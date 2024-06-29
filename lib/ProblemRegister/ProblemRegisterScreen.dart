@@ -1,6 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
-import 'DatePicker.dart';
+import 'package:image_picker/image_picker.dart'; // XFile을 사용하기 위해 추가
+import 'dart:io';
+import 'DatePickerHandler.dart';
+import 'ImagePickerHandler.dart'; // 분리한 이미지 선택기 핸들러 가져오기
+
+/*
+TODO
+  - 카메라 촬영도 가능한지 확인
+  - 갤럭시에서도 카메라, 갤러리 기능 작동하는지 확인
+  - 한 번 선택된 사진이 현재는 변경 불가능한 상태
+  - 등록 취소 기능
+  - 등록 완료 기능
+*/
 
 class ProblemRegisterScreen extends StatefulWidget {
   const ProblemRegisterScreen({super.key});
@@ -13,13 +25,18 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
   DateTime _selectedDate = DateTime.now(); // 선택된 날짜를 저장하는 변수
   final _sourceController = TextEditingController(); // 출처 입력 컨트롤러
   final _notesController = TextEditingController(); // 오답 메모 입력 컨트롤러
+  final ImagePickerHandler _imagePickerHandler = ImagePickerHandler(); // 이미지 선택기 핸들러 인스턴스
+
+  XFile? _problemImage; // 문제 이미지 변수
+  XFile? _solutionImage; // 해설 이미지 변수
+  XFile? _mySolutionImage; // 나의 풀이 이미지 변수
 
   // 날짜 선택기를 표시하는 함수
   void _showCustomDatePicker() {
     showModalBottomSheet(
       context: context,
       builder: (BuildContext context) {
-        return DatePicker(
+        return DatePickerHandler(
           initialDate: _selectedDate,
           onDateSelected: (DateTime newDate) {
             setState(() {
@@ -29,6 +46,30 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
         );
       },
     );
+  }
+
+  // 이미지 선택 결과를 처리하는 함수
+  void _onImagePicked(XFile? pickedFile, String imageType) {
+    if (pickedFile != null) {
+      setState(() {
+        if (imageType == 'problem') {
+          _problemImage = pickedFile;
+        } else if (imageType == 'solution') {
+          _solutionImage = pickedFile;
+        } else if (imageType == 'mySolution') {
+          _mySolutionImage = pickedFile;
+        }
+      });
+      // 선택된 이미지를 처리합니다.
+      print('이미지 경로: ${pickedFile.path}');
+    }
+  }
+
+  // 이미지 선택 팝업 호출 함수
+  void _showImagePicker(String imageType) {
+    _imagePickerHandler.showImagePicker(context, (pickedFile) {
+      _onImagePicked(pickedFile, imageType);
+    });
   }
 
   @override
@@ -41,11 +82,9 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
   @override
   Widget build(BuildContext context) {
     final mediaQuery = MediaQuery.of(context); // 미디어 쿼리 정보 가져오기
-    final isLandscape =
-        mediaQuery.orientation == Orientation.landscape; // 가로/세로 방향 확인
+    final isLandscape = mediaQuery.orientation == Orientation.landscape; // 가로/세로 방향 확인
 
     return Scaffold(
-      // AppBar는 main.dart에서 제공
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -108,12 +147,14 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
                 height: isLandscape ? mediaQuery.size.height * 0.3 : 200,
                 color: Colors.grey[200],
                 child: Center(
-                  child: IconButton(
+                  child: _problemImage == null
+                      ? IconButton(
                     icon: const Icon(Icons.add, color: Colors.green, size: 40),
                     onPressed: () {
-                      // 이미지 추가 기능 구현
+                      _showImagePicker('problem'); // 이미지 선택 팝업 호출
                     },
-                  ),
+                  )
+                      : Image.file(File(_problemImage!.path)),
                 ),
               ),
               const SizedBox(height: 20),
@@ -133,12 +174,14 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
                 height: isLandscape ? mediaQuery.size.height * 0.3 : 200,
                 color: Colors.grey[200],
                 child: Center(
-                  child: IconButton(
+                  child: _solutionImage == null
+                      ? IconButton(
                     icon: const Icon(Icons.add, color: Colors.green, size: 40),
                     onPressed: () {
-                      // 이미지 추가 기능 구현
+                      _showImagePicker('solution'); // 이미지 선택 팝업 호출
                     },
-                  ),
+                  )
+                      : Image.file(File(_solutionImage!.path)),
                 ),
               ),
               const SizedBox(height: 20),
@@ -158,12 +201,14 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
                 height: isLandscape ? mediaQuery.size.height * 0.3 : 200,
                 color: Colors.grey[200],
                 child: Center(
-                  child: IconButton(
+                  child: _mySolutionImage == null
+                      ? IconButton(
                     icon: const Icon(Icons.add, color: Colors.green, size: 40),
                     onPressed: () {
-                      // 이미지 추가 기능 구현
+                      _showImagePicker('mySolution'); // 이미지 선택 팝업 호출
                     },
-                  ),
+                  )
+                      : Image.file(File(_mySolutionImage!.path)),
                 ),
               ),
               const SizedBox(height: 20),
@@ -196,18 +241,28 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
                     onPressed: () {
                       // 등록 취소 기능 구현
                     },
-                    child: const Text('+ 등록 취소'),
+                    child: const Text('등록 취소'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.grey,
+                      backgroundColor: Colors.white54,
+                      foregroundColor: Colors.green,
+                      textStyle: const TextStyle(
+                        fontSize: 14, // 글씨 크기 설정
+                        fontWeight: FontWeight.bold, // 글씨 굵기 설정
+                      ),
                     ),
                   ),
                   ElevatedButton(
                     onPressed: () {
                       // 등록 완료 기능 구현
                     },
-                    child: const Text('+ 등록 완료'),
+                    child: const Text('등록 완료'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.green,
+                      foregroundColor: Colors.white,
+                      textStyle: const TextStyle(
+                        fontSize: 14, // 글씨 크기 설정
+                        fontWeight: FontWeight.bold, // 글씨 굵기 설정
+                      ),
                     ),
                   ),
                 ],

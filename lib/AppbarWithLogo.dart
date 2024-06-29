@@ -17,8 +17,6 @@ class AppBarWithLogo extends StatelessWidget implements PreferredSizeWidget {
             'assets/logo.png', // 로고 이미지 파일 경로
             height: 30,
           ),
-          //const SizedBox(width: 10),
-          //const Text('OnO'),
         ],
       ),
       backgroundColor: Colors.white,
