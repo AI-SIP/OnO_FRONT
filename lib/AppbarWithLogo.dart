@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 
+/*
+  상단에 로고를 출력해주는 클래스
+*/
+
 class AppBarWithLogo extends StatelessWidget implements PreferredSizeWidget {
   @override
   final Size preferredSize;

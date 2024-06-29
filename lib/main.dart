@@ -6,6 +6,10 @@ import 'ProblemRegister/ProblemRegisterScreen.dart';
 import 'Setting/SettingScreen.dart';
 import 'AppbarWithLogo.dart';
 
+/*
+  메인 함수
+*/
+
 void main() {
   runApp(const MyApp());
 }

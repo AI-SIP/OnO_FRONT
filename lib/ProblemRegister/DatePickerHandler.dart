@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 
+/*
+  날짜 선택기를 출력해주는 클래스
+ */
+
 class DatePickerHandler extends StatefulWidget {
   final DateTime initialDate;
   final Function(DateTime) onDateSelected;
@@ -14,9 +18,12 @@ class DatePickerHandler extends StatefulWidget {
 class _DatePickerHandlerState extends State<DatePickerHandler> {
   late DateTime _selectedDate;
 
-  final List<int> _years = List<int>.generate(101, (int index) => 2020 + index); // 2020부터 2120까지
-  final List<int> _months = List<int>.generate(12, (int index) => index + 1); // 1부터 12까지
-  final List<int> _days = List<int>.generate(31, (int index) => index + 1); // 1부터 31까지
+  final List<int> _years =
+      List<int>.generate(101, (int index) => 2020 + index); // 2020부터 2120까지
+  final List<int> _months =
+      List<int>.generate(12, (int index) => index + 1); // 1부터 12까지
+  final List<int> _days =
+      List<int>.generate(31, (int index) => index + 1); // 1부터 31까지
 
   @override
   void initState() {
@@ -40,7 +47,8 @@ class _DatePickerHandlerState extends State<DatePickerHandler> {
                 onPressed: () {
                   Navigator.of(context).pop(); // 날짜 선택 창 닫기
                 },
-                child: const Text('완료', style: TextStyle(fontSize: 16, color: Colors.blue)),
+                child: const Text('완료',
+                    style: TextStyle(fontSize: 16, color: Colors.blue)),
               ),
             ],
           ),

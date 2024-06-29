@@ -25,7 +25,8 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
   DateTime _selectedDate = DateTime.now(); // 선택된 날짜를 저장하는 변수
   final _sourceController = TextEditingController(); // 출처 입력 컨트롤러
   final _notesController = TextEditingController(); // 오답 메모 입력 컨트롤러
-  final ImagePickerHandler _imagePickerHandler = ImagePickerHandler(); // 이미지 선택기 핸들러 인스턴스
+  final ImagePickerHandler _imagePickerHandler =
+      ImagePickerHandler(); // 이미지 선택기 핸들러 인스턴스
 
   XFile? _problemImage; // 문제 이미지 변수
   XFile? _solutionImage; // 해설 이미지 변수
@@ -82,7 +83,8 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
   @override
   Widget build(BuildContext context) {
     final mediaQuery = MediaQuery.of(context); // 미디어 쿼리 정보 가져오기
-    final isLandscape = mediaQuery.orientation == Orientation.landscape; // 가로/세로 방향 확인
+    final isLandscape =
+        mediaQuery.orientation == Orientation.landscape; // 가로/세로 방향 확인
 
     return Scaffold(
       body: SingleChildScrollView(
@@ -149,11 +151,12 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
                 child: Center(
                   child: _problemImage == null
                       ? IconButton(
-                    icon: const Icon(Icons.add, color: Colors.green, size: 40),
-                    onPressed: () {
-                      _showImagePicker('problem'); // 이미지 선택 팝업 호출
-                    },
-                  )
+                          icon: const Icon(Icons.add,
+                              color: Colors.green, size: 40),
+                          onPressed: () {
+                            _showImagePicker('problem'); // 이미지 선택 팝업 호출
+                          },
+                        )
                       : Image.file(File(_problemImage!.path)),
                 ),
               ),
@@ -176,11 +179,12 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
                 child: Center(
                   child: _solutionImage == null
                       ? IconButton(
-                    icon: const Icon(Icons.add, color: Colors.green, size: 40),
-                    onPressed: () {
-                      _showImagePicker('solution'); // 이미지 선택 팝업 호출
-                    },
-                  )
+                          icon: const Icon(Icons.add,
+                              color: Colors.green, size: 40),
+                          onPressed: () {
+                            _showImagePicker('solution'); // 이미지 선택 팝업 호출
+                          },
+                        )
                       : Image.file(File(_solutionImage!.path)),
                 ),
               ),
@@ -203,11 +207,12 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
                 child: Center(
                   child: _mySolutionImage == null
                       ? IconButton(
-                    icon: const Icon(Icons.add, color: Colors.green, size: 40),
-                    onPressed: () {
-                      _showImagePicker('mySolution'); // 이미지 선택 팝업 호출
-                    },
-                  )
+                          icon: const Icon(Icons.add,
+                              color: Colors.green, size: 40),
+                          onPressed: () {
+                            _showImagePicker('mySolution'); // 이미지 선택 팝업 호출
+                          },
+                        )
                       : Image.file(File(_mySolutionImage!.path)),
                 ),
               ),
