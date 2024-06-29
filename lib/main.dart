@@ -4,6 +4,7 @@ import 'Directory/DirectoryScreen.dart';
 import 'ProblemInformation/ProblemInformationScreen.dart';
 import 'ProblemRegister/ProblemRegisterScreen.dart';
 import 'Setting/SettingScreen.dart';
+import 'AppbarWithLogo.dart';
 
 void main() {
   runApp(const MyApp());
@@ -51,6 +52,7 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBarWithLogo(),
       body: IndexedStack(
         index: _selectedIndex,
         children: _widgetOptions,
