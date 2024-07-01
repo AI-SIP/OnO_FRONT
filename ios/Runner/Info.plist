@@ -7,7 +7,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Mvp Front</string>
+	<string>OnO</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -22,8 +22,23 @@
 	<string>$(FLUTTER_BUILD_NAME)</string>
 	<key>CFBundleSignature</key>
 	<string>????</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.YOUR_CLIENT_ID</string>
+			</array>
+		</dict>
+	</array>
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>google</string>
+	</array>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
@@ -49,10 +64,37 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
-	<key>LSApplicationQueriesSchemes</key>
+	<key>CFBundleURLTypes</key>
     <array>
-        <string>https</string>
-        <string>http</string>
+    <dict>
+    <key>CFBundleURLSchemes</key>
+    <array>
+        <!-- google login -->
+        <string>com.googleusercontent.apps.41920987554-6lp5n7jr9v81pu2r6ulihp3ggu25kpse</string>
+    </array>
+    </dict>
+    </array>
+    <key>NSAppleMusicUsageDescription</key>
+    <string>Describe why your app uses this permission here.</string>
+    <key>NSCameraUsageDescription</key>
+    <string>Describe why your app uses this permission here.</string>
+    <key>NSLocationAlwaysUsageDescription</key>
+    <string>Describe why your app uses this permission here.</string>
+    <key>NSLocationWhenInUseUsageDescription</key>
+    <string>Describe why your app uses this permission here.</string>
+    <key>NSMicrophoneUsageDescription</key>
+    <string>Describe why your app uses this permission here.</string>
+    <key>NSMotionUsageDescription</key>
+    <string>Describe why your app uses this permission here.</string>
+    <key>NSSpeechRecognitionUsageDescription</key>
+    <string>Describe why your app uses this permission here.</string>
+    <key>NSSupportsOpeningDocumentsInPlace</key>
+    <true/>
+    <key>UISupportedInterfaceOrientations</key>
+    <array>
+      <string>UIInterfaceOrientationPortrait</string>
+      <string>UIInterfaceOrientationLandscapeLeft</string>
+      <string>UIInterfaceOrientationLandscapeRight</string>
     </array>
 </dict>
 </plist>
