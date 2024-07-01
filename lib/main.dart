@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:mvp_front/auth/AuthService.dart';
+import 'package:provider/provider.dart';
 import 'Home/HomeScreen.dart';
 import 'Directory/DirectoryScreen.dart';
 import 'ProblemInformation/ProblemInformationScreen.dart';
@@ -11,7 +13,12 @@ import 'AppbarWithLogo.dart';
 */
 
 void main() {
-  runApp(const MyApp());
+  runApp(
+      MultiProvider(
+          providers: [
+        ChangeNotifierProvider(create: (_) => AuthService()),
+      ], child: const MyApp()),
+  );
 }
 
 class MyApp extends StatelessWidget {
