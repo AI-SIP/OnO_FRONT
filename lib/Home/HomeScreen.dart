@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../GlobalModule/GridPainter.dart'; // GridPainter 클래스 가져오기
+import '../auth/AuthService.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
   // URL을 여는 함수
   Future<void> _launchURL() async {
-    final url =
-        Uri.parse('https://semnisem.notion.site/MVP-e104fd6af0064941acf464e6f77eabb3');
+    final url = Uri.parse(
+        'https://semnisem.notion.site/MVP-e104fd6af0064941acf464e6f77eabb3');
 
     if (await canLaunchUrl(url)) {
       launchUrl(url);
@@ -19,6 +20,9 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final AuthService authService = AuthService();
+    final screenHeight = MediaQuery.of(context).size.height;
+
     return Scaffold(
       body: Stack(
         children: [
@@ -28,9 +32,12 @@ class HomeScreen extends StatelessWidget {
               painter: GridPainter(),
             ),
           ),
-          Center(
+          // 텍스트와 OnO 사용 가이드 버튼을 중앙에 배치
+          Positioned(
+            top: screenHeight * 0.3, // 화면 높이의 30% 위치에 배치
+            left: 0,
+            right: 0,
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const Text(
                   'OnO, 이제는 나도 오답한다',
@@ -59,6 +66,67 @@ class HomeScreen extends StatelessWidget {
                       fontSize: 18, // 텍스트 크기
                       color: Colors.white, // 텍스트 색상
                     ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // 소셜 로그인 버튼을 아래에 배치
+          Positioned(
+            top: screenHeight * 0.5, // 화면 높이의 50% 위치에 배치
+            left: 20,
+            right: 20,
+            child: Column(
+              children: [
+                ElevatedButton(
+                  onPressed: () => authService.signInWithGoogle(),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    minimumSize: const Size.fromHeight(50), // 높이만 50으로 설정
+                    elevation: 1.0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(4.0),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Image.asset(
+                        'assets/GoogleLogo.png', // 로고 이미지 파일 경로
+                        height: 24,
+                      ),
+                      const SizedBox(width: 10),
+                      const Text(
+                        'Google 계정으로 로그인',
+                        style: TextStyle(color: Colors.black87, fontSize: 16.0),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 20), // 간격 추가
+                ElevatedButton(
+                  onPressed: () => authService.signInWithApple(),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.black,
+                    minimumSize: const Size.fromHeight(50), // 높이만 50으로 설정
+                    elevation: 1.0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(4.0),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Image.asset(
+                        'assets/AppleLogo.png', // 로고 이미지 파일 경로
+                        height: 24,
+                      ),
+                      const SizedBox(width: 10),
+                      const Text(
+                        'Apple 계정으로 로그인',
+                        style: TextStyle(color: Colors.white, fontSize: 16.0),
+                      ),
+                    ],
                   ),
                 ),
               ],

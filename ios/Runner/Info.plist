@@ -64,5 +64,37 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>CFBundleURLTypes</key>
+    <array>
+    <dict>
+    <key>CFBundleURLSchemes</key>
+    <array>
+        <!-- google login -->
+        <string>com.googleusercontent.apps.41920987554-6lp5n7jr9v81pu2r6ulihp3ggu25kpse</string>
+    </array>
+    </dict>
+    </array>
+    <key>NSAppleMusicUsageDescription</key>
+    <string>Describe why your app uses this permission here.</string>
+    <key>NSCameraUsageDescription</key>
+    <string>Describe why your app uses this permission here.</string>
+    <key>NSLocationAlwaysUsageDescription</key>
+    <string>Describe why your app uses this permission here.</string>
+    <key>NSLocationWhenInUseUsageDescription</key>
+    <string>Describe why your app uses this permission here.</string>
+    <key>NSMicrophoneUsageDescription</key>
+    <string>Describe why your app uses this permission here.</string>
+    <key>NSMotionUsageDescription</key>
+    <string>Describe why your app uses this permission here.</string>
+    <key>NSSpeechRecognitionUsageDescription</key>
+    <string>Describe why your app uses this permission here.</string>
+    <key>NSSupportsOpeningDocumentsInPlace</key>
+    <true/>
+    <key>UISupportedInterfaceOrientations</key>
+    <array>
+      <string>UIInterfaceOrientationPortrait</string>
+      <string>UIInterfaceOrientationLandscapeLeft</string>
+      <string>UIInterfaceOrientationLandscapeRight</string>
+    </array>
 </dict>
 </plist>
