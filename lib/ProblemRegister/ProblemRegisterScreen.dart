@@ -1,9 +1,13 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:image_picker/image_picker.dart'; // XFile을 사용하기 위해 추가
 import 'dart:io';
+import '../Model/ProblemRegisterModel.dart';
 import 'DatePickerHandler.dart';
 import 'ImagePickerHandler.dart'; // 분리한 이미지 선택기 핸들러 가져오기
+import 'package:http/http.dart' as http;
 
 /*
 TODO
@@ -77,6 +81,36 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
     _sourceController.dispose(); // 출처 컨트롤러 해제
     _notesController.dispose(); // 오답 메모 컨트롤러 해제
     super.dispose();
+  }
+
+  Future<void> submitProblem() async {
+    final problem = Problem(
+      userId: 1,
+      imageUrl: _problemImage?.path,
+      solveImageUrl: _solutionImage?.path,
+      answerImageUrl: _mySolutionImage?.path,
+      memo: _notesController.text,
+      reference: _sourceController.text,
+      solvedAt: _selectedDate,
+    );
+
+    try {
+      final response = await http.post(
+        Uri.parse('http://localhost:8080/api/problem'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(problem.toJson()),
+      );
+
+      if (response.statusCode == 200) {
+        print('Problem successfully submitted');
+        // 성공 시 로직 구현, 예: 사용자에게 알림, 화면 전환 등
+      } else {
+        print('Failed to submit problem: ${response.body}');
+        // 실패 시 로직 구현, 예: 에러 메시지 표시
+      }
+    } catch (e) {
+      print('Error submitting problem: $e');
+    }
   }
 
   @override
@@ -256,9 +290,7 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
                     ),
                   ),
                   ElevatedButton(
-                    onPressed: () {
-                      // 등록 완료 기능 구현
-                    },
+                    onPressed: submitProblem,
                     child: const Text('등록 완료'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.green,
