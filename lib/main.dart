@@ -54,6 +54,21 @@ class _MyHomePageState extends State<MyHomePage> {
     SettingScreen(),
   ];
 
+  @override
+  void initState() {
+    super.initState();
+    autoLogin();
+  }
+
+  Future<void> autoLogin() async {
+    try {
+      await Provider.of<AuthService>(context, listen: false).autoLogin();
+    } catch (e) {
+      // 여기에 오류 처리 로직을 추가할 수 있습니다.
+      print('Auto login failed: $e');
+    }
+  }
+
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;

@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:core';
+import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -67,28 +68,13 @@ class AuthService with ChangeNotifier {
     if (userId != null) {
       //await fetchUserFromServer(userId);
       _isLoggedIn = true;
+      log('userId : ${userId}');
       notifyListeners();
     } else {
       _isLoggedIn = false;
       notifyListeners();
     }
   }
-
-  /*
-  Future<void> fetchUserFromServer(int userId) async {
-    final url = Uri.parse('http://localhost:8080/api/user/$userId');
-    final response = await http.get(url);
-
-    if(response.statusCode == 200) {
-      var userData = jsonDecode(response.body);
-      _isLoggedIn = true;
-      notifyListeners();
-    } else{
-      _isLoggedIn = false;
-      notifyListeners();
-    }
-  }
-  */
 
   // Apple 로그인 함수
   Future<void> signInWithApple() async {
@@ -111,9 +97,22 @@ class AuthService with ChangeNotifier {
 
   // 로그아웃 함수
   Future<void> signOut() async {
-    await _googleSignIn.signOut();
-    _googleUser = null;
-    _isLoggedIn = false;
-    notifyListeners();
+    try {
+      await _googleSignIn.signOut();
+
+      // SharedPreferences에서 사용자 정보 삭제
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      await prefs.remove('userId');
+      await prefs.remove('userName');
+
+      _googleUser = null;
+      _isLoggedIn = false;
+      notifyListeners(); // 리스너들에게 상태 변경을 알림
+
+      // 로그인 화면으로 이동하거나 UI를 업데이트하기 위한 추가 로직
+    } catch (error) {
+      print('Error signing out: $error');
+      throw Exception('Failed to sign out');
+    }
   }
 }

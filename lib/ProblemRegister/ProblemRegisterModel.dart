@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:ffi';
 
-class Problem {
+class ProblemRegisterModel {
   String? imageUrl;
   String? solveImageUrl;
   String? answerImageUrl;
@@ -9,7 +9,7 @@ class Problem {
   String? reference;
   DateTime? solvedAt;
 
-  Problem({
+  ProblemRegisterModel({
     this.imageUrl,
     this.solveImageUrl,
     this.answerImageUrl,
@@ -29,8 +29,8 @@ class Problem {
     };
   }
 
-  factory Problem.fromJson(Map<String, dynamic> json) {
-    return Problem(
+  factory ProblemRegisterModel.fromJson(Map<String, dynamic> json) {
+    return ProblemRegisterModel(
       imageUrl: json['imageUrl'],
       solveImageUrl: json['solveImageUrl'],
       answerImageUrl: json['answerImageUrl'],

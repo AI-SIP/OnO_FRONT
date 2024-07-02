@@ -3,9 +3,10 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:image_picker/image_picker.dart'; // XFile을 사용하기 위해 추가
+import 'package:mvp_front/ProblemRegister/ProblemService.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:io';
-import '../Model/ProblemRegisterModel.dart';
+import 'ProblemRegisterModel.dart';
 import 'DatePickerHandler.dart';
 import 'ImagePickerHandler.dart'; // 분리한 이미지 선택기 핸들러 가져오기
 import 'package:http/http.dart' as http;
@@ -31,15 +32,11 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
   final _notesController = TextEditingController(); // 오답 메모 입력 컨트롤러
   final ImagePickerHandler _imagePickerHandler =
       ImagePickerHandler(); // 이미지 선택기 핸들러 인스턴스
+  final ProblemService _problemService = ProblemService();
 
   XFile? _problemImage; // 문제 이미지 변수
   XFile? _solutionImage; // 해설 이미지 변수
   XFile? _mySolutionImage; // 나의 풀이 이미지 변수
-
-  Future<int?> getUserId() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getInt('userId');
-  }
 
   // 날짜 선택기를 표시하는 함수
   void _showCustomDatePicker() {
@@ -89,11 +86,20 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
     super.dispose();
   }
 
+  // 모든 입력 필드와 이미지 선택기를 초기화하는 함수
+  void resetForm() {
+    _sourceController.clear();
+    _notesController.clear();
+    setState(() {
+      _problemImage = null;
+      _solutionImage = null;
+      _mySolutionImage = null;
+    });
+  }
+
   Future<void> submitProblem() async {
 
-    int? userId = await getUserId();
-
-    final problem = Problem(
+    final problemData = ProblemRegisterModel(
       imageUrl: _problemImage?.path,
       solveImageUrl: _solutionImage?.path,
       answerImageUrl: _mySolutionImage?.path,
@@ -102,23 +108,8 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
       solvedAt: _selectedDate,
     );
 
-    try {
-      final response = await http.post(
-        Uri.parse('http://localhost:8080/api/problem'),
-        headers: {'Content-Type': 'application/json', 'UserId' : userId.toString()},
-        body: jsonEncode(problem.toJson()),
-      );
-
-      if (response.statusCode == 200) {
-        print('Problem successfully submitted');
-        // 성공 시 로직 구현, 예: 사용자에게 알림, 화면 전환 등
-      } else {
-        print('Failed to submit problem: ${response.body}');
-        // 실패 시 로직 구현, 예: 에러 메시지 표시
-      }
-    } catch (e) {
-      print('Error submitting problem: $e');
-    }
+    resetForm();
+    await _problemService.submitProblem(problemData, context);
   }
 
   @override
@@ -284,9 +275,7 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: <Widget>[
                   ElevatedButton(
-                    onPressed: () {
-                      // 등록 취소 기능 구현
-                    },
+                    onPressed: resetForm,
                     child: const Text('등록 취소'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.white54,
