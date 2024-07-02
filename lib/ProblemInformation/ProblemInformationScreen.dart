@@ -7,7 +7,7 @@ class ProblemInformationScreen extends StatelessWidget {
 
   Future<void> fetchData() async {
     try {
-      final url = 'http://localhost:8080/api/autoLogin/test1';
+      final url = 'http://localhost:8080/api/user/autoLogin/test1';
       final response = await http
           .get(Uri.parse(url));
       if (response.statusCode == 200) {

@@ -2,8 +2,6 @@ import 'dart:convert';
 import 'dart:ffi';
 
 class Problem {
-
-  int? userId;
   String? imageUrl;
   String? solveImageUrl;
   String? answerImageUrl;
@@ -12,7 +10,6 @@ class Problem {
   DateTime? solvedAt;
 
   Problem({
-    this.userId,
     this.imageUrl,
     this.solveImageUrl,
     this.answerImageUrl,
@@ -23,7 +20,6 @@ class Problem {
 
   Map<String, dynamic> toJson() {
     return {
-      'userId' : userId,
       'imageUrl': imageUrl,
       'solveImageUrl': solveImageUrl,
       'answerImageUrl': answerImageUrl,
@@ -35,7 +31,6 @@ class Problem {
 
   factory Problem.fromJson(Map<String, dynamic> json) {
     return Problem(
-      userId: json['userId'],
       imageUrl: json['imageUrl'],
       solveImageUrl: json['solveImageUrl'],
       answerImageUrl: json['answerImageUrl'],

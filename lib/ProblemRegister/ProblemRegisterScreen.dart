@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:image_picker/image_picker.dart'; // XFile을 사용하기 위해 추가
+import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:io';
 import '../Model/ProblemRegisterModel.dart';
 import 'DatePickerHandler.dart';
@@ -34,6 +35,11 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
   XFile? _problemImage; // 문제 이미지 변수
   XFile? _solutionImage; // 해설 이미지 변수
   XFile? _mySolutionImage; // 나의 풀이 이미지 변수
+
+  Future<int?> getUserId() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getInt('userId');
+  }
 
   // 날짜 선택기를 표시하는 함수
   void _showCustomDatePicker() {
@@ -84,8 +90,10 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
   }
 
   Future<void> submitProblem() async {
+
+    int? userId = await getUserId();
+
     final problem = Problem(
-      userId: 1,
       imageUrl: _problemImage?.path,
       solveImageUrl: _solutionImage?.path,
       answerImageUrl: _mySolutionImage?.path,
@@ -97,7 +105,7 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
     try {
       final response = await http.post(
         Uri.parse('http://localhost:8080/api/problem'),
-        headers: {'Content-Type': 'application/json'},
+        headers: {'Content-Type': 'application/json', 'UserId' : userId.toString()},
         body: jsonEncode(problem.toJson()),
       );
 

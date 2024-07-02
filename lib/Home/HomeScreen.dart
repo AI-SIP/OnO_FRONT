@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../GlobalModule/GridPainter.dart'; // GridPainter 클래스 가져오기
 import '../auth/AuthService.dart';
@@ -17,6 +18,11 @@ class HomeScreen extends StatelessWidget {
     } else {
       throw 'Could not launch $url';
     }
+  }
+
+  Future<String> getUserName() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString('userName') ?? 'No Name';
   }
 
   @override
@@ -79,17 +85,28 @@ class HomeScreen extends StatelessWidget {
             child: Consumer<AuthService>(
               builder: (context, authService, child) {
                 if (authService.isLoggedIn) {
-                  return Column(
-                    children: [
-                      if (authService.googleUser != null) ...[
-                        Text('Logged in as: ${authService.googleUser!.displayName}'),
-                        Text('Email: ${authService.googleUser!.email}'),
-                      ],
-                      ElevatedButton(
-                        onPressed: () => authService.signOut(),
-                        child: const Text('Logout'),
-                      ),
-                    ],
+                  return FutureBuilder<String>(
+                    future: getUserName(),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.done) {
+                        return Column(
+                          children: [
+                            Text(
+                              '${snapshot.data}님 환영합니다!',
+                              style: TextStyle(
+                                  fontSize: 16, fontWeight: FontWeight.bold),
+                            ), // 사용자 이름 출력
+                            SizedBox(height: 20),
+                            ElevatedButton(
+                              onPressed: () => authService.signOut(),
+                              child: const Text('Logout'),
+                            ),
+                          ],
+                        );
+                      } else {
+                        return CircularProgressIndicator();
+                      }
+                    },
                   );
                 } else {
                   return Column(
@@ -114,7 +131,8 @@ class HomeScreen extends StatelessWidget {
                             const SizedBox(width: 10),
                             const Text(
                               'Google 계정으로 로그인',
-                              style: TextStyle(color: Colors.black87, fontSize: 16.0),
+                              style: TextStyle(
+                                  color: Colors.black87, fontSize: 16.0),
                             ),
                           ],
                         ),
@@ -140,7 +158,8 @@ class HomeScreen extends StatelessWidget {
                             const SizedBox(width: 10),
                             const Text(
                               'Apple 계정으로 로그인',
-                              style: TextStyle(color: Colors.white, fontSize: 16.0),
+                              style: TextStyle(
+                                  color: Colors.white, fontSize: 16.0),
                             ),
                           ],
                         ),
