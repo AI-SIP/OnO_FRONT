@@ -1,41 +1,118 @@
+import 'dart:convert';
+import 'dart:core';
+import 'dart:developer';
+
+import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
+import 'package:http/http.dart' as http;
 
-class AuthService {
+class AuthService with ChangeNotifier {
   final GoogleSignIn _googleSignIn = GoogleSignIn();
+  GoogleSignInAccount? _googleUser;
+  bool _isLoggedIn = false;
 
-  // Google 로그인 함수
+  GoogleSignInAccount? get googleUser => _googleUser;
+  bool get isLoggedIn => _isLoggedIn;
+
+  // Google 로그인 함수(앱 처음 설치하고 구글 로그인 버튼 누르면 실행)
   Future<void> signInWithGoogle() async {
     try {
       final account = await _googleSignIn.signIn();
-      if(account != null) {
-        print('Google User: ${account.displayName}');
-        print('Email: ${account.email}');
-        print('ID: ${account.id}');
-        print('Photo URL: ${account.photoUrl}');
-        print('Server Auth Code: ${account.serverAuthCode}');
+      if (account != null) {
+        _googleUser = account;
+        _isLoggedIn = true;
+        notifyListeners();
+
+        sendUserToServer(account);
       }
-      await _googleSignIn.signIn();
     } catch (error) {
       print('Google sign-in error: $error');
+    }
+  }
+
+  // 구글 로그인에 성공했을 때, 유저 정보를 서버에 전달해 저장
+  Future<void> sendUserToServer(GoogleSignInAccount user) async {
+    final url = Uri.parse('http://localhost:8080/api/user');
+    final response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json; charset=UTF-8'},
+      body: jsonEncode({
+        'googleId': user.id,
+        'email': user.email,
+        'userName': user.displayName,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      setUserInfo(response);
+    } else {
+      throw Exception("Failed to Register user on server");
+    }
+  }
+
+  Future<void> setUserInfo(http.Response response) async {
+    int userId = jsonDecode(utf8.decode(response.bodyBytes))['userId'];
+    String userName = jsonDecode(utf8.decode(response.bodyBytes))['userName'];
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('userId', userId);
+    await prefs.setString('userName', userName);
+    print('userId : $userId');
+    print('userName : $userName');
+  }
+
+  Future<void> autoLogin() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    int? userId = prefs.getInt('userId');
+    if (userId != null) {
+      //await fetchUserFromServer(userId);
+      _isLoggedIn = true;
+      log('userId : ${userId}');
+      notifyListeners();
+    } else {
+      _isLoggedIn = false;
+      notifyListeners();
     }
   }
 
   // Apple 로그인 함수
   Future<void> signInWithApple() async {
     try {
-      final credential = await SignInWithApple.getAppleIDCredential(
+      final appleCredential = await SignInWithApple.getAppleIDCredential(
         scopes: [
           AppleIDAuthorizationScopes.email,
           AppleIDAuthorizationScopes.fullName,
         ],
       );
-      if(credential != null) {
-        print('Apple User: ${credential.givenName} ${credential.familyName}');
-        print('Email: ${credential.email}');
+
+      if (appleCredential != null) {
+        _isLoggedIn = true;
+        notifyListeners();
       }
     } catch (error) {
       print('Apple sign-in error: $error');
+    }
+  }
+
+  // 로그아웃 함수
+  Future<void> signOut() async {
+    try {
+      await _googleSignIn.signOut();
+
+      // SharedPreferences에서 사용자 정보 삭제
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      await prefs.remove('userId');
+      await prefs.remove('userName');
+
+      _googleUser = null;
+      _isLoggedIn = false;
+      notifyListeners(); // 리스너들에게 상태 변경을 알림
+
+      // 로그인 화면으로 이동하거나 UI를 업데이트하기 위한 추가 로직
+    } catch (error) {
+      print('Error signing out: $error');
+      throw Exception('Failed to sign out');
     }
   }
 }

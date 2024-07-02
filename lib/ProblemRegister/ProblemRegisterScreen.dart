@@ -1,13 +1,18 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:image_picker/image_picker.dart'; // XFile을 사용하기 위해 추가
+import 'package:mvp_front/ProblemRegister/ProblemService.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:io';
+import 'ProblemRegisterModel.dart';
 import 'DatePickerHandler.dart';
 import 'ImagePickerHandler.dart'; // 분리한 이미지 선택기 핸들러 가져오기
+import 'package:http/http.dart' as http;
 
 /*
 TODO
-  - 카메라 촬영도 가능한지 확인
   - 갤럭시에서도 카메라, 갤러리 기능 작동하는지 확인
   - 한 번 선택된 사진이 현재는 변경 불가능한 상태
   - 등록 취소 기능
@@ -27,6 +32,7 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
   final _notesController = TextEditingController(); // 오답 메모 입력 컨트롤러
   final ImagePickerHandler _imagePickerHandler =
       ImagePickerHandler(); // 이미지 선택기 핸들러 인스턴스
+  final ProblemService _problemService = ProblemService();
 
   XFile? _problemImage; // 문제 이미지 변수
   XFile? _solutionImage; // 해설 이미지 변수
@@ -78,6 +84,32 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
     _sourceController.dispose(); // 출처 컨트롤러 해제
     _notesController.dispose(); // 오답 메모 컨트롤러 해제
     super.dispose();
+  }
+
+  // 모든 입력 필드와 이미지 선택기를 초기화하는 함수
+  void resetForm() {
+    _sourceController.clear();
+    _notesController.clear();
+    setState(() {
+      _problemImage = null;
+      _solutionImage = null;
+      _mySolutionImage = null;
+    });
+  }
+
+  Future<void> submitProblem() async {
+
+    final problemData = ProblemRegisterModel(
+      imageUrl: _problemImage?.path,
+      solveImageUrl: _solutionImage?.path,
+      answerImageUrl: _mySolutionImage?.path,
+      memo: _notesController.text,
+      reference: _sourceController.text,
+      solvedAt: _selectedDate,
+    );
+
+    resetForm();
+    await _problemService.submitProblem(problemData, context);
   }
 
   @override
@@ -243,9 +275,7 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: <Widget>[
                   ElevatedButton(
-                    onPressed: () {
-                      // 등록 취소 기능 구현
-                    },
+                    onPressed: resetForm,
                     child: const Text('등록 취소'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.white54,
@@ -257,9 +287,7 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
                     ),
                   ),
                   ElevatedButton(
-                    onPressed: () {
-                      // 등록 완료 기능 구현
-                    },
+                    onPressed: submitProblem,
                     child: const Text('등록 완료'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.green,

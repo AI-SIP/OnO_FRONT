@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../GlobalModule/GridPainter.dart'; // GridPainter 클래스 가져오기
 import '../auth/AuthService.dart';
@@ -18,9 +20,13 @@ class HomeScreen extends StatelessWidget {
     }
   }
 
+  Future<String> getUserName() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString('userName') ?? 'No Name';
+  }
+
   @override
   Widget build(BuildContext context) {
-    final AuthService authService = AuthService();
     final screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
@@ -76,60 +82,92 @@ class HomeScreen extends StatelessWidget {
             top: screenHeight * 0.5, // 화면 높이의 50% 위치에 배치
             left: 20,
             right: 20,
-            child: Column(
-              children: [
-                ElevatedButton(
-                  onPressed: () => authService.signInWithGoogle(),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    minimumSize: const Size.fromHeight(50), // 높이만 50으로 설정
-                    elevation: 1.0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(4.0),
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
+            child: Consumer<AuthService>(
+              builder: (context, authService, child) {
+                if (authService.isLoggedIn) {
+                  return FutureBuilder<String>(
+                    future: getUserName(),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.done) {
+                        return Column(
+                          children: [
+                            Text(
+                              '${snapshot.data}님 환영합니다!',
+                              style: TextStyle(
+                                  fontSize: 16, fontWeight: FontWeight.bold),
+                            ), // 사용자 이름 출력
+                            SizedBox(height: 20),
+                            ElevatedButton(
+                              onPressed: () => authService.signOut(),
+                              child: const Text('Logout'),
+                            ),
+                          ],
+                        );
+                      } else {
+                        return CircularProgressIndicator();
+                      }
+                    },
+                  );
+                } else {
+                  return Column(
                     children: [
-                      Image.asset(
-                        'assets/GoogleLogo.png', // 로고 이미지 파일 경로
-                        height: 24,
+                      ElevatedButton(
+                        onPressed: () => authService.signInWithGoogle(),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.white,
+                          minimumSize: const Size.fromHeight(50), // 높이만 50으로 설정
+                          elevation: 1.0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(4.0),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Image.asset(
+                              'assets/GoogleLogo.png', // 로고 이미지 파일 경로
+                              height: 24,
+                            ),
+                            const SizedBox(width: 10),
+                            const Text(
+                              'Google 계정으로 로그인',
+                              style: TextStyle(
+                                  color: Colors.black87, fontSize: 16.0),
+                            ),
+                          ],
+                        ),
                       ),
-                      const SizedBox(width: 10),
-                      const Text(
-                        'Google 계정으로 로그인',
-                        style: TextStyle(color: Colors.black87, fontSize: 16.0),
+                      const SizedBox(height: 20), // 간격 추가
+                      ElevatedButton(
+                        onPressed: () => authService.signInWithApple(),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.black,
+                          minimumSize: const Size.fromHeight(50), // 높이만 50으로 설정
+                          elevation: 1.0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(4.0),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Image.asset(
+                              'assets/AppleLogo.png', // 로고 이미지 파일 경로
+                              height: 24,
+                            ),
+                            const SizedBox(width: 10),
+                            const Text(
+                              'Apple 계정으로 로그인',
+                              style: TextStyle(
+                                  color: Colors.white, fontSize: 16.0),
+                            ),
+                          ],
+                        ),
                       ),
                     ],
-                  ),
-                ),
-                const SizedBox(height: 20), // 간격 추가
-                ElevatedButton(
-                  onPressed: () => authService.signInWithApple(),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.black,
-                    minimumSize: const Size.fromHeight(50), // 높이만 50으로 설정
-                    elevation: 1.0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(4.0),
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Image.asset(
-                        'assets/AppleLogo.png', // 로고 이미지 파일 경로
-                        height: 24,
-                      ),
-                      const SizedBox(width: 10),
-                      const Text(
-                        'Apple 계정으로 로그인',
-                        style: TextStyle(color: Colors.white, fontSize: 16.0),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+                  );
+                }
+              },
             ),
           ),
         ],
