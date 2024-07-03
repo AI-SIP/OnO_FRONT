@@ -3,7 +3,6 @@ import 'package:mvp_front/Service/AuthService.dart';
 import 'package:provider/provider.dart';
 import 'Home/HomeScreen.dart';
 import 'Directory/DirectoryScreen.dart';
-import 'ProblemDetail/ProblemDetailScreen.dart';
 import 'ProblemRegister/ProblemRegisterScreen.dart';
 import 'Service/ProblemService.dart';
 import 'Setting/SettingScreen.dart';
@@ -15,11 +14,10 @@ import 'AppbarWithLogo.dart';
 
 void main() {
   runApp(
-      MultiProvider(
-          providers: [
-        ChangeNotifierProvider(create: (_) => AuthService()),
-            Provider(create: (_) => ProblemService()), // ProblemService를 Provider로 추가
-      ], child: const MyApp()),
+    MultiProvider(providers: [
+      ChangeNotifierProvider(create: (_) => AuthService()),
+      Provider(create: (_) => ProblemService()), // ProblemService를 Provider로 추가
+    ], child: const MyApp()),
   );
 }
 

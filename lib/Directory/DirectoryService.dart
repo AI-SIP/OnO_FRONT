@@ -2,11 +2,9 @@ import 'package:http/http.dart' as http;
 import 'package:mvp_front/Service/ProblemService.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
-import 'dart:io';
 import 'dart:developer'; // 로깅을 위해 추가
 
 class DirectoryService {
-
   final ProblemService problemService;
 
   DirectoryService(this.problemService);
@@ -22,7 +20,9 @@ class DirectoryService {
 
     if (problemsData != null) {
       Iterable data = json.decode(problemsData);
-      return data.map<ProblemThumbnail>((model) => ProblemThumbnail.fromJson(model)).toList();
+      return data
+          .map<ProblemThumbnail>((model) => ProblemThumbnail.fromJson(model))
+          .toList();
     } else {
       log('No problems found in cache'); // 로깅 추가
       throw Exception('No problems found in cache');

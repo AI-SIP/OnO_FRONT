@@ -23,7 +23,7 @@ class AppBarWithLogo extends StatelessWidget implements PreferredSizeWidget {
           ),
         ],
       ),
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.green[50],
     );
   }
 }

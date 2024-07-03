@@ -98,7 +98,6 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
   }
 
   Future<void> submitProblem() async {
-
     final problemData = ProblemRegisterModel(
       imageUrl: _problemImage?.path,
       solveImageUrl: _solutionImage?.path,

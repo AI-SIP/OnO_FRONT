@@ -8,8 +8,8 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ProblemService {
-
-  Future<void> submitProblem(ProblemRegisterModel problemData, BuildContext context) async {
+  Future<void> submitProblem(
+      ProblemRegisterModel problemData, BuildContext context) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     int? userId = prefs.getInt('userId');
 
@@ -20,7 +20,10 @@ class ProblemService {
     try {
       final response = await http.post(
         Uri.parse('http://localhost:8080/api/problem'),
-        headers: {'Content-Type': 'application/json; charset=UTF-8', 'userId' : userId.toString()},
+        headers: {
+          'Content-Type': 'application/json; charset=UTF-8',
+          'userId': userId.toString()
+        },
         body: jsonEncode(problemData.toJson()),
       );
 
@@ -38,7 +41,7 @@ class ProblemService {
     }
   }
 
-  List<dynamic> _problems = [];  // 문제 목록 저장할 리스트
+  List<dynamic> _problems = []; // 문제 목록 저장할 리스트
 
   // 서버에서 문제 목록을 가져와 저장하고 SharedPreferences에 저장하는 함수
   Future<void> fetchAndSaveProblems() async {
@@ -51,13 +54,10 @@ class ProblemService {
     }
 
     final url = Uri.parse('http://localhost:8080/api/problems');
-    final response = await http.get(
-        url,
-        headers: {
-          'Content-Type': 'application/json; charset=UTF-8',
-          'userId': userId.toString(),
-        }
-    );
+    final response = await http.get(url, headers: {
+      'Content-Type': 'application/json; charset=UTF-8',
+      'userId': userId.toString(),
+    });
 
     log('Fetching problems: ${response.statusCode} ${response.body}');
 
@@ -96,7 +96,8 @@ class ProblemService {
   // 문제 목록에서 특정 문제 상세 정보 가져오기
   Map<String, dynamic>? getProblemDetails(int problemId) {
     try {
-      var problemDetails = _problems.firstWhere((problem) => problem['problemId'] == problemId);
+      var problemDetails =
+          _problems.firstWhere((problem) => problem['problemId'] == problemId);
       return problemDetails;
     } catch (e) {
       log('Problem with ID $problemId not found: $e');
@@ -106,30 +107,42 @@ class ProblemService {
 
   // Checks if there is a next problem
   bool hasNextProblem(int currentProblemId) {
-    var currentIndex = _problems.indexWhere((p) => p['problemId'] == currentProblemId);
+    var currentIndex =
+        _problems.indexWhere((p) => p['problemId'] == currentProblemId);
     return currentIndex >= 0 && currentIndex < _problems.length - 1;
   }
 
   // Checks if there is a previous problem
   bool hasPreviousProblem(int currentProblemId) {
-    var currentIndex = _problems.indexWhere((p) => p['problemId'] == currentProblemId);
+    var currentIndex =
+        _problems.indexWhere((p) => p['problemId'] == currentProblemId);
     return currentIndex > 0 && currentIndex < _problems.length;
   }
 
   // Get the ID of the next problem
   int getNextProblemId(int currentProblemId) {
-    var currentIndex = _problems.indexWhere((p) => p['problemId'] == currentProblemId);
+    var currentIndex =
+        _problems.indexWhere((p) => p['problemId'] == currentProblemId);
     if (currentIndex >= 0 && currentIndex < _problems.length - 1) {
       return _problems[currentIndex + 1]['problemId'];
+    } else if (currentIndex == _problems.length - 1) {
+      return _problems[0]['problemId'];
     }
     throw Exception('No next problem available.');
   }
 
+  List<int> getProblemIds() {
+    return _problems.map((problem) => problem['problemId'] as int).toList();
+  }
+
   // Get the ID of the previous problem
   int getPreviousProblemId(int currentProblemId) {
-    var currentIndex = _problems.indexWhere((p) => p['problemId'] == currentProblemId);
+    var currentIndex =
+        _problems.indexWhere((p) => p['problemId'] == currentProblemId);
     if (currentIndex > 0) {
       return _problems[currentIndex - 1]['problemId'];
+    } else if (currentIndex == 0) {
+      return _problems[_problems.length - 1]['problemId'];
     }
     throw Exception('No previous problem available.');
   }

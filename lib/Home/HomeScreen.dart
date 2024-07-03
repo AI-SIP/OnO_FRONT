@@ -94,7 +94,9 @@ class HomeScreen extends StatelessWidget {
                             Text(
                               '${snapshot.data}님 환영합니다!',
                               style: TextStyle(
-                                  fontSize: 16, fontWeight: FontWeight.bold),
+                                  color: Colors.green,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold),
                             ), // 사용자 이름 출력
                             SizedBox(height: 20),
                             ElevatedButton(
