@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:mvp_front/auth/AuthService.dart';
+import 'package:mvp_front/Service/AuthService.dart';
 import 'package:provider/provider.dart';
 import 'Home/HomeScreen.dart';
 import 'Directory/DirectoryScreen.dart';
-import 'ProblemInformation/ProblemInformationScreen.dart';
+import 'ProblemDetail/ProblemDetailScreen.dart';
 import 'ProblemRegister/ProblemRegisterScreen.dart';
+import 'Service/ProblemService.dart';
 import 'Setting/SettingScreen.dart';
 import 'AppbarWithLogo.dart';
 
@@ -17,6 +18,7 @@ void main() {
       MultiProvider(
           providers: [
         ChangeNotifierProvider(create: (_) => AuthService()),
+            Provider(create: (_) => ProblemService()), // ProblemService를 Provider로 추가
       ], child: const MyApp()),
   );
 }
@@ -48,7 +50,7 @@ class _MyHomePageState extends State<MyHomePage> {
   int _selectedIndex = 0;
   static const List<Widget> _widgetOptions = <Widget>[
     HomeScreen(),
-    ProblemInformationScreen(),
+    //ProblemDetailScreen(),
     ProblemRegisterScreen(),
     DirectoryScreen(),
     SettingScreen(),
@@ -90,10 +92,13 @@ class _MyHomePageState extends State<MyHomePage> {
             icon: Icon(Icons.home),
             label: '메인',
           ),
+          /*
           BottomNavigationBarItem(
             icon: Icon(Icons.book),
             label: '오답노트 복습',
           ),
+
+           */
           BottomNavigationBarItem(
             icon: Icon(Icons.add),
             label: '오답노트 등록',

@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../GlobalModule/GridPainter.dart'; // GridPainter 클래스 가져오기
-import '../auth/AuthService.dart';
+import '../Service/AuthService.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
