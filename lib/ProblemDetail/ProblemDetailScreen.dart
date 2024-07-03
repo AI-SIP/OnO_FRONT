@@ -17,7 +17,7 @@ class ProblemDetailScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('문제 $problemId',
+        title: Text(problemData != null ? problemData['reference'] : '문제 상세',
             style: TextStyle(
                 color: Colors.green,
                 fontSize: 20,
@@ -39,7 +39,7 @@ class ProblemDetailScreen extends StatelessWidget {
         ),
         SingleChildScrollView(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0), // 좌우 여백 추가
+            padding: const EdgeInsets.symmetric(horizontal: 35.0), // 좌우 여백 추가
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center, // 가운데 정렬
               children: [
@@ -240,7 +240,8 @@ class ProblemDetailScreen extends StatelessWidget {
                   ],
                 ),
                 SizedBox(height: 20.0), // 상하 간격 추가
-                navigationButtons(context, problemService, problemId)
+                navigationButtons(context, problemService, problemId),
+                SizedBox(height: 50.0), // 상하 간격 추가
               ],
             ),
           ),
