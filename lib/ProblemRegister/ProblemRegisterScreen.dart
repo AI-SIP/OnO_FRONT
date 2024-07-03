@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:image_picker/image_picker.dart'; // XFile을 사용하기 위해 추가
-import 'package:mvp_front/ProblemRegister/ProblemService.dart';
+import 'package:mvp_front/Service/ProblemService.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:io';
 import 'ProblemRegisterModel.dart';
@@ -98,7 +98,6 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
   }
 
   Future<void> submitProblem() async {
-
     final problemData = ProblemRegisterModel(
       imageUrl: _problemImage?.path,
       solveImageUrl: _solutionImage?.path,
