@@ -95,7 +95,6 @@ class _MyHomePageState extends State<MyHomePage> {
             icon: Icon(Icons.book),
             label: '오답노트 복습',
           ),
-
            */
           BottomNavigationBarItem(
             icon: Icon(Icons.add),

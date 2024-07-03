@@ -10,7 +10,7 @@ class DirectoryService {
   DirectoryService(this.problemService);
 
   Future<void> fetchAndSaveProblems() async {
-    problemService.fetchAndSaveProblems();
+    await problemService.fetchAndSaveProblems();
   }
 
   // 저장된 문제 목록을 로드
@@ -19,26 +19,28 @@ class DirectoryService {
     String? problemsData = prefs.getString('problems');
 
     if (problemsData != null) {
-      Iterable data = json.decode(problemsData);
+      Iterable data = json.decode(utf8.decode(problemsData.codeUnits));
       return data
           .map<ProblemThumbnail>((model) => ProblemThumbnail.fromJson(model))
           .toList();
     } else {
       log('No problems found in cache'); // 로깅 추가
-      throw Exception('No problems found in cache');
+      throw Exception('오답노트가 존재하지 않습니다!');
     }
   }
 }
 
 class ProblemThumbnail {
   final int id;
+  final String title;
   final String imageUrl;
 
-  ProblemThumbnail({required this.id, required this.imageUrl});
+  ProblemThumbnail({required this.id, required this.title, required this.imageUrl});
 
   factory ProblemThumbnail.fromJson(Map<String, dynamic> json) {
     return ProblemThumbnail(
       id: json['problemId'],
+      title: json['reference'],
       imageUrl: json['imageUrl'],
     );
   }

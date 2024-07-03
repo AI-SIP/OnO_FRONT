@@ -7,14 +7,20 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:http/http.dart' as http;
+import '../Service/UserService.dart';
 
 class AuthService with ChangeNotifier {
   final GoogleSignIn _googleSignIn = GoogleSignIn();
   GoogleSignInAccount? _googleUser;
   bool _isLoggedIn = false;
+  String _userName = '';
+  String _userEmail = '';
 
   GoogleSignInAccount? get googleUser => _googleUser;
   bool get isLoggedIn => _isLoggedIn;
+  String get userName => _userName;
+  String get userEmail => _userEmail;
+  final UserService _userService = UserService();
 
   // Google 로그인 함수(앱 처음 설치하고 구글 로그인 버튼 누르면 실행)
   Future<void> signInWithGoogle() async {
@@ -23,6 +29,8 @@ class AuthService with ChangeNotifier {
       if (account != null) {
         _googleUser = account;
         _isLoggedIn = true;
+        _userName = account.displayName ?? '';
+        _userEmail = account.email;
         notifyListeners();
 
         sendUserToServer(account);
@@ -55,18 +63,22 @@ class AuthService with ChangeNotifier {
   Future<void> setUserInfo(http.Response response) async {
     int userId = jsonDecode(utf8.decode(response.bodyBytes))['userId'];
     String userName = jsonDecode(utf8.decode(response.bodyBytes))['userName'];
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setInt('userId', userId);
-    await prefs.setString('userName', userName);
+    String userEmail = jsonDecode(utf8.decode(response.bodyBytes))['userEmail'];
+    _userName = userName;
+    _userEmail = userEmail;
     print('userId : $userId');
     print('userName : $userName');
+    print('userEmail : $userEmail');
+    await _userService.saveUserInfo(userId, userName, userEmail);
+    notifyListeners();
   }
 
   Future<void> autoLogin() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     int? userId = prefs.getInt('userId');
     if (userId != null) {
-      //await fetchUserFromServer(userId);
+      _userName = prefs.getString('userName') ?? '';
+      _userEmail = prefs.getString('email') ?? '';
       _isLoggedIn = true;
       log('userId : ${userId}');
       notifyListeners();
@@ -101,12 +113,12 @@ class AuthService with ChangeNotifier {
       await _googleSignIn.signOut();
 
       // SharedPreferences에서 사용자 정보 삭제
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      await prefs.remove('userId');
-      await prefs.remove('userName');
+      await _userService.clearUserInfo();
 
       _googleUser = null;
       _isLoggedIn = false;
+      _userName = '';
+      _userEmail = '';
       notifyListeners(); // 리스너들에게 상태 변경을 알림
 
       // 로그인 화면으로 이동하거나 UI를 업데이트하기 위한 추가 로직
