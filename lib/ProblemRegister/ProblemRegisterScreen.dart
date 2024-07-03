@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:image_picker/image_picker.dart'; // XFile을 사용하기 위해 추가
-import 'package:mvp_front/ProblemRegister/ProblemService.dart';
+import 'package:mvp_front/ProblemRegister/ProblemRegisterService.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:io';
 import 'ProblemRegisterModel.dart';
@@ -32,7 +32,7 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
   final _notesController = TextEditingController(); // 오답 메모 입력 컨트롤러
   final ImagePickerHandler _imagePickerHandler =
       ImagePickerHandler(); // 이미지 선택기 핸들러 인스턴스
-  final ProblemService _problemService = ProblemService();
+  final ProblemRegisterService _problemService = ProblemRegisterService();
 
   XFile? _problemImage; // 문제 이미지 변수
   XFile? _solutionImage; // 해설 이미지 변수

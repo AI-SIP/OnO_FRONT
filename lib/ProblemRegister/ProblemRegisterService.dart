@@ -7,7 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../Directory/DirectoryService.dart';
 
-class ProblemService {
+class ProblemRegisterService {
 
   final DirectoryService _directoryService = DirectoryService();
 

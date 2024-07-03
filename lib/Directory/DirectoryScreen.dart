@@ -17,30 +17,12 @@ class _DirectoryScreenState extends State<DirectoryScreen> with WidgetsBindingOb
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addObserver(this);
     loadData(); // 문제 데이터 로드
-  }
-
-  @override
-  void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
-    super.dispose();
-  }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) {
-      loadData(); // 앱이 다시 활성화될 때 데이터 새로고침
-    }
   }
 
   void loadData() async {
     await directoryService.fetchAndSaveProblems(); // 최신 데이터로 캐시 업데이트
     setState(() {}); // 화면 갱신
-  }
-
-  void reloadData(){
-    loadData();
   }
 
   @override
