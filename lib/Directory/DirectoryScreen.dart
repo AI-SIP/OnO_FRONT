@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../GlobalModule/DisplayImage.dart';
 import '../ProblemDetail/ProblemDetailScreen.dart';
 import '../Service/ProblemService.dart';
 import '../Service/AuthService.dart';
@@ -65,72 +66,73 @@ class _DirectoryScreenState extends State<DirectoryScreen>
     return Scaffold(
       body: RefreshIndicator(
         onRefresh: _refreshData, // 새로고침 콜백
-        child: FutureBuilder<List<ProblemThumbnail>>(
-          future: directoryService.loadProblemsFromCache(),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.done) {
-              if (snapshot.hasError) {
-                return Center(child: Text('${snapshot.error}'));
-              } else if (snapshot.hasData) {
-                // Switching to a grid view display
-                return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 10), // 좌우 공백 추가
-                  child: GridView.builder(
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2, // Number of columns
-                      childAspectRatio: 0.7, // Aspect ratio of each grid cell
-                      crossAxisSpacing: 10, // Horizontal space between cells
-                      mainAxisSpacing: 10, // Vertical space between cells
-                    ),
-                    itemCount: snapshot.data!.length,
-                    itemBuilder: (context, index) {
-                      var problem = snapshot.data![index];
-                      return GestureDetector(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) =>
-                                    ProblemDetailScreen(problemId: problem.id)),
-                          );
-                        },
-                        child: GridTile(
-                          child: Column(
-                            children: <Widget>[
-                              Expanded(
-                                child: Image.file(
-                                  File(problem.imageUrl),
-                                  fit: BoxFit
-                                      .contain, // 이미지가 잘리지 않고 축소되어 전체가 보이도록 설정
-                                  errorBuilder: (context, error, stackTrace) {
-                                    return Image.asset(defaultImage,
-                                        fit: BoxFit
-                                            .contain); // 이미지 로드 실패 시 default 이미지 표시
-                                  },
+        child: Padding(
+          padding: const EdgeInsets.only(top: 10, bottom: 10), // 상하 공백 추가
+          child: FutureBuilder<List<ProblemThumbnail>>(
+            future: directoryService.loadProblemsFromCache(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.done) {
+                if (snapshot.hasError) {
+                  return Center(child: Text('${snapshot.error}'));
+                } else if (snapshot.hasData) {
+                  // Switching to a grid view display
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 10), // 좌우 공백 추가
+                    child: GridView.builder(
+                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2, // Number of columns
+                        childAspectRatio: 0.7, // Aspect ratio of each grid cell
+                        crossAxisSpacing: 10, // Horizontal space between cells
+                        mainAxisSpacing: 10, // Vertical space between cells
+                      ),
+                      itemCount: snapshot.data!.length,
+                      itemBuilder: (context, index) {
+                        var problem = snapshot.data![index];
+                        return GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) =>
+                                      ProblemDetailScreen(problemId: problem.id)),
+                            ).then((value) {
+                              if (value == true) {
+                                _refreshData(); // 새로고침 콜백 호출
+                              }
+                            });
+                          },
+                          child: GridTile(
+                            child: Column(
+                              children: <Widget>[
+                                Expanded(
+                                  child: DisplayImage(
+                                    imagePath: problem.imageUrl,
+                                    defaultImagePath: defaultImage,
+                                  ),
                                 ),
-                              ),
-                              Container(
-                                padding: const EdgeInsets.all(8), // 텍스트 주변 패딩
-                                child: Text(
-                                  '${problem.title}',
-                                  style: const TextStyle(
-                                      color: Colors.green,
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold),
-                                  textAlign: TextAlign.center,
-                                ),
-                              )
-                            ],
+                                Container(
+                                  padding: const EdgeInsets.all(8), // 텍스트 주변 패딩
+                                  child: Text(
+                                    '${problem.title}',
+                                    style: const TextStyle(
+                                        color: Colors.green,
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                )
+                              ],
+                            ),
                           ),
-                        ),
-                      );
-                    },
-                  ),
-                );
+                        );
+                      },
+                    ),
+                  );
+                }
               }
-            }
-            return const Center(child: CircularProgressIndicator());
-          },
+              return const Center(child: CircularProgressIndicator());
+            },
+          ),
         ),
       ),
     );

@@ -1,5 +1,4 @@
 import 'dart:developer';
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -72,6 +71,39 @@ class ProblemService {
     }
   }
 
+  Future<bool> deleteProblem(int problemId) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    int? userId = prefs.getInt('userId');
+
+    if (userId == null) {
+      log('User ID is not available');
+      throw Exception('User ID is not available');
+    }
+
+    final url = Uri.parse('http://localhost:8080/api/problem');
+    final response = await http.delete(
+      url,
+      headers: {
+        'Content-Type': 'application/json; charset=UTF-8',
+        'userId': userId.toString(),
+        'problemId': problemId.toString(),
+      },
+    );
+
+    log('Deleting problem: ${response.statusCode} ${response.body}');
+
+    if (response.statusCode == 200) {
+      // 성공적으로 문제를 삭제한 경우
+      _problems.removeWhere((problem) => problem['problemId'] == problemId);
+      await fetchAndSaveProblems();
+      log('Problem deleted and changes saved locally');
+      return true;
+    } else {
+      log('Failed to delete problem from server');
+      return false;
+    }
+  }
+
   void showSuccessDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -97,7 +129,7 @@ class ProblemService {
   Map<String, dynamic>? getProblemDetails(int problemId) {
     try {
       var problemDetails =
-          _problems.firstWhere((problem) => problem['problemId'] == problemId);
+      _problems.firstWhere((problem) => problem['problemId'] == problemId);
       return problemDetails;
     } catch (e) {
       log('Problem with ID $problemId not found: $e');
@@ -108,21 +140,21 @@ class ProblemService {
   // Checks if there is a next problem
   bool hasNextProblem(int currentProblemId) {
     var currentIndex =
-        _problems.indexWhere((p) => p['problemId'] == currentProblemId);
+    _problems.indexWhere((p) => p['problemId'] == currentProblemId);
     return currentIndex >= 0 && currentIndex < _problems.length - 1;
   }
 
   // Checks if there is a previous problem
   bool hasPreviousProblem(int currentProblemId) {
     var currentIndex =
-        _problems.indexWhere((p) => p['problemId'] == currentProblemId);
+    _problems.indexWhere((p) => p['problemId'] == currentProblemId);
     return currentIndex > 0 && currentIndex < _problems.length;
   }
 
   // Get the ID of the next problem
   int getNextProblemId(int currentProblemId) {
     var currentIndex =
-        _problems.indexWhere((p) => p['problemId'] == currentProblemId);
+    _problems.indexWhere((p) => p['problemId'] == currentProblemId);
     if (currentIndex >= 0 && currentIndex < _problems.length - 1) {
       return _problems[currentIndex + 1]['problemId'];
     } else if (currentIndex == _problems.length - 1) {
@@ -138,7 +170,7 @@ class ProblemService {
   // Get the ID of the previous problem
   int getPreviousProblemId(int currentProblemId) {
     var currentIndex =
-        _problems.indexWhere((p) => p['problemId'] == currentProblemId);
+    _problems.indexWhere((p) => p['problemId'] == currentProblemId);
     if (currentIndex > 0) {
       return _problems[currentIndex - 1]['problemId'];
     } else if (currentIndex == 0) {

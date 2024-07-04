@@ -1,9 +1,9 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:mvp_front/Service/ProblemService.dart';
-
+import '../GlobalModule/DisplayImage.dart';
 import '../GlobalModule/GridPainter.dart';
+import 'NavigationButtons.dart';
 
 class ProblemDetailScreen extends StatelessWidget {
   final int problemId;
@@ -22,6 +22,29 @@ class ProblemDetailScreen extends StatelessWidget {
                 color: Colors.green,
                 fontSize: 20,
                 fontWeight: FontWeight.bold)),
+        actions: [
+          PopupMenuButton<String>(
+            onSelected: (String result) {
+              if (result == 'edit') {
+                // 수정하기 로직
+                _editProblem(context, problemId);
+              } else if (result == 'delete') {
+                // 삭제하기 로직
+                _deleteProblem(context, problemService, problemId);
+              }
+            },
+            itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+              const PopupMenuItem<String>(
+                value: 'edit',
+                child: Text('수정하기'),
+              ),
+              const PopupMenuItem<String>(
+                value: 'delete',
+                child: Text('삭제하기', style: TextStyle(color: Colors.red)),
+              ),
+            ],
+          ),
+        ],
       ),
       body: problemData != null
           ? buildProblemDetails(context, problemService, problemData)
@@ -123,8 +146,9 @@ class ProblemDetailScreen extends StatelessWidget {
                   ),
                 ),
                 SizedBox(height: 20.0), // 상하 간격 추가
-                displayImage(
-                    problemData['processImageUrl'], 'assets/process_image.png'),
+                DisplayImage(
+                    imagePath: problemData['processImageUrl'],
+                    defaultImagePath: 'assets/process_image.png'),
                 SizedBox(height: 30.0), // 상하 간격 추가
                 ExpansionTile(
                   title: Container(
@@ -192,8 +216,9 @@ class ProblemDetailScreen extends StatelessWidget {
                       ),
                     ),
                     SizedBox(height: 20.0), // 상하 간격 추가
-                    displayImage(
-                        problemData['solveImageUrl'], 'assets/solve_image.png'),
+                    DisplayImage(
+                        imagePath: problemData['solveImageUrl'],
+                        defaultImagePath: 'assets/solve_image.png'),
                     SizedBox(height: 20.0), // 상하 간격 추가
                     Container(
                       width: double.infinity,
@@ -213,8 +238,9 @@ class ProblemDetailScreen extends StatelessWidget {
                       ),
                     ),
                     SizedBox(height: 20.0), // 상하 간격 추가
-                    displayImage(problemData['answerImageUrl'],
-                        'assets/problem_image.png'),
+                    DisplayImage(
+                        imagePath: problemData['answerImageUrl'],
+                        defaultImagePath: 'assets/problem_image.png'),
                     SizedBox(height: 20.0), // 상하 간격 추가
                     Container(
                       width: double.infinity,
@@ -234,13 +260,17 @@ class ProblemDetailScreen extends StatelessWidget {
                       ),
                     ),
                     SizedBox(height: 20.0), // 상하 간격 추가
-                    displayImage(problemData['answerImageUrl'],
-                        'assets/answer_image.png'),
+                    DisplayImage(
+                        imagePath: problemData['answerImageUrl'],
+                        defaultImagePath: 'assets/answer_image.png'),
                     SizedBox(height: 20.0), // 상하 간격 추가
                   ],
                 ),
                 SizedBox(height: 20.0), // 상하 간격 추가
-                navigationButtons(context, problemService, problemId),
+                NavigationButtons(
+                    context: context,
+                    service: problemService,
+                    currentId: problemId),
                 SizedBox(height: 50.0), // 상하 간격 추가
               ],
             ),
@@ -250,68 +280,59 @@ class ProblemDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget navigationButtons(
-      BuildContext context, ProblemService service, int currentId) {
-    final problemIds = service.getProblemIds(); // 모든 문제 ID를 가져옴
-    int currentIndex = problemIds.indexOf(currentId);
-    int previousIndex =
-        (currentIndex - 1 + problemIds.length) % problemIds.length;
-    int nextIndex = (currentIndex + 1) % problemIds.length;
-
-    int previousProblemId = problemIds[previousIndex];
-    int nextProblemId = problemIds[nextIndex];
-
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: [
-        ElevatedButton(
-          onPressed: () =>
-              navigateToProblem(context, service, previousProblemId),
-          child: Text('이전 문제',
-              style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.green)),
-        ),
-        ElevatedButton(
-          onPressed: () => navigateToProblem(context, service, nextProblemId),
-          child: Text('다음 문제',
-              style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.green)),
-        ),
-      ],
+  void _editProblem(BuildContext context, int problemId) {
+    // 수정하기 로직 구현
+    // 여기서 수정 화면으로 이동하거나 수정 다이얼로그를 표시할 수 있습니다.
+    /*
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => EditProblemScreen(problemId: problemId),
+      ),
     );
+     */
   }
 
-  void navigateToProblem(
-      BuildContext context, ProblemService service, int newProblemId) {
-    if (service.getProblemDetails(newProblemId) != null) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-            builder: (context) => ProblemDetailScreen(problemId: newProblemId)),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('더 이상 문제가 없습니다.'),
-        duration: Duration(seconds: 2),
-      ));
-    }
+  void _deleteProblem(
+      BuildContext context, ProblemService problemService, int problemId) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('문제 삭제'),
+          content: Text('정말로 이 문제를 삭제하시겠습니까?'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // 다이얼로그 닫기
+              },
+              child: Text('취소'),
+            ),
+            TextButton(
+              onPressed: () {
+                problemService.deleteProblem(problemId).then((success) {
+                  Navigator.of(context).pop(); // 다이얼로그 닫기
+                  if (success) {
+                    Navigator.of(context).pop(true); // 이전 화면으로 이동
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('문제가 삭제되었습니다.')),
+                    );
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('문제 삭제에 실패했습니다.')),
+                    );
+                  }
+                });
+              },
+              child: Text('삭제'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   Widget buildNoDataScreen() {
     return Center(child: Text("문제 정보를 가져올 수 없습니다."));
-  }
-
-  Widget displayImage(String? imagePath, String defaultImagePath) {
-    if (imagePath == null ||
-        imagePath.isEmpty ||
-        !File(imagePath).existsSync()) {
-      return Image.asset(defaultImagePath, fit: BoxFit.cover);
-    } else {
-      return Image.file(File(imagePath), fit: BoxFit.cover);
-    }
   }
 }

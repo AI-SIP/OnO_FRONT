@@ -12,7 +12,7 @@ class GridPainter extends CustomPainter {
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.0; // 격자무늬 두께 조정
 
-    const double step = 20.0; // 격자무늬 간격
+    const double step = 10.0; // 격자무늬 간격
 
     for (double x = 0; x <= size.width; x += step) {
       canvas.drawLine(Offset(x, 0), Offset(x, size.height), paint);
