@@ -1,28 +1,25 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:image_picker/image_picker.dart'; // XFile을 사용하기 위해 추가
 import 'package:mvp_front/Service/ProblemService.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:io';
-import 'ProblemRegisterModel.dart';
-import 'DatePickerHandler.dart';
-import 'ImagePickerHandler.dart'; // 분리한 이미지 선택기 핸들러 가져오기
+import '../ProblemRegister/DatePickerHandler.dart';
+import '../ProblemRegister/ImagePickerHandler.dart';
+import '../ProblemRegister/ProblemRegisterModel.dart';
 import 'package:http/http.dart' as http;
 
-/*
-TODO
-  - 갤럭시에서도 카메라, 갤러리 기능 작동하는지 확인
-  - 등록 취소 기능
-  - 등록 완료 기능
-*/
+class ProblemModifyScreen extends StatefulWidget {
+  final int problemId;
 
-class ProblemRegisterScreen extends StatefulWidget {
-  const ProblemRegisterScreen({super.key});
+  const ProblemModifyScreen({super.key, required this.problemId});
 
   @override
-  ProblemRegisterScreenState createState() => ProblemRegisterScreenState();
+  ProblemModifyScreenState createState() => ProblemModifyScreenState();
 }
 
-class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
+class ProblemModifyScreenState extends State<ProblemModifyScreen> {
   DateTime _selectedDate = DateTime.now(); // 선택된 날짜를 저장하는 변수
   final _sourceController = TextEditingController(); // 출처 입력 컨트롤러
   final _notesController = TextEditingController(); // 오답 메모 입력 컨트롤러
@@ -33,6 +30,27 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
   XFile? _problemImage; // 문제 이미지 변수
   XFile? _solutionImage; // 해설 이미지 변수
   XFile? _mySolutionImage; // 나의 풀이 이미지 변수
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProblemData(); // 페이지 로드 시 문제 데이터 로드
+  }
+
+  Future<void> _loadProblemData() async {
+    final problemData =
+        await _problemService.getProblemDetails(widget.problemId);
+    if (problemData != null) {
+      setState(() {
+        _selectedDate = DateTime.parse(problemData['solvedAt']);
+        _sourceController.text = problemData['reference'];
+        _notesController.text = problemData['memo'];
+        _problemImage = XFile(problemData['imageUrl']);
+        _solutionImage = XFile(problemData['solveImageUrl']);
+        _mySolutionImage = XFile(problemData['answerImageUrl']);
+      });
+    }
+  }
 
   // 날짜 선택기를 표시하는 함수
   void _showCustomDatePicker() {
@@ -82,28 +100,6 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
     super.dispose();
   }
 
-  // 등록에 성공했을 때 다이얼로그를 출력해주는 함수
-  void showSuccessDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return CupertinoAlertDialog(
-          title: Text("성공!"),
-          content: Text("문제가 성공적으로 저장되었습니다."),
-          actions: <Widget>[
-            CupertinoDialogAction(
-              isDefaultAction: true,
-              child: Text("확인"),
-              onPressed: () {
-                Navigator.of(context).pop(); // 다이얼로그 닫기
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
-
   // 모든 입력 필드와 이미지 선택기를 초기화하는 함수
   void resetForm() {
     _sourceController.clear();
@@ -126,8 +122,31 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
     );
 
     resetForm();
-    await _problemService.submitProblem(problemData, context);
+    await _problemService.updateProblem(widget.problemId, problemData, context);
     showSuccessDialog(context);
+  }
+
+  // 등록에 성공했을 때 다이얼로그를 출력해주는 함수
+  void showSuccessDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return CupertinoAlertDialog(
+          title: Text("수정 성공!"),
+          content: Text("문제가 성공적으로 수정되었습니다."),
+          actions: <Widget>[
+            CupertinoDialogAction(
+              isDefaultAction: true,
+              child: Text("확인"),
+              onPressed: () {
+                Navigator.of(context).pop(); // 다이얼로그 닫기
+                Navigator.of(context).pop(true); // 수정 완료 신호와 함께 이전 화면으로 이동
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -137,6 +156,9 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
         mediaQuery.orientation == Orientation.landscape; // 가로/세로 방향 확인
 
     return Scaffold(
+      appBar: AppBar(
+        title: Text("문제 수정"),
+      ),
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -195,24 +217,16 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
                 ],
               ),
               const SizedBox(height: 10),
-              Container(
-                height: isLandscape ? mediaQuery.size.height * 0.3 : 200,
-                color: Colors.grey[200],
-                child: Center(
-                  child: _problemImage == null
-                      ? IconButton(
-                          icon: const Icon(Icons.add,
-                              color: Colors.green, size: 40),
-                          onPressed: () {
-                            _showImagePicker('problem'); // 이미지 선택 팝업 호출
-                          },
-                        )
-                      : GestureDetector(
-                          onTap: () {
-                            _showImagePicker('problem'); // 이미지 선택 팝업 호출
-                          },
-                          child: Image.file(File(_problemImage!.path)),
-                        ),
+              GestureDetector(
+                onTap: () => _showImagePicker('problem'),
+                child: Container(
+                  height: isLandscape ? mediaQuery.size.height * 0.3 : 200,
+                  color: Colors.grey[200],
+                  child: Center(
+                    child: _problemImage == null
+                        ? Icon(Icons.add, color: Colors.green, size: 40)
+                        : Image.file(File(_problemImage!.path)),
+                  ),
                 ),
               ),
               const SizedBox(height: 20),
@@ -228,24 +242,16 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
                 ],
               ),
               const SizedBox(height: 10),
-              Container(
-                height: isLandscape ? mediaQuery.size.height * 0.3 : 200,
-                color: Colors.grey[200],
-                child: Center(
-                  child: _solutionImage == null
-                      ? IconButton(
-                          icon: const Icon(Icons.add,
-                              color: Colors.green, size: 40),
-                          onPressed: () {
-                            _showImagePicker('solution'); // 이미지 선택 팝업 호출
-                          },
-                        )
-                      : GestureDetector(
-                          onTap: () {
-                            _showImagePicker('solution'); // 이미지 선택 팝업 호출
-                          },
-                          child: Image.file(File(_solutionImage!.path)),
-                        ),
+              GestureDetector(
+                onTap: () => _showImagePicker('solution'),
+                child: Container(
+                  height: isLandscape ? mediaQuery.size.height * 0.3 : 200,
+                  color: Colors.grey[200],
+                  child: Center(
+                    child: _solutionImage == null
+                        ? Icon(Icons.add, color: Colors.green, size: 40)
+                        : Image.file(File(_solutionImage!.path)),
+                  ),
                 ),
               ),
               const SizedBox(height: 20),
@@ -261,24 +267,16 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
                 ],
               ),
               const SizedBox(height: 10),
-              Container(
-                height: isLandscape ? mediaQuery.size.height * 0.3 : 200,
-                color: Colors.grey[200],
-                child: Center(
-                  child: _mySolutionImage == null
-                      ? IconButton(
-                          icon: const Icon(Icons.add,
-                              color: Colors.green, size: 40),
-                          onPressed: () {
-                            _showImagePicker('mySolution'); // 이미지 선택 팝업 호출
-                          },
-                        )
-                      : GestureDetector(
-                          onTap: () {
-                            _showImagePicker('mySolution'); // 이미지 선택 팝업 호출
-                          },
-                          child: Image.file(File(_mySolutionImage!.path)),
-                        ),
+              GestureDetector(
+                onTap: () => _showImagePicker('mySolution'),
+                child: Container(
+                  height: isLandscape ? mediaQuery.size.height * 0.3 : 200,
+                  color: Colors.grey[200],
+                  child: Center(
+                    child: _mySolutionImage == null
+                        ? Icon(Icons.add, color: Colors.green, size: 40)
+                        : Image.file(File(_mySolutionImage!.path)),
+                  ),
                 ),
               ),
               const SizedBox(height: 20),
@@ -321,7 +319,7 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
                   ),
                   ElevatedButton(
                     onPressed: submitProblem,
-                    child: const Text('등록 완료'),
+                    child: const Text('수정 완료'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.green,
                       foregroundColor: Colors.white,
