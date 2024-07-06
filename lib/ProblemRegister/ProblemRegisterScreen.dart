@@ -150,7 +150,11 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
                   const SizedBox(width: 10),
                   const Text(
                     '문제 푼 날짜',
-                    style: TextStyle(fontSize: 18),
+                    style: TextStyle(
+                        fontFamily: 'font1',
+                        color: Colors.green,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold),
                   ),
                   const Spacer(),
                   TextButton(
@@ -170,7 +174,11 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
                   SizedBox(width: 10),
                   Text(
                     '출처',
-                    style: TextStyle(fontSize: 18),
+                    style: TextStyle(
+                        fontFamily: 'font1',
+                        color: Colors.green,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold),
                   ),
                 ],
               ),
@@ -190,7 +198,11 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
                   SizedBox(width: 10),
                   Text(
                     '문제',
-                    style: TextStyle(fontSize: 18),
+                    style: TextStyle(
+                        fontFamily: 'font1',
+                        color: Colors.green,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold),
                   ),
                 ],
               ),
@@ -223,7 +235,11 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
                   SizedBox(width: 10),
                   Text(
                     '해설',
-                    style: TextStyle(fontSize: 18),
+                    style: TextStyle(
+                        fontFamily: 'font1',
+                        color: Colors.green,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold),
                   ),
                 ],
               ),
@@ -256,7 +272,11 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
                   SizedBox(width: 10),
                   Text(
                     '나의 풀이',
-                    style: TextStyle(fontSize: 18),
+                    style: TextStyle(
+                        fontFamily: 'font1',
+                        color: Colors.green,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold),
                   ),
                 ],
               ),
@@ -289,7 +309,11 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
                   SizedBox(width: 10),
                   Text(
                     '오답 메모',
-                    style: TextStyle(fontSize: 18),
+                    style: TextStyle(
+                        fontFamily: 'font1',
+                        color: Colors.green,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold),
                   ),
                 ],
               ),
@@ -314,7 +338,8 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
                       backgroundColor: Colors.white54,
                       foregroundColor: Colors.green,
                       textStyle: const TextStyle(
-                        fontSize: 14, // 글씨 크기 설정
+                        fontFamily: 'font1',
+                        fontSize: 16, // 글씨 크기 설정
                         fontWeight: FontWeight.bold, // 글씨 굵기 설정
                       ),
                     ),
@@ -326,7 +351,8 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
                       backgroundColor: Colors.green,
                       foregroundColor: Colors.white,
                       textStyle: const TextStyle(
-                        fontSize: 14, // 글씨 크기 설정
+                        fontFamily: 'font1',
+                        fontSize: 16, // 글씨 크기 설정
                         fontWeight: FontWeight.bold, // 글씨 굵기 설정
                       ),
                     ),

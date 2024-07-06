@@ -52,14 +52,14 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                   style: TextStyle(
                       color: Colors.green,
                       fontFamily: 'font1',
-                      fontSize: 20,
+                      fontSize: 24,
                       fontWeight: FontWeight.bold));
             } else {
               return Text('문제 상세',
                   style: TextStyle(
                       color: Colors.green,
                       fontFamily: 'font1',
-                      fontSize: 20,
+                      fontSize: 24,
                       fontWeight: FontWeight.bold));
             }
           },
@@ -78,15 +78,21 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                 value: 'edit',
                 child: Text('수정하기',
                     style: TextStyle(
-                        fontFamily: 'font1',
-                        fontSize: 18,
-                        color: Colors.black)),
+                      fontFamily: 'font1',
+                      fontSize: 18,
+                      color: Colors.black,
+                      fontWeight: FontWeight.bold,
+                    )),
               ),
               const PopupMenuItem<String>(
                 value: 'delete',
                 child: Text('삭제하기',
                     style: TextStyle(
-                        fontFamily: 'font1', fontSize: 18, color: Colors.red)),
+                      fontFamily: 'font1',
+                      fontSize: 18,
+                      color: Colors.red,
+                      fontWeight: FontWeight.bold,
+                    )),
               ),
             ],
           ),
@@ -223,7 +229,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                             style: TextStyle(
                                 fontFamily: 'font1',
                                 color: Colors.green,
-                                fontSize: 18,
+                                fontSize: 20,
                                 fontWeight: FontWeight.bold)),
                       ],
                     ),

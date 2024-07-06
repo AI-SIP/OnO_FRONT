@@ -157,7 +157,14 @@ class ProblemModifyScreenState extends State<ProblemModifyScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text("문제 수정"),
+        title: Text(
+          "문제 수정",
+          style: TextStyle(
+              fontFamily: 'font1',
+              color: Colors.green,
+              fontSize: 24,
+              fontWeight: FontWeight.bold),
+        ),
       ),
       body: SingleChildScrollView(
         child: Padding(
@@ -172,7 +179,11 @@ class ProblemModifyScreenState extends State<ProblemModifyScreen> {
                   const SizedBox(width: 10),
                   const Text(
                     '문제 푼 날짜',
-                    style: TextStyle(fontSize: 18),
+                    style: TextStyle(
+                        fontFamily: 'font1',
+                        color: Colors.green,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold),
                   ),
                   const Spacer(),
                   TextButton(
@@ -192,7 +203,11 @@ class ProblemModifyScreenState extends State<ProblemModifyScreen> {
                   SizedBox(width: 10),
                   Text(
                     '출처',
-                    style: TextStyle(fontSize: 18),
+                    style: TextStyle(
+                        fontFamily: 'font1',
+                        color: Colors.green,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold),
                   ),
                 ],
               ),
@@ -212,7 +227,11 @@ class ProblemModifyScreenState extends State<ProblemModifyScreen> {
                   SizedBox(width: 10),
                   Text(
                     '문제',
-                    style: TextStyle(fontSize: 18),
+                    style: TextStyle(
+                        fontFamily: 'font1',
+                        color: Colors.green,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold),
                   ),
                 ],
               ),
@@ -237,7 +256,11 @@ class ProblemModifyScreenState extends State<ProblemModifyScreen> {
                   SizedBox(width: 10),
                   Text(
                     '해설',
-                    style: TextStyle(fontSize: 18),
+                    style: TextStyle(
+                        fontFamily: 'font1',
+                        color: Colors.green,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold),
                   ),
                 ],
               ),
@@ -262,7 +285,11 @@ class ProblemModifyScreenState extends State<ProblemModifyScreen> {
                   SizedBox(width: 10),
                   Text(
                     '나의 풀이',
-                    style: TextStyle(fontSize: 18),
+                    style: TextStyle(
+                        fontFamily: 'font1',
+                        color: Colors.green,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold),
                   ),
                 ],
               ),
@@ -287,7 +314,11 @@ class ProblemModifyScreenState extends State<ProblemModifyScreen> {
                   SizedBox(width: 10),
                   Text(
                     '오답 메모',
-                    style: TextStyle(fontSize: 18),
+                    style: TextStyle(
+                        fontFamily: 'font1',
+                        color: Colors.green,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold),
                   ),
                 ],
               ),
