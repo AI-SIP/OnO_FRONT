@@ -3,34 +3,70 @@ import 'package:provider/provider.dart';
 import 'package:mvp_front/Service/ProblemService.dart';
 import '../GlobalModule/DisplayImage.dart';
 import '../GlobalModule/GridPainter.dart';
+import '../ProblemModify/ProblemModifyScreen.dart';
 import 'NavigationButtons.dart';
 
-class ProblemDetailScreen extends StatelessWidget {
+class ProblemDetailScreen extends StatefulWidget {
   final int problemId;
 
   ProblemDetailScreen({Key? key, required this.problemId}) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
-    final problemService = Provider.of<ProblemService>(context, listen: false);
-    final problemData = problemService.getProblemDetails(problemId);
+  _ProblemDetailScreenState createState() => _ProblemDetailScreenState();
+}
 
+class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
+  late Future<Map<String, dynamic>?> _problemDataFuture;
+  late ProblemService problemService;
+
+  @override
+  void initState() {
+    super.initState();
+    problemService = Provider.of<ProblemService>(context, listen: false);
+    _problemDataFuture = _fetchProblemDetails();
+  }
+
+  Future<Map<String, dynamic>?> _fetchProblemDetails() {
+    return problemService.getProblemDetails(widget.problemId);
+  }
+
+  void _refreshProblemDetails() {
+    setState(() {
+      _problemDataFuture = _fetchProblemDetails();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(problemData != null ? problemData['reference'] : '문제 상세',
-            style: TextStyle(
-                color: Colors.green,
-                fontSize: 20,
-                fontWeight: FontWeight.bold)),
+        title: FutureBuilder<Map<String, dynamic>?>(
+          future: _problemDataFuture,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return Text('로딩 중...');
+            } else if (snapshot.hasError) {
+              return Text('에러 발생');
+            } else if (snapshot.hasData && snapshot.data != null) {
+              return Text(snapshot.data!['reference'],
+                  style: TextStyle(
+                      color: Colors.green,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold));
+            } else {
+              return Text('문제 상세');
+            }
+          },
+        ),
         actions: [
           PopupMenuButton<String>(
             onSelected: (String result) {
               if (result == 'edit') {
                 // 수정하기 로직
-                _editProblem(context, problemId);
+                _editProblem(context, widget.problemId);
               } else if (result == 'delete') {
                 // 삭제하기 로직
-                _deleteProblem(context, problemService, problemId);
+                _deleteProblem(context);
               }
             },
             itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
@@ -46,14 +82,25 @@ class ProblemDetailScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: problemData != null
-          ? buildProblemDetails(context, problemService, problemData)
-          : buildNoDataScreen(),
+      body: FutureBuilder<Map<String, dynamic>?>(
+        future: _problemDataFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasError) {
+            return Center(child: Text('에러 발생'));
+          } else if (snapshot.hasData && snapshot.data != null) {
+            return buildProblemDetails(context, snapshot.data!);
+          } else {
+            return buildNoDataScreen();
+          }
+        },
+      ),
     );
   }
 
-  Widget buildProblemDetails(BuildContext context,
-      ProblemService problemService, Map<String, dynamic> problemData) {
+  Widget buildProblemDetails(
+      BuildContext context, Map<String, dynamic> problemData) {
     return Stack(
       children: [
         CustomPaint(
@@ -270,7 +317,7 @@ class ProblemDetailScreen extends StatelessWidget {
                 NavigationButtons(
                     context: context,
                     service: problemService,
-                    currentId: problemId),
+                    currentId: widget.problemId),
                 SizedBox(height: 50.0), // 상하 간격 추가
               ],
             ),
@@ -281,20 +328,19 @@ class ProblemDetailScreen extends StatelessWidget {
   }
 
   void _editProblem(BuildContext context, int problemId) {
-    // 수정하기 로직 구현
-    // 여기서 수정 화면으로 이동하거나 수정 다이얼로그를 표시할 수 있습니다.
-    /*
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => EditProblemScreen(problemId: problemId),
+        builder: (context) => ProblemModifyScreen(problemId: problemId),
       ),
-    );
-     */
+    ).then((value) {
+      if (value == true) {
+        _refreshProblemDetails();
+      }
+    });
   }
 
-  void _deleteProblem(
-      BuildContext context, ProblemService problemService, int problemId) {
+  void _deleteProblem(BuildContext context) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -310,7 +356,7 @@ class ProblemDetailScreen extends StatelessWidget {
             ),
             TextButton(
               onPressed: () {
-                problemService.deleteProblem(problemId).then((success) {
+                problemService.deleteProblem(widget.problemId).then((success) {
                   Navigator.of(context).pop(); // 다이얼로그 닫기
                   if (success) {
                     Navigator.of(context).pop(true); // 이전 화면으로 이동
