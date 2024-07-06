@@ -138,8 +138,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                             ),
                           ),
                           SizedBox(height: 8.0),
-                          Text('${problemData['solvedAt']}',
-                              style: TextStyle(fontSize: 16)),
+                          _buildUnderlinedText('${problemData['solvedAt']}'),
                         ],
                       ),
                     ),
@@ -167,8 +166,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                             ),
                           ),
                           SizedBox(height: 8.0),
-                          Text('${problemData['reference']}',
-                              style: TextStyle(fontSize: 16)),
+                          _buildUnderlinedText('${problemData['reference']}'),
                         ],
                       ),
                     ),
@@ -240,8 +238,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                             ),
                           ),
                           SizedBox(height: 8.0),
-                          Text('${problemData['memo']}',
-                              style: TextStyle(fontSize: 16)),
+                          _buildUnderlinedText('${problemData['memo']}'),
                         ],
                       ),
                     ),
@@ -289,7 +286,6 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                     DisplayImage(
                         imagePath: problemData['solveImageUrl'],
                         defaultImagePath: 'assets/solve_image.png'),
-
                     SizedBox(height: 20.0),
                     Container(
                       width: double.infinity,
@@ -323,6 +319,26 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                 SizedBox(height: 50.0),
               ],
             ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildUnderlinedText(String text) {
+    return Stack(
+      children: [
+        Text(
+          text,
+          style: TextStyle(fontSize: 16),
+        ),
+        Positioned(
+          bottom: 0,
+          left: 0,
+          right: 0,
+          child: Container(
+            height: 2,
+            color: Colors.red.withOpacity(0.5), // 밑줄 색상 및 투명도 조절
           ),
         ),
       ],
