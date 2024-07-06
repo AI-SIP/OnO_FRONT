@@ -215,7 +215,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                     ),
                   ),
                   children: [
-                    SizedBox(height: 30.0), // 상하 간격 추가,
+                    SizedBox(height: 20.0), // 상하 간격 추가,
                     Padding(
                       padding: const EdgeInsets.all(8.0),
                       child: Column(
@@ -244,28 +244,6 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                         ],
                       ),
                     ),
-                    SizedBox(height: 20.0),
-                    Container(
-                      width: double.infinity,
-                      alignment: Alignment.center,
-                      padding: EdgeInsets.symmetric(vertical: 4.0),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.image, color: Colors.green),
-                          SizedBox(width: 8.0),
-                          Text('풀이 이미지',
-                              style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.green)),
-                        ],
-                      ),
-                    ),
-                    SizedBox(height: 20.0), // 상하 간격 추가
-                    DisplayImage(
-                        imagePath: problemData['solveImageUrl'],
-                        defaultImagePath: 'assets/solve_image.png'),
                     SizedBox(height: 20.0), // 상하 간격 추가
                     Container(
                       width: double.infinity,
@@ -288,6 +266,29 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                     DisplayImage(
                         imagePath: problemData['answerImageUrl'],
                         defaultImagePath: 'assets/problem_image.png'),
+                    SizedBox(height: 20.0),
+                    Container(
+                      width: double.infinity,
+                      alignment: Alignment.center,
+                      padding: EdgeInsets.symmetric(vertical: 4.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.image, color: Colors.green),
+                          SizedBox(width: 8.0),
+                          Text('풀이 이미지',
+                              style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.green)),
+                        ],
+                      ),
+                    ),
+                    SizedBox(height: 20.0), // 상하 간격 추가
+                    DisplayImage(
+                        imagePath: problemData['solveImageUrl'],
+                        defaultImagePath: 'assets/solve_image.png'),
+
                     SizedBox(height: 20.0), // 상하 간격 추가
                     Container(
                       width: double.infinity,
