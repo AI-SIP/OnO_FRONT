@@ -62,10 +62,8 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
           PopupMenuButton<String>(
             onSelected: (String result) {
               if (result == 'edit') {
-                // 수정하기 로직
                 _editProblem(context, widget.problemId);
               } else if (result == 'delete') {
-                // 삭제하기 로직
                 _deleteProblem(context);
               }
             },
@@ -109,24 +107,25 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
         ),
         SingleChildScrollView(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 35.0), // 좌우 여백 추가
+            padding: const EdgeInsets.symmetric(horizontal: 35.0),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center, // 가운데 정렬
+              crossAxisAlignment: CrossAxisAlignment.start, // 좌측 정렬
               children: [
-                SizedBox(height: 16.0), // 상단 여백 추가
+                SizedBox(height: 16.0),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Expanded(
                       child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.center, // 가운데 정렬
+                        crossAxisAlignment: CrossAxisAlignment.start, // 좌측 정렬
                         children: [
                           Container(
                             width: double.infinity,
-                            alignment: Alignment.center,
+                            alignment: Alignment.centerLeft, // 좌측 정렬
                             padding: EdgeInsets.symmetric(vertical: 4.0),
                             child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
+                              mainAxisAlignment:
+                                  MainAxisAlignment.start, // 좌측 정렬
                               children: [
                                 Icon(Icons.calendar_today, color: Colors.green),
                                 SizedBox(width: 8.0),
@@ -138,23 +137,24 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                               ],
                             ),
                           ),
-                          SizedBox(height: 8.0), // 상하 간격 추가
+                          SizedBox(height: 8.0),
                           Text('${problemData['solvedAt']}',
                               style: TextStyle(fontSize: 16)),
                         ],
                       ),
                     ),
-                    SizedBox(width: 16.0), // 둘 사이 공백 추가
+                    SizedBox(width: 16.0),
                     Expanded(
                       child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.center, // 가운데 정렬
+                        crossAxisAlignment: CrossAxisAlignment.start, // 좌측 정렬
                         children: [
                           Container(
                             width: double.infinity,
-                            alignment: Alignment.center,
+                            alignment: Alignment.centerLeft, // 좌측 정렬
                             padding: EdgeInsets.symmetric(vertical: 4.0),
                             child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
+                              mainAxisAlignment:
+                                  MainAxisAlignment.start, // 좌측 정렬
                               children: [
                                 Icon(Icons.info, color: Colors.green),
                                 SizedBox(width: 8.0),
@@ -166,7 +166,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                               ],
                             ),
                           ),
-                          SizedBox(height: 8.0), // 상하 간격 추가
+                          SizedBox(height: 8.0),
                           Text('${problemData['reference']}',
                               style: TextStyle(fontSize: 16)),
                         ],
@@ -174,13 +174,13 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                     ),
                   ],
                 ),
-                SizedBox(height: 20.0), // 상하 간격 추가
+                SizedBox(height: 20.0),
                 Container(
                   width: double.infinity,
-                  alignment: Alignment.center,
+                  alignment: Alignment.centerLeft, // 좌측 정렬
                   padding: EdgeInsets.symmetric(vertical: 4.0),
                   child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.start, // 좌측 정렬
                     children: [
                       Icon(Icons.camera_alt, color: Colors.green),
                       SizedBox(width: 8.0),
@@ -192,18 +192,18 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                     ],
                   ),
                 ),
-                SizedBox(height: 20.0), // 상하 간격 추가
+                SizedBox(height: 20.0),
                 DisplayImage(
                     imagePath: problemData['processImageUrl'],
                     defaultImagePath: 'assets/process_image.png'),
-                SizedBox(height: 30.0), // 상하 간격 추가
+                SizedBox(height: 30.0),
                 ExpansionTile(
                   title: Container(
                     width: double.infinity,
-                    alignment: Alignment.center, // 가운데 정렬
+                    alignment: Alignment.centerLeft, // 좌측 정렬
                     padding: EdgeInsets.symmetric(vertical: 4.0),
                     child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisAlignment: MainAxisAlignment.center, // 좌측 정렬
                       children: [
                         SizedBox(width: 8.0),
                         Text('해설 및 풀이 확인',
@@ -215,18 +215,19 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                     ),
                   ),
                   children: [
-                    SizedBox(height: 20.0), // 상하 간격 추가,
+                    SizedBox(height: 20.0),
                     Padding(
                       padding: const EdgeInsets.all(8.0),
                       child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.center, // 가운데 정렬
+                        crossAxisAlignment: CrossAxisAlignment.start, // 좌측 정렬
                         children: [
                           Container(
                             width: double.infinity,
-                            alignment: Alignment.center,
+                            alignment: Alignment.centerLeft, // 좌측 정렬
                             padding: EdgeInsets.symmetric(vertical: 4.0),
                             child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
+                              mainAxisAlignment:
+                                  MainAxisAlignment.start, // 좌측 정렬
                               children: [
                                 Icon(Icons.edit, color: Colors.green),
                                 SizedBox(width: 8.0),
@@ -238,19 +239,19 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                               ],
                             ),
                           ),
-                          SizedBox(height: 8.0), // 상하 간격 추가
+                          SizedBox(height: 8.0),
                           Text('${problemData['memo']}',
                               style: TextStyle(fontSize: 16)),
                         ],
                       ),
                     ),
-                    SizedBox(height: 20.0), // 상하 간격 추가
+                    SizedBox(height: 20.0),
                     Container(
                       width: double.infinity,
-                      alignment: Alignment.center,
+                      alignment: Alignment.centerLeft, // 좌측 정렬
                       padding: EdgeInsets.symmetric(vertical: 4.0),
                       child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisAlignment: MainAxisAlignment.start, // 좌측 정렬
                         children: [
                           Icon(Icons.image, color: Colors.green),
                           SizedBox(width: 8.0),
@@ -262,17 +263,17 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                         ],
                       ),
                     ),
-                    SizedBox(height: 20.0), // 상하 간격 추가
+                    SizedBox(height: 20.0),
                     DisplayImage(
                         imagePath: problemData['answerImageUrl'],
                         defaultImagePath: 'assets/problem_image.png'),
                     SizedBox(height: 20.0),
                     Container(
                       width: double.infinity,
-                      alignment: Alignment.center,
+                      alignment: Alignment.centerLeft, // 좌측 정렬
                       padding: EdgeInsets.symmetric(vertical: 4.0),
                       child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisAlignment: MainAxisAlignment.start, // 좌측 정렬
                         children: [
                           Icon(Icons.image, color: Colors.green),
                           SizedBox(width: 8.0),
@@ -284,18 +285,18 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                         ],
                       ),
                     ),
-                    SizedBox(height: 20.0), // 상하 간격 추가
+                    SizedBox(height: 20.0),
                     DisplayImage(
                         imagePath: problemData['solveImageUrl'],
                         defaultImagePath: 'assets/solve_image.png'),
 
-                    SizedBox(height: 20.0), // 상하 간격 추가
+                    SizedBox(height: 20.0),
                     Container(
                       width: double.infinity,
-                      alignment: Alignment.center,
+                      alignment: Alignment.centerLeft, // 좌측 정렬
                       padding: EdgeInsets.symmetric(vertical: 4.0),
                       child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisAlignment: MainAxisAlignment.start, // 좌측 정렬
                         children: [
                           Icon(Icons.image, color: Colors.green),
                           SizedBox(width: 8.0),
@@ -307,19 +308,19 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                         ],
                       ),
                     ),
-                    SizedBox(height: 20.0), // 상하 간격 추가
+                    SizedBox(height: 20.0),
                     DisplayImage(
                         imagePath: problemData['answerImageUrl'],
                         defaultImagePath: 'assets/answer_image.png'),
-                    SizedBox(height: 20.0), // 상하 간격 추가
+                    SizedBox(height: 20.0),
                   ],
                 ),
-                SizedBox(height: 20.0), // 상하 간격 추가
+                SizedBox(height: 20.0),
                 NavigationButtons(
                     context: context,
                     service: problemService,
                     currentId: widget.problemId),
-                SizedBox(height: 50.0), // 상하 간격 추가
+                SizedBox(height: 50.0),
               ],
             ),
           ),
