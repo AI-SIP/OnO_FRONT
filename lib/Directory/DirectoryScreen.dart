@@ -67,7 +67,7 @@ class _DirectoryScreenState extends State<DirectoryScreen>
       body: RefreshIndicator(
         onRefresh: _refreshData, // 새로고침 콜백
         child: Padding(
-          padding: const EdgeInsets.only(top: 10, bottom: 10), // 상하 공백 추가
+          padding: const EdgeInsets.all(20), // 화면 바깥쪽 여백 추가
           child: FutureBuilder<List<ProblemThumbnail>>(
             future: directoryService.loadProblemsFromCache(),
             builder: (context, snapshot) {
@@ -76,57 +76,70 @@ class _DirectoryScreenState extends State<DirectoryScreen>
                   return Center(child: Text('${snapshot.error}'));
                 } else if (snapshot.hasData) {
                   // Switching to a grid view display
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 10), // 좌우 공백 추가
-                    child: GridView.builder(
-                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2, // Number of columns
-                        childAspectRatio: 0.7, // Aspect ratio of each grid cell
-                        crossAxisSpacing: 10, // Horizontal space between cells
-                        mainAxisSpacing: 10, // Vertical space between cells
-                      ),
-                      itemCount: snapshot.data!.length,
-                      itemBuilder: (context, index) {
-                        var problem = snapshot.data![index];
-                        return GestureDetector(
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) =>
-                                      ProblemDetailScreen(problemId: problem.id)),
-                            ).then((value) {
-                              if (value == true) {
-                                _refreshData(); // 새로고침 콜백 호출
-                              }
-                            });
-                          },
-                          child: GridTile(
-                            child: Column(
-                              children: <Widget>[
-                                Expanded(
-                                  child: DisplayImage(
-                                    imagePath: problem.imageUrl,
-                                    defaultImagePath: defaultImage,
+                  return GridView.builder(
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2, // Number of columns
+                      childAspectRatio: 0.7, // Aspect ratio of each grid cell
+                      crossAxisSpacing: 20, // Horizontal space between cells
+                      mainAxisSpacing: 20, // Vertical space between cells
+                    ),
+                    itemCount: snapshot.data!.length,
+                    itemBuilder: (context, index) {
+                      var problem = snapshot.data![index];
+                      return GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) =>
+                                    ProblemDetailScreen(problemId: problem.id)),
+                          ).then((value) {
+                            if (value == true) {
+                              _refreshData(); // 새로고침 콜백 호출
+                            }
+                          });
+                        },
+                        child: GridTile(
+                          child: Column(
+                            children: <Widget>[
+                              Expanded(
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    border: Border.all(color: Colors.green, width: 1.0), // 얇은 테두리
+                                    borderRadius: BorderRadius.circular(8.0),
+                                  ),
+                                  child: AspectRatio(
+                                    aspectRatio: 1, // 1:1 비율로 설정
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(8.0),
+                                      child: Image.file(
+                                        File(problem.imageUrl),
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (context, error, stackTrace) {
+                                          return Image.asset(
+                                            defaultImage,
+                                            fit: BoxFit.cover,
+                                          );
+                                        },
+                                      ),
+                                    ),
                                   ),
                                 ),
-                                Container(
-                                  padding: const EdgeInsets.all(8), // 텍스트 주변 패딩
-                                  child: Text(
-                                    '${problem.title}',
-                                    style: const TextStyle(
-                                        color: Colors.green,
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                )
-                              ],
-                            ),
+                              ),
+                              SizedBox(height: 8), // 이미지와 텍스트 사이의 공백 추가
+                              Text(
+                                '${problem.title}',
+                                style: const TextStyle(
+                                    color: Colors.green,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold),
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
                           ),
-                        );
-                      },
-                    ),
+                        ),
+                      );
+                    },
                   );
                 }
               }
