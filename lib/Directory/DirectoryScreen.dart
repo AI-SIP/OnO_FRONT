@@ -27,7 +27,8 @@ class _DirectoryScreenState extends State<DirectoryScreen>
     directoryService =
         DirectoryService(Provider.of<ProblemService>(context, listen: false));
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<AuthService>(context, listen: false).addListener(_onAuthChanged);
+      Provider.of<AuthService>(context, listen: false)
+          .addListener(_onAuthChanged);
     });
     loadData(); // 문제 데이터 로드
   }
@@ -41,7 +42,8 @@ class _DirectoryScreenState extends State<DirectoryScreen>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    Provider.of<AuthService>(context, listen: false).removeListener(_onAuthChanged);
+    Provider.of<AuthService>(context, listen: false)
+        .removeListener(_onAuthChanged);
     super.dispose();
   }
 
@@ -77,7 +79,8 @@ class _DirectoryScreenState extends State<DirectoryScreen>
                 } else if (snapshot.hasData) {
                   // Switching to a grid view display
                   return GridView.builder(
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 2, // Number of columns
                       childAspectRatio: 0.7, // Aspect ratio of each grid cell
                       crossAxisSpacing: 20, // Horizontal space between cells
@@ -105,7 +108,9 @@ class _DirectoryScreenState extends State<DirectoryScreen>
                               Expanded(
                                 child: Container(
                                   decoration: BoxDecoration(
-                                    border: Border.all(color: Colors.green, width: 1.0), // 얇은 테두리
+                                    border: Border.all(
+                                        color: Colors.green,
+                                        width: 1.0), // 얇은 테두리
                                     borderRadius: BorderRadius.circular(8.0),
                                   ),
                                   child: AspectRatio(
@@ -115,7 +120,8 @@ class _DirectoryScreenState extends State<DirectoryScreen>
                                       child: Image.file(
                                         File(problem.imageUrl),
                                         fit: BoxFit.cover,
-                                        errorBuilder: (context, error, stackTrace) {
+                                        errorBuilder:
+                                            (context, error, stackTrace) {
                                           return Image.asset(
                                             defaultImage,
                                             fit: BoxFit.cover,
@@ -130,8 +136,9 @@ class _DirectoryScreenState extends State<DirectoryScreen>
                               Text(
                                 '${problem.title}',
                                 style: const TextStyle(
+                                    fontFamily: 'font1',
                                     color: Colors.green,
-                                    fontSize: 16,
+                                    fontSize: 18,
                                     fontWeight: FontWeight.bold),
                                 textAlign: TextAlign.center,
                               ),
