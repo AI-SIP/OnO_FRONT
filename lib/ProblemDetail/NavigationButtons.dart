@@ -29,7 +29,8 @@ class NavigationButtons extends StatelessWidget {
               navigateToProblem(context, service, previousProblemId),
           child: Text('이전 문제',
               style: TextStyle(
-                  fontSize: 14,
+                  fontFamily: 'font1',
+                  fontSize: 16,
                   fontWeight: FontWeight.bold,
                   color: Colors.green)),
         ),
@@ -37,7 +38,8 @@ class NavigationButtons extends StatelessWidget {
           onPressed: () => navigateToProblem(context, service, nextProblemId),
           child: Text('다음 문제',
               style: TextStyle(
-                  fontSize: 14,
+                  fontFamily: 'font1',
+                  fontSize: 16,
                   fontWeight: FontWeight.bold,
                   color: Colors.green)),
         ),

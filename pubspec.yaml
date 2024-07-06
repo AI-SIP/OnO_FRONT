@@ -73,6 +73,10 @@ flutter:
     - assets/process_image.png
     - assets/answer_image.png
     - assets/solve_image.png
+  fonts:
+    - family: font1
+      fonts:
+        - asset: assets/fonts/font1.ttf
 
 
   # To add assets to your application, add an assets section, like this:

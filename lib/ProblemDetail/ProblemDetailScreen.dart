@@ -51,10 +51,16 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
               return Text(snapshot.data!['reference'],
                   style: TextStyle(
                       color: Colors.green,
+                      fontFamily: 'font1',
                       fontSize: 20,
                       fontWeight: FontWeight.bold));
             } else {
-              return Text('문제 상세');
+              return Text('문제 상세',
+                  style: TextStyle(
+                      color: Colors.green,
+                      fontFamily: 'font1',
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold));
             }
           },
         ),
@@ -62,21 +68,25 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
           PopupMenuButton<String>(
             onSelected: (String result) {
               if (result == 'edit') {
-                // 수정하기 로직
                 _editProblem(context, widget.problemId);
               } else if (result == 'delete') {
-                // 삭제하기 로직
                 _deleteProblem(context);
               }
             },
             itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
               const PopupMenuItem<String>(
                 value: 'edit',
-                child: Text('수정하기'),
+                child: Text('수정하기',
+                    style: TextStyle(
+                        fontFamily: 'font1',
+                        fontSize: 18,
+                        color: Colors.black)),
               ),
               const PopupMenuItem<String>(
                 value: 'delete',
-                child: Text('삭제하기', style: TextStyle(color: Colors.red)),
+                child: Text('삭제하기',
+                    style: TextStyle(
+                        fontFamily: 'font1', fontSize: 18, color: Colors.red)),
               ),
             ],
           ),
@@ -109,105 +119,109 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
         ),
         SingleChildScrollView(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 35.0), // 좌우 여백 추가
+            padding: const EdgeInsets.symmetric(horizontal: 35.0),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center, // 가운데 정렬
+              crossAxisAlignment: CrossAxisAlignment.start, // 좌측 정렬
               children: [
-                SizedBox(height: 16.0), // 상단 여백 추가
+                SizedBox(height: 16.0),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Expanded(
                       child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.center, // 가운데 정렬
+                        crossAxisAlignment: CrossAxisAlignment.start, // 좌측 정렬
                         children: [
                           Container(
                             width: double.infinity,
-                            alignment: Alignment.center,
+                            alignment: Alignment.centerLeft, // 좌측 정렬
                             padding: EdgeInsets.symmetric(vertical: 4.0),
                             child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
+                              mainAxisAlignment:
+                                  MainAxisAlignment.start, // 좌측 정렬
                               children: [
                                 Icon(Icons.calendar_today, color: Colors.green),
                                 SizedBox(width: 8.0),
                                 Text('푼 날짜',
                                     style: TextStyle(
-                                        fontSize: 16,
+                                        fontFamily: 'font1',
+                                        fontSize: 20,
                                         fontWeight: FontWeight.bold,
                                         color: Colors.green)),
                               ],
                             ),
                           ),
-                          SizedBox(height: 8.0), // 상하 간격 추가
-                          Text('${problemData['solvedAt']}',
-                              style: TextStyle(fontSize: 16)),
+                          SizedBox(height: 8.0),
+                          _buildUnderlinedText('${problemData['solvedAt']}'),
                         ],
                       ),
                     ),
-                    SizedBox(width: 16.0), // 둘 사이 공백 추가
+                    SizedBox(width: 16.0),
                     Expanded(
                       child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.center, // 가운데 정렬
+                        crossAxisAlignment: CrossAxisAlignment.start, // 좌측 정렬
                         children: [
                           Container(
                             width: double.infinity,
-                            alignment: Alignment.center,
+                            alignment: Alignment.centerLeft, // 좌측 정렬
                             padding: EdgeInsets.symmetric(vertical: 4.0),
                             child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
+                              mainAxisAlignment:
+                                  MainAxisAlignment.start, // 좌측 정렬
                               children: [
                                 Icon(Icons.info, color: Colors.green),
                                 SizedBox(width: 8.0),
                                 Text('문제 출처',
                                     style: TextStyle(
+                                        fontFamily: 'font1',
                                         fontSize: 16,
                                         fontWeight: FontWeight.bold,
                                         color: Colors.green)),
                               ],
                             ),
                           ),
-                          SizedBox(height: 8.0), // 상하 간격 추가
-                          Text('${problemData['reference']}',
-                              style: TextStyle(fontSize: 16)),
+                          SizedBox(height: 8.0),
+                          _buildUnderlinedText('${problemData['reference']}'),
                         ],
                       ),
                     ),
                   ],
                 ),
-                SizedBox(height: 20.0), // 상하 간격 추가
+                SizedBox(height: 20.0),
                 Container(
                   width: double.infinity,
-                  alignment: Alignment.center,
+                  alignment: Alignment.centerLeft, // 좌측 정렬
                   padding: EdgeInsets.symmetric(vertical: 4.0),
                   child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.start, // 좌측 정렬
                     children: [
                       Icon(Icons.camera_alt, color: Colors.green),
                       SizedBox(width: 8.0),
                       Text('문제',
                           style: TextStyle(
+                              fontFamily: 'font1',
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
                               color: Colors.green)),
                     ],
                   ),
                 ),
-                SizedBox(height: 20.0), // 상하 간격 추가
+                SizedBox(height: 20.0),
                 DisplayImage(
                     imagePath: problemData['processImageUrl'],
                     defaultImagePath: 'assets/process_image.png'),
-                SizedBox(height: 30.0), // 상하 간격 추가
+                SizedBox(height: 30.0),
                 ExpansionTile(
                   title: Container(
                     width: double.infinity,
-                    alignment: Alignment.center, // 가운데 정렬
+                    alignment: Alignment.centerLeft, // 좌측 정렬
                     padding: EdgeInsets.symmetric(vertical: 4.0),
                     child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisAlignment: MainAxisAlignment.center, // 좌측 정렬
                       children: [
                         SizedBox(width: 8.0),
                         Text('해설 및 풀이 확인',
                             style: TextStyle(
+                                fontFamily: 'font1',
                                 color: Colors.green,
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold)),
@@ -215,113 +229,139 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                     ),
                   ),
                   children: [
-                    SizedBox(height: 20.0), // 상하 간격 추가,
+                    SizedBox(height: 20.0),
                     Padding(
                       padding: const EdgeInsets.all(8.0),
                       child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.center, // 가운데 정렬
+                        crossAxisAlignment: CrossAxisAlignment.start, // 좌측 정렬
                         children: [
                           Container(
                             width: double.infinity,
-                            alignment: Alignment.center,
+                            alignment: Alignment.centerLeft, // 좌측 정렬
                             padding: EdgeInsets.symmetric(vertical: 4.0),
                             child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
+                              mainAxisAlignment:
+                                  MainAxisAlignment.start, // 좌측 정렬
                               children: [
                                 Icon(Icons.edit, color: Colors.green),
                                 SizedBox(width: 8.0),
                                 Text('메모',
                                     style: TextStyle(
-                                        fontSize: 16,
+                                        fontFamily: 'font1',
+                                        fontSize: 20,
                                         fontWeight: FontWeight.bold,
                                         color: Colors.green)),
                               ],
                             ),
                           ),
-                          SizedBox(height: 8.0), // 상하 간격 추가
-                          Text('${problemData['memo']}',
-                              style: TextStyle(fontSize: 16)),
+                          SizedBox(height: 8.0),
+                          _buildUnderlinedText('${problemData['memo']}'),
                         ],
                       ),
                     ),
-                    SizedBox(height: 20.0), // 상하 간격 추가
+                    SizedBox(height: 20.0),
                     Container(
                       width: double.infinity,
-                      alignment: Alignment.center,
+                      alignment: Alignment.centerLeft, // 좌측 정렬
                       padding: EdgeInsets.symmetric(vertical: 4.0),
                       child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisAlignment: MainAxisAlignment.start, // 좌측 정렬
                         children: [
                           Icon(Icons.image, color: Colors.green),
                           SizedBox(width: 8.0),
                           Text('원본 이미지',
                               style: TextStyle(
-                                  fontSize: 16,
+                                  fontFamily: 'font1',
+                                  fontSize: 20,
                                   fontWeight: FontWeight.bold,
                                   color: Colors.green)),
                         ],
                       ),
                     ),
-                    SizedBox(height: 20.0), // 상하 간격 추가
+                    SizedBox(height: 20.0),
                     DisplayImage(
                         imagePath: problemData['answerImageUrl'],
                         defaultImagePath: 'assets/problem_image.png'),
                     SizedBox(height: 20.0),
                     Container(
                       width: double.infinity,
-                      alignment: Alignment.center,
+                      alignment: Alignment.centerLeft, // 좌측 정렬
                       padding: EdgeInsets.symmetric(vertical: 4.0),
                       child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisAlignment: MainAxisAlignment.start, // 좌측 정렬
                         children: [
                           Icon(Icons.image, color: Colors.green),
                           SizedBox(width: 8.0),
                           Text('풀이 이미지',
                               style: TextStyle(
-                                  fontSize: 16,
+                                  fontFamily: 'font1',
+                                  fontSize: 20,
                                   fontWeight: FontWeight.bold,
                                   color: Colors.green)),
                         ],
                       ),
                     ),
-                    SizedBox(height: 20.0), // 상하 간격 추가
+                    SizedBox(height: 20.0),
                     DisplayImage(
                         imagePath: problemData['solveImageUrl'],
                         defaultImagePath: 'assets/solve_image.png'),
-
-                    SizedBox(height: 20.0), // 상하 간격 추가
+                    SizedBox(height: 20.0),
                     Container(
                       width: double.infinity,
-                      alignment: Alignment.center,
+                      alignment: Alignment.centerLeft, // 좌측 정렬
                       padding: EdgeInsets.symmetric(vertical: 4.0),
                       child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisAlignment: MainAxisAlignment.start, // 좌측 정렬
                         children: [
                           Icon(Icons.image, color: Colors.green),
                           SizedBox(width: 8.0),
                           Text('해설 이미지',
                               style: TextStyle(
-                                  fontSize: 16,
+                                  fontFamily: 'font1',
+                                  fontSize: 20,
                                   fontWeight: FontWeight.bold,
                                   color: Colors.green)),
                         ],
                       ),
                     ),
-                    SizedBox(height: 20.0), // 상하 간격 추가
+                    SizedBox(height: 20.0),
                     DisplayImage(
                         imagePath: problemData['answerImageUrl'],
                         defaultImagePath: 'assets/answer_image.png'),
-                    SizedBox(height: 20.0), // 상하 간격 추가
+                    SizedBox(height: 20.0),
                   ],
                 ),
-                SizedBox(height: 20.0), // 상하 간격 추가
+                SizedBox(height: 20.0),
                 NavigationButtons(
                     context: context,
                     service: problemService,
                     currentId: widget.problemId),
-                SizedBox(height: 50.0), // 상하 간격 추가
+                SizedBox(height: 50.0),
               ],
             ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildUnderlinedText(String text) {
+    return Stack(
+      children: [
+        Text(
+          text,
+          style: TextStyle(
+            fontFamily: 'font1',
+            fontSize: 20,
+          ),
+        ),
+        Positioned(
+          bottom: 0,
+          left: 0,
+          right: 0,
+          child: Container(
+            height: 2,
+            color: Colors.red.withOpacity(0.5), // 밑줄 색상 및 투명도 조절
           ),
         ),
       ],
