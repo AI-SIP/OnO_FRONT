@@ -51,10 +51,16 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
               return Text(snapshot.data!['reference'],
                   style: TextStyle(
                       color: Colors.green,
+                      fontFamily: 'font1',
                       fontSize: 20,
                       fontWeight: FontWeight.bold));
             } else {
-              return Text('문제 상세');
+              return Text('문제 상세',
+                  style: TextStyle(
+                      color: Colors.green,
+                      fontFamily: 'font1',
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold));
             }
           },
         ),
@@ -70,11 +76,17 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
             itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
               const PopupMenuItem<String>(
                 value: 'edit',
-                child: Text('수정하기'),
+                child: Text('수정하기',
+                    style: TextStyle(
+                        fontFamily: 'font1',
+                        fontSize: 18,
+                        color: Colors.black)),
               ),
               const PopupMenuItem<String>(
                 value: 'delete',
-                child: Text('삭제하기', style: TextStyle(color: Colors.red)),
+                child: Text('삭제하기',
+                    style: TextStyle(
+                        fontFamily: 'font1', fontSize: 18, color: Colors.red)),
               ),
             ],
           ),
@@ -131,7 +143,8 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                                 SizedBox(width: 8.0),
                                 Text('푼 날짜',
                                     style: TextStyle(
-                                        fontSize: 16,
+                                        fontFamily: 'font1',
+                                        fontSize: 20,
                                         fontWeight: FontWeight.bold,
                                         color: Colors.green)),
                               ],
@@ -159,6 +172,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                                 SizedBox(width: 8.0),
                                 Text('문제 출처',
                                     style: TextStyle(
+                                        fontFamily: 'font1',
                                         fontSize: 16,
                                         fontWeight: FontWeight.bold,
                                         color: Colors.green)),
@@ -184,6 +198,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                       SizedBox(width: 8.0),
                       Text('문제',
                           style: TextStyle(
+                              fontFamily: 'font1',
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
                               color: Colors.green)),
@@ -206,6 +221,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                         SizedBox(width: 8.0),
                         Text('해설 및 풀이 확인',
                             style: TextStyle(
+                                fontFamily: 'font1',
                                 color: Colors.green,
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold)),
@@ -231,7 +247,8 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                                 SizedBox(width: 8.0),
                                 Text('메모',
                                     style: TextStyle(
-                                        fontSize: 16,
+                                        fontFamily: 'font1',
+                                        fontSize: 20,
                                         fontWeight: FontWeight.bold,
                                         color: Colors.green)),
                               ],
@@ -254,7 +271,8 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                           SizedBox(width: 8.0),
                           Text('원본 이미지',
                               style: TextStyle(
-                                  fontSize: 16,
+                                  fontFamily: 'font1',
+                                  fontSize: 20,
                                   fontWeight: FontWeight.bold,
                                   color: Colors.green)),
                         ],
@@ -276,7 +294,8 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                           SizedBox(width: 8.0),
                           Text('풀이 이미지',
                               style: TextStyle(
-                                  fontSize: 16,
+                                  fontFamily: 'font1',
+                                  fontSize: 20,
                                   fontWeight: FontWeight.bold,
                                   color: Colors.green)),
                         ],
@@ -298,7 +317,8 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                           SizedBox(width: 8.0),
                           Text('해설 이미지',
                               style: TextStyle(
-                                  fontSize: 16,
+                                  fontFamily: 'font1',
+                                  fontSize: 20,
                                   fontWeight: FontWeight.bold,
                                   color: Colors.green)),
                         ],
@@ -330,7 +350,10 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
       children: [
         Text(
           text,
-          style: TextStyle(fontSize: 16),
+          style: TextStyle(
+            fontFamily: 'font1',
+            fontSize: 20,
+          ),
         ),
         Positioned(
           bottom: 0,
