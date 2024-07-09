@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:mvp_front/Directory/ProblemThumbnailModel.dart';
 import 'package:provider/provider.dart';
 import '../GlobalModule/DisplayImage.dart';
 import '../ProblemDetail/ProblemDetailScreen.dart';
@@ -71,17 +72,16 @@ class _DirectoryScreenState extends State<DirectoryScreen>
         onRefresh: _refreshData, // 새로고침 콜백
         child: Padding(
           padding: const EdgeInsets.all(20), // 화면 바깥쪽 여백 추가
-          child: FutureBuilder<List<ProblemThumbnail>>(
+          child: FutureBuilder<List<ProblemThumbnailModel>>(
             future: directoryService.loadProblemsFromCache(),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.done) {
                 if (snapshot.hasError) {
                   return Center(child: Text('${snapshot.error}'));
-                } else if (snapshot.hasData) {
-                  // Switching to a grid view display
+                } else if (snapshot.hasData && snapshot.data!.isNotEmpty) {
+                  // 데이터가 있을 때 그리드 뷰 표시
                   return GridView.builder(
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 2, // Number of columns
                       childAspectRatio: 0.7, // Aspect ratio of each grid cell
                       crossAxisSpacing: 20, // Horizontal space between cells
@@ -95,8 +95,7 @@ class _DirectoryScreenState extends State<DirectoryScreen>
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: (context) =>
-                                    ProblemDetailScreen(problemId: problem.id)),
+                                builder: (context) => ProblemDetailScreen(problemId: problem.id)),
                           ).then((value) {
                             if (value == true) {
                               _refreshData(); // 새로고침 콜백 호출
@@ -120,8 +119,7 @@ class _DirectoryScreenState extends State<DirectoryScreen>
                                       borderRadius: BorderRadius.circular(8.0),
                                       child: DisplayImage(
                                           imagePath: problem.problemImageUrl,
-                                          defaultImagePath: defaultImage
-                                      ),
+                                          defaultImagePath: defaultImage),
                                     ),
                                   ),
                                 ),
@@ -142,8 +140,12 @@ class _DirectoryScreenState extends State<DirectoryScreen>
                       );
                     },
                   );
+                } else {
+                  // 데이터가 없을 때 메시지 표시
+                  return Center(child: Text('오답노트가 존재하지 않습니다.'));
                 }
               }
+              // 데이터 로딩 중
               return const Center(child: CircularProgressIndicator());
             },
           ),

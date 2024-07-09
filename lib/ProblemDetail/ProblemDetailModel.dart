@@ -1,6 +1,7 @@
 import 'package:intl/intl.dart';
 
 class ProblemDetailModel {
+  final int? problemId;
   final String? processImageUrl;
   final String? problemImageUrl;
   final String? solveImageUrl;
@@ -10,6 +11,7 @@ class ProblemDetailModel {
   final DateTime? solvedAt;
 
   ProblemDetailModel({
+    this.problemId,
     this.processImageUrl,
     this.problemImageUrl,
     this.solveImageUrl,
@@ -21,17 +23,20 @@ class ProblemDetailModel {
 
   factory ProblemDetailModel.fromJson(Map<String, dynamic> json) {
     return ProblemDetailModel(
+      problemId: json['problemId'],
       problemImageUrl: json['problemImageUrl'],
       solveImageUrl: json['solveImageUrl'],
       answerImageUrl: json['answerImageUrl'],
       memo: json['memo'],
       reference: json['reference'],
-      solvedAt: json['solvedAt'] != null ? DateTime.parse(json['solvedAt']) : null,
+      solvedAt:
+          json['solvedAt'] != null ? DateTime.parse(json['solvedAt']) : null,
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
+      'problemId': problemId,
       'processImageUrl': processImageUrl,
       'problemImageUrl': problemImageUrl,
       'solveImageUrl': solveImageUrl,
@@ -45,6 +50,6 @@ class ProblemDetailModel {
   // 날짜 포맷팅 함수
   String? _formatDateTime(DateTime? dateTime) {
     if (dateTime == null) return null;
-    return DateFormat('yyyy년MM월dd일 HH시mm분ss초').format(dateTime);
+    return DateFormat('yyyy-MM-dd HH:mm').format(dateTime);
   }
 }
