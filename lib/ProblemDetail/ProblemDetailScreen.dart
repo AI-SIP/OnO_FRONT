@@ -76,6 +76,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
               }
             },
             itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+              /*
               const PopupMenuItem<String>(
                 value: 'edit',
                 child: Text('수정하기',
@@ -86,6 +87,8 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                       fontWeight: FontWeight.bold,
                     )),
               ),
+
+               */
               const PopupMenuItem<String>(
                 value: 'delete',
                 child: Text('삭제하기',
