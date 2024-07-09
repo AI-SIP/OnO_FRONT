@@ -66,9 +66,7 @@ class AuthService with ChangeNotifier {
     String userEmail = jsonDecode(utf8.decode(response.bodyBytes))['userEmail'];
     _userName = userName;
     _userEmail = userEmail;
-    print('userId : $userId');
-    print('userName : $userName');
-    print('userEmail : $userEmail');
+    print('====save user info complete====');
     await _userService.saveUserInfo(userId, userName, userEmail);
     notifyListeners();
   }
@@ -80,7 +78,7 @@ class AuthService with ChangeNotifier {
       _userName = prefs.getString('userName') ?? '';
       _userEmail = prefs.getString('email') ?? '';
       _isLoggedIn = true;
-      log('userId : ${userId}');
+      print('====auto login complete====');
       notifyListeners();
     } else {
       _isLoggedIn = false;

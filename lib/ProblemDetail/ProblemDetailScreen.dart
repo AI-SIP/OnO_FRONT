@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:mvp_front/ProblemDetail/ProblemDetailModel.dart';
 import 'package:provider/provider.dart';
 import 'package:mvp_front/Service/ProblemService.dart';
 import '../GlobalModule/DisplayImage.dart';
 import '../GlobalModule/GridPainter.dart';
+import '../GlobalModule/UnderlinedText.dart';
 import '../ProblemModify/ProblemModifyScreen.dart';
 import 'NavigationButtons.dart';
 
@@ -16,7 +18,7 @@ class ProblemDetailScreen extends StatefulWidget {
 }
 
 class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
-  late Future<Map<String, dynamic>?> _problemDataFuture;
+  late Future<ProblemDetailModel?> _problemDataFuture;
   late ProblemService problemService;
 
   @override
@@ -26,7 +28,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
     _problemDataFuture = _fetchProblemDetails();
   }
 
-  Future<Map<String, dynamic>?> _fetchProblemDetails() {
+  Future<ProblemDetailModel?> _fetchProblemDetails() {
     return problemService.getProblemDetails(widget.problemId);
   }
 
@@ -40,7 +42,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: FutureBuilder<Map<String, dynamic>?>(
+        title: FutureBuilder<ProblemDetailModel?>(
           future: _problemDataFuture,
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
@@ -48,7 +50,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
             } else if (snapshot.hasError) {
               return Text('에러 발생');
             } else if (snapshot.hasData && snapshot.data != null) {
-              return Text(snapshot.data!['reference'],
+              return Text(snapshot.data!.reference ?? '출처가 없습니다!',
                   style: TextStyle(
                       color: Colors.green,
                       fontFamily: 'font1',
@@ -98,7 +100,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
           ),
         ],
       ),
-      body: FutureBuilder<Map<String, dynamic>?>(
+      body: FutureBuilder<ProblemDetailModel?>(
         future: _problemDataFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -116,7 +118,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
   }
 
   Widget buildProblemDetails(
-      BuildContext context, Map<String, dynamic> problemData) {
+      BuildContext context, ProblemDetailModel problemDetailModel) {
     return Stack(
       children: [
         CustomPaint(
@@ -157,7 +159,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                             ),
                           ),
                           SizedBox(height: 8.0),
-                          _buildUnderlinedText('${problemData['solvedAt']}'),
+                          UnderlinedText(text: '${problemDetailModel.solvedAt}'),
                         ],
                       ),
                     ),
@@ -186,7 +188,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                             ),
                           ),
                           SizedBox(height: 8.0),
-                          _buildUnderlinedText('${problemData['reference']}'),
+                          UnderlinedText(text: '${problemDetailModel.reference}'),
                         ],
                       ),
                     ),
@@ -213,7 +215,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                 ),
                 SizedBox(height: 20.0),
                 DisplayImage(
-                    imagePath: problemData['processImageUrl'],
+                    imagePath: problemDetailModel.processImageUrl,
                     defaultImagePath: 'assets/process_image.png'),
                 SizedBox(height: 30.0),
                 ExpansionTile(
@@ -261,7 +263,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                             ),
                           ),
                           SizedBox(height: 8.0),
-                          _buildUnderlinedText('${problemData['memo']}'),
+                          UnderlinedText(text : '${problemDetailModel.memo}'),
                         ],
                       ),
                     ),
@@ -286,7 +288,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                     ),
                     SizedBox(height: 20.0),
                     DisplayImage(
-                        imagePath: problemData['answerImageUrl'],
+                        imagePath: problemDetailModel.problemImageUrl,
                         defaultImagePath: 'assets/problem_image.png'),
                     SizedBox(height: 20.0),
                     Container(
@@ -309,7 +311,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                     ),
                     SizedBox(height: 20.0),
                     DisplayImage(
-                        imagePath: problemData['solveImageUrl'],
+                        imagePath: problemDetailModel.solveImageUrl,
                         defaultImagePath: 'assets/solve_image.png'),
                     SizedBox(height: 20.0),
                     Container(
@@ -332,7 +334,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                     ),
                     SizedBox(height: 20.0),
                     DisplayImage(
-                        imagePath: problemData['answerImageUrl'],
+                        imagePath: problemDetailModel.answerImageUrl,
                         defaultImagePath: 'assets/answer_image.png'),
                     SizedBox(height: 20.0),
                   ],
@@ -345,29 +347,6 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                 SizedBox(height: 50.0),
               ],
             ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildUnderlinedText(String text) {
-    return Stack(
-      children: [
-        Text(
-          text,
-          style: TextStyle(
-            fontFamily: 'font1',
-            fontSize: 20,
-          ),
-        ),
-        Positioned(
-          bottom: 0,
-          left: 0,
-          right: 0,
-          child: Container(
-            height: 2,
-            color: Colors.red.withOpacity(0.5), // 밑줄 색상 및 투명도 조절
           ),
         ),
       ],

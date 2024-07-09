@@ -42,12 +42,12 @@ class ProblemModifyScreenState extends State<ProblemModifyScreen> {
         await _problemService.getProblemDetails(widget.problemId);
     if (problemData != null) {
       setState(() {
-        _selectedDate = DateTime.parse(problemData['solvedAt']);
-        _sourceController.text = problemData['reference'];
-        _notesController.text = problemData['memo'];
-        _problemImage = XFile(problemData['problemImage']);
-        _solveImage = XFile(problemData['solveImage']);
-        _answerImage = XFile(problemData['answerImage']);
+        _selectedDate = DateTime.parse(problemData.solvedAt);
+        _sourceController.text = problemData.reference;
+        _notesController.text = problemData.memo;
+        _problemImage = XFile(problemData.problemImageUrl);
+        _solveImage = XFile(problemData.solveImageUrl);
+        _answerImage = XFile(problemData.answerImageUrl);
       });
     }
   }

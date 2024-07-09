@@ -23,6 +23,7 @@ class _DirectoryScreenState extends State<DirectoryScreen>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+
     // ProblemService 인스턴스를 Provider에서 가져와 DirectoryService 생성
     directoryService =
         DirectoryService(Provider.of<ProblemService>(context, listen: false));
@@ -117,16 +118,9 @@ class _DirectoryScreenState extends State<DirectoryScreen>
                                     aspectRatio: 1, // 1:1 비율로 설정
                                     child: ClipRRect(
                                       borderRadius: BorderRadius.circular(8.0),
-                                      child: Image.file(
-                                        File(problem.imageUrl),
-                                        fit: BoxFit.cover,
-                                        errorBuilder:
-                                            (context, error, stackTrace) {
-                                          return Image.asset(
-                                            defaultImage,
-                                            fit: BoxFit.cover,
-                                          );
-                                        },
+                                      child: DisplayImage(
+                                          imagePath: problem.problemImageUrl,
+                                          defaultImagePath: defaultImage
                                       ),
                                     ),
                                   ),

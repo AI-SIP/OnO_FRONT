@@ -2,7 +2,7 @@ import 'dart:developer';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:image_picker/image_picker.dart';
+import 'package:mvp_front/ProblemDetail/ProblemDetailModel.dart';
 import 'package:mvp_front/ProblemRegister/ProblemRegisterModel.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -39,7 +39,7 @@ class ProblemService {
   }
 
   // 문제 목록에서 특정 문제 상세 정보 가져오기
-  Future<Map<String, dynamic>?> getProblemDetails(int problemId) async {
+  Future<ProblemDetailModel?> getProblemDetails(int problemId) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? problemsData = prefs.getString('problems');
 
@@ -52,7 +52,7 @@ class ProblemService {
             orElse: () => null);
 
         if (problemDetails != null) {
-          return problemDetails as Map<String, dynamic>;
+          return ProblemDetailModel.fromJson(problemDetails);
         } else {
           log('Problem with ID $problemId not found');
           return null;
@@ -176,7 +176,6 @@ class ProblemService {
       // 성공적으로 문제를 삭제한 경우
       _problems.removeWhere((problem) => problem['problemId'] == problemId);
       await fetchAndSaveProblems();
-      log('Problem deleted and changes saved locally');
       return true;
     } else {
       log('Failed to delete problem from server');

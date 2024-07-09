@@ -33,15 +33,15 @@ class DirectoryService {
 class ProblemThumbnail {
   final int id;
   final String title;
-  final String imageUrl;
+  final String problemImageUrl;
 
-  ProblemThumbnail({required this.id, required this.title, required this.imageUrl});
+  ProblemThumbnail({required this.id, required this.title, required this.problemImageUrl});
 
   factory ProblemThumbnail.fromJson(Map<String, dynamic> json) {
     return ProblemThumbnail(
       id: json['problemId'],
       title: json['reference'],
-      imageUrl: json['imageUrl'],
+      problemImageUrl: json['problemImageUrl'],
     );
   }
 }
