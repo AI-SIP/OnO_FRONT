@@ -31,8 +31,8 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
   final ProblemService _problemService = ProblemService();
 
   XFile? _problemImage; // 문제 이미지 변수
-  XFile? _solutionImage; // 해설 이미지 변수
-  XFile? _mySolutionImage; // 나의 풀이 이미지 변수
+  XFile? _answerImage; // 해설 이미지 변수
+  XFile? _solveImage; // 나의 풀이 이미지 변수
 
   // 날짜 선택기를 표시하는 함수
   void _showCustomDatePicker() {
@@ -55,12 +55,12 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
   void _onImagePicked(XFile? pickedFile, String imageType) {
     if (pickedFile != null) {
       setState(() {
-        if (imageType == 'problem') {
+        if (imageType == 'problemImage') {
           _problemImage = pickedFile;
-        } else if (imageType == 'solution') {
-          _solutionImage = pickedFile;
-        } else if (imageType == 'mySolution') {
-          _mySolutionImage = pickedFile;
+        } else if (imageType == 'answerImage') {
+          _answerImage = pickedFile;
+        } else if (imageType == 'solveImage') {
+          _solveImage = pickedFile;
         }
       });
       // 선택된 이미지를 처리합니다.
@@ -110,16 +110,16 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
     _notesController.clear();
     setState(() {
       _problemImage = null;
-      _solutionImage = null;
-      _mySolutionImage = null;
+      _answerImage = null;
+      _solveImage = null;
     });
   }
 
   Future<void> submitProblem() async {
     final problemData = ProblemRegisterModel(
-      imageUrl: _problemImage?.path,
-      solveImageUrl: _solutionImage?.path,
-      answerImageUrl: _mySolutionImage?.path,
+      problemImage: _problemImage,
+      solveImage: _answerImage,
+      answerImage: _solveImage,
       memo: _notesController.text,
       reference: _sourceController.text,
       solvedAt: _selectedDate,
@@ -216,12 +216,12 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
                           icon: const Icon(Icons.add,
                               color: Colors.green, size: 40),
                           onPressed: () {
-                            _showImagePicker('problem'); // 이미지 선택 팝업 호출
+                            _showImagePicker('problemImage'); // 이미지 선택 팝업 호출
                           },
                         )
                       : GestureDetector(
                           onTap: () {
-                            _showImagePicker('problem'); // 이미지 선택 팝업 호출
+                            _showImagePicker('problemImage'); // 이미지 선택 팝업 호출
                           },
                           child: Image.file(File(_problemImage!.path)),
                         ),
@@ -248,19 +248,19 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
                 height: isLandscape ? mediaQuery.size.height * 0.3 : 200,
                 color: Colors.grey[200],
                 child: Center(
-                  child: _solutionImage == null
+                  child: _answerImage == null
                       ? IconButton(
                           icon: const Icon(Icons.add,
                               color: Colors.green, size: 40),
                           onPressed: () {
-                            _showImagePicker('solution'); // 이미지 선택 팝업 호출
+                            _showImagePicker('answerImage'); // 이미지 선택 팝업 호출
                           },
                         )
                       : GestureDetector(
                           onTap: () {
-                            _showImagePicker('solution'); // 이미지 선택 팝업 호출
+                            _showImagePicker('answerImage'); // 이미지 선택 팝업 호출
                           },
-                          child: Image.file(File(_solutionImage!.path)),
+                          child: Image.file(File(_answerImage!.path)),
                         ),
                 ),
               ),
@@ -285,19 +285,19 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
                 height: isLandscape ? mediaQuery.size.height * 0.3 : 200,
                 color: Colors.grey[200],
                 child: Center(
-                  child: _mySolutionImage == null
+                  child: _solveImage == null
                       ? IconButton(
                           icon: const Icon(Icons.add,
                               color: Colors.green, size: 40),
                           onPressed: () {
-                            _showImagePicker('mySolution'); // 이미지 선택 팝업 호출
+                            _showImagePicker('solveImage'); // 이미지 선택 팝업 호출
                           },
                         )
                       : GestureDetector(
                           onTap: () {
-                            _showImagePicker('mySolution'); // 이미지 선택 팝업 호출
+                            _showImagePicker('solveImage'); // 이미지 선택 팝업 호출
                           },
-                          child: Image.file(File(_mySolutionImage!.path)),
+                          child: Image.file(File(_solveImage!.path)),
                         ),
                 ),
               ),

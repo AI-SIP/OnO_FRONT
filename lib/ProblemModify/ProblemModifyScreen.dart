@@ -27,9 +27,9 @@ class ProblemModifyScreenState extends State<ProblemModifyScreen> {
       ImagePickerHandler(); // 이미지 선택기 핸들러 인스턴스
   final ProblemService _problemService = ProblemService();
 
-  XFile? _problemImage; // 문제 이미지 변수
-  XFile? _solutionImage; // 해설 이미지 변수
-  XFile? _mySolutionImage; // 나의 풀이 이미지 변수
+  XFile? _problemImage; // 문제 이미지
+  XFile? _answerImage; // 해설 이미지
+  XFile? _solveImage; // 나의 풀이 이미지
 
   @override
   void initState() {
@@ -45,9 +45,9 @@ class ProblemModifyScreenState extends State<ProblemModifyScreen> {
         _selectedDate = DateTime.parse(problemData['solvedAt']);
         _sourceController.text = problemData['reference'];
         _notesController.text = problemData['memo'];
-        _problemImage = XFile(problemData['imageUrl']);
-        _solutionImage = XFile(problemData['solveImageUrl']);
-        _mySolutionImage = XFile(problemData['answerImageUrl']);
+        _problemImage = XFile(problemData['problemImage']);
+        _solveImage = XFile(problemData['solveImage']);
+        _answerImage = XFile(problemData['answerImage']);
       });
     }
   }
@@ -73,12 +73,12 @@ class ProblemModifyScreenState extends State<ProblemModifyScreen> {
   void _onImagePicked(XFile? pickedFile, String imageType) {
     if (pickedFile != null) {
       setState(() {
-        if (imageType == 'problem') {
+        if (imageType == 'problemImage') {
           _problemImage = pickedFile;
-        } else if (imageType == 'solution') {
-          _solutionImage = pickedFile;
-        } else if (imageType == 'mySolution') {
-          _mySolutionImage = pickedFile;
+        } else if (imageType == 'answerImage') {
+          _answerImage = pickedFile;
+        } else if (imageType == 'solveImage') {
+          _solveImage = pickedFile;
         }
       });
       // 선택된 이미지를 처리합니다.
@@ -106,16 +106,16 @@ class ProblemModifyScreenState extends State<ProblemModifyScreen> {
     _notesController.clear();
     setState(() {
       _problemImage = null;
-      _solutionImage = null;
-      _mySolutionImage = null;
+      _answerImage = null;
+      _solveImage = null;
     });
   }
 
   Future<void> submitProblem() async {
     final problemData = ProblemRegisterModel(
-      imageUrl: _problemImage?.path,
-      solveImageUrl: _solutionImage?.path,
-      answerImageUrl: _mySolutionImage?.path,
+      problemImage: _problemImage,
+      answerImage: _answerImage,
+      solveImage: _solveImage,
       memo: _notesController.text,
       reference: _sourceController.text,
       solvedAt: _selectedDate,
@@ -237,7 +237,7 @@ class ProblemModifyScreenState extends State<ProblemModifyScreen> {
               ),
               const SizedBox(height: 10),
               GestureDetector(
-                onTap: () => _showImagePicker('problem'),
+                onTap: () => _showImagePicker('problemImage'),
                 child: Container(
                   height: isLandscape ? mediaQuery.size.height * 0.3 : 200,
                   color: Colors.grey[200],
@@ -266,14 +266,14 @@ class ProblemModifyScreenState extends State<ProblemModifyScreen> {
               ),
               const SizedBox(height: 10),
               GestureDetector(
-                onTap: () => _showImagePicker('solution'),
+                onTap: () => _showImagePicker('answerImage'),
                 child: Container(
                   height: isLandscape ? mediaQuery.size.height * 0.3 : 200,
                   color: Colors.grey[200],
                   child: Center(
-                    child: _solutionImage == null
+                    child: _answerImage == null
                         ? Icon(Icons.add, color: Colors.green, size: 40)
-                        : Image.file(File(_solutionImage!.path)),
+                        : Image.file(File(_answerImage!.path)),
                   ),
                 ),
               ),
@@ -295,14 +295,14 @@ class ProblemModifyScreenState extends State<ProblemModifyScreen> {
               ),
               const SizedBox(height: 10),
               GestureDetector(
-                onTap: () => _showImagePicker('mySolution'),
+                onTap: () => _showImagePicker('solveImage'),
                 child: Container(
                   height: isLandscape ? mediaQuery.size.height * 0.3 : 200,
                   color: Colors.grey[200],
                   child: Center(
-                    child: _mySolutionImage == null
+                    child: _solveImage == null
                         ? Icon(Icons.add, color: Colors.green, size: 40)
-                        : Image.file(File(_mySolutionImage!.path)),
+                        : Image.file(File(_solveImage!.path)),
                   ),
                 ),
               ),

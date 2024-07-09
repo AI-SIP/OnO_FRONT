@@ -2,6 +2,7 @@ import 'dart:developer';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:image_picker/image_picker.dart';
 import 'package:mvp_front/ProblemRegister/ProblemRegisterModel.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -44,9 +45,10 @@ class ProblemService {
 
     if (problemsData != null) {
       try {
-        List<dynamic> problemsList = json.decode(utf8.decode(problemsData.codeUnits));
+        List<dynamic> problemsList =
+            json.decode(utf8.decode(problemsData.codeUnits));
         var problemDetails = problemsList.firstWhere(
-                (problem) => problem['problemId'] == problemId,
+            (problem) => problem['problemId'] == problemId,
             orElse: () => null);
 
         if (problemDetails != null) {
@@ -64,7 +66,7 @@ class ProblemService {
       return null;
     }
   }
-  
+
   Future<void> submitProblem(
       ProblemRegisterModel problemData, BuildContext context) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -74,31 +76,51 @@ class ProblemService {
       throw Exception("User ID is not available");
     }
 
-    try {
-      final response = await http.post(
-        Uri.parse('http://localhost:8080/api/problem'),
-        headers: {
-          'Content-Type': 'application/json; charset=UTF-8',
-          'userId': userId.toString()
-        },
-        body: jsonEncode(problemData.toJson()),
-      );
+    var uri = Uri.parse('http://localhost:8080/api/problem');
+    var request = http.MultipartRequest('POST', uri)
+      ..headers.addAll({'userId': userId.toString()});
+    request.fields['solvedAt'] = problemData.solvedAt?.toIso8601String() ?? "";
+    request.fields['reference'] = problemData.reference ?? "";
+    request.fields['memo'] = problemData.memo ?? "";
 
+    final problemImage = problemData.problemImage;
+    final solveImage = problemData.solveImage;
+    final answerImage = problemData.answerImage;
+
+    if (problemImage != null) {
+      print('problemImage : ${problemImage}');
+      request.files.add(
+          await http.MultipartFile.fromPath('problemImage', problemImage.path));
+    }
+    if (solveImage != null) {
+      print('solveImage : ${solveImage}');
+      request.files.add(
+          await http.MultipartFile.fromPath('solveImage', solveImage.path));
+    }
+    if (answerImage != null) {
+      print('answerImage : ${answerImage}');
+      request.files.add(
+          await http.MultipartFile.fromPath('answerImage', answerImage.path));
+    }
+
+    try {
+      var streamedResponse = await request.send();
+      var response = await http.Response.fromStream(streamedResponse);
       if (response.statusCode == 200) {
         print('Problem successfully submitted');
 
         // 폴더 갱신
         await fetchAndSaveProblems();
       } else {
-        print('Failed to submit problem: ${response.body}');
+        print('Failed to submit problem: ${response.reasonPhrase}');
       }
     } catch (e) {
       print('Error submitting problem: $e');
     }
   }
 
-  Future<void> updateProblem(
-      int problemId, ProblemRegisterModel problemData, BuildContext context) async {
+  Future<void> updateProblem(int problemId, ProblemRegisterModel problemData,
+      BuildContext context) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     int? userId = prefs.getInt('userId');
 
@@ -165,21 +187,21 @@ class ProblemService {
   // Checks if there is a next problem
   bool hasNextProblem(int currentProblemId) {
     var currentIndex =
-    _problems.indexWhere((p) => p['problemId'] == currentProblemId);
+        _problems.indexWhere((p) => p['problemId'] == currentProblemId);
     return currentIndex >= 0 && currentIndex < _problems.length - 1;
   }
 
   // Checks if there is a previous problem
   bool hasPreviousProblem(int currentProblemId) {
     var currentIndex =
-    _problems.indexWhere((p) => p['problemId'] == currentProblemId);
+        _problems.indexWhere((p) => p['problemId'] == currentProblemId);
     return currentIndex > 0 && currentIndex < _problems.length;
   }
 
   // Get the ID of the next problem
   int getNextProblemId(int currentProblemId) {
     var currentIndex =
-    _problems.indexWhere((p) => p['problemId'] == currentProblemId);
+        _problems.indexWhere((p) => p['problemId'] == currentProblemId);
     if (currentIndex >= 0 && currentIndex < _problems.length - 1) {
       return _problems[currentIndex + 1]['problemId'];
     } else if (currentIndex == _problems.length - 1) {
@@ -195,7 +217,7 @@ class ProblemService {
   // Get the ID of the previous problem
   int getPreviousProblemId(int currentProblemId) {
     var currentIndex =
-    _problems.indexWhere((p) => p['problemId'] == currentProblemId);
+        _problems.indexWhere((p) => p['problemId'] == currentProblemId);
     if (currentIndex > 0) {
       return _problems[currentIndex - 1]['problemId'];
     } else if (currentIndex == 0) {
