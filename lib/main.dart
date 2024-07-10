@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:mvp_front/Service/AuthService.dart';
 import 'package:provider/provider.dart';
-import 'Home/HomeScreen.dart';
-import 'Directory/DirectoryScreen.dart';
-import 'ProblemRegister/ProblemRegisterScreen.dart';
+import 'Screen/HomeScreen.dart';
+import 'Screen/DirectoryScreen.dart';
+import 'Screen/ProblemRegisterScreen.dart';
+import 'Provider/ProblemsProvider.dart';
 import 'Service/ProblemService.dart';
-import 'Setting/SettingScreen.dart';
-import 'AppbarWithLogo.dart';
+import 'Screen/SettingScreen.dart';
+import 'GlobalModule/AppbarWithLogo.dart';
 
 /*
   메인 함수
@@ -16,7 +17,12 @@ void main() {
   runApp(
     MultiProvider(providers: [
       ChangeNotifierProvider(create: (_) => AuthService()),
-      Provider(create: (_) => ProblemService()), // ProblemService를 Provider로 추가
+      //ChangeNotifierProvider(create: (_) => ProblemService()), // ProblemService를 Provider로 추가
+      ChangeNotifierProvider(create: (_) => ProblemsProvider()),
+      ProxyProvider<ProblemsProvider, ProblemService>(
+        update: (_, problemsProvider, __) => ProblemService(
+            problemsProvider), // ProblemService에 ProblemsProvider 주입
+      ),
     ], child: const MyApp()),
   );
 }
@@ -48,7 +54,6 @@ class _MyHomePageState extends State<MyHomePage> {
   int _selectedIndex = 0;
   static const List<Widget> _widgetOptions = <Widget>[
     HomeScreen(),
-    //ProblemDetailScreen(),
     ProblemRegisterScreen(),
     DirectoryScreen(),
     SettingScreen(),

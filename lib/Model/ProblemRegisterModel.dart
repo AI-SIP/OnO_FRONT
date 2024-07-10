@@ -1,18 +1,17 @@
-import 'dart:convert';
-import 'dart:ffi';
+import 'package:image_picker/image_picker.dart';
 
 class ProblemRegisterModel {
-  String? imageUrl;
-  String? solveImageUrl;
-  String? answerImageUrl;
+  XFile? problemImage;
+  XFile? solveImage;
+  XFile? answerImage;
   String? memo;
   String? reference;
   DateTime? solvedAt;
 
   ProblemRegisterModel({
-    this.imageUrl,
-    this.solveImageUrl,
-    this.answerImageUrl,
+    this.problemImage,
+    this.solveImage,
+    this.answerImage,
     this.memo,
     this.reference,
     this.solvedAt,
@@ -20,9 +19,9 @@ class ProblemRegisterModel {
 
   Map<String, dynamic> toJson() {
     return {
-      'imageUrl': imageUrl,
-      'solveImageUrl': solveImageUrl,
-      'answerImageUrl': answerImageUrl,
+      'problemImage': problemImage,
+      'solveImage': solveImage,
+      'answerImage': answerImage,
       'memo': memo,
       'reference': reference,
       'solvedAt': solvedAt?.toIso8601String(),
@@ -31,9 +30,9 @@ class ProblemRegisterModel {
 
   factory ProblemRegisterModel.fromJson(Map<String, dynamic> json) {
     return ProblemRegisterModel(
-      imageUrl: json['imageUrl'],
-      solveImageUrl: json['solveImageUrl'],
-      answerImageUrl: json['answerImageUrl'],
+      problemImage: json['problemImage'],
+      solveImage: json['solveImage'],
+      answerImage: json['answerImage'],
       memo: json['memo'],
       reference: json['reference'],
       solvedAt: DateTime.parse(json['solvedAt']),

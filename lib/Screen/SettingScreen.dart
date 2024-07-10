@@ -39,10 +39,12 @@ class _SettingScreenState extends State<SettingScreen> {
             TextButton(
               onPressed: () async {
                 Navigator.of(context).pop();
-                await Provider.of<AuthService>(context, listen: false).signOut();
+                await Provider.of<AuthService>(context, listen: false)
+                    .signOut();
                 Navigator.pushReplacement(
                   context,
-                  MaterialPageRoute(builder: (context) => MyHomePage()), // MyHomePage로 이동
+                  MaterialPageRoute(
+                      builder: (context) => MyHomePage()), // MyHomePage로 이동
                 );
               },
               child: Text('확인'),
@@ -75,12 +77,16 @@ class _SettingScreenState extends State<SettingScreen> {
                         children: [
                           Text(
                             '${snapshot.data!['userName']}님 환영합니다!',
-                            style: const TextStyle(color: Colors.green, fontSize: 20, fontWeight: FontWeight.bold),
+                            style: const TextStyle(
+                                color: Colors.green,
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold),
                           ),
                           const SizedBox(height: 20),
                           Text(
                             '로그인 한 계정: ${snapshot.data!['userEmail']}',
-                            style: const TextStyle(color: Colors.green, fontSize: 16),
+                            style: const TextStyle(
+                                color: Colors.green, fontSize: 16),
                           ),
                           const SizedBox(height: 40),
                           ElevatedButton(
@@ -98,7 +104,8 @@ class _SettingScreenState extends State<SettingScreen> {
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(20),
                               ),
-                              padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 40, vertical: 15),
                             ),
                           ),
                         ],

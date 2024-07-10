@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:image_picker/image_picker.dart'; // XFile을 사용하기 위해 추가
 import 'package:mvp_front/Service/ProblemService.dart';
+import 'package:provider/provider.dart';
 import 'dart:io';
-import 'ProblemRegisterModel.dart';
-import 'DatePickerHandler.dart';
-import 'ImagePickerHandler.dart'; // 분리한 이미지 선택기 핸들러 가져오기
+import '../Provider/ProblemsProvider.dart';
+import '../Model/ProblemRegisterModel.dart';
+import '../GlobalModule/DatePickerHandler.dart';
+import '../GlobalModule/ImagePickerHandler.dart'; // 분리한 이미지 선택기 핸들러 가져오기
 import 'package:http/http.dart' as http;
 
 /*
@@ -28,11 +30,10 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
   final _notesController = TextEditingController(); // 오답 메모 입력 컨트롤러
   final ImagePickerHandler _imagePickerHandler =
       ImagePickerHandler(); // 이미지 선택기 핸들러 인스턴스
-  final ProblemService _problemService = ProblemService();
 
   XFile? _problemImage; // 문제 이미지 변수
-  XFile? _solutionImage; // 해설 이미지 변수
-  XFile? _mySolutionImage; // 나의 풀이 이미지 변수
+  XFile? _answerImage; // 해설 이미지 변수
+  XFile? _solveImage; // 나의 풀이 이미지 변수
 
   // 날짜 선택기를 표시하는 함수
   void _showCustomDatePicker() {
@@ -55,16 +56,14 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
   void _onImagePicked(XFile? pickedFile, String imageType) {
     if (pickedFile != null) {
       setState(() {
-        if (imageType == 'problem') {
+        if (imageType == 'problemImage') {
           _problemImage = pickedFile;
-        } else if (imageType == 'solution') {
-          _solutionImage = pickedFile;
-        } else if (imageType == 'mySolution') {
-          _mySolutionImage = pickedFile;
+        } else if (imageType == 'answerImage') {
+          _answerImage = pickedFile;
+        } else if (imageType == 'solveImage') {
+          _solveImage = pickedFile;
         }
       });
-      // 선택된 이미지를 처리합니다.
-      print('이미지 경로: ${pickedFile.path}');
     }
   }
 
@@ -95,7 +94,7 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
               isDefaultAction: true,
               child: Text("확인"),
               onPressed: () {
-                Navigator.of(context).pop(); // 다이얼로그 닫기
+                Navigator.of(context).pop(true); // 다이얼로그 닫기
               },
             ),
           ],
@@ -110,23 +109,24 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
     _notesController.clear();
     setState(() {
       _problemImage = null;
-      _solutionImage = null;
-      _mySolutionImage = null;
+      _answerImage = null;
+      _solveImage = null;
     });
   }
 
   Future<void> submitProblem() async {
     final problemData = ProblemRegisterModel(
-      imageUrl: _problemImage?.path,
-      solveImageUrl: _solutionImage?.path,
-      answerImageUrl: _mySolutionImage?.path,
+      problemImage: _problemImage,
+      solveImage: _answerImage,
+      answerImage: _solveImage,
       memo: _notesController.text,
       reference: _sourceController.text,
       solvedAt: _selectedDate,
     );
 
     resetForm();
-    await _problemService.submitProblem(problemData, context);
+    await Provider.of<ProblemsProvider>(context, listen: false)
+        .submitProblem(problemData, context);
     showSuccessDialog(context);
   }
 
@@ -216,12 +216,12 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
                           icon: const Icon(Icons.add,
                               color: Colors.green, size: 40),
                           onPressed: () {
-                            _showImagePicker('problem'); // 이미지 선택 팝업 호출
+                            _showImagePicker('problemImage'); // 이미지 선택 팝업 호출
                           },
                         )
                       : GestureDetector(
                           onTap: () {
-                            _showImagePicker('problem'); // 이미지 선택 팝업 호출
+                            _showImagePicker('problemImage'); // 이미지 선택 팝업 호출
                           },
                           child: Image.file(File(_problemImage!.path)),
                         ),
@@ -248,19 +248,19 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
                 height: isLandscape ? mediaQuery.size.height * 0.3 : 200,
                 color: Colors.grey[200],
                 child: Center(
-                  child: _solutionImage == null
+                  child: _answerImage == null
                       ? IconButton(
                           icon: const Icon(Icons.add,
                               color: Colors.green, size: 40),
                           onPressed: () {
-                            _showImagePicker('solution'); // 이미지 선택 팝업 호출
+                            _showImagePicker('answerImage'); // 이미지 선택 팝업 호출
                           },
                         )
                       : GestureDetector(
                           onTap: () {
-                            _showImagePicker('solution'); // 이미지 선택 팝업 호출
+                            _showImagePicker('answerImage'); // 이미지 선택 팝업 호출
                           },
-                          child: Image.file(File(_solutionImage!.path)),
+                          child: Image.file(File(_answerImage!.path)),
                         ),
                 ),
               ),
@@ -285,19 +285,19 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
                 height: isLandscape ? mediaQuery.size.height * 0.3 : 200,
                 color: Colors.grey[200],
                 child: Center(
-                  child: _mySolutionImage == null
+                  child: _solveImage == null
                       ? IconButton(
                           icon: const Icon(Icons.add,
                               color: Colors.green, size: 40),
                           onPressed: () {
-                            _showImagePicker('mySolution'); // 이미지 선택 팝업 호출
+                            _showImagePicker('solveImage'); // 이미지 선택 팝업 호출
                           },
                         )
                       : GestureDetector(
                           onTap: () {
-                            _showImagePicker('mySolution'); // 이미지 선택 팝업 호출
+                            _showImagePicker('solveImage'); // 이미지 선택 팝업 호출
                           },
-                          child: Image.file(File(_mySolutionImage!.path)),
+                          child: Image.file(File(_solveImage!.path)),
                         ),
                 ),
               ),

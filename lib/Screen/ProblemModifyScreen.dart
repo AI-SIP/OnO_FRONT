@@ -5,9 +5,9 @@ import 'package:image_picker/image_picker.dart'; // XFile을 사용하기 위해
 import 'package:mvp_front/Service/ProblemService.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:io';
-import '../ProblemRegister/DatePickerHandler.dart';
-import '../ProblemRegister/ImagePickerHandler.dart';
-import '../ProblemRegister/ProblemRegisterModel.dart';
+import '../GlobalModule/DatePickerHandler.dart';
+import '../GlobalModule/ImagePickerHandler.dart';
+import '../Model/ProblemRegisterModel.dart';
 import 'package:http/http.dart' as http;
 
 class ProblemModifyScreen extends StatefulWidget {
@@ -25,32 +25,35 @@ class ProblemModifyScreenState extends State<ProblemModifyScreen> {
   final _notesController = TextEditingController(); // 오답 메모 입력 컨트롤러
   final ImagePickerHandler _imagePickerHandler =
       ImagePickerHandler(); // 이미지 선택기 핸들러 인스턴스
-  final ProblemService _problemService = ProblemService();
+  //final ProblemService _problemService = ProblemService();
 
-  XFile? _problemImage; // 문제 이미지 변수
-  XFile? _solutionImage; // 해설 이미지 변수
-  XFile? _mySolutionImage; // 나의 풀이 이미지 변수
+  XFile? _problemImage; // 문제 이미지
+  XFile? _answerImage; // 해설 이미지
+  XFile? _solveImage; // 나의 풀이 이미지
 
   @override
   void initState() {
     super.initState();
-    _loadProblemData(); // 페이지 로드 시 문제 데이터 로드
+    //_loadProblemData(); // 페이지 로드 시 문제 데이터 로드
   }
 
+  /*
   Future<void> _loadProblemData() async {
     final problemData =
         await _problemService.getProblemDetails(widget.problemId);
     if (problemData != null) {
       setState(() {
-        _selectedDate = DateTime.parse(problemData['solvedAt']);
-        _sourceController.text = problemData['reference'];
-        _notesController.text = problemData['memo'];
-        _problemImage = XFile(problemData['imageUrl']);
-        _solutionImage = XFile(problemData['solveImageUrl']);
-        _mySolutionImage = XFile(problemData['answerImageUrl']);
+        _selectedDate = problemData.solvedAt ?? DateTime.now();
+        _sourceController.text = problemData.reference ?? '';
+        _notesController.text = problemData.memo ?? '';
+        _problemImage = XFile(problemData.problemImageUrl ?? '');
+        _solveImage = XFile(problemData.solveImageUrl ?? '');
+        _answerImage = XFile(problemData.answerImageUrl ?? '');
       });
     }
   }
+
+   */
 
   // 날짜 선택기를 표시하는 함수
   void _showCustomDatePicker() {
@@ -73,12 +76,12 @@ class ProblemModifyScreenState extends State<ProblemModifyScreen> {
   void _onImagePicked(XFile? pickedFile, String imageType) {
     if (pickedFile != null) {
       setState(() {
-        if (imageType == 'problem') {
+        if (imageType == 'problemImage') {
           _problemImage = pickedFile;
-        } else if (imageType == 'solution') {
-          _solutionImage = pickedFile;
-        } else if (imageType == 'mySolution') {
-          _mySolutionImage = pickedFile;
+        } else if (imageType == 'answerImage') {
+          _answerImage = pickedFile;
+        } else if (imageType == 'solveImage') {
+          _solveImage = pickedFile;
         }
       });
       // 선택된 이미지를 처리합니다.
@@ -106,23 +109,23 @@ class ProblemModifyScreenState extends State<ProblemModifyScreen> {
     _notesController.clear();
     setState(() {
       _problemImage = null;
-      _solutionImage = null;
-      _mySolutionImage = null;
+      _answerImage = null;
+      _solveImage = null;
     });
   }
 
   Future<void> submitProblem() async {
     final problemData = ProblemRegisterModel(
-      imageUrl: _problemImage?.path,
-      solveImageUrl: _solutionImage?.path,
-      answerImageUrl: _mySolutionImage?.path,
+      problemImage: _problemImage,
+      answerImage: _answerImage,
+      solveImage: _solveImage,
       memo: _notesController.text,
       reference: _sourceController.text,
       solvedAt: _selectedDate,
     );
 
     resetForm();
-    await _problemService.updateProblem(widget.problemId, problemData, context);
+    //await _problemService.updateProblem(widget.problemId, problemData, context);
     showSuccessDialog(context);
   }
 
@@ -237,7 +240,7 @@ class ProblemModifyScreenState extends State<ProblemModifyScreen> {
               ),
               const SizedBox(height: 10),
               GestureDetector(
-                onTap: () => _showImagePicker('problem'),
+                onTap: () => _showImagePicker('problemImage'),
                 child: Container(
                   height: isLandscape ? mediaQuery.size.height * 0.3 : 200,
                   color: Colors.grey[200],
@@ -266,14 +269,14 @@ class ProblemModifyScreenState extends State<ProblemModifyScreen> {
               ),
               const SizedBox(height: 10),
               GestureDetector(
-                onTap: () => _showImagePicker('solution'),
+                onTap: () => _showImagePicker('answerImage'),
                 child: Container(
                   height: isLandscape ? mediaQuery.size.height * 0.3 : 200,
                   color: Colors.grey[200],
                   child: Center(
-                    child: _solutionImage == null
+                    child: _answerImage == null
                         ? Icon(Icons.add, color: Colors.green, size: 40)
-                        : Image.file(File(_solutionImage!.path)),
+                        : Image.file(File(_answerImage!.path)),
                   ),
                 ),
               ),
@@ -295,14 +298,14 @@ class ProblemModifyScreenState extends State<ProblemModifyScreen> {
               ),
               const SizedBox(height: 10),
               GestureDetector(
-                onTap: () => _showImagePicker('mySolution'),
+                onTap: () => _showImagePicker('solveImage'),
                 child: Container(
                   height: isLandscape ? mediaQuery.size.height * 0.3 : 200,
                   color: Colors.grey[200],
                   child: Center(
-                    child: _mySolutionImage == null
+                    child: _solveImage == null
                         ? Icon(Icons.add, color: Colors.green, size: 40)
-                        : Image.file(File(_mySolutionImage!.path)),
+                        : Image.file(File(_solveImage!.path)),
                   ),
                 ),
               ),

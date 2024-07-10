@@ -1,22 +1,20 @@
-import 'dart:developer';
-import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'package:mvp_front/Model/ProblemRegisterModel.dart';
-import 'package:mvp_front/Provider/ProblemsProvider.dart';
 import 'dart:convert';
+import 'dart:developer';
+import 'package:http/http.dart' as http;
+import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class ProblemService extends ChangeNotifier {
+import '../Model/ProblemRegisterModel.dart';
+import '../Model/ProblemModel.dart';
 
-  ProblemsProvider _problemsProvider;
+class ProblemsProvider with ChangeNotifier {
+  List<ProblemModel> _problems = [];
 
-  ProblemService(this._problemsProvider);
+  List<ProblemModel> get problems => List.unmodifiable(_problems);
 
-  Future<void> fetchAndSaveProblems() async {
-    /*
+  Future<void> fetchProblems() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     int? userId = prefs.getInt('userId');
-
     if (userId == null) {
       log('User ID is not available');
       throw Exception('User ID is not available');
@@ -28,53 +26,17 @@ class ProblemService extends ChangeNotifier {
       'userId': userId.toString(),
     });
 
-    //log('Fetching problems: ${response.statusCode} ${response.body}');
-
     if (response.statusCode == 200) {
-      // 성공적으로 문제 목록을 받아온 경우
-      //_problems = json.decode(utf8.decode(response.bodyBytes)) as List<dynamic>;
-
-      var result = json.decode(utf8.decode(response.bodyBytes));
-      _problems.clear();
-      _problems.addAll(result);
+      List<dynamic> fetchedProblems =
+          json.decode(utf8.decode(response.bodyBytes));
+      _problems = fetchedProblems.map((e) => ProblemModel.fromJson(e)).toList();
       notifyListeners();
-
-      print('problems size: ${_problems.length}');
-      //await prefs.setString('problems', response.body); // 로컬에 문제 목록 저장
-      log('Problems fetched and saved locally');
+      log('Problems fetched and saved locally: ${_problems.length}');
     } else {
       log('Failed to load problems from server');
       throw Exception('Failed to load problems from server');
     }
-
-     */
-
-    await _problemsProvider.fetchProblems();
   }
-
-  // 문제 목록에서 특정 문제 상세 정보 가져오기
-  /*
-  Future<ProblemDetailModel?> getProblemDetails(int problemId) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-
-    try {
-      var problemDetails = _problems.firstWhere(
-          (problem) => problem['problemId'] == problemId,
-          orElse: () => null);
-
-      if (problemDetails != null) {
-        return ProblemDetailModel.fromJson(problemDetails);
-      } else {
-        log('Problem with ID $problemId not found');
-        return null;
-      }
-    } catch (e) {
-      log('Error fetching problem details for ID $problemId: $e');
-      return null;
-    }
-  }
-
-   */
 
   Future<void> submitProblem(
       ProblemRegisterModel problemData, BuildContext context) async {
@@ -117,7 +79,7 @@ class ProblemService extends ChangeNotifier {
       var response = await http.Response.fromStream(streamedResponse);
       if (response.statusCode == 200) {
         print('Problem successfully submitted');
-        await fetchAndSaveProblems();
+        await fetchProblems();
         //notifyListeners();
       } else {
         print('Failed to submit problem: ${response.reasonPhrase}');
@@ -127,35 +89,22 @@ class ProblemService extends ChangeNotifier {
     }
   }
 
-  Future<void> updateProblem(int problemId, ProblemRegisterModel problemData,
-      BuildContext context) async {
+  Future<ProblemModel?> getProblemDetails(int? problemId) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    int? userId = prefs.getInt('userId');
-
-    if (userId == null) {
-      throw Exception("User ID is not available");
-    }
 
     try {
-      final response = await http.put(
-        Uri.parse('http://localhost:8080/api/problem/$problemId'),
-        headers: {
-          'Content-Type': 'application/json; charset=UTF-8',
-          'userId': userId.toString()
-        },
-        body: jsonEncode(problemData.toJson()),
-      );
+      var problemDetails =
+          _problems.firstWhere((problem) => problem.problemId == problemId);
 
-      if (response.statusCode == 200) {
-        print('Problem successfully updated');
-
-        // 폴더 갱신
-        await fetchAndSaveProblems();
+      if (problemDetails != null) {
+        return ProblemModel.fromJson(problemDetails.toJson());
       } else {
-        print('Failed to update problem: ${response.body}');
+        log('Problem with ID $problemId not found');
+        return null;
       }
     } catch (e) {
-      print('Error updating problem: $e');
+      log('Error fetching problem details for ID $problemId: $e');
+      return null;
     }
   }
 
@@ -183,7 +132,7 @@ class ProblemService extends ChangeNotifier {
     if (response.statusCode == 200) {
       // 성공적으로 문제를 삭제한 경우
       //_problems.removeWhere((problem) => problem['problemId'] == problemId);
-      await fetchAndSaveProblems();
+      await fetchProblems();
       return true;
     } else {
       log('Failed to delete problem from server');
@@ -191,48 +140,45 @@ class ProblemService extends ChangeNotifier {
     }
   }
 
-  /*
   // Checks if there is a next problem
   bool hasNextProblem(int currentProblemId) {
     var currentIndex =
-        _problems.indexWhere((p) => p['problemId'] == currentProblemId);
+        _problems.indexWhere((p) => p.problemId == currentProblemId);
     return currentIndex >= 0 && currentIndex < _problems.length - 1;
   }
 
   // Checks if there is a previous problem
   bool hasPreviousProblem(int currentProblemId) {
     var currentIndex =
-        _problems.indexWhere((p) => p['problemId'] == currentProblemId);
+        _problems.indexWhere((p) => p.problemId == currentProblemId);
     return currentIndex > 0 && currentIndex < _problems.length;
   }
 
   // Get the ID of the next problem
-  int getNextProblemId(int currentProblemId) {
+  int? getNextProblemId(int currentProblemId) {
     var currentIndex =
-        _problems.indexWhere((p) => p['problemId'] == currentProblemId);
+        _problems.indexWhere((p) => p.problemId == currentProblemId);
     if (currentIndex >= 0 && currentIndex < _problems.length - 1) {
-      return _problems[currentIndex + 1]['problemId'];
+      return _problems[currentIndex + 1].problemId;
     } else if (currentIndex == _problems.length - 1) {
-      return _problems[0]['problemId'];
+      return _problems[0].problemId;
     }
     throw Exception('No next problem available.');
   }
 
   List<int> getProblemIds() {
-    return _problems.map((problem) => problem['problemId'] as int).toList();
+    return _problems.map((problem) => problem.problemId as int).toList();
   }
 
   // Get the ID of the previous problem
-  int getPreviousProblemId(int currentProblemId) {
+  int? getPreviousProblemId(int currentProblemId) {
     var currentIndex =
-        _problems.indexWhere((p) => p['problemId'] == currentProblemId);
+        _problems.indexWhere((p) => p.problemId == currentProblemId);
     if (currentIndex > 0) {
-      return _problems[currentIndex - 1]['problemId'];
+      return _problems[currentIndex - 1].problemId;
     } else if (currentIndex == 0) {
-      return _problems[_problems.length - 1]['problemId'];
+      return _problems[_problems.length - 1].problemId;
     }
     throw Exception('No previous problem available.');
   }
-
-   */
 }

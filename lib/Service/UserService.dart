@@ -1,9 +1,9 @@
-import 'dart:convert';
 import 'dart:developer';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class UserService {
-  Future<void> saveUserInfo(int userId, String userName, String userEmail) async {
+  Future<void> saveUserInfo(
+      int userId, String userName, String userEmail) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setInt('userId', userId);
     await prefs.setString('userName', userName);
