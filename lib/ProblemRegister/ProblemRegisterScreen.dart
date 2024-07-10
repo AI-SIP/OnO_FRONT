@@ -125,7 +125,8 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
     );
 
     resetForm();
-    await Provider.of<ProblemsProvider>(context, listen: false).submitProblem(problemData, context);
+    await Provider.of<ProblemsProvider>(context, listen: false)
+        .submitProblem(problemData, context);
     showSuccessDialog(context);
   }
 

@@ -20,7 +20,6 @@ class ProblemModifyScreen extends StatefulWidget {
 }
 
 class ProblemModifyScreenState extends State<ProblemModifyScreen> {
-
   DateTime _selectedDate = DateTime.now(); // 선택된 날짜를 저장하는 변수
   final _sourceController = TextEditingController(); // 출처 입력 컨트롤러
   final _notesController = TextEditingController(); // 오답 메모 입력 컨트롤러

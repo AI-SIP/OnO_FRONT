@@ -4,7 +4,11 @@ class UnderlinedText extends StatelessWidget {
   final String text;
   final TextStyle style;
 
-  const UnderlinedText({Key? key, required this.text, this.style = const TextStyle(fontSize: 20, fontFamily: 'font1')}) : super(key: key);
+  const UnderlinedText(
+      {Key? key,
+      required this.text,
+      this.style = const TextStyle(fontSize: 20, fontFamily: 'font1')})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {

@@ -20,7 +20,8 @@ void main() {
       //ChangeNotifierProvider(create: (_) => ProblemService()), // ProblemService를 Provider로 추가
       ChangeNotifierProvider(create: (_) => ProblemsProvider()),
       ProxyProvider<ProblemsProvider, ProblemService>(
-        update: (_, problemsProvider, __) => ProblemService(problemsProvider), // ProblemService에 ProblemsProvider 주입
+        update: (_, problemsProvider, __) => ProblemService(
+            problemsProvider), // ProblemService에 ProblemsProvider 주입
       ),
     ], child: const MyApp()),
   );

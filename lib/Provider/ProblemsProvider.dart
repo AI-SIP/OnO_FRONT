@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:developer';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
-import 'package:mvp_front/ProblemDetail/ProblemDetailModel.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../ProblemRegister/ProblemRegisterModel.dart';
@@ -90,7 +89,7 @@ class ProblemsProvider with ChangeNotifier {
     }
   }
 
-  Future<ProblemDetailModel?> getProblemDetails(int? problemId) async {
+  Future<ProblemModel?> getProblemDetails(int? problemId) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
 
     try {
@@ -98,7 +97,7 @@ class ProblemsProvider with ChangeNotifier {
           _problems.firstWhere((problem) => problem.problemId == problemId);
 
       if (problemDetails != null) {
-        return ProblemDetailModel.fromJson(problemDetails.toJson());
+        return ProblemModel.fromJson(problemDetails.toJson());
       } else {
         log('Problem with ID $problemId not found');
         return null;
@@ -107,5 +106,79 @@ class ProblemsProvider with ChangeNotifier {
       log('Error fetching problem details for ID $problemId: $e');
       return null;
     }
+  }
+
+  Future<bool> deleteProblem(int problemId) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    int? userId = prefs.getInt('userId');
+
+    if (userId == null) {
+      log('User ID is not available');
+      throw Exception('User ID is not available');
+    }
+
+    final url = Uri.parse('http://localhost:8080/api/problem');
+    final response = await http.delete(
+      url,
+      headers: {
+        'Content-Type': 'application/json; charset=UTF-8',
+        'userId': userId.toString(),
+        'problemId': problemId.toString(),
+      },
+    );
+
+    log('Deleting problem: ${response.statusCode} ${response.body}');
+
+    if (response.statusCode == 200) {
+      // 성공적으로 문제를 삭제한 경우
+      //_problems.removeWhere((problem) => problem['problemId'] == problemId);
+      await fetchProblems();
+      return true;
+    } else {
+      log('Failed to delete problem from server');
+      return false;
+    }
+  }
+
+  // Checks if there is a next problem
+  bool hasNextProblem(int currentProblemId) {
+    var currentIndex =
+        _problems.indexWhere((p) => p.problemId == currentProblemId);
+    return currentIndex >= 0 && currentIndex < _problems.length - 1;
+  }
+
+  // Checks if there is a previous problem
+  bool hasPreviousProblem(int currentProblemId) {
+    var currentIndex =
+        _problems.indexWhere((p) => p.problemId == currentProblemId);
+    return currentIndex > 0 && currentIndex < _problems.length;
+  }
+
+  // Get the ID of the next problem
+  int? getNextProblemId(int currentProblemId) {
+    var currentIndex =
+        _problems.indexWhere((p) => p.problemId == currentProblemId);
+    if (currentIndex >= 0 && currentIndex < _problems.length - 1) {
+      return _problems[currentIndex + 1].problemId;
+    } else if (currentIndex == _problems.length - 1) {
+      return _problems[0].problemId;
+    }
+    throw Exception('No next problem available.');
+  }
+
+  List<int> getProblemIds() {
+    return _problems.map((problem) => problem.problemId as int).toList();
+  }
+
+  // Get the ID of the previous problem
+  int? getPreviousProblemId(int currentProblemId) {
+    var currentIndex =
+        _problems.indexWhere((p) => p.problemId == currentProblemId);
+    if (currentIndex > 0) {
+      return _problems[currentIndex - 1].problemId;
+    } else if (currentIndex == 0) {
+      return _problems[_problems.length - 1].problemId;
+    }
+    throw Exception('No previous problem available.');
   }
 }

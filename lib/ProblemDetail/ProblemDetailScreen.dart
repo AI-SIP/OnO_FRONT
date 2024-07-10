@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:mvp_front/ProblemDetail/ProblemDetailModel.dart';
 import 'package:mvp_front/Provider/ProblemsProvider.dart';
 import 'package:provider/provider.dart';
-import 'package:mvp_front/Service/ProblemService.dart';
 import '../GlobalModule/DisplayImage.dart';
 import '../GlobalModule/GridPainter.dart';
 import '../GlobalModule/UnderlinedText.dart';
-import '../ProblemModify/ProblemModifyScreen.dart';
+import '../Provider/ProblemModel.dart';
 import 'NavigationButtons.dart';
 
 class ProblemDetailScreen extends StatefulWidget {
@@ -19,7 +17,7 @@ class ProblemDetailScreen extends StatefulWidget {
 }
 
 class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
-  late Future<ProblemDetailModel?> _problemDataFuture;
+  late Future<ProblemModel?> _problemDataFuture;
 
   @override
   void initState() {
@@ -28,8 +26,9 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
     _problemDataFuture = _fetchProblemDetails();
   }
 
-  Future<ProblemDetailModel?> _fetchProblemDetails() {
-    return Provider.of<ProblemsProvider>(context, listen: false).getProblemDetails(widget.problemId);
+  Future<ProblemModel?> _fetchProblemDetails() {
+    return Provider.of<ProblemsProvider>(context, listen: false)
+        .getProblemDetails(widget.problemId);
   }
 
   void _refreshProblemDetails() {
@@ -42,7 +41,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: FutureBuilder<ProblemDetailModel?>(
+        title: FutureBuilder<ProblemModel?>(
           future: _problemDataFuture,
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
@@ -72,7 +71,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
               if (result == 'edit') {
                 //_editProblem(context, widget.problemId);
               } else if (result == 'delete') {
-                _deleteProblem(context);
+                _deleteProblem(context, widget.problemId);
               }
             },
             itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
@@ -103,7 +102,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
           ),
         ],
       ),
-      body: FutureBuilder<ProblemDetailModel?>(
+      body: FutureBuilder<ProblemModel?>(
         future: _problemDataFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -120,8 +119,9 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
     );
   }
 
-  Widget buildProblemDetails(
-      BuildContext context, ProblemDetailModel problemDetailModel) {
+  Widget buildProblemDetails(BuildContext context, ProblemModel problemModel) {
+    ProblemsProvider provider = Provider.of<ProblemsProvider>(context);
+
     return Stack(
       children: [
         CustomPaint(
@@ -162,7 +162,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                             ),
                           ),
                           SizedBox(height: 8.0),
-                          UnderlinedText(text: '${problemDetailModel.solvedAt}'),
+                          UnderlinedText(text: '${problemModel.solvedAt}'),
                         ],
                       ),
                     ),
@@ -191,7 +191,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                             ),
                           ),
                           SizedBox(height: 8.0),
-                          UnderlinedText(text: '${problemDetailModel.reference}'),
+                          UnderlinedText(text: '${problemModel.reference}'),
                         ],
                       ),
                     ),
@@ -218,7 +218,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                 ),
                 SizedBox(height: 20.0),
                 DisplayImage(
-                    imagePath: problemDetailModel.processImageUrl,
+                    imagePath: problemModel.processImageUrl,
                     defaultImagePath: 'assets/process_image.png'),
                 SizedBox(height: 30.0),
                 ExpansionTile(
@@ -266,7 +266,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                             ),
                           ),
                           SizedBox(height: 8.0),
-                          UnderlinedText(text : '${problemDetailModel.memo}'),
+                          UnderlinedText(text: '${problemModel.memo}'),
                         ],
                       ),
                     ),
@@ -291,7 +291,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                     ),
                     SizedBox(height: 20.0),
                     DisplayImage(
-                        imagePath: problemDetailModel.problemImageUrl,
+                        imagePath: problemModel.problemImageUrl,
                         defaultImagePath: 'assets/problem_image.png'),
                     SizedBox(height: 20.0),
                     Container(
@@ -314,7 +314,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                     ),
                     SizedBox(height: 20.0),
                     DisplayImage(
-                        imagePath: problemDetailModel.solveImageUrl,
+                        imagePath: problemModel.solveImageUrl,
                         defaultImagePath: 'assets/solve_image.png'),
                     SizedBox(height: 20.0),
                     Container(
@@ -337,19 +337,17 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                     ),
                     SizedBox(height: 20.0),
                     DisplayImage(
-                        imagePath: problemDetailModel.answerImageUrl,
+                        imagePath: problemModel.answerImageUrl,
                         defaultImagePath: 'assets/answer_image.png'),
                     SizedBox(height: 20.0),
                   ],
                 ),
                 SizedBox(height: 20.0),
-                /*
                 NavigationButtons(
-                    context: context,
-                    service: problemService,
-                    currentId: widget.problemId),
-
-                 */
+                  context: context,
+                  provider: provider,
+                  currentId: widget.problemId!,
+                ),
                 SizedBox(height: 50.0),
               ],
             ),
@@ -375,7 +373,14 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
 
    */
 
-  void _deleteProblem(BuildContext context) {
+  void _deleteProblem(BuildContext context, int? problemId) {
+    if (problemId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('문제 ID가 유효하지 않습니다.')),
+      );
+      return;
+    }
+
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -389,10 +394,11 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
               },
               child: Text('취소'),
             ),
-            /*
             TextButton(
               onPressed: () {
-                problemService.deleteProblem(widget.problemId).then((success) {
+                Provider.of<ProblemsProvider>(context, listen: false)
+                    .deleteProblem(problemId)
+                    .then((success) {
                   Navigator.of(context).pop(); // 다이얼로그 닫기
                   if (success) {
                     Navigator.of(context).pop(true); // 이전 화면으로 이동
@@ -404,12 +410,15 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                       SnackBar(content: Text('문제 삭제에 실패했습니다.')),
                     );
                   }
+                }).catchError((error) {
+                  Navigator.of(context).pop(); // 다이얼로그 닫기
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('오류 발생: ${error.toString()}')),
+                  );
                 });
               },
               child: Text('삭제'),
             ),
-
-             */
           ],
         );
       },

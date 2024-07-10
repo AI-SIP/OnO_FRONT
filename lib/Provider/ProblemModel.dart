@@ -30,7 +30,7 @@ class ProblemModel {
       memo: json['memo'],
       reference: json['reference'],
       solvedAt:
-      json['solvedAt'] != null ? DateTime.parse(json['solvedAt']) : null,
+          json['solvedAt'] != null ? DateTime.parse(json['solvedAt']) : null,
     );
   }
 

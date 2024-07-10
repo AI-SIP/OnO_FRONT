@@ -19,7 +19,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-// ProblemsProvider에서 데이터를 로드
+      // ProblemsProvider에서 데이터를 로드
       Provider.of<ProblemsProvider>(context, listen: false).fetchProblems();
     });
   }
@@ -61,7 +61,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => ProblemDetailScreen(problemId: problem.problemId),
+            builder: (context) =>
+                ProblemDetailScreen(problemId: problem.problemId),
           ),
         ).then((value) {
           if (value == true) {

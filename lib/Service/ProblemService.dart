@@ -1,23 +1,18 @@
 import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:mvp_front/ProblemDetail/ProblemDetailModel.dart';
 import 'package:mvp_front/ProblemRegister/ProblemRegisterModel.dart';
 import 'package:mvp_front/Provider/ProblemsProvider.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:provider/provider.dart';
 
 class ProblemService extends ChangeNotifier {
-  //List<dynamic> _problems = []; // 문제 목록 저장할 리스트
-  //List<dynamic> get problems => _problems;
 
   ProblemsProvider _problemsProvider;
 
   ProblemService(this._problemsProvider);
 
   Future<void> fetchAndSaveProblems() async {
-
     /*
     SharedPreferences prefs = await SharedPreferences.getInstance();
     int? userId = prefs.getInt('userId');
