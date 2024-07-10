@@ -20,12 +20,13 @@ class ProblemModifyScreen extends StatefulWidget {
 }
 
 class ProblemModifyScreenState extends State<ProblemModifyScreen> {
+
   DateTime _selectedDate = DateTime.now(); // 선택된 날짜를 저장하는 변수
   final _sourceController = TextEditingController(); // 출처 입력 컨트롤러
   final _notesController = TextEditingController(); // 오답 메모 입력 컨트롤러
   final ImagePickerHandler _imagePickerHandler =
       ImagePickerHandler(); // 이미지 선택기 핸들러 인스턴스
-  final ProblemService _problemService = ProblemService();
+  //final ProblemService _problemService = ProblemService();
 
   XFile? _problemImage; // 문제 이미지
   XFile? _answerImage; // 해설 이미지
@@ -34,9 +35,10 @@ class ProblemModifyScreenState extends State<ProblemModifyScreen> {
   @override
   void initState() {
     super.initState();
-    _loadProblemData(); // 페이지 로드 시 문제 데이터 로드
+    //_loadProblemData(); // 페이지 로드 시 문제 데이터 로드
   }
 
+  /*
   Future<void> _loadProblemData() async {
     final problemData =
         await _problemService.getProblemDetails(widget.problemId);
@@ -51,6 +53,8 @@ class ProblemModifyScreenState extends State<ProblemModifyScreen> {
       });
     }
   }
+
+   */
 
   // 날짜 선택기를 표시하는 함수
   void _showCustomDatePicker() {
@@ -122,7 +126,7 @@ class ProblemModifyScreenState extends State<ProblemModifyScreen> {
     );
 
     resetForm();
-    await _problemService.updateProblem(widget.problemId, problemData, context);
+    //await _problemService.updateProblem(widget.problemId, problemData, context);
     showSuccessDialog(context);
   }
 

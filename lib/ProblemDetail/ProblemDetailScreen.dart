@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mvp_front/ProblemDetail/ProblemDetailModel.dart';
+import 'package:mvp_front/Provider/ProblemsProvider.dart';
 import 'package:provider/provider.dart';
 import 'package:mvp_front/Service/ProblemService.dart';
 import '../GlobalModule/DisplayImage.dart';
@@ -9,7 +10,7 @@ import '../ProblemModify/ProblemModifyScreen.dart';
 import 'NavigationButtons.dart';
 
 class ProblemDetailScreen extends StatefulWidget {
-  final int problemId;
+  final int? problemId;
 
   ProblemDetailScreen({Key? key, required this.problemId}) : super(key: key);
 
@@ -19,17 +20,16 @@ class ProblemDetailScreen extends StatefulWidget {
 
 class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
   late Future<ProblemDetailModel?> _problemDataFuture;
-  late ProblemService problemService;
 
   @override
   void initState() {
     super.initState();
-    problemService = Provider.of<ProblemService>(context, listen: false);
+    //problemService = Provider.of<ProblemService>(context, listen: false);
     _problemDataFuture = _fetchProblemDetails();
   }
 
   Future<ProblemDetailModel?> _fetchProblemDetails() {
-    return problemService.getProblemDetails(widget.problemId);
+    return Provider.of<ProblemsProvider>(context, listen: false).getProblemDetails(widget.problemId);
   }
 
   void _refreshProblemDetails() {
@@ -70,7 +70,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
           PopupMenuButton<String>(
             onSelected: (String result) {
               if (result == 'edit') {
-                _editProblem(context, widget.problemId);
+                //_editProblem(context, widget.problemId);
               } else if (result == 'delete') {
                 _deleteProblem(context);
               }
@@ -343,10 +343,13 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                   ],
                 ),
                 SizedBox(height: 20.0),
+                /*
                 NavigationButtons(
                     context: context,
                     service: problemService,
                     currentId: widget.problemId),
+
+                 */
                 SizedBox(height: 50.0),
               ],
             ),
@@ -356,6 +359,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
     );
   }
 
+  /*
   void _editProblem(BuildContext context, int problemId) {
     Navigator.push(
       context,
@@ -368,6 +372,8 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
       }
     });
   }
+
+   */
 
   void _deleteProblem(BuildContext context) {
     showDialog(
@@ -383,6 +389,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
               },
               child: Text('취소'),
             ),
+            /*
             TextButton(
               onPressed: () {
                 problemService.deleteProblem(widget.problemId).then((success) {
@@ -401,6 +408,8 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
               },
               child: Text('삭제'),
             ),
+
+             */
           ],
         );
       },

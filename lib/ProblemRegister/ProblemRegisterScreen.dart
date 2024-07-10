@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:image_picker/image_picker.dart'; // XFile을 사용하기 위해 추가
 import 'package:mvp_front/Service/ProblemService.dart';
+import 'package:provider/provider.dart';
 import 'dart:io';
+import '../Provider/ProblemsProvider.dart';
 import 'ProblemRegisterModel.dart';
 import 'DatePickerHandler.dart';
 import 'ImagePickerHandler.dart'; // 분리한 이미지 선택기 핸들러 가져오기
@@ -28,7 +30,6 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
   final _notesController = TextEditingController(); // 오답 메모 입력 컨트롤러
   final ImagePickerHandler _imagePickerHandler =
       ImagePickerHandler(); // 이미지 선택기 핸들러 인스턴스
-  final ProblemService _problemService = ProblemService();
 
   XFile? _problemImage; // 문제 이미지 변수
   XFile? _answerImage; // 해설 이미지 변수
@@ -93,7 +94,7 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
               isDefaultAction: true,
               child: Text("확인"),
               onPressed: () {
-                Navigator.of(context).pop(); // 다이얼로그 닫기
+                Navigator.of(context).pop(true); // 다이얼로그 닫기
               },
             ),
           ],
@@ -124,7 +125,7 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
     );
 
     resetForm();
-    await _problemService.submitProblem(problemData, context);
+    await Provider.of<ProblemsProvider>(context, listen: false).submitProblem(problemData, context);
     showSuccessDialog(context);
   }
 

@@ -1,16 +1,24 @@
 import 'dart:developer';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:mvp_front/ProblemDetail/ProblemDetailModel.dart';
 import 'package:mvp_front/ProblemRegister/ProblemRegisterModel.dart';
+import 'package:mvp_front/Provider/ProblemsProvider.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
 
-class ProblemService {
-  List<dynamic> _problems = []; // 문제 목록 저장할 리스트
+class ProblemService extends ChangeNotifier {
+  //List<dynamic> _problems = []; // 문제 목록 저장할 리스트
+  //List<dynamic> get problems => _problems;
+
+  ProblemsProvider _problemsProvider;
+
+  ProblemService(this._problemsProvider);
 
   Future<void> fetchAndSaveProblems() async {
+
+    /*
     SharedPreferences prefs = await SharedPreferences.getInstance();
     int? userId = prefs.getInt('userId');
 
@@ -25,47 +33,53 @@ class ProblemService {
       'userId': userId.toString(),
     });
 
-    log('Fetching problems: ${response.statusCode} ${response.body}');
+    //log('Fetching problems: ${response.statusCode} ${response.body}');
 
     if (response.statusCode == 200) {
       // 성공적으로 문제 목록을 받아온 경우
-      _problems = json.decode(utf8.decode(response.bodyBytes)) as List<dynamic>;
-      await prefs.setString('problems', response.body); // 로컬에 문제 목록 저장
+      //_problems = json.decode(utf8.decode(response.bodyBytes)) as List<dynamic>;
+
+      var result = json.decode(utf8.decode(response.bodyBytes));
+      _problems.clear();
+      _problems.addAll(result);
+      notifyListeners();
+
+      print('problems size: ${_problems.length}');
+      //await prefs.setString('problems', response.body); // 로컬에 문제 목록 저장
       log('Problems fetched and saved locally');
     } else {
       log('Failed to load problems from server');
       throw Exception('Failed to load problems from server');
     }
+
+     */
+
+    await _problemsProvider.fetchProblems();
   }
 
   // 문제 목록에서 특정 문제 상세 정보 가져오기
+  /*
   Future<ProblemDetailModel?> getProblemDetails(int problemId) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? problemsData = prefs.getString('problems');
 
-    if (problemsData != null) {
-      try {
-        List<dynamic> problemsList =
-            json.decode(utf8.decode(problemsData.codeUnits));
-        var problemDetails = problemsList.firstWhere(
-            (problem) => problem['problemId'] == problemId,
-            orElse: () => null);
+    try {
+      var problemDetails = _problems.firstWhere(
+          (problem) => problem['problemId'] == problemId,
+          orElse: () => null);
 
-        if (problemDetails != null) {
-          return ProblemDetailModel.fromJson(problemDetails);
-        } else {
-          log('Problem with ID $problemId not found');
-          return null;
-        }
-      } catch (e) {
-        log('Error fetching problem details for ID $problemId: $e');
+      if (problemDetails != null) {
+        return ProblemDetailModel.fromJson(problemDetails);
+      } else {
+        log('Problem with ID $problemId not found');
         return null;
       }
-    } else {
-      log('No problems data found in SharedPreferences');
+    } catch (e) {
+      log('Error fetching problem details for ID $problemId: $e');
       return null;
     }
   }
+
+   */
 
   Future<void> submitProblem(
       ProblemRegisterModel problemData, BuildContext context) async {
@@ -108,9 +122,8 @@ class ProblemService {
       var response = await http.Response.fromStream(streamedResponse);
       if (response.statusCode == 200) {
         print('Problem successfully submitted');
-
-        // 폴더 갱신
         await fetchAndSaveProblems();
+        //notifyListeners();
       } else {
         print('Failed to submit problem: ${response.reasonPhrase}');
       }
@@ -174,7 +187,7 @@ class ProblemService {
 
     if (response.statusCode == 200) {
       // 성공적으로 문제를 삭제한 경우
-      _problems.removeWhere((problem) => problem['problemId'] == problemId);
+      //_problems.removeWhere((problem) => problem['problemId'] == problemId);
       await fetchAndSaveProblems();
       return true;
     } else {
@@ -183,6 +196,7 @@ class ProblemService {
     }
   }
 
+  /*
   // Checks if there is a next problem
   bool hasNextProblem(int currentProblemId) {
     var currentIndex =
@@ -224,4 +238,6 @@ class ProblemService {
     }
     throw Exception('No previous problem available.');
   }
+
+   */
 }

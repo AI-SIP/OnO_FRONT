@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'Home/HomeScreen.dart';
 import 'Directory/DirectoryScreen.dart';
 import 'ProblemRegister/ProblemRegisterScreen.dart';
+import 'Provider/ProblemsProvider.dart';
 import 'Service/ProblemService.dart';
 import 'Setting/SettingScreen.dart';
 import 'AppbarWithLogo.dart';
@@ -16,7 +17,11 @@ void main() {
   runApp(
     MultiProvider(providers: [
       ChangeNotifierProvider(create: (_) => AuthService()),
-      Provider(create: (_) => ProblemService()), // ProblemService를 Provider로 추가
+      //ChangeNotifierProvider(create: (_) => ProblemService()), // ProblemService를 Provider로 추가
+      ChangeNotifierProvider(create: (_) => ProblemsProvider()),
+      ProxyProvider<ProblemsProvider, ProblemService>(
+        update: (_, problemsProvider, __) => ProblemService(problemsProvider), // ProblemService에 ProblemsProvider 주입
+      ),
     ], child: const MyApp()),
   );
 }

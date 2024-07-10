@@ -12,6 +12,11 @@ class NavigationButtons extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return Row(
+
+    );
+  }
+    /*
     final problemIds = service.getProblemIds(); // 모든 문제 ID를 가져옴
     int currentIndex = problemIds.indexOf(currentId);
     int previousIndex =
@@ -62,4 +67,6 @@ class NavigationButtons extends StatelessWidget {
       ));
     }
   }
+
+     */
 }

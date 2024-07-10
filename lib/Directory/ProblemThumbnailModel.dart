@@ -1,16 +1,16 @@
 import 'dart:convert';
 
 class ProblemThumbnailModel {
-  final int id;
-  final String title;
+  final int problemId;
+  final String reference;
   final String problemImageUrl;
 
-  ProblemThumbnailModel({required this.id, required this.title, required this.problemImageUrl});
+  ProblemThumbnailModel({required this.problemId, required this.reference, required this.problemImageUrl});
 
   factory ProblemThumbnailModel.fromJson(Map<String, dynamic> json) {
     return ProblemThumbnailModel(
-      id: json['problemId'],
-      title: json['reference'],
+      problemId: json['problemId'],
+      reference: json['reference'],
       problemImageUrl: json['problemImageUrl'],
     );
   }
