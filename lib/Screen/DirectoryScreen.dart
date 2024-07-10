@@ -61,13 +61,11 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) =>
-                ProblemDetailScreen(problemId: problem.problemId),
+            builder: (context) => ProblemDetailScreen(problemId: problem.problemId),
           ),
         ).then((value) {
           if (value == true) {
-            Provider.of<ProblemsProvider>(context, listen: false)
-                .fetchProblems();
+            Provider.of<ProblemsProvider>(context, listen: false).fetchProblems();
           }
         });
       },
@@ -76,17 +74,16 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
           children: <Widget>[
             Expanded(
               child: Container(
+                height: 150, // 고정된 높이 설정
                 decoration: BoxDecoration(
                   border: Border.all(color: Colors.green, width: 1.0),
                   borderRadius: BorderRadius.circular(8.0),
                 ),
-                child: AspectRatio(
-                  aspectRatio: 1,
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(8.0),
-                    child: DisplayImage(
-                        imagePath: problem.problemImageUrl, // 이미지 경로 업데이트
-                        defaultImagePath: defaultImage),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(8.0),
+                  child: DisplayImage(
+                    imagePath: problem.problemImageUrl, // 이미지 경로 업데이트
+                    defaultImagePath: defaultImage,
                   ),
                 ),
               ),
@@ -101,6 +98,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                 fontWeight: FontWeight.bold,
               ),
               textAlign: TextAlign.center,
+              overflow: TextOverflow.ellipsis, // 넘치는 텍스트는 말줄임표로 처리
+              maxLines: 1, // 텍스트를 한 줄로 제한
             ),
           ],
         ),

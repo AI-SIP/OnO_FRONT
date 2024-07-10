@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:mvp_front/Provider/ProblemsProvider.dart';
 import 'package:provider/provider.dart';
 import '../GlobalModule/DisplayImage.dart';
@@ -121,6 +122,8 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
 
   Widget buildProblemDetails(BuildContext context, ProblemModel problemModel) {
     ProblemsProvider provider = Provider.of<ProblemsProvider>(context);
+    final formattedDate =
+        DateFormat('yyyy년 M월 d일 HH시 mm분').format(problemModel.solvedAt!);
 
     return Stack(
       children: [
@@ -138,66 +141,39 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
+                    Icon(Icons.calendar_today, color: Colors.green),
+                    SizedBox(width: 8),
                     Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start, // 좌측 정렬
-                        children: [
-                          Container(
-                            width: double.infinity,
-                            alignment: Alignment.centerLeft, // 좌측 정렬
-                            padding: EdgeInsets.symmetric(vertical: 4.0),
-                            child: Row(
-                              mainAxisAlignment:
-                                  MainAxisAlignment.start, // 좌측 정렬
-                              children: [
-                                Icon(Icons.calendar_today, color: Colors.green),
-                                SizedBox(width: 8.0),
-                                Text('푼 날짜',
-                                    style: TextStyle(
-                                        fontFamily: 'font1',
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.green)),
-                              ],
-                            ),
-                          ),
-                          SizedBox(height: 8.0),
-                          UnderlinedText(text: '${problemModel.solvedAt}'),
-                        ],
-                      ),
-                    ),
-                    SizedBox(width: 16.0),
+                        child: Text('푼 날짜',
+                            style: TextStyle(
+                                fontFamily: 'font1',
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.green))),
+                    Icon(Icons.info, color: Colors.green),
+                    SizedBox(width: 8),
                     Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start, // 좌측 정렬
-                        children: [
-                          Container(
-                            width: double.infinity,
-                            alignment: Alignment.centerLeft, // 좌측 정렬
-                            padding: EdgeInsets.symmetric(vertical: 4.0),
-                            child: Row(
-                              mainAxisAlignment:
-                                  MainAxisAlignment.start, // 좌측 정렬
-                              children: [
-                                Icon(Icons.info, color: Colors.green),
-                                SizedBox(width: 8.0),
-                                Text('문제 출처',
-                                    style: TextStyle(
-                                        fontFamily: 'font1',
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.green)),
-                              ],
-                            ),
-                          ),
-                          SizedBox(height: 8.0),
-                          UnderlinedText(text: '${problemModel.reference}'),
-                        ],
-                      ),
-                    ),
+                        child: Text('문제 출처',
+                            style: TextStyle(
+                                fontFamily: 'font1',
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.green))),
                   ],
                 ),
-                SizedBox(height: 20.0),
+                SizedBox(height: 4),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: UnderlinedText(text: '${formattedDate}', fontSize: 16,),),
+                    Expanded(
+                        child: UnderlinedText(text: '${problemModel.reference}'),
+                    ),
+
+                  ],
+                ),
+                SizedBox(height: 20),
                 Container(
                   width: double.infinity,
                   alignment: Alignment.centerLeft, // 좌측 정렬

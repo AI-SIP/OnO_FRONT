@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 
 class UnderlinedText extends StatelessWidget {
   final String text;
+  final double fontSize;
   final TextStyle style;
 
   const UnderlinedText(
       {Key? key,
       required this.text,
+        this.fontSize = 20,
       this.style = const TextStyle(fontSize: 20, fontFamily: 'font1')})
       : super(key: key);
 
@@ -16,7 +18,7 @@ class UnderlinedText extends StatelessWidget {
       children: [
         Text(
           text,
-          style: style,
+          style: style.copyWith(fontSize: fontSize),
         ),
         Positioned(
           bottom: 0,
