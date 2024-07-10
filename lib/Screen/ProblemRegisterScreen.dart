@@ -5,9 +5,9 @@ import 'package:mvp_front/Service/ProblemService.dart';
 import 'package:provider/provider.dart';
 import 'dart:io';
 import '../Provider/ProblemsProvider.dart';
-import 'ProblemRegisterModel.dart';
-import 'DatePickerHandler.dart';
-import 'ImagePickerHandler.dart'; // 분리한 이미지 선택기 핸들러 가져오기
+import '../Model/ProblemRegisterModel.dart';
+import '../GlobalModule/DatePickerHandler.dart';
+import '../GlobalModule/ImagePickerHandler.dart'; // 분리한 이미지 선택기 핸들러 가져오기
 import 'package:http/http.dart' as http;
 
 /*

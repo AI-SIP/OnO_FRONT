@@ -4,8 +4,8 @@ import 'package:provider/provider.dart';
 import '../GlobalModule/DisplayImage.dart';
 import '../GlobalModule/GridPainter.dart';
 import '../GlobalModule/UnderlinedText.dart';
-import '../Provider/ProblemModel.dart';
-import 'NavigationButtons.dart';
+import '../Model/ProblemModel.dart';
+import '../GlobalModule/NavigationButtons.dart';
 
 class ProblemDetailScreen extends StatefulWidget {
   final int? problemId;

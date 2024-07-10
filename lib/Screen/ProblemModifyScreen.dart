@@ -5,9 +5,9 @@ import 'package:image_picker/image_picker.dart'; // XFile을 사용하기 위해
 import 'package:mvp_front/Service/ProblemService.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:io';
-import '../ProblemRegister/DatePickerHandler.dart';
-import '../ProblemRegister/ImagePickerHandler.dart';
-import '../ProblemRegister/ProblemRegisterModel.dart';
+import '../GlobalModule/DatePickerHandler.dart';
+import '../GlobalModule/ImagePickerHandler.dart';
+import '../Model/ProblemRegisterModel.dart';
 import 'package:http/http.dart' as http;
 
 class ProblemModifyScreen extends StatefulWidget {

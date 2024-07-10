@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mvp_front/Provider/ProblemsProvider.dart';
-import 'ProblemDetailScreen.dart';
+import '../Screen/ProblemDetailScreen.dart';
 
 class NavigationButtons extends StatelessWidget {
   final BuildContext context;

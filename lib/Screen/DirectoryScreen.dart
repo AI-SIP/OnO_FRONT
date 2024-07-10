@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../GlobalModule/DisplayImage.dart';
-import '../ProblemDetail/ProblemDetailScreen.dart';
-import '../Provider/ProblemModel.dart';
+import 'ProblemDetailScreen.dart';
+import '../Model/ProblemModel.dart';
 import '../Provider/ProblemsProvider.dart'; // ProblemsProvider import
 
 class DirectoryScreen extends StatefulWidget {

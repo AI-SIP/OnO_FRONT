@@ -1,4 +1,4 @@
-import 'package:mvp_front/Directory/ProblemThumbnailModel.dart';
+import 'package:mvp_front/Model/ProblemThumbnailModel.dart';
 import 'package:mvp_front/Provider/ProblemsProvider.dart'; // ProblemsProvider import
 import 'dart:developer';
 

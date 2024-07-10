@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:mvp_front/Service/AuthService.dart';
 import 'package:provider/provider.dart';
-import 'Home/HomeScreen.dart';
-import 'Directory/DirectoryScreen.dart';
-import 'ProblemRegister/ProblemRegisterScreen.dart';
+import 'Screen/HomeScreen.dart';
+import 'Screen/DirectoryScreen.dart';
+import 'Screen/ProblemRegisterScreen.dart';
 import 'Provider/ProblemsProvider.dart';
 import 'Service/ProblemService.dart';
-import 'Setting/SettingScreen.dart';
-import 'AppbarWithLogo.dart';
+import 'Screen/SettingScreen.dart';
+import 'GlobalModule/AppbarWithLogo.dart';
 
 /*
   메인 함수

@@ -4,8 +4,8 @@ import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../ProblemRegister/ProblemRegisterModel.dart';
-import 'ProblemModel.dart';
+import '../Model/ProblemRegisterModel.dart';
+import '../Model/ProblemModel.dart';
 
 class ProblemsProvider with ChangeNotifier {
   List<ProblemModel> _problems = [];
