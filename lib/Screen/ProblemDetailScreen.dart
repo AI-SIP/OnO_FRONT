@@ -139,41 +139,47 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
               children: [
                 SizedBox(height: 16.0),
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Icon(Icons.calendar_today, color: Colors.green),
                     SizedBox(width: 8),
-                    Expanded(
-                        child: Text('푼 날짜',
-                            style: TextStyle(
-                                fontFamily: 'font1',
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.green))),
-                    Icon(Icons.info, color: Colors.green),
-                    SizedBox(width: 8),
-                    Expanded(
-                        child: Text('문제 출처',
-                            style: TextStyle(
-                                fontFamily: 'font1',
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.green))),
+                    Text('푼 날짜',
+                        style: TextStyle(
+                            fontFamily: 'font1',
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.green)),
+                    Spacer(), // 추가: 여백을 만들어 텍스트를 오른쪽으로 밀어줌
+                    UnderlinedText(text: formattedDate, fontSize: 18),
                   ],
                 ),
-                SizedBox(height: 4),
+                SizedBox(height: 25.0),
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.start, // 레이블을 위로 정렬
                   children: [
                     Expanded(
-                      child: UnderlinedText(text: '${formattedDate}', fontSize: 16,),),
-                    Expanded(
-                        child: UnderlinedText(text: '${problemModel.reference}'),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(children: [
+                            Icon(Icons.info, color: Colors.green),
+                            SizedBox(width: 8),
+                            Text('문제 출처',
+                                style: TextStyle(
+                                    fontFamily: 'font1',
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.green)),
+                          ]),
+                          SizedBox(height: 10.0),
+                          UnderlinedText(
+                              text: problemModel.reference ?? '출처 없음',
+                              fontSize: 18),
+                        ],
+                      ),
                     ),
-
                   ],
                 ),
-                SizedBox(height: 20),
+                SizedBox(height: 30.0),
                 Container(
                   width: double.infinity,
                   alignment: Alignment.centerLeft, // 좌측 정렬
@@ -216,7 +222,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                     ),
                   ),
                   children: [
-                    SizedBox(height: 20.0),
+                    SizedBox(height: 10.0),
                     Padding(
                       padding: const EdgeInsets.all(8.0),
                       child: Column(

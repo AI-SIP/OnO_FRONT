@@ -3,33 +3,25 @@ import 'package:flutter/material.dart';
 class UnderlinedText extends StatelessWidget {
   final String text;
   final double fontSize;
-  final TextStyle style;
+  final Color color;
 
-  const UnderlinedText(
-      {Key? key,
-      required this.text,
-        this.fontSize = 20,
-      this.style = const TextStyle(fontSize: 20, fontFamily: 'font1')})
+  const UnderlinedText({Key? key, required this.text, this.fontSize = 20, this.color = Colors.black})
       : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        Text(
-          text,
-          style: style.copyWith(fontSize: fontSize),
-        ),
-        Positioned(
-          bottom: 0,
-          left: 0,
-          right: 0,
-          child: Container(
+    return IntrinsicWidth(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(text, style: TextStyle(fontSize: fontSize, fontFamily: 'font1', fontWeight: FontWeight.bold, color: color)),
+          Container(
+            margin: EdgeInsets.only(top: 2),
             height: 2,
-            color: Colors.red.withOpacity(0.5), // 밑줄 색상 및 투명도 조절
+            color: Colors.red.withOpacity(0.5),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
