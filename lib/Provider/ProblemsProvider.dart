@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:developer';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
+import 'package:mvp_front/Config/AppConfig.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../Model/ProblemRegisterModel.dart';
@@ -20,7 +21,7 @@ class ProblemsProvider with ChangeNotifier {
       throw Exception('User ID is not available');
     }
 
-    final url = Uri.parse('http://localhost:8080/api/problems');
+    final url = Uri.parse('${Appconfig.baseUrl}/api/problems');
     final response = await http.get(url, headers: {
       'Content-Type': 'application/json; charset=UTF-8',
       'userId': userId.toString(),
@@ -47,7 +48,7 @@ class ProblemsProvider with ChangeNotifier {
       throw Exception("User ID is not available");
     }
 
-    var uri = Uri.parse('http://localhost:8080/api/problem');
+    var uri = Uri.parse('${Appconfig.baseUrl}/api/problem');
     var request = http.MultipartRequest('POST', uri)
       ..headers.addAll({'userId': userId.toString()});
     request.fields['solvedAt'] = problemData.solvedAt?.toIso8601String() ?? "";
@@ -108,6 +109,40 @@ class ProblemsProvider with ChangeNotifier {
     }
   }
 
+  /*
+  Future<void> updateProblem(int problemId, ProblemRegisterModel problemData,
+      BuildContext context) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    int? userId = prefs.getInt('userId');
+
+    if (userId == null) {
+      throw Exception("User ID is not available");
+    }
+
+    try {
+      final response = await http.put(
+        Uri.parse('${Appconfig.baseUrl}/api/problem/$problemId'),
+        headers: {
+          'Content-Type': 'application/json; charset=UTF-8',
+          'userId': userId.toString()
+        },
+        body: jsonEncode(problemData.toJson()),
+      );
+
+      if (response.statusCode == 200) {
+        print('Problem successfully updated');
+
+        // 폴더 갱신
+        await fetchAndSaveProblems();
+      } else {
+        print('Failed to update problem: ${response.body}');
+      }
+    } catch (e) {
+      print('Error updating problem: $e');
+    }
+  }
+   */
+
   Future<bool> deleteProblem(int problemId) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     int? userId = prefs.getInt('userId');
@@ -117,7 +152,7 @@ class ProblemsProvider with ChangeNotifier {
       throw Exception('User ID is not available');
     }
 
-    final url = Uri.parse('http://localhost:8080/api/problem');
+    final url = Uri.parse('${Appconfig.baseUrl}/api/problem');
     final response = await http.delete(
       url,
       headers: {

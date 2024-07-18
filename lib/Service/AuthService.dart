@@ -7,6 +7,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:http/http.dart' as http;
+import '../Config/AppConfig.dart';
 import '../Service/UserService.dart';
 
 class AuthService with ChangeNotifier {
@@ -42,7 +43,7 @@ class AuthService with ChangeNotifier {
 
   // 구글 로그인에 성공했을 때, 유저 정보를 서버에 전달해 저장
   Future<void> sendUserToServer(GoogleSignInAccount user) async {
-    final url = Uri.parse('http://localhost:8080/api/user');
+    final url = Uri.parse('${Appconfig.baseUrl}/api/user');
     final response = await http.post(
       url,
       headers: {'Content-Type': 'application/json; charset=UTF-8'},
