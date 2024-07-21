@@ -16,6 +16,9 @@ class AuthService with ChangeNotifier {
   bool _isLoggedIn = false;
   String _userName = '';
   String _userEmail = '';
+  String _id = '';
+  String? _serverAuthCode = '';
+
 
   GoogleSignInAccount? get googleUser => _googleUser;
   bool get isLoggedIn => _isLoggedIn;
@@ -26,15 +29,22 @@ class AuthService with ChangeNotifier {
   // Google 로그인 함수(앱 처음 설치하고 구글 로그인 버튼 누르면 실행)
   Future<void> signInWithGoogle() async {
     try {
-      final account = await _googleSignIn.signIn();
-      if (account != null) {
-        _googleUser = account;
-        _isLoggedIn = true;
-        _userName = account.displayName ?? '';
-        _userEmail = account.email;
-        notifyListeners();
+      final googleSignInAccount = await _googleSignIn.signIn();
+      final GoogleSignInAuthentication googleSignInAuthentication = await googleSignInAccount!.authentication;
+      final String? idToken = googleSignInAuthentication.idToken;
+      final String? accessToken = googleSignInAuthentication.accessToken;
 
-        sendUserToServer(account);
+      if (googleSignInAccount != null) {
+        print(googleSignInAccount);
+        _googleUser = googleSignInAccount;
+        _isLoggedIn = true;
+        _userName = googleSignInAccount.displayName ?? '';
+        _userEmail = googleSignInAccount.email;
+        _id = googleSignInAccount.id;
+        _serverAuthCode = googleSignInAccount.serverAuthCode;
+
+        notifyListeners();
+        sendUserToServer(googleSignInAccount);
       }
     } catch (error) {
       print('Google sign-in error: $error');
@@ -48,9 +58,10 @@ class AuthService with ChangeNotifier {
       url,
       headers: {'Content-Type': 'application/json; charset=UTF-8'},
       body: jsonEncode({
-        'googleId': user.id,
+        'id': user.id,
         'email': user.email,
         'userName': user.displayName,
+        'serverAuthCode': user.serverAuthCode,
       }),
     );
 

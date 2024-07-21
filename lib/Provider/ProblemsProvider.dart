@@ -18,7 +18,6 @@ class ProblemsProvider with ChangeNotifier {
     int? userId = prefs.getInt('userId');
     if (userId == null) {
       log('User ID is not available');
-      throw Exception('User ID is not available');
     }
 
     final url = Uri.parse('${Appconfig.baseUrl}/api/problems');

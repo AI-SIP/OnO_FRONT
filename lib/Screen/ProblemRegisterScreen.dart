@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:image_picker/image_picker.dart'; // XFile을 사용하기 위해 추가
-import 'package:mvp_front/Service/ProblemService.dart';
 import 'package:provider/provider.dart';
 import 'dart:io';
 import '../Provider/ProblemsProvider.dart';
