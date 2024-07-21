@@ -23,7 +23,6 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
   @override
   void initState() {
     super.initState();
-    //problemService = Provider.of<ProblemService>(context, listen: false);
     _problemDataFuture = _fetchProblemDetails();
   }
 
@@ -123,7 +122,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
   Widget buildProblemDetails(BuildContext context, ProblemModel problemModel) {
     ProblemsProvider provider = Provider.of<ProblemsProvider>(context);
     final formattedDate =
-        DateFormat('yyyy년 M월 d일 HH시 mm분').format(problemModel.solvedAt!);
+        DateFormat('yyyy년 M월 d일').format(problemModel.solvedAt!);
 
     return Stack(
       children: [
