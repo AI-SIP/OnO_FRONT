@@ -23,7 +23,6 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
   @override
   void initState() {
     super.initState();
-    //problemService = Provider.of<ProblemService>(context, listen: false);
     _problemDataFuture = _fetchProblemDetails();
   }
 

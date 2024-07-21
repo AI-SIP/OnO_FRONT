@@ -4,6 +4,7 @@ import '../GlobalModule/DisplayImage.dart';
 import 'ProblemDetailScreen.dart';
 import '../Model/ProblemModel.dart';
 import '../Provider/ProblemsProvider.dart'; // ProblemsProvider import
+import '../Service/AuthService.dart'; // AuthService import
 
 class DirectoryScreen extends StatefulWidget {
   const DirectoryScreen({Key? key}) : super(key: key);
@@ -26,17 +27,25 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final authService = Provider.of<AuthService>(context);
     return Scaffold(
-      body: RefreshIndicator(
-        onRefresh: () => Provider.of<ProblemsProvider>(context, listen: false)
-            .fetchProblems(),
+      body: !authService.isLoggedIn
+          ? Center(child: Text('로그인 해주세요!'))
+          : RefreshIndicator(
+        onRefresh: () =>
+            Provider.of<ProblemsProvider>(context, listen: false)
+                .fetchProblems(),
         child: Padding(
           padding: const EdgeInsets.all(20),
           child: Consumer<ProblemsProvider>(
             builder: (context, problemsProvider, child) {
               var problems = problemsProvider.problems;
+              if (problems.isEmpty) {
+                return Center(child: Text('오답노트가 등록되어 있지 않습니다'));
+              }
               return GridView.builder(
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                gridDelegate:
+                const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 2,
                   childAspectRatio: 0.7,
                   crossAxisSpacing: 20,

@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:developer';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:mvp_front/Config/AppConfig.dart';
@@ -10,17 +11,18 @@ import '../Model/ProblemModel.dart';
 
 class ProblemsProvider with ChangeNotifier {
   List<ProblemModel> _problems = [];
-
   List<ProblemModel> get problems => List.unmodifiable(_problems);
 
+  final storage = FlutterSecureStorage();
+
   Future<void> fetchProblems() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    int? userId = prefs.getInt('userId');
+
+    int userId = int.parse(await storage.read(key: 'userId') ?? '');
     if (userId == null) {
       log('User ID is not available');
     }
 
-    final url = Uri.parse('${Appconfig.baseUrl}/api/problems');
+    final url = Uri.parse('${AppConfig.baseUrl}/api/problems');
     final response = await http.get(url, headers: {
       'Content-Type': 'application/json; charset=UTF-8',
       'userId': userId.toString(),
@@ -41,13 +43,13 @@ class ProblemsProvider with ChangeNotifier {
   Future<void> submitProblem(
       ProblemRegisterModel problemData, BuildContext context) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    int? userId = prefs.getInt('userId');
+    int userId = int.parse(await storage.read(key: 'userId') ?? '');
 
     if (userId == null) {
       throw Exception("User ID is not available");
     }
 
-    var uri = Uri.parse('${Appconfig.baseUrl}/api/problem');
+    var uri = Uri.parse('${AppConfig.baseUrl}/api/problem');
     var request = http.MultipartRequest('POST', uri)
       ..headers.addAll({'userId': userId.toString()});
     request.fields['solvedAt'] = problemData.solvedAt?.toIso8601String() ?? "";
@@ -90,8 +92,6 @@ class ProblemsProvider with ChangeNotifier {
   }
 
   Future<ProblemModel?> getProblemDetails(int? problemId) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-
     try {
       var problemDetails =
           _problems.firstWhere((problem) => problem.problemId == problemId);
@@ -143,15 +143,14 @@ class ProblemsProvider with ChangeNotifier {
    */
 
   Future<bool> deleteProblem(int problemId) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    int? userId = prefs.getInt('userId');
+    int userId = int.parse(await storage.read(key: 'userId') ?? '');
 
     if (userId == null) {
       log('User ID is not available');
       throw Exception('User ID is not available');
     }
 
-    final url = Uri.parse('${Appconfig.baseUrl}/api/problem');
+    final url = Uri.parse('${AppConfig.baseUrl}/api/problem');
     final response = await http.delete(
       url,
       headers: {
