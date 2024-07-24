@@ -30,34 +30,33 @@ class AuthService with ChangeNotifier {
       final googleSignInAccount = await _googleSignIn.signIn();
       final GoogleSignInAuthentication googleSignInAuthentication = await googleSignInAccount!.authentication;
       final String? idToken = googleSignInAuthentication.idToken;
-      final String? accessToken = googleSignInAuthentication.accessToken;
 
-      if (googleSignInAccount != null) {
-        // print(googleSignInAccount);
-        // _googleUser = googleSignInAccount;
-        // _isLoggedIn = true;
-        // _userName = googleSignInAccount.displayName ?? '';
-        // _userEmail = googleSignInAccount.email;
-        // _id = googleSignInAccount.id;
-        // _serverAuthCode = googleSignInAccount.serverAuthCode;
+      if (googleSignInAccount != null && idToken != null) {
+        //print('Google Sign-In successful. ID Token: $idToken');
 
-        final url = Uri.parse('${AppConfig.baseUrl}/api/user');
+        final url = Uri.parse('${AppConfig.baseUrl}/api/auth/google');
         final response = await http.post(
           url,
           headers: {'Content-Type': 'application/json; charset=UTF-8'},
-          body: jsonEncode({
-            'googleId': googleSignInAccount.id,
-            'email': googleSignInAccount.email,
-            'userName': googleSignInAccount.displayName,
-            'socialLoginType': 'GOOGLE',
-          }),
+          body: jsonEncode({'idToken': idToken}),
         );
 
+        print('Response status: ${response.statusCode}');
+        print('Response body: ${response.body}');
+
         if (response.statusCode == 200) {
-          setUserInfo(response);
+          final responseBody = jsonDecode(response.body);
+          final jwtToken = responseBody['token'];
+          print('JWT Token: $jwtToken');
+
+          await setJwtToken(jwtToken);
+          fetchUserInfo();
+          notifyListeners();
         } else {
           throw Exception("Failed to Register user on server");
         }
+      } else {
+        throw Exception("Failed to get Google idToken");
       }
     } catch (error) {
       print('Google sign-in error: $error');
@@ -74,8 +73,13 @@ class AuthService with ChangeNotifier {
         ],
       );
 
+      print(appleCredential.toString());
+      print(appleCredential.identityToken);
+      print(appleCredential.authorizationCode);
+
       if (appleCredential != null) {
-        final url = Uri.parse('${AppConfig.baseUrl}/api/user');
+
+        final url = Uri.parse('${AppConfig.baseUrl}/api/user/join');
         final response = await http.post(
           url,
           headers: {'Content-Type': 'application/json; charset=UTF-8'},
@@ -88,7 +92,7 @@ class AuthService with ChangeNotifier {
         );
 
         if (response.statusCode == 200) {
-          setUserInfo(response);
+          //setUserInfo(response);
         } else {
           throw Exception("Failed to Register user on server");
         }
@@ -98,35 +102,81 @@ class AuthService with ChangeNotifier {
     }
   }
 
-  Future<void> setUserInfo(http.Response response) async {
-    int userId = jsonDecode(utf8.decode(response.bodyBytes))['userId'];
-    String userName = jsonDecode(utf8.decode(response.bodyBytes))['userName'];
-    String userEmail = jsonDecode(utf8.decode(response.bodyBytes))['userEmail'];
-    String socialId = jsonDecode(utf8.decode(response.bodyBytes))['socialId'];
-    String socialLoginType = jsonDecode(utf8.decode(response.bodyBytes))['socialLoginType'];
+  Future<void> setJwtToken(String token) async{
+    await storage.write(key: 'jwtToken', value: token);
+  }
 
-    await storage.write(key: 'userId', value: userId.toString());
-    await storage.write(key: 'userName', value: userName);
-    await storage.write(key: 'userEmail', value: userEmail);
-    await storage.write(key: 'socialId', value: socialId);
-    await storage.write(key: 'socialLoginType', value: socialLoginType);
+  Future<String?> getJwtToken() async{
+    return await storage.read(key: 'jwtToken');
+  }
 
-    _userId = userId;
-    _userName = userName;
-    _userEmail = userEmail;
-    _isLoggedIn = true;
-    notifyListeners();
+  Future<void> fetchUserInfo() async {
+    final token = await getJwtToken();
+    if (token == null) {
+      throw Exception("JWT token is not available");
+    }
+
+    final url = Uri.parse('${AppConfig.baseUrl}/api/user/info');
+    final response = await http.get(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    print(response.toString());
+
+    if (response.statusCode == 200) {
+      final responseBody = jsonDecode(utf8.decode(response.bodyBytes));
+      _userId = responseBody['userId'];
+      _userName = responseBody['name'];
+      _userEmail = responseBody['email'];
+      _isLoggedIn = true;
+      notifyListeners();
+    } else {
+      throw Exception("Failed to fetch user info");
+    }
+  }
+
+  Future<http.Response> sendAuthenticatedRequest(String endpoint, Map<String, dynamic> body) async {
+    final token = await getJwtToken();
+    if (token == null) {
+      throw Exception("JWT token is not available");
+    }
+
+    final url = Uri.parse('${AppConfig.baseUrl}/api/$endpoint');
+    final response = await http.post(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode(body),
+    );
+
+
+    print('Response status: ${response.statusCode}');
+    print('Response body: ${response.body}');
+
+    if (response.statusCode == 200) {
+      print('Authenticated request successful');
+    } else {
+      print('Failed to authenticate request');
+    }
+
+    return response;
   }
 
   Future<void> autoLogin() async {
-    String? userIdStr = await storage.read(key: 'userId');
-    int? userId = int.parse(userIdStr ?? '');
-    if (userId != null) {
-      _userId = userId;
-      _userName = await storage.read(key: 'userName') ?? '';
-      _userEmail = await storage.read(key: 'userEmail') ?? '';
-      _isLoggedIn = true;
-      print('====auto login complete====');
+    String? token = await getJwtToken();
+    if (token != null) {
+      try {
+        await fetchUserInfo();
+        print('====auto login complete====');
+      } catch (e) {
+        print('Auto login failed: $e');
+      }
       notifyListeners();
     } else {
       _isLoggedIn = false;
@@ -135,21 +185,14 @@ class AuthService with ChangeNotifier {
   }
 
   Future<Map<String, dynamic>> getUserInfo() async {
-    String? userId = await storage.read(key: 'userId');
-    String? userName = await storage.read(key: 'userName');
-    String? userEmail = await storage.read(key: 'userEmail');
-
-    log('userId: $userId, userName: $userName, userEmail: $userEmail');
-
-    if (userId != null && userName != null && userEmail != null) {
+    if (_userId != 0 && _userName.isNotEmpty && _userEmail.isNotEmpty) {
       return {
-        'userId': int.parse(userId),
-        'userName': userName,
-        'userEmail': userEmail,
+        'userId': _userId,
+        'userName': _userName,
+        'userEmail': _userEmail,
       };
     } else {
-      print('No user info found'); // 로그 추가
-      throw Exception('No user info found');
+      throw Exception('No user info available');
     }
   }
 
