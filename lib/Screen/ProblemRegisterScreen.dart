@@ -113,7 +113,27 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
     });
   }
 
+  // 로딩 다이얼로그를 보여주는 함수
+  void showLoadingDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return Center(
+          child: CircularProgressIndicator(),
+        );
+      },
+    );
+  }
+
+  // 로딩 다이얼로그를 닫는 함수
+  void hideLoadingDialog(BuildContext context) {
+    Navigator.of(context).pop(true);
+  }
+
   Future<void> submitProblem() async {
+    showLoadingDialog(context); // 로딩 다이얼로그 표시
+
     final problemData = ProblemRegisterModel(
       problemImage: _problemImage,
       solveImage: _answerImage,
@@ -123,10 +143,12 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
       solvedAt: _selectedDate,
     );
 
-    resetForm();
     await Provider.of<ProblemsProvider>(context, listen: false)
         .submitProblem(problemData, context);
-    showSuccessDialog(context);
+
+    hideLoadingDialog(context); // 로딩 다이얼로그 닫기
+    resetForm();
+    showSuccessDialog(context); // 성공 다이얼로그 표시
   }
 
   @override

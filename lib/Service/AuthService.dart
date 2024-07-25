@@ -41,13 +41,14 @@ class AuthService with ChangeNotifier {
           body: jsonEncode({'idToken': idToken}),
         );
 
-        print('Response status: ${response.statusCode}');
-        print('Response body: ${response.body}');
+        //print('Response status: ${response.statusCode}');
+        //print('Response body: ${response.body}');
 
         if (response.statusCode == 200) {
+          print('Google sign-in Success!');
           final responseBody = jsonDecode(response.body);
           final jwtToken = responseBody['token'];
-          print('JWT Token: $jwtToken');
+          //print('JWT Token: $jwtToken');
 
           await setJwtToken(jwtToken);
           fetchUserInfo();
@@ -130,8 +131,8 @@ class AuthService with ChangeNotifier {
     if (response.statusCode == 200) {
       final responseBody = jsonDecode(utf8.decode(response.bodyBytes));
       _userId = responseBody['userId'];
-      _userName = responseBody['name'];
-      _userEmail = responseBody['email'];
+      _userName = responseBody['userName'];
+      _userEmail = responseBody['userEmail'];
       _isLoggedIn = true;
       notifyListeners();
     } else {

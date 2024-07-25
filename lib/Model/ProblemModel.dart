@@ -27,6 +27,7 @@ class ProblemModel {
       problemImageUrl: json['problemImageUrl'],
       solveImageUrl: json['solveImageUrl'],
       answerImageUrl: json['answerImageUrl'],
+      processImageUrl: json['processImageUrl'],
       memo: json['memo'],
       reference: json['reference'],
       solvedAt:
