@@ -91,7 +91,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(8.0),
                   child: DisplayImage(
-                    imagePath: problem.problemImageUrl, // 이미지 경로 업데이트
+                    imagePath: problem.processImageUrl, // 이미지 경로 업데이트
                     defaultImagePath: defaultImage,
                   ),
                 ),
