@@ -74,32 +74,41 @@ class AuthService with ChangeNotifier {
         ],
       );
 
-      print(appleCredential.toString());
-      print(appleCredential.identityToken);
-      print(appleCredential.authorizationCode);
+      final String? idToken = appleCredential.identityToken;
+      final String? email = appleCredential.email;
+      final String? firstName = appleCredential.givenName;
+      final String? lastName = appleCredential.familyName;
+      final String? name = (lastName ?? "") + (firstName ?? "");
 
-      if (appleCredential != null) {
-
-        final url = Uri.parse('${AppConfig.baseUrl}/api/user/join');
+      if (idToken != null) {
+        final url = Uri.parse('${AppConfig.baseUrl}/api/auth/apple');
         final response = await http.post(
           url,
-          headers: {'Content-Type': 'application/json; charset=UTF-8'},
-          body: jsonEncode({
-            'appleId': appleCredential.userIdentifier,
-            'email': appleCredential.email,
-            'userName': "${appleCredential.familyName ?? ''}${appleCredential.givenName ?? ''}".trim(),
-            'socialLoginType': 'APPLE',
+          headers: <String, String>{
+            'Content-Type': 'application/json; charset=UTF-8',
+          },
+          body: jsonEncode(<String, String?>{
+            'idToken': idToken,
+            'email': email,
+            'name': name,
           }),
         );
 
         if (response.statusCode == 200) {
-          //setUserInfo(response);
+          print('Apple sign-in Success!');
+          final responseBody = jsonDecode(response.body);
+          final jwtToken = responseBody['token'];
+          await setJwtToken(jwtToken);
+          fetchUserInfo();
+          notifyListeners();
         } else {
           throw Exception("Failed to Register user on server");
         }
+      } else {
+        throw Exception("Failed to get Apple idToken");
       }
     } catch (error) {
-        print('Apple sign-in error: $error');
+      print('Apple sign-in error: $error');
     }
   }
 
