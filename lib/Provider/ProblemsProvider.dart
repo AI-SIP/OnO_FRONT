@@ -4,7 +4,6 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:mvp_front/Config/AppConfig.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../Model/ProblemRegisterModel.dart';
 import '../Model/ProblemModel.dart';
@@ -15,18 +14,26 @@ class ProblemsProvider with ChangeNotifier {
 
   final storage = FlutterSecureStorage();
 
+  Future<String?> getJwtToken() async {
+    return await storage.read(key: 'jwtToken');
+  }
+
   Future<void> fetchProblems() async {
 
-    int userId = int.parse(await storage.read(key: 'userId') ?? '');
-    if (userId == null) {
-      log('User ID is not available');
+    final token = await getJwtToken();
+    if (token == null) {
+      log('JWT token is not available');
+      return;
     }
 
     final url = Uri.parse('${AppConfig.baseUrl}/api/problems');
-    final response = await http.get(url, headers: {
-      'Content-Type': 'application/json; charset=UTF-8',
-      'userId': userId.toString(),
-    });
+    final response = await http.get(
+      url,
+      headers: {
+        'Content-Type': 'application/json; charset=UTF-8',
+        'Authorization': 'Bearer $token',
+      },
+    );
 
     if (response.statusCode == 200) {
       List<dynamic> fetchedProblems =
@@ -42,16 +49,15 @@ class ProblemsProvider with ChangeNotifier {
 
   Future<void> submitProblem(
       ProblemRegisterModel problemData, BuildContext context) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    int userId = int.parse(await storage.read(key: 'userId') ?? '');
 
-    if (userId == null) {
-      throw Exception("User ID is not available");
+    final token = await getJwtToken();
+    if (token == null) {
+      throw Exception("JWT token is not available");
     }
 
     var uri = Uri.parse('${AppConfig.baseUrl}/api/problem');
     var request = http.MultipartRequest('POST', uri)
-      ..headers.addAll({'userId': userId.toString()});
+      ..headers.addAll({'Authorization': 'Bearer $token'});
     request.fields['solvedAt'] = problemData.solvedAt?.toIso8601String() ?? "";
     request.fields['reference'] = problemData.reference ?? "";
     request.fields['memo'] = problemData.memo ?? "";
@@ -143,11 +149,10 @@ class ProblemsProvider with ChangeNotifier {
    */
 
   Future<bool> deleteProblem(int problemId) async {
-    int userId = int.parse(await storage.read(key: 'userId') ?? '');
-
-    if (userId == null) {
-      log('User ID is not available');
-      throw Exception('User ID is not available');
+    final token = await getJwtToken();
+    if (token == null) {
+      log('JWT token is not available');
+      throw Exception('JWT token is not available');
     }
 
     final url = Uri.parse('${AppConfig.baseUrl}/api/problem');
@@ -155,7 +160,7 @@ class ProblemsProvider with ChangeNotifier {
       url,
       headers: {
         'Content-Type': 'application/json; charset=UTF-8',
-        'userId': userId.toString(),
+        'Authorization': 'Bearer $token',
         'problemId': problemId.toString(),
       },
     );
@@ -163,8 +168,6 @@ class ProblemsProvider with ChangeNotifier {
     log('Deleting problem: ${response.statusCode} ${response.body}');
 
     if (response.statusCode == 200) {
-      // 성공적으로 문제를 삭제한 경우
-      //_problems.removeWhere((problem) => problem['problemId'] == problemId);
       await fetchProblems();
       return true;
     } else {
