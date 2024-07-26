@@ -182,7 +182,11 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
                     onPressed: _showCustomDatePicker, // 날짜 선택기 호출
                     child: Text(
                       '${_selectedDate.year}년 ${_selectedDate.month}월 ${_selectedDate.day}일',
-                      style: const TextStyle(fontSize: 18, color: Colors.green),
+                      style: const TextStyle(
+                          fontSize: 18,
+                          color: Colors.green,
+                          fontFamily: 'font1',
+                          fontWeight: FontWeight.bold),
                     ),
                   ),
                 ],
@@ -206,9 +210,37 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
               const SizedBox(height: 10),
               TextField(
                 controller: _sourceController,
+                style: const TextStyle(
+                  fontFamily: 'font1',
+                  color: Colors.green,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
                 decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
+                  border: OutlineInputBorder(
+                    borderSide: BorderSide(
+                      color: Colors.green, // 테두리 색상 설정
+                      width: 2.0, // 테두리 두께 설정
+                    ),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(
+                      color: Colors.green, // 활성화된 상태의 테두리 색상 설정
+                      width: 2.0, // 테두리 두께 설정
+                    ),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(
+                      color: Colors.green, // 포커스된 상태의 테두리 색상 설정
+                      width: 2.0, // 테두리 두께 설정
+                    ),
+                  ),
                   hintText: '문제집, 페이지, 문제번호 등',
+                  hintStyle: TextStyle(
+                      fontFamily: 'font1',
+                      color: Colors.green,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold),
                 ),
               ),
               const SizedBox(height: 20),
@@ -230,7 +262,13 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
               const SizedBox(height: 10),
               Container(
                 height: isLandscape ? mediaQuery.size.height * 0.3 : 200,
-                color: Colors.grey[200],
+                decoration: BoxDecoration(
+                  color: Colors.grey[200], // 배경색 지정
+                  border: Border.all(
+                    color: Colors.green, // 테두리 색상
+                    width: 2.0, // 테두리 두께
+                  ),
+                ),
                 child: Center(
                   child: _problemImage == null
                       ? IconButton(
@@ -267,7 +305,13 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
               const SizedBox(height: 10),
               Container(
                 height: isLandscape ? mediaQuery.size.height * 0.3 : 200,
-                color: Colors.grey[200],
+                decoration: BoxDecoration(
+                  color: Colors.grey[200], // 배경색 지정
+                  border: Border.all(
+                    color: Colors.green, // 테두리 색상
+                    width: 2.0, // 테두리 두께
+                  ),
+                ),
                 child: Center(
                   child: _answerImage == null
                       ? IconButton(
@@ -304,7 +348,13 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
               const SizedBox(height: 10),
               Container(
                 height: isLandscape ? mediaQuery.size.height * 0.3 : 200,
-                color: Colors.grey[200],
+                decoration: BoxDecoration(
+                  color: Colors.grey[200], // 배경색 지정
+                  border: Border.all(
+                    color: Colors.green, // 테두리 색상
+                    width: 2.0, // 테두리 두께
+                  ),
+                ),
                 child: Center(
                   child: _solveImage == null
                       ? IconButton(
@@ -341,9 +391,37 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
               const SizedBox(height: 10),
               TextField(
                 controller: _notesController,
+                style: const TextStyle(
+                  fontFamily: 'font1',
+                  color: Colors.green,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
                 decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
+                  border: OutlineInputBorder(
+                    borderSide: BorderSide(
+                      color: Colors.green, // 테두리 색상 설정
+                      width: 2.0, // 테두리 두께 설정
+                    ),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(
+                      color: Colors.green, // 활성화된 상태의 테두리 색상 설정
+                      width: 2.0, // 테두리 두께 설정
+                    ),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(
+                      color: Colors.green, // 포커스된 상태의 테두리 색상 설정
+                      width: 2.0, // 테두리 두께 설정
+                    ),
+                  ),
                   hintText: '틀린 이유 등 자유롭게 작성',
+                  hintStyle: TextStyle(
+                      fontFamily: 'font1',
+                      color: Colors.green,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold),
                 ),
                 maxLines: 3,
               ),

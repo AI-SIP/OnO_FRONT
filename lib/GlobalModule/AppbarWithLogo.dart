@@ -34,11 +34,10 @@ class AppBarWithLogo extends StatelessWidget implements PreferredSizeWidget {
           child: Text(
             'OnO',
             style: TextStyle(
-              fontFamily: 'Arial', // 원하는 폰트 패밀리 설정
-              fontSize: 25, // 폰트 크기 설정
-              fontWeight: FontWeight.bold, // 폰트 두께 설정
-              color: Colors.green, // 텍스트 색상 설정
-            ),
+                color: Colors.green,
+                fontSize: 25,
+                fontFamily: 'font1',
+                fontWeight: FontWeight.bold),
           ),
         ),
       ),

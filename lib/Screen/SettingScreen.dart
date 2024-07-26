@@ -60,14 +60,15 @@ class _SettingScreenState extends State<SettingScreen> {
                   '${authService.userName}님 환영합니다!',
                   style: const TextStyle(
                       color: Colors.green,
-                      fontSize: 20,
+                      fontFamily: 'font1',
+                      fontSize: 30,
                       fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 20),
                 Text(
                   '로그인 한 계정: ${authService.userEmail}',
                   style: const TextStyle(
-                      color: Colors.green, fontSize: 16),
+                      color: Colors.green, fontFamily: 'font1', fontSize: 20, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 40),
                 ElevatedButton(
@@ -76,7 +77,8 @@ class _SettingScreenState extends State<SettingScreen> {
                     '로그아웃',
                     style: TextStyle(
                         color: Colors.red,
-                        fontSize: 18,
+                        fontSize: 20,
+                        fontFamily: 'font1',
                         fontWeight: FontWeight.bold),
                   ),
                   style: ElevatedButton.styleFrom(
@@ -91,11 +93,11 @@ class _SettingScreenState extends State<SettingScreen> {
                 ),
               ] else ...[
                 const Text('로그인 해주세요!',
-                  style: TextStyle(
-                    fontSize: 20,
-                    color: Colors.red,
-                  ),
-                ),
+                    style: TextStyle(
+                        color: Colors.green,
+                        fontFamily: 'font1',
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold))
               ],
             ],
           ),

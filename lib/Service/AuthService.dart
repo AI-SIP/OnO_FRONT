@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:core';
-import 'dart:developer';
-
+import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -28,17 +27,25 @@ class AuthService with ChangeNotifier {
   Future<void> signInWithGoogle() async {
     try {
       final googleSignInAccount = await _googleSignIn.signIn();
-      final GoogleSignInAuthentication googleSignInAuthentication = await googleSignInAccount!.authentication;
+      final GoogleSignInAuthentication googleSignInAuthentication =
+          await googleSignInAccount!.authentication;
+
+      print(googleSignInAuthentication.accessToken);
+
       final String? idToken = googleSignInAuthentication.idToken;
 
       if (googleSignInAccount != null && idToken != null) {
         //print('Google Sign-In successful. ID Token: $idToken');
+        final platform = _getPlatform(); // 플랫폼 정보 확인
 
         final url = Uri.parse('${AppConfig.baseUrl}/api/auth/google');
         final response = await http.post(
           url,
           headers: {'Content-Type': 'application/json; charset=UTF-8'},
-          body: jsonEncode({'idToken': idToken}),
+          body: jsonEncode({
+            'idToken': idToken,
+            'platform': platform,
+          }),
         );
 
         //print('Response status: ${response.statusCode}');
@@ -48,7 +55,6 @@ class AuthService with ChangeNotifier {
           print('Google sign-in Success!');
           final responseBody = jsonDecode(response.body);
           final jwtToken = responseBody['token'];
-          //print('JWT Token: $jwtToken');
 
           await setJwtToken(jwtToken);
           fetchUserInfo();
@@ -112,12 +118,22 @@ class AuthService with ChangeNotifier {
     }
   }
 
-  Future<void> setJwtToken(String token) async{
+  Future<void> setJwtToken(String token) async {
     await storage.write(key: 'jwtToken', value: token);
   }
 
-  Future<String?> getJwtToken() async{
+  Future<String?> getJwtToken() async {
     return await storage.read(key: 'jwtToken');
+  }
+
+  String _getPlatform() {
+    if (Platform.isAndroid) {
+      return 'android';
+    } else if (Platform.isIOS) {
+      return 'ios';
+    } else {
+      return 'unknown';
+    }
   }
 
   Future<void> fetchUserInfo() async {
@@ -149,7 +165,8 @@ class AuthService with ChangeNotifier {
     }
   }
 
-  Future<http.Response> sendAuthenticatedRequest(String endpoint, Map<String, dynamic> body) async {
+  Future<http.Response> sendAuthenticatedRequest(
+      String endpoint, Map<String, dynamic> body) async {
     final token = await getJwtToken();
     if (token == null) {
       throw Exception("JWT token is not available");
@@ -164,7 +181,6 @@ class AuthService with ChangeNotifier {
       },
       body: jsonEncode(body),
     );
-
 
     print('Response status: ${response.statusCode}');
     print('Response body: ${response.body}');

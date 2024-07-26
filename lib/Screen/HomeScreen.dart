@@ -1,3 +1,4 @@
+import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -43,10 +44,10 @@ class HomeScreen extends StatelessWidget {
                   'OnO, 이제는 나도 오답한다',
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    fontSize: 30, // 큰 글씨 크기
-                    fontWeight: FontWeight.bold,
-                    color: Colors.green,
-                  ),
+                      color: Colors.green,
+                      fontSize:35,
+                      fontFamily: 'font1',
+                      fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 20),
                 ElevatedButton(
@@ -63,9 +64,10 @@ class HomeScreen extends StatelessWidget {
                   child: const Text(
                     'OnO 사용 가이드 →',
                     style: TextStyle(
-                      fontSize: 18, // 텍스트 크기
-                      color: Colors.white, // 텍스트 색상
-                    ),
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontFamily: 'font1',
+                        fontWeight: FontWeight.bold),
                   ),
                 ),
               ],
@@ -84,15 +86,17 @@ class HomeScreen extends StatelessWidget {
                       Text(
                         '${authService.userName}님 환영합니다!',
                         style: TextStyle(
-                            color: Colors.green,
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold),
+                      color: Colors.green,
+                      fontSize: 24,
+                      fontFamily: 'font1',
+                      fontWeight: FontWeight.bold),
                       ), // 사용자 이름 출력
                     ],
                   );
                 } else {
                   return Column(
                     children: [
+                      const SizedBox(height: 50), // 간격 추가
                       ElevatedButton(
                         onPressed: () => authService.signInWithGoogle(),
                         style: ElevatedButton.styleFrom(
@@ -120,32 +124,34 @@ class HomeScreen extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 20), // 간격 추가
-                      ElevatedButton(
-                        onPressed: () => authService.signInWithApple(),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.black,
-                          minimumSize: const Size.fromHeight(50), // 높이만 50으로 설정
-                          elevation: 1.0,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(4.0),
+                      // 안드로이드에서는 애플 로그인 버튼을 숨김
+                      if (!Platform.isAndroid)
+                        ElevatedButton(
+                          onPressed: () => authService.signInWithApple(),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.black,
+                            minimumSize: const Size.fromHeight(50), // 높이만 50으로 설정
+                            elevation: 1.0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(4.0),
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Image.asset(
+                                'assets/AppleLogo.png', // 로고 이미지 파일 경로
+                                height: 24,
+                              ),
+                              const SizedBox(width: 10),
+                              const Text(
+                                'Apple 계정으로 로그인',
+                                style: TextStyle(
+                                    color: Colors.white, fontSize: 16.0),
+                              ),
+                            ],
                           ),
                         ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Image.asset(
-                              'assets/AppleLogo.png', // 로고 이미지 파일 경로
-                              height: 24,
-                            ),
-                            const SizedBox(width: 10),
-                            const Text(
-                              'Apple 계정으로 로그인',
-                              style: TextStyle(
-                                  color: Colors.white, fontSize: 16.0),
-                            ),
-                          ],
-                        ),
-                      ),
                     ],
                   );
                 }
