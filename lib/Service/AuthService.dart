@@ -32,9 +32,13 @@ class AuthService with ChangeNotifier {
 
       print(googleSignInAuthentication.accessToken);
 
-      final String? idToken = googleSignInAuthentication.idToken;
+      //final String? idToken = googleSignInAuthentication.idToken;   // 얘가 null로 저장되는 문제 발생
+      final String? accessToken = googleSignInAuthentication.accessToken;   // 얘가 accessToken
+      String? email = googleSignInAccount.email;  // 유저의 이메일을 저장
+      String? name =  googleSignInAccount.displayName;    // 유저의 이름을 저장
 
-      if (googleSignInAccount != null && idToken != null) {
+      if (googleSignInAccount != null) {
+      //if (googleSignInAccount != null && idToken != null) {
         //print('Google Sign-In successful. ID Token: $idToken');
         final platform = _getPlatform(); // 플랫폼 정보 확인
 
@@ -43,13 +47,16 @@ class AuthService with ChangeNotifier {
           url,
           headers: {'Content-Type': 'application/json; charset=UTF-8'},
           body: jsonEncode({
-            'idToken': idToken,
+            //'idToken': idToken,
+            'accessToken': accessToken,
             'platform': platform,
+            'email': email,
+            'name': name,
           }),
         );
 
-        //print('Response status: ${response.statusCode}');
-        //print('Response body: ${response.body}');
+        print('Response status: ${response.statusCode}');
+        print('Response body: ${response.body}');
 
         if (response.statusCode == 200) {
           print('Google sign-in Success!');
