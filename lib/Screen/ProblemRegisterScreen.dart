@@ -158,7 +158,11 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
         mediaQuery.orientation == Orientation.landscape; // 가로/세로 방향 확인
 
     return Scaffold(
-      body: SingleChildScrollView(
+        body: GestureDetector(
+      onTap: () {
+        FocusScope.of(context).unfocus();
+      },
+      child: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
@@ -397,6 +401,7 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
                 ),
+                textInputAction: TextInputAction.done, // 이 부분 추가
                 decoration: const InputDecoration(
                   border: OutlineInputBorder(
                     borderSide: BorderSide(
@@ -462,6 +467,6 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
           ),
         ),
       ),
-    );
+    ));
   }
 }
