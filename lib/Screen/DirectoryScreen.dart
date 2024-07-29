@@ -30,7 +30,12 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     final authService = Provider.of<AuthService>(context);
     return Scaffold(
       body: !authService.isLoggedIn
-          ? Center(child: Text('로그인 해주세요!'))
+          ? Center(child: Text('로그인 해주세요!',
+          style: TextStyle(
+              color: Colors.green,
+              fontFamily: 'font1',
+              fontSize: 24,
+              fontWeight: FontWeight.bold)))
           : RefreshIndicator(
         onRefresh: () =>
             Provider.of<ProblemsProvider>(context, listen: false)
@@ -41,7 +46,12 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
             builder: (context, problemsProvider, child) {
               var problems = problemsProvider.problems;
               if (problems.isEmpty) {
-                return Center(child: Text('오답노트가 등록되어 있지 않습니다'));
+                return Center(child: Text('오답노트가 등록되어 있지 않습니다!',
+                    style: TextStyle(
+                        color: Colors.green,
+                        fontFamily: 'font1',
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold)));
               }
               return GridView.builder(
                 gridDelegate:
@@ -85,7 +95,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
               child: Container(
                 height: 150, // 고정된 높이 설정
                 decoration: BoxDecoration(
-                  border: Border.all(color: Colors.green, width: 1.0),
+                  border: Border.all(color: Colors.green, width: 2.0),
                   borderRadius: BorderRadius.circular(8.0),
                 ),
                 child: ClipRRect(

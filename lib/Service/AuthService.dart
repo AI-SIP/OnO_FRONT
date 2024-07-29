@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:core';
-import 'dart:developer';
-
+import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -28,27 +27,41 @@ class AuthService with ChangeNotifier {
   Future<void> signInWithGoogle() async {
     try {
       final googleSignInAccount = await _googleSignIn.signIn();
-      final GoogleSignInAuthentication googleSignInAuthentication = await googleSignInAccount!.authentication;
-      final String? idToken = googleSignInAuthentication.idToken;
+      final GoogleSignInAuthentication googleSignInAuthentication =
+          await googleSignInAccount!.authentication;
 
-      if (googleSignInAccount != null && idToken != null) {
+      print(googleSignInAuthentication.accessToken);
+
+      //final String? idToken = googleSignInAuthentication.idToken;   // 얘가 null로 저장되는 문제 발생
+      final String? accessToken = googleSignInAuthentication.accessToken;   // 얘가 accessToken
+      String? email = googleSignInAccount.email;  // 유저의 이메일을 저장
+      String? name =  googleSignInAccount.displayName;    // 유저의 이름을 저장
+
+      if (googleSignInAccount != null) {
+      //if (googleSignInAccount != null && idToken != null) {
         //print('Google Sign-In successful. ID Token: $idToken');
+        final platform = _getPlatform(); // 플랫폼 정보 확인
 
         final url = Uri.parse('${AppConfig.baseUrl}/api/auth/google');
         final response = await http.post(
           url,
           headers: {'Content-Type': 'application/json; charset=UTF-8'},
-          body: jsonEncode({'idToken': idToken}),
+          body: jsonEncode({
+            //'idToken': idToken,
+            'accessToken': accessToken,
+            'platform': platform,
+            'email': email,
+            'name': name,
+          }),
         );
 
-        //print('Response status: ${response.statusCode}');
-        //print('Response body: ${response.body}');
+        print('Response status: ${response.statusCode}');
+        print('Response body: ${response.body}');
 
         if (response.statusCode == 200) {
           print('Google sign-in Success!');
           final responseBody = jsonDecode(response.body);
           final jwtToken = responseBody['token'];
-          //print('JWT Token: $jwtToken');
 
           await setJwtToken(jwtToken);
           fetchUserInfo();
@@ -74,41 +87,60 @@ class AuthService with ChangeNotifier {
         ],
       );
 
-      print(appleCredential.toString());
-      print(appleCredential.identityToken);
-      print(appleCredential.authorizationCode);
+      final String? idToken = appleCredential.identityToken;
+      final String? email = appleCredential.email;
+      final String? firstName = appleCredential.givenName;
+      final String? lastName = appleCredential.familyName;
+      final String? name = (lastName ?? "") + (firstName ?? "");
 
-      if (appleCredential != null) {
-
-        final url = Uri.parse('${AppConfig.baseUrl}/api/user/join');
+      if (idToken != null) {
+        final url = Uri.parse('${AppConfig.baseUrl}/api/auth/apple');
         final response = await http.post(
           url,
-          headers: {'Content-Type': 'application/json; charset=UTF-8'},
-          body: jsonEncode({
-            'appleId': appleCredential.userIdentifier,
-            'email': appleCredential.email,
-            'userName': "${appleCredential.familyName ?? ''}${appleCredential.givenName ?? ''}".trim(),
-            'socialLoginType': 'APPLE',
+          headers: <String, String>{
+            'Content-Type': 'application/json; charset=UTF-8',
+          },
+          body: jsonEncode(<String, String?>{
+            'idToken': idToken,
+            'email': email,
+            'name': name,
           }),
         );
 
         if (response.statusCode == 200) {
-          //setUserInfo(response);
+          print('Apple sign-in Success!');
+          final responseBody = jsonDecode(response.body);
+          final jwtToken = responseBody['token'];
+          await setJwtToken(jwtToken);
+          fetchUserInfo();
+          notifyListeners();
         } else {
           throw Exception("Failed to Register user on server");
         }
+      } else {
+        throw Exception("Failed to get Apple idToken");
       }
     } catch (error) {
-        print('Apple sign-in error: $error');
+      print('Apple sign-in error: $error');
     }
   }
 
-  Future<void> setJwtToken(String token) async{
+  Future<void> setJwtToken(String token) async {
     await storage.write(key: 'jwtToken', value: token);
   }
 
-  Future<String?> getJwtToken() async{
+  Future<String?> getJwtToken() async {
     return await storage.read(key: 'jwtToken');
+  }
+
+  String _getPlatform() {
+    if (Platform.isAndroid) {
+      return 'android';
+    } else if (Platform.isIOS) {
+      return 'ios';
+    } else {
+      return 'unknown';
+    }
   }
 
   Future<void> fetchUserInfo() async {
@@ -140,7 +172,8 @@ class AuthService with ChangeNotifier {
     }
   }
 
-  Future<http.Response> sendAuthenticatedRequest(String endpoint, Map<String, dynamic> body) async {
+  Future<http.Response> sendAuthenticatedRequest(
+      String endpoint, Map<String, dynamic> body) async {
     final token = await getJwtToken();
     if (token == null) {
       throw Exception("JWT token is not available");
@@ -155,7 +188,6 @@ class AuthService with ChangeNotifier {
       },
       body: jsonEncode(body),
     );
-
 
     print('Response status: ${response.statusCode}');
     print('Response body: ${response.body}');

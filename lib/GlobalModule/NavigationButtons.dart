@@ -29,11 +29,23 @@ class NavigationButtons extends StatelessWidget {
         ElevatedButton(
           onPressed: () =>
               navigateToProblem(context, provider, previousProblemId),
-          child: Text('이전 문제'),
+          child: Text(
+            '이전 문제',
+            style: TextStyle(
+                color: Colors.green,
+                fontFamily: 'font1',
+                fontSize: 20,
+                fontWeight: FontWeight.bold),
+          ),
         ),
         ElevatedButton(
           onPressed: () => navigateToProblem(context, provider, nextProblemId),
-          child: Text('다음 문제'),
+          child: Text('다음 문제',
+              style: TextStyle(
+                  color: Colors.green,
+                  fontFamily: 'font1',
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold)),
         ),
       ],
     );
