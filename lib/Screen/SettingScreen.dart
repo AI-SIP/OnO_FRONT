@@ -31,10 +31,12 @@ class _SettingScreenState extends State<SettingScreen> {
               onPressed: () async {
                 Navigator.of(context).pop();
                 await Provider.of<AuthService>(context, listen: false).signOut();
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => HomeScreen()), // MyHomePage로 이동
-                );
+                if (mounted) {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (context) => HomeScreen()), // MyHomePage로 이동
+                  );
+                }
               },
               child: Text('확인'),
             ),
@@ -62,10 +64,12 @@ class _SettingScreenState extends State<SettingScreen> {
               onPressed: () async {
                 Navigator.of(context).pop();
                 await Provider.of<AuthService>(context, listen: false).deleteAccount();
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => HomeScreen()), // MyHomePage로 이동
-                );
+                if (mounted) {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (context) => HomeScreen()), // MyHomePage로 이동
+                  );
+                }
               },
               child: Text('확인'),
             ),
