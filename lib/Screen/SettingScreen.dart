@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mvp_front/Screen/HomeScreen.dart';
 import 'package:provider/provider.dart';
 import '../Service/AuthService.dart';
 import '../main.dart'; // MyHomePage 임포트
@@ -32,7 +33,38 @@ class _SettingScreenState extends State<SettingScreen> {
                 await Provider.of<AuthService>(context, listen: false).signOut();
                 Navigator.pushReplacement(
                   context,
-                  MaterialPageRoute(builder: (context) => MyHomePage()), // MyHomePage로 이동
+                  MaterialPageRoute(builder: (context) => HomeScreen()), // MyHomePage로 이동
+                );
+              },
+              child: Text('확인'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showDeleteAccountDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('회원 탈퇴'),
+          content: Text('정말 회원 탈퇴 하시겠습니까? 이 작업은 되돌릴 수 없습니다.'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('취소'),
+            ),
+            TextButton(
+              onPressed: () async {
+                Navigator.of(context).pop();
+                await Provider.of<AuthService>(context, listen: false).deleteAccount();
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => HomeScreen()), // MyHomePage로 이동
                 );
               },
               child: Text('확인'),
@@ -71,6 +103,7 @@ class _SettingScreenState extends State<SettingScreen> {
                       color: Colors.green, fontFamily: 'font1', fontSize: 20, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 40),
+                /*
                 ElevatedButton(
                   onPressed: () => _showLogoutDialog(context),
                   child: const Text(
@@ -84,6 +117,29 @@ class _SettingScreenState extends State<SettingScreen> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.white,
                     foregroundColor: Colors.red,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 40, vertical: 15),
+                  ),
+                ),
+                const SizedBox(height: 20), // 버튼 간 간격 추가
+
+                 */
+                ElevatedButton(
+                  onPressed: () => _showDeleteAccountDialog(context),
+                  child: const Text(
+                    '회원 탈퇴',
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontFamily: 'font1',
+                        fontWeight: FontWeight.bold),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red,
+                    foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(20),
                     ),

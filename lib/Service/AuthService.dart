@@ -4,6 +4,7 @@ import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:mvp_front/Service/AppleAuthService.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:http/http.dart' as http;
 import '../Config/AppConfig.dart';
@@ -22,6 +23,7 @@ class AuthService with ChangeNotifier {
   int get userId => _userId;
   String get userName => _userName;
   String get userEmail => _userEmail;
+  final AppleAuthService appleAuthService = AppleAuthService();
 
   // Google 로그인 함수(앱 처음 설치하고 구글 로그인 버튼 누르면 실행)
   Future<void> signInWithGoogle() async {
@@ -32,14 +34,11 @@ class AuthService with ChangeNotifier {
 
       print(googleSignInAuthentication.accessToken);
 
-      //final String? idToken = googleSignInAuthentication.idToken;   // 얘가 null로 저장되는 문제 발생
       final String? accessToken = googleSignInAuthentication.accessToken;   // 얘가 accessToken
       String? email = googleSignInAccount.email;  // 유저의 이메일을 저장
       String? name =  googleSignInAccount.displayName;    // 유저의 이름을 저장
 
       if (googleSignInAccount != null) {
-      //if (googleSignInAccount != null && idToken != null) {
-        //print('Google Sign-In successful. ID Token: $idToken');
         final platform = _getPlatform(); // 플랫폼 정보 확인
 
         final url = Uri.parse('${AppConfig.baseUrl}/api/auth/google');
@@ -55,14 +54,12 @@ class AuthService with ChangeNotifier {
           }),
         );
 
-        print('Response status: ${response.statusCode}');
-        print('Response body: ${response.body}');
-
         if (response.statusCode == 200) {
           print('Google sign-in Success!');
           final responseBody = jsonDecode(response.body);
           final jwtToken = responseBody['token'];
 
+          await storage.write(key: 'loginMethod', value: 'google');
           await setJwtToken(jwtToken);
           fetchUserInfo();
           notifyListeners();
@@ -78,51 +75,12 @@ class AuthService with ChangeNotifier {
   }
 
   // Apple 로그인 함수
-  Future<void> signInWithApple() async {
-    try {
-      final appleCredential = await SignInWithApple.getAppleIDCredential(
-        scopes: [
-          AppleIDAuthorizationScopes.email,
-          AppleIDAuthorizationScopes.fullName,
-        ],
-      );
-
-      final String? idToken = appleCredential.identityToken;
-      final String? email = appleCredential.email;
-      final String? firstName = appleCredential.givenName;
-      final String? lastName = appleCredential.familyName;
-      final String? name = (lastName ?? "") + (firstName ?? "");
-
-      if (idToken != null) {
-        final url = Uri.parse('${AppConfig.baseUrl}/api/auth/apple');
-        final response = await http.post(
-          url,
-          headers: <String, String>{
-            'Content-Type': 'application/json; charset=UTF-8',
-          },
-          body: jsonEncode(<String, String?>{
-            'idToken': idToken,
-            'email': email,
-            'name': name,
-          }),
-        );
-
-        if (response.statusCode == 200) {
-          print('Apple sign-in Success!');
-          final responseBody = jsonDecode(response.body);
-          final jwtToken = responseBody['token'];
-          await setJwtToken(jwtToken);
-          fetchUserInfo();
-          notifyListeners();
-        } else {
-          throw Exception("Failed to Register user on server");
-        }
-      } else {
-        throw Exception("Failed to get Apple idToken");
-      }
-    } catch (error) {
-      print('Apple sign-in error: $error');
-    }
+  Future<void> signInWithApple(BuildContext context) async {
+    final jwtToken = await appleAuthService.signInWithApple(context);
+    await storage.write(key: 'loginMethod', value: 'apple');
+    await setJwtToken(jwtToken);
+    fetchUserInfo();
+    notifyListeners();
   }
 
   Future<void> setJwtToken(String token) async {
@@ -149,7 +107,7 @@ class AuthService with ChangeNotifier {
       throw Exception("JWT token is not available");
     }
 
-    final url = Uri.parse('${AppConfig.baseUrl}/api/user/info');
+    final url = Uri.parse('${AppConfig.baseUrl}/api/user');
     final response = await http.get(
       url,
       headers: {
@@ -170,35 +128,6 @@ class AuthService with ChangeNotifier {
     } else {
       throw Exception("Failed to fetch user info");
     }
-  }
-
-  Future<http.Response> sendAuthenticatedRequest(
-      String endpoint, Map<String, dynamic> body) async {
-    final token = await getJwtToken();
-    if (token == null) {
-      throw Exception("JWT token is not available");
-    }
-
-    final url = Uri.parse('${AppConfig.baseUrl}/api/$endpoint');
-    final response = await http.post(
-      url,
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token',
-      },
-      body: jsonEncode(body),
-    );
-
-    print('Response status: ${response.statusCode}');
-    print('Response body: ${response.body}');
-
-    if (response.statusCode == 200) {
-      print('Authenticated request successful');
-    } else {
-      print('Failed to authenticate request');
-    }
-
-    return response;
   }
 
   Future<void> autoLogin() async {
@@ -243,6 +172,76 @@ class AuthService with ChangeNotifier {
     } catch (error) {
       print('Error signing out: $error');
       throw Exception('Failed to sign out');
+    }
+  }
+
+  // 회원 탈퇴 함수
+  Future<void> deleteAccount() async {
+    String? loginMethod = await storage.read(key: 'loginMethod');
+    if (loginMethod == 'google') {
+      // 구글 회원 탈퇴 로직
+      await _revokeGoogleSignIn();
+    } else if (loginMethod == 'apple') {
+      // 애플 회원 탈퇴 로직
+      await appleAuthService.revokeSignInWithApple();
+    } else {
+      throw Exception("Unknown login method");
+    }
+
+    // 서버에서 사용자 계정 삭제
+    try {
+      final token = await getJwtToken();
+      if (token == null) {
+        throw Exception("JWT token is not available");
+      }
+
+      final url = Uri.parse('${AppConfig.baseUrl}/api/user');
+      final response = await http.delete(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        print('Account deletion Success!');
+        await signOut(); // 로그아웃 처리
+      } else {
+        print('Failed to delete account: ${response.reasonPhrase}');
+        throw Exception("Failed to delete account");
+      }
+    } catch (error) {
+      print('Account deletion error: $error');
+    }
+  }
+
+  Future<void> _revokeGoogleSignIn() async {
+    try {
+      final googleSignInAccount = await _googleSignIn.signIn();
+      final GoogleSignInAuthentication googleSignInAuthentication =
+      await googleSignInAccount!.authentication;
+
+      final String? accessToken = googleSignInAuthentication.accessToken;
+
+      final url = Uri.parse('https://oauth2.googleapis.com/revoke');
+      final response = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: {
+          'token': accessToken,
+        },
+      );
+
+      if (response.statusCode == 200) {
+        print('Google sign-out Success!');
+      } else {
+        throw Exception('Failed to revoke Google token');
+      }
+    } catch (error) {
+      print('Google sign-out error: $error');
     }
   }
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:mvp_front/Service/AuthService.dart';
 import 'package:provider/provider.dart';
 import 'Screen/HomeScreen.dart';
@@ -8,11 +9,9 @@ import 'Provider/ProblemsProvider.dart';
 import 'Screen/SettingScreen.dart';
 import 'GlobalModule/AppbarWithLogo.dart';
 
-/*
-  메인 함수
-*/
 
-void main() {
+void main() async{
+  await dotenv.load(fileName: ".env");
   runApp(
     MultiProvider(
       providers: [

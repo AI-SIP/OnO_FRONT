@@ -127,7 +127,7 @@ class HomeScreen extends StatelessWidget {
                       // 안드로이드에서는 애플 로그인 버튼을 숨김
                       if (!Platform.isAndroid)
                         ElevatedButton(
-                          onPressed: () => authService.signInWithApple(),
+                          onPressed: () => authService.signInWithApple(context),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.black,
                             minimumSize: const Size.fromHeight(50), // 높이만 50으로 설정
