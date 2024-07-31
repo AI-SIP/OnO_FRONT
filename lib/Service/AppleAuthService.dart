@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:core';
+import 'dart:developer';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -9,7 +10,7 @@ import 'package:http/http.dart' as http;
 import '../Config/AppConfig.dart';
 
 class AppleAuthService {
-  final storage = FlutterSecureStorage();
+  final storage = const FlutterSecureStorage();
 
   Future<String> signInWithApple(BuildContext context) async {
     try {
@@ -43,7 +44,6 @@ class AppleAuthService {
         );
 
         if (response.statusCode == 200) {
-          print('Apple sign-in Success!');
           final responseBody = jsonDecode(response.body);
           final jwtToken = responseBody['token'];
 
@@ -55,7 +55,7 @@ class AppleAuthService {
         throw Exception("Failed to get Apple idToken");
       }
     } catch (error) {
-      print('Apple sign-in error: $error');
+      log('Apple sign-in error: $error');
     }
 
     return "Apple login error";

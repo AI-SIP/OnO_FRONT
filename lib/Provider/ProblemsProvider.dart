@@ -42,7 +42,6 @@ class ProblemsProvider with ChangeNotifier {
       log('Problems fetched and saved locally: ${_problems.length}');
     } else {
       log('Failed to load problems from server');
-      throw Exception('Failed to load problems from server');
     }
   }
 

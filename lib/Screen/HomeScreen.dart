@@ -129,7 +129,7 @@ class HomeScreen extends StatelessWidget {
                         ElevatedButton(
                           onPressed: () => authService.signInWithApple(context),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.black,
+                            backgroundColor: Colors.white,
                             minimumSize:
                                 const Size.fromHeight(50), // 높이만 50으로 설정
                             elevation: 1.0,
@@ -144,11 +144,10 @@ class HomeScreen extends StatelessWidget {
                                 'assets/AppleLogo.png', // 로고 이미지 파일 경로
                                 height: 24,
                               ),
-                              const SizedBox(width: 10),
                               const Text(
-                                'Apple 계정으로 로그인',
+                                'Apple로 로그인',
                                 style: TextStyle(
-                                    color: Colors.white, fontSize: 16.0),
+                                    color: Colors.black, fontSize: 16.0),
                               ),
                             ],
                           ),
