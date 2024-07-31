@@ -53,7 +53,7 @@ class _DatePickerHandlerState extends State<DatePickerHandler> {
             ],
           ),
           // 상단 마킹
-          Row(
+          const Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Expanded(
@@ -71,7 +71,7 @@ class _DatePickerHandlerState extends State<DatePickerHandler> {
               Expanded(
                 child: Align(
                   alignment: Alignment.center,
-                  child: const Text('일', style: TextStyle(fontSize: 16)),
+                  child: Text('일', style: TextStyle(fontSize: 16)),
                 ),
               ),
             ],

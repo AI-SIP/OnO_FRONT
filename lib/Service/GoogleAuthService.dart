@@ -18,6 +18,7 @@ class GoogleAuthService {
           googleSignInAuthentication.accessToken; // 얘가 accessToken
       String? email = googleSignInAccount.email; // 유저의 이메일을 저장
       String? name = googleSignInAccount.displayName; // 유저의 이름을 저장
+      String? identifier = googleSignInAccount.id;
 
       if (googleSignInAccount != null) {
         final platform = _getPlatform(); // 플랫폼 정보 확인
@@ -31,6 +32,7 @@ class GoogleAuthService {
             'platform': platform,
             'email': email,
             'name': name,
+            'identifier': identifier
           }),
         );
 
@@ -49,6 +51,10 @@ class GoogleAuthService {
       print('Google sign-in error: $error');
       return null;
     }
+  }
+
+  Future<void> logoutGoogleSignIn() async {
+
   }
 
   Future<void> revokeGoogleSignIn() async {

@@ -25,6 +25,7 @@ class AppleAuthService {
       final String? firstName = appleCredential.givenName;
       final String? lastName = appleCredential.familyName;
       final String? name = (lastName ?? "") + (firstName ?? "");
+      final String? identifier = appleCredential.userIdentifier;
 
       if (idToken != null) {
         final url = Uri.parse('${AppConfig.baseUrl}/api/auth/apple');
@@ -37,6 +38,7 @@ class AppleAuthService {
             'idToken': idToken,
             'email': email,
             'name': name,
+            'identifier': identifier,
           }),
         );
 

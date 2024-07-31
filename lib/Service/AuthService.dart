@@ -80,10 +80,11 @@ class AuthService with ChangeNotifier {
       _userName = responseBody['userName'];
       _userEmail = responseBody['userEmail'];
       _isLoggedIn = true;
-      notifyListeners();
     } else {
-      throw Exception("Failed to fetch user info");
+      _isLoggedIn = false;
     }
+
+    notifyListeners();
   }
 
   Future<void> autoLogin() async {
@@ -91,11 +92,9 @@ class AuthService with ChangeNotifier {
     if (token != null) {
       try {
         await fetchUserInfo();
-        print('====auto login complete====');
       } catch (e) {
         print('Auto login failed: $e');
       }
-      notifyListeners();
     } else {
       _isLoggedIn = false;
       notifyListeners();
@@ -119,7 +118,7 @@ class AuthService with ChangeNotifier {
     try {
       String? loginMethod = await storage.read(key: 'loginMethod');
       if (loginMethod == 'google') {
-        //await _googleSignIn.signOut();
+        googleAuthService.logoutGoogleSignIn();
       }
       _userId = 0;
       _isLoggedIn = false;

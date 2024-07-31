@@ -30,14 +30,7 @@ class _SettingScreenState extends State<SettingScreen> {
             TextButton(
               onPressed: () async {
                 Navigator.of(context).pop();
-                await Provider.of<AuthService>(context, listen: false).signOut().then((_) {
-                  if (mounted) {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(builder: (context) => HomeScreen()), // HomeScreen으로 이동
-                    );
-                  }
-                });
+                await Provider.of<AuthService>(context, listen: false).signOut();
               },
               child: Text('확인'),
             ),
@@ -102,7 +95,7 @@ class _SettingScreenState extends State<SettingScreen> {
                       color: Colors.green, fontFamily: 'font1', fontSize: 20, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 40),
-                /*
+
                 ElevatedButton(
                   onPressed: () => _showLogoutDialog(context),
                   child: const Text(
@@ -124,8 +117,6 @@ class _SettingScreenState extends State<SettingScreen> {
                   ),
                 ),
                 const SizedBox(height: 20), // 버튼 간 간격 추가
-
-                 */
                 ElevatedButton(
                   onPressed: () => _showDeleteAccountDialog(context),
                   child: const Text(
