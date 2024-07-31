@@ -35,8 +35,13 @@ class ImagePickerHandler {
           child: Wrap(
             children: <Widget>[
               ListTile(
-                leading: const Icon(Icons.camera),
-                title: const Text('카메라로 촬영'),
+                leading: const Icon(Icons.camera, color: Colors.green),
+                title: const Text('카메라로 촬영',
+                    style: TextStyle(
+                        fontFamily: 'font1',
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.green)),
                 onTap: () async {
                   Navigator.of(context).pop(); // 팝업 닫기
                   final pickedFile = await pickImageFromCamera();
@@ -44,8 +49,13 @@ class ImagePickerHandler {
                 },
               ),
               ListTile(
-                leading: const Icon(Icons.photo_library),
-                title: const Text('갤러리에서 선택'),
+                leading: const Icon(Icons.photo_library, color: Colors.green),
+                title: const Text('갤러리에서 선택',
+                    style: TextStyle(
+                        fontFamily: 'font1',
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.green)),
                 onTap: () async {
                   Navigator.of(context).pop(); // 팝업 닫기
                   final pickedFile = await pickImageFromGallery();
