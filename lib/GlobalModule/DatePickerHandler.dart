@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 
@@ -48,7 +50,7 @@ class _DatePickerHandlerState extends State<DatePickerHandler> {
                   Navigator.of(context).pop(); // 날짜 선택 창 닫기
                 },
                 child: const Text('완료',
-                    style: TextStyle(fontSize: 16, color: Colors.blue)),
+                    style: TextStyle(fontFamily: 'font1', fontSize: 20, color: Colors.blue, fontWeight: FontWeight.bold)),
               ),
             ],
           ),
@@ -59,19 +61,31 @@ class _DatePickerHandlerState extends State<DatePickerHandler> {
               Expanded(
                 child: Align(
                   alignment: Alignment.center,
-                  child: const Text('년도', style: TextStyle(fontSize: 16)),
+                  child: const Text('년도', style: TextStyle(
+                      fontFamily: 'font1',
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                  )),
                 ),
               ),
               Expanded(
                 child: Align(
                   alignment: Alignment.center,
-                  child: const Text('월', style: TextStyle(fontSize: 16)),
+                  child: const Text('월', style: TextStyle(
+                    fontFamily: 'font1',
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  )),
                 ),
               ),
               Expanded(
                 child: Align(
                   alignment: Alignment.center,
-                  child: Text('일', style: TextStyle(fontSize: 16)),
+                  child: Text('일', style: TextStyle(
+                    fontFamily: 'font1',
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  )),
                 ),
               ),
             ],
@@ -99,7 +113,11 @@ class _DatePickerHandlerState extends State<DatePickerHandler> {
                     },
                     children: _years.map((int year) {
                       return Center(
-                        child: Text('$year'),
+                        child: Text('$year', style: const TextStyle(
+                          fontFamily: 'font1',
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        )),
                       );
                     }).toList(),
                   ),
@@ -122,7 +140,11 @@ class _DatePickerHandlerState extends State<DatePickerHandler> {
                     },
                     children: _months.map((int month) {
                       return Center(
-                        child: Text('$month'),
+                        child: Text('$month', style: const TextStyle(
+                          fontFamily: 'font1',
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        )),
                       );
                     }).toList(),
                   ),
@@ -145,7 +167,11 @@ class _DatePickerHandlerState extends State<DatePickerHandler> {
                     },
                     children: _days.map((int day) {
                       return Center(
-                        child: Text('$day'),
+                        child: Text('$day', style: const TextStyle(
+                          fontFamily: 'font1',
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        )),
                       );
                     }).toList(),
                   ),

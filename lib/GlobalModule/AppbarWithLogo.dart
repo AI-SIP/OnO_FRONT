@@ -11,14 +11,14 @@ class AppBarWithLogo extends StatelessWidget implements PreferredSizeWidget {
   Widget build(BuildContext context) {
     return AppBar(
       title: const Padding(
-        padding: EdgeInsets.only(left: 12.0), // 왼쪽 여백 추가
+        padding: EdgeInsets.only(left: 10.0), // 왼쪽 여백 추가
         child: Align(
           alignment: Alignment.centerLeft,
           child: Text(
             'OnO',
             style: TextStyle(
                 color: Colors.green,
-                fontSize: 25,
+                fontSize: 26,
                 fontFamily: 'font1',
                 fontWeight: FontWeight.bold),
           ),

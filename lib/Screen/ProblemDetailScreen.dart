@@ -357,7 +357,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
   void _deleteProblem(BuildContext context, int? problemId) {
     if (problemId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('문제 ID가 유효하지 않습니다.')),
+        const SnackBar(content: Text('문제 ID가 유효하지 않습니다.')),
       );
       return;
     }
@@ -366,14 +366,26 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('문제 삭제'),
-          content: Text('정말로 이 문제를 삭제하시겠습니까?'),
+          title: const Text('문제 삭제', style: TextStyle(
+              fontFamily: 'font1',
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.green)),
+          content: const Text('정말로 이 문제를 삭제하시겠습니까?', style: TextStyle(
+              fontFamily: 'font1',
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Colors.green)),
           actions: [
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop(); // 다이얼로그 닫기
               },
-              child: Text('취소'),
+              child: const Text('취소', style: TextStyle(
+                  fontFamily: 'font1',
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black)),
             ),
             TextButton(
               onPressed: () {
@@ -413,7 +425,11 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                   );
                 });
               },
-              child: const Text('삭제'),
+              child: const Text('삭제', style: TextStyle(
+                  fontFamily: 'font1',
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.red)),
             ),
           ],
         );

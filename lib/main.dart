@@ -106,6 +106,17 @@ class _MyHomePageState extends State<MyHomePage> {
         ],
         currentIndex: _selectedIndex,
         selectedItemColor: Colors.green,
+        unselectedItemColor: Colors.grey,
+        selectedLabelStyle: const TextStyle(
+          fontSize: 18,
+          fontFamily: 'font1',
+          fontWeight: FontWeight.bold,
+        ),
+        unselectedLabelStyle: const TextStyle(
+          fontSize: 16,
+          fontFamily: 'font1',
+          fontWeight: FontWeight.bold,
+        ),
         onTap: _onItemTapped,
       ),
     );

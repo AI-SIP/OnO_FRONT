@@ -194,7 +194,7 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
                   const Icon(Icons.calendar_today, color: Colors.green),
                   const SizedBox(width: 10),
                   const Text(
-                    '문제 푼 날짜',
+                    '푼 날짜',
                     style: TextStyle(
                         fontFamily: 'font1',
                         color: Colors.green,
