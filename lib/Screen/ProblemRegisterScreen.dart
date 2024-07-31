@@ -72,25 +72,19 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
     super.dispose();
   }
 
-  // 등록에 성공했을 때 다이얼로그를 출력해주는 함수
   void showSuccessDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return CupertinoAlertDialog(
-          title: Text("성공!"),
-          content: Text("문제가 성공적으로 저장되었습니다."),
-          actions: <Widget>[
-            CupertinoDialogAction(
-              isDefaultAction: true,
-              child: Text("확인"),
-              onPressed: () {
-                Navigator.of(context).pop(true); // 다이얼로그 닫기
-              },
-            ),
-          ],
-        );
-      },
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text(
+          '문제가 성공적으로 저장되었습니다.',
+          style: TextStyle(
+              fontSize: 20,
+              color: Colors.white,
+              fontFamily: 'font1',
+              fontWeight: FontWeight.bold),
+        ),
+        backgroundColor: Colors.green,
+      ),
     );
   }
 
@@ -123,7 +117,41 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
     Navigator.of(context).pop(true);
   }
 
+  // 필수 항목 확인 함수
+  bool _validateForm() {
+    if (_sourceController.text.isEmpty) {
+      _showValidationMessage('출처는 필수 항목입니다.');
+      return false;
+    }
+    if (_problemImage == null) {
+      _showValidationMessage('문제 이미지는 필수 항목입니다.');
+      return false;
+    }
+    return true;
+  }
+
+  // 경고 메시지 출력 함수
+  void _showValidationMessage(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          message,
+          style: const TextStyle(
+              fontSize: 20,
+              color: Colors.white,
+              fontFamily: 'font1',
+              fontWeight: FontWeight.bold),
+        ),
+        backgroundColor: Colors.red,
+      ),
+    );
+  }
+
   Future<void> submitProblem() async {
+    if (!_validateForm()) {
+      return;
+    }
+
     showLoadingDialog(context); // 로딩 다이얼로그 표시
 
     final problemData = ProblemRegisterModel(

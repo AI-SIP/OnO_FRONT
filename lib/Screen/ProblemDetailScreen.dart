@@ -200,13 +200,13 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                 const SizedBox(height: 20.0),
                 DisplayImage(
                     imagePath: problemModel.processImageUrl,
-                    defaultImagePath: 'assets/process_image.png'),
+                    defaultImagePath: 'assets/no_image.jpg'),
                 const SizedBox(height: 30.0),
                 ExpansionTile(
                   title: Container(
                     width: double.infinity,
                     alignment: Alignment.centerLeft, // 좌측 정렬
-                    padding: EdgeInsets.symmetric(vertical: 4.0),
+                    padding: const EdgeInsets.symmetric(vertical: 4.0),
                     child: const Row(
                       mainAxisAlignment: MainAxisAlignment.center, // 좌측 정렬
                       children: [
@@ -246,7 +246,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                               ],
                             ),
                           ),
-                          SizedBox(height: 8.0),
+                          const SizedBox(height: 8.0),
                           UnderlinedText(text: '${problemModel.memo}'),
                         ],
                       ),
@@ -273,7 +273,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                     const SizedBox(height: 20.0),
                     DisplayImage(
                         imagePath: problemModel.problemImageUrl,
-                        defaultImagePath: 'assets/problem_image.png'),
+                        defaultImagePath: 'assets/no_image.jpg'),
                     const SizedBox(height: 20.0),
                     Container(
                       width: double.infinity,
@@ -296,7 +296,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                     const SizedBox(height: 20.0),
                     DisplayImage(
                         imagePath: problemModel.solveImageUrl,
-                        defaultImagePath: 'assets/solve_image.png'),
+                        defaultImagePath: 'assets/no_image.jpg'),
                     const SizedBox(height: 20.0),
                     Container(
                       width: double.infinity,
@@ -319,7 +319,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                     const SizedBox(height: 20.0),
                     DisplayImage(
                         imagePath: problemModel.answerImageUrl,
-                        defaultImagePath: 'assets/answer_image.png'),
+                        defaultImagePath: 'assets/no_image.jpg'),
                     const SizedBox(height: 20.0),
                   ],
                 ),
@@ -384,21 +384,36 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                   if (success) {
                     Navigator.of(context).pop(true); // 이전 화면으로 이동
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('문제가 삭제되었습니다.')),
+                      const SnackBar(
+                          content: Text('문제가 삭제되었습니다.',
+                              style: TextStyle(
+                                  fontSize: 20,
+                                  color: Colors.white,
+                                  fontFamily: 'font1',
+                                  fontWeight: FontWeight.bold)),
+                          backgroundColor: Colors.green),
                     );
                   } else {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('문제 삭제에 실패했습니다.')),
+                      const SnackBar(content: Text('문제 삭제에 실패했습니다.', style: TextStyle(
+                          fontSize: 20,
+                          color: Colors.white,
+                          fontFamily: 'font1',
+                          fontWeight: FontWeight.bold)), backgroundColor: Colors.red),
                     );
                   }
                 }).catchError((error) {
                   Navigator.of(context).pop(); // 다이얼로그 닫기
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('오류 발생: ${error.toString()}')),
+                    SnackBar(content: Text('오류 발생: ${error.toString()}', style: const TextStyle(
+                        fontSize: 20,
+                        color: Colors.white,
+                        fontFamily: 'font1',
+                        fontWeight: FontWeight.bold)), backgroundColor: Colors.red,),
                   );
                 });
               },
-              child: Text('삭제'),
+              child: const Text('삭제'),
             ),
           ],
         );
@@ -407,6 +422,6 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
   }
 
   Widget buildNoDataScreen() {
-    return Center(child: Text("문제 정보를 가져올 수 없습니다."));
+    return const Center(child: Text("문제 정보를 가져올 수 없습니다."));
   }
 }

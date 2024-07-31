@@ -29,6 +29,7 @@ class _SettingScreenState extends State<SettingScreen> {
                 Navigator.of(context).pop();
                 await Provider.of<AuthService>(context, listen: false)
                     .signOut();
+                _showSuccessDialog(context, '로그아웃에 성공했습니다.');
               },
               child: const Text('확인'),
             ),
@@ -57,12 +58,29 @@ class _SettingScreenState extends State<SettingScreen> {
                 Navigator.of(context).pop();
                 await Provider.of<AuthService>(context, listen: false)
                     .deleteAccount();
+                _showSuccessDialog(context, '회원 탈퇴에 성공했습니다.');
               },
               child: const Text('확인'),
             ),
           ],
         );
       },
+    );
+  }
+
+  void _showSuccessDialog(BuildContext context, String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          message,
+          style: const TextStyle(
+              fontSize: 20,
+              color: Colors.white,
+              fontFamily: 'font1',
+              fontWeight: FontWeight.bold),
+        ),
+        backgroundColor: Colors.green,
+      ),
     );
   }
 
