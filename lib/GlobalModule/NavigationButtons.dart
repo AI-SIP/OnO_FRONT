@@ -42,7 +42,7 @@ class NavigationButtons extends StatelessWidget {
           onPressed: () => navigateToProblem(context, provider, nextProblemId),
           child: const Text('다음 문제',
               style: TextStyle(
-                  color: Colors.white,
+                  color: Colors.green,
                   fontFamily: 'font1',
                   fontSize: 20,
                   fontWeight: FontWeight.bold)),
