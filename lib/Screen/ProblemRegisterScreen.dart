@@ -111,7 +111,7 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
       context: context,
       barrierDismissible: false,
       builder: (BuildContext context) {
-        return Center(
+        return const Center(
           child: CircularProgressIndicator(),
         );
       },
@@ -429,7 +429,6 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
                 children: <Widget>[
                   ElevatedButton(
                     onPressed: resetForm,
-                    child: const Text('등록 취소'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.white54,
                       foregroundColor: Colors.green,
@@ -439,10 +438,10 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
                         fontWeight: FontWeight.bold, // 글씨 굵기 설정
                       ),
                     ),
+                    child: const Text('등록 취소'),
                   ),
                   ElevatedButton(
                     onPressed: submitProblem,
-                    child: const Text('등록 완료'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.green,
                       foregroundColor: Colors.white,
@@ -452,6 +451,7 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
                         fontWeight: FontWeight.bold, // 글씨 굵기 설정
                       ),
                     ),
+                    child: const Text('등록 완료'),
                   ),
                 ],
               ),
