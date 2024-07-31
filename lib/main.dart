@@ -9,14 +9,15 @@ import 'Provider/ProblemsProvider.dart';
 import 'Screen/SettingScreen.dart';
 import 'GlobalModule/AppbarWithLogo.dart';
 
-
-void main() async{
+void main() async {
   await dotenv.load(fileName: ".env");
   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => ProblemsProvider()),
-        ChangeNotifierProvider(create: (context) => AuthService(Provider.of<ProblemsProvider>(context, listen:false))),
+        ChangeNotifierProvider(
+            create: (context) => AuthService(
+                Provider.of<ProblemsProvider>(context, listen: false))),
       ],
       child: const MyApp(),
     ),
@@ -65,7 +66,6 @@ class _MyHomePageState extends State<MyHomePage> {
     try {
       await Provider.of<AuthService>(context, listen: false).autoLogin();
     } catch (e) {
-      // 여기에 오류 처리 로직을 추가할 수 있습니다.
       print('Auto login failed: $e');
     }
   }
@@ -91,12 +91,6 @@ class _MyHomePageState extends State<MyHomePage> {
             icon: Icon(Icons.home),
             label: '메인',
           ),
-          /*
-          BottomNavigationBarItem(
-            icon: Icon(Icons.book),
-            label: '오답노트 복습',
-          ),
-           */
           BottomNavigationBarItem(
             icon: Icon(Icons.add),
             label: '오답노트 등록',

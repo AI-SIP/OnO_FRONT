@@ -126,7 +126,8 @@ class AppleAuthService {
 
     final builder = JsonWebSignatureBuilder()
       ..jsonContent = claims.toJson()
-      ..addRecipient(JsonWebKey.fromPem(privateKey, keyId: keyId), algorithm: 'ES256');
+      ..addRecipient(JsonWebKey.fromPem(privateKey, keyId: keyId),
+          algorithm: 'ES256');
 
     return builder.build().toCompactSerialization();
   }
@@ -162,10 +163,10 @@ class AppleAuthService {
   }
 
   Future<Map<String, dynamic>> requestAppleTokens(
-      String authorizationCode,
-      String clientSecret,
-      String clientId,
-      ) async {
+    String authorizationCode,
+    String clientSecret,
+    String clientId,
+  ) async {
     final response = await http.post(
       Uri.parse('https://appleid.apple.com/auth/token'),
       headers: {

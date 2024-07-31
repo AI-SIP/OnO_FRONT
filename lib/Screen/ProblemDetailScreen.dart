@@ -45,18 +45,18 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
           future: _problemDataFuture,
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
-              return Text('로딩 중...');
+              return const Text('로딩 중...');
             } else if (snapshot.hasError) {
-              return Text('에러 발생');
+              return const Text('에러 발생');
             } else if (snapshot.hasData && snapshot.data != null) {
               return Text(snapshot.data!.reference ?? '출처가 없습니다!',
-                  style: TextStyle(
+                  style: const TextStyle(
                       color: Colors.green,
                       fontFamily: 'font1',
                       fontSize: 24,
                       fontWeight: FontWeight.bold));
             } else {
-              return Text('문제 상세',
+              return const Text('문제 상세',
                   style: TextStyle(
                       color: Colors.green,
                       fontFamily: 'font1',
@@ -106,9 +106,9 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
         future: _problemDataFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator());
           } else if (snapshot.hasError) {
-            return Center(child: Text('에러 발생'));
+            return const Center(child: Text('에러 발생'));
           } else if (snapshot.hasData && snapshot.data != null) {
             return buildProblemDetails(context, snapshot.data!);
           } else {
@@ -136,22 +136,22 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start, // 좌측 정렬
               children: [
-                SizedBox(height: 16.0),
+                const SizedBox(height: 16.0),
                 Row(
                   children: [
-                    Icon(Icons.calendar_today, color: Colors.green),
-                    SizedBox(width: 8),
-                    Text('푼 날짜',
+                    const Icon(Icons.calendar_today, color: Colors.green),
+                    const SizedBox(width: 8),
+                    const Text('푼 날짜',
                         style: TextStyle(
                             fontFamily: 'font1',
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
                             color: Colors.green)),
-                    Spacer(), // 추가: 여백을 만들어 텍스트를 오른쪽으로 밀어줌
+                    const Spacer(), // 추가: 여백을 만들어 텍스트를 오른쪽으로 밀어줌
                     UnderlinedText(text: formattedDate, fontSize: 18),
                   ],
                 ),
-                SizedBox(height: 25.0),
+                const SizedBox(height: 25.0),
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start, // 레이블을 위로 정렬
                   children: [
@@ -159,7 +159,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Row(children: [
+                          const Row(children: [
                             Icon(Icons.info, color: Colors.green),
                             SizedBox(width: 8),
                             Text('문제 출처',
@@ -169,7 +169,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                                     fontWeight: FontWeight.bold,
                                     color: Colors.green)),
                           ]),
-                          SizedBox(height: 10.0),
+                          const SizedBox(height: 10.0),
                           UnderlinedText(
                               text: problemModel.reference ?? '출처 없음',
                               fontSize: 18),
@@ -178,12 +178,12 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                     ),
                   ],
                 ),
-                SizedBox(height: 30.0),
+                const SizedBox(height: 30.0),
                 Container(
                   width: double.infinity,
                   alignment: Alignment.centerLeft, // 좌측 정렬
-                  padding: EdgeInsets.symmetric(vertical: 4.0),
-                  child: Row(
+                  padding: const EdgeInsets.symmetric(vertical: 4.0),
+                  child: const Row(
                     mainAxisAlignment: MainAxisAlignment.start, // 좌측 정렬
                     children: [
                       Icon(Icons.camera_alt, color: Colors.green),
@@ -197,17 +197,17 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                     ],
                   ),
                 ),
-                SizedBox(height: 20.0),
+                const SizedBox(height: 20.0),
                 DisplayImage(
                     imagePath: problemModel.processImageUrl,
                     defaultImagePath: 'assets/process_image.png'),
-                SizedBox(height: 30.0),
+                const SizedBox(height: 30.0),
                 ExpansionTile(
                   title: Container(
                     width: double.infinity,
                     alignment: Alignment.centerLeft, // 좌측 정렬
                     padding: EdgeInsets.symmetric(vertical: 4.0),
-                    child: Row(
+                    child: const Row(
                       mainAxisAlignment: MainAxisAlignment.center, // 좌측 정렬
                       children: [
                         SizedBox(width: 8.0),
@@ -221,7 +221,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                     ),
                   ),
                   children: [
-                    SizedBox(height: 10.0),
+                    const SizedBox(height: 10.0),
                     Padding(
                       padding: const EdgeInsets.all(8.0),
                       child: Column(
@@ -230,8 +230,8 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                           Container(
                             width: double.infinity,
                             alignment: Alignment.centerLeft, // 좌측 정렬
-                            padding: EdgeInsets.symmetric(vertical: 4.0),
-                            child: Row(
+                            padding: const EdgeInsets.symmetric(vertical: 4.0),
+                            child: const Row(
                               mainAxisAlignment:
                                   MainAxisAlignment.start, // 좌측 정렬
                               children: [
@@ -251,12 +251,12 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                         ],
                       ),
                     ),
-                    SizedBox(height: 20.0),
+                    const SizedBox(height: 20.0),
                     Container(
                       width: double.infinity,
                       alignment: Alignment.centerLeft, // 좌측 정렬
-                      padding: EdgeInsets.symmetric(vertical: 4.0),
-                      child: Row(
+                      padding: const EdgeInsets.symmetric(vertical: 4.0),
+                      child: const Row(
                         mainAxisAlignment: MainAxisAlignment.start, // 좌측 정렬
                         children: [
                           Icon(Icons.image, color: Colors.green),
@@ -270,16 +270,16 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                         ],
                       ),
                     ),
-                    SizedBox(height: 20.0),
+                    const SizedBox(height: 20.0),
                     DisplayImage(
                         imagePath: problemModel.problemImageUrl,
                         defaultImagePath: 'assets/problem_image.png'),
-                    SizedBox(height: 20.0),
+                    const SizedBox(height: 20.0),
                     Container(
                       width: double.infinity,
                       alignment: Alignment.centerLeft, // 좌측 정렬
-                      padding: EdgeInsets.symmetric(vertical: 4.0),
-                      child: Row(
+                      padding: const EdgeInsets.symmetric(vertical: 4.0),
+                      child: const Row(
                         mainAxisAlignment: MainAxisAlignment.start, // 좌측 정렬
                         children: [
                           Icon(Icons.image, color: Colors.green),
@@ -293,16 +293,16 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                         ],
                       ),
                     ),
-                    SizedBox(height: 20.0),
+                    const SizedBox(height: 20.0),
                     DisplayImage(
                         imagePath: problemModel.solveImageUrl,
                         defaultImagePath: 'assets/solve_image.png'),
-                    SizedBox(height: 20.0),
+                    const SizedBox(height: 20.0),
                     Container(
                       width: double.infinity,
                       alignment: Alignment.centerLeft, // 좌측 정렬
-                      padding: EdgeInsets.symmetric(vertical: 4.0),
-                      child: Row(
+                      padding: const EdgeInsets.symmetric(vertical: 4.0),
+                      child: const Row(
                         mainAxisAlignment: MainAxisAlignment.start, // 좌측 정렬
                         children: [
                           Icon(Icons.image, color: Colors.green),
@@ -316,20 +316,20 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                         ],
                       ),
                     ),
-                    SizedBox(height: 20.0),
+                    const SizedBox(height: 20.0),
                     DisplayImage(
                         imagePath: problemModel.answerImageUrl,
                         defaultImagePath: 'assets/answer_image.png'),
-                    SizedBox(height: 20.0),
+                    const SizedBox(height: 20.0),
                   ],
                 ),
-                SizedBox(height: 20.0),
+                const SizedBox(height: 20.0),
                 NavigationButtons(
                   context: context,
                   provider: provider,
                   currentId: widget.problemId!,
                 ),
-                SizedBox(height: 50.0),
+                const SizedBox(height: 50.0),
               ],
             ),
           ),

@@ -1,20 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:image_picker/image_picker.dart'; // XFile을 사용하기 위해 추가
+import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'dart:io';
 import '../Provider/ProblemsProvider.dart';
 import '../Model/ProblemRegisterModel.dart';
 import '../GlobalModule/DatePickerHandler.dart';
-import '../GlobalModule/ImagePickerHandler.dart'; // 분리한 이미지 선택기 핸들러 가져오기
-import 'package:http/http.dart' as http;
-
-/*
-TODO
-  - 갤럭시에서도 카메라, 갤러리 기능 작동하는지 확인
-  - 등록 취소 기능
-  - 등록 완료 기능
-*/
+import '../GlobalModule/ImagePickerHandler.dart';
 
 class ProblemRegisterScreen extends StatefulWidget {
   const ProblemRegisterScreen({super.key});

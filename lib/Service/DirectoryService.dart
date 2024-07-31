@@ -7,7 +7,6 @@ class DirectoryService {
 
   DirectoryService(this.problemsProvider);
 
-  // 문제 목록을 ProblemThumbnailModel 리스트로 변환하는 함수
   List<ProblemThumbnailModel> loadProblems() {
     if (problemsProvider.problems.isNotEmpty) {
       return problemsProvider.problems

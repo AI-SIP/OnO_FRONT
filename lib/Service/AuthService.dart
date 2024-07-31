@@ -3,17 +3,14 @@ import 'dart:core';
 import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 import 'package:mvp_front/Service/AppleAuthService.dart';
 import 'package:mvp_front/Service/GoogleAuthService.dart';
-import 'package:provider/provider.dart';
-import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:http/http.dart' as http;
 import '../Config/AppConfig.dart';
 import '../Provider/ProblemsProvider.dart';
 
 class AuthService with ChangeNotifier {
-  final storage = FlutterSecureStorage();
+  final storage = const FlutterSecureStorage();
   final ProblemsProvider problemsProvider;
 
   AuthService(this.problemsProvider);

@@ -2,6 +2,7 @@ import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../Config/AppConfig.dart';
 import '../GlobalModule/GridPainter.dart'; // GridPainter 클래스 가져오기
 import '../Service/AuthService.dart';
 
@@ -10,8 +11,7 @@ class HomeScreen extends StatelessWidget {
 
   // URL을 여는 함수
   Future<void> _launchURL() async {
-    final url = Uri.parse(
-        'https://semnisem.notion.site/MVP-e104fd6af0064941acf464e6f77eabb3');
+    final url = Uri.parse(AppConfig.guidePageUrl);
 
     if (await canLaunchUrl(url)) {
       launchUrl(url);
@@ -45,7 +45,7 @@ class HomeScreen extends StatelessWidget {
                   textAlign: TextAlign.center,
                   style: TextStyle(
                       color: Colors.green,
-                      fontSize:35,
+                      fontSize: 35,
                       fontFamily: 'font1',
                       fontWeight: FontWeight.bold),
                 ),
@@ -86,10 +86,10 @@ class HomeScreen extends StatelessWidget {
                       Text(
                         '${authService.userName}님 환영합니다!',
                         style: TextStyle(
-                      color: Colors.green,
-                      fontSize: 24,
-                      fontFamily: 'font1',
-                      fontWeight: FontWeight.bold),
+                            color: Colors.green,
+                            fontSize: 24,
+                            fontFamily: 'font1',
+                            fontWeight: FontWeight.bold),
                       ), // 사용자 이름 출력
                     ],
                   );
@@ -130,7 +130,8 @@ class HomeScreen extends StatelessWidget {
                           onPressed: () => authService.signInWithApple(context),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.black,
-                            minimumSize: const Size.fromHeight(50), // 높이만 50으로 설정
+                            minimumSize:
+                                const Size.fromHeight(50), // 높이만 50으로 설정
                             elevation: 1.0,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(4.0),
