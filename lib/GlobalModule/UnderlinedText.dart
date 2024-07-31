@@ -16,7 +16,7 @@ class UnderlinedText extends StatelessWidget {
         children: [
           Text(text, style: TextStyle(fontSize: fontSize, fontFamily: 'font1', fontWeight: FontWeight.bold, color: color)),
           Container(
-            margin: EdgeInsets.only(top: 2),
+            margin: const EdgeInsets.only(top: 2),
             height: 2,
             color: Colors.red.withOpacity(0.5),
           ),

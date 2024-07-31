@@ -79,6 +79,7 @@ flutter:
     - assets/process_image.png
     - assets/answer_image.png
     - assets/solve_image.png
+    - assets/no_image.jpg
   fonts:
     - family: font1
       fonts:

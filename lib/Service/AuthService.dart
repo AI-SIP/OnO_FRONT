@@ -3,17 +3,14 @@ import 'dart:core';
 import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 import 'package:mvp_front/Service/AppleAuthService.dart';
 import 'package:mvp_front/Service/GoogleAuthService.dart';
-import 'package:provider/provider.dart';
-import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:http/http.dart' as http;
 import '../Config/AppConfig.dart';
 import '../Provider/ProblemsProvider.dart';
 
 class AuthService with ChangeNotifier {
-  final storage = FlutterSecureStorage();
+  final storage = const FlutterSecureStorage();
   final ProblemsProvider problemsProvider;
 
   AuthService(this.problemsProvider);
@@ -80,10 +77,11 @@ class AuthService with ChangeNotifier {
       _userName = responseBody['userName'];
       _userEmail = responseBody['userEmail'];
       _isLoggedIn = true;
-      notifyListeners();
     } else {
-      throw Exception("Failed to fetch user info");
+      _isLoggedIn = false;
     }
+
+    notifyListeners();
   }
 
   Future<void> autoLogin() async {
@@ -91,11 +89,9 @@ class AuthService with ChangeNotifier {
     if (token != null) {
       try {
         await fetchUserInfo();
-        print('====auto login complete====');
       } catch (e) {
         print('Auto login failed: $e');
       }
-      notifyListeners();
     } else {
       _isLoggedIn = false;
       notifyListeners();
@@ -119,7 +115,7 @@ class AuthService with ChangeNotifier {
     try {
       String? loginMethod = await storage.read(key: 'loginMethod');
       if (loginMethod == 'google') {
-        //await _googleSignIn.signOut();
+        googleAuthService.logoutGoogleSignIn();
       }
       _userId = 0;
       _isLoggedIn = false;

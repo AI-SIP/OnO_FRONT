@@ -1,41 +1,24 @@
 import 'package:flutter/material.dart';
 
-/*
-  상단에 로고를 출력해주는 클래스
-*/
-
 class AppBarWithLogo extends StatelessWidget implements PreferredSizeWidget {
   @override
   final Size preferredSize;
 
-  AppBarWithLogo({Key? key})
-      : preferredSize = Size.fromHeight(kToolbarHeight),
-        super(key: key);
+  const AppBarWithLogo({super.key})
+      : preferredSize = const Size.fromHeight(kToolbarHeight);
 
   @override
   Widget build(BuildContext context) {
     return AppBar(
-      /*
-      title: Row(
-        children: [
-          Image.asset(
-            'assets/logo.png', // 로고 이미지 파일 경로
-            height: 30,
-          ),
-        ],
-      ),
-      backgroundColor: Colors.green[50],
-    );
-       */
-      title: Padding(
-        padding: const EdgeInsets.only(left: 12.0), // 왼쪽 여백 추가
+      title: const Padding(
+        padding: EdgeInsets.only(left: 10.0), // 왼쪽 여백 추가
         child: Align(
           alignment: Alignment.centerLeft,
           child: Text(
             'OnO',
             style: TextStyle(
                 color: Colors.green,
-                fontSize: 25,
+                fontSize: 26,
                 fontFamily: 'font1',
                 fontWeight: FontWeight.bold),
           ),

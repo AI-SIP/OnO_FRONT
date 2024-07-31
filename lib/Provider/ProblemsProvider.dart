@@ -12,14 +12,13 @@ class ProblemsProvider with ChangeNotifier {
   List<ProblemModel> _problems = [];
   List<ProblemModel> get problems => List.unmodifiable(_problems);
 
-  final storage = FlutterSecureStorage();
+  final storage = const FlutterSecureStorage();
 
   Future<String?> getJwtToken() async {
     return await storage.read(key: 'jwtToken');
   }
 
   Future<void> fetchProblems() async {
-
     final token = await getJwtToken();
     if (token == null) {
       log('JWT token is not available');
@@ -49,7 +48,6 @@ class ProblemsProvider with ChangeNotifier {
 
   Future<void> submitProblem(
       ProblemRegisterModel problemData, BuildContext context) async {
-
     final token = await getJwtToken();
     if (token == null) {
       throw Exception("JWT token is not available");

@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'dart:io';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
 import '../Config/AppConfig.dart';
@@ -15,12 +14,13 @@ class GoogleAuthService {
           await googleSignInAccount!.authentication;
 
       final String? accessToken =
-          googleSignInAuthentication.accessToken; // 얘가 accessToken
-      String? email = googleSignInAccount.email; // 유저의 이메일을 저장
-      String? name = googleSignInAccount.displayName; // 유저의 이름을 저장
+          googleSignInAuthentication.accessToken;
+      String? email = googleSignInAccount.email;
+      String? name = googleSignInAccount.displayName;
+      String? identifier = googleSignInAccount.id;
 
       if (googleSignInAccount != null) {
-        final platform = _getPlatform(); // 플랫폼 정보 확인
+        final platform = _getPlatform();
 
         final url = Uri.parse('${AppConfig.baseUrl}/api/auth/google');
         final response = await http.post(
@@ -31,6 +31,7 @@ class GoogleAuthService {
             'platform': platform,
             'email': email,
             'name': name,
+            'identifier': identifier
           }),
         );
 
@@ -50,6 +51,8 @@ class GoogleAuthService {
       return null;
     }
   }
+
+  Future<void> logoutGoogleSignIn() async {}
 
   Future<void> revokeGoogleSignIn() async {
     try {

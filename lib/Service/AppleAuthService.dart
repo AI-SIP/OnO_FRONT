@@ -25,6 +25,7 @@ class AppleAuthService {
       final String? firstName = appleCredential.givenName;
       final String? lastName = appleCredential.familyName;
       final String? name = (lastName ?? "") + (firstName ?? "");
+      final String? identifier = appleCredential.userIdentifier;
 
       if (idToken != null) {
         final url = Uri.parse('${AppConfig.baseUrl}/api/auth/apple');
@@ -37,6 +38,7 @@ class AppleAuthService {
             'idToken': idToken,
             'email': email,
             'name': name,
+            'identifier': identifier,
           }),
         );
 
@@ -124,7 +126,8 @@ class AppleAuthService {
 
     final builder = JsonWebSignatureBuilder()
       ..jsonContent = claims.toJson()
-      ..addRecipient(JsonWebKey.fromPem(privateKey, keyId: keyId), algorithm: 'ES256');
+      ..addRecipient(JsonWebKey.fromPem(privateKey, keyId: keyId),
+          algorithm: 'ES256');
 
     return builder.build().toCompactSerialization();
   }
@@ -160,10 +163,10 @@ class AppleAuthService {
   }
 
   Future<Map<String, dynamic>> requestAppleTokens(
-      String authorizationCode,
-      String clientSecret,
-      String clientId,
-      ) async {
+    String authorizationCode,
+    String clientSecret,
+    String clientId,
+  ) async {
     final response = await http.post(
       Uri.parse('https://appleid.apple.com/auth/token'),
       headers: {

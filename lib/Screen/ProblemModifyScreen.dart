@@ -82,8 +82,6 @@ class ProblemModifyScreenState extends State<ProblemModifyScreen> {
           _solveImage = pickedFile;
         }
       });
-      // 선택된 이미지를 처리합니다.
-      print('이미지 경로: ${pickedFile.path}');
     }
   }
 

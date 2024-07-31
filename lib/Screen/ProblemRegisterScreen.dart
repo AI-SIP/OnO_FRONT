@@ -1,20 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:image_picker/image_picker.dart'; // XFile을 사용하기 위해 추가
+import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'dart:io';
 import '../Provider/ProblemsProvider.dart';
 import '../Model/ProblemRegisterModel.dart';
 import '../GlobalModule/DatePickerHandler.dart';
-import '../GlobalModule/ImagePickerHandler.dart'; // 분리한 이미지 선택기 핸들러 가져오기
-import 'package:http/http.dart' as http;
-
-/*
-TODO
-  - 갤럭시에서도 카메라, 갤러리 기능 작동하는지 확인
-  - 등록 취소 기능
-  - 등록 완료 기능
-*/
+import '../GlobalModule/ImagePickerHandler.dart';
 
 class ProblemRegisterScreen extends StatefulWidget {
   const ProblemRegisterScreen({super.key});
@@ -80,25 +72,19 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
     super.dispose();
   }
 
-  // 등록에 성공했을 때 다이얼로그를 출력해주는 함수
   void showSuccessDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return CupertinoAlertDialog(
-          title: Text("성공!"),
-          content: Text("문제가 성공적으로 저장되었습니다."),
-          actions: <Widget>[
-            CupertinoDialogAction(
-              isDefaultAction: true,
-              child: Text("확인"),
-              onPressed: () {
-                Navigator.of(context).pop(true); // 다이얼로그 닫기
-              },
-            ),
-          ],
-        );
-      },
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text(
+          '문제가 성공적으로 저장되었습니다.',
+          style: TextStyle(
+              fontSize: 20,
+              color: Colors.white,
+              fontFamily: 'font1',
+              fontWeight: FontWeight.bold),
+        ),
+        backgroundColor: Colors.green,
+      ),
     );
   }
 
@@ -119,7 +105,7 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
       context: context,
       barrierDismissible: false,
       builder: (BuildContext context) {
-        return Center(
+        return const Center(
           child: CircularProgressIndicator(),
         );
       },
@@ -131,7 +117,41 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
     Navigator.of(context).pop(true);
   }
 
+  // 필수 항목 확인 함수
+  bool _validateForm() {
+    if (_sourceController.text.isEmpty) {
+      _showValidationMessage('출처는 필수 항목입니다.');
+      return false;
+    }
+    if (_problemImage == null) {
+      _showValidationMessage('문제 이미지는 필수 항목입니다.');
+      return false;
+    }
+    return true;
+  }
+
+  // 경고 메시지 출력 함수
+  void _showValidationMessage(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          message,
+          style: const TextStyle(
+              fontSize: 20,
+              color: Colors.white,
+              fontFamily: 'font1',
+              fontWeight: FontWeight.bold),
+        ),
+        backgroundColor: Colors.red,
+      ),
+    );
+  }
+
   Future<void> submitProblem() async {
+    if (!_validateForm()) {
+      return;
+    }
+
     showLoadingDialog(context); // 로딩 다이얼로그 표시
 
     final problemData = ProblemRegisterModel(
@@ -174,7 +194,7 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
                   const Icon(Icons.calendar_today, color: Colors.green),
                   const SizedBox(width: 10),
                   const Text(
-                    '문제 푼 날짜',
+                    '푼 날짜',
                     style: TextStyle(
                         fontFamily: 'font1',
                         color: Colors.green,
@@ -437,7 +457,6 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
                 children: <Widget>[
                   ElevatedButton(
                     onPressed: resetForm,
-                    child: const Text('등록 취소'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.white54,
                       foregroundColor: Colors.green,
@@ -447,10 +466,10 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
                         fontWeight: FontWeight.bold, // 글씨 굵기 설정
                       ),
                     ),
+                    child: const Text('등록 취소'),
                   ),
                   ElevatedButton(
                     onPressed: submitProblem,
-                    child: const Text('등록 완료'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.green,
                       foregroundColor: Colors.white,
@@ -460,6 +479,7 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
                         fontWeight: FontWeight.bold, // 글씨 굵기 설정
                       ),
                     ),
+                    child: const Text('등록 완료'),
                   ),
                 ],
               ),
