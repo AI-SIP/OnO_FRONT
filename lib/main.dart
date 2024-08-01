@@ -1,4 +1,5 @@
-import 'package:flutter/cupertino.dart';
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
@@ -8,7 +9,6 @@ import 'Screen/ProblemRegisterScreen.dart';
 import 'Provider/ProblemsProvider.dart';
 import 'Screen/SettingScreen.dart';
 import 'GlobalModule/AppbarWithLogo.dart';
-import 'dart:io' show Platform;
 
 import 'Service/AuthService.dart';
 
@@ -40,6 +40,7 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
       ),
       home: const MyHomePage(),
+      debugShowCheckedModeBanner: false,
     );
   }
 }
@@ -70,7 +71,7 @@ class _MyHomePageState extends State<MyHomePage> {
     try {
       await Provider.of<AuthService>(context, listen: false).autoLogin();
     } catch (e) {
-      print('Auto login failed: $e');
+      log('Auto login failed: $e');
     }
   }
 

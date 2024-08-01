@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../Config/AppConfig.dart';
-import '../GlobalModule/GridPainter.dart'; // GridPainter 클래스 가져오기
+import '../GlobalModule/GridPainter.dart';
 import '../Service/AuthService.dart';
 
 class HomeScreen extends StatelessWidget {

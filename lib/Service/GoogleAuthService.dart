@@ -44,12 +44,15 @@ class GoogleAuthService {
             return jwtToken;
           } else {
             log("Failed to Register user on server");
+            return null;
           }
         } else {
           log("Failed to get Google idToken");
+          return null;
         }
       } else{
         log("googleSignInAccount is null!");
+        return null;
       }
 
 

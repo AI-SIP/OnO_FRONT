@@ -7,7 +7,7 @@ import '../Provider/ProblemsProvider.dart';
 import '../Service/AuthService.dart';
 
 class DirectoryScreen extends StatefulWidget {
-  const DirectoryScreen({Key? key}) : super(key: key);
+  const DirectoryScreen({super.key});
 
   @override
   _DirectoryScreenState createState() => _DirectoryScreenState();

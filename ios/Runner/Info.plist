@@ -25,8 +25,6 @@
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
-			<key>CFBundleTypeRole</key>
-			<string>Editor</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>com.googleusercontent.apps.41920987554-6lp5n7jr9v81pu2r6ulihp3ggu25kpse</string>
@@ -64,23 +62,9 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
-	<key>CFBundleURLTypes</key>
-    <array>
-        <dict>
-        <key>CFBundleURLSchemes</key>
-            <array>
-                <!-- google login -->
-                <string>com.googleusercontent.apps.41920987554-6lp5n7jr9v81pu2r6ulihp3ggu25kpse</string>
-            </array>
-        </dict>
-    </array>
-    <key>NSSupportsOpeningDocumentsInPlace</key>
-    <true/>
-    <key>UISupportedInterfaceOrientations</key>
-    <array>
-      <string>UIInterfaceOrientationPortrait</string>
-      <string>UIInterfaceOrientationLandscapeLeft</string>
-      <string>UIInterfaceOrientationLandscapeRight</string>
-    </array>
+	<key>NSSupportsOpeningDocumentsInPlace</key>
+	<true/>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 </dict>
 </plist>

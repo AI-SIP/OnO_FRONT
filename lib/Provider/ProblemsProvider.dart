@@ -64,17 +64,17 @@ class ProblemsProvider with ChangeNotifier {
     final answerImage = problemData.answerImage;
 
     if (problemImage != null) {
-      print('problemImage : ${problemImage}');
+      log('problemImage : $problemImage');
       request.files.add(
           await http.MultipartFile.fromPath('problemImage', problemImage.path));
     }
     if (solveImage != null) {
-      print('solveImage : ${solveImage}');
+      log('solveImage : $solveImage');
       request.files.add(
           await http.MultipartFile.fromPath('solveImage', solveImage.path));
     }
     if (answerImage != null) {
-      print('answerImage : ${answerImage}');
+      log('answerImage : $answerImage');
       request.files.add(
           await http.MultipartFile.fromPath('answerImage', answerImage.path));
     }
@@ -83,14 +83,14 @@ class ProblemsProvider with ChangeNotifier {
       var streamedResponse = await request.send();
       var response = await http.Response.fromStream(streamedResponse);
       if (response.statusCode == 200) {
-        print('Problem successfully submitted');
+        log('Problem successfully submitted');
         await fetchProblems();
         //notifyListeners();
       } else {
-        print('Failed to submit problem: ${response.reasonPhrase}');
+        log('Failed to submit problem: ${response.reasonPhrase}');
       }
     } catch (e) {
-      print('Error submitting problem: $e');
+      log('Error submitting problem: $e');
     }
   }
 
