@@ -29,7 +29,7 @@
 			<string>Editor</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>com.googleusercontent.apps.YOUR_CLIENT_ID</string>
+				<string>com.googleusercontent.apps.41920987554-6lp5n7jr9v81pu2r6ulihp3ggu25kpse</string>
 			</array>
 		</dict>
 	</array>
@@ -42,9 +42,9 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
-	<string>앱에서 카메라를 사용하려면 권한이 필요합니다.</string>
+	<string>오답노트 등록에 필요한 사진을 직접 첨부하기 위해서는 카메라 접근 권한 허용이 필요합니다.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>앱에서 사진을 사용하려면 권한이 필요합니다.</string>
+	<string>오답노트 등록에 필요한 사진을 직접 첨부하기 위해서는 갤러리 접근 권한 허용이 필요합니다.</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>UILaunchStoryboardName</key>
@@ -66,28 +66,14 @@
 	</array>
 	<key>CFBundleURLTypes</key>
     <array>
-    <dict>
-    <key>CFBundleURLSchemes</key>
-    <array>
-        <!-- google login -->
-        <string>com.googleusercontent.apps.41920987554-6lp5n7jr9v81pu2r6ulihp3ggu25kpse</string>
+        <dict>
+        <key>CFBundleURLSchemes</key>
+            <array>
+                <!-- google login -->
+                <string>com.googleusercontent.apps.41920987554-6lp5n7jr9v81pu2r6ulihp3ggu25kpse</string>
+            </array>
+        </dict>
     </array>
-    </dict>
-    </array>
-    <key>NSAppleMusicUsageDescription</key>
-    <string>Describe why your app uses this permission here.</string>
-    <key>NSCameraUsageDescription</key>
-    <string>Describe why your app uses this permission here.</string>
-    <key>NSLocationAlwaysUsageDescription</key>
-    <string>Describe why your app uses this permission here.</string>
-    <key>NSLocationWhenInUseUsageDescription</key>
-    <string>Describe why your app uses this permission here.</string>
-    <key>NSMicrophoneUsageDescription</key>
-    <string>Describe why your app uses this permission here.</string>
-    <key>NSMotionUsageDescription</key>
-    <string>Describe why your app uses this permission here.</string>
-    <key>NSSpeechRecognitionUsageDescription</key>
-    <string>Describe why your app uses this permission here.</string>
     <key>NSSupportsOpeningDocumentsInPlace</key>
     <true/>
     <key>UISupportedInterfaceOrientations</key>

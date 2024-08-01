@@ -111,40 +111,6 @@ class ProblemsProvider with ChangeNotifier {
     }
   }
 
-  /*
-  Future<void> updateProblem(int problemId, ProblemRegisterModel problemData,
-      BuildContext context) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    int? userId = prefs.getInt('userId');
-
-    if (userId == null) {
-      throw Exception("User ID is not available");
-    }
-
-    try {
-      final response = await http.put(
-        Uri.parse('${Appconfig.baseUrl}/api/problem/$problemId'),
-        headers: {
-          'Content-Type': 'application/json; charset=UTF-8',
-          'userId': userId.toString()
-        },
-        body: jsonEncode(problemData.toJson()),
-      );
-
-      if (response.statusCode == 200) {
-        print('Problem successfully updated');
-
-        // 폴더 갱신
-        await fetchAndSaveProblems();
-      } else {
-        print('Failed to update problem: ${response.body}');
-      }
-    } catch (e) {
-      print('Error updating problem: $e');
-    }
-  }
-   */
-
   Future<bool> deleteProblem(int problemId) async {
     final token = await getJwtToken();
     if (token == null) {

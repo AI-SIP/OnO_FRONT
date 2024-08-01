@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:mvp_front/Service/AuthService.dart';
 import 'package:provider/provider.dart';
 import 'dart:io';
 import '../Provider/ProblemsProvider.dart';
@@ -175,6 +176,22 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
     final mediaQuery = MediaQuery.of(context); // 미디어 쿼리 정보 가져오기
     final isLandscape =
         mediaQuery.orientation == Orientation.landscape; // 가로/세로 방향 확인
+    final authService = Provider.of<AuthService>(context);
+
+    if (!authService.isLoggedIn) {
+      // 로그인하지 않은 사용자에게 표시할 위젯
+      return const Scaffold(
+        body: Center(
+          child: Text('로그인 해주세요!',
+              style: TextStyle(
+                  color: Colors.green,
+                  fontFamily: 'font1',
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold)
+          ),
+        ),
+      );
+    }
 
     return Scaffold(
         body: GestureDetector(

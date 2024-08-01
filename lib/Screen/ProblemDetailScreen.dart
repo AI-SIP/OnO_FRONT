@@ -338,22 +338,6 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
     );
   }
 
-  /*
-  void _editProblem(BuildContext context, int problemId) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => ProblemModifyScreen(problemId: problemId),
-      ),
-    ).then((value) {
-      if (value == true) {
-        _refreshProblemDetails();
-      }
-    });
-  }
-
-   */
-
   void _deleteProblem(BuildContext context, int? problemId) {
     if (problemId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
