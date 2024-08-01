@@ -9,7 +9,6 @@ import '../Service/AuthService.dart';
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
-  // URL을 여는 함수
   Future<void> _launchURL() async {
     final url = Uri.parse(AppConfig.guidePageUrl);
 
@@ -27,13 +26,11 @@ class HomeScreen extends StatelessWidget {
     return Scaffold(
       body: Stack(
         children: [
-          // 배경 격자무늬
           Positioned.fill(
             child: CustomPaint(
               painter: GridPainter(),
             ),
           ),
-          // 텍스트와 OnO 사용 가이드 버튼을 중앙에 배치
           Positioned(
             top: screenHeight * 0.3, // 화면 높이의 30% 위치에 배치
             left: 0,
@@ -73,7 +70,6 @@ class HomeScreen extends StatelessWidget {
               ],
             ),
           ),
-          // 소셜 로그인 버튼을 아래에 배치
           Positioned(
             top: screenHeight * 0.5, // 화면 높이의 50% 위치에 배치
             left: 20,
@@ -85,7 +81,7 @@ class HomeScreen extends StatelessWidget {
                     children: [
                       Text(
                         '${authService.userName}님 환영합니다!',
-                        style: TextStyle(
+                        style: const TextStyle(
                             color: Colors.green,
                             fontSize: 24,
                             fontFamily: 'font1',
@@ -124,7 +120,6 @@ class HomeScreen extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 20), // 간격 추가
-                      // 안드로이드에서는 애플 로그인 버튼을 숨김
                       if (!Platform.isAndroid)
                         ElevatedButton(
                           onPressed: () => authService.signInWithApple(context),

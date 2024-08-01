@@ -75,19 +75,6 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
               }
             },
             itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-              /*
-              const PopupMenuItem<String>(
-                value: 'edit',
-                child: Text('수정하기',
-                    style: TextStyle(
-                      fontFamily: 'font1',
-                      fontSize: 18,
-                      color: Colors.black,
-                      fontWeight: FontWeight.bold,
-                    )),
-              ),
-
-               */
               const PopupMenuItem<String>(
                 value: 'delete',
                 child: Text('삭제하기',
