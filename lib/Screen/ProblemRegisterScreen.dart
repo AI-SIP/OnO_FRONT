@@ -187,8 +187,7 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
                   color: Colors.green,
                   fontFamily: 'font1',
                   fontSize: 24,
-                  fontWeight: FontWeight.bold)
-          ),
+                  fontWeight: FontWeight.bold)),
         ),
       );
     }
@@ -468,6 +467,7 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
               ),
               const SizedBox(height: 20),
               // 등록 취소 및 완료 버튼
+
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: <Widget>[
@@ -476,26 +476,26 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.white54,
                       foregroundColor: Colors.green,
-                      textStyle: const TextStyle(
-                        fontFamily: 'font1',
-                        fontSize: 16, // 글씨 크기 설정
-                        fontWeight: FontWeight.bold, // 글씨 굵기 설정
-                      ),
                     ),
-                    child: const Text('등록 취소'),
+                    child: const Text('등록 취소',
+                        style: TextStyle(
+                          fontFamily: 'font1',
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        )),
                   ),
                   ElevatedButton(
                     onPressed: submitProblem,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.green,
                       foregroundColor: Colors.white,
-                      textStyle: const TextStyle(
-                        fontFamily: 'font1',
-                        fontSize: 16, // 글씨 크기 설정
-                        fontWeight: FontWeight.bold, // 글씨 굵기 설정
-                      ),
                     ),
-                    child: const Text('등록 완료'),
+                    child: const Text('등록 완료',
+                        style: TextStyle(
+                          fontFamily: 'font1',
+                          fontSize: 20, // 글씨 크기 설정
+                          fontWeight: FontWeight.bold, // 글씨 굵기 설정
+                        )),
                   ),
                 ],
               ),

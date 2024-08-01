@@ -65,6 +65,7 @@ class _DatePickerHandlerState extends State<DatePickerHandler> {
                       fontFamily: 'font1',
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
+                    color: Colors.green
                   )),
                 ),
               ),
@@ -75,6 +76,7 @@ class _DatePickerHandlerState extends State<DatePickerHandler> {
                     fontFamily: 'font1',
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
+                      color: Colors.green
                   )),
                 ),
               ),
@@ -85,6 +87,7 @@ class _DatePickerHandlerState extends State<DatePickerHandler> {
                     fontFamily: 'font1',
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
+                      color: Colors.green
                   )),
                 ),
               ),
@@ -117,6 +120,7 @@ class _DatePickerHandlerState extends State<DatePickerHandler> {
                           fontFamily: 'font1',
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
+                            color: Colors.green
                         )),
                       );
                     }).toList(),
@@ -144,6 +148,7 @@ class _DatePickerHandlerState extends State<DatePickerHandler> {
                           fontFamily: 'font1',
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
+                            color: Colors.green
                         )),
                       );
                     }).toList(),
@@ -171,6 +176,7 @@ class _DatePickerHandlerState extends State<DatePickerHandler> {
                           fontFamily: 'font1',
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
+                            color: Colors.green
                         )),
                       );
                     }).toList(),

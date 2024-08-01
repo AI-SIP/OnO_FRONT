@@ -162,8 +162,13 @@ class AuthService with ChangeNotifier {
       );
 
       if (response.statusCode == 200) {
+        _userId = 0;
+        _isLoggedIn = false;
+        _userName = '';
+        _userEmail = '';
+        await storage.deleteAll();
+        notifyListeners();
         log('Account deletion Success!');
-        await signOut(); // 로그아웃 처리
       } else {
         log('Failed to delete account: ${response.reasonPhrase}');
         throw Exception("Failed to delete account");
