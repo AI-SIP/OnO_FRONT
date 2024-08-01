@@ -1,13 +1,14 @@
 import 'dart:convert';
 import 'dart:core';
+import 'dart:developer';
 import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:mvp_front/Service/AppleAuthService.dart';
-import 'package:mvp_front/Service/GoogleAuthService.dart';
 import 'package:http/http.dart' as http;
 import '../Config/AppConfig.dart';
 import '../Provider/ProblemsProvider.dart';
+import 'AppleAuthService.dart';
+import 'GoogleAuthService.dart';
 
 class AuthService with ChangeNotifier {
   final storage = const FlutterSecureStorage();
@@ -77,6 +78,8 @@ class AuthService with ChangeNotifier {
       _userName = responseBody['userName'];
       _userEmail = responseBody['userEmail'];
       _isLoggedIn = true;
+
+      await problemsProvider.fetchProblems();
     } else {
       _isLoggedIn = false;
     }
@@ -90,7 +93,7 @@ class AuthService with ChangeNotifier {
       try {
         await fetchUserInfo();
       } catch (e) {
-        print('Auto login failed: $e');
+        log('Auto login failed: $e');
       }
     } else {
       _isLoggedIn = false;
@@ -124,7 +127,7 @@ class AuthService with ChangeNotifier {
       await storage.deleteAll();
       notifyListeners(); // 리스너들에게 상태 변경을 알림
     } catch (error) {
-      print('Error signing out: $error');
+      log('Error signing out: $error');
       throw Exception('Failed to sign out');
     }
   }
@@ -159,14 +162,19 @@ class AuthService with ChangeNotifier {
       );
 
       if (response.statusCode == 200) {
-        print('Account deletion Success!');
-        await signOut(); // 로그아웃 처리
+        _userId = 0;
+        _isLoggedIn = false;
+        _userName = '';
+        _userEmail = '';
+        await storage.deleteAll();
+        notifyListeners();
+        log('Account deletion Success!');
       } else {
-        print('Failed to delete account: ${response.reasonPhrase}');
+        log('Failed to delete account: ${response.reasonPhrase}');
         throw Exception("Failed to delete account");
       }
     } catch (error) {
-      print('Account deletion error: $error');
+      log('Account deletion error: $error');
     }
   }
 }

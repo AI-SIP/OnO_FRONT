@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:mvp_front/Provider/ProblemsProvider.dart';
 import 'package:provider/provider.dart';
 import '../GlobalModule/DisplayImage.dart';
 import '../GlobalModule/GridPainter.dart';
 import '../GlobalModule/UnderlinedText.dart';
 import '../Model/ProblemModel.dart';
 import '../GlobalModule/NavigationButtons.dart';
+import '../Provider/ProblemsProvider.dart';
 
 class ProblemDetailScreen extends StatefulWidget {
   final int? problemId;
@@ -75,19 +75,6 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
               }
             },
             itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-              /*
-              const PopupMenuItem<String>(
-                value: 'edit',
-                child: Text('수정하기',
-                    style: TextStyle(
-                      fontFamily: 'font1',
-                      fontSize: 18,
-                      color: Colors.black,
-                      fontWeight: FontWeight.bold,
-                    )),
-              ),
-
-               */
               const PopupMenuItem<String>(
                 value: 'delete',
                 child: Text('삭제하기',
@@ -337,22 +324,6 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
       ],
     );
   }
-
-  /*
-  void _editProblem(BuildContext context, int problemId) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => ProblemModifyScreen(problemId: problemId),
-      ),
-    ).then((value) {
-      if (value == true) {
-        _refreshProblemDetails();
-      }
-    });
-  }
-
-   */
 
   void _deleteProblem(BuildContext context, int? problemId) {
     if (problemId == null) {

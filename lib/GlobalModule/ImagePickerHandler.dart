@@ -1,32 +1,31 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
 class ImagePickerHandler {
   final ImagePicker _picker = ImagePicker();
 
-  // 카메라를 통해 이미지를 선택하는 함수
   Future<XFile?> pickImageFromCamera() async {
     try {
       final pickedFile = await _picker.pickImage(source: ImageSource.camera);
       return pickedFile;
     } catch (e) {
-      print("Error picking image from camera: $e");
+      log("Error picking image from camera: $e");
       return null;
     }
   }
 
-  // 갤러리에서 이미지를 선택하는 함수
   Future<XFile?> pickImageFromGallery() async {
     try {
       final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
       return pickedFile;
     } catch (e) {
-      print("Error picking image from gallery: $e");
+      log("Error picking image from gallery: $e");
       return null;
     }
   }
 
-  // 이미지 선택 팝업을 표시하는 함수
   void showImagePicker(BuildContext context, Function(XFile?) onImagePicked) {
     showModalBottomSheet(
       context: context,
@@ -35,7 +34,7 @@ class ImagePickerHandler {
           child: Wrap(
             children: <Widget>[
               ListTile(
-                leading: const Icon(Icons.camera, color: Colors.green),
+                leading: const Icon(Icons.camera_alt, color: Colors.green),
                 title: const Text('카메라로 촬영',
                     style: TextStyle(
                         fontFamily: 'font1',

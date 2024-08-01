@@ -1,9 +1,5 @@
 import 'package:flutter/material.dart';
 
-/*
-  화면에 격자무늬를 그려주는 클래스
- */
-
 class GridPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {

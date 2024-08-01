@@ -14,7 +14,7 @@ class DirectoryScreen extends StatefulWidget {
 }
 
 class _DirectoryScreenState extends State<DirectoryScreen> {
-  final String defaultImage = 'assets/process_image.png'; // Default image 경로 설정
+  final String defaultImage = 'assets/no_image.png'; // Default image 경로 설정
 
   @override
   void initState() {

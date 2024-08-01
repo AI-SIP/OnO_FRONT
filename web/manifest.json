@@ -1,11 +1,11 @@
 {
-    "name": "mvp_front",
-    "short_name": "mvp_front",
+    "name": "OnO",
+    "short_name": "OnO",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "sw maestro mvp flutter project",
+    "description": "sw maestro OnO flutter project",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

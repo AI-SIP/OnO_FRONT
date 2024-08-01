@@ -15,26 +15,29 @@ class _SettingScreenState extends State<SettingScreen> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('로그아웃', style: TextStyle(
-              fontFamily: 'font1',
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: Colors.green)),
-          content: const Text('정말 로그아웃 하시겠습니까?', style: TextStyle(
-              fontFamily: 'font1',
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: Colors.green)),
+          title: const Text('로그아웃',
+              style: TextStyle(
+                  fontFamily: 'font1',
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.green)),
+          content: const Text('정말 로그아웃 하시겠습니까?',
+              style: TextStyle(
+                  fontFamily: 'font1',
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.green)),
           actions: [
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop();
               },
-              child: const Text('취소', style: TextStyle(
-                  fontFamily: 'font1',
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black)),
+              child: const Text('취소',
+                  style: TextStyle(
+                      fontFamily: 'font1',
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black)),
             ),
             TextButton(
               onPressed: () async {
@@ -43,11 +46,12 @@ class _SettingScreenState extends State<SettingScreen> {
                     .signOut();
                 _showSuccessDialog(context, '로그아웃에 성공했습니다.');
               },
-              child: const Text('로그아웃', style: TextStyle(
-                  fontFamily: 'font1',
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.red)),
+              child: const Text('로그아웃',
+                  style: TextStyle(
+                      fontFamily: 'font1',
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.red)),
             ),
           ],
         );
@@ -60,39 +64,44 @@ class _SettingScreenState extends State<SettingScreen> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('회원 탈퇴', style: TextStyle(
-              fontFamily: 'font1',
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: Colors.green)),
-          content: const Text('정말 회원 탈퇴 하시겠습니까?\n그동안 작성했던 모든 오답노트 및 개인정보가 삭제됩니다. 이 작업은 되돌릴 수 없습니다.', style: TextStyle(
-              fontFamily: 'font1',
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: Colors.green)),
+          title: const Text('회원 탈퇴',
+              style: TextStyle(
+                  fontFamily: 'font1',
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.green)),
+          content: const Text(
+              '정말 회원 탈퇴 하시겠습니까?\n그동안 작성했던 모든 오답노트 및 개인정보가 삭제됩니다. 이 작업은 되돌릴 수 없습니다.',
+              style: TextStyle(
+                  fontFamily: 'font1',
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.green)),
           actions: [
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop();
               },
-              child: const Text('취소', style: TextStyle(
-                  fontFamily: 'font1',
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black)),
+              child: const Text('취소',
+                  style: TextStyle(
+                      fontFamily: 'font1',
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black)),
             ),
             TextButton(
               onPressed: () async {
                 Navigator.of(context).pop();
                 await Provider.of<AuthService>(context, listen: false)
                     .deleteAccount();
-                _showSuccessDialog(context, '회원 탈퇴에 성공했습니다.');
+                //_showSuccessDialog(context, '회원 탈퇴에 성공했습니다.');
               },
-              child: const Text('탈퇴', style: TextStyle(
-                  fontFamily: 'font1',
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.red)),
+              child: const Text('탈퇴',
+                  style: TextStyle(
+                      fontFamily: 'font1',
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.red)),
             ),
           ],
         );

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer';
 import 'dart:io';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
@@ -10,49 +11,56 @@ class GoogleAuthService {
   Future<String?> signInWithGoogle() async {
     try {
       final googleSignInAccount = await _googleSignIn.signIn();
-      final GoogleSignInAuthentication googleSignInAuthentication =
-          await googleSignInAccount!.authentication;
+      if(googleSignInAccount != null){
+        final GoogleSignInAuthentication googleSignInAuthentication =
+        await googleSignInAccount!.authentication;
 
-      final String? accessToken =
-          googleSignInAuthentication.accessToken;
-      String? email = googleSignInAccount.email;
-      String? name = googleSignInAccount.displayName;
-      String? identifier = googleSignInAccount.id;
+        final String? accessToken =
+            googleSignInAuthentication.accessToken;
+        String? email = googleSignInAccount.email;
+        String? name = googleSignInAccount.displayName;
+        String? identifier = googleSignInAccount.id;
 
-      if (googleSignInAccount != null) {
-        final platform = _getPlatform();
+        if (googleSignInAccount != null) {
+          final platform = _getPlatform();
 
-        final url = Uri.parse('${AppConfig.baseUrl}/api/auth/google');
-        final response = await http.post(
-          url,
-          headers: {'Content-Type': 'application/json; charset=UTF-8'},
-          body: jsonEncode({
-            'accessToken': accessToken,
-            'platform': platform,
-            'email': email,
-            'name': name,
-            'identifier': identifier
-          }),
-        );
+          final url = Uri.parse('${AppConfig.baseUrl}/api/auth/google');
+          final response = await http.post(
+            url,
+            headers: {'Content-Type': 'application/json; charset=UTF-8'},
+            body: jsonEncode({
+              'accessToken': accessToken,
+              'platform': platform,
+              'email': email,
+              'name': name,
+              'identifier': identifier
+            }),
+          );
 
-        if (response.statusCode == 200) {
-          print('Google sign-in Success!');
-          final responseBody = jsonDecode(response.body);
-          final jwtToken = responseBody['token'];
-          return jwtToken;
+          if (response.statusCode == 200) {
+            log('Google sign-in Success!');
+            final responseBody = jsonDecode(response.body);
+            final jwtToken = responseBody['token'];
+            return jwtToken;
+          } else {
+            log("Failed to Register user on server");
+          }
         } else {
-          throw Exception("Failed to Register user on server");
+          log("Failed to get Google idToken");
         }
-      } else {
-        throw Exception("Failed to get Google idToken");
+      } else{
+        log("googleSignInAccount is null!");
       }
+
+
     } catch (error) {
-      print('Google sign-in error: $error');
       return null;
     }
   }
 
-  Future<void> logoutGoogleSignIn() async {}
+  Future<void> logoutGoogleSignIn() async {
+    _googleSignIn.signOut();
+  }
 
   Future<void> revokeGoogleSignIn() async {
     try {
@@ -74,12 +82,12 @@ class GoogleAuthService {
       );
 
       if (response.statusCode == 200) {
-        print('Google sign-out Success!');
+        log('Google sign-out Success!');
       } else {
-        throw Exception('Failed to revoke Google token');
+        log('Failed to revoke Google token');
       }
     } catch (error) {
-      print('Google sign-out error: $error');
+      log('Google sign-out error: $error');
     }
   }
 

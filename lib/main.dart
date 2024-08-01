@@ -1,6 +1,6 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:mvp_front/Service/AuthService.dart';
 import 'package:provider/provider.dart';
 import 'Screen/HomeScreen.dart';
 import 'Screen/DirectoryScreen.dart';
@@ -8,9 +8,13 @@ import 'Screen/ProblemRegisterScreen.dart';
 import 'Provider/ProblemsProvider.dart';
 import 'Screen/SettingScreen.dart';
 import 'GlobalModule/AppbarWithLogo.dart';
+import 'dart:io' show Platform;
+
+import 'Service/AuthService.dart';
 
 void main() async {
   await dotenv.load(fileName: ".env");
+
   runApp(
     MultiProvider(
       providers: [
@@ -79,7 +83,7 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBarWithLogo(),
+      appBar: const AppBarWithLogo(),
       body: IndexedStack(
         index: _selectedIndex,
         children: _widgetOptions,
