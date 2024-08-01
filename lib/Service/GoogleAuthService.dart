@@ -58,7 +58,9 @@ class GoogleAuthService {
     }
   }
 
-  Future<void> logoutGoogleSignIn() async {}
+  Future<void> logoutGoogleSignIn() async {
+    _googleSignIn.signOut();
+  }
 
   Future<void> revokeGoogleSignIn() async {
     try {
