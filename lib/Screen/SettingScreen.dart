@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import '../Service/AuthService.dart';
 
 class SettingScreen extends StatefulWidget {
-  const SettingScreen({Key? key}) : super(key: key);
+  const SettingScreen({super.key});
 
   @override
   _SettingScreenState createState() => _SettingScreenState();

@@ -105,7 +105,7 @@ class AppleAuthService {
         tokenTypeHint: tokenTypeHint,
       );
     } on Exception catch (e) {
-      print('사용자 계정 삭제 중 오류 발생: $e');
+      log('사용자 계정 삭제 중 오류 발생: $e');
     }
   }
 

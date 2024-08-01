@@ -5,8 +5,7 @@ class DisplayImage extends StatelessWidget {
   final String defaultImagePath;
 
   const DisplayImage(
-      {Key? key, required this.imagePath, required this.defaultImagePath})
-      : super(key: key);
+      {super.key, required this.imagePath, required this.defaultImagePath});
 
   @override
   Widget build(BuildContext context) {

@@ -11,7 +11,7 @@ import '../Provider/ProblemsProvider.dart';
 class ProblemDetailScreen extends StatefulWidget {
   final int? problemId;
 
-  ProblemDetailScreen({Key? key, required this.problemId}) : super(key: key);
+  const ProblemDetailScreen({super.key, required this.problemId});
 
   @override
   _ProblemDetailScreenState createState() => _ProblemDetailScreenState();

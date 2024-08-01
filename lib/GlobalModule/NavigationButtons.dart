@@ -8,6 +8,7 @@ class NavigationButtons extends StatelessWidget {
   final int currentId;
 
   const NavigationButtons({
+    super.key,
     required this.context,
     required this.provider,
     required this.currentId,
