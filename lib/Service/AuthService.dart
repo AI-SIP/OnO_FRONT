@@ -78,6 +78,8 @@ class AuthService with ChangeNotifier {
       _userName = responseBody['userName'];
       _userEmail = responseBody['userEmail'];
       _isLoggedIn = true;
+
+      await problemsProvider.fetchProblems();
     } else {
       _isLoggedIn = false;
     }
