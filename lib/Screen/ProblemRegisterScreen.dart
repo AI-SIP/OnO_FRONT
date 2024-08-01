@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:mvp_front/Service/AuthService.dart';
 import 'package:provider/provider.dart';
 import 'dart:io';
 import '../Provider/ProblemsProvider.dart';
 import '../Model/ProblemRegisterModel.dart';
 import '../GlobalModule/DatePickerHandler.dart';
 import '../GlobalModule/ImagePickerHandler.dart';
+import '../Service/AuthService.dart';
 
 class ProblemRegisterScreen extends StatefulWidget {
   const ProblemRegisterScreen({super.key});
@@ -179,7 +179,6 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
     final authService = Provider.of<AuthService>(context);
 
     if (!authService.isLoggedIn) {
-      // 로그인하지 않은 사용자에게 표시할 위젯
       return const Scaffold(
         body: Center(
           child: Text('로그인 해주세요!',
@@ -302,7 +301,6 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
               Container(
                 height: isLandscape ? mediaQuery.size.height * 0.3 : 200,
                 decoration: BoxDecoration(
-                  color: Colors.grey[200], // 배경색 지정
                   border: Border.all(
                     color: Colors.green, // 테두리 색상
                     width: 2.0, // 테두리 두께
@@ -311,8 +309,8 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
                 child: Center(
                   child: _problemImage == null
                       ? IconButton(
-                          icon: const Icon(Icons.add,
-                              color: Colors.green, size: 40),
+                          icon: const Icon(Icons.image,
+                              color: Colors.green, size: 50),
                           onPressed: () {
                             _showImagePicker('problemImage'); // 이미지 선택 팝업 호출
                           },
@@ -345,24 +343,23 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
               Container(
                 height: isLandscape ? mediaQuery.size.height * 0.3 : 200,
                 decoration: BoxDecoration(
-                  color: Colors.grey[200], // 배경색 지정
                   border: Border.all(
-                    color: Colors.green, // 테두리 색상
-                    width: 2.0, // 테두리 두께
+                    color: Colors.green,
+                    width: 2.0,
                   ),
                 ),
                 child: Center(
                   child: _answerImage == null
                       ? IconButton(
-                          icon: const Icon(Icons.add,
-                              color: Colors.green, size: 40),
+                          icon: const Icon(Icons.image,
+                              color: Colors.green, size: 50),
                           onPressed: () {
-                            _showImagePicker('answerImage'); // 이미지 선택 팝업 호출
+                            _showImagePicker('answerImage');
                           },
                         )
                       : GestureDetector(
                           onTap: () {
-                            _showImagePicker('answerImage'); // 이미지 선택 팝업 호출
+                            _showImagePicker('answerImage');
                           },
                           child: Image.file(File(_answerImage!.path)),
                         ),
@@ -388,7 +385,6 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
               Container(
                 height: isLandscape ? mediaQuery.size.height * 0.3 : 200,
                 decoration: BoxDecoration(
-                  color: Colors.grey[200], // 배경색 지정
                   border: Border.all(
                     color: Colors.green, // 테두리 색상
                     width: 2.0, // 테두리 두께
@@ -397,8 +393,8 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
                 child: Center(
                   child: _solveImage == null
                       ? IconButton(
-                          icon: const Icon(Icons.add,
-                              color: Colors.green, size: 40),
+                          icon: const Icon(Icons.image,
+                              color: Colors.green, size: 50),
                           onPressed: () {
                             _showImagePicker('solveImage'); // 이미지 선택 팝업 호출
                           },

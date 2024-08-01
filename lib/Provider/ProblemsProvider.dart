@@ -3,8 +3,8 @@ import 'dart:developer';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
-import 'package:mvp_front/Config/AppConfig.dart';
 
+import '../Config/AppConfig.dart';
 import '../Model/ProblemRegisterModel.dart';
 import '../Model/ProblemModel.dart';
 

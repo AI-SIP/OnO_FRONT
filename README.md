@@ -1,6 +1,6 @@
-# mvp_front
+# OnO
 
-sw maestro mvp flutter project
+sw maestro aisip's OnO project
 
 ## Getting Started
 

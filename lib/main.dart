@@ -1,7 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:mvp_front/Service/AuthService.dart';
 import 'package:provider/provider.dart';
 import 'Screen/HomeScreen.dart';
 import 'Screen/DirectoryScreen.dart';
@@ -10,6 +9,8 @@ import 'Provider/ProblemsProvider.dart';
 import 'Screen/SettingScreen.dart';
 import 'GlobalModule/AppbarWithLogo.dart';
 import 'dart:io' show Platform;
+
+import 'Service/AuthService.dart';
 
 void main() async {
   await dotenv.load(fileName: ".env");

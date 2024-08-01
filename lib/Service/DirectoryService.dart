@@ -1,6 +1,7 @@
-import 'package:mvp_front/Model/ProblemThumbnailModel.dart';
-import 'package:mvp_front/Provider/ProblemsProvider.dart'; // ProblemsProvider import
 import 'dart:developer';
+
+import '../Model/ProblemThumbnailModel.dart';
+import '../Provider/ProblemsProvider.dart';
 
 class DirectoryService {
   final ProblemsProvider problemsProvider;

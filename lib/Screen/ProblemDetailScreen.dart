@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:mvp_front/Provider/ProblemsProvider.dart';
 import 'package:provider/provider.dart';
 import '../GlobalModule/DisplayImage.dart';
 import '../GlobalModule/GridPainter.dart';
 import '../GlobalModule/UnderlinedText.dart';
 import '../Model/ProblemModel.dart';
 import '../GlobalModule/NavigationButtons.dart';
+import '../Provider/ProblemsProvider.dart';
 
 class ProblemDetailScreen extends StatefulWidget {
   final int? problemId;
