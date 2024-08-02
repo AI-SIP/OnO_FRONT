@@ -76,6 +76,9 @@ class HomeScreen extends StatelessWidget {
             right: 20,
             child: Consumer<AuthService>(
               builder: (context, authService, child) {
+
+                double buttonWidth = MediaQuery.of(context).size.width * 0.7;
+
                 if (authService.isLoggedIn) {
                   return Column(
                     children: [
@@ -92,41 +95,13 @@ class HomeScreen extends StatelessWidget {
                 } else {
                   return Column(
                     children: [
-                      const SizedBox(height: 50), // 간격 추가
-                      ElevatedButton(
-                        onPressed: () => authService.signInWithGoogle(),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white,
-                          minimumSize: const Size.fromHeight(50), // 높이만 50으로 설정
-                          elevation: 1.0,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(4.0),
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Image.asset(
-                              'assets/GoogleLogo.png', // 로고 이미지 파일 경로
-                              height: 24,
-                            ),
-                            const SizedBox(width: 10),
-                            const Text(
-                              'Google 계정으로 로그인',
-                              style: TextStyle(
-                                  color: Colors.black87, fontSize: 16.0),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 20), // 간격 추가
-                      if (!Platform.isAndroid)
-                        ElevatedButton(
-                          onPressed: () => authService.signInWithApple(context),
+                      SizedBox(
+                        width: buttonWidth,
+                        child: ElevatedButton(
+                          onPressed: () => authService.signInWithGoogle(),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.white,
-                            minimumSize:
-                                const Size.fromHeight(50), // 높이만 50으로 설정
+                            minimumSize: const Size.fromHeight(50), // 높이만 50으로 설정
                             elevation: 1.0,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(4.0),
@@ -136,15 +111,48 @@ class HomeScreen extends StatelessWidget {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Image.asset(
-                                'assets/AppleLogo.png', // 로고 이미지 파일 경로
+                                'assets/GoogleLogo.png', // 로고 이미지 파일 경로
                                 height: 24,
                               ),
+                              const SizedBox(width: 10),
                               const Text(
-                                'Apple로 로그인',
+                                'Google 계정으로 로그인',
                                 style: TextStyle(
-                                    color: Colors.black, fontSize: 16.0),
+                                    color: Colors.black87, fontSize: 16.0),
                               ),
                             ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 20), // 간격 추가
+                      if (!Platform.isAndroid)
+                        SizedBox(
+                          width: buttonWidth,
+                          child: ElevatedButton(
+                            onPressed: () => authService.signInWithApple(context),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.white,
+                              minimumSize:
+                              const Size.fromHeight(50), // 높이만 50으로 설정
+                              elevation: 1.0,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(4.0),
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Image.asset(
+                                  'assets/AppleLogo.png', // 로고 이미지 파일 경로
+                                  height: 24,
+                                ),
+                                const Text(
+                                  'Apple로 로그인',
+                                  style: TextStyle(
+                                      color: Colors.black, fontSize: 16.0),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                     ],
