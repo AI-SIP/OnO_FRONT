@@ -12,7 +12,7 @@ import '../Config/AppConfig.dart';
 class AppleAuthService {
   final storage = const FlutterSecureStorage();
 
-  Future<String> signInWithApple(BuildContext context) async {
+  Future<Map<String, dynamic>> signInWithApple(BuildContext context) async {
     try {
       final appleCredential = await SignInWithApple.getAppleIDCredential(
         scopes: [
@@ -44,12 +44,9 @@ class AppleAuthService {
         );
 
         if (response.statusCode == 200) {
-          final responseBody = jsonDecode(response.body);
-          final jwtToken = responseBody['token'];
-
-          return jwtToken;
+          return jsonDecode(response.body);
         } else {
-          return "Failed to Register user on server";
+          throw Exception("Failed to Register user on server");
         }
       } else {
         throw Exception("Failed to get Apple idToken");
@@ -58,7 +55,7 @@ class AppleAuthService {
       log('Apple sign-in error: $error');
     }
 
-    return "Apple login error";
+    throw Exception("Failed to Apple sign-in");
   }
 
   Future<void> revokeSignInWithApple() async {
@@ -155,9 +152,9 @@ class AppleAuthService {
 
     if (response.statusCode == 200) {
       // 토큰이 성공적으로 취소됨
-      print('토큰이 성공적으로 취소되었습니다.');
+      log('토큰이 성공적으로 취소되었습니다.');
     } else {
-      print('토큰 취소 중 오류 발생: ${response.statusCode}');
+      log('토큰 취소 중 오류 발생: ${response.statusCode}');
       throw Exception('토큰 취소 중 오류 발생: ${response.statusCode}');
     }
   }

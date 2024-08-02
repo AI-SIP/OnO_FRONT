@@ -254,27 +254,29 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
                 ),
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(
+                decoration: InputDecoration(
+                  border: const OutlineInputBorder(
                     borderSide: BorderSide(
                       color: Colors.green, // 테두리 색상 설정
                       width: 2.0, // 테두리 두께 설정
                     ),
                   ),
-                  enabledBorder: OutlineInputBorder(
+                  enabledBorder: const OutlineInputBorder(
                     borderSide: BorderSide(
                       color: Colors.green, // 활성화된 상태의 테두리 색상 설정
                       width: 2.0, // 테두리 두께 설정
                     ),
                   ),
-                  focusedBorder: OutlineInputBorder(
+                  focusedBorder: const OutlineInputBorder(
                     borderSide: BorderSide(
                       color: Colors.green, // 포커스된 상태의 테두리 색상 설정
                       width: 2.0, // 테두리 두께 설정
                     ),
                   ),
+                  fillColor: Colors.lightGreen.withOpacity(0.1),
+                  filled: true,
                   hintText: '문제집, 페이지, 문제번호 등',
-                  hintStyle: TextStyle(
+                  hintStyle: const TextStyle(
                       fontFamily: 'font1',
                       color: Colors.green,
                       fontSize: 20,
@@ -301,6 +303,7 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
               Container(
                 height: isLandscape ? mediaQuery.size.height * 0.3 : 200,
                 decoration: BoxDecoration(
+                  color: Colors.lightGreen.withOpacity(0.1),
                   border: Border.all(
                     color: Colors.green, // 테두리 색상
                     width: 2.0, // 테두리 두께
@@ -343,6 +346,7 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
               Container(
                 height: isLandscape ? mediaQuery.size.height * 0.3 : 200,
                 decoration: BoxDecoration(
+                  color: Colors.lightGreen.withOpacity(0.1),
                   border: Border.all(
                     color: Colors.green,
                     width: 2.0,
@@ -385,6 +389,7 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
               Container(
                 height: isLandscape ? mediaQuery.size.height * 0.3 : 200,
                 decoration: BoxDecoration(
+                  color: Colors.lightGreen.withOpacity(0.1),
                   border: Border.all(
                     color: Colors.green, // 테두리 색상
                     width: 2.0, // 테두리 두께
@@ -433,27 +438,29 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
                   fontWeight: FontWeight.bold,
                 ),
                 textInputAction: TextInputAction.done, // 이 부분 추가
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(
+                decoration: InputDecoration(
+                  border: const OutlineInputBorder(
                     borderSide: BorderSide(
                       color: Colors.green, // 테두리 색상 설정
                       width: 2.0, // 테두리 두께 설정
                     ),
                   ),
-                  enabledBorder: OutlineInputBorder(
+                  enabledBorder: const OutlineInputBorder(
                     borderSide: BorderSide(
                       color: Colors.green, // 활성화된 상태의 테두리 색상 설정
                       width: 2.0, // 테두리 두께 설정
                     ),
                   ),
-                  focusedBorder: OutlineInputBorder(
+                  focusedBorder: const OutlineInputBorder(
                     borderSide: BorderSide(
                       color: Colors.green, // 포커스된 상태의 테두리 색상 설정
                       width: 2.0, // 테두리 두께 설정
                     ),
                   ),
+                  fillColor: Colors.lightGreen.withOpacity(0.1), // 내부 배경색 설정
+                  filled: true,
                   hintText: '틀린 이유 등 자유롭게 작성',
-                  hintStyle: TextStyle(
+                  hintStyle: const TextStyle(
                       fontFamily: 'font1',
                       color: Colors.green,
                       fontSize: 20,

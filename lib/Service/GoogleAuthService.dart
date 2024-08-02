@@ -8,7 +8,7 @@ import '../Config/AppConfig.dart';
 class GoogleAuthService {
   final GoogleSignIn _googleSignIn = GoogleSignIn();
 
-  Future<String?> signInWithGoogle() async {
+  Future<Map<String, dynamic>> signInWithGoogle() async {
     try {
       final googleSignInAccount = await _googleSignIn.signIn();
       if(googleSignInAccount != null){
@@ -39,26 +39,21 @@ class GoogleAuthService {
 
           if (response.statusCode == 200) {
             log('Google sign-in Success!');
-            final responseBody = jsonDecode(response.body);
-            final jwtToken = responseBody['token'];
-            return jwtToken;
+            return jsonDecode(response.body);
           } else {
-            log("Failed to Register user on server");
-            return null;
+            throw Exception("Failed to Register user on server");
           }
         } else {
-          log("Failed to get Google idToken");
-          return null;
+          throw Exception("Failed to get Google idToken");
         }
       } else{
-        log("googleSignInAccount is null!");
-        return null;
+        throw Exception("googleSignInAccount is null!");
       }
-
-
     } catch (error) {
-      return null;
+      log(error.toString());
     }
+
+    throw Exception("Failed to Google sign-in");
   }
 
   Future<void> logoutGoogleSignIn() async {
