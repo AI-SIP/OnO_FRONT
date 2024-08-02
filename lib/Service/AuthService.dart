@@ -31,36 +31,66 @@ class AuthService with ChangeNotifier {
 
   // Google 로그인 함수(앱 처음 설치하고 구글 로그인 버튼 누르면 실행)
   Future<void> signInWithGoogle() async {
-    final jwtToken = await googleAuthService.signInWithGoogle();
-    if (jwtToken != null) {
-      await storage.write(key: 'loginMethod', value: 'google');
-      await setJwtToken(jwtToken);
-      fetchUserInfo();
-      notifyListeners();
-    }
-  }
-
-  // Apple 로그인 함수
-  Future<void> signInWithApple(BuildContext context) async {
-    final jwtToken = await appleAuthService.signInWithApple(context);
-    await storage.write(key: 'loginMethod', value: 'apple');
-    await setJwtToken(jwtToken);
+    final response = await googleAuthService.signInWithGoogle();
+    await storage.write(key: 'loginMethod', value: 'google');
+    await setAccessToken(response['accessToken']);
+    await setRefreshToken(response['refreshToken']);
     fetchUserInfo();
     notifyListeners();
   }
 
-  Future<void> setJwtToken(String token) async {
-    await storage.write(key: 'jwtToken', value: token);
+  // Apple 로그인 함수
+  Future<void> signInWithApple(BuildContext context) async {
+    final response  = await appleAuthService.signInWithApple(context);
+    await storage.write(key: 'loginMethod', value: 'apple');
+    await setAccessToken(response['accessToken']);
+    await setRefreshToken(response['refreshToken']);
+    fetchUserInfo();
+    notifyListeners();
   }
 
-  Future<String?> getJwtToken() async {
-    return await storage.read(key: 'jwtToken');
+  Future<void> setAccessToken(String accessToken) async {
+    await storage.write(key: 'accessToken', value: accessToken);
+  }
+
+  Future<String?> getAccessToken() async {
+    String? accessToken = await storage.read(key: 'accessToken');
+
+    if (accessToken == null) {
+      log('Access token is not available.');
+      return null;
+    }
+
+    final url = Uri.parse('${AppConfig.baseUrl}/api/auth/verifyAccessToken');
+    final response = await http.get(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $accessToken',
+      },
+    );
+
+    if (response.statusCode == 401) {
+      log('Access token is invalid or expired, trying to refresh...');
+      await refreshAccessToken();
+      accessToken = await storage.read(key: 'accessToken');
+    }
+
+    return accessToken;
+  }
+
+  Future<void> setRefreshToken(String refreshToken) async{
+    await storage.write(key: 'refreshToken', value: refreshToken);
+  }
+
+  Future<String?> getRefreshToken() async {
+    return await storage.read(key: 'refreshToken');
   }
 
   Future<void> fetchUserInfo() async {
-    final token = await getJwtToken();
-    if (token == null) {
-      throw Exception("JWT token is not available");
+    final accessToken = await getAccessToken();
+    if (accessToken == null) {
+      throw Exception("Access token is not available");
     }
 
     final url = Uri.parse('${AppConfig.baseUrl}/api/user');
@@ -68,7 +98,7 @@ class AuthService with ChangeNotifier {
       url,
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token',
+        'Authorization': 'Bearer $accessToken',
       },
     );
 
@@ -87,17 +117,42 @@ class AuthService with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> autoLogin() async {
-    String? token = await getJwtToken();
-    if (token != null) {
-      try {
-        await fetchUserInfo();
-      } catch (e) {
-        log('Auto login failed: $e');
+  Future<bool> refreshAccessToken() async {
+    try {
+      String? refreshToken = await storage.read(key: 'refreshToken');
+      if (refreshToken == null) {
+        log('No refresh token available.');
+        return false;
       }
-    } else {
+
+      final response = await http.post(
+        Uri.parse('${AppConfig.baseUrl}/api/auth/refresh'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'refreshToken': refreshToken}),
+      );
+
+      if (response.statusCode == 200) {
+        var data = jsonDecode(response.body);
+        await storage.write(key: 'accessToken', value: data['accessToken']);
+        log('Access token refreshed.');
+        return true;
+      } else {
+        log('Failed to refresh token. Logging out.');
+        return false;
+      }
+    } catch (e) {
+      log('Error refreshing token: $e');
+      return false;
+    }
+  }
+
+  Future<void> autoLogin() async {
+    String? refreshToken = await storage.read(key: 'refreshToken');
+    if(refreshToken == null){
       _isLoggedIn = false;
       notifyListeners();
+    } else {
+      fetchUserInfo();
     }
   }
 
@@ -147,7 +202,7 @@ class AuthService with ChangeNotifier {
 
     // 서버에서 사용자 계정 삭제
     try {
-      final token = await getJwtToken();
+      final token = await getAccessToken();
       if (token == null) {
         throw Exception("JWT token is not available");
       }

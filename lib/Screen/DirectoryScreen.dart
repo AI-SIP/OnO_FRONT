@@ -91,40 +91,46 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
           }
         });
       },
-      child: GridTile(
-        child: Column(
-          children: <Widget>[
-            Expanded(
-              child: Container(
-                height: 150, // 고정된 높이 설정
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.green, width: 2.0),
-                  borderRadius: BorderRadius.circular(8.0),
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(8.0),
-                  child: DisplayImage(
-                    imagePath: problem.processImageUrl,
-                    defaultImagePath: defaultImage,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          double height = constraints.maxHeight * 0.8;
+          double width = constraints.maxWidth * 0.9; // 가로 길이 비율 설정
+          return GridTile(
+            child: Column(
+              children: <Widget>[
+                Container(
+                  width: width,  // 비율로 설정된 너비
+                  height: height,   // 고정된 높이
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.green, width: 2.0),
+                    borderRadius: BorderRadius.circular(8.0),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(8.0),
+                    child: DisplayImage(
+                      imagePath: problem.processImageUrl,
+                      defaultImagePath: defaultImage,
+                      fit: BoxFit.contain
+                    ),
                   ),
                 ),
-              ),
+                const SizedBox(height: 8),
+                Text(
+                  problem.reference ?? '제목 없음',
+                  style: const TextStyle(
+                    fontFamily: 'font1',
+                    color: Colors.green,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
+                  overflow: TextOverflow.ellipsis, // 넘치는 텍스트는 말줄임표로 처리
+                  maxLines: 1, // 텍스트를 한 줄로 제한
+                ),
+              ],
             ),
-            const SizedBox(height: 8),
-            Text(
-              problem.reference ?? '제목 없음',
-              style: const TextStyle(
-                fontFamily: 'font1',
-                color: Colors.green,
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-              textAlign: TextAlign.center,
-              overflow: TextOverflow.ellipsis, // 넘치는 텍스트는 말줄임표로 처리
-              maxLines: 1, // 텍스트를 한 줄로 제한
-            ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
