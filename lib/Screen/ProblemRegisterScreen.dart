@@ -117,6 +117,42 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
     Navigator.of(context).pop(true);
   }
 
+  bool _isLogin(BuildContext context){
+    final authService = Provider.of<AuthService>(context, listen: false);
+
+    if(!authService.isLoggedIn){
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('로그인 필요', style: const TextStyle(
+              fontSize: 24,
+              color: Colors.green,
+              fontFamily: 'font1',
+              fontWeight: FontWeight.bold)),
+          content: const Text('문제를 등록하려면 로그인 해주세요!', style: const TextStyle(
+              fontSize: 20,
+              color: Colors.green,
+              fontFamily: 'font1',
+              fontWeight: FontWeight.bold)),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('확인', style: const TextStyle(
+                  fontSize: 20,
+                  color: Colors.green,
+                  fontFamily: 'font1',
+                  fontWeight: FontWeight.bold)),
+              onPressed: () {
+                Navigator.of(ctx).pop(); // 다이얼로그 닫기
+              },
+            )
+          ],
+        ),
+      );
+      return false;
+    }
+    return true;
+  }
+
   // 필수 항목 확인 함수
   bool _validateForm() {
     if (_sourceController.text.isEmpty) {
@@ -148,6 +184,11 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
   }
 
   Future<void> submitProblem() async {
+
+    if(!_isLogin(context)){
+      return;
+    }
+
     if (!_validateForm()) {
       return;
     }
@@ -178,6 +219,7 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
         mediaQuery.orientation == Orientation.landscape; // 가로/세로 방향 확인
     final authService = Provider.of<AuthService>(context);
 
+    /*
     if (!authService.isLoggedIn) {
       return const Scaffold(
         body: Center(
@@ -190,6 +232,7 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
         ),
       );
     }
+     */
 
     return Scaffold(
         body: GestureDetector(

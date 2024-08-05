@@ -30,7 +30,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     return Scaffold(
       body: !authService.isLoggedIn
           ? const Center(
-              child: Text('로그인 해주세요!',
+              child: Text('로그인을 통해 작성한 오답노트를 확인해보세요!',
                   style: TextStyle(
                       color: Colors.green,
                       fontFamily: 'font1',
