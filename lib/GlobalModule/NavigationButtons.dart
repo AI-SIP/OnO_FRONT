@@ -16,7 +16,24 @@ class NavigationButtons extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+
+
     final problemIds = provider.getProblemIds();
+
+    if (problemIds.isEmpty) {
+      return const Center(
+        child: Text(
+          '문제가 없습니다.',
+          style: TextStyle(
+            fontFamily: 'font1',
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: Colors.red,
+          ),
+        ),
+      );
+    }
+
     int currentIndex = problemIds.indexOf(currentId);
     int previousProblemId =
         currentIndex > 0 ? problemIds[currentIndex - 1] : problemIds.last;

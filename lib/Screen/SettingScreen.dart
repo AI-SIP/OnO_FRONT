@@ -21,7 +21,7 @@ class _SettingScreenState extends State<SettingScreen> {
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
                   color: Colors.green)),
-          content: const Text('정말 로그아웃 하시겠습니까?',
+          content: const Text('정말 로그아웃 하시겠습니까?\n(게스트 유저의 경우 모든 정보가 삭제됩니다.)',
               style: TextStyle(
                   fontFamily: 'font1',
                   fontSize: 20,
@@ -146,6 +146,7 @@ class _SettingScreenState extends State<SettingScreen> {
                       fontSize: 30,
                       fontWeight: FontWeight.bold),
                 ),
+                /*
                 const SizedBox(height: 20),
                 Text(
                   '로그인 한 계정: ${authService.userEmail}',
@@ -155,6 +156,8 @@ class _SettingScreenState extends State<SettingScreen> {
                       fontSize: 20,
                       fontWeight: FontWeight.bold),
                 ),
+
+                 */
                 const SizedBox(height: 40),
 
                 ElevatedButton(

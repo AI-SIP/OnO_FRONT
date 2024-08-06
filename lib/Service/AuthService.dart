@@ -5,6 +5,7 @@ import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
+import 'package:ono/Service/GuestAuthService.dart';
 import '../Config/AppConfig.dart';
 import '../Provider/ProblemsProvider.dart';
 import 'AppleAuthService.dart';
@@ -26,8 +27,18 @@ class AuthService with ChangeNotifier {
   String get userName => _userName;
   String get userEmail => _userEmail;
 
+  final GuestAuthService guestAuthService = GuestAuthService();
   final AppleAuthService appleAuthService = AppleAuthService();
   final GoogleAuthService googleAuthService = GoogleAuthService();
+
+  Future<void> signInWithGuest() async{
+    final response = await guestAuthService.signInWithGuest();
+    await storage.write(key: 'loginMethod', value: 'guest');
+    await setAccessToken(response['accessToken']);
+    await setRefreshToken(response['refreshToken']);
+    fetchUserInfo();
+    notifyListeners();
+  }
 
   // Google 로그인 함수(앱 처음 설치하고 구글 로그인 버튼 누르면 실행)
   Future<void> signInWithGoogle() async {
@@ -174,6 +185,10 @@ class AuthService with ChangeNotifier {
       String? loginMethod = await storage.read(key: 'loginMethod');
       if (loginMethod == 'google') {
         googleAuthService.logoutGoogleSignIn();
+      } else if(loginMethod == 'apple'){
+
+      } else if(loginMethod == 'guest'){
+        deleteAccount();
       }
       _userId = 0;
       _isLoggedIn = false;
@@ -196,7 +211,10 @@ class AuthService with ChangeNotifier {
     } else if (loginMethod == 'apple') {
       // 애플 회원 탈퇴 로직
       await appleAuthService.revokeSignInWithApple();
-    } else {
+    } else if(loginMethod == 'guest'){
+
+    }
+    else {
       throw Exception("Unknown login method");
     }
 

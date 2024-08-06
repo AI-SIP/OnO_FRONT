@@ -134,7 +134,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
                             color: Colors.green)),
-                    const Spacer(), // 추가: 여백을 만들어 텍스트를 오른쪽으로 밀어줌
+                    const Spacer(),
                     UnderlinedText(text: formattedDate, fontSize: 18),
                   ],
                 ),
