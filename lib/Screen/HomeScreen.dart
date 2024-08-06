@@ -19,6 +19,47 @@ class HomeScreen extends StatelessWidget {
     }
   }
 
+  void _showGuestLoginDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('게스트 로그인 경고', style: const TextStyle(
+            fontSize: 24,
+            color: Colors.green,
+            fontFamily: 'font1',
+            fontWeight: FontWeight.bold)),
+        content: const Text('게스트로 로그인 할 경우,\n기기 간 오답노트 연동이 불가능하며,\n로그아웃 시 모든 정보가 삭제됩니다.', style: const TextStyle(
+            fontSize: 22,
+            color: Colors.green,
+            fontFamily: 'font1',
+            fontWeight: FontWeight.bold)),
+        actions: <Widget>[
+          TextButton(
+            child: const Text('취소', style: const TextStyle(
+                fontSize: 20,
+                color: Colors.green,
+                fontFamily: 'font1',
+                fontWeight: FontWeight.bold)),
+            onPressed: () {
+              Navigator.of(ctx).pop();
+            },
+          ),
+          TextButton(
+            child: const Text('확인', style: const TextStyle(
+                fontSize: 20,
+                color: Colors.green,
+                fontFamily: 'font1',
+                fontWeight: FontWeight.bold)),
+            onPressed: () {
+              Navigator.of(ctx).pop();
+              Provider.of<AuthService>(context, listen: false).signInWithGuest();
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
@@ -32,7 +73,7 @@ class HomeScreen extends StatelessWidget {
             ),
           ),
           Positioned(
-            top: screenHeight * 0.3, // 화면 높이의 30% 위치에 배치
+            top: screenHeight * 0.3,
             left: 0,
             right: 0,
             child: Column(
@@ -95,6 +136,33 @@ class HomeScreen extends StatelessWidget {
                 } else {
                   return Column(
                     children: [
+                      SizedBox(
+                        width: buttonWidth,
+                        child: ElevatedButton(
+                          onPressed: () => _showGuestLoginDialog(context),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.white,
+                            minimumSize: const Size.fromHeight(50), // 높이만 50으로 설정
+                            elevation: 1.0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(4.0),
+                            ),
+                          ),
+                          child: const Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.person_outline, size: 24, color: Colors.black87),
+                              SizedBox(width: 10),
+                              Text(
+                                '게스트로 로그인',
+                                style: TextStyle(
+                                    color: Colors.black87, fontSize: 16.0),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
                       SizedBox(
                         width: buttonWidth,
                         child: ElevatedButton(
