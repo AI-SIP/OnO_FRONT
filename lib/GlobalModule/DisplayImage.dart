@@ -1,21 +1,24 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 class DisplayImage extends StatelessWidget {
   final String? imagePath;
-  final String defaultImagePath;
+  final String defaultImagePath = 'assets/no_image.jpg';
   final BoxFit fit;
 
   const DisplayImage(
-      {super.key, required this.imagePath, required this.defaultImagePath, this.fit = BoxFit.cover});
+      {super.key, required this.imagePath, this.fit = BoxFit.cover});
 
   @override
   Widget build(BuildContext context) {
     return imagePath == null || imagePath!.isEmpty
         ? Image.asset(defaultImagePath, fit: fit)
-        : Image.network(imagePath!, fit: fit,
-            errorBuilder: (context, error, stackTrace) {
-            // 네트워크 오류가 발생했을 때 기본 이미지를 보여줍니다.
-            return Image.asset(defaultImagePath, fit: fit);
-          });
+        : CachedNetworkImage(
+            imageUrl: imagePath!,
+            fit: fit,
+            //placeholder: (context, url) => const CircularProgressIndicator(),
+            errorWidget: (context, url, error) =>
+                Image.asset(defaultImagePath, fit: fit),
+          );
   }
 }

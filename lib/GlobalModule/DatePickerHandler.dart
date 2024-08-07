@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 
+import 'DecorateText.dart';
+
 class DatePickerHandler extends StatefulWidget {
   final DateTime initialDate;
   final Function(DateTime) onDateSelected;
@@ -30,7 +32,7 @@ class _DatePickerHandlerState extends State<DatePickerHandler> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return SizedBox(
       height: MediaQuery.of(context).size.height / 3,
       child: Column(
         children: <Widget>[
@@ -40,16 +42,14 @@ class _DatePickerHandlerState extends State<DatePickerHandler> {
               const SizedBox(width: 10), // 왼쪽 여백
               const Spacer(), // 가운데 비우기
               TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop(); // 날짜 선택 창 닫기
-                },
-                child: const Text('완료',
-                    style: TextStyle(
-                        fontFamily: 'font1',
-                        fontSize: 20,
-                        color: Colors.blue,
-                        fontWeight: FontWeight.bold)),
-              ),
+                  onPressed: () {
+                    Navigator.of(context).pop(); // 날짜 선택 창 닫기
+                  },
+                  child: const DecorateText(
+                    text: '완료',
+                    fontSize: 20,
+                    color: Colors.blue,
+                  )),
             ],
           ),
           // 상단 마킹
@@ -58,36 +58,18 @@ class _DatePickerHandlerState extends State<DatePickerHandler> {
             children: [
               Expanded(
                 child: Align(
-                  alignment: Alignment.center,
-                  child: Text('년도',
-                      style: TextStyle(
-                          fontFamily: 'font1',
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.green)),
-                ),
+                    alignment: Alignment.center,
+                    child: DecorateText(text: '년도', fontSize: 20)),
               ),
               Expanded(
                 child: Align(
-                  alignment: Alignment.center,
-                  child: Text('월',
-                      style: TextStyle(
-                          fontFamily: 'font1',
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.green)),
-                ),
+                    alignment: Alignment.center,
+                    child: DecorateText(text: '월', fontSize: 20)),
               ),
               Expanded(
                 child: Align(
-                  alignment: Alignment.center,
-                  child: Text('일',
-                      style: TextStyle(
-                          fontFamily: 'font1',
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.green)),
-                ),
+                    alignment: Alignment.center,
+                    child: DecorateText(text: '일', fontSize: 20)),
               ),
             ],
           ),
@@ -114,13 +96,7 @@ class _DatePickerHandlerState extends State<DatePickerHandler> {
                     },
                     children: _years.map((int year) {
                       return Center(
-                        child: Text('$year',
-                            style: const TextStyle(
-                                fontFamily: 'font1',
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.green)),
-                      );
+                          child: DecorateText(text: '$year', fontSize: 20));
                     }).toList(),
                   ),
                 ),
@@ -142,13 +118,7 @@ class _DatePickerHandlerState extends State<DatePickerHandler> {
                     },
                     children: _months.map((int month) {
                       return Center(
-                        child: Text('$month',
-                            style: const TextStyle(
-                                fontFamily: 'font1',
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.green)),
-                      );
+                          child: DecorateText(text: '$month', fontSize: 20));
                     }).toList(),
                   ),
                 ),
@@ -170,13 +140,7 @@ class _DatePickerHandlerState extends State<DatePickerHandler> {
                     },
                     children: _days.map((int day) {
                       return Center(
-                        child: Text('$day',
-                            style: const TextStyle(
-                                fontFamily: 'font1',
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.green)),
-                      );
+                          child: DecorateText(text: '$day', fontSize: 20));
                     }).toList(),
                   ),
                 ),

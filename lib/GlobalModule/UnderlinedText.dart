@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'DecorateText.dart';
+
 class UnderlinedText extends StatelessWidget {
   final String text;
   final double fontSize;
@@ -18,7 +20,7 @@ class UnderlinedText extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(text, style: TextStyle(fontSize: fontSize, fontFamily: 'font1', fontWeight: FontWeight.bold, color: color)),
+          DecorateText(text: text, fontSize: fontSize, color: color),
           Container(
             margin: const EdgeInsets.only(top: 2),
             height: 2,

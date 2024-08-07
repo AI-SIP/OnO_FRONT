@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import '../GlobalModule/DecorateText.dart';
 import '../GlobalModule/DisplayImage.dart';
+import '../GlobalModule/FullScreenImage.dart';
 import '../GlobalModule/GridPainter.dart';
 import '../GlobalModule/UnderlinedText.dart';
 import '../Model/ProblemModel.dart';
@@ -49,19 +51,10 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
             } else if (snapshot.hasError) {
               return const Text('에러 발생');
             } else if (snapshot.hasData && snapshot.data != null) {
-              return Text(snapshot.data!.reference ?? '출처가 없습니다!',
-                  style: const TextStyle(
-                      color: Colors.green,
-                      fontFamily: 'font1',
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold));
+              return DecorateText(
+                  text: snapshot.data!.reference ?? '출처가 없습니다!', fontSize: 24);
             } else {
-              return const Text('문제 상세',
-                  style: TextStyle(
-                      color: Colors.green,
-                      fontFamily: 'font1',
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold));
+              return const DecorateText(text: '문제 상세', fontSize: 24);
             }
           },
         ),
@@ -76,15 +69,12 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
             },
             itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
               const PopupMenuItem<String>(
-                value: 'delete',
-                child: Text('삭제하기',
-                    style: TextStyle(
-                      fontFamily: 'font1',
-                      fontSize: 18,
-                      color: Colors.red,
-                      fontWeight: FontWeight.bold,
-                    )),
-              ),
+                  value: 'delete',
+                  child: DecorateText(
+                    text: '삭제하기',
+                    fontSize: 18,
+                    color: Colors.red,
+                  )),
             ],
           ),
         ],
@@ -128,12 +118,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                   children: [
                     const Icon(Icons.calendar_today, color: Colors.green),
                     const SizedBox(width: 8),
-                    const Text('푼 날짜',
-                        style: TextStyle(
-                            fontFamily: 'font1',
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.green)),
+                    const DecorateText(text: '푼 날짜', fontSize: 20),
                     const Spacer(),
                     UnderlinedText(text: formattedDate, fontSize: 18),
                   ],
@@ -149,12 +134,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                           const Row(children: [
                             Icon(Icons.info, color: Colors.green),
                             SizedBox(width: 8),
-                            Text('문제 출처',
-                                style: TextStyle(
-                                    fontFamily: 'font1',
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.green)),
+                            DecorateText(text: '문제 출처', fontSize: 20),
                           ]),
                           const SizedBox(height: 10.0),
                           UnderlinedText(
@@ -175,20 +155,27 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                     children: [
                       Icon(Icons.camera_alt, color: Colors.green),
                       SizedBox(width: 8.0),
-                      Text('문제',
-                          style: TextStyle(
-                              fontFamily: 'font1',
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.green)),
+                      DecorateText(text: '문제', fontSize: 16),
                     ],
                   ),
                 ),
                 const SizedBox(height: 20.0),
                 Center(
-                  child: DisplayImage(
+                  child: GestureDetector(
+                    onTap: () {
+                      // 이미지를 탭했을 때 FullScreenImage를 표시합니다.
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => FullScreenImage(
+                              imagePath: problemModel.processImageUrl),
+                        ),
+                      );
+                    },
+                    child: DisplayImage(
                       imagePath: problemModel.processImageUrl,
-                      defaultImagePath: 'assets/no_image.jpg'),
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 30.0),
                 ExpansionTile(
@@ -200,12 +187,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                       mainAxisAlignment: MainAxisAlignment.center, // 좌측 정렬
                       children: [
                         SizedBox(width: 8.0),
-                        Text('해설 및 풀이 확인',
-                            style: TextStyle(
-                                fontFamily: 'font1',
-                                color: Colors.green,
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold)),
+                        DecorateText(text: '해설 및 풀이 확인', fontSize: 20),
                       ],
                     ),
                   ),
@@ -226,12 +208,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                               children: [
                                 Icon(Icons.edit, color: Colors.green),
                                 SizedBox(width: 8.0),
-                                Text('메모',
-                                    style: TextStyle(
-                                        fontFamily: 'font1',
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.green)),
+                                DecorateText(text: '메모', fontSize: 20),
                               ],
                             ),
                           ),
@@ -250,20 +227,26 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                         children: [
                           Icon(Icons.image, color: Colors.green),
                           SizedBox(width: 8.0),
-                          Text('원본 이미지',
-                              style: TextStyle(
-                                  fontFamily: 'font1',
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.green)),
+                          DecorateText(text: '원본 이미지', fontSize: 20),
                         ],
                       ),
                     ),
                     const SizedBox(height: 20.0),
                     Center(
-                      child: DisplayImage(
+                      child: GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => FullScreenImage(
+                                  imagePath: problemModel.problemImageUrl),
+                            ),
+                          );
+                        },
+                        child: DisplayImage(
                           imagePath: problemModel.problemImageUrl,
-                          defaultImagePath: 'assets/no_image.jpg'),
+                        ),
+                      ),
                     ),
                     const SizedBox(height: 20.0),
                     Container(
@@ -275,20 +258,26 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                         children: [
                           Icon(Icons.image, color: Colors.green),
                           SizedBox(width: 8.0),
-                          Text('풀이 이미지',
-                              style: TextStyle(
-                                  fontFamily: 'font1',
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.green)),
+                          DecorateText(text: '풀이 이미지', fontSize: 20),
                         ],
                       ),
                     ),
                     const SizedBox(height: 20.0),
                     Center(
-                      child: DisplayImage(
+                      child: GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => FullScreenImage(
+                                  imagePath: problemModel.solveImageUrl),
+                            ),
+                          );
+                        },
+                        child: DisplayImage(
                           imagePath: problemModel.solveImageUrl,
-                          defaultImagePath: 'assets/no_image.jpg'),
+                        ),
+                      ),
                     ),
                     const SizedBox(height: 20.0),
                     Container(
@@ -300,20 +289,26 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                         children: [
                           Icon(Icons.image, color: Colors.green),
                           SizedBox(width: 8.0),
-                          Text('해설 이미지',
-                              style: TextStyle(
-                                  fontFamily: 'font1',
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.green)),
+                          DecorateText(text: '해설 이미지', fontSize: 20),
                         ],
                       ),
                     ),
                     const SizedBox(height: 20.0),
                     Center(
-                      child: DisplayImage(
+                      child: GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => FullScreenImage(
+                                  imagePath: problemModel.answerImageUrl),
+                            ),
+                          );
+                        },
+                        child: DisplayImage(
                           imagePath: problemModel.answerImageUrl,
-                          defaultImagePath: 'assets/no_image.jpg'),
+                        ),
+                      ),
                     ),
                     const SizedBox(height: 20.0),
                   ],
@@ -345,29 +340,19 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('문제 삭제',
-              style: TextStyle(
-                  fontFamily: 'font1',
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.green)),
-          content: const Text('정말로 이 문제를 삭제하시겠습니까?',
-              style: TextStyle(
-                  fontFamily: 'font1',
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.green)),
+          title: const DecorateText(text: '문제 삭제', fontSize: 24),
+          content:
+              const DecorateText(text: '정말로 이 문제를 삭제하시겠습니까?', fontSize: 20),
           actions: [
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop(); // 다이얼로그 닫기
               },
-              child: const Text('취소',
-                  style: TextStyle(
-                      fontFamily: 'font1',
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black)),
+              child: const DecorateText(
+                text: '취소',
+                fontSize: 20,
+                color: Colors.black,
+              ),
             ),
             TextButton(
               onPressed: () {
@@ -379,23 +364,21 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                     Navigator.of(context).pop(true); // 이전 화면으로 이동
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
-                          content: Text('문제가 삭제되었습니다.',
-                              style: TextStyle(
-                                  fontSize: 20,
-                                  color: Colors.white,
-                                  fontFamily: 'font1',
-                                  fontWeight: FontWeight.bold)),
+                          content: DecorateText(
+                            text: '문제가 삭제되었습니다.',
+                            fontSize: 20,
+                            color: Colors.white,
+                          ),
                           backgroundColor: Colors.green),
                     );
                   } else {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
-                          content: Text('문제 삭제에 실패했습니다.',
-                              style: TextStyle(
-                                  fontSize: 20,
-                                  color: Colors.white,
-                                  fontFamily: 'font1',
-                                  fontWeight: FontWeight.bold)),
+                          content: DecorateText(
+                            text: '문제 삭제에 실패했습니다.',
+                            fontSize: 20,
+                            color: Colors.white,
+                          ),
                           backgroundColor: Colors.red),
                     );
                   }
@@ -403,23 +386,21 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                   Navigator.of(context).pop(); // 다이얼로그 닫기
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('오류 발생: ${error.toString()}',
-                          style: const TextStyle(
-                              fontSize: 20,
-                              color: Colors.white,
-                              fontFamily: 'font1',
-                              fontWeight: FontWeight.bold)),
+                      content: DecorateText(
+                        text: '오류 발생: ${error.toString()}',
+                        fontSize: 20,
+                        color: Colors.white,
+                      ),
                       backgroundColor: Colors.red,
                     ),
                   );
                 });
               },
-              child: const Text('삭제',
-                  style: TextStyle(
-                      fontFamily: 'font1',
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.red)),
+              child: const DecorateText(
+                text: '삭제',
+                fontSize: 20,
+                color: Colors.red,
+              ),
             ),
           ],
         );
@@ -429,5 +410,34 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
 
   Widget buildNoDataScreen() {
     return const Center(child: Text("문제 정보를 가져올 수 없습니다."));
+  }
+
+  void _showImageDialog(BuildContext context, String? imageUrl) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              double dialogWidth = constraints.maxWidth * 0.9;
+              double dialogHeight = constraints.maxHeight * 0.8;
+
+              return SizedBox(
+                width: dialogWidth,
+                height: dialogHeight,
+                child: InteractiveViewer(
+                  panEnabled: true,
+                  minScale: 0.5,
+                  maxScale: 3.0,
+                  child: imageUrl != null
+                      ? Image.network(imageUrl, fit: BoxFit.contain)
+                      : Image.asset('assets/no_image.jpg', fit: BoxFit.contain),
+                ),
+              );
+            },
+          ),
+        );
+      },
+    );
   }
 }

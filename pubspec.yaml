@@ -45,6 +45,7 @@ dependencies:
   change_app_package_name: ^1.2.0
   flutter_dotenv: ^5.1.0
   logging: ^1.2.0
+  cached_network_image: ^3.4.0
 
 dev_dependencies:
   flutter_test:

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../Provider/ProblemsProvider.dart';
 import '../Screen/ProblemDetailScreen.dart';
+import 'DecorateText.dart';
 
 class NavigationButtons extends StatelessWidget {
   final BuildContext context;
@@ -22,15 +23,7 @@ class NavigationButtons extends StatelessWidget {
 
     if (problemIds.isEmpty) {
       return const Center(
-        child: Text(
-          '문제가 없습니다.',
-          style: TextStyle(
-            fontFamily: 'font1',
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: Colors.red,
-          ),
-        ),
+          child: DecorateText(text: '문제가 없습니다.', fontSize: 20)
       );
     }
 
@@ -47,23 +40,11 @@ class NavigationButtons extends StatelessWidget {
         ElevatedButton(
           onPressed: () =>
               navigateToProblem(context, provider, previousProblemId),
-          child: const Text(
-            '이전 문제',
-            style: TextStyle(
-                color: Colors.green,
-                fontFamily: 'font1',
-                fontSize: 20,
-                fontWeight: FontWeight.bold),
-          ),
+            child: const DecorateText(text: '이전 문제', fontSize: 20)
         ),
         ElevatedButton(
           onPressed: () => navigateToProblem(context, provider, nextProblemId),
-          child: const Text('다음 문제',
-              style: TextStyle(
-                  color: Colors.green,
-                  fontFamily: 'font1',
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold)),
+            child: const DecorateText(text: '다음 문제', fontSize: 20)
         ),
       ],
     );
