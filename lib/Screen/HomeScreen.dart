@@ -57,7 +57,8 @@ class HomeScreen extends StatelessWidget {
                     fontWeight: FontWeight.bold)),
             onPressed: () {
               Navigator.of(ctx).pop();
-              Provider.of<AuthService>(context, listen: false).signInWithGuest();
+              Provider.of<AuthService>(context, listen: false)
+                  .signInWithGuest();
             },
           ),
         ],

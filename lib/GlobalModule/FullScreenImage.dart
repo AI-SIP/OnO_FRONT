@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class FullScreenImage extends StatelessWidget {
   final String? imagePath;
@@ -31,7 +32,9 @@ class FullScreenImage extends StatelessWidget {
                   image: DecorationImage(
                     image: imagePath == null
                         ? const AssetImage('assets/no_image.jpg')
-                        : NetworkImage(imagePath!) as ImageProvider,
+                            as ImageProvider<Object>
+                        : CachedNetworkImageProvider(imagePath!)
+                            as ImageProvider<Object>,
                     fit: BoxFit.contain,
                   ),
                 ),

@@ -99,8 +99,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
             child: Column(
               children: <Widget>[
                 Container(
-                  width: width,  // 비율로 설정된 너비
-                  height: height,   // 고정된 높이
+                  width: width, // 비율로 설정된 너비
+                  height: height, // 고정된 높이
                   decoration: BoxDecoration(
                     border: Border.all(color: Colors.green, width: 2.0),
                     borderRadius: BorderRadius.circular(8.0),
@@ -108,10 +108,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(8.0),
                     child: DisplayImage(
-                      imagePath: problem.processImageUrl,
-                      defaultImagePath: defaultImage,
-                      fit: BoxFit.contain
-                    ),
+                        imagePath: problem.processImageUrl,
+                        fit: BoxFit.contain),
                   ),
                 ),
                 const SizedBox(height: 8),

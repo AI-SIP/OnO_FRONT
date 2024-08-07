@@ -199,8 +199,8 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                       );
                     },
                     child: DisplayImage(
-                        imagePath: problemModel.processImageUrl,
-                        defaultImagePath: 'assets/no_image.jpg'),
+                      imagePath: problemModel.processImageUrl,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 30.0),
@@ -285,8 +285,8 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                           );
                         },
                         child: DisplayImage(
-                            imagePath: problemModel.problemImageUrl,
-                            defaultImagePath: 'assets/no_image.jpg'),
+                          imagePath: problemModel.problemImageUrl,
+                        ),
                       ),
                     ),
                     const SizedBox(height: 20.0),
@@ -321,8 +321,8 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                           );
                         },
                         child: DisplayImage(
-                            imagePath: problemModel.solveImageUrl,
-                            defaultImagePath: 'assets/no_image.jpg'),
+                          imagePath: problemModel.solveImageUrl,
+                        ),
                       ),
                     ),
                     const SizedBox(height: 20.0),
@@ -357,8 +357,8 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                           );
                         },
                         child: DisplayImage(
-                            imagePath: problemModel.answerImageUrl,
-                            defaultImagePath: 'assets/no_image.jpg'),
+                          imagePath: problemModel.answerImageUrl,
+                        ),
                       ),
                     ),
                     const SizedBox(height: 20.0),
