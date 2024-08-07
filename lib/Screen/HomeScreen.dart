@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../Config/AppConfig.dart';
+import '../GlobalModule/DecorateText.dart';
 import '../GlobalModule/GridPainter.dart';
 import '../Service/AuthService.dart';
 
@@ -23,38 +24,19 @@ class HomeScreen extends StatelessWidget {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('게스트 로그인 경고',
-            style: TextStyle(
-                fontSize: 24,
-                color: Colors.green,
-                fontFamily: 'font1',
-                fontWeight: FontWeight.bold)),
-        content: const Text(
-            '게스트로 로그인 할 경우,\n기기 간 오답노트 연동이 불가능하며,\n로그아웃 시 모든 정보가 삭제됩니다.',
-            style: TextStyle(
-                fontSize: 22,
-                color: Colors.green,
-                fontFamily: 'font1',
-                fontWeight: FontWeight.bold)),
+        title: const DecorateText(text: '게스트 로그인 경고', fontSize: 24),
+        content: const DecorateText(
+            text: '게스트로 로그인 할 경우,\n기기 간 오답노트 연동이 불가능하며,\n로그아웃 시 모든 정보가 삭제됩니다.',
+            fontSize: 22),
         actions: <Widget>[
           TextButton(
-            child: const Text('취소',
-                style: TextStyle(
-                    fontSize: 20,
-                    color: Colors.green,
-                    fontFamily: 'font1',
-                    fontWeight: FontWeight.bold)),
+            child: const DecorateText(text: '취소', fontSize: 20),
             onPressed: () {
               Navigator.of(ctx).pop();
             },
           ),
           TextButton(
-            child: const Text('확인',
-                style: TextStyle(
-                    fontSize: 20,
-                    color: Colors.green,
-                    fontFamily: 'font1',
-                    fontWeight: FontWeight.bold)),
+            child: const DecorateText(text: '확인', fontSize: 20),
             onPressed: () {
               Navigator.of(ctx).pop();
               Provider.of<AuthService>(context, listen: false)
@@ -85,16 +67,7 @@ class HomeScreen extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               SizedBox(height: screenHeight * 0.1),
-              Text(
-                'OnO, 이제는 나도 오답한다',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: Colors.green,
-                  fontSize: headerFontSize,
-                  fontFamily: 'font1',
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+              DecorateText(text: 'OnO, 이제는 나도 오답한다', fontSize: headerFontSize),
               SizedBox(height: screenHeight * 0.03),
               ElevatedButton(
                 onPressed: _launchURL,
@@ -109,14 +82,10 @@ class HomeScreen extends StatelessWidget {
                     color: Colors.white,
                   ),
                 ),
-                child: Text(
-                  'OnO 사용 가이드 →',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: buttonFontSize,
-                    fontFamily: 'font1',
-                    fontWeight: FontWeight.bold,
-                  ),
+                child: DecorateText(
+                  text: 'OnO 사용 가이드',
+                  fontSize: buttonFontSize,
+                  color: Colors.white,
                 ),
               ),
               SizedBox(height: screenHeight * 0.06),
@@ -130,15 +99,9 @@ class HomeScreen extends StatelessWidget {
                   if (authService.isLoggedIn) {
                     return Padding(
                       padding: EdgeInsets.only(top: screenHeight * 0.05),
-                      child: Text(
-                        '${authService.userName}님 환영합니다!',
-                        style: TextStyle(
-                          color: Colors.green,
-                          fontSize: welcomeFontSize,
-                          fontFamily: 'font1',
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+                      child: DecorateText(
+                          text: '${authService.userName}님 환영합니다!',
+                          fontSize: welcomeFontSize),
                     );
                   } else {
                     return Column(

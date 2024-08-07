@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'dart:io';
+import '../GlobalModule/DecorateText.dart';
 import '../Provider/ProblemsProvider.dart';
 import '../Model/ProblemRegisterModel.dart';
 import '../GlobalModule/DatePickerHandler.dart';
@@ -75,13 +76,10 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
   void showSuccessDialog(BuildContext context) {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-        content: Text(
-          '문제가 성공적으로 저장되었습니다.',
-          style: TextStyle(
-              fontSize: 20,
-              color: Colors.white,
-              fontFamily: 'font1',
-              fontWeight: FontWeight.bold),
+        content: DecorateText(
+          text: '문제가 성공적으로 저장되었습니다.',
+          fontSize: 20,
+          color: Colors.white,
         ),
         backgroundColor: Colors.green,
       ),
@@ -117,30 +115,19 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
     Navigator.of(context).pop(true);
   }
 
-  bool _isLogin(BuildContext context){
+  bool _isLogin(BuildContext context) {
     final authService = Provider.of<AuthService>(context, listen: false);
 
-    if(!authService.isLoggedIn){
+    if (!authService.isLoggedIn) {
       showDialog(
         context: context,
         builder: (ctx) => AlertDialog(
-          title: const Text('로그인 필요', style: const TextStyle(
-              fontSize: 24,
-              color: Colors.green,
-              fontFamily: 'font1',
-              fontWeight: FontWeight.bold)),
-          content: const Text('문제를 등록하려면 로그인 해주세요!', style: const TextStyle(
-              fontSize: 20,
-              color: Colors.green,
-              fontFamily: 'font1',
-              fontWeight: FontWeight.bold)),
+          title: const DecorateText(text: '로그인 필요', fontSize: 24),
+          content:
+              const DecorateText(text: '문제를 등록하려면 로그인 해주세요!', fontSize: 20),
           actions: <Widget>[
             TextButton(
-              child: const Text('확인', style: const TextStyle(
-                  fontSize: 20,
-                  color: Colors.green,
-                  fontFamily: 'font1',
-                  fontWeight: FontWeight.bold)),
+              child: const DecorateText(text: '확인', fontSize: 20),
               onPressed: () {
                 Navigator.of(ctx).pop(); // 다이얼로그 닫기
               },
@@ -170,13 +157,10 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
   void _showValidationMessage(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(
-          message,
-          style: const TextStyle(
-              fontSize: 20,
-              color: Colors.white,
-              fontFamily: 'font1',
-              fontWeight: FontWeight.bold),
+        content: DecorateText(
+          text: message,
+          fontSize: 20,
+          color: Colors.white,
         ),
         backgroundColor: Colors.red,
       ),
@@ -184,8 +168,7 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
   }
 
   Future<void> submitProblem() async {
-
-    if(!_isLogin(context)){
+    if (!_isLogin(context)) {
       return;
     }
 
@@ -217,22 +200,6 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
     final mediaQuery = MediaQuery.of(context); // 미디어 쿼리 정보 가져오기
     final isLandscape =
         mediaQuery.orientation == Orientation.landscape; // 가로/세로 방향 확인
-    final authService = Provider.of<AuthService>(context);
-
-    /*
-    if (!authService.isLoggedIn) {
-      return const Scaffold(
-        body: Center(
-          child: Text('로그인 해주세요!',
-              style: TextStyle(
-                  color: Colors.green,
-                  fontFamily: 'font1',
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold)),
-        ),
-      );
-    }
-     */
 
     return Scaffold(
         body: GestureDetector(
@@ -250,25 +217,14 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
                 children: <Widget>[
                   const Icon(Icons.calendar_today, color: Colors.green),
                   const SizedBox(width: 10),
-                  const Text(
-                    '푼 날짜',
-                    style: TextStyle(
-                        fontFamily: 'font1',
-                        color: Colors.green,
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold),
-                  ),
+                  const DecorateText(text: '푼 날짜', fontSize: 20),
                   const Spacer(),
                   TextButton(
                     onPressed: _showCustomDatePicker, // 날짜 선택기 호출
-                    child: Text(
-                      '${_selectedDate.year}년 ${_selectedDate.month}월 ${_selectedDate.day}일',
-                      style: const TextStyle(
-                          fontSize: 18,
-                          color: Colors.green,
-                          fontFamily: 'font1',
-                          fontWeight: FontWeight.bold),
-                    ),
+                    child: DecorateText(
+                        text:
+                            '${_selectedDate.year}년 ${_selectedDate.month}월 ${_selectedDate.day}일',
+                        fontSize: 18),
                   ),
                 ],
               ),
@@ -278,14 +234,7 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
                 children: <Widget>[
                   Icon(Icons.info, color: Colors.green),
                   SizedBox(width: 10),
-                  Text(
-                    '출처',
-                    style: TextStyle(
-                        fontFamily: 'font1',
-                        color: Colors.green,
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold),
-                  ),
+                  DecorateText(text: '출처', fontSize: 20)
                 ],
               ),
               const SizedBox(height: 10),
@@ -332,14 +281,7 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
                 children: <Widget>[
                   Icon(Icons.camera_alt, color: Colors.green),
                   SizedBox(width: 10),
-                  Text(
-                    '문제',
-                    style: TextStyle(
-                        fontFamily: 'font1',
-                        color: Colors.green,
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold),
-                  ),
+                  DecorateText(text: '문제', fontSize: 20),
                 ],
               ),
               const SizedBox(height: 10),
@@ -375,14 +317,7 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
                 children: <Widget>[
                   Icon(Icons.camera_alt, color: Colors.green),
                   SizedBox(width: 10),
-                  Text(
-                    '해설',
-                    style: TextStyle(
-                        fontFamily: 'font1',
-                        color: Colors.green,
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold),
-                  ),
+                  DecorateText(text: '해설', fontSize: 20),
                 ],
               ),
               const SizedBox(height: 10),
@@ -418,14 +353,7 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
                 children: <Widget>[
                   Icon(Icons.camera_alt, color: Colors.green),
                   SizedBox(width: 10),
-                  Text(
-                    '나의 풀이',
-                    style: TextStyle(
-                        fontFamily: 'font1',
-                        color: Colors.green,
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold),
-                  ),
+                  DecorateText(text: '나의 풀이', fontSize: 20),
                 ],
               ),
               const SizedBox(height: 10),
@@ -461,14 +389,7 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
                 children: <Widget>[
                   Icon(Icons.edit, color: Colors.green),
                   SizedBox(width: 10),
-                  Text(
-                    '오답 메모',
-                    style: TextStyle(
-                        fontFamily: 'font1',
-                        color: Colors.green,
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold),
-                  ),
+                  DecorateText(text: '오답 메모', fontSize: 20)
                 ],
               ),
               const SizedBox(height: 10),
@@ -523,26 +444,19 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
                       backgroundColor: Colors.white54,
                       foregroundColor: Colors.green,
                     ),
-                    child: const Text('등록 취소',
-                        style: TextStyle(
-                          fontFamily: 'font1',
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        )),
+                    child: const DecorateText(text: '등록 취소', fontSize: 18),
                   ),
                   ElevatedButton(
-                    onPressed: submitProblem,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green,
-                      foregroundColor: Colors.white,
-                    ),
-                    child: const Text('등록 완료',
-                        style: TextStyle(
-                          fontFamily: 'font1',
-                          fontSize: 20, // 글씨 크기 설정
-                          fontWeight: FontWeight.bold, // 글씨 굵기 설정
-                        )),
-                  ),
+                      onPressed: submitProblem,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green,
+                        foregroundColor: Colors.white,
+                      ),
+                      child: const DecorateText(
+                        text: '등록 완료',
+                        fontSize: 18,
+                        color: Colors.white,
+                      )),
                 ],
               ),
             ],

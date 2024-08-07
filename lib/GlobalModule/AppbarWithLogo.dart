@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'DecorateText.dart';
+
 class AppBarWithLogo extends StatelessWidget implements PreferredSizeWidget {
   @override
   final Size preferredSize;
@@ -14,14 +16,7 @@ class AppBarWithLogo extends StatelessWidget implements PreferredSizeWidget {
         padding: EdgeInsets.only(left: 10.0), // 왼쪽 여백 추가
         child: Align(
           alignment: Alignment.centerLeft,
-          child: Text(
-            'OnO',
-            style: TextStyle(
-                color: Colors.green,
-                fontSize: 26,
-                fontFamily: 'font1',
-                fontWeight: FontWeight.bold),
-          ),
+          child: DecorateText(text: 'OnO', fontSize: 26)
         ),
       ),
       backgroundColor: Colors.white,

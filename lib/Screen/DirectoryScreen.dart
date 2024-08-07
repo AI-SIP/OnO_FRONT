@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../GlobalModule/DecorateText.dart';
 import '../GlobalModule/DisplayImage.dart';
 import 'ProblemDetailScreen.dart';
 import '../Model/ProblemModel.dart';
@@ -30,12 +31,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     return Scaffold(
       body: !authService.isLoggedIn
           ? const Center(
-              child: Text('로그인을 통해 작성한 오답노트를 확인해보세요!',
-                  style: TextStyle(
-                      color: Colors.green,
-                      fontFamily: 'font1',
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold)))
+          child: DecorateText(text: '로그인을 통해 작성한 오답노트를 확인해보세요!', fontSize: 24))
           : RefreshIndicator(
               onRefresh: () =>
                   Provider.of<ProblemsProvider>(context, listen: false)
@@ -47,12 +43,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                     var problems = problemsProvider.problems;
                     if (problems.isEmpty) {
                       return const Center(
-                          child: Text('오답노트가 등록되어 있지 않습니다!',
-                              style: TextStyle(
-                                  color: Colors.green,
-                                  fontFamily: 'font1',
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.bold)));
+                          child: DecorateText(text: '오답노트가 등록되어 있지 않습니다!', fontSize: 24));
                     }
                     return GridView.builder(
                       gridDelegate:
