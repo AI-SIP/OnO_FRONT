@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../GlobalModule/DisplayImage.dart';
+import '../GlobalModule/FullScreenImage.dart';
 import '../GlobalModule/GridPainter.dart';
 import '../GlobalModule/UnderlinedText.dart';
 import '../Model/ProblemModel.dart';
@@ -186,9 +187,21 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                 ),
                 const SizedBox(height: 20.0),
                 Center(
-                  child: DisplayImage(
-                      imagePath: problemModel.processImageUrl,
-                      defaultImagePath: 'assets/no_image.jpg'),
+                  child: GestureDetector(
+                    onTap: () {
+                      // 이미지를 탭했을 때 FullScreenImage를 표시합니다.
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => FullScreenImage(
+                              imagePath: problemModel.processImageUrl),
+                        ),
+                      );
+                    },
+                    child: DisplayImage(
+                        imagePath: problemModel.processImageUrl,
+                        defaultImagePath: 'assets/no_image.jpg'),
+                  ),
                 ),
                 const SizedBox(height: 30.0),
                 ExpansionTile(
@@ -261,9 +274,20 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                     ),
                     const SizedBox(height: 20.0),
                     Center(
-                      child: DisplayImage(
-                          imagePath: problemModel.problemImageUrl,
-                          defaultImagePath: 'assets/no_image.jpg'),
+                      child: GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => FullScreenImage(
+                                  imagePath: problemModel.problemImageUrl),
+                            ),
+                          );
+                        },
+                        child: DisplayImage(
+                            imagePath: problemModel.problemImageUrl,
+                            defaultImagePath: 'assets/no_image.jpg'),
+                      ),
                     ),
                     const SizedBox(height: 20.0),
                     Container(
@@ -286,9 +310,20 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                     ),
                     const SizedBox(height: 20.0),
                     Center(
-                      child: DisplayImage(
-                          imagePath: problemModel.solveImageUrl,
-                          defaultImagePath: 'assets/no_image.jpg'),
+                      child: GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => FullScreenImage(
+                                  imagePath: problemModel.solveImageUrl),
+                            ),
+                          );
+                        },
+                        child: DisplayImage(
+                            imagePath: problemModel.solveImageUrl,
+                            defaultImagePath: 'assets/no_image.jpg'),
+                      ),
                     ),
                     const SizedBox(height: 20.0),
                     Container(
@@ -311,9 +346,20 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                     ),
                     const SizedBox(height: 20.0),
                     Center(
-                      child: DisplayImage(
-                          imagePath: problemModel.answerImageUrl,
-                          defaultImagePath: 'assets/no_image.jpg'),
+                      child: GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => FullScreenImage(
+                                  imagePath: problemModel.answerImageUrl),
+                            ),
+                          );
+                        },
+                        child: DisplayImage(
+                            imagePath: problemModel.answerImageUrl,
+                            defaultImagePath: 'assets/no_image.jpg'),
+                      ),
                     ),
                     const SizedBox(height: 20.0),
                   ],
@@ -429,5 +475,34 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
 
   Widget buildNoDataScreen() {
     return const Center(child: Text("문제 정보를 가져올 수 없습니다."));
+  }
+
+  void _showImageDialog(BuildContext context, String? imageUrl) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              double dialogWidth = constraints.maxWidth * 0.9;
+              double dialogHeight = constraints.maxHeight * 0.8;
+
+              return SizedBox(
+                width: dialogWidth,
+                height: dialogHeight,
+                child: InteractiveViewer(
+                  panEnabled: true,
+                  minScale: 0.5,
+                  maxScale: 3.0,
+                  child: imageUrl != null
+                      ? Image.network(imageUrl, fit: BoxFit.contain)
+                      : Image.asset('assets/no_image.jpg', fit: BoxFit.contain),
+                ),
+              );
+            },
+          ),
+        );
+      },
+    );
   }
 }
