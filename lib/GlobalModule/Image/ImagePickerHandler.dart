@@ -49,6 +49,8 @@ class ImagePickerHandler {
             toolbarTitle: '이미지 자르기',
             toolbarColor: Colors.green,
             toolbarWidgetColor: Colors.white,
+            lockAspectRatio: false,
+            cropStyle: CropStyle.rectangle,
             aspectRatioPresets: [
               CropAspectRatioPreset.original,
               CropAspectRatioPreset.square,
@@ -96,7 +98,10 @@ class ImagePickerHandler {
                 leading:
                     Icon(Icons.camera_alt, color: themeProvider.primaryColor),
                 title: DecorateText(
-                    text: '카메라로 촬영', color: themeProvider.primaryColor, fontSize: 20,),
+                  text: '카메라로 촬영',
+                  color: themeProvider.primaryColor,
+                  fontSize: 20,
+                ),
                 onTap: () async {
                   Navigator.of(context).pop(); // Close the popup
                   final pickedFile = await pickImageFromCamera(context);
@@ -107,7 +112,10 @@ class ImagePickerHandler {
                 leading: Icon(Icons.photo_library,
                     color: themeProvider.primaryColor),
                 title: DecorateText(
-                    text: '갤러리에서 선택', color: themeProvider.primaryColor, fontSize: 20,),
+                  text: '갤러리에서 선택',
+                  color: themeProvider.primaryColor,
+                  fontSize: 20,
+                ),
                 onTap: () async {
                   Navigator.of(context).pop(); // Close the popup
                   final pickedFile = await pickImageFromGallery();

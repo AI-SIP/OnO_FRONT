@@ -96,7 +96,7 @@ class _CameraScreenState extends State<CameraScreen> {
             alignment: Alignment.bottomCenter,
             child: Padding(
               padding: const EdgeInsets.only(
-                  bottom: 40.0), // Increase bottom padding
+                  bottom: 50.0), // Increase bottom padding
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [

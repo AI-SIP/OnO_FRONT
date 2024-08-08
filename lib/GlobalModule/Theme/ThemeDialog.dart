@@ -22,32 +22,38 @@ class _ThemeDialogState extends State<ThemeDialog> {
         fontSize: 24,
         color: themeProvider.primaryColor,
       ),
-      content: SizedBox(
-        height: 320, // 80 (item size) * 4 (rows) = 320
-        width: 320,  // 80 (item size) * 4 (columns) = 320
-        child: GridView.count(
-          crossAxisCount: 4, // Number of columns
-          crossAxisSpacing: 10.0,
-          mainAxisSpacing: 10.0,
-          children: [
-            _buildColorCircle(Colors.pinkAccent),
-            _buildColorCircle(Colors.purpleAccent),
-            _buildColorCircle(Colors.purple),
-            _buildColorCircle(Colors.deepPurple),
-            _buildColorCircle(Colors.redAccent),
-            _buildColorCircle(Colors.orangeAccent),
-            _buildColorCircle(Colors.amberAccent),
-            _buildColorCircle(Colors.lightGreen),
-            _buildColorCircle(Colors.green),
-            _buildColorCircle(Colors.greenAccent),
-            _buildColorCircle(Colors.cyan),
-            _buildColorCircle(Colors.blueAccent),
-            _buildColorCircle(Colors.indigo),
-            _buildColorCircle(Colors.brown),
-            _buildColorCircle(Colors.grey),
-            _buildColorCircle(Colors.black),
-          ],
-        ),
+      content: Column(
+        mainAxisSize: MainAxisSize.min, // Ensures the dialog fits content size
+        children: [
+          const SizedBox(height: 20), // Add vertical spacing
+          SizedBox(
+            height: 300, // Adjusted for smaller circles
+            width: 300,  // Adjusted for smaller circles
+            child: GridView.count(
+              crossAxisCount: 4, // Number of columns
+              crossAxisSpacing: 12.0, // Adjusted spacing
+              mainAxisSpacing: 12.0,  // Adjusted spacing
+              children: [
+                _buildColorCircle(Colors.pinkAccent),
+                _buildColorCircle(Colors.purpleAccent),
+                _buildColorCircle(Colors.purple),
+                _buildColorCircle(Colors.deepPurple),
+                _buildColorCircle(Colors.redAccent),
+                _buildColorCircle(Colors.orangeAccent),
+                _buildColorCircle(Colors.amberAccent),
+                _buildColorCircle(Colors.lightGreen),
+                _buildColorCircle(Colors.green),
+                _buildColorCircle(Colors.greenAccent),
+                _buildColorCircle(Colors.cyan),
+                _buildColorCircle(Colors.blueAccent),
+                _buildColorCircle(Colors.indigo),
+                _buildColorCircle(Colors.brown),
+                _buildColorCircle(Colors.grey),
+                _buildColorCircle(Colors.black),
+              ],
+            ),
+          ),
+        ],
       ),
       actions: [
         TextButton(
@@ -88,7 +94,7 @@ class _ThemeDialogState extends State<ThemeDialog> {
       },
       child: CircleAvatar(
         backgroundColor: color,
-        radius: 30,
+        radius: 20, // Reduced radius for smaller circles
         child: _selectedColor == color
             ? const Icon(Icons.check, color: Colors.white)
             : null,

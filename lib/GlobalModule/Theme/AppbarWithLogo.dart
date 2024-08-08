@@ -13,16 +13,18 @@ class AppBarWithLogo extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
-
     final themeProvider = Provider.of<ThemeHandler>(context);
 
     return AppBar(
       title: Padding(
         padding: const EdgeInsets.only(left: 10.0), // 왼쪽 여백 추가
         child: Align(
-          alignment: Alignment.centerLeft,
-          child: DecorateText(text: 'OnO', fontSize: 26, color: themeProvider.primaryColor,)
-        ),
+            alignment: Alignment.centerLeft,
+            child: DecorateText(
+              text: 'OnO',
+              fontSize: 26,
+              color: themeProvider.primaryColor,
+            )),
       ),
       backgroundColor: Colors.white,
       centerTitle: false,
