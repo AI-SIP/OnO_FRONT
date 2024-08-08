@@ -46,6 +46,7 @@ dependencies:
   flutter_dotenv: ^5.1.0
   logging: ^1.2.0
   cached_network_image: ^3.4.0
+  image_cropper: ^8.0.1
 
 dev_dependencies:
   flutter_test:
