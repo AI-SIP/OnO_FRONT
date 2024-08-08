@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 
 class DisplayImage extends StatelessWidget {
   final String? imagePath;
-  final String defaultImagePath = 'assets/no_image.jpg';
+  final String defaultImagePath = 'assets/no_image.png';
   final BoxFit fit;
 
   const DisplayImage(

@@ -31,7 +31,7 @@ class FullScreenImage extends StatelessWidget {
                 decoration: BoxDecoration(
                   image: DecorationImage(
                     image: imagePath == null
-                        ? const AssetImage('assets/no_image.jpg')
+                        ? const AssetImage('assets/no_image.png')
                             as ImageProvider<Object>
                         : CachedNetworkImageProvider(imagePath!)
                             as ImageProvider<Object>,

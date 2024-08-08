@@ -472,7 +472,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                   maxScale: 3.0,
                   child: imageUrl != null
                       ? Image.network(imageUrl, fit: BoxFit.contain)
-                      : Image.asset('assets/no_image.jpg', fit: BoxFit.contain),
+                      : Image.asset('assets/no_image.png', fit: BoxFit.contain),
                 ),
               );
             },
