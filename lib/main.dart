@@ -2,13 +2,14 @@ import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:ono/GlobalModule/Theme/ThemeHandler.dart';
 import 'package:provider/provider.dart';
 import 'Screen/HomeScreen.dart';
 import 'Screen/DirectoryScreen.dart';
 import 'Screen/ProblemRegisterScreen.dart';
 import 'Provider/ProblemsProvider.dart';
 import 'Screen/SettingScreen.dart';
-import 'GlobalModule/AppbarWithLogo.dart';
+import 'GlobalModule/Theme/AppbarWithLogo.dart';
 
 import 'Service/AuthService.dart';
 
@@ -21,7 +22,10 @@ void main() async {
         ChangeNotifierProvider(create: (_) => ProblemsProvider()),
         ChangeNotifierProvider(
             create: (context) => AuthService(
-                Provider.of<ProblemsProvider>(context, listen: false))),
+                Provider.of<ProblemsProvider>(context, listen: false))
+        ),
+        ChangeNotifierProvider(create: (context) => ThemeHandler()..loadColors()),
+
       ],
       child: const MyApp(),
     ),
@@ -33,10 +37,13 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+
+    final themeHandler = Provider.of<ThemeHandler>(context);
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.green),
+        colorScheme: ColorScheme.fromSeed(seedColor: themeHandler.primaryColor),
+        primaryColor: themeHandler.primaryColor,
         useMaterial3: true,
       ),
       home: const MyHomePage(),
@@ -83,6 +90,8 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeHandler>(context);
+
     return Scaffold(
       appBar: const AppBarWithLogo(),
       body: IndexedStack(
@@ -110,7 +119,8 @@ class _MyHomePageState extends State<MyHomePage> {
           ),
         ],
         currentIndex: _selectedIndex,
-        selectedItemColor: Colors.green,
+        selectedItemColor: themeProvider.primaryColor,
+        //selectedItemColor: Colors.green,
         unselectedItemColor: Colors.grey,
         selectedLabelStyle: const TextStyle(
           fontSize: 18,

@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import '../GlobalModule/DecorateText.dart';
-import '../GlobalModule/DisplayImage.dart';
-import '../GlobalModule/FullScreenImage.dart';
-import '../GlobalModule/GridPainter.dart';
-import '../GlobalModule/UnderlinedText.dart';
+import '../GlobalModule/Theme/DecorateText.dart';
+import '../GlobalModule/Image/DisplayImage.dart';
+import '../GlobalModule/Image/FullScreenImage.dart';
+import '../GlobalModule/Theme/GridPainter.dart';
+import '../GlobalModule/Theme/ThemeHandler.dart';
+import '../GlobalModule/Theme/UnderlinedText.dart';
 import '../Model/ProblemModel.dart';
-import '../GlobalModule/NavigationButtons.dart';
+import '../GlobalModule/Util/NavigationButtons.dart';
 import '../Provider/ProblemsProvider.dart';
 
 class ProblemDetailScreen extends StatefulWidget {
@@ -41,6 +42,8 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeHandler>(context);
+
     return Scaffold(
       appBar: AppBar(
         title: FutureBuilder<ProblemModel?>(
@@ -52,9 +55,15 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
               return const Text('에러 발생');
             } else if (snapshot.hasData && snapshot.data != null) {
               return DecorateText(
-                  text: snapshot.data!.reference ?? '출처가 없습니다!', fontSize: 24);
+                text: snapshot.data!.reference ?? '출처가 없습니다!',
+                fontSize: 24,
+                color: themeProvider.primaryColor,
+              );
             } else {
-              return const DecorateText(text: '문제 상세', fontSize: 24);
+              return DecorateText(
+                  text: '문제 상세',
+                  fontSize: 24,
+                  color: themeProvider.primaryColor);
             }
           },
         ),
@@ -98,6 +107,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
 
   Widget buildProblemDetails(BuildContext context, ProblemModel problemModel) {
     ProblemsProvider provider = Provider.of<ProblemsProvider>(context);
+    final themeProvider = Provider.of<ThemeHandler>(context);
     final formattedDate =
         DateFormat('yyyy년 M월 d일').format(problemModel.solvedAt!);
 
@@ -105,7 +115,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
       children: [
         CustomPaint(
           size: Size.infinite,
-          painter: GridPainter(),
+          painter: GridPainter(gridColor: themeProvider.primaryColor),
         ),
         SingleChildScrollView(
           child: Padding(
@@ -116,9 +126,13 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                 const SizedBox(height: 16.0),
                 Row(
                   children: [
-                    const Icon(Icons.calendar_today, color: Colors.green),
+                    Icon(Icons.calendar_today,
+                        color: themeProvider.primaryColor),
                     const SizedBox(width: 8),
-                    const DecorateText(text: '푼 날짜', fontSize: 20),
+                    DecorateText(
+                        text: '푼 날짜',
+                        fontSize: 20,
+                        color: themeProvider.primaryColor),
                     const Spacer(),
                     UnderlinedText(text: formattedDate, fontSize: 18),
                   ],
@@ -131,10 +145,13 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Row(children: [
-                            Icon(Icons.info, color: Colors.green),
-                            SizedBox(width: 8),
-                            DecorateText(text: '문제 출처', fontSize: 20),
+                          Row(children: [
+                            Icon(Icons.info, color: themeProvider.primaryColor),
+                            const SizedBox(width: 8),
+                            DecorateText(
+                                text: '문제 출처',
+                                fontSize: 20,
+                                color: themeProvider.primaryColor),
                           ]),
                           const SizedBox(height: 10.0),
                           UnderlinedText(
@@ -150,12 +167,15 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                   width: double.infinity,
                   alignment: Alignment.centerLeft, // 좌측 정렬
                   padding: const EdgeInsets.symmetric(vertical: 4.0),
-                  child: const Row(
+                  child: Row(
                     mainAxisAlignment: MainAxisAlignment.start, // 좌측 정렬
                     children: [
-                      Icon(Icons.camera_alt, color: Colors.green),
-                      SizedBox(width: 8.0),
-                      DecorateText(text: '문제', fontSize: 16),
+                      Icon(Icons.camera_alt, color: themeProvider.primaryColor),
+                      const SizedBox(width: 8.0),
+                      DecorateText(
+                          text: '문제',
+                          fontSize: 16,
+                          color: themeProvider.primaryColor),
                     ],
                   ),
                 ),
@@ -183,11 +203,14 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                     width: double.infinity,
                     alignment: Alignment.center, // 좌측 정렬
                     padding: const EdgeInsets.symmetric(vertical: 4.0),
-                    child: const Row(
+                    child: Row(
                       mainAxisAlignment: MainAxisAlignment.center, // 좌측 정렬
                       children: [
-                        SizedBox(width: 8.0),
-                        DecorateText(text: '해설 및 풀이 확인', fontSize: 20),
+                        const SizedBox(width: 8.0),
+                        DecorateText(
+                            text: '해설 및 풀이 확인',
+                            fontSize: 20,
+                            color: themeProvider.primaryColor),
                       ],
                     ),
                   ),
@@ -202,13 +225,17 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                             width: double.infinity,
                             alignment: Alignment.centerLeft, // 좌측 정렬
                             padding: const EdgeInsets.symmetric(vertical: 4.0),
-                            child: const Row(
+                            child: Row(
                               mainAxisAlignment:
                                   MainAxisAlignment.start, // 좌측 정렬
                               children: [
-                                Icon(Icons.edit, color: Colors.green),
-                                SizedBox(width: 8.0),
-                                DecorateText(text: '메모', fontSize: 20),
+                                Icon(Icons.edit,
+                                    color: themeProvider.primaryColor),
+                                const SizedBox(width: 8.0),
+                                DecorateText(
+                                    text: '메모',
+                                    fontSize: 20,
+                                    color: themeProvider.primaryColor),
                               ],
                             ),
                           ),
@@ -222,12 +249,15 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                       width: double.infinity,
                       alignment: Alignment.centerLeft, // 좌측 정렬
                       padding: const EdgeInsets.symmetric(vertical: 4.0),
-                      child: const Row(
+                      child: Row(
                         mainAxisAlignment: MainAxisAlignment.start, // 좌측 정렬
                         children: [
-                          Icon(Icons.image, color: Colors.green),
-                          SizedBox(width: 8.0),
-                          DecorateText(text: '원본 이미지', fontSize: 20),
+                          Icon(Icons.image, color: themeProvider.primaryColor),
+                          const SizedBox(width: 8.0),
+                          DecorateText(
+                              text: '원본 이미지',
+                              fontSize: 20,
+                              color: themeProvider.primaryColor),
                         ],
                       ),
                     ),
@@ -253,12 +283,15 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                       width: double.infinity,
                       alignment: Alignment.centerLeft, // 좌측 정렬
                       padding: const EdgeInsets.symmetric(vertical: 4.0),
-                      child: const Row(
+                      child: Row(
                         mainAxisAlignment: MainAxisAlignment.start, // 좌측 정렬
                         children: [
-                          Icon(Icons.image, color: Colors.green),
-                          SizedBox(width: 8.0),
-                          DecorateText(text: '풀이 이미지', fontSize: 20),
+                          Icon(Icons.image, color: themeProvider.primaryColor),
+                          const SizedBox(width: 8.0),
+                          DecorateText(
+                              text: '풀이 이미지',
+                              fontSize: 20,
+                              color: themeProvider.primaryColor),
                         ],
                       ),
                     ),
@@ -284,12 +317,15 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                       width: double.infinity,
                       alignment: Alignment.centerLeft, // 좌측 정렬
                       padding: const EdgeInsets.symmetric(vertical: 4.0),
-                      child: const Row(
+                      child: Row(
                         mainAxisAlignment: MainAxisAlignment.start, // 좌측 정렬
                         children: [
-                          Icon(Icons.image, color: Colors.green),
+                          Icon(Icons.image, color: themeProvider.primaryColor),
                           SizedBox(width: 8.0),
-                          DecorateText(text: '해설 이미지', fontSize: 20),
+                          DecorateText(
+                              text: '해설 이미지',
+                              fontSize: 20,
+                              color: themeProvider.primaryColor),
                         ],
                       ),
                     ),
@@ -339,10 +375,15 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
     showDialog(
       context: context,
       builder: (BuildContext context) {
+        final themeProvider = Provider.of<ThemeHandler>(context);
+
         return AlertDialog(
-          title: const DecorateText(text: '문제 삭제', fontSize: 24),
-          content:
-              const DecorateText(text: '정말로 이 문제를 삭제하시겠습니까?', fontSize: 20),
+          title: DecorateText(
+              text: '문제 삭제', fontSize: 24, color: themeProvider.primaryColor),
+          content: DecorateText(
+              text: '정말로 이 문제를 삭제하시겠습니까?',
+              fontSize: 20,
+              color: themeProvider.primaryColor),
           actions: [
             TextButton(
               onPressed: () {
@@ -363,13 +404,13 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                   if (success) {
                     Navigator.of(context).pop(true); // 이전 화면으로 이동
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                          content: DecorateText(
+                      SnackBar(
+                          content: const DecorateText(
                             text: '문제가 삭제되었습니다.',
                             fontSize: 20,
                             color: Colors.white,
                           ),
-                          backgroundColor: Colors.green),
+                          backgroundColor: themeProvider.primaryColor),
                     );
                   } else {
                     ScaffoldMessenger.of(context).showSnackBar(
@@ -431,7 +472,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                   maxScale: 3.0,
                   child: imageUrl != null
                       ? Image.network(imageUrl, fit: BoxFit.contain)
-                      : Image.asset('assets/no_image.jpg', fit: BoxFit.contain),
+                      : Image.asset('assets/no_image.png', fit: BoxFit.contain),
                 ),
               );
             },
