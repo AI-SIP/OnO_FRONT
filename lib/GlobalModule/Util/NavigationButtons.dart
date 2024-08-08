@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
-import '../Provider/ProblemsProvider.dart';
-import '../Screen/ProblemDetailScreen.dart';
-import 'DecorateText.dart';
+import 'package:provider/provider.dart';
+import '../../Provider/ProblemsProvider.dart';
+import '../../Screen/ProblemDetailScreen.dart';
+import '../Theme/DecorateText.dart';
+import '../Theme/ThemeHandler.dart';
 
 class NavigationButtons extends StatelessWidget {
   final BuildContext context;
@@ -18,12 +20,12 @@ class NavigationButtons extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
 
-
+    final themeProvider = Provider.of<ThemeHandler>(context);
     final problemIds = provider.getProblemIds();
 
     if (problemIds.isEmpty) {
-      return const Center(
-          child: DecorateText(text: '문제가 없습니다.', fontSize: 20)
+      return Center(
+          child: DecorateText(text: '문제가 없습니다.', fontSize: 20, color: themeProvider.primaryColor)
       );
     }
 
@@ -40,11 +42,11 @@ class NavigationButtons extends StatelessWidget {
         ElevatedButton(
           onPressed: () =>
               navigateToProblem(context, provider, previousProblemId),
-            child: const DecorateText(text: '이전 문제', fontSize: 20)
+            child: DecorateText(text: '이전 문제', fontSize: 20, color: themeProvider.primaryColor)
         ),
         ElevatedButton(
           onPressed: () => navigateToProblem(context, provider, nextProblemId),
-            child: const DecorateText(text: '다음 문제', fontSize: 20)
+            child: DecorateText(text: '다음 문제', fontSize: 20, color: themeProvider.primaryColor)
         ),
       ],
     );

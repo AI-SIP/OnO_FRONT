@@ -3,8 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../Config/AppConfig.dart';
-import '../GlobalModule/DecorateText.dart';
-import '../GlobalModule/GridPainter.dart';
+import '../GlobalModule/Theme/DecorateText.dart';
+import '../GlobalModule/Theme/GridPainter.dart';
+import '../GlobalModule/Theme/ThemeHandler.dart';
 import '../Service/AuthService.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -21,22 +22,25 @@ class HomeScreen extends StatelessWidget {
   }
 
   void _showGuestLoginDialog(BuildContext context) {
+
+    final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
+
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const DecorateText(text: '게스트 로그인 경고', fontSize: 24),
-        content: const DecorateText(
+        title: DecorateText(text: '게스트 로그인 경고', fontSize: 24, color: themeProvider.primaryColor),
+        content:  DecorateText(
             text: '게스트로 로그인 할 경우,\n기기 간 오답노트 연동이 불가능하며,\n로그아웃 시 모든 정보가 삭제됩니다.',
-            fontSize: 22),
+            fontSize: 22, color: themeProvider.primaryColor),
         actions: <Widget>[
           TextButton(
-            child: const DecorateText(text: '취소', fontSize: 20),
+            child: DecorateText(text: '취소', fontSize: 20, color: themeProvider.primaryColor),
             onPressed: () {
               Navigator.of(ctx).pop();
             },
           ),
           TextButton(
-            child: const DecorateText(text: '확인', fontSize: 20),
+            child: DecorateText(text: '확인', fontSize: 20, color: themeProvider.primaryColor),
             onPressed: () {
               Navigator.of(ctx).pop();
               Provider.of<AuthService>(context, listen: false)
@@ -50,6 +54,8 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeHandler>(context);
+
     final screenHeight = MediaQuery.of(context).size.height;
     final screenWidth = MediaQuery.of(context).size.width;
 
@@ -60,19 +66,19 @@ class HomeScreen extends StatelessWidget {
 
     return Scaffold(
       body: CustomPaint(
-        painter: GridPainter(),
+        painter: GridPainter(gridColor: themeProvider.primaryColor),
         child: Center(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               SizedBox(height: screenHeight * 0.1),
-              DecorateText(text: 'OnO, 이제는 나도 오답한다', fontSize: headerFontSize),
+              DecorateText(text: 'OnO, 이제는 나도 오답한다', fontSize: headerFontSize, color: themeProvider.primaryColor,),
               SizedBox(height: screenHeight * 0.03),
               ElevatedButton(
                 onPressed: _launchURL,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green,
+                  backgroundColor: themeProvider.primaryColor,
                   padding: EdgeInsets.symmetric(
                     horizontal: screenWidth * 0.1,
                     vertical: screenHeight * 0.02,
@@ -101,7 +107,7 @@ class HomeScreen extends StatelessWidget {
                       padding: EdgeInsets.only(top: screenHeight * 0.05),
                       child: DecorateText(
                           text: '${authService.userName}님 환영합니다!',
-                          fontSize: welcomeFontSize),
+                          fontSize: welcomeFontSize, color: themeProvider.primaryColor),
                     );
                   } else {
                     return Column(

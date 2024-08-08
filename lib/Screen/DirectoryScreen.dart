@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../GlobalModule/DecorateText.dart';
-import '../GlobalModule/DisplayImage.dart';
+import '../GlobalModule/Theme/DecorateText.dart';
+import '../GlobalModule/Image/DisplayImage.dart';
+import '../GlobalModule/Theme/ThemeHandler.dart';
 import 'ProblemDetailScreen.dart';
 import '../Model/ProblemModel.dart';
 import '../Provider/ProblemsProvider.dart';
@@ -28,10 +29,15 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   @override
   Widget build(BuildContext context) {
     final authService = Provider.of<AuthService>(context);
+    final themeProvider = Provider.of<ThemeHandler>(context);
+
     return Scaffold(
       body: !authService.isLoggedIn
-          ? const Center(
-          child: DecorateText(text: '로그인을 통해 작성한 오답노트를 확인해보세요!', fontSize: 24))
+          ? Center(
+              child: DecorateText(
+                  text: '로그인을 통해 작성한 오답노트를 확인해보세요!',
+                  fontSize: 24,
+                  color: themeProvider.primaryColor))
           : RefreshIndicator(
               onRefresh: () =>
                   Provider.of<ProblemsProvider>(context, listen: false)
@@ -42,8 +48,11 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                   builder: (context, problemsProvider, child) {
                     var problems = problemsProvider.problems;
                     if (problems.isEmpty) {
-                      return const Center(
-                          child: DecorateText(text: '오답노트가 등록되어 있지 않습니다!', fontSize: 24));
+                      return Center(
+                          child: DecorateText(
+                              text: '오답노트가 등록되어 있지 않습니다!',
+                              fontSize: 24,
+                              color: themeProvider.primaryColor));
                     }
                     return GridView.builder(
                       gridDelegate:
@@ -86,6 +95,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         builder: (context, constraints) {
           double height = constraints.maxHeight * 0.8;
           double width = constraints.maxWidth * 0.9; // 가로 길이 비율 설정
+          final themeProvider = Provider.of<ThemeHandler>(context);
           return GridTile(
             child: Column(
               children: <Widget>[
@@ -93,7 +103,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                   width: width, // 비율로 설정된 너비
                   height: height, // 고정된 높이
                   decoration: BoxDecoration(
-                    border: Border.all(color: Colors.green, width: 2.0),
+                    border: Border.all(
+                        color: themeProvider.primaryColor, width: 2.0),
                     borderRadius: BorderRadius.circular(8.0),
                   ),
                   child: ClipRRect(
@@ -106,9 +117,9 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                 const SizedBox(height: 8),
                 Text(
                   problem.reference ?? '제목 없음',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontFamily: 'font1',
-                    color: Colors.green,
+                    color: themeProvider.primaryColor,
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                   ),

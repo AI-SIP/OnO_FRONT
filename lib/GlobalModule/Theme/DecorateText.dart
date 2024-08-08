@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import 'ThemeHandler.dart';
 
 class DecorateText extends StatelessWidget {
   final String text;
@@ -6,6 +9,7 @@ class DecorateText extends StatelessWidget {
   final double fontSize;
   final FontWeight fontWeight;
   final String fontFamily;
+
 
   const DecorateText({
     super.key,

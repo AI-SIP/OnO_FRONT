@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'dart:io';
-import '../GlobalModule/DecorateText.dart';
+import '../GlobalModule/Theme/DecorateText.dart';
+import '../GlobalModule/Theme/ThemeHandler.dart';
 import '../Provider/ProblemsProvider.dart';
 import '../Model/ProblemRegisterModel.dart';
-import '../GlobalModule/DatePickerHandler.dart';
-import '../GlobalModule/ImagePickerHandler.dart';
+import '../GlobalModule/Util/DatePickerHandler.dart';
+import '../GlobalModule/Image/ImagePickerHandler.dart';
 import '../Service/AuthService.dart';
 
 class ProblemRegisterScreen extends StatefulWidget {
@@ -74,14 +75,17 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
   }
 
   void showSuccessDialog(BuildContext context) {
+
+    final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
+
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: DecorateText(
+      SnackBar(
+        content: const DecorateText(
           text: '문제가 성공적으로 저장되었습니다.',
           fontSize: 20,
           color: Colors.white,
         ),
-        backgroundColor: Colors.green,
+        backgroundColor: themeProvider.primaryColor
       ),
     );
   }
@@ -200,6 +204,7 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
     final mediaQuery = MediaQuery.of(context); // 미디어 쿼리 정보 가져오기
     final isLandscape =
         mediaQuery.orientation == Orientation.landscape; // 가로/세로 방향 확인
+    final themeProvider = Provider.of<ThemeHandler>(context);
 
     return Scaffold(
         body: GestureDetector(
@@ -215,90 +220,90 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
               // 문제 푼 날짜 선택
               Row(
                 children: <Widget>[
-                  const Icon(Icons.calendar_today, color: Colors.green),
+                  Icon(Icons.calendar_today, color: themeProvider.primaryColor),
                   const SizedBox(width: 10),
-                  const DecorateText(text: '푼 날짜', fontSize: 20),
+                  DecorateText(text: '푼 날짜', fontSize: 20, color: themeProvider.primaryColor),
                   const Spacer(),
                   TextButton(
                     onPressed: _showCustomDatePicker, // 날짜 선택기 호출
                     child: DecorateText(
                         text:
                             '${_selectedDate.year}년 ${_selectedDate.month}월 ${_selectedDate.day}일',
-                        fontSize: 18),
+                        fontSize: 18, color: themeProvider.primaryColor),
                   ),
                 ],
               ),
               const SizedBox(height: 20),
               // 출처 입력
-              const Row(
+              Row(
                 children: <Widget>[
-                  Icon(Icons.info, color: Colors.green),
-                  SizedBox(width: 10),
-                  DecorateText(text: '출처', fontSize: 20)
+                  Icon(Icons.info, color: themeProvider.primaryColor),
+                  const  SizedBox(width: 10),
+                  DecorateText(text: '출처', fontSize: 20, color: themeProvider.primaryColor)
                 ],
               ),
               const SizedBox(height: 10),
               TextField(
                 controller: _sourceController,
-                style: const TextStyle(
+                style: TextStyle(
                   fontFamily: 'font1',
-                  color: Colors.green,
+                  color: themeProvider.primaryColor,
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
                 ),
                 decoration: InputDecoration(
-                  border: const OutlineInputBorder(
+                  border: OutlineInputBorder(
                     borderSide: BorderSide(
-                      color: Colors.green, // 테두리 색상 설정
+                      color: themeProvider.primaryColor, // 테두리 색상 설정
                       width: 2.0, // 테두리 두께 설정
                     ),
                   ),
-                  enabledBorder: const OutlineInputBorder(
+                  enabledBorder: OutlineInputBorder(
                     borderSide: BorderSide(
-                      color: Colors.green, // 활성화된 상태의 테두리 색상 설정
+                      color: themeProvider.primaryColor, // 활성화된 상태의 테두리 색상 설정
                       width: 2.0, // 테두리 두께 설정
                     ),
                   ),
-                  focusedBorder: const OutlineInputBorder(
+                  focusedBorder: OutlineInputBorder(
                     borderSide: BorderSide(
-                      color: Colors.green, // 포커스된 상태의 테두리 색상 설정
+                      color: themeProvider.primaryColor, // 포커스된 상태의 테두리 색상 설정
                       width: 2.0, // 테두리 두께 설정
                     ),
                   ),
-                  fillColor: Colors.lightGreen.withOpacity(0.1),
+                  fillColor: themeProvider.primaryColor.withOpacity(0.1),
                   filled: true,
                   hintText: '문제집, 페이지, 문제번호 등',
-                  hintStyle: const TextStyle(
+                  hintStyle: TextStyle(
                       fontFamily: 'font1',
-                      color: Colors.green,
+                      color: themeProvider.primaryColor,
                       fontSize: 20,
                       fontWeight: FontWeight.bold),
                 ),
               ),
               const SizedBox(height: 20),
               // 문제 이미지 추가
-              const Row(
+              Row(
                 children: <Widget>[
-                  Icon(Icons.camera_alt, color: Colors.green),
-                  SizedBox(width: 10),
-                  DecorateText(text: '문제', fontSize: 20),
+                  Icon(Icons.camera_alt, color: themeProvider.primaryColor),
+                  const SizedBox(width: 10),
+                  DecorateText(text: '문제', fontSize: 20, color: themeProvider.primaryColor),
                 ],
               ),
               const SizedBox(height: 10),
               Container(
                 height: isLandscape ? mediaQuery.size.height * 0.3 : 200,
                 decoration: BoxDecoration(
-                  color: Colors.lightGreen.withOpacity(0.1),
+                  color: themeProvider.primaryColor.withOpacity(0.1),
                   border: Border.all(
-                    color: Colors.green, // 테두리 색상
+                    color: themeProvider.primaryColor, // 테두리 색상
                     width: 2.0, // 테두리 두께
                   ),
                 ),
                 child: Center(
                   child: _problemImage == null
                       ? IconButton(
-                          icon: const Icon(Icons.image,
-                              color: Colors.green, size: 50),
+                          icon: Icon(Icons.image,
+                              color: themeProvider.primaryColor, size: 50),
                           onPressed: () {
                             _showImagePicker('problemImage'); // 이미지 선택 팝업 호출
                           },
@@ -313,28 +318,28 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
               ),
               const SizedBox(height: 20),
               // 해설 이미지 추가
-              const Row(
+              Row(
                 children: <Widget>[
-                  Icon(Icons.camera_alt, color: Colors.green),
-                  SizedBox(width: 10),
-                  DecorateText(text: '해설', fontSize: 20),
+                  Icon(Icons.camera_alt, color: themeProvider.primaryColor),
+                  const SizedBox(width: 10),
+                  DecorateText(text: '해설', fontSize: 20, color: themeProvider.primaryColor),
                 ],
               ),
               const SizedBox(height: 10),
               Container(
                 height: isLandscape ? mediaQuery.size.height * 0.3 : 200,
                 decoration: BoxDecoration(
-                  color: Colors.lightGreen.withOpacity(0.1),
+                  color: themeProvider.primaryColor.withOpacity(0.1),
                   border: Border.all(
-                    color: Colors.green,
+                    color: themeProvider.primaryColor,
                     width: 2.0,
                   ),
                 ),
                 child: Center(
                   child: _answerImage == null
                       ? IconButton(
-                          icon: const Icon(Icons.image,
-                              color: Colors.green, size: 50),
+                          icon: Icon(Icons.image,
+                              color: themeProvider.primaryColor, size: 50),
                           onPressed: () {
                             _showImagePicker('answerImage');
                           },
@@ -349,28 +354,28 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
               ),
               const SizedBox(height: 20),
               // 나의 풀이 이미지 추가
-              const Row(
+              Row(
                 children: <Widget>[
-                  Icon(Icons.camera_alt, color: Colors.green),
-                  SizedBox(width: 10),
-                  DecorateText(text: '나의 풀이', fontSize: 20),
+                  Icon(Icons.camera_alt, color: themeProvider.primaryColor),
+                  const SizedBox(width: 10),
+                  DecorateText(text: '나의 풀이', fontSize: 20, color: themeProvider.primaryColor),
                 ],
               ),
               const SizedBox(height: 10),
               Container(
                 height: isLandscape ? mediaQuery.size.height * 0.3 : 200,
                 decoration: BoxDecoration(
-                  color: Colors.lightGreen.withOpacity(0.1),
+                  color: themeProvider.primaryColor.withOpacity(0.1),
                   border: Border.all(
-                    color: Colors.green, // 테두리 색상
+                    color: themeProvider.primaryColor, // 테두리 색상
                     width: 2.0, // 테두리 두께
                   ),
                 ),
                 child: Center(
                   child: _solveImage == null
                       ? IconButton(
-                          icon: const Icon(Icons.image,
-                              color: Colors.green, size: 50),
+                          icon: Icon(Icons.image,
+                              color: themeProvider.primaryColor, size: 50),
                           onPressed: () {
                             _showImagePicker('solveImage'); // 이미지 선택 팝업 호출
                           },
@@ -385,48 +390,48 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
               ),
               const SizedBox(height: 20),
               // 오답 메모
-              const Row(
+              Row(
                 children: <Widget>[
-                  Icon(Icons.edit, color: Colors.green),
-                  SizedBox(width: 10),
-                  DecorateText(text: '오답 메모', fontSize: 20)
+                  Icon(Icons.edit, color: themeProvider.primaryColor),
+                  const SizedBox(width: 10),
+                  DecorateText(text: '오답 메모', fontSize: 20, color: themeProvider.primaryColor)
                 ],
               ),
               const SizedBox(height: 10),
               TextField(
                 controller: _notesController,
-                style: const TextStyle(
+                style: TextStyle(
                   fontFamily: 'font1',
-                  color: Colors.green,
+                  color: themeProvider.primaryColor,
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
                 ),
                 textInputAction: TextInputAction.done, // 이 부분 추가
                 decoration: InputDecoration(
-                  border: const OutlineInputBorder(
+                  border: OutlineInputBorder(
                     borderSide: BorderSide(
-                      color: Colors.green, // 테두리 색상 설정
+                      color: themeProvider.primaryColor, // 테두리 색상 설정
                       width: 2.0, // 테두리 두께 설정
                     ),
                   ),
-                  enabledBorder: const OutlineInputBorder(
+                  enabledBorder: OutlineInputBorder(
                     borderSide: BorderSide(
-                      color: Colors.green, // 활성화된 상태의 테두리 색상 설정
+                      color: themeProvider.primaryColor, // 활성화된 상태의 테두리 색상 설정
                       width: 2.0, // 테두리 두께 설정
                     ),
                   ),
-                  focusedBorder: const OutlineInputBorder(
+                  focusedBorder: OutlineInputBorder(
                     borderSide: BorderSide(
-                      color: Colors.green, // 포커스된 상태의 테두리 색상 설정
+                      color: themeProvider.primaryColor, // 포커스된 상태의 테두리 색상 설정
                       width: 2.0, // 테두리 두께 설정
                     ),
                   ),
-                  fillColor: Colors.lightGreen.withOpacity(0.1), // 내부 배경색 설정
+                  fillColor: themeProvider.primaryColor.withOpacity(0.1), // 내부 배경색 설정
                   filled: true,
                   hintText: '틀린 이유 등 자유롭게 작성',
-                  hintStyle: const TextStyle(
+                  hintStyle: TextStyle(
                       fontFamily: 'font1',
-                      color: Colors.green,
+                      color: themeProvider.primaryColor,
                       fontSize: 20,
                       fontWeight: FontWeight.bold),
                 ),
@@ -442,14 +447,14 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
                     onPressed: resetForm,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.white54,
-                      foregroundColor: Colors.green,
+                      foregroundColor: themeProvider.primaryColor,
                     ),
-                    child: const DecorateText(text: '등록 취소', fontSize: 18),
+                    child: DecorateText(text: '등록 취소', fontSize: 18, color: themeProvider.primaryColor),
                   ),
                   ElevatedButton(
                       onPressed: submitProblem,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green,
+                        backgroundColor: themeProvider.primaryColor,
                         foregroundColor: Colors.white,
                       ),
                       child: const DecorateText(

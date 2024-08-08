@@ -3,7 +3,10 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:ono/GlobalModule/DecorateText.dart';
+import 'package:ono/GlobalModule/Theme/DecorateText.dart';
+import 'package:provider/provider.dart';
+
+import '../Theme/ThemeHandler.dart';
 
 class ImagePickerHandler {
   final ImagePicker _picker = ImagePicker();
@@ -80,15 +83,19 @@ class ImagePickerHandler {
   }
 
   void showImagePicker(BuildContext context, Function(XFile?) onImagePicked) {
+
     showModalBottomSheet(
       context: context,
       builder: (BuildContext context) {
+
+        final themeProvider = Provider.of<ThemeHandler>(context);
+
         return SafeArea(
           child: Wrap(
             children: <Widget>[
               ListTile(
-                leading: const Icon(Icons.camera_alt, color: Colors.green),
-                title: const DecorateText(text: '카메라로 촬영'),
+                leading: Icon(Icons.camera_alt, color: themeProvider.primaryColor),
+                title: DecorateText(text: '카메라로 촬영', color: themeProvider.primaryColor),
                 onTap: () async {
                   Navigator.of(context).pop(); // 팝업 닫기
                   final pickedFile = await pickImageFromCamera();
@@ -96,8 +103,8 @@ class ImagePickerHandler {
                 },
               ),
               ListTile(
-                leading: const Icon(Icons.photo_library, color: Colors.green),
-                title: const DecorateText(text: '갤러리에서 선택'),
+                leading: Icon(Icons.photo_library, color: themeProvider.primaryColor),
+                title: DecorateText(text: '갤러리에서 선택', color: themeProvider.primaryColor),
                 onTap: () async {
                   Navigator.of(context).pop(); // 팝업 닫기
                   final pickedFile = await pickImageFromGallery();

@@ -1,10 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import 'ThemeHandler.dart';
 
 class GridPainter extends CustomPainter {
+  final Color gridColor;
+
+  GridPainter({required this.gridColor});
+
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = Colors.green.withOpacity(0.2) // 격자무늬 색상과 불투명도
+      ..color = gridColor.withOpacity(0.2) // 격자무늬 색상과 불투명도
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.0; // 격자무늬 두께 조정
 
