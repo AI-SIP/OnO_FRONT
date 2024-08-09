@@ -8,6 +8,7 @@ class ProblemModel {
   final String? answerImageUrl;
   final String? memo;
   final String? reference;
+  final String? folder;
   final DateTime? solvedAt;
 
   ProblemModel({
@@ -19,6 +20,7 @@ class ProblemModel {
     this.memo,
     this.reference,
     this.solvedAt,
+    this.folder,
   });
 
   factory ProblemModel.fromJson(Map<String, dynamic> json) {
@@ -45,6 +47,7 @@ class ProblemModel {
       'memo': memo,
       'reference': reference,
       'solvedAt': _formatDateTime(solvedAt),
+      'folder': folder,
     };
   }
 
