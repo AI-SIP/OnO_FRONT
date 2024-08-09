@@ -19,7 +19,7 @@ class _ThemeDialogState extends State<ThemeDialog> {
     return AlertDialog(
       title: DecorateText(
         text: '테마 색상 선택',
-        fontSize: 24,
+        fontSize: 30,
         color: themeProvider.primaryColor,
       ),
       content: Column(
@@ -62,7 +62,7 @@ class _ThemeDialogState extends State<ThemeDialog> {
           },
           child: const DecorateText(
             text: '취소',
-            fontSize: 20,
+            fontSize: 24,
             color: Colors.black,
           ),
         ),
@@ -77,7 +77,7 @@ class _ThemeDialogState extends State<ThemeDialog> {
           },
           child: DecorateText(
             text: '확인',
-            fontSize: 20,
+            fontSize: 24,
             color: themeProvider.primaryColor,
           ),
         ),
