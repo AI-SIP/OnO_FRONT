@@ -88,25 +88,39 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
           ),
         ],
       ),
-      body: FutureBuilder<ProblemModel?>(
-        future: _problemDataFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            return const Center(child: Text('에러 발생'));
-          } else if (snapshot.hasData && snapshot.data != null) {
-            return buildProblemDetails(context, snapshot.data!);
-          } else {
-            return buildNoDataScreen();
-          }
-        },
+      body: Column(
+        children: [
+          Expanded(
+            child: FutureBuilder<ProblemModel?>(
+              future: _problemDataFuture,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                } else if (snapshot.hasError) {
+                  return const Center(child: Text('에러 발생'));
+                } else if (snapshot.hasData && snapshot.data != null) {
+                  return buildProblemDetails(context, snapshot.data!);
+                } else {
+                  return buildNoDataScreen();
+                }
+              },
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(
+                top: 20.0, bottom: 20.0), // Adjust padding here
+            child: NavigationButtons(
+              context: context,
+              provider: Provider.of<ProblemsProvider>(context, listen: false),
+              currentId: widget.problemId!,
+            ),
+          ),
+        ],
       ),
     );
   }
 
   Widget buildProblemDetails(BuildContext context, ProblemModel problemModel) {
-    ProblemsProvider provider = Provider.of<ProblemsProvider>(context);
     final themeProvider = Provider.of<ThemeHandler>(context);
     final formattedDate =
         DateFormat('yyyy년 M월 d일').format(problemModel.solvedAt!);
@@ -321,7 +335,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                         mainAxisAlignment: MainAxisAlignment.start, // 좌측 정렬
                         children: [
                           Icon(Icons.image, color: themeProvider.primaryColor),
-                          SizedBox(width: 8.0),
+                          const SizedBox(width: 8.0),
                           DecorateText(
                               text: '해설 이미지',
                               fontSize: 20,
@@ -350,12 +364,6 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                   ],
                 ),
                 const SizedBox(height: 20.0),
-                NavigationButtons(
-                  context: context,
-                  provider: provider,
-                  currentId: widget.problemId!,
-                ),
-                const SizedBox(height: 50.0),
               ],
             ),
           ),
