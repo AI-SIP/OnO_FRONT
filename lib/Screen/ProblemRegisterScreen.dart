@@ -75,18 +75,16 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
   }
 
   void showSuccessDialog(BuildContext context) {
-
     final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: const DecorateText(
-          text: '문제가 성공적으로 저장되었습니다.',
-          fontSize: 20,
-          color: Colors.white,
-        ),
-        backgroundColor: themeProvider.primaryColor
-      ),
+          content: const DecorateText(
+            text: '문제가 성공적으로 저장되었습니다.',
+            fontSize: 20,
+            color: Colors.white,
+          ),
+          backgroundColor: themeProvider.primaryColor),
     );
   }
 
@@ -222,14 +220,18 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
                 children: <Widget>[
                   Icon(Icons.calendar_today, color: themeProvider.primaryColor),
                   const SizedBox(width: 10),
-                  DecorateText(text: '푼 날짜', fontSize: 20, color: themeProvider.primaryColor),
+                  DecorateText(
+                      text: '푼 날짜',
+                      fontSize: 20,
+                      color: themeProvider.primaryColor),
                   const Spacer(),
                   TextButton(
                     onPressed: _showCustomDatePicker, // 날짜 선택기 호출
                     child: DecorateText(
                         text:
                             '${_selectedDate.year}년 ${_selectedDate.month}월 ${_selectedDate.day}일',
-                        fontSize: 18, color: themeProvider.primaryColor),
+                        fontSize: 18,
+                        color: themeProvider.primaryColor),
                   ),
                 ],
               ),
@@ -238,8 +240,11 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
               Row(
                 children: <Widget>[
                   Icon(Icons.info, color: themeProvider.primaryColor),
-                  const  SizedBox(width: 10),
-                  DecorateText(text: '출처', fontSize: 20, color: themeProvider.primaryColor)
+                  const SizedBox(width: 10),
+                  DecorateText(
+                      text: '출처',
+                      fontSize: 20,
+                      color: themeProvider.primaryColor)
                 ],
               ),
               const SizedBox(height: 10),
@@ -286,7 +291,10 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
                 children: <Widget>[
                   Icon(Icons.camera_alt, color: themeProvider.primaryColor),
                   const SizedBox(width: 10),
-                  DecorateText(text: '문제', fontSize: 20, color: themeProvider.primaryColor),
+                  DecorateText(
+                      text: '문제',
+                      fontSize: 20,
+                      color: themeProvider.primaryColor),
                 ],
               ),
               const SizedBox(height: 10),
@@ -301,13 +309,23 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
                 ),
                 child: Center(
                   child: _problemImage == null
-                      ? IconButton(
-                          icon: Icon(Icons.image,
-                              color: themeProvider.primaryColor, size: 50),
-                          onPressed: () {
-                            _showImagePicker('problemImage'); // 이미지 선택 팝업 호출
-                          },
-                        )
+                      ? Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                              IconButton(
+                                icon: Icon(Icons.image,
+                                    color: themeProvider.primaryColor,
+                                    size: 50),
+                                onPressed: () {
+                                  _showImagePicker(
+                                      'problemImage'); // 이미지 선택 팝업 호출
+                                },
+                              ),
+                              DecorateText(
+                                text: '아이콘을 눌러 이미지를 추가해주세요!',
+                                color: themeProvider.primaryColor,
+                              )
+                            ])
                       : GestureDetector(
                           onTap: () {
                             _showImagePicker('problemImage'); // 이미지 선택 팝업 호출
@@ -322,7 +340,10 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
                 children: <Widget>[
                   Icon(Icons.camera_alt, color: themeProvider.primaryColor),
                   const SizedBox(width: 10),
-                  DecorateText(text: '해설', fontSize: 20, color: themeProvider.primaryColor),
+                  DecorateText(
+                      text: '해설',
+                      fontSize: 20,
+                      color: themeProvider.primaryColor),
                 ],
               ),
               const SizedBox(height: 10),
@@ -337,13 +358,23 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
                 ),
                 child: Center(
                   child: _answerImage == null
-                      ? IconButton(
-                          icon: Icon(Icons.image,
-                              color: themeProvider.primaryColor, size: 50),
-                          onPressed: () {
-                            _showImagePicker('answerImage');
-                          },
-                        )
+                      ? Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                              IconButton(
+                                icon: Icon(Icons.image,
+                                    color: themeProvider.primaryColor,
+                                    size: 50),
+                                onPressed: () {
+                                  _showImagePicker(
+                                      'answerImage'); // 이미지 선택 팝업 호출
+                                },
+                              ),
+                              DecorateText(
+                                text: '아이콘을 눌러 이미지를 추가해주세요!',
+                                color: themeProvider.primaryColor,
+                              )
+                            ])
                       : GestureDetector(
                           onTap: () {
                             _showImagePicker('answerImage');
@@ -358,7 +389,10 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
                 children: <Widget>[
                   Icon(Icons.camera_alt, color: themeProvider.primaryColor),
                   const SizedBox(width: 10),
-                  DecorateText(text: '나의 풀이', fontSize: 20, color: themeProvider.primaryColor),
+                  DecorateText(
+                      text: '나의 풀이',
+                      fontSize: 20,
+                      color: themeProvider.primaryColor),
                 ],
               ),
               const SizedBox(height: 10),
@@ -373,13 +407,23 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
                 ),
                 child: Center(
                   child: _solveImage == null
-                      ? IconButton(
-                          icon: Icon(Icons.image,
-                              color: themeProvider.primaryColor, size: 50),
-                          onPressed: () {
-                            _showImagePicker('solveImage'); // 이미지 선택 팝업 호출
-                          },
-                        )
+                      ? Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                              IconButton(
+                                icon: Icon(Icons.image,
+                                    color: themeProvider.primaryColor,
+                                    size: 50),
+                                onPressed: () {
+                                  _showImagePicker(
+                                      'solveImage'); // 이미지 선택 팝업 호출
+                                },
+                              ),
+                              DecorateText(
+                                text: '아이콘을 눌러 이미지를 추가해주세요!',
+                                color: themeProvider.primaryColor,
+                              )
+                            ])
                       : GestureDetector(
                           onTap: () {
                             _showImagePicker('solveImage'); // 이미지 선택 팝업 호출
@@ -394,7 +438,10 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
                 children: <Widget>[
                   Icon(Icons.edit, color: themeProvider.primaryColor),
                   const SizedBox(width: 10),
-                  DecorateText(text: '오답 메모', fontSize: 20, color: themeProvider.primaryColor)
+                  DecorateText(
+                      text: '오답 메모',
+                      fontSize: 20,
+                      color: themeProvider.primaryColor)
                 ],
               ),
               const SizedBox(height: 10),
@@ -426,7 +473,8 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
                       width: 2.0, // 테두리 두께 설정
                     ),
                   ),
-                  fillColor: themeProvider.primaryColor.withOpacity(0.1), // 내부 배경색 설정
+                  fillColor:
+                      themeProvider.primaryColor.withOpacity(0.1), // 내부 배경색 설정
                   filled: true,
                   hintText: '틀린 이유 등 자유롭게 작성',
                   hintStyle: TextStyle(
@@ -449,7 +497,10 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
                       backgroundColor: Colors.white54,
                       foregroundColor: themeProvider.primaryColor,
                     ),
-                    child: DecorateText(text: '등록 취소', fontSize: 18, color: themeProvider.primaryColor),
+                    child: DecorateText(
+                        text: '등록 취소',
+                        fontSize: 18,
+                        color: themeProvider.primaryColor),
                   ),
                   ElevatedButton(
                       onPressed: submitProblem,
