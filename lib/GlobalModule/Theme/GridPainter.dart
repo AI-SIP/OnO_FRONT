@@ -13,7 +13,7 @@ class GridPainter extends CustomPainter {
     final paint = Paint()
       ..color = gridColor.withOpacity(0.2) // 격자무늬 색상과 불투명도
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.0; // 격자무늬 두께 조정
+      ..strokeWidth = 0.7; // 격자무늬 두께 조정
 
     const double step = 10.0; // 격자무늬 간격
 

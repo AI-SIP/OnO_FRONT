@@ -27,12 +27,12 @@ class _ThemeDialogState extends State<ThemeDialog> {
         children: [
           const SizedBox(height: 20), // Add vertical spacing
           SizedBox(
-            height: 300, // Adjusted for smaller circles
-            width: 300,  // Adjusted for smaller circles
+            height: 280, // Adjusted for smaller circles
+            width: 280, // Adjusted for smaller circles
             child: GridView.count(
               crossAxisCount: 4, // Number of columns
-              crossAxisSpacing: 12.0, // Adjusted spacing
-              mainAxisSpacing: 12.0,  // Adjusted spacing
+              crossAxisSpacing: 8.0, // Adjusted spacing
+              mainAxisSpacing: 8.0, // Adjusted spacing
               children: [
                 _buildColorCircle(Colors.pinkAccent),
                 _buildColorCircle(Colors.purpleAccent),
@@ -94,9 +94,9 @@ class _ThemeDialogState extends State<ThemeDialog> {
       },
       child: CircleAvatar(
         backgroundColor: color,
-        radius: 20, // Reduced radius for smaller circles
+        radius: 16, // Reduced radius for smaller circles
         child: _selectedColor == color
-            ? const Icon(Icons.check, color: Colors.white)
+            ? const Icon(Icons.check, color: Colors.white, size: 16)
             : null,
       ),
     );

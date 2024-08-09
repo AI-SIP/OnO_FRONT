@@ -188,7 +188,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                       const SizedBox(width: 8.0),
                       DecorateText(
                           text: '문제',
-                          fontSize: 16,
+                          fontSize: 20,
                           color: themeProvider.primaryColor),
                     ],
                   ),
