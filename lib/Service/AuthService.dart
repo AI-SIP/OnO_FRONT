@@ -8,12 +8,14 @@ import 'package:http/http.dart' as http;
 import 'package:ono/Service/GuestAuthService.dart';
 import '../Config/AppConfig.dart';
 import '../Provider/ProblemsProvider.dart';
+import '../Provider/TokenProvider.dart';
 import 'AppleAuthService.dart';
 import 'GoogleAuthService.dart';
 
 class AuthService with ChangeNotifier {
   final storage = const FlutterSecureStorage();
   final ProblemsProvider problemsProvider;
+  final TokenProvider tokenProvider = TokenProvider();
 
   AuthService(this.problemsProvider);
 
@@ -31,11 +33,11 @@ class AuthService with ChangeNotifier {
   final AppleAuthService appleAuthService = AppleAuthService();
   final GoogleAuthService googleAuthService = GoogleAuthService();
 
-  Future<void> signInWithGuest() async{
+  Future<void> signInWithGuest() async {
     final response = await guestAuthService.signInWithGuest();
     await storage.write(key: 'loginMethod', value: 'guest');
-    await setAccessToken(response['accessToken']);
-    await setRefreshToken(response['refreshToken']);
+    await tokenProvider.setAccessToken(response['accessToken']);
+    await tokenProvider.setRefreshToken(response['refreshToken']);
     fetchUserInfo();
     notifyListeners();
   }
@@ -44,62 +46,25 @@ class AuthService with ChangeNotifier {
   Future<void> signInWithGoogle() async {
     final response = await googleAuthService.signInWithGoogle();
     await storage.write(key: 'loginMethod', value: 'google');
-    await setAccessToken(response['accessToken']);
-    await setRefreshToken(response['refreshToken']);
+    await tokenProvider.setAccessToken(response['accessToken']);
+    await tokenProvider.setRefreshToken(response['refreshToken']);
     fetchUserInfo();
     notifyListeners();
   }
 
   // Apple 로그인 함수
   Future<void> signInWithApple(BuildContext context) async {
-    final response  = await appleAuthService.signInWithApple(context);
+    final response = await appleAuthService.signInWithApple(context);
     await storage.write(key: 'loginMethod', value: 'apple');
-    await setAccessToken(response['accessToken']);
-    await setRefreshToken(response['refreshToken']);
+    await tokenProvider.setAccessToken(response['accessToken']);
+    await tokenProvider.setRefreshToken(response['refreshToken']);
     fetchUserInfo();
     notifyListeners();
   }
 
-  Future<void> setAccessToken(String accessToken) async {
-    await storage.write(key: 'accessToken', value: accessToken);
-  }
-
-  Future<String?> getAccessToken() async {
-    String? accessToken = await storage.read(key: 'accessToken');
-
-    if (accessToken == null) {
-      log('Access token is not available.');
-      return null;
-    }
-
-    final url = Uri.parse('${AppConfig.baseUrl}/api/auth/verifyAccessToken');
-    final response = await http.get(
-      url,
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $accessToken',
-      },
-    );
-
-    if (response.statusCode == 401) {
-      log('Access token is invalid or expired, trying to refresh...');
-      await refreshAccessToken();
-      accessToken = await storage.read(key: 'accessToken');
-    }
-
-    return accessToken;
-  }
-
-  Future<void> setRefreshToken(String refreshToken) async{
-    await storage.write(key: 'refreshToken', value: refreshToken);
-  }
-
-  Future<String?> getRefreshToken() async {
-    return await storage.read(key: 'refreshToken');
-  }
-
   Future<void> fetchUserInfo() async {
-    final accessToken = await getAccessToken();
+    final accessToken = await tokenProvider.getAccessToken();
+    //final accessToken = await getAccessToken();
     if (accessToken == null) {
       throw Exception("Access token is not available");
     }
@@ -128,38 +93,9 @@ class AuthService with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<bool> refreshAccessToken() async {
-    try {
-      String? refreshToken = await storage.read(key: 'refreshToken');
-      if (refreshToken == null) {
-        log('No refresh token available.');
-        return false;
-      }
-
-      final response = await http.post(
-        Uri.parse('${AppConfig.baseUrl}/api/auth/refresh'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'refreshToken': refreshToken}),
-      );
-
-      if (response.statusCode == 200) {
-        var data = jsonDecode(response.body);
-        await storage.write(key: 'accessToken', value: data['accessToken']);
-        log('Access token refreshed.');
-        return true;
-      } else {
-        log('Failed to refresh token. Logging out.');
-        return false;
-      }
-    } catch (e) {
-      log('Error refreshing token: $e');
-      return false;
-    }
-  }
-
   Future<void> autoLogin() async {
     String? refreshToken = await storage.read(key: 'refreshToken');
-    if(refreshToken == null){
+    if (refreshToken == null) {
       _isLoggedIn = false;
       notifyListeners();
     } else {
@@ -185,9 +121,8 @@ class AuthService with ChangeNotifier {
       String? loginMethod = await storage.read(key: 'loginMethod');
       if (loginMethod == 'google') {
         googleAuthService.logoutGoogleSignIn();
-      } else if(loginMethod == 'apple'){
-
-      } else if(loginMethod == 'guest'){
+      } else if (loginMethod == 'apple') {
+      } else if (loginMethod == 'guest') {
         deleteAccount();
       }
       _userId = 0;
@@ -211,17 +146,16 @@ class AuthService with ChangeNotifier {
     } else if (loginMethod == 'apple') {
       // 애플 회원 탈퇴 로직
       await appleAuthService.revokeSignInWithApple();
-    } else if(loginMethod == 'guest'){
-
-    }
-    else {
+    } else if (loginMethod == 'guest') {
+    } else {
       throw Exception("Unknown login method");
     }
 
     // 서버에서 사용자 계정 삭제
     try {
-      final token = await getAccessToken();
-      if (token == null) {
+      final accessToken = await tokenProvider.getAccessToken();
+      //final token = await getAccessToken();
+      if (accessToken == null) {
         throw Exception("JWT token is not available");
       }
 
@@ -230,7 +164,7 @@ class AuthService with ChangeNotifier {
         url,
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
+          'Authorization': 'Bearer $accessToken',
         },
       );
 

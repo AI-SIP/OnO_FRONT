@@ -8,15 +8,15 @@ import 'package:ono/GlobalModule/Util/ProblemSorting.dart';
 import '../Config/AppConfig.dart';
 import '../Model/ProblemRegisterModel.dart';
 import '../Model/ProblemModel.dart';
+import 'TokenProvider.dart';
 
 class ProblemsProvider with ChangeNotifier {
   List<ProblemModel> _problems = [];
   List<ProblemModel> get problems => List.unmodifiable(_problems);
-
-  final storage = const FlutterSecureStorage();
+  final TokenProvider tokenProvider = TokenProvider();
 
   Future<void> fetchProblems() async {
-    final accessToken = await getAccessToken();
+    final accessToken = await tokenProvider.getAccessToken();
     if (accessToken == null) {
       log('access token is not available');
       return;
@@ -44,7 +44,7 @@ class ProblemsProvider with ChangeNotifier {
 
   Future<void> submitProblem(
       ProblemRegisterModel problemData, BuildContext context) async {
-    final accessToken = await getAccessToken();
+    final accessToken = await tokenProvider.getAccessToken();
     if (accessToken == null) {
       throw Exception("JWT token is not available");
     }
@@ -109,7 +109,7 @@ class ProblemsProvider with ChangeNotifier {
   }
 
   Future<bool> deleteProblem(int problemId) async {
-    final accessToken = await getAccessToken();
+    final accessToken = await tokenProvider.getAccessToken();
     if (accessToken == null) {
       log('accessToken is not available');
       throw Exception('accessToken is not available');
@@ -234,68 +234,5 @@ class ProblemsProvider with ChangeNotifier {
       return _problems[_problems.length - 1].problemId;
     }
     throw Exception('No previous problem available.');
-  }
-
-  Future<String?> getAccessToken() async {
-    String? accessToken = await storage.read(key: 'accessToken');
-
-    if (accessToken == null) {
-      log('Access token is not available.');
-      return null;
-    }
-
-    final url = Uri.parse('${AppConfig.baseUrl}/api/auth/verifyAccessToken');
-    final response = await http.get(
-      url,
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $accessToken',
-      },
-    );
-
-    if (response.statusCode == 401) {
-      log('Access token is invalid or expired, trying to refresh...');
-      await refreshAccessToken();
-      accessToken = await storage.read(key: 'accessToken');
-    }
-
-    return accessToken;
-  }
-
-  Future<void> setRefreshToken(String refreshToken) async {
-    await storage.write(key: 'refreshToken', value: refreshToken);
-  }
-
-  Future<String?> getRefreshToken() async {
-    return await storage.read(key: 'refreshToken');
-  }
-
-  Future<bool> refreshAccessToken() async {
-    try {
-      String? refreshToken = await storage.read(key: 'refreshToken');
-      if (refreshToken == null) {
-        log('No refresh token available.');
-        return false;
-      }
-
-      final response = await http.post(
-        Uri.parse('${AppConfig.baseUrl}/api/auth/refresh'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'refreshToken': refreshToken}),
-      );
-
-      if (response.statusCode == 200) {
-        var data = jsonDecode(response.body);
-        await storage.write(key: 'accessToken', value: data['accessToken']);
-        log('Access token refreshed.');
-        return true;
-      } else {
-        log('Failed to refresh token. Logging out.');
-        return false;
-      }
-    } catch (e) {
-      log('Error refreshing token: $e');
-      return false;
-    }
   }
 }
