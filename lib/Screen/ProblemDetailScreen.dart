@@ -460,33 +460,4 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
   Widget buildNoDataScreen() {
     return const Center(child: Text("문제 정보를 가져올 수 없습니다."));
   }
-
-  void _showImageDialog(BuildContext context, String? imageUrl) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return Dialog(
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              double dialogWidth = constraints.maxWidth * 0.9;
-              double dialogHeight = constraints.maxHeight * 0.8;
-
-              return SizedBox(
-                width: dialogWidth,
-                height: dialogHeight,
-                child: InteractiveViewer(
-                  panEnabled: true,
-                  minScale: 0.5,
-                  maxScale: 3.0,
-                  child: imageUrl != null
-                      ? Image.network(imageUrl, fit: BoxFit.contain)
-                      : Image.asset('assets/no_image.png', fit: BoxFit.contain),
-                ),
-              );
-            },
-          ),
-        );
-      },
-    );
-  }
 }

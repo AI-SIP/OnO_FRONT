@@ -22,25 +22,30 @@ class HomeScreen extends StatelessWidget {
   }
 
   void _showGuestLoginDialog(BuildContext context) {
-
     final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
 
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: DecorateText(text: '게스트 로그인 경고', fontSize: 24, color: themeProvider.primaryColor),
-        content:  DecorateText(
+        title: DecorateText(
+            text: '게스트 로그인 경고',
+            fontSize: 24,
+            color: themeProvider.primaryColor),
+        content: DecorateText(
             text: '게스트로 로그인 할 경우,\n기기 간 오답노트 연동이 불가능하며,\n로그아웃 시 모든 정보가 삭제됩니다.',
-            fontSize: 22, color: themeProvider.primaryColor),
+            fontSize: 22,
+            color: themeProvider.primaryColor),
         actions: <Widget>[
           TextButton(
-            child: DecorateText(text: '취소', fontSize: 20, color: themeProvider.primaryColor),
+            child: DecorateText(
+                text: '취소', fontSize: 20, color: themeProvider.primaryColor),
             onPressed: () {
               Navigator.of(ctx).pop();
             },
           ),
           TextButton(
-            child: DecorateText(text: '확인', fontSize: 20, color: themeProvider.primaryColor),
+            child: DecorateText(
+                text: '확인', fontSize: 20, color: themeProvider.primaryColor),
             onPressed: () {
               Navigator.of(ctx).pop();
               Provider.of<AuthService>(context, listen: false)
@@ -59,10 +64,9 @@ class HomeScreen extends StatelessWidget {
     final screenHeight = MediaQuery.of(context).size.height;
     final screenWidth = MediaQuery.of(context).size.width;
 
-    // Define dynamic font sizes based on screen dimensions
-    final double headerFontSize = screenHeight * 0.04; // 5% of screen height
-    final double buttonFontSize = screenHeight * 0.025; // 2.5% of screen height
-    final double welcomeFontSize = screenHeight * 0.03; // 3% of screen height
+    final double headerFontSize = screenHeight * 0.04;
+    final double buttonFontSize = screenHeight * 0.025;
+    final double welcomeFontSize = screenHeight * 0.03;
 
     return Scaffold(
       body: CustomPaint(
@@ -73,7 +77,11 @@ class HomeScreen extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               SizedBox(height: screenHeight * 0.1),
-              DecorateText(text: 'OnO, 이제는 나도 오답한다', fontSize: headerFontSize, color: themeProvider.primaryColor,),
+              DecorateText(
+                text: 'OnO, 이제는 나도 오답한다',
+                fontSize: headerFontSize,
+                color: themeProvider.primaryColor,
+              ),
               SizedBox(height: screenHeight * 0.03),
               ElevatedButton(
                 onPressed: _launchURL,
@@ -107,7 +115,8 @@ class HomeScreen extends StatelessWidget {
                       padding: EdgeInsets.only(top: screenHeight * 0.05),
                       child: DecorateText(
                           text: '${authService.userName}님 환영합니다!',
-                          fontSize: welcomeFontSize, color: themeProvider.primaryColor),
+                          fontSize: welcomeFontSize,
+                          color: themeProvider.primaryColor),
                     );
                   } else {
                     return Column(

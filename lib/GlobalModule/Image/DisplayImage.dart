@@ -16,7 +16,6 @@ class DisplayImage extends StatelessWidget {
         : CachedNetworkImage(
             imageUrl: imagePath!,
             fit: fit,
-            //placeholder: (context, url) => const CircularProgressIndicator(),
             errorWidget: (context, url, error) =>
                 Image.asset(defaultImagePath, fit: fit),
           );

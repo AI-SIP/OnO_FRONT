@@ -208,7 +208,6 @@ class ProblemsProvider with ChangeNotifier {
     return currentIndex > 0 && currentIndex < _problems.length;
   }
 
-  // Get the ID of the next problem
   int? getNextProblemId(int currentProblemId) {
     var currentIndex =
         _problems.indexWhere((p) => p.problemId == currentProblemId);
@@ -224,7 +223,6 @@ class ProblemsProvider with ChangeNotifier {
     return _problems.map((problem) => problem.problemId as int).toList();
   }
 
-  // Get the ID of the previous problem
   int? getPreviousProblemId(int currentProblemId) {
     var currentIndex =
         _problems.indexWhere((p) => p.problemId == currentProblemId);

@@ -73,8 +73,4 @@ class TokenProvider {
       return false;
     }
   }
-
-  Future<void> clearTokens() async {
-    await storage.deleteAll();
-  }
 }

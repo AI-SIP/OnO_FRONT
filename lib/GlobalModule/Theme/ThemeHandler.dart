@@ -7,7 +7,6 @@ class ThemeHandler with ChangeNotifier {
   Color _secondColor = Colors.lightGreen;
   Color _thirdColor = Colors.teal;
 
-  // SecureStorage 인스턴스 생성
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
 
   // 각 색상에 대한 getter
