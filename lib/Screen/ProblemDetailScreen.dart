@@ -108,7 +108,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
           ),
           Padding(
             padding: const EdgeInsets.only(
-                top: 20.0, bottom: 20.0), // Adjust padding here
+                top: 10.0, bottom: 30.0), // Adjust padding here
             child: NavigationButtons(
               context: context,
               provider: Provider.of<ProblemsProvider>(context, listen: false),

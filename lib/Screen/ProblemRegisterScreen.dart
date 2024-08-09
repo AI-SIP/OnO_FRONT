@@ -324,6 +324,7 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
                               DecorateText(
                                 text: '아이콘을 눌러 이미지를 추가해주세요!',
                                 color: themeProvider.primaryColor,
+                                fontSize: 16,
                               )
                             ])
                       : GestureDetector(
@@ -373,6 +374,7 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
                               DecorateText(
                                 text: '아이콘을 눌러 이미지를 추가해주세요!',
                                 color: themeProvider.primaryColor,
+                                fontSize: 16,
                               )
                             ])
                       : GestureDetector(
@@ -422,6 +424,7 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
                               DecorateText(
                                 text: '아이콘을 눌러 이미지를 추가해주세요!',
                                 color: themeProvider.primaryColor,
+                                fontSize: 16,
                               )
                             ])
                       : GestureDetector(
