@@ -78,7 +78,7 @@ class HomeScreen extends StatelessWidget {
             children: [
               SizedBox(height: screenHeight * 0.1),
               DecorateText(
-                text: 'OnO, 이제는 나도 오답한다',
+                text: '\"OnO, 이제는 나도 오답한다\"',
                 fontSize: headerFontSize,
                 color: themeProvider.primaryColor,
               ),
