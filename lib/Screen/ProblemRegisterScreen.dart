@@ -277,11 +277,11 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
                   ),
                   fillColor: themeProvider.primaryColor.withOpacity(0.1),
                   filled: true,
-                  hintText: '문제집, 페이지, 문제번호 등',
+                  hintText: '문제집, 페이지, 문제번호 등 문제의 출처를 작성해주세요!',
                   hintStyle: TextStyle(
                       fontFamily: 'font1',
                       color: themeProvider.primaryColor,
-                      fontSize: 20,
+                      fontSize: 16,
                       fontWeight: FontWeight.bold),
                 ),
               ),
@@ -442,7 +442,7 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
                   Icon(Icons.edit, color: themeProvider.primaryColor),
                   const SizedBox(width: 10),
                   DecorateText(
-                      text: '오답 메모',
+                      text: '한 줄 메모',
                       fontSize: 20,
                       color: themeProvider.primaryColor)
                 ],
@@ -479,11 +479,11 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
                   fillColor:
                       themeProvider.primaryColor.withOpacity(0.1), // 내부 배경색 설정
                   filled: true,
-                  hintText: '틀린 이유 등 자유롭게 작성',
+                  hintText: '기록하고 싶은 내용을 간단하게 작성해주세요!',
                   hintStyle: TextStyle(
                       fontFamily: 'font1',
                       color: themeProvider.primaryColor,
-                      fontSize: 20,
+                      fontSize: 16,
                       fontWeight: FontWeight.bold),
                 ),
                 maxLines: 3,

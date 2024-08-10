@@ -247,7 +247,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                                     color: themeProvider.primaryColor),
                                 const SizedBox(width: 8.0),
                                 DecorateText(
-                                    text: '메모',
+                                    text: '한 줄 메모',
                                     fontSize: 20,
                                     color: themeProvider.primaryColor),
                               ],
