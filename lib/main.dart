@@ -22,10 +22,9 @@ void main() async {
         ChangeNotifierProvider(create: (_) => ProblemsProvider()),
         ChangeNotifierProvider(
             create: (context) => AuthService(
-                Provider.of<ProblemsProvider>(context, listen: false))
-        ),
-        ChangeNotifierProvider(create: (context) => ThemeHandler()..loadColors()),
-
+                Provider.of<ProblemsProvider>(context, listen: false))),
+        ChangeNotifierProvider(
+            create: (context) => ThemeHandler()..loadColors()),
       ],
       child: const MyApp(),
     ),
@@ -37,7 +36,6 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-
     final themeHandler = Provider.of<ThemeHandler>(context);
     return MaterialApp(
       title: 'Flutter Demo',
@@ -120,7 +118,6 @@ class _MyHomePageState extends State<MyHomePage> {
         ],
         currentIndex: _selectedIndex,
         selectedItemColor: themeProvider.primaryColor,
-        //selectedItemColor: Colors.green,
         unselectedItemColor: Colors.grey,
         selectedLabelStyle: const TextStyle(
           fontSize: 18,

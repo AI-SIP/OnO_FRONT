@@ -118,7 +118,6 @@ class _CameraScreenState extends State<CameraScreen> {
                       ),
                     ),
                   ),
-                  // Capture button at the bottom center
                   FloatingActionButton(
                     onPressed: () async {
                       try {
@@ -131,8 +130,7 @@ class _CameraScreenState extends State<CameraScreen> {
                     },
                     child: const Icon(Icons.camera_alt),
                   ),
-                  // Invisible spacer to align the capture button to the center
-                  const SizedBox(width: 80), // Adjust width to balance layout
+                  const SizedBox(width: 80),
                 ],
               ),
             ),

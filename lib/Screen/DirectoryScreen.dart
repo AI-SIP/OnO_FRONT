@@ -17,6 +17,7 @@ class DirectoryScreen extends StatefulWidget {
 
 class _DirectoryScreenState extends State<DirectoryScreen> {
   final String defaultImage = 'assets/no_image.png'; // Default image 경로 설정
+  String _selectedSortOption = 'name'; // 기본 정렬 옵션
 
   @override
   void initState() {
@@ -24,6 +25,19 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<ProblemsProvider>(context, listen: false).fetchProblems();
     });
+  }
+
+  void _sortProblems(String option) {
+    final problemsProvider =
+        Provider.of<ProblemsProvider>(context, listen: false);
+
+    if (option == 'name') {
+      problemsProvider.sortProblemsByName('root');
+    } else if (option == 'newest') {
+      problemsProvider.sortProblemsByNewest('root');
+    } else if (option == 'oldest') {
+      problemsProvider.sortProblemsByOldest('root');
+    }
   }
 
   @override
@@ -43,32 +57,78 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                   Provider.of<ProblemsProvider>(context, listen: false)
                       .fetchProblems(),
               child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: Consumer<ProblemsProvider>(
-                  builder: (context, problemsProvider, child) {
-                    var problems = problemsProvider.problems;
-                    if (problems.isEmpty) {
-                      return Center(
-                          child: DecorateText(
-                              text: '오답노트가 등록되어 있지 않습니다!',
-                              fontSize: 24,
-                              color: themeProvider.primaryColor));
-                    }
-                    return GridView.builder(
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
-                        childAspectRatio: 0.7,
-                        crossAxisSpacing: 20,
-                        mainAxisSpacing: 20,
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                child: Column(
+                  children: [
+                    Align(
+                      alignment: Alignment.topRight,
+                      child: DropdownButton<String>(
+                        value: _selectedSortOption,
+                        iconEnabledColor: themeProvider.primaryColor,
+                        underline: Container(),
+                        items: [
+                          DropdownMenuItem(
+                            value: 'name',
+                            child: DecorateText(
+                              text: '이름순',
+                              fontSize: 18,
+                              color: themeProvider.primaryColor,
+                            ),
+                          ),
+                          DropdownMenuItem(
+                            value: 'newest',
+                            child: DecorateText(
+                              text: '최신순',
+                              fontSize: 18,
+                              color: themeProvider.primaryColor,
+                            ),
+                          ),
+                          DropdownMenuItem(
+                            value: 'oldest',
+                            child: DecorateText(
+                              text: '오래된순',
+                              fontSize: 18,
+                              color: themeProvider.primaryColor,
+                            ),
+                          ),
+                        ],
+                        onChanged: (value) {
+                          setState(() {
+                            _selectedSortOption = value!;
+                            _sortProblems(_selectedSortOption);
+                          });
+                        },
                       ),
-                      itemCount: problems.length,
-                      itemBuilder: (context, index) {
-                        var problem = problems[index];
-                        return buildProblemTile(problem);
-                      },
-                    );
-                  },
+                    ),
+                    Expanded(
+                      child: Consumer<ProblemsProvider>(
+                        builder: (context, problemsProvider, child) {
+                          var problems = problemsProvider.problems;
+                          if (problems.isEmpty) {
+                            return Center(
+                                child: DecorateText(
+                                    text: '오답노트가 등록되어 있지 않습니다!',
+                                    fontSize: 24,
+                                    color: themeProvider.primaryColor));
+                          }
+                          return GridView.builder(
+                            gridDelegate:
+                                const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 2,
+                              childAspectRatio: 0.7,
+                              crossAxisSpacing: 20,
+                              mainAxisSpacing: 20,
+                            ),
+                            itemCount: problems.length,
+                            itemBuilder: (context, index) {
+                              var problem = problems[index];
+                              return buildProblemTile(problem);
+                            },
+                          );
+                        },
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),

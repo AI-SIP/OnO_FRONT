@@ -3,19 +3,20 @@ import 'dart:developer';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
+import 'package:ono/GlobalModule/Util/ProblemSorting.dart';
 
 import '../Config/AppConfig.dart';
 import '../Model/ProblemRegisterModel.dart';
 import '../Model/ProblemModel.dart';
+import 'TokenProvider.dart';
 
 class ProblemsProvider with ChangeNotifier {
   List<ProblemModel> _problems = [];
   List<ProblemModel> get problems => List.unmodifiable(_problems);
-
-  final storage = const FlutterSecureStorage();
+  final TokenProvider tokenProvider = TokenProvider();
 
   Future<void> fetchProblems() async {
-    final accessToken = await getAccessToken();
+    final accessToken = await tokenProvider.getAccessToken();
     if (accessToken == null) {
       log('access token is not available');
       return;
@@ -43,7 +44,7 @@ class ProblemsProvider with ChangeNotifier {
 
   Future<void> submitProblem(
       ProblemRegisterModel problemData, BuildContext context) async {
-    final accessToken = await getAccessToken();
+    final accessToken = await tokenProvider.getAccessToken();
     if (accessToken == null) {
       throw Exception("JWT token is not available");
     }
@@ -108,7 +109,7 @@ class ProblemsProvider with ChangeNotifier {
   }
 
   Future<bool> deleteProblem(int problemId) async {
-    final accessToken = await getAccessToken();
+    final accessToken = await tokenProvider.getAccessToken();
     if (accessToken == null) {
       log('accessToken is not available');
       throw Exception('accessToken is not available');
@@ -135,6 +136,64 @@ class ProblemsProvider with ChangeNotifier {
     }
   }
 
+  // 폴더로 문제를 그룹화
+  Map<String, List<ProblemModel>> groupProblemsByFolder() {
+    Map<String, List<ProblemModel>> groupedProblems = {};
+    for (var problem in _problems) {
+      String folder = problem.folder ?? 'root'; // 기본 폴더로 그룹화
+      if (groupedProblems.containsKey(folder)) {
+        groupedProblems[folder]!.add(problem);
+      } else {
+        groupedProblems[folder] = [problem];
+      }
+    }
+    return groupedProblems;
+  }
+
+  // 특정 폴더 내에서 이름순 정렬
+  void sortProblemsByName(String folder) {
+    final groupedProblems = groupProblemsByFolder();
+    if (groupedProblems.containsKey(folder)) {
+      groupedProblems[folder]!.sortByName();
+      // Update the main list to reflect the sorted order
+      _updateProblemsList(groupedProblems);
+      notifyListeners();
+    }
+  }
+
+  // 특정 폴더 내에서 최신순 정렬
+  void sortProblemsByNewest(String folder) {
+    final groupedProblems = groupProblemsByFolder();
+    if (groupedProblems.containsKey(folder)) {
+      groupedProblems[folder]!.sortByNewest();
+      // Update the main list to reflect the sorted order
+      _updateProblemsList(groupedProblems);
+      notifyListeners();
+    }
+  }
+
+  // 특정 폴더 내에서 오래된순 정렬
+  void sortProblemsByOldest(String folder) {
+    final groupedProblems = groupProblemsByFolder();
+    if (groupedProblems.containsKey(folder)) {
+      groupedProblems[folder]!.sortByOldest();
+      // Update the main list to reflect the sorted order
+      _updateProblemsList(groupedProblems);
+      notifyListeners();
+    }
+  }
+
+  // 전체 문제를 이름순으로 정렬
+  void sortAllProblemsByName() {
+    _problems.sortByName();
+    notifyListeners();
+  }
+
+  // 그룹화된 문제 리스트로 _problems 업데이트
+  void _updateProblemsList(Map<String, List<ProblemModel>> groupedProblems) {
+    _problems = groupedProblems.entries.expand((entry) => entry.value).toList();
+  }
+
   // Checks if there is a next problem
   bool hasNextProblem(int currentProblemId) {
     var currentIndex =
@@ -149,7 +208,6 @@ class ProblemsProvider with ChangeNotifier {
     return currentIndex > 0 && currentIndex < _problems.length;
   }
 
-  // Get the ID of the next problem
   int? getNextProblemId(int currentProblemId) {
     var currentIndex =
         _problems.indexWhere((p) => p.problemId == currentProblemId);
@@ -165,7 +223,6 @@ class ProblemsProvider with ChangeNotifier {
     return _problems.map((problem) => problem.problemId as int).toList();
   }
 
-  // Get the ID of the previous problem
   int? getPreviousProblemId(int currentProblemId) {
     var currentIndex =
         _problems.indexWhere((p) => p.problemId == currentProblemId);
@@ -175,68 +232,5 @@ class ProblemsProvider with ChangeNotifier {
       return _problems[_problems.length - 1].problemId;
     }
     throw Exception('No previous problem available.');
-  }
-
-  Future<String?> getAccessToken() async {
-    String? accessToken = await storage.read(key: 'accessToken');
-
-    if (accessToken == null) {
-      log('Access token is not available.');
-      return null;
-    }
-
-    final url = Uri.parse('${AppConfig.baseUrl}/api/auth/verifyAccessToken');
-    final response = await http.get(
-      url,
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $accessToken',
-      },
-    );
-
-    if (response.statusCode == 401) {
-      log('Access token is invalid or expired, trying to refresh...');
-      await refreshAccessToken();
-      accessToken = await storage.read(key: 'accessToken');
-    }
-
-    return accessToken;
-  }
-
-  Future<void> setRefreshToken(String refreshToken) async{
-    await storage.write(key: 'refreshToken', value: refreshToken);
-  }
-
-  Future<String?> getRefreshToken() async {
-    return await storage.read(key: 'refreshToken');
-  }
-
-  Future<bool> refreshAccessToken() async {
-    try {
-      String? refreshToken = await storage.read(key: 'refreshToken');
-      if (refreshToken == null) {
-        log('No refresh token available.');
-        return false;
-      }
-
-      final response = await http.post(
-        Uri.parse('${AppConfig.baseUrl}/api/auth/refresh'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'refreshToken': refreshToken}),
-      );
-
-      if (response.statusCode == 200) {
-        var data = jsonDecode(response.body);
-        await storage.write(key: 'accessToken', value: data['accessToken']);
-        log('Access token refreshed.');
-        return true;
-      } else {
-        log('Failed to refresh token. Logging out.');
-        return false;
-      }
-    } catch (e) {
-      log('Error refreshing token: $e');
-      return false;
-    }
   }
 }

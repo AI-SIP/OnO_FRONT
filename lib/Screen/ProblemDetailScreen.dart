@@ -88,25 +88,39 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
           ),
         ],
       ),
-      body: FutureBuilder<ProblemModel?>(
-        future: _problemDataFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            return const Center(child: Text('에러 발생'));
-          } else if (snapshot.hasData && snapshot.data != null) {
-            return buildProblemDetails(context, snapshot.data!);
-          } else {
-            return buildNoDataScreen();
-          }
-        },
+      body: Column(
+        children: [
+          Expanded(
+            child: FutureBuilder<ProblemModel?>(
+              future: _problemDataFuture,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                } else if (snapshot.hasError) {
+                  return const Center(child: Text('에러 발생'));
+                } else if (snapshot.hasData && snapshot.data != null) {
+                  return buildProblemDetails(context, snapshot.data!);
+                } else {
+                  return buildNoDataScreen();
+                }
+              },
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(
+                top: 10.0, bottom: 30.0), // Adjust padding here
+            child: NavigationButtons(
+              context: context,
+              provider: Provider.of<ProblemsProvider>(context, listen: false),
+              currentId: widget.problemId!,
+            ),
+          ),
+        ],
       ),
     );
   }
 
   Widget buildProblemDetails(BuildContext context, ProblemModel problemModel) {
-    ProblemsProvider provider = Provider.of<ProblemsProvider>(context);
     final themeProvider = Provider.of<ThemeHandler>(context);
     final formattedDate =
         DateFormat('yyyy년 M월 d일').format(problemModel.solvedAt!);
@@ -174,7 +188,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                       const SizedBox(width: 8.0),
                       DecorateText(
                           text: '문제',
-                          fontSize: 16,
+                          fontSize: 20,
                           color: themeProvider.primaryColor),
                     ],
                   ),
@@ -233,14 +247,18 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                                     color: themeProvider.primaryColor),
                                 const SizedBox(width: 8.0),
                                 DecorateText(
-                                    text: '메모',
+                                    text: '한 줄 메모',
                                     fontSize: 20,
                                     color: themeProvider.primaryColor),
                               ],
                             ),
                           ),
                           const SizedBox(height: 8.0),
-                          UnderlinedText(text: '${problemModel.memo}'),
+                          UnderlinedText(
+                            text: problemModel.memo?.isNotEmpty == true
+                                ? problemModel.memo!
+                                : '작성한 메모가 없습니다!',
+                          ),
                         ],
                       ),
                     ),
@@ -289,40 +307,6 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                           Icon(Icons.image, color: themeProvider.primaryColor),
                           const SizedBox(width: 8.0),
                           DecorateText(
-                              text: '풀이 이미지',
-                              fontSize: 20,
-                              color: themeProvider.primaryColor),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 20.0),
-                    Center(
-                      child: GestureDetector(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => FullScreenImage(
-                                  imagePath: problemModel.solveImageUrl),
-                            ),
-                          );
-                        },
-                        child: DisplayImage(
-                          imagePath: problemModel.solveImageUrl,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 20.0),
-                    Container(
-                      width: double.infinity,
-                      alignment: Alignment.centerLeft, // 좌측 정렬
-                      padding: const EdgeInsets.symmetric(vertical: 4.0),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.start, // 좌측 정렬
-                        children: [
-                          Icon(Icons.image, color: themeProvider.primaryColor),
-                          SizedBox(width: 8.0),
-                          DecorateText(
                               text: '해설 이미지',
                               fontSize: 20,
                               color: themeProvider.primaryColor),
@@ -347,15 +331,43 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                       ),
                     ),
                     const SizedBox(height: 20.0),
+                    Container(
+                      width: double.infinity,
+                      alignment: Alignment.centerLeft, // 좌측 정렬
+                      padding: const EdgeInsets.symmetric(vertical: 4.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.start, // 좌측 정렬
+                        children: [
+                          Icon(Icons.image, color: themeProvider.primaryColor),
+                          const SizedBox(width: 8.0),
+                          DecorateText(
+                              text: '풀이 이미지',
+                              fontSize: 20,
+                              color: themeProvider.primaryColor),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 20.0),
+                    Center(
+                      child: GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => FullScreenImage(
+                                  imagePath: problemModel.solveImageUrl),
+                            ),
+                          );
+                        },
+                        child: DisplayImage(
+                          imagePath: problemModel.solveImageUrl,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20.0),
                   ],
                 ),
                 const SizedBox(height: 20.0),
-                NavigationButtons(
-                  context: context,
-                  provider: provider,
-                  currentId: widget.problemId!,
-                ),
-                const SizedBox(height: 50.0),
               ],
             ),
           ),
@@ -451,34 +463,5 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
 
   Widget buildNoDataScreen() {
     return const Center(child: Text("문제 정보를 가져올 수 없습니다."));
-  }
-
-  void _showImageDialog(BuildContext context, String? imageUrl) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return Dialog(
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              double dialogWidth = constraints.maxWidth * 0.9;
-              double dialogHeight = constraints.maxHeight * 0.8;
-
-              return SizedBox(
-                width: dialogWidth,
-                height: dialogHeight,
-                child: InteractiveViewer(
-                  panEnabled: true,
-                  minScale: 0.5,
-                  maxScale: 3.0,
-                  child: imageUrl != null
-                      ? Image.network(imageUrl, fit: BoxFit.contain)
-                      : Image.asset('assets/no_image.png', fit: BoxFit.contain),
-                ),
-              );
-            },
-          ),
-        );
-      },
-    );
   }
 }

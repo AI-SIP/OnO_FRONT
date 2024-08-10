@@ -19,7 +19,7 @@ class _ThemeDialogState extends State<ThemeDialog> {
     return AlertDialog(
       title: DecorateText(
         text: '테마 색상 선택',
-        fontSize: 24,
+        fontSize: 30,
         color: themeProvider.primaryColor,
       ),
       content: Column(
@@ -27,28 +27,36 @@ class _ThemeDialogState extends State<ThemeDialog> {
         children: [
           const SizedBox(height: 20), // Add vertical spacing
           SizedBox(
-            height: 300, // Adjusted for smaller circles
-            width: 300,  // Adjusted for smaller circles
+            height: 450, // Adjusted for smaller circles
+            width: 280, // Adjusted for smaller circles
             child: GridView.count(
               crossAxisCount: 4, // Number of columns
-              crossAxisSpacing: 12.0, // Adjusted spacing
-              mainAxisSpacing: 12.0,  // Adjusted spacing
+              crossAxisSpacing: 8.0, // Adjusted spacing
+              mainAxisSpacing: 8.0, // Adjusted spacing
               children: [
-                _buildColorCircle(Colors.pinkAccent),
-                _buildColorCircle(Colors.purpleAccent),
-                _buildColorCircle(Colors.purple),
-                _buildColorCircle(Colors.deepPurple),
-                _buildColorCircle(Colors.redAccent),
-                _buildColorCircle(Colors.orangeAccent),
-                _buildColorCircle(Colors.amberAccent),
+                _buildColorCircle(Colors.pink[200]!),
+                _buildColorCircle(Colors.pink[400]!),
+                _buildColorCircle(Colors.purple[300]!),
+                _buildColorCircle(Colors.purple[700]!),
+                _buildColorCircle(Colors.red[500]!),
+                _buildColorCircle(Colors.yellow[900]!),
+                _buildColorCircle(Colors.orange[300]!),
+                _buildColorCircle(Colors.yellow[600]!),
                 _buildColorCircle(Colors.lightGreen),
-                _buildColorCircle(Colors.green),
-                _buildColorCircle(Colors.greenAccent),
+                _buildColorCircle(Colors.green[500]!),
+                _buildColorCircle(Colors.green[700]!),
+                _buildColorCircle(Colors.green[900]!),
                 _buildColorCircle(Colors.cyan),
-                _buildColorCircle(Colors.blueAccent),
+                _buildColorCircle(Colors.blue[700]!),
                 _buildColorCircle(Colors.indigo),
-                _buildColorCircle(Colors.brown),
-                _buildColorCircle(Colors.grey),
+                _buildColorCircle(Colors.indigo[900]!),
+                _buildColorCircle(const Color(0xFFC8B68A)),
+                _buildColorCircle(const Color(0xFF7A6748)),
+                _buildColorCircle(Colors.brown[500]!),
+                _buildColorCircle(Colors.brown[800]!),
+                _buildColorCircle(Colors.grey[400]!),
+                _buildColorCircle(Colors.grey[600]!),
+                _buildColorCircle(Colors.grey[800]!),
                 _buildColorCircle(Colors.black),
               ],
             ),
@@ -62,7 +70,7 @@ class _ThemeDialogState extends State<ThemeDialog> {
           },
           child: const DecorateText(
             text: '취소',
-            fontSize: 20,
+            fontSize: 24,
             color: Colors.black,
           ),
         ),
@@ -77,7 +85,7 @@ class _ThemeDialogState extends State<ThemeDialog> {
           },
           child: DecorateText(
             text: '확인',
-            fontSize: 20,
+            fontSize: 24,
             color: themeProvider.primaryColor,
           ),
         ),
@@ -94,9 +102,9 @@ class _ThemeDialogState extends State<ThemeDialog> {
       },
       child: CircleAvatar(
         backgroundColor: color,
-        radius: 20, // Reduced radius for smaller circles
+        radius: 16, // Reduced radius for smaller circles
         child: _selectedColor == color
-            ? const Icon(Icons.check, color: Colors.white)
+            ? const Icon(Icons.check, color: Colors.white, size: 16)
             : null,
       ),
     );

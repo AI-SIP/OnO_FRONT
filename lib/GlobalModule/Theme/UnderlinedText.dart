@@ -6,27 +6,32 @@ class UnderlinedText extends StatelessWidget {
   final String text;
   final double fontSize;
   final Color color;
+  final String fontFamily;
+  final FontWeight fontWeight;
 
   const UnderlinedText({
     super.key,
     required this.text,
+
     this.fontSize = 20,
     this.color = Colors.black,
+    this.fontFamily = 'font1',
+    this.fontWeight = FontWeight.bold,
   });
+
 
   @override
   Widget build(BuildContext context) {
-    return IntrinsicWidth(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          DecorateText(text: text, fontSize: fontSize, color: color),
-          Container(
-            margin: const EdgeInsets.only(top: 2),
-            height: 2,
-            color: Colors.red.withOpacity(0.5),
-          ),
-        ],
+    return Text(
+      text,
+      style: TextStyle(
+        fontSize: fontSize,
+        color: color,
+        fontFamily: fontFamily,
+        fontWeight: fontWeight,
+        decoration: TextDecoration.underline,
+        decorationColor: Colors.red.withOpacity(0.5), // 밑줄 색상 설정
+        decorationThickness: 3.0, // 밑줄 두께 설정
       ),
     );
   }
