@@ -19,25 +19,6 @@ class UnderlinedText extends StatelessWidget {
     this.fontWeight = FontWeight.bold,
   });
 
-  /*
-  @override
-  Widget build(BuildContext context) {
-    return IntrinsicWidth(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          DecorateText(text: text, fontSize: fontSize, color: color),
-          Container(
-            margin: const EdgeInsets.only(top: 2),
-            height: 2,
-            color: Colors.red.withOpacity(0.5),
-          ),
-        ],
-      ),
-    );
-  }
-
-   */
 
   @override
   Widget build(BuildContext context) {
@@ -50,7 +31,7 @@ class UnderlinedText extends StatelessWidget {
         fontWeight: fontWeight,
         decoration: TextDecoration.underline,
         decorationColor: Colors.red.withOpacity(0.5), // 밑줄 색상 설정
-        decorationThickness: 2.0, // 밑줄 두께 설정
+        decorationThickness: 3.0, // 밑줄 두께 설정
       ),
     );
   }
