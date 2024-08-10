@@ -182,8 +182,8 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
 
     final problemData = ProblemRegisterModel(
       problemImage: _problemImage,
-      solveImage: _answerImage,
-      answerImage: _solveImage,
+      solveImage: _solveImage,
+      answerImage: _answerImage,
       memo: _notesController.text,
       reference: _sourceController.text,
       solvedAt: _selectedDate,

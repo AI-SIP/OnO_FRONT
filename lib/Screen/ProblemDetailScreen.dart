@@ -307,40 +307,6 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                           Icon(Icons.image, color: themeProvider.primaryColor),
                           const SizedBox(width: 8.0),
                           DecorateText(
-                              text: '풀이 이미지',
-                              fontSize: 20,
-                              color: themeProvider.primaryColor),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 20.0),
-                    Center(
-                      child: GestureDetector(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => FullScreenImage(
-                                  imagePath: problemModel.solveImageUrl),
-                            ),
-                          );
-                        },
-                        child: DisplayImage(
-                          imagePath: problemModel.solveImageUrl,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 20.0),
-                    Container(
-                      width: double.infinity,
-                      alignment: Alignment.centerLeft, // 좌측 정렬
-                      padding: const EdgeInsets.symmetric(vertical: 4.0),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.start, // 좌측 정렬
-                        children: [
-                          Icon(Icons.image, color: themeProvider.primaryColor),
-                          const SizedBox(width: 8.0),
-                          DecorateText(
                               text: '해설 이미지',
                               fontSize: 20,
                               color: themeProvider.primaryColor),
@@ -361,6 +327,40 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                         },
                         child: DisplayImage(
                           imagePath: problemModel.answerImageUrl,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20.0),
+                    Container(
+                      width: double.infinity,
+                      alignment: Alignment.centerLeft, // 좌측 정렬
+                      padding: const EdgeInsets.symmetric(vertical: 4.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.start, // 좌측 정렬
+                        children: [
+                          Icon(Icons.image, color: themeProvider.primaryColor),
+                          const SizedBox(width: 8.0),
+                          DecorateText(
+                              text: '풀이 이미지',
+                              fontSize: 20,
+                              color: themeProvider.primaryColor),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 20.0),
+                    Center(
+                      child: GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => FullScreenImage(
+                                  imagePath: problemModel.solveImageUrl),
+                            ),
+                          );
+                        },
+                        child: DisplayImage(
+                          imagePath: problemModel.solveImageUrl,
                         ),
                       ),
                     ),
