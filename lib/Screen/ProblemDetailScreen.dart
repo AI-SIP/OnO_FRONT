@@ -254,7 +254,11 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                             ),
                           ),
                           const SizedBox(height: 8.0),
-                          UnderlinedText(text: '${problemModel.memo}'),
+                          UnderlinedText(
+                            text: problemModel.memo?.isNotEmpty == true
+                                ? problemModel.memo!
+                                : '작성한 메모가 없습니다!',
+                          ),
                         ],
                       ),
                     ),
