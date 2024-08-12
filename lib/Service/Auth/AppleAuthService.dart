@@ -7,7 +7,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:jose/jose.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:http/http.dart' as http;
-import '../Config/AppConfig.dart';
+import '../../Config/AppConfig.dart';
 
 class AppleAuthService {
   final storage = const FlutterSecureStorage();

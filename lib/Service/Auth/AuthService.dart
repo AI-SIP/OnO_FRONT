@@ -5,10 +5,10 @@ import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
-import 'package:ono/Service/GuestAuthService.dart';
-import '../Config/AppConfig.dart';
-import '../Provider/ProblemsProvider.dart';
-import '../Provider/TokenProvider.dart';
+import 'package:ono/Service/Auth/GuestAuthService.dart';
+import '../../Config/AppConfig.dart';
+import '../../Provider/ProblemsProvider.dart';
+import '../../Provider/TokenProvider.dart';
 import 'AppleAuthService.dart';
 import 'GoogleAuthService.dart';
 

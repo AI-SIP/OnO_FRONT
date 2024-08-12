@@ -10,8 +10,7 @@ import 'Screen/ProblemRegisterScreen.dart';
 import 'Provider/ProblemsProvider.dart';
 import 'Screen/SettingScreen.dart';
 import 'GlobalModule/Theme/AppbarWithLogo.dart';
-
-import 'Service/AuthService.dart';
+import 'Service/Auth/AuthService.dart';
 
 void main() async {
   await dotenv.load(fileName: ".env");
@@ -21,8 +20,9 @@ void main() async {
       providers: [
         ChangeNotifierProvider(create: (_) => ProblemsProvider()),
         ChangeNotifierProvider(
-            create: (context) => AuthService(
-                Provider.of<ProblemsProvider>(context, listen: false))),
+          create: (context) => AuthService(
+              Provider.of<ProblemsProvider>(context, listen: false)),
+        ),
         ChangeNotifierProvider(
             create: (context) => ThemeHandler()..loadColors()),
       ],
@@ -36,16 +36,20 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final themeHandler = Provider.of<ThemeHandler>(context);
     return MaterialApp(
       title: 'Flutter Demo',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: themeHandler.primaryColor),
-        primaryColor: themeHandler.primaryColor,
-        useMaterial3: true,
-      ),
+      theme: _buildThemeData(context),
       home: const MyHomePage(),
       debugShowCheckedModeBanner: false,
+    );
+  }
+
+  ThemeData _buildThemeData(BuildContext context) {
+    final themeHandler = Provider.of<ThemeHandler>(context);
+    return ThemeData(
+      colorScheme: ColorScheme.fromSeed(seedColor: themeHandler.primaryColor),
+      primaryColor: themeHandler.primaryColor,
+      useMaterial3: true,
     );
   }
 }
@@ -88,49 +92,64 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    final themeProvider = Provider.of<ThemeHandler>(context);
-
     return Scaffold(
       appBar: const AppBarWithLogo(),
       body: IndexedStack(
         index: _selectedIndex,
         children: _widgetOptions,
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: '메인',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.add),
-            label: '오답노트 등록',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.folder),
-            label: '폴더',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.settings),
-            label: '설정',
-          ),
-        ],
-        currentIndex: _selectedIndex,
-        selectedItemColor: themeProvider.primaryColor,
-        unselectedItemColor: Colors.grey,
-        selectedLabelStyle: const TextStyle(
-          fontSize: 18,
-          fontFamily: 'font1',
-          fontWeight: FontWeight.bold,
-        ),
-        unselectedLabelStyle: const TextStyle(
-          fontSize: 16,
-          fontFamily: 'font1',
-          fontWeight: FontWeight.bold,
-        ),
-        onTap: _onItemTapped,
+      bottomNavigationBar: _buildBottomNavigationBar(context),
+    );
+  }
+
+  BottomNavigationBar _buildBottomNavigationBar(BuildContext context) {
+    final themeProvider = Provider.of<ThemeHandler>(context);
+    return BottomNavigationBar(
+      type: BottomNavigationBarType.fixed,
+      items: _bottomNavigationItems(),
+      currentIndex: _selectedIndex,
+      selectedItemColor: themeProvider.primaryColor,
+      unselectedItemColor: Colors.grey,
+      selectedLabelStyle: _selectedLabelStyle(),
+      unselectedLabelStyle: _unselectedLabelStyle(),
+      onTap: _onItemTapped,
+    );
+  }
+
+  List<BottomNavigationBarItem> _bottomNavigationItems() {
+    return const [
+      BottomNavigationBarItem(
+        icon: Icon(Icons.home),
+        label: '메인',
       ),
+      BottomNavigationBarItem(
+        icon: Icon(Icons.add),
+        label: '오답노트 등록',
+      ),
+      BottomNavigationBarItem(
+        icon: Icon(Icons.folder),
+        label: '폴더',
+      ),
+      BottomNavigationBarItem(
+        icon: Icon(Icons.settings),
+        label: '설정',
+      ),
+    ];
+  }
+
+  TextStyle _selectedLabelStyle() {
+    return const TextStyle(
+      fontSize: 18,
+      fontFamily: 'font1',
+      fontWeight: FontWeight.bold,
+    );
+  }
+
+  TextStyle _unselectedLabelStyle() {
+    return const TextStyle(
+      fontSize: 16,
+      fontFamily: 'font1',
+      fontWeight: FontWeight.bold,
     );
   }
 }

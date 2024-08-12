@@ -3,7 +3,7 @@ import 'dart:developer';
 import 'dart:io';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
-import '../Config/AppConfig.dart';
+import '../../Config/AppConfig.dart';
 
 class GoogleAuthService {
   final GoogleSignIn _googleSignIn = GoogleSignIn();
