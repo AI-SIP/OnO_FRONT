@@ -4,7 +4,6 @@ import '../GlobalModule/Theme/DecorateText.dart';
 import '../GlobalModule/Image/DisplayImage.dart';
 import '../GlobalModule/Theme/ThemeHandler.dart';
 import '../Service/ScreenUtil/DirectoryScreenService.dart';
-import 'ProblemDetailScreen.dart';
 import '../Model/ProblemModel.dart';
 import '../Provider/ProblemsProvider.dart';
 import '../Service/Auth/AuthService.dart';
@@ -28,10 +27,6 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     _directoryService = DirectoryScreenService(
       Provider.of<ProblemsProvider>(context, listen: false),
     );
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _directoryService.fetchProblems(); // Use the service to fetch problems
-    });
   }
 
   @override

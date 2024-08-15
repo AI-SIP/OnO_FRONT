@@ -127,7 +127,7 @@ class ProblemsProvider with ChangeNotifier {
     log('Deleting problem: ${response.statusCode} ${response.body}');
 
     if (response.statusCode == 200) {
-      await fetchProblems();
+      //await fetchProblems();
       return true;
     } else {
       log('Failed to delete problem from server');
@@ -149,58 +149,48 @@ class ProblemsProvider with ChangeNotifier {
     return groupedProblems;
   }
 
-  // 특정 폴더 내에서 이름순 정렬
   void sortProblemsByName(String folder) {
     final groupedProblems = groupProblemsByFolder();
     if (groupedProblems.containsKey(folder)) {
       groupedProblems[folder]!.sortByName();
-      // Update the main list to reflect the sorted order
       _updateProblemsList(groupedProblems);
       notifyListeners();
     }
   }
 
-  // 특정 폴더 내에서 최신순 정렬
   void sortProblemsByNewest(String folder) {
     final groupedProblems = groupProblemsByFolder();
     if (groupedProblems.containsKey(folder)) {
       groupedProblems[folder]!.sortByNewest();
-      // Update the main list to reflect the sorted order
       _updateProblemsList(groupedProblems);
       notifyListeners();
     }
   }
 
-  // 특정 폴더 내에서 오래된순 정렬
   void sortProblemsByOldest(String folder) {
     final groupedProblems = groupProblemsByFolder();
     if (groupedProblems.containsKey(folder)) {
       groupedProblems[folder]!.sortByOldest();
-      // Update the main list to reflect the sorted order
       _updateProblemsList(groupedProblems);
       notifyListeners();
     }
   }
 
-  // 전체 문제를 이름순으로 정렬
   void sortAllProblemsByName() {
     _problems.sortByName();
     notifyListeners();
   }
 
-  // 그룹화된 문제 리스트로 _problems 업데이트
   void _updateProblemsList(Map<String, List<ProblemModel>> groupedProblems) {
     _problems = groupedProblems.entries.expand((entry) => entry.value).toList();
   }
 
-  // Checks if there is a next problem
   bool hasNextProblem(int currentProblemId) {
     var currentIndex =
         _problems.indexWhere((p) => p.problemId == currentProblemId);
     return currentIndex >= 0 && currentIndex < _problems.length - 1;
   }
 
-  // Checks if there is a previous problem
   bool hasPreviousProblem(int currentProblemId) {
     var currentIndex =
         _problems.indexWhere((p) => p.problemId == currentProblemId);

@@ -72,8 +72,8 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   void initState() {
-    super.initState();
     autoLogin();
+    super.initState();
   }
 
   Future<void> autoLogin() async {

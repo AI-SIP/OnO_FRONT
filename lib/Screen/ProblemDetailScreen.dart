@@ -332,6 +332,6 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
   }
 
   Widget buildNoDataScreen() {
-    return const Center(child: Text("문제 정보를 가져올 수 없습니다."));
+    return const Center(child: DecorateText(text: "문제 정보를 가져올 수 없습니다."));
   }
 }
