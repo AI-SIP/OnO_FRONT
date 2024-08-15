@@ -30,6 +30,17 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
     super.dispose();
   }
 
+  void _resetFields() {
+    _sourceController.clear();
+    _notesController.clear();
+    setState(() {
+      _problemImage = null;
+      _answerImage = null;
+      _solveImage = null;
+      _selectedDate = DateTime.now();
+    });
+  }
+
   // Build a section of the form with an icon, text, and a TextField or image
   Widget buildSection(String title, IconData icon, Widget content) {
     final themeProvider = Provider.of<ThemeHandler>(context);
@@ -271,15 +282,7 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: <Widget>[
                     ElevatedButton(
-                      onPressed: () {
-                        _sourceController.clear();
-                        _notesController.clear();
-                        setState(() {
-                          _problemImage = null;
-                          _answerImage = null;
-                          _solveImage = null;
-                        });
-                      },
+                      onPressed: _resetFields,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.white54,
                         foregroundColor: themeProvider.primaryColor,
@@ -299,6 +302,7 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
                         _solveImage,
                         _answerImage,
                         _selectedDate,
+                        _resetFields,
                       ),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: themeProvider.primaryColor,
