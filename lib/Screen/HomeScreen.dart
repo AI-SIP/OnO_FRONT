@@ -255,7 +255,7 @@ class HomeScreen extends StatelessWidget {
                         _buildGoogleLoginButton(context, authService,
                             buttonWidth, buttonHeight, logoSize, textSize),
                         SizedBox(height: screenHeight * 0.03),
-                        if (!Platform.isAndroid)
+                        if (Platform.isIOS || Platform.isMacOS)
                           _buildAppleLoginButton(context, authService,
                               buttonWidth, buttonHeight, logoSize, textSize),
                       ],
