@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:ono/GlobalModule/Theme/DecorateText.dart';
+import 'package:ono/Model/LoginStatus.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../GlobalModule/Image/ImagePickerHandler.dart';
@@ -98,7 +99,7 @@ class ProblemRegisterScreenService {
       DateTime selectedDate,
       VoidCallback onSuccess) async {
     final authService = Provider.of<AuthService>(context, listen: false);
-    if (!authService.isLoggedIn) {
+    if (authService.isLoggedIn == LoginStatus.logout) {
       _showLoginRequiredDialog(context);
       return;
     }

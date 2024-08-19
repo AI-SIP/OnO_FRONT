@@ -5,6 +5,7 @@ import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
+import 'package:ono/Model/LoginStatus.dart';
 import 'package:ono/Service/Auth/GuestAuthService.dart';
 import '../../Config/AppConfig.dart';
 import '../../Provider/ProblemsProvider.dart';
@@ -19,12 +20,12 @@ class AuthService with ChangeNotifier {
 
   AuthService(this.problemsProvider);
 
-  bool _isLoggedIn = false;
+  LoginStatus _isLoggedIn = LoginStatus.wating;
   int _userId = 0;
   String _userName = '';
   String _userEmail = '';
 
-  bool get isLoggedIn => _isLoggedIn;
+  LoginStatus get isLoggedIn => _isLoggedIn;
   int get userId => _userId;
   String get userName => _userName;
   String get userEmail => _userEmail;
@@ -34,6 +35,9 @@ class AuthService with ChangeNotifier {
   final GoogleAuthService googleAuthService = GoogleAuthService();
 
   Future<void> signInWithGuest() async {
+    _isLoggedIn = LoginStatus.wating;
+    notifyListeners();
+
     final response = await guestAuthService.signInWithGuest();
     await storage.write(key: 'loginMethod', value: 'guest');
     await tokenProvider.setAccessToken(response['accessToken']);
@@ -44,6 +48,9 @@ class AuthService with ChangeNotifier {
 
   // Google 로그인 함수(앱 처음 설치하고 구글 로그인 버튼 누르면 실행)
   Future<void> signInWithGoogle() async {
+    _isLoggedIn = LoginStatus.wating;
+    notifyListeners();
+
     final response = await googleAuthService.signInWithGoogle();
     await storage.write(key: 'loginMethod', value: 'google');
     await tokenProvider.setAccessToken(response['accessToken']);
@@ -54,6 +61,8 @@ class AuthService with ChangeNotifier {
 
   // Apple 로그인 함수
   Future<void> signInWithApple(BuildContext context) async {
+    _isLoggedIn = LoginStatus.wating;
+    notifyListeners();
     final response = await appleAuthService.signInWithApple(context);
     await storage.write(key: 'loginMethod', value: 'apple');
     await tokenProvider.setAccessToken(response['accessToken']);
@@ -64,7 +73,6 @@ class AuthService with ChangeNotifier {
 
   Future<void> fetchUserInfo() async {
     final accessToken = await tokenProvider.getAccessToken();
-    //final accessToken = await getAccessToken();
     if (accessToken == null) {
       throw Exception("Access token is not available");
     }
@@ -83,20 +91,21 @@ class AuthService with ChangeNotifier {
       _userId = responseBody['userId'];
       _userName = responseBody['userName'];
       _userEmail = responseBody['userEmail'];
-      _isLoggedIn = true;
+      _isLoggedIn = LoginStatus.login;
 
       await problemsProvider.fetchProblems();
     } else {
-      _isLoggedIn = false;
+      _isLoggedIn = LoginStatus.logout;
     }
 
     notifyListeners();
   }
 
   Future<void> autoLogin() async {
+    _isLoggedIn = LoginStatus.wating;
     String? refreshToken = await storage.read(key: 'refreshToken');
     if (refreshToken == null) {
-      _isLoggedIn = false;
+      _isLoggedIn = LoginStatus.logout;
       notifyListeners();
     } else {
       fetchUserInfo();
@@ -115,7 +124,6 @@ class AuthService with ChangeNotifier {
     }
   }
 
-  // 로그아웃 함수
   Future<void> signOut() async {
     try {
       String? loginMethod = await storage.read(key: 'loginMethod');
@@ -126,11 +134,11 @@ class AuthService with ChangeNotifier {
         deleteAccount();
       }
       _userId = 0;
-      _isLoggedIn = false;
+      _isLoggedIn = LoginStatus.logout;
       _userName = '';
       _userEmail = '';
       await storage.deleteAll();
-      notifyListeners(); // 리스너들에게 상태 변경을 알림
+      notifyListeners();
     } catch (error) {
       log('Error signing out: $error');
       throw Exception('Failed to sign out');
@@ -154,7 +162,6 @@ class AuthService with ChangeNotifier {
     // 서버에서 사용자 계정 삭제
     try {
       final accessToken = await tokenProvider.getAccessToken();
-      //final token = await getAccessToken();
       if (accessToken == null) {
         throw Exception("JWT token is not available");
       }
@@ -170,7 +177,7 @@ class AuthService with ChangeNotifier {
 
       if (response.statusCode == 200) {
         _userId = 0;
-        _isLoggedIn = false;
+        _isLoggedIn = LoginStatus.logout;
         _userName = '';
         _userEmail = '';
         await storage.deleteAll();

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ono/Model/LoginStatus.dart';
 import 'package:provider/provider.dart';
 import '../GlobalModule/Theme/DecorateText.dart';
 import '../GlobalModule/Image/DisplayImage.dart';
@@ -35,7 +36,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     final themeProvider = Provider.of<ThemeHandler>(context);
 
     return Scaffold(
-      body: !authService.isLoggedIn
+      body: !(authService.isLoggedIn == LoginStatus.login)
           ? _buildLoginPrompt(themeProvider)
           : RefreshIndicator(
         onRefresh: () => _directoryService.fetchProblems(),

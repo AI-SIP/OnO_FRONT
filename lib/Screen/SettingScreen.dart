@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ono/Model/LoginStatus.dart';
 import 'package:provider/provider.dart';
 import '../GlobalModule/Theme/DecorateText.dart';
 import '../GlobalModule/Theme/ThemeHandler.dart';
@@ -34,7 +35,7 @@ class _SettingScreenState extends State<SettingScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              if (authService.isLoggedIn) ...[
+              if (authService.isLoggedIn == LoginStatus.login) ...[
                 _buildWelcomeText(authService, themeProvider),
                 const SizedBox(height: 40),
                 _buildButton(

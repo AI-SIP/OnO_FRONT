@@ -1,5 +1,6 @@
 import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
+import 'package:ono/Model/LoginStatus.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../Config/AppConfig.dart';
@@ -234,7 +235,10 @@ class HomeScreen extends StatelessWidget {
                   double logoSize = screenHeight * 0.02; // Dynamic logo size
                   double textSize = screenHeight * 0.015; // Dynamic text size
 
-                  if (authService.isLoggedIn) {
+                  if(authService.isLoggedIn == LoginStatus.wating){
+                    return CircularProgressIndicator(color: themeProvider.primaryColor);
+                  }
+                  else if (authService.isLoggedIn == LoginStatus.login) {
                     return Padding(
                       padding: EdgeInsets.only(top: screenHeight * 0.05),
                       child: DecorateText(
