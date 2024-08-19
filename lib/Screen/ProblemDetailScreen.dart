@@ -58,6 +58,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                           color: Colors.white,
                         ),
                         backgroundColor: themeProvider.primaryColor,
+                        duration: const Duration(seconds: 2),
                       ),
                     );
                   },
@@ -70,6 +71,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                           color: Colors.white,
                         ),
                         backgroundColor: Colors.red,
+                        duration: const Duration(seconds: 2),
                       ),
                     );
                   },

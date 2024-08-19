@@ -67,6 +67,7 @@ class SettingScreenService {
           color: Colors.white,
         ),
         backgroundColor: themeProvider.primaryColor,
+        duration: const Duration(seconds: 2),
       ),
     );
   }
