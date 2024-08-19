@@ -224,17 +224,27 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
     );
   }
 
-  Widget buildImageSection(
-      BuildContext context, String? imageUrl, String label, Color color) {
+  Widget buildImageSection(BuildContext context, String? imageUrl, String label, Color color) {
+    final mediaQuery = MediaQuery.of(context);
+    final themeProvider = Provider.of<ThemeHandler>(context);
+
+    // 화면의 너비에 따라 이미지 크기 비율을 다르게 설정
+    double maxImageHeight = mediaQuery.size.height * 0.9; // 기본 크기
+    if (mediaQuery.size.width > 600) { // 가로 모드나 태블릿 같이 큰 화면일 때
+      maxImageHeight = mediaQuery.size.height * 0.6; // 크기를 줄임
+    } else if (mediaQuery.size.width > 800) { // 더 큰 화면일 때
+      maxImageHeight = mediaQuery.size.height * 0.5; // 크기를 더 줄임
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
           width: double.infinity,
-          alignment: Alignment.centerLeft, // 좌측 정렬
+          alignment: Alignment.centerLeft,
           padding: const EdgeInsets.symmetric(vertical: 4.0),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.start, // 좌측 정렬
+            mainAxisAlignment: MainAxisAlignment.start,
             children: [
               Icon(Icons.camera_alt, color: color),
               const SizedBox(width: 8.0),
@@ -244,17 +254,23 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
         ),
         const SizedBox(height: 20.0),
         Center(
-          child: GestureDetector(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => FullScreenImage(imagePath: imageUrl),
-                ),
-              );
-            },
-            child: DisplayImage(
-              imagePath: imageUrl,
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxHeight: maxImageHeight, // 이미지의 최대 높이 설정
+            ),
+            child: GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => FullScreenImage(imagePath: imageUrl),
+                  ),
+                );
+              },
+              child: DisplayImage(
+                imagePath: imageUrl,
+                fit: BoxFit.contain,
+              ),
             ),
           ),
         ),

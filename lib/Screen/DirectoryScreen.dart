@@ -38,17 +38,17 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       body: !authService.isLoggedIn
           ? _buildLoginPrompt(themeProvider)
           : RefreshIndicator(
-              onRefresh: () => _directoryService.fetchProblems(),
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-                child: Column(
-                  children: [
-                    _buildSortDropdown(themeProvider),
-                    _buildProblemGrid(themeProvider),
-                  ],
-                ),
-              ),
-            ),
+        onRefresh: () => _directoryService.fetchProblems(),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+          child: Column(
+            children: [
+              _buildSortDropdown(themeProvider),
+              _buildProblemGrid(themeProvider),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
@@ -107,29 +107,39 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
   Widget _buildProblemGrid(ThemeHandler themeProvider) {
     return Expanded(
-      child: Consumer<ProblemsProvider>(
-        builder: (context, problemsProvider, child) {
-          var problems = problemsProvider.problems;
-          if (problems.isEmpty) {
-            return Center(
-              child: DecorateText(
-                text: '오답노트가 등록되어 있지 않습니다!',
-                fontSize: 24,
-                color: themeProvider.primaryColor,
-              ),
-            );
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          // 가로/세로 모드에 따라 그리드 레이아웃을 변경
+          int crossAxisCount = constraints.maxWidth > 600 ? 3 : 2;
+          if (constraints.maxWidth > 900) {
+            crossAxisCount = 4;
           }
-          return GridView.builder(
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              childAspectRatio: 0.7,
-              crossAxisSpacing: 20,
-              mainAxisSpacing: 20,
-            ),
-            itemCount: problems.length,
-            itemBuilder: (context, index) {
-              var problem = problems[index];
-              return _buildProblemTile(problem, themeProvider);
+
+          return Consumer<ProblemsProvider>(
+            builder: (context, problemsProvider, child) {
+              var problems = problemsProvider.problems;
+              if (problems.isEmpty) {
+                return Center(
+                  child: DecorateText(
+                    text: '오답노트가 등록되어 있지 않습니다!',
+                    fontSize: 24,
+                    color: themeProvider.primaryColor,
+                  ),
+                );
+              }
+              return GridView.builder(
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: crossAxisCount,
+                  childAspectRatio: 0.7,
+                  crossAxisSpacing: 20,
+                  mainAxisSpacing: 20,
+                ),
+                itemCount: problems.length,
+                itemBuilder: (context, index) {
+                  var problem = problems[index];
+                  return _buildProblemTile(problem, themeProvider);
+                },
+              );
             },
           );
         },
