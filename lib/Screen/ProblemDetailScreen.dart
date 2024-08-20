@@ -323,7 +323,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           const SizedBox(width: 8.0),
-          DecorateText(text: text, fontSize: 20, color: color),
+          DecorateText(text: text, fontSize: 24, color: color),
         ],
       ),
     );
