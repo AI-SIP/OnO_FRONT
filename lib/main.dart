@@ -2,6 +2,7 @@ import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:ono/GlobalModule/Theme/ThemeHandler.dart';
 import 'package:provider/provider.dart';
 import 'Screen/HomeScreen.dart';
@@ -61,8 +62,9 @@ class MyHomePage extends StatefulWidget {
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
   int _selectedIndex = 0;
+  final secureStorage = const FlutterSecureStorage();
   static const List<Widget> _widgetOptions = <Widget>[
     HomeScreen(),
     ProblemRegisterScreen(),
@@ -72,9 +74,17 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   void initState() {
-    autoLogin();
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    autoLogin();
   }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
 
   Future<void> autoLogin() async {
     try {
@@ -88,6 +98,38 @@ class _MyHomePageState extends State<MyHomePage> {
     setState(() {
       _selectedIndex = index;
     });
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) async {
+    if (state == AppLifecycleState.paused) {
+      // 앱이 백그라운드로 전환될 때 시간 저장
+      await secureStorage.write(
+        key: 'lastPaused',
+        value: DateTime.now().millisecondsSinceEpoch.toString(),
+      );
+    } else if (state == AppLifecycleState.resumed) {
+      // 앱이 포그라운드로 전환될 때 시간 비교
+      String? lastPaused = await secureStorage.read(key: 'lastPaused');
+      if (lastPaused != null) {
+        final difference = DateTime.now().millisecondsSinceEpoch - int.parse(lastPaused);
+        final minutes = difference / 1000 / 60;
+        if (minutes > 1) {
+          _resetAppState();
+        }
+      }
+    }
+  }
+
+  void _resetAppState() {
+
+    final problemsProvider = Provider.of<ProblemsProvider>(context, listen: false);
+
+    setState(() {
+      _selectedIndex = 0;
+    });
+
+    problemsProvider.fetchProblems();
   }
 
   @override
