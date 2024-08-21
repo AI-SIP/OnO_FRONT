@@ -6,10 +6,10 @@ extension ProblemSorting on List<ProblemModel> {
   }
 
   void sortByNewest() {
-    sort((a, b) => b.solvedAt!.compareTo(a.solvedAt!));
+    sort((a, b) => b.updateAt!.compareTo(a.updateAt!));
   }
 
   void sortByOldest() {
-    sort((a, b) => a.solvedAt!.compareTo(b.solvedAt!));
+    sort((a, b) => a.updateAt!.compareTo(b.updateAt!));
   }
 }

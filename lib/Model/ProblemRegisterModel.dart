@@ -24,7 +24,7 @@ class ProblemRegisterModel {
       'answerImage': answerImage,
       'memo': memo,
       'reference': reference,
-      'solvedAt': solvedAt?.toIso8601String(),
+      'solvedAt': solvedAt?.subtract(const Duration(hours: 9)).toIso8601String(),
     };
   }
 
@@ -35,7 +35,7 @@ class ProblemRegisterModel {
       answerImage: json['answerImage'],
       memo: json['memo'],
       reference: json['reference'],
-      solvedAt: DateTime.parse(json['solvedAt']),
+      solvedAt: DateTime.parse(json['solvedAt']).subtract(const Duration(hours: 9)),
     );
   }
 }

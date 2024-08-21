@@ -2,6 +2,7 @@ import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:ono/GlobalModule/Theme/ThemeHandler.dart';
 import 'package:provider/provider.dart';
 import 'Screen/HomeScreen.dart';
@@ -10,8 +11,7 @@ import 'Screen/ProblemRegisterScreen.dart';
 import 'Provider/ProblemsProvider.dart';
 import 'Screen/SettingScreen.dart';
 import 'GlobalModule/Theme/AppbarWithLogo.dart';
-
-import 'Service/AuthService.dart';
+import 'Service/Auth/AuthService.dart';
 
 void main() async {
   await dotenv.load(fileName: ".env");
@@ -21,8 +21,9 @@ void main() async {
       providers: [
         ChangeNotifierProvider(create: (_) => ProblemsProvider()),
         ChangeNotifierProvider(
-            create: (context) => AuthService(
-                Provider.of<ProblemsProvider>(context, listen: false))),
+          create: (context) => AuthService(
+              Provider.of<ProblemsProvider>(context, listen: false)),
+        ),
         ChangeNotifierProvider(
             create: (context) => ThemeHandler()..loadColors()),
       ],
@@ -36,16 +37,20 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final themeHandler = Provider.of<ThemeHandler>(context);
     return MaterialApp(
       title: 'Flutter Demo',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: themeHandler.primaryColor),
-        primaryColor: themeHandler.primaryColor,
-        useMaterial3: true,
-      ),
+      theme: _buildThemeData(context),
       home: const MyHomePage(),
       debugShowCheckedModeBanner: false,
+    );
+  }
+
+  ThemeData _buildThemeData(BuildContext context) {
+    final themeHandler = Provider.of<ThemeHandler>(context);
+    return ThemeData(
+      colorScheme: ColorScheme.fromSeed(seedColor: themeHandler.primaryColor),
+      primaryColor: themeHandler.primaryColor,
+      useMaterial3: true,
     );
   }
 }
@@ -57,8 +62,9 @@ class MyHomePage extends StatefulWidget {
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
   int _selectedIndex = 0;
+  final secureStorage = const FlutterSecureStorage();
   static const List<Widget> _widgetOptions = <Widget>[
     HomeScreen(),
     ProblemRegisterScreen(),
@@ -69,8 +75,16 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     autoLogin();
   }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
 
   Future<void> autoLogin() async {
     try {
@@ -87,50 +101,97 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    final themeProvider = Provider.of<ThemeHandler>(context);
+  void didChangeAppLifecycleState(AppLifecycleState state) async {
+    if (state == AppLifecycleState.paused) {
+      // 앱이 백그라운드로 전환될 때 시간 저장
+      await secureStorage.write(
+        key: 'lastPaused',
+        value: DateTime.now().millisecondsSinceEpoch.toString(),
+      );
+    } else if (state == AppLifecycleState.resumed) {
+      // 앱이 포그라운드로 전환될 때 시간 비교
+      String? lastPaused = await secureStorage.read(key: 'lastPaused');
+      if (lastPaused != null) {
+        final difference = DateTime.now().millisecondsSinceEpoch - int.parse(lastPaused);
+        final minutes = difference / 1000 / 60;
+        if (minutes > 1) {
+          _resetAppState();
+        }
+      }
+    }
+  }
 
+  void _resetAppState() {
+
+    final problemsProvider = Provider.of<ProblemsProvider>(context, listen: false);
+
+    setState(() {
+      _selectedIndex = 0;
+    });
+
+    problemsProvider.fetchProblems();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: const AppBarWithLogo(),
       body: IndexedStack(
         index: _selectedIndex,
         children: _widgetOptions,
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: '메인',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.add),
-            label: '오답노트 등록',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.folder),
-            label: '폴더',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.settings),
-            label: '설정',
-          ),
-        ],
-        currentIndex: _selectedIndex,
-        selectedItemColor: themeProvider.primaryColor,
-        unselectedItemColor: Colors.grey,
-        selectedLabelStyle: const TextStyle(
-          fontSize: 18,
-          fontFamily: 'font1',
-          fontWeight: FontWeight.bold,
-        ),
-        unselectedLabelStyle: const TextStyle(
-          fontSize: 16,
-          fontFamily: 'font1',
-          fontWeight: FontWeight.bold,
-        ),
-        onTap: _onItemTapped,
+      bottomNavigationBar: _buildBottomNavigationBar(context),
+    );
+  }
+
+  BottomNavigationBar _buildBottomNavigationBar(BuildContext context) {
+    final themeProvider = Provider.of<ThemeHandler>(context);
+    return BottomNavigationBar(
+      type: BottomNavigationBarType.fixed,
+      items: _bottomNavigationItems(),
+      currentIndex: _selectedIndex,
+      selectedItemColor: themeProvider.primaryColor,
+      unselectedItemColor: Colors.grey,
+      selectedLabelStyle: _selectedLabelStyle(),
+      unselectedLabelStyle: _unselectedLabelStyle(),
+      onTap: _onItemTapped,
+    );
+  }
+
+  List<BottomNavigationBarItem> _bottomNavigationItems() {
+    return const [
+      BottomNavigationBarItem(
+        icon: Icon(Icons.home),
+        label: '메인',
       ),
+      BottomNavigationBarItem(
+        icon: Icon(Icons.add),
+        label: '오답노트 등록',
+      ),
+      BottomNavigationBarItem(
+        icon: Icon(Icons.folder),
+        label: '폴더',
+      ),
+      BottomNavigationBarItem(
+        icon: Icon(Icons.settings),
+        label: '설정',
+      ),
+    ];
+  }
+
+  TextStyle _selectedLabelStyle() {
+    return const TextStyle(
+      fontSize: 18,
+      fontFamily: 'font1',
+      fontWeight: FontWeight.bold,
+    );
+  }
+
+  TextStyle _unselectedLabelStyle() {
+    return const TextStyle(
+      fontSize: 16,
+      fontFamily: 'font1',
+      fontWeight: FontWeight.bold,
     );
   }
 }

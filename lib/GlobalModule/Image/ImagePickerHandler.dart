@@ -44,6 +44,7 @@ class ImagePickerHandler {
     try {
       final croppedFile = await ImageCropper().cropImage(
         sourcePath: imageFile.path,
+        compressFormat: ImageCompressFormat.png,
         uiSettings: [
           AndroidUiSettings(
             toolbarTitle: '이미지 자르기',

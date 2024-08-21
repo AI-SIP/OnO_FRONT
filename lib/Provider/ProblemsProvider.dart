@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'dart:developer';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:ono/GlobalModule/Util/ProblemSorting.dart';
@@ -15,7 +14,7 @@ class ProblemsProvider with ChangeNotifier {
   List<ProblemModel> get problems => List.unmodifiable(_problems);
   final TokenProvider tokenProvider = TokenProvider();
 
-  Future<void> fetchProblems() async {
+  Future<void> fetchProblems({String sortOption = 'newest'}) async {
     final accessToken = await tokenProvider.getAccessToken();
     if (accessToken == null) {
       log('access token is not available');
@@ -35,6 +34,20 @@ class ProblemsProvider with ChangeNotifier {
       List<dynamic> fetchedProblems =
           json.decode(utf8.decode(response.bodyBytes));
       _problems = fetchedProblems.map((e) => ProblemModel.fromJson(e)).toList();
+
+      switch (sortOption) {
+        case 'name':
+          _problems.sortByName();
+          break;
+        case 'oldest':
+          _problems.sortByOldest();
+          break;
+        case 'newest':
+        default:
+          _problems.sortByNewest();
+          break;
+      }
+
       notifyListeners();
       log('Problems fetched and saved locally: ${_problems.length}');
     } else {
@@ -55,6 +68,8 @@ class ProblemsProvider with ChangeNotifier {
     request.fields['solvedAt'] = problemData.solvedAt?.toIso8601String() ?? "";
     request.fields['reference'] = problemData.reference ?? "";
     request.fields['memo'] = problemData.memo ?? "";
+
+    print('solvedAt : ${problemData.solvedAt?.toIso8601String()}');
 
     final problemImage = problemData.problemImage;
     final solveImage = problemData.solveImage;
@@ -128,7 +143,7 @@ class ProblemsProvider with ChangeNotifier {
     log('Deleting problem: ${response.statusCode} ${response.body}');
 
     if (response.statusCode == 200) {
-      await fetchProblems();
+      //await fetchProblems();
       return true;
     } else {
       log('Failed to delete problem from server');
@@ -150,58 +165,48 @@ class ProblemsProvider with ChangeNotifier {
     return groupedProblems;
   }
 
-  // 특정 폴더 내에서 이름순 정렬
   void sortProblemsByName(String folder) {
     final groupedProblems = groupProblemsByFolder();
     if (groupedProblems.containsKey(folder)) {
       groupedProblems[folder]!.sortByName();
-      // Update the main list to reflect the sorted order
       _updateProblemsList(groupedProblems);
       notifyListeners();
     }
   }
 
-  // 특정 폴더 내에서 최신순 정렬
   void sortProblemsByNewest(String folder) {
     final groupedProblems = groupProblemsByFolder();
     if (groupedProblems.containsKey(folder)) {
       groupedProblems[folder]!.sortByNewest();
-      // Update the main list to reflect the sorted order
       _updateProblemsList(groupedProblems);
       notifyListeners();
     }
   }
 
-  // 특정 폴더 내에서 오래된순 정렬
   void sortProblemsByOldest(String folder) {
     final groupedProblems = groupProblemsByFolder();
     if (groupedProblems.containsKey(folder)) {
       groupedProblems[folder]!.sortByOldest();
-      // Update the main list to reflect the sorted order
       _updateProblemsList(groupedProblems);
       notifyListeners();
     }
   }
 
-  // 전체 문제를 이름순으로 정렬
   void sortAllProblemsByName() {
     _problems.sortByName();
     notifyListeners();
   }
 
-  // 그룹화된 문제 리스트로 _problems 업데이트
   void _updateProblemsList(Map<String, List<ProblemModel>> groupedProblems) {
     _problems = groupedProblems.entries.expand((entry) => entry.value).toList();
   }
 
-  // Checks if there is a next problem
   bool hasNextProblem(int currentProblemId) {
     var currentIndex =
         _problems.indexWhere((p) => p.problemId == currentProblemId);
     return currentIndex >= 0 && currentIndex < _problems.length - 1;
   }
 
-  // Checks if there is a previous problem
   bool hasPreviousProblem(int currentProblemId) {
     var currentIndex =
         _problems.indexWhere((p) => p.problemId == currentProblemId);
