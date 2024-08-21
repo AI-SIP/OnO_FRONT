@@ -14,7 +14,7 @@ class ProblemsProvider with ChangeNotifier {
   List<ProblemModel> get problems => List.unmodifiable(_problems);
   final TokenProvider tokenProvider = TokenProvider();
 
-  Future<void> fetchProblems() async {
+  Future<void> fetchProblems({String sortOption = 'newest'}) async {
     final accessToken = await tokenProvider.getAccessToken();
     if (accessToken == null) {
       log('access token is not available');
@@ -34,6 +34,20 @@ class ProblemsProvider with ChangeNotifier {
       List<dynamic> fetchedProblems =
           json.decode(utf8.decode(response.bodyBytes));
       _problems = fetchedProblems.map((e) => ProblemModel.fromJson(e)).toList();
+
+      switch (sortOption) {
+        case 'name':
+          _problems.sortByName();
+          break;
+        case 'oldest':
+          _problems.sortByOldest();
+          break;
+        case 'newest':
+        default:
+          _problems.sortByNewest();
+          break;
+      }
+
       notifyListeners();
       log('Problems fetched and saved locally: ${_problems.length}');
     } else {

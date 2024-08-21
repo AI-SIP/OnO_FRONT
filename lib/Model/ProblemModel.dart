@@ -10,6 +10,8 @@ class ProblemModel {
   final String? reference;
   final String? folder;
   final DateTime? solvedAt;
+  final DateTime? createdAt;
+  final DateTime? updateAt;
 
   ProblemModel({
     this.problemId,
@@ -20,6 +22,8 @@ class ProblemModel {
     this.memo,
     this.reference,
     this.solvedAt,
+    this.createdAt,
+    this.updateAt,
     this.folder,
   });
 
@@ -34,6 +38,8 @@ class ProblemModel {
       reference: json['reference'],
       solvedAt:
           json['solvedAt'] != null ? DateTime.parse(json['solvedAt']) : null,
+      createdAt: json['createdAt'] != null ? DateTime.parse(json['createdAt']) : DateTime.parse(json['solvedAt']),
+      updateAt: json['updateAt'] != null ? DateTime.parse(json['updateAt']) : DateTime.parse(json['solvedAt']),
     );
   }
 
@@ -47,6 +53,8 @@ class ProblemModel {
       'memo': memo,
       'reference': reference,
       'solvedAt': _formatDateTime(solvedAt),
+      'createdAt' : _formatDateTime(createdAt),
+      'updateAt' : _formatDateTime(updateAt),
       'folder': folder,
     };
   }

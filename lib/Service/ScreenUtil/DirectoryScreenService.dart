@@ -22,9 +22,9 @@ class DirectoryScreenService {
     }
   }
 
-  Future<void> fetchProblems() async {
+  Future<void> fetchProblems({String sortOption = 'newest'}) async {
     try {
-      await problemsProvider.fetchProblems();
+      await problemsProvider.fetchProblems(sortOption: sortOption);
     } catch (e) {
       log('Failed to fetch problems: $e');
     }

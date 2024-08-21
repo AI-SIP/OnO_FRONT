@@ -17,10 +17,10 @@ class DirectoryScreen extends StatefulWidget {
 }
 
 class _DirectoryScreenState extends State<DirectoryScreen> {
-  final String defaultImage = 'assets/no_image.png'; // Default image path
-  String _selectedSortOption = 'newest'; // Default sorting option
+  final String defaultImage = 'assets/no_image.png';
+  String _selectedSortOption = 'newest';
 
-  late DirectoryScreenService _directoryService; // Instance of DirectoryService
+  late DirectoryScreenService _directoryService;
 
   @override
   void initState() {
@@ -28,6 +28,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     _directoryService = DirectoryScreenService(
       Provider.of<ProblemsProvider>(context, listen: false),
     );
+
+    _directoryService.sortProblems(_selectedSortOption);
   }
 
   @override
@@ -39,17 +41,17 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       body: !(authService.isLoggedIn == LoginStatus.login)
           ? _buildLoginPrompt(themeProvider)
           : RefreshIndicator(
-        onRefresh: () => _directoryService.fetchProblems(),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-          child: Column(
-            children: [
-              _buildSortDropdown(themeProvider),
-              _buildProblemGrid(themeProvider),
-            ],
-          ),
-        ),
-      ),
+              onRefresh: () => _directoryService.fetchProblems(sortOption:  _selectedSortOption),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                child: Column(
+                  children: [
+                    _buildSortDropdown(themeProvider),
+                    _buildProblemGrid(themeProvider),
+                  ],
+                ),
+              ),
+            ),
     );
   }
 
@@ -131,7 +133,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
               return GridView.builder(
                 gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: crossAxisCount,
-                  childAspectRatio: 0.7,
+                  childAspectRatio: 0.6,
                   crossAxisSpacing: 20,
                   mainAxisSpacing: 20,
                 ),
@@ -149,6 +151,10 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   }
 
   Widget _buildProblemTile(ProblemModel problem, ThemeHandler themeProvider) {
+    String formatDateTime(DateTime dateTime) {
+      return '${dateTime.year}/${dateTime.month}/${dateTime.day} ${dateTime.hour}:${dateTime.minute}';
+    }
+
     return GestureDetector(
       onTap: () {
         _directoryService.navigateToProblemDetail(context, problem.problemId);
@@ -190,6 +196,14 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                   textAlign: TextAlign.center,
                   overflow: TextOverflow.ellipsis, // Handle text overflow
                   maxLines: 1, // Limit to one line
+                ),
+                const SizedBox(height: 2),
+                DecorateText(
+                  text: problem.updateAt != null
+                      ? '작성 일시 : ${formatDateTime(problem.updateAt!)}'
+                      : '작성 일시 : 정보 없음',
+                  color: Colors.grey,
+                  fontSize: 12,
                 ),
               ],
             ),
