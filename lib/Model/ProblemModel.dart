@@ -37,9 +37,9 @@ class ProblemModel {
       memo: json['memo'],
       reference: json['reference'],
       solvedAt:
-          json['solvedAt'] != null ? DateTime.parse(json['solvedAt']) : null,
-      createdAt: json['createdAt'] != null ? DateTime.parse(json['createdAt']) : DateTime.parse(json['solvedAt']),
-      updateAt: json['updateAt'] != null ? DateTime.parse(json['updateAt']) : DateTime.parse(json['solvedAt']),
+          json['solvedAt'] != null ? DateTime.parse(json['solvedAt']).subtract(const Duration(hours: 9)) : null,
+      createdAt: json['createdAt'] != null ? DateTime.parse(json['createdAt']).add(const Duration(hours: 9)) : DateTime.parse(json['solvedAt']).subtract(const Duration(hours: 9)),
+      updateAt: json['updateAt'] != null ? DateTime.parse(json['updateAt']).add(const Duration(hours: 9)) : DateTime.parse(json['solvedAt']).subtract(const Duration(hours: 9)),
     );
   }
 

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:ono/Model/LoginStatus.dart';
 import 'package:provider/provider.dart';
 import '../GlobalModule/Theme/DecorateText.dart';
@@ -152,7 +153,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
   Widget _buildProblemTile(ProblemModel problem, ThemeHandler themeProvider) {
     String formatDateTime(DateTime dateTime) {
-      return '${dateTime.year}/${dateTime.month}/${dateTime.day} ${dateTime.hour}:${dateTime.minute}';
+      return DateFormat('yyyy/MM/dd HH:mm').format(dateTime);
     }
 
     return GestureDetector(

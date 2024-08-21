@@ -69,6 +69,8 @@ class ProblemsProvider with ChangeNotifier {
     request.fields['reference'] = problemData.reference ?? "";
     request.fields['memo'] = problemData.memo ?? "";
 
+    print('solvedAt : ${problemData.solvedAt?.toIso8601String()}');
+
     final problemImage = problemData.problemImage;
     final solveImage = problemData.solveImage;
     final answerImage = problemData.answerImage;
