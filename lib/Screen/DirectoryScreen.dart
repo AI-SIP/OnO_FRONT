@@ -133,7 +133,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
               return GridView.builder(
                 gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: crossAxisCount,
-                  childAspectRatio: 0.6,
+                  childAspectRatio: 0.55,
                   crossAxisSpacing: 20,
                   mainAxisSpacing: 20,
                 ),
@@ -161,7 +161,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       },
       child: LayoutBuilder(
         builder: (context, constraints) {
-          double height = constraints.maxHeight * 0.8;
+          double height = constraints.maxHeight * 0.7;
           double width = constraints.maxWidth * 0.9; // Set width ratio
           return GridTile(
             child: Column(
