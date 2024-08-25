@@ -201,41 +201,9 @@ class ProblemsProvider with ChangeNotifier {
     _problems = groupedProblems.entries.expand((entry) => entry.value).toList();
   }
 
-  bool hasNextProblem(int currentProblemId) {
-    var currentIndex =
-        _problems.indexWhere((p) => p.problemId == currentProblemId);
-    return currentIndex >= 0 && currentIndex < _problems.length - 1;
-  }
 
-  bool hasPreviousProblem(int currentProblemId) {
-    var currentIndex =
-        _problems.indexWhere((p) => p.problemId == currentProblemId);
-    return currentIndex > 0 && currentIndex < _problems.length;
-  }
-
-  int? getNextProblemId(int currentProblemId) {
-    var currentIndex =
-        _problems.indexWhere((p) => p.problemId == currentProblemId);
-    if (currentIndex >= 0 && currentIndex < _problems.length - 1) {
-      return _problems[currentIndex + 1].problemId;
-    } else if (currentIndex == _problems.length - 1) {
-      return _problems[0].problemId;
-    }
-    throw Exception('No next problem available.');
-  }
 
   List<int> getProblemIds() {
     return _problems.map((problem) => problem.problemId as int).toList();
-  }
-
-  int? getPreviousProblemId(int currentProblemId) {
-    var currentIndex =
-        _problems.indexWhere((p) => p.problemId == currentProblemId);
-    if (currentIndex > 0) {
-      return _problems[currentIndex - 1].problemId;
-    } else if (currentIndex == 0) {
-      return _problems[_problems.length - 1].problemId;
-    }
-    throw Exception('No previous problem available.');
   }
 }
