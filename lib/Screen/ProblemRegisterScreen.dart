@@ -2,12 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:provider/provider.dart';
+import '../GlobalModule/Image/DisplayImage.dart';
 import '../GlobalModule/Theme/DecorateText.dart';
 import '../GlobalModule/Theme/ThemeHandler.dart';
+import '../Model/ProblemModel.dart';
+import '../Model/ProblemRegisterModel.dart';
 import '../Service/ScreenUtil/ProblemRegisterScreenService.dart';
 
 class ProblemRegisterScreen extends StatefulWidget {
-  const ProblemRegisterScreen({super.key});
+  final ProblemModel? problem;
+  const ProblemRegisterScreen({super.key, this.problem});
 
   @override
   ProblemRegisterScreenState createState() => ProblemRegisterScreenState();
@@ -15,18 +19,37 @@ class ProblemRegisterScreen extends StatefulWidget {
 
 class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
   final _service = ProblemRegisterScreenService();
-  DateTime _selectedDate = DateTime.now(); // 선택된 날짜를 저장하는 변수
-  final _sourceController = TextEditingController(); // 출처 입력 컨트롤러
-  final _notesController = TextEditingController(); // 오답 메모 입력 컨트롤러
+  late DateTime _selectedDate;
+  late TextEditingController _sourceController;
+  late TextEditingController _notesController;
 
-  XFile? _problemImage; // 문제 이미지 변수
-  XFile? _answerImage; // 해설 이미지 변수
-  XFile? _solveImage; // 나의 풀이 이미지 변수
+  XFile? _problemImage;
+  XFile? _answerImage;
+  XFile? _solveImage;
+
+  @override
+  void initState() {
+    super.initState();
+
+    if (widget.problem != null) {
+
+      _selectedDate = widget.problem!.solvedAt ?? DateTime.now();
+      _sourceController =
+          TextEditingController(text: widget.problem!.reference);
+      _notesController = TextEditingController(text: widget.problem!.memo);
+
+      // Images are not set here, handled in the image picker
+    } else {
+      _selectedDate = DateTime.now();
+      _sourceController = TextEditingController();
+      _notesController = TextEditingController();
+    }
+  }
 
   @override
   void dispose() {
-    _sourceController.dispose(); // 출처 컨트롤러 해제
-    _notesController.dispose(); // 오답 메모 컨트롤러 해제
+    _sourceController.dispose();
+    _notesController.dispose();
     super.dispose();
   }
 
@@ -41,7 +64,6 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
     });
   }
 
-  // Build a section of the form with an icon, text, and a TextField or image
   Widget buildSection(String title, IconData icon, Widget content) {
     final themeProvider = Provider.of<ThemeHandler>(context);
     return Column(
@@ -65,41 +87,46 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
     );
   }
 
-  // Build a container with an image picker button or a selected image
-  Widget buildImagePicker(String imageType, XFile? image) {
-    final mediaQuery = MediaQuery.of(context); // 미디어 쿼리 정보 가져오기
-    final isLandscape =
-        mediaQuery.orientation == Orientation.landscape; // 가로/세로 방향 확인
+  Widget buildImagePicker(
+      String imageType, XFile? image, String? existingImageUrl) {
     final themeProvider = Provider.of<ThemeHandler>(context);
     return Container(
-      height: isLandscape ? mediaQuery.size.height * 0.3 : 200,
+      height: 200,
       decoration: BoxDecoration(
         color: themeProvider.primaryColor.withOpacity(0.1),
         border: Border.all(
-          color: themeProvider.primaryColor, // 테두리 색상
-          width: 2.0, // 테두리 두께
+          color: themeProvider.primaryColor,
+          width: 2.0,
         ),
       ),
       child: Center(
         child: image == null
-            ? Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  IconButton(
-                    icon: Icon(Icons.image,
-                        color: themeProvider.primaryColor, size: 50),
-                    onPressed: () {
+            ? existingImageUrl != null
+                ? GestureDetector(
+                    onTap: () {
                       _service.showImagePicker(
                           context, _onImagePicked, imageType);
                     },
-                  ),
-                  DecorateText(
-                    text: '아이콘을 눌러 이미지를 추가해주세요!',
-                    color: themeProvider.primaryColor,
-                    fontSize: 16,
+                    child: DisplayImage(imagePath: existingImageUrl),
                   )
-                ],
-              )
+                : Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      IconButton(
+                        icon: Icon(Icons.image,
+                            color: themeProvider.primaryColor, size: 50),
+                        onPressed: () {
+                          _service.showImagePicker(
+                              context, _onImagePicked, imageType);
+                        },
+                      ),
+                      DecorateText(
+                        text: '아이콘을 눌러 이미지를 추가해주세요!',
+                        color: themeProvider.primaryColor,
+                        fontSize: 16,
+                      )
+                    ],
+                  )
             : GestureDetector(
                 onTap: () {
                   _service.showImagePicker(context, _onImagePicked, imageType);
@@ -110,7 +137,6 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
     );
   }
 
-  // 이미지 선택 결과를 처리하는 함수
   void _onImagePicked(XFile? pickedFile, String imageType) {
     setState(() {
       if (imageType == 'problemImage') {
@@ -121,6 +147,43 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
         _solveImage = pickedFile;
       }
     });
+  }
+
+  void _submitProblem() {
+    if (widget.problem == null) {
+      final problemData = ProblemRegisterModel(
+        problemImage: _problemImage,
+        solveImage: _solveImage,
+        answerImage: _answerImage,
+        memo: _notesController.text,
+        reference: _sourceController.text,
+        solvedAt: _selectedDate,
+      );
+      _service.submitProblem(
+        context,
+        problemData,
+        _resetFields,
+      );
+    } else {
+      final updatedProblem = ProblemRegisterModel(
+        problemId: widget.problem!.problemId,
+        reference: _sourceController.text == widget.problem!.reference
+            ? null
+            : _sourceController.text,
+        memo: _notesController.text == widget.problem!.memo
+            ? null
+            : _notesController.text,
+        solvedAt:
+            _selectedDate == widget.problem!.solvedAt ? null : _selectedDate,
+        problemImage: _problemImage,
+        answerImage: _answerImage,
+        solveImage: _solveImage,
+      );
+
+      _service.updateProblem(context, updatedProblem, () {
+        Navigator.of(context).pop(true); // Return to the previous screen
+      });
+    }
   }
 
   @override
@@ -183,54 +246,52 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
                     decoration: InputDecoration(
                       border: OutlineInputBorder(
                         borderSide: BorderSide(
-                          color: themeProvider.primaryColor, // 테두리 색상 설정
-                          width: 2.0, // 테두리 두께 설정
+                          color: themeProvider.primaryColor,
+                          width: 2.0,
                         ),
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderSide: BorderSide(
-                          color:
-                              themeProvider.primaryColor, // 활성화된 상태의 테두리 색상 설정
-                          width: 2.0, // 테두리 두께 설정
+                          color: themeProvider.primaryColor,
+                          width: 2.0,
                         ),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderSide: BorderSide(
-                          color:
-                              themeProvider.primaryColor, // 포커스된 상태의 테두리 색상 설정
-                          width: 2.0, // 테두리 두께 설정
+                          color: themeProvider.primaryColor,
+                          width: 2.0,
                         ),
                       ),
                       fillColor: themeProvider.primaryColor.withOpacity(0.1),
                       filled: true,
                       hintText: '문제집, 페이지, 문제번호 등 문제의 출처를 작성해주세요!',
                       hintStyle: TextStyle(
-                          fontFamily: 'font1',
-                          color: themeProvider.primaryColor,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold),
+                        fontFamily: 'font1',
+                        color: themeProvider.primaryColor,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                 ),
-                // 문제 이미지 추가
                 buildSection(
                   '문제',
                   Icons.camera_alt,
-                  buildImagePicker('problemImage', _problemImage),
+                  buildImagePicker('problemImage', _problemImage,
+                      widget.problem?.problemImageUrl),
                 ),
-                // 해설 이미지 추가
                 buildSection(
                   '해설',
                   Icons.camera_alt,
-                  buildImagePicker('answerImage', _answerImage),
+                  buildImagePicker('answerImage', _answerImage,
+                      widget.problem?.answerImageUrl),
                 ),
-                // 나의 풀이 이미지 추가
                 buildSection(
                   '나의 풀이',
                   Icons.camera_alt,
-                  buildImagePicker('solveImage', _solveImage),
+                  buildImagePicker(
+                      'solveImage', _solveImage, widget.problem?.solveImageUrl),
                 ),
-                // 오답 메모
                 buildSection(
                   '한 줄 메모',
                   Icons.edit,
@@ -242,37 +303,35 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
                     ),
-                    textInputAction: TextInputAction.done, // 이 부분 추가
+                    textInputAction: TextInputAction.done,
                     decoration: InputDecoration(
                       border: OutlineInputBorder(
                         borderSide: BorderSide(
-                          color: themeProvider.primaryColor, // 테두리 색상 설정
-                          width: 2.0, // 테두리 두께 설정
+                          color: themeProvider.primaryColor,
+                          width: 2.0,
                         ),
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderSide: BorderSide(
-                          color:
-                              themeProvider.primaryColor, // 활성화된 상태의 테두리 색상 설정
-                          width: 2.0, // 테두리 두께 설정
+                          color: themeProvider.primaryColor,
+                          width: 2.0,
                         ),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderSide: BorderSide(
-                          color:
-                              themeProvider.primaryColor, // 포커스된 상태의 테두리 색상 설정
-                          width: 2.0, // 테두리 두께 설정
+                          color: themeProvider.primaryColor,
+                          width: 2.0,
                         ),
                       ),
-                      fillColor: themeProvider.primaryColor
-                          .withOpacity(0.1), // 내부 배경색 설정
+                      fillColor: themeProvider.primaryColor.withOpacity(0.1),
                       filled: true,
                       hintText: '기록하고 싶은 내용을 간단하게 작성해주세요!',
                       hintStyle: TextStyle(
-                          fontFamily: 'font1',
-                          color: themeProvider.primaryColor,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold),
+                        fontFamily: 'font1',
+                        color: themeProvider.primaryColor,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     maxLines: 3,
                   ),
@@ -288,28 +347,23 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
                         foregroundColor: themeProvider.primaryColor,
                       ),
                       child: DecorateText(
-                        text: '등록 취소',
+                        text: widget.problem == null
+                            ? '등록 취소'
+                            : '수정 취소',
                         fontSize: 18,
                         color: themeProvider.primaryColor,
                       ),
                     ),
                     ElevatedButton(
-                      onPressed: () => _service.submitProblem(
-                        context,
-                        _sourceController,
-                        _notesController,
-                        _problemImage,
-                        _solveImage,
-                        _answerImage,
-                        _selectedDate,
-                        _resetFields,
-                      ),
+                      onPressed: _submitProblem,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: themeProvider.primaryColor,
                         foregroundColor: Colors.white,
                       ),
-                      child: const DecorateText(
-                        text: '등록 완료',
+                      child: DecorateText(
+                        text: widget.problem == null
+                            ? '등록 완료'
+                            : '수정 완료',
                         fontSize: 18,
                         color: Colors.white,
                       ),

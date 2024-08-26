@@ -11,6 +11,7 @@ import '../Model/ProblemModel.dart';
 import '../GlobalModule/Util/NavigationButtons.dart';
 import '../Provider/ProblemsProvider.dart';
 import '../Service/ScreenUtil/ProblemDetailScreenService.dart';
+import 'ProblemRegisterScreen.dart'; // Import the update form screen
 
 class ProblemDetailScreen extends StatefulWidget {
   final int? problemId;
@@ -24,6 +25,7 @@ class ProblemDetailScreen extends StatefulWidget {
 class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
   late Future<ProblemModel?> _problemDataFuture;
   final ProblemDetailScreenService _service = ProblemDetailScreenService();
+  bool isEditMode = false; // State variable to control the view mode
 
   @override
   void initState() {
@@ -39,61 +41,82 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
     return Scaffold(
       appBar: AppBar(
         title: buildAppBarTitle(),
-        actions: [
-          PopupMenuButton<String>(
-            onSelected: (String result) {
-              if (result == 'edit') {
-                //_editProblem(context, widget.problemId);
-              } else if (result == 'delete') {
-                _service.deleteProblem(
-                  context,
-                  widget.problemId,
-                  () {
-                    Navigator.of(context).pop(true); // 이전 화면으로 이동
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: const DecorateText(
-                          text: '문제가 삭제되었습니다.',
-                          fontSize: 20,
-                          color: Colors.white,
-                        ),
-                        backgroundColor: themeProvider.primaryColor,
-                        duration: const Duration(seconds: 2),
-                      ),
-                    );
+        actions: isEditMode
+            ? null
+            : [
+                PopupMenuButton<String>(
+                  onSelected: (String result) {
+                    if (result == 'edit') {
+                      setState(() {
+                        isEditMode = true; // Switch to edit mode
+                      });
+                    } else if (result == 'delete') {
+                      _service.deleteProblem(
+                        context,
+                        widget.problemId,
+                        () {
+                          Navigator.of(context).pop(true); // 이전 화면으로 이동
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: const DecorateText(
+                                text: '문제가 삭제되었습니다.',
+                                fontSize: 20,
+                                color: Colors.white,
+                              ),
+                              backgroundColor: themeProvider.primaryColor,
+                              duration: const Duration(seconds: 2),
+                            ),
+                          );
+                        },
+                        (errorMessage) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: DecorateText(
+                                text: errorMessage,
+                                fontSize: 20,
+                                color: Colors.white,
+                              ),
+                              backgroundColor: Colors.red,
+                              duration: const Duration(seconds: 2),
+                            ),
+                          );
+                        },
+                      );
+                    }
                   },
-                  (errorMessage) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: DecorateText(
-                          text: errorMessage,
-                          fontSize: 20,
-                          color: Colors.white,
-                        ),
-                        backgroundColor: Colors.red,
-                        duration: const Duration(seconds: 2),
+                  itemBuilder: (BuildContext context) =>
+                      <PopupMenuEntry<String>>[
+                    const PopupMenuItem<String>(
+                      value: 'edit',
+                      child: DecorateText(
+                        text: '수정하기',
+                        fontSize: 18,
+                        color: Colors.blue,
                       ),
-                    );
-                  },
-                );
-              }
-            },
-            itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-              const PopupMenuItem<String>(
-                  value: 'delete',
-                  child: DecorateText(
-                    text: '삭제하기',
-                    fontSize: 18,
-                    color: Colors.red,
-                  )),
-            ],
-          ),
-        ],
+                    ),
+                    const PopupMenuItem<String>(
+                        value: 'delete',
+                        child: DecorateText(
+                          text: '삭제하기',
+                          fontSize: 18,
+                          color: Colors.red,
+                        )),
+                  ],
+                ),
+              ],
+        leading: isEditMode
+            ? IconButton(
+                icon: Icon(Icons.arrow_back, color: themeProvider.primaryColor),
+                onPressed: () {
+                  setState(() {
+                    isEditMode = false; // Switch back to view mode
+                  });
+                },
+              )
+            : null,
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: FutureBuilder<ProblemModel?>(
+      body: isEditMode
+          ? FutureBuilder<ProblemModel?>(
               future: _problemDataFuture,
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
@@ -101,24 +124,42 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                 } else if (snapshot.hasError) {
                   return const Center(child: Text('에러 발생'));
                 } else if (snapshot.hasData && snapshot.data != null) {
-                  return buildProblemDetails(context, snapshot.data!);
+                  return ProblemRegisterScreen(problem: snapshot.data!);
                 } else {
                   return buildNoDataScreen();
                 }
               },
+            )
+          : Column(
+              children: [
+                Expanded(
+                  child: FutureBuilder<ProblemModel?>(
+                    future: _problemDataFuture,
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const Center(child: CircularProgressIndicator());
+                      } else if (snapshot.hasError) {
+                        return const Center(child: Text('에러 발생'));
+                      } else if (snapshot.hasData && snapshot.data != null) {
+                        return buildProblemDetails(context, snapshot.data!);
+                      } else {
+                        return buildNoDataScreen();
+                      }
+                    },
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(
+                      top: 10.0, bottom: 30.0), // Adjust padding here
+                  child: NavigationButtons(
+                    context: context,
+                    provider:
+                        Provider.of<ProblemsProvider>(context, listen: false),
+                    currentId: widget.problemId!,
+                  ),
+                ),
+              ],
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.only(
-                top: 10.0, bottom: 30.0), // Adjust padding here
-            child: NavigationButtons(
-              context: context,
-              provider: Provider.of<ProblemsProvider>(context, listen: false),
-              currentId: widget.problemId!,
-            ),
-          ),
-        ],
-      ),
     );
   }
 
@@ -226,15 +267,18 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
     );
   }
 
-  Widget buildImageSection(BuildContext context, String? imageUrl, String label, Color color) {
+  Widget buildImageSection(
+      BuildContext context, String? imageUrl, String label, Color color) {
     final mediaQuery = MediaQuery.of(context);
     final themeProvider = Provider.of<ThemeHandler>(context);
 
     // 화면의 너비에 따라 이미지 크기 비율을 다르게 설정
     double maxImageHeight = mediaQuery.size.height * 0.9; // 기본 크기
-    if (mediaQuery.size.width > 600) { // 가로 모드나 태블릿 같이 큰 화면일 때
+    if (mediaQuery.size.width > 600) {
+      // 가로 모드나 태블릿 같이 큰 화면일 때
       maxImageHeight = mediaQuery.size.height * 0.6; // 크기를 줄임
-    } else if (mediaQuery.size.width > 800) { // 더 큰 화면일 때
+    } else if (mediaQuery.size.width > 800) {
+      // 더 큰 화면일 때
       maxImageHeight = mediaQuery.size.height * 0.5; // 크기를 더 줄임
     }
 

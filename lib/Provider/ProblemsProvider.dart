@@ -69,8 +69,6 @@ class ProblemsProvider with ChangeNotifier {
     request.fields['reference'] = problemData.reference ?? "";
     request.fields['memo'] = problemData.memo ?? "";
 
-    print('solvedAt : ${problemData.solvedAt?.toIso8601String()}');
-
     final problemImage = problemData.problemImage;
     final solveImage = problemData.solveImage;
     final answerImage = problemData.answerImage;
@@ -97,7 +95,6 @@ class ProblemsProvider with ChangeNotifier {
       if (response.statusCode == 200) {
         log('Problem successfully submitted');
         await fetchProblems();
-        //notifyListeners();
       } else {
         log('Failed to submit problem: ${response.reasonPhrase}');
       }
@@ -123,6 +120,63 @@ class ProblemsProvider with ChangeNotifier {
     }
   }
 
+  Future<void> updateProblem(ProblemRegisterModel problemData) async {
+    final accessToken = await tokenProvider.getAccessToken();
+    if (accessToken == null) {
+      throw Exception("JWT token is not available");
+    }
+
+    var uri = Uri.parse('${AppConfig.baseUrl}/api/problem');
+    var request = http.MultipartRequest('PATCH', uri)
+      ..headers.addAll({'Authorization': 'Bearer $accessToken'});
+
+    request.fields['problemId'] = (problemData.problemId ?? -1).toString();
+
+    if (problemData.solvedAt != null) {
+      request.fields['solvedAt'] = problemData.solvedAt!.toIso8601String();
+    }
+
+    log(problemData.reference!);
+
+    if (problemData.reference != null && problemData.reference!.isNotEmpty) {
+      request.fields['reference'] = problemData.reference!;
+    }
+    if (problemData.memo != null && problemData.memo!.isNotEmpty) {
+      request.fields['memo'] = problemData.memo!;
+    }
+
+    final problemImage = problemData.problemImage;
+    if (problemImage != null) {
+      request.files.add(
+          await http.MultipartFile.fromPath('problemImage', problemImage.path));
+    }
+
+    final solveImage = problemData.solveImage;
+    if (solveImage != null) {
+      request.files.add(
+          await http.MultipartFile.fromPath('solveImage', solveImage.path));
+    }
+
+    final answerImage = problemData.answerImage;
+    if (answerImage != null) {
+      request.files.add(
+          await http.MultipartFile.fromPath('answerImage', answerImage.path));
+    }
+
+    try {
+      var streamedResponse = await request.send();
+      var response = await http.Response.fromStream(streamedResponse);
+      if (response.statusCode == 200) {
+        log('Problem successfully submitted');
+        await fetchProblems();
+      } else {
+        log('Failed to submit problem: ${response.reasonPhrase}');
+      }
+    } catch (e) {
+      log('Error submitting problem: $e');
+    }
+  }
+
   Future<bool> deleteProblem(int problemId) async {
     final accessToken = await tokenProvider.getAccessToken();
     if (accessToken == null) {
@@ -143,7 +197,6 @@ class ProblemsProvider with ChangeNotifier {
     log('Deleting problem: ${response.statusCode} ${response.body}');
 
     if (response.statusCode == 200) {
-      //await fetchProblems();
       return true;
     } else {
       log('Failed to delete problem from server');
@@ -200,8 +253,6 @@ class ProblemsProvider with ChangeNotifier {
   void _updateProblemsList(Map<String, List<ProblemModel>> groupedProblems) {
     _problems = groupedProblems.entries.expand((entry) => entry.value).toList();
   }
-
-
 
   List<int> getProblemIds() {
     return _problems.map((problem) => problem.problemId as int).toList();

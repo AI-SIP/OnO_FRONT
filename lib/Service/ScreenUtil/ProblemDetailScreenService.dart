@@ -5,6 +5,7 @@ import '../../GlobalModule/Theme/DecorateText.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
 import '../../Model/ProblemModel.dart';
 import '../../Provider/ProblemsProvider.dart';
+import '../../Screen/ProblemRegisterScreen.dart';
 
 class ProblemDetailScreenService {
   Future<ProblemModel?> fetchProblemDetails(
@@ -16,6 +17,33 @@ class ProblemDetailScreenService {
   void refreshProblemDetails(
       BuildContext context, Future<ProblemModel?> Function() fetchDetails) {
     fetchDetails();
+  }
+
+  void editProblem(BuildContext context, int? problemId) async {
+    if (problemId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('문제 ID가 유효하지 않습니다.')),
+      );
+      return;
+    }
+
+    ProblemModel? problem =
+        await Provider.of<ProblemsProvider>(context, listen: false)
+            .getProblemDetails(problemId);
+
+    if (problem != null) {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => ProblemRegisterScreen(
+            problem: problem,
+          ),
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('문제를 불러오는 데 실패했습니다.')),
+      );
+    }
   }
 
   void deleteProblem(BuildContext context, int? problemId, Function onSuccess,

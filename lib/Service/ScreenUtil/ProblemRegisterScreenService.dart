@@ -79,8 +79,8 @@ class ProblemRegisterScreenService {
   }
 
   bool validateForm(BuildContext context,
-      TextEditingController sourceController, XFile? problemImage) {
-    if (sourceController.text.isEmpty) {
+      String? reference, XFile? problemImage) {
+    if(reference == null) {
       showValidationMessage(context, '출처는 필수 항목입니다.');
       return false;
     }
@@ -93,12 +93,7 @@ class ProblemRegisterScreenService {
 
   Future<void> submitProblem(
       BuildContext context,
-      TextEditingController sourceController,
-      TextEditingController notesController,
-      XFile? problemImage,
-      XFile? solveImage,
-      XFile? answerImage,
-      DateTime selectedDate,
+      ProblemRegisterModel problemData,
       VoidCallback onSuccess) async {
     final authService = Provider.of<AuthService>(context, listen: false);
     if (authService.isLoggedIn == LoginStatus.logout) {
@@ -106,20 +101,11 @@ class ProblemRegisterScreenService {
       return;
     }
 
-    if (!validateForm(context, sourceController, problemImage)) {
+    if (!validateForm(context, problemData.reference, problemData.problemImage)) {
       return;
     }
 
     showLoadingDialog(context);
-
-    final problemData = ProblemRegisterModel(
-      problemImage: problemImage,
-      solveImage: solveImage,
-      answerImage: answerImage,
-      memo: notesController.text,
-      reference: sourceController.text,
-      solvedAt: selectedDate,
-    );
 
     try {
       await Provider.of<ProblemsProvider>(context, listen: false)
@@ -129,6 +115,24 @@ class ProblemRegisterScreenService {
       showSuccessDialog(context);
     } catch (error) {
       hideLoadingDialog(context);
+    }
+  }
+
+  Future<void> updateProblem(
+      BuildContext context,
+      ProblemRegisterModel problemData,
+      VoidCallback onSuccess) async {
+    showLoadingDialog(context);
+
+    try {
+      await Provider.of<ProblemsProvider>(context, listen: false)
+          .updateProblem(problemData);
+      hideLoadingDialog(context);
+      onSuccess();
+      showSuccessDialog(context);
+    } catch (error) {
+      hideLoadingDialog(context);
+      showValidationMessage(context, '문제 업데이트에 실패했습니다.');
     }
   }
 
