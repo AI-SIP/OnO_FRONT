@@ -74,17 +74,14 @@ class ProblemsProvider with ChangeNotifier {
     final answerImage = problemData.answerImage;
 
     if (problemImage != null) {
-      log('problemImage : $problemImage');
       request.files.add(
           await http.MultipartFile.fromPath('problemImage', problemImage.path));
     }
     if (solveImage != null) {
-      log('solveImage : $solveImage');
       request.files.add(
           await http.MultipartFile.fromPath('solveImage', solveImage.path));
     }
     if (answerImage != null) {
-      log('answerImage : $answerImage');
       request.files.add(
           await http.MultipartFile.fromPath('answerImage', answerImage.path));
     }
@@ -135,8 +132,6 @@ class ProblemsProvider with ChangeNotifier {
     if (problemData.solvedAt != null) {
       request.fields['solvedAt'] = problemData.solvedAt!.toIso8601String();
     }
-
-    log(problemData.reference!);
 
     if (problemData.reference != null && problemData.reference!.isNotEmpty) {
       request.fields['reference'] = problemData.reference!;
