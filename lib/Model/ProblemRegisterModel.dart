@@ -8,6 +8,7 @@ class ProblemRegisterModel {
   String? memo;
   String? reference;
   DateTime? solvedAt;
+  List<Map<String, int>?>? colors;
 
   ProblemRegisterModel({
     this.problemId,
@@ -17,6 +18,7 @@ class ProblemRegisterModel {
     this.memo,
     this.reference,
     this.solvedAt,
+    this.colors
   });
 
   Map<String, dynamic> toJson() {
@@ -28,6 +30,7 @@ class ProblemRegisterModel {
       'memo': memo,
       'reference': reference,
       'solvedAt': solvedAt?.subtract(const Duration(hours: 9)).toIso8601String(),
+      'colors' : colors?.map((color) => color).toList(),
     };
   }
 
@@ -40,6 +43,7 @@ class ProblemRegisterModel {
       memo: json['memo'],
       reference: json['reference'],
       solvedAt: DateTime.parse(json['solvedAt']).subtract(const Duration(hours: 9)),
+      colors: json['colors'],
     );
   }
 }

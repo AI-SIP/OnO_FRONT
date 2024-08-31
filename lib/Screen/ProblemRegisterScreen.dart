@@ -26,6 +26,7 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
   XFile? _problemImage;
   XFile? _answerImage;
   XFile? _solveImage;
+  List<Map<String, int>?>? _selectedColors;
 
   @override
   void initState() {
@@ -60,6 +61,7 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
       _problemImage = null;
       _answerImage = null;
       _solveImage = null;
+      _selectedColors = null;
       _selectedDate = DateTime.now();
     });
   }
@@ -137,10 +139,12 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
     );
   }
 
-  void _onImagePicked(XFile? pickedFile, String imageType) {
+  void _onImagePicked(XFile? pickedFile, List<Map<String, int>?>? selectedColors, String imageType) {
     setState(() {
       if (imageType == 'problemImage') {
         _problemImage = pickedFile;
+        _selectedColors = selectedColors;
+        print('selectedColors : ${selectedColors}');
       } else if (imageType == 'answerImage') {
         _answerImage = pickedFile;
       } else if (imageType == 'solveImage') {
@@ -158,6 +162,7 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
         memo: _notesController.text,
         reference: _sourceController.text,
         solvedAt: _selectedDate,
+        colors: _selectedColors,
       );
       _service.submitProblem(
         context,
@@ -178,6 +183,7 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
         problemImage: _problemImage,
         answerImage: _answerImage,
         solveImage: _solveImage,
+        colors: _selectedColors,
       );
 
       _service.updateProblem(context, updatedProblem, () {

@@ -72,10 +72,14 @@ class ProblemsProvider with ChangeNotifier {
     final problemImage = problemData.problemImage;
     final solveImage = problemData.solveImage;
     final answerImage = problemData.answerImage;
+    final colors = problemData.colors;
 
     if (problemImage != null) {
       request.files.add(
           await http.MultipartFile.fromPath('problemImage', problemImage.path));
+      if(colors != null){
+        request.fields['colors'] = jsonEncode(colors);
+      }
     }
     if (solveImage != null) {
       request.files.add(
@@ -141,9 +145,14 @@ class ProblemsProvider with ChangeNotifier {
     }
 
     final problemImage = problemData.problemImage;
+    final colors = problemData.colors;
     if (problemImage != null) {
       request.files.add(
           await http.MultipartFile.fromPath('problemImage', problemImage.path));
+
+      if(colors != null){
+        request.fields['colors'] = jsonEncode(colors);
+      }
     }
 
     final solveImage = problemData.solveImage;

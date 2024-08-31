@@ -48,6 +48,8 @@ dependencies:
   cached_network_image: ^3.4.0
   image_cropper: ^8.0.1
   camera: ^0.11.0+2
+  #pick_color: ^0.0.4
+  image: ^3.0.1
 
 dev_dependencies:
   flutter_test:

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ono/GlobalModule/Image/ColorPicker/ImageColorPickerHandler.dart';
 import 'package:ono/GlobalModule/Theme/DecorateText.dart';
 import 'package:ono/Model/LoginStatus.dart';
 import 'package:provider/provider.dart';
@@ -12,6 +13,7 @@ import '../Auth/AuthService.dart';
 
 class ProblemRegisterScreenService {
   final ImagePickerHandler imagePickerHandler = ImagePickerHandler();
+  final ImageColorPickerHandler imageColorPickerHandler = ImageColorPickerHandler();
 
   Future<void> showCustomDatePicker(BuildContext context, DateTime selectedDate,
       ValueSetter<DateTime> onDateSelected) async {
@@ -72,9 +74,16 @@ class ProblemRegisterScreenService {
   }
 
   Future<void> showImagePicker(BuildContext context,
-      Function(XFile?, String) onImagePicked, String imageType) async {
-    imagePickerHandler.showImagePicker(context, (pickedFile) {
-      onImagePicked(pickedFile, imageType);
+      Function(XFile?, List<Map<String, int>?>?, String) onImagePicked, String imageType) async {
+    imagePickerHandler.showImagePicker(context, (pickedFile) async {
+      if (pickedFile != null && imageType == 'problemImage') {
+        // problemImage의 경우 색상 선택 화면을 표시
+        List<Map<String, int>?> selectedColors = await imageColorPickerHandler.showColorPicker(context, pickedFile.path);
+        onImagePicked(pickedFile, selectedColors, imageType);
+      } else {
+        // 다른 이미지 유형의 경우, 선택한 파일만 반환
+        onImagePicked(pickedFile, [], imageType); // 색상 목록을 빈 리스트로 반환
+      }
     });
   }
 
