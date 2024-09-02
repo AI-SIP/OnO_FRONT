@@ -29,21 +29,36 @@ class ColorPickerScreen extends StatefulWidget {
 class _ColorPickerScreenState extends State<ColorPickerScreen> {
   List<Color?> selectedColors = [null, null, null];
   int? activeCircleIndex;
+  final GlobalKey<ColorPickerState> colorPickerKey = GlobalKey();  // ColorPickerState에 접근하기 위한 Key
 
   @override
   Widget build(BuildContext context) {
-
     final themeProvider = Provider.of<ThemeHandler>(context);
 
     return Scaffold(
       appBar: AppBar(
-        title:  DecorateText(text: '지우고 싶은 필기 색상을 눌러주세요!!', fontSize: 24, color: themeProvider.primaryColor),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            DecorateText(
+              text: '하단의 + 버튼을 누른 뒤,',
+              fontSize: 20,
+              color: themeProvider.primaryColor,
+            ),
+            DecorateText(
+              text: '펜을 움직여 지우고 싶은 색상을 선택하세요!!',
+              fontSize: 20,
+              color: themeProvider.primaryColor,
+            ),
+          ],
+        ),
       ),
       body: Column(
         children: [
           const SizedBox(height: 40), // 상단에 여백 추가
           Expanded(
             child: ColorPicker(
+              key: colorPickerKey,  // ColorPicker에 Key 할당
               showMarker: false, // 마커를 표시하지 않음
               onChanged: (response) {
                 if (activeCircleIndex != null) {
@@ -69,13 +84,15 @@ class _ColorPickerScreenState extends State<ColorPickerScreen> {
                   setState(() {
                     activeCircleIndex = index;
                   });
+                  // 펜을 중앙에 표시하고 해당 위치의 색상을 추출
+                  colorPickerKey.currentState?.showPen();
                 },
                 child: CircleAvatar(
                   radius: 30,
-                  backgroundColor: selectedColors[index] ?? Colors.grey,
+                  backgroundColor: selectedColors[index] ?? themeProvider.primaryColor,
                   child: selectedColors[index] == null
-                      ? const Icon(Icons.add, color: Colors.white) // 선택되지 않은 경우 + 아이콘 표시
-                      : null, // 선택된 경우 아이콘 제거
+                      ? const Icon(Icons.add, color: Colors.white)
+                      : null,
                 ),
               );
             }),
@@ -95,7 +112,11 @@ class _ColorPickerScreenState extends State<ColorPickerScreen> {
 
               Navigator.of(context).pop(colorMaps); // 변환된 리스트 반환
             },
-            child: DecorateText(text: '완료', fontSize: 16, color: themeProvider.primaryColor,),
+            child: DecorateText(
+              text: '완료',
+              fontSize: 16,
+              color: themeProvider.primaryColor,
+            ),
           ),
           const SizedBox(height: 20),
         ],

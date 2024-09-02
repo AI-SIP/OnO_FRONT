@@ -1,7 +1,9 @@
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:provider/provider.dart';
 
+import '../../Theme/ThemeHandler.dart';
 import 'FindPixelColor.dart';
 import 'PickerResponse.dart';
 
@@ -12,23 +14,47 @@ class ColorPicker extends StatefulWidget {
   final Function(PickerResponse color) onChanged;
 
   const ColorPicker({
-    Key? key,
+    super.key,
     required this.child,
     required this.onChanged,
     this.showMarker,
     this.trackerImage,
-  }) : super(key: key);
+  });
 
   @override
-  _ColorPickerState createState() => _ColorPickerState();
+  ColorPickerState createState() => ColorPickerState();
 }
 
-class _ColorPickerState extends State<ColorPicker> {
+class ColorPickerState extends State<ColorPicker> {
   FindPixelColor? _colorPicker;
-  Offset fingerPosition = Offset(0, 0);
+  Offset penPosition = const Offset(0, 0); // 펜의 위치
   Color? selectedColor;
+  bool isPenVisible = false; // 펜의 가시성을 제어하기 위한 변수
 
   final GlobalKey _repaintBoundaryKey = GlobalKey();
+
+  final double penTipOffsetX = 10; // 펜 촉의 x 오프셋
+  final double penTipOffsetY = 50; // 펜 촉의 y 오프셋
+
+  void _centerPen() {
+    // RenderBox가 아직 렌더링되지 않았을 수 있기 때문에 WidgetsBinding 사용
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final renderBox =
+      _repaintBoundaryKey.currentContext?.findRenderObject() as RenderBox?;
+      if (renderBox != null) {
+        final Size imageSize = renderBox.size;
+
+        setState(() {
+          penPosition = Offset(
+            imageSize.width / 2 - penTipOffsetX,
+            imageSize.height / 2 - penTipOffsetY,
+          );
+          isPenVisible = true; // 펜을 보이도록 설정
+          _onInteract(penPosition + Offset(penTipOffsetX, penTipOffsetY));
+        });
+      }
+    });
+  }
 
   Future<ui.Image> _loadSnapshot() async {
     final RenderRepaintBoundary repaintBoundary =
@@ -42,24 +68,50 @@ class _ColorPickerState extends State<ColorPicker> {
 
   @override
   Widget build(BuildContext context) {
+
+    final themeProvider = Provider.of<ThemeHandler>(context);
+
     return Stack(
       fit: StackFit.loose,
       children: [
         RepaintBoundary(
           key: _repaintBoundaryKey,
-          child: GestureDetector(
-            onTapDown: (details) {
-              final offset = details.localPosition;
-              fingerPosition = offset;
-              _onInteract(offset);
-            },
+          child: Container(
+            margin: const EdgeInsets.symmetric(horizontal: 16.0), // 좌우 여백 추가
+            decoration: BoxDecoration(
+              border: Border.all(color: themeProvider.primaryColor, width: 2.0), // 이미지에 테두리 추가
+            ),
             child: widget.child,
           ),
         ),
+        if (isPenVisible) // 펜이 보일 때만 화면에 출력
+          Positioned(
+            left: penPosition.dx,
+            top: penPosition.dy,
+            child: GestureDetector(
+              onPanUpdate: (details) {
+                setState(() {
+                  final newPos = penPosition + details.delta;
+
+                  // 펜이 이미지 밖으로 나가지 않도록 제한
+                  final renderBox =
+                  _repaintBoundaryKey.currentContext?.findRenderObject() as RenderBox?;
+                  final Size imageSize = renderBox?.size ?? Size.zero;
+
+                  penPosition = Offset(
+                    newPos.dx.clamp(0.0, imageSize.width - penTipOffsetX),
+                    newPos.dy.clamp(0.0, imageSize.height - penTipOffsetY),
+                  );
+                });
+                _onInteract(penPosition + Offset(penTipOffsetX, penTipOffsetY));
+              },
+              child: const Icon(Icons.edit, size: 60, color: Colors.red),
+            ),
+          ),
         if (widget.showMarker ?? false) ...[
           Positioned(
-            left: fingerPosition.dx,
-            top: fingerPosition.dy - 50,
+            left: penPosition.dx,
+            top: penPosition.dy - 50,
             child: widget.trackerImage == null
                 ? Container(
               width: 50,
@@ -79,6 +131,10 @@ class _ColorPickerState extends State<ColorPicker> {
         ]
       ],
     );
+  }
+
+  void showPen() {
+    _centerPen(); // 펜을 이미지의 중앙으로 위치시키고 보이도록 설정
   }
 
   _onInteract(Offset offset) async {
@@ -106,8 +162,8 @@ class _ColorPickerState extends State<ColorPicker> {
       selectedColor?.blue ?? 0,
       selectedColor?.green ?? 0,
       selectedColor?.toHex() ?? '#000000',
-      fingerPosition.dx,
-      fingerPosition.dy,
+      penPosition.dx,
+      penPosition.dy,
     );
 
     widget.onChanged(response);
