@@ -62,8 +62,27 @@ class ProblemRegisterScreenService {
       context: context,
       barrierDismissible: false,
       builder: (BuildContext context) {
-        return const Center(
-          child: CircularProgressIndicator(),
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Image.asset(
+                'assets/Logo.png',  // 로고 이미지 경로
+                width: 100,  // 이미지 크기
+                height: 100,
+              ),
+              const SizedBox(height: 20),
+              const DecorateText(
+                text: '필기를 제거하는 중...',
+                fontSize: 24,
+                color: Colors.white,
+              ),
+              const SizedBox(height: 20),
+              const CircularProgressIndicator(),
+            ],
+          ),
         );
       },
     );

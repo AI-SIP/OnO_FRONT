@@ -77,6 +77,7 @@ flutter:
     - assets/GoogleLogo.png
     - assets/AppleLogo.png
     - assets/no_image.png
+    - assets/Logo.png
   fonts:
     - family: font1
       fonts:
