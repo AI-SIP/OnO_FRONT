@@ -33,8 +33,8 @@ class ColorPickerState extends State<ColorPicker> {
 
   final GlobalKey _repaintBoundaryKey = GlobalKey();
 
-  final double penTipOffsetX = 8; // 펜 촉의 x 오프셋
-  final double penTipOffsetY = 52; // 펜 촉의 y 오프셋
+  final double penTipOffsetX = 15; // 펜 촉의 x 오프셋
+  final double penTipOffsetY = 104; // 펜 촉의 y 오프셋
 
   void _centerPen() {
     // RenderBox가 아직 렌더링되지 않았을 수 있기 때문에 WidgetsBinding 사용
@@ -99,13 +99,13 @@ class ColorPickerState extends State<ColorPicker> {
                   final Size imageSize = renderBox?.size ?? Size.zero;
 
                   penPosition = Offset(
-                    newPos.dx.clamp(0.0, imageSize.width - penTipOffsetX),
-                    newPos.dy.clamp(0.0, imageSize.height - penTipOffsetY),
+                    newPos.dx.clamp(-penTipOffsetX, imageSize.width - penTipOffsetX),
+                    newPos.dy.clamp(-penTipOffsetY, imageSize.height - penTipOffsetY),
                   );
                 });
                 _onInteract(penPosition + Offset(penTipOffsetX, penTipOffsetY));
               },
-              child: const Icon(Icons.edit, size: 60, color: Colors.red),
+              child: const Icon(Icons.edit, size: 120, color: Colors.red),
             ),
           ),
         if (widget.showMarker ?? false) ...[
