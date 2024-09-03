@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ono/GlobalModule/Image/ColorPicker/ImageColorPickerHandler.dart';
 import 'package:ono/GlobalModule/Theme/DecorateText.dart';
 import 'package:ono/Model/LoginStatus.dart';
 import 'package:provider/provider.dart';
@@ -12,6 +13,7 @@ import '../Auth/AuthService.dart';
 
 class ProblemRegisterScreenService {
   final ImagePickerHandler imagePickerHandler = ImagePickerHandler();
+  final ImageColorPickerHandler imageColorPickerHandler = ImageColorPickerHandler();
 
   Future<void> showCustomDatePicker(BuildContext context, DateTime selectedDate,
       ValueSetter<DateTime> onDateSelected) async {
@@ -60,8 +62,27 @@ class ProblemRegisterScreenService {
       context: context,
       barrierDismissible: false,
       builder: (BuildContext context) {
-        return const Center(
-          child: CircularProgressIndicator(),
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Image.asset(
+                'assets/Logo.png',  // 로고 이미지 경로
+                width: 100,  // 이미지 크기
+                height: 100,
+              ),
+              const SizedBox(height: 20),
+              const DecorateText(
+                text: '필기를 제거하는 중...',
+                fontSize: 24,
+                color: Colors.white,
+              ),
+              const SizedBox(height: 20),
+              const CircularProgressIndicator(),
+            ],
+          ),
         );
       },
     );
@@ -72,15 +93,22 @@ class ProblemRegisterScreenService {
   }
 
   Future<void> showImagePicker(BuildContext context,
-      Function(XFile?, String) onImagePicked, String imageType) async {
-    imagePickerHandler.showImagePicker(context, (pickedFile) {
-      onImagePicked(pickedFile, imageType);
+      Function(XFile?, List<Map<String, int>?>?, String) onImagePicked, String imageType) async {
+    imagePickerHandler.showImagePicker(context, (pickedFile) async {
+      if (pickedFile != null && imageType == 'problemImage') {
+        // problemImage의 경우 색상 선택 화면을 표시
+        List<Map<String, int>?> selectedColors = await imageColorPickerHandler.showColorPicker(context, pickedFile.path);
+        onImagePicked(pickedFile, selectedColors, imageType);
+      } else {
+        // 다른 이미지 유형의 경우, 선택한 파일만 반환
+        onImagePicked(pickedFile, [], imageType); // 색상 목록을 빈 리스트로 반환
+      }
     });
   }
 
   bool validateForm(BuildContext context,
-      TextEditingController sourceController, XFile? problemImage) {
-    if (sourceController.text.isEmpty) {
+      String? reference, XFile? problemImage) {
+    if(reference == null) {
       showValidationMessage(context, '출처는 필수 항목입니다.');
       return false;
     }
@@ -93,12 +121,7 @@ class ProblemRegisterScreenService {
 
   Future<void> submitProblem(
       BuildContext context,
-      TextEditingController sourceController,
-      TextEditingController notesController,
-      XFile? problemImage,
-      XFile? solveImage,
-      XFile? answerImage,
-      DateTime selectedDate,
+      ProblemRegisterModel problemData,
       VoidCallback onSuccess) async {
     final authService = Provider.of<AuthService>(context, listen: false);
     if (authService.isLoggedIn == LoginStatus.logout) {
@@ -106,20 +129,11 @@ class ProblemRegisterScreenService {
       return;
     }
 
-    if (!validateForm(context, sourceController, problemImage)) {
+    if (!validateForm(context, problemData.reference, problemData.problemImage)) {
       return;
     }
 
     showLoadingDialog(context);
-
-    final problemData = ProblemRegisterModel(
-      problemImage: problemImage,
-      solveImage: solveImage,
-      answerImage: answerImage,
-      memo: notesController.text,
-      reference: sourceController.text,
-      solvedAt: selectedDate,
-    );
 
     try {
       await Provider.of<ProblemsProvider>(context, listen: false)
@@ -129,6 +143,24 @@ class ProblemRegisterScreenService {
       showSuccessDialog(context);
     } catch (error) {
       hideLoadingDialog(context);
+    }
+  }
+
+  Future<void> updateProblem(
+      BuildContext context,
+      ProblemRegisterModel problemData,
+      VoidCallback onSuccess) async {
+    showLoadingDialog(context);
+
+    try {
+      await Provider.of<ProblemsProvider>(context, listen: false)
+          .updateProblem(problemData);
+      hideLoadingDialog(context);
+      onSuccess();
+      showSuccessDialog(context);
+    } catch (error) {
+      hideLoadingDialog(context);
+      showValidationMessage(context, '문제 업데이트에 실패했습니다.');
     }
   }
 

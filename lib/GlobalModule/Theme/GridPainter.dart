@@ -1,7 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-
-import 'ThemeHandler.dart';
 
 class GridPainter extends CustomPainter {
   final Color gridColor;

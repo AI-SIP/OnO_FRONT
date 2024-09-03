@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:ono/GlobalModule/Theme/ThemeHandler.dart';
+import 'package:ono/Screen/SplashScreen.dart';
 import 'package:provider/provider.dart';
 import 'Screen/HomeScreen.dart';
 import 'Screen/DirectoryScreen.dart';
@@ -40,7 +41,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Flutter Demo',
       theme: _buildThemeData(context),
-      home: const MyHomePage(),
+      home: SplashScreen(),
       debugShowCheckedModeBanner: false,
     );
   }
