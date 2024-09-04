@@ -1,6 +1,14 @@
+import 'dart:developer';
+import 'dart:io';
+import 'dart:typed_data';
+import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:intl/intl.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:share_plus/share_plus.dart';
 import '../GlobalModule/Theme/DecorateText.dart';
 import '../GlobalModule/Image/DisplayImage.dart';
 import '../GlobalModule/Image/FullScreenImage.dart';
@@ -23,6 +31,7 @@ class ProblemDetailScreen extends StatefulWidget {
 }
 
 class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
+  final GlobalKey _globalKey = GlobalKey();  // RepaintBoundary를 위한 GlobalKey
   late Future<ProblemModel?> _problemDataFuture;
   final ProblemDetailScreenService _service = ProblemDetailScreenService();
   bool isEditMode = false; // State variable to control the view mode
@@ -46,7 +55,10 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
             : [
           PopupMenuButton<String>(
             onSelected: (String result) {
-              if (result == 'edit') {
+              if(result == 'share'){
+                _shareProblemAsImage();
+              }
+              else if (result == 'edit') {
                 setState(() {
                   isEditMode = true; // Switch to edit mode
                 });
@@ -86,6 +98,13 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
             },
             itemBuilder: (BuildContext context) =>
             <PopupMenuEntry<String>>[
+              PopupMenuItem<String>(
+                  value: 'share',
+                  child: DecorateText(
+                    text: '공유하기',
+                    fontSize: 18,
+                    color: themeProvider.primaryColor,
+                  )),
               const PopupMenuItem<String>(
                 value: 'edit',
                 child: DecorateText(
@@ -191,64 +210,67 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
     final formattedDate =
     DateFormat('yyyy년 M월 d일').format(problemModel.solvedAt!);
 
-    return Stack(
-      children: [
-        CustomPaint(
-          size: Size.infinite,
-          painter: GridPainter(gridColor: themeProvider.primaryColor),
-        ),
-        SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 35.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start, // 좌측 정렬
-              children: [
-                const SizedBox(height: 16.0),
-                buildIconTextRow(
-                  Icons.calendar_today,
-                  '푼 날짜',
-                  UnderlinedText(text: formattedDate, fontSize: 18),
-                ),
-                const SizedBox(height: 25.0),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start, // 레이블을 위로 정렬
+    return RepaintBoundary(
+        key: _globalKey,
+        child: Stack(
+          children: [
+            CustomPaint(
+              size: Size.infinite,
+              painter: GridPainter(gridColor: themeProvider.primaryColor),
+            ),
+            SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 35.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start, // 좌측 정렬
                   children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(children: [
-                            Icon(Icons.info, color: themeProvider.primaryColor),
-                            const SizedBox(width: 8),
-                            DecorateText(
-                                text: '문제 출처',
-                                fontSize: 20,
-                                color: themeProvider.primaryColor),
-                          ]),
-                          const SizedBox(height: 10.0),
-                          UnderlinedText(
-                              text: problemModel.reference ?? '출처 없음',
-                              fontSize: 18),
-                        ],
-                      ),
+                    const SizedBox(height: 16.0),
+                    buildIconTextRow(
+                      Icons.calendar_today,
+                      '푼 날짜',
+                      UnderlinedText(text: formattedDate, fontSize: 18),
                     ),
+                    const SizedBox(height: 25.0),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start, // 레이블을 위로 정렬
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(children: [
+                                Icon(Icons.info, color: themeProvider.primaryColor),
+                                const SizedBox(width: 8),
+                                DecorateText(
+                                    text: '문제 출처',
+                                    fontSize: 20,
+                                    color: themeProvider.primaryColor),
+                              ]),
+                              const SizedBox(height: 10.0),
+                              UnderlinedText(
+                                  text: problemModel.reference ?? '출처 없음',
+                                  fontSize: 18),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 30.0),
+                    buildImageSection(
+                      context,
+                      problemModel.processImageUrl,
+                      '문제',
+                      themeProvider.primaryColor,
+                    ),
+                    const SizedBox(height: 30.0),
+                    buildSolutionExpansionTile(problemModel),
+                    const SizedBox(height: 20.0),
                   ],
                 ),
-                const SizedBox(height: 30.0),
-                buildImageSection(
-                  context,
-                  problemModel.processImageUrl,
-                  '문제',
-                  themeProvider.primaryColor,
-                ),
-                const SizedBox(height: 30.0),
-                buildSolutionExpansionTile(problemModel),
-                const SizedBox(height: 20.0),
-              ],
+              ),
             ),
-          ),
-        ),
-      ],
+          ],
+        )
     );
   }
 
@@ -391,6 +413,26 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
         ],
       ),
     );
+  }
+
+  Future<void> _shareProblemAsImage() async {
+    try {
+      RenderRepaintBoundary boundary = _globalKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
+      ui.Image image = await boundary.toImage(pixelRatio: 3.0);
+      ByteData? byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+      Uint8List pngBytes = byteData!.buffer.asUint8List();
+
+      // 임시 파일 저장
+      final tempDir = await getTemporaryDirectory();
+      final file = await File('${tempDir.path}/problem.png').create();
+      await file.writeAsBytes(pngBytes);
+
+      // XFile 생성 후 이미지 공유
+      final XFile xFile = XFile(file.path);
+      await Share.shareXFiles([xFile], text: '내 오답노트를 공유합니다!');
+    } catch (e) {
+      log(e.toString());
+    }
   }
 
   Widget buildNoDataScreen() {
