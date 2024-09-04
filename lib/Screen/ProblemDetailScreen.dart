@@ -1,14 +1,6 @@
-import 'dart:developer';
-import 'dart:io';
-import 'dart:typed_data';
-import 'dart:ui' as ui;
-
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:intl/intl.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
-import 'package:share_plus/share_plus.dart';
 import '../GlobalModule/Theme/DecorateText.dart';
 import '../GlobalModule/Image/DisplayImage.dart';
 import '../GlobalModule/Image/FullScreenImage.dart';
@@ -31,8 +23,6 @@ class ProblemDetailScreen extends StatefulWidget {
 }
 
 class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
-  final GlobalKey _problemShareKey = GlobalKey();
-  final GlobalKey _answerShareKey = GlobalKey();
   late Future<ProblemModel?> _problemDataFuture;
   final ProblemDetailScreenService _service = ProblemDetailScreenService();
   bool isEditMode = false; // State variable to control the view mode
@@ -54,97 +44,96 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
         actions: isEditMode
             ? null
             : [
-                PopupMenuButton<String>(
-                  onSelected: (String result) {
-                    if (result == 'share_problem') {
-                      _shareProblem();
-                    } else if (result == 'shart_answer') {
-                      _shareAnswer();
-                    } else if (result == 'edit') {
-                      setState(() {
-                        isEditMode = true; // Switch to edit mode
-                      });
-                    } else if (result == 'delete') {
-                      _service.deleteProblem(
-                        context,
-                        widget.problemId,
-                        () {
-                          Navigator.of(context).pop(true); // 이전 화면으로 이동
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: const DecorateText(
-                                text: '문제가 삭제되었습니다.',
-                                fontSize: 20,
-                                color: Colors.white,
-                              ),
-                              backgroundColor: themeProvider.primaryColor,
-                              duration: const Duration(seconds: 2),
-                            ),
-                          );
-                        },
-                        (errorMessage) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: DecorateText(
-                                text: errorMessage,
-                                fontSize: 20,
-                                color: Colors.white,
-                              ),
-                              backgroundColor: Colors.red,
-                              duration: const Duration(seconds: 2),
-                            ),
-                          );
-                        },
-                      );
-                    }
-                  },
-                  itemBuilder: (BuildContext context) =>
-                      <PopupMenuEntry<String>>[
-                    PopupMenuItem<String>(
-                        value: 'share_problem',
-                        child: DecorateText(
-                          text: '문제 공유하기',
-                          fontSize: 18,
-                          color: themeProvider.primaryColor,
-                        )),
-                    PopupMenuItem<String>(
-                        value: 'share_answer',
-                        child: DecorateText(
-                          text: '정답 공유하기',
-                          fontSize: 18,
-                          color: themeProvider.primaryColor,
-                        )),
-                    const PopupMenuItem<String>(
-                      value: 'edit',
-                      child: DecorateText(
-                        text: '수정하기',
-                        fontSize: 18,
-                        color: Colors.blue,
+          PopupMenuButton<String>(
+            onSelected: (String result) {
+              if (result == 'edit') {
+                setState(() {
+                  isEditMode = true; // Switch to edit mode
+                });
+              } else if (result == 'delete') {
+                _service.deleteProblem(
+                  context,
+                  widget.problemId,
+                      () {
+                    Navigator.of(context).pop(true); // 이전 화면으로 이동
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: const DecorateText(
+                          text: '문제가 삭제되었습니다.',
+                          fontSize: 20,
+                          color: Colors.white,
+                        ),
+                        backgroundColor: themeProvider.primaryColor,
+                        duration: const Duration(seconds: 2),
                       ),
-                    ),
-                    const PopupMenuItem<String>(
-                        value: 'delete',
-                        child: DecorateText(
-                          text: '삭제하기',
-                          fontSize: 18,
-                          color: Colors.red,
-                        )),
-                  ],
+                    );
+                  },
+                      (errorMessage) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: DecorateText(
+                          text: errorMessage,
+                          fontSize: 20,
+                          color: Colors.white,
+                        ),
+                        backgroundColor: Colors.red,
+                        duration: const Duration(seconds: 2),
+                      ),
+                    );
+                  },
+                );
+              }
+            },
+            itemBuilder: (BuildContext context) =>
+            <PopupMenuEntry<String>>[
+              const PopupMenuItem<String>(
+                value: 'edit',
+                child: DecorateText(
+                  text: '수정하기',
+                  fontSize: 18,
+                  color: Colors.blue,
                 ),
-              ],
+              ),
+              const PopupMenuItem<String>(
+                  value: 'delete',
+                  child: DecorateText(
+                    text: '삭제하기',
+                    fontSize: 18,
+                    color: Colors.red,
+                  )),
+            ],
+          ),
+        ],
         leading: isEditMode
             ? IconButton(
-                icon: Icon(Icons.arrow_back, color: themeProvider.primaryColor),
-                onPressed: () {
-                  setState(() {
-                    isEditMode = false; // Switch back to view mode
-                  });
-                },
-              )
+          icon: Icon(Icons.arrow_back, color: themeProvider.primaryColor),
+          onPressed: () {
+            setState(() {
+              isEditMode = false; // Switch back to view mode
+            });
+          },
+        )
             : null,
       ),
       body: isEditMode
           ? FutureBuilder<ProblemModel?>(
+        future: _problemDataFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasError) {
+            return const Center(child: Text('에러 발생'));
+          } else if (snapshot.hasData && snapshot.data != null) {
+            return ProblemRegisterScreen(problem: snapshot.data!);
+          } else {
+            return buildNoDataScreen();
+          }
+        },
+      )
+          : Column(
+        children: [
+          Expanded(
+            child: FutureBuilder<ProblemModel?>(
               future: _problemDataFuture,
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
@@ -152,42 +141,25 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                 } else if (snapshot.hasError) {
                   return const Center(child: Text('에러 발생'));
                 } else if (snapshot.hasData && snapshot.data != null) {
-                  return ProblemRegisterScreen(problem: snapshot.data!);
+                  return buildProblemDetails(context, snapshot.data!);
                 } else {
                   return buildNoDataScreen();
                 }
               },
-            )
-          : Column(
-              children: [
-                Expanded(
-                  child: FutureBuilder<ProblemModel?>(
-                    future: _problemDataFuture,
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return const Center(child: CircularProgressIndicator());
-                      } else if (snapshot.hasError) {
-                        return const Center(child: Text('에러 발생'));
-                      } else if (snapshot.hasData && snapshot.data != null) {
-                        return buildProblemDetails(context, snapshot.data!);
-                      } else {
-                        return buildNoDataScreen();
-                      }
-                    },
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(
-                      top: 10.0, bottom: 30.0), // Adjust padding here
-                  child: NavigationButtons(
-                    context: context,
-                    provider:
-                        Provider.of<ProblemsProvider>(context, listen: false),
-                    currentId: widget.problemId!,
-                  ),
-                ),
-              ],
             ),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(
+                top: 10.0, bottom: 30.0), // Adjust padding here
+            child: NavigationButtons(
+              context: context,
+              provider:
+              Provider.of<ProblemsProvider>(context, listen: false),
+              currentId: widget.problemId!,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -217,7 +189,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
   Widget buildProblemDetails(BuildContext context, ProblemModel problemModel) {
     final themeProvider = Provider.of<ThemeHandler>(context);
     final formattedDate =
-        DateFormat('yyyy년 M월 d일').format(problemModel.solvedAt!);
+    DateFormat('yyyy년 M월 d일').format(problemModel.solvedAt!);
 
     return Stack(
       children: [
@@ -419,36 +391,6 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
         ],
       ),
     );
-  }
-
-  // 문제 공유하기 기능
-  Future<void> _shareProblem() async {
-    await _shareContent(_problemShareKey);
-  }
-
-  // 정답 공유하기 기능
-  Future<void> _shareAnswer() async {
-    await _shareContent(_answerShareKey);
-  }
-
-  Future<void> _shareContent(GlobalKey boundaryKey) async {
-    try {
-      RenderRepaintBoundary boundary = boundaryKey.currentContext!
-          .findRenderObject() as RenderRepaintBoundary;
-      ui.Image image = await boundary.toImage(pixelRatio: 3.0);
-      ByteData? byteData =
-          await image.toByteData(format: ui.ImageByteFormat.png);
-      Uint8List pngBytes = byteData!.buffer.asUint8List();
-
-      final tempDir = await getTemporaryDirectory();
-      final file = await File('${tempDir.path}/shared_image.png').create();
-      await file.writeAsBytes(pngBytes);
-
-      final XFile xFile = XFile(file.path);
-      await Share.shareXFiles([xFile], text: '내 오답노트를 공유합니다!');
-    } catch (e) {
-      log(e.toString());
-    }
   }
 
   Widget buildNoDataScreen() {
