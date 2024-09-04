@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../GlobalModule/Theme/DecorateText.dart';
 import '../../GlobalModule/Theme/ThemeDialog.dart';
 import '../../Service/Auth/AuthService.dart';
@@ -70,6 +71,15 @@ class SettingScreenService {
         duration: const Duration(seconds: 2),
       ),
     );
+  }
+
+  Future<void> openFeedbackForm() async {
+    Uri url = Uri.parse('https://forms.gle/MncQvyT57LQr43Pp7');
+    if (await canLaunchUrl(url)) {
+      await launchUrl(url);
+    } else {
+      throw 'Could not launch $url';
+    }
   }
 
   Future<void> logout(BuildContext context) async {
