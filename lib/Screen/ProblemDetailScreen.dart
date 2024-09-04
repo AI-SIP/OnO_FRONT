@@ -1,6 +1,14 @@
+import 'dart:developer';
+import 'dart:io';
+import 'dart:typed_data';
+import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:intl/intl.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:share_plus/share_plus.dart';
 import '../GlobalModule/Theme/DecorateText.dart';
 import '../GlobalModule/Image/DisplayImage.dart';
 import '../GlobalModule/Image/FullScreenImage.dart';
@@ -23,6 +31,8 @@ class ProblemDetailScreen extends StatefulWidget {
 }
 
 class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
+  final GlobalKey _problemShareKey = GlobalKey();
+  final GlobalKey _answerShareKey = GlobalKey();
   late Future<ProblemModel?> _problemDataFuture;
   final ProblemDetailScreenService _service = ProblemDetailScreenService();
   bool isEditMode = false; // State variable to control the view mode
@@ -46,7 +56,11 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
             : [
                 PopupMenuButton<String>(
                   onSelected: (String result) {
-                    if (result == 'edit') {
+                    if (result == 'share_problem') {
+                      _shareProblem();
+                    } else if (result == 'shart_answer') {
+                      _shareAnswer();
+                    } else if (result == 'edit') {
                       setState(() {
                         isEditMode = true; // Switch to edit mode
                       });
@@ -86,6 +100,20 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                   },
                   itemBuilder: (BuildContext context) =>
                       <PopupMenuEntry<String>>[
+                    PopupMenuItem<String>(
+                        value: 'share_problem',
+                        child: DecorateText(
+                          text: '문제 공유하기',
+                          fontSize: 18,
+                          color: themeProvider.primaryColor,
+                        )),
+                    PopupMenuItem<String>(
+                        value: 'share_answer',
+                        child: DecorateText(
+                          text: '정답 공유하기',
+                          fontSize: 18,
+                          color: themeProvider.primaryColor,
+                        )),
                     const PopupMenuItem<String>(
                       value: 'edit',
                       child: DecorateText(
@@ -391,6 +419,36 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
         ],
       ),
     );
+  }
+
+  // 문제 공유하기 기능
+  Future<void> _shareProblem() async {
+    await _shareContent(_problemShareKey);
+  }
+
+  // 정답 공유하기 기능
+  Future<void> _shareAnswer() async {
+    await _shareContent(_answerShareKey);
+  }
+
+  Future<void> _shareContent(GlobalKey boundaryKey) async {
+    try {
+      RenderRepaintBoundary boundary = boundaryKey.currentContext!
+          .findRenderObject() as RenderRepaintBoundary;
+      ui.Image image = await boundary.toImage(pixelRatio: 3.0);
+      ByteData? byteData =
+          await image.toByteData(format: ui.ImageByteFormat.png);
+      Uint8List pngBytes = byteData!.buffer.asUint8List();
+
+      final tempDir = await getTemporaryDirectory();
+      final file = await File('${tempDir.path}/shared_image.png').create();
+      await file.writeAsBytes(pngBytes);
+
+      final XFile xFile = XFile(file.path);
+      await Share.shareXFiles([xFile], text: '내 오답노트를 공유합니다!');
+    } catch (e) {
+      log(e.toString());
+    }
   }
 
   Widget buildNoDataScreen() {

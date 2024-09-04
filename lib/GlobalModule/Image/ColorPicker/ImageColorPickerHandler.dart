@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:ono/GlobalModule/Theme/DecorateText.dart';
 import 'package:provider/provider.dart';
@@ -7,6 +9,7 @@ import 'PixelPicker.dart';
 
 class ImageColorPickerHandler {
   Future<List<Map<String, int>?>> showColorPicker(BuildContext context, String imagePath) async {
+
     final result = await Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => ColorPickerScreen(imagePath: imagePath),
@@ -67,12 +70,21 @@ class _ColorPickerScreenState extends State<ColorPickerScreen> {
                   });
                 }
               },
+              child: Image.file(
+                File(widget.imagePath),  // Image.asset() 대신 Image.file() 사용
+                height: MediaQuery.of(context).size.height * 0.6, // 이미지의 높이를 더 크게 설정
+                width: MediaQuery.of(context).size.width, // 이미지의 너비를 화면 크기에 맞춤
+                fit: BoxFit.contain, // 이미지를 화면에 맞추어 표시
+              ),
+              /*
               child: Image.asset(
                 widget.imagePath,
                 height: MediaQuery.of(context).size.height * 0.6, // 이미지의 높이를 더 크게 설정
                 width: MediaQuery.of(context).size.width, // 이미지의 너비를 화면 크기에 맞춤
                 fit: BoxFit.contain, // 이미지를 화면에 맞추어 표시
               ),
+
+               */
             ),
           ),
           const SizedBox(height: 20),
