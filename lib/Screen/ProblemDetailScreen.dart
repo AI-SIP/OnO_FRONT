@@ -61,9 +61,12 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
     return [
       PopupMenuButton<String>(
         onSelected: (String result) {
+          /*
           if (result == 'share') {
             _shareService.shareProblemAsImage(_globalKey);
-          } else if (result == 'edit') {
+          }
+           */
+          if (result == 'edit') {
             setState(() {
               isEditMode = true;
             });
@@ -72,6 +75,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
           }
         },
         itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+          /*
           PopupMenuItem<String>(
             value: 'share',
             child: DecorateText(
@@ -80,6 +84,8 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
               color: themeProvider.primaryColor,
             ),
           ),
+
+           */
           const PopupMenuItem<String>(
             value: 'edit',
             child: DecorateText(
