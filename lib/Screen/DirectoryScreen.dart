@@ -4,6 +4,7 @@ import 'package:ono/Model/LoginStatus.dart';
 import 'package:provider/provider.dart';
 import '../GlobalModule/Theme/DecorateText.dart';
 import '../GlobalModule/Image/DisplayImage.dart';
+import '../GlobalModule/Theme/GridPainter.dart';
 import '../GlobalModule/Theme/ThemeHandler.dart';
 import '../Service/ScreenUtil/DirectoryScreenService.dart';
 import '../Model/ProblemModel.dart';
@@ -20,6 +21,7 @@ class DirectoryScreen extends StatefulWidget {
 class _DirectoryScreenState extends State<DirectoryScreen> {
   final String defaultImage = 'assets/no_image.png';
   String _selectedSortOption = 'newest';
+  final String _directoryName = '메인';
 
   late DirectoryScreenService _directoryService;
 
@@ -39,6 +41,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     final themeProvider = Provider.of<ThemeHandler>(context);
 
     return Scaffold(
+      appBar: _buildAppBar(themeProvider), // 상단 AppBar 추가
       body: !(authService.isLoggedIn == LoginStatus.login)
           ? _buildLoginPrompt(themeProvider)
           : RefreshIndicator(
@@ -53,6 +56,23 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                 ),
               ),
             ),
+    );
+  }
+
+  AppBar _buildAppBar(ThemeHandler themeProvider) {
+    return AppBar(
+      //backgroundColor: Colors.white,  // AppBar 배경을 흰색으로 설정
+      title: Padding(
+        padding: const EdgeInsets.only(left: 10.0), // 왼쪽 여백 추가
+        child: Align(
+            alignment: Alignment.center,
+            child: DecorateText(
+              text: _directoryName,
+              fontSize: 24,
+              color: themeProvider.primaryColor,
+            )),
+      ),
+      elevation: 0, // AppBar 그림자 제거 (선택 사항)
     );
   }
 

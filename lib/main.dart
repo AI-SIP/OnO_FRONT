@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:ono/GlobalModule/Theme/ThemeHandler.dart';
+import 'package:ono/Provider/FoldersProvider.dart';
 import 'package:ono/Screen/SplashScreen.dart';
 import 'package:provider/provider.dart';
 import 'Screen/HomeScreen.dart';
@@ -21,6 +22,7 @@ void main() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => ProblemsProvider()),
+        ChangeNotifierProvider(create: (_) => FoldersProvider()),
         ChangeNotifierProvider(
           create: (context) => AuthService(
               Provider.of<ProblemsProvider>(context, listen: false)),
@@ -136,7 +138,9 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const AppBarWithLogo(),
+      appBar: _selectedIndex == 2
+          ? null // DirectoryScreen을 위한 조건 (index 2일 경우 AppBar를 제거)
+          : const AppBarWithLogo(), // 다른 화면에서는 AppBar 표시
       body: IndexedStack(
         index: _selectedIndex,
         children: _widgetOptions,
