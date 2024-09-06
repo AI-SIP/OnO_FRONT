@@ -3,13 +3,15 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 
 import '../../Model/ProblemThumbnailModel.dart';
+import '../../Provider/FoldersProvider.dart';
 import '../../Provider/ProblemsProvider.dart';
 import '../../Screen/ProblemDetailScreen.dart';
 
 class DirectoryScreenService {
   final ProblemsProvider problemsProvider;
+  final FoldersProvider foldersProvider;
 
-  DirectoryScreenService(this.problemsProvider);
+  DirectoryScreenService(this.problemsProvider, this.foldersProvider);
 
   List<ProblemThumbnailModel> loadProblems() {
     if (problemsProvider.problems.isNotEmpty) {

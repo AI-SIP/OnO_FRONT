@@ -28,13 +28,18 @@ class TokenProvider {
       },
     );
 
-    if (response.statusCode == 401) {
+    if (response.statusCode == 200) {
+      return accessToken;
+    } else {
       log('Access token is invalid or expired, trying to refresh...');
-      await refreshAccessToken();
-      accessToken = await storage.read(key: 'accessToken');
+      bool isRefreshAccessToken = await refreshAccessToken();
+      if (isRefreshAccessToken) {
+        accessToken = await storage.read(key: 'accessToken');
+        return accessToken;
+      } else {
+        return null;
+      }
     }
-
-    return accessToken;
   }
 
   Future<void> setRefreshToken(String refreshToken) async {

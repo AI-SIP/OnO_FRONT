@@ -8,7 +8,7 @@ import '../../Config/AppConfig.dart';
 class GoogleAuthService {
   final GoogleSignIn _googleSignIn = GoogleSignIn();
 
-  Future<Map<String, dynamic>> signInWithGoogle() async {
+  Future<Map<String, dynamic>?> signInWithGoogle() async {
     try {
       final googleSignInAccount = await _googleSignIn.signIn();
       if(googleSignInAccount != null){
@@ -51,9 +51,8 @@ class GoogleAuthService {
       }
     } catch (error) {
       log(error.toString());
+      return null;
     }
-
-    throw Exception("Failed to Google sign-in");
   }
 
   Future<void> logoutGoogleSignIn() async {

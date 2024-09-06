@@ -1,5 +1,4 @@
 import 'package:ono/Model/FolderThumbnailModel.dart';
-
 import 'ProblemModel.dart';
 
 class FolderModel {
@@ -27,19 +26,15 @@ class FolderModel {
       folderName: json['folderName'],
       parentFolder: json['parentFolder'] != null
           ? FolderThumbnailModel.fromJson(json['parentFolder'])
-          : null,
-      problems: (json['problems'] as List)
-          .map((e) => ProblemModel.fromJson(e))
-          .toList(),
-      subFolders: (json['subFolders'] as List)
-          .map((e) => FolderThumbnailModel.fromJson(e))
-          .toList(),
+          : null, // null 체크
+      problems: (json['problems'] as List?)?.map((e) => ProblemModel.fromJson(e)).toList() ?? [], // null 체크
+      subFolders: (json['subFolders'] as List?)?.map((e) => FolderThumbnailModel.fromJson(e)).toList() ?? [], // null 체크
       createdAt: json['createdAt'] != null
           ? DateTime.parse(json['createdAt'])
-          : null,
+          : null, // null 체크
       updateAt: json['updateAt'] != null
           ? DateTime.parse(json['updateAt'])
-          : null,
+          : null, // null 체크
     );
   }
 

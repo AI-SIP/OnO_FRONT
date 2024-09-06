@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:ono/Model/LoginStatus.dart';
+import 'package:ono/Provider/FoldersProvider.dart';
 import 'package:provider/provider.dart';
 import '../GlobalModule/Theme/DecorateText.dart';
 import '../GlobalModule/Image/DisplayImage.dart';
@@ -30,6 +31,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     super.initState();
     _directoryService = DirectoryScreenService(
       Provider.of<ProblemsProvider>(context, listen: false),
+      Provider.of<FoldersProvider>(context, listen: false),
     );
 
     _directoryService.sortProblems(_selectedSortOption);

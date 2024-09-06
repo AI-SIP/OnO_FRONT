@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:ono/Model/LoginStatus.dart';
+import 'package:ono/Provider/FoldersProvider.dart';
 import 'package:ono/Service/Auth/GuestAuthService.dart';
 import '../../Config/AppConfig.dart';
 import '../../Provider/ProblemsProvider.dart';
@@ -16,9 +17,10 @@ import 'GoogleAuthService.dart';
 class AuthService with ChangeNotifier {
   final storage = const FlutterSecureStorage();
   final ProblemsProvider problemsProvider;
+  final FoldersProvider foldersProvider;
   final TokenProvider tokenProvider = TokenProvider();
 
-  AuthService(this.problemsProvider);
+  AuthService(this.problemsProvider, this.foldersProvider);
 
   LoginStatus _isLoggedIn = LoginStatus.wating;
   int _userId = 0;
@@ -52,10 +54,15 @@ class AuthService with ChangeNotifier {
     notifyListeners();
 
     final response = await googleAuthService.signInWithGoogle();
-    await storage.write(key: 'loginMethod', value: 'google');
-    await tokenProvider.setAccessToken(response['accessToken']);
-    await tokenProvider.setRefreshToken(response['refreshToken']);
-    fetchUserInfo();
+    if(response == null){
+      _isLoggedIn = LoginStatus.logout;
+    } else{
+      await storage.write(key: 'loginMethod', value: 'google');
+      await tokenProvider.setAccessToken(response['accessToken']);
+      await tokenProvider.setRefreshToken(response['refreshToken']);
+      fetchUserInfo();
+    }
+
     notifyListeners();
   }
 
@@ -74,6 +81,8 @@ class AuthService with ChangeNotifier {
   Future<void> fetchUserInfo() async {
     final accessToken = await tokenProvider.getAccessToken();
     if (accessToken == null) {
+      _isLoggedIn = LoginStatus.logout;
+      notifyListeners();
       throw Exception("Access token is not available");
     }
 
@@ -93,7 +102,9 @@ class AuthService with ChangeNotifier {
       _userEmail = responseBody['userEmail'];
       _isLoggedIn = LoginStatus.login;
 
+      await foldersProvider.fetchRootFolderContents();
       await problemsProvider.fetchProblems();
+
     } else {
       _isLoggedIn = LoginStatus.logout;
     }

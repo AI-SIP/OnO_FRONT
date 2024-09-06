@@ -25,7 +25,9 @@ void main() async {
         ChangeNotifierProvider(create: (_) => FoldersProvider()),
         ChangeNotifierProvider(
           create: (context) => AuthService(
-              Provider.of<ProblemsProvider>(context, listen: false)),
+            Provider.of<ProblemsProvider>(context, listen: false),
+            Provider.of<FoldersProvider>(context, listen: false),
+          ),
         ),
         ChangeNotifierProvider(
             create: (context) => ThemeHandler()..loadColors()),
@@ -127,11 +129,13 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
   void _resetAppState() {
 
     final problemsProvider = Provider.of<ProblemsProvider>(context, listen: false);
+    final foldersProvider = Provider.of<FoldersProvider>(context, listen: false);
 
     setState(() {
       _selectedIndex = 0;
     });
 
+    foldersProvider.fetchRootFolderContents();
     problemsProvider.fetchProblems();
   }
 
