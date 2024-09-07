@@ -46,24 +46,25 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       body: !(authService.isLoggedIn == LoginStatus.login)
           ? _buildLoginPrompt(themeProvider)
           : RefreshIndicator(
-        onRefresh: () async {
-          _directoryService.sortProblems(_selectedSortOption);
-          await _directoryService.fetchProblems();
-        },
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-          child: Column(
-            children: [
-              _buildSortDropdown(themeProvider),
-              _buildFolderAndProblemGrid(themeProvider),
-            ],
-          ),
-        ),
-      ),
+              onRefresh: () async {
+                _directoryService.sortProblems(_selectedSortOption);
+                await _directoryService.fetchProblems();
+              },
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                child: Column(
+                  children: [
+                    _buildSortDropdown(themeProvider),
+                    _buildFolderAndProblemGrid(themeProvider),
+                  ],
+                ),
+              ),
+            ),
     );
   }
 
-  AppBar _buildAppBar(ThemeHandler themeProvider, FoldersProvider foldersProvider) {
+  AppBar _buildAppBar(
+      ThemeHandler themeProvider, FoldersProvider foldersProvider) {
     return AppBar(
       elevation: 0, // AppBar 그림자 제거
       centerTitle: true, // 제목을 항상 가운데로 배치
@@ -74,25 +75,51 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       ),
       leading: foldersProvider.currentFolder?.parentFolder != null
           ? IconButton(
-        icon: Icon(
-          Icons.arrow_back,
-          color: themeProvider.primaryColor,
-        ),
-        onPressed: () {
-          foldersProvider.moveToParentFolder(foldersProvider.currentFolder!.parentFolder?.folderId);
-        },
-      )
+              icon: Icon(
+                Icons.arrow_back,
+                color: themeProvider.primaryColor,
+              ),
+              onPressed: () {
+                foldersProvider.moveToParentFolder(
+                    foldersProvider.currentFolder!.parentFolder?.folderId);
+              },
+            )
           : null, // 루트 폴더일 경우 leading 버튼 없음
       actions: [
         Padding(
           padding: const EdgeInsets.only(right: 16.0), // 우측에 여백 추가
-          child: IconButton(
-            icon: Icon(
-              Icons.create_new_folder,
-              color: themeProvider.primaryColor,
-              size: 24,
-            ),
-            onPressed: () => _showCreateFolderDialog(), // 폴더 생성 다이얼로그 호출
+          child: Row(
+            children: [
+              IconButton(
+                icon: Icon(
+                  Icons.create_new_folder,
+                  color: themeProvider.primaryColor,
+                  size: 24,
+                ),
+                onPressed: () => _showCreateFolderDialog(), // 폴더 생성 다이얼로그 호출
+              ),
+              PopupMenuButton<String>(
+                onSelected: (value) {
+                  if (value == 'delete') {
+                    _showDeleteFolderDialog(foldersProvider);
+                  }
+                },
+                itemBuilder: (context) => [
+                  const PopupMenuItem(
+                    value: 'delete',
+                    child: DecorateText(
+                      text: '폴더 삭제하기',
+                      fontSize: 18,
+                      color: Colors.red,
+                    ),
+                  ),
+                ],
+                icon: Icon(
+                  Icons.more_vert,
+                  color: themeProvider.primaryColor,
+                ),
+              ),
+            ],
           ),
         ),
       ],
@@ -113,7 +140,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
             color: themeProvider.primaryColor,
           ),
           content: SizedBox(
-            width: MediaQuery.of(context).size.width * 0.8, // 화면 너비의 80%로 다이얼로그의 가로 길이를 설정
+            width: MediaQuery.of(context).size.width *
+                0.8, // 화면 너비의 80%로 다이얼로그의 가로 길이를 설정
             child: TextField(
               controller: folderNameController,
               style: TextStyle(
@@ -135,11 +163,11 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderSide:
-                  BorderSide(color: themeProvider.primaryColor, width: 2.0),
+                      BorderSide(color: themeProvider.primaryColor, width: 1.5),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderSide:
-                  BorderSide(color: themeProvider.primaryColor, width: 2.0),
+                      BorderSide(color: themeProvider.primaryColor, width: 1.5),
                 ),
                 contentPadding: const EdgeInsets.symmetric(
                     vertical: 20.0, horizontal: 12.0), // 입력창 크기 조정
@@ -180,8 +208,60 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
   Future<void> _createFolder(String folderName) async {
     final foldersProvider =
-    Provider.of<FoldersProvider>(context, listen: false);
+        Provider.of<FoldersProvider>(context, listen: false);
     await foldersProvider.createFolder(folderName);
+  }
+
+  Future<void> _showDeleteFolderDialog(FoldersProvider foldersProvider) async {
+    final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
+    bool isRootFolder = foldersProvider.currentFolder?.parentFolder == null;
+
+    return showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: DecorateText(
+            text: '폴더 삭제',
+            fontSize: 24,
+            color: themeProvider.primaryColor,
+          ),
+          content: DecorateText(
+            text: isRootFolder ? '메인 폴더는 삭제할 수 없습니다!' : '정말로 이 폴더를 삭제하시겠습니까?',
+            fontSize: 18,
+            color: themeProvider.primaryColor,
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: DecorateText(
+                text: '확인',
+                fontSize: 18,
+                color: themeProvider.primaryColor,
+              ),
+            ),
+            if (!isRootFolder) // 루트 폴더가 아닌 경우에만 삭제 버튼을 표시
+              ElevatedButton(
+                onPressed: () async {
+                  if (foldersProvider.currentFolder != null) {
+                    await foldersProvider.deleteFolder(foldersProvider.currentFolder!.folderId);
+                    Navigator.pop(context); // 다이얼로그 닫기
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: themeProvider.primaryColor,
+                ),
+                child: const DecorateText(
+                  text: '삭제',
+                  fontSize: 18,
+                  color: Colors.white,
+                ),
+              ),
+          ],
+        );
+      },
+    );
   }
 
   Widget _buildLoginPrompt(ThemeHandler themeProvider) {
@@ -290,10 +370,10 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   Widget _buildFolderTile(
       FolderThumbnailModel folder, ThemeHandler themeProvider) {
     return GestureDetector(
-        onTap: () {
-      Provider.of<FoldersProvider>(context, listen: false)
-          .fetchFolderContents(folderId: folder.folderId);
-        },
+      onTap: () {
+        Provider.of<FoldersProvider>(context, listen: false)
+            .fetchFolderContents(folderId: folder.folderId);
+      },
       child: LayoutBuilder(
         builder: (context, constraints) {
           double height = constraints.maxHeight * 0.7;

@@ -82,6 +82,7 @@ class FoldersProvider with ChangeNotifier {
       _problems = (jsonResponse['problems'] as List)
           .map((e) => ProblemModel.fromJson(e))
           .toList();
+      currentFolderId = jsonResponse['folderId'];
 
       sortProblemsByOption(sortOption);
       notifyListeners(); // 데이터 갱신
@@ -126,7 +127,7 @@ class FoldersProvider with ChangeNotifier {
       sortProblemsByOption(sortOption);
       currentFolderId = folderId; // 현재 폴더 ID 업데이트
       notifyListeners(); // 데이터 갱신
-      log('Folder contents fetched: ${_currentFolder?.folderName}, ${problems.length} problems');
+      log('Folder contents fetched folderId : ${_currentFolder?.folderId}, folderName : ${_currentFolder?.folderName}, ${problems.length} problems');
     } else {
       log('Failed to load folder contents');
     }
@@ -192,7 +193,7 @@ class FoldersProvider with ChangeNotifier {
   }
 
   // 폴더 삭제
-  Future<void> deleteFolder(String folderId) async {
+  Future<void> deleteFolder(int folderId) async {
     final accessToken = await tokenProvider.getAccessToken();
     if (accessToken == null) {
       log('Access token is not available');
@@ -209,9 +210,15 @@ class FoldersProvider with ChangeNotifier {
     );
 
     if (response.statusCode == 200) {
-      log('Folder successfully deleted');
-      // 폴더 삭제 후 현재 폴더의 부모 폴더를 다시 로드
-      await fetchRootFolderContents();
+      log('folderId: $folderId successfully deleted');
+
+      // JSON 응답 파싱
+      final jsonResponse = json.decode(utf8.decode(response.bodyBytes));
+
+      int parentFolderId = jsonResponse['folderId'] as int;
+
+      // 부모 폴더 내용 불러오기
+      await fetchFolderContents(folderId: parentFolderId);
     } else {
       log('Failed to delete folder');
     }
@@ -370,7 +377,7 @@ class FoldersProvider with ChangeNotifier {
 
     if (response.statusCode == 200) {
       log('Problem successfully deleted');
-      await fetchCurrentFolderContents();
+
       return true;
     } else {
       log('Failed to delete problem from server');
