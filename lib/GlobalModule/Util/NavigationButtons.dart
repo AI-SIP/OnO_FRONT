@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:ono/Provider/FoldersProvider.dart';
 import 'package:provider/provider.dart';
-import '../../Provider/ProblemsProvider.dart';
 import '../../Screen/ProblemDetailScreen.dart';
 import '../Theme/DecorateText.dart';
 import '../Theme/ThemeHandler.dart';
 
 class NavigationButtons extends StatelessWidget {
   final BuildContext context;
-  final ProblemsProvider provider;
+  final FoldersProvider provider;
   final int currentId;
 
   const NavigationButtons({
@@ -24,9 +24,7 @@ class NavigationButtons extends StatelessWidget {
     final problemIds = provider.getProblemIds();
 
     if (problemIds.isEmpty) {
-      return Center(
-          child: DecorateText(text: '문제가 없습니다.', fontSize: 20, color: themeProvider.primaryColor)
-      );
+      return const Center();
     }
 
     int currentIndex = problemIds.indexOf(currentId);
@@ -53,7 +51,7 @@ class NavigationButtons extends StatelessWidget {
   }
 
   void navigateToProblem(
-      BuildContext context, ProblemsProvider provider, int newProblemId) {
+      BuildContext context, FoldersProvider provider, int newProblemId) {
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(

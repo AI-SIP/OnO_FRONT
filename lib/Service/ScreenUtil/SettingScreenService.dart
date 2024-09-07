@@ -89,7 +89,5 @@ class SettingScreenService {
 
   Future<void> deleteAccount(BuildContext context) async {
     await Provider.of<AuthService>(context, listen: false).deleteAccount();
-    // Uncomment if you want to show a success message after account deletion
-    // showSuccessDialog(context, '회원 탈퇴에 성공했습니다.');
   }
 }

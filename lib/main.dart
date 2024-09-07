@@ -10,7 +10,6 @@ import 'package:provider/provider.dart';
 import 'Screen/HomeScreen.dart';
 import 'Screen/DirectoryScreen.dart';
 import 'Screen/ProblemRegisterScreen.dart';
-import 'Provider/ProblemsProvider.dart';
 import 'Screen/SettingScreen.dart';
 import 'GlobalModule/Theme/AppbarWithLogo.dart';
 import 'Service/Auth/AuthService.dart';
@@ -21,11 +20,9 @@ void main() async {
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => ProblemsProvider()),
         ChangeNotifierProvider(create: (_) => FoldersProvider()),
         ChangeNotifierProvider(
           create: (context) => AuthService(
-            Provider.of<ProblemsProvider>(context, listen: false),
             Provider.of<FoldersProvider>(context, listen: false),
           ),
         ),
@@ -127,8 +124,6 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
   }
 
   void _resetAppState() {
-
-    final problemsProvider = Provider.of<ProblemsProvider>(context, listen: false);
     final foldersProvider = Provider.of<FoldersProvider>(context, listen: false);
 
     setState(() {
@@ -136,7 +131,6 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
     });
 
     foldersProvider.fetchRootFolderContents();
-    problemsProvider.fetchProblems();
   }
 
   @override

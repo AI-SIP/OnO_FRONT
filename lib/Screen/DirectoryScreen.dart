@@ -5,11 +5,9 @@ import 'package:ono/Provider/FoldersProvider.dart';
 import 'package:provider/provider.dart';
 import '../GlobalModule/Theme/DecorateText.dart';
 import '../GlobalModule/Image/DisplayImage.dart';
-import '../GlobalModule/Theme/GridPainter.dart';
 import '../GlobalModule/Theme/ThemeHandler.dart';
 import '../Service/ScreenUtil/DirectoryScreenService.dart';
 import '../Model/ProblemModel.dart';
-import '../Provider/ProblemsProvider.dart';
 import '../Service/Auth/AuthService.dart';
 
 class DirectoryScreen extends StatefulWidget {
@@ -30,7 +28,6 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   void initState() {
     super.initState();
     _directoryService = DirectoryScreenService(
-      Provider.of<ProblemsProvider>(context, listen: false),
       Provider.of<FoldersProvider>(context, listen: false),
     );
 
@@ -47,7 +44,10 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       body: !(authService.isLoggedIn == LoginStatus.login)
           ? _buildLoginPrompt(themeProvider)
           : RefreshIndicator(
-              onRefresh: () => _directoryService.fetchProblems(sortOption:  _selectedSortOption),
+              onRefresh: () async {
+                _directoryService.sortProblems(_selectedSortOption);
+                await _directoryService.fetchProblems();
+              },
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
                 child: Column(
@@ -74,7 +74,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
               color: themeProvider.primaryColor,
             )),
       ),
-      elevation: 0, // AppBar 그림자 제거 (선택 사항)
+      elevation: 0,
     );
   }
 
@@ -141,9 +141,9 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
             crossAxisCount = 4;
           }
 
-          return Consumer<ProblemsProvider>(
-            builder: (context, problemsProvider, child) {
-              var problems = problemsProvider.problems;
+          return Consumer<FoldersProvider>(
+            builder: (context, foldersProvider, child) {
+              var problems = foldersProvider.problems;
               if (problems.isEmpty) {
                 return Center(
                   child: DecorateText(
@@ -223,7 +223,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                 const SizedBox(height: 2),
                 DecorateText(
                   text: problem.updateAt != null
-                      ? '작성 일시 : ${formatDateTime(problem.updateAt!)}'
+                      ? '작성 일시 : ${formatDateTime(problem.createdAt!)}'
                       : '작성 일시 : 정보 없음',
                   color: Colors.grey,
                   fontSize: 12,

@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:ono/Provider/FoldersProvider.dart';
 import 'package:provider/provider.dart';
 
 import '../../GlobalModule/Theme/DecorateText.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
 import '../../Model/ProblemModel.dart';
-import '../../Provider/ProblemsProvider.dart';
 import '../../Screen/ProblemRegisterScreen.dart';
 
 class ProblemDetailScreenService {
   Future<ProblemModel?> fetchProblemDetails(
       BuildContext context, int? problemId) async {
-    return Provider.of<ProblemsProvider>(context, listen: false)
+    return Provider.of<FoldersProvider>(context, listen: false)
         .getProblemDetails(problemId);
   }
 
@@ -28,7 +28,7 @@ class ProblemDetailScreenService {
     }
 
     ProblemModel? problem =
-        await Provider.of<ProblemsProvider>(context, listen: false)
+        await Provider.of<FoldersProvider>(context, listen: false)
             .getProblemDetails(problemId);
 
     if (problem != null) {
@@ -80,7 +80,7 @@ class ProblemDetailScreenService {
             ),
             TextButton(
               onPressed: () {
-                Provider.of<ProblemsProvider>(context, listen: false)
+                Provider.of<FoldersProvider>(context, listen: false)
                     .deleteProblem(problemId)
                     .then((success) {
                   Navigator.of(context).pop(); // 다이얼로그 닫기

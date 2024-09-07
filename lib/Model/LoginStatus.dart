@@ -1,5 +1,5 @@
 enum LoginStatus {
   login,
   logout,
-  wating,
+  waiting,
 }

@@ -37,8 +37,9 @@ class TokenProvider {
         accessToken = await storage.read(key: 'accessToken');
         return accessToken;
       } else {
-        return null;
+        throw Exception("can not refresh access token");
       }
+
     }
   }
 

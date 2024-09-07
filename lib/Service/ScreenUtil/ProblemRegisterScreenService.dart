@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:ono/GlobalModule/Image/ColorPicker/ImageColorPickerHandler.dart';
 import 'package:ono/GlobalModule/Theme/DecorateText.dart';
 import 'package:ono/Model/LoginStatus.dart';
+import 'package:ono/Provider/FoldersProvider.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../GlobalModule/Image/ImagePickerHandler.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
 import '../../GlobalModule/Util/DatePickerHandler.dart';
 import '../../Model/ProblemRegisterModel.dart';
-import '../../Provider/ProblemsProvider.dart';
 import '../Auth/AuthService.dart';
 
 class ProblemRegisterScreenService {
@@ -137,7 +137,7 @@ class ProblemRegisterScreenService {
     showLoadingDialog(context);
 
     try {
-      await Provider.of<ProblemsProvider>(context, listen: false)
+      await Provider.of<FoldersProvider>(context, listen: false)
           .submitProblem(problemData, context);
       hideLoadingDialog(context);
       onSuccess();
@@ -154,7 +154,7 @@ class ProblemRegisterScreenService {
     showLoadingDialog(context);
 
     try {
-      await Provider.of<ProblemsProvider>(context, listen: false)
+      await Provider.of<FoldersProvider>(context, listen: false)
           .updateProblem(problemData);
       hideLoadingDialog(context);
       onSuccess();

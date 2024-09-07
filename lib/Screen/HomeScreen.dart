@@ -235,7 +235,7 @@ class HomeScreen extends StatelessWidget {
                   double logoSize = screenHeight * 0.02; // Dynamic logo size
                   double textSize = screenHeight * 0.015; // Dynamic text size
 
-                  if(authService.isLoggedIn == LoginStatus.wating){
+                  if(authService.isLoggedIn == LoginStatus.waiting){
                     return CircularProgressIndicator(color: themeProvider.primaryColor);
                   }
                   else if (authService.isLoggedIn == LoginStatus.login) {

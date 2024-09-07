@@ -2,19 +2,19 @@ class ProblemThumbnailModel {
   final int problemId;
   final String reference;
   final String processImageUrl;
-  final DateTime? updateAt;
+  final DateTime? createdAt;
 
   ProblemThumbnailModel(
       {required this.problemId,
       required this.reference,
-      required this.processImageUrl, required this.updateAt});
+      required this.processImageUrl, required this.createdAt});
 
   factory ProblemThumbnailModel.fromJson(Map<String, dynamic> json) {
     return ProblemThumbnailModel(
       problemId: json['problemId'],
       reference: json['reference'],
       processImageUrl: json['processImageUrl'],
-      updateAt: json['updateAt'],
+      createdAt: json['createdAt'],
     );
   }
 }

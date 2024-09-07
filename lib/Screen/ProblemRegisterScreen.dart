@@ -33,13 +33,10 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
     super.initState();
 
     if (widget.problem != null) {
-
       _selectedDate = widget.problem!.solvedAt ?? DateTime.now();
       _sourceController =
           TextEditingController(text: widget.problem!.reference);
       _notesController = TextEditingController(text: widget.problem!.memo);
-
-      // Images are not set here, handled in the image picker
     } else {
       _selectedDate = DateTime.now();
       _sourceController = TextEditingController();
@@ -139,7 +136,8 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
     );
   }
 
-  void _onImagePicked(XFile? pickedFile, List<Map<String, int>?>? selectedColors, String imageType) {
+  void _onImagePicked(XFile? pickedFile,
+      List<Map<String, int>?>? selectedColors, String imageType) {
     setState(() {
       if (imageType == 'problemImage') {
         _problemImage = pickedFile;
@@ -353,9 +351,7 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
                         foregroundColor: themeProvider.primaryColor,
                       ),
                       child: DecorateText(
-                        text: widget.problem == null
-                            ? '등록 취소'
-                            : '수정 취소',
+                        text: widget.problem == null ? '등록 취소' : '수정 취소',
                         fontSize: 18,
                         color: themeProvider.primaryColor,
                       ),
@@ -367,9 +363,7 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
                         foregroundColor: Colors.white,
                       ),
                       child: DecorateText(
-                        text: widget.problem == null
-                            ? '등록 완료'
-                            : '수정 완료',
+                        text: widget.problem == null ? '등록 완료' : '수정 완료',
                         fontSize: 18,
                         color: Colors.white,
                       ),

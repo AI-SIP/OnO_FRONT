@@ -9,20 +9,18 @@ import 'package:ono/Model/LoginStatus.dart';
 import 'package:ono/Provider/FoldersProvider.dart';
 import 'package:ono/Service/Auth/GuestAuthService.dart';
 import '../../Config/AppConfig.dart';
-import '../../Provider/ProblemsProvider.dart';
 import '../../Provider/TokenProvider.dart';
 import 'AppleAuthService.dart';
 import 'GoogleAuthService.dart';
 
 class AuthService with ChangeNotifier {
   final storage = const FlutterSecureStorage();
-  final ProblemsProvider problemsProvider;
   final FoldersProvider foldersProvider;
   final TokenProvider tokenProvider = TokenProvider();
 
-  AuthService(this.problemsProvider, this.foldersProvider);
+  AuthService(this.foldersProvider);
 
-  LoginStatus _isLoggedIn = LoginStatus.wating;
+  LoginStatus _isLoggedIn = LoginStatus.waiting;
   int _userId = 0;
   String _userName = '';
   String _userEmail = '';
@@ -37,7 +35,7 @@ class AuthService with ChangeNotifier {
   final GoogleAuthService googleAuthService = GoogleAuthService();
 
   Future<void> signInWithGuest() async {
-    _isLoggedIn = LoginStatus.wating;
+    _isLoggedIn = LoginStatus.waiting;
     notifyListeners();
 
     final response = await guestAuthService.signInWithGuest();
@@ -50,7 +48,7 @@ class AuthService with ChangeNotifier {
 
   // Google 로그인 함수(앱 처음 설치하고 구글 로그인 버튼 누르면 실행)
   Future<void> signInWithGoogle() async {
-    _isLoggedIn = LoginStatus.wating;
+    _isLoggedIn = LoginStatus.waiting;
     notifyListeners();
 
     final response = await googleAuthService.signInWithGoogle();
@@ -68,7 +66,7 @@ class AuthService with ChangeNotifier {
 
   // Apple 로그인 함수
   Future<void> signInWithApple(BuildContext context) async {
-    _isLoggedIn = LoginStatus.wating;
+    _isLoggedIn = LoginStatus.waiting;
     notifyListeners();
     final response = await appleAuthService.signInWithApple(context);
     await storage.write(key: 'loginMethod', value: 'apple');
@@ -103,8 +101,6 @@ class AuthService with ChangeNotifier {
       _isLoggedIn = LoginStatus.login;
 
       await foldersProvider.fetchRootFolderContents();
-      await problemsProvider.fetchProblems();
-
     } else {
       _isLoggedIn = LoginStatus.logout;
     }
@@ -113,7 +109,7 @@ class AuthService with ChangeNotifier {
   }
 
   Future<void> autoLogin() async {
-    _isLoggedIn = LoginStatus.wating;
+    _isLoggedIn = LoginStatus.waiting;
     String? refreshToken = await storage.read(key: 'refreshToken');
     if (refreshToken == null) {
       _isLoggedIn = LoginStatus.logout;

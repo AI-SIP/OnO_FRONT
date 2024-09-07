@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:ono/Provider/FoldersProvider.dart';
 import 'package:ono/Service/ScreenUtil/ProblemDetailShareService.dart';
 import 'package:provider/provider.dart';
 import '../GlobalModule/Theme/DecorateText.dart';
@@ -10,9 +11,8 @@ import '../GlobalModule/Theme/ThemeHandler.dart';
 import '../GlobalModule/Theme/UnderlinedText.dart';
 import '../Model/ProblemModel.dart';
 import '../GlobalModule/Util/NavigationButtons.dart';
-import '../Provider/ProblemsProvider.dart';
 import '../Service/ScreenUtil/ProblemDetailScreenService.dart';
-import 'ProblemRegisterScreen.dart'; // Import the update form screen
+import 'ProblemRegisterScreen.dart';
 
 class ProblemDetailScreen extends StatefulWidget {
   final int? problemId;
@@ -208,7 +208,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
       padding: const EdgeInsets.only(top: 10.0, bottom: 30.0),
       child: NavigationButtons(
         context: context,
-        provider: Provider.of<ProblemsProvider>(context, listen: false),
+        provider: Provider.of<FoldersProvider>(context, listen: false),
         currentId: widget.problemId!,
       ),
     );
@@ -482,6 +482,6 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
 
   // 데이터가 없을 때 띄워주는 경고 메시지
   Widget buildNoDataScreen() {
-    return const Center(child: DecorateText(text: "문제 정보를 가져올 수 없습니다."));
+    return const Center(child: DecorateText(text: "문제 정보를 가져올 수 없습니다.", fontSize: 28,));
   }
 }
