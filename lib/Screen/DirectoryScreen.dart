@@ -8,6 +8,7 @@ import '../GlobalModule/Image/DisplayImage.dart';
 import '../GlobalModule/Theme/ThemeHandler.dart';
 import '../Service/ScreenUtil/DirectoryScreenService.dart';
 import '../Model/ProblemModel.dart';
+import '../Model/FolderThumbnailModel.dart';
 import '../Service/Auth/AuthService.dart';
 
 class DirectoryScreen extends StatefulWidget {
@@ -38,38 +39,50 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   Widget build(BuildContext context) {
     final authService = Provider.of<AuthService>(context);
     final themeProvider = Provider.of<ThemeHandler>(context);
+    final foldersProvider = Provider.of<FoldersProvider>(context);
 
     return Scaffold(
-      appBar: _buildAppBar(themeProvider), // 상단 AppBar 추가
+      appBar: _buildAppBar(themeProvider, foldersProvider), // 상단 AppBar 추가
       body: !(authService.isLoggedIn == LoginStatus.login)
           ? _buildLoginPrompt(themeProvider)
           : RefreshIndicator(
-              onRefresh: () async {
-                _directoryService.sortProblems(_selectedSortOption);
-                await _directoryService.fetchProblems();
-              },
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-                child: Column(
-                  children: [
-                    _buildSortDropdown(themeProvider),
-                    _buildProblemGrid(themeProvider),
-                  ],
-                ),
-              ),
-            ),
+        onRefresh: () async {
+          _directoryService.sortProblems(_selectedSortOption);
+          await _directoryService.fetchProblems();
+        },
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+          child: Column(
+            children: [
+              _buildSortDropdown(themeProvider),
+              _buildFolderAndProblemGrid(themeProvider),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
-  AppBar _buildAppBar(ThemeHandler themeProvider) {
+  AppBar _buildAppBar(ThemeHandler themeProvider, FoldersProvider foldersProvider) {
     return AppBar(
       elevation: 0, // AppBar 그림자 제거
       centerTitle: true, // 제목을 항상 가운데로 배치
       title: DecorateText(
-        text: _directoryName,
+        text: foldersProvider.currentFolder?.folderName ?? _directoryName,
         fontSize: 24,
         color: themeProvider.primaryColor,
       ),
+      leading: foldersProvider.currentFolder?.parentFolder != null
+          ? IconButton(
+        icon: Icon(
+          Icons.arrow_back,
+          color: themeProvider.primaryColor,
+        ),
+        onPressed: () {
+          foldersProvider.moveToParentFolder(foldersProvider.currentFolder!.parentFolder?.folderId);
+        },
+      )
+          : null, // 루트 폴더일 경우 leading 버튼 없음
       actions: [
         Padding(
           padding: const EdgeInsets.only(right: 16.0), // 우측에 여백 추가
@@ -167,7 +180,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
   Future<void> _createFolder(String folderName) async {
     final foldersProvider =
-        Provider.of<FoldersProvider>(context, listen: false);
+    Provider.of<FoldersProvider>(context, listen: false);
     await foldersProvider.createFolder(folderName);
   }
 
@@ -224,7 +237,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     );
   }
 
-  Widget _buildProblemGrid(ThemeHandler themeProvider) {
+  Widget _buildFolderAndProblemGrid(ThemeHandler themeProvider) {
     return Expanded(
       child: LayoutBuilder(
         builder: (context, constraints) {
@@ -236,30 +249,89 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
           return Consumer<FoldersProvider>(
             builder: (context, foldersProvider, child) {
+              var folders = foldersProvider.currentFolder?.subFolders ?? [];
               var problems = foldersProvider.problems;
-              if (problems.isEmpty) {
+
+              if (folders.isEmpty && problems.isEmpty) {
                 return Center(
                   child: DecorateText(
-                    text: '오답노트가 등록되어 있지 않습니다!',
+                    text: '폴더나 문제가 등록되어 있지 않습니다!',
                     fontSize: 24,
                     color: themeProvider.primaryColor,
                   ),
                 );
               }
+
               return GridView.builder(
                 gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: crossAxisCount,
-                  childAspectRatio: 0.55,
+                  childAspectRatio: 0.7,
                   crossAxisSpacing: 20,
                   mainAxisSpacing: 20,
                 ),
-                itemCount: problems.length,
+                itemCount: folders.length + problems.length,
                 itemBuilder: (context, index) {
-                  var problem = problems[index];
-                  return _buildProblemTile(problem, themeProvider);
+                  if (index < folders.length) {
+                    var folder = folders[index];
+                    return _buildFolderTile(folder, themeProvider);
+                  } else {
+                    var problem = problems[index - folders.length];
+                    return _buildProblemTile(problem, themeProvider);
+                  }
                 },
               );
             },
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildFolderTile(
+      FolderThumbnailModel folder, ThemeHandler themeProvider) {
+    return GestureDetector(
+        onTap: () {
+      Provider.of<FoldersProvider>(context, listen: false)
+          .fetchFolderContents(folderId: folder.folderId);
+        },
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          double height = constraints.maxHeight * 0.7;
+          double width = constraints.maxWidth * 0.9;
+          return GridTile(
+            child: Column(
+              children: <Widget>[
+                Container(
+                  width: width,
+                  height: height,
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                      color: themeProvider.primaryColor,
+                      width: 2.0,
+                    ),
+                    borderRadius: BorderRadius.circular(8.0),
+                  ),
+                  child: Icon(
+                    Icons.folder,
+                    color: themeProvider.primaryColor,
+                    size: 60, // 폴더 아이콘 크기를 더 크게 설정
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  folder.folderName,
+                  style: TextStyle(
+                    fontFamily: 'font1',
+                    color: themeProvider.primaryColor,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
+                ),
+              ],
+            ),
           );
         },
       ),
@@ -278,13 +350,13 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       child: LayoutBuilder(
         builder: (context, constraints) {
           double height = constraints.maxHeight * 0.7;
-          double width = constraints.maxWidth * 0.9; // Set width ratio
+          double width = constraints.maxWidth * 0.9;
           return GridTile(
             child: Column(
               children: <Widget>[
                 Container(
-                  width: width, // Set width ratio
-                  height: height, // Fixed height
+                  width: width,
+                  height: height,
                   decoration: BoxDecoration(
                     border: Border.all(
                       color: themeProvider.primaryColor,
@@ -310,8 +382,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                     fontWeight: FontWeight.bold,
                   ),
                   textAlign: TextAlign.center,
-                  overflow: TextOverflow.ellipsis, // Handle text overflow
-                  maxLines: 1, // Limit to one line
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
                 ),
                 const SizedBox(height: 2),
                 DecorateText(
