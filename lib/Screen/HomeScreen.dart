@@ -28,37 +28,37 @@ class HomeScreen extends StatelessWidget {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: DecorateText(
-          text: '게스트 로그인 경고',
+
+        title: const DecorateText(
+          text: '게스트 로그인 할 경우',
           fontSize: 24,
-          color: themeProvider.primaryColor,
+          color: Colors.redAccent,
         ),
-        content: DecorateText(
-          text: '게스트로 로그인 할 경우,\n기기 간 오답노트 연동이 불가능하며,\n로그아웃 시 모든 정보가 삭제됩니다.',
-          fontSize: 22,
-          color: themeProvider.primaryColor,
+        content: const DecorateText(
+          text: '기기 간 오답노트 연동이 불가능하며\n로그아웃 시 모든 정보가 삭제됩니다.',
+          fontSize: 18,
+          color: Colors.redAccent,
         ),
         actions: <Widget>[
           TextButton(
-            child: DecorateText(
+            child: const DecorateText(
               text: '취소',
               fontSize: 20,
-              color: themeProvider.primaryColor,
+              color: Colors.black,
             ),
             onPressed: () {
               Navigator.of(ctx).pop();
             },
           ),
           TextButton(
-            child: DecorateText(
+            child: const DecorateText(
               text: '확인',
               fontSize: 20,
-              color: themeProvider.primaryColor,
+              color: Colors.redAccent,
             ),
             onPressed: () {
               Navigator.of(ctx).pop();
-              Provider.of<AuthService>(context, listen: false)
-                  .signInWithGuest();
+              Provider.of<AuthService>(context, listen: false).signInWithGuest();
             },
           ),
         ],
@@ -66,13 +66,22 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildGuestLoginButton(BuildContext context, double buttonWidth,
-      double buttonHeight, double logoSize, double textSize) {
+  Widget _buildLoginButton({
+    required BuildContext context,
+    required VoidCallback onPressed,
+    required String text,
+    required String assetPath,
+    required Color textColor,
+    required double buttonWidth,
+    required double buttonHeight,
+    required double logoSize,
+    required double textSize,
+  }) {
     return SizedBox(
       width: buttonWidth,
       height: buttonHeight,
       child: ElevatedButton(
-        onPressed: () => _showGuestLoginDialog(context),
+        onPressed: onPressed,
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.white,
           elevation: 1.0,
@@ -83,98 +92,13 @@ class HomeScreen extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.person_outline,
-              size: logoSize,
-              color: Colors.black87,
-            ),
+            assetPath.isNotEmpty
+                ? Image.asset(assetPath, height: logoSize)
+                : Icon(Icons.person_outline, size: logoSize, color: Colors.black87),
             SizedBox(width: buttonWidth * 0.02),
             Text(
-              '게스트로 로그인',
-              style: TextStyle(
-                color: Colors.black87,
-                fontSize: textSize,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildGoogleLoginButton(
-      BuildContext context,
-      AuthService authService,
-      double buttonWidth,
-      double buttonHeight,
-      double logoSize,
-      double textSize) {
-    return SizedBox(
-      width: buttonWidth,
-      height: buttonHeight,
-      child: ElevatedButton(
-        onPressed: () => authService.signInWithGoogle(),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.white,
-          elevation: 1.0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(4.0),
-          ),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Image.asset(
-              'assets/GoogleLogo.png',
-              height: logoSize,
-            ),
-            SizedBox(width: buttonWidth * 0.02),
-            Text(
-              'Google 계정으로 로그인',
-              style: TextStyle(
-                color: Colors.black87,
-                fontSize: textSize,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildAppleLoginButton(
-      BuildContext context,
-      AuthService authService,
-      double buttonWidth,
-      double buttonHeight,
-      double logoSize,
-      double textSize) {
-    return SizedBox(
-      width: buttonWidth,
-      height: buttonHeight,
-      child: ElevatedButton(
-        onPressed: () => authService.signInWithApple(context),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.white,
-          elevation: 1.0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(4.0),
-          ),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Image.asset(
-              'assets/AppleLogo.png',
-              height: logoSize,
-            ),
-            SizedBox(width: buttonWidth * 0.02),
-            Text(
-              'Apple로 로그인',
-              style: TextStyle(
-                color: Colors.black,
-                fontSize: textSize,
-              ),
+              text,
+              style: TextStyle(color: textColor, fontSize: textSize),
             ),
           ],
         ),
@@ -185,7 +109,6 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeHandler>(context);
-
     final screenHeight = MediaQuery.of(context).size.height;
     final screenWidth = MediaQuery.of(context).size.width;
 
@@ -235,29 +158,56 @@ class HomeScreen extends StatelessWidget {
                   double logoSize = screenHeight * 0.02; // Dynamic logo size
                   double textSize = screenHeight * 0.015; // Dynamic text size
 
-                  if(authService.isLoggedIn == LoginStatus.waiting){
+                  if (authService.isLoggedIn == LoginStatus.waiting) {
                     return CircularProgressIndicator(color: themeProvider.primaryColor);
-                  }
-                  else if (authService.isLoggedIn == LoginStatus.login) {
+                  } else if (authService.isLoggedIn == LoginStatus.login) {
                     return Padding(
                       padding: EdgeInsets.only(top: screenHeight * 0.05),
                       child: DecorateText(
-                          text: '${authService.userName}님 환영합니다!',
-                          fontSize: welcomeFontSize,
-                          color: themeProvider.primaryColor),
+                        text: '${authService.userName}님 환영합니다!',
+                        fontSize: welcomeFontSize,
+                        color: themeProvider.primaryColor,
+                      ),
                     );
                   } else {
                     return Column(
                       children: [
-                        _buildGuestLoginButton(context, buttonWidth,
-                            buttonHeight, logoSize, textSize),
+                        _buildLoginButton(
+                          context: context,
+                          onPressed: () => _showGuestLoginDialog(context),
+                          text: '게스트로 로그인',
+                          assetPath: '', // Icon will be used instead of asset image
+                          textColor: Colors.black87,
+                          buttonWidth: buttonWidth,
+                          buttonHeight: buttonHeight,
+                          logoSize: logoSize,
+                          textSize: textSize,
+                        ),
                         SizedBox(height: screenHeight * 0.03),
-                        _buildGoogleLoginButton(context, authService,
-                            buttonWidth, buttonHeight, logoSize, textSize),
+                        _buildLoginButton(
+                          context: context,
+                          onPressed: () => authService.signInWithGoogle(),
+                          text: 'Google 계정으로 로그인',
+                          assetPath: 'assets/GoogleLogo.png',
+                          textColor: Colors.black87,
+                          buttonWidth: buttonWidth,
+                          buttonHeight: buttonHeight,
+                          logoSize: logoSize,
+                          textSize: textSize,
+                        ),
                         SizedBox(height: screenHeight * 0.03),
                         if (Platform.isIOS || Platform.isMacOS)
-                          _buildAppleLoginButton(context, authService,
-                              buttonWidth, buttonHeight, logoSize, textSize),
+                          _buildLoginButton(
+                            context: context,
+                            onPressed: () => authService.signInWithApple(context),
+                            text: 'Apple로 로그인',
+                            assetPath: 'assets/AppleLogo.png',
+                            textColor: Colors.black87,
+                            buttonWidth: buttonWidth,
+                            buttonHeight: buttonHeight,
+                            logoSize: logoSize,
+                            textSize: textSize,
+                          ),
                       ],
                     );
                   }
