@@ -162,7 +162,7 @@ class FoldersProvider with ChangeNotifier {
   }
 
   // 폴더 생성
-  Future<void> createFolder(String folderName, int? parentFolderId) async {
+  Future<void> createFolder(String folderName) async {
     final accessToken = await tokenProvider.getAccessToken();
     if (accessToken == null) {
       log('Access token is not available');
@@ -178,14 +178,14 @@ class FoldersProvider with ChangeNotifier {
       },
       body: json.encode({
         'folderName': folderName,
-        'parentFolderId': parentFolderId,
+        'parentFolderId': currentFolderId,
       }),
     );
 
     if (response.statusCode == 200) {
       log('Folder successfully created');
       // 폴더를 생성 후 부모 폴더 내용을 다시 로드
-      await fetchFolderContents(folderId: parentFolderId ?? -1);
+      await fetchCurrentFolderContents();
     } else {
       log('Failed to create folder');
     }

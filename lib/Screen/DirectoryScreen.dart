@@ -63,19 +63,112 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
   AppBar _buildAppBar(ThemeHandler themeProvider) {
     return AppBar(
-      //backgroundColor: Colors.white,  // AppBar 배경을 흰색으로 설정
-      title: Padding(
-        padding: const EdgeInsets.only(left: 10.0), // 왼쪽 여백 추가
-        child: Align(
-            alignment: Alignment.center,
-            child: DecorateText(
-              text: _directoryName,
-              fontSize: 24,
-              color: themeProvider.primaryColor,
-            )),
+      elevation: 0, // AppBar 그림자 제거
+      centerTitle: true, // 제목을 항상 가운데로 배치
+      title: DecorateText(
+        text: _directoryName,
+        fontSize: 24,
+        color: themeProvider.primaryColor,
       ),
-      elevation: 0,
+      actions: [
+        Padding(
+          padding: const EdgeInsets.only(right: 16.0), // 우측에 여백 추가
+          child: IconButton(
+            icon: Icon(
+              Icons.create_new_folder,
+              color: themeProvider.primaryColor,
+              size: 24,
+            ),
+            onPressed: () => _showCreateFolderDialog(), // 폴더 생성 다이얼로그 호출
+          ),
+        ),
+      ],
     );
+  }
+
+  Future<void> _showCreateFolderDialog() async {
+    TextEditingController folderNameController = TextEditingController();
+    final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
+
+    await showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: DecorateText(
+            text: '폴더 생성',
+            fontSize: 24,
+            color: themeProvider.primaryColor,
+          ),
+          content: SizedBox(
+            width: MediaQuery.of(context).size.width * 0.8, // 화면 너비의 80%로 다이얼로그의 가로 길이를 설정
+            child: TextField(
+              controller: folderNameController,
+              style: TextStyle(
+                color: themeProvider.primaryColor,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                fontFamily: 'font1',
+              ),
+              decoration: InputDecoration(
+                hintText: '폴더 이름을 입력하세요',
+                hintStyle: TextStyle(
+                  color: themeProvider.primaryColor,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  fontFamily: 'font1',
+                ),
+                border: OutlineInputBorder(
+                  borderSide: BorderSide(color: themeProvider.primaryColor),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderSide:
+                  BorderSide(color: themeProvider.primaryColor, width: 2.0),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderSide:
+                  BorderSide(color: themeProvider.primaryColor, width: 2.0),
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                    vertical: 20.0, horizontal: 12.0), // 입력창 크기 조정
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: DecorateText(
+                text: '취소',
+                fontSize: 18,
+                color: themeProvider.primaryColor,
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                if (folderNameController.text.isNotEmpty) {
+                  await _createFolder(folderNameController.text);
+                  Navigator.pop(context);
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                  backgroundColor: themeProvider.primaryColor),
+              child: const DecorateText(
+                text: '생성',
+                fontSize: 18,
+                color: Colors.white,
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _createFolder(String folderName) async {
+    final foldersProvider =
+        Provider.of<FoldersProvider>(context, listen: false);
+    await foldersProvider.createFolder(folderName);
   }
 
   Widget _buildLoginPrompt(ThemeHandler themeProvider) {
