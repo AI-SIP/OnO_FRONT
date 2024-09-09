@@ -192,7 +192,7 @@ class FoldersProvider with ChangeNotifier {
     }
   }
 
-  Future<void> updateFolder(String newName, int? parentId) async {
+  Future<void> updateFolder(String? newName, int? parentId) async {
     final accessToken = await tokenProvider.getAccessToken();
     if (accessToken == null) {
       log('Access token is not available');

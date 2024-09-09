@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../GlobalModule/Theme/DecorateText.dart';
 import '../GlobalModule/Image/DisplayImage.dart';
 import '../GlobalModule/Theme/ThemeHandler.dart';
+import '../GlobalModule/Util/FolderSelectionDialog.dart';
 import '../Service/ScreenUtil/DirectoryScreenService.dart';
 import '../Model/ProblemModel.dart';
 import '../Model/FolderThumbnailModel.dart';
@@ -102,6 +103,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                 onSelected: (value) {
                   if (value == 'rename') {
                     _showRenameFolderDialog(foldersProvider);
+                  } else if (value == 'move') {
+                    _showMoveFolderDialog(foldersProvider); // 폴더 이동 다이얼로그 호출
                   } else if (value == 'delete') {
                     _showDeleteFolderDialog(foldersProvider);
                   }
@@ -113,6 +116,14 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                       text: '폴더 이름 수정하기',
                       fontSize: 18,
                       color: Colors.blue,
+                    ),
+                  ),
+                  const PopupMenuItem(
+                    value: 'move',
+                    child: DecorateText(
+                      text: '폴더 위치 변경하기',
+                      fontSize: 18,
+                      color: Colors.purple,
                     ),
                   ),
                   const PopupMenuItem(
@@ -149,7 +160,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
   Future<void> _createFolder(String folderName) async {
     final foldersProvider =
-    Provider.of<FoldersProvider>(context, listen: false);
+        Provider.of<FoldersProvider>(context, listen: false);
     await foldersProvider.createFolder(folderName);
   }
 
@@ -164,9 +175,65 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   }
 
   Future<void> _renameFolder(
-      String newName,) async {
-    final foldersProvider = Provider.of<FoldersProvider>(context, listen: false);
+    String newName,
+  ) async {
+    final foldersProvider =
+        Provider.of<FoldersProvider>(context, listen: false);
     await foldersProvider.updateFolder(newName, null);
+  }
+
+  // 폴더 이동 다이얼로그 출력
+  Future<void> _showMoveFolderDialog(FoldersProvider foldersProvider) async {
+    // 루트 폴더인지 확인
+    if (foldersProvider.currentFolder?.parentFolder == null) {
+      _showCannotMoveRootFolderDialog();
+      return;
+    }
+
+    final selectedFolder = await showDialog<Map<String, dynamic>?>(
+      context: context,
+      builder: (context) => FolderSelectionDialog(),
+    );
+
+    if (selectedFolder != null) {
+      final selectedFolderId = selectedFolder['folderId'];
+      await foldersProvider.updateFolder(null, selectedFolderId); // 부모 폴더 변경
+    }
+  }
+
+  // 루트 폴더 위치 변경 시 경고 다이얼로그 출력
+  Future<void> _showCannotMoveRootFolderDialog() async {
+    final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
+
+    await showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: DecorateText(
+            text: '폴더 위치 변경 불가',
+            fontSize: 24,
+            color: themeProvider.primaryColor,
+          ),
+          content: DecorateText(
+            text: '메인 폴더는 위치를 변경할 수 없습니다.',
+            fontSize: 20,
+            color: themeProvider.primaryColor,
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const DecorateText(
+                text: '확인',
+                fontSize: 20,
+                color: Colors.black,
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   Future<void> _showDeleteFolderDialog(FoldersProvider foldersProvider) async {
@@ -193,7 +260,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                 Navigator.pop(context);
               },
               child: const DecorateText(
-                text: '취소',
+                text: '확인',
                 fontSize: 20,
                 color: Colors.black,
               ),
@@ -235,7 +302,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     required Function(String) onFolderNameSubmitted,
   }) async {
     TextEditingController folderNameController =
-    TextEditingController(text: defaultFolderName);
+        TextEditingController(text: defaultFolderName);
     final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
 
     await showDialog(
@@ -270,11 +337,11 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderSide:
-                  BorderSide(color: themeProvider.primaryColor, width: 1.5),
+                      BorderSide(color: themeProvider.primaryColor, width: 1.5),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderSide:
-                  BorderSide(color: themeProvider.primaryColor, width: 1.5),
+                      BorderSide(color: themeProvider.primaryColor, width: 1.5),
                 ),
                 contentPadding: const EdgeInsets.symmetric(
                     vertical: 20.0, horizontal: 12.0),
