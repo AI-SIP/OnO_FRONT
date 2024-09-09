@@ -37,13 +37,35 @@ class NavigationButtons extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
-        ElevatedButton(
+        TextButton(
           onPressed: () =>
               navigateToProblem(context, provider, previousProblemId),
+            style: ElevatedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 25.0, vertical: 8.0),
+              backgroundColor: themeProvider.primaryColor.withOpacity(0.1), // 배경색을 은은하게 설정
+              side: BorderSide(
+                color: themeProvider.primaryColor,
+                width: 2.0, // 테두리 두께
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(15.0), // 둥글기 조정
+              ),
+            ),
             child: DecorateText(text: '이전 문제', fontSize: 20, color: themeProvider.primaryColor)
         ),
-        ElevatedButton(
+        TextButton(
           onPressed: () => navigateToProblem(context, provider, nextProblemId),
+            style: ElevatedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 25.0, vertical: 8.0),
+              backgroundColor: themeProvider.primaryColor.withOpacity(0.1), // 배경색을 은은하게 설정
+              side: BorderSide(
+                color: themeProvider.primaryColor,
+                width: 2.0, // 테두리 두께
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(15.0), // 둥글기 조정
+              ),
+            ),
             child: DecorateText(text: '다음 문제', fontSize: 20, color: themeProvider.primaryColor)
         ),
       ],

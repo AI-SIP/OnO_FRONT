@@ -340,11 +340,11 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
         TextButton(
           onPressed: _resetFields,
           style: ElevatedButton.styleFrom(
-            padding: const EdgeInsets.symmetric(horizontal: 25.0, vertical: 12.0),
+            padding: const EdgeInsets.symmetric(horizontal: 25.0, vertical: 8.0),
             backgroundColor: themeProvider.primaryColor.withOpacity(0.3),
             foregroundColor: themeProvider.primaryColor,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10.0), // 둥글기 조정
+              borderRadius: BorderRadius.circular(15.0), // 둥글기 조정
             ),
           ),
           child: DecorateText(
@@ -356,11 +356,11 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
         TextButton(
           onPressed: _submitProblem,
           style: ElevatedButton.styleFrom(
-            padding: const EdgeInsets.symmetric(horizontal: 25.0, vertical: 12.0),
+            padding: const EdgeInsets.symmetric(horizontal: 25.0, vertical: 8.0),
             backgroundColor: themeProvider.primaryColor,
             foregroundColor: Colors.white,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10.0), // 둥글기 조정
+              borderRadius: BorderRadius.circular(15.0), // 둥글기 조정
             ),
           ),
           child: DecorateText(
