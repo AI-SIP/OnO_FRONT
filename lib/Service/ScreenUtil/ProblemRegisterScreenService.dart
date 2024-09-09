@@ -78,10 +78,13 @@ class ProblemRegisterScreenService {
             mainAxisSize: MainAxisSize.min,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Image.asset(
-                'assets/Logo.png',  // 로고 이미지 경로
-                width: 100,  // 이미지 크기
-                height: 100,
+              ClipRRect(
+                borderRadius: BorderRadius.circular(10), // 모서리를 둥글게 설정
+                child: Image.asset(
+                  'assets/Logo.png',  // 로고 이미지 경로
+                  width: 100,  // 이미지 크기
+                  height: 100,
+                ),
               ),
               const SizedBox(height: 20),
               const DecorateText(
