@@ -143,7 +143,7 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
           color: themeProvider.primaryColor,
         ),
         const Spacer(),
-        ElevatedButton(
+        TextButton(
           onPressed: () => _service.showCustomDatePicker(
             context,
             _selectedDate,
@@ -152,11 +152,15 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
             }),
           ),
           style: ElevatedButton.styleFrom(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
             foregroundColor: themeProvider.primaryColor,
-            backgroundColor: Colors.white,
+            backgroundColor: themeProvider.primaryColor.withOpacity(0.1),
             side: BorderSide(
               color: themeProvider.primaryColor,
-              width: 1.5, // 테두리 두께
+              width: 2.0, // 테두리 두께
+            ),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10.0),
             ),
           ),
           child: DecorateText(
@@ -182,24 +186,26 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
           color: themeProvider.primaryColor,
         ),
         const Spacer(),
-        ElevatedButton(
+        TextButton(
           onPressed: () async {
             await _showFolderSelectionModal(context);
           },
-          style: ElevatedButton.styleFrom(
-            foregroundColor: themeProvider.primaryColor,
-            backgroundColor: Colors.white,
+          style: TextButton.styleFrom(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+            backgroundColor: themeProvider.primaryColor.withOpacity(0.1), // 배경색을 은은하게 설정
             side: BorderSide(
-              // 테두리 설정
               color: themeProvider.primaryColor,
-              width: 1.5, // 테두리 두께
+              width: 2.0, // 테두리 두께
+            ),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10.0),
             ),
           ),
           child: LayoutBuilder(
             builder: (context, constraints) {
               return Container(
                 constraints: const BoxConstraints(
-                  maxWidth: 150,
+                  maxWidth: 150, // 최대 너비 설정
                 ),
                 child: Text(
                   _selectedFolderName ?? '폴더 선택',
@@ -209,9 +215,9 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
                     color: themeProvider.primaryColor,
                     fontWeight: FontWeight.bold,
                   ),
-                  overflow: TextOverflow.ellipsis, // 최대 길이를 넘을 때만 말줄임표 적용
+                  overflow: TextOverflow.ellipsis, // 길어지면 말줄임표 적용
                   maxLines: 1, // 한 줄로 표시
-                  softWrap: false, // 말줄임표 적용 시 줄바꿈 방지
+                  softWrap: false, // 말 줄임표 적용 시 줄바꿈 방지
                   textAlign: TextAlign.right,
                 ),
               );
@@ -331,27 +337,35 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: <Widget>[
-        ElevatedButton(
+        TextButton(
           onPressed: _resetFields,
           style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.white54,
+            padding: const EdgeInsets.symmetric(horizontal: 25.0, vertical: 12.0),
+            backgroundColor: themeProvider.primaryColor.withOpacity(0.3),
             foregroundColor: themeProvider.primaryColor,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10.0), // 둥글기 조정
+            ),
           ),
           child: DecorateText(
             text: widget.problem == null ? '등록 취소' : '수정 취소',
-            fontSize: 18,
+            fontSize: 20,
             color: themeProvider.primaryColor,
           ),
         ),
-        ElevatedButton(
+        TextButton(
           onPressed: _submitProblem,
           style: ElevatedButton.styleFrom(
+            padding: const EdgeInsets.symmetric(horizontal: 25.0, vertical: 12.0),
             backgroundColor: themeProvider.primaryColor,
             foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10.0), // 둥글기 조정
+            ),
           ),
           child: DecorateText(
             text: widget.problem == null ? '등록 완료' : '수정 완료',
-            fontSize: 18,
+            fontSize: 20,
             color: Colors.white,
           ),
         ),
