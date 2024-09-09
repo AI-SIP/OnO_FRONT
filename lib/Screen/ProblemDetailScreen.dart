@@ -89,7 +89,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
           const PopupMenuItem<String>(
             value: 'edit',
             child: DecorateText(
-              text: '수정하기',
+              text: '문제 수정하기',
               fontSize: 18,
               color: Colors.blue,
             ),
@@ -97,7 +97,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
           const PopupMenuItem<String>(
             value: 'delete',
             child: DecorateText(
-              text: '삭제하기',
+              text: '문제 삭제하기',
               fontSize: 18,
               color: Colors.red,
             ),

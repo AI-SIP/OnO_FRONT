@@ -192,6 +192,35 @@ class FoldersProvider with ChangeNotifier {
     }
   }
 
+  Future<void> updateFolder(String newName, int? parentId) async {
+    final accessToken = await tokenProvider.getAccessToken();
+    if (accessToken == null) {
+      log('Access token is not available');
+      return;
+    }
+
+    final url = Uri.parse('${AppConfig.baseUrl}/api/folder/$currentFolderId');
+    final response = await http.patch(
+      url,
+      headers: {
+        'Content-Type': 'application/json; charset=UTF-8',
+        'Authorization': 'Bearer $accessToken',
+      },
+      body: json.encode({
+        'folderName': newName,
+        'parentFolderId': parentId, // 폴더의 상위 폴더 ID가 필요한 경우 추가
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      log('Folder name successfully updated to $newName');
+      // 폴더 내용 다시 로드
+      await fetchCurrentFolderContents();
+    } else {
+      log('Failed to update folder name: ${response.reasonPhrase}');
+    }
+  }
+
   // 폴더 삭제
   Future<void> deleteFolder(int folderId) async {
     final accessToken = await tokenProvider.getAccessToken();

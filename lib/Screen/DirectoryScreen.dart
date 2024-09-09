@@ -100,11 +100,21 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
               ),
               PopupMenuButton<String>(
                 onSelected: (value) {
-                  if (value == 'delete') {
+                  if (value == 'rename') {
+                    _showRenameFolderDialog(foldersProvider);
+                  } else if (value == 'delete') {
                     _showDeleteFolderDialog(foldersProvider);
                   }
                 },
                 itemBuilder: (context) => [
+                  const PopupMenuItem(
+                    value: 'rename',
+                    child: DecorateText(
+                      text: '폴더 이름 수정하기',
+                      fontSize: 18,
+                      color: Colors.blue,
+                    ),
+                  ),
                   const PopupMenuItem(
                     value: 'delete',
                     child: DecorateText(
@@ -128,87 +138,35 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
   // 폴더 생성 다이얼로그 출력
   Future<void> _showCreateFolderDialog() async {
-    TextEditingController folderNameController = TextEditingController();
-    final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
-
-    await showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: DecorateText(
-            text: '폴더 생성',
-            fontSize: 24,
-            color: themeProvider.primaryColor,
-          ),
-          content: SizedBox(
-            width: MediaQuery.of(context).size.width *
-                0.8, // 화면 너비의 80%로 다이얼로그의 가로 길이를 설정
-            child: TextField(
-              controller: folderNameController,
-              style: TextStyle(
-                color: themeProvider.primaryColor,
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                fontFamily: 'font1',
-              ),
-              decoration: InputDecoration(
-                hintText: '폴더 이름을 입력하세요',
-                hintStyle: TextStyle(
-                  color: themeProvider.primaryColor,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  fontFamily: 'font1',
-                ),
-                border: OutlineInputBorder(
-                  borderSide: BorderSide(color: themeProvider.primaryColor),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderSide:
-                      BorderSide(color: themeProvider.primaryColor, width: 1.5),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderSide:
-                      BorderSide(color: themeProvider.primaryColor, width: 1.5),
-                ),
-                contentPadding: const EdgeInsets.symmetric(
-                    vertical: 20.0, horizontal: 12.0), // 입력창 크기 조정
-              ),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: const DecorateText(
-                text: '취소',
-                fontSize: 20,
-                color: Colors.black,
-              ),
-            ),
-            TextButton(
-              onPressed: () async {
-                if (folderNameController.text.isNotEmpty) {
-                  await _createFolder(folderNameController.text);
-                  Navigator.pop(context);
-                }
-              },
-              child: DecorateText(
-                text: '생성',
-                fontSize: 20,
-                color: themeProvider.primaryColor,
-              ),
-            ),
-          ],
-        );
+    await _showFolderNameDialog(
+      dialogTitle: '폴더 생성',
+      defaultFolderName: '', // 폴더 생성 시에는 기본값이 없음
+      onFolderNameSubmitted: (folderName) async {
+        await _createFolder(folderName);
       },
     );
   }
 
   Future<void> _createFolder(String folderName) async {
     final foldersProvider =
-        Provider.of<FoldersProvider>(context, listen: false);
+    Provider.of<FoldersProvider>(context, listen: false);
     await foldersProvider.createFolder(folderName);
+  }
+
+  Future<void> _showRenameFolderDialog(FoldersProvider foldersProvider) async {
+    await _showFolderNameDialog(
+      dialogTitle: '폴더 이름 변경',
+      defaultFolderName: foldersProvider.currentFolder?.folderName ?? '',
+      onFolderNameSubmitted: (newName) async {
+        await _renameFolder(newName);
+      },
+    );
+  }
+
+  Future<void> _renameFolder(
+      String newName,) async {
+    final foldersProvider = Provider.of<FoldersProvider>(context, listen: false);
+    await foldersProvider.updateFolder(newName, null);
   }
 
   Future<void> _showDeleteFolderDialog(FoldersProvider foldersProvider) async {
@@ -268,6 +226,88 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         fontSize: 24,
         color: themeProvider.primaryColor,
       ),
+    );
+  }
+
+  Future<void> _showFolderNameDialog({
+    required String dialogTitle,
+    required String defaultFolderName,
+    required Function(String) onFolderNameSubmitted,
+  }) async {
+    TextEditingController folderNameController =
+    TextEditingController(text: defaultFolderName);
+    final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
+
+    await showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: DecorateText(
+            text: dialogTitle,
+            fontSize: 24,
+            color: themeProvider.primaryColor,
+          ),
+          content: SizedBox(
+            width: MediaQuery.of(context).size.width * 0.8,
+            child: TextField(
+              controller: folderNameController,
+              style: TextStyle(
+                color: themeProvider.primaryColor,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                fontFamily: 'font1',
+              ),
+              decoration: InputDecoration(
+                hintText: '폴더 이름을 입력하세요',
+                hintStyle: TextStyle(
+                  color: themeProvider.primaryColor,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  fontFamily: 'font1',
+                ),
+                border: OutlineInputBorder(
+                  borderSide: BorderSide(color: themeProvider.primaryColor),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderSide:
+                  BorderSide(color: themeProvider.primaryColor, width: 1.5),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderSide:
+                  BorderSide(color: themeProvider.primaryColor, width: 1.5),
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                    vertical: 20.0, horizontal: 12.0),
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const DecorateText(
+                text: '취소',
+                fontSize: 20,
+                color: Colors.black,
+              ),
+            ),
+            TextButton(
+              onPressed: () async {
+                if (folderNameController.text.isNotEmpty) {
+                  onFolderNameSubmitted(folderNameController.text);
+                  Navigator.pop(context);
+                }
+              },
+              child: DecorateText(
+                text: '확인',
+                fontSize: 20,
+                color: themeProvider.primaryColor,
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 
