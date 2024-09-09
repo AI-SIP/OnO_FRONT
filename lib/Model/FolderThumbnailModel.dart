@@ -2,13 +2,13 @@ class FolderThumbnailModel {
   int folderId;
   String folderName;
   int? parentFolderId;
-  List<int> subFoldersId;
+  List<int>? subFoldersId;
 
   FolderThumbnailModel({
     required this.folderId,
     required this.folderName,
     this.parentFolderId,
-    required this.subFoldersId,
+    this.subFoldersId,
   });
 
   // JSON 파싱 메서드
@@ -17,9 +17,10 @@ class FolderThumbnailModel {
       folderId: json['folderId'],
       folderName: json['folderName'],
       parentFolderId: json['parentFolderId'],
-      subFoldersId: (json['subFoldersId'] as List<dynamic>)
-          .map((id) => id as int)
-          .toList(),
+      // null일 수 있는 필드 처리
+      subFoldersId: json['subFoldersId'] != null
+          ? List<int>.from(json['subFoldersId'])
+          : [], // null이면 빈 리스트로 처리
     );
   }
 
@@ -28,7 +29,7 @@ class FolderThumbnailModel {
       'folderId': folderId,
       'folderName': folderName,
       'parentFolderId': parentFolderId,
-      'subFoldersId': subFoldersId,
+      'subFoldersId': subFoldersId ?? [],
     };
   }
 }
