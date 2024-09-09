@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../Model/FolderThumbnailModel.dart';
@@ -14,11 +16,31 @@ class _FolderSelectionDialogState extends State<FolderSelectionDialog> {
   int? _selectedFolderId;
   String? _selectedFolderName;
   Set<int> _expandedFolders = {}; // 확장된 폴더 ID를 저장하는 Set
+  List<FolderThumbnailModel> _cachedFolders = []; // 폴더 데이터를 캐싱하기 위한 리스트
+  bool _isLoading = true; // 데이터를 로딩 중인지 여부를 나타내는 상태
+
+  @override
+  void initState() {
+    super.initState();
+    _loadFolders(); // 초기 폴더 데이터를 로드
+  }
+
+  Future<void> _loadFolders() async {
+    final foldersProvider = Provider.of<FoldersProvider>(context, listen: false);
+    try {
+      // 서버에서 폴더 데이터를 한 번만 가져옴
+      _cachedFolders = await foldersProvider.fetchAllFolderThumbnails();
+    } catch (e) {
+      log('Failed to load folders: $e');
+    } finally {
+      setState(() {
+        _isLoading = false; // 데이터 로딩이 완료되면 상태 업데이트
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final foldersProvider =
-    Provider.of<FoldersProvider>(context, listen: false);
     final themeProvider = Provider.of<ThemeHandler>(context);
 
     return AlertDialog(
@@ -29,32 +51,10 @@ class _FolderSelectionDialogState extends State<FolderSelectionDialog> {
       ),
       content: Container(
         width: double.maxFinite,
-        child: FutureBuilder<List<FolderThumbnailModel>>(
-          future: foldersProvider.fetchAllFolderThumbnails(),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator());
-            } else if (snapshot.hasError) {
-              return Center(
-                  child: DecorateText(
-                    text: '폴더를 불러오는 중 오류 발생',
-                    fontSize: 24,
-                    color: themeProvider.primaryColor,
-                  ));
-            } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-              return Center(
-                  child: DecorateText(
-                    text: '폴더가 없습니다!',
-                    fontSize: 24,
-                    color: themeProvider.primaryColor,
-                  ));
-            } else {
-              // 폴더를 계층 구조로 표현
-              return ListView(
-                children: _buildFolderList(snapshot.data!, themeProvider),
-              );
-            }
-          },
+        child: _isLoading
+            ? const Center(child: CircularProgressIndicator()) // 로딩 중일 때 로딩 인디케이터 표시
+            : ListView(
+          children: _buildFolderList(_cachedFolders, themeProvider),
         ),
       ),
       actions: <Widget>[
@@ -135,7 +135,7 @@ class _FolderSelectionDialogState extends State<FolderSelectionDialog> {
             ),
             selected: isSelected, // 선택된 상태 반영
             onTap: () {
-              // 폴더 선택 로직
+              // 폴더 선택 시 전체 화면 리빌드 없이 상태만 변경
               setState(() {
                 _selectedFolderId = folder.folderId;
                 _selectedFolderName = folder.folderName;
