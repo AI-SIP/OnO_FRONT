@@ -410,13 +410,15 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
   void _onImagePicked(XFile? pickedFile,
       List<Map<String, int>?>? selectedColors, String imageType) {
     setState(() {
-      if (imageType == 'problemImage') {
-        _problemImage = pickedFile;
-        _selectedColors = selectedColors;
-      } else if (imageType == 'answerImage') {
-        _answerImage = pickedFile;
-      } else if (imageType == 'solveImage') {
-        _solveImage = pickedFile;
+      if (pickedFile != null) { // 이미지 선택이 성공했을 때만 값을 업데이트
+        if (imageType == 'problemImage') {
+          _problemImage = pickedFile;
+          _selectedColors = selectedColors;
+        } else if (imageType == 'answerImage') {
+          _answerImage = pickedFile;
+        } else if (imageType == 'solveImage') {
+          _solveImage = pickedFile;
+        }
       }
     });
   }
