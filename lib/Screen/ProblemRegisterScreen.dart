@@ -35,6 +35,15 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
   void initState() {
     super.initState();
 
+    final foldersProvider = Provider.of<FoldersProvider>(context, listen: false);
+
+    if (foldersProvider.currentFolder != null) {
+      _selectedFolderId = foldersProvider.currentFolder!.folderId;
+      _selectedFolderName = foldersProvider.currentFolder!.folderName;
+    } else {
+      _selectedFolderName = '메인'; // 기본값 설정
+    }
+
     if (widget.problem != null) {
       _selectedDate = widget.problem!.solvedAt ?? DateTime.now();
       _sourceController =

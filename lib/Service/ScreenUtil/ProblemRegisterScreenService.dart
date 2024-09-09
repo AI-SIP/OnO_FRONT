@@ -179,9 +179,9 @@ class ProblemRegisterScreenService {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('로그인 필요', style: TextStyle(fontSize: 24)),
+        title: const DecorateText(text: '로그인 필요',),
         content:
-            const Text('문제를 등록하려면 로그인 해주세요!', style: TextStyle(fontSize: 20)),
+            const DecorateText(text: '문제를 등록하려면 로그인 해주세요!', ),
         actions: <Widget>[
           TextButton(
             child: const DecorateText(
