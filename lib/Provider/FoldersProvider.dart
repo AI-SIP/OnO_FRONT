@@ -58,7 +58,6 @@ class FoldersProvider with ChangeNotifier {
   }
 
   Future<void> fetchCurrentFolderContents() async {
-
     final accessToken = await tokenProvider.getAccessToken();
     if (accessToken == null) {
       log('Access token is not available');
@@ -153,6 +152,7 @@ class FoldersProvider with ChangeNotifier {
       final jsonResponse = json.decode(utf8.decode(response.bodyBytes));
       log('AllFolderThumbnail Fetch Complete : $jsonResponse');
 
+      // JSON 응답을 FolderThumbnailModel 리스트로 변환
       return (jsonResponse as List)
           .map((e) => FolderThumbnailModel.fromJson(e))
           .toList();
@@ -319,7 +319,7 @@ class FoldersProvider with ChangeNotifier {
       request.fields['memo'] = problemData.memo!;
     }
 
-    if(problemData.folderId != null){
+    if (problemData.folderId != null) {
       request.fields['folderId'] = problemData.folderId!.toString();
     }
 
@@ -389,7 +389,7 @@ class FoldersProvider with ChangeNotifier {
     }
   }
 
-  void sortProblemsByOption(String option){
+  void sortProblemsByOption(String option) {
     if (option == 'name') {
       sortProblemsByName();
     } else if (option == 'newest') {
