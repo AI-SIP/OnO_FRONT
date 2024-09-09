@@ -195,11 +195,28 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
               width: 1.5, // 테두리 두께
             ),
           ),
-          child: DecorateText(
-            text: _selectedFolderName,
-            fontSize: 18,
-            color: themeProvider.primaryColor,
-          ), // 선택한 폴더 이름을 표시
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              return Container(
+                constraints: const BoxConstraints(
+                  maxWidth: 150,
+                ),
+                child: Text(
+                  _selectedFolderName ?? '폴더 선택',
+                  style: TextStyle(
+                    fontFamily: 'font1',
+                    fontSize: 18,
+                    color: themeProvider.primaryColor,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  overflow: TextOverflow.ellipsis, // 최대 길이를 넘을 때만 말줄임표 적용
+                  maxLines: 1, // 한 줄로 표시
+                  softWrap: false, // 말줄임표 적용 시 줄바꿈 방지
+                  textAlign: TextAlign.right,
+                ),
+              );
+            },
+          ),
         ),
       ],
     );

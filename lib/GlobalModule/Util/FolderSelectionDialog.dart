@@ -44,6 +44,9 @@ class _FolderSelectionDialogState extends State<FolderSelectionDialog> {
     final themeProvider = Provider.of<ThemeHandler>(context);
 
     return AlertDialog(
+      insetPadding: const EdgeInsets.symmetric(horizontal: 30), // 좌우 패딩 줄임
+      contentPadding: const EdgeInsets.all(0), // AlertDialog의 기본 패딩 제거
+      titlePadding: const EdgeInsets.only(left: 20, top: 20), // 타이틀 패딩만 유지
       title: DecorateText(
         text: '위치 선택',
         fontSize: 24,
@@ -54,6 +57,7 @@ class _FolderSelectionDialogState extends State<FolderSelectionDialog> {
         child: _isLoading
             ? const Center(child: CircularProgressIndicator()) // 로딩 중일 때 로딩 인디케이터 표시
             : ListView(
+          padding: const EdgeInsets.only(left: 10, top: 10), // ListView의 기본 padding 제거
           children: _buildFolderList(_cachedFolders, themeProvider),
         ),
       ),
@@ -104,7 +108,7 @@ class _FolderSelectionDialogState extends State<FolderSelectionDialog> {
 
       folderWidgets.add(
         Padding(
-          padding: EdgeInsets.only(left: level * 16.0), // 계층에 따른 왼쪽 여백
+          padding: EdgeInsets.only(left: level * 12.0), // 계층에 따른 왼쪽 여백
           child: ListTile(
             title: DecorateText(
               text: folder.folderName,
@@ -116,7 +120,7 @@ class _FolderSelectionDialogState extends State<FolderSelectionDialog> {
               mainAxisSize: MainAxisSize.min, // 아이콘들이 꽉 차지 않도록 설정
               children: [
                 if (isSelected) // 폴더가 선택된 경우 체크 아이콘을 추가
-                  Icon(Icons.check, color: themeProvider.primaryColor),
+                  const Icon(Icons.check, color: Colors.red),
                 IconButton(
                   icon: Icon(isExpanded ? Icons.expand_less : Icons.expand_more),
                   color: themeProvider.primaryColor,
