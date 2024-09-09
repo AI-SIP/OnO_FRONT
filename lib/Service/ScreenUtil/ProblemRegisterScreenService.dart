@@ -8,6 +8,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../GlobalModule/Image/ImagePickerHandler.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
 import '../../GlobalModule/Util/DatePickerHandler.dart';
+import '../../GlobalModule/Util/FolderSelectionDialog.dart';
 import '../../Model/ProblemRegisterModel.dart';
 import '../Auth/AuthService.dart';
 
@@ -24,6 +25,15 @@ class ProblemRegisterScreenService {
           initialDate: selectedDate,
           onDateSelected: onDateSelected,
         );
+      },
+    );
+  }
+
+  Future<Map<String, dynamic>?> showFolderSelectionModal(BuildContext context) async {
+    return await showDialog<Map<String, dynamic>>(
+      context: context,
+      builder: (BuildContext context) {
+        return FolderSelectionDialog(); // 폴더 선택 다이얼로그
       },
     );
   }

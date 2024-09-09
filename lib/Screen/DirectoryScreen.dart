@@ -126,6 +126,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     );
   }
 
+  // 폴더 생성 다이얼로그 출력
   Future<void> _showCreateFolderDialog() async {
     TextEditingController folderNameController = TextEditingController();
     final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
@@ -179,25 +180,23 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
               onPressed: () {
                 Navigator.pop(context);
               },
-              child: DecorateText(
+              child: const DecorateText(
                 text: '취소',
-                fontSize: 18,
-                color: themeProvider.primaryColor,
+                fontSize: 20,
+                color: Colors.black,
               ),
             ),
-            ElevatedButton(
+            TextButton(
               onPressed: () async {
                 if (folderNameController.text.isNotEmpty) {
                   await _createFolder(folderNameController.text);
                   Navigator.pop(context);
                 }
               },
-              style: ElevatedButton.styleFrom(
-                  backgroundColor: themeProvider.primaryColor),
-              child: const DecorateText(
+              child: DecorateText(
                 text: '생성',
-                fontSize: 18,
-                color: Colors.white,
+                fontSize: 20,
+                color: themeProvider.primaryColor,
               ),
             ),
           ],
@@ -227,7 +226,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
           ),
           content: DecorateText(
             text: isRootFolder ? '메인 폴더는 삭제할 수 없습니다!' : '정말로 이 폴더를 삭제하시겠습니까?',
-            fontSize: 18,
+            fontSize: 20,
             color: themeProvider.primaryColor,
           ),
           actions: [
@@ -235,27 +234,25 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
               onPressed: () {
                 Navigator.pop(context);
               },
-              child: DecorateText(
-                text: '확인',
-                fontSize: 18,
-                color: themeProvider.primaryColor,
+              child: const DecorateText(
+                text: '취소',
+                fontSize: 20,
+                color: Colors.black,
               ),
             ),
             if (!isRootFolder) // 루트 폴더가 아닌 경우에만 삭제 버튼을 표시
-              ElevatedButton(
+              TextButton(
                 onPressed: () async {
                   if (foldersProvider.currentFolder != null) {
-                    await foldersProvider.deleteFolder(foldersProvider.currentFolder!.folderId);
+                    await foldersProvider
+                        .deleteFolder(foldersProvider.currentFolder!.folderId);
                     Navigator.pop(context); // 다이얼로그 닫기
                   }
                 },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: themeProvider.primaryColor,
-                ),
                 child: const DecorateText(
                   text: '삭제',
-                  fontSize: 18,
-                  color: Colors.white,
+                  fontSize: 20,
+                  color: Colors.red,
                 ),
               ),
           ],

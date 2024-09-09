@@ -7,6 +7,7 @@ import '../GlobalModule/Theme/DecorateText.dart';
 import '../GlobalModule/Theme/ThemeHandler.dart';
 import '../Model/ProblemModel.dart';
 import '../Model/ProblemRegisterModel.dart';
+import '../Provider/FoldersProvider.dart';
 import '../Service/ScreenUtil/ProblemRegisterScreenService.dart';
 
 class ProblemRegisterScreen extends StatefulWidget {
@@ -20,6 +21,8 @@ class ProblemRegisterScreen extends StatefulWidget {
 class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
   final _service = ProblemRegisterScreenService();
   late DateTime _selectedDate;
+  int? _selectedFolderId;
+  String _selectedFolderName = '메인';
   late TextEditingController _sourceController;
   late TextEditingController _notesController;
 
@@ -34,7 +37,8 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
 
     if (widget.problem != null) {
       _selectedDate = widget.problem!.solvedAt ?? DateTime.now();
-      _sourceController = TextEditingController(text: widget.problem!.reference);
+      _sourceController =
+          TextEditingController(text: widget.problem!.reference);
       _notesController = TextEditingController(text: widget.problem!.memo);
     } else {
       _selectedDate = DateTime.now();
@@ -79,6 +83,8 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
               children: <Widget>[
                 _buildDatePickerSection(themeProvider),
                 const SizedBox(height: 20),
+                _buildFolderSelection(themeProvider),
+                const SizedBox(height: 20),
                 buildSection(
                   '출처',
                   Icons.info,
@@ -91,17 +97,20 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
                 buildSection(
                   '문제',
                   Icons.camera_alt,
-                  buildImagePicker('problemImage', _problemImage, widget.problem?.problemImageUrl),
+                  buildImagePicker('problemImage', _problemImage,
+                      widget.problem?.problemImageUrl),
                 ),
                 buildSection(
                   '해설',
                   Icons.camera_alt,
-                  buildImagePicker('answerImage', _answerImage, widget.problem?.answerImageUrl),
+                  buildImagePicker('answerImage', _answerImage,
+                      widget.problem?.answerImageUrl),
                 ),
                 buildSection(
                   '나의 풀이',
                   Icons.camera_alt,
-                  buildImagePicker('solveImage', _solveImage, widget.problem?.solveImageUrl),
+                  buildImagePicker(
+                      'solveImage', _solveImage, widget.problem?.solveImageUrl),
                 ),
                 buildSection(
                   '한 줄 메모',
@@ -134,16 +143,25 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
           color: themeProvider.primaryColor,
         ),
         const Spacer(),
-        TextButton(
+        ElevatedButton(
           onPressed: () => _service.showCustomDatePicker(
             context,
             _selectedDate,
-                (newDate) => setState(() {
+            (newDate) => setState(() {
               _selectedDate = newDate;
             }),
           ),
+          style: ElevatedButton.styleFrom(
+            foregroundColor: themeProvider.primaryColor,
+            backgroundColor: Colors.white,
+            side: BorderSide(
+              color: themeProvider.primaryColor,
+              width: 1.5, // 테두리 두께
+            ),
+          ),
           child: DecorateText(
-            text: '${_selectedDate.year}년 ${_selectedDate.month}월 ${_selectedDate.day}일',
+            text:
+                '${_selectedDate.year}년 ${_selectedDate.month}월 ${_selectedDate.day}일',
             fontSize: 18,
             color: themeProvider.primaryColor,
           ),
@@ -152,8 +170,55 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
     );
   }
 
+  // 폴더 선택 UI
+  Widget _buildFolderSelection(ThemeHandler themeProvider) {
+    return Row(
+      children: [
+        Icon(Icons.folder, color: themeProvider.primaryColor),
+        const SizedBox(width: 10),
+        DecorateText(
+          text: '저장 폴더',
+          fontSize: 20,
+          color: themeProvider.primaryColor,
+        ),
+        const Spacer(),
+        ElevatedButton(
+          onPressed: () async {
+            await _showFolderSelectionModal(context);
+          },
+          style: ElevatedButton.styleFrom(
+            foregroundColor: themeProvider.primaryColor,
+            backgroundColor: Colors.white,
+            side: BorderSide(
+              // 테두리 설정
+              color: themeProvider.primaryColor,
+              width: 1.5, // 테두리 두께
+            ),
+          ),
+          child: DecorateText(
+            text: _selectedFolderName,
+            fontSize: 18,
+            color: themeProvider.primaryColor,
+          ), // 선택한 폴더 이름을 표시
+        ),
+      ],
+    );
+  }
+
+  Future<void> _showFolderSelectionModal(BuildContext context) async {
+    final result = await _service.showFolderSelectionModal(context);
+
+    if (result != null) {
+      setState(() {
+        _selectedFolderId = result['folderId']; // 폴더 ID 저장
+        _selectedFolderName = result['folderName']; // 폴더 이름 저장
+      });
+    }
+  }
+
   // 이미지 선택 UI
-  Widget buildImagePicker(String imageType, XFile? image, String? existingImageUrl) {
+  Widget buildImagePicker(
+      String imageType, XFile? image, String? existingImageUrl) {
     final themeProvider = Provider.of<ThemeHandler>(context);
     return Container(
       height: 200,
@@ -164,45 +229,48 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
       child: Center(
         child: image == null
             ? existingImageUrl != null
-            ? GestureDetector(
-          onTap: () {
-            _service.showImagePicker(context, _onImagePicked, imageType);
-          },
-          child: DisplayImage(imagePath: existingImageUrl),
-        )
-            : Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            IconButton(
-              icon: Icon(Icons.image, color: themeProvider.primaryColor, size: 50),
-              onPressed: () {
-                _service.showImagePicker(context, _onImagePicked, imageType);
-              },
-            ),
-            DecorateText(
-              text: '아이콘을 눌러 이미지를 추가해주세요!',
-              color: themeProvider.primaryColor,
-              fontSize: 16,
-            ),
-          ],
-        )
+                ? GestureDetector(
+                    onTap: () {
+                      _service.showImagePicker(
+                          context, _onImagePicked, imageType);
+                    },
+                    child: DisplayImage(imagePath: existingImageUrl),
+                  )
+                : Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      IconButton(
+                        icon: Icon(Icons.image,
+                            color: themeProvider.primaryColor, size: 50),
+                        onPressed: () {
+                          _service.showImagePicker(
+                              context, _onImagePicked, imageType);
+                        },
+                      ),
+                      DecorateText(
+                        text: '아이콘을 눌러 이미지를 추가해주세요!',
+                        color: themeProvider.primaryColor,
+                        fontSize: 16,
+                      ),
+                    ],
+                  )
             : GestureDetector(
-          onTap: () {
-            _service.showImagePicker(context, _onImagePicked, imageType);
-          },
-          child: Image.file(File(image.path)),
-        ),
+                onTap: () {
+                  _service.showImagePicker(context, _onImagePicked, imageType);
+                },
+                child: Image.file(File(image.path)),
+              ),
       ),
     );
   }
 
   // 텍스트 필드 생성 공통 함수
   Widget _buildStyledTextField(
-      TextEditingController controller,
-      String hintText,
-      ThemeHandler themeProvider, {
-        int maxLines = 1,
-      }) {
+    TextEditingController controller,
+    String hintText,
+    ThemeHandler themeProvider, {
+    int maxLines = 1,
+  }) {
     return TextField(
       controller: controller,
       style: TextStyle(
@@ -217,7 +285,8 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
   }
 
   // InputDecoration 공통 설정 함수
-  InputDecoration _buildInputDecoration(String hintText, ThemeHandler themeProvider) {
+  InputDecoration _buildInputDecoration(
+      String hintText, ThemeHandler themeProvider) {
     return InputDecoration(
       border: OutlineInputBorder(
         borderSide: BorderSide(color: themeProvider.primaryColor, width: 2.0),
@@ -298,7 +367,8 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
   }
 
   // 이미지 선택 핸들러
-  void _onImagePicked(XFile? pickedFile, List<Map<String, int>?>? selectedColors, String imageType) {
+  void _onImagePicked(XFile? pickedFile,
+      List<Map<String, int>?>? selectedColors, String imageType) {
     setState(() {
       if (imageType == 'problemImage') {
         _problemImage = pickedFile;
@@ -322,6 +392,7 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
         reference: _sourceController.text,
         solvedAt: _selectedDate,
         colors: _selectedColors,
+        folderId: _selectedFolderId,
       );
       _service.submitProblem(
         context,
@@ -337,7 +408,9 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
         memo: _notesController.text == widget.problem!.memo
             ? null
             : _notesController.text,
-        solvedAt: _selectedDate == widget.problem!.solvedAt ? null : _selectedDate,
+        solvedAt:
+            _selectedDate == widget.problem!.solvedAt ? null : _selectedDate,
+        folderId: _selectedFolderId,
         problemImage: _problemImage,
         answerImage: _answerImage,
         solveImage: _solveImage,
@@ -345,7 +418,8 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
       );
 
       _service.updateProblem(context, updatedProblem, () {
-        Navigator.of(context).pop(true); // Return to the previous screen after editing
+        Navigator.of(context)
+            .pop(true); // Return to the previous screen after editing
       });
     }
   }

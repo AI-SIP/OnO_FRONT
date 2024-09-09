@@ -133,11 +133,11 @@ class FoldersProvider with ChangeNotifier {
     }
   }
 
-  Future<List<FolderThumbnailModel>?> fetchAllFolderThumbnails() async {
+  Future<List<FolderThumbnailModel>> fetchAllFolderThumbnails() async {
     final accessToken = await tokenProvider.getAccessToken();
     if (accessToken == null) {
       log('Access token is not available');
-      return null;
+      return [];
     }
 
     final url = Uri.parse('${AppConfig.baseUrl}/api/folder/folders');
@@ -158,7 +158,7 @@ class FoldersProvider with ChangeNotifier {
           .toList();
     } else {
       log('Failed to load folder contents');
-      return null;
+      return [];
     }
   }
 
@@ -242,7 +242,7 @@ class FoldersProvider with ChangeNotifier {
     request.fields['solvedAt'] = problemData.solvedAt?.toIso8601String() ?? "";
     request.fields['reference'] = problemData.reference ?? "";
     request.fields['memo'] = problemData.memo ?? "";
-    request.fields['folderId'] = currentFolderId.toString();
+    request.fields['folderId'] = problemData.folderId.toString();
 
     final problemImage = problemData.problemImage;
     final solveImage = problemData.solveImage;
@@ -317,6 +317,10 @@ class FoldersProvider with ChangeNotifier {
     }
     if (problemData.memo != null && problemData.memo!.isNotEmpty) {
       request.fields['memo'] = problemData.memo!;
+    }
+
+    if(problemData.folderId != null){
+      request.fields['folderId'] = problemData.folderId!.toString();
     }
 
     final problemImage = problemData.problemImage;
