@@ -567,10 +567,10 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                       borderRadius: BorderRadius.circular(8.0),
                     ),
                     child: ClipRRect(
-                      borderRadius: BorderRadius.circular(8.0),
+                      borderRadius: BorderRadius.circular(6.0),
                       child: DisplayImage(
                         imagePath: problem.processImageUrl,
-                        fit: BoxFit.contain,
+                        fit: BoxFit.cover,
                       ),
                     ),
                   ),
