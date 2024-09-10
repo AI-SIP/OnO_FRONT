@@ -3,17 +3,17 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 
 import '../../Model/ProblemThumbnailModel.dart';
-import '../../Provider/ProblemsProvider.dart';
+import '../../Provider/FoldersProvider.dart';
 import '../../Screen/ProblemDetailScreen.dart';
 
 class DirectoryScreenService {
-  final ProblemsProvider problemsProvider;
+  final FoldersProvider foldersProvider;
 
-  DirectoryScreenService(this.problemsProvider);
+  DirectoryScreenService(this.foldersProvider);
 
   List<ProblemThumbnailModel> loadProblems() {
-    if (problemsProvider.problems.isNotEmpty) {
-      return problemsProvider.problems
+    if (foldersProvider.problems.isNotEmpty) {
+      return foldersProvider.problems
           .map((problem) => ProblemThumbnailModel.fromJson(problem.toJson()))
           .toList();
     } else {
@@ -22,9 +22,9 @@ class DirectoryScreenService {
     }
   }
 
-  Future<void> fetchProblems({String sortOption = 'newest'}) async {
+  Future<void> fetchProblems() async {
     try {
-      await problemsProvider.fetchProblems(sortOption: sortOption);
+      await foldersProvider.fetchCurrentFolderContents();
     } catch (e) {
       log('Failed to fetch problems: $e');
     }
@@ -32,11 +32,11 @@ class DirectoryScreenService {
 
   void sortProblems(String option) {
     if (option == 'name') {
-      problemsProvider.sortProblemsByName('root');
+      foldersProvider.sortProblemsByName();
     } else if (option == 'newest') {
-      problemsProvider.sortProblemsByNewest('root');
+      foldersProvider.sortProblemsByNewest();
     } else if (option == 'oldest') {
-      problemsProvider.sortProblemsByOldest('root');
+      foldersProvider.sortProblemsByOldest();
     }
   }
 

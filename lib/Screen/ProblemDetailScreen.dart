@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:ono/Provider/FoldersProvider.dart';
+import 'package:ono/Service/ScreenUtil/ProblemDetailShareService.dart';
 import 'package:provider/provider.dart';
 import '../GlobalModule/Theme/DecorateText.dart';
 import '../GlobalModule/Image/DisplayImage.dart';
@@ -9,9 +11,8 @@ import '../GlobalModule/Theme/ThemeHandler.dart';
 import '../GlobalModule/Theme/UnderlinedText.dart';
 import '../Model/ProblemModel.dart';
 import '../GlobalModule/Util/NavigationButtons.dart';
-import '../Provider/ProblemsProvider.dart';
 import '../Service/ScreenUtil/ProblemDetailScreenService.dart';
-import 'ProblemRegisterScreen.dart'; // Import the update form screen
+import 'ProblemRegisterScreen.dart';
 
 class ProblemDetailScreen extends StatefulWidget {
   final int? problemId;
@@ -23,9 +24,11 @@ class ProblemDetailScreen extends StatefulWidget {
 }
 
 class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
+  final GlobalKey _globalKey = GlobalKey();
   late Future<ProblemModel?> _problemDataFuture;
   final ProblemDetailScreenService _service = ProblemDetailScreenService();
-  bool isEditMode = false; // State variable to control the view mode
+  final ProblemDetailShareService _shareService = ProblemDetailShareService();
+  bool isEditMode = false;
 
   @override
   void initState() {
@@ -39,139 +42,194 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
     final themeProvider = Provider.of<ThemeHandler>(context);
 
     return Scaffold(
-      appBar: AppBar(
-        title: buildAppBarTitle(),
-        actions: isEditMode
-            ? null
-            : [
-                PopupMenuButton<String>(
-                  onSelected: (String result) {
-                    if (result == 'edit') {
-                      setState(() {
-                        isEditMode = true; // Switch to edit mode
-                      });
-                    } else if (result == 'delete') {
-                      _service.deleteProblem(
-                        context,
-                        widget.problemId,
-                        () {
-                          Navigator.of(context).pop(true); // 이전 화면으로 이동
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: const DecorateText(
-                                text: '문제가 삭제되었습니다.',
-                                fontSize: 20,
-                                color: Colors.white,
-                              ),
-                              backgroundColor: themeProvider.primaryColor,
-                              duration: const Duration(seconds: 2),
-                            ),
-                          );
-                        },
-                        (errorMessage) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: DecorateText(
-                                text: errorMessage,
-                                fontSize: 20,
-                                color: Colors.white,
-                              ),
-                              backgroundColor: Colors.red,
-                              duration: const Duration(seconds: 2),
-                            ),
-                          );
-                        },
-                      );
-                    }
-                  },
-                  itemBuilder: (BuildContext context) =>
-                      <PopupMenuEntry<String>>[
-                    const PopupMenuItem<String>(
-                      value: 'edit',
-                      child: DecorateText(
-                        text: '수정하기',
-                        fontSize: 18,
-                        color: Colors.blue,
-                      ),
-                    ),
-                    const PopupMenuItem<String>(
-                        value: 'delete',
-                        child: DecorateText(
-                          text: '삭제하기',
-                          fontSize: 18,
-                          color: Colors.red,
-                        )),
-                  ],
-                ),
-              ],
-        leading: isEditMode
-            ? IconButton(
-                icon: Icon(Icons.arrow_back, color: themeProvider.primaryColor),
-                onPressed: () {
-                  setState(() {
-                    isEditMode = false; // Switch back to view mode
-                  });
-                },
-              )
-            : null,
-      ),
-      body: isEditMode
-          ? FutureBuilder<ProblemModel?>(
-              future: _problemDataFuture,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                } else if (snapshot.hasError) {
-                  return const Center(child: Text('에러 발생'));
-                } else if (snapshot.hasData && snapshot.data != null) {
-                  return ProblemRegisterScreen(problem: snapshot.data!);
-                } else {
-                  return buildNoDataScreen();
-                }
-              },
-            )
-          : Column(
-              children: [
-                Expanded(
-                  child: FutureBuilder<ProblemModel?>(
-                    future: _problemDataFuture,
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return const Center(child: CircularProgressIndicator());
-                      } else if (snapshot.hasError) {
-                        return const Center(child: Text('에러 발생'));
-                      } else if (snapshot.hasData && snapshot.data != null) {
-                        return buildProblemDetails(context, snapshot.data!);
-                      } else {
-                        return buildNoDataScreen();
-                      }
-                    },
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(
-                      top: 10.0, bottom: 30.0), // Adjust padding here
-                  child: NavigationButtons(
-                    context: context,
-                    provider:
-                        Provider.of<ProblemsProvider>(context, listen: false),
-                    currentId: widget.problemId!,
-                  ),
-                ),
-              ],
-            ),
+      appBar: buildAppBar(themeProvider),
+      body: buildBody(context),
     );
   }
 
+  // AppBar 구성 함수
+  AppBar buildAppBar(ThemeHandler themeProvider) {
+    return AppBar(
+      title: buildAppBarTitle(),
+      actions: isEditMode ? null : buildAppBarActions(themeProvider),
+      leading: isEditMode ? buildBackButton(themeProvider) : null,
+    );
+  }
+
+  // AppBar의 동작 및 메뉴 버튼
+  List<Widget> buildAppBarActions(ThemeHandler themeProvider) {
+    return [
+      PopupMenuButton<String>(
+        onSelected: (String result) {
+          /*
+          if (result == 'share') {
+            _shareService.shareProblemAsImage(_globalKey);
+          }
+           */
+          if (result == 'edit') {
+            setState(() {
+              isEditMode = true;
+            });
+          } else if (result == 'delete') {
+            deleteProblemDialog(context, themeProvider);
+          }
+        },
+        itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+          /*
+          PopupMenuItem<String>(
+            value: 'share',
+            child: DecorateText(
+              text: '문제 공유하기',
+              fontSize: 18,
+              color: themeProvider.primaryColor,
+            ),
+          ),
+
+           */
+          const PopupMenuItem<String>(
+            value: 'edit',
+            child: DecorateText(
+              text: '문제 수정하기',
+              fontSize: 18,
+              color: Colors.blue,
+            ),
+          ),
+          const PopupMenuItem<String>(
+            value: 'delete',
+            child: DecorateText(
+              text: '문제 삭제하기',
+              fontSize: 18,
+              color: Colors.red,
+            ),
+          ),
+        ],
+      ),
+    ];
+  }
+
+// 뒤로 가기 버튼 함수
+  IconButton buildBackButton(ThemeHandler themeProvider) {
+    return IconButton(
+      icon: Icon(Icons.arrow_back, color: themeProvider.primaryColor),
+      onPressed: () {
+        setState(() {
+          isEditMode = false;
+        });
+      },
+    );
+  }
+
+// 문제 삭제 처리 함수
+  void deleteProblemDialog(BuildContext context, ThemeHandler themeProvider) {
+    _service.deleteProblem(
+      context,
+      widget.problemId,
+      () {
+        Navigator.of(context).pop(true);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const DecorateText(
+              text: '문제가 삭제되었습니다.',
+              fontSize: 20,
+              color: Colors.white,
+            ),
+            backgroundColor: themeProvider.primaryColor,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      },
+      (errorMessage) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: DecorateText(
+              text: errorMessage,
+              fontSize: 20,
+              color: Colors.white,
+            ),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      },
+    );
+  }
+
+// 화면의 본문(body)을 구성하는 함수
+  Widget buildBody(BuildContext context) {
+    return isEditMode ? buildEditMode(context) : buildViewMode(context);
+  }
+
+// 수정 모드일 때의 화면 구성
+  Widget buildEditMode(BuildContext context) {
+    return FutureBuilder<ProblemModel?>(
+      future: _problemDataFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        } else if (snapshot.hasError) {
+          return const Center(child: Text('에러 발생'));
+        } else if (snapshot.hasData && snapshot.data != null) {
+          return ProblemRegisterScreen(problem: snapshot.data!);
+        } else {
+          return buildNoDataScreen();
+        }
+      },
+    );
+  }
+
+// 뷰 모드일 때의 화면 구성
+  Widget buildViewMode(BuildContext context) {
+    return Column(
+      children: [
+        Expanded(
+          child: FutureBuilder<ProblemModel?>(
+            future: _problemDataFuture,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              } else if (snapshot.hasError) {
+                return const Center(child: Text('에러 발생'));
+              } else if (snapshot.hasData && snapshot.data != null) {
+                return buildProblemDetails(context, snapshot.data!);
+              } else {
+                return buildNoDataScreen();
+              }
+            },
+          ),
+        ),
+        buildNavigationButtons(context),
+      ],
+    );
+  }
+
+  // 네비게이션 버튼 구성 함수
+  Widget buildNavigationButtons(BuildContext context) {
+    // 기기의 높이 정보를 가져옴
+    double screenHeight = MediaQuery.of(context).size.height;
+
+    // 화면 높이에 따라 패딩 값을 동적으로 설정
+    double topBottomPadding = screenHeight >= 1000 ? 25.0 : 15.0; // 아이패드 13인치(높이 1024 이상) 기준으로 35, 그 외는 20
+
+    return Padding(
+      padding: EdgeInsets.only(top: topBottomPadding, bottom: topBottomPadding),
+      child: NavigationButtons(
+        context: context,
+        provider: Provider.of<FoldersProvider>(context, listen: false),
+        currentId: widget.problemId!,
+      ),
+    );
+  }
+
+  // 상단 앱 바 구성 함수
   Widget buildAppBarTitle() {
     final themeProvider = Provider.of<ThemeHandler>(context);
     return FutureBuilder<ProblemModel?>(
       future: _problemDataFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Text('로딩 중...');
+          return const DecorateText(text: '로딩 중...');
         } else if (snapshot.hasError) {
-          return const Text('에러 발생');
+          return const DecorateText(text: '에러 발생');
         } else if (snapshot.hasData && snapshot.data != null) {
           return DecorateText(
             text: snapshot.data!.reference ?? '출처가 없습니다!',
@@ -186,146 +244,111 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
     );
   }
 
+  // 문제 상세 화면 구성 함수
   Widget buildProblemDetails(BuildContext context, ProblemModel problemModel) {
     final themeProvider = Provider.of<ThemeHandler>(context);
-    final formattedDate =
-        DateFormat('yyyy년 M월 d일').format(problemModel.solvedAt!);
+    final screenWidth = MediaQuery.of(context).size.width;
 
-    return Stack(
-      children: [
-        CustomPaint(
-          size: Size.infinite,
-          painter: GridPainter(gridColor: themeProvider.primaryColor),
-        ),
-        SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 35.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start, // 좌측 정렬
-              children: [
-                const SizedBox(height: 16.0),
-                buildIconTextRow(
-                  Icons.calendar_today,
-                  '푼 날짜',
-                  UnderlinedText(text: formattedDate, fontSize: 18),
-                ),
-                const SizedBox(height: 25.0),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start, // 레이블을 위로 정렬
+    if (screenWidth > 600) {
+      // 화면 너비가 600 이상일 때 좌우로 배치
+      return RepaintBoundary(
+        key: _globalKey,
+        child: Stack(
+          children: [
+            buildBackground(themeProvider),
+            SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 35.0),
+                child: Column(
                   children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(children: [
-                            Icon(Icons.info, color: themeProvider.primaryColor),
-                            const SizedBox(width: 8),
-                            DecorateText(
-                                text: '문제 출처',
-                                fontSize: 20,
-                                color: themeProvider.primaryColor),
-                          ]),
-                          const SizedBox(height: 10.0),
-                          UnderlinedText(
-                              text: problemModel.reference ?? '출처 없음',
-                              fontSize: 18),
-                        ],
-                      ),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // 좌측 영역 (푼 날짜와 문제 출처)
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const SizedBox(height: 30.0),
+                              buildSolvedDate(context, problemModel),
+                              const SizedBox(height: 30.0),
+                              buildProblemReference(context, problemModel),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 30.0), // 좌우 간격을 위한 여백
+                        // 우측 영역 (문제 이미지)
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const SizedBox(height: 25.0),
+                              // 이미지 상단 정렬 및 하단 여백 최소화
+                              buildProblemImage(context, problemModel),
+                              const SizedBox(height: 30.0),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
+                    // 해설 및 풀이 확인 토글은 스크롤 시 나타나도록 설정
+                    const SizedBox(height: 15.0),
+                    buildSolutionExpansionTile(problemModel),
                   ],
                 ),
-                const SizedBox(height: 30.0),
-                buildImageSection(
-                  context,
-                  problemModel.processImageUrl,
-                  '문제',
-                  themeProvider.primaryColor,
-                ),
-                const SizedBox(height: 30.0),
-                buildSolutionExpansionTile(problemModel),
-                const SizedBox(height: 20.0),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget buildIconTextRow(IconData icon, String label, Widget trailing) {
-    final themeProvider = Provider.of<ThemeHandler>(context);
-
-    return Row(
-      children: [
-        Icon(icon, color: themeProvider.primaryColor),
-        const SizedBox(width: 8),
-        DecorateText(
-            text: label, fontSize: 20, color: themeProvider.primaryColor),
-        const Spacer(),
-        trailing,
-      ],
-    );
-  }
-
-  Widget buildImageSection(
-      BuildContext context, String? imageUrl, String label, Color color) {
-    final mediaQuery = MediaQuery.of(context);
-    final themeProvider = Provider.of<ThemeHandler>(context);
-
-    // 화면의 너비에 따라 이미지 크기 비율을 다르게 설정
-    double maxImageHeight = mediaQuery.size.height * 0.9; // 기본 크기
-    if (mediaQuery.size.width > 600) {
-      // 가로 모드나 태블릿 같이 큰 화면일 때
-      maxImageHeight = mediaQuery.size.height * 0.6; // 크기를 줄임
-    } else if (mediaQuery.size.width > 800) {
-      // 더 큰 화면일 때
-      maxImageHeight = mediaQuery.size.height * 0.5; // 크기를 더 줄임
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          width: double.infinity,
-          alignment: Alignment.centerLeft,
-          padding: const EdgeInsets.symmetric(vertical: 4.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              Icon(Icons.camera_alt, color: color),
-              const SizedBox(width: 8.0),
-              DecorateText(text: label, fontSize: 20, color: color),
-            ],
-          ),
-        ),
-        const SizedBox(height: 20.0),
-        Center(
-          child: ConstrainedBox(
-            constraints: BoxConstraints(
-              maxHeight: maxImageHeight, // 이미지의 최대 높이 설정
-            ),
-            child: GestureDetector(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => FullScreenImage(imagePath: imageUrl),
-                  ),
-                );
-              },
-              child: DisplayImage(
-                imagePath: imageUrl,
-                fit: BoxFit.contain,
               ),
             ),
-          ),
+          ],
         ),
-      ],
-    );
+      );
+    } else {
+      // 화면 너비가 600 이하일 때 기존 세로 배치 유지
+      return RepaintBoundary(
+        key: _globalKey,
+        child: Stack(
+          children: [
+            buildBackground(themeProvider),
+            SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 35.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start, // 좌측 정렬
+                  children: [
+                    const SizedBox(height: 16.0),
+                    buildSolvedDate(context, problemModel),
+                    const SizedBox(height: 25.0),
+                    buildProblemReference(context, problemModel),
+                    const SizedBox(height: 30.0),
+                    buildProblemImage(context, problemModel),
+                    const SizedBox(height: 30.0),
+                    buildSolutionExpansionTile(problemModel), // 스크롤 시 보여지는 영역
+                    const SizedBox(height: 20.0),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
   }
 
+  // 토글 눌렀을 때 나오는 항목 위젯 구성 함수
   Widget buildSolutionExpansionTile(ProblemModel problemModel) {
     final themeProvider = Provider.of<ThemeHandler>(context);
+    final screenWidth = MediaQuery.of(context).size.width;
+
+    // 화면 크기에 따라 한 줄에 몇 개의 항목을 배치할지 설정
+    int crossAxisCount;
+    if (screenWidth > 1100) {
+      crossAxisCount = 3;  // 가로가 1100 이상이면 3개
+    } else if (screenWidth >= 600) {
+      crossAxisCount = 2;  // 가로가 600에서 1100 사이면 2개
+    } else {
+      crossAxisCount = 1;  // 가로가 600 이하이면 1개
+    }
+
+    double childAspectRatio = 0.65;
 
     return ExpansionTile(
       title: buildCenteredTitle('해설 및 풀이 확인', themeProvider.primaryColor),
@@ -333,46 +356,104 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
         const SizedBox(height: 10.0),
         buildSectionWithMemo(problemModel),
         const SizedBox(height: 20.0),
-        buildImageSection(
-          context,
-          problemModel.problemImageUrl,
-          '원본 이미지',
-          themeProvider.primaryColor,
-        ),
-        const SizedBox(height: 20.0),
-        buildImageSection(
-          context,
-          problemModel.answerImageUrl,
-          '해설 이미지',
-          themeProvider.primaryColor,
-        ),
-        const SizedBox(height: 20.0),
-        buildImageSection(
-          context,
-          problemModel.solveImageUrl,
-          '풀이 이미지',
-          themeProvider.primaryColor,
+        GridView.count(
+          crossAxisCount: crossAxisCount,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          mainAxisSpacing: 20.0,
+          crossAxisSpacing: 20.0,
+          childAspectRatio: childAspectRatio,
+          children: [
+            buildImageSection(
+              context,
+              problemModel.problemImageUrl,
+              '원본 이미지',
+              themeProvider.primaryColor,
+            ),
+            buildImageSection(
+              context,
+              problemModel.answerImageUrl,
+              '해설 이미지',
+              themeProvider.primaryColor,
+            ),
+            buildImageSection(
+              context,
+              problemModel.solveImageUrl,
+              '풀이 이미지',
+              themeProvider.primaryColor,
+            ),
+          ],
         ),
         const SizedBox(height: 20.0),
       ],
     );
   }
 
-  Widget buildCenteredTitle(String text, Color color) {
-    return Container(
-      width: double.infinity,
-      alignment: Alignment.center,
-      padding: const EdgeInsets.symmetric(vertical: 4.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const SizedBox(width: 8.0),
-          DecorateText(text: text, fontSize: 24, color: color),
-        ],
-      ),
+  // 배경 구현 함수
+  Widget buildBackground(ThemeHandler themeProvider) {
+    return CustomPaint(
+      size: Size.infinite,
+      painter: GridPainter(gridColor: themeProvider.primaryColor),
     );
   }
 
+  // 푼 날짜 위젯 구현 함수
+  Widget buildSolvedDate(BuildContext context, ProblemModel problemModel) {
+    final formattedDate =
+        DateFormat('yyyy년 M월 d일').format(problemModel.solvedAt!);
+    return buildIconTextRow(
+      Icons.calendar_today,
+      '푼 날짜',
+      UnderlinedText(text: formattedDate, fontSize: 18),
+    );
+  }
+
+  // 문제 출처 위젯 구현 함수
+  Widget buildProblemReference(
+      BuildContext context, ProblemModel problemModel) {
+    final themeProvider = Provider.of<ThemeHandler>(context);
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start, // 레이블을 위로 정렬
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.info, color: themeProvider.primaryColor),
+                  const SizedBox(width: 8),
+                  DecorateText(
+                    text: '문제 출처',
+                    fontSize: 20,
+                    color: themeProvider.primaryColor,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10.0),
+              UnderlinedText(
+                text: problemModel.reference ?? '출처 없음',
+                fontSize: 18,
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  // 문제 보정 이미지 구현 위젯
+  Widget buildProblemImage(BuildContext context, ProblemModel problemModel) {
+    final themeProvider = Provider.of<ThemeHandler>(context);
+    return buildImageSection(
+      context,
+      problemModel.processImageUrl,
+      '문제',
+      themeProvider.primaryColor,
+    );
+  }
+
+  // 메모 위젯 구현 함수
   Widget buildSectionWithMemo(ProblemModel problemModel) {
     final themeProvider = Provider.of<ThemeHandler>(context);
 
@@ -393,7 +474,93 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
     );
   }
 
+  // 이미지 띄워주는 위젯 구현 함수
+  Widget buildImageSection(BuildContext context, String? imageUrl, String label, Color color) {
+    final mediaQuery = MediaQuery.of(context);
+    final themeProvider = Provider.of<ThemeHandler>(context);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: double.infinity,
+          alignment: Alignment.centerLeft,
+          padding: const EdgeInsets.symmetric(vertical: 4.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              Icon(Icons.camera_alt, color: color),
+              const SizedBox(width: 8.0),
+              DecorateText(text: label, fontSize: 20, color: color),
+            ],
+          ),
+        ),
+        const SizedBox(height: 20.0),
+        Center(
+          child: GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => FullScreenImage(imagePath: imageUrl),
+                ),
+              );
+            },
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(10), // 모서리 둥글게 설정
+              child: AspectRatio(
+                aspectRatio: 0.8, // 여기서 원하는 비율로 이미지의 높이를 유동적으로 조정
+                child: SizedBox(
+                  width: mediaQuery.size.width * 0.8, // 부모 크기 기준
+                  //height : mediaQuery.size.height,
+                  child: DisplayImage(
+                    imagePath: imageUrl,
+                    fit: BoxFit.cover, // 이미지가 여백 없이 꽉 차도록 설정
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+
+  // 한 줄에 아이콘과 텍스트가 동시에 오도록 하는 함수
+  Widget buildIconTextRow(IconData icon, String label, Widget trailing) {
+    final themeProvider = Provider.of<ThemeHandler>(context);
+
+    return Row(
+      children: [
+        Icon(icon, color: themeProvider.primaryColor),
+        const SizedBox(width: 8),
+        DecorateText(
+            text: label, fontSize: 20, color: themeProvider.primaryColor),
+        const Spacer(),
+        trailing,
+      ],
+    );
+  }
+
+  // 가운데 위젯이 오도록 하는 함수
+  Widget buildCenteredTitle(String text, Color color) {
+    return Container(
+      width: double.infinity,
+      alignment: Alignment.center,
+      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const SizedBox(width: 8.0),
+          DecorateText(text: text, fontSize: 24, color: color),
+        ],
+      ),
+    );
+  }
+
+  // 데이터가 없을 때 띄워주는 경고 메시지
   Widget buildNoDataScreen() {
-    return const Center(child: DecorateText(text: "문제 정보를 가져올 수 없습니다."));
+    return const Center(child: DecorateText(text: "문제 정보를 가져올 수 없습니다.", fontSize: 28,));
   }
 }

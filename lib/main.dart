@@ -4,12 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:ono/GlobalModule/Theme/ThemeHandler.dart';
+import 'package:ono/Provider/FoldersProvider.dart';
 import 'package:ono/Screen/SplashScreen.dart';
 import 'package:provider/provider.dart';
 import 'Screen/HomeScreen.dart';
 import 'Screen/DirectoryScreen.dart';
 import 'Screen/ProblemRegisterScreen.dart';
-import 'Provider/ProblemsProvider.dart';
 import 'Screen/SettingScreen.dart';
 import 'GlobalModule/Theme/AppbarWithLogo.dart';
 import 'Service/Auth/AuthService.dart';
@@ -20,10 +20,11 @@ void main() async {
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => ProblemsProvider()),
+        ChangeNotifierProvider(create: (_) => FoldersProvider()),
         ChangeNotifierProvider(
           create: (context) => AuthService(
-              Provider.of<ProblemsProvider>(context, listen: false)),
+            Provider.of<FoldersProvider>(context, listen: false),
+          ),
         ),
         ChangeNotifierProvider(
             create: (context) => ThemeHandler()..loadColors()),
@@ -123,20 +124,21 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
   }
 
   void _resetAppState() {
-
-    final problemsProvider = Provider.of<ProblemsProvider>(context, listen: false);
+    final foldersProvider = Provider.of<FoldersProvider>(context, listen: false);
 
     setState(() {
       _selectedIndex = 0;
     });
 
-    problemsProvider.fetchProblems();
+    foldersProvider.fetchRootFolderContents();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const AppBarWithLogo(),
+      appBar: _selectedIndex == 2
+          ? null // DirectoryScreen을 위한 조건 (index 2일 경우 AppBar를 제거)
+          : const AppBarWithLogo(), // 다른 화면에서는 AppBar 표시
       body: IndexedStack(
         index: _selectedIndex,
         children: _widgetOptions,

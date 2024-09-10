@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../GlobalModule/Theme/DecorateText.dart';
 import '../../GlobalModule/Theme/ThemeDialog.dart';
 import '../../Service/Auth/AuthService.dart';
@@ -72,6 +73,15 @@ class SettingScreenService {
     );
   }
 
+  Future<void> openFeedbackForm() async {
+    Uri url = Uri.parse('https://forms.gle/MncQvyT57LQr43Pp7');
+    if (await canLaunchUrl(url)) {
+      await launchUrl(url);
+    } else {
+      throw 'Could not launch $url';
+    }
+  }
+
   Future<void> logout(BuildContext context) async {
     await Provider.of<AuthService>(context, listen: false).signOut();
     showSuccessDialog(context, '로그아웃에 성공했습니다.');
@@ -79,7 +89,5 @@ class SettingScreenService {
 
   Future<void> deleteAccount(BuildContext context) async {
     await Provider.of<AuthService>(context, listen: false).deleteAccount();
-    // Uncomment if you want to show a success message after account deletion
-    // showSuccessDialog(context, '회원 탈퇴에 성공했습니다.');
   }
 }

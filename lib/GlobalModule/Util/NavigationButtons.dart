@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:ono/Provider/FoldersProvider.dart';
 import 'package:provider/provider.dart';
-import '../../Provider/ProblemsProvider.dart';
 import '../../Screen/ProblemDetailScreen.dart';
 import '../Theme/DecorateText.dart';
 import '../Theme/ThemeHandler.dart';
 
 class NavigationButtons extends StatelessWidget {
   final BuildContext context;
-  final ProblemsProvider provider;
+  final FoldersProvider provider;
   final int currentId;
 
   const NavigationButtons({
@@ -24,9 +24,7 @@ class NavigationButtons extends StatelessWidget {
     final problemIds = provider.getProblemIds();
 
     if (problemIds.isEmpty) {
-      return Center(
-          child: DecorateText(text: '문제가 없습니다.', fontSize: 20, color: themeProvider.primaryColor)
-      );
+      return const Center();
     }
 
     int currentIndex = problemIds.indexOf(currentId);
@@ -39,13 +37,35 @@ class NavigationButtons extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
-        ElevatedButton(
+        TextButton(
           onPressed: () =>
               navigateToProblem(context, provider, previousProblemId),
+            style: ElevatedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 25.0, vertical: 8.0),
+              backgroundColor: themeProvider.primaryColor.withOpacity(0.1), // 배경색을 은은하게 설정
+              side: BorderSide(
+                color: themeProvider.primaryColor,
+                width: 2.0, // 테두리 두께
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(15.0), // 둥글기 조정
+              ),
+            ),
             child: DecorateText(text: '이전 문제', fontSize: 20, color: themeProvider.primaryColor)
         ),
-        ElevatedButton(
+        TextButton(
           onPressed: () => navigateToProblem(context, provider, nextProblemId),
+            style: ElevatedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 25.0, vertical: 8.0),
+              backgroundColor: themeProvider.primaryColor.withOpacity(0.1), // 배경색을 은은하게 설정
+              side: BorderSide(
+                color: themeProvider.primaryColor,
+                width: 2.0, // 테두리 두께
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(15.0), // 둥글기 조정
+              ),
+            ),
             child: DecorateText(text: '다음 문제', fontSize: 20, color: themeProvider.primaryColor)
         ),
       ],
@@ -53,7 +73,7 @@ class NavigationButtons extends StatelessWidget {
   }
 
   void navigateToProblem(
-      BuildContext context, ProblemsProvider provider, int newProblemId) {
+      BuildContext context, FoldersProvider provider, int newProblemId) {
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(

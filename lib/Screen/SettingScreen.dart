@@ -45,6 +45,14 @@ class _SettingScreenState extends State<SettingScreen> {
                   themeProvider.primaryColor,
                   () => _settingScreenService.showThemeDialog(context),
                 ),
+                const SizedBox(height: 20,),
+                _buildButton(
+                  context,
+                  '의견 남기기',
+                  Colors.white,
+                  Colors.blueAccent,
+                      () => _settingScreenService.openFeedbackForm(),
+                ),
                 const SizedBox(height: 20),
                 _buildButton(
                   context,

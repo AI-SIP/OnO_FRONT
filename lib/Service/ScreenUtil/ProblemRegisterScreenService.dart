@@ -2,13 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:ono/GlobalModule/Image/ColorPicker/ImageColorPickerHandler.dart';
 import 'package:ono/GlobalModule/Theme/DecorateText.dart';
 import 'package:ono/Model/LoginStatus.dart';
+import 'package:ono/Provider/FoldersProvider.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../GlobalModule/Image/ImagePickerHandler.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
 import '../../GlobalModule/Util/DatePickerHandler.dart';
+import '../../GlobalModule/Util/FolderSelectionDialog.dart';
 import '../../Model/ProblemRegisterModel.dart';
-import '../../Provider/ProblemsProvider.dart';
 import '../Auth/AuthService.dart';
 
 class ProblemRegisterScreenService {
@@ -24,6 +25,15 @@ class ProblemRegisterScreenService {
           initialDate: selectedDate,
           onDateSelected: onDateSelected,
         );
+      },
+    );
+  }
+
+  Future<Map<String, dynamic>?> showFolderSelectionModal(BuildContext context) async {
+    return await showDialog<Map<String, dynamic>>(
+      context: context,
+      builder: (BuildContext context) {
+        return FolderSelectionDialog(); // 폴더 선택 다이얼로그
       },
     );
   }
@@ -68,10 +78,13 @@ class ProblemRegisterScreenService {
             mainAxisSize: MainAxisSize.min,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Image.asset(
-                'assets/Logo.png',  // 로고 이미지 경로
-                width: 100,  // 이미지 크기
-                height: 100,
+              ClipRRect(
+                borderRadius: BorderRadius.circular(10), // 모서리를 둥글게 설정
+                child: Image.asset(
+                  'assets/Logo.png',  // 로고 이미지 경로
+                  width: 100,  // 이미지 크기
+                  height: 100,
+                ),
               ),
               const SizedBox(height: 20),
               const DecorateText(
@@ -93,10 +106,11 @@ class ProblemRegisterScreenService {
   }
 
   Future<void> showImagePicker(BuildContext context,
-      Function(XFile?, List<Map<String, int>?>?, String) onImagePicked, String imageType) async {
+      Function(XFile?, List<Map<String, int>?>?, String) onImagePicked, String imageType, bool isProcess) async {
     imagePickerHandler.showImagePicker(context, (pickedFile) async {
-      if (pickedFile != null && imageType == 'problemImage') {
+      if (pickedFile != null && imageType == 'problemImage' && isProcess) {
         // problemImage의 경우 색상 선택 화면을 표시
+        print('image path: ${pickedFile!.path}');
         List<Map<String, int>?> selectedColors = await imageColorPickerHandler.showColorPicker(context, pickedFile.path);
         onImagePicked(pickedFile, selectedColors, imageType);
       } else {
@@ -136,7 +150,7 @@ class ProblemRegisterScreenService {
     showLoadingDialog(context);
 
     try {
-      await Provider.of<ProblemsProvider>(context, listen: false)
+      await Provider.of<FoldersProvider>(context, listen: false)
           .submitProblem(problemData, context);
       hideLoadingDialog(context);
       onSuccess();
@@ -153,7 +167,7 @@ class ProblemRegisterScreenService {
     showLoadingDialog(context);
 
     try {
-      await Provider.of<ProblemsProvider>(context, listen: false)
+      await Provider.of<FoldersProvider>(context, listen: false)
           .updateProblem(problemData);
       hideLoadingDialog(context);
       onSuccess();
@@ -168,9 +182,9 @@ class ProblemRegisterScreenService {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('로그인 필요', style: TextStyle(fontSize: 24)),
+        title: const DecorateText(text: '로그인 필요',),
         content:
-            const Text('문제를 등록하려면 로그인 해주세요!', style: TextStyle(fontSize: 20)),
+            const DecorateText(text: '문제를 등록하려면 로그인 해주세요!', ),
         actions: <Widget>[
           TextButton(
             child: const DecorateText(
