@@ -30,6 +30,8 @@ class _FolderSelectionDialogState extends State<FolderSelectionDialog> {
     try {
       // 서버에서 폴더 데이터를 한 번만 가져옴
       _cachedFolders = await foldersProvider.fetchAllFolderThumbnails();
+      _selectedFolderId = await foldersProvider.currentFolder!.folderId;
+      _selectedFolderName = await foldersProvider.currentFolder!.folderName;
     } catch (e) {
       log('Failed to load folders: $e');
     } finally {
