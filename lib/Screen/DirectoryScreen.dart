@@ -260,7 +260,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                 Navigator.pop(context);
               },
               child: const DecorateText(
-                text: '확인',
+                text: '취소',
                 fontSize: 20,
                 color: Colors.black,
               ),
@@ -500,18 +500,13 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
           return GridTile(
             child: Column(
               children: <Widget>[
-                SizedBox(
+                Container(
                   width: width,
                   height: height,
-                  /*
                   decoration: BoxDecoration(
-                    border: Border.all(
-                      color: themeProvider.primaryColor,
-                      width: 2.0,
-                    ),
-                    borderRadius: BorderRadius.circular(8.0),
+                    color: themeProvider.primaryColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12.0), // 모서리를 둥글게 설정
                   ),
-                   */
                   child: Icon(
                     Icons.folder,
                     color: themeProvider.primaryColor,

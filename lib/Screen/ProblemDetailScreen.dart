@@ -208,10 +208,12 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
     double screenHeight = MediaQuery.of(context).size.height;
 
     // 화면 높이에 따라 패딩 값을 동적으로 설정
-    double topBottomPadding = screenHeight >= 1000 ? 25.0 : 15.0; // 아이패드 13인치(높이 1024 이상) 기준으로 35, 그 외는 20
+    double topPadding = screenHeight >= 1000 ? 25.0 : 15.0;
+    double bottomPadding = screenHeight >= 1000 ? 30.0 : 25.0;
+    double topBottomPadding = screenHeight >= 1000 ? 25.0 : 25.0; // 아이패드 13인치(높이 1024 이상) 기준으로 35, 그 외는 20
 
     return Padding(
-      padding: EdgeInsets.only(top: topBottomPadding, bottom: topBottomPadding),
+      padding: EdgeInsets.only(top: topPadding, bottom: bottomPadding),
       child: NavigationButtons(
         context: context,
         provider: Provider.of<FoldersProvider>(context, listen: false),
@@ -322,7 +324,6 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                     buildProblemImage(context, problemModel),
                     const SizedBox(height: 30.0),
                     buildSolutionExpansionTile(problemModel), // 스크롤 시 보여지는 영역
-                    const SizedBox(height: 20.0),
                   ],
                 ),
               ),
@@ -351,7 +352,14 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
     double childAspectRatio = 0.65;
 
     return ExpansionTile(
-      title: buildCenteredTitle('해설 및 풀이 확인', themeProvider.primaryColor),
+      title: Container(
+        decoration: BoxDecoration(
+          color: themeProvider.primaryColor.withOpacity(0.2), // 배경색 적용
+          borderRadius: BorderRadius.circular(12.0), // 모서리를 둥글게 설정
+        ),
+        padding: const EdgeInsets.all(8.0), // 여백 추가
+        child: buildCenteredTitle('해설 및 풀이 확인', themeProvider.primaryColor),
+      ),
       children: [
         const SizedBox(height: 10.0),
         buildSectionWithMemo(problemModel),
@@ -384,7 +392,6 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
             ),
           ],
         ),
-        const SizedBox(height: 20.0),
       ],
     );
   }
