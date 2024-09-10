@@ -260,7 +260,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                 Navigator.pop(context);
               },
               child: const DecorateText(
-                text: '확인',
+                text: '취소',
                 fontSize: 20,
                 color: Colors.black,
               ),
