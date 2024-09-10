@@ -204,8 +204,14 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
 
   // 네비게이션 버튼 구성 함수
   Widget buildNavigationButtons(BuildContext context) {
+    // 기기의 높이 정보를 가져옴
+    double screenHeight = MediaQuery.of(context).size.height;
+
+    // 화면 높이에 따라 패딩 값을 동적으로 설정
+    double topBottomPadding = screenHeight >= 1000 ? 25.0 : 15.0; // 아이패드 13인치(높이 1024 이상) 기준으로 35, 그 외는 20
+
     return Padding(
-      padding: const EdgeInsets.only(top: 35.0, bottom: 35.0),
+      padding: EdgeInsets.only(top: topBottomPadding, bottom: topBottomPadding),
       child: NavigationButtons(
         context: context,
         provider: Provider.of<FoldersProvider>(context, listen: false),
@@ -241,8 +247,63 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
   // 문제 상세 화면 구성 함수
   Widget buildProblemDetails(BuildContext context, ProblemModel problemModel) {
     final themeProvider = Provider.of<ThemeHandler>(context);
+    final screenWidth = MediaQuery.of(context).size.width;
 
-    return RepaintBoundary(
+    if (screenWidth > 600) {
+      // 화면 너비가 600 이상일 때 좌우로 배치
+      return RepaintBoundary(
+        key: _globalKey,
+        child: Stack(
+          children: [
+            buildBackground(themeProvider),
+            SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 35.0),
+                child: Column(
+                  children: [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // 좌측 영역 (푼 날짜와 문제 출처)
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const SizedBox(height: 30.0),
+                              buildSolvedDate(context, problemModel),
+                              const SizedBox(height: 30.0),
+                              buildProblemReference(context, problemModel),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 30.0), // 좌우 간격을 위한 여백
+                        // 우측 영역 (문제 이미지)
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const SizedBox(height: 25.0),
+                              // 이미지 상단 정렬 및 하단 여백 최소화
+                              buildProblemImage(context, problemModel),
+                              const SizedBox(height: 30.0),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    // 해설 및 풀이 확인 토글은 스크롤 시 나타나도록 설정
+                    const SizedBox(height: 15.0),
+                    buildSolutionExpansionTile(problemModel),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    } else {
+      // 화면 너비가 600 이하일 때 기존 세로 배치 유지
+      return RepaintBoundary(
         key: _globalKey,
         child: Stack(
           children: [
@@ -260,14 +321,16 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                     const SizedBox(height: 30.0),
                     buildProblemImage(context, problemModel),
                     const SizedBox(height: 30.0),
-                    buildSolutionExpansionTile(problemModel),
+                    buildSolutionExpansionTile(problemModel), // 스크롤 시 보여지는 영역
                     const SizedBox(height: 20.0),
                   ],
                 ),
               ),
             ),
           ],
-        ));
+        ),
+      );
+    }
   }
 
   // 토글 눌렀을 때 나오는 항목 위젯 구성 함수
@@ -285,7 +348,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
       crossAxisCount = 1;  // 가로가 600 이하이면 1개
     }
 
-    double childAspectRatio = 0.6;
+    double childAspectRatio = 0.65;
 
     return ExpansionTile(
       title: buildCenteredTitle('해설 및 풀이 확인', themeProvider.primaryColor),
@@ -447,11 +510,12 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
               borderRadius: BorderRadius.circular(10), // 모서리 둥글게 설정
               child: AspectRatio(
                 aspectRatio: 0.8, // 여기서 원하는 비율로 이미지의 높이를 유동적으로 조정
-                child: Container(
-                  width: mediaQuery.size.width * 0.9, // 부모 크기 기준
+                child: SizedBox(
+                  width: mediaQuery.size.width * 0.8, // 부모 크기 기준
+                  //height : mediaQuery.size.height,
                   child: DisplayImage(
                     imagePath: imageUrl,
-                    fit: BoxFit.contain, // 이미지를 부모 컨테이너에 맞게 조정
+                    fit: BoxFit.cover, // 이미지가 여백 없이 꽉 차도록 설정
                   ),
                 ),
               ),
@@ -461,6 +525,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
       ],
     );
   }
+
 
   // 한 줄에 아이콘과 텍스트가 동시에 오도록 하는 함수
   Widget buildIconTextRow(IconData icon, String label, Widget trailing) {
