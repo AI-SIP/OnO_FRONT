@@ -271,7 +271,9 @@ class FoldersProvider with ChangeNotifier {
     request.fields['solvedAt'] = problemData.solvedAt?.toIso8601String() ?? "";
     request.fields['reference'] = problemData.reference ?? "";
     request.fields['memo'] = problemData.memo ?? "";
-    request.fields['folderId'] = problemData.folderId.toString();
+
+    final folderId = problemData.folderId ?? currentFolderId;
+    request.fields['folderId'] = folderId.toString();
 
     final problemImage = problemData.problemImage;
     final solveImage = problemData.solveImage;

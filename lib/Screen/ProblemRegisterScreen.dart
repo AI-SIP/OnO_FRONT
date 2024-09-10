@@ -41,6 +41,7 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
       _selectedFolderId = foldersProvider.currentFolder!.folderId;
       _selectedFolderName = foldersProvider.currentFolder!.folderName;
     } else {
+      _selectedFolderId = null;
       _selectedFolderName = '메인'; // 기본값 설정
     }
 
