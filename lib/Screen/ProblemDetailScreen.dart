@@ -273,6 +273,19 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
   // 토글 눌렀을 때 나오는 항목 위젯 구성 함수
   Widget buildSolutionExpansionTile(ProblemModel problemModel) {
     final themeProvider = Provider.of<ThemeHandler>(context);
+    final screenWidth = MediaQuery.of(context).size.width;
+
+    // 화면 크기에 따라 한 줄에 몇 개의 항목을 배치할지 설정
+    int crossAxisCount;
+    if (screenWidth > 1100) {
+      crossAxisCount = 3;  // 가로가 1100 이상이면 3개
+    } else if (screenWidth >= 600) {
+      crossAxisCount = 2;  // 가로가 600에서 1100 사이면 2개
+    } else {
+      crossAxisCount = 1;  // 가로가 600 이하이면 1개
+    }
+
+    double childAspectRatio = 0.6;
 
     return ExpansionTile(
       title: buildCenteredTitle('해설 및 풀이 확인', themeProvider.primaryColor),
@@ -280,25 +293,33 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
         const SizedBox(height: 10.0),
         buildSectionWithMemo(problemModel),
         const SizedBox(height: 20.0),
-        buildImageSection(
-          context,
-          problemModel.problemImageUrl,
-          '원본 이미지',
-          themeProvider.primaryColor,
-        ),
-        const SizedBox(height: 20.0),
-        buildImageSection(
-          context,
-          problemModel.answerImageUrl,
-          '해설 이미지',
-          themeProvider.primaryColor,
-        ),
-        const SizedBox(height: 20.0),
-        buildImageSection(
-          context,
-          problemModel.solveImageUrl,
-          '풀이 이미지',
-          themeProvider.primaryColor,
+        GridView.count(
+          crossAxisCount: crossAxisCount,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          mainAxisSpacing: 20.0,
+          crossAxisSpacing: 20.0,
+          childAspectRatio: childAspectRatio,
+          children: [
+            buildImageSection(
+              context,
+              problemModel.problemImageUrl,
+              '원본 이미지',
+              themeProvider.primaryColor,
+            ),
+            buildImageSection(
+              context,
+              problemModel.answerImageUrl,
+              '해설 이미지',
+              themeProvider.primaryColor,
+            ),
+            buildImageSection(
+              context,
+              problemModel.solveImageUrl,
+              '풀이 이미지',
+              themeProvider.primaryColor,
+            ),
+          ],
         ),
         const SizedBox(height: 20.0),
       ],
@@ -391,20 +412,9 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
   }
 
   // 이미지 띄워주는 위젯 구현 함수
-  Widget buildImageSection(
-      BuildContext context, String? imageUrl, String label, Color color) {
+  Widget buildImageSection(BuildContext context, String? imageUrl, String label, Color color) {
     final mediaQuery = MediaQuery.of(context);
     final themeProvider = Provider.of<ThemeHandler>(context);
-
-    // 화면의 너비에 따라 이미지 크기 비율을 다르게 설정
-    double maxImageHeight = mediaQuery.size.height * 0.9; // 기본 크기
-    if (mediaQuery.size.width > 600) {
-      // 가로 모드나 태블릿 같이 큰 화면일 때
-      maxImageHeight = mediaQuery.size.height * 0.6; // 크기를 줄임
-    } else if (mediaQuery.size.width > 800) {
-      // 더 큰 화면일 때
-      maxImageHeight = mediaQuery.size.height * 0.5; // 크기를 더 줄임
-    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -424,22 +434,26 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
         ),
         const SizedBox(height: 20.0),
         Center(
-          child: ConstrainedBox(
-            constraints: BoxConstraints(
-              maxHeight: maxImageHeight, // 이미지의 최대 높이 설정
-            ),
-            child: GestureDetector(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => FullScreenImage(imagePath: imageUrl),
+          child: GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => FullScreenImage(imagePath: imageUrl),
+                ),
+              );
+            },
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(10), // 모서리 둥글게 설정
+              child: AspectRatio(
+                aspectRatio: 0.8, // 여기서 원하는 비율로 이미지의 높이를 유동적으로 조정
+                child: Container(
+                  width: mediaQuery.size.width * 0.9, // 부모 크기 기준
+                  child: DisplayImage(
+                    imagePath: imageUrl,
+                    fit: BoxFit.contain, // 이미지를 부모 컨테이너에 맞게 조정
                   ),
-                );
-              },
-              child: DisplayImage(
-                imagePath: imageUrl,
-                fit: BoxFit.contain,
+                ),
               ),
             ),
           ),
