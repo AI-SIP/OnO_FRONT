@@ -37,9 +37,9 @@ class TokenProvider {
         accessToken = await storage.read(key: 'accessToken');
         return accessToken;
       } else {
-        throw Exception("can not refresh access token");
+        log("Can not refresh access token");
+        return null;
       }
-
     }
   }
 
@@ -68,6 +68,7 @@ class TokenProvider {
       if (response.statusCode == 200) {
         var data = jsonDecode(response.body);
         await setAccessToken(data['accessToken']);
+        await setRefreshToken(data['refreshToken']);
         log('Access token refreshed.');
         return true;
       } else {
