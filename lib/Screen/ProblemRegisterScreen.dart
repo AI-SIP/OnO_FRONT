@@ -36,7 +36,8 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
   void initState() {
     super.initState();
 
-    final foldersProvider = Provider.of<FoldersProvider>(context, listen: false);
+    final foldersProvider =
+        Provider.of<FoldersProvider>(context, listen: false);
 
     if (foldersProvider.currentFolder != null) {
       _selectedFolderId = foldersProvider.currentFolder!.folderId;
@@ -66,8 +67,8 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
   }
 
   void _resetFields() {
-
-    final foldersProvider = Provider.of<FoldersProvider>(context, listen: false);
+    final foldersProvider =
+        Provider.of<FoldersProvider>(context, listen: false);
 
     _sourceController.clear();
     _notesController.clear();
@@ -86,6 +87,26 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeHandler>(context);
+    final screenWidth = MediaQuery.of(context).size.width;
+
+    // 이미지 항목을 한 줄에 몇 개 배치할지 결정 (가로 크기에 따라 다르게 설정)
+    int crossAxisCount;
+    if (screenWidth > 1100) {
+      crossAxisCount = 3;  // 가로가 900 이상이면 3개
+    } else if (screenWidth >= 600) {
+      crossAxisCount = 2;  // 가로가 600에서 900 사이면 2개
+    } else {
+      crossAxisCount = 1;  // 가로가 600 이하이면 1개
+    }
+
+    double childAspectRatio;
+    if(screenWidth > 1100){
+      childAspectRatio = 0.7;
+    } else if(screenWidth >= 600) {
+      childAspectRatio = 0.8;
+    } else{
+      childAspectRatio = (screenWidth / (screenWidth / crossAxisCount) * 0.9);
+    }
 
     return Scaffold(
       body: GestureDetector(
@@ -94,7 +115,7 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
         },
         child: SingleChildScrollView(
           child: Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(20.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: <Widget>[
@@ -111,23 +132,33 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
                     themeProvider,
                   ),
                 ),
-                buildSection(
-                  '문제',
-                  Icons.camera_alt,
-                  buildImagePicker('problemImage', _problemImage,
-                      widget.problem?.problemImageUrl),
-                ),
-                buildSection(
-                  '해설',
-                  Icons.camera_alt,
-                  buildImagePicker('answerImage', _answerImage,
-                      widget.problem?.answerImageUrl),
-                ),
-                buildSection(
-                  '나의 풀이',
-                  Icons.camera_alt,
-                  buildImagePicker(
-                      'solveImage', _solveImage, widget.problem?.solveImageUrl),
+                GridView.count(
+                  crossAxisCount: crossAxisCount,
+                  shrinkWrap: true,  // GridView가 다른 스크롤 뷰 안에 있으므로 shrinkWrap을 true로 설정
+                  physics: const NeverScrollableScrollPhysics(),  // 스크롤을 금지하고 부모 스크롤뷰 사용
+                  mainAxisSpacing: 0,  // 항목 간 세로 간격
+                  crossAxisSpacing: 20.0,  // 항목 간 가로 간격
+                  childAspectRatio: childAspectRatio,
+                  children: [
+                    buildSection(
+                      '문제',
+                      Icons.camera_alt,
+                      buildImagePicker('problemImage', _problemImage,
+                          widget.problem?.problemImageUrl),
+                    ),
+                    buildSection(
+                      '해설',
+                      Icons.camera_alt,
+                      buildImagePicker('answerImage', _answerImage,
+                          widget.problem?.answerImageUrl),
+                    ),
+                    buildSection(
+                      '나의 풀이',
+                      Icons.camera_alt,
+                      buildImagePicker('solveImage', _solveImage,
+                          widget.problem?.solveImageUrl),
+                    ),
+                  ],
                 ),
                 buildSection(
                   '한 줄 메모',
@@ -169,7 +200,8 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
             }),
           ),
           style: ElevatedButton.styleFrom(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
             foregroundColor: themeProvider.primaryColor,
             backgroundColor: themeProvider.primaryColor.withOpacity(0.1),
             side: BorderSide(
@@ -208,8 +240,10 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
             await _showFolderSelectionModal(context);
           },
           style: TextButton.styleFrom(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
-            backgroundColor: themeProvider.primaryColor.withOpacity(0.1), // 배경색을 은은하게 설정
+            padding:
+                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
+            backgroundColor:
+                themeProvider.primaryColor.withOpacity(0.1), // 배경색을 은은하게 설정
             side: BorderSide(
               color: themeProvider.primaryColor,
               width: 2.0, // 테두리 두께
@@ -260,46 +294,49 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
   Widget buildImagePicker(
       String imageType, XFile? image, String? existingImageUrl) {
     final themeProvider = Provider.of<ThemeHandler>(context);
-    return Container(
-      height: 200,
-      decoration: BoxDecoration(
-        color: themeProvider.primaryColor.withOpacity(0.1),
-        border: Border.all(color: themeProvider.primaryColor, width: 2.0),
-      ),
-      child: Center(
-        child: image == null
-            ? existingImageUrl != null
-                ? GestureDetector(
-                    onTap: () {
-                      _service.showImagePicker(
-                          context, _onImagePicked, imageType, _isProcess);
-                    },
-                    child: DisplayImage(imagePath: existingImageUrl),
-                  )
-                : Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      IconButton(
-                        icon: Icon(Icons.image,
-                            color: themeProvider.primaryColor, size: 50),
-                        onPressed: () {
-                          _service.showImagePicker(
-                              context, _onImagePicked, imageType, _isProcess);
-                        },
-                      ),
-                      DecorateText(
-                        text: '아이콘을 눌러 이미지를 추가해주세요!',
-                        color: themeProvider.primaryColor,
-                        fontSize: 16,
-                      ),
-                    ],
-                  )
-            : GestureDetector(
-                onTap: () {
-                  _service.showImagePicker(context, _onImagePicked, imageType, _isProcess);
+
+    return Flexible(  // Flexible 또는 Expanded로 감싸서 크기 조정 가능하게 만듦
+      child: Container(
+        decoration: BoxDecoration(
+          color: themeProvider.primaryColor.withOpacity(0.1),
+          border: Border.all(color: themeProvider.primaryColor, width: 2.0),
+        ),
+        child: Center(
+          child: image == null
+              ? existingImageUrl != null
+              ? GestureDetector(
+            onTap: () {
+              _service.showImagePicker(
+                  context, _onImagePicked, imageType, _isProcess);
+            },
+            child: DisplayImage(imagePath: existingImageUrl),
+          )
+              : Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              IconButton(
+                icon: Icon(Icons.image,
+                    color: themeProvider.primaryColor, size: 50),
+                onPressed: () {
+                  _service.showImagePicker(
+                      context, _onImagePicked, imageType, _isProcess);
                 },
-                child: Image.file(File(image.path)),
               ),
+              DecorateText(
+                text: '아이콘을 눌러 이미지를 추가해주세요!',
+                color: themeProvider.primaryColor,
+                fontSize: 16,
+              ),
+            ],
+          )
+              : GestureDetector(
+            onTap: () {
+              _service.showImagePicker(
+                  context, _onImagePicked, imageType, _isProcess);
+            },
+            child: Image.file(File(image.path)),
+          ),
+        ),
       ),
     );
   }
@@ -357,7 +394,8 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
         TextButton(
           onPressed: _resetFields,
           style: ElevatedButton.styleFrom(
-            padding: const EdgeInsets.symmetric(horizontal: 25.0, vertical: 8.0),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 25.0, vertical: 8.0),
             backgroundColor: themeProvider.primaryColor.withOpacity(0.3),
             foregroundColor: themeProvider.primaryColor,
             shape: RoundedRectangleBorder(
@@ -373,7 +411,8 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
         TextButton(
           onPressed: _submitProblem,
           style: ElevatedButton.styleFrom(
-            padding: const EdgeInsets.symmetric(horizontal: 25.0, vertical: 8.0),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 25.0, vertical: 8.0),
             backgroundColor: themeProvider.primaryColor,
             foregroundColor: Colors.white,
             shape: RoundedRectangleBorder(
@@ -397,45 +436,52 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween, // 양쪽 끝으로 배치
-          children: <Widget>[
-            Row(
-              children: [
-                Icon(icon, color: themeProvider.primaryColor),
-                const SizedBox(width: 10),
-                DecorateText(
-                  text: title,
-                  fontSize: 20,
-                  color: themeProvider.primaryColor,
-                ),
-              ],
-            ),
-
-            // '문제' 섹션에서만 토글을 추가
-            if (title == '문제')
+        SizedBox(
+          height: 60, // 고정된 높이 설정 (적절한 높이로 수정 가능)
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween, // 양쪽 끝으로 배치
+            children: <Widget>[
               Row(
                 children: [
+                  Icon(icon, color: themeProvider.primaryColor),
+                  const SizedBox(width: 10),
                   DecorateText(
-                    text: '필기 제거 및 이미지 보정',
-                    fontSize: 16,
+                    text: title,
+                    fontSize: 20,
                     color: themeProvider.primaryColor,
-                  ),
-                  Transform.scale(
-                    scale: 0.6,  // 스위치 크기 조정 (0.8 배)
-                    child: Switch(
-                      value: _isProcess,
-                      onChanged: (bool newValue) {
-                        setState(() {
-                          _isProcess = newValue;
-                        });
-                      },
-                      activeColor: themeProvider.primaryColor,
-                    ),
                   ),
                 ],
               ),
-          ],
+              // '문제' 섹션에서만 토글을 추가
+              if (title == '문제')
+                Row(
+                  children: [
+                    DecorateText(
+                      text: '필기 제거 및 이미지 보정',
+                      fontSize: 16,
+                      color: themeProvider.primaryColor,
+                    ),
+                    Transform.scale(
+                      scale: 0.6, // 스위치 크기 조정 (0.6배)
+                      child: Switch(
+                        value: _isProcess,
+                        onChanged: (bool newValue) {
+                          setState(() {
+                            _isProcess = newValue;
+                          });
+                        },
+                        activeColor: themeProvider.primaryColor,
+                      ),
+                    ),
+                  ],
+                )
+              else
+                // 문제 이미지가 아닌 경우 동일한 높이 확보를 위해 빈 위젯 추가
+                const SizedBox(
+                  width: 160, // 토글이 차지하는 공간만큼 너비를 설정
+                ),
+            ],
+          ),
         ),
         const SizedBox(height: 5),
         content,
@@ -448,7 +494,8 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
   void _onImagePicked(XFile? pickedFile,
       List<Map<String, int>?>? selectedColors, String imageType) {
     setState(() {
-      if (pickedFile != null) { // 이미지 선택이 성공했을 때만 값을 업데이트
+      if (pickedFile != null) {
+        // 이미지 선택이 성공했을 때만 값을 업데이트
         if (imageType == 'problemImage') {
           _problemImage = pickedFile;
           _selectedColors = selectedColors;
@@ -495,7 +542,7 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
         problemImage: _problemImage,
         answerImage: _answerImage,
         solveImage: _solveImage,
-        isProcess : _isProcess,
+        isProcess: _isProcess,
         colors: _selectedColors,
       );
 

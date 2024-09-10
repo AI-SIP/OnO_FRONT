@@ -205,7 +205,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
   // 네비게이션 버튼 구성 함수
   Widget buildNavigationButtons(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(top: 10.0, bottom: 30.0),
+      padding: const EdgeInsets.only(top: 35.0, bottom: 35.0),
       child: NavigationButtons(
         context: context,
         provider: Provider.of<FoldersProvider>(context, listen: false),
