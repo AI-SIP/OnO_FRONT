@@ -379,45 +379,60 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   }
 
   Widget _buildSortDropdown(ThemeHandler themeProvider) {
-    return Align(
-      alignment: Alignment.topRight,
-      child: DropdownButton<String>(
-        value: _selectedSortOption,
-        iconEnabledColor: themeProvider.primaryColor,
-        underline: Container(),
-        items: [
-          DropdownMenuItem(
-            value: 'name',
-            child: DecorateText(
-              text: '이름순',
-              fontSize: 18,
-              color: themeProvider.primaryColor,
-            ),
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 16.0), // 왼쪽 여백 추가
+          child: Consumer<FoldersProvider>(
+            builder: (context, foldersProvider, child) {
+              int problemCount = foldersProvider.problems.length;
+              return DecorateText(
+                text: '문제 수 : $problemCount',
+                fontSize: 18,
+                color: themeProvider.primaryColor,
+              );
+            },
           ),
-          DropdownMenuItem(
-            value: 'newest',
-            child: DecorateText(
-              text: '최신순',
-              fontSize: 18,
-              color: themeProvider.primaryColor,
+        ),
+        DropdownButton<String>(
+          value: _selectedSortOption,
+          iconEnabledColor: themeProvider.primaryColor,
+          underline: Container(),
+          items: [
+            DropdownMenuItem(
+              value: 'name',
+              child: DecorateText(
+                text: '이름순',
+                fontSize: 18,
+                color: themeProvider.primaryColor,
+              ),
             ),
-          ),
-          DropdownMenuItem(
-            value: 'oldest',
-            child: DecorateText(
-              text: '오래된순',
-              fontSize: 18,
-              color: themeProvider.primaryColor,
+            DropdownMenuItem(
+              value: 'newest',
+              child: DecorateText(
+                text: '최신순',
+                fontSize: 18,
+                color: themeProvider.primaryColor,
+              ),
             ),
-          ),
-        ],
-        onChanged: (value) {
-          setState(() {
-            _selectedSortOption = value!;
-            _directoryService.sortProblems(_selectedSortOption);
-          });
-        },
-      ),
+            DropdownMenuItem(
+              value: 'oldest',
+              child: DecorateText(
+                text: '오래된순',
+                fontSize: 18,
+                color: themeProvider.primaryColor,
+              ),
+            ),
+          ],
+          onChanged: (value) {
+            setState(() {
+              _selectedSortOption = value!;
+              _directoryService.sortProblems(_selectedSortOption);
+            });
+          },
+        ),
+      ],
     );
   }
 
@@ -480,14 +495,15 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       },
       child: LayoutBuilder(
         builder: (context, constraints) {
-          double height = constraints.maxHeight * 0.7;
+          double height = constraints.maxHeight * 0.8;
           double width = constraints.maxWidth * 0.9;
           return GridTile(
             child: Column(
               children: <Widget>[
-                Container(
+                SizedBox(
                   width: width,
                   height: height,
+                  /*
                   decoration: BoxDecoration(
                     border: Border.all(
                       color: themeProvider.primaryColor,
@@ -495,10 +511,11 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                     ),
                     borderRadius: BorderRadius.circular(8.0),
                   ),
+                   */
                   child: Icon(
                     Icons.folder,
                     color: themeProvider.primaryColor,
-                    size: 60, // 폴더 아이콘 크기를 더 크게 설정
+                    size: 80, // 폴더 아이콘 크기를 더 크게 설정
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -533,26 +550,28 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       },
       child: LayoutBuilder(
         builder: (context, constraints) {
-          double height = constraints.maxHeight * 0.7;
+          double height = constraints.maxHeight * 0.8;
           double width = constraints.maxWidth * 0.9;
           return GridTile(
             child: Column(
               children: <Widget>[
-                Container(
-                  width: width,
-                  height: height,
-                  decoration: BoxDecoration(
-                    border: Border.all(
-                      color: themeProvider.primaryColor,
-                      width: 2.0,
+                Expanded(
+                  child: Container(
+                    width: width,
+                    height: height,
+                    decoration: BoxDecoration(
+                      border: Border.all(
+                        color: themeProvider.primaryColor,
+                        width: 2.0,
+                      ),
+                      borderRadius: BorderRadius.circular(8.0),
                     ),
-                    borderRadius: BorderRadius.circular(8.0),
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(8.0),
-                    child: DisplayImage(
-                      imagePath: problem.processImageUrl,
-                      fit: BoxFit.contain,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(8.0),
+                      child: DisplayImage(
+                        imagePath: problem.processImageUrl,
+                        fit: BoxFit.contain,
+                      ),
                     ),
                   ),
                 ),
