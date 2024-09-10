@@ -9,6 +9,7 @@ class ProblemRegisterModel {
   String? reference;
   DateTime? solvedAt;
   int? folderId;
+  bool? isProcess;
   List<Map<String, int>?>? colors;
 
   ProblemRegisterModel({
@@ -20,6 +21,7 @@ class ProblemRegisterModel {
     this.reference,
     this.solvedAt,
     this.folderId,
+    this.isProcess,
     this.colors
   });
 
@@ -33,6 +35,7 @@ class ProblemRegisterModel {
       'reference': reference,
       'solvedAt': solvedAt?.subtract(const Duration(hours: 9)).toIso8601String(),
       'folderId' : folderId,
+      'isProcess' : isProcess,
       'colors' : colors?.map((color) => color).toList(),
     };
   }
@@ -47,6 +50,7 @@ class ProblemRegisterModel {
       reference: json['reference'],
       solvedAt: DateTime.parse(json['solvedAt']).subtract(const Duration(hours: 9)),
       folderId: int.parse(json['folderId']),
+      isProcess : bool.parse(json['isProcess']),
       colors: json['colors'],
     );
   }

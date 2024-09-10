@@ -106,9 +106,9 @@ class ProblemRegisterScreenService {
   }
 
   Future<void> showImagePicker(BuildContext context,
-      Function(XFile?, List<Map<String, int>?>?, String) onImagePicked, String imageType) async {
+      Function(XFile?, List<Map<String, int>?>?, String) onImagePicked, String imageType, bool isProcess) async {
     imagePickerHandler.showImagePicker(context, (pickedFile) async {
-      if (pickedFile != null && imageType == 'problemImage') {
+      if (pickedFile != null && imageType == 'problemImage' && isProcess) {
         // problemImage의 경우 색상 선택 화면을 표시
         print('image path: ${pickedFile!.path}');
         List<Map<String, int>?> selectedColors = await imageColorPickerHandler.showColorPicker(context, pickedFile.path);

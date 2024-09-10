@@ -23,6 +23,7 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
   late DateTime _selectedDate;
   int? _selectedFolderId;
   String _selectedFolderName = '메인';
+  bool _isProcess = false;
   late TextEditingController _sourceController;
   late TextEditingController _notesController;
 
@@ -65,6 +66,9 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
   }
 
   void _resetFields() {
+
+    final foldersProvider = Provider.of<FoldersProvider>(context, listen: false);
+
     _sourceController.clear();
     _notesController.clear();
     setState(() {
@@ -73,6 +77,9 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
       _solveImage = null;
       _selectedColors = null;
       _selectedDate = DateTime.now();
+      _selectedFolderId = foldersProvider.currentFolder!.folderId;
+      _selectedFolderName = foldersProvider.currentFolder!.folderName;
+      _isProcess = false;
     });
   }
 
@@ -162,7 +169,7 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
             }),
           ),
           style: ElevatedButton.styleFrom(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
             foregroundColor: themeProvider.primaryColor,
             backgroundColor: themeProvider.primaryColor.withOpacity(0.1),
             side: BorderSide(
@@ -201,7 +208,7 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
             await _showFolderSelectionModal(context);
           },
           style: TextButton.styleFrom(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
             backgroundColor: themeProvider.primaryColor.withOpacity(0.1), // 배경색을 은은하게 설정
             side: BorderSide(
               color: themeProvider.primaryColor,
@@ -265,7 +272,7 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
                 ? GestureDetector(
                     onTap: () {
                       _service.showImagePicker(
-                          context, _onImagePicked, imageType);
+                          context, _onImagePicked, imageType, _isProcess);
                     },
                     child: DisplayImage(imagePath: existingImageUrl),
                   )
@@ -277,7 +284,7 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
                             color: themeProvider.primaryColor, size: 50),
                         onPressed: () {
                           _service.showImagePicker(
-                              context, _onImagePicked, imageType);
+                              context, _onImagePicked, imageType, _isProcess);
                         },
                       ),
                       DecorateText(
@@ -289,7 +296,7 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
                   )
             : GestureDetector(
                 onTap: () {
-                  _service.showImagePicker(context, _onImagePicked, imageType);
+                  _service.showImagePicker(context, _onImagePicked, imageType, _isProcess);
                 },
                 child: Image.file(File(image.path)),
               ),
@@ -386,21 +393,51 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
   // 공통 UI 빌더 함수
   Widget buildSection(String title, IconData icon, Widget content) {
     final themeProvider = Provider.of<ThemeHandler>(context);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween, // 양쪽 끝으로 배치
           children: <Widget>[
-            Icon(icon, color: themeProvider.primaryColor),
-            const SizedBox(width: 10),
-            DecorateText(
-              text: title,
-              fontSize: 20,
-              color: themeProvider.primaryColor,
+            Row(
+              children: [
+                Icon(icon, color: themeProvider.primaryColor),
+                const SizedBox(width: 10),
+                DecorateText(
+                  text: title,
+                  fontSize: 20,
+                  color: themeProvider.primaryColor,
+                ),
+              ],
             ),
+
+            // '문제' 섹션에서만 토글을 추가
+            if (title == '문제')
+              Row(
+                children: [
+                  DecorateText(
+                    text: '필기 제거 및 이미지 보정',
+                    fontSize: 16,
+                    color: themeProvider.primaryColor,
+                  ),
+                  Transform.scale(
+                    scale: 0.6,  // 스위치 크기 조정 (0.8 배)
+                    child: Switch(
+                      value: _isProcess,
+                      onChanged: (bool newValue) {
+                        setState(() {
+                          _isProcess = newValue;
+                        });
+                      },
+                      activeColor: themeProvider.primaryColor,
+                    ),
+                  ),
+                ],
+              ),
           ],
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 5),
         content,
         const SizedBox(height: 20),
       ],
@@ -435,6 +472,7 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
         reference: _sourceController.text,
         solvedAt: _selectedDate,
         colors: _selectedColors,
+        isProcess: _isProcess,
         folderId: _selectedFolderId,
       );
       _service.submitProblem(
@@ -457,6 +495,7 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
         problemImage: _problemImage,
         answerImage: _answerImage,
         solveImage: _solveImage,
+        isProcess : _isProcess,
         colors: _selectedColors,
       );
 

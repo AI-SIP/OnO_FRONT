@@ -271,9 +271,8 @@ class FoldersProvider with ChangeNotifier {
     request.fields['solvedAt'] = problemData.solvedAt?.toIso8601String() ?? "";
     request.fields['reference'] = problemData.reference ?? "";
     request.fields['memo'] = problemData.memo ?? "";
-
-    final folderId = problemData.folderId ?? currentFolderId;
-    request.fields['folderId'] = folderId.toString();
+    request.fields['folderId'] = (problemData.folderId ?? currentFolderId).toString();
+    request.fields['process'] = problemData.isProcess! ? 'true' : 'false';
 
     final problemImage = problemData.problemImage;
     final solveImage = problemData.solveImage;
@@ -353,6 +352,8 @@ class FoldersProvider with ChangeNotifier {
     if (problemData.folderId != null) {
       request.fields['folderId'] = problemData.folderId!.toString();
     }
+
+    request.fields['process'] = problemData.isProcess! ? 'true' : 'false';
 
     final problemImage = problemData.problemImage;
     final colors = problemData.colors;
