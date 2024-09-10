@@ -22,46 +22,48 @@ class _ThemeDialogState extends State<ThemeDialog> {
         fontSize: 30,
         color: themeProvider.primaryColor,
       ),
-      content: Column(
-        mainAxisSize: MainAxisSize.min, // Ensures the dialog fits content size
-        children: [
-          const SizedBox(height: 20), // Add vertical spacing
-          SizedBox(
-            height: 450, // Adjusted for smaller circles
-            width: 280, // Adjusted for smaller circles
-            child: GridView.count(
-              crossAxisCount: 4, // Number of columns
-              crossAxisSpacing: 8.0, // Adjusted spacing
-              mainAxisSpacing: 8.0, // Adjusted spacing
-              children: [
-                _buildColorCircle(Colors.pink[200]!),
-                _buildColorCircle(Colors.pink[400]!),
-                _buildColorCircle(Colors.purple[300]!),
-                _buildColorCircle(Colors.purple[700]!),
-                _buildColorCircle(Colors.red[500]!),
-                _buildColorCircle(Colors.yellow[900]!),
-                _buildColorCircle(Colors.orange[300]!),
-                _buildColorCircle(Colors.yellow[600]!),
-                _buildColorCircle(Colors.lightGreen),
-                _buildColorCircle(Colors.green[500]!),
-                _buildColorCircle(Colors.green[700]!),
-                _buildColorCircle(Colors.green[900]!),
-                _buildColorCircle(Colors.cyan),
-                _buildColorCircle(Colors.blue[700]!),
-                _buildColorCircle(Colors.indigo),
-                _buildColorCircle(Colors.indigo[900]!),
-                _buildColorCircle(const Color(0xFFC8B68A)),
-                _buildColorCircle(const Color(0xFF7A6748)),
-                _buildColorCircle(Colors.brown[500]!),
-                _buildColorCircle(Colors.brown[800]!),
-                _buildColorCircle(Colors.grey[400]!),
-                _buildColorCircle(Colors.grey[600]!),
-                _buildColorCircle(Colors.grey[800]!),
-                _buildColorCircle(Colors.black),
-              ],
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min, // Ensures the dialog fits content size
+          children: [
+            const SizedBox(height: 20), // Add vertical spacing
+            SizedBox(
+              height: 450, // Adjusted for smaller circles
+              width: 280, // Adjusted for smaller circles
+              child: GridView.count(
+                crossAxisCount: 4, // Number of columns
+                crossAxisSpacing: 8.0, // Adjusted spacing
+                mainAxisSpacing: 8.0, // Adjusted spacing
+                children: [
+                  _buildColorCircle(Colors.pink[200]!),
+                  _buildColorCircle(Colors.pink[400]!),
+                  _buildColorCircle(Colors.purple[300]!),
+                  _buildColorCircle(Colors.purple[700]!),
+                  _buildColorCircle(Colors.red[500]!),
+                  _buildColorCircle(Colors.yellow[900]!),
+                  _buildColorCircle(Colors.orange[300]!),
+                  _buildColorCircle(Colors.yellow[600]!),
+                  _buildColorCircle(Colors.lightGreen),
+                  _buildColorCircle(Colors.green[500]!),
+                  _buildColorCircle(Colors.green[700]!),
+                  _buildColorCircle(Colors.green[900]!),
+                  _buildColorCircle(Colors.cyan),
+                  _buildColorCircle(Colors.blue[700]!),
+                  _buildColorCircle(Colors.indigo),
+                  _buildColorCircle(Colors.indigo[900]!),
+                  _buildColorCircle(const Color(0xFFC8B68A)),
+                  _buildColorCircle(const Color(0xFF7A6748)),
+                  _buildColorCircle(Colors.brown[500]!),
+                  _buildColorCircle(Colors.brown[800]!),
+                  _buildColorCircle(Colors.grey[400]!),
+                  _buildColorCircle(Colors.grey[600]!),
+                  _buildColorCircle(Colors.grey[800]!),
+                  _buildColorCircle(Colors.black),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
       actions: [
         TextButton(
