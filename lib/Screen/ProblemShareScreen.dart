@@ -27,10 +27,7 @@ class ProblemShareScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeHandler>(context);
     final formattedDate = DateFormat('yyyy년 M월 d일').format(problem.solvedAt!);
-
-    SchedulerBinding.instance.addPostFrameCallback((_) async {
-      await _shareProblemAsImage(context); // 바로 공유 창 실행
-    });
+    bool isImageLoaded = false;
 
     return Scaffold(
       appBar: AppBar(
@@ -89,7 +86,7 @@ class ProblemShareScreen extends StatelessWidget {
                             UnderlinedText(text: formattedDate, fontSize: 20),
                           ]),
                         const SizedBox(height: 30),
-                        if (problem.problemImageUrl != null)
+                        if (problem.processImageUrl != null)
                           Row(children: [
                             Icon(Icons.camera_alt,
                                 color: themeProvider.primaryColor),
@@ -105,16 +102,46 @@ class ProblemShareScreen extends StatelessWidget {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                if (problem.problemImageUrl != null)
-                                  ConstrainedBox(
-                                    constraints: BoxConstraints(
-                                      maxHeight:
-                                      MediaQuery.of(context).size.height *
-                                          0.7, // 최대 높이 제한
-                                    ),
-                                    child: Image.network(
-                                      problem.problemImageUrl!,
-                                      fit: BoxFit.contain,
+                                if (problem.processImageUrl != null)
+                                  AspectRatio(
+                                    aspectRatio: 3 / 4,
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 10.0),
+                                      child: Image.network(
+                                        problem.processImageUrl!,
+                                        fit: BoxFit.contain,
+                                        loadingBuilder:
+                                            (BuildContext context, Widget child,
+                                            ImageChunkEvent?
+                                            loadingProgress) {
+                                          if (loadingProgress == null) {
+                                            if (!isImageLoaded) {
+                                              isImageLoaded = true;
+                                              SchedulerBinding.instance
+                                                  .addPostFrameCallback((_) {
+                                                _shareProblemAsImage(context);
+                                              });
+                                            }
+                                            return child;
+                                          } else {
+                                            return Center(
+                                              child:
+                                              CircularProgressIndicator(
+                                                value: loadingProgress
+                                                    .expectedTotalBytes !=
+                                                    null
+                                                    ? loadingProgress
+                                                    .cumulativeBytesLoaded /
+                                                    (loadingProgress
+                                                        .expectedTotalBytes ??
+                                                        1)
+                                                    : null,
+                                              ),
+                                            );
+                                          }
+                                        },
+                                      ),
                                     ),
                                   ),
                                 const SizedBox(height: 10),

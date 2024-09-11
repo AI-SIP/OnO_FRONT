@@ -12,6 +12,7 @@ import '../GlobalModule/Theme/UnderlinedText.dart';
 import '../Model/ProblemModel.dart';
 import '../GlobalModule/Util/NavigationButtons.dart';
 import '../Service/ScreenUtil/ProblemDetailScreenService.dart';
+import 'AnswerShareScreen.dart';
 import 'ProblemRegisterScreen.dart';
 import 'ProblemShareScreen.dart';
 
@@ -60,8 +61,8 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
     return [
       PopupMenuButton<String>(
         onSelected: (String result) async{
-          if (result == 'share') {
-            final problemData = await _problemDataFuture;
+          final problemData = await _problemDataFuture;
+          if (result == 'share_problem') {
             if (problemData != null) {
               // Navigate to ProblemShareScreen and wait for result
               await Navigator.push(
@@ -69,6 +70,18 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                 MaterialPageRoute(
                   builder: (context) =>
                       ProblemShareScreen(problem: problemData),
+                ),
+              );
+            }
+          }
+          else if (result == 'share_answer') {
+            if (problemData != null) {
+              // Navigate to ProblemShareScreen and wait for result
+              await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) =>
+                      AnswerShareScreen(problem: problemData),
                 ),
               );
             }
@@ -84,9 +97,17 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
         itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
 
           PopupMenuItem<String>(
-            value: 'share',
+            value: 'share_problem',
             child: DecorateText(
               text: '문제 공유하기',
+              fontSize: 18,
+              color: themeProvider.primaryColor,
+            ),
+          ),
+          PopupMenuItem<String>(
+            value: 'share_answer',
+            child: DecorateText(
+              text: '정답 공유하기',
               fontSize: 18,
               color: themeProvider.primaryColor,
             ),
