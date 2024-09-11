@@ -12,7 +12,9 @@ import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../GlobalModule/Theme/GridPainter.dart';
 import '../GlobalModule/Theme/ThemeHandler.dart';
+import '../GlobalModule/Theme/UnderlinedText.dart';
 import '../Model/ProblemModel.dart';
 
 class ProblemShareScreen extends StatelessWidget {
@@ -23,38 +25,97 @@ class ProblemShareScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-
     final themeProvider = Provider.of<ThemeHandler>(context);
+    final formattedDate = DateFormat('yyyy년 M월 d일').format(problem.solvedAt!);
 
     SchedulerBinding.instance.addPostFrameCallback((_) async {
-      await Future.delayed(const Duration(seconds: 1)); // 렌더링 완료 대기
       await _shareProblemAsImage(context); // 바로 공유 창 실행
     });
 
     return Scaffold(
       appBar: AppBar(
-        title: DecorateText(text: '공유 화면 미리보기', fontSize: 28, color: themeProvider.primaryColor),
+        title: DecorateText(
+          text: '공유 화면 미리보기',
+          fontSize: 28,
+          color: themeProvider.primaryColor,
+        ),
       ),
       body: RepaintBoundary(
+        // 격자무늬를 포함하는 RepaintBoundary로 변경
         key: _globalKey,
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(problem.reference ?? '문제 제목 없음',
-                  style: TextStyle(fontSize: 24)),
-              SizedBox(height: 10),
-              if (problem.problemImageUrl != null)
-                Image.network(problem.problemImageUrl!),
-              SizedBox(height: 10),
-              if (problem.solvedAt != null)
-                Text(
-                    '푼 날짜: ${DateFormat('yyyy-MM-dd').format(problem.solvedAt!)}'),
-              SizedBox(height: 10),
-              if (problem.memo != null) Text('메모: ${problem.memo}'),
-            ],
-          ),
+        child: Stack(
+          children: [
+            CustomPaint(
+              size: Size.infinite,
+              painter: GridPainter(gridColor: themeProvider.primaryColor),
+            ),
+            Center(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxHeight: MediaQuery.of(context).size.height, // 화면 높이 최대
+                  maxWidth: MediaQuery.of(context).size.width,
+                ),
+                child: Container(
+                  color: themeProvider.primaryColor.withOpacity(0.03), // 배경 색 설정
+                  padding: const EdgeInsets.all(35.0),
+                  child: Column(
+                    mainAxisAlignment:
+                        MainAxisAlignment.start, // 이미지 위에 푼 날짜 배치
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (problem.solvedAt != null)
+                        Row(children: [
+                          Icon(Icons.calendar_today,
+                              color: themeProvider.primaryColor),
+                          const SizedBox(width: 8),
+                          DecorateText(
+                              text: '푼 날짜',
+                              fontSize: 20,
+                              color: themeProvider.primaryColor),
+                          const Spacer(),
+                          UnderlinedText(text: formattedDate, fontSize: 20),
+                        ]),
+                      const SizedBox(height: 30),
+                      if (problem.reference != null)
+                        Row(children: [
+                          Icon(Icons.info,
+                              color: themeProvider.primaryColor),
+                          const SizedBox(width: 8),
+                          DecorateText(
+                              text: '출처',
+                              fontSize: 20,
+                              color: themeProvider.primaryColor),
+                          const Spacer(),
+                          UnderlinedText(text: problem.reference!, fontSize: 20),
+                        ]),
+                      const SizedBox(height: 30),
+                      if (problem.problemImageUrl != null)
+                        Row(children: [
+                          Icon(Icons.camera_alt,
+                              color: themeProvider.primaryColor),
+                          const SizedBox(width: 8),
+                          DecorateText(
+                              text: '문제 이미지',
+                              fontSize: 20,
+                              color: themeProvider.primaryColor),
+                        ]),
+                      const SizedBox(height: 20),
+                        Flexible(
+                          child: Image.network(
+                            problem.problemImageUrl!,
+                            fit: BoxFit.contain, // 이미지를 화면에 맞게 조정
+                            width: MediaQuery.of(context).size.width * 0.6, // 가로가 화면을 꽉 채우지 않도록 설정
+                            height: MediaQuery.of(context).size.height *
+                                0.7, // 세로 길이가 화면을 넘지 않도록 설정
+                          ),
+                        ),
+                      const SizedBox(height: 10),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -63,6 +124,8 @@ class ProblemShareScreen extends StatelessWidget {
   // 문제 캡처 후 이미지로 공유하는 로직
   Future<void> _shareProblemAsImage(context) async {
     try {
+
+      await Future.delayed(const Duration(milliseconds: 500));
       // RepaintBoundary로부터 이미지를 캡처
       RenderRepaintBoundary boundary = _globalKey.currentContext!
           .findRenderObject() as RenderRepaintBoundary;
