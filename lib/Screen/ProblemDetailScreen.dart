@@ -63,10 +63,12 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
           if (result == 'share') {
             final problemData = await _problemDataFuture;
             if (problemData != null) {
-              Navigator.push(
+              // Navigate to ProblemShareScreen and wait for result
+              await Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => ProblemShareScreen(problem: problemData),
+                  builder: (context) =>
+                      ProblemShareScreen(problem: problemData),
                 ),
               );
             }

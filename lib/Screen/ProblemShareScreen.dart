@@ -43,80 +43,94 @@ class ProblemShareScreen extends StatelessWidget {
       body: RepaintBoundary(
         // 격자무늬를 포함하는 RepaintBoundary로 변경
         key: _globalKey,
-        child: Stack(
-          children: [
-            CustomPaint(
-              size: Size.infinite,
-              painter: GridPainter(gridColor: themeProvider.primaryColor),
-            ),
-            Center(
-              child: ConstrainedBox(
-                constraints: BoxConstraints(
-                  maxHeight: MediaQuery.of(context).size.height, // 화면 높이 최대
-                  maxWidth: MediaQuery.of(context).size.width,
-                ),
-                child: Container(
-                  color: themeProvider.primaryColor.withOpacity(0.03), // 배경 색 설정
-                  padding: const EdgeInsets.all(35.0),
-                  child: Column(
-                    mainAxisAlignment:
-                        MainAxisAlignment.start, // 이미지 위에 푼 날짜 배치
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (problem.solvedAt != null)
-                        Row(children: [
-                          Icon(Icons.calendar_today,
-                              color: themeProvider.primaryColor),
-                          const SizedBox(width: 8),
-                          DecorateText(
-                              text: '푼 날짜',
-                              fontSize: 20,
-                              color: themeProvider.primaryColor),
-                          const Spacer(),
-                          UnderlinedText(text: formattedDate, fontSize: 20),
-                        ]),
-                      const SizedBox(height: 30),
-                      if (problem.reference != null)
-                        Row(children: [
-                          Icon(Icons.info,
-                              color: themeProvider.primaryColor),
-                          const SizedBox(width: 8),
-                          DecorateText(
-                              text: '출처',
-                              fontSize: 20,
-                              color: themeProvider.primaryColor),
-                          const Spacer(),
-                          UnderlinedText(text: problem.reference!, fontSize: 20),
-                        ]),
-                      const SizedBox(height: 30),
-                      if (problem.problemImageUrl != null)
-                        Row(children: [
-                          Icon(Icons.camera_alt,
-                              color: themeProvider.primaryColor),
-                          const SizedBox(width: 8),
-                          DecorateText(
-                              text: '문제 이미지',
-                              fontSize: 20,
-                              color: themeProvider.primaryColor),
-                        ]),
-                      const SizedBox(height: 20),
+        child:Container(
+          color: themeProvider.primaryColor.withOpacity(0.03),
+          child: Stack(
+            children: [
+              CustomPaint(
+                size: Size.infinite,
+                painter: GridPainter(gridColor: themeProvider.primaryColor),
+              ),
+              Center(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxHeight: MediaQuery.of(context).size.height, // 화면 높이 최대
+                    maxWidth: MediaQuery.of(context).size.width,
+                  ),
+                  child: Container(
+                    padding: const EdgeInsets.all(30.0),
+                    child: Column(
+                      mainAxisAlignment:
+                      MainAxisAlignment.start, // 이미지 위에 푼 날짜 배치
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (problem.reference != null)
+                          Row(
+                              mainAxisAlignment:
+                              MainAxisAlignment.center, // 날짜도 가운데 정렬
+                              children: [
+                                UnderlinedText(
+                                  text: problem.reference!,
+                                  fontSize: 24,
+                                  color: themeProvider.primaryColor,
+                                ),
+                              ]),
+                        const SizedBox(height: 30),
+                        if (problem.solvedAt != null)
+                          Row(children: [
+                            Icon(Icons.calendar_today,
+                                color: themeProvider.primaryColor),
+                            const SizedBox(width: 8),
+                            DecorateText(
+                                text: '푼 날짜',
+                                fontSize: 20,
+                                color: themeProvider.primaryColor),
+                            const Spacer(),
+                            UnderlinedText(text: formattedDate, fontSize: 20),
+                          ]),
+                        const SizedBox(height: 30),
+                        if (problem.problemImageUrl != null)
+                          Row(children: [
+                            Icon(Icons.camera_alt,
+                                color: themeProvider.primaryColor),
+                            const SizedBox(width: 8),
+                            DecorateText(
+                                text: '문제 이미지',
+                                fontSize: 20,
+                                color: themeProvider.primaryColor),
+                          ]),
+                        const SizedBox(height: 20),
                         Flexible(
-                          child: Image.network(
-                            problem.problemImageUrl!,
-                            fit: BoxFit.contain, // 이미지를 화면에 맞게 조정
-                            width: MediaQuery.of(context).size.width * 0.6, // 가로가 화면을 꽉 채우지 않도록 설정
-                            height: MediaQuery.of(context).size.height *
-                                0.7, // 세로 길이가 화면을 넘지 않도록 설정
+                          child: SingleChildScrollView(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                if (problem.problemImageUrl != null)
+                                  ConstrainedBox(
+                                    constraints: BoxConstraints(
+                                      maxHeight:
+                                      MediaQuery.of(context).size.height *
+                                          0.7, // 최대 높이 제한
+                                    ),
+                                    child: Image.network(
+                                      problem.problemImageUrl!,
+                                      fit: BoxFit.contain,
+                                    ),
+                                  ),
+                                const SizedBox(height: 10),
+                              ],
+                            ),
                           ),
                         ),
-                      const SizedBox(height: 10),
-                    ],
+                        const SizedBox(height: 10),
+                      ],
+                    ),
                   ),
                 ),
               ),
-            ),
-          ],
-        ),
+            ],
+          ),
+        )
       ),
     );
   }
@@ -124,7 +138,6 @@ class ProblemShareScreen extends StatelessWidget {
   // 문제 캡처 후 이미지로 공유하는 로직
   Future<void> _shareProblemAsImage(context) async {
     try {
-
       await Future.delayed(const Duration(milliseconds: 500));
       // RepaintBoundary로부터 이미지를 캡처
       RenderRepaintBoundary boundary = _globalKey.currentContext!
@@ -151,7 +164,7 @@ class ProblemShareScreen extends StatelessWidget {
       if (rect.size.width > 0 && rect.size.height > 0) {
         Share.shareXFiles(
           [xFile],
-          text: '제가 푼 문제를 확인해보세요!',
+          text: '내 오답노트야! 어때?',
           sharePositionOrigin: Rect.fromPoints(
             Offset.zero,
             Offset(size.width / 3 * 2, size.height),
@@ -159,10 +172,13 @@ class ProblemShareScreen extends StatelessWidget {
         );
       } else {
         log('Invalid box size, defaulting to basic share...');
-        Share.shareXFiles([xFile], text: '제가 푼 문제를 확인해보세요!');
+        Share.shareXFiles([xFile], text: '내 오답노트야! 어때?');
       }
+
+      Navigator.pop(context, true);
     } catch (e) {
       log('이미지 공유 실패: $e');
+      Navigator.pop(context, false);
     }
   }
 }
