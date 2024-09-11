@@ -13,6 +13,7 @@ import '../Model/ProblemModel.dart';
 import '../GlobalModule/Util/NavigationButtons.dart';
 import '../Service/ScreenUtil/ProblemDetailScreenService.dart';
 import 'ProblemRegisterScreen.dart';
+import 'ProblemShareScreen.dart';
 
 class ProblemDetailScreen extends StatefulWidget {
   final int? problemId;
@@ -24,10 +25,8 @@ class ProblemDetailScreen extends StatefulWidget {
 }
 
 class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
-  final GlobalKey _globalKey = GlobalKey();
   late Future<ProblemModel?> _problemDataFuture;
   final ProblemDetailScreenService _service = ProblemDetailScreenService();
-  final ProblemDetailShareService _shareService = ProblemDetailShareService();
   bool isEditMode = false;
 
   @override
@@ -60,13 +59,19 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
   List<Widget> buildAppBarActions(ThemeHandler themeProvider) {
     return [
       PopupMenuButton<String>(
-        onSelected: (String result) {
-          /*
+        onSelected: (String result) async{
           if (result == 'share') {
-            _shareService.shareProblemAsImage(_globalKey);
+            final problemData = await _problemDataFuture;
+            if (problemData != null) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ProblemShareScreen(problem: problemData),
+                ),
+              );
+            }
           }
-           */
-          if (result == 'edit') {
+          else if (result == 'edit') {
             setState(() {
               isEditMode = true;
             });
@@ -75,7 +80,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
           }
         },
         itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-          /*
+
           PopupMenuItem<String>(
             value: 'share',
             child: DecorateText(
@@ -84,8 +89,6 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
               color: themeProvider.primaryColor,
             ),
           ),
-
-           */
           const PopupMenuItem<String>(
             value: 'edit',
             child: DecorateText(
@@ -253,83 +256,77 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
 
     if (screenWidth > 600) {
       // 화면 너비가 600 이상일 때 좌우로 배치
-      return RepaintBoundary(
-        key: _globalKey,
-        child: Stack(
-          children: [
-            buildBackground(themeProvider),
-            SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 35.0),
-                child: Column(
-                  children: [
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // 좌측 영역 (푼 날짜와 문제 출처)
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const SizedBox(height: 30.0),
-                              buildSolvedDate(context, problemModel),
-                              const SizedBox(height: 30.0),
-                              buildProblemReference(context, problemModel),
-                            ],
-                          ),
+      return Stack(
+        children: [
+          buildBackground(themeProvider),
+          SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 35.0),
+              child: Column(
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // 좌측 영역 (푼 날짜와 문제 출처)
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const SizedBox(height: 30.0),
+                            buildSolvedDate(context, problemModel),
+                            const SizedBox(height: 30.0),
+                            buildProblemReference(context, problemModel),
+                          ],
                         ),
-                        const SizedBox(width: 30.0), // 좌우 간격을 위한 여백
-                        // 우측 영역 (문제 이미지)
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const SizedBox(height: 25.0),
-                              // 이미지 상단 정렬 및 하단 여백 최소화
-                              buildProblemImage(context, problemModel),
-                              const SizedBox(height: 30.0),
-                            ],
-                          ),
+                      ),
+                      const SizedBox(width: 30.0), // 좌우 간격을 위한 여백
+                      // 우측 영역 (문제 이미지)
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const SizedBox(height: 25.0),
+                            // 이미지 상단 정렬 및 하단 여백 최소화
+                            buildProblemImage(context, problemModel),
+                            const SizedBox(height: 30.0),
+                          ],
                         ),
-                      ],
-                    ),
-                    // 해설 및 풀이 확인 토글은 스크롤 시 나타나도록 설정
-                    const SizedBox(height: 15.0),
-                    buildSolutionExpansionTile(problemModel),
-                  ],
-                ),
+                      ),
+                    ],
+                  ),
+                  // 해설 및 풀이 확인 토글은 스크롤 시 나타나도록 설정
+                  const SizedBox(height: 15.0),
+                  buildSolutionExpansionTile(problemModel),
+                ],
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       );
     } else {
       // 화면 너비가 600 이하일 때 기존 세로 배치 유지
-      return RepaintBoundary(
-        key: _globalKey,
-        child: Stack(
-          children: [
-            buildBackground(themeProvider),
-            SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 35.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start, // 좌측 정렬
-                  children: [
-                    const SizedBox(height: 16.0),
-                    buildSolvedDate(context, problemModel),
-                    const SizedBox(height: 25.0),
-                    buildProblemReference(context, problemModel),
-                    const SizedBox(height: 30.0),
-                    buildProblemImage(context, problemModel),
-                    const SizedBox(height: 30.0),
-                    buildSolutionExpansionTile(problemModel), // 스크롤 시 보여지는 영역
-                  ],
-                ),
+      return Stack(
+        children: [
+          buildBackground(themeProvider),
+          SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 35.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start, // 좌측 정렬
+                children: [
+                  const SizedBox(height: 16.0),
+                  buildSolvedDate(context, problemModel),
+                  const SizedBox(height: 25.0),
+                  buildProblemReference(context, problemModel),
+                  const SizedBox(height: 30.0),
+                  buildProblemImage(context, problemModel),
+                  const SizedBox(height: 30.0),
+                  buildSolutionExpansionTile(problemModel), // 스크롤 시 보여지는 영역
+                ],
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       );
     }
   }
