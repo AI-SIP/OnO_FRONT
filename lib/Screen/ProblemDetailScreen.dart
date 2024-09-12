@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:ono/Provider/FoldersProvider.dart';
-import 'package:ono/Service/ScreenUtil/ProblemDetailShareService.dart';
 import 'package:provider/provider.dart';
 import '../GlobalModule/Theme/DecorateText.dart';
 import '../GlobalModule/Image/DisplayImage.dart';
