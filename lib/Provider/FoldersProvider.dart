@@ -3,6 +3,7 @@ import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:ono/GlobalModule/Util/ProblemSorting.dart';
+import 'package:ono/GlobalModule/Util/ReviewHandler.dart';
 import 'package:ono/Model/FolderThumbnailModel.dart';
 
 import '../Config/AppConfig.dart';
@@ -16,6 +17,7 @@ class FoldersProvider with ChangeNotifier {
   FolderModel? _currentFolder;
   List<ProblemModel> _problems = [];
   final TokenProvider tokenProvider = TokenProvider();
+  final ReviewHandler reviewHandler = ReviewHandler();
 
   int? currentFolderId;
   String sortOption = 'newest';
@@ -301,6 +303,10 @@ class FoldersProvider with ChangeNotifier {
       if (response.statusCode == 200) {
         log('Problem successfully submitted');
         await fetchRootFolderContents();
+
+        if (_problems.length % 5 == 0) {
+          reviewHandler.requestReview(); // 문제 개수가 5의 배수일 때 리뷰 요청
+        }
       } else {
         log('Failed to submit problem: ${response.reasonPhrase}');
       }
