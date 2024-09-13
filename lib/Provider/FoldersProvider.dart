@@ -306,7 +306,7 @@ class FoldersProvider with ChangeNotifier {
 
         int userProblemCount = await getUserProblemCount();
         if (userProblemCount > 0 && userProblemCount % 10 == 0) {
-          reviewHandler.requestReview(); // 문제 개수가 10의 배수일 때 리뷰 요청
+          reviewHandler.requestReview(context); // 문제 개수가 10의 배수일 때 리뷰 요청
           //reviewHandler.openReviewPage();
         }
       } else {
