@@ -22,7 +22,7 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
   final _service = ProblemRegisterScreenService();
   late DateTime _selectedDate;
   int? _selectedFolderId;
-  String _selectedFolderName = '메인';
+  String _selectedFolderName = '폴더 선택';
   bool _isProcess = false;
   late TextEditingController _sourceController;
   late TextEditingController _notesController;
@@ -40,11 +40,11 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
         Provider.of<FoldersProvider>(context, listen: false);
 
     if (foldersProvider.currentFolder != null) {
-      _selectedFolderId = foldersProvider.currentFolder!.folderId;
-      _selectedFolderName = foldersProvider.currentFolder!.folderName;
+      //_selectedFolderId = foldersProvider.currentFolder!.folderId;
+      //_selectedFolderName = foldersProvider.currentFolder!.folderName;
     } else {
       _selectedFolderId = null;
-      _selectedFolderName = '메인'; // 기본값 설정
+      _selectedFolderName = '폴더 선택'; // 기본값 설정
     }
 
     if (widget.problem != null) {
@@ -78,8 +78,8 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
       _solveImage = null;
       _selectedColors = null;
       _selectedDate = DateTime.now();
-      _selectedFolderId = foldersProvider.currentFolder!.folderId;
-      _selectedFolderName = foldersProvider.currentFolder!.folderName;
+      _selectedFolderId = null;
+      _selectedFolderName = '폴더 선택';
       _isProcess = false;
     });
   }
@@ -316,7 +316,7 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
             children: [
               IconButton(
                 icon: Icon(Icons.image,
-                    color: themeProvider.primaryColor, size: 50),
+                    color: themeProvider.desaturateColor, size: 50),
                 onPressed: () {
                   _service.showImagePicker(
                       context, _onImagePicked, imageType, _isProcess);
@@ -324,7 +324,7 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
               ),
               DecorateText(
                 text: '아이콘을 눌러 이미지를 추가해주세요!',
-                color: themeProvider.primaryColor,
+                color: themeProvider.desaturateColor,
                 fontSize: 16,
               ),
             ],
@@ -379,7 +379,7 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
       hintText: hintText,
       hintStyle: TextStyle(
         fontFamily: 'font1',
-        color: themeProvider.primaryColor,
+        color: themeProvider.desaturateColor,
         fontSize: 16,
         fontWeight: FontWeight.bold,
       ),

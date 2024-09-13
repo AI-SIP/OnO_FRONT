@@ -327,7 +327,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
               decoration: InputDecoration(
                 hintText: '폴더 이름을 입력하세요',
                 hintStyle: TextStyle(
-                  color: themeProvider.primaryColor,
+                  color: themeProvider.desaturateColor,
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                   fontFamily: 'font1',
@@ -588,7 +588,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                   text: problem.updateAt != null
                       ? '작성 일시 : ${formatDateTime(problem.createdAt!)}'
                       : '작성 일시 : 정보 없음',
-                  color: Colors.grey,
+                  color: themeProvider.desaturateColor,
                   fontSize: 12,
                 ),
               ],

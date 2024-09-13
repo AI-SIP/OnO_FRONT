@@ -8,11 +8,11 @@ class GridPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = gridColor.withOpacity(0.2) // 격자무늬 색상과 불투명도
+      ..color = gridColor.withOpacity(0.15) // 격자무늬 색상과 불투명도
       ..style = PaintingStyle.stroke
       ..strokeWidth = 0.7; // 격자무늬 두께 조정
 
-    const double step = 10.0; // 격자무늬 간격
+    const double step = 15.0; // 격자무늬 간격
 
     for (double x = 0; x <= size.width; x += step) {
       canvas.drawLine(Offset(x, 0), Offset(x, size.height), paint);

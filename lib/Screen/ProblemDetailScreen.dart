@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:ono/Provider/FoldersProvider.dart';
-import 'package:ono/Service/ScreenUtil/ProblemDetailShareService.dart';
 import 'package:provider/provider.dart';
 import '../GlobalModule/Theme/DecorateText.dart';
 import '../GlobalModule/Image/DisplayImage.dart';
@@ -12,7 +11,9 @@ import '../GlobalModule/Theme/UnderlinedText.dart';
 import '../Model/ProblemModel.dart';
 import '../GlobalModule/Util/NavigationButtons.dart';
 import '../Service/ScreenUtil/ProblemDetailScreenService.dart';
+import 'AnswerShareScreen.dart';
 import 'ProblemRegisterScreen.dart';
+import 'ProblemShareScreen.dart';
 
 class ProblemDetailScreen extends StatefulWidget {
   final int? problemId;
@@ -24,11 +25,14 @@ class ProblemDetailScreen extends StatefulWidget {
 }
 
 class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
-  final GlobalKey _globalKey = GlobalKey();
   late Future<ProblemModel?> _problemDataFuture;
   final ProblemDetailScreenService _service = ProblemDetailScreenService();
-  final ProblemDetailShareService _shareService = ProblemDetailShareService();
   bool isEditMode = false;
+
+  static const String shareProblemValue = 'share_problem';
+  static const String shareAnswerValue = 'share_answer';
+  static const String editValue = 'edit';
+  static const String deleteValue = 'delete';
 
   @override
   void initState() {
@@ -58,34 +62,61 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
 
   // AppBar의 동작 및 메뉴 버튼
   List<Widget> buildAppBarActions(ThemeHandler themeProvider) {
+
     return [
       PopupMenuButton<String>(
-        onSelected: (String result) {
-          /*
-          if (result == 'share') {
-            _shareService.shareProblemAsImage(_globalKey);
+        onSelected: (String result) async{
+          final problemData = await _problemDataFuture;
+          if (result == shareProblemValue) {
+            if (problemData != null) {
+              // Navigate to ProblemShareScreen and wait for result
+              await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) =>
+                      ProblemShareScreen(problem: problemData),
+                ),
+              );
+            }
           }
-           */
-          if (result == 'edit') {
+          else if (result == shareAnswerValue) {
+            if (problemData != null) {
+              // Navigate to ProblemShareScreen and wait for result
+              await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) =>
+                      AnswerShareScreen(problem: problemData),
+                ),
+              );
+            }
+          }
+          else if (result == editValue) {
             setState(() {
               isEditMode = true;
             });
-          } else if (result == 'delete') {
+          } else if (result == deleteValue) {
             deleteProblemDialog(context, themeProvider);
           }
         },
         itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-          /*
+
           PopupMenuItem<String>(
-            value: 'share',
+            value: 'share_problem',
             child: DecorateText(
               text: '문제 공유하기',
               fontSize: 18,
               color: themeProvider.primaryColor,
             ),
           ),
-
-           */
+          PopupMenuItem<String>(
+            value: 'share_answer',
+            child: DecorateText(
+              text: '정답 공유하기',
+              fontSize: 18,
+              color: themeProvider.primaryColor,
+            ),
+          ),
           const PopupMenuItem<String>(
             value: 'edit',
             child: DecorateText(
@@ -253,83 +284,77 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
 
     if (screenWidth > 600) {
       // 화면 너비가 600 이상일 때 좌우로 배치
-      return RepaintBoundary(
-        key: _globalKey,
-        child: Stack(
-          children: [
-            buildBackground(themeProvider),
-            SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 35.0),
-                child: Column(
-                  children: [
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // 좌측 영역 (푼 날짜와 문제 출처)
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const SizedBox(height: 30.0),
-                              buildSolvedDate(context, problemModel),
-                              const SizedBox(height: 30.0),
-                              buildProblemReference(context, problemModel),
-                            ],
-                          ),
+      return Stack(
+        children: [
+          buildBackground(themeProvider),
+          SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 35.0),
+              child: Column(
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // 좌측 영역 (푼 날짜와 문제 출처)
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const SizedBox(height: 30.0),
+                            buildSolvedDate(context, problemModel),
+                            const SizedBox(height: 30.0),
+                            buildProblemReference(context, problemModel),
+                          ],
                         ),
-                        const SizedBox(width: 30.0), // 좌우 간격을 위한 여백
-                        // 우측 영역 (문제 이미지)
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const SizedBox(height: 25.0),
-                              // 이미지 상단 정렬 및 하단 여백 최소화
-                              buildProblemImage(context, problemModel),
-                              const SizedBox(height: 30.0),
-                            ],
-                          ),
+                      ),
+                      const SizedBox(width: 30.0), // 좌우 간격을 위한 여백
+                      // 우측 영역 (문제 이미지)
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const SizedBox(height: 25.0),
+                            // 이미지 상단 정렬 및 하단 여백 최소화
+                            buildProblemImage(context, problemModel),
+                            const SizedBox(height: 30.0),
+                          ],
                         ),
-                      ],
-                    ),
-                    // 해설 및 풀이 확인 토글은 스크롤 시 나타나도록 설정
-                    const SizedBox(height: 15.0),
-                    buildSolutionExpansionTile(problemModel),
-                  ],
-                ),
+                      ),
+                    ],
+                  ),
+                  // 해설 및 풀이 확인 토글은 스크롤 시 나타나도록 설정
+                  const SizedBox(height: 15.0),
+                  buildSolutionExpansionTile(problemModel),
+                ],
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       );
     } else {
       // 화면 너비가 600 이하일 때 기존 세로 배치 유지
-      return RepaintBoundary(
-        key: _globalKey,
-        child: Stack(
-          children: [
-            buildBackground(themeProvider),
-            SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 35.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start, // 좌측 정렬
-                  children: [
-                    const SizedBox(height: 16.0),
-                    buildSolvedDate(context, problemModel),
-                    const SizedBox(height: 25.0),
-                    buildProblemReference(context, problemModel),
-                    const SizedBox(height: 30.0),
-                    buildProblemImage(context, problemModel),
-                    const SizedBox(height: 30.0),
-                    buildSolutionExpansionTile(problemModel), // 스크롤 시 보여지는 영역
-                  ],
-                ),
+      return Stack(
+        children: [
+          buildBackground(themeProvider),
+          SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 35.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start, // 좌측 정렬
+                children: [
+                  const SizedBox(height: 16.0),
+                  buildSolvedDate(context, problemModel),
+                  const SizedBox(height: 25.0),
+                  buildProblemReference(context, problemModel),
+                  const SizedBox(height: 30.0),
+                  buildProblemImage(context, problemModel),
+                  const SizedBox(height: 30.0),
+                  buildSolutionExpansionTile(problemModel), // 스크롤 시 보여지는 영역
+                ],
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       );
     }
   }

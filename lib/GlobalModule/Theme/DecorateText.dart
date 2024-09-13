@@ -18,6 +18,7 @@ class DecorateText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+
     return Text(
       text,
       style: TextStyle(

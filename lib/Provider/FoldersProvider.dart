@@ -3,6 +3,7 @@ import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:ono/GlobalModule/Util/ProblemSorting.dart';
+import 'package:ono/GlobalModule/Util/ReviewHandler.dart';
 import 'package:ono/Model/FolderThumbnailModel.dart';
 
 import '../Config/AppConfig.dart';
@@ -16,6 +17,7 @@ class FoldersProvider with ChangeNotifier {
   FolderModel? _currentFolder;
   List<ProblemModel> _problems = [];
   final TokenProvider tokenProvider = TokenProvider();
+  final ReviewHandler reviewHandler = ReviewHandler();
 
   int? currentFolderId;
   String sortOption = 'newest';
@@ -301,6 +303,12 @@ class FoldersProvider with ChangeNotifier {
       if (response.statusCode == 200) {
         log('Problem successfully submitted');
         await fetchRootFolderContents();
+
+        int userProblemCount = await getUserProblemCount();
+        if (userProblemCount > 0 && userProblemCount % 10 == 0) {
+          reviewHandler.requestReview(context); // 문제 개수가 10의 배수일 때 리뷰 요청
+          //reviewHandler.openReviewPage();
+        }
       } else {
         log('Failed to submit problem: ${response.reasonPhrase}');
       }
@@ -325,6 +333,35 @@ class FoldersProvider with ChangeNotifier {
       return null;
     }
   }
+
+  Future<int> getUserProblemCount() async{
+    final accessToken = await tokenProvider.getAccessToken();
+    if (accessToken == null) {
+      log('Access token is not available');
+      return 0;
+    }
+
+    final url = Uri.parse('${AppConfig.baseUrl}/api/user/problemCount');
+    final response = await http.get(
+      url,
+      headers: {
+        'Content-Type': 'application/json; charset=UTF-8',
+        'Authorization': 'Bearer $accessToken',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      int userProblemCount = int.parse(response.body);
+
+      log('user problem count : $userProblemCount');
+
+      return userProblemCount;
+    } else {
+      log('Failed to getuser problem count');
+      return 0;
+    }
+  }
+
 
   Future<void> updateProblem(ProblemRegisterModel problemData) async {
     final accessToken = await tokenProvider.getAccessToken();
