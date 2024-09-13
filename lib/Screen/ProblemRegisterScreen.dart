@@ -316,7 +316,7 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
             children: [
               IconButton(
                 icon: Icon(Icons.image,
-                    color: themeProvider.primaryColor, size: 50),
+                    color: themeProvider.desaturateColor, size: 50),
                 onPressed: () {
                   _service.showImagePicker(
                       context, _onImagePicked, imageType, _isProcess);
@@ -324,7 +324,7 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
               ),
               DecorateText(
                 text: '아이콘을 눌러 이미지를 추가해주세요!',
-                color: themeProvider.primaryColor,
+                color: themeProvider.desaturateColor,
                 fontSize: 16,
               ),
             ],
@@ -379,7 +379,7 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
       hintText: hintText,
       hintStyle: TextStyle(
         fontFamily: 'font1',
-        color: themeProvider.primaryColor,
+        color: themeProvider.desaturateColor,
         fontSize: 16,
         fontWeight: FontWeight.bold,
       ),

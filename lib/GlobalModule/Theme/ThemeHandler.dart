@@ -4,24 +4,28 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 class ThemeHandler with ChangeNotifier {
   // 기본 색상
   Color _primaryColor = Colors.lightGreen;
-  Color _darkPrimaryColor = Colors.lightGreen;
   Color _lightPrimaryColor = Colors.lightGreen;
-  //Color _secondColor = Colors.lightGreen;
-  //Color _thirdColor = Colors.teal;
+  Color _darkPrimaryColor = Colors.lightGreen;
+  Color _desaturateColor = Colors.lightGreen;
 
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
 
   // 각 색상에 대한 getter
   Color get primaryColor => _primaryColor;
+  Color get lightPrimaryColor => _lightPrimaryColor;
+  Color get darkPrimaryColor => _darkPrimaryColor;
+  Color get desaturateColor => _desaturateColor;
 
   // 색상을 변경하고 저장하는 메서드
   void changePrimaryColor(Color primaryColor) {
     _primaryColor = primaryColor;
     _lightPrimaryColor = _lightenColor(primaryColor, 0.2);
     _darkPrimaryColor = _darkenColor(primaryColor, 0.2);
+    _desaturateColor = _desaturatenColor(primaryColor, 0.5);
     _saveColor('primaryColor', primaryColor);
     _saveColor('lightPrimaryColor', _lightPrimaryColor);
     _saveColor('darkPrimaryColor', _darkPrimaryColor);
+    _saveColor('desaturateColor', _desaturateColor);
     notifyListeners();
   }
 
@@ -30,6 +34,7 @@ class ThemeHandler with ChangeNotifier {
     _primaryColor = await _loadColor('primaryColor', Colors.lightGreen);
     _lightPrimaryColor = await _loadColor('lightPrimaryColor', _lightenColor(Colors.lightGreen, 0.2));
     _darkPrimaryColor = await _loadColor('darkPrimaryColor', _darkenColor(Colors.lightGreen, 0.2));
+    _desaturateColor = await _loadColor('desaturateColor', _desaturatenColor(Colors.lightGreen, 0.5));
     notifyListeners();
   }
 
@@ -65,5 +70,12 @@ class ThemeHandler with ChangeNotifier {
       (hslColor.lightness - amount).clamp(0.0, 1.0),
     );
     return lightenedHslColor.toColor();
+  }
+
+  Color _desaturatenColor(Color color, double amount) {
+    assert(amount >= 0 && amount <= 1);
+    return color.withOpacity(
+      (color.opacity - amount).clamp(0.0, 1.0), // 투명도를 감소시킴
+    );
   }
 }
