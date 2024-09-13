@@ -17,87 +17,142 @@ import '../GlobalModule/Theme/ThemeHandler.dart';
 import '../GlobalModule/Theme/UnderlinedText.dart';
 import '../Model/ProblemModel.dart';
 
-class AnswerShareScreen extends StatelessWidget {
+class AnswerShareScreen extends StatefulWidget {
   final ProblemModel problem;
   final GlobalKey _globalKey = GlobalKey();
 
-  AnswerShareScreen({required this.problem});
+  AnswerShareScreen({super.key, required this.problem});
+
+  @override
+  _AnswerShareScreenState createState() => _AnswerShareScreenState();
+}
+
+class _AnswerShareScreenState extends State<AnswerShareScreen> {
+  bool isImageLoaded = false; // 이미지 로드 상태
+  bool hasShared = false; // 공유 함수 호출 여부
+  Image? _image; // 이미지 위젯
+  ImageStreamListener? _imageStreamListener; // 이미지 로드 감지 리스너
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.problem.answerImageUrl != null) {
+      _image = Image.network(
+        widget.problem.answerImageUrl!,
+        fit: BoxFit.contain,
+      );
+
+      final ImageStream imageStream =
+      _image!.image.resolve(const ImageConfiguration());
+      _imageStreamListener = ImageStreamListener(
+              (ImageInfo imageInfo, bool synchronousCall) {
+            if (!isImageLoaded) {
+              isImageLoaded = true;
+              setState(() {});
+            }
+          });
+      imageStream.addListener(_imageStreamListener!);
+    } else {
+      // 이미지가 없을 경우 바로 공유
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _shareProblemAsImage();
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    if (_imageStreamListener != null) {
+      _image!.image
+          .resolve(const ImageConfiguration())
+          .removeListener(_imageStreamListener!);
+    }
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeHandler>(context);
-    bool isImageLoaded = false;
+    bool isImageLoaded = this.isImageLoaded;
+
+    // 이미지가 로드되었고, 공유하지 않았다면 공유 함수 호출
+    if (isImageLoaded && !hasShared) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _shareProblemAsImage();
+      });
+      hasShared = true; // 한 번만 호출되도록 설정
+    }
 
     return Scaffold(
       appBar: AppBar(
         title: DecorateText(
           text: '공유 화면 미리보기',
-          fontSize: 28,
+          fontSize: 24,
           color: themeProvider.primaryColor,
         ),
       ),
       body: RepaintBoundary(
-          // 격자무늬를 포함하는 RepaintBoundary로 변경
-          key: _globalKey,
-          child: Container(
-            color: themeProvider.primaryColor.withOpacity(0.03),
-            child: Stack(
-              children: [
-                CustomPaint(
-                  size: Size.infinite,
-                  painter: GridPainter(gridColor: themeProvider.primaryColor),
-                ),
-                Center(
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(
-                      maxHeight: MediaQuery.of(context).size.height, // 화면 높이 최대
-                      maxWidth: MediaQuery.of(context).size.width,
-                    ),
-                    child: Container(
-                      padding: const EdgeInsets.all(30.0),
-                      child: Column(
-                        mainAxisAlignment:
-                            MainAxisAlignment.start, // 이미지 위에 푼 날짜 배치
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          if (problem.reference != null)
-                            Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.center, // 날짜도 가운데 정렬
+        key: widget._globalKey,
+        child: Container(
+          color: themeProvider.primaryColor.withOpacity(0.03),
+          child: Stack(
+            children: [
+              CustomPaint(
+                size: Size.infinite,
+                painter: GridPainter(gridColor: themeProvider.primaryColor),
+              ),
+              Center(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxHeight: MediaQuery.of(context).size.height,
+                    maxWidth: MediaQuery.of(context).size.width,
+                  ),
+                  child: Container(
+                    padding: const EdgeInsets.all(30.0),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (widget.problem.reference != null)
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              UnderlinedText(
+                                text: widget.problem.reference!,
+                                fontSize: 24,
+                                color: themeProvider.primaryColor,
+                              ),
+                            ],
+                          ),
+                        const SizedBox(height: 30),
+                        if (widget.problem.memo != null)
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
                                 children: [
-                                  UnderlinedText(
-                                    text: problem.reference!,
-                                    fontSize: 24,
+                                  Icon(Icons.edit,
+                                      color: themeProvider.primaryColor),
+                                  const SizedBox(width: 8),
+                                  DecorateText(
+                                    text: '메모',
+                                    fontSize: 20,
                                     color: themeProvider.primaryColor,
                                   ),
-                                ]),
-                          const SizedBox(height: 30),
-                          if (problem.memo != null)
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start, // 메모를 왼쪽 정렬
-                              children: [
-                                Row(
-                                  children: [
-                                    Icon(Icons.edit, color: themeProvider.primaryColor),
-                                    const SizedBox(width: 8),
-                                    DecorateText(
-                                      text: '메모',
-                                      fontSize: 20,
-                                      color: themeProvider.primaryColor,
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 8), // 라벨과 메모 텍스트 간의 간격 조정
-                                UnderlinedText(
-                                  text: problem.memo!,
-                                  fontSize: 20,
-                                  color: Colors.black,
-                                ),
-                              ],
-                            ),
-                          const SizedBox(height: 30),
-                          if (problem.answerImageUrl != null)
-                            Row(children: [
+                                ],
+                              ),
+                              const SizedBox(height: 8),
+                              UnderlinedText(
+                                text: widget.problem.memo!,
+                                fontSize: 20,
+                                color: Colors.black,
+                              ),
+                            ],
+                          ),
+                        const SizedBox(height: 30),
+                        if (widget.problem.answerImageUrl != null)
+                          Row(
+                            children: [
                               Icon(Icons.camera_alt,
                                   color: themeProvider.primaryColor),
                               const SizedBox(width: 8),
@@ -105,82 +160,71 @@ class AnswerShareScreen extends StatelessWidget {
                                   text: '정답 이미지',
                                   fontSize: 20,
                                   color: themeProvider.primaryColor),
-                            ]),
-                          const SizedBox(height: 20),
-                          Flexible(
-                            child: SingleChildScrollView(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  if (problem.answerImageUrl != null)
-                                    AspectRatio(
-                                      aspectRatio: 3 / 4,
-                                      child: Container(
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 10.0),
-                                        child: Image.network(
-                                          problem.processImageUrl!,
-                                          fit: BoxFit.contain,
-                                          loadingBuilder:
-                                              (BuildContext context, Widget child,
-                                              ImageChunkEvent?
-                                              loadingProgress) {
-                                            if (loadingProgress == null) {
-                                              if (!isImageLoaded) {
-                                                isImageLoaded = true;
-                                                SchedulerBinding.instance
-                                                    .addPostFrameCallback((_) {
-                                                  _shareProblemAsImage(context);
-                                                });
-                                              }
-                                              return child;
-                                            } else {
-                                              return Center(
-                                                child:
-                                                CircularProgressIndicator(
-                                                  value: loadingProgress
-                                                      .expectedTotalBytes !=
-                                                      null
-                                                      ? loadingProgress
-                                                      .cumulativeBytesLoaded /
-                                                      (loadingProgress
-                                                          .expectedTotalBytes ??
-                                                          1)
-                                                      : null,
-                                                ),
-                                              );
-                                            }
-                                          },
-                                        ),
+                            ],
+                          ),
+                        const SizedBox(height: 20),
+                        Flexible(
+                          child: SingleChildScrollView(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                if (_image != null)
+                                  AspectRatio(
+                                    aspectRatio: 3 / 4,
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 10.0),
+                                      child: Stack(
+                                        children: [
+                                          _image!,
+                                          if (!isImageLoaded)
+                                            Center(
+                                              child:
+                                              CircularProgressIndicator(),
+                                            ),
+                                        ],
                                       ),
                                     ),
-                                  const SizedBox(height: 10),
-                                ],
-                              ),
+                                  ),
+                                const SizedBox(height: 10),
+                              ],
                             ),
                           ),
-                          const SizedBox(height: 10),
-                        ],
-                      ),
+                        ),
+                        const SizedBox(height: 10),
+                      ],
                     ),
                   ),
                 ),
-              ],
-            ),
-          )),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
   // 문제 캡처 후 이미지로 공유하는 로직
-  Future<void> _shareProblemAsImage(context) async {
+  Future<void> _shareProblemAsImage() async {
     try {
-      await Future.delayed(const Duration(milliseconds: 500));
-      // RepaintBoundary로부터 이미지를 캡처
-      RenderRepaintBoundary boundary = _globalKey.currentContext!
+      // 프레임 완료 후 실행되도록 대기
+      await WidgetsBinding.instance.endOfFrame;
+
+      // RenderRepaintBoundary로부터 이미지를 캡처
+      RenderRepaintBoundary boundary = widget._globalKey.currentContext!
           .findRenderObject() as RenderRepaintBoundary;
+
+      // boundary가 준비될 때까지 대기
+      while (boundary.debugNeedsPaint) {
+        await Future.delayed(const Duration(milliseconds: 20));
+        boundary = widget._globalKey.currentContext!
+            .findRenderObject() as RenderRepaintBoundary;
+      }
+
+      // 이미지 캡처
       ui.Image image = await boundary.toImage(pixelRatio: 3.0);
       ByteData? byteData =
-          await image.toByteData(format: ui.ImageByteFormat.png);
+      await image.toByteData(format: ui.ImageByteFormat.png);
       Uint8List pngBytes = byteData!.buffer.asUint8List();
 
       // 임시 파일에 저장
@@ -188,33 +232,24 @@ class AnswerShareScreen extends StatelessWidget {
       final file = await File('${tempDir.path}/problem.png').create();
       await file.writeAsBytes(pngBytes);
 
-      // XFile을 사용해 이미지 공유
+      // 이미지 공유
       final XFile xFile = XFile(file.path);
 
-      // RenderBox에서 위치 정보 가져오기
-      final RenderBox box =
-          _globalKey.currentContext!.findRenderObject() as RenderBox;
-      final rect = box.localToGlobal(Offset.zero) & box.size;
+      final RenderBox box = context.findRenderObject() as RenderBox;
       final size = MediaQuery.of(context).size;
 
-      if (rect.size.width > 0 && rect.size.height > 0) {
-        Share.shareXFiles(
-          [xFile],
-          text: '내 오답노트야! 어때?',
-          sharePositionOrigin: Rect.fromPoints(
-            Offset.zero,
-            Offset(size.width / 3 * 2, size.height),
-          ),
-        );
-      } else {
-        log('Invalid box size, defaulting to basic share...');
-        Share.shareXFiles([xFile], text: '내 오답노트야! 어때?');
-      }
+      Share.shareXFiles(
+        [xFile],
+        text: '내 오답노트야! 어때?',
+        sharePositionOrigin: box.localToGlobal(Offset.zero) & size,
+      );
 
-      Navigator.pop(context, true);
-    } catch (e) {
+      // 화면 닫기 (필요 시)
+      // Navigator.pop(context, true);
+    } catch (e, stackTrace) {
       log('이미지 공유 실패: $e');
-      Navigator.pop(context, false);
+      log('스택 트레이스: $stackTrace');
+      // Navigator.pop(context, false);
     }
   }
 }

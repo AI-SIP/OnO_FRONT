@@ -22,7 +22,7 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
   final _service = ProblemRegisterScreenService();
   late DateTime _selectedDate;
   int? _selectedFolderId;
-  String _selectedFolderName = '메인';
+  String _selectedFolderName = '폴더 선택';
   bool _isProcess = false;
   late TextEditingController _sourceController;
   late TextEditingController _notesController;
@@ -40,11 +40,11 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
         Provider.of<FoldersProvider>(context, listen: false);
 
     if (foldersProvider.currentFolder != null) {
-      _selectedFolderId = foldersProvider.currentFolder!.folderId;
-      _selectedFolderName = foldersProvider.currentFolder!.folderName;
+      //_selectedFolderId = foldersProvider.currentFolder!.folderId;
+      //_selectedFolderName = foldersProvider.currentFolder!.folderName;
     } else {
       _selectedFolderId = null;
-      _selectedFolderName = '메인'; // 기본값 설정
+      _selectedFolderName = '폴더 선택'; // 기본값 설정
     }
 
     if (widget.problem != null) {
@@ -78,8 +78,8 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
       _solveImage = null;
       _selectedColors = null;
       _selectedDate = DateTime.now();
-      _selectedFolderId = foldersProvider.currentFolder!.folderId;
-      _selectedFolderName = foldersProvider.currentFolder!.folderName;
+      _selectedFolderId = null;
+      _selectedFolderName = '폴더 선택';
       _isProcess = false;
     });
   }

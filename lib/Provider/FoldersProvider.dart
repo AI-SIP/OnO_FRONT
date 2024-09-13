@@ -304,7 +304,7 @@ class FoldersProvider with ChangeNotifier {
         log('Problem successfully submitted');
         await fetchRootFolderContents();
 
-        if (_problems.length % 5 == 0) {
+        if (_problems.isNotEmpty && _problems.length % 5 == 0) {
           reviewHandler.requestReview(); // 문제 개수가 5의 배수일 때 리뷰 요청
         }
       } else {
