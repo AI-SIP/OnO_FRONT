@@ -29,6 +29,11 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
   final ProblemDetailScreenService _service = ProblemDetailScreenService();
   bool isEditMode = false;
 
+  static const String shareProblemValue = 'share_problem';
+  static const String shareAnswerValue = 'share_answer';
+  static const String editValue = 'edit';
+  static const String deleteValue = 'delete';
+
   @override
   void initState() {
     super.initState();
@@ -57,11 +62,12 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
 
   // AppBar의 동작 및 메뉴 버튼
   List<Widget> buildAppBarActions(ThemeHandler themeProvider) {
+
     return [
       PopupMenuButton<String>(
         onSelected: (String result) async{
           final problemData = await _problemDataFuture;
-          if (result == 'share_problem') {
+          if (result == shareProblemValue) {
             if (problemData != null) {
               // Navigate to ProblemShareScreen and wait for result
               await Navigator.push(
@@ -73,7 +79,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
               );
             }
           }
-          else if (result == 'share_answer') {
+          else if (result == shareAnswerValue) {
             if (problemData != null) {
               // Navigate to ProblemShareScreen and wait for result
               await Navigator.push(
@@ -85,11 +91,11 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
               );
             }
           }
-          else if (result == 'edit') {
+          else if (result == editValue) {
             setState(() {
               isEditMode = true;
             });
-          } else if (result == 'delete') {
+          } else if (result == deleteValue) {
             deleteProblemDialog(context, themeProvider);
           }
         },

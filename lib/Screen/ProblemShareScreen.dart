@@ -1,4 +1,3 @@
-
 import 'dart:developer';
 import 'dart:io';
 import 'dart:ui' as ui;
@@ -36,28 +35,31 @@ class _ProblemShareScreenState extends State<ProblemShareScreen> {
   @override
   void initState() {
     super.initState();
+    // 이미지가 있을 경우 네트워크 이미지를 사용
     if (widget.problem.processImageUrl != null) {
       _image = Image.network(
         widget.problem.processImageUrl!,
         fit: BoxFit.contain,
       );
-
-      final ImageStream imageStream =
-      _image!.image.resolve(const ImageConfiguration());
-      _imageStreamListener = ImageStreamListener(
-              (ImageInfo imageInfo, bool synchronousCall) {
-            if (!isImageLoaded) {
-              isImageLoaded = true;
-              setState(() {});
-            }
-          });
-      imageStream.addListener(_imageStreamListener!);
     } else {
-      // 이미지가 없을 경우 바로 공유
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _shareProblemAsImage();
-      });
+      // 이미지가 없을 경우 로컬 기본 이미지 사용
+      _image = Image.asset(
+        'assets/no_image.png',
+        fit: BoxFit.contain,
+      );
     }
+
+    // 이미지 로딩이 완료되면 상태 업데이트
+    final ImageStream imageStream = _image!.image.resolve(const ImageConfiguration());
+    _imageStreamListener = ImageStreamListener(
+          (ImageInfo imageInfo, bool synchronousCall) {
+        if (!isImageLoaded) {
+          isImageLoaded = true;
+          setState(() {});
+        }
+      },
+    );
+    imageStream.addListener(_imageStreamListener!);
   }
 
   @override
@@ -73,8 +75,7 @@ class _ProblemShareScreenState extends State<ProblemShareScreen> {
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeHandler>(context);
-    final formattedDate =
-    DateFormat('yyyy년 M월 d일').format(widget.problem.solvedAt!);
+    final formattedDate = DateFormat('yyyy년 M월 d일').format(widget.problem.solvedAt!);
 
     // 이미지가 로드되었고, 공유하지 않았다면 공유 함수 호출
     if (isImageLoaded && !hasShared) {
@@ -129,29 +130,31 @@ class _ProblemShareScreenState extends State<ProblemShareScreen> {
                         if (widget.problem.solvedAt != null)
                           Row(
                             children: [
-                              Icon(Icons.calendar_today,
-                                  color: themeProvider.primaryColor),
+                              Icon(Icons.calendar_today, color: themeProvider.primaryColor),
                               const SizedBox(width: 8),
                               DecorateText(
-                                  text: '푼 날짜',
-                                  fontSize: 20,
-                                  color: themeProvider.primaryColor),
+                                text: '푼 날짜',
+                                fontSize: 20,
+                                color: themeProvider.primaryColor,
+                              ),
                               const Spacer(),
                               UnderlinedText(
-                                  text: formattedDate, fontSize: 20),
+                                text: formattedDate,
+                                fontSize: 20,
+                              ),
                             ],
                           ),
                         const SizedBox(height: 30),
                         if (widget.problem.processImageUrl != null)
                           Row(
                             children: [
-                              Icon(Icons.camera_alt,
-                                  color: themeProvider.primaryColor),
+                              Icon(Icons.camera_alt, color: themeProvider.primaryColor),
                               const SizedBox(width: 8),
                               DecorateText(
-                                  text: '문제 이미지',
-                                  fontSize: 20,
-                                  color: themeProvider.primaryColor),
+                                text: '문제 이미지',
+                                fontSize: 20,
+                                color: themeProvider.primaryColor,
+                              ),
                             ],
                           ),
                         const SizedBox(height: 20),
@@ -164,15 +167,13 @@ class _ProblemShareScreenState extends State<ProblemShareScreen> {
                                   AspectRatio(
                                     aspectRatio: 3 / 4,
                                     child: Container(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 10.0),
+                                      padding: const EdgeInsets.symmetric(horizontal: 10.0),
                                       child: Stack(
                                         children: [
                                           _image!,
                                           if (!isImageLoaded)
                                             const Center(
-                                              child:
-                                              CircularProgressIndicator(),
+                                              child: CircularProgressIndicator(),
                                             ),
                                         ],
                                       ),
@@ -202,21 +203,16 @@ class _ProblemShareScreenState extends State<ProblemShareScreen> {
       // 프레임 완료 후 실행되도록 대기
       await WidgetsBinding.instance.endOfFrame;
 
+      // 추가적인 딜레이를 줘서 boundary가 준비될 시간을 확보합니다.
+      await Future.delayed(const Duration(milliseconds: 20));
+
       // RenderRepaintBoundary로부터 이미지를 캡처
       RenderRepaintBoundary boundary = widget._globalKey.currentContext!
           .findRenderObject() as RenderRepaintBoundary;
 
-      // boundary가 준비될 때까지 대기
-      while (boundary.debugNeedsPaint) {
-        await Future.delayed(const Duration(milliseconds: 5));
-        boundary = widget._globalKey.currentContext!
-            .findRenderObject() as RenderRepaintBoundary;
-      }
-
       // 이미지 캡처
       ui.Image image = await boundary.toImage(pixelRatio: 3.0);
-      ByteData? byteData =
-      await image.toByteData(format: ui.ImageByteFormat.png);
+      ByteData? byteData = await image.toByteData(format: ui.ImageByteFormat.png);
       Uint8List pngBytes = byteData!.buffer.asUint8List();
 
       // 임시 파일에 저장
@@ -252,7 +248,7 @@ class _ProblemShareScreenState extends State<ProblemShareScreen> {
     } catch (e, stackTrace) {
       log('이미지 공유 실패: $e');
       log('스택 트레이스: $stackTrace');
-      // Navigator.pop(context, false);
+      // 에러 처리 로직
     }
   }
 }
