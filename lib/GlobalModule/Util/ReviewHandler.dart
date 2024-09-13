@@ -11,4 +11,8 @@ class ReviewHandler {
       _inAppReview.openStoreListing(appStoreId: '6602886624');
     }
   }
+
+  Future<void> openReviewPage() async {
+    _inAppReview.openStoreListing(appStoreId: '6602886624');
+  }
 }

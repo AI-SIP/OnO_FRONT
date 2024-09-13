@@ -304,8 +304,10 @@ class FoldersProvider with ChangeNotifier {
         log('Problem successfully submitted');
         await fetchRootFolderContents();
 
-        if (_problems.isNotEmpty && _problems.length % 5 == 0) {
-          reviewHandler.requestReview(); // 문제 개수가 5의 배수일 때 리뷰 요청
+        int userProblemCount = await getUserProblemCount();
+        if (userProblemCount > 0 && userProblemCount % 10 == 0) {
+          reviewHandler.requestReview(); // 문제 개수가 10의 배수일 때 리뷰 요청
+          //reviewHandler.openReviewPage();
         }
       } else {
         log('Failed to submit problem: ${response.reasonPhrase}');
@@ -331,6 +333,35 @@ class FoldersProvider with ChangeNotifier {
       return null;
     }
   }
+
+  Future<int> getUserProblemCount() async{
+    final accessToken = await tokenProvider.getAccessToken();
+    if (accessToken == null) {
+      log('Access token is not available');
+      return 0;
+    }
+
+    final url = Uri.parse('${AppConfig.baseUrl}/api/user/problemCount');
+    final response = await http.get(
+      url,
+      headers: {
+        'Content-Type': 'application/json; charset=UTF-8',
+        'Authorization': 'Bearer $accessToken',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      int userProblemCount = int.parse(response.body);
+
+      log('user problem count : $userProblemCount');
+
+      return userProblemCount;
+    } else {
+      log('Failed to getuser problem count');
+      return 0;
+    }
+  }
+
 
   Future<void> updateProblem(ProblemRegisterModel problemData) async {
     final accessToken = await tokenProvider.getAccessToken();
