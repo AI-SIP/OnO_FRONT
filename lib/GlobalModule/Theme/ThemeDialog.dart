@@ -80,7 +80,8 @@ class _ThemeDialogState extends State<ThemeDialog> {
           onPressed: () {
             if (_selectedColor != null) {
               // Change the PrimaryColor to the selected color
-              themeProvider.changePrimaryColor(_selectedColor!);
+              final darkerColor = _darken(_selectedColor!, 0.1);
+              themeProvider.changePrimaryColor(darkerColor);
 
               Navigator.of(context).pop();
             }
@@ -93,6 +94,12 @@ class _ThemeDialogState extends State<ThemeDialog> {
         ),
       ],
     );
+  }
+
+  Color _darken(Color color, [double amount = .1]) {
+    final hsl = HSLColor.fromColor(color);
+    final hslDark = hsl.withLightness((hsl.lightness - amount).clamp(0.0, 1.0));
+    return hslDark.toColor();
   }
 
   Widget _buildColorCircle(Color color) {
