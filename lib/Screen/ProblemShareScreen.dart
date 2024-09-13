@@ -1,3 +1,4 @@
+
 import 'dart:developer';
 import 'dart:io';
 import 'dart:ui' as ui;
@@ -169,7 +170,7 @@ class _ProblemShareScreenState extends State<ProblemShareScreen> {
                                         children: [
                                           _image!,
                                           if (!isImageLoaded)
-                                            Center(
+                                            const Center(
                                               child:
                                               CircularProgressIndicator(),
                                             ),
@@ -207,7 +208,7 @@ class _ProblemShareScreenState extends State<ProblemShareScreen> {
 
       // boundary가 준비될 때까지 대기
       while (boundary.debugNeedsPaint) {
-        await Future.delayed(const Duration(milliseconds: 20));
+        await Future.delayed(const Duration(milliseconds: 5));
         boundary = widget._globalKey.currentContext!
             .findRenderObject() as RenderRepaintBoundary;
       }
@@ -224,16 +225,25 @@ class _ProblemShareScreenState extends State<ProblemShareScreen> {
       await file.writeAsBytes(pngBytes);
 
       // 이미지 공유
-      final XFile xFile = XFile(file.path);
+      final XFile xFile = XFile(file.path, mimeType: 'image/png');
 
       final RenderBox box = context.findRenderObject() as RenderBox;
+      final rect = box.localToGlobal(Offset.zero) & box.size;
       final size = MediaQuery.of(context).size;
 
-      Share.shareXFiles(
-        [xFile],
-        text: '내 오답노트야! 어때?',
-        sharePositionOrigin: box.localToGlobal(Offset.zero) & size,
-      );
+      if (rect.size.width > 0 && rect.size.height > 0) {
+        Share.shareXFiles(
+          [xFile],
+          text: '내 오답노트야! 어때?',
+          sharePositionOrigin: Rect.fromPoints(
+            Offset.zero,
+            Offset(size.width / 3 * 2, size.height),
+          ),
+        );
+      } else {
+        log('Invalid box size, defaulting to basic share...');
+        Share.shareXFiles([xFile], text: '내 오답노트야! 어때?');
+      }
 
       // 필요에 따라 화면 닫기
       // Navigator.pop(context, true);

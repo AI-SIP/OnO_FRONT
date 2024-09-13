@@ -178,7 +178,7 @@ class _AnswerShareScreenState extends State<AnswerShareScreen> {
                                         children: [
                                           _image!,
                                           if (!isImageLoaded)
-                                            Center(
+                                            const Center(
                                               child:
                                               CircularProgressIndicator(),
                                             ),
@@ -216,7 +216,7 @@ class _AnswerShareScreenState extends State<AnswerShareScreen> {
 
       // boundary가 준비될 때까지 대기
       while (boundary.debugNeedsPaint) {
-        await Future.delayed(const Duration(milliseconds: 20));
+        await Future.delayed(const Duration(milliseconds: 5));
         boundary = widget._globalKey.currentContext!
             .findRenderObject() as RenderRepaintBoundary;
       }
@@ -233,7 +233,7 @@ class _AnswerShareScreenState extends State<AnswerShareScreen> {
       await file.writeAsBytes(pngBytes);
 
       // 이미지 공유
-      final XFile xFile = XFile(file.path);
+      final XFile xFile = XFile(file.path, mimeType: 'image/png');
 
       final RenderBox box = context.findRenderObject() as RenderBox;
       final size = MediaQuery.of(context).size;
