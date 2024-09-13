@@ -221,11 +221,13 @@ class _ProblemShareScreenState extends State<ProblemShareScreen> {
 
       // 임시 파일에 저장
       final tempDir = await getTemporaryDirectory();
-      final file = await File('${tempDir.path}/problem.png').create();
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final filePath = '${tempDir.path}/problem_$timestamp.png';
+      final file = await File(filePath).create();
       await file.writeAsBytes(pngBytes);
 
       // 이미지 공유
-      final XFile xFile = XFile(file.path, mimeType: 'image/png');
+      final XFile xFile = XFile(file.path);
 
       final RenderBox box = context.findRenderObject() as RenderBox;
       final rect = box.localToGlobal(Offset.zero) & box.size;
