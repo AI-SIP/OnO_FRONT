@@ -60,7 +60,7 @@ class KakaoAuthService {
       );
 
       if (response.statusCode == 200) {
-        log('Google sign-in Success!');
+        log('kakao sign-in Success!');
         return jsonDecode(response.body);
       } else {
         throw Exception("Failed to Register user on server");
@@ -76,6 +76,6 @@ class KakaoAuthService {
   }
 
   Future<void> revokeKakaoSignIn() async {
-    await UserApi.instance.logout();
+    await UserApi.instance.unlink();
   }
 }

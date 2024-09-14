@@ -200,6 +200,7 @@ class HomeScreen extends StatelessWidget {
                         ),
                         if (Platform.isIOS || Platform.isMacOS)
                           SizedBox(height: screenHeight * 0.03),
+                        if (Platform.isIOS || Platform.isMacOS)
                           _buildLoginButton(
                             context: context,
                             onPressed: () => authService.signInWithApple(context),
