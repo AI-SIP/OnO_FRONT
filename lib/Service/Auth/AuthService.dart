@@ -3,11 +3,13 @@ import 'dart:core';
 import 'dart:developer';
 import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:ono/Model/LoginStatus.dart';
 import 'package:ono/Provider/FoldersProvider.dart';
 import 'package:ono/Service/Auth/GuestAuthService.dart';
+import 'package:ono/Service/Auth/KakaoAuthService.dart';
 import '../../Config/AppConfig.dart';
 import '../../Provider/TokenProvider.dart';
 import 'AppleAuthService.dart';
@@ -33,6 +35,7 @@ class AuthService with ChangeNotifier {
   final GuestAuthService guestAuthService = GuestAuthService();
   final AppleAuthService appleAuthService = AppleAuthService();
   final GoogleAuthService googleAuthService = GoogleAuthService();
+  final KakaoAuthService kakaoAuthService = KakaoAuthService();
 
   Future<void> signInWithGuest() async {
     _isLoggedIn = LoginStatus.waiting;
@@ -76,11 +79,18 @@ class AuthService with ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> signInWithKakao() async {
+    _isLoggedIn = LoginStatus.waiting;
+    notifyListeners();
+
+    kakaoAuthService.signInWithKakao();
+  }
+
   Future<void> fetchUserInfo() async {
     final accessToken = await tokenProvider.getAccessToken();
     if (accessToken == null) {
       _isLoggedIn = LoginStatus.logout;
-      notifyListeners();
+      notifyListeners ();
       throw Exception("Access token is not available");
     }
 

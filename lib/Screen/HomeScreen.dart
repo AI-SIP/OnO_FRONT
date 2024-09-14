@@ -76,6 +76,7 @@ class HomeScreen extends StatelessWidget {
     required double buttonHeight,
     required double logoSize,
     required double textSize,
+    required Color backgroundColor,
   }) {
     return SizedBox(
       width: buttonWidth,
@@ -83,7 +84,7 @@ class HomeScreen extends StatelessWidget {
       child: ElevatedButton(
         onPressed: onPressed,
         style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.white,
+          backgroundColor: backgroundColor,
           elevation: 1.0,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(4.0),
@@ -182,6 +183,7 @@ class HomeScreen extends StatelessWidget {
                           buttonHeight: buttonHeight,
                           logoSize: logoSize,
                           textSize: textSize,
+                          backgroundColor: Colors.white
                         ),
                         SizedBox(height: screenHeight * 0.03),
                         _buildLoginButton(
@@ -194,9 +196,10 @@ class HomeScreen extends StatelessWidget {
                           buttonHeight: buttonHeight,
                           logoSize: logoSize,
                           textSize: textSize,
+                            backgroundColor: Colors.white
                         ),
-                        SizedBox(height: screenHeight * 0.03),
                         if (Platform.isIOS || Platform.isMacOS)
+                          SizedBox(height: screenHeight * 0.03),
                           _buildLoginButton(
                             context: context,
                             onPressed: () => authService.signInWithApple(context),
@@ -207,7 +210,21 @@ class HomeScreen extends StatelessWidget {
                             buttonHeight: buttonHeight,
                             logoSize: logoSize,
                             textSize: textSize,
+                              backgroundColor: Colors.white,
                           ),
+                        SizedBox(height: screenHeight * 0.03),
+                        _buildLoginButton(
+                          context: context,
+                          onPressed: () => authService.signInWithKakao(),
+                          text: '카카오 계정으로 로그인',
+                          assetPath: 'assets/KakaoLogo.png', // 카카오 로고 경로
+                          textColor: Colors.black87,
+                          buttonWidth: buttonWidth,
+                          buttonHeight: buttonHeight,
+                          logoSize: logoSize,
+                          textSize: textSize,
+                            backgroundColor: Color(0xFFFEE500),
+                        ),
                       ],
                     );
                   }
