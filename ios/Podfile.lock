@@ -8,6 +8,9 @@ PODS:
   - camera_avfoundation (0.0.1):
     - Flutter
   - Flutter (1.0.0)
+  - flutter_naver_login (0.0.1):
+    - Flutter
+    - naveridlogin-sdk-ios (~> 4.1.0)
   - flutter_secure_storage (6.0.0):
     - Flutter
   - google_sign_in_ios (0.0.1):
@@ -39,6 +42,7 @@ PODS:
     - Flutter
   - kakao_flutter_sdk_common (1.9.6):
     - Flutter
+  - naveridlogin-sdk-ios (4.1.6)
   - path_provider_foundation (0.0.1):
     - Flutter
     - FlutterMacOS
@@ -64,6 +68,7 @@ PODS:
 DEPENDENCIES:
   - camera_avfoundation (from `.symlinks/plugins/camera_avfoundation/ios`)
   - Flutter (from `Flutter`)
+  - flutter_naver_login (from `.symlinks/plugins/flutter_naver_login/ios`)
   - flutter_secure_storage (from `.symlinks/plugins/flutter_secure_storage/ios`)
   - google_sign_in_ios (from `.symlinks/plugins/google_sign_in_ios/darwin`)
   - image_cropper (from `.symlinks/plugins/image_cropper/ios`)
@@ -86,6 +91,7 @@ SPEC REPOS:
     - GoogleSignIn
     - GTMAppAuth
     - GTMSessionFetcher
+    - naveridlogin-sdk-ios
     - TOCropViewController
 
 EXTERNAL SOURCES:
@@ -93,6 +99,8 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/camera_avfoundation/ios"
   Flutter:
     :path: Flutter
+  flutter_naver_login:
+    :path: ".symlinks/plugins/flutter_naver_login/ios"
   flutter_secure_storage:
     :path: ".symlinks/plugins/flutter_secure_storage/ios"
   google_sign_in_ios:
@@ -128,6 +136,7 @@ SPEC CHECKSUMS:
   AppAuth: 501c04eda8a8d11f179dbe8637b7a91bb7e5d2fa
   camera_avfoundation: dd002b0330f4981e1bbcb46ae9b62829237459a4
   Flutter: e0871f40cf51350855a761d2e70bf5af5b9b5de7
+  flutter_naver_login: 1dbf6d21aae5235cdf76a28ac79cf6871899282f
   flutter_secure_storage: d33dac7ae2ea08509be337e775f6b59f1ff45f12
   google_sign_in_ios: 07375bfbf2620bc93a602c0e27160d6afc6ead38
   GoogleSignIn: d4281ab6cf21542b1cfaff85c191f230b399d2db
@@ -138,6 +147,7 @@ SPEC CHECKSUMS:
   image_picker_ios: c560581cceedb403a6ff17f2f816d7fea1421fc1
   in_app_review: 318597b3a06c22bb46dc454d56828c85f444f99d
   kakao_flutter_sdk_common: 4f10f98226da5d0f7cbdeeaed5cc21f144515209
+  naveridlogin-sdk-ios: cdd34e3585a3d5aaf37c1d84c1f41faba4a25d1a
   path_provider_foundation: 2b6b4c569c0fb62ec74538f866245ac84301af46
   permission_handler_apple: 9878588469a2b0d0fc1e048d9f43605f92e6cec2
   share_plus: 8875f4f2500512ea181eef553c3e27dba5135aad

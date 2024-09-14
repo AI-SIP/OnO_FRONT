@@ -55,6 +55,7 @@ dependencies:
   image_gallery_saver: ^2.0.3
   in_app_review: ^2.0.9
   kakao_flutter_sdk: ^1.9.6
+  flutter_naver_login: ^1.8.0
 
 dev_dependencies:
   flutter_test:
