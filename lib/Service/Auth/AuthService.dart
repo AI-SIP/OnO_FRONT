@@ -3,7 +3,6 @@ import 'dart:core';
 import 'dart:developer';
 import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:ono/Model/LoginStatus.dart';

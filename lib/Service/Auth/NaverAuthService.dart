@@ -14,7 +14,7 @@ class NaverAuthService{
 
       if (result.status == NaverLoginStatus.loggedIn) {
 
-        final String email = 'naver email';
+        final String email = 'ono@naver.com';
         final String identifier = result.account.id;
         final String name = result.account.name;
 
