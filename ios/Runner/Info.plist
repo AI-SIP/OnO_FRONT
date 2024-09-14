@@ -26,6 +26,7 @@
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>com.googleusercontent.apps.41920987554-6lp5n7jr9v81pu2r6ulihp3ggu25kpse</string>
+				<string>OnO</string>
 			</array>
 		</dict>
 		<dict>
@@ -53,13 +54,13 @@
 	<key>LSSupportsOpeningDocumentsInPlace</key>
 	<true/>
 	<key>LSApplicationQueriesSchemes</key>
-        <array>
-           <string>naversearchapp</string>
-           <string>naversearchthirdlogin</string>
-        </array>
+    <array>
+       <string>naversearchapp</string>
+       <string>naversearchthirdlogin</string>
+    </array>
 
     <key>naverServiceAppUrlScheme</key>
-    <string>socialloginapp</string>
+    <string>OnO</string>
 
     <!-- naver client_id -->
     <key>naverConsumerKey</key>

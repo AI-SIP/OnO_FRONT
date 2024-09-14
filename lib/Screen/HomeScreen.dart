@@ -28,7 +28,6 @@ class HomeScreen extends StatelessWidget {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-
         title: const DecorateText(
           text: '게스트 로그인 할 경우',
           fontSize: 24,
@@ -58,7 +57,8 @@ class HomeScreen extends StatelessWidget {
             ),
             onPressed: () {
               Navigator.of(ctx).pop();
-              Provider.of<AuthService>(context, listen: false).signInWithGuest();
+              Provider.of<AuthService>(context, listen: false)
+                  .signInWithGuest();
             },
           ),
         ],
@@ -77,6 +77,7 @@ class HomeScreen extends StatelessWidget {
     required double logoSize,
     required double textSize,
     required Color backgroundColor,
+    required bool fontBold,
   }) {
     return SizedBox(
       width: buttonWidth,
@@ -95,11 +96,16 @@ class HomeScreen extends StatelessWidget {
           children: [
             assetPath.isNotEmpty
                 ? Image.asset(assetPath, height: logoSize)
-                : Icon(Icons.person_outline, size: logoSize, color: Colors.black87),
+                : Icon(Icons.person_outline,
+                    size: logoSize, color: Colors.black87),
             SizedBox(width: buttonWidth * 0.02),
             Text(
               text,
-              style: TextStyle(color: textColor, fontSize: textSize),
+              style: TextStyle(
+                color: textColor,
+                fontSize: textSize,
+                fontWeight: fontBold ? FontWeight.bold : FontWeight.normal,
+              ),
             ),
           ],
         ),
@@ -160,7 +166,8 @@ class HomeScreen extends StatelessWidget {
                   double textSize = screenHeight * 0.015; // Dynamic text size
 
                   if (authService.isLoggedIn == LoginStatus.waiting) {
-                    return CircularProgressIndicator(color: themeProvider.primaryColor);
+                    return CircularProgressIndicator(
+                        color: themeProvider.primaryColor);
                   } else if (authService.isLoggedIn == LoginStatus.login) {
                     return Padding(
                       padding: EdgeInsets.only(top: screenHeight * 0.05),
@@ -177,13 +184,15 @@ class HomeScreen extends StatelessWidget {
                           context: context,
                           onPressed: () => _showGuestLoginDialog(context),
                           text: '게스트로 로그인',
-                          assetPath: '', // Icon will be used instead of asset image
+                          assetPath:
+                              '', // Icon will be used instead of asset image
                           textColor: Colors.black87,
                           buttonWidth: buttonWidth,
                           buttonHeight: buttonHeight,
                           logoSize: logoSize,
                           textSize: textSize,
-                          backgroundColor: Colors.white
+                          backgroundColor: Colors.white,
+                          fontBold: false,
                         ),
                         SizedBox(height: screenHeight * 0.03),
                         _buildLoginButton(
@@ -196,14 +205,16 @@ class HomeScreen extends StatelessWidget {
                           buttonHeight: buttonHeight,
                           logoSize: logoSize,
                           textSize: textSize,
-                            backgroundColor: Colors.white
+                          backgroundColor: Colors.white,
+                          fontBold: false,
                         ),
                         if (Platform.isIOS || Platform.isMacOS)
                           SizedBox(height: screenHeight * 0.03),
                         if (Platform.isIOS || Platform.isMacOS)
                           _buildLoginButton(
                             context: context,
-                            onPressed: () => authService.signInWithApple(context),
+                            onPressed: () =>
+                                authService.signInWithApple(context),
                             text: 'Apple로 로그인',
                             assetPath: 'assets/AppleLogo.png',
                             textColor: Colors.black87,
@@ -211,7 +222,8 @@ class HomeScreen extends StatelessWidget {
                             buttonHeight: buttonHeight,
                             logoSize: logoSize,
                             textSize: textSize,
-                              backgroundColor: Colors.white,
+                            backgroundColor: Colors.white,
+                            fontBold: false,
                           ),
                         SizedBox(height: screenHeight * 0.03),
                         _buildLoginButton(
@@ -224,7 +236,22 @@ class HomeScreen extends StatelessWidget {
                           buttonHeight: buttonHeight,
                           logoSize: logoSize,
                           textSize: textSize,
-                            backgroundColor: Color(0xFFFEE500),
+                          backgroundColor: Color(0xFFFEE500),
+                          fontBold: true,
+                        ),
+                        SizedBox(height: screenHeight * 0.03),
+                        _buildLoginButton(
+                          context: context,
+                          onPressed: () => authService.signInWithNaver(),
+                          text: '네이버 로그인',
+                          assetPath: 'assets/NaverLogo.png', // 네이버 로고 경로
+                          textColor: Colors.white,
+                          buttonWidth: buttonWidth,
+                          buttonHeight: buttonHeight,
+                          logoSize: logoSize,
+                          textSize: textSize,
+                          backgroundColor: Color(0xFF03C75A), // 네이버의 그린 컬러
+                          fontBold: true,
                         ),
                       ],
                     );

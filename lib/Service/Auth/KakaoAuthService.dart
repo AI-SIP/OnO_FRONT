@@ -63,7 +63,7 @@ class KakaoAuthService {
         log('kakao sign-in Success!');
         return jsonDecode(response.body);
       } else {
-        throw Exception("Failed to Register user on server");
+        throw Exception("Failed to Register kakao user on server");
       }
     } catch (error) {
       log(error.toString());

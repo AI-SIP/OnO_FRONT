@@ -85,6 +85,7 @@ flutter:
     - assets/no_image.png
     - assets/Logo.png
     - assets/KakaoLogo.png
+    - assets/NaverLogo.png
   fonts:
     - family: font1
       fonts:

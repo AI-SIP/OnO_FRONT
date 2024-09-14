@@ -10,6 +10,7 @@ import 'package:ono/Model/LoginStatus.dart';
 import 'package:ono/Provider/FoldersProvider.dart';
 import 'package:ono/Service/Auth/GuestAuthService.dart';
 import 'package:ono/Service/Auth/KakaoAuthService.dart';
+import 'package:ono/Service/Auth/NaverAuthService.dart';
 import '../../Config/AppConfig.dart';
 import '../../Provider/TokenProvider.dart';
 import 'AppleAuthService.dart';
@@ -36,6 +37,7 @@ class AuthService with ChangeNotifier {
   final AppleAuthService appleAuthService = AppleAuthService();
   final GoogleAuthService googleAuthService = GoogleAuthService();
   final KakaoAuthService kakaoAuthService = KakaoAuthService();
+  final NaverAuthService naverAuthService = NaverAuthService();
 
   Future<void> signInWithGuest() async {
     _isLoggedIn = LoginStatus.waiting;
@@ -93,6 +95,23 @@ class AuthService with ChangeNotifier {
       _isLoggedIn = LoginStatus.logout;
     } else {
       await storage.write(key: 'loginMethod', value: 'kakao');
+      await tokenProvider.setAccessToken(response['accessToken']);
+      await tokenProvider.setRefreshToken(response['refreshToken']);
+      fetchUserInfo();
+    }
+
+    notifyListeners();
+  }
+
+  Future<void> signInWithNaver() async{
+    _isLoggedIn = LoginStatus.logout;
+    notifyListeners();
+
+    final response = await naverAuthService.signInWithNaver();
+    if (response == null) {
+      _isLoggedIn = LoginStatus.logout;
+    } else {
+      await storage.write(key: 'loginMethod', value: 'naver');
       await tokenProvider.setAccessToken(response['accessToken']);
       await tokenProvider.setRefreshToken(response['refreshToken']);
       fetchUserInfo();
@@ -164,7 +183,10 @@ class AuthService with ChangeNotifier {
       } else if (loginMethod == 'apple') {
       } else if (loginMethod == 'kakao') {
         await kakaoAuthService.logoutKakaoSignIn();
-      } else if (loginMethod == 'guest') {
+      } else if(loginMethod == 'naver'){
+        await naverAuthService.logoutNaverSignIn();
+      }
+      else if (loginMethod == 'guest') {
         deleteAccount();
       }
       _userId = 0;
@@ -190,6 +212,8 @@ class AuthService with ChangeNotifier {
       await appleAuthService.revokeSignInWithApple();
     } else if(loginMethod == 'kakao'){
       await kakaoAuthService.revokeKakaoSignIn();
+    } else if(loginMethod == 'naver'){
+      await naverAuthService.revokeNaverSignIn();
     }
     else if (loginMethod == 'guest') {
 
