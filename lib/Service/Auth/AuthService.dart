@@ -44,11 +44,7 @@ class AuthService with ChangeNotifier {
     notifyListeners();
 
     final response = await guestAuthService.signInWithGuest();
-    await storage.write(key: 'loginMethod', value: 'guest');
-    await tokenProvider.setAccessToken(response['accessToken']);
-    await tokenProvider.setRefreshToken(response['refreshToken']);
-    fetchUserInfo();
-    notifyListeners();
+    saveUserToken(response: response, loginMethod: 'guest');
   }
 
   // Google 로그인 함수(앱 처음 설치하고 구글 로그인 버튼 누르면 실행)
@@ -57,16 +53,7 @@ class AuthService with ChangeNotifier {
     notifyListeners();
 
     final response = await googleAuthService.signInWithGoogle();
-    if (response == null) {
-      _isLoggedIn = LoginStatus.logout;
-    } else {
-      await storage.write(key: 'loginMethod', value: 'google');
-      await tokenProvider.setAccessToken(response['accessToken']);
-      await tokenProvider.setRefreshToken(response['refreshToken']);
-      fetchUserInfo();
-    }
-
-    notifyListeners();
+    saveUserToken(response: response, loginMethod: 'google');
   }
 
   // Apple 로그인 함수
@@ -74,16 +61,7 @@ class AuthService with ChangeNotifier {
     _isLoggedIn = LoginStatus.waiting;
     notifyListeners();
     final response = await appleAuthService.signInWithApple(context);
-    if (response == null) {
-      _isLoggedIn = LoginStatus.logout;
-    } else {
-      await storage.write(key: 'loginMethod', value: 'apple');
-      await tokenProvider.setAccessToken(response['accessToken']);
-      await tokenProvider.setRefreshToken(response['refreshToken']);
-      fetchUserInfo();
-    }
-
-    notifyListeners();
+    saveUserToken(response: response, loginMethod: 'apple');
   }
 
   Future<void> signInWithKakao() async {
@@ -91,16 +69,7 @@ class AuthService with ChangeNotifier {
     notifyListeners();
 
     final response = await kakaoAuthService.signInWithKakao();
-    if (response == null) {
-      _isLoggedIn = LoginStatus.logout;
-    } else {
-      await storage.write(key: 'loginMethod', value: 'kakao');
-      await tokenProvider.setAccessToken(response['accessToken']);
-      await tokenProvider.setRefreshToken(response['refreshToken']);
-      fetchUserInfo();
-    }
-
-    notifyListeners();
+    saveUserToken(response: response, loginMethod: 'kakao');
   }
 
   Future<void> signInWithNaver() async{
@@ -108,10 +77,14 @@ class AuthService with ChangeNotifier {
     notifyListeners();
 
     final response = await naverAuthService.signInWithNaver();
-    if (response == null) {
+    saveUserToken(response: response, loginMethod: 'naver');
+  }
+
+  Future<void> saveUserToken({Map<String,dynamic>? response, String? loginMethod}) async{
+    if(response == null){
       _isLoggedIn = LoginStatus.logout;
-    } else {
-      await storage.write(key: 'loginMethod', value: 'naver');
+    } else{
+      await storage.write(key: 'loginMethod', value: loginMethod);
       await tokenProvider.setAccessToken(response['accessToken']);
       await tokenProvider.setRefreshToken(response['refreshToken']);
       fetchUserInfo();
@@ -163,24 +136,13 @@ class AuthService with ChangeNotifier {
     }
   }
 
-  Future<Map<String, dynamic>> getUserInfo() async {
-    if (_userId != 0 && _userName.isNotEmpty && _userEmail.isNotEmpty) {
-      return {
-        'userId': _userId,
-        'userName': _userName,
-        'userEmail': _userEmail,
-      };
-    } else {
-      throw Exception('No user info available');
-    }
-  }
-
   Future<void> signOut() async {
     try {
       String? loginMethod = await storage.read(key: 'loginMethod');
       if (loginMethod == 'google') {
         googleAuthService.logoutGoogleSignIn();
       } else if (loginMethod == 'apple') {
+        // apple 은 별도의 로그아웃 로직이 없습니다.
       } else if (loginMethod == 'kakao') {
         await kakaoAuthService.logoutKakaoSignIn();
       } else if(loginMethod == 'naver'){
@@ -189,12 +151,8 @@ class AuthService with ChangeNotifier {
       else if (loginMethod == 'guest') {
         deleteAccount();
       }
-      _userId = 0;
-      _isLoggedIn = LoginStatus.logout;
-      _userName = '';
-      _userEmail = '';
-      await storage.deleteAll();
-      notifyListeners();
+
+      resetUserInfo();
     } catch (error) {
       log('Error signing out: $error');
       throw Exception('Failed to sign out');
@@ -211,8 +169,10 @@ class AuthService with ChangeNotifier {
       // 애플 회원 탈퇴 로직
       await appleAuthService.revokeSignInWithApple();
     } else if(loginMethod == 'kakao'){
+      // 카카오 회원 탈퇴 로직
       await kakaoAuthService.revokeKakaoSignIn();
     } else if(loginMethod == 'naver'){
+      // 네이버 회우너 탈퇴 로직
       await naverAuthService.revokeNaverSignIn();
     }
     else if (loginMethod == 'guest') {
@@ -238,13 +198,8 @@ class AuthService with ChangeNotifier {
       );
 
       if (response.statusCode == 200) {
-        _userId = 0;
-        _isLoggedIn = LoginStatus.logout;
-        _userName = '';
-        _userEmail = '';
-        await storage.deleteAll();
-        notifyListeners();
         log('Account deletion Success!');
+        resetUserInfo();
       } else {
         log('Failed to delete account: ${response.reasonPhrase}');
         throw Exception("Failed to delete account");
@@ -252,5 +207,14 @@ class AuthService with ChangeNotifier {
     } catch (error) {
       log('Account deletion error: $error');
     }
+  }
+
+  Future<void> resetUserInfo() async{
+    _userId = 0;
+    _isLoggedIn = LoginStatus.logout;
+    _userName = '';
+    _userEmail = '';
+    await storage.deleteAll();
+    notifyListeners();
   }
 }
