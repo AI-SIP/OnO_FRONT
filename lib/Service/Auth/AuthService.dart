@@ -55,9 +55,9 @@ class AuthService with ChangeNotifier {
     notifyListeners();
 
     final response = await googleAuthService.signInWithGoogle();
-    if(response == null){
+    if (response == null) {
       _isLoggedIn = LoginStatus.logout;
-    } else{
+    } else {
       await storage.write(key: 'loginMethod', value: 'google');
       await tokenProvider.setAccessToken(response['accessToken']);
       await tokenProvider.setRefreshToken(response['refreshToken']);
@@ -72,10 +72,15 @@ class AuthService with ChangeNotifier {
     _isLoggedIn = LoginStatus.waiting;
     notifyListeners();
     final response = await appleAuthService.signInWithApple(context);
-    await storage.write(key: 'loginMethod', value: 'apple');
-    await tokenProvider.setAccessToken(response['accessToken']);
-    await tokenProvider.setRefreshToken(response['refreshToken']);
-    fetchUserInfo();
+    if (response == null) {
+      _isLoggedIn = LoginStatus.logout;
+    } else {
+      await storage.write(key: 'loginMethod', value: 'apple');
+      await tokenProvider.setAccessToken(response['accessToken']);
+      await tokenProvider.setRefreshToken(response['refreshToken']);
+      fetchUserInfo();
+    }
+
     notifyListeners();
   }
 
@@ -83,14 +88,24 @@ class AuthService with ChangeNotifier {
     _isLoggedIn = LoginStatus.waiting;
     notifyListeners();
 
-    kakaoAuthService.signInWithKakao();
+    final response = await kakaoAuthService.signInWithKakao();
+    if (response == null) {
+      _isLoggedIn = LoginStatus.logout;
+    } else {
+      await storage.write(key: 'loginMethod', value: 'kakao');
+      await tokenProvider.setAccessToken(response['accessToken']);
+      await tokenProvider.setRefreshToken(response['refreshToken']);
+      fetchUserInfo();
+    }
+
+    notifyListeners();
   }
 
   Future<void> fetchUserInfo() async {
     final accessToken = await tokenProvider.getAccessToken();
     if (accessToken == null) {
       _isLoggedIn = LoginStatus.logout;
-      notifyListeners ();
+      notifyListeners();
       throw Exception("Access token is not available");
     }
 
@@ -147,6 +162,8 @@ class AuthService with ChangeNotifier {
       if (loginMethod == 'google') {
         googleAuthService.logoutGoogleSignIn();
       } else if (loginMethod == 'apple') {
+      } else if (loginMethod == 'kakao') {
+        await kakaoAuthService.logoutKakaoSignIn();
       } else if (loginMethod == 'guest') {
         deleteAccount();
       }
@@ -171,7 +188,11 @@ class AuthService with ChangeNotifier {
     } else if (loginMethod == 'apple') {
       // 애플 회원 탈퇴 로직
       await appleAuthService.revokeSignInWithApple();
-    } else if (loginMethod == 'guest') {
+    } else if(loginMethod == 'kakao'){
+      await kakaoAuthService.revokeKakaoSignIn();
+    }
+    else if (loginMethod == 'guest') {
+
     } else {
       throw Exception("Unknown login method");
     }
