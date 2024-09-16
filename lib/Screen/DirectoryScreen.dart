@@ -3,6 +3,7 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
+import 'package:ono/GlobalModule/Theme/SnackBarDialog.dart';
 import 'package:ono/Model/LoginStatus.dart';
 import 'package:ono/Provider/FoldersProvider.dart';
 import 'package:provider/provider.dart';
@@ -490,7 +491,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     );
   }
 
-  Widget _buildFolderTile(FolderThumbnailModel folder, ThemeHandler themeProvider) {
+  Widget _buildFolderTile(
+      FolderThumbnailModel folder, ThemeHandler themeProvider) {
     return GestureDetector(
       onTap: () {
         // 폴더를 클릭했을 때 해당 폴더로 이동
@@ -641,12 +643,15 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   }
 
   Future<void> _moveProblemToFolder(ProblemModel problem, int? folderId) async {
+    final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
+
     if (problem.problemId == null || folderId == null) {
       log('Problem ID or folderId is null. Cannot move the problem.');
       return; // 문제 ID 또는 폴더 ID가 null이면 실행하지 않음
     }
 
-    final foldersProvider = Provider.of<FoldersProvider>(context, listen: false);
+    final foldersProvider =
+        Provider.of<FoldersProvider>(context, listen: false);
     await foldersProvider.updateProblem(
       ProblemRegisterModel(
         problemId: problem.problemId,
@@ -654,5 +659,13 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         isProcess: false,
       ),
     );
+
+    if (mounted) {
+      SnackBarDialog.showSnackBar(
+        context: context,
+        message: '문제가 이동되었습니다!',
+        backgroundColor: Theme.of(context).primaryColor,
+      );
+    }
   }
 }

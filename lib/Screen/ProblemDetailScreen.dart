@@ -6,6 +6,7 @@ import '../GlobalModule/Theme/DecorateText.dart';
 import '../GlobalModule/Image/DisplayImage.dart';
 import '../GlobalModule/Image/FullScreenImage.dart';
 import '../GlobalModule/Theme/GridPainter.dart';
+import '../GlobalModule/Theme/SnackBarDialog.dart';
 import '../GlobalModule/Theme/ThemeHandler.dart';
 import '../GlobalModule/Theme/UnderlinedText.dart';
 import '../Model/ProblemModel.dart';
@@ -157,30 +158,22 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
       widget.problemId,
       () {
         Navigator.of(context).pop(true);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const DecorateText(
-              text: '문제가 삭제되었습니다.',
-              fontSize: 20,
-              color: Colors.white,
-            ),
-            backgroundColor: themeProvider.primaryColor,
-            duration: const Duration(seconds: 2),
-          ),
-        );
+        if (mounted) {
+          SnackBarDialog.showSnackBar(
+            context: context,
+            message: '문제가 삭제되었습니다!',
+            backgroundColor: Theme.of(context).primaryColor,
+          );
+        }
       },
       (errorMessage) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: DecorateText(
-              text: errorMessage,
-              fontSize: 20,
-              color: Colors.white,
-            ),
+        if (mounted) {
+          SnackBarDialog.showSnackBar(
+            context: context,
+            message: errorMessage,
             backgroundColor: Colors.red,
-            duration: const Duration(seconds: 2),
-          ),
-        );
+          );
+        }
       },
     );
   }
