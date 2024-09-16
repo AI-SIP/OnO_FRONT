@@ -198,7 +198,7 @@ class HomeScreen extends StatelessWidget {
                         _buildLoginButton(
                           context: context,
                           onPressed: () => authService.signInWithGoogle(),
-                          text: 'Google 계정으로 로그인',
+                          text: '  Google로 로그인',
                           assetPath: 'assets/GoogleLogo.png',
                           textColor: Colors.black87,
                           buttonWidth: buttonWidth,
@@ -229,7 +229,7 @@ class HomeScreen extends StatelessWidget {
                         _buildLoginButton(
                           context: context,
                           onPressed: () => authService.signInWithKakao(),
-                          text: '카카오 계정으로 로그인',
+                          text: ' 카카오 로그인',
                           assetPath: 'assets/KakaoLogo.png', // 카카오 로고 경로
                           textColor: Colors.black87,
                           buttonWidth: buttonWidth,
@@ -243,7 +243,7 @@ class HomeScreen extends StatelessWidget {
                         _buildLoginButton(
                           context: context,
                           onPressed: () => authService.signInWithNaver(),
-                          text: '네이버 로그인',
+                          text: ' 네이버 로그인',
                           assetPath: 'assets/NaverLogo.png', // 네이버 로고 경로
                           textColor: Colors.white,
                           buttonWidth: buttonWidth,
