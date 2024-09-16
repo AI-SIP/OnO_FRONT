@@ -325,7 +325,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
               controller: folderNameController,
               style: TextStyle(
                 color: themeProvider.primaryColor,
-                fontSize: 16,
+                fontSize: 20,
                 fontWeight: FontWeight.bold,
                 fontFamily: 'font1',
               ),

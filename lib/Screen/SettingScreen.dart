@@ -27,7 +27,6 @@ class _SettingScreenState extends State<SettingScreen> {
     final themeProvider = Provider.of<ThemeHandler>(context);
 
     return Scaffold(
-      backgroundColor: Colors.white,
       body: Column(
         children: [
           Expanded(
@@ -266,6 +265,19 @@ class _SettingScreenState extends State<SettingScreen> {
                 fontWeight: FontWeight.bold,
                 fontFamily: 'font1',
               ),
+              border: OutlineInputBorder(
+                borderSide: BorderSide(color: themeProvider.primaryColor, width: 1.5),
+                borderRadius: BorderRadius.circular(8.0),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderSide: BorderSide(color: themeProvider.primaryColor, width: 1.5),
+                borderRadius: BorderRadius.circular(8.0),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderSide: BorderSide(color: themeProvider.primaryColor, width: 2.0),
+                borderRadius: BorderRadius.circular(8.0),
+              ),
+              contentPadding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 12.0),
             ),
           ),
           actions: [
