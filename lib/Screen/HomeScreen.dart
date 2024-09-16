@@ -236,9 +236,10 @@ class HomeScreen extends StatelessWidget {
                           buttonHeight: buttonHeight,
                           logoSize: logoSize,
                           textSize: textSize,
-                          backgroundColor: Color(0xFFFEE500),
+                          backgroundColor: const Color(0xFFFEE500),
                           fontBold: true,
                         ),
+                        /*
                         SizedBox(height: screenHeight * 0.03),
                         _buildLoginButton(
                           context: context,
@@ -253,6 +254,8 @@ class HomeScreen extends StatelessWidget {
                           backgroundColor: Color(0xFF03C75A), // 네이버의 그린 컬러
                           fontBold: true,
                         ),
+
+                         */
                       ],
                     );
                   }

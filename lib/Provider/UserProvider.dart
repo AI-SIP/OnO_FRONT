@@ -299,6 +299,7 @@ class UserProvider with ChangeNotifier {
     _isLoggedIn = LoginStatus.logout;
     _userName = '';
     _userEmail = '';
+    _problemCount = 0;
     await storage.deleteAll();
     notifyListeners();
   }
