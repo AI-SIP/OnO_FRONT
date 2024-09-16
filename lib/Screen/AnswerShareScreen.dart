@@ -9,6 +9,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../GlobalModule/Image/DisplayImage.dart';
 import '../GlobalModule/Theme/DecorateText.dart';
 import '../GlobalModule/Theme/GridPainter.dart';
 import '../GlobalModule/Theme/ThemeHandler.dart';
@@ -168,21 +169,7 @@ class _AnswerShareScreenState extends State<AnswerShareScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 if (_image != null)
-                                  AspectRatio(
-                                    aspectRatio: 3 / 4,
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 10.0),
-                                      child: Stack(
-                                        children: [
-                                          _image!,
-                                          if (!isImageLoaded)
-                                            const Center(
-                                              child: CircularProgressIndicator(),
-                                            ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
+                                  buildAnswerImage(context, widget.problem.answerImageUrl),
                                 const SizedBox(height: 10),
                               ],
                             ),
@@ -200,6 +187,30 @@ class _AnswerShareScreenState extends State<AnswerShareScreen> {
       ),
     );
   }
+
+  // 정답 이미지 출력 함수
+  Widget buildAnswerImage(BuildContext context, String? imageUrl) {
+    final mediaQuery = MediaQuery.of(context);
+    final themeProvider = Provider.of<ThemeHandler>(context);
+
+    return Center(
+      child: Container(
+        width: mediaQuery.size.width * 0.8,
+        decoration: BoxDecoration(
+          color: themeProvider.primaryColor.withOpacity(0.1), // 배경색 추가
+          borderRadius: BorderRadius.circular(10), // 모서리 둥글게 설정
+        ),
+        child: AspectRatio(
+          aspectRatio: 0.8, // 원하는 비율로 이미지의 높이를 조정
+          child: DisplayImage(
+            imagePath: imageUrl,
+            fit: BoxFit.contain, // 이미지 전체를 보여주기 위한 설정
+          ),
+        ),
+      ),
+    );
+  }
+
 
   // 문제 캡처 후 이미지로 공유하는 로직
   Future<void> _shareProblemAsImage() async {
