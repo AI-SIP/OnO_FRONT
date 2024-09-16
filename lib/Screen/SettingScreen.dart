@@ -24,22 +24,27 @@ class _SettingScreenState extends State<SettingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final authService = Provider.of<UserProvider>(context);
+    final userProvider = Provider.of<UserProvider>(context);
     final themeProvider = Provider.of<ThemeHandler>(context);
 
     return Scaffold(
       backgroundColor: Colors.white,
       body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24.0), // 좌우 여백 늘림
+        padding: const EdgeInsets.symmetric(horizontal: 30.0), // 좌우 여백
         child: Column(
           children: [
             Expanded(
               child: ListView(
                 children: [
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 10),
                   _buildUserNameTile(
                     context: context,
-                    userName: authService.userName,
+                    userName: userProvider.userName,
+                    themeProvider: themeProvider,
+                  ),
+                  const Divider(),
+                  _buildProblemCountTile(
+                    problemCount: userProvider.problemCount,
                     themeProvider: themeProvider,
                   ),
                   const Divider(),
@@ -124,6 +129,26 @@ class _SettingScreenState extends State<SettingScreen> {
           fontSize: 18,
           color: themeProvider.primaryColor,
         ),
+      ),
+    );
+  }
+
+  // 작성한 문제 수를 보여주는 타일
+  Widget _buildProblemCountTile({
+    required int problemCount,
+    required ThemeHandler themeProvider,
+  }) {
+    return ListTile(
+      contentPadding: const EdgeInsets.symmetric(vertical: 10.0),
+      title: DecorateText(
+        text: '작성한 오답노트 수',
+        fontSize: 22,
+        color: themeProvider.primaryColor,
+      ),
+      trailing: DecorateText(
+        text: problemCount.toString(),
+        fontSize: 22,
+        color: themeProvider.primaryColor,
       ),
     );
   }

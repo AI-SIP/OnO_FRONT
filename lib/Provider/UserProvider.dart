@@ -24,11 +24,13 @@ class UserProvider with ChangeNotifier {
 
   LoginStatus _isLoggedIn = LoginStatus.waiting;
   int _userId = 0;
+  int _problemCount = 0;
   String _userName = '';
   String _userEmail = '';
 
   LoginStatus get isLoggedIn => _isLoggedIn;
   int get userId => _userId;
+  int get problemCount => _problemCount;
   String get userName => _userName;
   String get userEmail => _userEmail;
 
@@ -116,12 +118,41 @@ class UserProvider with ChangeNotifier {
       _userEmail = responseBody['userEmail'];
       _isLoggedIn = LoginStatus.login;
 
+      _problemCount = await getUserProblemCount();
       await foldersProvider.fetchRootFolderContents();
     } else {
       _isLoggedIn = LoginStatus.logout;
     }
 
     notifyListeners();
+  }
+
+  Future<int> getUserProblemCount() async{
+    final accessToken = await tokenProvider.getAccessToken();
+    if (accessToken == null) {
+      log('Access token is not available');
+      return 0;
+    }
+
+    final url = Uri.parse('${AppConfig.baseUrl}/api/user/problemCount');
+    final response = await http.get(
+      url,
+      headers: {
+        'Content-Type': 'application/json; charset=UTF-8',
+        'Authorization': 'Bearer $accessToken',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      int userProblemCount = int.parse(response.body);
+
+      log('user problem count : $userProblemCount');
+
+      return userProblemCount;
+    } else {
+      log('Failed to get user problem count');
+      return 0;
+    }
   }
 
   Future<void> autoLogin() async {

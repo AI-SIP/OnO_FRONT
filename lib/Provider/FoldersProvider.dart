@@ -357,11 +357,10 @@ class FoldersProvider with ChangeNotifier {
 
       return userProblemCount;
     } else {
-      log('Failed to getuser problem count');
+      log('Failed to get user problem count');
       return 0;
     }
   }
-
 
   Future<void> updateProblem(ProblemRegisterModel problemData) async {
     final accessToken = await tokenProvider.getAccessToken();
