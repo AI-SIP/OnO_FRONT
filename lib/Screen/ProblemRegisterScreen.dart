@@ -405,7 +405,7 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
           child: DecorateText(
             text: widget.problem == null ? '등록 취소' : '수정 취소',
             fontSize: 20,
-            color: themeProvider.primaryColor,
+            color : Colors.white,
           ),
         ),
         TextButton(
