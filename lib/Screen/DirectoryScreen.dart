@@ -546,26 +546,6 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     );
   }
 
-  Future<void> _moveProblemToFolder(ProblemModel problem, int? folderId) async {
-    if (problem.problemId == null) {
-      log('Problem ID is null. Cannot move the problem.');
-      return; // 문제 ID 또는 폴더 ID가 null이면 실행하지 않음
-    }
-
-    if (folderId == null) {
-      log('folder ID is null. Cannot move the problem.');
-      return; // 문제 ID 또는 폴더 ID가 null이면 실행하지 않음
-    }
-
-    final foldersProvider = Provider.of<FoldersProvider>(context, listen: false);
-    await foldersProvider.updateProblem(
-      ProblemRegisterModel(
-        problemId: problem.problemId,
-        folderId: folderId, // 폴더 ID로 문제를 이동
-      ),
-    );
-  }
-
   String formatDateTime(DateTime dateTime) {
     return DateFormat('yyyy/MM/dd HH:mm').format(dateTime);
   }
@@ -583,11 +563,11 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
           HapticFeedback.lightImpact(); // 드래그 시작 시 가벼운 햅틱 피드백 제공
         },
         feedback: Material(
-          child: Container(
+          child: SizedBox(
             width: 100,
             height: 100,
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(6.0),
+              borderRadius: BorderRadius.circular(8.0),
               child: DisplayImage(
                 imagePath: problem.processImageUrl,
                 fit: BoxFit.cover, // 문제 썸네일을 드래그 시 보여줌
@@ -657,6 +637,22 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
           ),
         );
       },
+    );
+  }
+
+  Future<void> _moveProblemToFolder(ProblemModel problem, int? folderId) async {
+    if (problem.problemId == null || folderId == null) {
+      log('Problem ID or folderId is null. Cannot move the problem.');
+      return; // 문제 ID 또는 폴더 ID가 null이면 실행하지 않음
+    }
+
+    final foldersProvider = Provider.of<FoldersProvider>(context, listen: false);
+    await foldersProvider.updateProblem(
+      ProblemRegisterModel(
+        problemId: problem.problemId,
+        folderId: folderId, // 폴더 ID로 문제를 이동
+        isProcess: false,
+      ),
     );
   }
 }

@@ -390,9 +390,7 @@ class FoldersProvider with ChangeNotifier {
       request.fields['folderId'] = problemData.folderId!.toString();
     }
 
-    if(problemData.isProcess != null){
-      request.fields['process'] = problemData.isProcess! ? 'true' : 'false';
-    }
+    request.fields['process'] = problemData.isProcess! ? 'true' : 'false';
 
     final problemImage = problemData.problemImage;
     final colors = problemData.colors;
