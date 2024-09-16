@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:ono/Model/LoginStatus.dart';
 import 'package:provider/provider.dart';
 import '../GlobalModule/Theme/DecorateText.dart';
 import '../GlobalModule/Theme/ThemeHandler.dart';
@@ -118,10 +117,19 @@ class _SettingScreenState extends State<SettingScreen> {
         fontSize: 24,
         color: themeProvider.primaryColor,
       ),
-      trailing: TextButton(
+      trailing: ElevatedButton(
         onPressed: () {
           _showChangeNameDialog(context, userName);
         },
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.white,
+          foregroundColor: themeProvider.primaryColor,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          side: BorderSide(color: themeProvider.primaryColor),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+        ),
         child: DecorateText(
           text: '이름 수정',
           fontSize: 18,
