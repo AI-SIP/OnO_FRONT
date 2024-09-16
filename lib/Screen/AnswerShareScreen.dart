@@ -93,7 +93,8 @@ class _AnswerShareScreenState extends State<AnswerShareScreen> {
       body: RepaintBoundary(
         key: widget._globalKey,
         child: Container(
-          color: themeProvider.primaryColor.withOpacity(0.03),
+          //color: themeProvider.primaryColor.withOpacity(0.03),
+          color : Colors.white,
           child: Stack(
             children: [
               CustomPaint(
@@ -216,7 +217,7 @@ class _AnswerShareScreenState extends State<AnswerShareScreen> {
       await Future.delayed(const Duration(milliseconds: 20));
 
       // 이미지 캡처
-      ui.Image image = await boundary.toImage(pixelRatio: 3.0);
+      ui.Image image = await boundary.toImage(pixelRatio: MediaQuery.of(context).devicePixelRatio);
       ByteData? byteData = await image.toByteData(format: ui.ImageByteFormat.png);
       Uint8List pngBytes = byteData!.buffer.asUint8List();
 
