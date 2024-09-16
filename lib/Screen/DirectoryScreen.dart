@@ -1,4 +1,7 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:ono/Model/LoginStatus.dart';
 import 'package:ono/Provider/FoldersProvider.dart';
@@ -7,6 +10,7 @@ import '../GlobalModule/Theme/DecorateText.dart';
 import '../GlobalModule/Image/DisplayImage.dart';
 import '../GlobalModule/Theme/ThemeHandler.dart';
 import '../GlobalModule/Util/FolderSelectionDialog.dart';
+import '../Model/ProblemRegisterModel.dart';
 import '../Service/ScreenUtil/DirectoryScreenService.dart';
 import '../Model/ProblemModel.dart';
 import '../Model/FolderThumbnailModel.dart';
@@ -486,116 +490,173 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     );
   }
 
-  Widget _buildFolderTile(
-      FolderThumbnailModel folder, ThemeHandler themeProvider) {
+  Widget _buildFolderTile(FolderThumbnailModel folder, ThemeHandler themeProvider) {
     return GestureDetector(
       onTap: () {
+        // 폴더를 클릭했을 때 해당 폴더로 이동
         Provider.of<FoldersProvider>(context, listen: false)
             .fetchFolderContents(folderId: folder.folderId);
       },
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          double height = constraints.maxHeight * 0.8;
-          double width = constraints.maxWidth * 0.9;
-          return GridTile(
-            child: Column(
-              children: <Widget>[
-                Container(
-                  width: width,
-                  height: height,
-                  decoration: BoxDecoration(
-                    color: themeProvider.primaryColor.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12.0), // 모서리를 둥글게 설정
-                  ),
-                  child: Icon(
-                    Icons.folder,
-                    color: themeProvider.primaryColor,
-                    size: 80, // 폴더 아이콘 크기를 더 크게 설정
-                  ),
+      child: DragTarget<ProblemModel>(
+        onAccept: (problem) async {
+          // 문제를 드롭하면 폴더로 이동
+          await _moveProblemToFolder(problem, folder.folderId);
+        },
+        builder: (context, candidateData, rejectedData) {
+          return LayoutBuilder(
+            builder: (context, constraints) {
+              double height = constraints.maxHeight * 0.8;
+              double width = constraints.maxWidth * 0.9;
+              return GridTile(
+                child: Column(
+                  children: <Widget>[
+                    Container(
+                      width: width,
+                      height: height,
+                      decoration: BoxDecoration(
+                        color: themeProvider.primaryColor.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12.0),
+                      ),
+                      child: Icon(
+                        Icons.folder,
+                        color: themeProvider.primaryColor,
+                        size: 80,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      folder.folderName,
+                      style: TextStyle(
+                        fontFamily: 'font1',
+                        color: themeProvider.primaryColor,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  folder.folderName,
-                  style: TextStyle(
-                    fontFamily: 'font1',
-                    color: themeProvider.primaryColor,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  textAlign: TextAlign.center,
-                  overflow: TextOverflow.ellipsis,
-                  maxLines: 1,
-                ),
-              ],
-            ),
+              );
+            },
           );
         },
       ),
     );
   }
 
-  Widget _buildProblemTile(ProblemModel problem, ThemeHandler themeProvider) {
-    String formatDateTime(DateTime dateTime) {
-      return DateFormat('yyyy/MM/dd HH:mm').format(dateTime);
+  Future<void> _moveProblemToFolder(ProblemModel problem, int? folderId) async {
+    if (problem.problemId == null) {
+      log('Problem ID is null. Cannot move the problem.');
+      return; // 문제 ID 또는 폴더 ID가 null이면 실행하지 않음
     }
 
+    if (folderId == null) {
+      log('folder ID is null. Cannot move the problem.');
+      return; // 문제 ID 또는 폴더 ID가 null이면 실행하지 않음
+    }
+
+    final foldersProvider = Provider.of<FoldersProvider>(context, listen: false);
+    await foldersProvider.updateProblem(
+      ProblemRegisterModel(
+        problemId: problem.problemId,
+        folderId: folderId, // 폴더 ID로 문제를 이동
+      ),
+    );
+  }
+
+  String formatDateTime(DateTime dateTime) {
+    return DateFormat('yyyy/MM/dd HH:mm').format(dateTime);
+  }
+
+  Widget _buildProblemTile(ProblemModel problem, ThemeHandler themeProvider) {
     return GestureDetector(
       onTap: () {
+        // 문제를 터치했을 때 페이지로 이동
         _directoryService.navigateToProblemDetail(context, problem.problemId);
       },
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          double height = constraints.maxHeight * 0.8;
-          double width = constraints.maxWidth * 0.9;
-          return GridTile(
-            child: Column(
-              children: <Widget>[
-                Expanded(
-                  child: Container(
-                    width: width,
-                    height: height,
-                    decoration: BoxDecoration(
-                      border: Border.all(
-                        color: themeProvider.primaryColor,
-                        width: 2.0,
-                      ),
-                      borderRadius: BorderRadius.circular(8.0),
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(6.0),
-                      child: DisplayImage(
-                        imagePath: problem.processImageUrl,
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  problem.reference ?? '제목 없음',
-                  style: TextStyle(
-                    fontFamily: 'font1',
-                    color: themeProvider.primaryColor,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  textAlign: TextAlign.center,
-                  overflow: TextOverflow.ellipsis,
-                  maxLines: 1,
-                ),
-                const SizedBox(height: 2),
-                DecorateText(
-                  text: problem.updateAt != null
-                      ? '작성 일시 : ${formatDateTime(problem.createdAt!)}'
-                      : '작성 일시 : 정보 없음',
-                  color: themeProvider.desaturateColor,
-                  fontSize: 12,
-                ),
-              ],
-            ),
-          );
+      child: LongPressDraggable<ProblemModel>(
+        data: problem,
+        delay: const Duration(milliseconds: 500), // 딜레이를 500ms로 줄임
+        onDragStarted: () {
+          HapticFeedback.lightImpact(); // 드래그 시작 시 가벼운 햅틱 피드백 제공
         },
+        feedback: Material(
+          child: Container(
+            width: 100,
+            height: 100,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(6.0),
+              child: DisplayImage(
+                imagePath: problem.processImageUrl,
+                fit: BoxFit.cover, // 문제 썸네일을 드래그 시 보여줌
+              ),
+            ),
+          ),
+        ),
+        childWhenDragging: Opacity(
+          opacity: 0.5, // 드래그 중일 때의 UI
+          child: _problemTileContent(problem, themeProvider),
+        ),
+        child: _problemTileContent(problem, themeProvider), // 기본 UI
       ),
+    );
+  }
+
+  Widget _problemTileContent(ProblemModel problem, ThemeHandler themeProvider) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        double height = constraints.maxHeight * 0.8;
+        double width = constraints.maxWidth * 0.9;
+        return GridTile(
+          child: Column(
+            children: <Widget>[
+              Expanded(
+                child: Container(
+                  width: width,
+                  height: height,
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                      color: themeProvider.primaryColor,
+                      width: 2.0,
+                    ),
+                    borderRadius: BorderRadius.circular(8.0),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(6.0),
+                    child: DisplayImage(
+                      imagePath: problem.processImageUrl,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                problem.reference ?? '제목 없음',
+                style: TextStyle(
+                  fontFamily: 'font1',
+                  color: themeProvider.primaryColor,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+                textAlign: TextAlign.center,
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
+              ),
+              const SizedBox(height: 2),
+              DecorateText(
+                text: problem.updateAt != null
+                    ? '작성 일시 : ${formatDateTime(problem.createdAt!)}'
+                    : '작성 일시 : 정보 없음',
+                color: themeProvider.desaturateColor,
+                fontSize: 12,
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }
