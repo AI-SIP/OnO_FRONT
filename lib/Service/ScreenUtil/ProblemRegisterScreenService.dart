@@ -10,7 +10,7 @@ import '../../GlobalModule/Theme/ThemeHandler.dart';
 import '../../GlobalModule/Util/DatePickerHandler.dart';
 import '../../GlobalModule/Util/FolderSelectionDialog.dart';
 import '../../Model/ProblemRegisterModel.dart';
-import '../Auth/AuthService.dart';
+import '../../Provider/UserProvider.dart';
 
 class ProblemRegisterScreenService {
   final ImagePickerHandler imagePickerHandler = ImagePickerHandler();
@@ -137,7 +137,7 @@ class ProblemRegisterScreenService {
       BuildContext context,
       ProblemRegisterModel problemData,
       VoidCallback onSuccess) async {
-    final authService = Provider.of<AuthService>(context, listen: false);
+    final authService = Provider.of<UserProvider>(context, listen: false);
     if (authService.isLoggedIn == LoginStatus.logout) {
       _showLoginRequiredDialog(context);
       return;

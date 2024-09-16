@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../GlobalModule/Theme/DecorateText.dart';
 import '../../GlobalModule/Theme/ThemeDialog.dart';
-import '../../Service/Auth/AuthService.dart';
+import '../../Provider/UserProvider.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
 
 class SettingScreenService {
@@ -83,11 +83,11 @@ class SettingScreenService {
   }
 
   Future<void> logout(BuildContext context) async {
-    await Provider.of<AuthService>(context, listen: false).signOut();
+    await Provider.of<UserProvider>(context, listen: false).signOut();
     showSuccessDialog(context, '로그아웃에 성공했습니다.');
   }
 
   Future<void> deleteAccount(BuildContext context) async {
-    await Provider.of<AuthService>(context, listen: false).deleteAccount();
+    await Provider.of<UserProvider>(context, listen: false).deleteAccount();
   }
 }

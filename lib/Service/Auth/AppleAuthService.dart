@@ -12,7 +12,7 @@ import '../../Config/AppConfig.dart';
 class AppleAuthService {
   final storage = const FlutterSecureStorage();
 
-  Future<Map<String, dynamic>> signInWithApple(BuildContext context) async {
+  Future<Map<String, dynamic>?> signInWithApple(BuildContext context) async {
     try {
       final appleCredential = await SignInWithApple.getAppleIDCredential(
         scopes: [
@@ -46,16 +46,20 @@ class AppleAuthService {
         if (response.statusCode == 200) {
           return jsonDecode(response.body);
         } else {
-          throw Exception("Failed to Register user on server");
+          log("Failed to Register user on server");
+          return null;
         }
       } else {
-        throw Exception("Failed to get Apple idToken");
+        log("Failed to get Apple idToken");
+        return null;
       }
     } catch (error) {
       log('Apple sign-in error: $error');
+      return null;
     }
 
-    throw Exception("Failed to Apple sign-in");
+    log("Failed to Apple sign-in");
+    return null;
   }
 
   Future<void> revokeSignInWithApple() async {

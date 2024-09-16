@@ -3,6 +3,7 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart';
 import 'package:ono/GlobalModule/Theme/ThemeHandler.dart';
 import 'package:ono/Provider/FoldersProvider.dart';
 import 'package:ono/Screen/SplashScreen.dart';
@@ -12,17 +13,18 @@ import 'Screen/DirectoryScreen.dart';
 import 'Screen/ProblemRegisterScreen.dart';
 import 'Screen/SettingScreen.dart';
 import 'GlobalModule/Theme/AppbarWithLogo.dart';
-import 'Service/Auth/AuthService.dart';
+import 'Provider/UserProvider.dart';
 
 void main() async {
   await dotenv.load(fileName: ".env");
+  KakaoSdk.init(nativeAppKey: '7fd2fa49895af63319fd6b11e084d0d5');
 
   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => FoldersProvider()),
         ChangeNotifierProvider(
-          create: (context) => AuthService(
+          create: (context) => UserProvider(
             Provider.of<FoldersProvider>(context, listen: false),
           ),
         ),
@@ -90,7 +92,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
 
   Future<void> autoLogin() async {
     try {
-      await Provider.of<AuthService>(context, listen: false).autoLogin();
+      await Provider.of<UserProvider>(context, listen: false).autoLogin();
     } catch (e) {
       log('Auto login failed: $e');
     }

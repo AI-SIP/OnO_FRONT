@@ -6,6 +6,7 @@ import '../GlobalModule/Theme/DecorateText.dart';
 import '../GlobalModule/Image/DisplayImage.dart';
 import '../GlobalModule/Image/FullScreenImage.dart';
 import '../GlobalModule/Theme/GridPainter.dart';
+import '../GlobalModule/Theme/SnackBarDialog.dart';
 import '../GlobalModule/Theme/ThemeHandler.dart';
 import '../GlobalModule/Theme/UnderlinedText.dart';
 import '../Model/ProblemModel.dart';
@@ -157,30 +158,22 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
       widget.problemId,
       () {
         Navigator.of(context).pop(true);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const DecorateText(
-              text: '문제가 삭제되었습니다.',
-              fontSize: 20,
-              color: Colors.white,
-            ),
-            backgroundColor: themeProvider.primaryColor,
-            duration: const Duration(seconds: 2),
-          ),
-        );
+        if (mounted) {
+          SnackBarDialog.showSnackBar(
+            context: context,
+            message: '문제가 삭제되었습니다!',
+            backgroundColor: Theme.of(context).primaryColor,
+          );
+        }
       },
       (errorMessage) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: DecorateText(
-              text: errorMessage,
-              fontSize: 20,
-              color: Colors.white,
-            ),
+        if (mounted) {
+          SnackBarDialog.showSnackBar(
+            context: context,
+            message: errorMessage,
             backgroundColor: Colors.red,
-            duration: const Duration(seconds: 2),
-          ),
-        );
+          );
+        }
       },
     );
   }
@@ -378,10 +371,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
 
     return ExpansionTile(
       title: Container(
-        decoration: BoxDecoration(
-          color: themeProvider.primaryColor.withOpacity(0.2), // 배경색 적용
-          borderRadius: BorderRadius.circular(12.0), // 모서리를 둥글게 설정
-        ),
+
         padding: const EdgeInsets.all(8.0), // 여백 추가
         child: buildCenteredTitle('해설 및 풀이 확인', themeProvider.primaryColor),
       ),
@@ -538,17 +528,17 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                 ),
               );
             },
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(10), // 모서리 둥글게 설정
+            child: Container(
+              width: mediaQuery.size.width * 0.8, // 부모 크기 기준
+              decoration: BoxDecoration(
+                color: themeProvider.primaryColor.withOpacity(0.1), // 배경색 추가
+                borderRadius: BorderRadius.circular(10), // 모서리 둥글게 설정
+              ),
               child: AspectRatio(
-                aspectRatio: 0.8, // 여기서 원하는 비율로 이미지의 높이를 유동적으로 조정
-                child: SizedBox(
-                  width: mediaQuery.size.width * 0.8, // 부모 크기 기준
-                  //height : mediaQuery.size.height,
-                  child: DisplayImage(
-                    imagePath: imageUrl,
-                    fit: BoxFit.cover, // 이미지가 여백 없이 꽉 차도록 설정
-                  ),
+                aspectRatio: 0.8, // 원하는 비율로 이미지의 높이를 조정
+                child: DisplayImage(
+                  imagePath: imageUrl,
+                  fit: BoxFit.contain, // 이미지 전체를 보여주기 위한 설정
                 ),
               ),
             ),
@@ -575,7 +565,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
     );
   }
 
-  // 가운데 위젯이 오도록 하는 함수
+  // 가운데 밑줄이 있는 텍스트 위젯을 만드는 함수
   Widget buildCenteredTitle(String text, Color color) {
     return Container(
       width: double.infinity,
@@ -585,7 +575,12 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           const SizedBox(width: 8.0),
-          DecorateText(text: text, fontSize: 24, color: color),
+          UnderlinedText(
+            text: text,
+            fontSize: 24,
+            color: color,
+            fontWeight: FontWeight.bold, // 굵은 텍스트로 설정
+          ),
         ],
       ),
     );
