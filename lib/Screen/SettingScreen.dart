@@ -3,7 +3,7 @@ import 'package:ono/Model/LoginStatus.dart';
 import 'package:provider/provider.dart';
 import '../GlobalModule/Theme/DecorateText.dart';
 import '../GlobalModule/Theme/ThemeHandler.dart';
-import '../Service/Auth/AuthService.dart';
+import '../Provider/UserProvider.dart';
 import '../Service/ScreenUtil/SettingScreenService.dart';
 
 class SettingScreen extends StatefulWidget {
@@ -24,7 +24,7 @@ class _SettingScreenState extends State<SettingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final authService = Provider.of<AuthService>(context);
+    final authService = Provider.of<UserProvider>(context);
     final themeProvider = Provider.of<ThemeHandler>(context);
 
     return Scaffold(

@@ -10,17 +10,17 @@ import 'package:ono/Provider/FoldersProvider.dart';
 import 'package:ono/Service/Auth/GuestAuthService.dart';
 import 'package:ono/Service/Auth/KakaoAuthService.dart';
 import 'package:ono/Service/Auth/NaverAuthService.dart';
-import '../../Config/AppConfig.dart';
-import '../../Provider/TokenProvider.dart';
-import 'AppleAuthService.dart';
-import 'GoogleAuthService.dart';
+import '../Config/AppConfig.dart';
+import 'TokenProvider.dart';
+import '../Service/Auth/AppleAuthService.dart';
+import '../Service/Auth/GoogleAuthService.dart';
 
-class AuthService with ChangeNotifier {
+class UserProvider with ChangeNotifier {
   final storage = const FlutterSecureStorage();
   final FoldersProvider foldersProvider;
   final TokenProvider tokenProvider = TokenProvider();
 
-  AuthService(this.foldersProvider);
+  UserProvider(this.foldersProvider);
 
   LoginStatus _isLoggedIn = LoginStatus.waiting;
   int _userId = 0;

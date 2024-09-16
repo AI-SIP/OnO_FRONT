@@ -7,7 +7,7 @@ import '../Config/AppConfig.dart';
 import '../GlobalModule/Theme/DecorateText.dart';
 import '../GlobalModule/Theme/GridPainter.dart';
 import '../GlobalModule/Theme/ThemeHandler.dart';
-import '../Service/Auth/AuthService.dart';
+import '../Provider/UserProvider.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -57,7 +57,7 @@ class HomeScreen extends StatelessWidget {
             ),
             onPressed: () {
               Navigator.of(ctx).pop();
-              Provider.of<AuthService>(context, listen: false)
+              Provider.of<UserProvider>(context, listen: false)
                   .signInWithGuest();
             },
           ),
@@ -158,7 +158,7 @@ class HomeScreen extends StatelessWidget {
                 ),
               ),
               SizedBox(height: screenHeight * 0.06),
-              Consumer<AuthService>(
+              Consumer<UserProvider>(
                 builder: (context, authService, child) {
                   double buttonWidth = screenWidth * 0.7;
                   double buttonHeight = screenHeight * 0.05;

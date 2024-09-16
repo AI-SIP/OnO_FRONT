@@ -13,7 +13,7 @@ import 'Screen/DirectoryScreen.dart';
 import 'Screen/ProblemRegisterScreen.dart';
 import 'Screen/SettingScreen.dart';
 import 'GlobalModule/Theme/AppbarWithLogo.dart';
-import 'Service/Auth/AuthService.dart';
+import 'Provider/UserProvider.dart';
 
 void main() async {
   await dotenv.load(fileName: ".env");
@@ -24,7 +24,7 @@ void main() async {
       providers: [
         ChangeNotifierProvider(create: (_) => FoldersProvider()),
         ChangeNotifierProvider(
-          create: (context) => AuthService(
+          create: (context) => UserProvider(
             Provider.of<FoldersProvider>(context, listen: false),
           ),
         ),
@@ -92,7 +92,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
 
   Future<void> autoLogin() async {
     try {
-      await Provider.of<AuthService>(context, listen: false).autoLogin();
+      await Provider.of<UserProvider>(context, listen: false).autoLogin();
     } catch (e) {
       log('Auto login failed: $e');
     }

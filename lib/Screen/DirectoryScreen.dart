@@ -15,7 +15,7 @@ import '../Model/ProblemRegisterModel.dart';
 import '../Service/ScreenUtil/DirectoryScreenService.dart';
 import '../Model/ProblemModel.dart';
 import '../Model/FolderThumbnailModel.dart';
-import '../Service/Auth/AuthService.dart';
+import '../Provider/UserProvider.dart';
 
 class DirectoryScreen extends StatefulWidget {
   const DirectoryScreen({super.key});
@@ -43,7 +43,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final authService = Provider.of<AuthService>(context);
+    final authService = Provider.of<UserProvider>(context);
     final themeProvider = Provider.of<ThemeHandler>(context);
     final foldersProvider = Provider.of<FoldersProvider>(context);
 
