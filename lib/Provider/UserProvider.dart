@@ -155,6 +155,61 @@ class UserProvider with ChangeNotifier {
     }
   }
 
+  Future<void> updateUser({
+    String? email,
+    String? name,
+    String? identifier,
+    String? userType,
+  }) async {
+    try {
+      // Access token 가져오기
+      final accessToken = await tokenProvider.getAccessToken();
+      if (accessToken == null) {
+        throw Exception("Access token is not available");
+      }
+
+      // 서버 URL
+      final url = Uri.parse('${AppConfig.baseUrl}/api/user');
+
+      // 유저 업데이트 요청을 위한 데이터
+      final Map<String, dynamic> requestBody = {};
+
+      // 각 필드가 null이 아닐 때만 requestBody에 포함
+      if (email != null) requestBody['email'] = email;
+      if (name != null) requestBody['name'] = name;
+      if (identifier != null) requestBody['identifier'] = identifier;
+      if (userType != null) requestBody['type'] = userType;
+
+      // PATCH 요청
+      final response = await http.patch(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $accessToken', // 토큰 인증
+        },
+        body: jsonEncode(requestBody), // JSON으로 직렬화
+      );
+
+      // 성공적으로 유저 정보가 업데이트되었을 경우
+      if (response.statusCode == 200) {
+        final responseBody = jsonDecode(utf8.decode(response.bodyBytes));
+        if (responseBody['userName'] != null) _userName = responseBody['userName'];
+        if (responseBody['userEmail'] != null) _userEmail = responseBody['userEmail'];
+
+        log("User info updated successfully: $responseBody");
+        notifyListeners(); // 상태 변화 알림
+      } else {
+        // 업데이트 실패 처리
+        log('Failed to update user info: ${response.statusCode}');
+        throw Exception('Failed to update user info');
+      }
+    } catch (error) {
+      // 예외 처리
+      log('Error updating user info: $error');
+      throw Exception('Error updating user info');
+    }
+  }
+
   Future<void> autoLogin() async {
     _isLoggedIn = LoginStatus.waiting;
     String? refreshToken = await storage.read(key: 'refreshToken');

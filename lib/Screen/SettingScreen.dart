@@ -29,80 +29,78 @@ class _SettingScreenState extends State<SettingScreen> {
 
     return Scaffold(
       backgroundColor: Colors.white,
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 30.0), // 좌우 여백
-        child: Column(
-          children: [
-            Expanded(
-              child: ListView(
-                children: [
-                  const SizedBox(height: 10),
-                  _buildUserNameTile(
-                    context: context,
-                    userName: userProvider.userName,
-                    themeProvider: themeProvider,
-                  ),
-                  const Divider(),
-                  _buildProblemCountTile(
-                    problemCount: userProvider.problemCount,
-                    themeProvider: themeProvider,
-                  ),
-                  const Divider(),
-                  _buildSettingItemWithColor(
-                    title: '테마 변경',
-                    subtitle: '앱의 테마를 변경하세요.',
-                    themeColor: themeProvider.primaryColor, // 현재 테마 색상
-                    context: context,
-                    onTap: () {
-                      _settingScreenService.showThemeDialog(context);
-                    },
-                  ),
-                  const Divider(),
-                  _buildSettingItem(
-                    title: '의견 남기기',
-                    subtitle: '앱에 대한 의견을 보내주세요.',
-                    context: context,
-                    onTap: () {
-                      _settingScreenService.openFeedbackForm();
-                    },
-                  ),
-                ],
-              ),
+      body: Column(
+        children: [
+          Expanded(
+            child: ListView(
+              padding: const EdgeInsets.symmetric(horizontal: 30.0),
+              children: [
+                const SizedBox(height: 10),
+                _buildUserNameTile(
+                  context: context,
+                  userName: userProvider.userName,
+                  themeProvider: themeProvider,
+                ),
+                const Divider(),
+                _buildProblemCountTile(
+                  problemCount: userProvider.problemCount,
+                  themeProvider: themeProvider,
+                ),
+                const Divider(),
+                _buildSettingItemWithColor(
+                  title: '테마 변경',
+                  subtitle: '앱의 테마를 변경하세요.',
+                  themeColor: themeProvider.primaryColor,
+                  context: context,
+                  onTap: () {
+                    _settingScreenService.showThemeDialog(context);
+                  },
+                ),
+                const Divider(),
+                _buildSettingItem(
+                  title: '의견 남기기',
+                  subtitle: '앱에 대한 의견을 보내주세요.',
+                  context: context,
+                  onTap: () {
+                    _settingScreenService.openFeedbackForm();
+                  },
+                ),
+              ],
             ),
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 20.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  _buildBottomButton(
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 20.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _buildBottomButton(
+                  context,
+                  '로그아웃',
+                  Colors.white,
+                  Colors.red,
+                      () => _settingScreenService.showConfirmationDialog(
                     context,
                     '로그아웃',
-                    Colors.white,
-                    Colors.red,
-                        () => _settingScreenService.showConfirmationDialog(
-                      context,
-                      '로그아웃',
-                      '정말 로그아웃 하시겠습니까?\n(게스트 유저의 경우 모든 정보가 삭제됩니다.)',
-                          () => _settingScreenService.logout(context),
-                    ),
+                    '정말 로그아웃 하시겠습니까?\n(게스트 유저의 경우 모든 정보가 삭제됩니다.)',
+                        () => _settingScreenService.logout(context),
                   ),
-                  _buildBottomButton(
+                ),
+                _buildBottomButton(
+                  context,
+                  '회원 탈퇴',
+                  Colors.red,
+                  Colors.white,
+                      () => _settingScreenService.showConfirmationDialog(
                     context,
                     '회원 탈퇴',
-                    Colors.red,
-                    Colors.white,
-                        () => _settingScreenService.showConfirmationDialog(
-                      context,
-                      '회원 탈퇴',
-                      '정말 회원 탈퇴 하시겠습니까?\n그동안 작성했던 모든 오답노트 및 개인정보가 삭제됩니다. 이 작업은 되돌릴 수 없습니다.',
-                          () => _settingScreenService.deleteAccount(context),
-                    ),
+                    '정말 회원 탈퇴 하시겠습니까?\n그동안 작성했던 모든 오답노트 및 개인정보가 삭제됩니다. 이 작업은 되돌릴 수 없습니다.',
+                        () => _settingScreenService.deleteAccount(context),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -122,7 +120,7 @@ class _SettingScreenState extends State<SettingScreen> {
       ),
       trailing: TextButton(
         onPressed: () {
-          _showChangeNameDialog(context);
+          _showChangeNameDialog(context, userName);
         },
         child: DecorateText(
           text: '이름 수정',
@@ -174,7 +172,7 @@ class _SettingScreenState extends State<SettingScreen> {
         color: themeColor.withOpacity(0.6),
       ),
       trailing: Container(
-        width: 40,  // 원의 크기를 키움
+        width: 40,
         height: 40,
         decoration: BoxDecoration(
           color: themeColor,
@@ -230,7 +228,11 @@ class _SettingScreenState extends State<SettingScreen> {
   }
 
   // 이름 변경 다이얼로그
-  void _showChangeNameDialog(BuildContext context) {
+  void _showChangeNameDialog(BuildContext context, String currentName) {
+    final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final TextEditingController nameController = TextEditingController(text: currentName);
+
     showDialog(
       context: context,
       builder: (context) {
@@ -238,13 +240,25 @@ class _SettingScreenState extends State<SettingScreen> {
           title: DecorateText(
             text: '이름 수정',
             fontSize: 24,
-            color: Provider.of<ThemeHandler>(context, listen: false).primaryColor,
+            color: themeProvider.primaryColor,
           ),
           content: TextField(
-            decoration: const InputDecoration(
-              hintText: '새 이름을 입력하세요',
+            controller: nameController,
+            style: TextStyle(
+              color: themeProvider.primaryColor,
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              fontFamily: 'font1',
             ),
-            // 이름 입력 처리 로직
+            decoration: InputDecoration(
+              hintText: '수정할 이름을 입력하세요',
+              hintStyle: TextStyle(
+                color: themeProvider.desaturateColor,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                fontFamily: 'font1',
+              ),
+            ),
           ),
           actions: [
             TextButton(
@@ -253,19 +267,28 @@ class _SettingScreenState extends State<SettingScreen> {
               },
               child: const DecorateText(
                 text: '취소',
-                fontSize: 18,
+                fontSize: 20,
                 color: Colors.black,
               ),
             ),
             TextButton(
-              onPressed: () {
-                // 이름 수정 로직
+              onPressed: () async {
+                String newName = nameController.text;
+                if (newName.isNotEmpty) {
+                  // 이름 업데이트 요청, 나머지 필드는 null로 보냄
+                  await userProvider.updateUser(
+                    name: newName,
+                    email: null,
+                    identifier: null,
+                    userType: null,
+                  );
+                }
                 Navigator.pop(context);
               },
               child: DecorateText(
-                text: '확인',
-                fontSize: 18,
-                color: Provider.of<ThemeHandler>(context, listen: false).primaryColor,
+                text: '수정',
+                fontSize: 20,
+                color: themeProvider.primaryColor,
               ),
             ),
           ],
