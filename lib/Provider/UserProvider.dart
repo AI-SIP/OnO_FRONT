@@ -10,6 +10,7 @@ import 'package:ono/Provider/FoldersProvider.dart';
 import 'package:ono/Service/Auth/GuestAuthService.dart';
 import 'package:ono/Service/Auth/KakaoAuthService.dart';
 import 'package:ono/Service/Auth/NaverAuthService.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 import '../Config/AppConfig.dart';
 import 'TokenProvider.dart';
 import '../Service/Auth/AppleAuthService.dart';
@@ -118,6 +119,15 @@ class UserProvider with ChangeNotifier {
       _userEmail = responseBody['userEmail'];
       _isLoggedIn = LoginStatus.login;
 
+      // Sentry에 유저 정보 설정
+      Sentry.configureScope((scope) {
+        scope.setUser(SentryUser(
+          id: _userId.toString(),  // 유저 아이디 설정
+          username: _userName,     // 유저 이름 설정
+          email: _userEmail,       // 유저 이메일 설정
+        ));
+      });
+
       _problemCount = await getUserProblemCount();
       await foldersProvider.fetchRootFolderContents();
     } else {
@@ -128,29 +138,38 @@ class UserProvider with ChangeNotifier {
   }
 
   Future<int> getUserProblemCount() async{
-    final accessToken = await tokenProvider.getAccessToken();
-    if (accessToken == null) {
-      log('Access token is not available');
-      return 0;
-    }
+    try{
+      final accessToken = await tokenProvider.getAccessToken();
+      if (accessToken == null) {
+        log('Access token is not available');
+        return 0;
+      }
 
-    final url = Uri.parse('${AppConfig.baseUrl}/api/user/problemCount');
-    final response = await http.get(
-      url,
-      headers: {
-        'Content-Type': 'application/json; charset=UTF-8',
-        'Authorization': 'Bearer $accessToken',
-      },
-    );
+      final url = Uri.parse('${AppConfig.baseUrl}/api/user/problemCount');
+      final response = await http.get(
+        url,
+        headers: {
+          'Content-Type': 'application/json; charset=UTF-8',
+          'Authorization': 'Bearer $accessToken',
+        },
+      );
 
-    if (response.statusCode == 200) {
-      int userProblemCount = int.parse(response.body);
+      if (response.statusCode == 200) {
+        int userProblemCount = int.parse(response.body);
 
-      log('user problem count : $userProblemCount');
+        log('user problem count : $userProblemCount');
 
-      return userProblemCount;
-    } else {
-      log('Failed to get user problem count');
+        return userProblemCount;
+      } else {
+        throw Exception('Failed to get user problem count');
+      }
+    } catch(error, stackTrace) {
+      log('error in getUserProblemCount() : $error');
+      await Sentry.captureException(
+        error,
+        stackTrace: stackTrace,
+      );
+
       return 0;
     }
   }
@@ -203,10 +222,12 @@ class UserProvider with ChangeNotifier {
         log('Failed to update user info: ${response.statusCode}');
         throw Exception('Failed to update user info');
       }
-    } catch (error) {
-      // 예외 처리
+    } catch (error, stackTrace) {
       log('Error updating user info: $error');
-      throw Exception('Error updating user info');
+      await Sentry.captureException(
+        error,
+        stackTrace: stackTrace,
+      );
     }
   }
 
@@ -238,9 +259,12 @@ class UserProvider with ChangeNotifier {
       }
 
       resetUserInfo();
-    } catch (error) {
+    } catch (error, stackTrace) {
       log('Error signing out: $error');
-      throw Exception('Failed to sign out');
+      await Sentry.captureException(
+        error,
+        stackTrace: stackTrace,
+      );
     }
   }
 
@@ -263,7 +287,7 @@ class UserProvider with ChangeNotifier {
     else if (loginMethod == 'guest') {
 
     } else {
-      throw Exception("Unknown login method");
+
     }
 
     // 서버에서 사용자 계정 삭제
@@ -289,8 +313,12 @@ class UserProvider with ChangeNotifier {
         log('Failed to delete account: ${response.reasonPhrase}');
         throw Exception("Failed to delete account");
       }
-    } catch (error) {
+    } catch (error, stackTrace) {
       log('Account deletion error: $error');
+      await Sentry.captureException(
+        error,
+        stackTrace: stackTrace,
+      );
     }
   }
 

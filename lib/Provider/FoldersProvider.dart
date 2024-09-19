@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:ono/GlobalModule/Util/ProblemSorting.dart';
 import 'package:ono/GlobalModule/Util/ReviewHandler.dart';
 import 'package:ono/Model/FolderThumbnailModel.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 
 import '../Config/AppConfig.dart';
 import '../Model/FolderModel.dart';
@@ -26,70 +27,84 @@ class FoldersProvider with ChangeNotifier {
   List<ProblemModel> get problems => List.unmodifiable(_problems);
 
   Future<void> fetchRootFolderContents() async {
-    final accessToken = await tokenProvider.getAccessToken();
-    if (accessToken == null) {
-      log('Access token is not available');
-      return;
-    }
+    try {
+      final accessToken = await tokenProvider.getAccessToken();
+      if (accessToken == null) {
+        throw Exception('Access token is not available');
+      }
 
-    final url = Uri.parse('${AppConfig.baseUrl}/api/folder');
-    final response = await http.get(
-      url,
-      headers: {
-        'Content-Type': 'application/json; charset=UTF-8',
-        'Authorization': 'Bearer $accessToken',
-      },
-    );
+      final url = Uri.parse('${AppConfig.baseUrl}/api/folder');
+      final response = await http.get(
+        url,
+        headers: {
+          'Content-Type': 'application/json; charset=UTF-8',
+          'Authorization': 'Bearer $accessToken',
+        },
+      );
 
-    if (response.statusCode == 200) {
-      final jsonResponse = json.decode(utf8.decode(response.bodyBytes));
+      if (response.statusCode == 200) {
+        final jsonResponse = json.decode(utf8.decode(response.bodyBytes));
 
-      // 폴더 및 문제 데이터 초기화
-      _currentFolder = FolderModel.fromJson(jsonResponse);
-      _problems = (jsonResponse['problems'] as List)
-          .map((e) => ProblemModel.fromJson(e))
-          .toList();
+        // 폴더 및 문제 데이터 초기화
+        _currentFolder = FolderModel.fromJson(jsonResponse);
+        _problems = (jsonResponse['problems'] as List)
+            .map((e) => ProblemModel.fromJson(e))
+            .toList();
 
-      sortProblemsByOption(sortOption);
-      currentFolderId = jsonResponse['folderId']; // 현재 폴더 ID 업데이트
-      notifyListeners(); // 데이터 갱신
-      log('Folder contents fetched: ${_currentFolder?.folderName}, ${problems.length} problems');
-    } else {
-      log('Failed to load folder contents');
+        sortProblemsByOption(sortOption);
+        currentFolderId = jsonResponse['folderId']; // 현재 폴더 ID 업데이트
+        notifyListeners(); // 데이터 갱신
+        log('Folder contents fetched: ${_currentFolder?.folderName}, ${problems.length} problems');
+      } else {
+        throw Exception('Failed to load RootFolderContents');
+      }
+    } catch (error, stackTrace) {
+      log('Error for fetchRootFolderContents: $error');
+      await Sentry.captureException(
+        error,
+        stackTrace: stackTrace,
+      );
     }
   }
 
   Future<void> fetchCurrentFolderContents() async {
-    final accessToken = await tokenProvider.getAccessToken();
-    if (accessToken == null) {
-      log('Access token is not available');
-      return;
-    }
+    try {
+      final accessToken = await tokenProvider.getAccessToken();
+      if (accessToken == null) {
+        throw Exception('Access token is not available');
+      }
 
-    final url = Uri.parse('${AppConfig.baseUrl}/api/folder/$currentFolderId');
-    final response = await http.get(
-      url,
-      headers: {
-        'Content-Type': 'application/json; charset=UTF-8',
-        'Authorization': 'Bearer $accessToken',
-      },
-    );
+      final url = Uri.parse('${AppConfig.baseUrl}/api/folder/$currentFolderId');
+      final response = await http.get(
+        url,
+        headers: {
+          'Content-Type': 'application/json; charset=UTF-8',
+          'Authorization': 'Bearer $accessToken',
+        },
+      );
 
-    if (response.statusCode == 200) {
-      final jsonResponse = json.decode(utf8.decode(response.bodyBytes));
+      if (response.statusCode == 200) {
+        final jsonResponse = json.decode(utf8.decode(response.bodyBytes));
 
-      // 폴더 및 문제 데이터 초기화
-      _currentFolder = FolderModel.fromJson(jsonResponse);
-      _problems = (jsonResponse['problems'] as List)
-          .map((e) => ProblemModel.fromJson(e))
-          .toList();
-      currentFolderId = jsonResponse['folderId'];
+        // 폴더 및 문제 데이터 초기화
+        _currentFolder = FolderModel.fromJson(jsonResponse);
+        _problems = (jsonResponse['problems'] as List)
+            .map((e) => ProblemModel.fromJson(e))
+            .toList();
+        currentFolderId = jsonResponse['folderId'];
 
-      sortProblemsByOption(sortOption);
-      notifyListeners(); // 데이터 갱신
-      log('Folder contents fetched: ${_currentFolder?.folderName}, ${problems.length} problems');
-    } else {
-      log('Failed to load folder contents');
+        sortProblemsByOption(sortOption);
+        notifyListeners(); // 데이터 갱신
+        log('Folder contents fetched: ${_currentFolder?.folderName}, ${problems.length} problems');
+      } else {
+        throw Exception('Failed to load CurrentFolderContents');
+      }
+    } catch (error, stackTrace) {
+      log('Error for fetchCurrentFolderContents: $error');
+      await Sentry.captureException(
+        error,
+        stackTrace: stackTrace,
+      );
     }
   }
 
@@ -101,157 +116,194 @@ class FoldersProvider with ChangeNotifier {
       return;
     }
 
-    final accessToken = await tokenProvider.getAccessToken();
-    if (accessToken == null) {
-      log('Access token is not available');
-      return;
-    }
+    try {
+      final accessToken = await tokenProvider.getAccessToken();
+      if (accessToken == null) {
+        throw Exception('Access token is not available');
+      }
 
-    final url = Uri.parse('${AppConfig.baseUrl}/api/folder/$folderId');
-    final response = await http.get(
-      url,
-      headers: {
-        'Content-Type': 'application/json; charset=UTF-8',
-        'Authorization': 'Bearer $accessToken',
-      },
-    );
+      final url = Uri.parse('${AppConfig.baseUrl}/api/folder/$folderId');
+      final response = await http.get(
+        url,
+        headers: {
+          'Content-Type': 'application/json; charset=UTF-8',
+          'Authorization': 'Bearer $accessToken',
+        },
+      );
 
-    if (response.statusCode == 200) {
-      final jsonResponse = json.decode(utf8.decode(response.bodyBytes));
+      if (response.statusCode == 200) {
+        final jsonResponse = json.decode(utf8.decode(response.bodyBytes));
 
-      // 폴더 및 문제 데이터 초기화
-      _currentFolder = FolderModel.fromJson(jsonResponse);
-      _problems = (jsonResponse['problems'] as List)
-          .map((e) => ProblemModel.fromJson(e))
-          .toList();
+        // 폴더 및 문제 데이터 초기화
+        _currentFolder = FolderModel.fromJson(jsonResponse);
+        _problems = (jsonResponse['problems'] as List)
+            .map((e) => ProblemModel.fromJson(e))
+            .toList();
 
-      sortProblemsByOption(sortOption);
-      currentFolderId = folderId; // 현재 폴더 ID 업데이트
-      notifyListeners(); // 데이터 갱신
-      log('Folder contents fetched folderId : ${_currentFolder?.folderId}, folderName : ${_currentFolder?.folderName}, ${problems.length} problems');
-    } else {
-      log('Failed to load folder contents');
+        sortProblemsByOption(sortOption);
+        currentFolderId = folderId; // 현재 폴더 ID 업데이트
+        notifyListeners(); // 데이터 갱신
+        log('Folder contents fetched folderId : ${_currentFolder?.folderId}, folderName : ${_currentFolder?.folderName}, ${problems.length} problems');
+      } else {
+        throw Exception('Failed to load FolderContents');
+      }
+    } catch (error, stackTrace) {
+      log('Error for fetchFolderContents: $error');
+      await Sentry.captureException(
+        error,
+        stackTrace: stackTrace,
+      );
     }
   }
 
   Future<List<FolderThumbnailModel>> fetchAllFolderThumbnails() async {
-    final accessToken = await tokenProvider.getAccessToken();
-    if (accessToken == null) {
-      log('Access token is not available');
-      return [];
-    }
+    try {
+      final accessToken = await tokenProvider.getAccessToken();
+      if (accessToken == null) {
+        throw Exception('Access token is not available');
+      }
 
-    final url = Uri.parse('${AppConfig.baseUrl}/api/folder/folders');
-    final response = await http.get(
-      url,
-      headers: {
-        'Content-Type': 'application/json; charset=UTF-8',
-        'Authorization': 'Bearer $accessToken',
-      },
-    );
+      final url = Uri.parse('${AppConfig.baseUrl}/api/folder/folders');
+      final response = await http.get(
+        url,
+        headers: {
+          'Content-Type': 'application/json; charset=UTF-8',
+          'Authorization': 'Bearer $accessToken',
+        },
+      );
 
-    if (response.statusCode == 200) {
-      final jsonResponse = json.decode(utf8.decode(response.bodyBytes));
-      log('AllFolderThumbnail Fetch Complete : $jsonResponse');
+      if (response.statusCode == 200) {
+        final jsonResponse = json.decode(utf8.decode(response.bodyBytes));
+        log('AllFolderThumbnail Fetch Complete : $jsonResponse');
 
-      // JSON 응답을 FolderThumbnailModel 리스트로 변환
-      return (jsonResponse as List)
-          .map((e) => FolderThumbnailModel.fromJson(e))
-          .toList();
-    } else {
-      log('Failed to load folder contents');
+        // JSON 응답을 FolderThumbnailModel 리스트로 변환
+        return (jsonResponse as List)
+            .map((e) => FolderThumbnailModel.fromJson(e))
+            .toList();
+      } else {
+        throw Exception('Failed to load AllFolderThumbnails');
+      }
+    } catch (error, stackTrace) {
+      log('Error for fetchCurrentFolderContents: $error');
+      await Sentry.captureException(
+        error,
+        stackTrace: stackTrace,
+      );
+
       return [];
     }
   }
 
   // 폴더 생성
   Future<void> createFolder(String folderName) async {
-    final accessToken = await tokenProvider.getAccessToken();
-    if (accessToken == null) {
-      log('Access token is not available');
-      return;
-    }
+    try {
+      final accessToken = await tokenProvider.getAccessToken();
+      if (accessToken == null) {
+        throw Exception('Access token is not available');
+      }
 
-    final url = Uri.parse('${AppConfig.baseUrl}/api/folder');
-    final response = await http.post(
-      url,
-      headers: {
-        'Content-Type': 'application/json; charset=UTF-8',
-        'Authorization': 'Bearer $accessToken',
-      },
-      body: json.encode({
-        'folderName': folderName,
-        'parentFolderId': currentFolderId,
-      }),
-    );
+      final url = Uri.parse('${AppConfig.baseUrl}/api/folder');
+      final response = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json; charset=UTF-8',
+          'Authorization': 'Bearer $accessToken',
+        },
+        body: json.encode({
+          'folderName': folderName,
+          'parentFolderId': currentFolderId,
+        }),
+      );
 
-    if (response.statusCode == 200) {
-      log('Folder successfully created');
-      // 폴더를 생성 후 부모 폴더 내용을 다시 로드
-      await fetchCurrentFolderContents();
-    } else {
-      log('Failed to create folder');
+      if (response.statusCode == 200) {
+        log('Folder successfully created');
+        // 폴더를 생성 후 부모 폴더 내용을 다시 로드
+        await fetchCurrentFolderContents();
+      } else {
+        throw Exception('Failed to create folder');
+      }
+    } catch (error, stackTrace) {
+      log('Error for fetchCurrentFolderContents: $error');
+      await Sentry.captureException(
+        error,
+        stackTrace: stackTrace,
+      );
     }
   }
 
   Future<void> updateFolder(String? newName, int? parentId) async {
-    final accessToken = await tokenProvider.getAccessToken();
-    if (accessToken == null) {
-      log('Access token is not available');
-      return;
-    }
+    try {
+      final accessToken = await tokenProvider.getAccessToken();
+      if (accessToken == null) {
+        throw Exception('Access token is not available');
+      }
 
-    final url = Uri.parse('${AppConfig.baseUrl}/api/folder/$currentFolderId');
-    final response = await http.patch(
-      url,
-      headers: {
-        'Content-Type': 'application/json; charset=UTF-8',
-        'Authorization': 'Bearer $accessToken',
-      },
-      body: json.encode({
-        'folderName': newName,
-        'parentFolderId': parentId, // 폴더의 상위 폴더 ID가 필요한 경우 추가
-      }),
-    );
+      final url = Uri.parse('${AppConfig.baseUrl}/api/folder/$currentFolderId');
+      final response = await http.patch(
+        url,
+        headers: {
+          'Content-Type': 'application/json; charset=UTF-8',
+          'Authorization': 'Bearer $accessToken',
+        },
+        body: json.encode({
+          'folderName': newName,
+          'parentFolderId': parentId, // 폴더의 상위 폴더 ID가 필요한 경우 추가
+        }),
+      );
 
-    if (response.statusCode == 200) {
-      log('Folder name successfully updated to $newName');
-      // 폴더 내용 다시 로드
-      await fetchCurrentFolderContents();
-    } else {
-      log('Failed to update folder name: ${response.reasonPhrase}');
+      if (response.statusCode == 200) {
+        log('Folder name successfully updated to $newName');
+        // 폴더 내용 다시 로드
+        await fetchCurrentFolderContents();
+      } else {
+        throw Exception(
+            'Failed to update folder name: ${response.reasonPhrase}');
+      }
+    } catch (error, stackTrace) {
+      log('Error for update folder name: $error');
+      await Sentry.captureException(
+        error,
+        stackTrace: stackTrace,
+      );
     }
   }
 
   // 폴더 삭제
   Future<void> deleteFolder(int folderId) async {
-    final accessToken = await tokenProvider.getAccessToken();
-    if (accessToken == null) {
-      log('Access token is not available');
-      return;
-    }
+    try {
+      final accessToken = await tokenProvider.getAccessToken();
+      if (accessToken == null) {
+        throw Exception('Access token is not available');
+      }
 
-    final url = Uri.parse('${AppConfig.baseUrl}/api/folder/$folderId');
-    final response = await http.delete(
-      url,
-      headers: {
-        'Content-Type': 'application/json; charset=UTF-8',
-        'Authorization': 'Bearer $accessToken',
-      },
-    );
+      final url = Uri.parse('${AppConfig.baseUrl}/api/folder/$folderId');
+      final response = await http.delete(
+        url,
+        headers: {
+          'Content-Type': 'application/json; charset=UTF-8',
+          'Authorization': 'Bearer $accessToken',
+        },
+      );
 
-    if (response.statusCode == 200) {
-      log('folderId: $folderId successfully deleted');
+      if (response.statusCode == 200) {
+        log('folderId: $folderId successfully deleted');
 
-      // JSON 응답 파싱
-      final jsonResponse = json.decode(utf8.decode(response.bodyBytes));
+        // JSON 응답 파싱
+        final jsonResponse = json.decode(utf8.decode(response.bodyBytes));
 
-      int parentFolderId = jsonResponse['folderId'] as int;
+        int parentFolderId = jsonResponse['folderId'] as int;
 
-      // 부모 폴더 내용 불러오기
-      await fetchFolderContents(folderId: parentFolderId);
-    } else {
-      log('Failed to delete folder');
+        // 부모 폴더 내용 불러오기
+        await fetchFolderContents(folderId: parentFolderId);
+      } else {
+        throw Exception('Failed to delete folder');
+      }
+    } catch (error, stackTrace) {
+      log('Error for delete folder: $error');
+      await Sentry.captureException(
+        error,
+        stackTrace: stackTrace,
+      );
     }
   }
 
@@ -262,58 +314,71 @@ class FoldersProvider with ChangeNotifier {
 
   Future<void> submitProblem(
       ProblemRegisterModel problemData, BuildContext context) async {
-    final accessToken = await tokenProvider.getAccessToken();
-    if (accessToken == null) {
-      throw Exception("JWT token is not available");
-    }
-
-    var uri = Uri.parse('${AppConfig.baseUrl}/api/problem');
-    var request = http.MultipartRequest('POST', uri)
-      ..headers.addAll({'Authorization': 'Bearer $accessToken'});
-    request.fields['solvedAt'] = problemData.solvedAt?.toIso8601String() ?? "";
-    request.fields['reference'] = problemData.reference ?? "";
-    request.fields['memo'] = problemData.memo ?? "";
-    request.fields['folderId'] = (problemData.folderId ?? currentFolderId).toString();
-    request.fields['process'] = problemData.isProcess! ? 'true' : 'false';
-
-    final problemImage = problemData.problemImage;
-    final solveImage = problemData.solveImage;
-    final answerImage = problemData.answerImage;
-    final colors = problemData.colors;
-
-    if (problemImage != null) {
-      request.files.add(
-          await http.MultipartFile.fromPath('problemImage', problemImage.path));
-      if (colors != null) {
-        request.fields['colors'] = jsonEncode(colors);
-      }
-    }
-    if (solveImage != null) {
-      request.files.add(
-          await http.MultipartFile.fromPath('solveImage', solveImage.path));
-    }
-    if (answerImage != null) {
-      request.files.add(
-          await http.MultipartFile.fromPath('answerImage', answerImage.path));
-    }
-
     try {
-      var streamedResponse = await request.send();
-      var response = await http.Response.fromStream(streamedResponse);
-      if (response.statusCode == 200) {
-        log('Problem successfully submitted');
-        await fetchRootFolderContents();
-
-        int userProblemCount = await getUserProblemCount();
-        if (userProblemCount > 0 && userProblemCount % 10 == 0) {
-          reviewHandler.requestReview(context); // 문제 개수가 10의 배수일 때 리뷰 요청
-          //reviewHandler.openReviewPage();
-        }
-      } else {
-        log('Failed to submit problem: ${response.reasonPhrase}');
+      final accessToken = await tokenProvider.getAccessToken();
+      if (accessToken == null) {
+        throw Exception("JWT token is not available");
       }
-    } catch (e) {
-      log('Error submitting problem: $e');
+
+      var uri = Uri.parse('${AppConfig.baseUrl}/api/problem');
+      var request = http.MultipartRequest('POST', uri)
+        ..headers.addAll({'Authorization': 'Bearer $accessToken'});
+      request.fields['solvedAt'] =
+          problemData.solvedAt?.toIso8601String() ?? "";
+      request.fields['reference'] = problemData.reference ?? "";
+      request.fields['memo'] = problemData.memo ?? "";
+      request.fields['folderId'] =
+          (problemData.folderId ?? currentFolderId).toString();
+      request.fields['process'] = problemData.isProcess! ? 'true' : 'false';
+
+      final problemImage = problemData.problemImage;
+      final solveImage = problemData.solveImage;
+      final answerImage = problemData.answerImage;
+      final colors = problemData.colors;
+
+      if (problemImage != null) {
+        request.files.add(await http.MultipartFile.fromPath(
+            'problemImage', problemImage.path));
+        if (colors != null) {
+          request.fields['colors'] = jsonEncode(colors);
+        }
+      }
+      if (solveImage != null) {
+        request.files.add(
+            await http.MultipartFile.fromPath('solveImage', solveImage.path));
+      }
+      if (answerImage != null) {
+        request.files.add(
+            await http.MultipartFile.fromPath('answerImage', answerImage.path));
+      }
+
+      try {
+        var streamedResponse = await request.send();
+        var response = await http.Response.fromStream(streamedResponse);
+        if (response.statusCode == 200) {
+          log('Problem successfully submitted');
+          await fetchRootFolderContents();
+
+          int userProblemCount = await getUserProblemCount();
+          if (userProblemCount > 0 && userProblemCount % 10 == 0) {
+            reviewHandler.requestReview(context); // 문제 개수가 10의 배수일 때 리뷰 요청
+          }
+        } else {
+          log('Failed to submit problem: ${response.reasonPhrase}');
+        }
+      } catch (error, stackTrace) {
+        log('Error submit problem: $error');
+        await Sentry.captureException(
+          error,
+          stackTrace: stackTrace,
+        );
+      }
+    } catch (error, stackTrace) {
+      log('Error for submit problem: $error');
+      await Sentry.captureException(
+        error,
+        stackTrace: stackTrace,
+      );
     }
   }
 
@@ -325,134 +390,165 @@ class FoldersProvider with ChangeNotifier {
       if (problemDetails != null) {
         return ProblemModel.fromJson(problemDetails.toJson());
       } else {
-        log('Problem with ID $problemId not found');
-        return null;
+        throw Exception('Problem with ID $problemId not found');
       }
-    } catch (e) {
-      log('Error fetching problem details for ID $problemId: $e');
+    } catch (error, stackTrace) {
+      log('Error fetching problem details for ID $problemId: $error');
+      await Sentry.captureException(
+        error,
+        stackTrace: stackTrace,
+      );
       return null;
     }
   }
 
-  Future<int> getUserProblemCount() async{
-    final accessToken = await tokenProvider.getAccessToken();
-    if (accessToken == null) {
-      log('Access token is not available');
-      return 0;
-    }
+  Future<int> getUserProblemCount() async {
+    try {
+      final accessToken = await tokenProvider.getAccessToken();
+      if (accessToken == null) {
+        throw Exception('Access token is not available');
+      }
 
-    final url = Uri.parse('${AppConfig.baseUrl}/api/user/problemCount');
-    final response = await http.get(
-      url,
-      headers: {
-        'Content-Type': 'application/json; charset=UTF-8',
-        'Authorization': 'Bearer $accessToken',
-      },
-    );
+      final url = Uri.parse('${AppConfig.baseUrl}/api/user/problemCount');
+      final response = await http.get(
+        url,
+        headers: {
+          'Content-Type': 'application/json; charset=UTF-8',
+          'Authorization': 'Bearer $accessToken',
+        },
+      );
 
-    if (response.statusCode == 200) {
-      int userProblemCount = int.parse(response.body);
+      if (response.statusCode == 200) {
+        int userProblemCount = int.parse(response.body);
 
-      log('user problem count : $userProblemCount');
+        log('user problem count : $userProblemCount');
 
-      return userProblemCount;
-    } else {
-      log('Failed to get user problem count');
+        return userProblemCount;
+      } else {
+        throw Exception('Failed to get user problem count');
+      }
+    } catch (error, stackTrace) {
+      log('Error for get user problem count: $error');
+      await Sentry.captureException(
+        error,
+        stackTrace: stackTrace,
+      );
+
       return 0;
     }
   }
 
   Future<void> updateProblem(ProblemRegisterModel problemData) async {
-    final accessToken = await tokenProvider.getAccessToken();
-    if (accessToken == null) {
-      throw Exception("JWT token is not available");
-    }
-
-    var uri = Uri.parse('${AppConfig.baseUrl}/api/problem');
-    var request = http.MultipartRequest('PATCH', uri)
-      ..headers.addAll({'Authorization': 'Bearer $accessToken'});
-
-    request.fields['problemId'] = (problemData.problemId ?? -1).toString();
-
-    if (problemData.solvedAt != null) {
-      request.fields['solvedAt'] = problemData.solvedAt!.toIso8601String();
-    }
-
-    if (problemData.reference != null && problemData.reference!.isNotEmpty) {
-      request.fields['reference'] = problemData.reference!;
-    }
-    if (problemData.memo != null && problemData.memo!.isNotEmpty) {
-      request.fields['memo'] = problemData.memo!;
-    }
-
-    if (problemData.folderId != null) {
-      request.fields['folderId'] = problemData.folderId!.toString();
-    }
-
-    request.fields['process'] = problemData.isProcess! ? 'true' : 'false';
-
-    final problemImage = problemData.problemImage;
-    final colors = problemData.colors;
-    if (problemImage != null) {
-      request.files.add(
-          await http.MultipartFile.fromPath('problemImage', problemImage.path));
-
-      if (colors != null) {
-        request.fields['colors'] = jsonEncode(colors);
-      }
-    }
-
-    final solveImage = problemData.solveImage;
-    if (solveImage != null) {
-      request.files.add(
-          await http.MultipartFile.fromPath('solveImage', solveImage.path));
-    }
-
-    final answerImage = problemData.answerImage;
-    if (answerImage != null) {
-      request.files.add(
-          await http.MultipartFile.fromPath('answerImage', answerImage.path));
-    }
-
     try {
-      var streamedResponse = await request.send();
-      var response = await http.Response.fromStream(streamedResponse);
-      if (response.statusCode == 200) {
-        log('Problem successfully submitted');
-        await fetchCurrentFolderContents();
-      } else {
-        log('Failed to submit problem: ${response.reasonPhrase}');
+      final accessToken = await tokenProvider.getAccessToken();
+      if (accessToken == null) {
+        throw Exception("JWT token is not available");
       }
-    } catch (e) {
-      log('Error submitting problem: $e');
+
+      var uri = Uri.parse('${AppConfig.baseUrl}/api/problem');
+      var request = http.MultipartRequest('PATCH', uri)
+        ..headers.addAll({'Authorization': 'Bearer $accessToken'});
+
+      request.fields['problemId'] = (problemData.problemId ?? -1).toString();
+
+      if (problemData.solvedAt != null) {
+        request.fields['solvedAt'] = problemData.solvedAt!.toIso8601String();
+      }
+
+      if (problemData.reference != null && problemData.reference!.isNotEmpty) {
+        request.fields['reference'] = problemData.reference!;
+      }
+      if (problemData.memo != null && problemData.memo!.isNotEmpty) {
+        request.fields['memo'] = problemData.memo!;
+      }
+
+      if (problemData.folderId != null) {
+        request.fields['folderId'] = problemData.folderId!.toString();
+      }
+
+      request.fields['process'] = problemData.isProcess! ? 'true' : 'false';
+
+      final problemImage = problemData.problemImage;
+      final colors = problemData.colors;
+      if (problemImage != null) {
+        request.files.add(await http.MultipartFile.fromPath(
+            'problemImage', problemImage.path));
+
+        if (colors != null) {
+          request.fields['colors'] = jsonEncode(colors);
+        }
+      }
+
+      final solveImage = problemData.solveImage;
+      if (solveImage != null) {
+        request.files.add(
+            await http.MultipartFile.fromPath('solveImage', solveImage.path));
+      }
+
+      final answerImage = problemData.answerImage;
+      if (answerImage != null) {
+        request.files.add(
+            await http.MultipartFile.fromPath('answerImage', answerImage.path));
+      }
+
+      try {
+        var streamedResponse = await request.send();
+        var response = await http.Response.fromStream(streamedResponse);
+        if (response.statusCode == 200) {
+          log('Problem successfully submitted');
+          await fetchCurrentFolderContents();
+        } else {
+          throw Exception('Failed to update problem: ${response.reasonPhrase}');
+        }
+      } catch (error, stackTrace) {
+        log('Error update problem: $error');
+        await Sentry.captureException(
+          error,
+          stackTrace: stackTrace,
+        );
+      }
+    } catch (error, stackTrace) {
+      log('Error for update problem: $error');
+      await Sentry.captureException(
+        error,
+        stackTrace: stackTrace,
+      );
     }
   }
 
   Future<bool> deleteProblem(int problemId) async {
-    final accessToken = await tokenProvider.getAccessToken();
-    if (accessToken == null) {
-      log('accessToken is not available');
-      throw Exception('accessToken is not available');
-    }
+    try {
+      final accessToken = await tokenProvider.getAccessToken();
+      if (accessToken == null) {
+        throw Exception('accessToken is not available');
+      }
 
-    final url = Uri.parse('${AppConfig.baseUrl}/api/problem');
-    final response = await http.delete(
-      url,
-      headers: {
-        'Content-Type': 'application/json; charset=UTF-8',
-        'Authorization': 'Bearer $accessToken',
-        'problemId': problemId.toString(),
-      },
-    );
+      final url = Uri.parse('${AppConfig.baseUrl}/api/problem');
+      final response = await http.delete(
+        url,
+        headers: {
+          'Content-Type': 'application/json; charset=UTF-8',
+          'Authorization': 'Bearer $accessToken',
+          'problemId': problemId.toString(),
+        },
+      );
 
-    log('Deleting problem: ${response.statusCode} ${response.body}');
+      log('Deleting problem: ${response.statusCode} ${response.body}');
 
-    if (response.statusCode == 200) {
-      log('Problem successfully deleted');
+      if (response.statusCode == 200) {
+        log('Problem successfully deleted');
 
-      return true;
-    } else {
-      log('Failed to delete problem from server');
+        return true;
+      } else {
+        throw Exception('Failed to delete problem from server');
+      }
+    } catch (error, stackTrace) {
+      log('Error for delete problem: $error');
+      await Sentry.captureException(
+        error,
+        stackTrace: stackTrace,
+      );
+
       return false;
     }
   }

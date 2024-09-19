@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:ono/GlobalModule/Image/ColorPicker/ImageColorPickerHandler.dart';
 import 'package:ono/GlobalModule/Theme/DecorateText.dart';
@@ -5,6 +7,7 @@ import 'package:ono/Model/LoginStatus.dart';
 import 'package:ono/Provider/FoldersProvider.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 import '../../GlobalModule/Image/ImagePickerHandler.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
 import '../../GlobalModule/Util/DatePickerHandler.dart';
@@ -110,7 +113,7 @@ class ProblemRegisterScreenService {
     imagePickerHandler.showImagePicker(context, (pickedFile) async {
       if (pickedFile != null && imageType == 'problemImage' && isProcess) {
         // problemImage의 경우 색상 선택 화면을 표시
-        print('image path: ${pickedFile!.path}');
+        log('image path: ${pickedFile!.path}');
         List<Map<String, int>?> selectedColors = await imageColorPickerHandler.showColorPicker(context, pickedFile.path);
         onImagePicked(pickedFile, selectedColors, imageType);
       } else {
@@ -172,9 +175,14 @@ class ProblemRegisterScreenService {
       hideLoadingDialog(context);
       onSuccess();
       showSuccessDialog(context);
-    } catch (error) {
+    } catch (error, stackTrace) {
       hideLoadingDialog(context);
       showValidationMessage(context, '문제 업데이트에 실패했습니다.');
+      log('error in update problem : $error');
+      await Sentry.captureException(
+        error,
+        stackTrace: stackTrace,
+      );
     }
   }
 

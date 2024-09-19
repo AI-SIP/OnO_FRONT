@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:developer';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
+import 'package:sentry_flutter/sentry_flutter.dart';
 import '../Config/AppConfig.dart';
 
 class TokenProvider {
@@ -12,34 +13,43 @@ class TokenProvider {
   }
 
   Future<String?> getAccessToken() async {
-    String? accessToken = await storage.read(key: 'accessToken');
+    try {
+      String? accessToken = await storage.read(key: 'accessToken');
 
-    if (accessToken == null) {
-      log('Access token is not available.');
-      return null;
-    }
-
-    final url = Uri.parse('${AppConfig.baseUrl}/api/auth/verifyAccessToken');
-    final response = await http.get(
-      url,
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $accessToken',
-      },
-    );
-
-    if (response.statusCode == 200) {
-      return accessToken;
-    } else {
-      log('Access token is invalid or expired, trying to refresh...');
-      bool isRefreshAccessToken = await refreshAccessToken();
-      if (isRefreshAccessToken) {
-        accessToken = await storage.read(key: 'accessToken');
-        return accessToken;
-      } else {
-        log("Can not refresh access token");
+      if (accessToken == null) {
+        log('Access token is not available.');
         return null;
       }
+
+      final url = Uri.parse('${AppConfig.baseUrl}/api/auth/verifyAccessToken');
+      final response = await http.get(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $accessToken',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        return accessToken;
+      } else {
+        log('Access token is invalid or expired, trying to refresh...');
+        bool isRefreshAccessToken = await refreshAccessToken();
+        if (isRefreshAccessToken) {
+          accessToken = await storage.read(key: 'accessToken');
+          return accessToken;
+        } else {
+          throw Exception("Can not refresh access token");
+        }
+      }
+    } catch (error, stackTrace) {
+      log('getAccessToken() error: $error');
+      await Sentry.captureException(
+        error,
+        stackTrace: stackTrace,
+      );
+
+      return null;
     }
   }
 
@@ -72,11 +82,14 @@ class TokenProvider {
         log('Access token refreshed.');
         return true;
       } else {
-        log('Failed to refresh token. Logging out.');
-        return false;
+        throw Exception('Failed to refresh token. Logging out.');
       }
-    } catch (e) {
-      log('Error refreshing token: $e');
+    } catch (error, stackTrace) {
+      log('Error refreshing token: $error');
+      await Sentry.captureException(
+        error,
+        stackTrace: stackTrace,
+      );
       return false;
     }
   }

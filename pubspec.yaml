@@ -56,6 +56,7 @@ dependencies:
   in_app_review: ^2.0.9
   kakao_flutter_sdk: ^1.9.6
   flutter_naver_login: ^1.8.0
+  sentry_flutter: ^8.9.0
 
 dev_dependencies:
   flutter_test:

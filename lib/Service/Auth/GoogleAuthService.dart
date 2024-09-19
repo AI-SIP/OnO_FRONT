@@ -3,6 +3,7 @@ import 'dart:developer';
 import 'dart:io';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
+import 'package:sentry_flutter/sentry_flutter.dart';
 import '../../Config/AppConfig.dart';
 
 class GoogleAuthService {
@@ -49,8 +50,12 @@ class GoogleAuthService {
       } else{
         throw Exception("googleSignInAccount is null!");
       }
-    } catch (error) {
+    } catch (error, stackTrace) {
       log(error.toString());
+      await Sentry.captureException(
+        error,
+        stackTrace: stackTrace,
+      );
       return null;
     }
   }
@@ -82,9 +87,14 @@ class GoogleAuthService {
         log('Google sign-out Success!');
       } else {
         log('Failed to revoke Google token');
+        throw new Exception('Failed to revoke Google token');
       }
-    } catch (error) {
+    } catch (error, stackTrace) {
       log('Google sign-out error: $error');
+      await Sentry.captureException(
+        error,
+        stackTrace: stackTrace,
+      );
     }
   }
 

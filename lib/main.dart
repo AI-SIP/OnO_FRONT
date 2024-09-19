@@ -8,6 +8,7 @@ import 'package:ono/GlobalModule/Theme/ThemeHandler.dart';
 import 'package:ono/Provider/FoldersProvider.dart';
 import 'package:ono/Screen/SplashScreen.dart';
 import 'package:provider/provider.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 import 'Screen/HomeScreen.dart';
 import 'Screen/DirectoryScreen.dart';
 import 'Screen/ProblemRegisterScreen.dart';
@@ -18,6 +19,18 @@ import 'Provider/UserProvider.dart';
 void main() async {
   await dotenv.load(fileName: ".env");
   KakaoSdk.init(nativeAppKey: '7fd2fa49895af63319fd6b11e084d0d5');
+
+  await SentryFlutter.init(
+          (options) {
+        options.dsn = 'https://ef02bb2a25f04c4141b3edb8c51ff128@o4507978249273344.ingest.us.sentry.io/4507978250911744';
+        // Set tracesSampleRate to 1.0 to capture 100% of transactions for tracing.
+        // We recommend adjusting this value in production.
+        options.tracesSampleRate = 1.0;
+        // The sampling rate for profiling is relative to tracesSampleRate
+        // Setting to 1.0 will profile 100% of sampled transactions:
+        options.profilesSampleRate = 1.0;
+      },
+  );
 
   runApp(
     MultiProvider(
