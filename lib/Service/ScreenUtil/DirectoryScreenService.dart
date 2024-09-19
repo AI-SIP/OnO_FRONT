@@ -1,6 +1,7 @@
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 
 import '../../Model/ProblemThumbnailModel.dart';
 import '../../Provider/FoldersProvider.dart';
@@ -25,8 +26,12 @@ class DirectoryScreenService {
   Future<void> fetchProblems() async {
     try {
       await foldersProvider.fetchCurrentFolderContents();
-    } catch (e) {
-      log('Failed to fetch problems: $e');
+    } catch (error, stackTrace) {
+      log('Failed to fetch problems: $error');
+      await Sentry.captureException(
+        error,
+        stackTrace: stackTrace,
+      );
     }
   }
 

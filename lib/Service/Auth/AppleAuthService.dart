@@ -5,6 +5,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:jose/jose.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:http/http.dart' as http;
 import '../../Config/AppConfig.dart';
@@ -46,20 +47,20 @@ class AppleAuthService {
         if (response.statusCode == 200) {
           return jsonDecode(response.body);
         } else {
-          log("Failed to Register user on server");
-          return null;
+          throw new Exception("Failed to Register user on server");
         }
       } else {
         log("Failed to get Apple idToken");
         return null;
       }
-    } catch (error) {
+    } catch (error, stackTrace) {
       log('Apple sign-in error: $error');
+      await Sentry.captureException(
+        error,
+        stackTrace: stackTrace,
+      );
       return null;
     }
-
-    log("Failed to Apple sign-in");
-    return null;
   }
 
   Future<void> revokeSignInWithApple() async {
@@ -105,8 +106,12 @@ class AppleAuthService {
         token: accessToken,
         tokenTypeHint: tokenTypeHint,
       );
-    } on Exception catch (e) {
+    } on Exception catch (e, stackTrace) {
       log('사용자 계정 삭제 중 오류 발생: $e');
+      await Sentry.captureException(
+        e,
+        stackTrace: stackTrace,
+      );
     }
   }
 

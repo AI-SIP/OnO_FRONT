@@ -1,9 +1,9 @@
-
 import 'dart:convert';
 import 'dart:developer';
 
 import 'package:flutter_naver_login/flutter_naver_login.dart';
 import 'package:http/http.dart' as http;
+import 'package:sentry_flutter/sentry_flutter.dart';
 
 import '../../Config/AppConfig.dart';
 
@@ -14,7 +14,7 @@ class NaverAuthService{
 
       if (result.status == NaverLoginStatus.loggedIn) {
 
-        final String email = 'ono@naver.com';
+        const String email = 'ono@naver.com';
         final String identifier = result.account.id;
         final String name = result.account.name;
 
@@ -34,10 +34,14 @@ class NaverAuthService{
         }
       } else{
         log('naver login error');
-        return null;
+        throw new Exception("naver login error");
       }
-    } catch(error) {
+    } catch(error, stackTrace) {
       log(error.toString());
+      await Sentry.captureException(
+        error,
+        stackTrace: stackTrace,
+      );
       return null;
     }
   }
