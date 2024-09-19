@@ -9,10 +9,9 @@ import '../../Config/AppConfig.dart';
 
 class KakaoAuthService {
   Future<Map<String, dynamic>?> signInWithKakao() async {
-    final UserApi api = UserApi.instance;
     if (await isKakaoTalkInstalled()) {
       try {
-        api.loginWithKakaoTalk().then((_) async {
+        UserApi.instance.loginWithKakaoTalk().then((_) async {
           User user = await UserApi.instance.me();
           return registerUser(user);
         });
@@ -26,8 +25,8 @@ class KakaoAuthService {
         }
         // 카카오톡에 연결된 카카오계정이 없는 경우, 카카오계정으로 로그인
         try {
-          await api.loginWithKakaoAccount();
-          User user = await api.me();
+          await UserApi.instance.loginWithKakaoAccount();
+          User user = await UserApi.instance.me();
           return registerUser(user);
         } catch (error) {
           print('카카오계정으로 로그인 실패 $error');
@@ -36,13 +35,15 @@ class KakaoAuthService {
       }
     } else {
       try {
-        await api.loginWithKakaoAccount();
-        User user = await api.me();
+        await UserApi.instance.loginWithKakaoAccount();
+        User user = await UserApi.instance.me();
         return registerUser(user);
       } catch (error) {
         print('카카오계정으로 로그인 실패 $error');
       }
     }
+
+    return null;
   }
 
   Future<Map<String, dynamic>?> registerUser(User user) async {
