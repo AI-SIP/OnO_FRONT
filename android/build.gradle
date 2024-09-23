@@ -1,3 +1,15 @@
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:7.0.4' // 현재 사용 중인 Gradle 버전에 따라 변경하세요.
+        classpath 'com.google.gms:google-services:4.4.2' // 여기로 이동
+    }
+}
+
+
 allprojects {
     repositories {
         google()
