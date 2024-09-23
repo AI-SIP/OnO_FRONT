@@ -57,6 +57,7 @@ dependencies:
   kakao_flutter_sdk: ^1.9.6
   flutter_naver_login: ^1.8.0
   sentry_flutter: ^8.9.0
+  url_launcher_ios: ^6.3.1
 
 dev_dependencies:
   flutter_test:
