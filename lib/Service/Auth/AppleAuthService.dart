@@ -55,6 +55,13 @@ class AppleAuthService {
         return null;
       }
     } catch (error, stackTrace) {
+      if(error == AuthorizationErrorCode.canceled){
+        return null;
+      }
+      if(error == AuthorizationErrorCode.unknown){
+        return null;
+      }
+
       log('Apple sign-in error: $error');
       await Sentry.captureException(
         error,
