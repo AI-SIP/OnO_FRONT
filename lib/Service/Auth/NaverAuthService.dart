@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:developer';
 
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter_naver_login/flutter_naver_login.dart';
 import 'package:http/http.dart' as http;
 import 'package:sentry_flutter/sentry_flutter.dart';
@@ -28,6 +29,7 @@ class NaverAuthService{
 
         if (response.statusCode == 200) {
           log('naver sign-in Success!');
+          FirebaseAnalytics.instance.logSignUp(signUpMethod: 'naver');
           return jsonDecode(response.body);
         } else {
           throw Exception("Failed to Register naver user on server");

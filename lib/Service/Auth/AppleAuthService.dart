@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:core';
 import 'dart:developer';
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -46,6 +47,7 @@ class AppleAuthService {
 
         if (response.statusCode == 200) {
           log('Apple sign-in Success!');
+          FirebaseAnalytics.instance.logSignUp(signUpMethod: 'Apple');
           return jsonDecode(response.body);
         } else {
           throw Exception("Failed to Register user on server");

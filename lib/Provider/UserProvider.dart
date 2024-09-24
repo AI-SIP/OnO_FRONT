@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:core';
 import 'dart:developer';
 import 'dart:io' show Platform;
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
@@ -120,6 +121,9 @@ class UserProvider with ChangeNotifier {
       _userEmail = responseBody['userEmail'];
       _loginStatus = LoginStatus.login;
 
+      FirebaseAnalytics.instance.logLogin();
+      setUserInfoInFirebase(_userId, _userName, _userEmail);
+
       // Sentry에 유저 정보 설정
       Sentry.configureScope((scope) {
         scope.setUser(SentryUser(
@@ -139,6 +143,12 @@ class UserProvider with ChangeNotifier {
     }
 
     notifyListeners();
+  }
+
+  Future<void> setUserInfoInFirebase(int? userId, String? userName, String? userEmail) async {
+    FirebaseAnalytics.instance.setUserId(id: userId.toString());
+    FirebaseAnalytics.instance.setUserProperty(name: 'userName', value: userName);
+    FirebaseAnalytics.instance.setUserProperty(name: 'userEmail', value: userEmail);
   }
 
   Future<int> getUserProblemCount() async{
@@ -262,6 +272,13 @@ class UserProvider with ChangeNotifier {
         deleteAccount();
       }
 
+      await FirebaseAnalytics.instance.logEvent(
+        name: 'user_logout',
+        parameters: {
+          'user_id': _userId.toString(), // 유저 ID 등 추가적인 정보도 포함 가능
+        },
+      );
+
       resetUserInfo();
     } catch (error, stackTrace) {
       log('Error signing out: $error');
@@ -285,7 +302,7 @@ class UserProvider with ChangeNotifier {
       // 카카오 회원 탈퇴 로직
       await kakaoAuthService.revokeKakaoSignIn();
     } else if(loginMethod == 'naver'){
-      // 네이버 회우너 탈퇴 로직
+      // 네이버 회원 탈퇴 로직
       await naverAuthService.revokeNaverSignIn();
     }
     else if (loginMethod == 'guest') {
@@ -312,6 +329,14 @@ class UserProvider with ChangeNotifier {
 
       if (response.statusCode == 200) {
         log('Account deletion Success!');
+
+        await FirebaseAnalytics.instance.logEvent(
+          name: 'user_delete',
+          parameters: {
+            'user_id': _userId.toString(), // 유저 ID 등 추가적인 정보도 포함 가능
+          },
+        );
+
         resetUserInfo();
       } else {
         log('Failed to delete account: ${response.reasonPhrase}');

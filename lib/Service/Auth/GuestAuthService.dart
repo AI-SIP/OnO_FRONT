@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:developer';
 
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:sentry_flutter/sentry_flutter.dart';
@@ -22,6 +23,7 @@ class GuestAuthService{
 
       if (response.statusCode == 200) {
         log('Guest sign-in Success!');
+        FirebaseAnalytics.instance.logSignUp(signUpMethod: 'Guest');
         return jsonDecode(response.body);
       } else {
         throw Exception("Failed to Register user on server");

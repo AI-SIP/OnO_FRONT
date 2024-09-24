@@ -130,6 +130,30 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
     setState(() {
       _selectedIndex = index;
     });
+
+    // 탭된 아이템에 따른 스크린 뷰 기록
+    switch (index) {
+      case 0:
+        _sendScreenView('HomeScreen');
+        break;
+      case 1:
+        _sendScreenView('ProblemRegisterScreen');
+        break;
+      case 2:
+        _sendScreenView('DirectoryScreen');
+        break;
+      case 3:
+        _sendScreenView('SettingScreen');
+        break;
+    }
+  }
+
+  // FirebaseAnalytics에 스크린 뷰를 기록하는 함수
+  Future<void> _sendScreenView(String screenName) async {
+    FirebaseAnalytics.instance.logScreenView(
+      screenName: screenName,
+    );
+    log("Screen viewed: $screenName");
   }
 
   @override
