@@ -153,7 +153,6 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
     FirebaseAnalytics.instance.logScreenView(
       screenName: screenName,
     );
-    log("Screen viewed: $screenName");
   }
 
   @override
