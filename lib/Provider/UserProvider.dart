@@ -23,15 +23,16 @@ class UserProvider with ChangeNotifier {
 
   UserProvider(this.foldersProvider);
 
-  LoginStatus _isLoggedIn = LoginStatus.waiting;
+  LoginStatus _loginStatus = LoginStatus.waiting;
   int _userId = 0;
   int _problemCount = 0;
   String _userName = '';
   String _userEmail = '';
 
-  LoginStatus get isLoggedIn => _isLoggedIn;
+  LoginStatus get isLoggedIn => _loginStatus;
   int get userId => _userId;
   int get problemCount => _problemCount;
+  LoginStatus get loginStatus => _loginStatus;
   String get userName => _userName;
   String get userEmail => _userEmail;
 
@@ -42,7 +43,7 @@ class UserProvider with ChangeNotifier {
   final NaverAuthService naverAuthService = NaverAuthService();
 
   Future<void> signInWithGuest() async {
-    _isLoggedIn = LoginStatus.waiting;
+    _loginStatus = LoginStatus.waiting;
     notifyListeners();
 
     final response = await guestAuthService.signInWithGuest();
@@ -51,7 +52,7 @@ class UserProvider with ChangeNotifier {
 
   // Google 로그인 함수(앱 처음 설치하고 구글 로그인 버튼 누르면 실행)
   Future<void> signInWithGoogle() async {
-    _isLoggedIn = LoginStatus.waiting;
+    _loginStatus = LoginStatus.waiting;
     notifyListeners();
 
     final response = await googleAuthService.signInWithGoogle();
@@ -60,14 +61,14 @@ class UserProvider with ChangeNotifier {
 
   // Apple 로그인 함수
   Future<void> signInWithApple(BuildContext context) async {
-    _isLoggedIn = LoginStatus.waiting;
+    _loginStatus = LoginStatus.waiting;
     notifyListeners();
     final response = await appleAuthService.signInWithApple(context);
     saveUserToken(response: response, loginMethod: 'apple');
   }
 
   Future<void> signInWithKakao() async {
-    _isLoggedIn = LoginStatus.waiting;
+    _loginStatus = LoginStatus.waiting;
     notifyListeners();
 
     final response = await kakaoAuthService.signInWithKakao();
@@ -75,7 +76,7 @@ class UserProvider with ChangeNotifier {
   }
 
   Future<void> signInWithNaver() async{
-    _isLoggedIn = LoginStatus.logout;
+    _loginStatus = LoginStatus.logout;
     notifyListeners();
 
     final response = await naverAuthService.signInWithNaver();
@@ -84,7 +85,7 @@ class UserProvider with ChangeNotifier {
 
   Future<void> saveUserToken({Map<String,dynamic>? response, String? loginMethod}) async{
     if(response == null){
-      _isLoggedIn = LoginStatus.logout;
+      _loginStatus = LoginStatus.logout;
     } else{
       await storage.write(key: 'loginMethod', value: loginMethod);
       await tokenProvider.setAccessToken(response['accessToken']);
@@ -98,7 +99,7 @@ class UserProvider with ChangeNotifier {
   Future<void> fetchUserInfo() async {
     final accessToken = await tokenProvider.getAccessToken();
     if (accessToken == null) {
-      _isLoggedIn = LoginStatus.logout;
+      _loginStatus = LoginStatus.logout;
       notifyListeners();
       throw Exception("Access token is not available");
     }
@@ -117,7 +118,7 @@ class UserProvider with ChangeNotifier {
       _userId = responseBody['userId'];
       _userName = responseBody['userName'];
       _userEmail = responseBody['userEmail'];
-      _isLoggedIn = LoginStatus.login;
+      _loginStatus = LoginStatus.login;
 
       // Sentry에 유저 정보 설정
       Sentry.configureScope((scope) {
@@ -129,9 +130,12 @@ class UserProvider with ChangeNotifier {
       });
 
       _problemCount = await getUserProblemCount();
-      await foldersProvider.fetchRootFolderContents();
+      if(_loginStatus == LoginStatus.login){
+        await foldersProvider.fetchRootFolderContents();
+      }
+
     } else {
-      _isLoggedIn = LoginStatus.logout;
+      _loginStatus = LoginStatus.logout;
     }
 
     notifyListeners();
@@ -232,10 +236,10 @@ class UserProvider with ChangeNotifier {
   }
 
   Future<void> autoLogin() async {
-    _isLoggedIn = LoginStatus.waiting;
+    _loginStatus = LoginStatus.waiting;
     String? refreshToken = await storage.read(key: 'refreshToken');
     if (refreshToken == null) {
-      _isLoggedIn = LoginStatus.logout;
+      _loginStatus = LoginStatus.logout;
       notifyListeners();
     } else {
       fetchUserInfo();
@@ -324,7 +328,7 @@ class UserProvider with ChangeNotifier {
 
   Future<void> resetUserInfo() async{
     _userId = 0;
-    _isLoggedIn = LoginStatus.logout;
+    _loginStatus = LoginStatus.logout;
     _userName = '';
     _userEmail = '';
     _problemCount = 0;
