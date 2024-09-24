@@ -33,7 +33,8 @@ class KakaoAuthService {
           await UserApi.instance.loginWithKakaoAccount();
           User user = await UserApi.instance.me();
           return registerUser(user);
-        } catch (error, stackTrace) {
+        }
+        catch (error, stackTrace) {
           log('카카오계정으로 로그인 실패 $error');
           await Sentry.captureException(
             error,
@@ -48,6 +49,10 @@ class KakaoAuthService {
         User user = await UserApi.instance.me();
         return registerUser(user);
       } catch (error, stackTrace) {
+        if (error is PlatformException && error.code == 'CANCELED') {
+          return null;
+        }
+
         log('카카오계정으로 로그인 실패 $error');
         await Sentry.captureException(
           error,
