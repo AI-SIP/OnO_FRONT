@@ -14,7 +14,7 @@ class GoogleAuthService {
       final googleSignInAccount = await _googleSignIn.signIn();
       if(googleSignInAccount != null){
         final GoogleSignInAuthentication googleSignInAuthentication =
-        await googleSignInAccount!.authentication;
+        await googleSignInAccount.authentication;
 
         final String? accessToken =
             googleSignInAuthentication.accessToken;
@@ -22,33 +22,29 @@ class GoogleAuthService {
         String? name = googleSignInAccount.displayName;
         String? identifier = googleSignInAccount.id;
 
-        if (googleSignInAccount != null) {
-          final platform = _getPlatform();
+        final platform = _getPlatform();
 
-          final url = Uri.parse('${AppConfig.baseUrl}/api/auth/google');
-          final response = await http.post(
-            url,
-            headers: {'Content-Type': 'application/json; charset=UTF-8'},
-            body: jsonEncode({
-              'accessToken': accessToken,
-              'platform': platform,
-              'email': email,
-              'name': name,
-              'identifier': identifier
-            }),
-          );
+        final url = Uri.parse('${AppConfig.baseUrl}/api/auth/google');
+        final response = await http.post(
+          url,
+          headers: {'Content-Type': 'application/json; charset=UTF-8'},
+          body: jsonEncode({
+            'accessToken': accessToken,
+            'platform': platform,
+            'email': email,
+            'name': name,
+            'identifier': identifier
+          }),
+        );
 
-          if (response.statusCode == 200) {
-            log('Google sign-in Success!');
-            return jsonDecode(response.body);
-          } else {
-            throw Exception("Failed to Register user on server");
-          }
+        if (response.statusCode == 200) {
+          log('Google sign-in Success!');
+          return jsonDecode(response.body);
         } else {
-          throw Exception("Failed to get Google idToken");
+          throw Exception("Failed to Register user on server");
         }
       } else{
-        throw Exception("googleSignInAccount is null!");
+        return null;
       }
     } catch (error, stackTrace) {
       log(error.toString());

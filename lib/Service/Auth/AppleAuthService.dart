@@ -45,9 +45,10 @@ class AppleAuthService {
         );
 
         if (response.statusCode == 200) {
+          log('Apple sign-in Success!');
           return jsonDecode(response.body);
         } else {
-          throw new Exception("Failed to Register user on server");
+          throw Exception("Failed to Register user on server");
         }
       } else {
         log("Failed to get Apple idToken");

@@ -24,17 +24,17 @@ class UserProvider with ChangeNotifier {
   UserProvider(this.foldersProvider);
 
   LoginStatus _loginStatus = LoginStatus.waiting;
-  int _userId = 0;
-  int _problemCount = 0;
-  String _userName = '';
-  String _userEmail = '';
+  int? _userId = 0;
+  int? _problemCount = 0;
+  String? _userName = '';
+  String? _userEmail = '';
 
   LoginStatus get isLoggedIn => _loginStatus;
-  int get userId => _userId;
-  int get problemCount => _problemCount;
-  LoginStatus get loginStatus => _loginStatus;
-  String get userName => _userName;
-  String get userEmail => _userEmail;
+  int? get userId => _userId;
+  int? get problemCount => _problemCount;
+  LoginStatus? get loginStatus => _loginStatus;
+  String? get userName => _userName;
+  String? get userEmail => _userEmail;
 
   final GuestAuthService guestAuthService = GuestAuthService();
   final AppleAuthService appleAuthService = AppleAuthService();
@@ -115,8 +115,8 @@ class UserProvider with ChangeNotifier {
 
     if (response.statusCode == 200) {
       final responseBody = jsonDecode(utf8.decode(response.bodyBytes));
-      _userId = responseBody['userId'];
-      _userName = responseBody['userName'];
+      _userId = responseBody['userId'] ?? 0;
+      _userName = responseBody['userName'] ?? '이름 없음';
       _userEmail = responseBody['userEmail'];
       _loginStatus = LoginStatus.login;
 
