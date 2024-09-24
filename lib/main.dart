@@ -5,10 +5,12 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart';
 import 'package:ono/GlobalModule/Theme/ThemeHandler.dart';
+import 'package:ono/Model/LoginStatus.dart';
 import 'package:ono/Provider/FoldersProvider.dart';
 import 'package:ono/Screen/SplashScreen.dart';
 import 'package:provider/provider.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
+import 'Provider/UserProvider.dart';
 import 'Screen/HomeScreen.dart';
 import 'Screen/DirectoryScreen.dart';
 import 'Screen/ProblemRegisterScreen.dart';
@@ -139,13 +141,19 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
   }
 
   void _resetAppState() {
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
     final foldersProvider = Provider.of<FoldersProvider>(context, listen: false);
 
-    setState(() {
-      _selectedIndex = 0;
-    });
-
-    foldersProvider.fetchRootFolderContents();
+    if(userProvider.loginStatus == LoginStatus.login){
+      setState(() {
+        _selectedIndex = 2;
+      });
+      foldersProvider.fetchRootFolderContents();
+    } else{
+      setState(() {
+        _selectedIndex = 0;
+      });
+    }
   }
 
   @override
