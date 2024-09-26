@@ -338,7 +338,7 @@ class FoldersProvider with ChangeNotifier {
       final colors = problemData.colors;
 
       logProblemSubmission(
-        action: "등록",
+        action: "submit",
         isProblemImageFilled: problemData.problemImage != null,
         isAnswerImageFilled: problemData.answerImage != null,
         isSolveImageFilled: problemData.solveImage != null,
@@ -479,6 +479,16 @@ class FoldersProvider with ChangeNotifier {
 
       request.fields['process'] = problemData.isProcess! ? 'true' : 'false';
 
+      logProblemSubmission(
+        action: "update",
+        isProblemImageFilled: problemData.problemImage != null,
+        isAnswerImageFilled: problemData.answerImage != null,
+        isSolveImageFilled: problemData.solveImage != null,
+        isReferenceFilled: problemData.reference!.isNotEmpty,
+        isMemoFilled: problemData.memo!.isNotEmpty,
+        isProcess: problemData.isProcess!,
+      );
+
       final problemImage = problemData.problemImage;
       final colors = problemData.colors;
       if (problemImage != null) {
@@ -606,15 +616,15 @@ class FoldersProvider with ChangeNotifier {
 
     // Log the overall action
     await analytics.logEvent(
-      name: '문제 등록',
+      name: 'problem_submit',
       parameters: {
-        '문제 등록 방식': action,
-        '문제 이미지': isProblemImageFilled ? "작성" : "공백",
-        '정답 이미지': isAnswerImageFilled ? "작성" : "공백",
-        '풀이 이미지': isSolveImageFilled ? "작성" : "공백",
-        '출처': isReferenceFilled ? "작성" : "공백",
-        '메모': isMemoFilled ? "작성" : "공백",
-        '필기 제거 여부' : isProcess ? "제거 O" : "제거 X",
+        'method': action,
+        'problem_image': isProblemImageFilled ? "filled" : "null",
+        'answer_image': isAnswerImageFilled ? "filled" : "null",
+        'solve_image': isSolveImageFilled ? "filled" : "null",
+        'reference': isReferenceFilled ? "filled" : "null",
+        'memo': isMemoFilled ? "filled" : "null",
+        'isProcess' : isProcess ? "true" : "false",
       },
     );
   }
