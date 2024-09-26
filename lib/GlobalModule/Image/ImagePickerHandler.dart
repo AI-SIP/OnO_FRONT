@@ -30,7 +30,7 @@ class ImagePickerHandler {
         },
       );
 
-      return _cropImage(pickedFile, context);
+      return _cropImage(pickedFile);
     }
     return null;
   }
@@ -47,7 +47,7 @@ class ImagePickerHandler {
           },
         );
 
-        return _cropImage(pickedFile, context);
+        return _cropImage(pickedFile);
       }
       return null;
     } catch (e) {
@@ -56,8 +56,7 @@ class ImagePickerHandler {
     }
   }
 
-  Future<XFile?> _cropImage(XFile imageFile, BuildContext context) async {
-    final themeProvider = Provider.of<ThemeHandler>(context);
+  Future<XFile?> _cropImage(XFile imageFile) async {
 
     try {
       final croppedFile = await ImageCropper().cropImage(
@@ -66,7 +65,7 @@ class ImagePickerHandler {
         uiSettings: [
           AndroidUiSettings(
             toolbarTitle: '이미지 자르기',
-            toolbarColor: themeProvider.primaryColor,
+            toolbarColor: Colors.black,
             toolbarWidgetColor: Colors.white,
             lockAspectRatio: false,
             cropStyle: CropStyle.rectangle,

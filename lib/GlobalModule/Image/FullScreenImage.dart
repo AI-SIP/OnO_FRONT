@@ -87,7 +87,7 @@ class FullScreenImage extends StatelessWidget {
             icon: const Icon(Icons.download, color: Colors.white),
             onPressed: () {
               FirebaseAnalytics.instance.logEvent(
-                name: '이미지 다운로드 버튼 클릭',
+                name: 'image_download_button_click',
               );
               _downloadImage(context);
             },

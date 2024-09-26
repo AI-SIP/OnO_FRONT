@@ -104,20 +104,20 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                   size: 24,
                 ),
                 onPressed: ()  {
-                  FirebaseAnalytics.instance.logEvent(name: '폴더 생성 버튼 클릭');
+                  FirebaseAnalytics.instance.logEvent(name: 'folder_create_button_click');
                   _showCreateFolderDialog(); // 폴더 생성 다이얼로그 호출
                 }
               ),
               PopupMenuButton<String>(
                 onSelected: (value) {
                   if (value == 'rename') {
-                    FirebaseAnalytics.instance.logEvent(name: '폴더 이름 수정 버튼 클릭');
+                    FirebaseAnalytics.instance.logEvent(name: 'folder_name_edit_button_click');
                     _showRenameFolderDialog(foldersProvider);
                   } else if (value == 'move') {
-                    FirebaseAnalytics.instance.logEvent(name: '폴더 경로 변경 버튼 클릭');
+                    FirebaseAnalytics.instance.logEvent(name: 'folder_path_move_button_click');
                     _showMoveFolderDialog(foldersProvider); // 폴더 이동 다이얼로그 호출
                   } else if (value == 'delete') {
-                    FirebaseAnalytics.instance.logEvent(name: '폴더 삭제 버튼 클릭');
+                    FirebaseAnalytics.instance.logEvent(name: 'folder_delete_button_click');
                     _showDeleteFolderDialog(foldersProvider);
                   }
                 },
@@ -443,9 +443,9 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
               _directoryService.sortProblems(_selectedSortOption);
 
               FirebaseAnalytics.instance.logEvent(
-                name: '정렬 옵션 선택',
+                name: 'select_option_button_click',
                 parameters: {
-                  '정렬 옵션': _selectedSortOption,
+                  'select_option': _selectedSortOption,
                 },
               );
             });
@@ -510,7 +510,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     return GestureDetector(
       onTap: () {
 
-        FirebaseAnalytics.instance.logEvent(name: '폴더로 이동', parameters: {
+        FirebaseAnalytics.instance.logEvent(name: 'move_to_folder', parameters: {
           'folder_id': folder.folderId,
         }); // GA 로그 추가
 
@@ -574,7 +574,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   Widget _buildProblemTile(ProblemModel problem, ThemeHandler themeProvider) {
     return GestureDetector(
       onTap: () {
-        FirebaseAnalytics.instance.logEvent(name: '문제 페이지로 이동', parameters: {
+        FirebaseAnalytics.instance.logEvent(name: 'move_to_problem', parameters: {
           'problem_id': problem.problemId!,
         });
 
@@ -673,7 +673,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       return; // 문제 ID 또는 폴더 ID가 null이면 실행하지 않음
     }
 
-    FirebaseAnalytics.instance.logEvent(name: '문제 경로 수정', parameters: {
+    FirebaseAnalytics.instance.logEvent(name: 'problem_path_edit', parameters: {
       'problem_id': problem.problemId!,
       'target_folder_id': folderId,
     });

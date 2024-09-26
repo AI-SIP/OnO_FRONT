@@ -70,7 +70,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
         onSelected: (String result) async{
           final problemData = await _problemDataFuture;
           if (result == shareProblemValue) {
-            FirebaseAnalytics.instance.logEvent(name: '문제 공유 버튼 클릭');
+            FirebaseAnalytics.instance.logEvent(name: 'problem_share_button_click');
             if (problemData != null) {
               // Navigate to ProblemShareScreen and wait for result
               await Navigator.push(
@@ -83,7 +83,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
             }
           }
           else if (result == shareAnswerValue) {
-            FirebaseAnalytics.instance.logEvent(name: '정답 공유 버튼 클릭');
+            FirebaseAnalytics.instance.logEvent(name: 'answer_share_button_click');
             if (problemData != null) {
               // Navigate to ProblemShareScreen and wait for result
               await Navigator.push(
@@ -96,12 +96,12 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
             }
           }
           else if (result == editValue) {
-            FirebaseAnalytics.instance.logEvent(name: '문제 수정 버튼 클릭');
+            FirebaseAnalytics.instance.logEvent(name: 'problem_edit_button_click');
             setState(() {
               isEditMode = true;
             });
           } else if (result == deleteValue) {
-            FirebaseAnalytics.instance.logEvent(name: '문제 삭제 버튼 클릭');
+            FirebaseAnalytics.instance.logEvent(name: 'problem_delete_button_click');
             deleteProblemDialog(context, themeProvider);
           }
         },
@@ -162,7 +162,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
       context,
       widget.problemId,
       () {
-        FirebaseAnalytics.instance.logEvent(name: '문제 삭제');
+        FirebaseAnalytics.instance.logEvent(name: 'problem_delete');
         Navigator.of(context).pop(true);
         if (mounted) {
           SnackBarDialog.showSnackBar(

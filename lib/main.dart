@@ -21,6 +21,7 @@ import 'GlobalModule/Theme/AppbarWithLogo.dart';
 import 'firebase_options.dart';
 
 void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env");
 
   await Firebase.initializeApp(
@@ -67,9 +68,9 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Flutter Demo',
       theme: _buildThemeData(context),
+      navigatorObservers: <NavigatorObserver>[observer],
       home: SplashScreen(),
       debugShowCheckedModeBanner: false,
-      navigatorObservers: <NavigatorObserver>[observer],
     );
   }
 

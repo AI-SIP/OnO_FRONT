@@ -62,7 +62,7 @@ class _SettingScreenState extends State<SettingScreen> {
                   subtitle: '앱에 대한 의견을 보내주세요.',
                   context: context,
                   onTap: () {
-                    FirebaseAnalytics.instance.logEvent(name: '의견 남기기 버튼 클릭', parameters: {
+                    FirebaseAnalytics.instance.logEvent(name: 'feedback_button_click', parameters: {
                       'url' : AppConfig.feedbackPageUrl,
                     });
                     _settingScreenService.openFeedbackForm();
@@ -123,7 +123,7 @@ class _SettingScreenState extends State<SettingScreen> {
       ),
       trailing: ElevatedButton(
         onPressed: () {
-          FirebaseAnalytics.instance.logEvent(name: '이름 수정 버튼 클릭');
+          FirebaseAnalytics.instance.logEvent(name: 'userName_edit_button_click');
           _showChangeNameDialog(context, userName);
         },
         style: ElevatedButton.styleFrom(

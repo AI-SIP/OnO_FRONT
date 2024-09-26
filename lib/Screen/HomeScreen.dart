@@ -18,7 +18,7 @@ class HomeScreen extends StatelessWidget {
 
     if (await canLaunchUrl(url)) {
       launchUrl(url);
-      FirebaseAnalytics.instance.logEvent(name: '오노 가이드 버튼 클릭', parameters: {
+      FirebaseAnalytics.instance.logEvent(name: 'ono_guide_button_click', parameters: {
         'url': AppConfig.guidePageUrl,
       });
     } else {

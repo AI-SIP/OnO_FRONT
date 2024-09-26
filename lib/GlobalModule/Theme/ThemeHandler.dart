@@ -36,8 +36,8 @@ class ThemeHandler with ChangeNotifier {
     _saveColor('darkPrimaryColor', _darkPrimaryColor);
     _saveColor('desaturateColor', _desaturateColor);
 
-    FirebaseAnalytics.instance.logEvent(name: '테마 색상 변경', parameters: {
-      '색상': colorName,
+    FirebaseAnalytics.instance.logEvent(name: 'theme_color_change', parameters: {
+      'color': colorName,
     });
     notifyListeners();
   }

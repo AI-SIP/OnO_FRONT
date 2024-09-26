@@ -40,7 +40,7 @@ class NavigationButtons extends StatelessWidget {
         TextButton(
             onPressed: () {
               FirebaseAnalytics.instance.logEvent(
-                name: '이전 문제로 이동 버튼 클릭',
+                name: 'navigate_previous_problem',
               );
               navigateToProblem(context, provider, previousProblemId);
             },
@@ -64,7 +64,7 @@ class NavigationButtons extends StatelessWidget {
         TextButton(
             onPressed: () {
               FirebaseAnalytics.instance.logEvent(
-                name: '다음 문제로 이동 버튼 클릭',
+                name: 'navigate_next_problem',
               );
               navigateToProblem(context, provider, nextProblemId);
             },

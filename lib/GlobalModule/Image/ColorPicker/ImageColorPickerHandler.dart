@@ -118,7 +118,7 @@ class _ColorPickerScreenState extends State<ColorPickerScreen> {
               int selectedColorCount = colorMaps.where((color) => color != null).length;
 
               FirebaseAnalytics.instance.logEvent(
-                name: '필기 제거 색상 선택 개수',
+                name: 'color_picker_count',
                 parameters: {
                   'selected_color_count': selectedColorCount,
                 },
