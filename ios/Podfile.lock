@@ -121,7 +121,7 @@ PODS:
   - image_cropper (0.0.4):
     - Flutter
     - TOCropViewController (~> 2.7.4)
-  - image_gallery_saver (2.0.2):
+  - image_gallery_saver_plus (0.0.1):
     - Flutter
   - image_picker_ios (0.0.1):
     - Flutter
@@ -172,7 +172,7 @@ DEPENDENCIES:
   - flutter_secure_storage (from `.symlinks/plugins/flutter_secure_storage/ios`)
   - google_sign_in_ios (from `.symlinks/plugins/google_sign_in_ios/darwin`)
   - image_cropper (from `.symlinks/plugins/image_cropper/ios`)
-  - image_gallery_saver (from `.symlinks/plugins/image_gallery_saver/ios`)
+  - image_gallery_saver_plus (from `.symlinks/plugins/image_gallery_saver_plus/ios`)
   - image_picker_ios (from `.symlinks/plugins/image_picker_ios/ios`)
   - in_app_review (from `.symlinks/plugins/in_app_review/ios`)
   - kakao_flutter_sdk_common (from `.symlinks/plugins/kakao_flutter_sdk_common/ios`)
@@ -220,8 +220,8 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/google_sign_in_ios/darwin"
   image_cropper:
     :path: ".symlinks/plugins/image_cropper/ios"
-  image_gallery_saver:
-    :path: ".symlinks/plugins/image_gallery_saver/ios"
+  image_gallery_saver_plus:
+    :path: ".symlinks/plugins/image_gallery_saver_plus/ios"
   image_picker_ios:
     :path: ".symlinks/plugins/image_picker_ios/ios"
   in_app_review:
@@ -268,7 +268,7 @@ SPEC CHECKSUMS:
   GTMAppAuth: f69bd07d68cd3b766125f7e072c45d7340dea0de
   GTMSessionFetcher: 5aea5ba6bd522a239e236100971f10cb71b96ab6
   image_cropper: 37d40f62177c101ff4c164906d259ea2c3aa70cf
-  image_gallery_saver: cb43cc43141711190510e92c460eb1655cd343cb
+  image_gallery_saver_plus: 782ade975fe6a4600b53e7c1983e3a2979d1e9e5
   image_picker_ios: c560581cceedb403a6ff17f2f816d7fea1421fc1
   in_app_review: 318597b3a06c22bb46dc454d56828c85f444f99d
   kakao_flutter_sdk_common: 4f10f98226da5d0f7cbdeeaed5cc21f144515209
