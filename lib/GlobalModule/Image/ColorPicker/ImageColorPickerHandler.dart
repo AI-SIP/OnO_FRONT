@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:ono/GlobalModule/Theme/DecorateText.dart';
 import 'package:provider/provider.dart';
@@ -76,15 +77,6 @@ class _ColorPickerScreenState extends State<ColorPickerScreen> {
                 width: MediaQuery.of(context).size.width, // 이미지의 너비를 화면 크기에 맞춤
                 fit: BoxFit.contain, // 이미지를 화면에 맞추어 표시
               ),
-              /*
-              child: Image.asset(
-                widget.imagePath,
-                height: MediaQuery.of(context).size.height * 0.6, // 이미지의 높이를 더 크게 설정
-                width: MediaQuery.of(context).size.width, // 이미지의 너비를 화면 크기에 맞춤
-                fit: BoxFit.contain, // 이미지를 화면에 맞추어 표시
-              ),
-
-               */
             ),
           ),
           const SizedBox(height: 20),
@@ -121,6 +113,16 @@ class _ColorPickerScreenState extends State<ColorPickerScreen> {
                   'blue': color.blue,
                 };
               }).toList();
+
+              // 선택한 색상 개수 GA 로그로 수집
+              int selectedColorCount = colorMaps.where((color) => color != null).length;
+
+              FirebaseAnalytics.instance.logEvent(
+                name: 'color_picker_count',
+                parameters: {
+                  'selected_color_count': selectedColorCount,
+                },
+              );
 
               Navigator.of(context).pop(colorMaps); // 변환된 리스트 반환
             },

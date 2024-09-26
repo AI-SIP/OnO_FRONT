@@ -1,4 +1,5 @@
 import 'dart:io' show Platform;
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:ono/Model/LoginStatus.dart';
 import 'package:provider/provider.dart';
@@ -17,6 +18,9 @@ class HomeScreen extends StatelessWidget {
 
     if (await canLaunchUrl(url)) {
       launchUrl(url);
+      FirebaseAnalytics.instance.logEvent(name: 'ono_guide_button_click', parameters: {
+        'url': AppConfig.guidePageUrl,
+      });
     } else {
       throw 'Could not launch $url';
     }
@@ -239,23 +243,6 @@ class HomeScreen extends StatelessWidget {
                           backgroundColor: const Color(0xFFFEE500),
                           fontBold: true,
                         ),
-                        /*
-                        SizedBox(height: screenHeight * 0.03),
-                        _buildLoginButton(
-                          context: context,
-                          onPressed: () => authService.signInWithNaver(),
-                          text: ' 네이버 로그인',
-                          assetPath: 'assets/NaverLogo.png', // 네이버 로고 경로
-                          textColor: Colors.white,
-                          buttonWidth: buttonWidth,
-                          buttonHeight: buttonHeight,
-                          logoSize: logoSize,
-                          textSize: textSize,
-                          backgroundColor: const Color(0xFF03C75A), // 네이버의 그린 컬러
-                          fontBold: true,
-                        ),
-
-                         */
                       ],
                     );
                   }

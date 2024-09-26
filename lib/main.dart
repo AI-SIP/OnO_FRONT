@@ -1,33 +1,39 @@
 import 'dart:developer';
 
+import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart';
 import 'package:ono/GlobalModule/Theme/ThemeHandler.dart';
+import 'package:ono/Model/LoginStatus.dart';
 import 'package:ono/Provider/FoldersProvider.dart';
 import 'package:ono/Screen/SplashScreen.dart';
 import 'package:provider/provider.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
+import 'Provider/UserProvider.dart';
 import 'Screen/HomeScreen.dart';
 import 'Screen/DirectoryScreen.dart';
 import 'Screen/ProblemRegisterScreen.dart';
 import 'Screen/SettingScreen.dart';
 import 'GlobalModule/Theme/AppbarWithLogo.dart';
-import 'Provider/UserProvider.dart';
+import 'firebase_options.dart';
 
 void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env");
+
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+
   KakaoSdk.init(nativeAppKey: '7fd2fa49895af63319fd6b11e084d0d5');
 
   await SentryFlutter.init(
           (options) {
         options.dsn = 'https://ef02bb2a25f04c4141b3edb8c51ff128@o4507978249273344.ingest.us.sentry.io/4507978250911744';
-        // Set tracesSampleRate to 1.0 to capture 100% of transactions for tracing.
-        // We recommend adjusting this value in production.
         options.tracesSampleRate = 1.0;
-        // The sampling rate for profiling is relative to tracesSampleRate
-        // Setting to 1.0 will profile 100% of sampled transactions:
         options.profilesSampleRate = 1.0;
       },
   );
@@ -50,13 +56,19 @@ void main() async {
 }
 
 class MyApp extends StatelessWidget {
+
   const MyApp({super.key});
+
+  static FirebaseAnalytics analytics = FirebaseAnalytics.instance;
+  static FirebaseAnalyticsObserver observer = FirebaseAnalyticsObserver(analytics: analytics);
 
   @override
   Widget build(BuildContext context) {
+
     return MaterialApp(
       title: 'Flutter Demo',
       theme: _buildThemeData(context),
+      navigatorObservers: <NavigatorObserver>[observer],
       home: SplashScreen(),
       debugShowCheckedModeBanner: false,
     );
@@ -115,6 +127,29 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
     setState(() {
       _selectedIndex = index;
     });
+
+    // 탭된 아이템에 따른 스크린 뷰 기록
+    switch (index) {
+      case 0:
+        _sendScreenView('HomeScreen');
+        break;
+      case 1:
+        _sendScreenView('ProblemRegisterScreen');
+        break;
+      case 2:
+        _sendScreenView('DirectoryScreen');
+        break;
+      case 3:
+        _sendScreenView('SettingScreen');
+        break;
+    }
+  }
+
+  // FirebaseAnalytics에 스크린 뷰를 기록하는 함수
+  Future<void> _sendScreenView(String screenName) async {
+    FirebaseAnalytics.instance.logScreenView(
+      screenName: screenName,
+    );
   }
 
   @override
@@ -139,13 +174,19 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
   }
 
   void _resetAppState() {
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
     final foldersProvider = Provider.of<FoldersProvider>(context, listen: false);
 
-    setState(() {
-      _selectedIndex = 0;
-    });
-
-    foldersProvider.fetchRootFolderContents();
+    if(userProvider.loginStatus == LoginStatus.login){
+      setState(() {
+        _selectedIndex = 2;
+      });
+      foldersProvider.fetchRootFolderContents();
+    } else{
+      setState(() {
+        _selectedIndex = 0;
+      });
+    }
   }
 
   @override

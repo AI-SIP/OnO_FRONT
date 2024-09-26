@@ -6,9 +6,31 @@
 	<string>41920987554-6lp5n7jr9v81pu2r6ulihp3ggu25kpse.apps.googleusercontent.com</string>
 	<key>REVERSED_CLIENT_ID</key>
 	<string>com.googleusercontent.apps.41920987554-6lp5n7jr9v81pu2r6ulihp3ggu25kpse</string>
+	<key>ANDROID_CLIENT_ID</key>
+	<string>41920987554-3npfho91l117nk3bnuhu51caff3ip44v.apps.googleusercontent.com</string>
+	<key>API_KEY</key>
+	<string>AIzaSyDpLuO4oC-696P7dCyKDFKwMvt0FWkAjCA</string>
+	<key>GCM_SENDER_ID</key>
+	<string>41920987554</string>
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
 	<string>com.aisip.OnO</string>
+	<key>PROJECT_ID</key>
+	<string>aisip-ono</string>
+	<key>STORAGE_BUCKET</key>
+	<string>aisip-ono.appspot.com</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<true></true>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:41920987554:ios:dde502c0f722f5a26eb2fb</string>
 </dict>
 </plist>

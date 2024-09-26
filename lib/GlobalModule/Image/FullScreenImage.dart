@@ -1,9 +1,10 @@
 import 'dart:typed_data';
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:http/http.dart' as http;
 import 'package:permission_handler/permission_handler.dart';
-import 'package:image_gallery_saver/image_gallery_saver.dart';
+import 'package:image_gallery_saver_plus/image_gallery_saver_plus.dart';
 
 import '../Theme/DecorateText.dart';
 
@@ -15,7 +16,9 @@ class FullScreenImage extends StatelessWidget {
   Future<void> _downloadImage(BuildContext context) async {
     if (imagePath == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: DecorateText(text: "이미지를 다운로드할 수 없습니다.", fontSize: 20, color: Colors.white)),
+        const SnackBar(
+            content: DecorateText(
+                text: "이미지를 다운로드할 수 없습니다.", fontSize: 20, color: Colors.white)),
       );
       return;
     }
@@ -28,29 +31,42 @@ class FullScreenImage extends StatelessWidget {
         var response = await http.get(Uri.parse(imagePath!));
         if (response.statusCode == 200) {
           // 갤러리에 이미지 저장
-          final result = await ImageGallerySaver.saveImage(
+          final result = await ImageGallerySaverPlus.saveImage(
             Uint8List.fromList(response.bodyBytes),
             quality: 80,
             name: "downloaded_image",
           );
           if (result["isSuccess"]) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: DecorateText(text: "이미지가 다운로드되었습니다.", fontSize: 20, color: Colors.white,)),
+              const SnackBar(
+                  content: DecorateText(
+                text: "이미지가 다운로드되었습니다.",
+                fontSize: 20,
+                color: Colors.white,
+              )),
             );
           } else {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: DecorateText(text: "다운로드에 실패했습니다.", fontSize: 20, color: Colors.white)),
+              const SnackBar(
+                  content: DecorateText(
+                      text: "다운로드에 실패했습니다.",
+                      fontSize: 20,
+                      color: Colors.white)),
             );
           }
         }
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: DecorateText(text: "에러 발생: $e", fontSize: 20, color: Colors.white)),
+          SnackBar(
+              content: DecorateText(
+                  text: "에러 발생: $e", fontSize: 20, color: Colors.white)),
         );
       }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: DecorateText(text: "저장 권한이 필요합니다.", fontSize: 20, color: Colors.white)),
+        const SnackBar(
+            content: DecorateText(
+                text: "저장 권한이 필요합니다.", fontSize: 20, color: Colors.white)),
       );
     }
   }
@@ -69,7 +85,12 @@ class FullScreenImage extends StatelessWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.download, color: Colors.white),
-            onPressed: () => _downloadImage(context),
+            onPressed: () {
+              FirebaseAnalytics.instance.logEvent(
+                name: 'image_download_button_click',
+              );
+              _downloadImage(context);
+            },
           ),
         ],
       ),
@@ -87,9 +108,9 @@ class FullScreenImage extends StatelessWidget {
                   image: DecorationImage(
                     image: imagePath == null
                         ? const AssetImage('assets/no_image.png')
-                    as ImageProvider<Object>
+                            as ImageProvider<Object>
                         : CachedNetworkImageProvider(imagePath!)
-                    as ImageProvider<Object>,
+                            as ImageProvider<Object>,
                     fit: BoxFit.contain,
                   ),
                 ),

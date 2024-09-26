@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:core';
 import 'dart:developer';
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -45,15 +46,24 @@ class AppleAuthService {
         );
 
         if (response.statusCode == 200) {
+          log('Apple sign-in Success!');
+          FirebaseAnalytics.instance.logSignUp(signUpMethod: 'Apple');
           return jsonDecode(response.body);
         } else {
-          throw new Exception("Failed to Register user on server");
+          throw Exception("Failed to Register user on server");
         }
       } else {
         log("Failed to get Apple idToken");
         return null;
       }
     } catch (error, stackTrace) {
+      if(error == AuthorizationErrorCode.canceled){
+        return null;
+      }
+      if(error == AuthorizationErrorCode.unknown){
+        return null;
+      }
+
       log('Apple sign-in error: $error');
       await Sentry.captureException(
         error,

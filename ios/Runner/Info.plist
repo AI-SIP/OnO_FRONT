@@ -42,61 +42,15 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
-	<key>LSApplicationQueriesSchemes</key>
-	<array>
-		<string>kakaokompassauth</string>
-		<string>kakaolink</string>
-		<string>kakaoplus</string>
-		<string>google</string>
-	</array>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>LSSupportsOpeningDocumentsInPlace</key>
 	<true/>
-	<key>LSApplicationQueriesSchemes</key>
-    <array>
-       <string>naversearchapp</string>
-       <string>naversearchthirdlogin</string>
-    </array>
-
-    <key>naverServiceAppUrlScheme</key>
-    <string>OnO</string>
-
-    <!-- naver client_id -->
-    <key>naverConsumerKey</key>
-    <string>_fFR5LPvfgKDimQqucMR</string>
-
-    <!-- naver client_secret -->
-    <key>naverConsumerSecret</key>
-    <string>5KH13wnGep</string>
-
-    <key>naverServiceAppName</key>
-    <string>OnO</string>
-
-    <!-- http allows configurations -->
-    <key>NSAppTransportSecurity</key>
-    <dict>
-       <key>NSAllowsArbitraryLoads</key>
-       <true/>
-       <key>NSExceptionDomains</key>
-       <dict>
-           <key>naver.com</key>
-           <dict>
-               <key>NSExceptionRequiresForwardSecrecy</key>
-               <false/>
-               <key>NSIncludesSubdomains</key>
-               <true/>
-           </dict>
-           <key>naver.net</key>
-           <dict>
-               <key>NSExceptionRequiresForwardSecrecy</key>
-               <false/>
-               <key>NSIncludesSubdomains</key>
-               <true/>
-           </dict>
-       </dict>
-    </dict>
-
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<true/>
+	</dict>
 	<key>NSCameraUsageDescription</key>
 	<string>오답노트 등록에 필요한 사진을 직접 첨부하기 위해서는 카메라 접근 권한 허용이 필요합니다.</string>
 	<key>NSMicrophoneUsageDescription</key>

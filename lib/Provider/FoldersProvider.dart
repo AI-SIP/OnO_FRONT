@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:developer';
 
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:ono/GlobalModule/Util/ProblemSorting.dart';
 import 'package:ono/GlobalModule/Util/ReviewHandler.dart';
@@ -336,6 +337,16 @@ class FoldersProvider with ChangeNotifier {
       final answerImage = problemData.answerImage;
       final colors = problemData.colors;
 
+      logProblemSubmission(
+        action: "submit",
+        isProblemImageFilled: problemData.problemImage != null,
+        isAnswerImageFilled: problemData.answerImage != null,
+        isSolveImageFilled: problemData.solveImage != null,
+        isReferenceFilled: (problemData.reference != null) && (problemData.reference!.isNotEmpty),
+        isMemoFilled: (problemData.memo != null) && (problemData.memo!.isNotEmpty),
+        isProcess: problemData.isProcess!,
+      );
+
       if (problemImage != null) {
         request.files.add(await http.MultipartFile.fromPath(
             'problemImage', problemImage.path));
@@ -445,6 +456,9 @@ class FoldersProvider with ChangeNotifier {
         throw Exception("JWT token is not available");
       }
 
+      log(problemData.toString());
+
+
       var uri = Uri.parse('${AppConfig.baseUrl}/api/problem');
       var request = http.MultipartRequest('PATCH', uri)
         ..headers.addAll({'Authorization': 'Bearer $accessToken'});
@@ -467,6 +481,16 @@ class FoldersProvider with ChangeNotifier {
       }
 
       request.fields['process'] = problemData.isProcess! ? 'true' : 'false';
+
+      logProblemSubmission(
+        action: "update",
+        isProblemImageFilled: problemData.problemImage != null,
+        isAnswerImageFilled: problemData.answerImage != null,
+        isSolveImageFilled: problemData.solveImage != null,
+        isReferenceFilled: (problemData.reference != null) && (problemData.reference!.isNotEmpty),
+        isMemoFilled: (problemData.memo != null) && (problemData.memo!.isNotEmpty),
+        isProcess: problemData.isProcess!,
+      );
 
       final problemImage = problemData.problemImage;
       final colors = problemData.colors;
@@ -580,5 +604,31 @@ class FoldersProvider with ChangeNotifier {
 
   List<int> getProblemIds() {
     return _problems.map((problem) => problem.problemId as int).toList();
+  }
+
+  Future<void> logProblemSubmission({
+    required String action, // "등록" or "수정"
+    required bool isProblemImageFilled,
+    required bool isAnswerImageFilled,
+    required bool isSolveImageFilled,
+    required bool isReferenceFilled,
+    required bool isMemoFilled,
+    required bool isProcess,
+  }) async {
+    FirebaseAnalytics analytics = FirebaseAnalytics.instance;
+
+    // Log the overall action
+    await analytics.logEvent(
+      name: 'problem_submit',
+      parameters: {
+        'method': action,
+        'problem_image': isProblemImageFilled ? "filled" : "null",
+        'answer_image': isAnswerImageFilled ? "filled" : "null",
+        'solve_image': isSolveImageFilled ? "filled" : "null",
+        'reference': isReferenceFilled ? "filled" : "null",
+        'memo': isMemoFilled ? "filled" : "null",
+        'isProcess' : isProcess ? "true" : "false",
+      },
+    );
   }
 }

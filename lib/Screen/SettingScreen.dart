@@ -1,4 +1,6 @@
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
+import 'package:ono/Config/AppConfig.dart';
 import 'package:provider/provider.dart';
 import '../GlobalModule/Theme/DecorateText.dart';
 import '../GlobalModule/Theme/ThemeHandler.dart';
@@ -36,12 +38,12 @@ class _SettingScreenState extends State<SettingScreen> {
                 const SizedBox(height: 10),
                 _buildUserNameTile(
                   context: context,
-                  userName: userProvider.userName,
+                  userName: userProvider.userName ?? '이름 없음',
                   themeProvider: themeProvider,
                 ),
                 const Divider(),
                 _buildProblemCountTile(
-                  problemCount: userProvider.problemCount,
+                  problemCount: userProvider.problemCount ?? 0,
                   themeProvider: themeProvider,
                 ),
                 const Divider(),
@@ -60,6 +62,9 @@ class _SettingScreenState extends State<SettingScreen> {
                   subtitle: '앱에 대한 의견을 보내주세요.',
                   context: context,
                   onTap: () {
+                    FirebaseAnalytics.instance.logEvent(name: 'feedback_button_click', parameters: {
+                      'url' : AppConfig.feedbackPageUrl,
+                    });
                     _settingScreenService.openFeedbackForm();
                   },
                 ),
@@ -118,6 +123,7 @@ class _SettingScreenState extends State<SettingScreen> {
       ),
       trailing: ElevatedButton(
         onPressed: () {
+          FirebaseAnalytics.instance.logEvent(name: 'userName_edit_button_click');
           _showChangeNameDialog(context, userName);
         },
         style: ElevatedButton.styleFrom(

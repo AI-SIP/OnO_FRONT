@@ -1,4 +1,5 @@
 import 'dart:developer';
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
@@ -22,15 +23,30 @@ class ImagePickerHandler {
     final pickedFile = await _cameraHandler.takePicture(context);
 
     if (pickedFile != null) {
+      FirebaseAnalytics.instance.logEvent(
+        name: '이미지 선택',
+        parameters: {
+          '이미지 선택 방식': '카메라',
+        },
+      );
+
       return _cropImage(pickedFile);
     }
     return null;
   }
 
-  Future<XFile?> pickImageFromGallery() async {
+  Future<XFile?> pickImageFromGallery(BuildContext context) async {
     try {
       final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
       if (pickedFile != null) {
+
+        FirebaseAnalytics.instance.logEvent(
+          name: '이미지 선택',
+          parameters: {
+            '이미지 선택 방식': '갤러리',
+          },
+        );
+
         return _cropImage(pickedFile);
       }
       return null;
@@ -41,6 +57,7 @@ class ImagePickerHandler {
   }
 
   Future<XFile?> _cropImage(XFile imageFile) async {
+
     try {
       final croppedFile = await ImageCropper().cropImage(
         sourcePath: imageFile.path,
@@ -48,7 +65,7 @@ class ImagePickerHandler {
         uiSettings: [
           AndroidUiSettings(
             toolbarTitle: '이미지 자르기',
-            toolbarColor: Colors.green,
+            toolbarColor: Colors.black,
             toolbarWidgetColor: Colors.white,
             lockAspectRatio: false,
             cropStyle: CropStyle.rectangle,
@@ -119,7 +136,7 @@ class ImagePickerHandler {
                 ),
                 onTap: () async {
                   Navigator.of(context).pop(); // Close the popup
-                  final pickedFile = await pickImageFromGallery();
+                  final pickedFile = await pickImageFromGallery(context);
                   onImagePicked(pickedFile);
                 },
               ),

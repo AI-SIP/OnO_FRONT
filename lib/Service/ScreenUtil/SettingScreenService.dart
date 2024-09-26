@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ono/Config/AppConfig.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../GlobalModule/Theme/DecorateText.dart';
@@ -74,7 +75,7 @@ class SettingScreenService {
   }
 
   Future<void> openFeedbackForm() async {
-    Uri url = Uri.parse('https://forms.gle/MncQvyT57LQr43Pp7');
+    Uri url = Uri.parse(AppConfig.feedbackPageUrl);
     if (await canLaunchUrl(url)) {
       await launchUrl(url);
     } else {

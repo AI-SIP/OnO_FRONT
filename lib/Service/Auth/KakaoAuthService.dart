@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:developer';
 
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/services.dart';
 import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart';
 import 'package:http/http.dart' as http;
@@ -14,6 +15,7 @@ class KakaoAuthService {
       try {
         UserApi.instance.loginWithKakaoTalk().then((_) async {
           User user = await UserApi.instance.me();
+          FirebaseAnalytics.instance.logSignUp(signUpMethod: 'Kakao');
           return registerUser(user);
         });
       } catch (error, stackTrace) {
@@ -33,7 +35,8 @@ class KakaoAuthService {
           await UserApi.instance.loginWithKakaoAccount();
           User user = await UserApi.instance.me();
           return registerUser(user);
-        } catch (error, stackTrace) {
+        }
+        catch (error, stackTrace) {
           log('카카오계정으로 로그인 실패 $error');
           await Sentry.captureException(
             error,
@@ -46,8 +49,13 @@ class KakaoAuthService {
       try {
         await UserApi.instance.loginWithKakaoAccount();
         User user = await UserApi.instance.me();
+        FirebaseAnalytics.instance.logSignUp(signUpMethod: 'Kakao');
         return registerUser(user);
       } catch (error, stackTrace) {
+        if (error is PlatformException && error.code == 'CANCELED') {
+          return null;
+        }
+
         log('카카오계정으로 로그인 실패 $error');
         await Sentry.captureException(
           error,

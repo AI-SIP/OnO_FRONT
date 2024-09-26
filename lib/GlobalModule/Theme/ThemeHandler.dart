@@ -1,3 +1,4 @@
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
@@ -25,7 +26,7 @@ class ThemeHandler with ChangeNotifier {
   Color get desaturateColor => _desaturateColor;
 
   // 색상을 변경하고 저장하는 메서드
-  void changePrimaryColor(Color primaryColor) {
+  void changePrimaryColor(Color primaryColor, String colorName) {
     _primaryColor = primaryColor;
     _lightPrimaryColor = _lightenColor(primaryColor, 0.2);
     _darkPrimaryColor = _darkenColor(primaryColor, 0.2);
@@ -34,6 +35,10 @@ class ThemeHandler with ChangeNotifier {
     _saveColor('lightPrimaryColor', _lightPrimaryColor);
     _saveColor('darkPrimaryColor', _darkPrimaryColor);
     _saveColor('desaturateColor', _desaturateColor);
+
+    FirebaseAnalytics.instance.logEvent(name: 'theme_color_change', parameters: {
+      'color': colorName,
+    });
     notifyListeners();
   }
 

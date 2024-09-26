@@ -1,5 +1,6 @@
 import 'dart:developer';
 
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
@@ -102,15 +103,21 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                   color: themeProvider.primaryColor,
                   size: 24,
                 ),
-                onPressed: () => _showCreateFolderDialog(), // 폴더 생성 다이얼로그 호출
+                onPressed: ()  {
+                  FirebaseAnalytics.instance.logEvent(name: 'folder_create_button_click');
+                  _showCreateFolderDialog(); // 폴더 생성 다이얼로그 호출
+                }
               ),
               PopupMenuButton<String>(
                 onSelected: (value) {
                   if (value == 'rename') {
+                    FirebaseAnalytics.instance.logEvent(name: 'folder_name_edit_button_click');
                     _showRenameFolderDialog(foldersProvider);
                   } else if (value == 'move') {
+                    FirebaseAnalytics.instance.logEvent(name: 'folder_path_move_button_click');
                     _showMoveFolderDialog(foldersProvider); // 폴더 이동 다이얼로그 호출
                   } else if (value == 'delete') {
+                    FirebaseAnalytics.instance.logEvent(name: 'folder_delete_button_click');
                     _showDeleteFolderDialog(foldersProvider);
                   }
                 },
@@ -434,6 +441,13 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
             setState(() {
               _selectedSortOption = value!;
               _directoryService.sortProblems(_selectedSortOption);
+
+              FirebaseAnalytics.instance.logEvent(
+                name: 'select_option_button_click',
+                parameters: {
+                  'select_option': _selectedSortOption,
+                },
+              );
             });
           },
         ),
@@ -495,14 +509,19 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       FolderThumbnailModel folder, ThemeHandler themeProvider) {
     return GestureDetector(
       onTap: () {
+
+        FirebaseAnalytics.instance.logEvent(name: 'move_to_folder', parameters: {
+          'folder_id': folder.folderId,
+        }); // GA 로그 추가
+
         // 폴더를 클릭했을 때 해당 폴더로 이동
         Provider.of<FoldersProvider>(context, listen: false)
             .fetchFolderContents(folderId: folder.folderId);
       },
       child: DragTarget<ProblemModel>(
-        onAccept: (problem) async {
+        onAcceptWithDetails: (details) async {
           // 문제를 드롭하면 폴더로 이동
-          await _moveProblemToFolder(problem, folder.folderId);
+          await _moveProblemToFolder(details.data, folder.folderId);
         },
         builder: (context, candidateData, rejectedData) {
           return LayoutBuilder(
@@ -555,6 +574,10 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   Widget _buildProblemTile(ProblemModel problem, ThemeHandler themeProvider) {
     return GestureDetector(
       onTap: () {
+        FirebaseAnalytics.instance.logEvent(name: 'move_to_problem', parameters: {
+          'problem_id': problem.problemId!,
+        });
+
         // 문제를 터치했을 때 페이지로 이동
         _directoryService.navigateToProblemDetail(context, problem.problemId);
       },
@@ -649,6 +672,11 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       log('Problem ID or folderId is null. Cannot move the problem.');
       return; // 문제 ID 또는 폴더 ID가 null이면 실행하지 않음
     }
+
+    FirebaseAnalytics.instance.logEvent(name: 'problem_path_edit', parameters: {
+      'problem_id': problem.problemId!,
+      'target_folder_id': folderId,
+    });
 
     final foldersProvider =
         Provider.of<FoldersProvider>(context, listen: false);
