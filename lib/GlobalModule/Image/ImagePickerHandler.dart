@@ -22,16 +22,16 @@ class ImagePickerHandler {
     final pickedFile = await _cameraHandler.takePicture(context);
 
     if (pickedFile != null) {
-      return _cropImage(pickedFile);
+      return _cropImage(pickedFile, context);
     }
     return null;
   }
 
-  Future<XFile?> pickImageFromGallery() async {
+  Future<XFile?> pickImageFromGallery(BuildContext context) async {
     try {
       final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
       if (pickedFile != null) {
-        return _cropImage(pickedFile);
+        return _cropImage(pickedFile, context);
       }
       return null;
     } catch (e) {
@@ -40,7 +40,9 @@ class ImagePickerHandler {
     }
   }
 
-  Future<XFile?> _cropImage(XFile imageFile) async {
+  Future<XFile?> _cropImage(XFile imageFile, BuildContext context) async {
+    final themeProvider = Provider.of<ThemeHandler>(context);
+
     try {
       final croppedFile = await ImageCropper().cropImage(
         sourcePath: imageFile.path,
@@ -48,7 +50,7 @@ class ImagePickerHandler {
         uiSettings: [
           AndroidUiSettings(
             toolbarTitle: '이미지 자르기',
-            toolbarColor: Colors.green,
+            toolbarColor: themeProvider.primaryColor,
             toolbarWidgetColor: Colors.white,
             lockAspectRatio: false,
             cropStyle: CropStyle.rectangle,
@@ -119,7 +121,7 @@ class ImagePickerHandler {
                 ),
                 onTap: () async {
                   Navigator.of(context).pop(); // Close the popup
-                  final pickedFile = await pickImageFromGallery();
+                  final pickedFile = await pickImageFromGallery(context);
                   onImagePicked(pickedFile);
                 },
               ),
