@@ -342,8 +342,8 @@ class FoldersProvider with ChangeNotifier {
         isProblemImageFilled: problemData.problemImage != null,
         isAnswerImageFilled: problemData.answerImage != null,
         isSolveImageFilled: problemData.solveImage != null,
-        isReferenceFilled: problemData.reference!.isNotEmpty,
-        isMemoFilled: problemData.memo!.isNotEmpty,
+        isReferenceFilled: (problemData.reference != null) && (problemData.reference!.isNotEmpty),
+        isMemoFilled: (problemData.memo != null) && (problemData.memo!.isNotEmpty),
         isProcess: problemData.isProcess!,
       );
 
@@ -456,6 +456,9 @@ class FoldersProvider with ChangeNotifier {
         throw Exception("JWT token is not available");
       }
 
+      log(problemData.toString());
+
+
       var uri = Uri.parse('${AppConfig.baseUrl}/api/problem');
       var request = http.MultipartRequest('PATCH', uri)
         ..headers.addAll({'Authorization': 'Bearer $accessToken'});
@@ -484,8 +487,8 @@ class FoldersProvider with ChangeNotifier {
         isProblemImageFilled: problemData.problemImage != null,
         isAnswerImageFilled: problemData.answerImage != null,
         isSolveImageFilled: problemData.solveImage != null,
-        isReferenceFilled: problemData.reference!.isNotEmpty,
-        isMemoFilled: problemData.memo!.isNotEmpty,
+        isReferenceFilled: (problemData.reference != null) && (problemData.reference!.isNotEmpty),
+        isMemoFilled: (problemData.memo != null) && (problemData.memo!.isNotEmpty),
         isProcess: problemData.isProcess!,
       );
 

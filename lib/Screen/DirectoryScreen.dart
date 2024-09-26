@@ -519,9 +519,9 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
             .fetchFolderContents(folderId: folder.folderId);
       },
       child: DragTarget<ProblemModel>(
-        onAccept: (problem) async {
+        onAcceptWithDetails: (details) async {
           // 문제를 드롭하면 폴더로 이동
-          await _moveProblemToFolder(problem, folder.folderId);
+          await _moveProblemToFolder(details.data, folder.folderId);
         },
         builder: (context, candidateData, rejectedData) {
           return LayoutBuilder(
