@@ -10,7 +10,6 @@ import 'package:ono/Model/LoginStatus.dart';
 import 'package:ono/Provider/FoldersProvider.dart';
 import 'package:ono/Service/Auth/GuestAuthService.dart';
 import 'package:ono/Service/Auth/KakaoAuthService.dart';
-import 'package:ono/Service/Auth/NaverAuthService.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import '../Config/AppConfig.dart';
 import 'TokenProvider.dart';
@@ -41,7 +40,6 @@ class UserProvider with ChangeNotifier {
   final AppleAuthService appleAuthService = AppleAuthService();
   final GoogleAuthService googleAuthService = GoogleAuthService();
   final KakaoAuthService kakaoAuthService = KakaoAuthService();
-  final NaverAuthService naverAuthService = NaverAuthService();
 
   Future<void> signInWithGuest() async {
     _loginStatus = LoginStatus.waiting;
@@ -74,14 +72,6 @@ class UserProvider with ChangeNotifier {
 
     final response = await kakaoAuthService.signInWithKakao();
     saveUserToken(response: response, loginMethod: 'kakao');
-  }
-
-  Future<void> signInWithNaver() async{
-    _loginStatus = LoginStatus.logout;
-    notifyListeners();
-
-    final response = await naverAuthService.signInWithNaver();
-    saveUserToken(response: response, loginMethod: 'naver');
   }
 
   Future<void> saveUserToken({Map<String,dynamic>? response, String? loginMethod}) async{
@@ -265,8 +255,6 @@ class UserProvider with ChangeNotifier {
         // apple 은 별도의 로그아웃 로직이 없습니다.
       } else if (loginMethod == 'kakao') {
         await kakaoAuthService.logoutKakaoSignIn();
-      } else if(loginMethod == 'naver'){
-        await naverAuthService.logoutNaverSignIn();
       }
       else if (loginMethod == 'guest') {
         deleteAccount();
@@ -301,9 +289,6 @@ class UserProvider with ChangeNotifier {
     } else if(loginMethod == 'kakao'){
       // 카카오 회원 탈퇴 로직
       await kakaoAuthService.revokeKakaoSignIn();
-    } else if(loginMethod == 'naver'){
-      // 네이버 회원 탈퇴 로직
-      await naverAuthService.revokeNaverSignIn();
     }
     else if (loginMethod == 'guest') {
 
