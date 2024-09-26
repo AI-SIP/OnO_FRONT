@@ -1,3 +1,4 @@
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -11,6 +12,7 @@ class ThemeDialog extends StatefulWidget {
 
 class _ThemeDialogState extends State<ThemeDialog> {
   Color? _selectedColor;
+  String? _selectedColorName;
 
   @override
   Widget build(BuildContext context) {
@@ -35,30 +37,30 @@ class _ThemeDialogState extends State<ThemeDialog> {
                 crossAxisSpacing: 8.0, // Adjusted spacing
                 mainAxisSpacing: 8.0, // Adjusted spacing
                 children: [
-                  _buildColorCircle(Colors.pink[200]!),
-                  _buildColorCircle(Colors.pink[400]!),
-                  _buildColorCircle(Colors.purple[300]!),
-                  _buildColorCircle(Colors.purple[700]!),
-                  _buildColorCircle(Colors.red[500]!),
-                  _buildColorCircle(Colors.yellow[900]!),
-                  _buildColorCircle(Colors.orange[300]!),
-                  _buildColorCircle(Colors.yellow[600]!),
-                  _buildColorCircle(Colors.lightGreen),
-                  _buildColorCircle(Colors.green[500]!),
-                  _buildColorCircle(Colors.green[700]!),
-                  _buildColorCircle(Colors.green[900]!),
-                  _buildColorCircle(Colors.cyan),
-                  _buildColorCircle(Colors.blue[700]!),
-                  _buildColorCircle(Colors.indigo),
-                  _buildColorCircle(Colors.indigo[900]!),
-                  _buildColorCircle(const Color(0xFFC8B68A)),
-                  _buildColorCircle(const Color(0xFF7A6748)),
-                  _buildColorCircle(Colors.brown[500]!),
-                  _buildColorCircle(Colors.brown[800]!),
-                  _buildColorCircle(Colors.grey[400]!),
-                  _buildColorCircle(Colors.grey[600]!),
-                  _buildColorCircle(Colors.grey[800]!),
-                  _buildColorCircle(Colors.black),
+                  _buildColorCircle(Colors.pink[200]!, '연핑크'),
+                  _buildColorCircle(Colors.pink[400]!, '진핑크'),
+                  _buildColorCircle(Colors.purple[300]!, '라일락'),
+                  _buildColorCircle(Colors.purple[700]!, '보라색'),
+                  _buildColorCircle(Colors.red[500]!, '빨간색'),
+                  _buildColorCircle(Colors.yellow[900]!, '황금색'),
+                  _buildColorCircle(Colors.orange[300]!, '오렌지색'),
+                  _buildColorCircle(Colors.yellow[600]!, '노란색'),
+                  _buildColorCircle(Colors.lightGreen, '라이트그린'),
+                  _buildColorCircle(Colors.green[500]!, '초록색'),
+                  _buildColorCircle(Colors.green[700]!, '다크그린'),
+                  _buildColorCircle(Colors.green[900]!, '딥그린'),
+                  _buildColorCircle(Colors.cyan, '시안'),
+                  _buildColorCircle(Colors.blue[700]!, '블루'),
+                  _buildColorCircle(Colors.indigo, '인디고'),
+                  _buildColorCircle(Colors.indigo[900]!, '딥인디고'),
+                  _buildColorCircle(const Color(0xFFC8B68A), '베이지'),
+                  _buildColorCircle(const Color(0xFF7A6748), '브론즈'),
+                  _buildColorCircle(Colors.brown[500]!, '브라운'),
+                  _buildColorCircle(Colors.brown[800]!, '다크브라운'),
+                  _buildColorCircle(Colors.grey[400]!, '라이트그레이'),
+                  _buildColorCircle(Colors.grey[600]!, '그레이'),
+                  _buildColorCircle(Colors.grey[800]!, '다크그레이'),
+                  _buildColorCircle(Colors.black, '블랙'),
                 ],
               ),
             ),
@@ -81,7 +83,7 @@ class _ThemeDialogState extends State<ThemeDialog> {
             if (_selectedColor != null) {
               // Change the PrimaryColor to the selected color
               final darkerColor = _darken(_selectedColor!, 0.1);
-              themeProvider.changePrimaryColor(darkerColor);
+              themeProvider.changePrimaryColor(darkerColor, _selectedColorName!);
 
               Navigator.of(context).pop();
             }
@@ -102,11 +104,12 @@ class _ThemeDialogState extends State<ThemeDialog> {
     return hslDark.toColor();
   }
 
-  Widget _buildColorCircle(Color color) {
+  Widget _buildColorCircle(Color color, String colorName) {
     return GestureDetector(
       onTap: () {
         setState(() {
           _selectedColor = color;
+          _selectedColorName = colorName; // 선택한 색상의 이름을 설정
         });
       },
       child: CircleAvatar(

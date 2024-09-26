@@ -1,4 +1,5 @@
 import 'dart:developer';
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
@@ -22,6 +23,13 @@ class ImagePickerHandler {
     final pickedFile = await _cameraHandler.takePicture(context);
 
     if (pickedFile != null) {
+      FirebaseAnalytics.instance.logEvent(
+        name: '이미지 선택',
+        parameters: {
+          '이미지 선택 방식': '카메라',
+        },
+      );
+
       return _cropImage(pickedFile, context);
     }
     return null;
@@ -31,6 +39,14 @@ class ImagePickerHandler {
     try {
       final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
       if (pickedFile != null) {
+
+        FirebaseAnalytics.instance.logEvent(
+          name: '이미지 선택',
+          parameters: {
+            '이미지 선택 방식': '갤러리',
+          },
+        );
+
         return _cropImage(pickedFile, context);
       }
       return null;

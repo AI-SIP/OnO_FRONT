@@ -81,6 +81,8 @@ class UserProvider with ChangeNotifier {
       await storage.write(key: 'loginMethod', value: loginMethod);
       await tokenProvider.setAccessToken(response['accessToken']);
       await tokenProvider.setRefreshToken(response['refreshToken']);
+
+      FirebaseAnalytics.instance.logLogin(loginMethod: loginMethod);
       fetchUserInfo();
     }
 

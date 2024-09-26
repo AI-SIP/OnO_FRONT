@@ -1,3 +1,4 @@
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:ono/Provider/FoldersProvider.dart';
@@ -69,6 +70,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
         onSelected: (String result) async{
           final problemData = await _problemDataFuture;
           if (result == shareProblemValue) {
+            FirebaseAnalytics.instance.logEvent(name: '문제 공유 버튼 클릭');
             if (problemData != null) {
               // Navigate to ProblemShareScreen and wait for result
               await Navigator.push(
@@ -81,6 +83,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
             }
           }
           else if (result == shareAnswerValue) {
+            FirebaseAnalytics.instance.logEvent(name: '정답 공유 버튼 클릭');
             if (problemData != null) {
               // Navigate to ProblemShareScreen and wait for result
               await Navigator.push(
@@ -93,10 +96,12 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
             }
           }
           else if (result == editValue) {
+            FirebaseAnalytics.instance.logEvent(name: '문제 수정 버튼 클릭');
             setState(() {
               isEditMode = true;
             });
           } else if (result == deleteValue) {
+            FirebaseAnalytics.instance.logEvent(name: '문제 삭제 버튼 클릭');
             deleteProblemDialog(context, themeProvider);
           }
         },
@@ -157,6 +162,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
       context,
       widget.problemId,
       () {
+        FirebaseAnalytics.instance.logEvent(name: '문제 삭제');
         Navigator.of(context).pop(true);
         if (mounted) {
           SnackBarDialog.showSnackBar(
@@ -212,7 +218,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return const Center(child: CircularProgressIndicator());
               } else if (snapshot.hasError) {
-                return const Center(child: Text('에러 발생'));
+                return const Center(child: DecorateText(text: '에러 발생'));
               } else if (snapshot.hasData && snapshot.data != null) {
                 return buildProblemDetails(context, snapshot.data!);
               } else {

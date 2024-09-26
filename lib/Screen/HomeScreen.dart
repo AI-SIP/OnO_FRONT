@@ -1,4 +1,5 @@
 import 'dart:io' show Platform;
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:ono/Model/LoginStatus.dart';
 import 'package:provider/provider.dart';
@@ -17,6 +18,9 @@ class HomeScreen extends StatelessWidget {
 
     if (await canLaunchUrl(url)) {
       launchUrl(url);
+      FirebaseAnalytics.instance.logEvent(name: '오노 가이드 버튼 클릭', parameters: {
+        'url': AppConfig.guidePageUrl,
+      });
     } else {
       throw 'Could not launch $url';
     }

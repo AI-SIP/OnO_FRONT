@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:developer';
 
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:ono/GlobalModule/Util/ProblemSorting.dart';
 import 'package:ono/GlobalModule/Util/ReviewHandler.dart';
@@ -336,6 +337,16 @@ class FoldersProvider with ChangeNotifier {
       final answerImage = problemData.answerImage;
       final colors = problemData.colors;
 
+      logProblemSubmission(
+        action: "등록",
+        isProblemImageFilled: problemData.problemImage != null,
+        isAnswerImageFilled: problemData.answerImage != null,
+        isSolveImageFilled: problemData.solveImage != null,
+        isReferenceFilled: problemData.reference!.isNotEmpty,
+        isMemoFilled: problemData.memo!.isNotEmpty,
+        isProcess: problemData.isProcess!,
+      );
+
       if (problemImage != null) {
         request.files.add(await http.MultipartFile.fromPath(
             'problemImage', problemImage.path));
@@ -580,5 +591,31 @@ class FoldersProvider with ChangeNotifier {
 
   List<int> getProblemIds() {
     return _problems.map((problem) => problem.problemId as int).toList();
+  }
+
+  Future<void> logProblemSubmission({
+    required String action, // "등록" or "수정"
+    required bool isProblemImageFilled,
+    required bool isAnswerImageFilled,
+    required bool isSolveImageFilled,
+    required bool isReferenceFilled,
+    required bool isMemoFilled,
+    required bool isProcess,
+  }) async {
+    FirebaseAnalytics analytics = FirebaseAnalytics.instance;
+
+    // Log the overall action
+    await analytics.logEvent(
+      name: '문제 등록',
+      parameters: {
+        '문제 등록 방식': action,
+        '문제 이미지': isProblemImageFilled ? "작성" : "공백",
+        '정답 이미지': isAnswerImageFilled ? "작성" : "공백",
+        '풀이 이미지': isSolveImageFilled ? "작성" : "공백",
+        '출처': isReferenceFilled ? "작성" : "공백",
+        '메모': isMemoFilled ? "작성" : "공백",
+        '필기 제거 여부' : isProcess ? "제거 O" : "제거 X",
+      },
+    );
   }
 }

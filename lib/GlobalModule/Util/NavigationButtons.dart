@@ -1,3 +1,4 @@
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:ono/Provider/FoldersProvider.dart';
 import 'package:provider/provider.dart';
@@ -19,7 +20,6 @@ class NavigationButtons extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-
     final themeProvider = Provider.of<ThemeHandler>(context);
     final problemIds = provider.getProblemIds();
 
@@ -38,11 +38,17 @@ class NavigationButtons extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
         TextButton(
-          onPressed: () =>
-              navigateToProblem(context, provider, previousProblemId),
+            onPressed: () {
+              FirebaseAnalytics.instance.logEvent(
+                name: '이전 문제로 이동 버튼 클릭',
+              );
+              navigateToProblem(context, provider, previousProblemId);
+            },
             style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 25.0, vertical: 8.0),
-              backgroundColor: themeProvider.primaryColor.withOpacity(0.1), // 배경색을 은은하게 설정
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 25.0, vertical: 8.0),
+              backgroundColor:
+                  themeProvider.primaryColor.withOpacity(0.1), // 배경색을 은은하게 설정
               side: BorderSide(
                 color: themeProvider.primaryColor,
                 width: 2.0, // 테두리 두께
@@ -51,13 +57,22 @@ class NavigationButtons extends StatelessWidget {
                 borderRadius: BorderRadius.circular(15.0), // 둥글기 조정
               ),
             ),
-            child: DecorateText(text: '이전 문제', fontSize: 20, color: themeProvider.primaryColor)
-        ),
+            child: DecorateText(
+                text: '이전 문제',
+                fontSize: 20,
+                color: themeProvider.primaryColor)),
         TextButton(
-          onPressed: () => navigateToProblem(context, provider, nextProblemId),
+            onPressed: () {
+              FirebaseAnalytics.instance.logEvent(
+                name: '다음 문제로 이동 버튼 클릭',
+              );
+              navigateToProblem(context, provider, nextProblemId);
+            },
             style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 25.0, vertical: 8.0),
-              backgroundColor: themeProvider.primaryColor.withOpacity(0.1), // 배경색을 은은하게 설정
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 25.0, vertical: 8.0),
+              backgroundColor:
+                  themeProvider.primaryColor.withOpacity(0.1), // 배경색을 은은하게 설정
               side: BorderSide(
                 color: themeProvider.primaryColor,
                 width: 2.0, // 테두리 두께
@@ -66,8 +81,10 @@ class NavigationButtons extends StatelessWidget {
                 borderRadius: BorderRadius.circular(15.0), // 둥글기 조정
               ),
             ),
-            child: DecorateText(text: '다음 문제', fontSize: 20, color: themeProvider.primaryColor)
-        ),
+            child: DecorateText(
+                text: '다음 문제',
+                fontSize: 20,
+                color: themeProvider.primaryColor)),
       ],
     );
   }

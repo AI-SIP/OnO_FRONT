@@ -1,3 +1,4 @@
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
@@ -495,7 +496,6 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
       List<Map<String, int>?>? selectedColors, String imageType) {
     setState(() {
       if (pickedFile != null) {
-        // 이미지 선택이 성공했을 때만 값을 업데이트
         if (imageType == 'problemImage') {
           _problemImage = pickedFile;
           _selectedColors = selectedColors;
