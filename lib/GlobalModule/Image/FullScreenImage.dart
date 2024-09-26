@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:http/http.dart' as http;
 import 'package:permission_handler/permission_handler.dart';
-import 'package:image_gallery_saver/image_gallery_saver.dart';
+import 'package:image_gallery_saver_plus/image_gallery_saver_plus.dart';
 
 import '../Theme/DecorateText.dart';
 
@@ -31,7 +31,7 @@ class FullScreenImage extends StatelessWidget {
         var response = await http.get(Uri.parse(imagePath!));
         if (response.statusCode == 200) {
           // 갤러리에 이미지 저장
-          final result = await ImageGallerySaver.saveImage(
+          final result = await ImageGallerySaverPlus.saveImage(
             Uint8List.fromList(response.bodyBytes),
             quality: 80,
             name: "downloaded_image",

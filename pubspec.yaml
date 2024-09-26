@@ -52,13 +52,13 @@ dependencies:
   share_plus: ^10.0.2
   path_provider: ^2.1.4
   permission_handler: ^11.3.1
-  image_gallery_saver: ^2.0.3
   in_app_review: ^2.0.9
   kakao_flutter_sdk: ^1.9.6
   sentry_flutter: ^8.9.0
   url_launcher_ios: ^6.3.1
   firebase_core: ^3.5.0
   firebase_analytics: ^11.3.2
+  image_gallery_saver_plus: ^3.0.5
 
 dev_dependencies:
   flutter_test:
