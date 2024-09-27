@@ -3,6 +3,7 @@ import 'dart:developer';
 
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
+import 'package:ono/GlobalModule/Util/HttpService.dart';
 import 'package:ono/GlobalModule/Util/ProblemSorting.dart';
 import 'package:ono/GlobalModule/Util/ReviewHandler.dart';
 import 'package:ono/Model/FolderThumbnailModel.dart';
@@ -20,6 +21,7 @@ class FoldersProvider with ChangeNotifier {
   List<ProblemModel> _problems = [];
   final TokenProvider tokenProvider = TokenProvider();
   final ReviewHandler reviewHandler = ReviewHandler();
+  final HttpService httpService = HttpService();
 
   int? currentFolderId;
   String sortOption = 'newest';
@@ -28,19 +30,11 @@ class FoldersProvider with ChangeNotifier {
   List<ProblemModel> get problems => List.unmodifiable(_problems);
 
   Future<void> fetchRootFolderContents() async {
-    try {
-      final accessToken = await tokenProvider.getAccessToken();
-      if (accessToken == null) {
-        throw Exception('Access token is not available');
-      }
 
-      final url = Uri.parse('${AppConfig.baseUrl}/api/folder');
-      final response = await http.get(
-        url,
-        headers: {
-          'Content-Type': 'application/json; charset=UTF-8',
-          'Authorization': 'Bearer $accessToken',
-        },
+    try {
+      final response = await httpService.sendRequest(
+        method: 'GET',
+        url: '${AppConfig.baseUrl}/api/folder',
       );
 
       if (response.statusCode == 200) {
@@ -60,124 +54,81 @@ class FoldersProvider with ChangeNotifier {
         throw Exception('Failed to load RootFolderContents');
       }
     } catch (error, stackTrace) {
-      log('Error for fetchRootFolderContents: $error');
-      await Sentry.captureException(
-        error,
-        stackTrace: stackTrace,
-      );
+      log('Error fetching root folder contents: $error');
+      await Sentry.captureException(error, stackTrace: stackTrace);
     }
   }
 
   Future<void> fetchCurrentFolderContents() async {
     try {
-      final accessToken = await tokenProvider.getAccessToken();
-      if (accessToken == null) {
-        throw Exception('Access token is not available');
-      }
-
-      final url = Uri.parse('${AppConfig.baseUrl}/api/folder/$currentFolderId');
-      final response = await http.get(
-        url,
-        headers: {
-          'Content-Type': 'application/json; charset=UTF-8',
-          'Authorization': 'Bearer $accessToken',
-        },
+      final response = await httpService.sendRequest(
+        method: 'GET',
+        url: '${AppConfig.baseUrl}/api/folder/$currentFolderId',
       );
 
       if (response.statusCode == 200) {
         final jsonResponse = json.decode(utf8.decode(response.bodyBytes));
-
-        // 폴더 및 문제 데이터 초기화
         _currentFolder = FolderModel.fromJson(jsonResponse);
         _problems = (jsonResponse['problems'] as List)
             .map((e) => ProblemModel.fromJson(e))
             .toList();
         currentFolderId = jsonResponse['folderId'];
-
         sortProblemsByOption(sortOption);
-        notifyListeners(); // 데이터 갱신
-        log('Folder contents fetched: ${_currentFolder?.folderName}, ${problems.length} problems');
+        notifyListeners();
       } else {
         throw Exception('Failed to load CurrentFolderContents');
       }
     } catch (error, stackTrace) {
-      log('Error for fetchCurrentFolderContents: $error');
-      await Sentry.captureException(
-        error,
-        stackTrace: stackTrace,
-      );
+      log('Error fetching current folder contents: $error');
+      await Sentry.captureException(error, stackTrace: stackTrace);
     }
   }
 
   // 폴더 내용 로드 (특정 폴더 ID로)
   Future<void> fetchFolderContents({required int folderId}) async {
+
     if (currentFolderId == folderId) {
-      // 이미 해당 폴더를 보고 있을 때는 다시 데이터를 요청하지 않음
       log('Already viewing the current folder: $folderId');
       return;
     }
 
     try {
-      final accessToken = await tokenProvider.getAccessToken();
-      if (accessToken == null) {
-        throw Exception('Access token is not available');
-      }
-
-      final url = Uri.parse('${AppConfig.baseUrl}/api/folder/$folderId');
-      final response = await http.get(
-        url,
-        headers: {
-          'Content-Type': 'application/json; charset=UTF-8',
-          'Authorization': 'Bearer $accessToken',
-        },
+      final response = await httpService.sendRequest(
+        method: 'GET',
+        url: '${AppConfig.baseUrl}/api/folder/$folderId',
       );
 
       if (response.statusCode == 200) {
         final jsonResponse = json.decode(utf8.decode(response.bodyBytes));
 
-        // 폴더 및 문제 데이터 초기화
         _currentFolder = FolderModel.fromJson(jsonResponse);
         _problems = (jsonResponse['problems'] as List)
             .map((e) => ProblemModel.fromJson(e))
             .toList();
 
         sortProblemsByOption(sortOption);
-        currentFolderId = folderId; // 현재 폴더 ID 업데이트
-        notifyListeners(); // 데이터 갱신
+        currentFolderId = folderId;
+        notifyListeners();
         log('Folder contents fetched folderId : ${_currentFolder?.folderId}, folderName : ${_currentFolder?.folderName}, ${problems.length} problems');
       } else {
         throw Exception('Failed to load FolderContents');
       }
     } catch (error, stackTrace) {
-      log('Error for fetchFolderContents: $error');
-      await Sentry.captureException(
-        error,
-        stackTrace: stackTrace,
-      );
+      log('Error fetching folder contents: $error');
+      await Sentry.captureException(error, stackTrace: stackTrace);
     }
   }
 
   Future<List<FolderThumbnailModel>> fetchAllFolderThumbnails() async {
     try {
-      final accessToken = await tokenProvider.getAccessToken();
-      if (accessToken == null) {
-        throw Exception('Access token is not available');
-      }
-
-      final url = Uri.parse('${AppConfig.baseUrl}/api/folder/folders');
-      final response = await http.get(
-        url,
-        headers: {
-          'Content-Type': 'application/json; charset=UTF-8',
-          'Authorization': 'Bearer $accessToken',
-        },
+      final response = await httpService.sendRequest(
+        method: 'GET',
+        url: '${AppConfig.baseUrl}/api/folder/folders',
       );
 
       if (response.statusCode == 200) {
         final jsonResponse = json.decode(utf8.decode(response.bodyBytes));
         log('AllFolderThumbnail Fetch Complete : $jsonResponse');
-
-        // JSON 응답을 FolderThumbnailModel 리스트로 변환
         return (jsonResponse as List)
             .map((e) => FolderThumbnailModel.fromJson(e))
             .toList();
@@ -185,126 +136,80 @@ class FoldersProvider with ChangeNotifier {
         throw Exception('Failed to load AllFolderThumbnails');
       }
     } catch (error, stackTrace) {
-      log('Error for fetchCurrentFolderContents: $error');
-      await Sentry.captureException(
-        error,
-        stackTrace: stackTrace,
-      );
-
+      log('Error fetching all folder thumbnails: $error');
+      await Sentry.captureException(error, stackTrace: stackTrace);
       return [];
     }
   }
 
   // 폴더 생성
   Future<void> createFolder(String folderName) async {
-    try {
-      final accessToken = await tokenProvider.getAccessToken();
-      if (accessToken == null) {
-        throw Exception('Access token is not available');
-      }
 
-      final url = Uri.parse('${AppConfig.baseUrl}/api/folder');
-      final response = await http.post(
-        url,
-        headers: {
-          'Content-Type': 'application/json; charset=UTF-8',
-          'Authorization': 'Bearer $accessToken',
-        },
-        body: json.encode({
+    try {
+      final response = await httpService.sendRequest(
+        method: 'POST',
+        url: '${AppConfig.baseUrl}/api/folder',
+        body: {
           'folderName': folderName,
           'parentFolderId': currentFolderId,
-        }),
+        },
       );
 
       if (response.statusCode == 200) {
         log('Folder successfully created');
-        // 폴더를 생성 후 부모 폴더 내용을 다시 로드
         await fetchCurrentFolderContents();
       } else {
         throw Exception('Failed to create folder');
       }
     } catch (error, stackTrace) {
-      log('Error for fetchCurrentFolderContents: $error');
-      await Sentry.captureException(
-        error,
-        stackTrace: stackTrace,
-      );
+      log('Error creating folder: $error');
+      await Sentry.captureException(error, stackTrace: stackTrace);
     }
   }
 
   Future<void> updateFolder(String? newName, int? parentId) async {
     try {
-      final accessToken = await tokenProvider.getAccessToken();
-      if (accessToken == null) {
-        throw Exception('Access token is not available');
-      }
-
-      final url = Uri.parse('${AppConfig.baseUrl}/api/folder/$currentFolderId');
-      final response = await http.patch(
-        url,
-        headers: {
-          'Content-Type': 'application/json; charset=UTF-8',
-          'Authorization': 'Bearer $accessToken',
-        },
-        body: json.encode({
+      final response = await httpService.sendRequest(
+        method: 'PATCH',
+        url: '${AppConfig.baseUrl}/api/folder/$currentFolderId',
+        body: {
           'folderName': newName,
-          'parentFolderId': parentId, // 폴더의 상위 폴더 ID가 필요한 경우 추가
-        }),
+          'parentFolderId': parentId,
+        },
       );
 
       if (response.statusCode == 200) {
         log('Folder name successfully updated to $newName');
-        // 폴더 내용 다시 로드
         await fetchCurrentFolderContents();
       } else {
-        throw Exception(
-            'Failed to update folder name: ${response.reasonPhrase}');
+        throw Exception('Failed to update folder name');
       }
     } catch (error, stackTrace) {
-      log('Error for update folder name: $error');
-      await Sentry.captureException(
-        error,
-        stackTrace: stackTrace,
-      );
+      log('Error updating folder name: $error');
+      await Sentry.captureException(error, stackTrace: stackTrace);
     }
   }
 
   // 폴더 삭제
   Future<void> deleteFolder(int folderId) async {
-    try {
-      final accessToken = await tokenProvider.getAccessToken();
-      if (accessToken == null) {
-        throw Exception('Access token is not available');
-      }
 
-      final url = Uri.parse('${AppConfig.baseUrl}/api/folder/$folderId');
-      final response = await http.delete(
-        url,
-        headers: {
-          'Content-Type': 'application/json; charset=UTF-8',
-          'Authorization': 'Bearer $accessToken',
-        },
+    try {
+      final response = await httpService.sendRequest(
+        method: 'DELETE',
+        url: '${AppConfig.baseUrl}/api/folder/$folderId',
       );
 
       if (response.statusCode == 200) {
-        log('folderId: $folderId successfully deleted');
-
-        // JSON 응답 파싱
+        log('Folder successfully deleted');
         final jsonResponse = json.decode(utf8.decode(response.bodyBytes));
-
         int parentFolderId = jsonResponse['folderId'] as int;
-
-        // 부모 폴더 내용 불러오기
         await fetchFolderContents(folderId: parentFolderId);
       } else {
         throw Exception('Failed to delete folder');
       }
     } catch (error, stackTrace) {
-      log('Error for delete folder: $error');
-      await Sentry.captureException(
-        error,
-        stackTrace: stackTrace,
-      );
+      log('Error deleting folder: $error');
+      await Sentry.captureException(error, stackTrace: stackTrace);
     }
   }
 
@@ -315,264 +220,157 @@ class FoldersProvider with ChangeNotifier {
 
   Future<void> submitProblem(
       ProblemRegisterModel problemData, BuildContext context) async {
+
     try {
-      final accessToken = await tokenProvider.getAccessToken();
-      if (accessToken == null) {
-        throw Exception("JWT token is not available");
+      final files = <http.MultipartFile>[];
+      if (problemData.problemImage != null) {
+        files.add(await http.MultipartFile.fromPath('problemImage', problemData.problemImage!.path));
+      }
+      if (problemData.solveImage != null) {
+        files.add(await http.MultipartFile.fromPath('solveImage', problemData.solveImage!.path));
+      }
+      if (problemData.answerImage != null) {
+        files.add(await http.MultipartFile.fromPath('answerImage', problemData.answerImage!.path));
       }
 
-      var uri = Uri.parse('${AppConfig.baseUrl}/api/problem');
-      var request = http.MultipartRequest('POST', uri)
-        ..headers.addAll({'Authorization': 'Bearer $accessToken'});
-      request.fields['solvedAt'] =
-          problemData.solvedAt?.toIso8601String() ?? "";
-      request.fields['reference'] = problemData.reference ?? "";
-      request.fields['memo'] = problemData.memo ?? "";
-      request.fields['folderId'] =
-          (problemData.folderId ?? currentFolderId).toString();
-      request.fields['process'] = problemData.isProcess! ? 'true' : 'false';
-
-      final problemImage = problemData.problemImage;
-      final solveImage = problemData.solveImage;
-      final answerImage = problemData.answerImage;
-      final colors = problemData.colors;
-
-      logProblemSubmission(
-        action: "submit",
-        isProblemImageFilled: problemData.problemImage != null,
-        isAnswerImageFilled: problemData.answerImage != null,
-        isSolveImageFilled: problemData.solveImage != null,
-        isReferenceFilled: (problemData.reference != null) && (problemData.reference!.isNotEmpty),
-        isMemoFilled: (problemData.memo != null) && (problemData.memo!.isNotEmpty),
-        isProcess: problemData.isProcess!,
-      );
-
-      if (problemImage != null) {
-        request.files.add(await http.MultipartFile.fromPath(
-            'problemImage', problemImage.path));
-        if (colors != null) {
-          request.fields['colors'] = jsonEncode(colors);
-        }
-      }
-      if (solveImage != null) {
-        request.files.add(
-            await http.MultipartFile.fromPath('solveImage', solveImage.path));
-      }
-      if (answerImage != null) {
-        request.files.add(
-            await http.MultipartFile.fromPath('answerImage', answerImage.path));
-      }
-
-      try {
-        var streamedResponse = await request.send();
-        var response = await http.Response.fromStream(streamedResponse);
-        if (response.statusCode == 200) {
-          log('Problem successfully submitted');
-          await fetchRootFolderContents();
-
-          int userProblemCount = await getUserProblemCount();
-          if (userProblemCount > 0 && userProblemCount % 10 == 0) {
-            reviewHandler.requestReview(context); // 문제 개수가 10의 배수일 때 리뷰 요청
-          }
-        } else {
-          log('Failed to submit problem: ${response.reasonPhrase}');
-        }
-      } catch (error, stackTrace) {
-        log('Error submit problem: $error');
-        await Sentry.captureException(
-          error,
-          stackTrace: stackTrace,
-        );
-      }
-    } catch (error, stackTrace) {
-      log('Error for submit problem: $error');
-      await Sentry.captureException(
-        error,
-        stackTrace: stackTrace,
-      );
-    }
-  }
-
-  Future<ProblemModel?> getProblemDetails(int? problemId) async {
-    try {
-      var problemDetails =
-          _problems.firstWhere((problem) => problem.problemId == problemId);
-
-      if (problemDetails != null) {
-        return ProblemModel.fromJson(problemDetails.toJson());
-      } else {
-        throw Exception('Problem with ID $problemId not found');
-      }
-    } catch (error, stackTrace) {
-      log('Error fetching problem details for ID $problemId: $error');
-      await Sentry.captureException(
-        error,
-        stackTrace: stackTrace,
-      );
-      return null;
-    }
-  }
-
-  Future<int> getUserProblemCount() async {
-    try {
-      final accessToken = await tokenProvider.getAccessToken();
-      if (accessToken == null) {
-        throw Exception('Access token is not available');
-      }
-
-      final url = Uri.parse('${AppConfig.baseUrl}/api/user/problemCount');
-      final response = await http.get(
-        url,
-        headers: {
-          'Content-Type': 'application/json; charset=UTF-8',
-          'Authorization': 'Bearer $accessToken',
+      final response = await httpService.sendRequest(
+        method: 'POST',
+        url: '${AppConfig.baseUrl}/api/problem',
+        isMultipart: true,
+        files: files,
+        body: {
+          'solvedAt': problemData.solvedAt?.toIso8601String(),
+          'reference': problemData.reference ?? "",
+          'memo': problemData.memo ?? "",
+          'folderId': (problemData.folderId ?? currentFolderId).toString(),
+          'process': problemData.isProcess! ? 'true' : 'false',
+          'colors': problemData.colors != null ? jsonEncode(problemData.colors) : null,
         },
       );
 
       if (response.statusCode == 200) {
+        log('Problem successfully submitted');
+        logProblemSubmission(
+          action: "submit",
+          isProblemImageFilled: problemData.problemImage != null,
+          isAnswerImageFilled: problemData.answerImage != null,
+          isSolveImageFilled: problemData.solveImage != null,
+          isReferenceFilled: (problemData.reference != null) && (problemData.reference!.isNotEmpty),
+          isMemoFilled: (problemData.memo != null) && (problemData.memo!.isNotEmpty),
+          isProcess: problemData.isProcess!,
+        );
+
+        await fetchRootFolderContents();
+
+        int userProblemCount = await getUserProblemCount();
+        if (userProblemCount > 0 && userProblemCount % 10 == 0) {
+          reviewHandler.requestReview(context);
+        }
+      } else {
+        throw Exception('Failed to submit problem');
+      }
+    } catch (error, stackTrace) {
+      log('Error submitting problem: $error');
+      await Sentry.captureException(error, stackTrace: stackTrace);
+    }
+  }
+
+  Future<int> getUserProblemCount() async {
+
+    try {
+      final response = await httpService.sendRequest(
+        method: 'GET',
+        url: '${AppConfig.baseUrl}/api/user/problemCount',
+      );
+
+      if (response.statusCode == 200) {
         int userProblemCount = int.parse(response.body);
-
-        log('user problem count : $userProblemCount');
-
+        log('User problem count: $userProblemCount');
         return userProblemCount;
       } else {
         throw Exception('Failed to get user problem count');
       }
     } catch (error, stackTrace) {
-      log('Error for get user problem count: $error');
-      await Sentry.captureException(
-        error,
-        stackTrace: stackTrace,
-      );
-
+      log('Error fetching user problem count: $error');
+      await Sentry.captureException(error, stackTrace: stackTrace);
       return 0;
     }
   }
 
   Future<void> updateProblem(ProblemRegisterModel problemData) async {
+
     try {
-      final accessToken = await tokenProvider.getAccessToken();
-      if (accessToken == null) {
-        throw Exception("JWT token is not available");
+      final files = <http.MultipartFile>[];
+      if (problemData.problemImage != null) {
+        files.add(await http.MultipartFile.fromPath('problemImage', problemData.problemImage!.path));
+      }
+      if (problemData.solveImage != null) {
+        files.add(await http.MultipartFile.fromPath('solveImage', problemData.solveImage!.path));
+      }
+      if (problemData.answerImage != null) {
+        files.add(await http.MultipartFile.fromPath('answerImage', problemData.answerImage!.path));
       }
 
-      log(problemData.toString());
-
-
-      var uri = Uri.parse('${AppConfig.baseUrl}/api/problem');
-      var request = http.MultipartRequest('PATCH', uri)
-        ..headers.addAll({'Authorization': 'Bearer $accessToken'});
-
-      request.fields['problemId'] = (problemData.problemId ?? -1).toString();
-
-      if (problemData.solvedAt != null) {
-        request.fields['solvedAt'] = problemData.solvedAt!.toIso8601String();
-      }
-
-      if (problemData.reference != null && problemData.reference!.isNotEmpty) {
-        request.fields['reference'] = problemData.reference!;
-      }
-      if (problemData.memo != null && problemData.memo!.isNotEmpty) {
-        request.fields['memo'] = problemData.memo!;
-      }
-
-      if (problemData.folderId != null) {
-        request.fields['folderId'] = problemData.folderId!.toString();
-      }
-
-      request.fields['process'] = problemData.isProcess! ? 'true' : 'false';
-
-      logProblemSubmission(
-        action: "update",
-        isProblemImageFilled: problemData.problemImage != null,
-        isAnswerImageFilled: problemData.answerImage != null,
-        isSolveImageFilled: problemData.solveImage != null,
-        isReferenceFilled: (problemData.reference != null) && (problemData.reference!.isNotEmpty),
-        isMemoFilled: (problemData.memo != null) && (problemData.memo!.isNotEmpty),
-        isProcess: problemData.isProcess!,
+      final response = await httpService.sendRequest(
+        method: 'PATCH',
+        url: '${AppConfig.baseUrl}/api/problem',
+        isMultipart: true,
+        files: files,
+        body: {
+          'problemId': (problemData.problemId ?? -1).toString(),
+          if (problemData.solvedAt != null) 'solvedAt': problemData.solvedAt!.toIso8601String(),
+          if (problemData.reference != null && problemData.reference!.isNotEmpty)
+            'reference': problemData.reference!,
+          if (problemData.memo != null && problemData.memo!.isNotEmpty)
+            'memo': problemData.memo!,
+          if (problemData.folderId != null) 'folderId': problemData.folderId!.toString(),
+          'process': problemData.isProcess! ? 'true' : 'false',
+          if (problemData.colors != null) 'colors': jsonEncode(problemData.colors),
+        },
       );
 
-      final problemImage = problemData.problemImage;
-      final colors = problemData.colors;
-      if (problemImage != null) {
-        request.files.add(await http.MultipartFile.fromPath(
-            'problemImage', problemImage.path));
-
-        if (colors != null) {
-          request.fields['colors'] = jsonEncode(colors);
-        }
-      }
-
-      final solveImage = problemData.solveImage;
-      if (solveImage != null) {
-        request.files.add(
-            await http.MultipartFile.fromPath('solveImage', solveImage.path));
-      }
-
-      final answerImage = problemData.answerImage;
-      if (answerImage != null) {
-        request.files.add(
-            await http.MultipartFile.fromPath('answerImage', answerImage.path));
-      }
-
-      try {
-        var streamedResponse = await request.send();
-        var response = await http.Response.fromStream(streamedResponse);
-        if (response.statusCode == 200) {
-          log('Problem successfully submitted');
-          await fetchCurrentFolderContents();
-        } else {
-          throw Exception('Failed to update problem: ${response.reasonPhrase}');
-        }
-      } catch (error, stackTrace) {
-        log('Error update problem: $error');
-        await Sentry.captureException(
-          error,
-          stackTrace: stackTrace,
+      if (response.statusCode == 200) {
+        log('Problem successfully updated');
+        logProblemSubmission(
+          action: "update",
+          isProblemImageFilled: problemData.problemImage != null,
+          isAnswerImageFilled: problemData.answerImage != null,
+          isSolveImageFilled: problemData.solveImage != null,
+          isReferenceFilled: (problemData.reference != null) && (problemData.reference!.isNotEmpty),
+          isMemoFilled: (problemData.memo != null) && (problemData.memo!.isNotEmpty),
+          isProcess: problemData.isProcess!,
         );
+
+        await fetchCurrentFolderContents();
+      } else {
+        throw Exception('Failed to update problem');
       }
     } catch (error, stackTrace) {
-      log('Error for update problem: $error');
-      await Sentry.captureException(
-        error,
-        stackTrace: stackTrace,
-      );
+      log('Error updating problem: $error');
+      await Sentry.captureException(error, stackTrace: stackTrace);
     }
   }
 
   Future<bool> deleteProblem(int problemId) async {
-    try {
-      final accessToken = await tokenProvider.getAccessToken();
-      if (accessToken == null) {
-        throw Exception('accessToken is not available');
-      }
 
-      final url = Uri.parse('${AppConfig.baseUrl}/api/problem');
-      final response = await http.delete(
-        url,
+    try {
+      final response = await httpService.sendRequest(
+        method: 'DELETE',
+        url: '${AppConfig.baseUrl}/api/problem',
         headers: {
-          'Content-Type': 'application/json; charset=UTF-8',
-          'Authorization': 'Bearer $accessToken',
           'problemId': problemId.toString(),
         },
       );
 
-      log('Deleting problem: ${response.statusCode} ${response.body}');
-
       if (response.statusCode == 200) {
         log('Problem successfully deleted');
-
         return true;
       } else {
-        throw Exception('Failed to delete problem from server');
+        throw Exception('Failed to delete problem');
       }
     } catch (error, stackTrace) {
-      log('Error for delete problem: $error');
-      await Sentry.captureException(
-        error,
-        stackTrace: stackTrace,
-      );
-
+      log('Error deleting problem: $error');
+      await Sentry.captureException(error, stackTrace: stackTrace);
       return false;
     }
   }
@@ -604,6 +402,26 @@ class FoldersProvider with ChangeNotifier {
 
   List<int> getProblemIds() {
     return _problems.map((problem) => problem.problemId as int).toList();
+  }
+
+  Future<ProblemModel?> getProblemDetails(int? problemId) async {
+    try {
+      var problemDetails =
+      _problems.firstWhere((problem) => problem.problemId == problemId);
+
+      if (problemDetails != null) {
+        return ProblemModel.fromJson(problemDetails.toJson());
+      } else {
+        throw Exception('Problem with ID $problemId not found');
+      }
+    } catch (error, stackTrace) {
+      log('Error fetching problem details for ID $problemId: $error');
+      await Sentry.captureException(
+        error,
+        stackTrace: stackTrace,
+      );
+      return null;
+    }
   }
 
   Future<void> logProblemSubmission({
