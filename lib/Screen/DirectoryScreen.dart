@@ -8,7 +8,7 @@ import 'package:ono/GlobalModule/Theme/SnackBarDialog.dart';
 import 'package:ono/Model/LoginStatus.dart';
 import 'package:ono/Provider/FoldersProvider.dart';
 import 'package:provider/provider.dart';
-import '../GlobalModule/Theme/DecorateText.dart';
+import '../GlobalModule/Theme/HandWriteText.dart';
 import '../GlobalModule/Image/DisplayImage.dart';
 import '../GlobalModule/Theme/ThemeHandler.dart';
 import '../GlobalModule/Util/FolderSelectionDialog.dart';
@@ -75,7 +75,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     return AppBar(
       elevation: 0, // AppBar 그림자 제거
       centerTitle: true, // 제목을 항상 가운데로 배치
-      title: DecorateText(
+      title: HandWriteText(
         text: foldersProvider.currentFolder?.folderName ?? _directoryName,
         fontSize: 24,
         color: themeProvider.primaryColor,
@@ -124,7 +124,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                 itemBuilder: (context) => [
                   const PopupMenuItem(
                     value: 'rename',
-                    child: DecorateText(
+                    child: HandWriteText(
                       text: '폴더 이름 수정하기',
                       fontSize: 18,
                       color: Colors.blue,
@@ -132,7 +132,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                   ),
                   const PopupMenuItem(
                     value: 'move',
-                    child: DecorateText(
+                    child: HandWriteText(
                       text: '폴더 위치 변경하기',
                       fontSize: 18,
                       color: Colors.purple,
@@ -140,7 +140,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                   ),
                   const PopupMenuItem(
                     value: 'delete',
-                    child: DecorateText(
+                    child: HandWriteText(
                       text: '폴더 삭제하기',
                       fontSize: 18,
                       color: Colors.red,
@@ -221,12 +221,12 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: DecorateText(
+          title: HandWriteText(
             text: '폴더 위치 변경 불가',
             fontSize: 24,
             color: themeProvider.primaryColor,
           ),
-          content: DecorateText(
+          content: HandWriteText(
             text: '메인 폴더는 위치를 변경할 수 없습니다.',
             fontSize: 20,
             color: themeProvider.primaryColor,
@@ -236,7 +236,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
               onPressed: () {
                 Navigator.pop(context);
               },
-              child: const DecorateText(
+              child: const HandWriteText(
                 text: '확인',
                 fontSize: 20,
                 color: Colors.black,
@@ -256,12 +256,12 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: DecorateText(
+          title: HandWriteText(
             text: '폴더 삭제',
             fontSize: 24,
             color: themeProvider.primaryColor,
           ),
-          content: DecorateText(
+          content: HandWriteText(
             text: isRootFolder ? '메인 폴더는 삭제할 수 없습니다!' : '정말로 이 폴더를 삭제하시겠습니까?',
             fontSize: 20,
             color: themeProvider.primaryColor,
@@ -271,7 +271,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
               onPressed: () {
                 Navigator.pop(context);
               },
-              child: const DecorateText(
+              child: const HandWriteText(
                 text: '취소',
                 fontSize: 20,
                 color: Colors.black,
@@ -286,7 +286,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                     Navigator.pop(context); // 다이얼로그 닫기
                   }
                 },
-                child: const DecorateText(
+                child: const HandWriteText(
                   text: '삭제',
                   fontSize: 20,
                   color: Colors.red,
@@ -300,7 +300,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
   Widget _buildLoginPrompt(ThemeHandler themeProvider) {
     return Center(
-      child: DecorateText(
+      child: HandWriteText(
         text: '로그인을 통해 작성한 오답노트를 확인해보세요!',
         fontSize: 24,
         color: themeProvider.primaryColor,
@@ -321,7 +321,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: DecorateText(
+          title: HandWriteText(
             text: dialogTitle,
             fontSize: 24,
             color: themeProvider.primaryColor,
@@ -334,7 +334,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                 color: themeProvider.primaryColor,
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
-                fontFamily: 'font1',
+                fontFamily: 'HandWrite',
               ),
               decoration: InputDecoration(
                 hintText: '폴더 이름을 입력하세요',
@@ -342,7 +342,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                   color: themeProvider.desaturateColor,
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
-                  fontFamily: 'font1',
+                  fontFamily: 'HandWrite',
                 ),
                 border: OutlineInputBorder(
                   borderSide: BorderSide(color: themeProvider.primaryColor),
@@ -365,7 +365,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
               onPressed: () {
                 Navigator.pop(context);
               },
-              child: const DecorateText(
+              child: const HandWriteText(
                 text: '취소',
                 fontSize: 20,
                 color: Colors.black,
@@ -378,7 +378,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                   Navigator.pop(context);
                 }
               },
-              child: DecorateText(
+              child: HandWriteText(
                 text: '확인',
                 fontSize: 20,
                 color: themeProvider.primaryColor,
@@ -399,7 +399,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
           child: Consumer<FoldersProvider>(
             builder: (context, foldersProvider, child) {
               int problemCount = foldersProvider.problems.length;
-              return DecorateText(
+              return HandWriteText(
                 text: '문제 수 : $problemCount',
                 fontSize: 18,
                 color: themeProvider.primaryColor,
@@ -414,7 +414,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
           items: [
             DropdownMenuItem(
               value: 'name',
-              child: DecorateText(
+              child: HandWriteText(
                 text: '이름순',
                 fontSize: 18,
                 color: themeProvider.primaryColor,
@@ -422,7 +422,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
             ),
             DropdownMenuItem(
               value: 'newest',
-              child: DecorateText(
+              child: HandWriteText(
                 text: '최신순',
                 fontSize: 18,
                 color: themeProvider.primaryColor,
@@ -430,7 +430,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
             ),
             DropdownMenuItem(
               value: 'oldest',
-              child: DecorateText(
+              child: HandWriteText(
                 text: '오래된순',
                 fontSize: 18,
                 color: themeProvider.primaryColor,
@@ -472,7 +472,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
               if (folders.isEmpty && problems.isEmpty) {
                 return Center(
-                  child: DecorateText(
+                  child: HandWriteText(
                     text: '폴더나 문제가 등록되어 있지 않습니다!',
                     fontSize: 24,
                     color: themeProvider.primaryColor,
@@ -548,7 +548,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                     Text(
                       folder.folderName,
                       style: TextStyle(
-                        fontFamily: 'font1',
+                        fontFamily: 'HandWrite',
                         color: themeProvider.primaryColor,
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -641,7 +641,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
               Text(
                 problem.reference ?? '제목 없음',
                 style: TextStyle(
-                  fontFamily: 'font1',
+                  fontFamily: 'HandWrite',
                   color: themeProvider.primaryColor,
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -651,7 +651,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                 maxLines: 1,
               ),
               const SizedBox(height: 2),
-              DecorateText(
+              HandWriteText(
                 text: problem.updateAt != null
                     ? '작성 일시 : ${formatDateTime(problem.createdAt!)}'
                     : '작성 일시 : 정보 없음',

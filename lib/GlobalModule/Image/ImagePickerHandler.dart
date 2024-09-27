@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:ono/GlobalModule/Image/CameraHandler.dart';
-import 'package:ono/GlobalModule/Theme/DecorateText.dart';
+import 'package:ono/GlobalModule/Theme/HandWriteText.dart';
 import 'package:provider/provider.dart';
 
 import '../Theme/ThemeHandler.dart';
@@ -115,7 +115,7 @@ class ImagePickerHandler {
               ListTile(
                 leading:
                     Icon(Icons.camera_alt, color: themeProvider.primaryColor),
-                title: DecorateText(
+                title: HandWriteText(
                   text: '카메라로 촬영',
                   color: themeProvider.primaryColor,
                   fontSize: 20,
@@ -129,7 +129,7 @@ class ImagePickerHandler {
               ListTile(
                 leading: Icon(Icons.photo_library,
                     color: themeProvider.primaryColor),
-                title: DecorateText(
+                title: HandWriteText(
                   text: '갤러리에서 선택',
                   color: themeProvider.primaryColor,
                   fontSize: 20,

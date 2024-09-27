@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:ono/Provider/FoldersProvider.dart';
 import 'package:provider/provider.dart';
 import '../../Screen/ProblemDetailScreen.dart';
-import '../Theme/DecorateText.dart';
+import '../Theme/HandWriteText.dart';
 import '../Theme/ThemeHandler.dart';
 
 class NavigationButtons extends StatelessWidget {
@@ -57,7 +57,7 @@ class NavigationButtons extends StatelessWidget {
                 borderRadius: BorderRadius.circular(15.0), // 둥글기 조정
               ),
             ),
-            child: DecorateText(
+            child: HandWriteText(
                 text: '이전 문제',
                 fontSize: 20,
                 color: themeProvider.primaryColor)),
@@ -81,7 +81,7 @@ class NavigationButtons extends StatelessWidget {
                 borderRadius: BorderRadius.circular(15.0), // 둥글기 조정
               ),
             ),
-            child: DecorateText(
+            child: HandWriteText(
                 text: '다음 문제',
                 fontSize: 20,
                 color: themeProvider.primaryColor)),

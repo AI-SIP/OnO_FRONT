@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'DecorateText.dart';
+import 'HandWriteText.dart';
 import 'ThemeHandler.dart';
 
 class AppBarWithLogo extends StatelessWidget implements PreferredSizeWidget {
@@ -20,7 +20,7 @@ class AppBarWithLogo extends StatelessWidget implements PreferredSizeWidget {
         padding: const EdgeInsets.only(left: 10.0), // 왼쪽 여백 추가
         child: Align(
             alignment: Alignment.centerLeft,
-            child: DecorateText(
+            child: HandWriteText(
               text: 'OnO',
               fontSize: 26,
               color: themeProvider.primaryColor,

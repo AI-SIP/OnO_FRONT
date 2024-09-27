@@ -6,7 +6,7 @@ import 'package:http/http.dart' as http;
 import 'package:permission_handler/permission_handler.dart';
 import 'package:image_gallery_saver_plus/image_gallery_saver_plus.dart';
 
-import '../Theme/DecorateText.dart';
+import '../Theme/HandWriteText.dart';
 
 class FullScreenImage extends StatelessWidget {
   final String? imagePath;
@@ -17,7 +17,7 @@ class FullScreenImage extends StatelessWidget {
     if (imagePath == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-            content: DecorateText(
+            content: HandWriteText(
                 text: "이미지를 다운로드할 수 없습니다.", fontSize: 20, color: Colors.white)),
       );
       return;
@@ -39,7 +39,7 @@ class FullScreenImage extends StatelessWidget {
           if (result["isSuccess"]) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
-                  content: DecorateText(
+                  content: HandWriteText(
                 text: "이미지가 다운로드되었습니다.",
                 fontSize: 20,
                 color: Colors.white,
@@ -48,7 +48,7 @@ class FullScreenImage extends StatelessWidget {
           } else {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
-                  content: DecorateText(
+                  content: HandWriteText(
                       text: "다운로드에 실패했습니다.",
                       fontSize: 20,
                       color: Colors.white)),
@@ -58,14 +58,14 @@ class FullScreenImage extends StatelessWidget {
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-              content: DecorateText(
+              content: HandWriteText(
                   text: "에러 발생: $e", fontSize: 20, color: Colors.white)),
         );
       }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-            content: DecorateText(
+            content: HandWriteText(
                 text: "저장 권한이 필요합니다.", fontSize: 20, color: Colors.white)),
       );
     }

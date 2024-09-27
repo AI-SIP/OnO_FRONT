@@ -241,7 +241,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
   TextStyle _selectedLabelStyle() {
     return const TextStyle(
       fontSize: 18,
-      fontFamily: 'font1',
+      fontFamily: 'HandWrite',
       fontWeight: FontWeight.bold,
     );
   }
@@ -249,7 +249,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
   TextStyle _unselectedLabelStyle() {
     return const TextStyle(
       fontSize: 16,
-      fontFamily: 'font1',
+      fontFamily: 'HandWrite',
       fontWeight: FontWeight.bold,
     );
   }

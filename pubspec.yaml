@@ -90,9 +90,9 @@ flutter:
     - assets/KakaoLogo.png
     - assets/NaverLogo.png
   fonts:
-    - family: font1
+    - family: HandWrite
       fonts:
-        - asset: assets/fonts/font1.ttf
+        - asset: assets/fonts/HandWrite.ttf
 
 
   # To add assets to your application, add an assets section, like this:

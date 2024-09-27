@@ -5,7 +5,7 @@ import 'package:ono/Model/LoginStatus.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../Config/AppConfig.dart';
-import '../GlobalModule/Theme/DecorateText.dart';
+import '../GlobalModule/Theme/HandWriteText.dart';
 import '../GlobalModule/Theme/GridPainter.dart';
 import '../GlobalModule/Theme/ThemeHandler.dart';
 import '../Provider/UserProvider.dart';
@@ -32,19 +32,19 @@ class HomeScreen extends StatelessWidget {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const DecorateText(
+        title: const HandWriteText(
           text: '게스트 로그인 할 경우',
           fontSize: 24,
           color: Colors.redAccent,
         ),
-        content: const DecorateText(
+        content: const HandWriteText(
           text: '기기 간 오답노트 연동이 불가능하며\n로그아웃 시 모든 정보가 삭제됩니다.',
           fontSize: 18,
           color: Colors.redAccent,
         ),
         actions: <Widget>[
           TextButton(
-            child: const DecorateText(
+            child: const HandWriteText(
               text: '취소',
               fontSize: 20,
               color: Colors.black,
@@ -54,7 +54,7 @@ class HomeScreen extends StatelessWidget {
             },
           ),
           TextButton(
-            child: const DecorateText(
+            child: const HandWriteText(
               text: '확인',
               fontSize: 20,
               color: Colors.redAccent,
@@ -136,7 +136,7 @@ class HomeScreen extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               SizedBox(height: screenHeight * 0.1),
-              DecorateText(
+              HandWriteText(
                 text: '\"OnO, 이제는 나도 오답한다\"',
                 fontSize: headerFontSize,
                 color: themeProvider.primaryColor,
@@ -155,7 +155,7 @@ class HomeScreen extends StatelessWidget {
                     color: Colors.white,
                   ),
                 ),
-                child: DecorateText(
+                child: HandWriteText(
                   text: 'OnO 사용 가이드',
                   fontSize: buttonFontSize,
                   color: Colors.white,
@@ -175,7 +175,7 @@ class HomeScreen extends StatelessWidget {
                   } else if (authService.isLoggedIn == LoginStatus.login) {
                     return Padding(
                       padding: EdgeInsets.only(top: screenHeight * 0.05),
-                      child: DecorateText(
+                      child: HandWriteText(
                         text: '${authService.userName}님 환영합니다!',
                         fontSize: welcomeFontSize,
                         color: themeProvider.primaryColor,

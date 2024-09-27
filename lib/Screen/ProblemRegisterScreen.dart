@@ -4,7 +4,7 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:provider/provider.dart';
 import '../GlobalModule/Image/DisplayImage.dart';
-import '../GlobalModule/Theme/DecorateText.dart';
+import '../GlobalModule/Theme/HandWriteText.dart';
 import '../GlobalModule/Theme/ThemeHandler.dart';
 import '../Model/ProblemModel.dart';
 import '../Model/ProblemRegisterModel.dart';
@@ -186,7 +186,7 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
       children: <Widget>[
         Icon(Icons.calendar_today, color: themeProvider.primaryColor),
         const SizedBox(width: 10),
-        DecorateText(
+        HandWriteText(
           text: '푼 날짜',
           fontSize: 20,
           color: themeProvider.primaryColor,
@@ -213,7 +213,7 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
               borderRadius: BorderRadius.circular(10.0),
             ),
           ),
-          child: DecorateText(
+          child: HandWriteText(
             text:
                 '${_selectedDate.year}년 ${_selectedDate.month}월 ${_selectedDate.day}일',
             fontSize: 18,
@@ -230,7 +230,7 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
       children: [
         Icon(Icons.folder, color: themeProvider.primaryColor),
         const SizedBox(width: 10),
-        DecorateText(
+        HandWriteText(
           text: '저장 폴더',
           fontSize: 20,
           color: themeProvider.primaryColor,
@@ -262,7 +262,7 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
                 child: Text(
                   _selectedFolderName ?? '폴더 선택',
                   style: TextStyle(
-                    fontFamily: 'font1',
+                    fontFamily: 'HandWrite',
                     fontSize: 18,
                     color: themeProvider.primaryColor,
                     fontWeight: FontWeight.bold,
@@ -323,7 +323,7 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
                       context, _onImagePicked, imageType, _isProcess);
                 },
               ),
-              DecorateText(
+              HandWriteText(
                 text: '아이콘을 눌러 이미지를 추가해주세요!',
                 color: themeProvider.desaturateColor,
                 fontSize: 16,
@@ -352,7 +352,7 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
     return TextField(
       controller: controller,
       style: TextStyle(
-        fontFamily: 'font1',
+        fontFamily: 'HandWrite',
         color: themeProvider.primaryColor,
         fontSize: 20,
         fontWeight: FontWeight.bold,
@@ -379,7 +379,7 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
       filled: true,
       hintText: hintText,
       hintStyle: TextStyle(
-        fontFamily: 'font1',
+        fontFamily: 'HandWrite',
         color: themeProvider.desaturateColor,
         fontSize: 16,
         fontWeight: FontWeight.bold,
@@ -403,7 +403,7 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
               borderRadius: BorderRadius.circular(15.0), // 둥글기 조정
             ),
           ),
-          child: DecorateText(
+          child: HandWriteText(
             text: widget.problem == null ? '등록 취소' : '수정 취소',
             fontSize: 20,
             color : Colors.white,
@@ -420,7 +420,7 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
               borderRadius: BorderRadius.circular(15.0), // 둥글기 조정
             ),
           ),
-          child: DecorateText(
+          child: HandWriteText(
             text: widget.problem == null ? '등록 완료' : '수정 완료',
             fontSize: 20,
             color: Colors.white,
@@ -446,7 +446,7 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
                 children: [
                   Icon(icon, color: themeProvider.primaryColor),
                   const SizedBox(width: 10),
-                  DecorateText(
+                  HandWriteText(
                     text: title,
                     fontSize: 20,
                     color: themeProvider.primaryColor,
@@ -457,7 +457,7 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
               if (title == '문제')
                 Row(
                   children: [
-                    DecorateText(
+                    HandWriteText(
                       text: '필기 제거 및 이미지 보정',
                       fontSize: 16,
                       color: themeProvider.primaryColor,

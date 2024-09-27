@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:ono/GlobalModule/Theme/DecorateText.dart';
+import 'package:ono/GlobalModule/Theme/HandWriteText.dart';
 
 import '../main.dart';
 
@@ -37,7 +37,7 @@ class _SplashScreenState extends State<SplashScreen> {
               height: 200,
             ),
             const SizedBox(height: 20),
-            const DecorateText(
+            const HandWriteText(
               text: "\"OnO, 나만의 손쉬운 오답노트\"",
               fontSize: 28,
               color: Colors.white,

@@ -2,7 +2,7 @@ import 'dart:developer';
 
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
-import 'package:ono/GlobalModule/Theme/DecorateText.dart';
+import 'package:ono/GlobalModule/Theme/HandWriteText.dart';
 import 'package:provider/provider.dart';
 
 import '../Theme/ThemeHandler.dart';
@@ -74,7 +74,7 @@ class _CameraScreenState extends State<CameraScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: DecorateText(
+        title: HandWriteText(
           text: '이미지를 촬영해주세요!',
           color: themeProvider.primaryColor,
           fontSize: 24,
@@ -120,7 +120,7 @@ class _CameraScreenState extends State<CameraScreen> {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 20, vertical: 10),
                       ),
-                      child: const DecorateText(
+                      child: const HandWriteText(
                         text: '취소',
                         color: Colors.black,
                         fontSize: 18,

@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:ono/Provider/FoldersProvider.dart';
 import 'package:provider/provider.dart';
-import '../GlobalModule/Theme/DecorateText.dart';
+import '../GlobalModule/Theme/HandWriteText.dart';
 import '../GlobalModule/Image/DisplayImage.dart';
 import '../GlobalModule/Image/FullScreenImage.dart';
 import '../GlobalModule/Theme/GridPainter.dart';
@@ -109,7 +109,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
 
           PopupMenuItem<String>(
             value: 'share_problem',
-            child: DecorateText(
+            child: HandWriteText(
               text: '문제 공유하기',
               fontSize: 18,
               color: themeProvider.primaryColor,
@@ -117,7 +117,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
           ),
           PopupMenuItem<String>(
             value: 'share_answer',
-            child: DecorateText(
+            child: HandWriteText(
               text: '정답 공유하기',
               fontSize: 18,
               color: themeProvider.primaryColor,
@@ -125,7 +125,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
           ),
           const PopupMenuItem<String>(
             value: 'edit',
-            child: DecorateText(
+            child: HandWriteText(
               text: '문제 수정하기',
               fontSize: 18,
               color: Colors.blue,
@@ -133,7 +133,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
           ),
           const PopupMenuItem<String>(
             value: 'delete',
-            child: DecorateText(
+            child: HandWriteText(
               text: '문제 삭제하기',
               fontSize: 18,
               color: Colors.red,
@@ -218,7 +218,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return const Center(child: CircularProgressIndicator());
               } else if (snapshot.hasError) {
-                return const Center(child: DecorateText(text: '에러 발생'));
+                return const Center(child: HandWriteText(text: '에러 발생'));
               } else if (snapshot.hasData && snapshot.data != null) {
                 return buildProblemDetails(context, snapshot.data!);
               } else {
@@ -259,17 +259,17 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
       future: _problemDataFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const DecorateText(text: '로딩 중...');
+          return const HandWriteText(text: '로딩 중...');
         } else if (snapshot.hasError) {
-          return const DecorateText(text: '에러 발생');
+          return const HandWriteText(text: '에러 발생');
         } else if (snapshot.hasData && snapshot.data != null) {
-          return DecorateText(
+          return HandWriteText(
             text: snapshot.data!.reference ?? '출처가 없습니다!',
             fontSize: 24,
             color: themeProvider.primaryColor,
           );
         } else {
-          return DecorateText(
+          return HandWriteText(
               text: '문제 상세', fontSize: 24, color: themeProvider.primaryColor);
         }
       },
@@ -451,7 +451,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                 children: [
                   Icon(Icons.info, color: themeProvider.primaryColor),
                   const SizedBox(width: 8),
-                  DecorateText(
+                  HandWriteText(
                     text: '문제 출처',
                     fontSize: 20,
                     color: themeProvider.primaryColor,
@@ -519,7 +519,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
             children: [
               Icon(Icons.camera_alt, color: color),
               const SizedBox(width: 8.0),
-              DecorateText(text: label, fontSize: 20, color: color),
+              HandWriteText(text: label, fontSize: 20, color: color),
             ],
           ),
         ),
@@ -563,7 +563,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
       children: [
         Icon(icon, color: themeProvider.primaryColor),
         const SizedBox(width: 8),
-        DecorateText(
+        HandWriteText(
             text: label, fontSize: 20, color: themeProvider.primaryColor),
         const Spacer(),
         trailing,
@@ -594,6 +594,6 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
 
   // 데이터가 없을 때 띄워주는 경고 메시지
   Widget buildNoDataScreen() {
-    return const Center(child: DecorateText(text: "문제 정보를 가져올 수 없습니다.", fontSize: 28,));
+    return const Center(child: HandWriteText(text: "문제 정보를 가져올 수 없습니다.", fontSize: 28,));
   }
 }

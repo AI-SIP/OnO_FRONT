@@ -2,7 +2,7 @@ import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:ono/GlobalModule/Image/ColorPicker/ImageColorPickerHandler.dart';
-import 'package:ono/GlobalModule/Theme/DecorateText.dart';
+import 'package:ono/GlobalModule/Theme/HandWriteText.dart';
 import 'package:ono/Model/LoginStatus.dart';
 import 'package:ono/Provider/FoldersProvider.dart';
 import 'package:provider/provider.dart';
@@ -45,7 +45,7 @@ class ProblemRegisterScreenService {
     final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: const DecorateText(
+        content: const HandWriteText(
           text: '문제가 성공적으로 저장되었습니다.',
           fontSize: 20,
           color: Colors.white,
@@ -59,7 +59,7 @@ class ProblemRegisterScreenService {
   void showValidationMessage(BuildContext context, String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: DecorateText(
+        content: HandWriteText(
           text: message,
           fontSize: 20,
           color: Colors.white,
@@ -90,7 +90,7 @@ class ProblemRegisterScreenService {
                 ),
               ),
               const SizedBox(height: 20),
-              const DecorateText(
+              const HandWriteText(
                 text: '필기를 제거하는 중...',
                 fontSize: 24,
                 color: Colors.white,
@@ -190,12 +190,12 @@ class ProblemRegisterScreenService {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const DecorateText(text: '로그인 필요',),
+        title: const HandWriteText(text: '로그인 필요',),
         content:
-            const DecorateText(text: '문제를 등록하려면 로그인 해주세요!', ),
+            const HandWriteText(text: '문제를 등록하려면 로그인 해주세요!', ),
         actions: <Widget>[
           TextButton(
-            child: const DecorateText(
+            child: const HandWriteText(
               text: '확인',
               fontSize: 20,
             ),

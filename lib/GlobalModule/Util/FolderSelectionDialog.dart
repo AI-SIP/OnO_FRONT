@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../Model/FolderThumbnailModel.dart';
 import '../../Provider/FoldersProvider.dart';
-import '../Theme/DecorateText.dart';
+import '../Theme/HandWriteText.dart';
 import '../Theme/ThemeHandler.dart';
 
 class FolderSelectionDialog extends StatefulWidget {
@@ -49,7 +49,7 @@ class _FolderSelectionDialogState extends State<FolderSelectionDialog> {
       insetPadding: const EdgeInsets.symmetric(horizontal: 30), // 좌우 패딩 줄임
       contentPadding: const EdgeInsets.all(0), // AlertDialog의 기본 패딩 제거
       titlePadding: const EdgeInsets.only(left: 20, top: 20), // 타이틀 패딩만 유지
-      title: DecorateText(
+      title: HandWriteText(
         text: '위치 선택',
         fontSize: 24,
         color: themeProvider.primaryColor,
@@ -68,7 +68,7 @@ class _FolderSelectionDialogState extends State<FolderSelectionDialog> {
           onPressed: () {
             Navigator.pop(context, null); // 취소 시 아무 값도 넘기지 않음
           },
-          child: const DecorateText(
+          child: const HandWriteText(
             text: '취소',
             fontSize: 24,
             color: Colors.black,
@@ -87,7 +87,7 @@ class _FolderSelectionDialogState extends State<FolderSelectionDialog> {
               Navigator.pop(context, null);
             }
           },
-          child: DecorateText(
+          child: HandWriteText(
             text: '확인',
             fontSize: 24,
             color: themeProvider.primaryColor,
@@ -112,7 +112,7 @@ class _FolderSelectionDialogState extends State<FolderSelectionDialog> {
         Padding(
           padding: EdgeInsets.only(left: level * 12.0), // 계층에 따른 왼쪽 여백
           child: ListTile(
-            title: DecorateText(
+            title: HandWriteText(
               text: folder.folderName,
               fontSize: 20,
               color: themeProvider.primaryColor,

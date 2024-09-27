@@ -10,7 +10,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 
-import '../../GlobalModule/Theme/DecorateText.dart';
+import '../../GlobalModule/Theme/HandWriteText.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
 import '../../Model/ProblemModel.dart';
 import '../../Screen/ProblemRegisterScreen.dart';
@@ -69,9 +69,9 @@ class ProblemDetailScreenService {
         final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
 
         return AlertDialog(
-          title: DecorateText(
+          title: HandWriteText(
               text: '문제 삭제', fontSize: 24, color: themeProvider.primaryColor),
-          content: DecorateText(
+          content: HandWriteText(
               text: '정말로 이 문제를 삭제하시겠습니까?',
               fontSize: 20,
               color: themeProvider.primaryColor),
@@ -80,7 +80,7 @@ class ProblemDetailScreenService {
               onPressed: () {
                 Navigator.of(context).pop(); // 다이얼로그 닫기
               },
-              child: const DecorateText(
+              child: const HandWriteText(
                 text: '취소',
                 fontSize: 20,
                 color: Colors.black,
@@ -102,7 +102,7 @@ class ProblemDetailScreenService {
                   onError('오류 발생: ${error.toString()}');
                 });
               },
-              child: const DecorateText(
+              child: const HandWriteText(
                 text: '삭제',
                 fontSize: 20,
                 color: Colors.red,

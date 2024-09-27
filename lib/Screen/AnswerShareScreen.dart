@@ -10,7 +10,7 @@ import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../GlobalModule/Image/DisplayImage.dart';
-import '../GlobalModule/Theme/DecorateText.dart';
+import '../GlobalModule/Theme/HandWriteText.dart';
 import '../GlobalModule/Theme/GridPainter.dart';
 import '../GlobalModule/Theme/ThemeHandler.dart';
 import '../GlobalModule/Theme/UnderlinedText.dart';
@@ -85,7 +85,7 @@ class _AnswerShareScreenState extends State<AnswerShareScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: DecorateText(
+        title: HandWriteText(
           text: '공유 화면 미리보기',
           fontSize: 24,
           color: themeProvider.primaryColor,
@@ -134,7 +134,7 @@ class _AnswerShareScreenState extends State<AnswerShareScreen> {
                               children: [
                                 Icon(Icons.edit, color: themeProvider.primaryColor),
                                 const SizedBox(width: 8),
-                                DecorateText(
+                                HandWriteText(
                                   text: '메모',
                                   fontSize: 20,
                                   color: themeProvider.primaryColor,
@@ -155,7 +155,7 @@ class _AnswerShareScreenState extends State<AnswerShareScreen> {
                             children: [
                               Icon(Icons.camera_alt, color: themeProvider.primaryColor),
                               const SizedBox(width: 8),
-                              DecorateText(
+                              HandWriteText(
                                 text: '정답 이미지',
                                 fontSize: 20,
                                 color: themeProvider.primaryColor,
