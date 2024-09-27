@@ -5,13 +5,13 @@ import 'dart:io' show Platform;
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:http/http.dart' as http;
 import 'package:ono/Model/LoginStatus.dart';
 import 'package:ono/Provider/FoldersProvider.dart';
 import 'package:ono/Service/Auth/GuestAuthService.dart';
 import 'package:ono/Service/Auth/KakaoAuthService.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import '../Config/AppConfig.dart';
+import '../GlobalModule/Util/HttpService.dart';
 import 'TokenProvider.dart';
 import '../Service/Auth/AppleAuthService.dart';
 import '../Service/Auth/GoogleAuthService.dart';
@@ -20,6 +20,7 @@ class UserProvider with ChangeNotifier {
   final storage = const FlutterSecureStorage();
   final FoldersProvider foldersProvider;
   final TokenProvider tokenProvider = TokenProvider();
+  final HttpService httpService = HttpService();
 
   UserProvider(this.foldersProvider);
 
@@ -90,48 +91,42 @@ class UserProvider with ChangeNotifier {
   }
 
   Future<void> fetchUserInfo() async {
-    final accessToken = await tokenProvider.getAccessToken();
-    if (accessToken == null) {
-      _loginStatus = LoginStatus.logout;
-      notifyListeners();
-      throw Exception("Access token is not available");
-    }
 
-    final url = Uri.parse('${AppConfig.baseUrl}/api/user');
-    final response = await http.get(
-      url,
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $accessToken',
-      },
-    );
+    try {
+      final response = await httpService.sendRequest(
+        method: 'GET',
+        url: '${AppConfig.baseUrl}/api/user',
+      );
 
-    if (response.statusCode == 200) {
-      final responseBody = jsonDecode(utf8.decode(response.bodyBytes));
-      _userId = responseBody['userId'] ?? 0;
-      _userName = responseBody['userName'] ?? '이름 없음';
-      _userEmail = responseBody['userEmail'];
-      _loginStatus = LoginStatus.login;
+      if (response.statusCode == 200) {
+        final responseBody = jsonDecode(utf8.decode(response.bodyBytes));
+        _userId = responseBody['userId'] ?? 0;
+        _userName = responseBody['userName'] ?? '이름 없음';
+        _userEmail = responseBody['userEmail'];
+        _loginStatus = LoginStatus.login;
 
-      FirebaseAnalytics.instance.logLogin();
-      setUserInfoInFirebase(_userId, _userName, _userEmail);
+        FirebaseAnalytics.instance.logLogin();
+        setUserInfoInFirebase(_userId, _userName, _userEmail);
 
-      // Sentry에 유저 정보 설정
-      Sentry.configureScope((scope) {
-        scope.setUser(SentryUser(
-          id: _userId.toString(),  // 유저 아이디 설정
-          username: _userName,     // 유저 이름 설정
-          email: _userEmail,       // 유저 이메일 설정
-        ));
-      });
+        // Sentry에 유저 정보 설정
+        Sentry.configureScope((scope) {
+          scope.setUser(SentryUser(
+            id: _userId.toString(),
+            username: _userName,
+            email: _userEmail,
+          ));
+        });
 
-      _problemCount = await getUserProblemCount();
-      if(_loginStatus == LoginStatus.login){
-        await foldersProvider.fetchRootFolderContents();
+        _problemCount = await getUserProblemCount();
+        if (_loginStatus == LoginStatus.login) {
+          await foldersProvider.fetchRootFolderContents();
+        }
+      } else {
+        _loginStatus = LoginStatus.logout;
       }
-
-    } else {
+    } catch (error, stackTrace) {
       _loginStatus = LoginStatus.logout;
+      await Sentry.captureException(error, stackTrace: stackTrace);
     }
 
     notifyListeners();
@@ -144,38 +139,23 @@ class UserProvider with ChangeNotifier {
   }
 
   Future<int> getUserProblemCount() async{
-    try{
-      final accessToken = await tokenProvider.getAccessToken();
-      if (accessToken == null) {
-        log('Access token is not available');
-        return 0;
-      }
 
-      final url = Uri.parse('${AppConfig.baseUrl}/api/user/problemCount');
-      final response = await http.get(
-        url,
-        headers: {
-          'Content-Type': 'application/json; charset=UTF-8',
-          'Authorization': 'Bearer $accessToken',
-        },
+    try {
+      final response = await httpService.sendRequest(
+        method: 'GET',
+        url: '${AppConfig.baseUrl}/api/user/problemCount',
       );
 
       if (response.statusCode == 200) {
         int userProblemCount = int.parse(response.body);
-
         log('user problem count : $userProblemCount');
-
         return userProblemCount;
       } else {
         throw Exception('Failed to get user problem count');
       }
-    } catch(error, stackTrace) {
+    } catch (error, stackTrace) {
       log('error in getUserProblemCount() : $error');
-      await Sentry.captureException(
-        error,
-        stackTrace: stackTrace,
-      );
-
+      await Sentry.captureException(error, stackTrace: stackTrace);
       return 0;
     }
   }
@@ -186,54 +166,35 @@ class UserProvider with ChangeNotifier {
     String? identifier,
     String? userType,
   }) async {
+
     try {
-      // Access token 가져오기
-      final accessToken = await tokenProvider.getAccessToken();
-      if (accessToken == null) {
-        throw Exception("Access token is not available");
-      }
+      final requestBody = {
+        if (email != null) 'email': email,
+        if (name != null) 'name': name,
+        if (identifier != null) 'identifier': identifier,
+        if (userType != null) 'type': userType,
+      };
 
-      // 서버 URL
-      final url = Uri.parse('${AppConfig.baseUrl}/api/user');
-
-      // 유저 업데이트 요청을 위한 데이터
-      final Map<String, dynamic> requestBody = {};
-
-      // 각 필드가 null이 아닐 때만 requestBody에 포함
-      if (email != null) requestBody['email'] = email;
-      if (name != null) requestBody['name'] = name;
-      if (identifier != null) requestBody['identifier'] = identifier;
-      if (userType != null) requestBody['type'] = userType;
-
-      // PATCH 요청
-      final response = await http.patch(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $accessToken', // 토큰 인증
-        },
-        body: jsonEncode(requestBody), // JSON으로 직렬화
+      final response = await httpService.sendRequest(
+        method: 'PATCH',
+        url: '${AppConfig.baseUrl}/api/user',
+        body: requestBody,
       );
 
-      // 성공적으로 유저 정보가 업데이트되었을 경우
       if (response.statusCode == 200) {
         final responseBody = jsonDecode(utf8.decode(response.bodyBytes));
         if (responseBody['userName'] != null) _userName = responseBody['userName'];
         if (responseBody['userEmail'] != null) _userEmail = responseBody['userEmail'];
 
         log("User info updated successfully: $responseBody");
-        notifyListeners(); // 상태 변화 알림
+        notifyListeners();
       } else {
-        // 업데이트 실패 처리
         log('Failed to update user info: ${response.statusCode}');
         throw Exception('Failed to update user info');
       }
     } catch (error, stackTrace) {
       log('Error updating user info: $error');
-      await Sentry.captureException(
-        error,
-        stackTrace: stackTrace,
-      );
+      await Sentry.captureException(error, stackTrace: stackTrace);
     }
   }
 
@@ -298,20 +259,10 @@ class UserProvider with ChangeNotifier {
 
     }
 
-    // 서버에서 사용자 계정 삭제
     try {
-      final accessToken = await tokenProvider.getAccessToken();
-      if (accessToken == null) {
-        throw Exception("JWT token is not available");
-      }
-
-      final url = Uri.parse('${AppConfig.baseUrl}/api/user');
-      final response = await http.delete(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $accessToken',
-        },
+      final response = await httpService.sendRequest(
+        method: 'DELETE',
+        url: '${AppConfig.baseUrl}/api/user',
       );
 
       if (response.statusCode == 200) {
@@ -320,7 +271,7 @@ class UserProvider with ChangeNotifier {
         await FirebaseAnalytics.instance.logEvent(
           name: 'user_delete',
           parameters: {
-            'user_id': _userId.toString(), // 유저 ID 등 추가적인 정보도 포함 가능
+            'user_id': _userId.toString(),
           },
         );
 
@@ -331,10 +282,7 @@ class UserProvider with ChangeNotifier {
       }
     } catch (error, stackTrace) {
       log('Account deletion error: $error');
-      await Sentry.captureException(
-        error,
-        stackTrace: stackTrace,
-      );
+      await Sentry.captureException(error, stackTrace: stackTrace);
     }
   }
 
