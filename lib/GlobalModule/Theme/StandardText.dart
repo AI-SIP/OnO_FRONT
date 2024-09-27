@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
 
-class HandWriteText extends StatelessWidget {
+class StandardText extends StatelessWidget {
   final String text;
   final Color color;
   final double fontSize;
-  final FontWeight fontWeight;
+  //final FontWeight fontWeight;
   final String fontFamily;
 
-  const HandWriteText({
+  const StandardText({
     super.key,
     required this.text,
     this.color = Colors.green,
     this.fontSize = 16.0,
-    this.fontWeight = FontWeight.bold,
-    this.fontFamily = 'HandWrite',
+    //this.fontWeight = FontWeight.bold,
+    this.fontFamily = 'StandardFont',
   });
 
   @override
@@ -25,7 +25,7 @@ class HandWriteText extends StatelessWidget {
         color: color,
         fontSize: fontSize,
         fontFamily: fontFamily,
-        fontWeight: fontWeight,
+        //fontWeight: fontWeight,
       ),
     );
   }

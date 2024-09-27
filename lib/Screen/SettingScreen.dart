@@ -6,6 +6,7 @@ import '../GlobalModule/Theme/HandWriteText.dart';
 import '../GlobalModule/Theme/ThemeHandler.dart';
 import '../Provider/UserProvider.dart';
 import '../Service/ScreenUtil/SettingScreenService.dart';
+import 'TemplateSelectionScreen.dart';
 
 class SettingScreen extends StatefulWidget {
   const SettingScreen({super.key});
@@ -66,6 +67,20 @@ class _SettingScreenState extends State<SettingScreen> {
                       'url' : AppConfig.feedbackPageUrl,
                     });
                     _settingScreenService.openFeedbackForm();
+                  },
+                ),
+                const Divider(),
+                _buildSettingItem(
+                  title: '템플릿 선택 페이지로 이동',
+                  subtitle: '템플릿을 선택하러 가세요.',
+                  context: context,
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => TemplateSelectionScreen(),
+                      ),
+                    );
                   },
                 ),
               ],

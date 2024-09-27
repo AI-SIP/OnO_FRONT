@@ -93,6 +93,9 @@ flutter:
     - family: HandWrite
       fonts:
         - asset: assets/fonts/HandWrite.ttf
+    - family: StandardFont
+      fonts:
+        - asset: assets/fonts/StandardFont.otf
 
 
   # To add assets to your application, add an assets section, like this:
