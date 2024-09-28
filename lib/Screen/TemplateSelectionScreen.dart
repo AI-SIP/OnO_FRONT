@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:ono/GlobalModule/Theme/HandWriteText.dart';
 import 'package:provider/provider.dart';
+import '../GlobalModule/Image/ColorPicker/ImageColorPickerHandler.dart';
 import '../GlobalModule/Image/ImagePickerHandler.dart';
 import '../GlobalModule/Theme/StandardText.dart';
 import '../GlobalModule/Theme/ThemeHandler.dart';
@@ -75,9 +76,19 @@ class TemplateSelectionScreen extends StatelessWidget {
           final imagePickerHandler = ImagePickerHandler();
           imagePickerHandler.showImagePicker(context, (pickedFile) async {
             if (pickedFile != null) {
+
+              List<Map<String, int>?>? selectedColors;
+
+              // TemplateType이 clean이나 special인 경우 색상 선택 화면 표시
+              if (templateType == TemplateType.clean || templateType == TemplateType.special) {
+                final colorPickerHandler = ImageColorPickerHandler();
+                selectedColors = await colorPickerHandler.showColorPicker(context, pickedFile.path);
+              }
+
+
               // 이미지 전송 로직
               await Provider.of<FoldersProvider>(context, listen: false)
-                  .uploadProblemImage(pickedFile, templateType);
+                  .uploadProblemImage(pickedFile, templateType, selectedColors);
 
               Navigator.pushNamed(context, '/problemRegister', arguments: templateType);
             }

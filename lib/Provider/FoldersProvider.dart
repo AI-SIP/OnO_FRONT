@@ -220,8 +220,10 @@ class FoldersProvider with ChangeNotifier {
     await fetchFolderContents(folderId: parentFolderId ?? -1);
   }
 
-  Future<void> uploadProblemImage(XFile? problemImage, TemplateType templateType) async{
+  // 문제 이미지 미리 전송
+  Future<void> uploadProblemImage(XFile? problemImage, TemplateType templateType, List<Map<String, int>?>? colors) async{
     log(problemImage.toString());
+    log(colors.toString());
   }
 
   Future<void> submitProblem(

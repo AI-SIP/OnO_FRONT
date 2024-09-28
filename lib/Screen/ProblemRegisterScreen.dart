@@ -111,7 +111,6 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.white,
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: themeProvider.primaryColor),
           onPressed: () {
