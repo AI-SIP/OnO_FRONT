@@ -69,20 +69,6 @@ class _SettingScreenState extends State<SettingScreen> {
                     _settingScreenService.openFeedbackForm();
                   },
                 ),
-                const Divider(),
-                _buildSettingItem(
-                  title: '템플릿 선택 페이지로 이동',
-                  subtitle: '템플릿을 선택하러 가세요.',
-                  context: context,
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => TemplateSelectionScreen(),
-                      ),
-                    );
-                  },
-                ),
               ],
             ),
           ),

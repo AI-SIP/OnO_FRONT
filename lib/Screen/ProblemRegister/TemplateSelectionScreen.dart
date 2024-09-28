@@ -111,13 +111,9 @@ class TemplateSelectionScreen extends StatelessWidget {
                 );
               } else {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: StandardText(text: '문제 이미지 업로드에 실패했습니다. 다시 시도해주세요.')),
+                  const SnackBar(content: StandardText(text: '문제 이미지 업로드에 실패했습니다. 다시 시도해주세요.', color: Colors.black,)),
                 );
               }
-            } else{
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: StandardText(text: '이미지를 선택하지 않았습니다. 다시 시도해주세요.')),
-              );
             }
           });
         }
