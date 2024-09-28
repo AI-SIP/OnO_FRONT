@@ -42,7 +42,7 @@ class ProblemModel {
       memo: json['memo'],
       reference: json['reference'],
       folderId: json['folderId'],
-      templateType: json['templateType'],
+      templateType: TemplateTypeExtension.fromTemplateTypeCode(json['templateType']) ?? TemplateType.simple,
       analysis: json['analysis'],
       solvedAt:
           json['solvedAt'] != null ? DateTime.parse(json['solvedAt']).subtract(const Duration(hours: 9)) : null,

@@ -28,6 +28,7 @@ class _CleanTemplateState extends State<CleanTemplate> {
   late TextEditingController sourceController;
   late TextEditingController notesController;
   XFile? answerImage;
+  XFile? solveImage;
   final _service = ProblemRegisterScreenService();
 
   String? processImageUrl;
@@ -198,6 +199,33 @@ class _CleanTemplateState extends State<CleanTemplate> {
               ),
               const SizedBox(height: 20),
 
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.camera_alt, color: themeProvider.primaryColor),
+                      const SizedBox(width: 10),
+                      HandWriteText(text: '풀이 이미지', fontSize: 20, color: themeProvider.primaryColor,),
+                    ],
+                  ),
+                  const SizedBox(height: 5),
+
+                  // Use the buildImagePicker widget to handle image picking
+                  ProblemRegisterScreenWidget.buildImagePicker(
+                    context: context,
+                    image: solveImage,
+                    existingImageUrl: problemModel.solveImageUrl,
+                    onImagePicked: (XFile? pickedFile) {
+                      setState(() {
+                        solveImage = pickedFile;
+                      });
+                    },
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+
               ProblemRegisterScreenWidget.buildActionButtons(
                 themeProvider: themeProvider,
                 onSubmit: _submitProblem,
@@ -225,6 +253,7 @@ class _CleanTemplateState extends State<CleanTemplate> {
       problemImageUrl: problemModel.problemImageUrl,
       processImageUrl: processImageUrl,
       answerImage: answerImage,
+      solveImage: solveImage,
       memo: notesController.text == problemModel.memo ? null : notesController.text,
       reference: sourceController.text == problemModel.reference ? null : sourceController.text,
       templateType: TemplateType.clean,

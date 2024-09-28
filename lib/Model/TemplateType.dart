@@ -37,4 +37,24 @@ extension TemplateTypeExtension on TemplateType {
         return 3;
     }
   }
+
+  // displayName을 통해 TemplateType을 반환하는 메서드
+  static TemplateType? fromDisplayName(String name) {
+    for (TemplateType type in TemplateType.values) {
+      if (type.displayName == name) {
+        return type;
+      }
+    }
+    return null; // 찾을 수 없으면 null 반환
+  }
+
+  // templateTypeCode를 통해 TemplateType을 반환하는 메서드
+  static TemplateType? fromTemplateTypeCode(int code) {
+    for (TemplateType type in TemplateType.values) {
+      if (type.templateTypeCode == code) {
+        return type;
+      }
+    }
+    return null; // 찾을 수 없으면 null 반환
+  }
 }
