@@ -3,13 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:provider/provider.dart';
-import '../GlobalModule/Image/DisplayImage.dart';
-import '../GlobalModule/Theme/HandWriteText.dart';
-import '../GlobalModule/Theme/ThemeHandler.dart';
-import '../Model/ProblemModel.dart';
-import '../Model/ProblemRegisterModel.dart';
-import '../Provider/FoldersProvider.dart';
-import '../Service/ScreenUtil/ProblemRegisterScreenService.dart';
+import '../../GlobalModule/Image/DisplayImage.dart';
+import '../../GlobalModule/Theme/HandWriteText.dart';
+import '../../GlobalModule/Theme/ThemeHandler.dart';
+import '../../Model/ProblemModel.dart';
+import '../../Model/ProblemRegisterModel.dart';
+import '../../Provider/FoldersProvider.dart';
+import '../../Service/ScreenUtil/ProblemRegisterScreenService.dart';
 
 class ProblemRegisterScreen extends StatefulWidget {
   final ProblemModel? problem;

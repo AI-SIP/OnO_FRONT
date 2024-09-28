@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:ono/GlobalModule/Theme/HandWriteText.dart';
 import 'package:provider/provider.dart';
-import '../GlobalModule/Image/ColorPicker/ImageColorPickerHandler.dart';
-import '../GlobalModule/Image/ImagePickerHandler.dart';
-import '../GlobalModule/Theme/StandardText.dart';
-import '../GlobalModule/Theme/ThemeHandler.dart';
-import '../Model/TemplateType.dart';
-import '../Provider/FoldersProvider.dart';
+import '../../GlobalModule/Image/ColorPicker/ImageColorPickerHandler.dart';
+import '../../GlobalModule/Image/ImagePickerHandler.dart';
+import '../../GlobalModule/Theme/StandardText.dart';
+import '../../GlobalModule/Theme/ThemeHandler.dart';
+import '../../Model/TemplateType.dart';
+import '../../Provider/FoldersProvider.dart';
 
 class TemplateSelectionScreen extends StatelessWidget {
   const TemplateSelectionScreen({super.key});

@@ -9,12 +9,12 @@ import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 
-import '../GlobalModule/Image/DisplayImage.dart';
-import '../GlobalModule/Theme/HandWriteText.dart';
-import '../GlobalModule/Theme/GridPainter.dart';
-import '../GlobalModule/Theme/ThemeHandler.dart';
-import '../GlobalModule/Theme/UnderlinedText.dart';
-import '../Model/ProblemModel.dart';
+import '../../GlobalModule/Image/DisplayImage.dart';
+import '../../GlobalModule/Theme/HandWriteText.dart';
+import '../../GlobalModule/Theme/GridPainter.dart';
+import '../../GlobalModule/Theme/ThemeHandler.dart';
+import '../../GlobalModule/Theme/UnderlinedText.dart';
+import '../../Model/ProblemModel.dart';
 
 class AnswerShareScreen extends StatefulWidget {
   final ProblemModel problem;

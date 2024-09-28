@@ -13,7 +13,7 @@ import 'package:share_plus/share_plus.dart';
 import '../../GlobalModule/Theme/HandWriteText.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
 import '../../Model/ProblemModel.dart';
-import '../../Screen/ProblemRegisterScreen.dart';
+import '../../Screen/ProblemRegister/ProblemRegisterScreen.dart';
 
 class ProblemDetailScreenService {
   Future<ProblemModel?> fetchProblemDetails(

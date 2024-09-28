@@ -6,7 +6,7 @@ import '../GlobalModule/Theme/HandWriteText.dart';
 import '../GlobalModule/Theme/ThemeHandler.dart';
 import '../Provider/UserProvider.dart';
 import '../Service/ScreenUtil/SettingScreenService.dart';
-import 'TemplateSelectionScreen.dart';
+import 'ProblemRegister/TemplateSelectionScreen.dart';
 
 class SettingScreen extends StatefulWidget {
   const SettingScreen({super.key});
