@@ -85,12 +85,33 @@ class TemplateSelectionScreen extends StatelessWidget {
                 selectedColors = await colorPickerHandler.showColorPicker(context, pickedFile.path);
               }
 
+              final result = await Provider.of<FoldersProvider>(context, listen: false)
+                  .uploadProblemImage(pickedFile);
 
-              // 이미지 전송 로직
-              await Provider.of<FoldersProvider>(context, listen: false)
-                  .uploadProblemImage(pickedFile, templateType, selectedColors);
+              // `result`에 받은 값을 사용하여 화면 이동
+              if (result != null) {
+                final problemId = result['problemId'];
+                final problemImageUrl = result['problemImageUrl'];
 
-              Navigator.pushNamed(context, '/problemRegister', arguments: templateType);
+                Navigator.pushNamed(
+                  context,
+                  '/problemRegister',
+                  arguments: {
+                    'templateType': templateType,
+                    'problemId': problemId,
+                    'problemImageUrl': problemImageUrl,
+                    'colors' : selectedColors,
+                  },
+                );
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: StandardText(text: '문제 이미지 업로드에 실패했습니다. 다시 시도해주세요.')),
+                );
+              }
+            } else{
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: StandardText(text: '이미지를 선택하지 않았습니다. 다시 시도해주세요.')),
+              );
             }
           });
         }

@@ -221,9 +221,75 @@ class FoldersProvider with ChangeNotifier {
   }
 
   // 문제 이미지 미리 전송
-  Future<void> uploadProblemImage(XFile? problemImage, TemplateType templateType, List<Map<String, int>?>? colors) async{
-    log(problemImage.toString());
-    log(colors.toString());
+  Future<Map<String, dynamic>?> uploadProblemImage(XFile? problemImage) async{
+    try {
+      final response = await httpService.sendRequest(
+        method: 'POST',
+        url: '${AppConfig.baseUrl}/api/process/problemImage',
+        isMultipart: true,
+        files: [await http.MultipartFile.fromPath('problemImage', problemImage!.path)],
+      );
+
+      if (response.statusCode == 200) {
+        final jsonResponse = json.decode(utf8.decode(response.bodyBytes));
+        return {
+          'problemId': jsonResponse['problemId'],
+          'problemImageUrl': jsonResponse['problemImageUrl'],
+        };
+      } else {
+        throw Exception('Failed to upload problem image');
+      }
+    } catch (error, stackTrace) {
+      log('Error uploading problem image: $error');
+      await Sentry.captureException(error, stackTrace: stackTrace);
+      return null;
+    }
+  }
+
+  Future<String?> fetchProcessImageUrl(String fullUrl, List<Map<String, int>?>? colorsList) async {
+    try {
+      final response = await httpService.sendRequest(
+        method: 'POST', // 'GET'에서 'POST'로 변경
+        url: '${AppConfig.baseUrl}/api/process/processImage',
+        body: {
+          'fullUrl': fullUrl,
+          'colorsList': colorsList,
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final jsonResponse = json.decode(utf8.decode(response.bodyBytes));
+        return jsonResponse['processImageUrl'];
+      } else {
+        log('Failed to fetch process image URL: ${response.body}');
+        return null;
+      }
+    } catch (error) {
+      log('Error fetching process image URL: $error');
+      return null;
+    }
+  }
+
+  Future<String?> fetchAnalysisResult(String problemImageUrl) async {
+    try {
+      final response = await httpService.sendRequest(
+        method: 'POST', // 'GET'에서 'POST'로 변경
+        url: '${AppConfig.baseUrl}/api/process/analysis',
+        body: {'problemImageUrl': problemImageUrl},
+      );
+
+      if (response.statusCode == 200) {
+        final jsonResponse = json.decode(utf8.decode(response.bodyBytes));
+        log('analysis : ${jsonResponse['analysis']}');
+        return jsonResponse['analysis'];
+      } else {
+        log('Failed to fetch analysis result: ${response.body}');
+        return null;
+      }
+    } catch (error) {
+      log('Error fetching analysis result: $error');
+      return null;
+    }
   }
 
   Future<void> submitProblem(

@@ -9,6 +9,7 @@ import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart';
 import 'package:ono/GlobalModule/Theme/ThemeHandler.dart';
 import 'package:ono/Model/LoginStatus.dart';
 import 'package:ono/Provider/FoldersProvider.dart';
+import 'package:ono/Screen/ProblemRegister/ProblemRegisterScreenV2.dart';
 import 'package:ono/Screen/SplashScreen.dart';
 import 'package:provider/provider.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
@@ -72,8 +73,21 @@ class MyApp extends StatelessWidget {
       navigatorObservers: <NavigatorObserver>[observer],
       home: SplashScreen(),
       debugShowCheckedModeBanner: false,
-      routes: {
-        '/problemRegister': (context) => const ProblemRegisterScreen(),
+      onGenerateRoute: (settings) {
+        if (settings.name == '/problemRegister') {
+          final args = settings.arguments as Map<String, dynamic>;
+          return MaterialPageRoute(
+            builder: (context) {
+              return ProblemRegisterScreenV2(
+                problemId: args['problemId'],
+                problemImageUrl: args['problemImageUrl'],
+                templateType: args['templateType'],
+                colors: args['colors'],
+              );
+            },
+          );
+        }
+        return null; // Other routes can be handled here
       },
     );
   }
