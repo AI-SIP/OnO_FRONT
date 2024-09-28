@@ -72,6 +72,9 @@ class MyApp extends StatelessWidget {
       navigatorObservers: <NavigatorObserver>[observer],
       home: SplashScreen(),
       debugShowCheckedModeBanner: false,
+      routes: {
+        '/problemRegister': (context) => const ProblemRegisterScreen(),
+      },
     );
   }
 

@@ -110,6 +110,20 @@ class ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
     }
 
     return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: themeProvider.primaryColor),
+          onPressed: () {
+            Navigator.pop(context);
+          },
+        ),
+        title: HandWriteText(
+          text: "문제를 등록해주세요!",
+          fontSize: 24,
+          color: themeProvider.primaryColor,
+        ),
+      ),
       body: GestureDetector(
         onTap: () {
           FocusScope.of(context).unfocus();

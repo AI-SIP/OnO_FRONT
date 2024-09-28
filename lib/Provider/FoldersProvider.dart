@@ -1,12 +1,14 @@
 import 'dart:convert';
 import 'dart:developer';
 
+import 'package:camera/camera.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:ono/GlobalModule/Util/HttpService.dart';
 import 'package:ono/GlobalModule/Util/ProblemSorting.dart';
 import 'package:ono/GlobalModule/Util/ReviewHandler.dart';
 import 'package:ono/Model/FolderThumbnailModel.dart';
+import 'package:ono/Model/TemplateType.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
 import '../Config/AppConfig.dart';
@@ -216,6 +218,10 @@ class FoldersProvider with ChangeNotifier {
   // 상위 폴더로 이동
   Future<void> moveToParentFolder(int? parentFolderId) async {
     await fetchFolderContents(folderId: parentFolderId ?? -1);
+  }
+
+  Future<void> uploadProblemImage(XFile? problemImage, TemplateType templateType) async{
+    log(problemImage.toString());
   }
 
   Future<void> submitProblem(

@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:ono/GlobalModule/Theme/HandWriteText.dart';
 import 'package:provider/provider.dart';
+import '../GlobalModule/Image/ImagePickerHandler.dart';
 import '../GlobalModule/Theme/StandardText.dart';
 import '../GlobalModule/Theme/ThemeHandler.dart';
 import '../Model/TemplateType.dart';
+import '../Provider/FoldersProvider.dart';
 
 class TemplateSelectionScreen extends StatelessWidget {
   const TemplateSelectionScreen({super.key});
@@ -28,7 +30,6 @@ class TemplateSelectionScreen extends StatelessWidget {
               children: TemplateType.values.map((templateType) {
                 return Column(
                   children: [
-                    const SizedBox(height: 10),
                     _buildTemplateItem(
                       context: context,
                       templateType: templateType,
@@ -70,9 +71,18 @@ class TemplateSelectionScreen extends StatelessWidget {
           );
         }).toList(),
       ),
-      onTap: () {
-        Navigator.pushNamed(context, '/problemRegister', arguments: templateType);
-      },
+        onTap: () {
+          final imagePickerHandler = ImagePickerHandler();
+          imagePickerHandler.showImagePicker(context, (pickedFile) async {
+            if (pickedFile != null) {
+              // 이미지 전송 로직
+              await Provider.of<FoldersProvider>(context, listen: false)
+                  .uploadProblemImage(pickedFile, templateType);
+
+              Navigator.pushNamed(context, '/problemRegister', arguments: templateType);
+            }
+          });
+        }
     );
   }
 }
