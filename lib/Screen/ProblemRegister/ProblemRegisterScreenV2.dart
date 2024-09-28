@@ -1,22 +1,26 @@
 import 'package:flutter/material.dart';
+import 'package:ono/GlobalModule/Theme/StandardText.dart';
+import 'package:ono/Model/ProblemModel.dart';
+import 'package:provider/provider.dart';
 
+import '../../GlobalModule/Theme/HandWriteText.dart';
+import '../../GlobalModule/Theme/ThemeHandler.dart';
 import '../../Model/TemplateType.dart';
+import '../../Provider/FoldersProvider.dart';
 import 'Template/CleanTemplate.dart';
 import 'Template/SimpleTemplate.dart';
 import 'Template/SpecialTemplate.dart';
 
 class ProblemRegisterScreenV2 extends StatefulWidget {
-  final int problemId;
-  final String problemImageUrl;
-  final TemplateType templateType;
+  final ProblemModel problemModel;
+  final bool isEditMode;
   final List<Map<String, int>?>? colors;
 
 
   const ProblemRegisterScreenV2({
     Key? key,
-    required this.problemId,
-    required this.problemImageUrl,
-    required this.templateType,
+    required this.problemModel,
+    required this.isEditMode,
     required this.colors,
   }) : super(key: key);
 
@@ -25,9 +29,6 @@ class ProblemRegisterScreenV2 extends StatefulWidget {
 }
 
 class _ProblemRegisterScreenV2State extends State<ProblemRegisterScreenV2> {
-  String? processImageUrl;
-  String? analysisResult;
-  bool isLoading = true;
 
   @override
   void initState() {
@@ -37,32 +38,49 @@ class _ProblemRegisterScreenV2State extends State<ProblemRegisterScreenV2> {
   @override
   Widget build(BuildContext context) {
     Widget templateWidget;
+    final themeProvider = Provider.of<ThemeHandler>(context);
 
-    switch (widget.templateType) {
+    switch (widget.problemModel.templateType!) {
       case TemplateType.simple:
         templateWidget = SimpleTemplate(
-          problemId: widget.problemId,
-          problemImageUrl: widget.problemImageUrl,
+            problemModel: widget.problemModel,
         );
         break;
       case TemplateType.clean:
         templateWidget = CleanTemplate(
-          problemId: widget.problemId,
-          problemImageUrl: widget.problemImageUrl,
+          problemModel: widget.problemModel,
           colors: widget.colors,
         );
         break;
       case TemplateType.special:
         templateWidget = SpecialTemplate(
-          problemId: widget.problemId,
-          problemImageUrl: widget.problemImageUrl,
+          problemModel: widget.problemModel,
           colors: widget.colors,
         );
         break;
     }
 
     return Scaffold(
+      appBar: AppBar(
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: themeProvider.primaryColor,),
+          onPressed: () {
+            if (!widget.isEditMode) {
+              // 새롭게 등록하는 경우에만 문제 삭제 요청을 보냄
+              _deleteProblem();
+            }
+            Navigator.pop(context);
+          },
+        ),
+        title: HandWriteText(text: widget.isEditMode ? '오답노트 수정' : '오답노트 등록', color: themeProvider.primaryColor, fontSize: 24,),
+      ),
       body: templateWidget,
     );
+  }
+
+  Future<void> _deleteProblem() async {
+    // FoldersProvider를 이용하여 문제 삭제 API 호출
+    await Provider.of<FoldersProvider>(context, listen: false)
+        .deleteProblem(widget.problemModel.problemId!);
   }
 }

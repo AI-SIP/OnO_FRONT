@@ -1,17 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_tex/flutter_tex.dart';
+import 'package:ono/Model/ProblemModel.dart';
 import 'package:provider/provider.dart';
 import '../../../GlobalModule/Util/LatexTextHandler.dart';
 import '../../../Provider/FoldersProvider.dart';
 
 class SpecialTemplate extends StatefulWidget {
-  final int problemId;
-  final String problemImageUrl;
+  final ProblemModel problemModel;
   final List<Map<String, int>?>? colors; // 추가된 부분
 
   const SpecialTemplate(
-      {required this.problemId,
-      required this.problemImageUrl,
+      {required this.problemModel,
       required this.colors,
       Key? key})
       : super(key: key);
@@ -21,6 +20,7 @@ class SpecialTemplate extends StatefulWidget {
 }
 
 class _SpecialTemplateState extends State<SpecialTemplate> {
+  late ProblemModel problemModel;
   String? processImageUrl;
   String? analysisResult;
   bool isLoading = true;
@@ -28,6 +28,7 @@ class _SpecialTemplateState extends State<SpecialTemplate> {
   @override
   void initState() {
     super.initState();
+    problemModel = widget.problemModel;
     _fetchData();
   }
 
@@ -36,10 +37,10 @@ class _SpecialTemplateState extends State<SpecialTemplate> {
 
     // processImageUrl 먼저 fetch
     processImageUrl = await provider.fetchProcessImageUrl(
-        widget.problemImageUrl, widget.colors);
+        problemModel.problemImageUrl, widget.colors);
 
     // analysisResult fetch
-    analysisResult = await provider.fetchAnalysisResult(widget.problemImageUrl);
+    analysisResult = await provider.fetchAnalysisResult(problemModel.problemImageUrl);
 
     setState(() {
       isLoading = false;
@@ -49,20 +50,6 @@ class _SpecialTemplateState extends State<SpecialTemplate> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Special Template 등록'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () async {
-            bool isDeleted =
-                await Provider.of<FoldersProvider>(context, listen: false)
-                    .deleteProblem(widget.problemId);
-            if (isDeleted) {
-              Navigator.pop(context);
-            }
-          },
-        ),
-      ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(

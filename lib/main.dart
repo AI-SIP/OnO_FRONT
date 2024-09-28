@@ -79,9 +79,8 @@ class MyApp extends StatelessWidget {
           return MaterialPageRoute(
             builder: (context) {
               return ProblemRegisterScreenV2(
-                problemId: args['problemId'],
-                problemImageUrl: args['problemImageUrl'],
-                templateType: args['templateType'],
+                problemModel: args['problemModel'],
+                isEditMode: args['isEditMode'],
                 colors: args['colors'],
               );
             },

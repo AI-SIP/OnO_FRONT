@@ -5,6 +5,7 @@ import '../../GlobalModule/Image/ColorPicker/ImageColorPickerHandler.dart';
 import '../../GlobalModule/Image/ImagePickerHandler.dart';
 import '../../GlobalModule/Theme/StandardText.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
+import '../../Model/ProblemModel.dart';
 import '../../Model/TemplateType.dart';
 import '../../Provider/FoldersProvider.dart';
 
@@ -93,13 +94,18 @@ class TemplateSelectionScreen extends StatelessWidget {
                 final problemId = result['problemId'];
                 final problemImageUrl = result['problemImageUrl'];
 
+                final problemModel = ProblemModel(
+                  problemId: problemId,
+                  problemImageUrl: problemImageUrl,
+                  templateType: templateType,
+                );
+
                 Navigator.pushNamed(
                   context,
                   '/problemRegister',
                   arguments: {
-                    'templateType': templateType,
-                    'problemId': problemId,
-                    'problemImageUrl': problemImageUrl,
+                    'problemModel' : problemModel,
+                    'isEditMode' : false,
                     'colors' : selectedColors,
                   },
                 );

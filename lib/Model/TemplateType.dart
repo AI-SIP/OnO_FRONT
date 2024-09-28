@@ -26,4 +26,15 @@ extension TemplateTypeExtension on TemplateType {
         return ['추천 과목 : 수학', '필기 제거 기능과 AI 문제 분석 기능을 통해 고도화된 복습을 하고 싶은 분들을 위한 템플릿입니다'];
     }
   }
+
+  int get templateTypeCode {
+    switch (this) {
+      case TemplateType.simple:
+        return 0;
+      case TemplateType.clean:
+        return 1;
+      case TemplateType.special:
+        return 2;
+    }
+  }
 }

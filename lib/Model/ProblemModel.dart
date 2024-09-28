@@ -1,4 +1,5 @@
 import 'package:intl/intl.dart';
+import 'package:ono/Model/TemplateType.dart';
 
 class ProblemModel {
   final int? problemId;
@@ -9,9 +10,12 @@ class ProblemModel {
   final String? memo;
   final String? reference;
   final String? folder;
+  final TemplateType? templateType;
+  final String? analysis;
   final DateTime? solvedAt;
   final DateTime? createdAt;
   final DateTime? updateAt;
+
 
   ProblemModel({
     this.problemId,
@@ -21,10 +25,12 @@ class ProblemModel {
     this.answerImageUrl,
     this.memo,
     this.reference,
+    this.folder,
+    this.templateType,
+    this.analysis,
     this.solvedAt,
     this.createdAt,
     this.updateAt,
-    this.folder,
   });
 
   factory ProblemModel.fromJson(Map<String, dynamic> json) {
@@ -36,10 +42,13 @@ class ProblemModel {
       processImageUrl: json['processImageUrl'],
       memo: json['memo'],
       reference: json['reference'],
+      templateType: json['templateType'],
+      analysis: json['analysis'],
       solvedAt:
           json['solvedAt'] != null ? DateTime.parse(json['solvedAt']).subtract(const Duration(hours: 9)) : null,
       createdAt: json['createdAt'] != null ? DateTime.parse(json['createdAt']).add(const Duration(hours: 9)) : DateTime.parse(json['solvedAt']).subtract(const Duration(hours: 9)),
       updateAt: json['updateAt'] != null ? DateTime.parse(json['updateAt']).add(const Duration(hours: 9)) : DateTime.parse(json['solvedAt']).subtract(const Duration(hours: 9)),
+
     );
   }
 
@@ -52,10 +61,13 @@ class ProblemModel {
       'answerImageUrl': answerImageUrl,
       'memo': memo,
       'reference': reference,
+      'folder': folder,
+      'templateType' : templateType,
+      'analysis' : analysis,
       'solvedAt': _formatDateTime(solvedAt),
       'createdAt' : _formatDateTime(createdAt),
       'updateAt' : _formatDateTime(updateAt),
-      'folder': folder,
+
     };
   }
 

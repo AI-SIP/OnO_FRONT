@@ -246,7 +246,7 @@ class FoldersProvider with ChangeNotifier {
     }
   }
 
-  Future<String?> fetchProcessImageUrl(String fullUrl, List<Map<String, int>?>? colorsList) async {
+  Future<String?> fetchProcessImageUrl(String? fullUrl, List<Map<String, int>?>? colorsList) async {
     try {
       final response = await httpService.sendRequest(
         method: 'POST', // 'GET'에서 'POST'로 변경
@@ -270,7 +270,7 @@ class FoldersProvider with ChangeNotifier {
     }
   }
 
-  Future<String?> fetchAnalysisResult(String problemImageUrl) async {
+  Future<String?> fetchAnalysisResult(String? problemImageUrl) async {
     try {
       final response = await httpService.sendRequest(
         method: 'POST', // 'GET'에서 'POST'로 변경

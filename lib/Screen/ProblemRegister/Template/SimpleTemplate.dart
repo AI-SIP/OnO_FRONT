@@ -1,19 +1,31 @@
 import 'package:flutter/material.dart';
+import 'package:ono/Model/ProblemModel.dart';
 
-class SimpleTemplate extends StatelessWidget {
-  final int problemId;
-  final String problemImageUrl;
+class SimpleTemplate extends StatefulWidget {
+  final ProblemModel problemModel;
 
-  const SimpleTemplate({required this.problemId, required this.problemImageUrl, Key? key}) : super(key: key);
+  const SimpleTemplate({required this.problemModel, Key? key}) : super(key: key);
+
+  @override
+  _SimpleTemplate createState() => _SimpleTemplate();
+}
+
+class _SimpleTemplate extends State<SimpleTemplate> {
+  late ProblemModel problemModel;
+
+  @override
+  void initState() {
+    super.initState();
+    problemModel = widget.problemModel; // initState에서 problemModel 할당
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Simple Template 등록')),
-      body: SingleChildScrollView( // Enabling scrolling
+      body: SingleChildScrollView(
         child: Column(
           children: [
-            Image.network(problemImageUrl),
+            Image.network(problemModel.problemImageUrl!),
           ],
         ),
       ),

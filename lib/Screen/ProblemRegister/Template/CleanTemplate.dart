@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:ono/Model/ProblemModel.dart';
 import 'package:provider/provider.dart';
 import '../../../Provider/FoldersProvider.dart';
 
 class CleanTemplate extends StatefulWidget {
-  final int problemId;
-  final String problemImageUrl;
+  final ProblemModel problemModel;
   final List<Map<String, int>?>? colors; // 추가된 부분
 
-  const CleanTemplate({required this.problemId, required this.problemImageUrl, required this.colors, Key? key})
+  const CleanTemplate({required this.problemModel, required this.colors, Key? key})
       : super(key: key);
 
   @override
@@ -15,6 +15,7 @@ class CleanTemplate extends StatefulWidget {
 }
 
 class _CleanTemplateState extends State<CleanTemplate> {
+  late ProblemModel problemModel;
   String? processImageUrl;
   bool isLoading = true;
 
@@ -27,17 +28,17 @@ class _CleanTemplateState extends State<CleanTemplate> {
   Future<void> _fetchProcessImage() async {
     final provider = Provider.of<FoldersProvider>(context, listen: false);
 
-    processImageUrl = await provider.fetchProcessImageUrl(widget.problemImageUrl, widget.colors);
+    processImageUrl = await provider.fetchProcessImageUrl(problemModel.problemImageUrl, widget.colors);
 
     setState(() {
       isLoading = false;
+      problemModel = widget.problemModel;
     });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Clean Template 등록')),
       body: isLoading
           ? Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
