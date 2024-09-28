@@ -9,13 +9,12 @@ class ProblemModel {
   final String? answerImageUrl;
   final String? memo;
   final String? reference;
-  final String? folder;
+  final int? folderId;
   final TemplateType? templateType;
   final String? analysis;
   final DateTime? solvedAt;
   final DateTime? createdAt;
   final DateTime? updateAt;
-
 
   ProblemModel({
     this.problemId,
@@ -25,7 +24,7 @@ class ProblemModel {
     this.answerImageUrl,
     this.memo,
     this.reference,
-    this.folder,
+    this.folderId,
     this.templateType,
     this.analysis,
     this.solvedAt,
@@ -42,6 +41,7 @@ class ProblemModel {
       processImageUrl: json['processImageUrl'],
       memo: json['memo'],
       reference: json['reference'],
+      folderId: json['folderId'],
       templateType: json['templateType'],
       analysis: json['analysis'],
       solvedAt:
@@ -61,13 +61,12 @@ class ProblemModel {
       'answerImageUrl': answerImageUrl,
       'memo': memo,
       'reference': reference,
-      'folder': folder,
+      'folderId': folderId,
       'templateType' : templateType,
       'analysis' : analysis,
       'solvedAt': _formatDateTime(solvedAt),
       'createdAt' : _formatDateTime(createdAt),
       'updateAt' : _formatDateTime(updateAt),
-
     };
   }
 

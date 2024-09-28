@@ -2,14 +2,14 @@ class FolderThumbnailModel {
   int folderId;
   String folderName;
   int? parentFolderId;
-  List<int>? subFoldersId;
+  List<int> subFoldersId;
 
   FolderThumbnailModel({
     required this.folderId,
     required this.folderName,
     this.parentFolderId,
-    this.subFoldersId,
-  });
+    List<int>? subFoldersId,
+  }): subFoldersId = subFoldersId ?? [];
 
   // JSON 파싱 메서드
   factory FolderThumbnailModel.fromJson(Map<String, dynamic> json) {

@@ -15,6 +15,7 @@ import '../Config/AppConfig.dart';
 import '../Model/FolderModel.dart';
 import '../Model/ProblemModel.dart';
 import '../Model/ProblemRegisterModel.dart';
+import '../Model/ProblemRegisterModelV2.dart';
 import 'TokenProvider.dart';
 import 'package:http/http.dart' as http;
 
@@ -332,6 +333,62 @@ class FoldersProvider with ChangeNotifier {
           isReferenceFilled: (problemData.reference != null) && (problemData.reference!.isNotEmpty),
           isMemoFilled: (problemData.memo != null) && (problemData.memo!.isNotEmpty),
           isProcess: problemData.isProcess!,
+        );
+
+        await fetchRootFolderContents();
+
+        int userProblemCount = await getUserProblemCount();
+        if (userProblemCount > 0 && userProblemCount % 10 == 0) {
+          reviewHandler.requestReview(context);
+        }
+      } else {
+        throw Exception('Failed to submit problem');
+      }
+    } catch (error, stackTrace) {
+      log('Error submitting problem: $error');
+      await Sentry.captureException(error, stackTrace: stackTrace);
+    }
+  }
+
+  Future<void> submitProblemV2(
+      ProblemRegisterModelV2 problemData, BuildContext context) async {
+
+    try {
+      final files = <http.MultipartFile>[];
+
+      if (problemData.solveImage != null) {
+        files.add(await http.MultipartFile.fromPath('solveImage', problemData.solveImage!.path));
+      }
+      if (problemData.answerImage != null) {
+        files.add(await http.MultipartFile.fromPath('answerImage', problemData.answerImage!.path));
+      }
+
+      final response = await httpService.sendRequest(
+        method: 'POST',
+        url: '${AppConfig.baseUrl}/api/problem/V2',
+        isMultipart: true,
+        files: files,
+        body: {
+          'problemId' : problemData.problemId.toString(),
+          'solvedAt': problemData.solvedAt?.toIso8601String(),
+          'reference': problemData.reference ?? "",
+          'memo': problemData.memo ?? "",
+          'folderId': (problemData.folderId ?? currentFolderId).toString(),
+          'templateType': problemData.templateType!.templateTypeCode.toString(),
+          'analysis': problemData.analysis ?? "",
+        },
+      );
+
+      if (response.statusCode == 200) {
+        log('Problem successfully submitted');
+        logProblemSubmission(
+          action: "submit",
+          isProblemImageFilled: problemData.problemImageUrl != null,
+          isAnswerImageFilled: problemData.answerImage != null,
+          isSolveImageFilled: problemData.solveImage != null,
+          isReferenceFilled: (problemData.reference != null) && (problemData.reference!.isNotEmpty),
+          isMemoFilled: (problemData.memo != null) && (problemData.memo!.isNotEmpty),
+          isProcess: problemData.problemImageUrl != null,
         );
 
         await fetchRootFolderContents();

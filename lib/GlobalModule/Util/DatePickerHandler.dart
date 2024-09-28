@@ -19,12 +19,9 @@ class DatePickerHandler extends StatefulWidget {
 class _DatePickerHandlerState extends State<DatePickerHandler> {
   late DateTime _selectedDate;
 
-  final List<int> _years =
-      List<int>.generate(101, (int index) => 2020 + index); // 2020부터 2120까지
-  final List<int> _months =
-      List<int>.generate(12, (int index) => index + 1); // 1부터 12까지
-  final List<int> _days =
-      List<int>.generate(31, (int index) => index + 1); // 1부터 31까지
+  final List<int> _years = List<int>.generate(101, (int index) => 2020 + index); // 2020부터 2120까지
+  final List<int> _months = List<int>.generate(12, (int index) => index + 1); // 1부터 12까지
+  final List<int> _days = List<int>.generate(31, (int index) => index + 1); // 1부터 31까지
 
   @override
   void initState() {
@@ -34,7 +31,6 @@ class _DatePickerHandlerState extends State<DatePickerHandler> {
 
   @override
   Widget build(BuildContext context) {
-
     final themeProvider = Provider.of<ThemeHandler>(context);
 
     return SizedBox(
@@ -48,7 +44,10 @@ class _DatePickerHandlerState extends State<DatePickerHandler> {
               const Spacer(), // 가운데 비우기
               TextButton(
                   onPressed: () {
-                    Navigator.of(context).pop(); // 날짜 선택 창 닫기
+                    // 완료 버튼을 누르면 선택한 날짜만 전달하고 모달 닫기
+                    if (Navigator.of(context).canPop()) {
+                      Navigator.pop(context, _selectedDate);
+                    }
                   },
                   child: HandWriteText(
                     text: '완료',
@@ -64,17 +63,20 @@ class _DatePickerHandlerState extends State<DatePickerHandler> {
               Expanded(
                 child: Align(
                     alignment: Alignment.center,
-                    child: HandWriteText(text: '년도', fontSize: 20, color: themeProvider.primaryColor)),
+                    child: HandWriteText(
+                        text: '년도', fontSize: 20, color: themeProvider.primaryColor)),
               ),
               Expanded(
                 child: Align(
                     alignment: Alignment.center,
-                    child: HandWriteText(text: '월', fontSize: 20, color: themeProvider.primaryColor)),
+                    child: HandWriteText(
+                        text: '월', fontSize: 20, color: themeProvider.primaryColor)),
               ),
               Expanded(
                 child: Align(
                     alignment: Alignment.center,
-                    child: HandWriteText(text: '일', fontSize: 20, color: themeProvider.primaryColor)),
+                    child: HandWriteText(
+                        text: '일', fontSize: 20, color: themeProvider.primaryColor)),
               ),
             ],
           ),
@@ -96,12 +98,12 @@ class _DatePickerHandlerState extends State<DatePickerHandler> {
                           _selectedDate.month,
                           _selectedDate.day,
                         );
-                        widget.onDateSelected(_selectedDate);
                       });
                     },
                     children: _years.map((int year) {
                       return Center(
-                          child: HandWriteText(text: '$year', fontSize: 20, color: themeProvider.primaryColor));
+                          child: HandWriteText(
+                              text: '$year', fontSize: 20, color: themeProvider.primaryColor));
                     }).toList(),
                   ),
                 ),
@@ -118,12 +120,12 @@ class _DatePickerHandlerState extends State<DatePickerHandler> {
                           _months[index],
                           _selectedDate.day,
                         );
-                        widget.onDateSelected(_selectedDate);
                       });
                     },
                     children: _months.map((int month) {
                       return Center(
-                          child: HandWriteText(text: '$month', fontSize: 20, color: themeProvider.primaryColor));
+                          child: HandWriteText(
+                              text: '$month', fontSize: 20, color: themeProvider.primaryColor));
                     }).toList(),
                   ),
                 ),
@@ -140,12 +142,12 @@ class _DatePickerHandlerState extends State<DatePickerHandler> {
                           _selectedDate.month,
                           _days[index],
                         );
-                        widget.onDateSelected(_selectedDate);
                       });
                     },
                     children: _days.map((int day) {
                       return Center(
-                          child: HandWriteText(text: '$day', fontSize: 20, color: themeProvider.primaryColor));
+                          child: HandWriteText(
+                              text: '$day', fontSize: 20, color: themeProvider.primaryColor));
                     }).toList(),
                   ),
                 ),

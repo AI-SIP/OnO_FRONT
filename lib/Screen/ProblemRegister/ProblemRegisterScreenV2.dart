@@ -63,18 +63,24 @@ class _ProblemRegisterScreenV2State extends State<ProblemRegisterScreenV2> {
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: themeProvider.primaryColor,),
+          icon: Icon(Icons.arrow_back, color: themeProvider.primaryColor),
           onPressed: () {
             if (!widget.isEditMode) {
-              // 새롭게 등록하는 경우에만 문제 삭제 요청을 보냄
               _deleteProblem();
             }
             Navigator.pop(context);
           },
         ),
-        title: HandWriteText(text: widget.isEditMode ? '오답노트 수정' : '오답노트 등록', color: themeProvider.primaryColor, fontSize: 24,),
+        title: HandWriteText(
+          text: widget.isEditMode ? '오답노트 수정' : '오답노트 등록',
+          color: themeProvider.primaryColor,
+          fontSize: 24,
+        ),
       ),
-      body: templateWidget,
+      body: Padding(
+        padding: const EdgeInsets.all(20.0), // 기존 ProblemRegisterScreen과 동일한 padding 적용
+        child: templateWidget,
+      ),
     );
   }
 

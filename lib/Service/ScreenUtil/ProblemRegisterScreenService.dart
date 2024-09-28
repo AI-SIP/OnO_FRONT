@@ -13,6 +13,7 @@ import '../../GlobalModule/Theme/ThemeHandler.dart';
 import '../../GlobalModule/Util/DatePickerHandler.dart';
 import '../../GlobalModule/Util/FolderSelectionDialog.dart';
 import '../../Model/ProblemRegisterModel.dart';
+import '../../Model/ProblemRegisterModelV2.dart';
 import '../../Provider/UserProvider.dart';
 
 class ProblemRegisterScreenService {
@@ -155,6 +156,29 @@ class ProblemRegisterScreenService {
     try {
       await Provider.of<FoldersProvider>(context, listen: false)
           .submitProblem(problemData, context);
+      hideLoadingDialog(context);
+      onSuccess();
+      showSuccessDialog(context);
+    } catch (error) {
+      hideLoadingDialog(context);
+    }
+  }
+
+  Future<void> submitProblemV2(
+      BuildContext context,
+      ProblemRegisterModelV2 problemData,
+      VoidCallback onSuccess) async {
+    final authService = Provider.of<UserProvider>(context, listen: false);
+    if (authService.isLoggedIn == LoginStatus.logout) {
+      _showLoginRequiredDialog(context);
+      return;
+    }
+
+    showLoadingDialog(context);
+
+    try {
+      await Provider.of<FoldersProvider>(context, listen: false)
+          .submitProblemV2(problemData, context);
       hideLoadingDialog(context);
       onSuccess();
       showSuccessDialog(context);

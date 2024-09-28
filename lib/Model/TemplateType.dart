@@ -30,11 +30,11 @@ extension TemplateTypeExtension on TemplateType {
   int get templateTypeCode {
     switch (this) {
       case TemplateType.simple:
-        return 0;
-      case TemplateType.clean:
         return 1;
-      case TemplateType.special:
+      case TemplateType.clean:
         return 2;
+      case TemplateType.special:
+        return 3;
     }
   }
 }

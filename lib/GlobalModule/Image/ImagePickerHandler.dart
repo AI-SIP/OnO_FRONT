@@ -112,6 +112,16 @@ class ImagePickerHandler {
         return SafeArea(
           child: Wrap(
             children: <Widget>[
+              Padding(
+                padding: const EdgeInsets.all(16.0), // 상하좌우에 약간의 여백을 추가
+                child: Center(
+                  child: HandWriteText(
+                    text: '이미지 업로드 방식을 선택해주세요',
+                    color: themeProvider.primaryColor,
+                    fontSize: 24,
+                  ),
+                ),
+              ),
               ListTile(
                 leading:
                     Icon(Icons.camera_alt, color: themeProvider.primaryColor),
