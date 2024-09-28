@@ -10,6 +10,7 @@ import 'package:ono/GlobalModule/Theme/ThemeHandler.dart';
 import 'package:ono/Model/LoginStatus.dart';
 import 'package:ono/Provider/FoldersProvider.dart';
 import 'package:ono/Screen/SplashScreen.dart';
+import 'package:ono/Screen/TemplateSelectionScreen.dart';
 import 'package:provider/provider.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'Provider/UserProvider.dart';
@@ -96,7 +97,8 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
   final secureStorage = const FlutterSecureStorage();
   static const List<Widget> _widgetOptions = <Widget>[
     HomeScreen(),
-    ProblemRegisterScreen(),
+    TemplateSelectionScreen(),
+    //ProblemRegisterScreen(),
     DirectoryScreen(),
     SettingScreen(),
   ];
@@ -192,7 +194,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: _selectedIndex == 2
+      appBar: (_selectedIndex == 1 || _selectedIndex == 2)
           ? null // DirectoryScreen을 위한 조건 (index 2일 경우 AppBar를 제거)
           : const AppBarWithLogo(), // 다른 화면에서는 AppBar 표시
       body: IndexedStack(
