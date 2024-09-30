@@ -2,7 +2,7 @@ import 'package:intl/intl.dart';
 import 'package:ono/Model/TemplateType.dart';
 
 class ProblemModel {
-  final int? problemId;
+  final int problemId;
   final String? processImageUrl;
   final String? problemImageUrl;
   final String? solveImageUrl;
@@ -17,7 +17,7 @@ class ProblemModel {
   final DateTime? updateAt;
 
   ProblemModel({
-    this.problemId,
+    this.problemId = -1,
     this.processImageUrl,
     this.problemImageUrl,
     this.solveImageUrl,

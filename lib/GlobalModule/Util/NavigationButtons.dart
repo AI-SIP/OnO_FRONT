@@ -2,7 +2,7 @@ import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:ono/Provider/FoldersProvider.dart';
 import 'package:provider/provider.dart';
-import '../../Screen/ProblemManagement/ProblemDetailScreen.dart';
+import '../../Screen/ProblemDetail/ProblemDetailScreen.dart';
 import '../Theme/HandWriteText.dart';
 import '../Theme/ThemeHandler.dart';
 
