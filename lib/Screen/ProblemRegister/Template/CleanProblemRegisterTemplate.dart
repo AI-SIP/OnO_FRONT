@@ -12,18 +12,18 @@ import '../../../GlobalModule/Util/ProblemRegisterScreenWidget.dart';
 import '../../../Service/ScreenUtil/ProblemRegisterScreenService.dart';
 import '../../../Provider/FoldersProvider.dart';
 
-class CleanTemplate extends StatefulWidget {
+class CleanProblemRegisterTemplate extends StatefulWidget {
   final ProblemModel problemModel;
   final List<Map<String, int>?>? colors;
 
-  const CleanTemplate({required this.problemModel, required this.colors, Key? key})
+  const CleanProblemRegisterTemplate({required this.problemModel, required this.colors, Key? key})
       : super(key: key);
 
   @override
-  _CleanTemplateState createState() => _CleanTemplateState();
+  _CleanProblemRegisterTemplateState createState() => _CleanProblemRegisterTemplateState();
 }
 
-class _CleanTemplateState extends State<CleanTemplate> {
+class _CleanProblemRegisterTemplateState extends State<CleanProblemRegisterTemplate> {
   late ProblemModel problemModel;
   late TextEditingController sourceController;
   late TextEditingController notesController;

@@ -7,9 +7,9 @@ import '../../GlobalModule/Theme/HandWriteText.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
 import '../../Model/TemplateType.dart';
 import '../../Provider/FoldersProvider.dart';
-import 'Template/CleanTemplate.dart';
-import 'Template/SimpleTemplate.dart';
-import 'Template/SpecialTemplate.dart';
+import 'Template/CleanProblemRegisterTemplate.dart';
+import 'Template/SimpleProblemRegisterTemplate.dart';
+import 'Template/SpecialProblemRegisterTemplate.dart';
 
 class ProblemRegisterScreenV2 extends StatefulWidget {
   final ProblemModel problemModel;
@@ -42,18 +42,18 @@ class _ProblemRegisterScreenV2State extends State<ProblemRegisterScreenV2> {
 
     switch (widget.problemModel.templateType!) {
       case TemplateType.simple:
-        templateWidget = SimpleTemplate(
+        templateWidget = SimpleProblemRegisterTemplate(
             problemModel: widget.problemModel,
         );
         break;
       case TemplateType.clean:
-        templateWidget = CleanTemplate(
+        templateWidget = CleanProblemRegisterTemplate(
           problemModel: widget.problemModel,
           colors: widget.colors,
         );
         break;
       case TemplateType.special:
-        templateWidget = SpecialTemplate(
+        templateWidget = SpecialProblemRegisterTemplate(
           problemModel: widget.problemModel,
           colors: widget.colors,
         );
