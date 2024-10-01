@@ -11,7 +11,7 @@ import 'package:provider/provider.dart';
 import '../../../GlobalModule/Image/DisplayImage.dart';
 import '../../../GlobalModule/Theme/ThemeHandler.dart';
 import '../../../GlobalModule/Util/FolderSelectionDialog.dart';
-import '../../../GlobalModule/Util/ProblemRegisterScreenWidget.dart';
+import '../ProblemRegisterScreenWidget.dart';
 import '../../../Service/ScreenUtil/ProblemRegisterScreenService.dart';
 
 class SimpleProblemRegisterTemplate extends StatefulWidget {

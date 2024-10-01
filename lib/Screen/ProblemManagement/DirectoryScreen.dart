@@ -575,7 +575,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     return GestureDetector(
       onTap: () {
         FirebaseAnalytics.instance.logEvent(name: 'move_to_problem', parameters: {
-          'problem_id': problem.problemId!,
+          'problem_id': problem.problemId,
         });
 
         // 문제를 터치했을 때 페이지로 이동
@@ -594,7 +594,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
             child: ClipRRect(
               borderRadius: BorderRadius.circular(8.0),
               child: DisplayImage(
-                imagePath: problem.processImageUrl,
+                imagePath: problem.problemImageUrl,
                 fit: BoxFit.cover, // 문제 썸네일을 드래그 시 보여줌
               ),
             ),
@@ -631,7 +631,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(6.0),
                     child: DisplayImage(
-                      imagePath: problem.processImageUrl,
+                      imagePath: problem.problemImageUrl,
                       fit: BoxFit.cover,
                     ),
                   ),

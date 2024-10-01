@@ -4,12 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
-import '../Image/DisplayImage.dart';
-import '../Image/ImagePickerHandler.dart';
-import '../Theme/HandWriteText.dart';
-import '../Theme/ThemeHandler.dart';
-import 'DatePickerHandler.dart';
-import 'FolderSelectionDialog.dart';
+import '../../GlobalModule/Image/DisplayImage.dart';
+import '../../GlobalModule/Image/ImagePickerHandler.dart';
+import '../../GlobalModule/Theme/HandWriteText.dart';
+import '../../GlobalModule/Theme/ThemeHandler.dart';
+import '../../GlobalModule/Util/DatePickerHandler.dart';
+import '../../GlobalModule/Util/FolderSelectionDialog.dart';
 
 class ProblemRegisterScreenWidget {
   // 날짜 선택 위젯
