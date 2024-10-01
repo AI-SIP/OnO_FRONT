@@ -64,13 +64,13 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
 
   // AppBar의 동작 및 메뉴 버튼
   List<Widget> buildAppBarActions(ThemeHandler themeProvider) {
-
     return [
       PopupMenuButton<String>(
-        onSelected: (String result) async{
+        onSelected: (String result) async {
           final problemData = await _problemDataFuture;
           if (result == shareProblemValue) {
-            FirebaseAnalytics.instance.logEvent(name: 'problem_share_button_click');
+            FirebaseAnalytics.instance
+                .logEvent(name: 'problem_share_button_click');
             if (problemData != null) {
               // Navigate to ProblemShareScreen and wait for result
               await Navigator.push(
@@ -81,32 +81,31 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                 ),
               );
             }
-          }
-          else if (result == shareAnswerValue) {
-            FirebaseAnalytics.instance.logEvent(name: 'answer_share_button_click');
+          } else if (result == shareAnswerValue) {
+            FirebaseAnalytics.instance
+                .logEvent(name: 'answer_share_button_click');
             if (problemData != null) {
               // Navigate to ProblemShareScreen and wait for result
               await Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) =>
-                      AnswerShareScreen(problem: problemData),
+                  builder: (context) => AnswerShareScreen(problem: problemData),
                 ),
               );
             }
-          }
-          else if (result == editValue) {
-            FirebaseAnalytics.instance.logEvent(name: 'problem_edit_button_click');
+          } else if (result == editValue) {
+            FirebaseAnalytics.instance
+                .logEvent(name: 'problem_edit_button_click');
             setState(() {
               isEditMode = true;
             });
           } else if (result == deleteValue) {
-            FirebaseAnalytics.instance.logEvent(name: 'problem_delete_button_click');
+            FirebaseAnalytics.instance
+                .logEvent(name: 'problem_delete_button_click');
             deleteProblemDialog(context, themeProvider);
           }
         },
         itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-
           PopupMenuItem<String>(
             value: 'share_problem',
             child: HandWriteText(
@@ -240,7 +239,9 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
     // 화면 높이에 따라 패딩 값을 동적으로 설정
     double topPadding = screenHeight >= 1000 ? 25.0 : 15.0;
     double bottomPadding = screenHeight >= 1000 ? 30.0 : 25.0;
-    double topBottomPadding = screenHeight >= 1000 ? 25.0 : 25.0; // 아이패드 13인치(높이 1024 이상) 기준으로 35, 그 외는 20
+    double topBottomPadding = screenHeight >= 1000
+        ? 25.0
+        : 25.0; // 아이패드 13인치(높이 1024 이상) 기준으로 35, 그 외는 20
 
     return Padding(
       padding: EdgeInsets.only(top: topPadding, bottom: bottomPadding),
@@ -366,18 +367,17 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
     // 화면 크기에 따라 한 줄에 몇 개의 항목을 배치할지 설정
     int crossAxisCount;
     if (screenWidth > 1100) {
-      crossAxisCount = 3;  // 가로가 1100 이상이면 3개
+      crossAxisCount = 3; // 가로가 1100 이상이면 3개
     } else if (screenWidth >= 600) {
-      crossAxisCount = 2;  // 가로가 600에서 1100 사이면 2개
+      crossAxisCount = 2; // 가로가 600에서 1100 사이면 2개
     } else {
-      crossAxisCount = 1;  // 가로가 600 이하이면 1개
+      crossAxisCount = 1; // 가로가 600 이하이면 1개
     }
 
     double childAspectRatio = 0.65;
 
     return ExpansionTile(
       title: Container(
-
         padding: const EdgeInsets.all(8.0), // 여백 추가
         child: buildCenteredTitle('해설 및 풀이 확인', themeProvider.primaryColor),
       ),
@@ -503,7 +503,8 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
   }
 
   // 이미지 띄워주는 위젯 구현 함수
-  Widget buildImageSection(BuildContext context, String? imageUrl, String label, Color color) {
+  Widget buildImageSection(
+      BuildContext context, String? imageUrl, String label, Color color) {
     final mediaQuery = MediaQuery.of(context);
     final themeProvider = Provider.of<ThemeHandler>(context);
 
@@ -554,7 +555,6 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
     );
   }
 
-
   // 한 줄에 아이콘과 텍스트가 동시에 오도록 하는 함수
   Widget buildIconTextRow(IconData icon, String label, Widget trailing) {
     final themeProvider = Provider.of<ThemeHandler>(context);
@@ -594,6 +594,10 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
 
   // 데이터가 없을 때 띄워주는 경고 메시지
   Widget buildNoDataScreen() {
-    return const Center(child: HandWriteText(text: "문제 정보를 가져올 수 없습니다.", fontSize: 28,));
+    return const Center(
+        child: HandWriteText(
+      text: "문제 정보를 가져올 수 없습니다.",
+      fontSize: 28,
+    ));
   }
 }
