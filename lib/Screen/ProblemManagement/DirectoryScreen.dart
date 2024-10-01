@@ -13,6 +13,7 @@ import '../../GlobalModule/Image/DisplayImage.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
 import '../../GlobalModule/Util/FolderSelectionDialog.dart';
 import '../../Model/ProblemRegisterModel.dart';
+import '../../Model/TemplateType.dart';
 import '../../Service/ScreenUtil/DirectoryScreenService.dart';
 import '../../Model/ProblemModel.dart';
 import '../../Model/FolderThumbnailModel.dart';
@@ -610,6 +611,10 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   }
 
   Widget _problemTileContent(ProblemModel problem, ThemeHandler themeProvider) {
+    final imageUrl = (problem.templateType == TemplateType.simple)
+        ? problem.problemImageUrl
+        : problem.processImageUrl;
+
     return LayoutBuilder(
       builder: (context, constraints) {
         double height = constraints.maxHeight * 0.8;
@@ -631,7 +636,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(6.0),
                     child: DisplayImage(
-                      imagePath: problem.problemImageUrl,
+                      imagePath: imageUrl, // 선택된 이미지 URL 사용
                       fit: BoxFit.cover,
                     ),
                   ),
