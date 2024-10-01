@@ -209,7 +209,7 @@ class _SpecialProblemRegisterTemplateState extends State<SpecialProblemRegisterT
                       backgroundColor: Colors.white,
                     ),
                   )
-                      : const Text('No analysis result available'),
+                      : const HandWriteText(text: "분석 결과가 없습니다.", color: Colors.black, fontSize: 20,)
                 ],
               ),
               const SizedBox(height: 30),

@@ -131,10 +131,36 @@ class ProblemDetailScreenWidget{
     );
   }
 
-  // 이미지 띄워주는 위젯 구현 함수
+
+
+  // 한 줄에 아이콘과 텍스트가 동시에 오도록 하는 함수
+  Widget buildIconTextRow(IconData icon, String label, Widget trailing, ThemeHandler themeProvider) {
+    return Row(
+      children: [
+        Icon(icon, color: themeProvider.primaryColor),
+        const SizedBox(width: 8),
+        HandWriteText(
+            text: label, fontSize: 20, color: themeProvider.primaryColor),
+        const Spacer(),
+        trailing,
+      ],
+    );
+  }
+
   Widget buildImageSection(
-      BuildContext context, String? imageUrl, String label, Color color, ThemeHandler themeProvider) {
+      BuildContext context,
+      String? imageUrl,
+      String label,
+      Color color,
+      ThemeHandler themeProvider,
+      ) {
     final mediaQuery = MediaQuery.of(context);
+    double aspectRatio = 0.8; // 기본 비율
+
+    // 가로 길이가 1100 이상인 경우 비율을 축소
+    if (mediaQuery.size.width > 1100) {
+      aspectRatio = 1.0; // 원하는 비율로 축소
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -152,7 +178,7 @@ class ProblemDetailScreenWidget{
             ],
           ),
         ),
-        const SizedBox(height: 20.0),
+        const SizedBox(height: 10.0),
         Center(
           child: GestureDetector(
             onTap: () {
@@ -170,7 +196,7 @@ class ProblemDetailScreenWidget{
                 borderRadius: BorderRadius.circular(10), // 모서리 둥글게 설정
               ),
               child: AspectRatio(
-                aspectRatio: 0.8, // 원하는 비율로 이미지의 높이를 조정
+                aspectRatio: aspectRatio, // 조정된 비율로 이미지의 높이를 조정
                 child: DisplayImage(
                   imagePath: imageUrl,
                   fit: BoxFit.contain, // 이미지 전체를 보여주기 위한 설정
@@ -179,20 +205,6 @@ class ProblemDetailScreenWidget{
             ),
           ),
         ),
-      ],
-    );
-  }
-
-  // 한 줄에 아이콘과 텍스트가 동시에 오도록 하는 함수
-  Widget buildIconTextRow(IconData icon, String label, Widget trailing, ThemeHandler themeProvider) {
-    return Row(
-      children: [
-        Icon(icon, color: themeProvider.primaryColor),
-        const SizedBox(width: 8),
-        HandWriteText(
-            text: label, fontSize: 20, color: themeProvider.primaryColor),
-        const Spacer(),
-        trailing,
       ],
     );
   }
@@ -209,7 +221,7 @@ class ProblemDetailScreenWidget{
           const SizedBox(width: 8.0),
           UnderlinedText(
             text: text,
-            fontSize: 24,
+            fontSize: 30,
             color: color,
             fontWeight: FontWeight.bold, // 굵은 텍스트로 설정
           ),
