@@ -363,20 +363,29 @@ class FoldersProvider with ChangeNotifier {
         files.add(await http.MultipartFile.fromPath('answerImage', problemData.answerImage!.path));
       }
 
+      final requestBody = {
+        'problemId': problemData.problemId.toString(),
+        'solvedAt': problemData.solvedAt?.toIso8601String(),
+        'reference': problemData.reference ?? "",
+        'memo': problemData.memo ?? "",
+        'folderId': (problemData.folderId ?? currentFolderId).toString(),
+        'templateType': problemData.templateType!.templateTypeCode.toString(),
+        'analysis': problemData.analysis ?? "",
+      };
+
+      if (problemData.templateType == TemplateType.clean ||
+          problemData.templateType == TemplateType.special) {
+          if(problemData.processImageUrl != null){
+            requestBody['processImageUrl'] = problemData.processImageUrl;
+          }
+      }
+
       final response = await httpService.sendRequest(
         method: 'POST',
         url: '${AppConfig.baseUrl}/api/problem/V2',
         isMultipart: true,
         files: files,
-        body: {
-          'problemId' : problemData.problemId.toString(),
-          'solvedAt': problemData.solvedAt?.toIso8601String(),
-          'reference': problemData.reference ?? "",
-          'memo': problemData.memo ?? "",
-          'folderId': (problemData.folderId ?? currentFolderId).toString(),
-          'templateType': problemData.templateType!.templateTypeCode.toString(),
-          'analysis': problemData.analysis ?? "",
-        },
+        body: requestBody,
       );
 
       if (response.statusCode == 200) {
