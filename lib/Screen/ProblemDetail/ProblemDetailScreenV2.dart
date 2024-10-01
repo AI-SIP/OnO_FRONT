@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 
 import '../../GlobalModule/Theme/SnackBarDialog.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
+import '../../GlobalModule/Util/NavigationButtons.dart';
 import '../../Model/ProblemModel.dart';
 import '../../Model/TemplateType.dart';
 import '../../Provider/FoldersProvider.dart';
@@ -43,41 +44,42 @@ class _ProblemDetailScreenV2State extends State<ProblemDetailScreenV2> {
     _problemModelFuture = _problemDetailService.fetchProblemDetails(context, widget.problemId);
   }
 
-  Future<ProblemModel?> _fetchProblemDetail() async {
-    final foldersProvider =
-        Provider.of<FoldersProvider>(context, listen: false);
-    return await foldersProvider.getProblemDetails(widget.problemId);
-  }
-
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeHandler>(context);
 
     return Scaffold(
       appBar: _buildAppBar(themeProvider),
-      body: FutureBuilder<ProblemModel?>(
-        future: _problemModelFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            return Center(
-              child: HandWriteText(
-                text: '문제를 불러오는 중 오류가 발생했습니다.',
-                color: themeProvider.primaryColor,
-              ),
-            );
-          } else if (snapshot.hasData && snapshot.data != null) {
-            return _buildContent(snapshot.data!);
-          } else {
-            return Center(
-              child: HandWriteText(
-                text: '문제를 불러올 수 없습니다.',
-                color: themeProvider.primaryColor,
-              ),
-            );
-          }
-        },
+      body: Column(
+        children: [
+          Expanded(
+            child: FutureBuilder<ProblemModel?>(
+              future: _problemModelFuture,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return Center(child: CircularProgressIndicator());
+                } else if (snapshot.hasError) {
+                  return Center(
+                    child: HandWriteText(
+                      text: '문제를 불러오는 중 오류가 발생했습니다.',
+                      color: themeProvider.primaryColor,
+                    ),
+                  );
+                } else if (snapshot.hasData && snapshot.data != null) {
+                  return _buildContent(snapshot.data!);
+                } else {
+                  return Center(
+                    child: HandWriteText(
+                      text: '문제를 불러올 수 없습니다.',
+                      color: themeProvider.primaryColor,
+                    ),
+                  );
+                }
+              },
+            ),
+          ),
+          _buildNavigationButtons(context), // 항상 하단에 고정된 네비게이션 바
+        ],
       ),
     );
   }
@@ -128,7 +130,6 @@ class _ProblemDetailScreenV2State extends State<ProblemDetailScreenV2> {
               snapshot.hasData) {
             return PopupMenuButton<String>(
               onSelected: (String result) async {
-                log('Popup menu selected: $result');
                 final problemModel = snapshot.data;
                 if (problemModel != null) {
                   if (result == shareProblemValue) {
@@ -205,8 +206,6 @@ class _ProblemDetailScreenV2State extends State<ProblemDetailScreenV2> {
   }
 
   void _deleteProblemDialog(BuildContext context, int problemId, ThemeHandler themeProvider) {
-    log('problemId : ${problemId}');
-    log('problemId2 : ${problemId}');
     _problemDetailService.deleteProblem(
       context,
       problemId,
@@ -249,5 +248,27 @@ class _ProblemDetailScreenV2State extends State<ProblemDetailScreenV2> {
           ),
         );
     }
+  }
+
+  // 네비게이션 버튼 구성 함수
+  Widget _buildNavigationButtons(BuildContext context) {
+    // 기기의 높이 정보를 가져옴
+    double screenHeight = MediaQuery.of(context).size.height;
+
+    // 화면 높이에 따라 패딩 값을 동적으로 설정
+    double topPadding = screenHeight >= 1000 ? 25.0 : 15.0;
+    double bottomPadding = screenHeight >= 1000 ? 30.0 : 25.0;
+    double topBottomPadding = screenHeight >= 1000
+        ? 25.0
+        : 25.0; // 아이패드 13인치(높이 1024 이상) 기준으로 35, 그 외는 20
+
+    return Padding(
+      padding: EdgeInsets.only(top: topPadding, bottom: bottomPadding),
+      child: NavigationButtons(
+        context: context,
+        provider: Provider.of<FoldersProvider>(context, listen: false),
+        currentId: widget.problemId,
+      ),
+    );
   }
 }
