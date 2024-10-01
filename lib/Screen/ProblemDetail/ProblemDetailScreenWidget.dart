@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_tex/flutter_tex.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
@@ -8,6 +9,7 @@ import '../../GlobalModule/Theme/GridPainter.dart';
 import '../../GlobalModule/Theme/HandWriteText.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
 import '../../GlobalModule/Theme/UnderlinedText.dart';
+import '../../GlobalModule/Util/LatexTextHandler.dart';
 
 class ProblemDetailScreenWidget{
 
@@ -83,11 +85,56 @@ class ProblemDetailScreenWidget{
     );
   }
 
+  // Latex 형태의 텍스트를 출력해주는 함수
+  Widget buildLatexView(BuildContext context, String? analysis, ThemeHandler themeProvider) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(Icons.analytics, color: themeProvider.primaryColor),
+            const SizedBox(width: 10),
+            HandWriteText(text: '문제 분석', fontSize: 20, color: themeProvider.primaryColor),
+          ],
+        ),
+        const SizedBox(height: 5),
+        Container(
+          constraints: BoxConstraints(
+            maxWidth: MediaQuery.of(context).size.width - 70, // 제한된 너비 설정
+            maxHeight: 300, // 필요에 따라 최대 높이 설정
+          ),
+          padding: const EdgeInsets.all(10.0),
+          decoration: BoxDecoration(
+            color: themeProvider.primaryColor.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: SingleChildScrollView( // 내용이 넘칠 때 스크롤 가능하게 설정
+            scrollDirection: Axis.vertical,
+            child: TeXView(
+              fonts: const [
+                TeXViewFont(
+                  fontFamily: 'HandWrite',
+                  src: 'assets/fonts/HandWrite.ttf',
+                ),
+              ],
+              child: LatexTextHandler.renderLatex(analysis ?? ""),
+              renderingEngine: const TeXViewRenderingEngine.mathjax(),
+              style: TeXViewStyle(
+                elevation: 0,
+                borderRadius: const TeXViewBorderRadius.all(10),
+                backgroundColor: Colors.white,
+              ),
+            ),
+          ),
+        )
+      ],
+    );
+  }
+
   // 이미지 띄워주는 위젯 구현 함수
   Widget buildImageSection(
       BuildContext context, String? imageUrl, String label, Color color, ThemeHandler themeProvider) {
     final mediaQuery = MediaQuery.of(context);
-
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -150,6 +197,7 @@ class ProblemDetailScreenWidget{
     );
   }
 
+  //
   static Widget buildCenteredTitle(String text, Color color) {
     return Container(
       width: double.infinity,

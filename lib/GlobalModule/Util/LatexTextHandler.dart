@@ -16,7 +16,7 @@ class LatexTextHandler {
         backgroundColor: Colors.white,
         fontStyle: TeXViewFontStyle(
           fontFamily: 'HandWrite', // Custom Font 적용
-          fontSize: 16,
+          fontSize: 14,
           sizeUnit: TeXViewSizeUnit.pt,
         ),
       ),
