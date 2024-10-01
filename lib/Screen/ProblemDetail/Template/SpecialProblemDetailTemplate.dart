@@ -198,7 +198,7 @@ class SpecialProblemDetailTemplate extends StatelessWidget {
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: AspectRatio(
-                  aspectRatio: 1.0, // 원하는 비율로 이미지의 높이를 조정
+                  aspectRatio: 0.8, // 원하는 비율로 이미지의 높이를 조정
                   child: DisplayImage(
                     imagePath: imageUrl,
                     fit: BoxFit.contain, // 이미지 전체를 보여주기 위한 설정
