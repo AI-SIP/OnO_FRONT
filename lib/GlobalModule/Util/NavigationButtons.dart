@@ -1,6 +1,7 @@
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:ono/Provider/FoldersProvider.dart';
+import 'package:ono/Screen/ProblemDetail/ProblemDetailScreenV2.dart';
 import 'package:provider/provider.dart';
 import '../../Screen/ProblemDetail/ProblemDetailScreen.dart';
 import '../Theme/HandWriteText.dart';
@@ -94,7 +95,7 @@ class NavigationButtons extends StatelessWidget {
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
-          builder: (context) => ProblemDetailScreen(problemId: newProblemId)),
+          builder: (context) => ProblemDetailScreenV2(problemId: newProblemId)),
     );
   }
 }
