@@ -17,9 +17,9 @@ import '../../../Service/ScreenUtil/ProblemRegisterScreenService.dart';
 
 class SimpleProblemRegisterTemplate extends StatefulWidget {
   final ProblemModel problemModel;
+  final bool isEditMode;
 
-  const SimpleProblemRegisterTemplate({required this.problemModel, Key? key})
-      : super(key: key);
+  const SimpleProblemRegisterTemplate({required this.problemModel, required this.isEditMode, super.key});
 
   @override
   _SimpleTemplate createState() => _SimpleTemplate();
@@ -193,11 +193,11 @@ class _SimpleTemplate extends State<SimpleProblemRegisterTemplate> {
       problemId: problemModel.problemId,
       problemImageUrl: problemModel.problemImageUrl,
       answerImage: answerImage,
-      memo: notesController.text == problemModel.memo ? null : notesController.text,
-      reference: sourceController.text == problemModel.reference ? null : sourceController.text,
+      memo: notesController.text,
+      reference: sourceController.text,
       templateType: TemplateType.simple,
       solvedAt: _selectedDate,
-      folderId: _selectedFolderId == problemModel.folderId ? null : _selectedFolderId,
+      folderId: _selectedFolderId,
     );
 
     _service.submitProblemV2(
@@ -205,8 +205,11 @@ class _SimpleTemplate extends State<SimpleProblemRegisterTemplate> {
       problemRegisterModel,
           () {
         _resetFields(); // 성공 시 호출할 함수
-        Navigator.of(context)
-            .pop(true);
+        Navigator.of(context).pop(true);
+
+        MaterialPageRoute(
+          builder: (context) => const DirectoryScreen(),
+        );
       },
     );
   }

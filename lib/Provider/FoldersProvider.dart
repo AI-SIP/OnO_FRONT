@@ -545,6 +545,7 @@ class FoldersProvider with ChangeNotifier {
   }
 
   Future<ProblemModel?> getProblemDetails(int? problemId) async {
+
     try {
       var problemDetails =
       _problems.firstWhere((problem) => problem.problemId == problemId);

@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_tex/flutter_tex.dart';
 import 'package:image_picker/image_picker.dart';
@@ -5,12 +7,10 @@ import 'package:ono/GlobalModule/Theme/HandWriteText.dart';
 import 'package:ono/Model/ProblemModel.dart';
 import 'package:ono/Model/ProblemRegisterModelV2.dart';
 import 'package:ono/Model/TemplateType.dart';
-import 'package:ono/Screen/ProblemRegister/TemplateSelectionScreen.dart';
 import 'package:provider/provider.dart';
 import '../../../GlobalModule/Image/DisplayImage.dart';
 import '../../../GlobalModule/Theme/ThemeHandler.dart';
 import '../../../GlobalModule/Util/FolderSelectionDialog.dart';
-import '../../ProblemManagement/DirectoryScreen.dart';
 import '../ProblemRegisterScreenWidget.dart';
 import '../../../GlobalModule/Util/LatexTextHandler.dart';
 import '../../../Service/ScreenUtil/ProblemRegisterScreenService.dart';
@@ -19,10 +19,13 @@ import '../../../Provider/FoldersProvider.dart';
 class SpecialProblemRegisterTemplate extends StatefulWidget {
   final ProblemModel problemModel;
   final List<Map<String, int>?>? colors;
+  final bool isEditMode;
 
   const SpecialProblemRegisterTemplate(
-      {required this.problemModel, required this.colors, Key? key})
-      : super(key: key);
+      {required this.problemModel,
+      required this.colors,
+      required this.isEditMode,
+      super.key});
 
   @override
   _SpecialProblemRegisterTemplateState createState() =>
@@ -40,7 +43,7 @@ class _SpecialProblemRegisterTemplateState
 
   String? processImageUrl;
   String? analysisResult;
-  bool isLoading = true;
+  bool isLoading = false;
   DateTime _selectedDate = DateTime.now();
   int? _selectedFolderId;
 
@@ -69,15 +72,22 @@ class _SpecialProblemRegisterTemplateState
   }
 
   Future<void> _fetchData() async {
-    final provider = Provider.of<FoldersProvider>(context, listen: false);
+    if (widget.isEditMode) {
+      processImageUrl = problemModel.processImageUrl;
+      analysisResult = problemModel.analysis;
+    } else {
+      setState(() {
+        isLoading = true;
+      });
 
-    // Fetch the processImageUrl
-    processImageUrl = await provider.fetchProcessImageUrl(
-        problemModel.problemImageUrl, widget.colors);
+      final provider = Provider.of<FoldersProvider>(context, listen: false);
 
-    // Fetch the analysisResult
-    analysisResult =
-        await provider.fetchAnalysisResult(problemModel.problemImageUrl);
+      processImageUrl = await provider.fetchProcessImageUrl(
+          problemModel.problemImageUrl, widget.colors);
+
+      analysisResult =
+          await provider.fetchAnalysisResult(problemModel.problemImageUrl);
+    }
 
     setState(() {
       isLoading = false;
@@ -361,6 +371,7 @@ class _SpecialProblemRegisterTemplateState
       sourceController.clear();
       notesController.clear();
       answerImage = null;
+      solveImage = null;
     });
   }
 
@@ -373,40 +384,32 @@ class _SpecialProblemRegisterTemplateState
 
   void _submitProblem() {
     _service.showLoadingDialog(context);
-    if (isLoading) {
-      // isLoading이 false로 바뀌면 서버로 전송
-      _waitForLoadingToComplete().then((_) {
-        final problemRegisterModel = ProblemRegisterModelV2(
-          problemId: problemModel.problemId,
-          problemImageUrl: problemModel.problemImageUrl,
-          processImageUrl: processImageUrl,
-          answerImage: answerImage,
-          solveImage: solveImage,
-          memo: notesController.text == problemModel.memo
-              ? null
-              : notesController.text,
-          reference: sourceController.text == problemModel.reference
-              ? null
-              : sourceController.text,
-          analysis: analysisResult,
-          templateType: TemplateType.special,
-          solvedAt: _selectedDate,
-          folderId: _selectedFolderId == problemModel.folderId
-              ? null
-              : _selectedFolderId,
-        );
 
-        _service.submitProblemV2(
-          context,
-          problemRegisterModel,
-          () {
-            _resetFields(); // 성공 시 호출할 함수
-            _service.hideLoadingDialog(context);
-            Navigator.of(context)
-                .pop(true);
-          },
-        );
-      });
-    }
+    _waitForLoadingToComplete().then((_) {
+      final problemRegisterModel = ProblemRegisterModelV2(
+        problemId: problemModel.problemId,
+        problemImageUrl: problemModel.problemImageUrl,
+        processImageUrl: processImageUrl,
+        answerImage: answerImage,
+        solveImage: solveImage,
+        memo: notesController.text,
+        reference: sourceController.text,
+        analysis: analysisResult,
+        templateType: TemplateType.special,
+        solvedAt: _selectedDate,
+        folderId: _selectedFolderId,
+      );
+
+      _service.submitProblemV2(
+        context,
+        problemRegisterModel,
+            () {
+          _resetFields(); // 성공 시 호출할 함수
+          _service.hideLoadingDialog(context);
+          Navigator.of(context).pop(true);
+
+        },
+      );
+    });
   }
 }

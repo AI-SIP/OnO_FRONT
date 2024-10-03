@@ -10,19 +10,22 @@ import '../Theme/ThemeHandler.dart';
 class FolderSelectionDialog extends StatefulWidget {
   final int? initialFolderId; // 추가: 처음 선택된 폴더 ID
 
-  FolderSelectionDialog({this.initialFolderId});
+  const FolderSelectionDialog({super.key, this.initialFolderId});
 
   @override
   _FolderSelectionDialogState createState() => _FolderSelectionDialogState();
 
   // folderId로 folderName을 찾아 반환하는 함수
   static String? getFolderNameByFolderId(int? folderId) {
-    if (folderId == null) return '폴더 선택';
+    if (folderId == null || _cachedFolders.isEmpty) return '폴더 선택';
 
-    return _cachedFolders.firstWhere(
+    // 해당 folderId가 있는지 확인하고, 없으면 기본값 반환
+    final folder = _cachedFolders.firstWhere(
           (folder) => folder.folderId == folderId,
       orElse: () => FolderThumbnailModel(folderId: -1, folderName: '폴더 선택'),
-    ).folderName;
+    );
+
+    return folder.folderId != -1 ? folder.folderName : '폴더 선택';
   }
 
   static List<FolderThumbnailModel> _cachedFolders = [];
@@ -47,6 +50,13 @@ class _FolderSelectionDialogState extends State<FolderSelectionDialog> {
       _cachedFolders = await foldersProvider.fetchAllFolderThumbnails();
       FolderSelectionDialog._cachedFolders = _cachedFolders;
       _expandedFolders = _cachedFolders.map((folder) => folder.folderId).toSet(); // 모든 폴더를 기본적으로 확장
+
+      if (_selectedFolderId != null) {
+        // 폴더 ID가 선택되어 있다면 폴더 이름을 불러와 업데이트
+        setState(() {
+          _selectedFolderId = _selectedFolderId; // 업데이트 시 폴더 이름 반영
+        });
+      }
     } catch (e) {
       log('Failed to load folders: $e');
     } finally {
@@ -69,7 +79,7 @@ class _FolderSelectionDialogState extends State<FolderSelectionDialog> {
         fontSize: 24,
         color: themeProvider.primaryColor,
       ),
-      content: Container(
+      content: SizedBox(
         width: double.maxFinite,
         child: _isLoading
             ? const Center(child: CircularProgressIndicator())

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:ono/GlobalModule/Theme/StandardText.dart';
 import 'package:ono/Model/ProblemModel.dart';
 import 'package:provider/provider.dart';
 
@@ -15,7 +14,6 @@ class ProblemRegisterScreenV2 extends StatefulWidget {
   final ProblemModel problemModel;
   final bool isEditMode;
   final List<Map<String, int>?>? colors;
-
 
   const ProblemRegisterScreenV2({
     super.key,
@@ -44,18 +42,21 @@ class _ProblemRegisterScreenV2State extends State<ProblemRegisterScreenV2> {
       case TemplateType.simple:
         templateWidget = SimpleProblemRegisterTemplate(
             problemModel: widget.problemModel,
+            isEditMode : widget.isEditMode,
         );
         break;
       case TemplateType.clean:
         templateWidget = CleanProblemRegisterTemplate(
           problemModel: widget.problemModel,
           colors: widget.colors,
+          isEditMode : widget.isEditMode,
         );
         break;
       case TemplateType.special:
         templateWidget = SpecialProblemRegisterTemplate(
           problemModel: widget.problemModel,
           colors: widget.colors,
+          isEditMode : widget.isEditMode,
         );
         break;
     }

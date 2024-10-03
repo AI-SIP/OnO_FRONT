@@ -45,7 +45,6 @@ class _ProblemDetailScreenV2State extends State<ProblemDetailScreenV2> {
     _problemModelFuture = _problemDetailService.fetchProblemDetails(context, widget.problemId);
   }
 
-
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeHandler>(context);
@@ -165,7 +164,12 @@ class _ProblemDetailScreenV2State extends State<ProblemDetailScreenV2> {
                           colors: null,
                         ),
                       ),
-                    );
+                    ).then((_) {
+                      // 수정 후 돌아오면 Future를 다시 호출하여 최신 데이터를 가져옴
+                      setState(() {
+                        _problemModelFuture = _problemDetailService.fetchProblemDetails(context, widget.problemId);
+                      });
+                    });
                   } else if (result == deleteValue) {
                     FirebaseAnalytics.instance
                         .logEvent(name: 'problem_delete_button_click');

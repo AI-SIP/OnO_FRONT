@@ -37,7 +37,7 @@ class ProblemRegisterScreenService {
     return await showDialog<Map<String, dynamic>>(
       context: context,
       builder: (BuildContext context) {
-        return FolderSelectionDialog(); // 폴더 선택 다이얼로그
+        return const FolderSelectionDialog(); // 폴더 선택 다이얼로그
       },
     );
   }
@@ -173,6 +173,8 @@ class ProblemRegisterScreenService {
       _showLoginRequiredDialog(context);
       return;
     }
+
+    log('problem submit');
 
     try {
       await Provider.of<FoldersProvider>(context, listen: false)

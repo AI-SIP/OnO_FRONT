@@ -645,7 +645,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
               ),
               const SizedBox(height: 8),
               Text(
-                problem.reference ?? '제목 없음',
+                (problem.reference != null && problem.reference!.isNotEmpty) ? problem.reference! : '출처 없음',
                 style: TextStyle(
                   fontFamily: 'Handwrite',
                   color: themeProvider.primaryColor,
@@ -662,7 +662,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                     ? '작성 일시 : ${formatDateTime(problem.createdAt!)}'
                     : '작성 일시 : 정보 없음',
                 color: themeProvider.desaturateColor,
-                fontSize: 12,
+                fontSize: 10,
               ),
             ],
           ),
@@ -674,7 +674,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   Future<void> _moveProblemToFolder(ProblemModel problem, int? folderId) async {
     final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
 
-    if (problem.problemId == null || folderId == null) {
+    if (folderId == null) {
       log('Problem ID or folderId is null. Cannot move the problem.');
       return; // 문제 ID 또는 폴더 ID가 null이면 실행하지 않음
     }
