@@ -2,6 +2,7 @@ import 'dart:developer';
 
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:ono/GlobalModule/Theme/HandWriteText.dart';
 import 'package:provider/provider.dart';
 
@@ -55,6 +56,12 @@ class _CameraScreenState extends State<CameraScreen> {
   @override
   void initState() {
     super.initState();
+
+    // 화면 방향을 세로로 고정
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+    ]);
+
     _controller = CameraController(
       widget.camera,
       ResolutionPreset.high,
@@ -64,6 +71,15 @@ class _CameraScreenState extends State<CameraScreen> {
 
   @override
   void dispose() {
+
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+      DeviceOrientation.landscapeLeft,
+      DeviceOrientation.landscapeRight,
+    ]);
+
+
     _controller.dispose();
     super.dispose();
   }
