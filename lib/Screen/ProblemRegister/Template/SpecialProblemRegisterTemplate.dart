@@ -179,7 +179,6 @@ class _SpecialProblemRegisterTemplateState extends State<SpecialProblemRegisterT
               ),
               const SizedBox(height: 30),
 
-              // Display analysis result or loading message
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -194,24 +193,45 @@ class _SpecialProblemRegisterTemplateState extends State<SpecialProblemRegisterT
                   isLoading
                       ? Center(child: HandWriteText(text: '문제 분석 중...', fontSize: 16, color: themeProvider.primaryColor,))
                       : analysisResult != null
-                      ? TeXView(
-                    fonts: const [
-                      TeXViewFont(
-                        fontFamily: 'HandWrite',
-                        src: 'assets/fonts/HandWrite.ttf',
+                      ? Container(
+                    constraints: BoxConstraints(
+                      maxWidth: MediaQuery.of(context).size.width * 0.9, // Unified width with other widgets
+                      maxHeight: 500, // Set maximum height
+                    ),
+                    padding: const EdgeInsets.all(10.0),
+                    decoration: BoxDecoration(
+                      color: themeProvider.primaryColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: themeProvider.primaryColor, width: 2.0), // Adding a border
+                    ),
+                    child: Scrollbar(
+                      thumbVisibility: true,
+                      thickness: 6.0,
+                      radius: const Radius.circular(10),
+                      child: SingleChildScrollView(
+                        scrollDirection: Axis.vertical,
+                        child: TeXView(
+                          fonts: const [
+                            TeXViewFont(
+                              fontFamily: 'HandWrite',
+                              src: 'assets/fonts/HandWrite.ttf',
+                            ),
+                          ],
+                          renderingEngine: const TeXViewRenderingEngine.mathjax(),
+                          child: LatexTextHandler.renderLatex(analysisResult!),
+                          style: const TeXViewStyle(
+                            elevation: 5,
+                            borderRadius: TeXViewBorderRadius.all(10),
+                            backgroundColor: Colors.white,
+                          ),
+                        ),
                       ),
-                    ],
-                    renderingEngine: const TeXViewRenderingEngine.mathjax(),
-                    child: LatexTextHandler.renderLatex(analysisResult!),
-                    style: const TeXViewStyle(
-                      elevation: 5,
-                      borderRadius: TeXViewBorderRadius.all(10),
-                      backgroundColor: Colors.white,
                     ),
                   )
                       : const HandWriteText(text: "분석 결과가 없습니다.", color: Colors.black, fontSize: 20,)
                 ],
               ),
+
               const SizedBox(height: 30),
 
               Column(

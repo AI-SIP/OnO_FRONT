@@ -198,37 +198,41 @@ class ProblemDetailScreenWidget{
         Container(
           constraints: BoxConstraints(
             maxWidth: MediaQuery.of(context).size.width - 70, // 제한된 너비 설정
-            maxHeight: 300, // 필요에 따라 최대 높이 설정
+            maxHeight: MediaQuery.of(context).size.width / 3, // 필요에 따라 최대 높이 설정
           ),
           padding: const EdgeInsets.all(10.0),
           decoration: BoxDecoration(
             color: themeProvider.primaryColor.withOpacity(0.1),
             borderRadius: BorderRadius.circular(10),
           ),
-          child: SingleChildScrollView( // 내용이 넘칠 때 스크롤 가능하게 설정
-            scrollDirection: Axis.vertical,
-            child: TeXView(
-              fonts: const [
-                TeXViewFont(
-                  fontFamily: 'HandWrite',
-                  src: 'assets/fonts/HandWrite.ttf',
+          child: Scrollbar(
+            thumbVisibility: true, // 스크롤바 항상 보이도록 설정
+            thickness: 6.0, // 스크롤바 두께
+            radius: const Radius.circular(10), // 스크롤바 모서리 반경
+            scrollbarOrientation: ScrollbarOrientation.right, // 스크롤바 위치
+            child: SingleChildScrollView(
+              scrollDirection: Axis.vertical,
+              child: TeXView(
+                fonts: const [
+                  TeXViewFont(
+                    fontFamily: 'HandWrite',
+                    src: 'assets/fonts/HandWrite.ttf',
+                  ),
+                ],
+                child: LatexTextHandler.renderLatex(analysis ?? ""),
+                renderingEngine: const TeXViewRenderingEngine.mathjax(),
+                style: const TeXViewStyle(
+                  elevation: 0,
+                  borderRadius: TeXViewBorderRadius.all(10),
+                  backgroundColor: Colors.white,
                 ),
-              ],
-              child: LatexTextHandler.renderLatex(analysis ?? ""),
-              renderingEngine: const TeXViewRenderingEngine.mathjax(),
-              style: const TeXViewStyle(
-                elevation: 0,
-                borderRadius: TeXViewBorderRadius.all(10),
-                backgroundColor: Colors.white,
               ),
             ),
           ),
-        )
+        ),
       ],
     );
   }
-
-
 
   // 한 줄에 아이콘과 텍스트가 동시에 오도록 하는 함수
   Widget buildIconTextRow(IconData icon, String label, Widget trailing, ThemeHandler themeProvider) {
