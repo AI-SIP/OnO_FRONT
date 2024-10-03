@@ -10,6 +10,7 @@ import 'package:ono/Provider/FoldersProvider.dart';
 import 'package:provider/provider.dart';
 import '../../GlobalModule/Theme/HandWriteText.dart';
 import '../../GlobalModule/Image/DisplayImage.dart';
+import '../../GlobalModule/Theme/StandardText.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
 import '../../GlobalModule/Util/FolderSelectionDialog.dart';
 import '../../Model/ProblemRegisterModel.dart';
@@ -646,9 +647,9 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
               Text(
                 problem.reference ?? '제목 없음',
                 style: TextStyle(
-                  fontFamily: 'HandWrite',
+                  fontFamily: 'Handwrite',
                   color: themeProvider.primaryColor,
-                  fontSize: 18,
+                  fontSize: 20,
                   fontWeight: FontWeight.bold,
                 ),
                 textAlign: TextAlign.center,
@@ -656,7 +657,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                 maxLines: 1,
               ),
               const SizedBox(height: 2),
-              HandWriteText(
+              StandardText(
                 text: problem.updateAt != null
                     ? '작성 일시 : ${formatDateTime(problem.createdAt!)}'
                     : '작성 일시 : 정보 없음',

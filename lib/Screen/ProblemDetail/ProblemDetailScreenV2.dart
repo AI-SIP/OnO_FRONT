@@ -3,7 +3,6 @@ import 'dart:developer';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:ono/GlobalModule/Theme/HandWriteText.dart';
-import 'package:ono/GlobalModule/Theme/StandardText.dart';
 import 'package:provider/provider.dart';
 
 import '../../GlobalModule/Theme/SnackBarDialog.dart';
@@ -57,7 +56,7 @@ class _ProblemDetailScreenV2State extends State<ProblemDetailScreenV2> {
               future: _problemModelFuture,
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return Center(child: CircularProgressIndicator());
+                  return Center(child: CircularProgressIndicator(color: themeProvider.primaryColor,),);
                 } else if (snapshot.hasError) {
                   return Center(
                     child: HandWriteText(

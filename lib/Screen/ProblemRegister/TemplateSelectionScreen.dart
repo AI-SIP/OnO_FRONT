@@ -20,7 +20,7 @@ class TemplateSelectionScreen extends StatelessWidget {
       appBar: AppBar(
         title: HandWriteText(
           text: '오답노트 템플릿 선택',
-          fontSize: 24,
+          fontSize: 26,
           color: themeProvider.primaryColor,
         ),
       ),
