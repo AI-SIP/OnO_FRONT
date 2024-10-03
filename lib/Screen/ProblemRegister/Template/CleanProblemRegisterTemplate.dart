@@ -4,6 +4,7 @@ import 'package:ono/GlobalModule/Theme/HandWriteText.dart';
 import 'package:ono/Model/ProblemModel.dart';
 import 'package:ono/Model/ProblemRegisterModelV2.dart';
 import 'package:ono/Model/TemplateType.dart';
+import 'package:ono/Screen/ProblemManagement/DirectoryScreen.dart';
 import 'package:provider/provider.dart';
 import '../../../GlobalModule/Image/DisplayImage.dart';
 import '../../../GlobalModule/Theme/ThemeHandler.dart';
@@ -247,28 +248,48 @@ class _CleanProblemRegisterTemplateState extends State<CleanProblemRegisterTempl
     });
   }
 
-  void _submitProblem() {
-    final problemRegisterModel = ProblemRegisterModelV2(
-      problemId: problemModel.problemId,
-      problemImageUrl: problemModel.problemImageUrl,
-      processImageUrl: processImageUrl,
-      answerImage: answerImage,
-      solveImage: solveImage,
-      memo: notesController.text == problemModel.memo ? null : notesController.text,
-      reference: sourceController.text == problemModel.reference ? null : sourceController.text,
-      templateType: TemplateType.clean,
-      solvedAt: _selectedDate,
-      folderId: _selectedFolderId == problemModel.folderId ? null : _selectedFolderId,
-    );
+  Future<void> _waitForLoadingToComplete() async {
+    while (isLoading) {
+      // 500ms 마다 로딩 상태를 체크
+      await Future.delayed(const Duration(milliseconds: 500));
+    }
+  }
 
-    // 서버로 전송
-    _service.submitProblemV2(
-      context,
-      problemRegisterModel,
-          () {
-        _resetFields(); // 성공 시 호출할 함수
-        Navigator.pop(context); // 등록 창 닫기
-      },
-    );
+  void _submitProblem() {
+    _service.showLoadingDialog(context);
+    if (isLoading) {
+      // isLoading이 false로 바뀌면 서버로 전송
+      _waitForLoadingToComplete().then((_) {
+        final problemRegisterModel = ProblemRegisterModelV2(
+          problemId: problemModel.problemId,
+          problemImageUrl: problemModel.problemImageUrl,
+          processImageUrl: processImageUrl,
+          answerImage: answerImage,
+          solveImage: solveImage,
+          memo: notesController.text == problemModel.memo
+              ? null
+              : notesController.text,
+          reference: sourceController.text == problemModel.reference
+              ? null
+              : sourceController.text,
+          templateType: TemplateType.special,
+          solvedAt: _selectedDate,
+          folderId: _selectedFolderId == problemModel.folderId
+              ? null
+              : _selectedFolderId,
+        );
+
+        _service.submitProblemV2(
+          context,
+          problemRegisterModel,
+              () {
+            _resetFields(); // 성공 시 호출할 함수
+            _service.hideLoadingDialog(context);
+            Navigator.of(context)
+                .pop(true);
+          },
+        );
+      });
+    }
   }
 }

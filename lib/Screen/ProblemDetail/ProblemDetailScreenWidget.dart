@@ -80,6 +80,8 @@ class ProblemDetailScreenWidget{
   // 정답 및 풀이 확인 ExpansionTile
   Widget buildAnalysisExpansionTile(
       BuildContext context, ProblemModel problemModel, ThemeHandler themeProvider, TemplateType templateType) {
+    final ScrollController scrollController = ScrollController();
+    final ScrollController scrollController2 = ScrollController();
     final screenWidth = MediaQuery.of(context).size.width;
     int crossAxisCount = screenWidth > 1100 ? 3 : (screenWidth > 600 ? 2 : 1);
     double childAspectRatio = screenWidth > 1100 ? 0.8 : 0.9;
@@ -93,11 +95,12 @@ class ProblemDetailScreenWidget{
         const SizedBox(height: 10.0),
         buildSectionWithMemo(problemModel.memo, themeProvider),
         const SizedBox(height: 20.0),
-        if (templateType == TemplateType.special) buildLatexView(context, problemModel.analysis, themeProvider),
+        if (templateType == TemplateType.special) buildLatexView(context, problemModel.analysis, scrollController, themeProvider),
         const SizedBox(height: 20.0),
         LayoutBuilder(
           builder: (BuildContext context, BoxConstraints constraints) {
             return GridView.count(
+              controller: scrollController2,
               crossAxisCount: crossAxisCount,
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
@@ -183,7 +186,7 @@ class ProblemDetailScreenWidget{
   }
 
   // Latex 형태의 텍스트를 출력해주는 함수
-  Widget buildLatexView(BuildContext context, String? analysis, ThemeHandler themeProvider) {
+  Widget buildLatexView(BuildContext context, String? analysis, ScrollController scrollController, ThemeHandler themeProvider) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -206,11 +209,13 @@ class ProblemDetailScreenWidget{
             borderRadius: BorderRadius.circular(10),
           ),
           child: Scrollbar(
+            controller: scrollController,
             thumbVisibility: true, // 스크롤바 항상 보이도록 설정
             thickness: 6.0, // 스크롤바 두께
             radius: const Radius.circular(10), // 스크롤바 모서리 반경
             scrollbarOrientation: ScrollbarOrientation.right, // 스크롤바 위치
             child: SingleChildScrollView(
+              controller: scrollController,
               scrollDirection: Axis.vertical,
               child: TeXView(
                 fonts: const [

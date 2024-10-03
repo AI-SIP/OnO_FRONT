@@ -12,6 +12,7 @@ import '../../Model/ProblemModel.dart';
 import '../../Model/TemplateType.dart';
 import '../../Provider/FoldersProvider.dart';
 import '../../Service/ScreenUtil/ProblemDetailScreenService.dart';
+import '../ProblemRegister/ProblemRegisterScreenV2.dart';
 import '../ProblemShare/AnswerShareScreen.dart';
 import '../ProblemShare/ProblemShareScreen.dart';
 import 'Template/CleanProblemDetailTemplate.dart';
@@ -32,6 +33,7 @@ class _ProblemDetailScreenV2State extends State<ProblemDetailScreenV2> {
   final ProblemDetailScreenService _problemDetailService =
       ProblemDetailScreenService();
 
+
   static const String shareProblemValue = 'share_problem';
   static const String shareAnswerValue = 'share_answer';
   static const String editValue = 'edit';
@@ -42,6 +44,7 @@ class _ProblemDetailScreenV2State extends State<ProblemDetailScreenV2> {
     super.initState();
     _problemModelFuture = _problemDetailService.fetchProblemDetails(context, widget.problemId);
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -154,7 +157,15 @@ class _ProblemDetailScreenV2State extends State<ProblemDetailScreenV2> {
                   } else if (result == editValue) {
                     FirebaseAnalytics.instance
                         .logEvent(name: 'problem_edit_button_click');
-
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => ProblemRegisterScreenV2(
+                          problemModel: problemModel,
+                          isEditMode: true,
+                          colors: null,
+                        ),
+                      ),
+                    );
                   } else if (result == deleteValue) {
                     FirebaseAnalytics.instance
                         .logEvent(name: 'problem_delete_button_click');

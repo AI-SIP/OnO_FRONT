@@ -5,10 +5,12 @@ import 'package:ono/GlobalModule/Theme/HandWriteText.dart';
 import 'package:ono/Model/ProblemModel.dart';
 import 'package:ono/Model/ProblemRegisterModelV2.dart';
 import 'package:ono/Model/TemplateType.dart';
+import 'package:ono/Screen/ProblemRegister/TemplateSelectionScreen.dart';
 import 'package:provider/provider.dart';
 import '../../../GlobalModule/Image/DisplayImage.dart';
 import '../../../GlobalModule/Theme/ThemeHandler.dart';
 import '../../../GlobalModule/Util/FolderSelectionDialog.dart';
+import '../../ProblemManagement/DirectoryScreen.dart';
 import '../ProblemRegisterScreenWidget.dart';
 import '../../../GlobalModule/Util/LatexTextHandler.dart';
 import '../../../Service/ScreenUtil/ProblemRegisterScreenService.dart';
@@ -18,14 +20,17 @@ class SpecialProblemRegisterTemplate extends StatefulWidget {
   final ProblemModel problemModel;
   final List<Map<String, int>?>? colors;
 
-  const SpecialProblemRegisterTemplate({required this.problemModel, required this.colors, Key? key})
+  const SpecialProblemRegisterTemplate(
+      {required this.problemModel, required this.colors, Key? key})
       : super(key: key);
 
   @override
-  _SpecialProblemRegisterTemplateState createState() => _SpecialProblemRegisterTemplateState();
+  _SpecialProblemRegisterTemplateState createState() =>
+      _SpecialProblemRegisterTemplateState();
 }
 
-class _SpecialProblemRegisterTemplateState extends State<SpecialProblemRegisterTemplate> {
+class _SpecialProblemRegisterTemplateState
+    extends State<SpecialProblemRegisterTemplate> {
   late ProblemModel problemModel;
   late TextEditingController sourceController;
   late TextEditingController notesController;
@@ -38,6 +43,9 @@ class _SpecialProblemRegisterTemplateState extends State<SpecialProblemRegisterT
   bool isLoading = true;
   DateTime _selectedDate = DateTime.now();
   int? _selectedFolderId;
+
+  final ScrollController scrollControllerForPage = ScrollController();
+  final ScrollController scrollControllerForAnalysis = ScrollController();
 
   @override
   void initState() {
@@ -53,6 +61,8 @@ class _SpecialProblemRegisterTemplateState extends State<SpecialProblemRegisterT
 
   @override
   void dispose() {
+    scrollControllerForPage.dispose();
+    scrollControllerForAnalysis.dispose();
     sourceController.dispose();
     notesController.dispose();
     super.dispose();
@@ -62,10 +72,12 @@ class _SpecialProblemRegisterTemplateState extends State<SpecialProblemRegisterT
     final provider = Provider.of<FoldersProvider>(context, listen: false);
 
     // Fetch the processImageUrl
-    processImageUrl = await provider.fetchProcessImageUrl(problemModel.problemImageUrl, widget.colors);
+    processImageUrl = await provider.fetchProcessImageUrl(
+        problemModel.problemImageUrl, widget.colors);
 
     // Fetch the analysisResult
-    analysisResult = await provider.fetchAnalysisResult(problemModel.problemImageUrl);
+    analysisResult =
+        await provider.fetchAnalysisResult(problemModel.problemImageUrl);
 
     setState(() {
       isLoading = false;
@@ -82,6 +94,7 @@ class _SpecialProblemRegisterTemplateState extends State<SpecialProblemRegisterT
           FocusScope.of(context).unfocus();
         },
         child: SingleChildScrollView(
+          controller: scrollControllerForPage,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -151,7 +164,11 @@ class _SpecialProblemRegisterTemplateState extends State<SpecialProblemRegisterT
                     children: [
                       Icon(Icons.image, color: themeProvider.primaryColor),
                       const SizedBox(width: 10),
-                      HandWriteText(text: '문제 이미지', fontSize: 20, color: themeProvider.primaryColor,),
+                      HandWriteText(
+                        text: '문제 이미지',
+                        fontSize: 20,
+                        color: themeProvider.primaryColor,
+                      ),
                     ],
                   ),
                   const SizedBox(height: 5),
@@ -168,12 +185,21 @@ class _SpecialProblemRegisterTemplateState extends State<SpecialProblemRegisterT
                     children: [
                       Icon(Icons.image, color: themeProvider.primaryColor),
                       const SizedBox(width: 10),
-                      HandWriteText(text: '보정된 이미지', fontSize: 20, color: themeProvider.primaryColor,),
+                      HandWriteText(
+                        text: '보정된 이미지',
+                        fontSize: 20,
+                        color: themeProvider.primaryColor,
+                      ),
                     ],
                   ),
                   const SizedBox(height: 5),
                   isLoading
-                      ? Center(child: HandWriteText(text: '이미지 보정 중...', fontSize: 16, color: themeProvider.primaryColor,))
+                      ? Center(
+                          child: HandWriteText(
+                          text: '이미지 보정 중...',
+                          fontSize: 16,
+                          color: themeProvider.primaryColor,
+                        ))
                       : DisplayImage(imagePath: processImageUrl ?? ''),
                 ],
               ),
@@ -186,49 +212,70 @@ class _SpecialProblemRegisterTemplateState extends State<SpecialProblemRegisterT
                     children: [
                       Icon(Icons.analytics, color: themeProvider.primaryColor),
                       const SizedBox(width: 10),
-                      HandWriteText(text: '문제 분석 결과', fontSize: 20, color: themeProvider.primaryColor,),
+                      HandWriteText(
+                        text: '문제 분석 결과',
+                        fontSize: 20,
+                        color: themeProvider.primaryColor,
+                      ),
                     ],
                   ),
                   const SizedBox(height: 5),
                   isLoading
-                      ? Center(child: HandWriteText(text: '문제 분석 중...', fontSize: 16, color: themeProvider.primaryColor,))
+                      ? Center(
+                          child: HandWriteText(
+                          text: '문제 분석 중...',
+                          fontSize: 16,
+                          color: themeProvider.primaryColor,
+                        ))
                       : analysisResult != null
-                      ? Container(
-                    constraints: BoxConstraints(
-                      maxWidth: MediaQuery.of(context).size.width * 0.9, // Unified width with other widgets
-                      maxHeight: 500, // Set maximum height
-                    ),
-                    padding: const EdgeInsets.all(10.0),
-                    decoration: BoxDecoration(
-                      color: themeProvider.primaryColor.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: themeProvider.primaryColor, width: 2.0), // Adding a border
-                    ),
-                    child: Scrollbar(
-                      thumbVisibility: true,
-                      thickness: 6.0,
-                      radius: const Radius.circular(10),
-                      child: SingleChildScrollView(
-                        scrollDirection: Axis.vertical,
-                        child: TeXView(
-                          fonts: const [
-                            TeXViewFont(
-                              fontFamily: 'HandWrite',
-                              src: 'assets/fonts/HandWrite.ttf',
-                            ),
-                          ],
-                          renderingEngine: const TeXViewRenderingEngine.mathjax(),
-                          child: LatexTextHandler.renderLatex(analysisResult!),
-                          style: const TeXViewStyle(
-                            elevation: 5,
-                            borderRadius: TeXViewBorderRadius.all(10),
-                            backgroundColor: Colors.white,
-                          ),
-                        ),
-                      ),
-                    ),
-                  )
-                      : const HandWriteText(text: "분석 결과가 없습니다.", color: Colors.black, fontSize: 20,)
+                          ? Container(
+                              constraints: BoxConstraints(
+                                maxWidth: MediaQuery.of(context).size.width *
+                                    0.9, // Unified width with other widgets
+                                maxHeight: 500, // Set maximum height
+                              ),
+                              padding: const EdgeInsets.all(10.0),
+                              decoration: BoxDecoration(
+                                color:
+                                    themeProvider.primaryColor.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(
+                                    color: themeProvider.primaryColor,
+                                    width: 2.0), // Adding a border
+                              ),
+                              child: Scrollbar(
+                                controller: scrollControllerForAnalysis,
+                                thumbVisibility: true,
+                                thickness: 6.0,
+                                radius: const Radius.circular(10),
+                                child: SingleChildScrollView(
+                                  controller: scrollControllerForAnalysis,
+                                  scrollDirection: Axis.vertical,
+                                  child: TeXView(
+                                    fonts: const [
+                                      TeXViewFont(
+                                        fontFamily: 'HandWrite',
+                                        src: 'assets/fonts/HandWrite.ttf',
+                                      ),
+                                    ],
+                                    renderingEngine:
+                                        const TeXViewRenderingEngine.mathjax(),
+                                    child: LatexTextHandler.renderLatex(
+                                        analysisResult!),
+                                    style: const TeXViewStyle(
+                                      elevation: 5,
+                                      borderRadius: TeXViewBorderRadius.all(10),
+                                      backgroundColor: Colors.white,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            )
+                          : const HandWriteText(
+                              text: "분석 결과가 없습니다.",
+                              color: Colors.black,
+                              fontSize: 20,
+                            )
                 ],
               ),
 
@@ -241,7 +288,11 @@ class _SpecialProblemRegisterTemplateState extends State<SpecialProblemRegisterT
                     children: [
                       Icon(Icons.camera_alt, color: themeProvider.primaryColor),
                       const SizedBox(width: 10),
-                      HandWriteText(text: '해설 이미지', fontSize: 20, color: themeProvider.primaryColor,),
+                      HandWriteText(
+                        text: '해설 이미지',
+                        fontSize: 20,
+                        color: themeProvider.primaryColor,
+                      ),
                     ],
                   ),
                   const SizedBox(height: 5),
@@ -268,7 +319,11 @@ class _SpecialProblemRegisterTemplateState extends State<SpecialProblemRegisterT
                     children: [
                       Icon(Icons.camera_alt, color: themeProvider.primaryColor),
                       const SizedBox(width: 10),
-                      HandWriteText(text: '풀이 이미지', fontSize: 20, color: themeProvider.primaryColor,),
+                      HandWriteText(
+                        text: '풀이 이미지',
+                        fontSize: 20,
+                        color: themeProvider.primaryColor,
+                      ),
                     ],
                   ),
                   const SizedBox(height: 5),
@@ -309,29 +364,49 @@ class _SpecialProblemRegisterTemplateState extends State<SpecialProblemRegisterT
     });
   }
 
-  void _submitProblem() {
-    final problemRegisterModel = ProblemRegisterModelV2(
-      problemId: problemModel.problemId,
-      problemImageUrl: problemModel.problemImageUrl,
-      processImageUrl: processImageUrl,
-      answerImage: answerImage,
-      solveImage: solveImage,
-      memo: notesController.text == problemModel.memo ? null : notesController.text,
-      reference: sourceController.text == problemModel.reference ? null : sourceController.text,
-      analysis: analysisResult,
-      templateType: TemplateType.special,
-      solvedAt: _selectedDate,
-      folderId: _selectedFolderId == problemModel.folderId ? null : _selectedFolderId,
-    );
+  Future<void> _waitForLoadingToComplete() async {
+    while (isLoading) {
+      // 500ms 마다 로딩 상태를 체크
+      await Future.delayed(const Duration(milliseconds: 500));
+    }
+  }
 
-    // 서버로 전송
-    _service.submitProblemV2(
-      context,
-      problemRegisterModel,
+  void _submitProblem() {
+    _service.showLoadingDialog(context);
+    if (isLoading) {
+      // isLoading이 false로 바뀌면 서버로 전송
+      _waitForLoadingToComplete().then((_) {
+        final problemRegisterModel = ProblemRegisterModelV2(
+          problemId: problemModel.problemId,
+          problemImageUrl: problemModel.problemImageUrl,
+          processImageUrl: processImageUrl,
+          answerImage: answerImage,
+          solveImage: solveImage,
+          memo: notesController.text == problemModel.memo
+              ? null
+              : notesController.text,
+          reference: sourceController.text == problemModel.reference
+              ? null
+              : sourceController.text,
+          analysis: analysisResult,
+          templateType: TemplateType.special,
+          solvedAt: _selectedDate,
+          folderId: _selectedFolderId == problemModel.folderId
+              ? null
+              : _selectedFolderId,
+        );
+
+        _service.submitProblemV2(
+          context,
+          problemRegisterModel,
           () {
-        _resetFields(); // 성공 시 호출할 함수
-        Navigator.pop(context); // 등록 창 닫기
-      },
-    );
+            _resetFields(); // 성공 시 호출할 함수
+            _service.hideLoadingDialog(context);
+            Navigator.of(context)
+                .pop(true);
+          },
+        );
+      });
+    }
   }
 }

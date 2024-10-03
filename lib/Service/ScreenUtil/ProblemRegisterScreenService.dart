@@ -92,7 +92,7 @@ class ProblemRegisterScreenService {
               ),
               const SizedBox(height: 20),
               const HandWriteText(
-                text: '필기를 제거하는 중...',
+                text: '문제 등록 중...',
                 fontSize: 24,
                 color: Colors.white,
               ),
@@ -174,12 +174,9 @@ class ProblemRegisterScreenService {
       return;
     }
 
-    showLoadingDialog(context);
-
     try {
       await Provider.of<FoldersProvider>(context, listen: false)
           .submitProblemV2(problemData, context);
-      hideLoadingDialog(context);
       onSuccess();
       showSuccessDialog(context);
     } catch (error) {

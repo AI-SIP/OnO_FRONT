@@ -6,6 +6,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:ono/Provider/FoldersProvider.dart';
+import 'package:ono/Screen/ProblemRegister/ProblemRegisterScreenV2.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
@@ -42,8 +43,10 @@ class ProblemDetailScreenService {
     if (problem != null) {
       Navigator.of(context).push(
         MaterialPageRoute(
-          builder: (context) => ProblemRegisterScreen(
-            problem: problem,
+          builder: (context) => ProblemRegisterScreenV2(
+            problemModel: problem,
+            isEditMode: true,
+            colors: [],
           ),
         ),
       );

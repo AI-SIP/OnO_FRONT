@@ -18,11 +18,11 @@ class ProblemRegisterScreenV2 extends StatefulWidget {
 
 
   const ProblemRegisterScreenV2({
-    Key? key,
+    super.key,
     required this.problemModel,
     required this.isEditMode,
     required this.colors,
-  }) : super(key: key);
+  });
 
   @override
   _ProblemRegisterScreenV2State createState() => _ProblemRegisterScreenV2State();
@@ -85,8 +85,7 @@ class _ProblemRegisterScreenV2State extends State<ProblemRegisterScreenV2> {
   }
 
   Future<void> _deleteProblem() async {
-    // FoldersProvider를 이용하여 문제 삭제 API 호출
     await Provider.of<FoldersProvider>(context, listen: false)
-        .deleteProblem(widget.problemModel.problemId!);
+        .deleteProblem(widget.problemModel.problemId);
   }
 }

@@ -11,6 +11,7 @@ import 'package:provider/provider.dart';
 import '../../../GlobalModule/Image/DisplayImage.dart';
 import '../../../GlobalModule/Theme/ThemeHandler.dart';
 import '../../../GlobalModule/Util/FolderSelectionDialog.dart';
+import '../../ProblemManagement/DirectoryScreen.dart';
 import '../ProblemRegisterScreenWidget.dart';
 import '../../../Service/ScreenUtil/ProblemRegisterScreenService.dart';
 
@@ -199,13 +200,13 @@ class _SimpleTemplate extends State<SimpleProblemRegisterTemplate> {
       folderId: _selectedFolderId == problemModel.folderId ? null : _selectedFolderId,
     );
 
-    // 서버로 전송
     _service.submitProblemV2(
       context,
       problemRegisterModel,
           () {
         _resetFields(); // 성공 시 호출할 함수
-        Navigator.pop(context); // 등록 창 닫기
+        Navigator.of(context)
+            .pop(true);
       },
     );
   }
