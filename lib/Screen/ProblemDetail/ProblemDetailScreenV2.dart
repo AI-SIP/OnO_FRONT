@@ -79,6 +79,7 @@ class _ProblemDetailScreenV2State extends State<ProblemDetailScreenV2> {
               },
             ),
           ),
+          const SizedBox(height: 10,),
           _buildNavigationButtons(context), // 항상 하단에 고정된 네비게이션 바
         ],
       ),
@@ -280,7 +281,7 @@ class _ProblemDetailScreenV2State extends State<ProblemDetailScreenV2> {
       padding: EdgeInsets.only(top: topPadding, bottom: bottomPadding),
       child: NavigationButtons(
         context: context,
-        provider: Provider.of<FoldersProvider>(context, listen: false),
+        foldersProvider: Provider.of<FoldersProvider>(context, listen: false),
         currentId: widget.problemId,
       ),
     );

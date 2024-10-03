@@ -28,6 +28,18 @@ class ProblemDetailScreenService {
     fetchDetails();
   }
 
+  void addRepeatCount(BuildContext context, int? problemId) async{
+    if (problemId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('문제 ID가 유효하지 않습니다.')),
+      );
+      return;
+    }
+
+    Provider.of<FoldersProvider>(context, listen: false)
+        .addRepeatCount(problemId);
+  }
+
   void editProblem(BuildContext context, int? problemId) async {
     if (problemId == null) {
       ScaffoldMessenger.of(context).showSnackBar(

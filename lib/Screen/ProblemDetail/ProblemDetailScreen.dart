@@ -247,7 +247,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
       padding: EdgeInsets.only(top: topPadding, bottom: bottomPadding),
       child: NavigationButtons(
         context: context,
-        provider: Provider.of<FoldersProvider>(context, listen: false),
+        foldersProvider: Provider.of<FoldersProvider>(context, listen: false),
         currentId: widget.problemId!,
       ),
     );

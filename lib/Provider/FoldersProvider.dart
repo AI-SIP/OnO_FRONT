@@ -515,6 +515,27 @@ class FoldersProvider with ChangeNotifier {
     }
   }
 
+  Future<void> addRepeatCount(int problemId) async {
+    try {
+      final response = await httpService.sendRequest(
+        method: 'POST',
+        url: '${AppConfig.baseUrl}/api/problem/repeat',
+        headers: {
+          'problemId': problemId.toString(),
+        },
+      );
+
+      if (response.statusCode == 200) {
+        log('Problem successfully repeated');
+      } else {
+        throw Exception('Failed to delete problem');
+      }
+    } catch (error, stackTrace) {
+      log('Error deleting problem: $error');
+      await Sentry.captureException(error, stackTrace: stackTrace);
+    }
+  }
+
   void sortProblemsByOption(String option) {
     if (option == 'name') {
       sortProblemsByName();

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_tex/flutter_tex.dart';
 import 'package:intl/intl.dart';
 import 'package:ono/Model/TemplateType.dart';
-import 'package:provider/provider.dart';
 
 import '../../GlobalModule/Image/DisplayImage.dart';
 import '../../GlobalModule/Image/FullScreenImage.dart';
@@ -117,6 +116,9 @@ class ProblemDetailScreenWidget{
             );
           },
         ),
+
+        const SizedBox(height: 20.0),
+        buildRepeatSection(problemModel, themeProvider),
       ],
     );
   }
@@ -201,7 +203,7 @@ class ProblemDetailScreenWidget{
         Container(
           constraints: BoxConstraints(
             maxWidth: MediaQuery.of(context).size.width - 70, // 제한된 너비 설정
-            maxHeight: MediaQuery.of(context).size.width / 3, // 필요에 따라 최대 높이 설정
+            maxHeight: MediaQuery.of(context).size.height / 3, // 필요에 따라 최대 높이 설정
           ),
           padding: const EdgeInsets.all(10.0),
           decoration: BoxDecoration(
@@ -366,6 +368,58 @@ class ProblemDetailScreenWidget{
               ),
             ),
           ),
+        ),
+      ],
+    );
+  }
+
+  Widget buildRepeatSection(ProblemModel problemModel, ThemeHandler themeProvider) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // '복습 기록' 제목과 복습 횟수 표시
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.book, color: themeProvider.primaryColor), // 책 아이콘 추가
+                const SizedBox(width: 8),
+                HandWriteText(
+                  text: '복습 기록',
+                  fontSize: 20,
+                  color: themeProvider.primaryColor,
+                ),
+              ],
+            ),
+            UnderlinedText(
+              text: '복습 횟수: ${problemModel.repeats?.length ?? 0}',
+              fontSize: 20,
+              color: Colors.black,
+            ),
+          ],
+        ),
+        const SizedBox(height: 10.0),
+
+        // 복습 날짜 리스트
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: problemModel.repeats?.map((repeat) {
+            return Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4.0),
+              child: HandWriteText(
+                text: DateFormat('yyyy-MM-dd').format(repeat.createdAt),
+                fontSize: 18,
+                color: Colors.black,
+              ),
+            );
+          }).toList() ?? [
+            const HandWriteText(
+              text: '복습 기록이 없습니다.',
+              fontSize: 18,
+              color: Colors.black,
+            )
+          ],
         ),
       ],
     );
