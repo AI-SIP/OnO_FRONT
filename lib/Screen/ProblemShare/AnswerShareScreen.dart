@@ -100,7 +100,7 @@ class _AnswerShareScreenState extends State<AnswerShareScreen> {
             children: [
               CustomPaint(
                 size: Size.infinite,
-                painter: GridPainter(gridColor: themeProvider.primaryColor),
+                painter: GridPainter(gridColor: themeProvider.primaryColor, step: 15.0, strokeWidth: 1.3),
               ),
               Center(
                 child: ConstrainedBox(

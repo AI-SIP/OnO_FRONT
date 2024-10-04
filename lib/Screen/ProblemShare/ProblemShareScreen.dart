@@ -6,6 +6,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:intl/intl.dart';
+import 'package:ono/Model/TemplateType.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
@@ -37,17 +38,33 @@ class _ProblemShareScreenState extends State<ProblemShareScreen> {
   void initState() {
     super.initState();
     // 이미지가 있을 경우 네트워크 이미지를 사용
-    if (widget.problem.processImageUrl != null) {
-      _image = Image.network(
-        widget.problem.processImageUrl!,
-        fit: BoxFit.contain,
-      );
-    } else {
-      // 이미지가 없을 경우 로컬 기본 이미지 사용
-      _image = Image.asset(
-        'assets/no_image.png',
-        fit: BoxFit.contain,
-      );
+    if(widget.problem.templateType == TemplateType.simple){
+      if(widget.problem.problemImageUrl != null){
+        _image = Image.network(
+          widget.problem.problemImageUrl!,
+          fit: BoxFit.contain,
+        );
+      }
+      else {
+        // 이미지가 없을 경우 로컬 기본 이미지 사용
+        _image = Image.asset(
+          'assets/no_image.png',
+          fit: BoxFit.contain,
+        );
+      }
+    } else{
+      if(widget.problem.processImageUrl != null){
+        _image = Image.network(
+          widget.problem.processImageUrl!,
+          fit: BoxFit.contain,
+        );
+      } else {
+        // 이미지가 없을 경우 로컬 기본 이미지 사용
+        _image = Image.asset(
+          'assets/no_image.png',
+          fit: BoxFit.contain,
+        );
+      }
     }
 
     // 이미지 로딩이 완료되면 상태 업데이트
@@ -98,12 +115,12 @@ class _ProblemShareScreenState extends State<ProblemShareScreen> {
         key: widget._globalKey,
         child: Container(
           //color: themeProvider.primaryColor,
-          color : Colors.white,
+          color: Colors.white,
           child: Stack(
             children: [
               CustomPaint(
                 size: Size.infinite,
-                painter: GridPainter(gridColor: themeProvider.primaryColor),
+                painter: GridPainter(gridColor: themeProvider.primaryColor, step: 15.0, strokeWidth: 1.3),
               ),
               Center(
                 child: ConstrainedBox(
