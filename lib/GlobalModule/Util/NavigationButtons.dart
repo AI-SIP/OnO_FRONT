@@ -72,6 +72,10 @@ class _NavigationButtonsState extends State<NavigationButtons> {
         TextButton(
           onPressed: () async {
             if (!isReviewed) {
+              FirebaseAnalytics.instance.logEvent(
+                name: 'problem_repeat_complete',
+              );
+
               await widget.foldersProvider.addRepeatCount(widget.currentId);
               setState(() {
                 isReviewed = true; // 복습 완료 상태로 변경

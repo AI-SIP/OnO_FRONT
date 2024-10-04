@@ -1,3 +1,4 @@
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:ono/GlobalModule/Theme/HandWriteText.dart';
 import 'package:provider/provider.dart';
@@ -74,6 +75,10 @@ class TemplateSelectionScreen extends StatelessWidget {
         }).toList(),
       ),
         onTap: () {
+          FirebaseAnalytics.instance.logEvent(name: 'template_selection', parameters: {
+            'type': templateType.name,
+          });
+
           final imagePickerHandler = ImagePickerHandler();
           imagePickerHandler.showImagePicker(context, (pickedFile) async {
             if (pickedFile != null) {

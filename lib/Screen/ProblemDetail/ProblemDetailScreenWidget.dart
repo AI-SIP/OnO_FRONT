@@ -1,3 +1,4 @@
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_tex/flutter_tex.dart';
 import 'package:intl/intl.dart';
@@ -345,6 +346,9 @@ class ProblemDetailScreenWidget{
           child: Center(
             child: GestureDetector(
               onTap: () {
+                FirebaseAnalytics.instance.logEvent(name: 'image_full_screen', parameters: {
+                  'image_type': label,
+                });
                 Navigator.push(
                   context,
                   MaterialPageRoute(

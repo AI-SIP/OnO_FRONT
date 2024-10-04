@@ -124,7 +124,7 @@ class _SettingScreenState extends State<SettingScreen> {
       ),
       trailing: ElevatedButton(
         onPressed: () {
-          FirebaseAnalytics.instance.logEvent(name: 'userName_edit_button_click');
+          FirebaseAnalytics.instance.logEvent(name: 'username_edit_button_click');
           _showChangeNameDialog(context, userName);
         },
         style: ElevatedButton.styleFrom(

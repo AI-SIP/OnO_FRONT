@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
@@ -31,6 +32,11 @@ class ProblemRegisterScreenWidget {
         const Spacer(),
         TextButton(
           onPressed: () async {
+
+            FirebaseAnalytics.instance.logEvent(
+              name: 'problem_register_date_select',
+            );
+
             final newDate = await showModalBottomSheet<DateTime>(
               context: context,
               builder: (BuildContext context) {

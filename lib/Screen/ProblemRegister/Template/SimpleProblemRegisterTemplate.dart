@@ -1,5 +1,6 @@
 import 'dart:developer';
 
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:ono/GlobalModule/Theme/HandWriteText.dart';
@@ -81,6 +82,10 @@ class _SimpleTemplate extends State<SimpleProblemRegisterTemplate> {
               ProblemRegisterScreenWidget.folderSelection(
                 selectedFolderId: _selectedFolderId,
                 onFolderSelected: () async {
+                  FirebaseAnalytics.instance.logEvent(
+                    name: 'problem_register_folder_select',
+                  );
+
                   final selectedFolderId = await showDialog<int>(
                     context: context,
                     builder: (BuildContext context) => FolderSelectionDialog(
@@ -161,6 +166,10 @@ class _SimpleTemplate extends State<SimpleProblemRegisterTemplate> {
                       setState(() {
                         answerImage = pickedFile;
                       });
+
+                      FirebaseAnalytics.instance.logEvent(name: 'image_add', parameters: {
+                        'type': 'answer_image',
+                      });
                     },
                   ),
                 ],
@@ -181,6 +190,11 @@ class _SimpleTemplate extends State<SimpleProblemRegisterTemplate> {
   }
 
   void _resetFields() {
+
+    FirebaseAnalytics.instance.logEvent(
+      name: 'problem_register_cancel_button_click',
+    );
+
     setState(() {
       sourceController.clear();
       notesController.clear();
@@ -189,6 +203,11 @@ class _SimpleTemplate extends State<SimpleProblemRegisterTemplate> {
   }
 
   void _submitProblem() {
+
+    FirebaseAnalytics.instance.logEvent(
+      name: 'problem_register_complete_button_click',
+    );
+
     final problemRegisterModel = ProblemRegisterModelV2(
       problemId: problemModel.problemId,
       problemImageUrl: problemModel.problemImageUrl,

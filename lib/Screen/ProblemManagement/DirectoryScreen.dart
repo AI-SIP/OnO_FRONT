@@ -206,7 +206,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
     final selectedFolder = await showDialog<Map<String, dynamic>?>(
       context: context,
-      builder: (context) => FolderSelectionDialog(),
+      builder: (context) => const FolderSelectionDialog(),
     );
 
     if (selectedFolder != null) {

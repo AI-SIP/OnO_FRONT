@@ -23,13 +23,6 @@ class ImagePickerHandler {
     final pickedFile = await _cameraHandler.takePicture(context);
 
     if (pickedFile != null) {
-      FirebaseAnalytics.instance.logEvent(
-        name: '이미지 선택',
-        parameters: {
-          '이미지 선택 방식': '카메라',
-        },
-      );
-
       return _cropImage(pickedFile);
     }
     return null;
@@ -39,13 +32,6 @@ class ImagePickerHandler {
     try {
       final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
       if (pickedFile != null) {
-
-        FirebaseAnalytics.instance.logEvent(
-          name: '이미지 선택',
-          parameters: {
-            '이미지 선택 방식': '갤러리',
-          },
-        );
 
         return _cropImage(pickedFile);
       }
@@ -131,6 +117,11 @@ class ImagePickerHandler {
                   fontSize: 20,
                 ),
                 onTap: () async {
+
+                  FirebaseAnalytics.instance.logEvent(name: 'image_select', parameters: {
+                    'method': 'camera',
+                  });
+
                   Navigator.of(context).pop(); // Close the popup
                   final pickedFile = await pickImageFromCamera(context);
                   onImagePicked(pickedFile);
@@ -145,6 +136,11 @@ class ImagePickerHandler {
                   fontSize: 20,
                 ),
                 onTap: () async {
+
+                  FirebaseAnalytics.instance.logEvent(name: 'image_select', parameters: {
+                    'method': 'gallery',
+                  });
+
                   Navigator.of(context).pop(); // Close the popup
                   final pickedFile = await pickImageFromGallery(context);
                   onImagePicked(pickedFile);
