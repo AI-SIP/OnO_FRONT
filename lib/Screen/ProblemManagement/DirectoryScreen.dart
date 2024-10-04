@@ -193,7 +193,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   ) async {
     final foldersProvider =
         Provider.of<FoldersProvider>(context, listen: false);
-    await foldersProvider.updateFolder(newName, null);
+    await foldersProvider.updateFolder(newName, foldersProvider.currentFolderId, null);
   }
 
   // 폴더 이동 다이얼로그 출력
@@ -204,14 +204,13 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       return;
     }
 
-    final selectedFolder = await showDialog<Map<String, dynamic>?>(
+    final int? selectedFolderId = await showDialog<int?>(
       context: context,
       builder: (context) => const FolderSelectionDialog(),
     );
 
-    if (selectedFolder != null) {
-      final selectedFolderId = selectedFolder['folderId'];
-      await foldersProvider.updateFolder(null, selectedFolderId); // 부모 폴더 변경
+    if (selectedFolderId != null) {
+      await foldersProvider.updateFolder(foldersProvider.currentFolder!.folderName, foldersProvider.currentFolderId, selectedFolderId); // 부모 폴더 변경
     }
   }
 
@@ -511,61 +510,93 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       FolderThumbnailModel folder, ThemeHandler themeProvider) {
     return GestureDetector(
       onTap: () {
-
+        // 폴더를 클릭했을 때 해당 폴더로 이동
         FirebaseAnalytics.instance.logEvent(name: 'move_to_folder', parameters: {
           'folder_id': folder.folderId,
-        }); // GA 로그 추가
-
-        // 폴더를 클릭했을 때 해당 폴더로 이동
+        });
         Provider.of<FoldersProvider>(context, listen: false)
             .fetchFolderContents(folderId: folder.folderId);
       },
-      child: DragTarget<ProblemModel>(
-        onAcceptWithDetails: (details) async {
-          // 문제를 드롭하면 폴더로 이동
-          await _moveProblemToFolder(details.data, folder.folderId);
+      child: LongPressDraggable<FolderThumbnailModel>(
+        data: folder,
+        feedback: Material(
+          child: SizedBox(
+            width: 100,
+            height: 100,
+            child: Icon(
+              Icons.folder,
+              color: themeProvider.primaryColor,
+              size: 80,
+            ),
+          ),
+        ),
+        childWhenDragging: Opacity(
+          opacity: 0.5,
+          child: _folderTileContent(folder, themeProvider),
+        ),
+        onDragStarted: () {
+          HapticFeedback.lightImpact();
         },
-        builder: (context, candidateData, rejectedData) {
-          return LayoutBuilder(
-            builder: (context, constraints) {
-              double height = constraints.maxHeight * 0.8;
-              double width = constraints.maxWidth * 0.9;
-              return GridTile(
-                child: Column(
-                  children: <Widget>[
-                    Container(
-                      width: width,
-                      height: height,
-                      decoration: BoxDecoration(
-                        color: themeProvider.primaryColor.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(12.0),
-                      ),
-                      child: Icon(
-                        Icons.folder,
-                        color: themeProvider.primaryColor,
-                        size: 80,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      folder.folderName,
-                      style: TextStyle(
-                        fontFamily: 'HandWrite',
-                        color: themeProvider.primaryColor,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      textAlign: TextAlign.center,
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 1,
-                    ),
-                  ],
-                ),
-              );
-            },
-          );
-        },
+        child: DragTarget<ProblemModel>(
+          onAcceptWithDetails: (details) async {
+            // 문제를 드롭하면 폴더로 이동
+            await _moveProblemToFolder(details.data, folder.folderId);
+          },
+          builder: (context, candidateData, rejectedData) {
+            return DragTarget<FolderThumbnailModel>(
+              onAcceptWithDetails: (details) async {
+                // 폴더를 드롭하면 자식 폴더로 이동
+                await _moveFolderToNewParent(details.data, folder.folderId);
+              },
+              builder: (context, candidateData, rejectedData) {
+                return _folderTileContent(folder, themeProvider);
+              },
+            );
+          },
+        ),
       ),
+    );
+  }
+
+  Widget _folderTileContent(
+      FolderThumbnailModel folder, ThemeHandler themeProvider) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        double height = constraints.maxHeight * 0.8;
+        double width = constraints.maxWidth * 0.9;
+        return GridTile(
+          child: Column(
+            children: <Widget>[
+              Container(
+                width: width,
+                height: height,
+                decoration: BoxDecoration(
+                  color: themeProvider.primaryColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12.0),
+                ),
+                child: Icon(
+                  Icons.folder,
+                  color: themeProvider.primaryColor,
+                  size: 80,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                folder.folderName,
+                style: TextStyle(
+                  fontFamily: 'HandWrite',
+                  color: themeProvider.primaryColor,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+                textAlign: TextAlign.center,
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -669,6 +700,31 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         );
       },
     );
+  }
+
+  Future<void> _moveFolderToNewParent(
+      FolderThumbnailModel folder, int? newParentFolderId) async {
+    if (newParentFolderId == null) {
+      log('New parent folder ID is null.');
+      return;
+    }
+
+    FirebaseAnalytics.instance.logEvent(name: 'folder_move', parameters: {
+      'folder_id': folder.folderId,
+      'target_folder_id': newParentFolderId,
+    });
+
+    final foldersProvider =
+    Provider.of<FoldersProvider>(context, listen: false);
+    await foldersProvider.updateFolder(folder.folderName, folder.folderId, newParentFolderId);
+
+    if (mounted) {
+      SnackBarDialog.showSnackBar(
+        context: context,
+        message: '폴더가 성공적으로 이동되었습니다!',
+        backgroundColor: Theme.of(context).primaryColor,
+      );
+    }
   }
 
   Future<void> _moveProblemToFolder(ProblemModel problem, int? folderId) async {

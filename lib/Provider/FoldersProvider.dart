@@ -170,11 +170,11 @@ class FoldersProvider with ChangeNotifier {
     }
   }
 
-  Future<void> updateFolder(String? newName, int? parentId) async {
+  Future<void> updateFolder(String? newName, int? folderId, int? parentId) async {
     try {
       final response = await httpService.sendRequest(
         method: 'PATCH',
-        url: '${AppConfig.baseUrl}/api/folder/$currentFolderId',
+        url: '${AppConfig.baseUrl}/api/folder/$folderId',
         body: {
           'folderName': newName,
           'parentFolderId': parentId,
