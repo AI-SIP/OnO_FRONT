@@ -60,6 +60,7 @@ dependencies:
   firebase_analytics: ^11.3.2
   image_gallery_saver_plus: ^3.0.5
   flutter_tex: ^4.0.9
+  animated_text_kit: ^4.2.2
 
 dev_dependencies:
   flutter_test:

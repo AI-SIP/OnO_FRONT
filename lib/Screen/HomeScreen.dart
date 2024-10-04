@@ -1,4 +1,5 @@
 import 'dart:io' show Platform;
+import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:ono/Model/LoginStatus.dart';
@@ -145,20 +146,28 @@ class HomeScreen extends StatelessWidget {
               ElevatedButton(
                 onPressed: _launchURL,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: themeProvider.primaryColor,
                   padding: EdgeInsets.symmetric(
                     horizontal: screenWidth * 0.1,
-                    vertical: screenHeight * 0.02,
+                    vertical: screenHeight * 0.018,
                   ),
-                  textStyle: TextStyle(
-                    fontSize: buttonFontSize,
-                    color: Colors.white,
+                  backgroundColor: themeProvider.primaryColor,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20.0), // 둥근 버튼 모양
                   ),
+                  shadowColor: Colors.black.withOpacity(0.5), // 그림자 추가
+                  elevation: 10, // 그림자 깊이
                 ),
-                child: HandWriteText(
-                  text: 'OnO 사용 가이드',
-                  fontSize: buttonFontSize,
-                  color: Colors.white,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.touch_app, color: Colors.white, size: buttonFontSize), // 아이콘 추가
+                    const SizedBox(width: 10),
+                    HandWriteText(
+                      text: 'OnO 사용 가이드',
+                      fontSize: buttonFontSize,
+                      color: Colors.white,
+                    ),
+                  ],
                 ),
               ),
               SizedBox(height: screenHeight * 0.06),
