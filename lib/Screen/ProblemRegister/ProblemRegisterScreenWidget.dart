@@ -146,12 +146,15 @@ class ProblemRegisterScreenWidget {
       ),
       decoration: InputDecoration(
         border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
           borderSide: BorderSide(color: themeProvider.primaryColor, width: 2.0),
         ),
         enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
           borderSide: BorderSide(color: themeProvider.primaryColor, width: 2.0),
         ),
         focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
           borderSide: BorderSide(color: themeProvider.primaryColor, width: 2.0),
         ),
         fillColor: themeProvider.primaryColor.withOpacity(0.1),
@@ -224,6 +227,7 @@ class ProblemRegisterScreenWidget {
     return Container( // Flexible 대신 Container로 변경
       height: 200, // 고정된 높이 지정
       decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(10),
         color: themeProvider.primaryColor.withOpacity(0.1),
         border: Border.all(color: themeProvider.primaryColor, width: 2.0),
       ),

@@ -205,11 +205,34 @@ class _SpecialProblemRegisterTemplateState
                   const SizedBox(height: 5),
                   isLoading
                       ? Center(
-                          child: HandWriteText(
-                          text: '이미지 보정 중...',
-                          fontSize: 16,
-                          color: themeProvider.primaryColor,
-                        ))
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(20.0),
+                      decoration: BoxDecoration(
+                        color: Colors.white, // 흰색 박스 배경
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: themeProvider.primaryColor, // 테두리 색상
+                          width: 2.0,
+                        ),
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const SizedBox(height: 20),
+                          CircularProgressIndicator(
+                            color: themeProvider.primaryColor,
+                          ),
+                          const SizedBox(height: 20),
+                          HandWriteText(
+                            text: '이미지 보정 중...',
+                            fontSize: 16,
+                            color: themeProvider.primaryColor,
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
                       : DisplayImage(imagePath: processImageUrl ?? ''),
                 ],
               ),
@@ -232,60 +255,80 @@ class _SpecialProblemRegisterTemplateState
                   const SizedBox(height: 5),
                   isLoading
                       ? Center(
-                          child: HandWriteText(
-                          text: '문제 분석 중...',
-                          fontSize: 16,
-                          color: themeProvider.primaryColor,
-                        ))
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(20.0),
+                      decoration: BoxDecoration(
+                        color: Colors.white, // 흰색 박스 배경
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: themeProvider.primaryColor, // 테두리 색상
+                          width: 2.0,
+                        ),
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const SizedBox(height: 20),
+                          CircularProgressIndicator(
+                            color: themeProvider.primaryColor,
+                          ),
+                          const SizedBox(height: 20),
+                          HandWriteText(
+                            text: '문제 분석 중...',
+                            fontSize: 16,
+                            color: themeProvider.primaryColor,
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
                       : analysisResult != null
-                          ? Container(
-                              constraints: BoxConstraints(
-                                maxWidth: MediaQuery.of(context).size.width *
-                                    0.9, // Unified width with other widgets
-                                maxHeight: 500, // Set maximum height
-                              ),
-                              padding: const EdgeInsets.all(10.0),
-                              decoration: BoxDecoration(
-                                color:
-                                    themeProvider.primaryColor.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(10),
-                                border: Border.all(
-                                    color: themeProvider.primaryColor,
-                                    width: 2.0), // Adding a border
-                              ),
-                              child: Scrollbar(
-                                controller: scrollControllerForAnalysis,
-                                thumbVisibility: true,
-                                thickness: 6.0,
-                                radius: const Radius.circular(10),
-                                child: SingleChildScrollView(
-                                  controller: scrollControllerForAnalysis,
-                                  scrollDirection: Axis.vertical,
-                                  child: TeXView(
-                                    fonts: const [
-                                      TeXViewFont(
-                                        fontFamily: 'HandWrite',
-                                        src: 'assets/fonts/HandWrite.ttf',
-                                      ),
-                                    ],
-                                    renderingEngine:
-                                        const TeXViewRenderingEngine.mathjax(),
-                                    child: LatexTextHandler.renderLatex(
-                                        analysisResult!),
-                                    style: const TeXViewStyle(
-                                      elevation: 5,
-                                      borderRadius: TeXViewBorderRadius.all(10),
-                                      backgroundColor: Colors.white,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            )
-                          : const HandWriteText(
-                              text: "분석 결과가 없습니다.",
-                              color: Colors.black,
-                              fontSize: 20,
-                            )
+                      ? Container(
+                    constraints: BoxConstraints(
+                      maxWidth: MediaQuery.of(context).size.width *
+                          0.9, // Unified width with other widgets
+                      maxHeight: 500, // Set maximum height
+                    ),
+                    padding: const EdgeInsets.all(10.0),
+                    decoration: BoxDecoration(
+                      color: themeProvider.primaryColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                          color: themeProvider.primaryColor,
+                          width: 2.0), // Adding a border
+                    ),
+                    child: Scrollbar(
+                      controller: scrollControllerForAnalysis,
+                      thumbVisibility: true,
+                      thickness: 6.0,
+                      radius: const Radius.circular(10),
+                      child: SingleChildScrollView(
+                        controller: scrollControllerForAnalysis,
+                        scrollDirection: Axis.vertical,
+                        child: TeXView(
+                          fonts: const [
+                            TeXViewFont(
+                              fontFamily: 'HandWrite',
+                              src: 'assets/fonts/HandWrite.ttf',
+                            ),
+                          ],
+                          renderingEngine: const TeXViewRenderingEngine.mathjax(),
+                          child: LatexTextHandler.renderLatex(analysisResult!),
+                          style: const TeXViewStyle(
+                            elevation: 5,
+                            borderRadius: TeXViewBorderRadius.all(10),
+                            backgroundColor: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                  )
+                      : const HandWriteText(
+                    text: "분석 결과가 없습니다.",
+                    color: Colors.black,
+                    fontSize: 20,
+                  ),
                 ],
               ),
 

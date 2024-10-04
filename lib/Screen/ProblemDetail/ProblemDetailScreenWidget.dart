@@ -408,7 +408,7 @@ class ProblemDetailScreenWidget{
             return Padding(
               padding: const EdgeInsets.symmetric(vertical: 4.0),
               child: HandWriteText(
-                text: DateFormat('yyyy-MM-dd').format(repeat.createdAt),
+                text: DateFormat('yyyy년 MM월 dd일').format(repeat.createdAt),
                 fontSize: 18,
                 color: Colors.black,
               ),

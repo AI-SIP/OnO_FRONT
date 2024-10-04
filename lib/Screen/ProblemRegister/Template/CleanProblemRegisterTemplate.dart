@@ -164,12 +164,44 @@ class _CleanProblemRegisterTemplateState extends State<CleanProblemRegisterTempl
                     children: [
                       Icon(Icons.image, color: themeProvider.primaryColor),
                       const SizedBox(width: 10),
-                      HandWriteText(text: '보정된 이미지', fontSize: 20, color: themeProvider.primaryColor,),
+                      HandWriteText(
+                        text: '보정된 이미지',
+                        fontSize: 20,
+                        color: themeProvider.primaryColor,
+                      ),
                     ],
                   ),
                   const SizedBox(height: 5),
                   isLoading
-                      ? Center(child: HandWriteText(text: '이미지 보정 중...', fontSize: 16, color: themeProvider.primaryColor,))
+                      ? Center(
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(20.0),
+                      decoration: BoxDecoration(
+                        color: Colors.white, // 흰색 박스 배경
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: themeProvider.primaryColor, // 테두리 색상
+                          width: 2.0,
+                        ),
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const SizedBox(height: 20),
+                          CircularProgressIndicator(
+                            color: themeProvider.primaryColor,
+                          ),
+                          const SizedBox(height: 20),
+                          HandWriteText(
+                            text: '이미지 보정 중...',
+                            fontSize: 16,
+                            color: themeProvider.primaryColor,
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
                       : DisplayImage(imagePath: processImageUrl ?? ''),
                 ],
               ),
