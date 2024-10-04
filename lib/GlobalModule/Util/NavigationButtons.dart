@@ -4,6 +4,7 @@ import 'package:ono/Provider/FoldersProvider.dart';
 import 'package:ono/Screen/ProblemDetail/ProblemDetailScreenV2.dart';
 import 'package:provider/provider.dart';
 import '../Theme/HandWriteText.dart';
+import '../Theme/StandardText.dart';
 import '../Theme/ThemeHandler.dart';
 
 class NavigationButtons extends StatefulWidget {
@@ -62,9 +63,9 @@ class _NavigationButtonsState extends State<NavigationButtons> {
               borderRadius: BorderRadius.circular(15.0),
             ),
           ),
-          child: HandWriteText(
+          child: StandardText(
               text: '< 이전 문제',
-              fontSize: 16,
+              fontSize: 12,
               color: themeProvider.primaryColor),
         ),
 
@@ -94,14 +95,28 @@ class _NavigationButtonsState extends State<NavigationButtons> {
             ),
           ),
           child: isReviewed
-              ? Icon(Icons.check, color: themeProvider.primaryColor, size: 24) // 체크 표시
-              : HandWriteText(
-            text: '복습 완료',
-            fontSize: 20,
+              ? Icon(
+            Icons.check, // 복습 완료 시 체크 아이콘만 표시
             color: themeProvider.primaryColor,
+            size: 24,
+          )
+              : Row(
+            mainAxisSize: MainAxisSize.min, // 터치 아이콘과 텍스트를 한 줄로 표시
+            children: [
+              Icon(
+                Icons.touch_app, // 복습 완료 전 터치 아이콘
+                color: themeProvider.primaryColor,
+                size: 14,
+              ),
+              const SizedBox(width: 8), // 아이콘과 텍스트 간 간격
+              StandardText(
+                text: '복습 완료', // 복습 완료 텍스트
+                fontSize: 14,
+                color: themeProvider.primaryColor,
+              ),
+            ],
           ),
         ),
-
         TextButton(
           onPressed: () {
             FirebaseAnalytics.instance.logEvent(
@@ -120,9 +135,9 @@ class _NavigationButtonsState extends State<NavigationButtons> {
               borderRadius: BorderRadius.circular(15.0),
             ),
           ),
-          child: HandWriteText(
+          child: StandardText(
               text: '다음 문제 >',
-              fontSize: 16,
+              fontSize: 12,
               color: themeProvider.primaryColor),
         ),
       ],

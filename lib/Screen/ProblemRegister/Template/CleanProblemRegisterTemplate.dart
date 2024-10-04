@@ -7,6 +7,7 @@ import 'package:ono/Model/ProblemRegisterModelV2.dart';
 import 'package:ono/Model/TemplateType.dart';
 import 'package:provider/provider.dart';
 import '../../../GlobalModule/Image/DisplayImage.dart';
+import '../../../GlobalModule/Theme/StandardText.dart';
 import '../../../GlobalModule/Theme/ThemeHandler.dart';
 import '../../../GlobalModule/Util/FolderSelectionDialog.dart';
 import '../ProblemRegisterScreenWidget.dart';
@@ -153,10 +154,10 @@ class _CleanProblemRegisterTemplateState extends State<CleanProblemRegisterTempl
                     children: [
                       Icon(Icons.image, color: themeProvider.primaryColor),
                       const SizedBox(width: 10),
-                      HandWriteText(text: '문제 이미지', fontSize: 20, color: themeProvider.primaryColor,),
+                      StandardText(text: '문제 이미지', fontSize: 16, color: themeProvider.primaryColor,),
                     ],
                   ),
-                  const SizedBox(height: 5),
+                  const SizedBox(height: 10),
                   DisplayImage(imagePath: problemModel.problemImageUrl),
                 ],
               ),
@@ -170,14 +171,14 @@ class _CleanProblemRegisterTemplateState extends State<CleanProblemRegisterTempl
                     children: [
                       Icon(Icons.image, color: themeProvider.primaryColor),
                       const SizedBox(width: 10),
-                      HandWriteText(
+                      StandardText(
                         text: '보정된 이미지',
-                        fontSize: 20,
+                        fontSize: 16,
                         color: themeProvider.primaryColor,
                       ),
                     ],
                   ),
-                  const SizedBox(height: 5),
+                  const SizedBox(height: 10),
                   isLoading
                       ? Center(
                     child: Container(
@@ -220,10 +221,10 @@ class _CleanProblemRegisterTemplateState extends State<CleanProblemRegisterTempl
                     children: [
                       Icon(Icons.camera_alt, color: themeProvider.primaryColor),
                       const SizedBox(width: 10),
-                      HandWriteText(text: '해설 이미지', fontSize: 20, color: themeProvider.primaryColor,),
+                      StandardText(text: '해설 이미지', fontSize: 16, color: themeProvider.primaryColor,),
                     ],
                   ),
-                  const SizedBox(height: 5),
+                  const SizedBox(height: 10),
 
                   // Use the buildImagePicker widget to handle image picking
                   ProblemRegisterScreenWidget.buildImagePicker(
@@ -254,7 +255,7 @@ class _CleanProblemRegisterTemplateState extends State<CleanProblemRegisterTempl
                       HandWriteText(text: '풀이 이미지', fontSize: 20, color: themeProvider.primaryColor,),
                     ],
                   ),
-                  const SizedBox(height: 5),
+                  const SizedBox(height: 10),
 
                   // Use the buildImagePicker widget to handle image picking
                   ProblemRegisterScreenWidget.buildImagePicker(

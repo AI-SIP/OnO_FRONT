@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:ono/Config/AppConfig.dart';
 import 'package:provider/provider.dart';
 import '../GlobalModule/Theme/HandWriteText.dart';
+import '../GlobalModule/Theme/StandardText.dart';
 import '../GlobalModule/Theme/ThemeHandler.dart';
 import '../Provider/UserProvider.dart';
 import '../Service/ScreenUtil/SettingScreenService.dart';
@@ -117,9 +118,9 @@ class _SettingScreenState extends State<SettingScreen> {
   }) {
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(vertical: 10.0),
-      title: HandWriteText(
+      title: StandardText(
         text: '$userName님',
-        fontSize: 24,
+        fontSize: 16,
         color: themeProvider.primaryColor,
       ),
       trailing: ElevatedButton(
@@ -131,14 +132,14 @@ class _SettingScreenState extends State<SettingScreen> {
           backgroundColor: Colors.white,
           foregroundColor: themeProvider.primaryColor,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(10),
           ),
           side: BorderSide(color: themeProvider.primaryColor),
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
         ),
-        child: HandWriteText(
+        child: StandardText(
           text: '이름 수정',
-          fontSize: 18,
+          fontSize: 14,
           color: themeProvider.primaryColor,
         ),
       ),
@@ -152,14 +153,14 @@ class _SettingScreenState extends State<SettingScreen> {
   }) {
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(vertical: 10.0),
-      title: HandWriteText(
+      title: StandardText(
         text: '작성한 오답노트 수',
-        fontSize: 22,
+        fontSize: 16,
         color: themeProvider.primaryColor,
       ),
-      trailing: HandWriteText(
+      trailing: StandardText(
         text: problemCount.toString(),
-        fontSize: 22,
+        fontSize: 16,
         color: themeProvider.primaryColor,
       ),
     );
@@ -175,14 +176,14 @@ class _SettingScreenState extends State<SettingScreen> {
   }) {
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(vertical: 10.0),
-      title: HandWriteText(
+      title: StandardText(
         text: title,
-        fontSize: 22,
+        fontSize: 16,
         color: themeColor,
       ),
-      subtitle: HandWriteText(
+      subtitle: StandardText(
         text: subtitle,
-        fontSize: 16,
+        fontSize: 12,
         color: themeColor.withOpacity(0.6),
       ),
       trailing: Container(
@@ -207,14 +208,14 @@ class _SettingScreenState extends State<SettingScreen> {
     final themeProvider = Provider.of<ThemeHandler>(context);
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(vertical: 10.0),
-      title: HandWriteText(
+      title: StandardText(
         text: title,
-        fontSize: 22,
+        fontSize: 16,
         color: themeProvider.primaryColor,
       ),
-      subtitle: HandWriteText(
+      subtitle: StandardText(
         text: subtitle,
-        fontSize: 16,
+        fontSize: 12,
         color: themeProvider.primaryColor.withOpacity(0.6),
       ),
       onTap: onTap,
@@ -233,9 +234,9 @@ class _SettingScreenState extends State<SettingScreen> {
         ),
         padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
       ),
-      child: HandWriteText(
+      child: StandardText(
         text: text,
-        fontSize: 20,
+        fontSize: 16,
         color: textColor,
       ),
     );
@@ -251,26 +252,26 @@ class _SettingScreenState extends State<SettingScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: HandWriteText(
+          title: StandardText(
             text: '이름 수정',
-            fontSize: 24,
+            fontSize: 16,
             color: themeProvider.primaryColor,
           ),
           content: TextField(
             controller: nameController,
             style: TextStyle(
               color: themeProvider.primaryColor,
-              fontSize: 20,
+              fontSize: 15,
               fontWeight: FontWeight.bold,
-              fontFamily: 'HandWrite',
+              fontFamily: 'StandardBold',
             ),
             decoration: InputDecoration(
               hintText: '수정할 이름을 입력하세요',
               hintStyle: TextStyle(
                 color: themeProvider.desaturateColor,
-                fontSize: 16,
+                fontSize: 14,
                 fontWeight: FontWeight.bold,
-                fontFamily: 'HandWrite',
+                fontFamily: 'StandardBold',
               ),
               border: OutlineInputBorder(
                 borderSide: BorderSide(color: themeProvider.primaryColor, width: 1.5),
@@ -292,9 +293,9 @@ class _SettingScreenState extends State<SettingScreen> {
               onPressed: () {
                 Navigator.pop(context);
               },
-              child: const HandWriteText(
+              child: const StandardText(
                 text: '취소',
-                fontSize: 20,
+                fontSize: 14,
                 color: Colors.black,
               ),
             ),
@@ -312,9 +313,9 @@ class _SettingScreenState extends State<SettingScreen> {
                 }
                 Navigator.pop(context);
               },
-              child: HandWriteText(
+              child: StandardText(
                 text: '수정',
-                fontSize: 20,
+                fontSize: 14,
                 color: themeProvider.primaryColor,
               ),
             ),

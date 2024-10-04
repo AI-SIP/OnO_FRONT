@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../Model/FolderThumbnailModel.dart';
 import '../../Provider/FoldersProvider.dart';
 import '../Theme/HandWriteText.dart';
+import '../Theme/StandardText.dart';
 import '../Theme/ThemeHandler.dart';
 
 class FolderSelectionDialog extends StatefulWidget {
@@ -74,9 +75,9 @@ class _FolderSelectionDialogState extends State<FolderSelectionDialog> {
       insetPadding: const EdgeInsets.symmetric(horizontal: 30),
       contentPadding: const EdgeInsets.all(0),
       titlePadding: const EdgeInsets.only(left: 20, top: 20),
-      title: HandWriteText(
+      title: StandardText(
         text: '폴더 선택',
-        fontSize: 24,
+        fontSize: 16,
         color: themeProvider.primaryColor,
       ),
       content: SizedBox(
@@ -93,9 +94,9 @@ class _FolderSelectionDialogState extends State<FolderSelectionDialog> {
           onPressed: () {
             Navigator.pop(context, null); // 취소 시 아무 값도 넘기지 않음
           },
-          child: const HandWriteText(
+          child: const StandardText(
             text: '취소',
-            fontSize: 24,
+            fontSize: 14,
             color: Colors.black,
           ),
         ),
@@ -107,9 +108,9 @@ class _FolderSelectionDialogState extends State<FolderSelectionDialog> {
               Navigator.pop(context, null);
             }
           },
-          child: HandWriteText(
+          child: StandardText(
             text: '확인',
-            fontSize: 24,
+            fontSize: 14,
             color: themeProvider.primaryColor,
           ),
         ),
@@ -130,9 +131,9 @@ class _FolderSelectionDialogState extends State<FolderSelectionDialog> {
         Padding(
           padding: EdgeInsets.only(left: level * 12.0),
           child: ListTile(
-            title: HandWriteText(
+            title: StandardText(
               text: folder.folderName,
-              fontSize: 20,
+              fontSize: 15,
               color: themeProvider.primaryColor,
             ),
             leading: Icon(Icons.folder, color: themeProvider.primaryColor),

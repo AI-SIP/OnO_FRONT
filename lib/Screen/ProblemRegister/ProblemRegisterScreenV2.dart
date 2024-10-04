@@ -3,6 +3,7 @@ import 'package:ono/Model/ProblemModel.dart';
 import 'package:provider/provider.dart';
 
 import '../../GlobalModule/Theme/HandWriteText.dart';
+import '../../GlobalModule/Theme/StandardText.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
 import '../../Model/TemplateType.dart';
 import '../../Provider/FoldersProvider.dart';
@@ -72,10 +73,10 @@ class _ProblemRegisterScreenV2State extends State<ProblemRegisterScreenV2> {
             Navigator.pop(context);
           },
         ),
-        title: HandWriteText(
+        title: StandardText(
           text: widget.isEditMode ? '오답노트 수정' : '오답노트 등록',
           color: themeProvider.primaryColor,
-          fontSize: 24,
+          fontSize: 18,
         ),
       ),
       body: Padding(

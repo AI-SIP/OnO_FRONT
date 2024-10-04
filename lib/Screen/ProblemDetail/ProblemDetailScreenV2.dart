@@ -6,6 +6,7 @@ import 'package:ono/GlobalModule/Theme/HandWriteText.dart';
 import 'package:provider/provider.dart';
 
 import '../../GlobalModule/Theme/SnackBarDialog.dart';
+import '../../GlobalModule/Theme/StandardText.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
 import '../../GlobalModule/Util/NavigationButtons.dart';
 import '../../Model/ProblemModel.dart';
@@ -107,7 +108,7 @@ class _ProblemDetailScreenV2State extends State<ProblemDetailScreenV2> {
           final reference = snapshot.data!.reference;
           return HandWriteText(
             text: (reference == null || reference.isEmpty) ? '제목 없음' : reference,
-            fontSize: 24,
+            fontSize: 26,
             color: themeProvider.primaryColor,
           );
         } else {
@@ -181,33 +182,33 @@ class _ProblemDetailScreenV2State extends State<ProblemDetailScreenV2> {
               itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
                 PopupMenuItem<String>(
                   value: shareProblemValue,
-                  child: HandWriteText(
+                  child: StandardText(
                     text: '문제 공유하기',
-                    fontSize: 18,
+                    fontSize: 14,
                     color: themeProvider.primaryColor,
                   ),
                 ),
                 PopupMenuItem<String>(
                   value: shareAnswerValue,
-                  child: HandWriteText(
+                  child: StandardText(
                     text: '정답 공유하기',
-                    fontSize: 18,
+                    fontSize: 14,
+                    color: themeProvider.primaryColor,
+                  ),
+                ),
+                PopupMenuItem<String>(
+                  value: editValue,
+                  child: StandardText(
+                    text: '문제 수정하기',
+                    fontSize: 14,
                     color: themeProvider.primaryColor,
                   ),
                 ),
                 const PopupMenuItem<String>(
-                  value: editValue,
-                  child: HandWriteText(
-                    text: '문제 수정하기',
-                    fontSize: 18,
-                    color: Colors.blue,
-                  ),
-                ),
-                const PopupMenuItem<String>(
                   value: deleteValue,
-                  child: HandWriteText(
+                  child: StandardText(
                     text: '문제 삭제하기',
-                    fontSize: 18,
+                    fontSize: 14,
                     color: Colors.red,
                   ),
                 ),

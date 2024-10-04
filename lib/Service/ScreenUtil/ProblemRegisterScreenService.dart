@@ -9,6 +9,7 @@ import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import '../../GlobalModule/Image/ImagePickerHandler.dart';
+import '../../GlobalModule/Theme/StandardText.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
 import '../../GlobalModule/Util/DatePickerHandler.dart';
 import '../../GlobalModule/Util/FolderSelectionDialog.dart';
@@ -46,9 +47,9 @@ class ProblemRegisterScreenService {
     final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: const HandWriteText(
+        content: const StandardText(
           text: '문제가 성공적으로 저장되었습니다.',
-          fontSize: 20,
+          fontSize: 14,
           color: Colors.white,
         ),
         backgroundColor: themeProvider.primaryColor,
@@ -60,9 +61,9 @@ class ProblemRegisterScreenService {
   void showValidationMessage(BuildContext context, String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: HandWriteText(
+        content: StandardText(
           text: message,
-          fontSize: 20,
+          fontSize: 14,
           color: Colors.white,
         ),
         backgroundColor: Colors.red,

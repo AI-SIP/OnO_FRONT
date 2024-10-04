@@ -24,6 +24,7 @@ class AppBarWithLogo extends StatelessWidget implements PreferredSizeWidget {
               text: 'OnO',
               fontSize: 26,
               color: themeProvider.primaryColor,
+              fontWeight: FontWeight.bold,
             )),
       ),
       backgroundColor: Colors.white,

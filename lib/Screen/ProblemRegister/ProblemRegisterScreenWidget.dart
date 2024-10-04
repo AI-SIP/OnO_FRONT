@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 import '../../GlobalModule/Image/DisplayImage.dart';
 import '../../GlobalModule/Image/ImagePickerHandler.dart';
 import '../../GlobalModule/Theme/HandWriteText.dart';
+import '../../GlobalModule/Theme/StandardText.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
 import '../../GlobalModule/Util/DatePickerHandler.dart';
 import '../../GlobalModule/Util/FolderSelectionDialog.dart';
@@ -24,9 +25,9 @@ class ProblemRegisterScreenWidget {
       children: <Widget>[
         Icon(Icons.calendar_today, color: themeProvider.primaryColor),
         const SizedBox(width: 10),
-        HandWriteText(
+        StandardText(
           text: '푼 날짜',
-          fontSize: 20,
+          fontSize: 16,
           color: themeProvider.primaryColor,
         ),
         const Spacer(),
@@ -61,9 +62,9 @@ class ProblemRegisterScreenWidget {
               borderRadius: BorderRadius.circular(10.0),
             ),
           ),
-          child: HandWriteText(
+          child: StandardText(
             text: '${selectedDate.year}년 ${selectedDate.month}월 ${selectedDate.day}일',
-            fontSize: 18,
+            fontSize: 14,
             color: themeProvider.primaryColor,
           ),
         ),
@@ -82,9 +83,9 @@ class ProblemRegisterScreenWidget {
       children: [
         Icon(Icons.folder, color: themeProvider.primaryColor),
         const SizedBox(width: 10),
-        HandWriteText(
+        StandardText(
           text: '저장 폴더',
-          fontSize: 20,
+          fontSize: 16,
           color: themeProvider.primaryColor,
         ),
         const Spacer(),
@@ -98,9 +99,9 @@ class ProblemRegisterScreenWidget {
               borderRadius: BorderRadius.circular(10.0),
             ),
           ),
-          child: HandWriteText(
+          child: StandardText(
             text: folderName ?? '폴더 선택',
-            fontSize: 18,
+            fontSize: 14,
             color: themeProvider.primaryColor,
           ),
         ),
@@ -122,9 +123,9 @@ class ProblemRegisterScreenWidget {
           children: [
             Icon(icon ?? Icons.label, color: themeProvider.primaryColor), // Use provided icon or default to label
             const SizedBox(width: 10),
-            HandWriteText(
+            StandardText(
               text: label,
-              fontSize: 20,
+              fontSize: 16,
               color: themeProvider.primaryColor,
             ),
           ],
@@ -145,9 +146,9 @@ class ProblemRegisterScreenWidget {
     return TextField(
       controller: controller,
       style: TextStyle(
-        fontFamily: 'HandWrite',
+        fontFamily: 'StandBold',
         color: themeProvider.primaryColor,
-        fontSize: 20,
+        fontSize: 16,
         fontWeight: FontWeight.bold,
       ),
       decoration: InputDecoration(
@@ -167,9 +168,9 @@ class ProblemRegisterScreenWidget {
         filled: true,
         hintText: hintText,
         hintStyle: TextStyle(
-          fontFamily: 'HandWrite',
+          fontFamily: 'StandardBold',
           color: themeProvider.desaturateColor,
-          fontSize: 16,
+          fontSize: 12,
           fontWeight: FontWeight.bold,
         ),
       ),
@@ -196,9 +197,9 @@ class ProblemRegisterScreenWidget {
               borderRadius: BorderRadius.circular(15.0), // Adjust corner radius
             ),
           ),
-          child: HandWriteText(
+          child: StandardText(
             text: isEditMode ? '수정 취소' : '등록 취소',
-            fontSize: 20,
+            fontSize: 14,
             color: Colors.white,
           ),
         ),
@@ -212,9 +213,9 @@ class ProblemRegisterScreenWidget {
               borderRadius: BorderRadius.circular(15.0), // Adjust corner radius
             ),
           ),
-          child: HandWriteText(
+          child: StandardText(
             text: isEditMode ? '수정 완료' : '등록 완료',
-            fontSize: 20,
+            fontSize: 14,
             color: Colors.white,
           ),
         ),
@@ -256,10 +257,10 @@ class ProblemRegisterScreenWidget {
                 ImagePickerHandler().showImagePicker(context, onImagePicked);
               },
             ),
-            HandWriteText(
+            StandardText(
               text: '아이콘을 눌러 이미지를 추가해주세요!',
               color: themeProvider.desaturateColor,
-              fontSize: 16,
+              fontSize: 12,
             ),
           ],
         )

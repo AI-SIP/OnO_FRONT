@@ -89,7 +89,7 @@ class ProblemDetailScreenWidget{
     return ExpansionTile(
       title: Container(
         padding: const EdgeInsets.all(8.0),
-        child: buildCenteredTitle('해설 및 풀이 확인', themeProvider.primaryColor),
+        child: buildCenteredTitle('정답 확인', themeProvider.primaryColor),
       ),
       children: [
         const SizedBox(height: 10.0),
@@ -268,7 +268,7 @@ class ProblemDetailScreenWidget{
           const SizedBox(width: 8.0),
           UnderlinedText(
             text: text,
-            fontSize: 30,
+            fontSize: 26,
             color: color,
             fontWeight: FontWeight.bold, // 굵은 텍스트로 설정
           ),
@@ -387,7 +387,7 @@ class ProblemDetailScreenWidget{
           children: [
             Row(
               children: [
-                Icon(Icons.book, color: themeProvider.primaryColor), // 책 아이콘 추가
+                Icon(Icons.menu_book, color: themeProvider.primaryColor), // 책 아이콘 추가
                 const SizedBox(width: 8),
                 HandWriteText(
                   text: '복습 기록',

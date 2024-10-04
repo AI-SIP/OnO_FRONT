@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:ono/GlobalModule/Theme/HandWriteText.dart';
 import 'package:provider/provider.dart';
 
+import '../../Theme/StandardText.dart';
 import '../../Theme/ThemeHandler.dart';
 import 'PixelPicker.dart';
 
@@ -44,14 +45,14 @@ class _ColorPickerScreenState extends State<ColorPickerScreen> {
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            HandWriteText(
+            StandardText(
               text: '하단의 + 버튼을 누른 뒤,',
-              fontSize: 20,
+              fontSize: 14,
               color: themeProvider.primaryColor,
             ),
-            HandWriteText(
+            StandardText(
               text: '펜을 움직여 지우고 싶은 색상을 선택하세요!!',
-              fontSize: 20,
+              fontSize: 14,
               color: themeProvider.primaryColor,
             ),
           ],
@@ -126,9 +127,9 @@ class _ColorPickerScreenState extends State<ColorPickerScreen> {
 
               Navigator.of(context).pop(colorMaps); // 변환된 리스트 반환
             },
-            child: HandWriteText(
+            child: StandardText(
               text: '완료',
-              fontSize: 16,
+              fontSize: 14,
               color: themeProvider.primaryColor,
             ),
           ),

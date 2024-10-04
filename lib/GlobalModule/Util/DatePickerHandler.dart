@@ -3,6 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
 
 import '../Theme/HandWriteText.dart';
+import '../Theme/StandardText.dart';
 import '../Theme/ThemeHandler.dart';
 
 class DatePickerHandler extends StatefulWidget {
@@ -49,9 +50,9 @@ class _DatePickerHandlerState extends State<DatePickerHandler> {
                       Navigator.pop(context, _selectedDate);
                     }
                   },
-                  child: HandWriteText(
+                  child: StandardText(
                     text: '완료',
-                    fontSize: 20,
+                    fontSize: 16,
                     color: themeProvider.primaryColor,
                   )),
             ],
@@ -63,20 +64,20 @@ class _DatePickerHandlerState extends State<DatePickerHandler> {
               Expanded(
                 child: Align(
                     alignment: Alignment.center,
-                    child: HandWriteText(
-                        text: '년도', fontSize: 20, color: themeProvider.primaryColor)),
+                    child: StandardText(
+                        text: '년도', fontSize: 16, color: themeProvider.primaryColor)),
               ),
               Expanded(
                 child: Align(
                     alignment: Alignment.center,
-                    child: HandWriteText(
-                        text: '월', fontSize: 20, color: themeProvider.primaryColor)),
+                    child: StandardText(
+                        text: '월', fontSize: 16, color: themeProvider.primaryColor)),
               ),
               Expanded(
                 child: Align(
                     alignment: Alignment.center,
-                    child: HandWriteText(
-                        text: '일', fontSize: 20, color: themeProvider.primaryColor)),
+                    child: StandardText(
+                        text: '일', fontSize: 16, color: themeProvider.primaryColor)),
               ),
             ],
           ),
@@ -102,8 +103,8 @@ class _DatePickerHandlerState extends State<DatePickerHandler> {
                     },
                     children: _years.map((int year) {
                       return Center(
-                          child: HandWriteText(
-                              text: '$year', fontSize: 20, color: themeProvider.primaryColor));
+                          child: StandardText(
+                              text: '$year', fontSize: 16, color: themeProvider.primaryColor));
                     }).toList(),
                   ),
                 ),
@@ -124,8 +125,8 @@ class _DatePickerHandlerState extends State<DatePickerHandler> {
                     },
                     children: _months.map((int month) {
                       return Center(
-                          child: HandWriteText(
-                              text: '$month', fontSize: 20, color: themeProvider.primaryColor));
+                          child: StandardText(
+                              text: '$month', fontSize: 16, color: themeProvider.primaryColor));
                     }).toList(),
                   ),
                 ),
@@ -146,8 +147,8 @@ class _DatePickerHandlerState extends State<DatePickerHandler> {
                     },
                     children: _days.map((int day) {
                       return Center(
-                          child: HandWriteText(
-                              text: '$day', fontSize: 20, color: themeProvider.primaryColor));
+                          child: StandardText(
+                              text: '$day', fontSize: 16, color: themeProvider.primaryColor));
                     }).toList(),
                   ),
                 ),

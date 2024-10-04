@@ -12,6 +12,7 @@ import 'package:share_plus/share_plus.dart';
 import '../../GlobalModule/Image/DisplayImage.dart';
 import '../../GlobalModule/Theme/HandWriteText.dart';
 import '../../GlobalModule/Theme/GridPainter.dart';
+import '../../GlobalModule/Theme/StandardText.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
 import '../../GlobalModule/Theme/UnderlinedText.dart';
 import '../../Model/ProblemModel.dart';
@@ -85,9 +86,9 @@ class _AnswerShareScreenState extends State<AnswerShareScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: HandWriteText(
+        title: StandardText(
           text: '공유 화면 미리보기',
-          fontSize: 24,
+          fontSize: 18,
           color: themeProvider.primaryColor,
         ),
       ),

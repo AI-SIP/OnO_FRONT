@@ -7,6 +7,7 @@ import 'package:ono/GlobalModule/Image/CameraHandler.dart';
 import 'package:ono/GlobalModule/Theme/HandWriteText.dart';
 import 'package:provider/provider.dart';
 
+import '../Theme/StandardText.dart';
 import '../Theme/ThemeHandler.dart';
 
 class ImagePickerHandler {
@@ -101,20 +102,20 @@ class ImagePickerHandler {
               Padding(
                 padding: const EdgeInsets.all(16.0), // 상하좌우에 약간의 여백을 추가
                 child: Center(
-                  child: HandWriteText(
+                  child: StandardText(
                     text: '이미지 업로드 방식을 선택해주세요',
                     color: themeProvider.primaryColor,
-                    fontSize: 24,
+                    fontSize: 16,
                   ),
                 ),
               ),
               ListTile(
                 leading:
                     Icon(Icons.camera_alt, color: themeProvider.primaryColor),
-                title: HandWriteText(
+                title: StandardText(
                   text: '카메라로 촬영',
                   color: themeProvider.primaryColor,
-                  fontSize: 20,
+                  fontSize: 15,
                 ),
                 onTap: () async {
 
@@ -130,10 +131,10 @@ class ImagePickerHandler {
               ListTile(
                 leading: Icon(Icons.photo_library,
                     color: themeProvider.primaryColor),
-                title: HandWriteText(
+                title: StandardText(
                   text: '갤러리에서 선택',
                   color: themeProvider.primaryColor,
-                  fontSize: 20,
+                  fontSize: 15,
                 ),
                 onTap: () async {
 

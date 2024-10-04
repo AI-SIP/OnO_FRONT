@@ -98,6 +98,15 @@ flutter:
     - family: StandardFont
       fonts:
         - asset: assets/fonts/StandardFont.otf
+    - family: StandardLight
+      fonts:
+        - asset: assets/fonts/StandardLight.ttf
+    - family: StandardMedium
+      fonts:
+        - asset: assets/fonts/StandardMedium.ttf
+    - family: StandardBold
+      fonts:
+        - asset: assets/fonts/StandardBold.ttf
 
 
   # To add assets to your application, add an assets section, like this:

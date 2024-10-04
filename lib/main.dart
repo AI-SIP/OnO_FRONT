@@ -242,12 +242,12 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
         label: '메인',
       ),
       BottomNavigationBarItem(
-        icon: Icon(Icons.add),
+        icon: Icon(Icons.edit),
         label: '오답노트 등록',
       ),
       BottomNavigationBarItem(
-        icon: Icon(Icons.folder),
-        label: '폴더',
+        icon: Icon(Icons.menu_book),
+        label: '오답노트 복습',
       ),
       BottomNavigationBarItem(
         icon: Icon(Icons.settings),
@@ -258,17 +258,17 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
 
   TextStyle _selectedLabelStyle() {
     return const TextStyle(
-      fontSize: 18,
-      fontFamily: 'HandWrite',
-      fontWeight: FontWeight.bold,
+      fontSize: 13,
+      fontFamily: 'StandardBold',
+      //fontWeight: FontWeight.bold,
     );
   }
 
   TextStyle _unselectedLabelStyle() {
     return const TextStyle(
-      fontSize: 16,
-      fontFamily: 'HandWrite',
-      fontWeight: FontWeight.bold,
+      fontSize: 11,
+      fontFamily: 'StandardBold',
+      //fontWeight: FontWeight.bold,
     );
   }
 }

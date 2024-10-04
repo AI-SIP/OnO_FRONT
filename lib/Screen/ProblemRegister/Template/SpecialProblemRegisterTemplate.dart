@@ -10,6 +10,7 @@ import 'package:ono/Model/ProblemRegisterModelV2.dart';
 import 'package:ono/Model/TemplateType.dart';
 import 'package:provider/provider.dart';
 import '../../../GlobalModule/Image/DisplayImage.dart';
+import '../../../GlobalModule/Theme/StandardText.dart';
 import '../../../GlobalModule/Theme/ThemeHandler.dart';
 import '../../../GlobalModule/Util/FolderSelectionDialog.dart';
 import '../ProblemRegisterScreenWidget.dart';
@@ -179,9 +180,9 @@ class _SpecialProblemRegisterTemplateState
                     children: [
                       Icon(Icons.image, color: themeProvider.primaryColor),
                       const SizedBox(width: 10),
-                      HandWriteText(
+                      StandardText(
                         text: '문제 이미지',
-                        fontSize: 20,
+                        fontSize: 16,
                         color: themeProvider.primaryColor,
                       ),
                     ],
@@ -200,14 +201,14 @@ class _SpecialProblemRegisterTemplateState
                     children: [
                       Icon(Icons.image, color: themeProvider.primaryColor),
                       const SizedBox(width: 10),
-                      HandWriteText(
+                      StandardText(
                         text: '보정된 이미지',
-                        fontSize: 20,
+                        fontSize: 16,
                         color: themeProvider.primaryColor,
                       ),
                     ],
                   ),
-                  const SizedBox(height: 5),
+                  const SizedBox(height: 10),
                   isLoading
                       ? Center(
                     child: Container(
@@ -250,14 +251,14 @@ class _SpecialProblemRegisterTemplateState
                     children: [
                       Icon(Icons.analytics, color: themeProvider.primaryColor),
                       const SizedBox(width: 10),
-                      HandWriteText(
+                      StandardText(
                         text: '문제 분석 결과',
-                        fontSize: 20,
+                        fontSize: 16,
                         color: themeProvider.primaryColor,
                       ),
                     ],
                   ),
-                  const SizedBox(height: 5),
+                  const SizedBox(height: 10),
                   isLoading
                       ? Center(
                     child: Container(
@@ -346,14 +347,14 @@ class _SpecialProblemRegisterTemplateState
                     children: [
                       Icon(Icons.camera_alt, color: themeProvider.primaryColor),
                       const SizedBox(width: 10),
-                      HandWriteText(
+                      StandardText(
                         text: '해설 이미지',
-                        fontSize: 20,
+                        fontSize: 16,
                         color: themeProvider.primaryColor,
                       ),
                     ],
                   ),
-                  const SizedBox(height: 5),
+                  const SizedBox(height: 10),
 
                   // Use the buildImagePicker widget to handle image picking
                   ProblemRegisterScreenWidget.buildImagePicker(
@@ -381,14 +382,14 @@ class _SpecialProblemRegisterTemplateState
                     children: [
                       Icon(Icons.camera_alt, color: themeProvider.primaryColor),
                       const SizedBox(width: 10),
-                      HandWriteText(
+                      StandardText(
                         text: '풀이 이미지',
-                        fontSize: 20,
+                        fontSize: 16,
                         color: themeProvider.primaryColor,
                       ),
                     ],
                   ),
-                  const SizedBox(height: 5),
+                  const SizedBox(height: 10),
 
                   // Use the buildImagePicker widget to handle image picking
                   ProblemRegisterScreenWidget.buildImagePicker(

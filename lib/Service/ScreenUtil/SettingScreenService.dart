@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:ono/Config/AppConfig.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
-import '../../GlobalModule/Theme/HandWriteText.dart';
+import '../../GlobalModule/Theme/StandardText.dart';
 import '../../GlobalModule/Theme/ThemeDialog.dart';
 import '../../Provider/UserProvider.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
@@ -19,10 +19,10 @@ class SettingScreenService {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: HandWriteText(
-              text: title, fontSize: 24, color: themeProvider.primaryColor),
-          content: HandWriteText(
-              text: message, fontSize: 20, color: themeProvider.primaryColor),
+          title: StandardText(
+              text: title, fontSize: 16, color: themeProvider.primaryColor),
+          content: StandardText(
+              text: message, fontSize: 15, color: themeProvider.primaryColor),
           actions: [
             _buildDialogButton(context, '취소', Colors.black, () {
               Navigator.of(context).pop();
@@ -41,9 +41,9 @@ class SettingScreenService {
       BuildContext context, String text, Color color, VoidCallback onPressed) {
     return TextButton(
       onPressed: onPressed,
-      child: HandWriteText(
+      child: StandardText(
         text: text,
-        fontSize: 20,
+        fontSize: 14,
         color: color,
       ),
     );
@@ -63,9 +63,9 @@ class SettingScreenService {
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: HandWriteText(
+        content: StandardText(
           text: message,
-          fontSize: 20,
+          fontSize: 14,
           color: Colors.white,
         ),
         backgroundColor: themeProvider.primaryColor,

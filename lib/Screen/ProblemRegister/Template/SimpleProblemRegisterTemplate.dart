@@ -3,13 +3,13 @@ import 'dart:developer';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:ono/GlobalModule/Theme/HandWriteText.dart';
 import 'package:ono/Model/ProblemModel.dart';
 import 'package:ono/Model/ProblemRegisterModelV2.dart';
 import 'package:ono/Model/TemplateType.dart';
 import 'package:provider/provider.dart';
 
 import '../../../GlobalModule/Image/DisplayImage.dart';
+import '../../../GlobalModule/Theme/StandardText.dart';
 import '../../../GlobalModule/Theme/ThemeHandler.dart';
 import '../../../GlobalModule/Util/FolderSelectionDialog.dart';
 import '../../ProblemManagement/DirectoryScreen.dart';
@@ -136,10 +136,10 @@ class _SimpleTemplate extends State<SimpleProblemRegisterTemplate> {
                     children: [
                       Icon(Icons.image, color: themeProvider.primaryColor),
                       const SizedBox(width: 10),
-                      HandWriteText(text: '문제 이미지', fontSize: 20, color: themeProvider.primaryColor,),
+                      StandardText(text: '문제 이미지', fontSize: 16, color: themeProvider.primaryColor,),
                     ],
                   ),
-                  const SizedBox(height: 5),
+                  const SizedBox(height: 10),
                   DisplayImage(imagePath: problemModel.problemImageUrl),
                 ],
               ),
@@ -152,10 +152,10 @@ class _SimpleTemplate extends State<SimpleProblemRegisterTemplate> {
                     children: [
                       Icon(Icons.camera_alt, color: themeProvider.primaryColor),
                       const SizedBox(width: 10),
-                      HandWriteText(text: '해설 이미지', fontSize: 20, color: themeProvider.primaryColor,),
+                      StandardText(text: '해설 이미지', fontSize: 16, color: themeProvider.primaryColor,),
                     ],
                   ),
-                  const SizedBox(height: 5),
+                  const SizedBox(height: 10),
 
                   // Use the buildImagePicker widget to handle image picking
                   ProblemRegisterScreenWidget.buildImagePicker(
@@ -174,7 +174,7 @@ class _SimpleTemplate extends State<SimpleProblemRegisterTemplate> {
                   ),
                 ],
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 30),
 
               ProblemRegisterScreenWidget.buildActionButtons(
                 themeProvider: themeProvider,

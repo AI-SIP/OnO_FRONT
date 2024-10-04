@@ -1,6 +1,5 @@
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
-import 'package:ono/GlobalModule/Theme/HandWriteText.dart';
 import 'package:provider/provider.dart';
 import '../../GlobalModule/Image/ColorPicker/ImageColorPickerHandler.dart';
 import '../../GlobalModule/Image/ImagePickerHandler.dart';
@@ -19,10 +18,10 @@ class TemplateSelectionScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: HandWriteText(
+        title: StandardText(
           text: '오답노트 템플릿 선택',
-          fontSize: 26,
-          color: themeProvider.primaryColor,
+          fontSize: 18,
+          color: themeProvider.darkPrimaryColor,
         ),
       ),
       body: Column(
@@ -55,25 +54,22 @@ class TemplateSelectionScreen extends StatelessWidget {
     required ThemeHandler themeProvider,
   }) {
     return ListTile(
-      contentPadding: const EdgeInsets.symmetric(vertical: 10.0),
-      title: HandWriteText(
-        text: templateType.displayName,
-        fontSize: 24,
-        color: themeProvider.darkPrimaryColor,
-      ),
-      subtitle: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: templateType.description.map((desc) {
-          return Padding(
-            padding: const EdgeInsets.only(top: 4.0),
-            child: StandardText(
-              text: desc,
-              fontSize: 16,
-              color: themeProvider.primaryColor.withOpacity(0.6),
-            ),
-          );
-        }).toList(),
-      ),
+        contentPadding: const EdgeInsets.symmetric(vertical: 10.0),
+        leading: _getTemplateIcon(templateType, themeProvider), // 템플릿에 맞는 아이콘 추가
+        title: StandardText(
+          text: templateType.displayName,
+          fontSize: 16,
+          color: themeProvider.primaryColor,
+        ),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: templateType.description.map((desc) {
+            return Padding(
+              padding: const EdgeInsets.only(top: 4.0),
+              child: _getHighlightedDescription(desc, themeProvider),
+            );
+          }).toList(),
+        ),
         onTap: () {
           FirebaseAnalytics.instance.logEvent(name: 'template_selection', parameters: {
             'type': templateType.name,
@@ -82,7 +78,6 @@ class TemplateSelectionScreen extends StatelessWidget {
           final imagePickerHandler = ImagePickerHandler();
           imagePickerHandler.showImagePicker(context, (pickedFile) async {
             if (pickedFile != null) {
-
               List<Map<String, int>?>? selectedColors;
 
               // TemplateType이 clean이나 special인 경우 색상 선택 화면 표시
@@ -122,6 +117,58 @@ class TemplateSelectionScreen extends StatelessWidget {
             }
           });
         }
+    );
+  }
+
+  // 템플릿 타입에 따른 아이콘 설정
+  Widget _getTemplateIcon(TemplateType templateType, ThemeHandler themeProvider) {
+    switch (templateType) {
+      case TemplateType.simple:
+        return Icon(Icons.library_books_rounded, color: themeProvider.primaryColor);
+      case TemplateType.clean:
+        return Icon(Icons.brush, color: themeProvider.primaryColor);
+      case TemplateType.special:
+        return Icon(Icons.auto_awesome, color: themeProvider.primaryColor);
+    }
+  }
+
+  Widget _getHighlightedDescription(String desc, ThemeHandler themeProvider) {
+    List<TextSpan> spans = [];
+
+    // **로 감싸진 텍스트 부분을 찾아서 강조
+    final regex = RegExp(r'\*\*(.*?)\*\*');
+    final matches = regex.allMatches(desc);
+
+    int lastMatchEnd = 0;
+
+    for (final match in matches) {
+      // 강조되지 않은 부분 추가
+      if (match.start > lastMatchEnd) {
+        spans.add(TextSpan(
+          text: desc.substring(lastMatchEnd, match.start),
+          style: TextStyle(fontSize: 14, color: themeProvider.desaturateColor, fontFamily: 'StandardBold'),
+        ));
+      }
+
+      // 강조된 부분 추가
+      spans.add(TextSpan(
+        text: match.group(1), // **로 감싸진 텍스트
+        style: TextStyle(fontSize: 14, color: themeProvider.primaryColor, fontFamily: 'StandardBold'),
+      ));
+
+      lastMatchEnd = match.end;
+    }
+
+    // 마지막 남은 텍스트 추가
+    if (lastMatchEnd < desc.length) {
+      spans.add(TextSpan(
+        text: desc.substring(lastMatchEnd),
+        style: TextStyle(fontSize: 14, color: themeProvider.desaturateColor, fontFamily: 'StandardBold'),
+      ));
+    }
+
+    return RichText(
+      text: TextSpan(children: spans),
     );
   }
 }
