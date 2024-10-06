@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:ono/Model/ProblemModel.dart';
+import 'package:ono/Screen/ProblemRegister/Template/ProblemRegisterTemplate.dart';
 import 'package:provider/provider.dart';
 
 import '../../GlobalModule/Theme/HandWriteText.dart';
@@ -24,11 +25,11 @@ class ProblemRegisterScreenV2 extends StatefulWidget {
   });
 
   @override
-  _ProblemRegisterScreenV2State createState() => _ProblemRegisterScreenV2State();
+  _ProblemRegisterScreenV2State createState() =>
+      _ProblemRegisterScreenV2State();
 }
 
 class _ProblemRegisterScreenV2State extends State<ProblemRegisterScreenV2> {
-
   @override
   void initState() {
     super.initState();
@@ -38,6 +39,13 @@ class _ProblemRegisterScreenV2State extends State<ProblemRegisterScreenV2> {
   Widget build(BuildContext context) {
     Widget templateWidget;
     final themeProvider = Provider.of<ThemeHandler>(context);
+
+    templateWidget = ProblemRegisterTemplate(
+        problemModel: widget.problemModel,
+        colors: widget.colors,
+        isEditMode: widget.isEditMode,
+        templateType: widget.problemModel.templateType!);
+    /*
 
     switch (widget.problemModel.templateType!) {
       case TemplateType.simple:
@@ -60,7 +68,9 @@ class _ProblemRegisterScreenV2State extends State<ProblemRegisterScreenV2> {
           isEditMode : widget.isEditMode,
         );
         break;
+
     }
+    */
 
     return Scaffold(
       appBar: AppBar(
@@ -80,7 +90,8 @@ class _ProblemRegisterScreenV2State extends State<ProblemRegisterScreenV2> {
         ),
       ),
       body: Padding(
-        padding: const EdgeInsets.all(20.0), // 기존 ProblemRegisterScreen과 동일한 padding 적용
+        padding: const EdgeInsets.all(
+            20.0), // 기존 ProblemRegisterScreen과 동일한 padding 적용
         child: templateWidget,
       ),
     );

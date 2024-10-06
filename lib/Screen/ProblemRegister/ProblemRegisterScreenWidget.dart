@@ -7,7 +7,6 @@ import 'package:provider/provider.dart';
 
 import '../../GlobalModule/Image/DisplayImage.dart';
 import '../../GlobalModule/Image/ImagePickerHandler.dart';
-import '../../GlobalModule/Theme/HandWriteText.dart';
 import '../../GlobalModule/Theme/StandardText.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
 import '../../GlobalModule/Util/DatePickerHandler.dart';
@@ -228,47 +227,95 @@ class ProblemRegisterScreenWidget {
     required Function(XFile?) onImagePicked,
   }) {
     final themeProvider = Provider.of<ThemeHandler>(context);
+    final screenHeight = MediaQuery.of(context).size.height;
 
-    return Container( // Flexible 대신 Container로 변경
-      height: 200, // 고정된 높이 지정
+    return Container(
+      height: screenHeight * 0.4, // 고정된 높이 지정
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(10),
         color: themeProvider.primaryColor.withOpacity(0.1),
-        border: Border.all(color: themeProvider.primaryColor, width: 2.0),
+        border: Border.all(color: themeProvider.primaryColor, width: 1.5),
       ),
-      child: Center(
-        child: image == null
-            ? existingImageUrl != null
-            ? GestureDetector(
-          onTap: () {
-            ImagePickerHandler().showImagePicker(context, onImagePicked);
-          },
-          child: DisplayImage(imagePath: existingImageUrl),
-        )
-            : Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            IconButton(
-              icon: Icon(Icons.image,
-                  color: themeProvider.desaturateColor, size: 50),
-              onPressed: () {
-                ImagePickerHandler().showImagePicker(context, onImagePicked);
-              },
+      child: Padding( // Padding 추가
+        padding: const EdgeInsets.all(10.0), // 이미지와 테두리 사이에 8px 패딩 적용
+        child: Center(
+          child: image == null
+              ? existingImageUrl != null
+              ? GestureDetector(
+            onTap: () {
+              ImagePickerHandler().showImagePicker(context, onImagePicked);
+            },
+            child: ClipRRect( // 이미지에 radius 적용
+              borderRadius: BorderRadius.circular(10), // radius 10 적용
+              child: DisplayImage(imagePath: existingImageUrl),
             ),
-            StandardText(
-              text: '아이콘을 눌러 이미지를 추가해주세요!',
-              color: themeProvider.desaturateColor,
-              fontSize: 12,
+          )
+              : Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              IconButton(
+                icon: Icon(
+                  Icons.image,
+                  color: themeProvider.desaturateColor,
+                  size: 50,
+                ),
+                onPressed: () {
+                  ImagePickerHandler().showImagePicker(context, onImagePicked);
+                },
+              ),
+              StandardText(
+                text: '아이콘을 눌러 이미지를 추가해주세요!',
+                color: themeProvider.desaturateColor,
+                fontSize: 12,
+              ),
+            ],
+          )
+              : GestureDetector(
+            onTap: () {
+              ImagePickerHandler().showImagePicker(context, onImagePicked);
+            },
+            child: ClipRRect( // 이미지에 radius 적용
+              borderRadius: BorderRadius.circular(10), // radius 10 적용
+              child: Image.file(File(image.path)),
             ),
-          ],
-        )
-            : GestureDetector(
-          onTap: () {
-            ImagePickerHandler().showImagePicker(context, onImagePicked);
-          },
-          child: Image.file(File(image.path)),
+          ),
         ),
       ),
+    );
+  }
+
+  static Widget buildImagePickerWithLabel({
+    required String label,
+    required XFile? image,
+    required String? existingImageUrl,
+    required ThemeHandler themeProvider,
+    required BuildContext context,
+    required Function(XFile? pickedFile) onImagePicked,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(Icons.image, color: themeProvider.primaryColor),
+            const SizedBox(width: 10),
+            StandardText(
+              text: label,
+              fontSize: 16,
+              color: themeProvider.primaryColor,
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        Container(
+          child: buildImagePicker(
+            context: context,
+            image: image,
+            existingImageUrl: existingImageUrl,
+            onImagePicked: onImagePicked,
+          ),
+        ),
+      ],
     );
   }
 }

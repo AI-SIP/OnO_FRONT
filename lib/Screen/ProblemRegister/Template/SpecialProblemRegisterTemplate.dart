@@ -99,6 +99,7 @@ class _SpecialProblemRegisterTemplateState
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeHandler>(context);
+    final screenWidth = MediaQuery.of(context).size.width;
 
     return Scaffold(
       body: GestureDetector(
@@ -172,6 +173,15 @@ class _SpecialProblemRegisterTemplateState
               ),
               const SizedBox(height: 30),
 
+              if (screenWidth >= 1100)
+                _buildWideScreenLayout(themeProvider)
+              else if (screenWidth >= 600 && screenWidth < 1100)
+                _buildMediumScreenLayout(themeProvider)
+              else
+                _buildNarrowScreenLayout(themeProvider),
+
+
+              /*
               // Display problem image with label
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -408,6 +418,8 @@ class _SpecialProblemRegisterTemplateState
                   ),
                 ],
               ),
+
+               */
               const SizedBox(height: 20),
 
               ProblemRegisterScreenWidget.buildActionButtons(
@@ -423,8 +435,256 @@ class _SpecialProblemRegisterTemplateState
     );
   }
 
-  void _resetFields() {
+  Widget _buildWideScreenLayout(ThemeHandler themeProvider) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildImageColumn(
+              context,
+              themeProvider,
+              '문제 이미지',
+              problemModel.problemImageUrl,
+              null,
+            ),
+            const SizedBox(width: 10),
+            _buildImageColumn(
+              context,
+              themeProvider,
+              '보정된 이미지',
+              processImageUrl,
+              null,
+            ),
+            const SizedBox(width: 10),
+            _buildImageColumn(
+              context,
+              themeProvider,
+              '문제 분석 결과',
+              null,
+              analysisResult,
+            ),
+          ],
+        ),
+        const SizedBox(height: 30),
+        Row(
+          children: [
+            ProblemRegisterScreenWidget.buildImagePicker(
+              context: context,
+              image: answerImage,
+              existingImageUrl: problemModel.answerImageUrl,
+              onImagePicked: (XFile? pickedFile) {
+                setState(() {
+                  answerImage = pickedFile;
+                });
 
+                FirebaseAnalytics.instance.logEvent(name: 'image_add', parameters: {
+                  'type': 'answer_image',
+                });
+              },
+            ),
+            const SizedBox(width: 10),
+            ProblemRegisterScreenWidget.buildImagePicker(
+              context: context,
+              image: solveImage,
+              existingImageUrl: problemModel.solveImageUrl,
+              onImagePicked: (XFile? pickedFile) {
+                setState(() {
+                  solveImage = pickedFile;
+                });
+
+                FirebaseAnalytics.instance.logEvent(name: 'image_add', parameters: {
+                  'type': 'solve_image',
+                });
+              },
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMediumScreenLayout(ThemeHandler themeProvider) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            _buildImageColumn(
+              context,
+              themeProvider,
+              '문제 이미지',
+              problemModel.problemImageUrl,
+              null,
+            ),
+            const SizedBox(width: 10),
+            _buildImageColumn(
+              context,
+              themeProvider,
+              '보정된 이미지',
+              processImageUrl,
+              null,
+            ),
+          ],
+        ),
+        const SizedBox(height: 30),
+        _buildImageColumn(
+          context,
+          themeProvider,
+          '문제 분석 결과',
+          null,
+          analysisResult,
+        ),
+        const SizedBox(height: 30),
+        Row(
+          children: [
+            ProblemRegisterScreenWidget.buildImagePicker(
+              context: context,
+              image: answerImage,
+              existingImageUrl: problemModel.answerImageUrl,
+              onImagePicked: (XFile? pickedFile) {
+                setState(() {
+                  answerImage = pickedFile;
+                });
+
+                FirebaseAnalytics.instance.logEvent(name: 'image_add', parameters: {
+                  'type': 'answer_image',
+                });
+              },
+            ),
+            const SizedBox(width: 10),
+            ProblemRegisterScreenWidget.buildImagePicker(
+              context: context,
+              image: solveImage,
+              existingImageUrl: problemModel.solveImageUrl,
+              onImagePicked: (XFile? pickedFile) {
+                setState(() {
+                  solveImage = pickedFile;
+                });
+
+                FirebaseAnalytics.instance.logEvent(name: 'image_add', parameters: {
+                  'type': 'solve_image',
+                });
+              },
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildNarrowScreenLayout(ThemeHandler themeProvider) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildImageColumn(
+          context,
+          themeProvider,
+          '문제 이미지',
+          problemModel.problemImageUrl,
+          null,
+        ),
+        const SizedBox(height: 10),
+        _buildImageColumn(
+          context,
+          themeProvider,
+          '보정된 이미지',
+          processImageUrl,
+          null,
+        ),
+        const SizedBox(height: 10),
+        _buildImageColumn(
+          context,
+          themeProvider,
+          '문제 분석 결과',
+          null,
+          analysisResult,
+        ),
+        const SizedBox(height: 10),
+        ProblemRegisterScreenWidget.buildImagePicker(
+          context: context,
+          image: answerImage,
+          existingImageUrl: problemModel.answerImageUrl,
+          onImagePicked: (XFile? pickedFile) {
+            setState(() {
+              answerImage = pickedFile;
+            });
+
+            FirebaseAnalytics.instance.logEvent(name: 'image_add', parameters: {
+              'type': 'answer_image',
+            });
+          },
+        ),
+        const SizedBox(width: 10),
+        ProblemRegisterScreenWidget.buildImagePicker(
+          context: context,
+          image: solveImage,
+          existingImageUrl: problemModel.solveImageUrl,
+          onImagePicked: (XFile? pickedFile) {
+            setState(() {
+              solveImage = pickedFile;
+            });
+
+            FirebaseAnalytics.instance.logEvent(name: 'image_add', parameters: {
+              'type': 'solve_image',
+            });
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildImageColumn(
+    BuildContext context,
+    ThemeHandler themeProvider,
+    String label,
+    String? imageUrl,
+    dynamic imageFile,
+  ) {
+    return Expanded(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.image, color: themeProvider.primaryColor),
+              const SizedBox(width: 10),
+              StandardText(
+                text: label,
+                fontSize: 16,
+                color: themeProvider.primaryColor,
+              ),
+            ],
+          ),
+          const SizedBox(height: 5),
+          Container(
+            height: 200,
+            decoration: BoxDecoration(
+              border: Border.all(
+                color: themeProvider.primaryColor,
+                width: 2.0,
+              ),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: imageUrl != null
+                ? DisplayImage(imagePath: imageUrl)
+                : imageFile != null
+                    ? Image.file(imageFile)
+                    : Center(
+                        child: HandWriteText(
+                          text: '이미지 없음',
+                          fontSize: 16,
+                          color: themeProvider.primaryColor,
+                        ),
+                      ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _resetFields() {
     FirebaseAnalytics.instance.logEvent(
       name: 'problem_register_cancel_button_click',
     );
@@ -469,7 +729,7 @@ class _SpecialProblemRegisterTemplateState
       _service.submitProblemV2(
         context,
         problemRegisterModel,
-            () {
+        () {
           _resetFields(); // 성공 시 호출할 함수
           _service.hideLoadingDialog(context);
           Navigator.of(context).pop(true);
