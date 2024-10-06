@@ -20,7 +20,7 @@ class SettingScreenService {
       builder: (BuildContext context) {
         return AlertDialog(
           title: StandardText(
-              text: title, fontSize: 16, color: themeProvider.primaryColor),
+              text: title, fontSize: 18, color: themeProvider.primaryColor),
           content: StandardText(
               text: message, fontSize: 15, color: themeProvider.primaryColor),
           actions: [

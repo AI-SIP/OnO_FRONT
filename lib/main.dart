@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart';
+import 'package:ono/GlobalModule/Theme/StandardText.dart';
 import 'package:ono/GlobalModule/Theme/ThemeHandler.dart';
 import 'package:ono/Model/LoginStatus.dart';
 import 'package:ono/Provider/FoldersProvider.dart';
@@ -223,14 +224,22 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
 
   BottomNavigationBar _buildBottomNavigationBar(BuildContext context) {
     final themeProvider = Provider.of<ThemeHandler>(context);
+    final standardTextStyle = const StandardText(text: '').getTextStyle();
+
     return BottomNavigationBar(
       type: BottomNavigationBarType.fixed,
       items: _bottomNavigationItems(),
       currentIndex: _selectedIndex,
       selectedItemColor: themeProvider.primaryColor,
       unselectedItemColor: Colors.grey,
-      selectedLabelStyle: _selectedLabelStyle(),
-      unselectedLabelStyle: _unselectedLabelStyle(),
+      selectedLabelStyle: standardTextStyle.copyWith(
+        color:themeProvider.primaryColor,
+        fontSize: 15,
+      ),
+      unselectedLabelStyle: standardTextStyle.copyWith(
+        color:Colors.grey,
+        fontSize: 13,
+      ),
       onTap: _onItemTapped,
     );
   }
@@ -254,21 +263,5 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
         label: '설정',
       ),
     ];
-  }
-
-  TextStyle _selectedLabelStyle() {
-    return const TextStyle(
-      fontSize: 13,
-      fontFamily: 'StandardBold',
-      //fontWeight: FontWeight.bold,
-    );
-  }
-
-  TextStyle _unselectedLabelStyle() {
-    return const TextStyle(
-      fontSize: 11,
-      fontFamily: 'StandardBold',
-      //fontWeight: FontWeight.bold,
-    );
   }
 }

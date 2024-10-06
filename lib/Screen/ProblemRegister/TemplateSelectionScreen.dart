@@ -20,8 +20,8 @@ class TemplateSelectionScreen extends StatelessWidget {
       appBar: AppBar(
         title: StandardText(
           text: '오답노트 템플릿 선택',
-          fontSize: 18,
-          color: themeProvider.darkPrimaryColor,
+          fontSize: 20,
+          color: themeProvider.primaryColor,
         ),
       ),
       body: Column(
@@ -58,7 +58,7 @@ class TemplateSelectionScreen extends StatelessWidget {
         leading: _getTemplateIcon(templateType, themeProvider), // 템플릿에 맞는 아이콘 추가
         title: StandardText(
           text: templateType.displayName,
-          fontSize: 16,
+          fontSize: 18,
           color: themeProvider.primaryColor,
         ),
         subtitle: Column(
@@ -138,6 +138,7 @@ class TemplateSelectionScreen extends StatelessWidget {
     // **로 감싸진 텍스트 부분을 찾아서 강조
     final regex = RegExp(r'\*\*(.*?)\*\*');
     final matches = regex.allMatches(desc);
+    final standardTextStyle = const StandardText(text: '').getTextStyle();
 
     int lastMatchEnd = 0;
 
@@ -146,14 +147,20 @@ class TemplateSelectionScreen extends StatelessWidget {
       if (match.start > lastMatchEnd) {
         spans.add(TextSpan(
           text: desc.substring(lastMatchEnd, match.start),
-          style: TextStyle(fontSize: 14, color: themeProvider.desaturateColor, fontFamily: 'StandardBold'),
+          style: standardTextStyle.copyWith(
+              color: themeProvider.primaryColor,
+              fontSize: 14,
+          ),
         ));
       }
 
       // 강조된 부분 추가
       spans.add(TextSpan(
         text: match.group(1), // **로 감싸진 텍스트
-        style: TextStyle(fontSize: 14, color: themeProvider.primaryColor, fontFamily: 'StandardBold'),
+        style: standardTextStyle.copyWith(
+            color: themeProvider.darkPrimaryColor,
+            fontSize: 14
+        ),
       ));
 
       lastMatchEnd = match.end;
@@ -163,7 +170,10 @@ class TemplateSelectionScreen extends StatelessWidget {
     if (lastMatchEnd < desc.length) {
       spans.add(TextSpan(
         text: desc.substring(lastMatchEnd),
-        style: TextStyle(fontSize: 14, color: themeProvider.desaturateColor, fontFamily: 'StandardBold'),
+        style: standardTextStyle.copyWith(
+            color: themeProvider.primaryColor,
+            fontSize: 14
+        ),
       ));
     }
 

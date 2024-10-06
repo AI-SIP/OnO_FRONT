@@ -120,7 +120,7 @@ class _SettingScreenState extends State<SettingScreen> {
       contentPadding: const EdgeInsets.symmetric(vertical: 10.0),
       title: StandardText(
         text: '$userName님',
-        fontSize: 16,
+        fontSize: 18,
         color: themeProvider.primaryColor,
       ),
       trailing: ElevatedButton(
@@ -155,12 +155,12 @@ class _SettingScreenState extends State<SettingScreen> {
       contentPadding: const EdgeInsets.symmetric(vertical: 10.0),
       title: StandardText(
         text: '작성한 오답노트 수',
-        fontSize: 16,
+        fontSize: 18,
         color: themeProvider.primaryColor,
       ),
       trailing: StandardText(
         text: problemCount.toString(),
-        fontSize: 16,
+        fontSize: 18,
         color: themeProvider.primaryColor,
       ),
     );
@@ -178,12 +178,12 @@ class _SettingScreenState extends State<SettingScreen> {
       contentPadding: const EdgeInsets.symmetric(vertical: 10.0),
       title: StandardText(
         text: title,
-        fontSize: 16,
+        fontSize: 18,
         color: themeColor,
       ),
       subtitle: StandardText(
         text: subtitle,
-        fontSize: 12,
+        fontSize: 14,
         color: themeColor.withOpacity(0.6),
       ),
       trailing: Container(
@@ -210,12 +210,12 @@ class _SettingScreenState extends State<SettingScreen> {
       contentPadding: const EdgeInsets.symmetric(vertical: 10.0),
       title: StandardText(
         text: title,
-        fontSize: 16,
+        fontSize: 18,
         color: themeProvider.primaryColor,
       ),
       subtitle: StandardText(
         text: subtitle,
-        fontSize: 12,
+        fontSize: 14,
         color: themeProvider.primaryColor.withOpacity(0.6),
       ),
       onTap: onTap,
@@ -232,7 +232,7 @@ class _SettingScreenState extends State<SettingScreen> {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
         ),
-        padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+        padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
       ),
       child: StandardText(
         text: text,
@@ -247,6 +247,7 @@ class _SettingScreenState extends State<SettingScreen> {
     final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
     final userProvider = Provider.of<UserProvider>(context, listen: false);
     final TextEditingController nameController = TextEditingController(text: currentName);
+    final standardTextStyle = const StandardText(text: '').getTextStyle();
 
     showDialog(
       context: context,
@@ -259,19 +260,15 @@ class _SettingScreenState extends State<SettingScreen> {
           ),
           content: TextField(
             controller: nameController,
-            style: TextStyle(
+            style: standardTextStyle.copyWith(
               color: themeProvider.primaryColor,
-              fontSize: 15,
-              fontWeight: FontWeight.bold,
-              fontFamily: 'StandardBold',
+              fontSize: 16
             ),
             decoration: InputDecoration(
               hintText: '수정할 이름을 입력하세요',
-              hintStyle: TextStyle(
-                color: themeProvider.desaturateColor,
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-                fontFamily: 'StandardBold',
+              hintStyle: standardTextStyle.copyWith(
+                  color: themeProvider.desaturateColor,
+                  fontSize: 14
               ),
               border: OutlineInputBorder(
                 borderSide: BorderSide(color: themeProvider.primaryColor, width: 1.5),

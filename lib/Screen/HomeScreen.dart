@@ -38,11 +38,11 @@ class HomeScreen extends StatelessWidget {
       builder: (ctx) => AlertDialog(
         title: const StandardText(
           text: '게스트 로그인 할 경우',
-          fontSize: 20,
+          fontSize: 18,
           color: Colors.red,
         ),
         content: const StandardText(
-          text: '기기 간 오답노트 연동이 불가능하며\n로그아웃 시 모든 정보가 삭제됩니다.',
+          text: '기기 간 오답노트 연동이 불가능하며,\n로그아웃 시 모든 정보가 삭제됩니다.',
           fontSize: 14,
           color: Colors.black,
         ),
@@ -50,7 +50,7 @@ class HomeScreen extends StatelessWidget {
           TextButton(
             child: const StandardText(
               text: '취소',
-              fontSize: 12,
+              fontSize: 14,
               color: Colors.black,
             ),
             onPressed: () {
@@ -60,7 +60,7 @@ class HomeScreen extends StatelessWidget {
           TextButton(
             child: const StandardText(
               text: '확인',
-              fontSize: 12,
+              fontSize: 14,
               color: Colors.black,
             ),
             onPressed: () {

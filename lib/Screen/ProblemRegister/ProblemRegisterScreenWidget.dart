@@ -143,13 +143,13 @@ class ProblemRegisterScreenWidget {
     required ThemeHandler themeProvider,
     int maxLines = 1,
   }) {
+    final standardTextStyle = const StandardText(text: '').getTextStyle();
+
     return TextField(
       controller: controller,
-      style: TextStyle(
-        fontFamily: 'StandBold',
-        color: themeProvider.primaryColor,
-        fontSize: 16,
-        fontWeight: FontWeight.bold,
+      style: standardTextStyle.copyWith(
+          color: themeProvider.primaryColor,
+          fontSize: 16
       ),
       decoration: InputDecoration(
         border: OutlineInputBorder(
@@ -167,11 +167,9 @@ class ProblemRegisterScreenWidget {
         fillColor: themeProvider.primaryColor.withOpacity(0.1),
         filled: true,
         hintText: hintText,
-        hintStyle: TextStyle(
-          fontFamily: 'StandardBold',
-          color: themeProvider.desaturateColor,
-          fontSize: 12,
-          fontWeight: FontWeight.bold,
+        hintStyle: standardTextStyle.copyWith(
+            color: themeProvider.desaturateColor,
+            fontSize: 12,
         ),
       ),
       maxLines: maxLines,

@@ -105,7 +105,7 @@ class ImagePickerHandler {
                   child: StandardText(
                     text: '이미지 업로드 방식을 선택해주세요',
                     color: themeProvider.primaryColor,
-                    fontSize: 16,
+                    fontSize: 18,
                   ),
                 ),
               ),

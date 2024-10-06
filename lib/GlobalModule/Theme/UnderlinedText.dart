@@ -29,6 +29,7 @@ class UnderlinedText extends StatelessWidget {
         color: color,
         fontFamily: fontFamily,
         fontWeight: fontWeight,
+        height: 1.5,
         decoration: TextDecoration.underline,
         decorationColor: Colors.red.withOpacity(0.7), // 밑줄 색상 설정
         decorationThickness: 3.0, // 밑줄 두께 설정

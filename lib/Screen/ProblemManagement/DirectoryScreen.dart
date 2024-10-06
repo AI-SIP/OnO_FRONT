@@ -79,8 +79,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       centerTitle: true, // 제목을 항상 가운데로 배치
       title: StandardText(
         text: foldersProvider.currentFolder?.folderName ?? _directoryName,
-        fontSize: 18,
-        color: themeProvider.darkPrimaryColor,
+        fontSize: 20,
+        color: themeProvider.primaryColor,
       ),
       leading: foldersProvider.currentFolder?.parentFolder != null
           ? IconButton(
@@ -317,33 +317,31 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     TextEditingController folderNameController =
         TextEditingController(text: defaultFolderName);
     final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
+    final standardTextStyle = const StandardText(text: '').getTextStyle();
 
     await showDialog(
       context: context,
       builder: (context) {
+
         return AlertDialog(
           title: StandardText(
             text: dialogTitle,
-            fontSize: 16,
+            fontSize: 18,
             color: themeProvider.primaryColor,
           ),
           content: SizedBox(
             width: MediaQuery.of(context).size.width * 0.8,
             child: TextField(
               controller: folderNameController,
-              style: TextStyle(
-                color: themeProvider.primaryColor,
-                fontSize: 15,
-                fontWeight: FontWeight.bold,
-                fontFamily: 'StandardText',
+              style: standardTextStyle.copyWith(
+                  color: themeProvider.primaryColor,
+                  fontSize: 16,
               ),
               decoration: InputDecoration(
                 hintText: '폴더 이름을 입력하세요',
-                hintStyle: TextStyle(
-                  color: themeProvider.desaturateColor,
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                  fontFamily: 'StandardText',
+                hintStyle: standardTextStyle.copyWith(
+                    color: themeProvider.desaturateColor,
+                    fontSize: 14,
                 ),
                 border: OutlineInputBorder(
                   borderSide: BorderSide(color: themeProvider.primaryColor),
@@ -564,6 +562,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       builder: (context, constraints) {
         double height = constraints.maxHeight * 0.8;
         double width = constraints.maxWidth * 0.9;
+        final standardTextStyle = const StandardText(text: '').getTextStyle();
+
         return GridTile(
           child: Column(
             children: <Widget>[
@@ -583,11 +583,9 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
               const SizedBox(height: 8),
               Text(
                 folder.folderName,
-                style: TextStyle(
-                  fontFamily: 'StandardBold',
-                  color: themeProvider.primaryColor,
-                  fontSize: 14,
-                  //fontWeight: FontWeight.bold,
+                style: standardTextStyle.copyWith(
+                    color: themeProvider.primaryColor,
+                    fontSize: 16,
                 ),
                 textAlign: TextAlign.center,
                 overflow: TextOverflow.ellipsis,
@@ -651,6 +649,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       builder: (context, constraints) {
         double height = constraints.maxHeight * 0.8;
         double width = constraints.maxWidth * 0.9;
+        final standardTextStyle = const StandardText(text: '').getTextStyle();
+
         return GridTile(
           child: Column(
             children: <Widget>[
@@ -677,11 +677,9 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
               const SizedBox(height: 8),
               Text(
                 (problem.reference != null && problem.reference!.isNotEmpty) ? problem.reference! : '제목 없음',
-                style: TextStyle(
-                  fontFamily: 'StandardBold',
-                  color: themeProvider.primaryColor,
-                  fontSize: 14,
-                  //fontWeight: FontWeight.bold,
+                style: standardTextStyle.copyWith(
+                    color: themeProvider.primaryColor,
+                    fontSize: 16
                 ),
                 textAlign: TextAlign.center,
                 overflow: TextOverflow.ellipsis,
