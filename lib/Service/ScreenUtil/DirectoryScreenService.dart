@@ -1,11 +1,11 @@
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
+import 'package:ono/Screen/ProblemDetail/ProblemDetailScreenV2.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
 import '../../Model/ProblemThumbnailModel.dart';
 import '../../Provider/FoldersProvider.dart';
-import '../../Screen/ProblemDetailScreen.dart';
 
 class DirectoryScreenService {
   final FoldersProvider foldersProvider;
@@ -45,11 +45,12 @@ class DirectoryScreenService {
     }
   }
 
-  void navigateToProblemDetail(BuildContext context, int? problemId) {
+  void navigateToProblemDetail(BuildContext context, int problemId) {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => ProblemDetailScreen(problemId: problemId),
+        //builder: (context) => ProblemDetailScreen(problemId: problemId),
+        builder: (context) => ProblemDetailScreenV2(problemId: problemId),
       ),
     ).then((value) {
       if (value == true) {

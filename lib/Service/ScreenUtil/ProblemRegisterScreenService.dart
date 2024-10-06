@@ -2,17 +2,19 @@ import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:ono/GlobalModule/Image/ColorPicker/ImageColorPickerHandler.dart';
-import 'package:ono/GlobalModule/Theme/DecorateText.dart';
+import 'package:ono/GlobalModule/Theme/HandWriteText.dart';
 import 'package:ono/Model/LoginStatus.dart';
 import 'package:ono/Provider/FoldersProvider.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import '../../GlobalModule/Image/ImagePickerHandler.dart';
+import '../../GlobalModule/Theme/StandardText.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
 import '../../GlobalModule/Util/DatePickerHandler.dart';
 import '../../GlobalModule/Util/FolderSelectionDialog.dart';
 import '../../Model/ProblemRegisterModel.dart';
+import '../../Model/ProblemRegisterModelV2.dart';
 import '../../Provider/UserProvider.dart';
 
 class ProblemRegisterScreenService {
@@ -36,7 +38,7 @@ class ProblemRegisterScreenService {
     return await showDialog<Map<String, dynamic>>(
       context: context,
       builder: (BuildContext context) {
-        return FolderSelectionDialog(); // 폴더 선택 다이얼로그
+        return const FolderSelectionDialog(); // 폴더 선택 다이얼로그
       },
     );
   }
@@ -45,9 +47,9 @@ class ProblemRegisterScreenService {
     final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: const DecorateText(
+        content: const StandardText(
           text: '문제가 성공적으로 저장되었습니다.',
-          fontSize: 20,
+          fontSize: 14,
           color: Colors.white,
         ),
         backgroundColor: themeProvider.primaryColor,
@@ -59,9 +61,9 @@ class ProblemRegisterScreenService {
   void showValidationMessage(BuildContext context, String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: DecorateText(
+        content: StandardText(
           text: message,
-          fontSize: 20,
+          fontSize: 14,
           color: Colors.white,
         ),
         backgroundColor: Colors.red,
@@ -90,8 +92,8 @@ class ProblemRegisterScreenService {
                 ),
               ),
               const SizedBox(height: 20),
-              const DecorateText(
-                text: '필기를 제거하는 중...',
+              const HandWriteText(
+                text: '문제 등록 중...',
                 fontSize: 24,
                 color: Colors.white,
               ),
@@ -136,9 +138,9 @@ class ProblemRegisterScreenService {
     return true;
   }
 
-  Future<void> submitProblem(
+  Future<void> submitProblemV2(
       BuildContext context,
-      ProblemRegisterModel problemData,
+      ProblemRegisterModelV2 problemData,
       VoidCallback onSuccess) async {
     final authService = Provider.of<UserProvider>(context, listen: false);
     if (authService.isLoggedIn == LoginStatus.logout) {
@@ -146,16 +148,11 @@ class ProblemRegisterScreenService {
       return;
     }
 
-    if (!validateForm(context, problemData.reference, problemData.problemImage)) {
-      return;
-    }
-
-    showLoadingDialog(context);
+    log('problem submit');
 
     try {
       await Provider.of<FoldersProvider>(context, listen: false)
-          .submitProblem(problemData, context);
-      hideLoadingDialog(context);
+          .submitProblemV2(problemData, context);
       onSuccess();
       showSuccessDialog(context);
     } catch (error) {
@@ -190,12 +187,12 @@ class ProblemRegisterScreenService {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const DecorateText(text: '로그인 필요',),
+        title: const HandWriteText(text: '로그인 필요',),
         content:
-            const DecorateText(text: '문제를 등록하려면 로그인 해주세요!', ),
+            const HandWriteText(text: '문제를 등록하려면 로그인 해주세요!', ),
         actions: <Widget>[
           TextButton(
-            child: const DecorateText(
+            child: const HandWriteText(
               text: '확인',
               fontSize: 20,
             ),

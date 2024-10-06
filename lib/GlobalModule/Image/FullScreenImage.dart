@@ -3,10 +3,9 @@ import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:http/http.dart' as http;
+import 'package:ono/GlobalModule/Theme/StandardText.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:image_gallery_saver_plus/image_gallery_saver_plus.dart';
-
-import '../Theme/DecorateText.dart';
 
 class FullScreenImage extends StatelessWidget {
   final String? imagePath;
@@ -17,8 +16,8 @@ class FullScreenImage extends StatelessWidget {
     if (imagePath == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-            content: DecorateText(
-                text: "이미지를 다운로드할 수 없습니다.", fontSize: 20, color: Colors.white)),
+            content: StandardText(
+                text: "이미지를 다운로드할 수 없습니다.", fontSize: 14, color: Colors.white)),
       );
       return;
     }
@@ -39,18 +38,18 @@ class FullScreenImage extends StatelessWidget {
           if (result["isSuccess"]) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
-                  content: DecorateText(
+                  content: StandardText(
                 text: "이미지가 다운로드되었습니다.",
-                fontSize: 20,
+                fontSize: 14,
                 color: Colors.white,
               )),
             );
           } else {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
-                  content: DecorateText(
+                  content: StandardText(
                       text: "다운로드에 실패했습니다.",
-                      fontSize: 20,
+                      fontSize: 14,
                       color: Colors.white)),
             );
           }
@@ -58,15 +57,15 @@ class FullScreenImage extends StatelessWidget {
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-              content: DecorateText(
-                  text: "에러 발생: $e", fontSize: 20, color: Colors.white)),
+              content: StandardText(
+                  text: "에러 발생: $e", fontSize: 14, color: Colors.white)),
         );
       }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-            content: DecorateText(
-                text: "저장 권한이 필요합니다.", fontSize: 20, color: Colors.white)),
+            content: StandardText(
+                text: "저장 권한이 필요합니다.", fontSize: 14, color: Colors.white)),
       );
     }
   }

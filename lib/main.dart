@@ -6,16 +6,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart';
+import 'package:ono/GlobalModule/Theme/StandardText.dart';
 import 'package:ono/GlobalModule/Theme/ThemeHandler.dart';
 import 'package:ono/Model/LoginStatus.dart';
 import 'package:ono/Provider/FoldersProvider.dart';
+import 'package:ono/Screen/ProblemRegister/ProblemRegisterScreenV2.dart';
 import 'package:ono/Screen/SplashScreen.dart';
 import 'package:provider/provider.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'Provider/UserProvider.dart';
 import 'Screen/HomeScreen.dart';
-import 'Screen/DirectoryScreen.dart';
-import 'Screen/ProblemRegisterScreen.dart';
+import 'Screen/ProblemManagement/DirectoryScreen.dart';
+import 'Screen/ProblemRegister/TemplateSelectionScreen.dart';
 import 'Screen/SettingScreen.dart';
 import 'GlobalModule/Theme/AppbarWithLogo.dart';
 import 'firebase_options.dart';
@@ -71,6 +73,21 @@ class MyApp extends StatelessWidget {
       navigatorObservers: <NavigatorObserver>[observer],
       home: SplashScreen(),
       debugShowCheckedModeBanner: false,
+      onGenerateRoute: (settings) {
+        if (settings.name == '/problemRegister') {
+          final args = settings.arguments as Map<String, dynamic>;
+          return MaterialPageRoute(
+            builder: (context) {
+              return ProblemRegisterScreenV2(
+                problemModel: args['problemModel'],
+                isEditMode: args['isEditMode'],
+                colors: args['colors'],
+              );
+            },
+          );
+        }
+        return null; // Other routes can be handled here
+      },
     );
   }
 
@@ -96,7 +113,8 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
   final secureStorage = const FlutterSecureStorage();
   static const List<Widget> _widgetOptions = <Widget>[
     HomeScreen(),
-    ProblemRegisterScreen(),
+    TemplateSelectionScreen(),
+    //ProblemRegisterScreen(),
     DirectoryScreen(),
     SettingScreen(),
   ];
@@ -192,7 +210,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: _selectedIndex == 2
+      appBar: (_selectedIndex == 1 || _selectedIndex == 2)
           ? null // DirectoryScreen을 위한 조건 (index 2일 경우 AppBar를 제거)
           : const AppBarWithLogo(), // 다른 화면에서는 AppBar 표시
       body: IndexedStack(
@@ -205,14 +223,22 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
 
   BottomNavigationBar _buildBottomNavigationBar(BuildContext context) {
     final themeProvider = Provider.of<ThemeHandler>(context);
+    final standardTextStyle = const StandardText(text: '').getTextStyle();
+
     return BottomNavigationBar(
       type: BottomNavigationBarType.fixed,
       items: _bottomNavigationItems(),
       currentIndex: _selectedIndex,
       selectedItemColor: themeProvider.primaryColor,
       unselectedItemColor: Colors.grey,
-      selectedLabelStyle: _selectedLabelStyle(),
-      unselectedLabelStyle: _unselectedLabelStyle(),
+      selectedLabelStyle: standardTextStyle.copyWith(
+        color:themeProvider.primaryColor,
+        fontSize: 15,
+      ),
+      unselectedLabelStyle: standardTextStyle.copyWith(
+        color:Colors.grey,
+        fontSize: 13,
+      ),
       onTap: _onItemTapped,
     );
   }
@@ -224,33 +250,17 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
         label: '메인',
       ),
       BottomNavigationBarItem(
-        icon: Icon(Icons.add),
+        icon: Icon(Icons.edit),
         label: '오답노트 등록',
       ),
       BottomNavigationBarItem(
-        icon: Icon(Icons.folder),
-        label: '폴더',
+        icon: Icon(Icons.menu_book),
+        label: '오답노트 복습',
       ),
       BottomNavigationBarItem(
         icon: Icon(Icons.settings),
         label: '설정',
       ),
     ];
-  }
-
-  TextStyle _selectedLabelStyle() {
-    return const TextStyle(
-      fontSize: 18,
-      fontFamily: 'font1',
-      fontWeight: FontWeight.bold,
-    );
-  }
-
-  TextStyle _unselectedLabelStyle() {
-    return const TextStyle(
-      fontSize: 16,
-      fontFamily: 'font1',
-      fontWeight: FontWeight.bold,
-    );
   }
 }

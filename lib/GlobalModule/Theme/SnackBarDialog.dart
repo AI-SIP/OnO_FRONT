@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:ono/GlobalModule/Theme/DecorateText.dart';
+import 'package:ono/GlobalModule/Theme/HandWriteText.dart';
+
+import 'StandardText.dart';
 
 class SnackBarDialog {
   static void showSnackBar({
@@ -10,9 +12,9 @@ class SnackBarDialog {
     if (ScaffoldMessenger.maybeOf(context) != null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: DecorateText(
+          content: StandardText(
             text: message,
-            fontSize: 20,
+            fontSize: 14,
             color: Colors.white,
           ),
           backgroundColor: backgroundColor,

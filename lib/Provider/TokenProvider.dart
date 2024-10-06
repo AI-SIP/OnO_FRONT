@@ -18,7 +18,9 @@ class TokenProvider {
 
       if (accessToken == null) {
         log('Access token is not available.');
-        return null;
+        await refreshAccessToken();
+
+        accessToken = await storage.read(key: 'accessToken');
       }
 
       final url = Uri.parse('${AppConfig.baseUrl}/api/auth/verifyAccessToken');

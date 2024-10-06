@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 
-import 'DecorateText.dart';
-
 class UnderlinedText extends StatelessWidget {
   final String text;
   final double fontSize;
@@ -15,7 +13,7 @@ class UnderlinedText extends StatelessWidget {
 
     this.fontSize = 20,
     this.color = Colors.black,
-    this.fontFamily = 'font1',
+    this.fontFamily = 'HandWrite',
     this.fontWeight = FontWeight.bold,
   });
 
@@ -29,6 +27,7 @@ class UnderlinedText extends StatelessWidget {
         color: color,
         fontFamily: fontFamily,
         fontWeight: fontWeight,
+        height: 1.5,
         decoration: TextDecoration.underline,
         decorationColor: Colors.red.withOpacity(0.7), // 밑줄 색상 설정
         decorationThickness: 3.0, // 밑줄 두께 설정

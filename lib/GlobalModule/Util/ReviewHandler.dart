@@ -3,7 +3,7 @@ import 'package:in_app_review/in_app_review.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../Theme/DecorateText.dart';
+import '../Theme/HandWriteText.dart';
 import '../Theme/ThemeHandler.dart';
 
 class ReviewHandler {
@@ -31,17 +31,17 @@ class ReviewHandler {
       context: context,
       builder: (BuildContext dialogContext) {
         return AlertDialog(
-          title: DecorateText(text: '리뷰 작성 요청', fontSize: 24, color: themeProvider.primaryColor,),
-          content: DecorateText(text: '작성하신 리뷰는 저희에게 큰 도움이 됩니다. 리뷰를 작성하시겠습니까?', fontSize: 20, color: themeProvider.primaryColor,),
+          title: HandWriteText(text: '리뷰 작성 요청', fontSize: 24, color: themeProvider.primaryColor,),
+          content: HandWriteText(text: '작성하신 리뷰는 저희에게 큰 도움이 됩니다. 리뷰를 작성하시겠습니까?', fontSize: 20, color: themeProvider.primaryColor,),
           actions: [
             TextButton(
-              child: const DecorateText(text: '취소', fontSize: 20, color: Colors.black,),
+              child: const HandWriteText(text: '취소', fontSize: 20, color: Colors.black,),
               onPressed: () {
                 Navigator.of(dialogContext).pop(); // 다이얼로그 닫기
               },
             ),
             TextButton(
-              child: const DecorateText(text: '작성하기', fontSize: 20, color: Colors.blue,),
+              child: const HandWriteText(text: '작성하기', fontSize: 20, color: Colors.blue,),
               onPressed: () {
                 Navigator.of(dialogContext).pop(); // 다이얼로그 닫기
                 _launchURL('https://forms.gle/MncQvyT57LQr43Pp7'); // Google Forms 링크 열기

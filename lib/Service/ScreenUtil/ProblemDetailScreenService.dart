@@ -1,19 +1,11 @@
-import 'dart:developer';
-import 'dart:io';
-import 'dart:typed_data';
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:ono/Provider/FoldersProvider.dart';
-import 'package:path_provider/path_provider.dart';
+import 'package:ono/Screen/ProblemRegister/ProblemRegisterScreenV2.dart';
 import 'package:provider/provider.dart';
-import 'package:share_plus/share_plus.dart';
 
-import '../../GlobalModule/Theme/DecorateText.dart';
+import '../../GlobalModule/Theme/StandardText.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
 import '../../Model/ProblemModel.dart';
-import '../../Screen/ProblemRegisterScreen.dart';
 
 class ProblemDetailScreenService {
   Future<ProblemModel?> fetchProblemDetails(
@@ -27,10 +19,22 @@ class ProblemDetailScreenService {
     fetchDetails();
   }
 
+  void addRepeatCount(BuildContext context, int? problemId) async{
+    if (problemId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: StandardText(text: '문제 ID가 유효하지 않습니다.', fontSize: 14,)),
+      );
+      return;
+    }
+
+    Provider.of<FoldersProvider>(context, listen: false)
+        .addRepeatCount(problemId);
+  }
+
   void editProblem(BuildContext context, int? problemId) async {
     if (problemId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('문제 ID가 유효하지 않습니다.')),
+        const SnackBar(content: StandardText(text: '문제 ID가 유효하지 않습니다.', fontSize: 14,)),
       );
       return;
     }
@@ -42,14 +46,16 @@ class ProblemDetailScreenService {
     if (problem != null) {
       Navigator.of(context).push(
         MaterialPageRoute(
-          builder: (context) => ProblemRegisterScreen(
-            problem: problem,
+          builder: (context) => ProblemRegisterScreenV2(
+            problemModel: problem,
+            isEditMode: true,
+            colors: [],
           ),
         ),
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('문제를 불러오는 데 실패했습니다.')),
+        const SnackBar(content: StandardText(text: '문제를 불러오는 데 실패했습니다.', fontSize: 14,)),
       );
     }
   }
@@ -58,7 +64,7 @@ class ProblemDetailScreenService {
       Function onError) {
     if (problemId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('문제 ID가 유효하지 않습니다.')),
+        const SnackBar(content: StandardText(text: '문제 ID가 유효하지 않습니다.', fontSize: 14,)),
       );
       return;
     }
@@ -69,20 +75,20 @@ class ProblemDetailScreenService {
         final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
 
         return AlertDialog(
-          title: DecorateText(
-              text: '문제 삭제', fontSize: 24, color: themeProvider.primaryColor),
-          content: DecorateText(
+          title: StandardText(
+              text: '문제 삭제', fontSize: 16, color: themeProvider.primaryColor),
+          content: StandardText(
               text: '정말로 이 문제를 삭제하시겠습니까?',
-              fontSize: 20,
+              fontSize: 14,
               color: themeProvider.primaryColor),
           actions: [
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop(); // 다이얼로그 닫기
               },
-              child: const DecorateText(
+              child: const StandardText(
                 text: '취소',
-                fontSize: 20,
+                fontSize: 14,
                 color: Colors.black,
               ),
             ),
@@ -102,9 +108,9 @@ class ProblemDetailScreenService {
                   onError('오류 발생: ${error.toString()}');
                 });
               },
-              child: const DecorateText(
+              child: const StandardText(
                 text: '삭제',
-                fontSize: 20,
+                fontSize: 14,
                 color: Colors.red,
               ),
             ),

@@ -2,9 +2,10 @@ import 'dart:developer';
 
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
-import 'package:ono/GlobalModule/Theme/DecorateText.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
+import '../Theme/StandardText.dart';
 import '../Theme/ThemeHandler.dart';
 
 class CameraHandler {
@@ -55,6 +56,12 @@ class _CameraScreenState extends State<CameraScreen> {
   @override
   void initState() {
     super.initState();
+
+    // 화면 방향을 세로로 고정
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+    ]);
+
     _controller = CameraController(
       widget.camera,
       ResolutionPreset.high,
@@ -64,6 +71,15 @@ class _CameraScreenState extends State<CameraScreen> {
 
   @override
   void dispose() {
+
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+      DeviceOrientation.landscapeLeft,
+      DeviceOrientation.landscapeRight,
+    ]);
+
+
     _controller.dispose();
     super.dispose();
   }
@@ -74,10 +90,10 @@ class _CameraScreenState extends State<CameraScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: DecorateText(
+        title: StandardText(
           text: '이미지를 촬영해주세요!',
           color: themeProvider.primaryColor,
-          fontSize: 24,
+          fontSize: 16,
         ),
       ),
       body: Stack(
@@ -120,10 +136,10 @@ class _CameraScreenState extends State<CameraScreen> {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 20, vertical: 10),
                       ),
-                      child: const DecorateText(
+                      child: const StandardText(
                         text: '취소',
                         color: Colors.black,
-                        fontSize: 18,
+                        fontSize: 14,
                       ),
                     ),
                   ),

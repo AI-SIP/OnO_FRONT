@@ -4,9 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:ono/GlobalModule/Image/CameraHandler.dart';
-import 'package:ono/GlobalModule/Theme/DecorateText.dart';
 import 'package:provider/provider.dart';
 
+import '../Theme/StandardText.dart';
 import '../Theme/ThemeHandler.dart';
 
 class ImagePickerHandler {
@@ -23,13 +23,6 @@ class ImagePickerHandler {
     final pickedFile = await _cameraHandler.takePicture(context);
 
     if (pickedFile != null) {
-      FirebaseAnalytics.instance.logEvent(
-        name: '이미지 선택',
-        parameters: {
-          '이미지 선택 방식': '카메라',
-        },
-      );
-
       return _cropImage(pickedFile);
     }
     return null;
@@ -39,13 +32,6 @@ class ImagePickerHandler {
     try {
       final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
       if (pickedFile != null) {
-
-        FirebaseAnalytics.instance.logEvent(
-          name: '이미지 선택',
-          parameters: {
-            '이미지 선택 방식': '갤러리',
-          },
-        );
 
         return _cropImage(pickedFile);
       }
@@ -112,15 +98,30 @@ class ImagePickerHandler {
         return SafeArea(
           child: Wrap(
             children: <Widget>[
+              Padding(
+                padding: const EdgeInsets.all(16.0), // 상하좌우에 약간의 여백을 추가
+                child: Center(
+                  child: StandardText(
+                    text: '이미지 업로드 방식을 선택해주세요',
+                    color: themeProvider.primaryColor,
+                    fontSize: 18,
+                  ),
+                ),
+              ),
               ListTile(
                 leading:
                     Icon(Icons.camera_alt, color: themeProvider.primaryColor),
-                title: DecorateText(
+                title: StandardText(
                   text: '카메라로 촬영',
                   color: themeProvider.primaryColor,
-                  fontSize: 20,
+                  fontSize: 15,
                 ),
                 onTap: () async {
+
+                  FirebaseAnalytics.instance.logEvent(name: 'image_select', parameters: {
+                    'method': 'camera',
+                  });
+
                   Navigator.of(context).pop(); // Close the popup
                   final pickedFile = await pickImageFromCamera(context);
                   onImagePicked(pickedFile);
@@ -129,12 +130,17 @@ class ImagePickerHandler {
               ListTile(
                 leading: Icon(Icons.photo_library,
                     color: themeProvider.primaryColor),
-                title: DecorateText(
+                title: StandardText(
                   text: '갤러리에서 선택',
                   color: themeProvider.primaryColor,
-                  fontSize: 20,
+                  fontSize: 15,
                 ),
                 onTap: () async {
+
+                  FirebaseAnalytics.instance.logEvent(name: 'image_select', parameters: {
+                    'method': 'gallery',
+                  });
+
                   Navigator.of(context).pop(); // Close the popup
                   final pickedFile = await pickImageFromGallery(context);
                   onImagePicked(pickedFile);

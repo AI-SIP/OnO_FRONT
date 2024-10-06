@@ -2,7 +2,7 @@ import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'DecorateText.dart';
+import 'StandardText.dart';
 import 'ThemeHandler.dart';
 
 class ThemeDialog extends StatefulWidget {
@@ -19,9 +19,9 @@ class _ThemeDialogState extends State<ThemeDialog> {
     final themeProvider = Provider.of<ThemeHandler>(context);
 
     return AlertDialog(
-      title: DecorateText(
+      title: StandardText(
         text: '테마 색상 선택',
-        fontSize: 30,
+        fontSize: 20,
         color: themeProvider.primaryColor,
       ),
       content: SingleChildScrollView(
@@ -72,9 +72,9 @@ class _ThemeDialogState extends State<ThemeDialog> {
           onPressed: () {
             Navigator.of(context).pop();
           },
-          child: const DecorateText(
+          child: const StandardText(
             text: '취소',
-            fontSize: 24,
+            fontSize: 14,
             color: Colors.black,
           ),
         ),
@@ -88,9 +88,9 @@ class _ThemeDialogState extends State<ThemeDialog> {
               Navigator.of(context).pop();
             }
           },
-          child: DecorateText(
+          child: StandardText(
             text: '확인',
-            fontSize: 24,
+            fontSize: 14,
             color: themeProvider.primaryColor,
           ),
         ),
