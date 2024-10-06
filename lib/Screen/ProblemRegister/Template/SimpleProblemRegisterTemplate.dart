@@ -225,10 +225,6 @@ class _SimpleTemplate extends State<SimpleProblemRegisterTemplate> {
           () {
         _resetFields(); // 성공 시 호출할 함수
         Navigator.of(context).pop(true);
-
-        MaterialPageRoute(
-          builder: (context) => const DirectoryScreen(),
-        );
       },
     );
   }

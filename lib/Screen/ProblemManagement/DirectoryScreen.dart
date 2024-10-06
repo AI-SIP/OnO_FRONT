@@ -301,9 +301,9 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
   Widget _buildLoginPrompt(ThemeHandler themeProvider) {
     return Center(
-      child: HandWriteText(
+      child: StandardText(
         text: '로그인을 통해 작성한 오답노트를 확인해보세요!',
-        fontSize: 24,
+        fontSize: 16,
         color: themeProvider.primaryColor,
       ),
     );

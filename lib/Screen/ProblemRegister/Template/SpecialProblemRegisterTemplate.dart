@@ -473,7 +473,6 @@ class _SpecialProblemRegisterTemplateState
           _resetFields(); // 성공 시 호출할 함수
           _service.hideLoadingDialog(context);
           Navigator.of(context).pop(true);
-
         },
       );
     });

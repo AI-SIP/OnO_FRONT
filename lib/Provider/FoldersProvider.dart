@@ -400,7 +400,7 @@ class FoldersProvider with ChangeNotifier {
           isProcess: problemData.problemImageUrl != null,
         );
 
-        await fetchRootFolderContents();
+        await fetchCurrentFolderContents();
 
         int userProblemCount = await getUserProblemCount();
         if (userProblemCount > 0 && userProblemCount % 10 == 0) {

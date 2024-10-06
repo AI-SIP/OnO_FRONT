@@ -76,7 +76,7 @@ class _ProblemRegisterScreenV2State extends State<ProblemRegisterScreenV2> {
         title: StandardText(
           text: widget.isEditMode ? '오답노트 수정' : '오답노트 등록',
           color: themeProvider.primaryColor,
-          fontSize: 18,
+          fontSize: 20,
         ),
       ),
       body: Padding(
