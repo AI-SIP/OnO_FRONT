@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 
-import 'HandWriteText.dart';
-
 class UnderlinedText extends StatelessWidget {
   final String text;
   final double fontSize;

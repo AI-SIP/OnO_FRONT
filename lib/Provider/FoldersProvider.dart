@@ -293,63 +293,6 @@ class FoldersProvider with ChangeNotifier {
     }
   }
 
-  Future<void> submitProblem(
-      ProblemRegisterModel problemData, BuildContext context) async {
-
-    try {
-      final files = <http.MultipartFile>[];
-      if (problemData.problemImage != null) {
-        files.add(await http.MultipartFile.fromPath('problemImage', problemData.problemImage!.path));
-      }
-      if (problemData.solveImage != null) {
-        files.add(await http.MultipartFile.fromPath('solveImage', problemData.solveImage!.path));
-      }
-      if (problemData.answerImage != null) {
-        files.add(await http.MultipartFile.fromPath('answerImage', problemData.answerImage!.path));
-      }
-
-      final response = await httpService.sendRequest(
-        method: 'POST',
-        url: '${AppConfig.baseUrl}/api/problem',
-        isMultipart: true,
-        files: files,
-        body: {
-          'solvedAt': problemData.solvedAt?.toIso8601String(),
-          'reference': problemData.reference ?? "",
-          'memo': problemData.memo ?? "",
-          'folderId': (problemData.folderId ?? currentFolderId).toString(),
-          'process': problemData.isProcess! ? 'true' : 'false',
-          'colors': problemData.colors != null ? jsonEncode(problemData.colors) : null,
-        },
-      );
-
-      if (response.statusCode == 200) {
-        log('Problem successfully submitted');
-        logProblemSubmission(
-          action: "submit",
-          isProblemImageFilled: problemData.problemImage != null,
-          isAnswerImageFilled: problemData.answerImage != null,
-          isSolveImageFilled: problemData.solveImage != null,
-          isReferenceFilled: (problemData.reference != null) && (problemData.reference!.isNotEmpty),
-          isMemoFilled: (problemData.memo != null) && (problemData.memo!.isNotEmpty),
-          isProcess: problemData.isProcess!,
-        );
-
-        await fetchRootFolderContents();
-
-        int userProblemCount = await getUserProblemCount();
-        if (userProblemCount > 0 && userProblemCount % 10 == 0) {
-          reviewHandler.requestReview(context);
-        }
-      } else {
-        throw Exception('Failed to submit problem');
-      }
-    } catch (error, stackTrace) {
-      log('Error submitting problem: $error');
-      await Sentry.captureException(error, stackTrace: stackTrace);
-    }
-  }
-
   Future<void> submitProblemV2(
       ProblemRegisterModelV2 problemData, BuildContext context) async {
 

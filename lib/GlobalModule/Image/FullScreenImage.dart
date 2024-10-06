@@ -7,8 +7,6 @@ import 'package:ono/GlobalModule/Theme/StandardText.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:image_gallery_saver_plus/image_gallery_saver_plus.dart';
 
-import '../Theme/HandWriteText.dart';
-
 class FullScreenImage extends StatelessWidget {
   final String? imagePath;
 

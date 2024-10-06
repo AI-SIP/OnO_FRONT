@@ -280,7 +280,7 @@ class ProblemDetailScreenWidget{
   // 이미지 섹션 빌드 함수
   Widget buildImageSection(BuildContext context, String? imageUrl, String label, Color color, ThemeHandler themeProvider) {
     final mediaQuery = MediaQuery.of(context);
-    double aspectRatio = mediaQuery.size.width > 1100 ? 1.0 : 0.8;
+    double aspectRatio = mediaQuery.size.width > 1100 ? 1.4 : 0.8;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

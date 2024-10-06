@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../Model/FolderThumbnailModel.dart';
 import '../../Provider/FoldersProvider.dart';
-import '../Theme/HandWriteText.dart';
 import '../Theme/StandardText.dart';
 import '../Theme/ThemeHandler.dart';
 

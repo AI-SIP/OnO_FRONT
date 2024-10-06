@@ -4,18 +4,17 @@ import 'package:flutter_tex/flutter_tex.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
-import '../../../GlobalModule/Image/DisplayImage.dart';
-import '../../../GlobalModule/Theme/HandWriteText.dart';
-import '../../../GlobalModule/Theme/StandardText.dart';
-import '../../../GlobalModule/Theme/ThemeHandler.dart';
-import '../../../GlobalModule/Util/FolderSelectionDialog.dart';
-import '../../../GlobalModule/Util/LatexTextHandler.dart';
-import '../../../Model/ProblemModel.dart';
-import '../../../Model/ProblemRegisterModelV2.dart';
-import '../../../Model/TemplateType.dart';
-import '../../../Provider/FoldersProvider.dart';
-import '../../../Service/ScreenUtil/ProblemRegisterScreenService.dart';
-import '../ProblemRegisterScreenWidget.dart';
+import '../../GlobalModule/Image/DisplayImage.dart';
+import '../../GlobalModule/Theme/StandardText.dart';
+import '../../GlobalModule/Theme/ThemeHandler.dart';
+import '../../GlobalModule/Util/FolderSelectionDialog.dart';
+import '../../GlobalModule/Util/LatexTextHandler.dart';
+import '../../Model/ProblemModel.dart';
+import '../../Model/ProblemRegisterModelV2.dart';
+import '../../Model/TemplateType.dart';
+import '../../Provider/FoldersProvider.dart';
+import '../../Service/ScreenUtil/ProblemRegisterScreenService.dart';
+import 'ProblemRegisterScreenWidget.dart';
 
 class ProblemRegisterTemplate extends StatefulWidget {
   final ProblemModel problemModel;
@@ -76,20 +75,25 @@ class _UnifiedProblemRegisterTemplateState
   }
 
   Future<void> _fetchData() async {
-    setState(() {
-      isLoading = true;
-    });
+    if(widget.isEditMode){
+      processImageUrl = problemModel.processImageUrl;
+      analysisResult = problemModel.analysis;
+    } else{
+      setState(() {
+        isLoading = true;
+      });
 
-    if (widget.templateType != TemplateType.simple) {
-      final provider = Provider.of<FoldersProvider>(context, listen: false);
+      if (widget.templateType != TemplateType.simple) {
+        final provider = Provider.of<FoldersProvider>(context, listen: false);
 
-      // Fetch processImageUrl and analysis based on the template type
-      processImageUrl = await provider.fetchProcessImageUrl(
-          problemModel.problemImageUrl, widget.colors);
+        // Fetch processImageUrl and analysis based on the template type
+        processImageUrl = await provider.fetchProcessImageUrl(
+            problemModel.problemImageUrl, widget.colors);
 
-      if (widget.templateType == TemplateType.special) {
-        analysisResult =
-            await provider.fetchAnalysisResult(problemModel.problemImageUrl);
+        if (widget.templateType == TemplateType.special) {
+          analysisResult =
+          await provider.fetchAnalysisResult(problemModel.problemImageUrl);
+        }
       }
     }
 
@@ -222,12 +226,12 @@ class _UnifiedProblemRegisterTemplateState
               ),
             ),
             const SizedBox(width: 10),
-            const Icon(Icons.arrow_forward, size: 30, color: Colors.red),
+            const Icon(Icons.play_arrow_sharp, size: 30, color: Colors.red),
             const SizedBox(width: 10),
             Expanded(
               flex: 1,
               child: _buildImageSection(
-                label: '보정된 이미지',
+                label: '필기 제거 이미지',
                 imageUrl: processImageUrl,
                 themeProvider: themeProvider,
                 isLoading: isLoading,
@@ -353,7 +357,7 @@ class _UnifiedProblemRegisterTemplateState
         const SizedBox(height: 20),
         if(widget.templateType != TemplateType.simple) ... [
           _buildImageSection(
-              label: '보정된 이미지',
+              label: '필기 제거 이미지',
               imageUrl: processImageUrl,
               themeProvider: themeProvider,
               isLoading: isLoading,

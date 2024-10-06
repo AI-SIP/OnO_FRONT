@@ -6,7 +6,6 @@ import 'package:sentry_flutter/sentry_flutter.dart';
 
 import '../../Model/ProblemThumbnailModel.dart';
 import '../../Provider/FoldersProvider.dart';
-import '../../Screen/ProblemDetail/ProblemDetailScreen.dart';
 
 class DirectoryScreenService {
   final FoldersProvider foldersProvider;

@@ -17,7 +17,6 @@ import 'package:sentry_flutter/sentry_flutter.dart';
 import 'Provider/UserProvider.dart';
 import 'Screen/HomeScreen.dart';
 import 'Screen/ProblemManagement/DirectoryScreen.dart';
-import 'Screen/ProblemRegister/ProblemRegisterScreen.dart';
 import 'Screen/ProblemRegister/TemplateSelectionScreen.dart';
 import 'Screen/SettingScreen.dart';
 import 'GlobalModule/Theme/AppbarWithLogo.dart';

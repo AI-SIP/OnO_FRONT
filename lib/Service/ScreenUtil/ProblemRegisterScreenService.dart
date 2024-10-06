@@ -138,33 +138,6 @@ class ProblemRegisterScreenService {
     return true;
   }
 
-  Future<void> submitProblem(
-      BuildContext context,
-      ProblemRegisterModel problemData,
-      VoidCallback onSuccess) async {
-    final authService = Provider.of<UserProvider>(context, listen: false);
-    if (authService.isLoggedIn == LoginStatus.logout) {
-      _showLoginRequiredDialog(context);
-      return;
-    }
-
-    if (!validateForm(context, problemData.reference, problemData.problemImage)) {
-      return;
-    }
-
-    showLoadingDialog(context);
-
-    try {
-      await Provider.of<FoldersProvider>(context, listen: false)
-          .submitProblem(problemData, context);
-      hideLoadingDialog(context);
-      onSuccess();
-      showSuccessDialog(context);
-    } catch (error) {
-      hideLoadingDialog(context);
-    }
-  }
-
   Future<void> submitProblemV2(
       BuildContext context,
       ProblemRegisterModelV2 problemData,

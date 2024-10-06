@@ -1,16 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:ono/Model/ProblemModel.dart';
-import 'package:ono/Screen/ProblemRegister/Template/ProblemRegisterTemplate.dart';
+import 'package:ono/Screen/ProblemRegister/ProblemRegisterTemplate.dart';
 import 'package:provider/provider.dart';
 
-import '../../GlobalModule/Theme/HandWriteText.dart';
 import '../../GlobalModule/Theme/StandardText.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
-import '../../Model/TemplateType.dart';
 import '../../Provider/FoldersProvider.dart';
-import 'Template/CleanProblemRegisterTemplate.dart';
-import 'Template/SimpleProblemRegisterTemplate.dart';
-import 'Template/SpecialProblemRegisterTemplate.dart';
 
 class ProblemRegisterScreenV2 extends StatefulWidget {
   final ProblemModel problemModel;
@@ -45,32 +40,6 @@ class _ProblemRegisterScreenV2State extends State<ProblemRegisterScreenV2> {
         colors: widget.colors,
         isEditMode: widget.isEditMode,
         templateType: widget.problemModel.templateType!);
-    /*
-
-    switch (widget.problemModel.templateType!) {
-      case TemplateType.simple:
-        templateWidget = SimpleProblemRegisterTemplate(
-            problemModel: widget.problemModel,
-            isEditMode : widget.isEditMode,
-        );
-        break;
-      case TemplateType.clean:
-        templateWidget = CleanProblemRegisterTemplate(
-          problemModel: widget.problemModel,
-          colors: widget.colors,
-          isEditMode : widget.isEditMode,
-        );
-        break;
-      case TemplateType.special:
-        templateWidget = SpecialProblemRegisterTemplate(
-          problemModel: widget.problemModel,
-          colors: widget.colors,
-          isEditMode : widget.isEditMode,
-        );
-        break;
-
-    }
-    */
 
     return Scaffold(
       appBar: AppBar(
