@@ -2,20 +2,25 @@ import 'dart:convert';
 import 'dart:developer';
 
 import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart';
 import 'package:http/http.dart' as http;
 import 'package:sentry_flutter/sentry_flutter.dart';
 
 import '../../Config/AppConfig.dart';
+import '../../GlobalModule/Theme/SnackBarDialog.dart';
 
 class KakaoAuthService {
-  Future<Map<String, dynamic>?> signInWithKakao() async {
+  Future<Map<String, dynamic>?> signInWithKakao(BuildContext context) async {
     if (await isKakaoTalkInstalled()) {
       try {
         UserApi.instance.loginWithKakaoTalk().then((_) async {
           User user = await UserApi.instance.me();
           FirebaseAnalytics.instance.logSignUp(signUpMethod: 'Kakao');
+          SnackBarDialog.showSnackBar(context: context, message: "로그인에 성공했습니다.", backgroundColor: Colors.green);
+
           return registerUser(user);
         });
       } catch (error, stackTrace) {
@@ -34,6 +39,8 @@ class KakaoAuthService {
         try {
           await UserApi.instance.loginWithKakaoAccount();
           User user = await UserApi.instance.me();
+          SnackBarDialog.showSnackBar(context: context, message: "로그인에 성공했습니다.", backgroundColor: Colors.green);
+
           return registerUser(user);
         }
         catch (error, stackTrace) {
@@ -42,6 +49,8 @@ class KakaoAuthService {
             error,
             stackTrace: stackTrace,
           );
+
+          SnackBarDialog.showSnackBar(context: context, message: "로그인 과정에서 오류가 발생했습니다. 다시 시도해주세요.", backgroundColor: Colors.red);
           return null;
         }
       }
@@ -50,12 +59,15 @@ class KakaoAuthService {
         await UserApi.instance.loginWithKakaoAccount();
         User user = await UserApi.instance.me();
         FirebaseAnalytics.instance.logSignUp(signUpMethod: 'Kakao');
+
+        SnackBarDialog.showSnackBar(context: context, message: "로그인 과정에서 오류가 발생했습니다. 다시 시도해주세요.", backgroundColor: Colors.red);
         return registerUser(user);
       } catch (error, stackTrace) {
         if (error is PlatformException && error.code == 'CANCELED') {
           return null;
         }
 
+        SnackBarDialog.showSnackBar(context: context, message: "로그인 과정에서 오류가 발생했습니다. 다시 시도해주세요.", backgroundColor: Colors.red);
         log('카카오계정으로 로그인 실패 $error');
         await Sentry.captureException(
           error,

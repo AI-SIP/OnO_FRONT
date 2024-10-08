@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../GlobalModule/Image/ColorPicker/ImageColorPickerHandler.dart';
 import '../../GlobalModule/Image/ImagePickerHandler.dart';
+import '../../GlobalModule/Theme/SnackBarDialog.dart';
 import '../../GlobalModule/Theme/StandardText.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
 import '../../Model/LoginStatus.dart';
@@ -78,15 +79,7 @@ class TemplateSelectionScreen extends StatelessWidget {
 
           if (authService.isLoggedIn != LoginStatus.login) {
             // 로그인하지 않은 경우
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: StandardText(
-                  text: '로그인 후에 오답노트를 작성할 수 있습니다!',
-                  color: Colors.white,
-                ),
-                backgroundColor: Colors.red,
-              ),
-            );
+            SnackBarDialog.showSnackBar(context: context, message: "로그인 후에 오답노트를 작성할 수 있습니다!", backgroundColor: Colors.red);
           } else {
             FirebaseAnalytics.instance
                 .logEvent(name: 'template_selection_${templateType.name}');
@@ -129,15 +122,7 @@ class TemplateSelectionScreen extends StatelessWidget {
                     },
                   );
                 } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: const StandardText(
-                        text: '문제 이미지 업로드에 실패했습니다. 다시 시도해주세요.',
-                        color: Colors.white,
-                      ),
-                      backgroundColor: themeProvider.primaryColor,
-                    ),
-                  );
+                  SnackBarDialog.showSnackBar(context: context, message: "문제 이미지 업로드에 실패했습니다. 다시 시도해주세요.", backgroundColor: Colors.red);
                 }
               }
             });

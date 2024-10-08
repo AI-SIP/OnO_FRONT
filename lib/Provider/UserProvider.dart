@@ -11,6 +11,7 @@ import 'package:ono/Service/Auth/GuestAuthService.dart';
 import 'package:ono/Service/Auth/KakaoAuthService.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import '../Config/AppConfig.dart';
+import '../GlobalModule/Theme/SnackBarDialog.dart';
 import '../GlobalModule/Util/HttpService.dart';
 import 'TokenProvider.dart';
 import '../Service/Auth/AppleAuthService.dart';
@@ -42,20 +43,20 @@ class UserProvider with ChangeNotifier {
   final GoogleAuthService googleAuthService = GoogleAuthService();
   final KakaoAuthService kakaoAuthService = KakaoAuthService();
 
-  Future<void> signInWithGuest() async {
+  Future<void> signInWithGuest(BuildContext context) async {
     _loginStatus = LoginStatus.waiting;
     notifyListeners();
 
-    final response = await guestAuthService.signInWithGuest();
+    final response = await guestAuthService.signInWithGuest(context);
     saveUserToken(response: response, loginMethod: 'guest');
   }
 
   // Google 로그인 함수(앱 처음 설치하고 구글 로그인 버튼 누르면 실행)
-  Future<void> signInWithGoogle() async {
+  Future<void> signInWithGoogle(BuildContext context) async {
     _loginStatus = LoginStatus.waiting;
     notifyListeners();
 
-    final response = await googleAuthService.signInWithGoogle();
+    final response = await googleAuthService.signInWithGoogle(context);
     saveUserToken(response: response, loginMethod: 'google');
   }
 
@@ -67,11 +68,11 @@ class UserProvider with ChangeNotifier {
     saveUserToken(response: response, loginMethod: 'apple');
   }
 
-  Future<void> signInWithKakao() async {
+  Future<void> signInWithKakao(BuildContext context) async {
     _loginStatus = LoginStatus.waiting;
     notifyListeners();
 
-    final response = await kakaoAuthService.signInWithKakao();
+    final response = await kakaoAuthService.signInWithKakao(context);
     saveUserToken(response: response, loginMethod: 'kakao');
   }
 
@@ -91,7 +92,6 @@ class UserProvider with ChangeNotifier {
   }
 
   Future<void> fetchUserInfo() async {
-
     try {
       final response = await httpService.sendRequest(
         method: 'GET',

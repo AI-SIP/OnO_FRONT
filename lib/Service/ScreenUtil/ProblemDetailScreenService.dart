@@ -3,6 +3,7 @@ import 'package:ono/Provider/FoldersProvider.dart';
 import 'package:ono/Screen/ProblemRegister/ProblemRegisterScreenV2.dart';
 import 'package:provider/provider.dart';
 
+import '../../GlobalModule/Theme/SnackBarDialog.dart';
 import '../../GlobalModule/Theme/StandardText.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
 import '../../Model/ProblemModel.dart';
@@ -21,9 +22,7 @@ class ProblemDetailScreenService {
 
   void addRepeatCount(BuildContext context, int? problemId) async{
     if (problemId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: StandardText(text: '문제 ID가 유효하지 않습니다.', fontSize: 14,)),
-      );
+      SnackBarDialog.showSnackBar(context: context, message: "문제를 불러오는 과정에서 오류가 발생했습니다.", backgroundColor: Colors.red);
       return;
     }
 
@@ -33,9 +32,7 @@ class ProblemDetailScreenService {
 
   void editProblem(BuildContext context, int? problemId) async {
     if (problemId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: StandardText(text: '문제 ID가 유효하지 않습니다.', fontSize: 14,)),
-      );
+      SnackBarDialog.showSnackBar(context: context, message: "문제를 불러오는 과정에서 오류가 발생했습니다.", backgroundColor: Colors.red);
       return;
     }
 
@@ -54,18 +51,14 @@ class ProblemDetailScreenService {
         ),
       );
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: StandardText(text: '문제를 불러오는 데 실패했습니다.', fontSize: 14,)),
-      );
+      SnackBarDialog.showSnackBar(context: context, message: "문제를 불러오는 과정에서 오류가 발생했습니다.", backgroundColor: Colors.red);
     }
   }
 
   void deleteProblem(BuildContext context, int? problemId, Function onSuccess,
       Function onError) {
     if (problemId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: StandardText(text: '문제 ID가 유효하지 않습니다.', fontSize: 14,)),
-      );
+      SnackBarDialog.showSnackBar(context: context, message: "문제를 불러오는 과정에서 오류가 발생했습니다.", backgroundColor: Colors.red);
       return;
     }
 

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:ono/GlobalModule/Theme/HandWriteText.dart';
 
 import 'StandardText.dart';
 

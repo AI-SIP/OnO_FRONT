@@ -9,6 +9,7 @@ import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import '../../GlobalModule/Image/ImagePickerHandler.dart';
+import '../../GlobalModule/Theme/SnackBarDialog.dart';
 import '../../GlobalModule/Theme/StandardText.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
 import '../../GlobalModule/Util/DatePickerHandler.dart';
@@ -45,31 +46,11 @@ class ProblemRegisterScreenService {
 
   void showSuccessDialog(BuildContext context) {
     final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const StandardText(
-          text: '문제가 성공적으로 저장되었습니다.',
-          fontSize: 14,
-          color: Colors.white,
-        ),
-        backgroundColor: themeProvider.primaryColor,
-        duration: const Duration(seconds: 2),
-      ),
-    );
+    SnackBarDialog.showSnackBar(context: context, message: "문제가 성공적으로 저장되었습니다.", backgroundColor: themeProvider.primaryColor);
   }
 
   void showValidationMessage(BuildContext context, String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: StandardText(
-          text: message,
-          fontSize: 14,
-          color: Colors.white,
-        ),
-        backgroundColor: Colors.red,
-        duration: const Duration(seconds: 2),
-      ),
-    );
+    SnackBarDialog.showSnackBar(context: context, message: "문제 등록 과정에서 오류가 발생했습니다.", backgroundColor: Colors.red);
   }
 
   void showLoadingDialog(BuildContext context) {
@@ -147,8 +128,6 @@ class ProblemRegisterScreenService {
       _showLoginRequiredDialog(context);
       return;
     }
-
-    log('problem submit');
 
     try {
       await Provider.of<FoldersProvider>(context, listen: false)
