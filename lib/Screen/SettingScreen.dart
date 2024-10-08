@@ -1,6 +1,7 @@
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:ono/Config/AppConfig.dart';
+import 'package:ono/Model/LoginStatus.dart';
 import 'package:provider/provider.dart';
 import '../GlobalModule/Theme/HandWriteText.dart';
 import '../GlobalModule/Theme/StandardText.dart';
@@ -27,85 +28,100 @@ class _SettingScreenState extends State<SettingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final authService = Provider.of<UserProvider>(context);
     final userProvider = Provider.of<UserProvider>(context);
     final themeProvider = Provider.of<ThemeHandler>(context);
 
     return Scaffold(
-      body: Column(
-        children: [
-          Expanded(
-            child: ListView(
-              padding: const EdgeInsets.symmetric(horizontal: 30.0),
+      body: !(authService.isLoggedIn == LoginStatus.login)
+          ? _buildLoginPrompt(themeProvider)
+          : Column(
               children: [
-                const SizedBox(height: 10),
-                _buildUserNameTile(
-                  context: context,
-                  userName: userProvider.userName ?? '이름 없음',
-                  themeProvider: themeProvider,
+                Expanded(
+                  child: ListView(
+                    padding: const EdgeInsets.symmetric(horizontal: 30.0),
+                    children: [
+                      const SizedBox(height: 10),
+                      _buildUserNameTile(
+                        context: context,
+                        userName: userProvider.userName ?? '이름 없음',
+                        themeProvider: themeProvider,
+                      ),
+                      const Divider(),
+                      _buildProblemCountTile(
+                        problemCount: userProvider.problemCount ?? 0,
+                        themeProvider: themeProvider,
+                      ),
+                      const Divider(),
+                      _buildSettingItemWithColor(
+                        title: '테마 변경',
+                        subtitle: '앱의 테마를 변경하세요.',
+                        themeColor: themeProvider.primaryColor,
+                        context: context,
+                        onTap: () {
+                          _settingScreenService.showThemeDialog(context);
+                        },
+                      ),
+                      const Divider(),
+                      _buildSettingItem(
+                        title: '의견 남기기',
+                        subtitle: '앱에 대한 의견을 보내주세요.',
+                        context: context,
+                        onTap: () {
+                          FirebaseAnalytics.instance.logEvent(
+                              name: 'feedback_button_click',
+                              parameters: {
+                                'url': AppConfig.feedbackPageUrl,
+                              });
+                          _settingScreenService.openFeedbackForm();
+                        },
+                      ),
+                    ],
+                  ),
                 ),
-                const Divider(),
-                _buildProblemCountTile(
-                  problemCount: userProvider.problemCount ?? 0,
-                  themeProvider: themeProvider,
-                ),
-                const Divider(),
-                _buildSettingItemWithColor(
-                  title: '테마 변경',
-                  subtitle: '앱의 테마를 변경하세요.',
-                  themeColor: themeProvider.primaryColor,
-                  context: context,
-                  onTap: () {
-                    _settingScreenService.showThemeDialog(context);
-                  },
-                ),
-                const Divider(),
-                _buildSettingItem(
-                  title: '의견 남기기',
-                  subtitle: '앱에 대한 의견을 보내주세요.',
-                  context: context,
-                  onTap: () {
-                    FirebaseAnalytics.instance.logEvent(name: 'feedback_button_click', parameters: {
-                      'url' : AppConfig.feedbackPageUrl,
-                    });
-                    _settingScreenService.openFeedbackForm();
-                  },
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 20.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      _buildBottomButton(
+                        context,
+                        '로그아웃',
+                        Colors.white,
+                        Colors.red,
+                        () => _settingScreenService.showConfirmationDialog(
+                          context,
+                          '로그아웃',
+                          '정말 로그아웃 하시겠습니까?\n(게스트 유저의 경우 모든 정보가 삭제됩니다.)',
+                          () => _settingScreenService.logout(context),
+                        ),
+                      ),
+                      _buildBottomButton(
+                        context,
+                        '회원 탈퇴',
+                        Colors.red,
+                        Colors.white,
+                        () => _settingScreenService.showConfirmationDialog(
+                          context,
+                          '회원 탈퇴',
+                          '정말 회원 탈퇴 하시겠습니까?\n그동안 작성했던 모든 오답노트 및 개인정보가 삭제됩니다. 이 작업은 되돌릴 수 없습니다.',
+                          () => _settingScreenService.deleteAccount(context),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 20.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                _buildBottomButton(
-                  context,
-                  '로그아웃',
-                  Colors.white,
-                  Colors.red,
-                      () => _settingScreenService.showConfirmationDialog(
-                    context,
-                    '로그아웃',
-                    '정말 로그아웃 하시겠습니까?\n(게스트 유저의 경우 모든 정보가 삭제됩니다.)',
-                        () => _settingScreenService.logout(context),
-                  ),
-                ),
-                _buildBottomButton(
-                  context,
-                  '회원 탈퇴',
-                  Colors.red,
-                  Colors.white,
-                      () => _settingScreenService.showConfirmationDialog(
-                    context,
-                    '회원 탈퇴',
-                    '정말 회원 탈퇴 하시겠습니까?\n그동안 작성했던 모든 오답노트 및 개인정보가 삭제됩니다. 이 작업은 되돌릴 수 없습니다.',
-                        () => _settingScreenService.deleteAccount(context),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
+    );
+  }
+
+  Widget _buildLoginPrompt(ThemeHandler themeProvider) {
+    return Center(
+      child: StandardText(
+        text: '로그인을 통해 설정을 변경해보세요!',
+        fontSize: 16,
+        color: themeProvider.primaryColor,
       ),
     );
   }
@@ -125,7 +141,8 @@ class _SettingScreenState extends State<SettingScreen> {
       ),
       trailing: ElevatedButton(
         onPressed: () {
-          FirebaseAnalytics.instance.logEvent(name: 'username_edit_button_click');
+          FirebaseAnalytics.instance
+              .logEvent(name: 'username_edit_button_click');
           _showChangeNameDialog(context, userName);
         },
         style: ElevatedButton.styleFrom(
@@ -223,7 +240,8 @@ class _SettingScreenState extends State<SettingScreen> {
   }
 
   // 하단 버튼 스타일
-  Widget _buildBottomButton(BuildContext context, String text, Color backgroundColor, Color textColor, VoidCallback onPressed) {
+  Widget _buildBottomButton(BuildContext context, String text,
+      Color backgroundColor, Color textColor, VoidCallback onPressed) {
     return ElevatedButton(
       onPressed: onPressed,
       style: ElevatedButton.styleFrom(
@@ -246,7 +264,8 @@ class _SettingScreenState extends State<SettingScreen> {
   void _showChangeNameDialog(BuildContext context, String currentName) {
     final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
     final userProvider = Provider.of<UserProvider>(context, listen: false);
-    final TextEditingController nameController = TextEditingController(text: currentName);
+    final TextEditingController nameController =
+        TextEditingController(text: currentName);
     final standardTextStyle = const StandardText(text: '').getTextStyle();
 
     showDialog(
@@ -261,28 +280,28 @@ class _SettingScreenState extends State<SettingScreen> {
           content: TextField(
             controller: nameController,
             style: standardTextStyle.copyWith(
-              color: themeProvider.primaryColor,
-              fontSize: 16
-            ),
+                color: themeProvider.primaryColor, fontSize: 16),
             decoration: InputDecoration(
               hintText: '수정할 이름을 입력하세요',
               hintStyle: standardTextStyle.copyWith(
-                  color: themeProvider.desaturateColor,
-                  fontSize: 14
-              ),
+                  color: themeProvider.desaturateColor, fontSize: 14),
               border: OutlineInputBorder(
-                borderSide: BorderSide(color: themeProvider.primaryColor, width: 1.5),
+                borderSide:
+                    BorderSide(color: themeProvider.primaryColor, width: 1.5),
                 borderRadius: BorderRadius.circular(8.0),
               ),
               enabledBorder: OutlineInputBorder(
-                borderSide: BorderSide(color: themeProvider.primaryColor, width: 1.5),
+                borderSide:
+                    BorderSide(color: themeProvider.primaryColor, width: 1.5),
                 borderRadius: BorderRadius.circular(8.0),
               ),
               focusedBorder: OutlineInputBorder(
-                borderSide: BorderSide(color: themeProvider.primaryColor, width: 2.0),
+                borderSide:
+                    BorderSide(color: themeProvider.primaryColor, width: 2.0),
                 borderRadius: BorderRadius.circular(8.0),
               ),
-              contentPadding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 12.0),
+              contentPadding:
+                  const EdgeInsets.symmetric(vertical: 20.0, horizontal: 12.0),
             ),
           ),
           actions: [

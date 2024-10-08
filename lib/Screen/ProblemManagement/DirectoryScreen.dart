@@ -8,7 +8,6 @@ import 'package:ono/GlobalModule/Theme/SnackBarDialog.dart';
 import 'package:ono/Model/LoginStatus.dart';
 import 'package:ono/Provider/FoldersProvider.dart';
 import 'package:provider/provider.dart';
-import '../../GlobalModule/Theme/HandWriteText.dart';
 import '../../GlobalModule/Image/DisplayImage.dart';
 import '../../GlobalModule/Theme/StandardText.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
@@ -468,7 +467,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
               if (folders.isEmpty && problems.isEmpty) {
                 return Center(
-                  child: HandWriteText(
+                  child: StandardText(
                     text: '폴더나 문제가 등록되어 있지 않습니다!',
                     fontSize: 24,
                     color: themeProvider.primaryColor,
