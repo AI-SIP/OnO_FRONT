@@ -259,7 +259,7 @@ class _UnifiedProblemRegisterTemplateState
                     answerImage = pickedFile;
                   });
                   FirebaseAnalytics.instance.logEvent(
-                    name: 'image_add',
+                    name: 'image_add_answer_image',
                     parameters: {'type': 'answer_image'},
                   );
                 },
@@ -281,7 +281,7 @@ class _UnifiedProblemRegisterTemplateState
                     solveImage = pickedFile;
                   });
                   FirebaseAnalytics.instance.logEvent(
-                    name: 'image_add',
+                    name: 'image_add_solve_image',
                     parameters: {'type': 'solve_image'},
                   );
                 },
@@ -323,7 +323,7 @@ class _UnifiedProblemRegisterTemplateState
                     answerImage = pickedFile;
                   });
                   FirebaseAnalytics.instance.logEvent(
-                    name: 'image_add',
+                    name: 'image_add_answer_image',
                     parameters: {'type': 'answer_image'},
                   );
                 },
@@ -377,7 +377,7 @@ class _UnifiedProblemRegisterTemplateState
             });
 
             FirebaseAnalytics.instance.logEvent(
-              name: 'image_add',
+              name: 'image_add_answer_image',
               parameters: {'type': 'answer_image'},
             );
           },
@@ -399,7 +399,7 @@ class _UnifiedProblemRegisterTemplateState
                   });
 
                   FirebaseAnalytics.instance.logEvent(
-                    name: 'image_add',
+                    name: 'image_add_solve_image',
                     parameters: {'type': 'solve_image'},
                   );
                 },

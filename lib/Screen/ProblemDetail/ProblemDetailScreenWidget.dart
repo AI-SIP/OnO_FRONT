@@ -346,9 +346,7 @@ class ProblemDetailScreenWidget{
           child: Center(
             child: GestureDetector(
               onTap: () {
-                FirebaseAnalytics.instance.logEvent(name: 'image_full_screen', parameters: {
-                  'image_type': label,
-                });
+                FirebaseAnalytics.instance.logEvent(name: 'image_full_screen_$label');
                 Navigator.push(
                   context,
                   MaterialPageRoute(

@@ -71,9 +71,7 @@ class TemplateSelectionScreen extends StatelessWidget {
           }).toList(),
         ),
         onTap: () {
-          FirebaseAnalytics.instance.logEvent(name: 'template_selection', parameters: {
-            'type': templateType.name,
-          });
+          FirebaseAnalytics.instance.logEvent(name: 'template_selection_${templateType.name}');
 
           final imagePickerHandler = ImagePickerHandler();
           imagePickerHandler.showImagePicker(context, (pickedFile) async {

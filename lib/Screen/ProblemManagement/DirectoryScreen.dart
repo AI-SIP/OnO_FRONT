@@ -442,10 +442,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
               _directoryService.sortProblems(_selectedSortOption);
 
               FirebaseAnalytics.instance.logEvent(
-                name: 'select_option_button_click',
-                parameters: {
-                  'select_option': _selectedSortOption,
-                },
+                name: 'sort_option_button_click_$_selectedSortOption}',
               );
             });
           },

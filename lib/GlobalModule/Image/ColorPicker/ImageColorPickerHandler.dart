@@ -118,7 +118,7 @@ class _ColorPickerScreenState extends State<ColorPickerScreen> {
               int selectedColorCount = colorMaps.where((color) => color != null).length;
 
               FirebaseAnalytics.instance.logEvent(
-                name: 'color_picker_count',
+                name: 'color_picker_counts_$selectedColorCount',
                 parameters: {
                   'selected_color_count': selectedColorCount,
                 },
