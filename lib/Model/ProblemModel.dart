@@ -52,7 +52,7 @@ class ProblemModel {
           ? (json['repeats'] as List).map((e) => ProblemRepeatModel.fromJson(e)).toList()
           : [],
       solvedAt:
-          json['solvedAt'] != null ? DateTime.parse(json['solvedAt']).subtract(const Duration(hours: 9)) : null,
+          json['solvedAt'] != null ? DateTime.parse(json['solvedAt']).subtract(const Duration(hours: 9)) : DateTime.parse(json['createdAt']).add(const Duration(hours: 9)),
       createdAt: json['createdAt'] != null ? DateTime.parse(json['createdAt']).add(const Duration(hours: 9)) : DateTime.parse(json['solvedAt']).subtract(const Duration(hours: 9)),
       updateAt: json['updateAt'] != null ? DateTime.parse(json['updateAt']).add(const Duration(hours: 9)) : DateTime.parse(json['solvedAt']).subtract(const Duration(hours: 9)),
 

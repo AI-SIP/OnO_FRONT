@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_tex/flutter_tex.dart';
@@ -126,8 +128,7 @@ class ProblemDetailScreenWidget{
 
   // 푼 날짜 위젯 구현 함수
   Widget buildSolvedDate(DateTime? solvedAt, ThemeHandler themeProvider) {
-    final formattedDate =
-    DateFormat('yyyy년 M월 d일').format(solvedAt!);
+    final formattedDate = DateFormat('yyyy년 M월 d일').format(solvedAt!);
     return buildIconTextRow(
       Icons.calendar_today,
       '푼 날짜',
