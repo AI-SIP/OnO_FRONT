@@ -36,7 +36,8 @@ class _AnswerShareScreenState extends State<AnswerShareScreen> {
   @override
   void initState() {
     super.initState();
-    if (widget.problem.answerImageUrl != null && widget.problem.answerImageUrl!.isNotEmpty) {
+    if (widget.problem.answerImageUrl != null &&
+        widget.problem.answerImageUrl!.isNotEmpty) {
       _image = Image.network(
         widget.problem.answerImageUrl!,
         fit: BoxFit.contain,
@@ -49,9 +50,10 @@ class _AnswerShareScreenState extends State<AnswerShareScreen> {
       );
     }
 
-    final ImageStream imageStream = _image!.image.resolve(const ImageConfiguration());
+    final ImageStream imageStream =
+        _image!.image.resolve(const ImageConfiguration());
     _imageStreamListener = ImageStreamListener(
-          (ImageInfo imageInfo, bool synchronousCall) {
+      (ImageInfo imageInfo, bool synchronousCall) {
         if (!isImageLoaded) {
           isImageLoaded = true;
           setState(() {});
@@ -64,7 +66,9 @@ class _AnswerShareScreenState extends State<AnswerShareScreen> {
   @override
   void dispose() {
     if (_imageStreamListener != null) {
-      _image!.image.resolve(const ImageConfiguration()).removeListener(_imageStreamListener!);
+      _image!.image
+          .resolve(const ImageConfiguration())
+          .removeListener(_imageStreamListener!);
     }
     super.dispose();
   }
@@ -72,9 +76,10 @@ class _AnswerShareScreenState extends State<AnswerShareScreen> {
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeHandler>(context);
-    final String memoText = widget.problem.memo != null && widget.problem.memo!.isNotEmpty
-        ? widget.problem.memo!
-        : '메모 없음';
+    final String memoText =
+        widget.problem.memo != null && widget.problem.memo!.isNotEmpty
+            ? widget.problem.memo!
+            : '메모 없음';
 
     // 이미지가 로드되었고, 공유하지 않았다면 공유 함수 호출
     if (isImageLoaded && !hasShared) {
@@ -88,104 +93,126 @@ class _AnswerShareScreenState extends State<AnswerShareScreen> {
       appBar: AppBar(
         title: StandardText(
           text: '공유 화면 미리보기',
-          fontSize: 18,
+          fontSize: 20,
           color: themeProvider.primaryColor,
         ),
       ),
       body: RepaintBoundary(
-        key: widget._globalKey,
-        child: Container(
-          //color: themeProvider.primaryColor.withOpacity(0.03),
-          color : Colors.white,
-          child: Stack(
+          key: widget._globalKey,
+          child: Column(
             children: [
-              CustomPaint(
-                size: Size.infinite,
-                painter: GridPainter(gridColor: themeProvider.primaryColor, step: 15.0, strokeWidth: 1.3),
-              ),
-              Center(
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(
-                    maxHeight: MediaQuery.of(context).size.height,
-                    maxWidth: MediaQuery.of(context).size.width,
+              Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 16.0, vertical: 12.0),
+                  decoration: BoxDecoration(
+                    color: themeProvider.primaryColor.withOpacity(0.03),
                   ),
-                  child: Container(
-                    padding: const EdgeInsets.all(30.0),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                  child: Center(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        if (widget.problem.reference != null && widget.problem.reference!.isNotEmpty)
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              UnderlinedText(
-                                text: widget.problem.reference!,
-                                fontSize: 24,
-                                color: themeProvider.primaryColor,
-                              ),
-                            ],
+                        Expanded(
+                          child: Text(
+                            widget.problem.reference ?? "출처 없음",
+                            style: TextStyle(
+                              color: themeProvider.primaryColor,
+                              fontSize: 24,
+                              fontFamily: 'HandWrite',
+                              fontWeight: ui.FontWeight.bold,
+                            ),
+                            textAlign: TextAlign.center,
                           ),
-                        const SizedBox(height: 30),
-                        // 메모가 있으면 표시, 없으면 '메모 없음' 표시
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Icon(Icons.edit, color: themeProvider.primaryColor),
-                                const SizedBox(width: 8),
-                                HandWriteText(
-                                  text: '메모',
-                                  fontSize: 20,
-                                  color: themeProvider.primaryColor,
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 8),
-                            UnderlinedText(
-                              text: memoText,
-                              fontSize: 20,
-                              color: Colors.black,
-                            ),
-                          ],
                         ),
-                        const SizedBox(height: 30),
-                        if (widget.problem.answerImageUrl != null && widget.problem.answerImageUrl!.isNotEmpty)
-                          Row(
-                            children: [
-                              Icon(Icons.camera_alt, color: themeProvider.primaryColor),
-                              const SizedBox(width: 8),
-                              HandWriteText(
-                                text: '정답 이미지',
-                                fontSize: 20,
-                                color: themeProvider.primaryColor,
-                              ),
-                            ],
+                      ],
+                    ),
+                  )),
+              Expanded(
+                child: Container(
+                  color: themeProvider.primaryColor.withOpacity(0.03),
+                  child: Stack(
+                    children: [
+                      CustomPaint(
+                        size: Size.infinite,
+                        painter: GridPainter(
+                            gridColor: themeProvider.primaryColor,
+                        ),
+                      ),
+                      Center(
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(
+                            maxHeight: MediaQuery.of(context).size.height,
+                            maxWidth: MediaQuery.of(context).size.width,
                           ),
-                        const SizedBox(height: 20),
-                        Flexible(
-                          child: SingleChildScrollView(
+                          child: Container(
+                            padding: const EdgeInsets.all(30.0),
                             child: Column(
+                              mainAxisAlignment: MainAxisAlignment.start,
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                if (_image != null)
-                                  buildAnswerImage(context, widget.problem.answerImageUrl),
+                                // 메모가 있으면 표시, 없으면 '메모 없음' 표시
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Icon(Icons.edit,
+                                            color: themeProvider.primaryColor),
+                                        const SizedBox(width: 8),
+                                        HandWriteText(
+                                          text: '메모',
+                                          fontSize: 20,
+                                          color: themeProvider.primaryColor,
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 8),
+                                    UnderlinedText(
+                                      text: memoText,
+                                      fontSize: 20,
+                                      color: Colors.black,
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 30),
+                                Row(
+                                  children: [
+                                    Icon(Icons.camera_alt,
+                                        color: themeProvider.primaryColor),
+                                    const SizedBox(width: 8),
+                                    HandWriteText(
+                                      text: '해설 이미지',
+                                      fontSize: 20,
+                                      color: themeProvider.primaryColor,
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 20),
+                                Flexible(
+                                  child: SingleChildScrollView(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        if (_image != null)
+                                          buildAnswerImage(context,
+                                              widget.problem.answerImageUrl),
+                                        const SizedBox(height: 10),
+                                      ],
+                                    ),
+                                  ),
+                                ),
                                 const SizedBox(height: 10),
                               ],
                             ),
                           ),
                         ),
-                        const SizedBox(height: 10),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
-              ),
+              )
             ],
-          ),
-        ),
-      ),
+          )),
     );
   }
 
@@ -212,7 +239,6 @@ class _AnswerShareScreenState extends State<AnswerShareScreen> {
     );
   }
 
-
   // 문제 캡처 후 이미지로 공유하는 로직
   Future<void> _shareProblemAsImage() async {
     try {
@@ -220,7 +246,8 @@ class _AnswerShareScreenState extends State<AnswerShareScreen> {
       await WidgetsBinding.instance.endOfFrame;
 
       // RenderRepaintBoundary로부터 이미지를 캡처
-      RenderRepaintBoundary? boundary = widget._globalKey.currentContext!.findRenderObject() as RenderRepaintBoundary?;
+      RenderRepaintBoundary? boundary = widget._globalKey.currentContext!
+          .findRenderObject() as RenderRepaintBoundary?;
 
       // boundary가 null인 경우 종료
       if (boundary == null) return;
@@ -229,8 +256,10 @@ class _AnswerShareScreenState extends State<AnswerShareScreen> {
       await Future.delayed(const Duration(milliseconds: 20));
 
       // 이미지 캡처
-      ui.Image image = await boundary.toImage(pixelRatio: MediaQuery.of(context).devicePixelRatio);
-      ByteData? byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+      ui.Image image = await boundary.toImage(
+          pixelRatio: MediaQuery.of(context).devicePixelRatio);
+      ByteData? byteData =
+          await image.toByteData(format: ui.ImageByteFormat.png);
       Uint8List pngBytes = byteData!.buffer.asUint8List();
 
       // 임시 파일에 저장

@@ -34,27 +34,29 @@ class _ProblemShareScreenState extends State<ProblemShareScreen> {
   bool hasShared = false; // 공유 함수 호출 여부
   Image? _image; // 이미지 위젯
   ImageStreamListener? _imageStreamListener; // 이미지 로드 감지 리스너
+  String? imageUrl;
 
   @override
   void initState() {
     super.initState();
     // 이미지가 있을 경우 네트워크 이미지를 사용
-    if(widget.problem.templateType == TemplateType.simple){
-      if(widget.problem.problemImageUrl != null){
+    if (widget.problem.templateType == TemplateType.simple) {
+      if (widget.problem.problemImageUrl != null) {
+        imageUrl = widget.problem.problemImageUrl;
         _image = Image.network(
           widget.problem.problemImageUrl!,
           fit: BoxFit.contain,
         );
-      }
-      else {
+      } else {
         // 이미지가 없을 경우 로컬 기본 이미지 사용
         _image = Image.asset(
           'assets/no_image.png',
           fit: BoxFit.contain,
         );
       }
-    } else{
-      if(widget.problem.processImageUrl != null){
+    } else {
+      if (widget.problem.processImageUrl != null) {
+        imageUrl = widget.problem.processImageUrl;
         _image = Image.network(
           widget.problem.processImageUrl!,
           fit: BoxFit.contain,
@@ -69,9 +71,10 @@ class _ProblemShareScreenState extends State<ProblemShareScreen> {
     }
 
     // 이미지 로딩이 완료되면 상태 업데이트
-    final ImageStream imageStream = _image!.image.resolve(const ImageConfiguration());
+    final ImageStream imageStream =
+        _image!.image.resolve(const ImageConfiguration());
     _imageStreamListener = ImageStreamListener(
-          (ImageInfo imageInfo, bool synchronousCall) {
+      (ImageInfo imageInfo, bool synchronousCall) {
         if (!isImageLoaded) {
           isImageLoaded = true;
           setState(() {});
@@ -94,7 +97,8 @@ class _ProblemShareScreenState extends State<ProblemShareScreen> {
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeHandler>(context);
-    final formattedDate = DateFormat('yyyy년 M월 d일').format(widget.problem.solvedAt!);
+    final formattedDate = DateFormat('yyyy년 M월 d일')
+        .format(widget.problem.solvedAt ?? widget.problem.createdAt!);
 
     // 이미지가 로드되었고, 공유하지 않았다면 공유 함수 호출
     if (isImageLoaded && !hasShared) {
@@ -108,96 +112,149 @@ class _ProblemShareScreenState extends State<ProblemShareScreen> {
       appBar: AppBar(
         title: StandardText(
           text: '공유 화면 미리보기',
-          fontSize: 18,
+          fontSize: 20,
           color: themeProvider.primaryColor,
         ),
       ),
       body: RepaintBoundary(
         key: widget._globalKey,
-        child: Container(
-          //color: themeProvider.primaryColor,
-          color: Colors.white,
-          child: Stack(
-            children: [
-              CustomPaint(
-                size: Size.infinite,
-                painter: GridPainter(gridColor: themeProvider.primaryColor, step: 15.0, strokeWidth: 1.3),
-              ),
-              Center(
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(
-                    maxHeight: MediaQuery.of(context).size.height,
-                    maxWidth: MediaQuery.of(context).size.width,
-                  ),
-                  child: Container(
-                    padding: const EdgeInsets.all(30.0),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        if (widget.problem.reference != null)
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              UnderlinedText(
-                                text: widget.problem.reference!,
-                                fontSize: 24,
-                                color: themeProvider.primaryColor,
-                              ),
-                            ],
+        child: Column(
+          children: [
+            Container(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 16.0, vertical: 12.0),
+                decoration: BoxDecoration(
+                  color: themeProvider.primaryColor.withOpacity(0.03),
+                ),
+                child: Center(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          widget.problem.reference ?? "출처 없음",
+                          style: TextStyle(
+                            color: themeProvider.primaryColor,
+                            fontSize: 24,
+                            fontFamily: 'HandWrite',
+                            fontWeight: ui.FontWeight.bold,
                           ),
-                        const SizedBox(height: 30),
-                        if (widget.problem.solvedAt != null)
-                          Row(
-                            children: [
-                              Icon(Icons.calendar_today, color: themeProvider.primaryColor),
-                              const SizedBox(width: 8),
-                              HandWriteText(
-                                text: '푼 날짜',
-                                fontSize: 20,
-                                color: themeProvider.primaryColor,
-                              ),
-                              const Spacer(),
-                              UnderlinedText(
-                                text: formattedDate,
-                                fontSize: 20,
-                              ),
-                            ],
-                          ),
-                        const SizedBox(height: 30),
-                        if (widget.problem.processImageUrl != null)
-                          Row(
-                            children: [
-                              Icon(Icons.camera_alt, color: themeProvider.primaryColor),
-                              const SizedBox(width: 8),
-                              HandWriteText(
-                                text: '문제 이미지',
-                                fontSize: 20,
-                                color: themeProvider.primaryColor,
-                              ),
-                            ],
-                          ),
-                        const SizedBox(height: 20),
-                        Flexible(
-                          child: SingleChildScrollView(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                if (_image != null)
-                                  buildProblemImage(context, widget.problem.processImageUrl),
-                                const SizedBox(height: 10),
-                              ],
-                            ),
-                          ),
+                          textAlign: TextAlign.center,
                         ),
-                        const SizedBox(height: 10),
-                      ],
+                      ),
+                    ],
+                  ),
+                )),
+            Expanded(
+                child: Container(
+              color: themeProvider.primaryColor.withOpacity(0.03),
+              child: Stack(
+                children: [
+                  CustomPaint(
+                    size: Size.infinite,
+                    painter: GridPainter(
+                      gridColor: themeProvider.primaryColor,
                     ),
                   ),
-                ),
+                  Center(
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        maxHeight: MediaQuery.of(context).size.height,
+                        maxWidth: MediaQuery.of(context).size.width,
+                      ),
+                      child: Container(
+                        padding: const EdgeInsets.all(30.0),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(Icons.calendar_today,
+                                    color: themeProvider.primaryColor),
+                                const SizedBox(width: 8),
+                                HandWriteText(
+                                  text: '푼 날짜',
+                                  fontSize: 20,
+                                  color: themeProvider.primaryColor,
+                                ),
+                                const Spacer(),
+                                UnderlinedText(
+                                  text: formattedDate,
+                                  fontSize: 20,
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 30),
+                            Row(
+                              crossAxisAlignment:
+                                  CrossAxisAlignment.start, // 레이블을 위로 정렬
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Icon(Icons.info,
+                                              color:
+                                                  themeProvider.primaryColor),
+                                          const SizedBox(width: 8),
+                                          HandWriteText(
+                                            text: '문제 출처',
+                                            fontSize: 20,
+                                            color: themeProvider.primaryColor,
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 10.0),
+                                      UnderlinedText(
+                                        text:
+                                            widget.problem.reference ?? '출처 없음',
+                                        fontSize: 18,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 30),
+                            Row(
+                              children: [
+                                Icon(Icons.camera_alt,
+                                    color: themeProvider.primaryColor),
+                                const SizedBox(width: 8),
+                                HandWriteText(
+                                  text: '문제 이미지',
+                                  fontSize: 20,
+                                  color: themeProvider.primaryColor,
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 20),
+                            Flexible(
+                              child: SingleChildScrollView(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    if (_image != null)
+                                      buildProblemImage(context, imageUrl),
+                                    const SizedBox(height: 10),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
+            ))
+          ],
         ),
       ),
     );
@@ -240,8 +297,10 @@ class _ProblemShareScreenState extends State<ProblemShareScreen> {
           .findRenderObject() as RenderRepaintBoundary;
 
       // 이미지 캡처
-      ui.Image image = await boundary.toImage(pixelRatio: MediaQuery.of(context).devicePixelRatio);
-      ByteData? byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+      ui.Image image = await boundary.toImage(
+          pixelRatio: MediaQuery.of(context).devicePixelRatio);
+      ByteData? byteData =
+          await image.toByteData(format: ui.ImageByteFormat.png);
       Uint8List pngBytes = byteData!.buffer.asUint8List();
 
       // 임시 파일에 저장
