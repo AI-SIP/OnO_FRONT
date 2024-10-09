@@ -671,15 +671,26 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                 ),
               ),
               const SizedBox(height: 8),
-              Text(
-                (problem.reference != null && problem.reference!.isNotEmpty) ? problem.reference! : '제목 없음',
-                style: standardTextStyle.copyWith(
-                    color: themeProvider.primaryColor,
-                    fontSize: 16
-                ),
-                textAlign: TextAlign.center,
-                overflow: TextOverflow.ellipsis,
-                maxLines: 1,
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  _getTemplateIcon(problem.templateType, themeProvider),
+                  const SizedBox(width: 10),
+                  Flexible(
+                    child: Text(
+                      (problem.reference != null && problem.reference!.isNotEmpty)
+                          ? problem.reference!
+                          : '제목 없음',
+                      style: standardTextStyle.copyWith(
+                        color: themeProvider.primaryColor,
+                        fontSize: 16,
+                      ),
+                      textAlign: TextAlign.left,
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 2),
               StandardText(
@@ -695,6 +706,36 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       },
     );
   }
+
+  Widget _getTemplateIcon(TemplateType? templateType, ThemeHandler themeProvider) {
+    switch (templateType) {
+      case TemplateType.simple:
+        return Icon(
+          Icons.library_books_rounded,
+          color: themeProvider.primaryColor,
+          size: 14,
+        );
+      case TemplateType.clean:
+        return Icon(
+          Icons.brush,
+          color: themeProvider.primaryColor,
+          size: 14,
+        );
+      case TemplateType.special:
+        return Icon(
+          Icons.auto_awesome,
+          color: themeProvider.primaryColor,
+          size: 14,
+        );
+      default:
+        return Icon(
+          Icons.library_books_rounded,
+          color: themeProvider.primaryColor,
+          size: 14,
+        );
+    }
+  }
+
 
   Future<void> _moveFolderToNewParent(
       FolderThumbnailModel folder, int? newParentFolderId) async {
