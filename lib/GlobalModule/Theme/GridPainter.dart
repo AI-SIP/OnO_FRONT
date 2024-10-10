@@ -6,8 +6,9 @@ class GridPainter extends CustomPainter {
   final Color gridColor;
   final double step;    // 격자 무늬 간격
   final double strokeWidth;   // 격자무늬 두께
+  final bool isSpring;
 
-  GridPainter({required this.gridColor, this.step = 15.0, this.strokeWidth = 0.7});
+  GridPainter({required this.gridColor, this.step = 15.0, this.strokeWidth = 0.7, this.isSpring = false});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -25,18 +26,20 @@ class GridPainter extends CustomPainter {
       canvas.drawLine(Offset(0, y), Offset(size.width, y), gridPaint);
     }
 
-    // 스프링 제본 그리기
-    final springPaint = Paint()
-      ..color = Colors.black
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.5;
+    if(isSpring){
+      // 스프링 제본 그리기
+      final springPaint = Paint()
+        ..color = Colors.black.withOpacity(0.5)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.5;
 
-    double springRadius = 4.0; // 스프링 반지름
-    double springSpacing = 20.0; // 스프링 간격
+      double springRadius = 4.5; // 스프링 반지름
+      double springSpacing = 20.0; // 스프링 간격
 
-    // 왼쪽 가장자리에서 springRadius만큼 떨어진 곳에 스프링 그리기
-    for (double y = springSpacing; y < size.height; y += springSpacing * 2) {
-      canvas.drawCircle(Offset(springRadius, y), springRadius, springPaint);
+      // 왼쪽 가장자리에서 springRadius만큼 떨어진 곳에 스프링 그리기
+      for (double y = springSpacing; y < size.height; y += springSpacing * 2) {
+        canvas.drawCircle(Offset(springRadius*0.5, y), springRadius, springPaint);
+      }
     }
   }
 

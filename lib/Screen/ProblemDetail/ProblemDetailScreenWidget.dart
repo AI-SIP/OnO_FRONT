@@ -21,7 +21,7 @@ class ProblemDetailScreenWidget{
   Widget buildBackground(ThemeHandler themeProvider) {
     return CustomPaint(
       size: Size.infinite,
-      painter: GridPainter(gridColor: themeProvider.primaryColor),
+      painter: GridPainter(gridColor: themeProvider.primaryColor, isSpring: true),
     );
   }
 

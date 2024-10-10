@@ -39,6 +39,7 @@ class _ProblemShareScreenState extends State<ProblemShareScreen> {
   @override
   void initState() {
     super.initState();
+
     // 이미지가 있을 경우 네트워크 이미지를 사용
     if (widget.problem.templateType == TemplateType.simple) {
       if (widget.problem.problemImageUrl != null) {
@@ -82,6 +83,7 @@ class _ProblemShareScreenState extends State<ProblemShareScreen> {
       },
     );
     imageStream.addListener(_imageStreamListener!);
+    _shareProblemAsImage();
   }
 
   @override
@@ -100,6 +102,7 @@ class _ProblemShareScreenState extends State<ProblemShareScreen> {
     final formattedDate = DateFormat('yyyy년 M월 d일')
         .format(widget.problem.solvedAt ?? widget.problem.createdAt!);
 
+    /*
     // 이미지가 로드되었고, 공유하지 않았다면 공유 함수 호출
     if (isImageLoaded && !hasShared) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -107,6 +110,8 @@ class _ProblemShareScreenState extends State<ProblemShareScreen> {
       });
       hasShared = true; // 한 번만 호출되도록 설정
     }
+
+     */
 
     return Scaffold(
       appBar: AppBar(
@@ -154,6 +159,7 @@ class _ProblemShareScreenState extends State<ProblemShareScreen> {
                     size: Size.infinite,
                     painter: GridPainter(
                       gridColor: themeProvider.primaryColor,
+                      isSpring: true,
                     ),
                   ),
                   Center(
@@ -260,6 +266,37 @@ class _ProblemShareScreenState extends State<ProblemShareScreen> {
     );
   }
 
+  Future<void> _loadImageAndShare() async {
+    if (widget.problem.templateType == TemplateType.simple) {
+      imageUrl = widget.problem.problemImageUrl ?? 'assets/no_image.png';
+    } else {
+      imageUrl = widget.problem.processImageUrl ?? 'assets/no_image.png';
+    }
+
+    if (imageUrl != null) {
+      _image = Image.network(imageUrl!, fit: BoxFit.contain);
+    } else {
+      _image = Image.asset('assets/no_image.png', fit: BoxFit.contain);
+    }
+
+    _imageStreamListener = ImageStreamListener((ImageInfo imageInfo, bool synchronousCall) {
+      if (!isImageLoaded) {
+        setState(() {
+          isImageLoaded = true;
+        });
+      }
+    });
+
+    final ImageStream imageStream = _image!.image.resolve(const ImageConfiguration());
+    imageStream.addListener(_imageStreamListener!);
+
+    if (isImageLoaded && !hasShared) {
+      await Future.delayed(Duration(milliseconds: 50));
+      _shareProblemAsImage();
+      hasShared = true; // 여러 번 호출되지 않도록 설정
+    }
+  }
+
   // 문제 이미지 출력 함수
   Widget buildProblemImage(BuildContext context, String? imageUrl) {
     final mediaQuery = MediaQuery.of(context);
@@ -283,6 +320,50 @@ class _ProblemShareScreenState extends State<ProblemShareScreen> {
     );
   }
 
+  Future<void> _shareProblemAsImage() async {
+    try {
+      await WidgetsBinding.instance.endOfFrame;
+
+      await Future.delayed(const Duration(milliseconds: 20));
+
+      RenderRepaintBoundary boundary = widget._globalKey.currentContext!
+          .findRenderObject() as RenderRepaintBoundary;
+
+      // 이미지를 캡처합니다.
+      ui.Image image = await boundary.toImage(pixelRatio: MediaQuery.of(context).devicePixelRatio);
+
+      // 불투명한 배경을 가진 새로운 캔버스를 생성합니다.
+      final paint = Paint();
+      final recorder = ui.PictureRecorder();
+      final canvas = Canvas(recorder);
+      final imageRect = Rect.fromLTWH(0, 0, image.width.toDouble(), image.height.toDouble());
+
+      // 캔버스에 불투명 배경을 먼저 채운 후, 캡처된 이미지를 덧씁니다.
+      canvas.drawRect(imageRect, paint..color = Colors.white);
+      canvas.drawImage(image, Offset.zero, paint);
+      final picture = recorder.endRecording();
+      final imgWithOpaqueBg = await picture.toImage(image.width, image.height);
+
+      ByteData? byteData = await imgWithOpaqueBg.toByteData(format: ui.ImageByteFormat.png);
+      Uint8List pngBytes = byteData!.buffer.asUint8List();
+
+      final tempDir = await getTemporaryDirectory();
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final filePath = '${tempDir.path}/problem_$timestamp.png';
+      final file = await File(filePath).create();
+      await file.writeAsBytes(pngBytes);
+
+      final XFile xFile = XFile(file.path);
+      Share.shareXFiles([xFile], text: '내 오답노트야! 어때?');
+
+      Navigator.pop(context);
+    } catch (e, stackTrace) {
+      log('이미지 공유 실패: $e');
+      log('스택 트레이스: $stackTrace');
+    }
+  }
+
+  /*
   // 문제 캡처 후 이미지로 공유하는 로직
   Future<void> _shareProblemAsImage() async {
     try {
@@ -339,4 +420,6 @@ class _ProblemShareScreenState extends State<ProblemShareScreen> {
       // 에러 처리 로직
     }
   }
+
+   */
 }

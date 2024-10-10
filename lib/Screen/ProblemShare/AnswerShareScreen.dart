@@ -61,6 +61,7 @@ class _AnswerShareScreenState extends State<AnswerShareScreen> {
       },
     );
     imageStream.addListener(_imageStreamListener!);
+    _shareProblemAsImage();
   }
 
   @override
@@ -81,6 +82,7 @@ class _AnswerShareScreenState extends State<AnswerShareScreen> {
             ? widget.problem.memo!
             : '메모 없음';
 
+    /*
     // 이미지가 로드되었고, 공유하지 않았다면 공유 함수 호출
     if (isImageLoaded && !hasShared) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -88,6 +90,8 @@ class _AnswerShareScreenState extends State<AnswerShareScreen> {
       });
       hasShared = true; // 한 번만 호출되도록 설정
     }
+
+     */
 
     return Scaffold(
       appBar: AppBar(
@@ -135,6 +139,7 @@ class _AnswerShareScreenState extends State<AnswerShareScreen> {
                         size: Size.infinite,
                         painter: GridPainter(
                             gridColor: themeProvider.primaryColor,
+                          isSpring: true,
                         ),
                       ),
                       Center(
@@ -237,8 +242,60 @@ class _AnswerShareScreenState extends State<AnswerShareScreen> {
         ),
       ),
     );
+
   }
 
+  Future<void> _shareProblemAsImage() async {
+    try {
+      // 프레임 완료 후 실행되도록 대기
+      await WidgetsBinding.instance.endOfFrame;
+
+      RenderRepaintBoundary? boundary = widget._globalKey.currentContext!
+          .findRenderObject() as RenderRepaintBoundary?;
+
+      // boundary가 null인 경우 종료
+      if (boundary == null) return;
+
+      // 추가적인 딜레이를 줘서 boundary가 준비될 시간을 확보합니다.
+      await Future.delayed(const Duration(milliseconds: 20));
+
+      // 이미지를 캡처합니다.
+      ui.Image image = await boundary.toImage(pixelRatio: MediaQuery.of(context).devicePixelRatio);
+
+      // 불투명한 배경을 가진 새로운 캔버스를 생성합니다.
+      final paint = Paint();
+      final recorder = ui.PictureRecorder();
+      final canvas = Canvas(recorder);
+      final imageRect = Rect.fromLTWH(0, 0, image.width.toDouble(), image.height.toDouble());
+
+      // 캔버스에 불투명 배경을 먼저 채운 후, 캡처된 이미지를 덧씁니다.
+      canvas.drawRect(imageRect, paint..color = Colors.white);
+      canvas.drawImage(image, Offset.zero, paint);
+      final picture = recorder.endRecording();
+      final imgWithOpaqueBg = await picture.toImage(image.width, image.height);
+
+      ByteData? byteData = await imgWithOpaqueBg.toByteData(format: ui.ImageByteFormat.png);
+      Uint8List pngBytes = byteData!.buffer.asUint8List();
+
+      final tempDir = await getTemporaryDirectory();
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final filePath = '${tempDir.path}/answer_$timestamp.png';
+      final file = await File(filePath).create();
+      await file.writeAsBytes(pngBytes);
+
+      final XFile xFile = XFile(file.path);
+
+      Share.shareXFiles([xFile], text: '내 오답노트야! 어때?');
+
+      // 공유 후 화면을 닫습니다.
+      Navigator.pop(context);
+    } catch (e, stackTrace) {
+      log('이미지 공유 실패: $e');
+      log('스택 트레이스: $stackTrace');
+    }
+  }
+
+  /*
   // 문제 캡처 후 이미지로 공유하는 로직
   Future<void> _shareProblemAsImage() async {
     try {
@@ -289,4 +346,6 @@ class _AnswerShareScreenState extends State<AnswerShareScreen> {
       // 에러 처리 로직
     }
   }
+
+   */
 }
