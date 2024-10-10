@@ -102,17 +102,6 @@ class _ProblemShareScreenState extends State<ProblemShareScreen> {
     final formattedDate = DateFormat('yyyy년 M월 d일')
         .format(widget.problem.solvedAt ?? widget.problem.createdAt!);
 
-    /*
-    // 이미지가 로드되었고, 공유하지 않았다면 공유 함수 호출
-    if (isImageLoaded && !hasShared) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _shareProblemAsImage();
-      });
-      hasShared = true; // 한 번만 호출되도록 설정
-    }
-
-     */
-
     return Scaffold(
       appBar: AppBar(
         title: StandardText(
@@ -137,7 +126,10 @@ class _ProblemShareScreenState extends State<ProblemShareScreen> {
                     children: [
                       Expanded(
                         child: Text(
-                          widget.problem.reference ?? "출처 없음",
+                          (widget.problem.reference != null &&
+                                  widget.problem.reference!.isNotEmpty)
+                              ? widget.problem.reference!
+                              : "출처 없음",
                           style: TextStyle(
                             color: themeProvider.primaryColor,
                             fontSize: 24,
@@ -217,7 +209,11 @@ class _ProblemShareScreenState extends State<ProblemShareScreen> {
                                       const SizedBox(height: 10.0),
                                       UnderlinedText(
                                         text:
-                                            widget.problem.reference ?? '출처 없음',
+                                            (widget.problem.reference != null &&
+                                                    widget.problem.reference!
+                                                        .isNotEmpty)
+                                                ? widget.problem.reference!
+                                                : "출처 없음",
                                         fontSize: 18,
                                       ),
                                     ],
@@ -279,7 +275,8 @@ class _ProblemShareScreenState extends State<ProblemShareScreen> {
       _image = Image.asset('assets/no_image.png', fit: BoxFit.contain);
     }
 
-    _imageStreamListener = ImageStreamListener((ImageInfo imageInfo, bool synchronousCall) {
+    _imageStreamListener =
+        ImageStreamListener((ImageInfo imageInfo, bool synchronousCall) {
       if (!isImageLoaded) {
         setState(() {
           isImageLoaded = true;
@@ -287,7 +284,8 @@ class _ProblemShareScreenState extends State<ProblemShareScreen> {
       }
     });
 
-    final ImageStream imageStream = _image!.image.resolve(const ImageConfiguration());
+    final ImageStream imageStream =
+        _image!.image.resolve(const ImageConfiguration());
     imageStream.addListener(_imageStreamListener!);
 
     if (isImageLoaded && !hasShared) {
@@ -330,13 +328,15 @@ class _ProblemShareScreenState extends State<ProblemShareScreen> {
           .findRenderObject() as RenderRepaintBoundary;
 
       // 이미지를 캡처합니다.
-      ui.Image image = await boundary.toImage(pixelRatio: MediaQuery.of(context).devicePixelRatio);
+      ui.Image image = await boundary.toImage(
+          pixelRatio: MediaQuery.of(context).devicePixelRatio);
 
       // 불투명한 배경을 가진 새로운 캔버스를 생성합니다.
       final paint = Paint();
       final recorder = ui.PictureRecorder();
       final canvas = Canvas(recorder);
-      final imageRect = Rect.fromLTWH(0, 0, image.width.toDouble(), image.height.toDouble());
+      final imageRect =
+          Rect.fromLTWH(0, 0, image.width.toDouble(), image.height.toDouble());
 
       // 캔버스에 불투명 배경을 먼저 채운 후, 캡처된 이미지를 덧씁니다.
       canvas.drawRect(imageRect, paint..color = Colors.white);
@@ -344,7 +344,8 @@ class _ProblemShareScreenState extends State<ProblemShareScreen> {
       final picture = recorder.endRecording();
       final imgWithOpaqueBg = await picture.toImage(image.width, image.height);
 
-      ByteData? byteData = await imgWithOpaqueBg.toByteData(format: ui.ImageByteFormat.png);
+      ByteData? byteData =
+          await imgWithOpaqueBg.toByteData(format: ui.ImageByteFormat.png);
       Uint8List pngBytes = byteData!.buffer.asUint8List();
 
       final tempDir = await getTemporaryDirectory();
@@ -362,64 +363,4 @@ class _ProblemShareScreenState extends State<ProblemShareScreen> {
       log('스택 트레이스: $stackTrace');
     }
   }
-
-  /*
-  // 문제 캡처 후 이미지로 공유하는 로직
-  Future<void> _shareProblemAsImage() async {
-    try {
-      // 프레임 완료 후 실행되도록 대기
-      await WidgetsBinding.instance.endOfFrame;
-
-      // 추가적인 딜레이를 줘서 boundary가 준비될 시간을 확보합니다.
-      await Future.delayed(const Duration(milliseconds: 20));
-
-      // RenderRepaintBoundary로부터 이미지를 캡처
-      RenderRepaintBoundary boundary = widget._globalKey.currentContext!
-          .findRenderObject() as RenderRepaintBoundary;
-
-      // 이미지 캡처
-      ui.Image image = await boundary.toImage(
-          pixelRatio: MediaQuery.of(context).devicePixelRatio);
-      ByteData? byteData =
-          await image.toByteData(format: ui.ImageByteFormat.png);
-      Uint8List pngBytes = byteData!.buffer.asUint8List();
-
-      // 임시 파일에 저장
-      final tempDir = await getTemporaryDirectory();
-      final timestamp = DateTime.now().millisecondsSinceEpoch;
-      final filePath = '${tempDir.path}/problem_$timestamp.png';
-      final file = await File(filePath).create();
-      await file.writeAsBytes(pngBytes);
-
-      // 이미지 공유
-      final XFile xFile = XFile(file.path);
-
-      final RenderBox box = context.findRenderObject() as RenderBox;
-      final rect = box.localToGlobal(Offset.zero) & box.size;
-      final size = MediaQuery.of(context).size;
-
-      if (rect.size.width > 0 && rect.size.height > 0) {
-        Share.shareXFiles(
-          [xFile],
-          text: '내 오답노트야! 어때?',
-          sharePositionOrigin: Rect.fromPoints(
-            Offset.zero,
-            Offset(size.width / 3 * 2, size.height),
-          ),
-        );
-      } else {
-        log('Invalid box size, defaulting to basic share...');
-        Share.shareXFiles([xFile], text: '내 오답노트야! 어때?');
-      }
-
-      // 필요에 따라 화면 닫기
-      // Navigator.pop(context, true);
-    } catch (e, stackTrace) {
-      log('이미지 공유 실패: $e');
-      log('스택 트레이스: $stackTrace');
-      // 에러 처리 로직
-    }
-  }
-
-   */
 }

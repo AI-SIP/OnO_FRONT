@@ -18,32 +18,48 @@ class DisplayImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-
     final themeProvider = Provider.of<ThemeHandler>(context);
-    
+
     return ClipRRect(
       borderRadius: BorderRadius.circular(10), // 테두리 radius 설정
-      child: imagePath == null || imagePath!.isEmpty
-          ? Container(
-        color: themeProvider.primaryColor.withOpacity(0.03), // 배경색 설정 (선택 사항)
-        alignment: Alignment.center,
-        child: StandardText(text: '이미지가 없습니다!', color: themeProvider.primaryColor,),
-      )
-          : CachedNetworkImage(
-        imageUrl: imagePath!,
-        fit: fit,
-        errorWidget: (context, url, error) => Container(
-          color: Colors.grey[200],
-          alignment: Alignment.center,
-          child: Text(
-            '이미지가 없습니다!',
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.grey[600],
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ),
+      child: Padding(
+        padding: const EdgeInsets.all(10.0), // 원하는 padding 값
+        child: imagePath == null || imagePath!.isEmpty
+            ? Container(
+                decoration: BoxDecoration(
+                  color: themeProvider.primaryColor.withOpacity(0.03),
+                  borderRadius: BorderRadius.circular(20), // 컨테이너 둥근 모서리
+                ),
+                alignment: Alignment.center,
+                child: StandardText(
+                  text: '이미지가 없습니다!',
+                  color: themeProvider.primaryColor,
+                ),
+              )
+            : CachedNetworkImage(
+                imageUrl: imagePath!,
+                fit: fit,
+                imageBuilder: (context, imageProvider) => Container(
+                  decoration: BoxDecoration(
+                    image: DecorationImage(
+                      image: imageProvider,
+                      fit: fit,
+                    ),
+                    //borderRadius: BorderRadius.circular(10), // 이미지 둥근 모서리
+                  ),
+                ),
+                errorWidget: (context, url, error) => Container(
+                  decoration: BoxDecoration(
+                    color: themeProvider.primaryColor.withOpacity(0.03),
+                    borderRadius: BorderRadius.circular(20), // 에러 컨테이너 둥근 모서리
+                  ),
+                  alignment: Alignment.center,
+                  child: StandardText(
+                    text: '이미지가 없습니다!',
+                    color: themeProvider.primaryColor,
+                  ),
+                ),
+              ),
       ),
     );
   }

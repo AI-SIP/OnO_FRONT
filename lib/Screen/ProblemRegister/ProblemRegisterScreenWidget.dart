@@ -80,7 +80,7 @@ class ProblemRegisterScreenWidget {
 
     return Row(
       children: [
-        Icon(Icons.folder, color: themeProvider.primaryColor),
+        Icon(Icons.menu_book_outlined, color: themeProvider.primaryColor),
         const SizedBox(width: 10),
         StandardText(
           text: '공책 선택',

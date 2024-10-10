@@ -160,7 +160,7 @@ class ProblemDetailScreenWidget{
               ),
               const SizedBox(height: 10.0),
               UnderlinedText(
-                text: reference ?? '출처 없음',
+                text: (reference != null && reference.isNotEmpty) ? reference : "작성한 출처가 없습니다!",
                 fontSize: 18,
               ),
             ],

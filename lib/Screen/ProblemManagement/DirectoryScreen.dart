@@ -29,7 +29,6 @@ class DirectoryScreen extends StatefulWidget {
 class _DirectoryScreenState extends State<DirectoryScreen> {
   final String defaultImage = 'assets/no_image.png';
   String _selectedSortOption = 'newest';
-  final String _directoryName = '책장';
 
   late DirectoryScreenService _directoryService;
 
@@ -77,7 +76,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       elevation: 0, // AppBar 그림자 제거
       centerTitle: true, // 제목을 항상 가운데로 배치
       title: StandardText(
-        text: foldersProvider.currentFolder?.folderName ?? _directoryName,
+        text: (foldersProvider.currentFolder?.parentFolder != null && foldersProvider.currentFolder?.folderName != null) ? foldersProvider.currentFolder!.folderName : '책장',
         fontSize: 20,
         color: themeProvider.primaryColor,
       ),
@@ -662,6 +661,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                   width: width,
                   height: height,
                   decoration: BoxDecoration(
+                    color: themeProvider.primaryColor.withOpacity(0.03),
                     border: Border.all(
                       color: themeProvider.primaryColor,
                       width: 2.0,

@@ -117,7 +117,7 @@ class _AnswerShareScreenState extends State<AnswerShareScreen> {
                       children: [
                         Expanded(
                           child: Text(
-                            widget.problem.reference ?? "출처 없음",
+                            (widget.problem.reference != null && widget.problem.reference!.isNotEmpty) ? widget.problem.reference! : "출처 없음",
                             style: TextStyle(
                               color: themeProvider.primaryColor,
                               fontSize: 24,
@@ -294,58 +294,4 @@ class _AnswerShareScreenState extends State<AnswerShareScreen> {
       log('스택 트레이스: $stackTrace');
     }
   }
-
-  /*
-  // 문제 캡처 후 이미지로 공유하는 로직
-  Future<void> _shareProblemAsImage() async {
-    try {
-      // 프레임 완료 후 실행되도록 대기
-      await WidgetsBinding.instance.endOfFrame;
-
-      // RenderRepaintBoundary로부터 이미지를 캡처
-      RenderRepaintBoundary? boundary = widget._globalKey.currentContext!
-          .findRenderObject() as RenderRepaintBoundary?;
-
-      // boundary가 null인 경우 종료
-      if (boundary == null) return;
-
-      // 추가적인 딜레이를 줘서 boundary가 준비될 시간을 확보합니다.
-      await Future.delayed(const Duration(milliseconds: 20));
-
-      // 이미지 캡처
-      ui.Image image = await boundary.toImage(
-          pixelRatio: MediaQuery.of(context).devicePixelRatio);
-      ByteData? byteData =
-          await image.toByteData(format: ui.ImageByteFormat.png);
-      Uint8List pngBytes = byteData!.buffer.asUint8List();
-
-      // 임시 파일에 저장
-      final tempDir = await getTemporaryDirectory();
-      final timestamp = DateTime.now().millisecondsSinceEpoch;
-      final filePath = '${tempDir.path}/problem_$timestamp.png';
-      final file = await File(filePath).create();
-      await file.writeAsBytes(pngBytes);
-
-      // 이미지 공유
-      final XFile xFile = XFile(file.path);
-
-      final RenderBox box = context.findRenderObject() as RenderBox;
-      final size = MediaQuery.of(context).size;
-
-      Share.shareXFiles(
-        [xFile],
-        text: '내 오답노트야! 어때?',
-        sharePositionOrigin: box.localToGlobal(Offset.zero) & size,
-      );
-
-      // 화면 닫기 (필요 시)
-      // Navigator.pop(context, true);
-    } catch (e, stackTrace) {
-      log('이미지 공유 실패: $e');
-      log('스택 트레이스: $stackTrace');
-      // 에러 처리 로직
-    }
-  }
-
-   */
 }
