@@ -31,11 +31,11 @@ class ProblemRegisterTemplate extends StatefulWidget {
   });
 
   @override
-  _UnifiedProblemRegisterTemplateState createState() =>
-      _UnifiedProblemRegisterTemplateState();
+  _ProblemRegisterTemplateState createState() =>
+      _ProblemRegisterTemplateState();
 }
 
-class _UnifiedProblemRegisterTemplateState
+class _ProblemRegisterTemplateState
     extends State<ProblemRegisterTemplate> {
   late ProblemModel problemModel;
   late TextEditingController sourceController;
@@ -272,7 +272,7 @@ class _UnifiedProblemRegisterTemplateState
               flex: 1,
               child: ProblemRegisterScreenWidget.buildImagePickerWithLabel(
                 context: context,
-                label: '해설 이미지',
+                label: '풀이 이미지',
                 image: solveImage,
                 existingImageUrl: problemModel.solveImageUrl,
                 themeProvider: themeProvider,

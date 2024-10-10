@@ -100,7 +100,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
             children: [
               IconButton(
                   icon: Icon(
-                    Icons.add,
+                    Icons.menu_book_rounded,
                     color: themeProvider.primaryColor,
                   ),
                   onPressed: () {
@@ -233,7 +233,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
             color: themeProvider.primaryColor,
           ),
           content: StandardText(
-            text: '최상위 공책의 위치를 변경할 수 없습니다.',
+            text: '책장의 위치를 변경할 수 없습니다.',
             fontSize: 14,
             color: themeProvider.primaryColor,
           ),
@@ -268,7 +268,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
             color: themeProvider.primaryColor,
           ),
           content: StandardText(
-            text: isRootFolder ? '최상위 공책은 삭제할 수 없습니다!' : '정말로 이 공책을 삭제하시겠습니까?',
+            text: isRootFolder ? '책장은 삭제할 수 없습니다!' : '정말로 이 공책을 삭제하시겠습니까?',
             fontSize: 15,
             color: themeProvider.primaryColor,
           ),
@@ -474,7 +474,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                 return Center(
                   child: StandardText(
                     text: '공책이나 오답 노트가 작성되어 있지 않습니다!',
-                    fontSize: 24,
+                    fontSize: 16,
                     color: themeProvider.primaryColor,
                   ),
                 );
@@ -524,7 +524,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
             width: 100,
             height: 100,
             child: Icon(
-              Icons.folder,
+              Icons.menu_book_outlined,
               color: themeProvider.primaryColor,
               size: 80,
             ),
@@ -579,7 +579,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                 child: Icon(
                   Icons.menu_book_outlined,
                   color: themeProvider.primaryColor,
-                  size: 80,
+                  size: 70,
                 ),
               ),
               const SizedBox(height: 8),

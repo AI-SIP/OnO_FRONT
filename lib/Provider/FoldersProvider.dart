@@ -146,15 +146,14 @@ class FoldersProvider with ChangeNotifier {
   }
 
   // 폴더 생성
-  Future<void> createFolder(String folderName) async {
-
+  Future<void> createFolder(String folderName, {int? parentFolderId}) async {
     try {
       final response = await httpService.sendRequest(
         method: 'POST',
         url: '${AppConfig.baseUrl}/api/folder',
         body: {
           'folderName': folderName,
-          'parentFolderId': currentFolderId,
+          'parentFolderId': parentFolderId ?? currentFolderId,
         },
       );
 
