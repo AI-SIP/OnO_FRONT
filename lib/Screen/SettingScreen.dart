@@ -3,12 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:ono/Config/AppConfig.dart';
 import 'package:ono/Model/LoginStatus.dart';
 import 'package:provider/provider.dart';
-import '../GlobalModule/Theme/HandWriteText.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../GlobalModule/Theme/StandardText.dart';
 import '../GlobalModule/Theme/ThemeHandler.dart';
 import '../Provider/UserProvider.dart';
 import '../Service/ScreenUtil/SettingScreenService.dart';
-import 'ProblemRegister/TemplateSelectionScreen.dart';
 
 class SettingScreen extends StatefulWidget {
   const SettingScreen({super.key});
@@ -76,11 +75,25 @@ class _SettingScreenState extends State<SettingScreen> {
                           _settingScreenService.openFeedbackForm();
                         },
                       ),
+                      const Divider(),
+                      _buildSettingItem(
+                        title: 'OnO 이용약관',
+                        subtitle: '',
+                        context: context,
+                        onTap: () {
+                          FirebaseAnalytics.instance.logEvent(
+                              name: 'userTerm_button_click',
+                              parameters: {
+                                'url': AppConfig.userTermPageUrl,
+                              });
+                          _settingScreenService.openUserTermPage();
+                        },
+                      ),
                     ],
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 20.0),
+                  padding: const EdgeInsets.symmetric(vertical: 10.0),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [

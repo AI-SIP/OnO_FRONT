@@ -74,6 +74,15 @@ class SettingScreenService {
     }
   }
 
+  Future<void> openUserTermPage() async {
+    Uri url = Uri.parse(AppConfig.userTermPageUrl);
+    if (await canLaunchUrl(url)) {
+      await launchUrl(url);
+    } else {
+      throw 'Could not launch $url';
+    }
+  }
+
   Future<void> logout(BuildContext context) async {
     await Provider.of<UserProvider>(context, listen: false).signOut();
     showSuccessDialog(context, '로그아웃에 성공했습니다.');
