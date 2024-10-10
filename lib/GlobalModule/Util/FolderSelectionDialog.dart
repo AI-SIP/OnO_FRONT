@@ -17,15 +17,15 @@ class FolderSelectionDialog extends StatefulWidget {
 
   // folderId로 folderName을 찾아 반환하는 함수
   static String? getFolderNameByFolderId(int? folderId) {
-    if (folderId == null || _cachedFolders.isEmpty) return '폴더 선택';
+    if (folderId == null || _cachedFolders.isEmpty) return '공책 선택';
 
     // 해당 folderId가 있는지 확인하고, 없으면 기본값 반환
     final folder = _cachedFolders.firstWhere(
           (folder) => folder.folderId == folderId,
-      orElse: () => FolderThumbnailModel(folderId: -1, folderName: '폴더 선택'),
+      orElse: () => FolderThumbnailModel(folderId: -1, folderName: '공책 선택'),
     );
 
-    return folder.folderId != -1 ? folder.folderName : '폴더 선택';
+    return folder.folderId != -1 ? folder.folderName : '공책 선택';
   }
 
   static List<FolderThumbnailModel> _cachedFolders = [];
@@ -75,7 +75,7 @@ class _FolderSelectionDialogState extends State<FolderSelectionDialog> {
       contentPadding: const EdgeInsets.all(0),
       titlePadding: const EdgeInsets.only(left: 20, top: 20),
       title: StandardText(
-        text: '폴더 선택',
+        text: '공책 선택',
         fontSize: 16,
         color: themeProvider.primaryColor,
       ),

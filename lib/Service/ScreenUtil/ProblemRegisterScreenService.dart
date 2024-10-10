@@ -46,11 +46,11 @@ class ProblemRegisterScreenService {
 
   void showSuccessDialog(BuildContext context) {
     final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
-    SnackBarDialog.showSnackBar(context: context, message: "문제가 성공적으로 저장되었습니다.", backgroundColor: themeProvider.primaryColor);
+    SnackBarDialog.showSnackBar(context: context, message: "오답노트가 성공적으로 저장되었습니다.", backgroundColor: themeProvider.primaryColor);
   }
 
   void showValidationMessage(BuildContext context, String message) {
-    SnackBarDialog.showSnackBar(context: context, message: "문제 등록 과정에서 오류가 발생했습니다.", backgroundColor: Colors.red);
+    SnackBarDialog.showSnackBar(context: context, message: "오답노트 작성 과정에서 오류가 발생했습니다.", backgroundColor: Colors.red);
   }
 
   void showLoadingDialog(BuildContext context) {
@@ -74,7 +74,7 @@ class ProblemRegisterScreenService {
               ),
               const SizedBox(height: 20),
               const HandWriteText(
-                text: '문제 등록 중...',
+                text: '오답노트 작성 중...',
                 fontSize: 24,
                 color: Colors.white,
               ),
@@ -153,7 +153,7 @@ class ProblemRegisterScreenService {
       showSuccessDialog(context);
     } catch (error, stackTrace) {
       hideLoadingDialog(context);
-      showValidationMessage(context, '문제 업데이트에 실패했습니다.');
+      showValidationMessage(context, '오답노트 수정에 실패했습니다.');
       log('error in update problem : $error');
       await Sentry.captureException(
         error,
@@ -168,7 +168,7 @@ class ProblemRegisterScreenService {
       builder: (ctx) => AlertDialog(
         title: const HandWriteText(text: '로그인 필요',),
         content:
-            const HandWriteText(text: '문제를 등록하려면 로그인 해주세요!', ),
+            const HandWriteText(text: '오답노트를 작성하려면 로그인 해주세요!', ),
         actions: <Widget>[
           TextButton(
             child: const HandWriteText(

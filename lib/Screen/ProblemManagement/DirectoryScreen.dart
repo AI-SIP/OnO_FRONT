@@ -29,7 +29,7 @@ class DirectoryScreen extends StatefulWidget {
 class _DirectoryScreenState extends State<DirectoryScreen> {
   final String defaultImage = 'assets/no_image.png';
   String _selectedSortOption = 'newest';
-  final String _directoryName = '메인';
+  final String _directoryName = '책장';
 
   late DirectoryScreenService _directoryService;
 
@@ -99,26 +99,28 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
           child: Row(
             children: [
               IconButton(
-                icon: Icon(
-                  Icons.create_new_folder,
-                  color: themeProvider.primaryColor,
-                  size: 24,
-                ),
-                onPressed: ()  {
-                  FirebaseAnalytics.instance.logEvent(name: 'folder_create_button_click');
-                  _showCreateFolderDialog(); // 폴더 생성 다이얼로그 호출
-                }
-              ),
+                  icon: Icon(
+                    Icons.add,
+                    color: themeProvider.primaryColor,
+                  ),
+                  onPressed: () {
+                    FirebaseAnalytics.instance
+                        .logEvent(name: 'folder_create_button_click');
+                    _showCreateFolderDialog(); // 폴더 생성 다이얼로그 호출
+                  }),
               PopupMenuButton<String>(
                 onSelected: (value) {
                   if (value == 'rename') {
-                    FirebaseAnalytics.instance.logEvent(name: 'folder_name_edit_button_click');
+                    FirebaseAnalytics.instance
+                        .logEvent(name: 'folder_name_edit_button_click');
                     _showRenameFolderDialog(foldersProvider);
                   } else if (value == 'move') {
-                    FirebaseAnalytics.instance.logEvent(name: 'folder_path_move_button_click');
+                    FirebaseAnalytics.instance
+                        .logEvent(name: 'folder_path_move_button_click');
                     _showMoveFolderDialog(foldersProvider); // 폴더 이동 다이얼로그 호출
                   } else if (value == 'delete') {
-                    FirebaseAnalytics.instance.logEvent(name: 'folder_delete_button_click');
+                    FirebaseAnalytics.instance
+                        .logEvent(name: 'folder_delete_button_click');
                     _showDeleteFolderDialog(foldersProvider);
                   }
                 },
@@ -126,7 +128,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                   PopupMenuItem(
                     value: 'rename',
                     child: StandardText(
-                      text: '폴더 이름 수정하기',
+                      text: '공책 제목 수정하기',
                       fontSize: 14,
                       color: themeProvider.primaryColor,
                     ),
@@ -134,7 +136,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                   PopupMenuItem(
                     value: 'move',
                     child: StandardText(
-                      text: '폴더 위치 변경하기',
+                      text: '공책 위치 변경하기',
                       fontSize: 14,
                       color: themeProvider.primaryColor,
                     ),
@@ -142,7 +144,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                   const PopupMenuItem(
                     value: 'delete',
                     child: StandardText(
-                      text: '폴더 삭제하기',
+                      text: '공책 삭제하기',
                       fontSize: 14,
                       color: Colors.red,
                     ),
@@ -160,10 +162,10 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     );
   }
 
-  // 폴더 생성 다이얼로그 출력
+  // 공책 생성 다이얼로그 출력
   Future<void> _showCreateFolderDialog() async {
     await _showFolderNameDialog(
-      dialogTitle: '폴더 생성',
+      dialogTitle: '공책 생성',
       defaultFolderName: '', // 폴더 생성 시에는 기본값이 없음
       onFolderNameSubmitted: (folderName) async {
         await _createFolder(folderName);
@@ -179,7 +181,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
   Future<void> _showRenameFolderDialog(FoldersProvider foldersProvider) async {
     await _showFolderNameDialog(
-      dialogTitle: '폴더 이름 변경',
+      dialogTitle: '공책 이름 변경',
       defaultFolderName: foldersProvider.currentFolder?.folderName ?? '',
       onFolderNameSubmitted: (newName) async {
         await _renameFolder(newName);
@@ -192,7 +194,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   ) async {
     final foldersProvider =
         Provider.of<FoldersProvider>(context, listen: false);
-    await foldersProvider.updateFolder(newName, foldersProvider.currentFolderId, null);
+    await foldersProvider.updateFolder(
+        newName, foldersProvider.currentFolderId, null);
   }
 
   // 폴더 이동 다이얼로그 출력
@@ -209,7 +212,10 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     );
 
     if (selectedFolderId != null) {
-      await foldersProvider.updateFolder(foldersProvider.currentFolder!.folderName, foldersProvider.currentFolderId, selectedFolderId); // 부모 폴더 변경
+      await foldersProvider.updateFolder(
+          foldersProvider.currentFolder!.folderName,
+          foldersProvider.currentFolderId,
+          selectedFolderId); // 부모 폴더 변경
     }
   }
 
@@ -222,12 +228,12 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       builder: (context) {
         return AlertDialog(
           title: StandardText(
-            text: '폴더 위치 변경 불가',
+            text: '공책 위치 변경 불가',
             fontSize: 16,
             color: themeProvider.primaryColor,
           ),
           content: StandardText(
-            text: '메인 폴더는 위치를 변경할 수 없습니다.',
+            text: '최상위 공책의 위치를 변경할 수 없습니다.',
             fontSize: 14,
             color: themeProvider.primaryColor,
           ),
@@ -257,12 +263,12 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       builder: (context) {
         return AlertDialog(
           title: StandardText(
-            text: '폴더 삭제',
+            text: '공책 삭제',
             fontSize: 16,
             color: themeProvider.primaryColor,
           ),
           content: StandardText(
-            text: isRootFolder ? '메인 폴더는 삭제할 수 없습니다!' : '정말로 이 폴더를 삭제하시겠습니까?',
+            text: isRootFolder ? '최상위 공책은 삭제할 수 없습니다!' : '정말로 이 공책을 삭제하시겠습니까?',
             fontSize: 15,
             color: themeProvider.primaryColor,
           ),
@@ -321,7 +327,6 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     await showDialog(
       context: context,
       builder: (context) {
-
         return AlertDialog(
           title: StandardText(
             text: dialogTitle,
@@ -333,14 +338,14 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
             child: TextField(
               controller: folderNameController,
               style: standardTextStyle.copyWith(
-                  color: themeProvider.primaryColor,
-                  fontSize: 16,
+                color: themeProvider.primaryColor,
+                fontSize: 16,
               ),
               decoration: InputDecoration(
-                hintText: '폴더 이름을 입력하세요',
+                hintText: '공책 이름을 입력하세요',
                 hintStyle: standardTextStyle.copyWith(
-                    color: themeProvider.desaturateColor,
-                    fontSize: 14,
+                  color: themeProvider.desaturateColor,
+                  fontSize: 14,
                 ),
                 border: OutlineInputBorder(
                   borderSide: BorderSide(color: themeProvider.primaryColor),
@@ -398,7 +403,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
             builder: (context, foldersProvider, child) {
               int problemCount = foldersProvider.problems.length;
               return StandardText(
-                text: '문제 수 : $problemCount',
+                text: '오답노트 수 : $problemCount',
                 fontSize: 15,
                 color: themeProvider.primaryColor,
               );
@@ -468,7 +473,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
               if (folders.isEmpty && problems.isEmpty) {
                 return Center(
                   child: StandardText(
-                    text: '폴더나 문제가 등록되어 있지 않습니다!',
+                    text: '공책이나 오답 노트가 작성되어 있지 않습니다!',
                     fontSize: 24,
                     color: themeProvider.primaryColor,
                   ),
@@ -505,7 +510,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     return GestureDetector(
       onTap: () {
         // 폴더를 클릭했을 때 해당 폴더로 이동
-        FirebaseAnalytics.instance.logEvent(name: 'move_to_folder', parameters: {
+        FirebaseAnalytics.instance
+            .logEvent(name: 'move_to_folder', parameters: {
           'folder_id': folder.folderId,
         });
         Provider.of<FoldersProvider>(context, listen: false)
@@ -571,7 +577,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                   borderRadius: BorderRadius.circular(12.0),
                 ),
                 child: Icon(
-                  Icons.folder,
+                  Icons.menu_book_outlined,
                   color: themeProvider.primaryColor,
                   size: 80,
                 ),
@@ -580,8 +586,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
               Text(
                 folder.folderName,
                 style: standardTextStyle.copyWith(
-                    color: themeProvider.primaryColor,
-                    fontSize: 16,
+                  color: themeProvider.primaryColor,
+                  fontSize: 16,
                 ),
                 textAlign: TextAlign.center,
                 overflow: TextOverflow.ellipsis,
@@ -601,7 +607,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   Widget _buildProblemTile(ProblemModel problem, ThemeHandler themeProvider) {
     return GestureDetector(
       onTap: () {
-        FirebaseAnalytics.instance.logEvent(name: 'move_to_problem', parameters: {
+        FirebaseAnalytics.instance
+            .logEvent(name: 'move_to_problem', parameters: {
           'problem_id': problem.problemId,
         });
 
@@ -678,7 +685,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                   const SizedBox(width: 10),
                   Flexible(
                     child: Text(
-                      (problem.reference != null && problem.reference!.isNotEmpty)
+                      (problem.reference != null &&
+                              problem.reference!.isNotEmpty)
                           ? problem.reference!
                           : '제목 없음',
                       style: standardTextStyle.copyWith(
@@ -707,7 +715,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     );
   }
 
-  Widget _getTemplateIcon(TemplateType? templateType, ThemeHandler themeProvider) {
+  Widget _getTemplateIcon(
+      TemplateType? templateType, ThemeHandler themeProvider) {
     switch (templateType) {
       case TemplateType.simple:
         return Icon(
@@ -736,7 +745,6 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     }
   }
 
-
   Future<void> _moveFolderToNewParent(
       FolderThumbnailModel folder, int? newParentFolderId) async {
     if (newParentFolderId == null) {
@@ -750,13 +758,14 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     });
 
     final foldersProvider =
-    Provider.of<FoldersProvider>(context, listen: false);
-    await foldersProvider.updateFolder(folder.folderName, folder.folderId, newParentFolderId);
+        Provider.of<FoldersProvider>(context, listen: false);
+    await foldersProvider.updateFolder(
+        folder.folderName, folder.folderId, newParentFolderId);
 
     if (mounted) {
       SnackBarDialog.showSnackBar(
         context: context,
-        message: '폴더가 성공적으로 이동되었습니다!',
+        message: '공책이 성공적으로 이동되었습니다!',
         backgroundColor: Theme.of(context).primaryColor,
       );
     }
@@ -788,7 +797,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     if (mounted) {
       SnackBarDialog.showSnackBar(
         context: context,
-        message: '문제가 이동되었습니다!',
+        message: '오답노트가 이동되었습니다!',
         backgroundColor: Theme.of(context).primaryColor,
       );
     }

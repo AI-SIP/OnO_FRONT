@@ -22,7 +22,7 @@ class ProblemDetailScreenService {
 
   void addRepeatCount(BuildContext context, int? problemId) async{
     if (problemId == null) {
-      SnackBarDialog.showSnackBar(context: context, message: "문제를 불러오는 과정에서 오류가 발생했습니다.", backgroundColor: Colors.red);
+      SnackBarDialog.showSnackBar(context: context, message: "오답노트를 불러오는 과정에서 오류가 발생했습니다.", backgroundColor: Colors.red);
       return;
     }
 
@@ -32,7 +32,7 @@ class ProblemDetailScreenService {
 
   void editProblem(BuildContext context, int? problemId) async {
     if (problemId == null) {
-      SnackBarDialog.showSnackBar(context: context, message: "문제를 불러오는 과정에서 오류가 발생했습니다.", backgroundColor: Colors.red);
+      SnackBarDialog.showSnackBar(context: context, message: "오답노트를 불러오는 과정에서 오류가 발생했습니다.", backgroundColor: Colors.red);
       return;
     }
 
@@ -51,14 +51,14 @@ class ProblemDetailScreenService {
         ),
       );
     } else {
-      SnackBarDialog.showSnackBar(context: context, message: "문제를 불러오는 과정에서 오류가 발생했습니다.", backgroundColor: Colors.red);
+      SnackBarDialog.showSnackBar(context: context, message: "오답노트를 불러오는 과정에서 오류가 발생했습니다.", backgroundColor: Colors.red);
     }
   }
 
   void deleteProblem(BuildContext context, int? problemId, Function onSuccess,
       Function onError) {
     if (problemId == null) {
-      SnackBarDialog.showSnackBar(context: context, message: "문제를 불러오는 과정에서 오류가 발생했습니다.", backgroundColor: Colors.red);
+      SnackBarDialog.showSnackBar(context: context, message: "오답노트를 불러오는 과정에서 오류가 발생했습니다.", backgroundColor: Colors.red);
       return;
     }
 
@@ -69,9 +69,9 @@ class ProblemDetailScreenService {
 
         return AlertDialog(
           title: StandardText(
-              text: '문제 삭제', fontSize: 16, color: themeProvider.primaryColor),
+              text: '오답노트 삭제', fontSize: 16, color: themeProvider.primaryColor),
           content: StandardText(
-              text: '정말로 이 문제를 삭제하시겠습니까?',
+              text: '정말로 이 오답노트를 삭제하시겠습니까?',
               fontSize: 14,
               color: themeProvider.primaryColor),
           actions: [
@@ -94,7 +94,7 @@ class ProblemDetailScreenService {
                   if (success) {
                     onSuccess();
                   } else {
-                    onError('문제 삭제에 실패했습니다.');
+                    onError('오답노트 삭제에 실패했습니다.');
                   }
                 }).catchError((error) {
                   Navigator.of(context).pop(); // 다이얼로그 닫기

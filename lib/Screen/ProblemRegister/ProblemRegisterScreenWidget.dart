@@ -83,7 +83,7 @@ class ProblemRegisterScreenWidget {
         Icon(Icons.folder, color: themeProvider.primaryColor),
         const SizedBox(width: 10),
         StandardText(
-          text: '저장 폴더',
+          text: '공책 선택',
           fontSize: 16,
           color: themeProvider.primaryColor,
         ),
@@ -99,7 +99,7 @@ class ProblemRegisterScreenWidget {
             ),
           ),
           child: StandardText(
-            text: folderName ?? '폴더 선택',
+            text: folderName ?? '공책 선택',
             fontSize: 14,
             color: themeProvider.primaryColor,
           ),
@@ -195,7 +195,7 @@ class ProblemRegisterScreenWidget {
             ),
           ),
           child: StandardText(
-            text: isEditMode ? '수정 취소' : '등록 취소',
+            text: isEditMode ? '수정 취소' : '작성 취소',
             fontSize: 14,
             color: Colors.white,
           ),
@@ -211,7 +211,7 @@ class ProblemRegisterScreenWidget {
             ),
           ),
           child: StandardText(
-            text: isEditMode ? '수정 완료' : '등록 완료',
+            text: isEditMode ? '수정 완료' : '작성 완료',
             fontSize: 14,
             color: Colors.white,
           ),
