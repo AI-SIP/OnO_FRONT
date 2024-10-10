@@ -389,7 +389,7 @@ class _ProblemRegisterTemplateState
             children: [
               ProblemRegisterScreenWidget.buildImagePickerWithLabel(
                 context: context,
-                label: '해설 이미지',
+                label: '풀이 이미지',
                 image: solveImage,
                 existingImageUrl: problemModel.solveImageUrl,
                 themeProvider: themeProvider,

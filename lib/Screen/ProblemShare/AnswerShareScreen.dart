@@ -185,7 +185,7 @@ class _AnswerShareScreenState extends State<AnswerShareScreen> {
                                         color: themeProvider.primaryColor),
                                     const SizedBox(width: 8),
                                     HandWriteText(
-                                      text: '해설 이미지',
+                                      text: '정답 이미지',
                                       fontSize: 20,
                                       color: themeProvider.primaryColor,
                                     ),

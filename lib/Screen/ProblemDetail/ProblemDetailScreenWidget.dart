@@ -110,10 +110,10 @@ class ProblemDetailScreenWidget{
               crossAxisSpacing: 20.0,
               childAspectRatio: childAspectRatio,
               children: (templateType == TemplateType.simple)
-                  ? [_buildImageContainer(context, problemModel.answerImageUrl, '해설 이미지', crossAxisCount, themeProvider)]
+                  ? [_buildImageContainer(context, problemModel.answerImageUrl, '정답 이미지', crossAxisCount, themeProvider)]
                   : [
                 _buildImageContainer(context, problemModel.problemImageUrl, '원본 이미지', crossAxisCount, themeProvider),
-                _buildImageContainer(context, problemModel.answerImageUrl, '해설 이미지', crossAxisCount, themeProvider),
+                _buildImageContainer(context, problemModel.answerImageUrl, '정답 이미지', crossAxisCount, themeProvider),
                 _buildImageContainer(context, problemModel.solveImageUrl, '풀이 이미지', crossAxisCount, themeProvider),
               ],
             );
