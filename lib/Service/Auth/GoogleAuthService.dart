@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
 import 'package:firebase_analytics/firebase_analytics.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
@@ -20,21 +19,15 @@ class GoogleAuthService {
         final GoogleSignInAuthentication googleSignInAuthentication =
         await googleSignInAccount.authentication;
 
-        final String? accessToken =
-            googleSignInAuthentication.accessToken;
         String? email = googleSignInAccount.email;
         String? name = googleSignInAccount.displayName;
         String? identifier = googleSignInAccount.id;
-
-        final platform = _getPlatform();
 
         final url = Uri.parse('${AppConfig.baseUrl}/api/auth/google');
         final response = await http.post(
           url,
           headers: {'Content-Type': 'application/json; charset=UTF-8'},
           body: jsonEncode({
-            'accessToken': accessToken,
-            'platform': platform,
             'email': email,
             'name': name,
             'identifier': identifier
@@ -99,16 +92,6 @@ class GoogleAuthService {
         error,
         stackTrace: stackTrace,
       );
-    }
-  }
-
-  String _getPlatform() {
-    if (Platform.isAndroid) {
-      return 'android';
-    } else if (Platform.isIOS) {
-      return 'ios';
-    } else {
-      return 'unknown';
     }
   }
 }

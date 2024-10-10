@@ -25,42 +25,34 @@ class AppleAuthService {
         ],
       );
 
-      final String? idToken = appleCredential.identityToken;
+      //final String? idToken = appleCredential.identityToken;
       final String? email = appleCredential.email;
       final String? firstName = appleCredential.givenName;
       final String? lastName = appleCredential.familyName;
       final String? name = (lastName ?? "") + (firstName ?? "");
       final String? identifier = appleCredential.userIdentifier;
 
-      if (idToken != null) {
-        final url = Uri.parse('${AppConfig.baseUrl}/api/auth/apple');
-        final response = await http.post(
-          url,
-          headers: <String, String>{
-            'Content-Type': 'application/json; charset=UTF-8',
-          },
-          body: jsonEncode(<String, String?>{
-            'idToken': idToken,
-            'email': email,
-            'name': name,
-            'identifier': identifier,
-          }),
-        );
+      final url = Uri.parse('${AppConfig.baseUrl}/api/auth/apple');
+      final response = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: jsonEncode({
+          'email': email,
+          'name': name,
+          'identifier': identifier,
+        }),
+      );
 
-        if (response.statusCode == 200) {
-          log('Apple sign-in Success!');
-          FirebaseAnalytics.instance.logSignUp(signUpMethod: 'Apple');
-          SnackBarDialog.showSnackBar(context: context, message: "로그인에 성공했습니다.", backgroundColor: Colors.green);
+      if (response.statusCode == 200) {
+        log('Apple sign-in Success!');
+        FirebaseAnalytics.instance.logSignUp(signUpMethod: 'Apple');
+        SnackBarDialog.showSnackBar(context: context, message: "로그인에 성공했습니다.", backgroundColor: Colors.green);
 
-          return jsonDecode(response.body);
-        } else {
-          throw Exception("Failed to Register user on server");
-        }
+        return jsonDecode(response.body);
       } else {
-        log("Failed to get Apple idToken");
-        SnackBarDialog.showSnackBar(context: context, message: "로그인 과정에서 오류가 발생했습니다. 다시 시도해주세요.", backgroundColor: Colors.red);
-
-        return null;
+        throw Exception("Failed to Register user on server");
       }
     } catch (error, stackTrace) {
       if(error == AuthorizationErrorCode.canceled){
