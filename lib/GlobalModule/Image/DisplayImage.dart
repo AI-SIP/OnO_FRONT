@@ -26,10 +26,6 @@ class DisplayImage extends StatelessWidget {
         padding: const EdgeInsets.all(10.0), // 원하는 padding 값
         child: imagePath == null || imagePath!.isEmpty
             ? Container(
-                decoration: BoxDecoration(
-                  color: themeProvider.primaryColor.withOpacity(0.03),
-                  borderRadius: BorderRadius.circular(20), // 컨테이너 둥근 모서리
-                ),
                 alignment: Alignment.center,
                 child: StandardText(
                   text: '이미지가 없습니다!',
@@ -49,10 +45,6 @@ class DisplayImage extends StatelessWidget {
                   ),
                 ),
                 errorWidget: (context, url, error) => Container(
-                  decoration: BoxDecoration(
-                    color: themeProvider.primaryColor.withOpacity(0.03),
-                    borderRadius: BorderRadius.circular(20), // 에러 컨테이너 둥근 모서리
-                  ),
                   alignment: Alignment.center,
                   child: StandardText(
                     text: '이미지가 없습니다!',

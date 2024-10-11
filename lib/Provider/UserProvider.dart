@@ -11,7 +11,6 @@ import 'package:ono/Service/Auth/GuestAuthService.dart';
 import 'package:ono/Service/Auth/KakaoAuthService.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import '../Config/AppConfig.dart';
-import '../GlobalModule/Theme/SnackBarDialog.dart';
 import '../GlobalModule/Util/HttpService.dart';
 import 'TokenProvider.dart';
 import '../Service/Auth/AppleAuthService.dart';
@@ -64,6 +63,7 @@ class UserProvider with ChangeNotifier {
   Future<void> signInWithApple(BuildContext context) async {
     _loginStatus = LoginStatus.waiting;
     notifyListeners();
+
     final response = await appleAuthService.signInWithApple(context);
     saveUserToken(response: response, loginMethod: 'apple');
   }
@@ -85,7 +85,7 @@ class UserProvider with ChangeNotifier {
       await tokenProvider.setRefreshToken(response['refreshToken']);
 
       FirebaseAnalytics.instance.logLogin(loginMethod: loginMethod);
-      fetchUserInfo();
+      await fetchUserInfo();
     }
 
     notifyListeners();
@@ -230,7 +230,7 @@ class UserProvider with ChangeNotifier {
         },
       );
 
-      resetUserInfo();
+      await resetUserInfo();
     } catch (error, stackTrace) {
       log('Error signing out: $error');
       await Sentry.captureException(
@@ -275,7 +275,7 @@ class UserProvider with ChangeNotifier {
           },
         );
 
-        resetUserInfo();
+        await resetUserInfo();
       } else {
         log('Failed to delete account: ${response.reasonPhrase}');
         throw Exception("Failed to delete account");

@@ -33,7 +33,6 @@ class FoldersProvider with ChangeNotifier {
   List<ProblemModel> get problems => List.unmodifiable(_problems);
 
   Future<void> fetchRootFolderContents() async {
-
     try {
       final response = await httpService.sendRequest(
         method: 'GET',

@@ -16,8 +16,7 @@ class GoogleAuthService {
     try {
       final googleSignInAccount = await _googleSignIn.signIn();
       if(googleSignInAccount != null){
-        final GoogleSignInAuthentication googleSignInAuthentication =
-        await googleSignInAccount.authentication;
+        final GoogleSignInAuthentication googleSignInAuthentication = await googleSignInAccount.authentication;
 
         String? email = googleSignInAccount.email;
         String? name = googleSignInAccount.displayName;

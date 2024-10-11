@@ -7,7 +7,7 @@ class AppConfig {
   /*
   static const String guidePageUrl =
       'https://semnisem.notion.site/MVP-e104fd6af0064941acf464e6f77eabb3';
-   */
+  */
 
   static const String guidePageUrl = 'https://ono-app.notion.site';
   static const String feedbackPageUrl = 'https://forms.gle/MncQvyT57LQr43Pp7';
