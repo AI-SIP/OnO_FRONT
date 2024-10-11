@@ -48,7 +48,7 @@ class _SplashScreenState extends State<SplashScreen> {
                     fontFamily: 'HandWrite', // 손글씨 느낌의 폰트 사용
                     fontWeight: FontWeight.bold,
                   ),
-                  speed: const Duration(milliseconds: 100), // 타이핑 속도 조절
+                  speed: const Duration(milliseconds: 75), // 타이핑 속도 조절
                   cursor: '', // 커서를 빈 문자열로 설정하여 깜빡임을 없앰
                 ),
               ],

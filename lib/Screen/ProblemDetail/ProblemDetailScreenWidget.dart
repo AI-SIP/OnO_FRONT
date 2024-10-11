@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_tex/flutter_tex.dart';
@@ -19,7 +21,7 @@ class ProblemDetailScreenWidget{
   Widget buildBackground(ThemeHandler themeProvider) {
     return CustomPaint(
       size: Size.infinite,
-      painter: GridPainter(gridColor: themeProvider.primaryColor),
+      painter: GridPainter(gridColor: themeProvider.primaryColor, isSpring: true),
     );
   }
 
@@ -108,10 +110,10 @@ class ProblemDetailScreenWidget{
               crossAxisSpacing: 20.0,
               childAspectRatio: childAspectRatio,
               children: (templateType == TemplateType.simple)
-                  ? [_buildImageContainer(context, problemModel.answerImageUrl, '해설 이미지', crossAxisCount, themeProvider)]
+                  ? [_buildImageContainer(context, problemModel.answerImageUrl, '정답 이미지', crossAxisCount, themeProvider)]
                   : [
                 _buildImageContainer(context, problemModel.problemImageUrl, '원본 이미지', crossAxisCount, themeProvider),
-                _buildImageContainer(context, problemModel.answerImageUrl, '해설 이미지', crossAxisCount, themeProvider),
+                _buildImageContainer(context, problemModel.answerImageUrl, '정답 이미지', crossAxisCount, themeProvider),
                 _buildImageContainer(context, problemModel.solveImageUrl, '풀이 이미지', crossAxisCount, themeProvider),
               ],
             );
@@ -120,14 +122,14 @@ class ProblemDetailScreenWidget{
 
         const SizedBox(height: 20.0),
         buildRepeatSection(problemModel, themeProvider),
+        const SizedBox(height: 20.0),
       ],
     );
   }
 
   // 푼 날짜 위젯 구현 함수
   Widget buildSolvedDate(DateTime? solvedAt, ThemeHandler themeProvider) {
-    final formattedDate =
-    DateFormat('yyyy년 M월 d일').format(solvedAt!);
+    final formattedDate = DateFormat('yyyy년 M월 d일').format(solvedAt!);
     return buildIconTextRow(
       Icons.calendar_today,
       '푼 날짜',
@@ -159,7 +161,7 @@ class ProblemDetailScreenWidget{
               ),
               const SizedBox(height: 10.0),
               UnderlinedText(
-                text: reference ?? '출처 없음',
+                text: (reference != null && reference.isNotEmpty) ? reference : "작성한 출처가 없습니다!",
                 fontSize: 18,
               ),
             ],
@@ -346,9 +348,7 @@ class ProblemDetailScreenWidget{
           child: Center(
             child: GestureDetector(
               onTap: () {
-                FirebaseAnalytics.instance.logEvent(name: 'image_full_screen', parameters: {
-                  'image_type': label,
-                });
+                FirebaseAnalytics.instance.logEvent(name: 'image_full_screen_$label');
                 Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -432,7 +432,7 @@ class ProblemDetailScreenWidget{
   Widget buildNoDataScreen() {
     return const Center(
         child: HandWriteText(
-          text: "문제 정보를 가져올 수 없습니다.",
+          text: "오답노트 정보를 가져올 수 없습니다.",
           fontSize: 28,
         ));
   }

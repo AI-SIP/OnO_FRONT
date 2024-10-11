@@ -118,9 +118,7 @@ class ImagePickerHandler {
                 ),
                 onTap: () async {
 
-                  FirebaseAnalytics.instance.logEvent(name: 'image_select', parameters: {
-                    'method': 'camera',
-                  });
+                  FirebaseAnalytics.instance.logEvent(name: 'image_select_camera');
 
                   Navigator.of(context).pop(); // Close the popup
                   final pickedFile = await pickImageFromCamera(context);
@@ -137,9 +135,7 @@ class ImagePickerHandler {
                 ),
                 onTap: () async {
 
-                  FirebaseAnalytics.instance.logEvent(name: 'image_select', parameters: {
-                    'method': 'gallery',
-                  });
+                  FirebaseAnalytics.instance.logEvent(name: 'image_select_gallery');
 
                   Navigator.of(context).pop(); // Close the popup
                   final pickedFile = await pickImageFromGallery(context);

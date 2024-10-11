@@ -33,7 +33,6 @@ class FoldersProvider with ChangeNotifier {
   List<ProblemModel> get problems => List.unmodifiable(_problems);
 
   Future<void> fetchRootFolderContents() async {
-
     try {
       final response = await httpService.sendRequest(
         method: 'GET',
@@ -146,15 +145,14 @@ class FoldersProvider with ChangeNotifier {
   }
 
   // 폴더 생성
-  Future<void> createFolder(String folderName) async {
-
+  Future<void> createFolder(String folderName, {int? parentFolderId}) async {
     try {
       final response = await httpService.sendRequest(
         method: 'POST',
         url: '${AppConfig.baseUrl}/api/folder',
         body: {
           'folderName': folderName,
-          'parentFolderId': currentFolderId,
+          'parentFolderId': parentFolderId ?? currentFolderId,
         },
       );
 
@@ -308,7 +306,7 @@ class FoldersProvider with ChangeNotifier {
 
       final requestBody = {
         'problemId': problemData.problemId.toString(),
-        'solvedAt': problemData.solvedAt?.toIso8601String(),
+        'solvedAt': (problemData.solvedAt ?? DateTime.now()).toIso8601String(),
         'reference': problemData.reference ?? "",
         'memo': problemData.memo ?? "",
         'folderId': (problemData.folderId ?? currentFolderId).toString(),
@@ -319,7 +317,7 @@ class FoldersProvider with ChangeNotifier {
       if (problemData.templateType == TemplateType.clean ||
           problemData.templateType == TemplateType.special) {
           if(problemData.processImageUrl != null){
-            requestBody['processImageUrl'] = problemData.processImageUrl;
+            requestBody['processImageUrl'] = problemData.processImageUrl!;
           }
       }
 

@@ -31,11 +31,11 @@ class ProblemRegisterTemplate extends StatefulWidget {
   });
 
   @override
-  _UnifiedProblemRegisterTemplateState createState() =>
-      _UnifiedProblemRegisterTemplateState();
+  _ProblemRegisterTemplateState createState() =>
+      _ProblemRegisterTemplateState();
 }
 
-class _UnifiedProblemRegisterTemplateState
+class _ProblemRegisterTemplateState
     extends State<ProblemRegisterTemplate> {
   late ProblemModel problemModel;
   late TextEditingController sourceController;
@@ -259,7 +259,7 @@ class _UnifiedProblemRegisterTemplateState
                     answerImage = pickedFile;
                   });
                   FirebaseAnalytics.instance.logEvent(
-                    name: 'image_add',
+                    name: 'image_add_answer_image',
                     parameters: {'type': 'answer_image'},
                   );
                 },
@@ -272,7 +272,7 @@ class _UnifiedProblemRegisterTemplateState
               flex: 1,
               child: ProblemRegisterScreenWidget.buildImagePickerWithLabel(
                 context: context,
-                label: '해설 이미지',
+                label: '풀이 이미지',
                 image: solveImage,
                 existingImageUrl: problemModel.solveImageUrl,
                 themeProvider: themeProvider,
@@ -281,7 +281,7 @@ class _UnifiedProblemRegisterTemplateState
                     solveImage = pickedFile;
                   });
                   FirebaseAnalytics.instance.logEvent(
-                    name: 'image_add',
+                    name: 'image_add_solve_image',
                     parameters: {'type': 'solve_image'},
                   );
                 },
@@ -323,7 +323,7 @@ class _UnifiedProblemRegisterTemplateState
                     answerImage = pickedFile;
                   });
                   FirebaseAnalytics.instance.logEvent(
-                    name: 'image_add',
+                    name: 'image_add_answer_image',
                     parameters: {'type': 'answer_image'},
                   );
                 },
@@ -377,7 +377,7 @@ class _UnifiedProblemRegisterTemplateState
             });
 
             FirebaseAnalytics.instance.logEvent(
-              name: 'image_add',
+              name: 'image_add_answer_image',
               parameters: {'type': 'answer_image'},
             );
           },
@@ -389,7 +389,7 @@ class _UnifiedProblemRegisterTemplateState
             children: [
               ProblemRegisterScreenWidget.buildImagePickerWithLabel(
                 context: context,
-                label: '해설 이미지',
+                label: '풀이 이미지',
                 image: solveImage,
                 existingImageUrl: problemModel.solveImageUrl,
                 themeProvider: themeProvider,
@@ -399,7 +399,7 @@ class _UnifiedProblemRegisterTemplateState
                   });
 
                   FirebaseAnalytics.instance.logEvent(
-                    name: 'image_add',
+                    name: 'image_add_solve_image',
                     parameters: {'type': 'solve_image'},
                   );
                 },

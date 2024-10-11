@@ -251,7 +251,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
       ),
       BottomNavigationBarItem(
         icon: Icon(Icons.edit),
-        label: '오답노트 등록',
+        label: '오답노트 작성',
       ),
       BottomNavigationBarItem(
         icon: Icon(Icons.menu_book),

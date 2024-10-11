@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:ono/Config/AppConfig.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../GlobalModule/Theme/SnackBarDialog.dart';
 import '../../GlobalModule/Theme/StandardText.dart';
 import '../../GlobalModule/Theme/ThemeDialog.dart';
 import '../../Provider/UserProvider.dart';
@@ -61,21 +62,20 @@ class SettingScreenService {
   void showSuccessDialog(BuildContext context, String message) {
     final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: StandardText(
-          text: message,
-          fontSize: 14,
-          color: Colors.white,
-        ),
-        backgroundColor: themeProvider.primaryColor,
-        duration: const Duration(seconds: 2),
-      ),
-    );
+    SnackBarDialog.showSnackBar(context: context, message: message, backgroundColor: themeProvider.primaryColor);
   }
 
   Future<void> openFeedbackForm() async {
     Uri url = Uri.parse(AppConfig.feedbackPageUrl);
+    if (await canLaunchUrl(url)) {
+      await launchUrl(url);
+    } else {
+      throw 'Could not launch $url';
+    }
+  }
+
+  Future<void> openUserTermPage() async {
+    Uri url = Uri.parse(AppConfig.userTermPageUrl);
     if (await canLaunchUrl(url)) {
       await launchUrl(url);
     } else {

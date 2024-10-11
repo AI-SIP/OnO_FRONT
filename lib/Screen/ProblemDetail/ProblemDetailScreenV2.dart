@@ -3,6 +3,7 @@ import 'dart:developer';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:ono/GlobalModule/Theme/HandWriteText.dart';
+import 'package:ono/Screen/ProblemManagement/DirectoryScreen.dart';
 import 'package:provider/provider.dart';
 
 import '../../GlobalModule/Theme/SnackBarDialog.dart';
@@ -63,7 +64,7 @@ class _ProblemDetailScreenV2State extends State<ProblemDetailScreenV2> {
                 } else if (snapshot.hasError) {
                   return Center(
                     child: HandWriteText(
-                      text: '문제를 불러오는 중 오류가 발생했습니다.',
+                      text: '오답 노트를 불러오는 중 오류가 발생했습니다.',
                       color: themeProvider.primaryColor,
                     ),
                   );
@@ -72,7 +73,7 @@ class _ProblemDetailScreenV2State extends State<ProblemDetailScreenV2> {
                 } else {
                   return Center(
                     child: HandWriteText(
-                      text: '문제를 불러올 수 없습니다.',
+                      text: '오답노트를 불러올 수 없습니다.',
                       color: themeProvider.primaryColor,
                     ),
                   );
@@ -113,7 +114,7 @@ class _ProblemDetailScreenV2State extends State<ProblemDetailScreenV2> {
           );
         } else {
           return HandWriteText(
-            text: '문제 상세',
+            text: '오답노트 상세',
             fontSize: 24,
             color: themeProvider.primaryColor,
           );
@@ -167,10 +168,9 @@ class _ProblemDetailScreenV2State extends State<ProblemDetailScreenV2> {
                         ),
                       ),
                     ).then((_) {
-                      // 수정 후 돌아오면 Future를 다시 호출하여 최신 데이터를 가져옴
-                      setState(() {
-                        _problemModelFuture = _problemDetailService.fetchProblemDetails(context, widget.problemId);
-                      });
+                      MaterialPageRoute(
+                        builder: (context) => const DirectoryScreen(),
+                      );
                     });
                   } else if (result == deleteValue) {
                     FirebaseAnalytics.instance
@@ -183,7 +183,7 @@ class _ProblemDetailScreenV2State extends State<ProblemDetailScreenV2> {
                 PopupMenuItem<String>(
                   value: shareProblemValue,
                   child: StandardText(
-                    text: '문제 공유하기',
+                    text: '오답노트 문제 공유하기',
                     fontSize: 14,
                     color: themeProvider.primaryColor,
                   ),
@@ -191,7 +191,7 @@ class _ProblemDetailScreenV2State extends State<ProblemDetailScreenV2> {
                 PopupMenuItem<String>(
                   value: shareAnswerValue,
                   child: StandardText(
-                    text: '정답 공유하기',
+                    text: '오답노트 풀이 공유하기',
                     fontSize: 14,
                     color: themeProvider.primaryColor,
                   ),
@@ -199,7 +199,7 @@ class _ProblemDetailScreenV2State extends State<ProblemDetailScreenV2> {
                 PopupMenuItem<String>(
                   value: editValue,
                   child: StandardText(
-                    text: '문제 수정하기',
+                    text: '오답노트 수정하기',
                     fontSize: 14,
                     color: themeProvider.primaryColor,
                   ),
@@ -207,7 +207,7 @@ class _ProblemDetailScreenV2State extends State<ProblemDetailScreenV2> {
                 const PopupMenuItem<String>(
                   value: deleteValue,
                   child: StandardText(
-                    text: '문제 삭제하기',
+                    text: '오답노트 삭제하기',
                     fontSize: 14,
                     color: Colors.red,
                   ),
@@ -231,7 +231,7 @@ class _ProblemDetailScreenV2State extends State<ProblemDetailScreenV2> {
         if (mounted) {
           SnackBarDialog.showSnackBar(
             context: context,
-            message: '문제가 삭제되었습니다!',
+            message: '오답노트가 삭제되었습니다!',
             backgroundColor: themeProvider.primaryColor,
           );
         }

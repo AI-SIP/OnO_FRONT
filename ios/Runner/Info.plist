@@ -51,7 +51,13 @@
 		<key>NSAllowsArbitraryLoads</key>
 		<true/>
 	</dict>
-	<key>io.flutter.embedded_views_preview</key> <true/>
+	<key>LSApplicationQueriesSchemes</key>
+      <array>
+          <!-- 카카오톡으로 로그인 -->
+          <string>kakaokompassauth</string>
+          <!-- 카카오링크 -->
+          <string>kakaolink</string>
+      </array>
 	<key>NSCameraUsageDescription</key>
 	<string>오답노트 등록에 필요한 사진을 직접 첨부하기 위해서는 카메라 접근 권한 허용이 필요합니다.</string>
 	<key>NSMicrophoneUsageDescription</key>
@@ -81,5 +87,7 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>io.flutter.embedded_views_preview</key>
+	<true/>
 </dict>
 </plist>

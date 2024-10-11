@@ -3,7 +3,6 @@ import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:ono/Model/LoginStatus.dart';
-import 'package:ono/Screen/ProblemRegister/TemplateSelectionScreen.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../Config/AppConfig.dart';
@@ -12,7 +11,6 @@ import '../GlobalModule/Theme/GridPainter.dart';
 import '../GlobalModule/Theme/StandardText.dart';
 import '../GlobalModule/Theme/ThemeHandler.dart';
 import '../Provider/UserProvider.dart';
-import 'ProblemManagement/DirectoryScreen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -66,7 +64,7 @@ class HomeScreen extends StatelessWidget {
             onPressed: () {
               Navigator.of(ctx).pop();
               Provider.of<UserProvider>(context, listen: false)
-                  .signInWithGuest();
+                  .signInWithGuest(context);
             },
           ),
         ],
@@ -213,7 +211,7 @@ class HomeScreen extends StatelessWidget {
                         SizedBox(height: screenHeight * 0.03),
                         _buildLoginButton(
                           context: context,
-                          onPressed: () => authService.signInWithGoogle(),
+                          onPressed: () => authService.signInWithGoogle(context),
                           text: '  Google로 로그인',
                           assetPath: 'assets/GoogleLogo.png',
                           textColor: Colors.black87,
@@ -229,8 +227,7 @@ class HomeScreen extends StatelessWidget {
                         if (Platform.isIOS || Platform.isMacOS)
                           _buildLoginButton(
                             context: context,
-                            onPressed: () =>
-                                authService.signInWithApple(context),
+                            onPressed: () => authService.signInWithApple(context),
                             text: 'Apple로 로그인',
                             assetPath: 'assets/AppleLogo.png',
                             textColor: Colors.black87,
@@ -244,7 +241,7 @@ class HomeScreen extends StatelessWidget {
                         SizedBox(height: screenHeight * 0.03),
                         _buildLoginButton(
                           context: context,
-                          onPressed: () => authService.signInWithKakao(),
+                          onPressed: () => authService.signInWithKakao(context),
                           text: ' 카카오 로그인',
                           assetPath: 'assets/KakaoLogo.png', // 카카오 로고 경로
                           textColor: Colors.black87,
