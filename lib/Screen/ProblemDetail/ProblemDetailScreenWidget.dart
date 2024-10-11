@@ -122,6 +122,7 @@ class ProblemDetailScreenWidget{
 
         const SizedBox(height: 20.0),
         buildRepeatSection(problemModel, themeProvider),
+        const SizedBox(height: 20.0),
       ],
     );
   }

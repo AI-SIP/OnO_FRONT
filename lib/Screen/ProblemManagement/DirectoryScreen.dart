@@ -99,7 +99,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
             children: [
               IconButton(
                   icon: Icon(
-                    Icons.menu_book_rounded,
+                    Icons.add,
                     color: themeProvider.primaryColor,
                   ),
                   onPressed: () {
@@ -127,7 +127,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                   PopupMenuItem(
                     value: 'rename',
                     child: StandardText(
-                      text: '공책 제목 수정하기',
+                      text: '공책 이름 수정하기',
                       fontSize: 14,
                       color: themeProvider.primaryColor,
                     ),
@@ -164,7 +164,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   // 공책 생성 다이얼로그 출력
   Future<void> _showCreateFolderDialog() async {
     await _showFolderNameDialog(
-      dialogTitle: '공책 생성',
+      dialogTitle: '공책 추가',
       defaultFolderName: '', // 폴더 생성 시에는 기본값이 없음
       onFolderNameSubmitted: (folderName) async {
         await _createFolder(folderName);

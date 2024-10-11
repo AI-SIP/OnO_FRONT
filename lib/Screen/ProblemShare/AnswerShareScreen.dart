@@ -285,7 +285,23 @@ class _AnswerShareScreenState extends State<AnswerShareScreen> {
 
       final XFile xFile = XFile(file.path);
 
-      Share.shareXFiles([xFile], text: '내 오답노트야! 어때?');
+      final RenderBox box = context.findRenderObject() as RenderBox;
+      final rect = box.localToGlobal(Offset.zero) & box.size;
+      final size = MediaQuery.of(context).size;
+
+      if (rect.size.width > 0 && rect.size.height > 0) {
+        Share.shareXFiles(
+          [xFile],
+          text: '내 오답노트야! 어때?',
+          sharePositionOrigin: Rect.fromPoints(
+            Offset.zero,
+            Offset(size.width / 3 * 2, size.height),
+          ),
+        );
+      } else {
+        log('Invalid box size, defaulting to basic share...');
+        Share.shareXFiles([xFile], text: '내 오답노트야! 어때?');
+      }
 
       // 공유 후 화면을 닫습니다.
       Navigator.pop(context);
