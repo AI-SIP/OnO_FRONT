@@ -1,9 +1,7 @@
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../GlobalModule/Theme/ThemeHandler.dart';
 import '../../../Model/ProblemModel.dart';
-import '../../../Model/TemplateType.dart';
 import '../ProblemDetailScreenWidget.dart';
 
 class SpecialProblemDetailTemplate extends StatelessWidget {
@@ -20,16 +18,38 @@ class SpecialProblemDetailTemplate extends StatelessWidget {
     return Stack(
       children: [
         problemDetailScreenWidget.buildBackground(themeProvider),
-        SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 35.0),
-            child: Container(
-              constraints: BoxConstraints(maxWidth: screenWidth),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 35.0),
+          child: Container(
+            constraints: BoxConstraints(maxWidth: screenWidth),
+            child: screenWidth > 600
+                ? Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // 왼쪽 고정 영역
+                Flexible(
+                  flex: 1,
+                  child: problemDetailScreenWidget.buildCommonDetailView(context, problemModel, themeProvider, problemModel.templateType!),
+                ),
+                const SizedBox(width: 30.0),
+                // 오른쪽 스크롤 가능한 영역
+                Flexible(
+                  flex: 1,
+                  child: problemDetailScreenWidget.buildAnalysisExpansionTile(context, problemModel, themeProvider, problemModel.templateType!),
+                ),
+              ],
+            )
+                : SingleChildScrollView( // 화면이 좁을 경우 전체를 스크롤 가능하게
               child: Column(
-                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  problemDetailScreenWidget.buildCommonDetailView(context, problemModel, themeProvider, TemplateType.special),
-                  problemDetailScreenWidget.buildAnalysisExpansionTile(context, problemModel, themeProvider, TemplateType.special),
+                  problemDetailScreenWidget.buildCommonDetailView(
+                    context, problemModel, themeProvider, problemModel.templateType!,
+                  ),
+                  const SizedBox(height: 30.0),
+                  problemDetailScreenWidget.buildAnalysisExpansionTile(
+                    context, problemModel, themeProvider, problemModel.templateType!,
+                  ),
                 ],
               ),
             ),
