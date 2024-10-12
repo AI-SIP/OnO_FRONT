@@ -49,6 +49,7 @@ class _ProblemRegisterTemplateState
   bool isLoading = false;
   DateTime _selectedDate = DateTime.now();
   int? _selectedFolderId;
+  String? _selectedFolderName;
 
   final ScrollController scrollControllerForPage = ScrollController();
   final ScrollController scrollControllerForAnalysis = ScrollController();
@@ -61,6 +62,7 @@ class _ProblemRegisterTemplateState
     notesController = TextEditingController(text: problemModel.memo);
     _selectedDate = problemModel.solvedAt ?? DateTime.now();
     _selectedFolderId = problemModel.folderId;
+    _selectedFolderName = null;
 
     _fetchData();
   }
@@ -145,6 +147,11 @@ class _ProblemRegisterTemplateState
                   if (selectedFolderId != null) {
                     setState(() {
                       _selectedFolderId = selectedFolderId;
+                      _selectedFolderName = FolderSelectionDialog.getFolderNameByFolderId(selectedFolderId);
+
+                      if(sourceController.text.isEmpty){
+                        sourceController.text = '$_selectedFolderName ';
+                      }
                     });
                   }
                 },
