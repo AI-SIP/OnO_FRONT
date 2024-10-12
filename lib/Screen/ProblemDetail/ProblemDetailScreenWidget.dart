@@ -79,8 +79,8 @@ class ProblemDetailScreenWidget{
               //_buildImageContainer(context, problemModel.solveImageUrl, '풀이 이미지', themeProvider),
             ],
           ),
-          const SizedBox(height: 20.0),
-          buildRepeatSection(problemModel, themeProvider),
+          const SizedBox(height: 30.0),
+          buildRepeatSection(context, problemModel, themeProvider),
           const SizedBox(height: 20.0),
         ],
       ),
@@ -332,7 +332,9 @@ class ProblemDetailScreenWidget{
     );
   }
 
-  Widget buildRepeatSection(ProblemModel problemModel, ThemeHandler themeProvider) {
+  Widget buildRepeatSection(BuildContext context, ProblemModel problemModel, ThemeHandler themeProvider) {
+    final mediaQuery = MediaQuery.of(context);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -360,16 +362,38 @@ class ProblemDetailScreenWidget{
         ),
         const SizedBox(height: 10.0),
 
-        // 복습 날짜 리스트
+        // 복습 날짜와 이미지 리스트
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: problemModel.repeats?.map((repeat) {
             return Padding(
-              padding: const EdgeInsets.symmetric(vertical: 4.0),
-              child: HandWriteText(
-                text: DateFormat('yyyy년 MM월 dd일').format(repeat.createdAt),
-                fontSize: 18,
-                color: Colors.black,
+              padding: const EdgeInsets.symmetric(vertical: 8.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // 복습 날짜
+                  HandWriteText(
+                    text: '복습 날짜 : ${DateFormat('yyyy년 MM월 dd일').format(repeat.createdAt)}',
+                    fontSize: 18,
+                    color: Colors.black,
+                  ),
+
+                  // 복습 이미지
+                  if(repeat.solveImageUrl != null)
+                    Container(
+                      width: mediaQuery.size.width,
+                      height: mediaQuery.size.height * 0.5,
+                      decoration: BoxDecoration(
+                        color: themeProvider.primaryColor.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: AspectRatio(
+                        aspectRatio: 0.5,
+                        child: DisplayImage(imagePath: repeat.solveImageUrl, fit: BoxFit.contain),
+                      ),
+                    ),
+                  const SizedBox(height: 10.0),
+                ],
               ),
             );
           }).toList() ?? [
