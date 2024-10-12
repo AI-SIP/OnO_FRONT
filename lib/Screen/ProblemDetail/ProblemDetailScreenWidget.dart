@@ -15,20 +15,22 @@ import '../../GlobalModule/Theme/UnderlinedText.dart';
 import '../../GlobalModule/Util/LatexTextHandler.dart';
 import '../../Model/ProblemModel.dart';
 
-class ProblemDetailScreenWidget{
-
+class ProblemDetailScreenWidget {
   // 배경 구현 함수
   Widget buildBackground(ThemeHandler themeProvider) {
     return CustomPaint(
       size: Size.infinite,
-      painter: GridPainter(gridColor: themeProvider.primaryColor, isSpring: true),
+      painter:
+          GridPainter(gridColor: themeProvider.primaryColor, isSpring: true),
     );
   }
 
-  Widget buildCommonDetailView(
-      BuildContext context, ProblemModel problemModel, ThemeHandler themeProvider, TemplateType templateType) {
+  Widget buildCommonDetailView(BuildContext context, ProblemModel problemModel,
+      ThemeHandler themeProvider, TemplateType templateType) {
     final screenWidth = MediaQuery.of(context).size.width;
-    final imageUrl = (templateType == TemplateType.simple) ? problemModel.problemImageUrl : problemModel.processImageUrl;
+    final imageUrl = (templateType == TemplateType.simple)
+        ? problemModel.problemImageUrl
+        : problemModel.processImageUrl;
 
     return SingleChildScrollView(
       child: Padding(
@@ -41,7 +43,12 @@ class ProblemDetailScreenWidget{
             const SizedBox(height: 30.0),
             buildProblemReference(problemModel.reference, themeProvider),
             const SizedBox(height: 30.0),
-            buildImageSection(context, imageUrl, (templateType == TemplateType.simple) ? '문제 이미지' : '보정 이미지', themeProvider.primaryColor, themeProvider),
+            buildImageSection(
+                context,
+                imageUrl,
+                (templateType == TemplateType.simple) ? '문제 이미지' : '보정 이미지',
+                themeProvider.primaryColor,
+                themeProvider),
           ],
         ),
       ),
@@ -49,7 +56,10 @@ class ProblemDetailScreenWidget{
   }
 
   Widget buildAnalysisExpansionTile(
-      BuildContext context, ProblemModel problemModel, ThemeHandler themeProvider, TemplateType templateType) {
+      BuildContext context,
+      ProblemModel problemModel,
+      ThemeHandler themeProvider,
+      TemplateType templateType) {
     final ScrollController latexScrollController = ScrollController();
     final ScrollController tileScrollController = ScrollController();
 
@@ -65,19 +75,25 @@ class ProblemDetailScreenWidget{
           buildSectionWithMemo(problemModel.memo, themeProvider),
           const SizedBox(height: 20.0),
           if (templateType == TemplateType.special)
-            buildLatexView(context, problemModel.analysis, latexScrollController, themeProvider),
+            buildLatexView(context, problemModel.analysis,
+                latexScrollController, themeProvider),
           const SizedBox(height: 20.0),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: (templateType == TemplateType.simple)
-                ? [_buildImageContainer(context, problemModel.answerImageUrl, '정답 이미지', themeProvider)]
+                ? [
+                    _buildImageContainer(context, problemModel.answerImageUrl,
+                        '정답 이미지', themeProvider)
+                  ]
                 : [
-              _buildImageContainer(context, problemModel.problemImageUrl, '원본 이미지', themeProvider),
-              const SizedBox(height: 20.0),
-              _buildImageContainer(context, problemModel.answerImageUrl, '정답 이미지', themeProvider),
-              //const SizedBox(height: 20.0),
-              //_buildImageContainer(context, problemModel.solveImageUrl, '풀이 이미지', themeProvider),
-            ],
+                    _buildImageContainer(context, problemModel.problemImageUrl,
+                        '원본 이미지', themeProvider),
+                    const SizedBox(height: 20.0),
+                    _buildImageContainer(context, problemModel.answerImageUrl,
+                        '정답 이미지', themeProvider),
+                    //const SizedBox(height: 20.0),
+                    //_buildImageContainer(context, problemModel.solveImageUrl, '풀이 이미지', themeProvider),
+                  ],
           ),
           const SizedBox(height: 30.0),
           buildRepeatSection(context, problemModel, themeProvider),
@@ -99,8 +115,7 @@ class ProblemDetailScreenWidget{
   }
 
   // 문제 출처 위젯 구현 함수
-  Widget buildProblemReference(
-      String? reference, ThemeHandler themeProvider) {
+  Widget buildProblemReference(String? reference, ThemeHandler themeProvider) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start, // 레이블을 위로 정렬
       children: [
@@ -121,7 +136,9 @@ class ProblemDetailScreenWidget{
               ),
               const SizedBox(height: 10.0),
               UnderlinedText(
-                text: (reference != null && reference.isNotEmpty) ? reference : "작성한 출처가 없습니다!",
+                text: (reference != null && reference.isNotEmpty)
+                    ? reference
+                    : "작성한 출처가 없습니다!",
                 fontSize: 18,
               ),
             ],
@@ -151,7 +168,8 @@ class ProblemDetailScreenWidget{
   }
 
   // Latex 형태의 텍스트를 출력해주는 함수
-  Widget buildLatexView(BuildContext context, String? analysis, ScrollController scrollController, ThemeHandler themeProvider) {
+  Widget buildLatexView(BuildContext context, String? analysis,
+      ScrollController scrollController, ThemeHandler themeProvider) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -159,14 +177,16 @@ class ProblemDetailScreenWidget{
           children: [
             Icon(Icons.analytics, color: themeProvider.primaryColor),
             const SizedBox(width: 10),
-            HandWriteText(text: '문제 분석', fontSize: 20, color: themeProvider.primaryColor),
+            HandWriteText(
+                text: '문제 분석', fontSize: 20, color: themeProvider.primaryColor),
           ],
         ),
         const SizedBox(height: 5),
         Container(
           constraints: BoxConstraints(
             maxWidth: MediaQuery.of(context).size.width - 70, // 제한된 너비 설정
-            maxHeight: MediaQuery.of(context).size.height / 3, // 필요에 따라 최대 높이 설정
+            maxHeight:
+                MediaQuery.of(context).size.height / 3, // 필요에 따라 최대 높이 설정
           ),
           padding: const EdgeInsets.all(10.0),
           decoration: BoxDecoration(
@@ -205,7 +225,8 @@ class ProblemDetailScreenWidget{
   }
 
   // 한 줄에 아이콘과 텍스트가 동시에 오도록 하는 함수
-  Widget buildIconTextRow(IconData icon, String label, Widget trailing, ThemeHandler themeProvider) {
+  Widget buildIconTextRow(IconData icon, String label, Widget trailing,
+      ThemeHandler themeProvider) {
     return Row(
       children: [
         Icon(icon, color: themeProvider.primaryColor),
@@ -240,7 +261,8 @@ class ProblemDetailScreenWidget{
   }
 
   // 이미지 섹션 빌드 함수
-  Widget buildImageSection(BuildContext context, String? imageUrl, String label, Color color, ThemeHandler themeProvider) {
+  Widget buildImageSection(BuildContext context, String? imageUrl, String label,
+      Color color, ThemeHandler themeProvider) {
     final mediaQuery = MediaQuery.of(context);
     double aspectRatio = 1.0;
 
@@ -264,7 +286,11 @@ class ProblemDetailScreenWidget{
         Center(
           child: GestureDetector(
             onTap: () {
-              Navigator.push(context, MaterialPageRoute(builder: (context) => FullScreenImage(imagePath: imageUrl)));
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) =>
+                          FullScreenImage(imagePath: imageUrl)));
             },
             child: Container(
               width: mediaQuery.size.width,
@@ -284,7 +310,8 @@ class ProblemDetailScreenWidget{
     );
   }
 
-  Widget _buildImageContainer(BuildContext context, String? imageUrl, String label, ThemeHandler themeProvider) {
+  Widget _buildImageContainer(BuildContext context, String? imageUrl,
+      String label, ThemeHandler themeProvider) {
     final mediaQuery = MediaQuery.of(context);
 
     return Column(
@@ -299,7 +326,8 @@ class ProblemDetailScreenWidget{
             children: [
               Icon(Icons.camera_alt, color: themeProvider.primaryColor),
               const SizedBox(width: 8.0),
-              HandWriteText(text: label, fontSize: 20, color: themeProvider.primaryColor),
+              HandWriteText(
+                  text: label, fontSize: 20, color: themeProvider.primaryColor),
             ],
           ),
         ),
@@ -307,7 +335,8 @@ class ProblemDetailScreenWidget{
         Center(
           child: GestureDetector(
             onTap: () {
-              FirebaseAnalytics.instance.logEvent(name: 'image_full_screen_$label');
+              FirebaseAnalytics.instance
+                  .logEvent(name: 'image_full_screen_$label');
               Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -332,7 +361,8 @@ class ProblemDetailScreenWidget{
     );
   }
 
-  Widget buildRepeatSection(BuildContext context, ProblemModel problemModel, ThemeHandler themeProvider) {
+  Widget buildRepeatSection(BuildContext context, ProblemModel problemModel,
+      ThemeHandler themeProvider) {
     final mediaQuery = MediaQuery.of(context);
 
     return Column(
@@ -344,7 +374,8 @@ class ProblemDetailScreenWidget{
           children: [
             Row(
               children: [
-                Icon(Icons.menu_book, color: themeProvider.primaryColor), // 책 아이콘 추가
+                Icon(Icons.menu_book,
+                    color: themeProvider.primaryColor), // 책 아이콘 추가
                 const SizedBox(width: 8),
                 HandWriteText(
                   text: '복습 기록',
@@ -366,43 +397,49 @@ class ProblemDetailScreenWidget{
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: problemModel.repeats?.map((repeat) {
-            return Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // 복습 날짜
-                  HandWriteText(
-                    text: '복습 날짜 : ${DateFormat('yyyy년 MM월 dd일').format(repeat.createdAt)}',
-                    fontSize: 18,
-                    color: Colors.black,
-                  ),
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // 복습 날짜
+                      UnderlinedText(
+                        text:
+                            '복습 날짜 : ${DateFormat('yyyy년 MM월 dd일').format(repeat.createdAt)}',
+                        fontSize: 18,
+                        color: Colors.black,
+                      ),
 
-                  // 복습 이미지
-                  if(repeat.solveImageUrl != null)
-                    Container(
-                      width: mediaQuery.size.width,
-                      height: mediaQuery.size.height * 0.5,
-                      decoration: BoxDecoration(
-                        color: themeProvider.primaryColor.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: AspectRatio(
-                        aspectRatio: 0.5,
-                        child: DisplayImage(imagePath: repeat.solveImageUrl, fit: BoxFit.contain),
-                      ),
-                    ),
-                  const SizedBox(height: 10.0),
-                ],
-              ),
-            );
-          }).toList() ?? [
-            const HandWriteText(
-              text: '복습 기록이 없습니다.',
-              fontSize: 18,
-              color: Colors.black,
-            )
-          ],
+                      const SizedBox(height: 10.0),
+
+                      // 복습 이미지
+                      if (repeat.solveImageUrl != null)
+                        Container(
+                          width: mediaQuery.size.width,
+                          height: mediaQuery.size.height * 0.5,
+                          decoration: BoxDecoration(
+                            color: themeProvider.primaryColor.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: AspectRatio(
+                            aspectRatio: 0.5,
+                            child: DisplayImage(
+                                imagePath: repeat.solveImageUrl,
+                                fit: BoxFit.contain),
+                          ),
+                        ),
+                      const SizedBox(height: 10.0),
+                    ],
+                  ),
+                );
+              }).toList() ??
+              [
+                const HandWriteText(
+                  text: '복습 기록이 없습니다.',
+                  fontSize: 18,
+                  color: Colors.black,
+                )
+              ],
         ),
       ],
     );
@@ -411,8 +448,8 @@ class ProblemDetailScreenWidget{
   Widget buildNoDataScreen() {
     return const Center(
         child: HandWriteText(
-          text: "오답노트 정보를 가져올 수 없습니다.",
-          fontSize: 28,
-        ));
+      text: "오답노트 정보를 가져올 수 없습니다.",
+      fontSize: 28,
+    ));
   }
 }
