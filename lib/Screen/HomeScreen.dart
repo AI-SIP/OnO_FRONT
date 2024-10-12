@@ -148,8 +148,8 @@ class HomeScreen extends StatelessWidget {
                 onPressed: _launchURL,
                 style: ElevatedButton.styleFrom(
                   padding: EdgeInsets.symmetric(
-                    horizontal: screenWidth * 0.1,
-                    vertical: screenHeight * 0.018,
+                    horizontal: screenWidth * 0.07,
+                    vertical: screenHeight * 0.015,
                   ),
                   backgroundColor: themeProvider.primaryColor,
                   shape: RoundedRectangleBorder(

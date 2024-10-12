@@ -475,6 +475,7 @@ class FoldersProvider with ChangeNotifier {
 
         if (response.statusCode == 200) {
           log('Problem successfully repeated with image');
+          await fetchCurrentFolderContents();
         } else {
           throw Exception('Failed to repeat problem with image');
         }
@@ -491,6 +492,7 @@ class FoldersProvider with ChangeNotifier {
 
         if (response.statusCode == 200) {
           log('Problem successfully repeated without image');
+          await fetchCurrentFolderContents();
         } else {
           throw Exception('Failed to repeat problem without image');
         }
