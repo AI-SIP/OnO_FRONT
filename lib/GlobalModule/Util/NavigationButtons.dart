@@ -1,8 +1,13 @@
+import 'dart:io';
+
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:ono/GlobalModule/Image/DisplayImage.dart';
 import 'package:ono/Provider/FoldersProvider.dart';
 import 'package:ono/Screen/ProblemDetail/ProblemDetailScreenV2.dart';
 import 'package:provider/provider.dart';
+import '../Image/ImagePickerHandler.dart';
 import '../Theme/StandardText.dart';
 import '../Theme/ThemeHandler.dart';
 
@@ -23,7 +28,9 @@ class NavigationButtons extends StatefulWidget {
 }
 
 class _NavigationButtonsState extends State<NavigationButtons> {
-  bool isReviewed = false; // 복습 완료 상태를 저장하는 변수
+  bool isReviewed = false;
+  final ImagePickerHandler _imagePickerHandler = ImagePickerHandler();
+  XFile? selectedImage;
 
   @override
   Widget build(BuildContext context) {
@@ -36,7 +43,7 @@ class _NavigationButtonsState extends State<NavigationButtons> {
 
     int currentIndex = problemIds.indexOf(widget.currentId);
     int previousProblemId =
-    currentIndex > 0 ? problemIds[currentIndex - 1] : problemIds.last;
+        currentIndex > 0 ? problemIds[currentIndex - 1] : problemIds.last;
     int nextProblemId = currentIndex < problemIds.length - 1
         ? problemIds[currentIndex + 1]
         : problemIds.first;
@@ -52,7 +59,8 @@ class _NavigationButtonsState extends State<NavigationButtons> {
             navigateToProblem(context, previousProblemId, isNext: false);
           },
           style: ElevatedButton.styleFrom(
-            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 8.0),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 20.0, vertical: 8.0),
             backgroundColor: themeProvider.primaryColor.withOpacity(0.1),
             side: BorderSide(
               color: themeProvider.primaryColor,
@@ -63,27 +71,15 @@ class _NavigationButtonsState extends State<NavigationButtons> {
             ),
           ),
           child: StandardText(
-              text: '< 이전 문제',
-              fontSize: 12,
-              color: themeProvider.primaryColor),
+              text: '< 이전 문제', fontSize: 12, color: themeProvider.primaryColor),
         ),
 
         // 복습 완료 버튼
         TextButton(
-          onPressed: () async {
-            if (!isReviewed) {
-              FirebaseAnalytics.instance.logEvent(
-                name: 'problem_repeat_complete',
-              );
-
-              await widget.foldersProvider.addRepeatCount(widget.currentId, null);
-              setState(() {
-                isReviewed = true; // 복습 완료 상태로 변경
-              });
-            }
-          },
+          onPressed: () => showReviewDialog(context),
           style: ElevatedButton.styleFrom(
-            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 8.0),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 20.0, vertical: 8.0),
             backgroundColor: themeProvider.primaryColor.withOpacity(0.1),
             side: BorderSide(
               color: themeProvider.primaryColor,
@@ -95,26 +91,26 @@ class _NavigationButtonsState extends State<NavigationButtons> {
           ),
           child: isReviewed
               ? Icon(
-            Icons.check, // 복습 완료 시 체크 아이콘만 표시
-            color: themeProvider.primaryColor,
-            size: 24,
-          )
+                  Icons.check, // 복습 완료 시 체크 아이콘만 표시
+                  color: themeProvider.primaryColor,
+                  size: 24,
+                )
               : Row(
-            mainAxisSize: MainAxisSize.min, // 터치 아이콘과 텍스트를 한 줄로 표시
-            children: [
-              Icon(
-                Icons.touch_app, // 복습 완료 전 터치 아이콘
-                color: themeProvider.primaryColor,
-                size: 14,
-              ),
-              const SizedBox(width: 8), // 아이콘과 텍스트 간 간격
-              StandardText(
-                text: '복습 완료', // 복습 완료 텍스트
-                fontSize: 14,
-                color: themeProvider.primaryColor,
-              ),
-            ],
-          ),
+                  mainAxisSize: MainAxisSize.min, // 터치 아이콘과 텍스트를 한 줄로 표시
+                  children: [
+                    Icon(
+                      Icons.touch_app, // 복습 완료 전 터치 아이콘
+                      color: themeProvider.primaryColor,
+                      size: 14,
+                    ),
+                    const SizedBox(width: 8), // 아이콘과 텍스트 간 간격
+                    StandardText(
+                      text: '복습 완료', // 복습 완료 텍스트
+                      fontSize: 14,
+                      color: themeProvider.primaryColor,
+                    ),
+                  ],
+                ),
         ),
         TextButton(
           onPressed: () {
@@ -124,7 +120,8 @@ class _NavigationButtonsState extends State<NavigationButtons> {
             navigateToProblem(context, nextProblemId, isNext: true);
           },
           style: ElevatedButton.styleFrom(
-            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 8.0),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 20.0, vertical: 8.0),
             backgroundColor: themeProvider.primaryColor.withOpacity(0.1),
             side: BorderSide(
               color: themeProvider.primaryColor,
@@ -135,26 +132,28 @@ class _NavigationButtonsState extends State<NavigationButtons> {
             ),
           ),
           child: StandardText(
-              text: '다음 문제 >',
-              fontSize: 12,
-              color: themeProvider.primaryColor),
+              text: '다음 문제 >', fontSize: 12, color: themeProvider.primaryColor),
         ),
       ],
     );
   }
 
-  void navigateToProblem(BuildContext context, int newProblemId, {required bool isNext}) {
+  void navigateToProblem(BuildContext context, int newProblemId,
+      {required bool isNext}) {
     Navigator.pushReplacement(
       context,
       PageRouteBuilder(
-        pageBuilder: (context, animation, secondaryAnimation) => ProblemDetailScreenV2(problemId: newProblemId),
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            ProblemDetailScreenV2(problemId: newProblemId),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           // 다음 문제인지 이전 문제인지에 따라 시작 위치와 애니메이션 설정
-          final Offset begin = !isNext ? const Offset(-1.0, 0.0) : const Offset(1.0, 0.0);
+          final Offset begin =
+              !isNext ? const Offset(-1.0, 0.0) : const Offset(1.0, 0.0);
           const end = Offset.zero;
           const curve = Curves.easeInOut;
 
-          var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+          var tween =
+              Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
           var offsetAnimation = animation.drive(tween);
 
           // 회전 애니메이션 설정
@@ -162,7 +161,8 @@ class _NavigationButtonsState extends State<NavigationButtons> {
             position: offsetAnimation,
             child: RotationTransition(
               alignment: Alignment.bottomRight, // 오른쪽 아래를 기준으로 회전
-              turns: Tween(begin: !isNext ? -0.1 : 0.1, end: 0.0).animate(animation), // 시계 방향으로 회전
+              turns: Tween(begin: !isNext ? -0.1 : 0.1, end: 0.0)
+                  .animate(animation), // 시계 방향으로 회전
               child: child,
             ),
           );
@@ -171,8 +171,109 @@ class _NavigationButtonsState extends State<NavigationButtons> {
     );
   }
 
-  void repeatComplete() async{
-    Provider.of<FoldersProvider>(context, listen: false)
-        .addRepeatCount(widget.currentId, null);
+  void showReviewDialog(BuildContext context) {
+    final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return StatefulBuilder( // StatefulBuilder 추가
+            builder: (context, setState) {
+              return AlertDialog(
+                insetPadding: const EdgeInsets.symmetric(horizontal: 30, vertical: 30),
+                contentPadding: const EdgeInsets.all(15), // 추가된 패딩
+                titlePadding: const EdgeInsets.only(left: 20, top: 20, right: 20),
+                title: StandardText(
+                  text: '복습을 완료했나요?',
+                  fontSize: 18,
+                  color: themeProvider.primaryColor,
+                ),
+                content: Container(
+                  height: MediaQuery.of(context).size.height * 0.5, // 세로 길이 설정
+                  padding: const EdgeInsets.all(15), // 내부 패딩 추가
+                  child: GestureDetector(
+                    onTap: () {
+                      FirebaseAnalytics.instance.logEvent(
+                        name: 'add_solve_image',
+                      );
+
+                      _imagePickerHandler.showImagePicker(context, (pickedFile) async {
+                        if (pickedFile != null) {
+                          setState(() { // 다이얼로그 내부에서 setState 호출
+                            selectedImage = pickedFile;
+                          });
+                        }
+                      });
+                    },
+                    child: Container(
+                      width: double.maxFinite,
+                      margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                      decoration: BoxDecoration(
+                        color: themeProvider.primaryColor.withOpacity(0.3),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: selectedImage == null
+                          ? Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.photo_library,
+                            size: 60,
+                            color: themeProvider.primaryColor,
+                          ),
+                          const SizedBox(height: 8),
+                          StandardText(
+                            text: '풀이 이미지를 등록하세요',
+                            color: themeProvider.primaryColor,
+                          ),
+                        ],
+                      )
+                          : ClipRRect(
+                        borderRadius: BorderRadius.circular(10),
+                        child: Image.file(
+                          File (selectedImage!.path),
+                          fit: BoxFit.cover,
+                          width: double.infinity,
+                          height: double.infinity,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const StandardText(
+                      text: '취소',
+                      fontSize: 14,
+                      color: Colors.black,
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () async {
+                      await widget.foldersProvider
+                          .addRepeatCount(widget.currentId, selectedImage);
+
+                      FirebaseAnalytics.instance.logEvent(
+                        name: 'problem_repeat_complete',
+                      );
+
+                      setState(() {
+                        isReviewed = true;
+                      });
+                      Navigator.of(context).pop();
+                    },
+                    child: StandardText(
+                      text: '복습 완료',
+                      fontSize: 14,
+                      color: themeProvider.primaryColor,
+                    ),
+                  ),
+                ],
+              );
+            }
+        );
+      },
+    );
   }
 }
