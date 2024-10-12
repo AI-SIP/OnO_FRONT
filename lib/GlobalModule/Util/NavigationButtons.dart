@@ -76,7 +76,7 @@ class _NavigationButtonsState extends State<NavigationButtons> {
                 name: 'problem_repeat_complete',
               );
 
-              await widget.foldersProvider.addRepeatCount(widget.currentId);
+              await widget.foldersProvider.addRepeatCount(widget.currentId, null);
               setState(() {
                 isReviewed = true; // 복습 완료 상태로 변경
               });
@@ -173,6 +173,6 @@ class _NavigationButtonsState extends State<NavigationButtons> {
 
   void repeatComplete() async{
     Provider.of<FoldersProvider>(context, listen: false)
-        .addRepeatCount(widget.currentId);
+        .addRepeatCount(widget.currentId, null);
   }
 }

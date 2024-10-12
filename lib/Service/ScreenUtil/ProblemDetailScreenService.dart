@@ -27,7 +27,7 @@ class ProblemDetailScreenService {
     }
 
     Provider.of<FoldersProvider>(context, listen: false)
-        .addRepeatCount(problemId);
+        .addRepeatCount(problemId, null);
   }
 
   void editProblem(BuildContext context, int? problemId) async {

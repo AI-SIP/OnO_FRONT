@@ -41,7 +41,7 @@ class _ProblemRegisterTemplateState
   late TextEditingController sourceController;
   late TextEditingController notesController;
   XFile? answerImage;
-  XFile? solveImage;
+  //XFile? solveImage;
   final _service = ProblemRegisterScreenService();
 
   String? processImageUrl;
@@ -273,6 +273,7 @@ class _ProblemRegisterTemplateState
               ),
             ),
             const SizedBox(width: 10),
+            /*
             const Icon(Icons.arrow_forward, size: 30, color: Colors.white),
             const SizedBox(width: 10),
             Expanded(
@@ -294,6 +295,7 @@ class _ProblemRegisterTemplateState
                 },
               ),
             ),
+             */
           ],
         ),
       ],
@@ -391,6 +393,7 @@ class _ProblemRegisterTemplateState
         ),
         const SizedBox(height: 20),
         // 보정 이미지와 해설 이미지가 있을 경우 추가
+        /*
         if (widget.templateType != TemplateType.simple)
           Column(
             children: [
@@ -414,6 +417,8 @@ class _ProblemRegisterTemplateState
               const SizedBox(height: 20),
             ],
           ),
+
+         */
       ],
     );
   }
@@ -577,7 +582,7 @@ class _ProblemRegisterTemplateState
       sourceController.clear();
       notesController.clear();
       answerImage = null;
-      solveImage = null;
+      //solveImage = null;
     });
   }
 
@@ -600,7 +605,7 @@ class _ProblemRegisterTemplateState
         problemImageUrl: problemModel.problemImageUrl,
         processImageUrl: processImageUrl,
         answerImage: answerImage,
-        solveImage: solveImage,
+        //solveImage: solveImage,
         memo: notesController.text,
         reference: sourceController.text,
         analysis: analysisResult,
