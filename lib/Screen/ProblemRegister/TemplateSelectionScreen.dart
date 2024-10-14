@@ -1,5 +1,6 @@
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
+import 'package:ono/GlobalModule/Theme/LoadingDialog.dart';
 import 'package:provider/provider.dart';
 import '../../GlobalModule/Image/ColorPicker/ImageColorPickerHandler.dart';
 import '../../GlobalModule/Image/ImagePickerHandler.dart';
@@ -97,6 +98,8 @@ class TemplateSelectionScreen extends StatelessWidget {
                       context, pickedFile.path);
                 }
 
+                LoadingDialog.show(context, '템플릿 불러오는 중...');
+
                 final result =
                     await Provider.of<FoldersProvider>(context, listen: false)
                         .uploadProblemImage(pickedFile);
@@ -111,6 +114,8 @@ class TemplateSelectionScreen extends StatelessWidget {
                     problemImageUrl: problemImageUrl,
                     templateType: templateType,
                   );
+
+                  LoadingDialog.hide(context);
 
                   Navigator.pushNamed(
                     context,

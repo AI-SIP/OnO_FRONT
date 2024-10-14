@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
 import '../../GlobalModule/Image/DisplayImage.dart';
+import '../../GlobalModule/Theme/LoadingDialog.dart';
 import '../../GlobalModule/Theme/StandardText.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
 import '../../GlobalModule/Util/FolderSelectionDialog.dart';
@@ -597,7 +598,7 @@ class _ProblemRegisterTemplateState
       name: 'problem_register_complete_button_click',
     );
 
-    _service.showLoadingDialog(context);
+    LoadingDialog.show(context, '오답노트 작성 중...');
 
     _waitForLoadingToComplete().then((_) {
       final problemRegisterModel = ProblemRegisterModelV2(
@@ -619,7 +620,7 @@ class _ProblemRegisterTemplateState
         problemRegisterModel,
         () {
           _resetFields();
-          _service.hideLoadingDialog(context);
+          LoadingDialog.hide(context);
           Navigator.of(context).pop(true);
         },
       );

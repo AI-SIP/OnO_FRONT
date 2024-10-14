@@ -4,6 +4,7 @@ import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:ono/GlobalModule/Image/DisplayImage.dart';
+import 'package:ono/GlobalModule/Theme/LoadingDialog.dart';
 import 'package:ono/Provider/FoldersProvider.dart';
 import 'package:ono/Screen/ProblemDetail/ProblemDetailScreenV2.dart';
 import 'package:provider/provider.dart';
@@ -259,6 +260,8 @@ class _NavigationButtonsState extends State<NavigationButtons> {
                       isLoading = true;
                     });
 
+                    LoadingDialog.show(context, '오답 복습 중...');
+
                     await widget.foldersProvider.addRepeatCount(widget.currentId, selectedImage);
 
                     FirebaseAnalytics.instance.logEvent(
@@ -270,6 +273,7 @@ class _NavigationButtonsState extends State<NavigationButtons> {
                       isLoading = false;
                     });
 
+                    LoadingDialog.hide(context);
                     Navigator.of(context).pop();
 
                     SnackBarDialog.showSnackBar(
