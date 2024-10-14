@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:ono/GlobalModule/Image/DisplayImage.dart';
 import 'package:ono/GlobalModule/Theme/LoadingDialog.dart';
 import 'package:ono/Provider/FoldersProvider.dart';
 import 'package:ono/Screen/ProblemDetail/ProblemDetailScreenV2.dart';
