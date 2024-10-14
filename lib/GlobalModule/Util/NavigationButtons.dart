@@ -16,12 +16,14 @@ class NavigationButtons extends StatefulWidget {
   final BuildContext context;
   final FoldersProvider foldersProvider;
   final int currentId;
+  final VoidCallback onRefresh;
 
   const NavigationButtons({
     super.key,
     required this.context,
     required this.foldersProvider,
     required this.currentId,
+    required this.onRefresh,
   });
 
   @override
@@ -280,6 +282,8 @@ class _NavigationButtonsState extends State<NavigationButtons> {
                       message: '복습이 완료되었습니다!',
                       backgroundColor: themeProvider.primaryColor,
                     );
+
+                    widget.onRefresh();
                   },
                   child: isLoading
                       ? SizedBox(

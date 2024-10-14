@@ -46,6 +46,18 @@ class _ProblemDetailScreenV2State extends State<ProblemDetailScreenV2> {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _refreshScreen();
+  }
+
+  void _refreshScreen() {
+    setState(() {
+      _problemModelFuture = _problemDetailService.fetchProblemDetails(context, widget.problemId);
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeHandler>(context);
 
@@ -282,6 +294,7 @@ class _ProblemDetailScreenV2State extends State<ProblemDetailScreenV2> {
         context: context,
         foldersProvider: Provider.of<FoldersProvider>(context, listen: false),
         currentId: widget.problemId,
+        onRefresh: _refreshScreen,
       ),
     );
   }
