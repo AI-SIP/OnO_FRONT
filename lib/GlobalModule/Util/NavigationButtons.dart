@@ -8,6 +8,7 @@ import 'package:ono/Provider/FoldersProvider.dart';
 import 'package:ono/Screen/ProblemDetail/ProblemDetailScreenV2.dart';
 import 'package:provider/provider.dart';
 import '../Image/ImagePickerHandler.dart';
+import '../Theme/SnackBarDialog.dart';
 import '../Theme/StandardText.dart';
 import '../Theme/ThemeHandler.dart';
 
@@ -173,105 +174,128 @@ class _NavigationButtonsState extends State<NavigationButtons> {
 
   void showReviewDialog(BuildContext context) {
     final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
+    bool isLoading = false; // 로딩 상태 변수 외부로 이동
 
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return StatefulBuilder( // StatefulBuilder 추가
-            builder: (context, setState) {
-              return AlertDialog(
-                insetPadding: const EdgeInsets.symmetric(horizontal: 30, vertical: 30),
-                contentPadding: const EdgeInsets.all(15), // 추가된 패딩
-                titlePadding: const EdgeInsets.only(left: 20, top: 20, right: 20),
-                title: StandardText(
-                  text: '복습을 완료했나요?',
-                  fontSize: 18,
-                  color: themeProvider.primaryColor,
-                ),
-                content: Container(
-                  height: MediaQuery.of(context).size.height * 0.5, // 세로 길이 설정
-                  padding: const EdgeInsets.all(15), // 내부 패딩 추가
-                  child: GestureDetector(
-                    onTap: () {
-                      FirebaseAnalytics.instance.logEvent(
-                        name: 'add_solve_image',
-                      );
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              insetPadding: const EdgeInsets.symmetric(horizontal: 30, vertical: 30),
+              contentPadding: const EdgeInsets.all(15),
+              titlePadding: const EdgeInsets.only(left: 20, top: 20, right: 20),
+              title: StandardText(
+                text: '복습을 완료했나요?',
+                fontSize: 18,
+                color: themeProvider.primaryColor,
+              ),
+              content: Container(
+                height: MediaQuery.of(context).size.height * 0.5,
+                padding: const EdgeInsets.all(15),
+                child: GestureDetector(
+                  onTap: () {
+                    FirebaseAnalytics.instance.logEvent(
+                      name: 'add_solve_image',
+                    );
 
-                      _imagePickerHandler.showImagePicker(context, (pickedFile) async {
-                        if (pickedFile != null) {
-                          setState(() { // 다이얼로그 내부에서 setState 호출
-                            selectedImage = pickedFile;
-                          });
-                        }
-                      });
-                    },
-                    child: Container(
-                      width: double.maxFinite,
-                      margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-                      decoration: BoxDecoration(
-                        color: themeProvider.primaryColor.withOpacity(0.3),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: selectedImage == null
-                          ? Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.photo_library,
-                            size: 60,
-                            color: themeProvider.primaryColor,
-                          ),
-                          const SizedBox(height: 8),
-                          StandardText(
-                            text: '풀이 이미지를 등록하세요',
-                            color: themeProvider.primaryColor,
-                          ),
-                        ],
-                      )
-                          : ClipRRect(
-                        borderRadius: BorderRadius.circular(10),
-                        child: Image.file(
-                          File (selectedImage!.path),
-                          fit: BoxFit.cover,
-                          width: double.infinity,
-                          height: double.infinity,
+                    _imagePickerHandler.showImagePicker(context, (pickedFile) async {
+                      if (pickedFile != null) {
+                        setState(() {
+                          selectedImage = pickedFile;
+                        });
+                      }
+                    });
+                  },
+                  child: Container(
+                    width: double.maxFinite,
+                    margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: themeProvider.primaryColor.withOpacity(0.3),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: selectedImage == null
+                        ? Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.photo_library,
+                          size: 60,
+                          color: themeProvider.primaryColor,
                         ),
+                        const SizedBox(height: 8),
+                        StandardText(
+                          text: '풀이 이미지를 등록하세요',
+                          color: themeProvider.primaryColor,
+                        ),
+                      ],
+                    )
+                        : ClipRRect(
+                      borderRadius: BorderRadius.circular(10),
+                      child: Image.file(
+                        File(selectedImage!.path),
+                        fit: BoxFit.cover,
+                        width: double.infinity,
+                        height: double.infinity,
                       ),
                     ),
                   ),
                 ),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    child: const StandardText(
-                      text: '취소',
-                      fontSize: 14,
-                      color: Colors.black,
-                    ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const StandardText(
+                    text: '취소',
+                    fontSize: 14,
+                    color: Colors.black,
                   ),
-                  TextButton(
-                    onPressed: () async {
-                      await widget.foldersProvider
-                          .addRepeatCount(widget.currentId, selectedImage);
+                ),
+                TextButton(
+                  onPressed: isLoading
+                      ? null
+                      : () async {
+                    setState(() {
+                      isLoading = true;
+                    });
 
-                      FirebaseAnalytics.instance.logEvent(
-                        name: 'problem_repeat_complete',
-                      );
+                    await widget.foldersProvider.addRepeatCount(widget.currentId, selectedImage);
 
-                      setState(() {
-                        isReviewed = true;
-                      });
-                      Navigator.of(context).pop();
-                    },
-                    child: StandardText(
-                      text: '복습 완료',
-                      fontSize: 14,
+                    FirebaseAnalytics.instance.logEvent(
+                      name: 'problem_repeat_complete',
+                    );
+
+                    setState(() {
+                      isReviewed = true;
+                      isLoading = false;
+                    });
+
+                    Navigator.of(context).pop();
+
+                    SnackBarDialog.showSnackBar(
+                      context: context,
+                      message: '복습이 완료되었습니다!',
+                      backgroundColor: themeProvider.primaryColor,
+                    );
+                  },
+                  child: isLoading
+                      ? SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.0,
                       color: themeProvider.primaryColor,
                     ),
+                  )
+                      : StandardText(
+                    text: '복습 완료',
+                    fontSize: 14,
+                    color: themeProvider.primaryColor,
                   ),
-                ],
-              );
-            }
+                ),
+              ],
+            );
+          },
         );
       },
     );
