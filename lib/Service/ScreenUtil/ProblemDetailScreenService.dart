@@ -15,46 +15,6 @@ class ProblemDetailScreenService {
         .getProblemDetails(problemId);
   }
 
-  void refreshProblemDetails(
-      BuildContext context, Future<ProblemModel?> Function() fetchDetails) {
-    fetchDetails();
-  }
-
-  void addRepeatCount(BuildContext context, int? problemId) async{
-    if (problemId == null) {
-      SnackBarDialog.showSnackBar(context: context, message: "오답노트를 불러오는 과정에서 오류가 발생했습니다.", backgroundColor: Colors.red);
-      return;
-    }
-
-    Provider.of<FoldersProvider>(context, listen: false)
-        .addRepeatCount(problemId);
-  }
-
-  void editProblem(BuildContext context, int? problemId) async {
-    if (problemId == null) {
-      SnackBarDialog.showSnackBar(context: context, message: "오답노트를 불러오는 과정에서 오류가 발생했습니다.", backgroundColor: Colors.red);
-      return;
-    }
-
-    ProblemModel? problem =
-        await Provider.of<FoldersProvider>(context, listen: false)
-            .getProblemDetails(problemId);
-
-    if (problem != null) {
-      Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (context) => ProblemRegisterScreenV2(
-            problemModel: problem,
-            isEditMode: true,
-            colors: [],
-          ),
-        ),
-      );
-    } else {
-      SnackBarDialog.showSnackBar(context: context, message: "오답노트를 불러오는 과정에서 오류가 발생했습니다.", backgroundColor: Colors.red);
-    }
-  }
-
   void deleteProblem(BuildContext context, int? problemId, Function onSuccess,
       Function onError) {
     if (problemId == null) {

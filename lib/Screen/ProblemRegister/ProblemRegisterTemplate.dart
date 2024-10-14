@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
 import '../../GlobalModule/Image/DisplayImage.dart';
+import '../../GlobalModule/Theme/LoadingDialog.dart';
 import '../../GlobalModule/Theme/StandardText.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
 import '../../GlobalModule/Util/FolderSelectionDialog.dart';
@@ -41,7 +42,7 @@ class _ProblemRegisterTemplateState
   late TextEditingController sourceController;
   late TextEditingController notesController;
   XFile? answerImage;
-  XFile? solveImage;
+  //XFile? solveImage;
   final _service = ProblemRegisterScreenService();
 
   String? processImageUrl;
@@ -49,6 +50,7 @@ class _ProblemRegisterTemplateState
   bool isLoading = false;
   DateTime _selectedDate = DateTime.now();
   int? _selectedFolderId;
+  String? _selectedFolderName;
 
   final ScrollController scrollControllerForPage = ScrollController();
   final ScrollController scrollControllerForAnalysis = ScrollController();
@@ -61,6 +63,7 @@ class _ProblemRegisterTemplateState
     notesController = TextEditingController(text: problemModel.memo);
     _selectedDate = problemModel.solvedAt ?? DateTime.now();
     _selectedFolderId = problemModel.folderId;
+    _selectedFolderName = null;
 
     _fetchData();
   }
@@ -145,6 +148,11 @@ class _ProblemRegisterTemplateState
                   if (selectedFolderId != null) {
                     setState(() {
                       _selectedFolderId = selectedFolderId;
+                      _selectedFolderName = FolderSelectionDialog.getFolderNameByFolderId(selectedFolderId);
+
+                      if(sourceController.text.isEmpty){
+                        sourceController.text = '$_selectedFolderName ';
+                      }
                     });
                   }
                 },
@@ -266,6 +274,7 @@ class _ProblemRegisterTemplateState
               ),
             ),
             const SizedBox(width: 10),
+            /*
             const Icon(Icons.arrow_forward, size: 30, color: Colors.white),
             const SizedBox(width: 10),
             Expanded(
@@ -287,6 +296,7 @@ class _ProblemRegisterTemplateState
                 },
               ),
             ),
+             */
           ],
         ),
       ],
@@ -384,6 +394,7 @@ class _ProblemRegisterTemplateState
         ),
         const SizedBox(height: 20),
         // 보정 이미지와 해설 이미지가 있을 경우 추가
+        /*
         if (widget.templateType != TemplateType.simple)
           Column(
             children: [
@@ -407,6 +418,8 @@ class _ProblemRegisterTemplateState
               const SizedBox(height: 20),
             ],
           ),
+
+         */
       ],
     );
   }
@@ -570,7 +583,7 @@ class _ProblemRegisterTemplateState
       sourceController.clear();
       notesController.clear();
       answerImage = null;
-      solveImage = null;
+      //solveImage = null;
     });
   }
 
@@ -585,7 +598,7 @@ class _ProblemRegisterTemplateState
       name: 'problem_register_complete_button_click',
     );
 
-    _service.showLoadingDialog(context);
+    LoadingDialog.show(context, '오답노트 작성 중...');
 
     _waitForLoadingToComplete().then((_) {
       final problemRegisterModel = ProblemRegisterModelV2(
@@ -593,7 +606,7 @@ class _ProblemRegisterTemplateState
         problemImageUrl: problemModel.problemImageUrl,
         processImageUrl: processImageUrl,
         answerImage: answerImage,
-        solveImage: solveImage,
+        //solveImage: solveImage,
         memo: notesController.text,
         reference: sourceController.text,
         analysis: analysisResult,
@@ -607,7 +620,7 @@ class _ProblemRegisterTemplateState
         problemRegisterModel,
         () {
           _resetFields();
-          _service.hideLoadingDialog(context);
+          LoadingDialog.hide(context);
           Navigator.of(context).pop(true);
         },
       );

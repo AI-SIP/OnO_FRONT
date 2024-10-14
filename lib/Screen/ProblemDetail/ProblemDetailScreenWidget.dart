@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_tex/flutter_tex.dart';
@@ -15,115 +13,91 @@ import '../../GlobalModule/Theme/UnderlinedText.dart';
 import '../../GlobalModule/Util/LatexTextHandler.dart';
 import '../../Model/ProblemModel.dart';
 
-class ProblemDetailScreenWidget{
-
+class ProblemDetailScreenWidget {
   // 배경 구현 함수
   Widget buildBackground(ThemeHandler themeProvider) {
     return CustomPaint(
       size: Size.infinite,
-      painter: GridPainter(gridColor: themeProvider.primaryColor, isSpring: true),
+      painter:
+          GridPainter(gridColor: themeProvider.primaryColor, isSpring: true),
     );
   }
 
-  // 공통된 뷰 (풀이 날짜, 문제 출처, 이미지 뷰)
-  Widget buildCommonDetailView(
-      BuildContext context, ProblemModel problemModel, ThemeHandler themeProvider, TemplateType templateType) {
+  Widget buildCommonDetailView(BuildContext context, ProblemModel problemModel,
+      ThemeHandler themeProvider, TemplateType templateType) {
     final screenWidth = MediaQuery.of(context).size.width;
-    final imageUrl = (templateType == TemplateType.simple) ? problemModel.problemImageUrl : problemModel.processImageUrl;
+    final imageUrl = (templateType == TemplateType.simple)
+        ? problemModel.problemImageUrl
+        : problemModel.processImageUrl;
 
-    if (screenWidth > 600) {
-      // 가로 모드 레이아웃
-      return Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // 왼쪽 영역 (풀이 날짜와 문제 출처)
-          Flexible(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 30.0),
-                buildSolvedDate(problemModel.solvedAt, themeProvider),
-                const SizedBox(height: 30.0),
-                buildProblemReference(problemModel.reference, themeProvider),
-              ],
-            ),
-          ),
-          const SizedBox(width: 30.0), // 좌우 간격을 위한 여백
-          // 오른쪽 영역 (이미지 뷰)
-          Flexible(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 25.0),
-                buildImageSection(context, imageUrl, (templateType == TemplateType.simple) ? '문제 이미지' : '보정 이미지', themeProvider.primaryColor, themeProvider),
-                const SizedBox(height: 30.0),
-              ],
-            ),
-          ),
-        ],
-      );
-    } else {
-      // 세로 모드 레이아웃
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const SizedBox(height: 16.0),
-          buildSolvedDate(problemModel.solvedAt, themeProvider),
-          const SizedBox(height: 25.0),
-          buildProblemReference(problemModel.reference, themeProvider),
-          const SizedBox(height: 30.0),
-          buildImageSection(context, imageUrl, (templateType == TemplateType.simple) ? '문제 이미지' : '보정 이미지', themeProvider.primaryColor, themeProvider),
-          const SizedBox(height: 30.0),
-        ],
-      );
-    }
+    return SingleChildScrollView(
+      child: Padding(
+        padding: const EdgeInsets.all(8.0), // 원하는 경우 여백 추가
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 30.0),
+            buildSolvedDate(problemModel.solvedAt, themeProvider),
+            const SizedBox(height: 30.0),
+            buildProblemReference(problemModel.reference, themeProvider),
+            const SizedBox(height: 30.0),
+            buildImageSection(
+                context,
+                imageUrl,
+                (templateType == TemplateType.simple) ? '문제 이미지' : '보정 이미지',
+                themeProvider.primaryColor,
+                themeProvider),
+          ],
+        ),
+      ),
+    );
   }
 
-  // 정답 및 풀이 확인 ExpansionTile
   Widget buildAnalysisExpansionTile(
-      BuildContext context, ProblemModel problemModel, ThemeHandler themeProvider, TemplateType templateType) {
-    final ScrollController scrollController = ScrollController();
-    final ScrollController scrollController2 = ScrollController();
-    final screenWidth = MediaQuery.of(context).size.width;
-    int crossAxisCount = screenWidth > 1100 ? 3 : (screenWidth > 600 ? 2 : 1);
-    double childAspectRatio = screenWidth > 1100 ? 0.8 : 0.9;
+      BuildContext context,
+      ProblemModel problemModel,
+      ThemeHandler themeProvider,
+      TemplateType templateType) {
+    final ScrollController latexScrollController = ScrollController();
+    final ScrollController tileScrollController = ScrollController();
 
-    return ExpansionTile(
-      title: Container(
-        padding: const EdgeInsets.all(8.0),
-        child: buildCenteredTitle('정답 확인', themeProvider.primaryColor),
-      ),
-      children: [
-        const SizedBox(height: 10.0),
-        buildSectionWithMemo(problemModel.memo, themeProvider),
-        const SizedBox(height: 20.0),
-        if (templateType == TemplateType.special) buildLatexView(context, problemModel.analysis, scrollController, themeProvider),
-        const SizedBox(height: 20.0),
-        LayoutBuilder(
-          builder: (BuildContext context, BoxConstraints constraints) {
-            return GridView.count(
-              controller: scrollController2,
-              crossAxisCount: crossAxisCount,
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              mainAxisSpacing: 20.0,
-              crossAxisSpacing: 20.0,
-              childAspectRatio: childAspectRatio,
-              children: (templateType == TemplateType.simple)
-                  ? [_buildImageContainer(context, problemModel.answerImageUrl, '정답 이미지', crossAxisCount, themeProvider)]
-                  : [
-                _buildImageContainer(context, problemModel.problemImageUrl, '원본 이미지', crossAxisCount, themeProvider),
-                _buildImageContainer(context, problemModel.answerImageUrl, '정답 이미지', crossAxisCount, themeProvider),
-                _buildImageContainer(context, problemModel.solveImageUrl, '풀이 이미지', crossAxisCount, themeProvider),
-              ],
-            );
-          },
+    return SingleChildScrollView(
+      controller: tileScrollController,
+      child: ExpansionTile(
+        title: Container(
+          padding: const EdgeInsets.all(8.0),
+          child: buildCenteredTitle('정답 확인', themeProvider.primaryColor),
         ),
-
-        const SizedBox(height: 20.0),
-        buildRepeatSection(problemModel, themeProvider),
-        const SizedBox(height: 20.0),
-      ],
+        children: [
+          const SizedBox(height: 10.0),
+          buildSectionWithMemo(problemModel.memo, themeProvider),
+          const SizedBox(height: 20.0),
+          if (templateType == TemplateType.special)
+            buildLatexView(context, problemModel.analysis,
+                latexScrollController, themeProvider),
+          const SizedBox(height: 20.0),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: (templateType == TemplateType.simple)
+                ? [
+                    _buildImageContainer(context, problemModel.answerImageUrl,
+                        '정답 이미지', themeProvider)
+                  ]
+                : [
+                    _buildImageContainer(context, problemModel.problemImageUrl,
+                        '원본 이미지', themeProvider),
+                    const SizedBox(height: 20.0),
+                    _buildImageContainer(context, problemModel.answerImageUrl,
+                        '정답 이미지', themeProvider),
+                    //const SizedBox(height: 20.0),
+                    //_buildImageContainer(context, problemModel.solveImageUrl, '풀이 이미지', themeProvider),
+                  ],
+          ),
+          const SizedBox(height: 30.0),
+          buildRepeatSection(context, problemModel, themeProvider),
+          const SizedBox(height: 20.0),
+        ],
+      ),
     );
   }
 
@@ -139,8 +113,7 @@ class ProblemDetailScreenWidget{
   }
 
   // 문제 출처 위젯 구현 함수
-  Widget buildProblemReference(
-      String? reference, ThemeHandler themeProvider) {
+  Widget buildProblemReference(String? reference, ThemeHandler themeProvider) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start, // 레이블을 위로 정렬
       children: [
@@ -161,7 +134,9 @@ class ProblemDetailScreenWidget{
               ),
               const SizedBox(height: 10.0),
               UnderlinedText(
-                text: (reference != null && reference.isNotEmpty) ? reference : "작성한 출처가 없습니다!",
+                text: (reference != null && reference.isNotEmpty)
+                    ? reference
+                    : "작성한 출처가 없습니다!",
                 fontSize: 18,
               ),
             ],
@@ -191,7 +166,8 @@ class ProblemDetailScreenWidget{
   }
 
   // Latex 형태의 텍스트를 출력해주는 함수
-  Widget buildLatexView(BuildContext context, String? analysis, ScrollController scrollController, ThemeHandler themeProvider) {
+  Widget buildLatexView(BuildContext context, String? analysis,
+      ScrollController scrollController, ThemeHandler themeProvider) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -199,14 +175,16 @@ class ProblemDetailScreenWidget{
           children: [
             Icon(Icons.analytics, color: themeProvider.primaryColor),
             const SizedBox(width: 10),
-            HandWriteText(text: '문제 분석', fontSize: 20, color: themeProvider.primaryColor),
+            HandWriteText(
+                text: '문제 분석', fontSize: 20, color: themeProvider.primaryColor),
           ],
         ),
         const SizedBox(height: 5),
         Container(
           constraints: BoxConstraints(
             maxWidth: MediaQuery.of(context).size.width - 70, // 제한된 너비 설정
-            maxHeight: MediaQuery.of(context).size.height / 3, // 필요에 따라 최대 높이 설정
+            maxHeight:
+                MediaQuery.of(context).size.height / 3, // 필요에 따라 최대 높이 설정
           ),
           padding: const EdgeInsets.all(10.0),
           decoration: BoxDecoration(
@@ -245,7 +223,8 @@ class ProblemDetailScreenWidget{
   }
 
   // 한 줄에 아이콘과 텍스트가 동시에 오도록 하는 함수
-  Widget buildIconTextRow(IconData icon, String label, Widget trailing, ThemeHandler themeProvider) {
+  Widget buildIconTextRow(IconData icon, String label, Widget trailing,
+      ThemeHandler themeProvider) {
     return Row(
       children: [
         Icon(icon, color: themeProvider.primaryColor),
@@ -280,9 +259,10 @@ class ProblemDetailScreenWidget{
   }
 
   // 이미지 섹션 빌드 함수
-  Widget buildImageSection(BuildContext context, String? imageUrl, String label, Color color, ThemeHandler themeProvider) {
+  Widget buildImageSection(BuildContext context, String? imageUrl, String label,
+      Color color, ThemeHandler themeProvider) {
     final mediaQuery = MediaQuery.of(context);
-    double aspectRatio = mediaQuery.size.width > 1100 ? 1.4 : 0.8;
+    double aspectRatio = 1.0;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -304,10 +284,15 @@ class ProblemDetailScreenWidget{
         Center(
           child: GestureDetector(
             onTap: () {
-              Navigator.push(context, MaterialPageRoute(builder: (context) => FullScreenImage(imagePath: imageUrl)));
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) =>
+                          FullScreenImage(imagePath: imageUrl)));
             },
             child: Container(
-              width: mediaQuery.size.width * 0.8,
+              width: mediaQuery.size.width,
+              height: mediaQuery.size.height * 0.5,
               decoration: BoxDecoration(
                 color: themeProvider.primaryColor.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(10),
@@ -323,8 +308,8 @@ class ProblemDetailScreenWidget{
     );
   }
 
-  // 이미지 컨테이너를 빌드하는 함수
-  Widget _buildImageContainer(BuildContext context, String? imageUrl, String label, int crossAxisCount, ThemeHandler themeProvider) {
+  Widget _buildImageContainer(BuildContext context, String? imageUrl,
+      String label, ThemeHandler themeProvider) {
     final mediaQuery = MediaQuery.of(context);
 
     return Column(
@@ -339,36 +324,33 @@ class ProblemDetailScreenWidget{
             children: [
               Icon(Icons.camera_alt, color: themeProvider.primaryColor),
               const SizedBox(width: 8.0),
-              HandWriteText(text: label, fontSize: 20, color: themeProvider.primaryColor),
+              HandWriteText(
+                  text: label, fontSize: 20, color: themeProvider.primaryColor),
             ],
           ),
         ),
         const SizedBox(height: 10.0),
-        Expanded(
-          child: Center(
-            child: GestureDetector(
-              onTap: () {
-                FirebaseAnalytics.instance.logEvent(name: 'image_full_screen_$label');
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => FullScreenImage(imagePath: imageUrl),
-                  ),
-                );
-              },
-              child: Container(
-                width: mediaQuery.size.width * 0.8 / crossAxisCount, // 기기 크기 및 그리드 수에 맞게 크기 조절
-                decoration: BoxDecoration(
-                  color: themeProvider.primaryColor.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(10),
+        Center(
+          child: GestureDetector(
+            onTap: () {
+              FirebaseAnalytics.instance
+                  .logEvent(name: 'image_full_screen_$label');
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => FullScreenImage(imagePath: imageUrl),
                 ),
-                child: AspectRatio(
-                  aspectRatio: 0.8, // 원하는 비율로 이미지의 높이를 조정
-                  child: DisplayImage(
-                    imagePath: imageUrl,
-                    fit: BoxFit.contain, // 이미지 전체를 보여주기 위한 설정
-                  ),
-                ),
+              );
+            },
+            child: Container(
+              height: mediaQuery.size.height * 0.5, // 고정된 높이로 변경
+              decoration: BoxDecoration(
+                color: themeProvider.primaryColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: DisplayImage(
+                imagePath: imageUrl,
+                fit: BoxFit.contain,
               ),
             ),
           ),
@@ -377,7 +359,10 @@ class ProblemDetailScreenWidget{
     );
   }
 
-  Widget buildRepeatSection(ProblemModel problemModel, ThemeHandler themeProvider) {
+  Widget buildRepeatSection(BuildContext context, ProblemModel problemModel,
+      ThemeHandler themeProvider) {
+    final mediaQuery = MediaQuery.of(context);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -387,7 +372,8 @@ class ProblemDetailScreenWidget{
           children: [
             Row(
               children: [
-                Icon(Icons.menu_book, color: themeProvider.primaryColor), // 책 아이콘 추가
+                Icon(Icons.menu_book,
+                    color: themeProvider.primaryColor), // 책 아이콘 추가
                 const SizedBox(width: 8),
                 HandWriteText(
                   text: '복습 기록',
@@ -405,25 +391,53 @@ class ProblemDetailScreenWidget{
         ),
         const SizedBox(height: 10.0),
 
-        // 복습 날짜 리스트
+        // 복습 날짜와 이미지 리스트
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: problemModel.repeats?.map((repeat) {
-            return Padding(
-              padding: const EdgeInsets.symmetric(vertical: 4.0),
-              child: HandWriteText(
-                text: DateFormat('yyyy년 MM월 dd일').format(repeat.createdAt),
-                fontSize: 18,
-                color: Colors.black,
-              ),
-            );
-          }).toList() ?? [
-            const HandWriteText(
-              text: '복습 기록이 없습니다.',
-              fontSize: 18,
-              color: Colors.black,
-            )
-          ],
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // 복습 날짜
+                      UnderlinedText(
+                        text:
+                            '복습 날짜 : ${DateFormat('yyyy년 MM월 dd일').format(repeat.createdAt)}',
+                        fontSize: 18,
+                        color: Colors.black,
+                      ),
+
+                      const SizedBox(height: 10.0),
+
+                      // 복습 이미지
+                      if (repeat.solveImageUrl != null)
+                        Container(
+                          width: mediaQuery.size.width,
+                          height: mediaQuery.size.height * 0.5,
+                          decoration: BoxDecoration(
+                            color: themeProvider.primaryColor.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: AspectRatio(
+                            aspectRatio: 0.5,
+                            child: DisplayImage(
+                                imagePath: repeat.solveImageUrl,
+                                fit: BoxFit.contain),
+                          ),
+                        ),
+                      const SizedBox(height: 10.0),
+                    ],
+                  ),
+                );
+              }).toList() ??
+              [
+                const HandWriteText(
+                  text: '복습 기록이 없습니다.',
+                  fontSize: 18,
+                  color: Colors.black,
+                )
+              ],
         ),
       ],
     );
@@ -432,8 +446,8 @@ class ProblemDetailScreenWidget{
   Widget buildNoDataScreen() {
     return const Center(
         child: HandWriteText(
-          text: "오답노트 정보를 가져올 수 없습니다.",
-          fontSize: 28,
-        ));
+      text: "오답노트 정보를 가져올 수 없습니다.",
+      fontSize: 28,
+    ));
   }
 }

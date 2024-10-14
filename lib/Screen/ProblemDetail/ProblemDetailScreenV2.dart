@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:ono/GlobalModule/Theme/HandWriteText.dart';
@@ -45,6 +43,18 @@ class _ProblemDetailScreenV2State extends State<ProblemDetailScreenV2> {
   void initState() {
     super.initState();
     _problemModelFuture = _problemDetailService.fetchProblemDetails(context, widget.problemId);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _refreshScreen();
+  }
+
+  void _refreshScreen() {
+    setState(() {
+      _problemModelFuture = _problemDetailService.fetchProblemDetails(context, widget.problemId);
+    });
   }
 
   @override
@@ -284,6 +294,7 @@ class _ProblemDetailScreenV2State extends State<ProblemDetailScreenV2> {
         context: context,
         foldersProvider: Provider.of<FoldersProvider>(context, listen: false),
         currentId: widget.problemId,
+        onRefresh: _refreshScreen,
       ),
     );
   }

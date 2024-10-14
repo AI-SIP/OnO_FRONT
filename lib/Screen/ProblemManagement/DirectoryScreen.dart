@@ -76,7 +76,10 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       elevation: 0, // AppBar 그림자 제거
       centerTitle: true, // 제목을 항상 가운데로 배치
       title: StandardText(
-        text: (foldersProvider.currentFolder?.parentFolder != null && foldersProvider.currentFolder?.folderName != null) ? foldersProvider.currentFolder!.folderName : '책장',
+        text: (foldersProvider.currentFolder?.parentFolder != null &&
+                foldersProvider.currentFolder?.folderName != null)
+            ? foldersProvider.currentFolder!.folderName
+            : '책장',
         fontSize: 20,
         color: themeProvider.primaryColor,
       ),
@@ -289,6 +292,10 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                     await foldersProvider
                         .deleteFolder(foldersProvider.currentFolder!.folderId);
                     Navigator.pop(context); // 다이얼로그 닫기
+                    SnackBarDialog.showSnackBar(
+                        context: context,
+                        message: '공책이 삭제되었습니다!',
+                        backgroundColor: themeProvider.primaryColor);
                   }
                 },
                 child: const StandardText(

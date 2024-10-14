@@ -1,5 +1,4 @@
 import 'dart:io' show Platform;
-import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:ono/Model/LoginStatus.dart';
@@ -148,8 +147,8 @@ class HomeScreen extends StatelessWidget {
                 onPressed: _launchURL,
                 style: ElevatedButton.styleFrom(
                   padding: EdgeInsets.symmetric(
-                    horizontal: screenWidth * 0.1,
-                    vertical: screenHeight * 0.018,
+                    horizontal: screenWidth * 0.07,
+                    vertical: screenHeight * 0.015,
                   ),
                   backgroundColor: themeProvider.primaryColor,
                   shape: RoundedRectangleBorder(

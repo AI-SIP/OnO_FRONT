@@ -456,20 +456,46 @@ class FoldersProvider with ChangeNotifier {
     }
   }
 
-  Future<void> addRepeatCount(int problemId) async {
+  Future<void> addRepeatCount(int problemId, XFile? solveImage) async {
     try {
-      final response = await httpService.sendRequest(
-        method: 'POST',
-        url: '${AppConfig.baseUrl}/api/problem/repeat',
-        headers: {
-          'problemId': problemId.toString(),
-        },
-      );
+      if (solveImage != null) {
+        // Multipart 파일로 변환
+        final file = await http.MultipartFile.fromPath('solveImage', solveImage.path);
 
-      if (response.statusCode == 200) {
-        log('Problem successfully repeated');
+        // Multipart 요청 생성
+        final response = await httpService.sendRequest(
+          method: 'POST',
+          url: '${AppConfig.baseUrl}/api/problem/repeat',
+          headers: {
+            'problemId': problemId.toString(),
+          },
+          isMultipart: true,
+          files: [file],
+        );
+
+        if (response.statusCode == 200) {
+          log('Problem successfully repeated with image');
+          await fetchCurrentFolderContents();
+        } else {
+          throw Exception('Failed to repeat problem with image');
+        }
       } else {
-        throw Exception('Failed to delete problem');
+        // solveImage가 null인 경우, 일반 POST 요청으로 전송
+        final response = await httpService.sendRequest(
+          method: 'POST',
+          url: '${AppConfig.baseUrl}/api/problem/repeat',
+          headers: {
+            'problemId': problemId.toString(),
+          },
+          isMultipart: false,
+        );
+
+        if (response.statusCode == 200) {
+          log('Problem successfully repeated without image');
+          await fetchCurrentFolderContents();
+        } else {
+          throw Exception('Failed to repeat problem without image');
+        }
       }
     } catch (error, stackTrace) {
       log('Error deleting problem: $error');

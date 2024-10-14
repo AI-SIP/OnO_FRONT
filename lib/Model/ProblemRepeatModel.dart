@@ -2,11 +2,13 @@ import 'package:intl/intl.dart';
 
 class ProblemRepeatModel {
   final int id;
+  final String? solveImageUrl;
   final DateTime createdAt;
   final DateTime updatedAt;
 
   ProblemRepeatModel({
     required this.id,
+    required this.solveImageUrl,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -15,6 +17,7 @@ class ProblemRepeatModel {
   factory ProblemRepeatModel.fromJson(Map<String, dynamic> json) {
     return ProblemRepeatModel(
       id: json['id'],
+      solveImageUrl: json['solveImageUrl'],
       createdAt: DateTime.parse(json['createdAt']).add(const Duration(hours: 9)),
       updatedAt: DateTime.parse(json['updatedAt']).add(const Duration(hours: 9)),
     );
@@ -24,6 +27,7 @@ class ProblemRepeatModel {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
+      'solveImageUrl' : solveImageUrl,
       'createdAt': _formatDateTime(createdAt),
       'updatedAt': _formatDateTime(updatedAt),
     };
