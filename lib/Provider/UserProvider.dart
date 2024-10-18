@@ -30,6 +30,7 @@ class UserProvider with ChangeNotifier {
   String? _userName = '';
   String? _userEmail = '';
   bool _isLoading = true;
+  bool _isFirstLogin = false;
 
   LoginStatus get isLoggedIn => _loginStatus;
   int? get userId => _userId;
@@ -38,6 +39,7 @@ class UserProvider with ChangeNotifier {
   String? get userName => _userName;
   String? get userEmail => _userEmail;
   bool get isLoading => _isLoading;
+  bool get isFirstLogin => _isFirstLogin;
 
   final GuestAuthService guestAuthService = GuestAuthService();
   final AppleAuthService appleAuthService = AppleAuthService();
@@ -105,6 +107,7 @@ class UserProvider with ChangeNotifier {
         _userId = responseBody['userId'] ?? 0;
         _userName = responseBody['userName'] ?? '이름 없음';
         _userEmail = responseBody['userEmail'];
+        _isFirstLogin = responseBody['firstLogin'];
         _loginStatus = LoginStatus.login;
 
         FirebaseAnalytics.instance.logLogin();
@@ -119,7 +122,6 @@ class UserProvider with ChangeNotifier {
           ));
         });
 
-        bool isFirstLogin = responseBody['firstLogin'];
         _problemCount = await getUserProblemCount();
         if (_loginStatus == LoginStatus.login) {
           await foldersProvider.fetchRootFolderContents();
@@ -301,6 +303,7 @@ class UserProvider with ChangeNotifier {
     _userName = '';
     _userEmail = '';
     _problemCount = 0;
+    _isFirstLogin = false;
     await storage.deleteAll();
     notifyListeners();
   }

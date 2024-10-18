@@ -91,6 +91,10 @@ flutter:
     - assets/Logo.png
     - assets/KakaoLogo.png
     - assets/NaverLogo.png
+    - assets/GuideScreen/GuideScreen1.png
+    - assets/GuideScreen/GuideScreen2.png
+    - assets/GuideScreen/GuideScreen3.png
+
   fonts:
     - family: HandWrite
       fonts:

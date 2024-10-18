@@ -98,7 +98,7 @@ class KakaoAuthService {
 
       if (response.statusCode == 200) {
         log('kakao sign-in Success!');
-        SnackBarDialog.showSnackBar(context: context, message: "로그인에 성공했습니다.", backgroundColor: Colors.green);
+        //SnackBarDialog.showSnackBar(context: context, message: "로그인에 성공했습니다.", backgroundColor: Colors.green);
 
         return jsonDecode(response.body);
       } else {

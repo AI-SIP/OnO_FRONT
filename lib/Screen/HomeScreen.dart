@@ -2,6 +2,7 @@ import 'dart:io' show Platform;
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:ono/Model/LoginStatus.dart';
+import 'package:ono/Screen/UserGuideScreen.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../Config/AppConfig.dart';
@@ -11,8 +12,47 @@ import '../GlobalModule/Theme/StandardText.dart';
 import '../GlobalModule/Theme/ThemeHandler.dart';
 import '../Provider/UserProvider.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  _HomeScreenState createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+
+  bool modalShown = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Post frame callback을 사용해 모달을 제어
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final userProvider = Provider.of<UserProvider>(context, listen: false);
+      if (userProvider.isFirstLogin && !modalShown) {
+        _showUserGuideModal();
+      }
+    });
+  }
+
+  void _showUserGuideModal() {
+    modalShown = true; // 모달을 보여줬으므로 true로 설정
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true, // 스크롤 가능 모달 설정
+      backgroundColor: Colors.transparent, // 투명 배경
+      builder: (BuildContext context) {
+        return FractionallySizedBox(
+          heightFactor: 0.5, // 화면 높이의 85% 차지
+          child: UserGuideScreen(
+            onFinish: () {
+              Navigator.of(context).pop(); // 모달 닫기
+            },
+          ),
+        );
+      },
+    );
+  }
 
   Future<void> _launchURL() async {
     final url = Uri.parse(AppConfig.guidePageUrl);
@@ -120,6 +160,7 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final userProvider = Provider.of<UserProvider>(context);
     final themeProvider = Provider.of<ThemeHandler>(context);
     final screenHeight = MediaQuery.of(context).size.height;
     final screenWidth = MediaQuery.of(context).size.width;

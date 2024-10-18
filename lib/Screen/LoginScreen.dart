@@ -15,19 +15,6 @@ import '../Provider/UserProvider.dart';
 class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});
 
-  Future<void> _launchURL() async {
-    final url = Uri.parse(AppConfig.guidePageUrl);
-
-    if (await canLaunchUrl(url)) {
-      launchUrl(url);
-      FirebaseAnalytics.instance.logEvent(name: 'ono_guide_button_click', parameters: {
-        'url': AppConfig.guidePageUrl,
-      });
-    } else {
-      throw 'Could not launch $url';
-    }
-  }
-
   void _showGuestLoginDialog(BuildContext context) {
     final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
 
@@ -126,8 +113,6 @@ class LoginScreen extends StatelessWidget {
     final screenWidth = MediaQuery.of(context).size.width;
 
     final double headerFontSize = screenHeight * 0.04;
-    final double buttonFontSize = screenHeight * 0.025;
-    final double welcomeFontSize = screenHeight * 0.03;
 
     return Scaffold(
       body: CustomPaint(
