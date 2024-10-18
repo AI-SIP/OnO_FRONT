@@ -11,8 +11,6 @@ class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});
 
   void _showGuestLoginDialog(BuildContext context) {
-    final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
-
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -68,53 +66,6 @@ class LoginScreen extends StatelessWidget {
         width: buttonWidth,
         height: buttonHeight,
         fit: BoxFit.contain, // 이미지를 버튼 크기에 맞게 조정
-      ),
-    );
-  }
-
-  Widget _buildLoginButton({
-    required BuildContext context,
-    required VoidCallback onPressed,
-    required String text,
-    required String assetPath,
-    required Color textColor,
-    required double buttonWidth,
-    required double buttonHeight,
-    required double logoSize,
-    required double textSize,
-    required Color backgroundColor,
-    required bool fontBold,
-  }) {
-    return SizedBox(
-      width: buttonWidth,
-      height: buttonHeight,
-      child: ElevatedButton(
-        onPressed: onPressed,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: backgroundColor,
-          elevation: 1.0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(4.0),
-          ),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            assetPath.isNotEmpty
-                ? Image.asset(assetPath, height: logoSize)
-                : Icon(Icons.person_outline,
-                size: logoSize, color: Colors.black87),
-            SizedBox(width: buttonWidth * 0.02),
-            Text(
-              text,
-              style: TextStyle(
-                color: textColor,
-                fontSize: textSize,
-                fontWeight: fontBold ? FontWeight.bold : FontWeight.normal,
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

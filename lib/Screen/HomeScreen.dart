@@ -232,68 +232,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     );
                   } else {
-                    return Column(
-                      children: [
-                        _buildLoginButton(
-                          context: context,
-                          onPressed: () => _showGuestLoginDialog(context),
-                          text: '게스트로 로그인',
-                          assetPath:
-                              '', // Icon will be used instead of asset image
-                          textColor: Colors.black87,
-                          buttonWidth: buttonWidth,
-                          buttonHeight: buttonHeight,
-                          logoSize: logoSize,
-                          textSize: textSize,
-                          backgroundColor: Colors.white,
-                          fontBold: false,
-                        ),
-                        SizedBox(height: screenHeight * 0.03),
-                        _buildLoginButton(
-                          context: context,
-                          onPressed: () => authService.signInWithGoogle(context),
-                          text: '  Google로 로그인',
-                          assetPath: 'assets/GoogleLogo.png',
-                          textColor: Colors.black87,
-                          buttonWidth: buttonWidth,
-                          buttonHeight: buttonHeight,
-                          logoSize: logoSize,
-                          textSize: textSize,
-                          backgroundColor: Colors.white,
-                          fontBold: false,
-                        ),
-                        if (Platform.isIOS || Platform.isMacOS)
-                          SizedBox(height: screenHeight * 0.03),
-                        if (Platform.isIOS || Platform.isMacOS)
-                          _buildLoginButton(
-                            context: context,
-                            onPressed: () => authService.signInWithApple(context),
-                            text: 'Apple로 로그인',
-                            assetPath: 'assets/AppleLogo.png',
-                            textColor: Colors.black87,
-                            buttonWidth: buttonWidth,
-                            buttonHeight: buttonHeight,
-                            logoSize: logoSize,
-                            textSize: textSize,
-                            backgroundColor: Colors.white,
-                            fontBold: false,
-                          ),
-                        SizedBox(height: screenHeight * 0.03),
-                        _buildLoginButton(
-                          context: context,
-                          onPressed: () => authService.signInWithKakao(context),
-                          text: ' 카카오 로그인',
-                          assetPath: 'assets/KakaoLogo.png', // 카카오 로고 경로
-                          textColor: Colors.black87,
-                          buttonWidth: buttonWidth,
-                          buttonHeight: buttonHeight,
-                          logoSize: logoSize,
-                          textSize: textSize,
-                          backgroundColor: const Color(0xFFFEE500),
-                          fontBold: true,
-                        ),
-                      ],
-                    );
+                    return const Column();
                   }
                 },
               ),
