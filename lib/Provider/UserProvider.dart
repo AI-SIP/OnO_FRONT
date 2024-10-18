@@ -29,6 +29,7 @@ class UserProvider with ChangeNotifier {
   int? _problemCount = 0;
   String? _userName = '';
   String? _userEmail = '';
+  bool _isLoading = true;
 
   LoginStatus get isLoggedIn => _loginStatus;
   int? get userId => _userId;
@@ -36,6 +37,7 @@ class UserProvider with ChangeNotifier {
   LoginStatus? get loginStatus => _loginStatus;
   String? get userName => _userName;
   String? get userEmail => _userEmail;
+  bool get isLoading => _isLoading;
 
   final GuestAuthService guestAuthService = GuestAuthService();
   final AppleAuthService appleAuthService = AppleAuthService();
@@ -117,9 +119,14 @@ class UserProvider with ChangeNotifier {
           ));
         });
 
+        bool isFirstLogin = responseBody['firstLogin'];
         _problemCount = await getUserProblemCount();
         if (_loginStatus == LoginStatus.login) {
           await foldersProvider.fetchRootFolderContents();
+
+          if(isFirstLogin){
+            log('this user is first login!');
+          }
         }
       } else {
         _loginStatus = LoginStatus.logout;
@@ -201,6 +208,8 @@ class UserProvider with ChangeNotifier {
   Future<void> autoLogin() async {
     _loginStatus = LoginStatus.waiting;
     String? refreshToken = await storage.read(key: 'refreshToken');
+
+    _isLoading = false;
     if (refreshToken == null) {
       _loginStatus = LoginStatus.logout;
       notifyListeners();

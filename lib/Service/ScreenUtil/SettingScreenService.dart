@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:ono/Config/AppConfig.dart';
+import 'package:ono/Screen/LoginScreen.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../GlobalModule/Theme/SnackBarDialog.dart';
@@ -86,9 +87,17 @@ class SettingScreenService {
   Future<void> logout(BuildContext context) async {
     await Provider.of<UserProvider>(context, listen: false).signOut();
     showSuccessDialog(context, '로그아웃에 성공했습니다.');
+
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(builder: (context) => const LoginScreen()),
+    );
   }
 
   Future<void> deleteAccount(BuildContext context) async {
     await Provider.of<UserProvider>(context, listen: false).deleteAccount();
+
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(builder: (context) => const LoginScreen()),
+    );
   }
 }
