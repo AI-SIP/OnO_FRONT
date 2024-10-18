@@ -94,6 +94,11 @@ flutter:
     - assets/GuideScreen/GuideScreen1.png
     - assets/GuideScreen/GuideScreen2.png
     - assets/GuideScreen/GuideScreen3.png
+    - assets/SocialLogin/AppleLogin.png
+    - assets/SocialLogin/GoogleLogin.png
+    - assets/SocialLogin/KakaoLogin.png
+    - assets/Logo/GreenFrog.png
+    - assets/Logo/IvoryFrog.png
 
   fonts:
     - family: HandWrite
