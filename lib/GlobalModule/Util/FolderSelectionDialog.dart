@@ -1,6 +1,7 @@
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:provider/provider.dart';
 import '../../Model/FolderThumbnailModel.dart';
 import '../../Provider/FoldersProvider.dart';
@@ -87,7 +88,12 @@ class _FolderSelectionDialogState extends State<FolderSelectionDialog> {
             color: themeProvider.primaryColor,
           ),
           IconButton(
-            icon: Icon(Icons.add_circle_outline, color: themeProvider.primaryColor),
+            icon: SvgPicture.asset(
+              "assets/Icon/add_note.svg", // SVG 경로
+              color: themeProvider.primaryColor, // SVG의 색상 적용
+              width: 24,
+              height: 24,
+            ),
             onPressed: () async {
               await _showFolderNameDialog(
                 dialogTitle: '공책 생성',

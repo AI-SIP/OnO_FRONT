@@ -3,6 +3,7 @@ import 'dart:developer';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
 import 'package:ono/GlobalModule/Theme/SnackBarDialog.dart';
 import 'package:ono/Model/LoginStatus.dart';
@@ -68,6 +69,21 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                 ),
               ),
             ),
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: 20, right: 10), // 위치 조정 (약간 위로)
+        child: FloatingActionButton(
+          onPressed: () {
+            FirebaseAnalytics.instance
+                .logEvent(name: 'folder_create_button_click');
+            _showCreateFolderDialog(); // 기존에 상단에서 호출하던 폴더 생성 로직
+          },
+          backgroundColor: themeProvider.primaryColor,
+          shape: const CircleBorder(), // 동그란 모양 유지
+          child: SvgPicture.asset("assets/Icon/add_note.svg", color: Colors.white,),
+        ),
+      ),
+      floatingActionButtonLocation:
+          FloatingActionButtonLocation.endFloat, // 오른쪽 하단 기본 위치
     );
   }
 
@@ -102,16 +118,6 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
           padding: const EdgeInsets.only(right: 16.0), // 우측에 여백 추가
           child: Row(
             children: [
-              IconButton(
-                  icon: Icon(
-                    Icons.add,
-                    color: themeProvider.primaryColor,
-                  ),
-                  onPressed: () {
-                    FirebaseAnalytics.instance
-                        .logEvent(name: 'folder_create_button_click');
-                    _showCreateFolderDialog(); // 폴더 생성 다이얼로그 호출
-                  }),
               PopupMenuButton<String>(
                 onSelected: (value) {
                   if (value == 'rename') {

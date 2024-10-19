@@ -61,6 +61,7 @@ dependencies:
   image_gallery_saver_plus: ^3.0.5
   flutter_tex: ^4.0.9
   animated_text_kit: ^4.2.2
+  flutter_svg: ^2.0.10+1
 
 dev_dependencies:
   flutter_test:
@@ -85,12 +86,8 @@ flutter:
   uses-material-design: true
   assets:
     - .env
-    - assets/GoogleLogo.png
-    - assets/AppleLogo.png
     - assets/no_image.png
     - assets/Logo.png
-    - assets/KakaoLogo.png
-    - assets/NaverLogo.png
     - assets/GuideScreen/GuideScreen1.png
     - assets/GuideScreen/GuideScreen2.png
     - assets/GuideScreen/GuideScreen3.png
@@ -99,6 +96,7 @@ flutter:
     - assets/SocialLogin/KakaoLogin.png
     - assets/Logo/GreenFrog.png
     - assets/Logo/IvoryFrog.png
+    - assets/Icon/add_note.svg
 
   fonts:
     - family: HandWrite
