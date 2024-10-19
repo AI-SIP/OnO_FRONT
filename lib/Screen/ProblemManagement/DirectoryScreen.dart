@@ -240,7 +240,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                 fontSize: 14,
                 color: themeProvider.primaryColor,
               ),
-              const Icon(Icons.arrow_drop_down, color: Colors.black),
+              Icon(Icons.arrow_drop_down, color: themeProvider.primaryColor),
             ],
           ),
         ],
@@ -388,25 +388,25 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       builder: (context) {
         return AlertDialog(
           backgroundColor: Colors.white,
-          title: StandardText(
+          title: const StandardText(
             text: '공책 위치 변경 불가',
-            fontSize: 16,
-            color: themeProvider.primaryColor,
+            fontSize: 18,
+            color: Colors.black,
           ),
-          content: StandardText(
+          content: const StandardText(
             text: '책장의 위치를 변경할 수 없습니다.',
-            fontSize: 14,
-            color: themeProvider.primaryColor,
+            fontSize: 16,
+            color: Colors.black,
           ),
           actions: [
             TextButton(
               onPressed: () {
                 Navigator.pop(context);
               },
-              child: const StandardText(
+              child: StandardText(
                 text: '확인',
                 fontSize: 14,
-                color: Colors.black,
+                color: themeProvider.primaryColor,
               ),
             ),
           ],
@@ -424,15 +424,15 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       builder: (context) {
         return AlertDialog(
           backgroundColor: Colors.white,
-          title: StandardText(
+          title: const StandardText(
             text: '공책 삭제',
-            fontSize: 16,
-            color: themeProvider.primaryColor,
+            fontSize: 18,
+            color: Colors.black,
           ),
           content: StandardText(
             text: isRootFolder ? '책장은 삭제할 수 없습니다!' : '정말로 이 공책을 삭제하시겠습니까?',
-            fontSize: 15,
-            color: themeProvider.primaryColor,
+            fontSize: 16,
+            color: Colors.black,
           ),
           actions: [
             TextButton(
@@ -501,11 +501,10 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
             color: Colors.black,
           ),
           content: SizedBox(
-            width: MediaQuery.of(context).size.width * 0.8,
             child: TextField(
               controller: folderNameController,
               style: standardTextStyle.copyWith(
-                color: themeProvider.primaryColor,
+                color: Colors.black,
                 fontSize: 16,
               ),
               decoration: InputDecoration(
@@ -514,8 +513,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                   color: ThemeHandler.desaturatenColor(Colors.black),
                   fontSize: 14,
                 ),
-                border: OutlineInputBorder(
-                  borderSide: BorderSide(color: themeProvider.primaryColor),
+                border: const OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.black),
                 ),
                 enabledBorder: const OutlineInputBorder(
                   borderSide:

@@ -309,7 +309,6 @@ class _SettingScreenState extends State<SettingScreen> {
             color: Colors.black,
           ),
           content: SizedBox(
-            width: MediaQuery.of(context).size.width * 0.8, // 화면 가로의 80%로 설정
             child: TextField(
               controller: nameController,
               style: standardTextStyle.copyWith(
@@ -387,7 +386,6 @@ class _SettingScreenState extends State<SettingScreen> {
           title: StandardText(
               text: title, fontSize: 18, color: Colors.black),
           content: SizedBox(
-            width: MediaQuery.of(context).size.width * 0.8, // 화면 가로의 80%로 설정
             child: StandardText(
                 text: message, fontSize: 15, color: Colors.black),
           ),

@@ -29,12 +29,12 @@ class ProblemDetailScreenService {
 
         return AlertDialog(
           backgroundColor: Colors.white,
-          title: StandardText(
-              text: '오답노트 삭제', fontSize: 16, color: themeProvider.primaryColor),
-          content: StandardText(
+          title: const StandardText(
+              text: '오답노트 삭제', fontSize: 18, color: Colors.black),
+          content: const StandardText(
               text: '정말로 이 오답노트를 삭제하시겠습니까?',
-              fontSize: 14,
-              color: themeProvider.primaryColor),
+              fontSize: 16,
+              color: Colors.black),
           actions: [
             TextButton(
               onPressed: () {

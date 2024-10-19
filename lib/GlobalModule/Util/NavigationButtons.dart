@@ -188,10 +188,10 @@ class _NavigationButtonsState extends State<NavigationButtons> {
               insetPadding: const EdgeInsets.symmetric(horizontal: 30, vertical: 30),
               contentPadding: const EdgeInsets.all(15),
               titlePadding: const EdgeInsets.only(left: 20, top: 20, right: 20),
-              title: StandardText(
+              title: const StandardText(
                 text: '복습을 완료했나요?',
                 fontSize: 18,
-                color: themeProvider.primaryColor,
+                color: Colors.black,
               ),
               content: Container(
                 height: MediaQuery.of(context).size.height * 0.5,
@@ -215,7 +215,7 @@ class _NavigationButtonsState extends State<NavigationButtons> {
                     width: double.maxFinite,
                     margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
                     decoration: BoxDecoration(
-                      color: themeProvider.primaryColor.withOpacity(0.3),
+                      color: themeProvider.primaryColor.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: selectedImage == null

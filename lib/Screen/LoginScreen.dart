@@ -21,11 +21,10 @@ class LoginScreen extends StatelessWidget {
           fontSize: 18,
           color: Colors.black,
         ),
-        content: SizedBox(
-          width: MediaQuery.of(ctx).size.width * 0.8, // 화면 가로의 80%로 설정
-          child: const StandardText(
+        content: const SizedBox(
+          child: StandardText(
             text: '기기 간 오답노트 연동이 불가능하며, 로그아웃 시 모든 정보가 삭제됩니다.',
-            fontSize: 14,
+            fontSize: 16,
             color: Colors.black,
           ),
         ),
