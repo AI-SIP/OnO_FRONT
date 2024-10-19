@@ -1,15 +1,14 @@
 import 'dart:io' show Platform;
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
-import 'package:ono/Model/LoginStatus.dart';
 import 'package:ono/Screen/UserGuideScreen.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../Config/AppConfig.dart';
 import '../GlobalModule/Theme/HandWriteText.dart';
 import '../GlobalModule/Theme/GridPainter.dart';
-import '../GlobalModule/Theme/StandardText.dart';
 import '../GlobalModule/Theme/ThemeHandler.dart';
+import '../Model/LoginStatus.dart';
 import '../Provider/UserProvider.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -30,20 +29,20 @@ class _HomeScreenState extends State<HomeScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final userProvider = Provider.of<UserProvider>(context, listen: false);
       if (userProvider.isFirstLogin && !modalShown) {
+        modalShown = true;
         _showUserGuideModal();
       }
     });
   }
 
-  void _showUserGuideModal() {
-    modalShown = true; // 모달을 보여줬으므로 true로 설정
-    showModalBottomSheet(
+  void _showUserGuideModal() async {
+    await showModalBottomSheet(
       context: context,
       isScrollControlled: true, // 스크롤 가능 모달 설정
       backgroundColor: Colors.transparent, // 투명 배경
       builder: (BuildContext context) {
         return FractionallySizedBox(
-          heightFactor: 0.5, // 화면 높이의 85% 차지
+          heightFactor: 0.5, // 화면 높이의 50% 차지
           child: UserGuideScreen(
             onFinish: () {
               Navigator.of(context).pop(); // 모달 닫기
@@ -65,97 +64,6 @@ class _HomeScreenState extends State<HomeScreen> {
     } else {
       throw 'Could not launch $url';
     }
-  }
-
-  void _showGuestLoginDialog(BuildContext context) {
-    final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
-
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const StandardText(
-          text: '게스트 로그인 할 경우',
-          fontSize: 18,
-          color: Colors.red,
-        ),
-        content: const StandardText(
-          text: '기기 간 오답노트 연동이 불가능하며,\n로그아웃 시 모든 정보가 삭제됩니다.',
-          fontSize: 14,
-          color: Colors.black,
-        ),
-        actions: <Widget>[
-          TextButton(
-            child: const StandardText(
-              text: '취소',
-              fontSize: 14,
-              color: Colors.black,
-            ),
-            onPressed: () {
-              Navigator.of(ctx).pop();
-            },
-          ),
-          TextButton(
-            child: const StandardText(
-              text: '확인',
-              fontSize: 14,
-              color: Colors.black,
-            ),
-            onPressed: () {
-              Navigator.of(ctx).pop();
-              Provider.of<UserProvider>(context, listen: false)
-                  .signInWithGuest(context);
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildLoginButton({
-    required BuildContext context,
-    required VoidCallback onPressed,
-    required String text,
-    required String assetPath,
-    required Color textColor,
-    required double buttonWidth,
-    required double buttonHeight,
-    required double logoSize,
-    required double textSize,
-    required Color backgroundColor,
-    required bool fontBold,
-  }) {
-    return SizedBox(
-      width: buttonWidth,
-      height: buttonHeight,
-      child: ElevatedButton(
-        onPressed: onPressed,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: backgroundColor,
-          elevation: 1.0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(4.0),
-          ),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            assetPath.isNotEmpty
-                ? Image.asset(assetPath, height: logoSize)
-                : Icon(Icons.person_outline,
-                    size: logoSize, color: Colors.black87),
-            SizedBox(width: buttonWidth * 0.02),
-            Text(
-              text,
-              style: TextStyle(
-                color: textColor,
-                fontSize: textSize,
-                fontWeight: fontBold ? FontWeight.bold : FontWeight.normal,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
   }
 
   @override
@@ -214,15 +122,8 @@ class _HomeScreenState extends State<HomeScreen> {
               SizedBox(height: screenHeight * 0.06),
               Consumer<UserProvider>(
                 builder: (context, authService, child) {
-                  double buttonWidth = screenWidth * 0.7;
-                  double buttonHeight = screenHeight * 0.05;
-                  double logoSize = screenHeight * 0.02; // Dynamic logo size
-                  double textSize = screenHeight * 0.015; // Dynamic text size
 
-                  if (authService.isLoggedIn == LoginStatus.waiting) {
-                    return CircularProgressIndicator(
-                        color: themeProvider.primaryColor);
-                  } else if (authService.isLoggedIn == LoginStatus.login) {
+                  if (authService.isLoggedIn == LoginStatus.login) {
                     return Padding(
                       padding: EdgeInsets.only(top: screenHeight * 0.05),
                       child: HandWriteText(

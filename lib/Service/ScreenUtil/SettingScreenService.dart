@@ -86,7 +86,7 @@ class SettingScreenService {
 
   Future<void> logout(BuildContext context) async {
     await Provider.of<UserProvider>(context, listen: false).signOut();
-    showSuccessDialog(context, '로그아웃에 성공했습니다.');
+    //showSuccessDialog(context, '로그아웃에 성공했습니다.');
 
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(builder: (context) => const LoginScreen()),

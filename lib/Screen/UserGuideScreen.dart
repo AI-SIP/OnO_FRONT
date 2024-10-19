@@ -13,6 +13,7 @@ class UserGuideScreen extends StatefulWidget {
 class _UserGuideScreenState extends State<UserGuideScreen> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
+  final guideScreenLength = 3;
 
   @override
   Widget build(BuildContext context) {
@@ -90,7 +91,7 @@ class _UserGuideScreenState extends State<UserGuideScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: List.generate(
-              3,
+              guideScreenLength,
                   (index) => _buildIndicator(index == _currentPage),
             ),
           ),
@@ -102,7 +103,7 @@ class _UserGuideScreenState extends State<UserGuideScreen> {
               return SizedBox(
                 width: buttonWidth, // 다이얼로그의 80% 너비로 버튼 설정
                 child: ElevatedButton(
-                  onPressed: _currentPage == 2
+                  onPressed: _currentPage == guideScreenLength - 1
                       ? widget.onFinish
                       : () {
                     _pageController.nextPage(
@@ -117,7 +118,7 @@ class _UserGuideScreenState extends State<UserGuideScreen> {
                     ),
                   ),
                   child: StandardText(
-                    text: _currentPage == 2 ? '확인' : '다음',
+                    text: _currentPage == guideScreenLength - 1 ? '확인' : '다음',
                     color: Colors.white,
                     fontSize: 16,
                   ),

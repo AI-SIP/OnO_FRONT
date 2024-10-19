@@ -47,35 +47,23 @@ class UserProvider with ChangeNotifier {
   final KakaoAuthService kakaoAuthService = KakaoAuthService();
 
   Future<void> signInWithGuest(BuildContext context) async {
-    _loginStatus = LoginStatus.waiting;
-    notifyListeners();
-
     final response = await guestAuthService.signInWithGuest(context);
     saveUserToken(response: response, loginMethod: 'guest');
   }
 
   // Google 로그인 함수(앱 처음 설치하고 구글 로그인 버튼 누르면 실행)
   Future<void> signInWithGoogle(BuildContext context) async {
-    _loginStatus = LoginStatus.waiting;
-    notifyListeners();
-
     final response = await googleAuthService.signInWithGoogle(context);
     saveUserToken(response: response, loginMethod: 'google');
   }
 
   // Apple 로그인 함수
   Future<void> signInWithApple(BuildContext context) async {
-    _loginStatus = LoginStatus.waiting;
-    notifyListeners();
-
     final response = await appleAuthService.signInWithApple(context);
     saveUserToken(response: response, loginMethod: 'apple');
   }
 
   Future<void> signInWithKakao(BuildContext context) async {
-    _loginStatus = LoginStatus.waiting;
-    notifyListeners();
-
     final response = await kakaoAuthService.signInWithKakao(context);
     saveUserToken(response: response, loginMethod: 'kakao');
   }
@@ -83,6 +71,7 @@ class UserProvider with ChangeNotifier {
   Future<void> saveUserToken({Map<String,dynamic>? response, String? loginMethod}) async{
     if(response == null){
       _loginStatus = LoginStatus.logout;
+      notifyListeners();
     } else{
       await storage.write(key: 'loginMethod', value: loginMethod);
       await tokenProvider.setAccessToken(response['accessToken']);
@@ -91,8 +80,6 @@ class UserProvider with ChangeNotifier {
       FirebaseAnalytics.instance.logLogin(loginMethod: loginMethod);
       await fetchUserInfo();
     }
-
-    notifyListeners();
   }
 
   Future<void> fetchUserInfo() async {
@@ -107,7 +94,7 @@ class UserProvider with ChangeNotifier {
         _userId = responseBody['userId'] ?? 0;
         _userName = responseBody['userName'] ?? '이름 없음';
         _userEmail = responseBody['userEmail'];
-        _isFirstLogin = responseBody['firstLogin'];
+        _isFirstLogin = responseBody['firstLogin'] ? true : false;
         _loginStatus = LoginStatus.login;
 
         FirebaseAnalytics.instance.logLogin();
@@ -208,7 +195,7 @@ class UserProvider with ChangeNotifier {
   }
 
   Future<void> autoLogin() async {
-    _loginStatus = LoginStatus.waiting;
+    //_loginStatus = LoginStatus.waiting;
     String? refreshToken = await storage.read(key: 'refreshToken');
 
     _isLoading = false;

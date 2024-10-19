@@ -115,7 +115,6 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
   static const List<Widget> _widgetOptions = <Widget>[
     HomeScreen(),
     TemplateSelectionScreen(),
-    //ProblemRegisterScreen(),
     DirectoryScreen(),
     SettingScreen(),
   ];
@@ -124,7 +123,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    autoLogin();
+    //autoLogin();
   }
 
   @override

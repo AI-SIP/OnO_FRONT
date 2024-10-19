@@ -77,6 +77,7 @@ class LoginScreen extends StatelessWidget {
     final screenWidth = MediaQuery.of(context).size.width;
 
     final double headerFontSize = screenHeight * 0.03;
+    bool isNavigated = false;
 
     return Scaffold(
       body: Stack(
@@ -115,7 +116,9 @@ class LoginScreen extends StatelessWidget {
                 double buttonWidth = screenWidth * 0.8; // 화면의 80% 크기
                 double buttonHeight = screenHeight * 0.065;
 
-                if (userProvider.loginStatus == LoginStatus.login) {
+                if (userProvider.loginStatus == LoginStatus.login && !isNavigated){
+                  isNavigated = true;
+
                   WidgetsBinding.instance.addPostFrameCallback((_) {
                     Navigator.of(context).pushReplacement(
                       MaterialPageRoute(builder: (context) => const MyHomePage()),
