@@ -105,6 +105,9 @@ flutter:
     - assets/Icon/BrownNote.svg
     - assets/Icon/WhiteNote.svg
     - assets/Icon/GreyNote.svg
+    - assets/Icon/Pencil.svg
+    - assets/Icon/Eraser.svg
+    - assets/Icon/Glass.svg
 
   fonts:
     - family: HandWrite
