@@ -20,10 +20,10 @@ class _ThemeDialogState extends State<ThemeDialog> {
 
     return AlertDialog(
       backgroundColor: Colors.white,
-      title: StandardText(
+      title: const StandardText(
         text: '테마 색상 선택',
         fontSize: 20,
-        color: themeProvider.primaryColor,
+        color: Colors.black,
       ),
       content: SingleChildScrollView(
         child: Column(

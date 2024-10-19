@@ -13,9 +13,9 @@ class ThemeHandler with ChangeNotifier {
 
   ThemeHandler()
       : _primaryColor = Colors.lightGreen,
-        _lightPrimaryColor = _lightenColor(Colors.lightGreen, 0.2),
-        _darkPrimaryColor = _darkenColor(Colors.lightGreen, 0.1),
-        _desaturateColor = _desaturatenColor(Colors.lightGreen, 0.5) {
+        _lightPrimaryColor = lightenColor(Colors.lightGreen),
+        _darkPrimaryColor = darkenColor(Colors.lightGreen),
+        _desaturateColor = desaturatenColor(Colors.lightGreen) {
     loadColors(); // 생성자에서 색상을 불러오는 메서드 호출
   }
 
@@ -28,13 +28,13 @@ class ThemeHandler with ChangeNotifier {
   // 색상을 변경하고 저장하는 메서드
   void changePrimaryColor(Color primaryColor, String colorName) {
     _primaryColor = primaryColor;
-    _lightPrimaryColor = _lightenColor(primaryColor, 0.2);
-    _darkPrimaryColor = _darkenColor(primaryColor, 0.2);
-    _desaturateColor = _desaturatenColor(primaryColor, 0.5);
-    _saveColor('primaryColor', primaryColor);
-    _saveColor('lightPrimaryColor', _lightPrimaryColor);
-    _saveColor('darkPrimaryColor', _darkPrimaryColor);
-    _saveColor('desaturateColor', _desaturateColor);
+    _lightPrimaryColor = lightenColor(primaryColor);
+    _darkPrimaryColor = darkenColor(primaryColor);
+    _desaturateColor = desaturatenColor(primaryColor);
+    saveColor('primaryColor', primaryColor);
+    saveColor('lightPrimaryColor', _lightPrimaryColor);
+    saveColor('darkPrimaryColor', _darkPrimaryColor);
+    saveColor('desaturateColor', _desaturateColor);
 
     FirebaseAnalytics.instance.logEvent(name: 'theme_color_change_to_$colorName');
     notifyListeners();
@@ -42,23 +42,23 @@ class ThemeHandler with ChangeNotifier {
 
   // 저장된 색상을 로드하는 메서드
   Future<void> loadColors() async {
-    _primaryColor = await _loadColor('primaryColor', Colors.lightGreen);
-    _lightPrimaryColor = await _loadColor(
-        'lightPrimaryColor', _lightenColor(Colors.lightGreen, 0.2));
-    _darkPrimaryColor = await _loadColor(
-        'darkPrimaryColor', _darkenColor(Colors.lightGreen, 0.2));
-    _desaturateColor = await _loadColor(
-        'desaturateColor', _desaturatenColor(Colors.lightGreen, 0.5));
+    _primaryColor = await loadColor('primaryColor', Colors.lightGreen);
+    _lightPrimaryColor = await loadColor(
+        'lightPrimaryColor', lightenColor(Colors.lightGreen));
+    _darkPrimaryColor = await loadColor(
+        'darkPrimaryColor', darkenColor(Colors.lightGreen));
+    _desaturateColor = await loadColor(
+        'desaturateColor', desaturatenColor(Colors.lightGreen));
     notifyListeners();
   }
 
   // 색상을 저장하는 메서드
-  Future<void> _saveColor(String key, Color color) async {
+  Future<void> saveColor(String key, Color color) async {
     await _storage.write(key: key, value: color.value.toRadixString(16));
   }
 
   // 색상을 불러오는 메서드
-  Future<Color> _loadColor(String key, Color defaultColor) async {
+  Future<Color> loadColor(String key, Color defaultColor) async {
     final colorString = await _storage.read(key: key);
     if (colorString != null) {
       return Color(int.parse(colorString, radix: 16));
@@ -67,7 +67,7 @@ class ThemeHandler with ChangeNotifier {
   }
 
   // 더 밝은 색상을 생성하는 메서드
-  static Color _lightenColor(Color color, double amount) {
+  static Color lightenColor(Color color, {double amount = 0.2}) {
     assert(amount >= 0 && amount <= 1);
     final hslColor = HSLColor.fromColor(color);
     final lightenedHslColor = hslColor.withLightness(
@@ -77,7 +77,7 @@ class ThemeHandler with ChangeNotifier {
   }
 
   // 더 밝은 색상을 생성하는 메서드
-  static Color _darkenColor(Color color, double amount) {
+  static Color darkenColor(Color color, {double amount = 0.2}) {
     assert(amount >= 0 && amount <= 1);
     final hslColor = HSLColor.fromColor(color);
     final lightenedHslColor = hslColor.withLightness(
@@ -86,7 +86,7 @@ class ThemeHandler with ChangeNotifier {
     return lightenedHslColor.toColor();
   }
 
-  static Color _desaturatenColor(Color color, double amount) {
+  static Color desaturatenColor(Color color, {double amount = 0.5}) {
     assert(amount >= 0 && amount <= 1);
     return color.withOpacity(
       (color.opacity - amount).clamp(0.0, 1.0), // 투명도를 감소시킴

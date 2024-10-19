@@ -19,12 +19,15 @@ class LoginScreen extends StatelessWidget {
         title: const StandardText(
           text: '게스트 로그인 할 경우',
           fontSize: 18,
-          color: Colors.red,
-        ),
-        content: const StandardText(
-          text: '기기 간 오답노트 연동이 불가능하며,\n로그아웃 시 모든 정보가 삭제됩니다.',
-          fontSize: 14,
           color: Colors.black,
+        ),
+        content: SizedBox(
+          width: MediaQuery.of(ctx).size.width * 0.8, // 화면 가로의 80%로 설정
+          child: const StandardText(
+            text: '기기 간 오답노트 연동이 불가능하며, 로그아웃 시 모든 정보가 삭제됩니다.',
+            fontSize: 14,
+            color: Colors.black,
+          ),
         ),
         actions: <Widget>[
           TextButton(
@@ -41,7 +44,7 @@ class LoginScreen extends StatelessWidget {
             child: const StandardText(
               text: '확인',
               fontSize: 14,
-              color: Colors.black,
+              color: Colors.red,
             ),
             onPressed: () {
               Navigator.of(ctx).pop();

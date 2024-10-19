@@ -303,34 +303,34 @@ class _SettingScreenState extends State<SettingScreen> {
       builder: (context) {
         return AlertDialog(
           backgroundColor: Colors.white,
-          title: StandardText(
+          title: const StandardText(
             text: '이름 수정',
             fontSize: 18,
-            color: themeProvider.primaryColor,
+            color: Colors.black,
           ),
           content: SizedBox(
             width: MediaQuery.of(context).size.width * 0.8, // 화면 가로의 80%로 설정
             child: TextField(
               controller: nameController,
               style: standardTextStyle.copyWith(
-                  color: themeProvider.primaryColor, fontSize: 16),
+                  color: Colors.black, fontSize: 16),
               decoration: InputDecoration(
                 hintText: '수정할 이름을 입력하세요',
                 hintStyle: standardTextStyle.copyWith(
-                    color: themeProvider.desaturateColor, fontSize: 14),
+                    color: ThemeHandler.desaturatenColor(Colors.black), fontSize: 14),
                 border: OutlineInputBorder(
                   borderSide:
-                  BorderSide(color: themeProvider.primaryColor, width: 1.5),
+                  const BorderSide(color: Colors.black, width: 1.5),
                   borderRadius: BorderRadius.circular(8.0),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderSide:
-                  BorderSide(color: themeProvider.primaryColor, width: 1.5),
+                  const BorderSide(color: Colors.black, width: 1.5),
                   borderRadius: BorderRadius.circular(8.0),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderSide:
-                  BorderSide(color: themeProvider.primaryColor, width: 2.0),
+                  const BorderSide(color: Colors.black, width: 2.0),
                   borderRadius: BorderRadius.circular(8.0),
                 ),
                 contentPadding:
@@ -385,11 +385,11 @@ class _SettingScreenState extends State<SettingScreen> {
         return AlertDialog(
           backgroundColor: Colors.white,
           title: StandardText(
-              text: title, fontSize: 18, color: themeProvider.primaryColor),
+              text: title, fontSize: 18, color: Colors.black),
           content: SizedBox(
             width: MediaQuery.of(context).size.width * 0.8, // 화면 가로의 80%로 설정
             child: StandardText(
-                text: message, fontSize: 15, color: themeProvider.primaryColor),
+                text: message, fontSize: 15, color: Colors.black),
           ),
           actions: [
             TextButton(
@@ -406,10 +406,10 @@ class _SettingScreenState extends State<SettingScreen> {
                   Navigator.of(context).pop();
                   onConfirm();
                 },
-                child: StandardText(
+                child: const StandardText(
                   text: '확인',
                   fontSize: 14,
-                  color: themeProvider.primaryColor,
+                  color: Colors.red,
                 )),
           ],
         );

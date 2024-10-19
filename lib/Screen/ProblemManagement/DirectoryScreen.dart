@@ -167,10 +167,10 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
               Padding(
                 padding: const EdgeInsets.only(bottom: 10.0), // 텍스트 간격 조정
                 child: ListTile(
-                  title: StandardText(
+                  title: const StandardText(
                     text: '공책 이름 수정하기',
                     fontSize: 16,
-                    color: themeProvider.primaryColor,
+                    color: Colors.black,
                   ),
                   onTap: () {
                     Navigator.pop(context);
@@ -181,10 +181,10 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
               Padding(
                 padding: const EdgeInsets.only(bottom: 10.0), // 텍스트 간격 조정
                 child: ListTile(
-                  title: StandardText(
+                  title: const StandardText(
                     text: '공책 위치 변경하기',
                     fontSize: 16,
-                    color: themeProvider.primaryColor,
+                    color: Colors.black,
                   ),
                   onTap: () {
                     Navigator.pop(context);
@@ -498,7 +498,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
           title: StandardText(
             text: dialogTitle,
             fontSize: 18,
-            color: themeProvider.primaryColor,
+            color: Colors.black,
           ),
           content: SizedBox(
             width: MediaQuery.of(context).size.width * 0.8,
@@ -511,19 +511,19 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
               decoration: InputDecoration(
                 hintText: '공책 이름을 입력하세요',
                 hintStyle: standardTextStyle.copyWith(
-                  color: themeProvider.desaturateColor,
+                  color: ThemeHandler.desaturatenColor(Colors.black),
                   fontSize: 14,
                 ),
                 border: OutlineInputBorder(
                   borderSide: BorderSide(color: themeProvider.primaryColor),
                 ),
-                enabledBorder: OutlineInputBorder(
+                enabledBorder: const OutlineInputBorder(
                   borderSide:
-                      BorderSide(color: themeProvider.primaryColor, width: 1.5),
+                      BorderSide(color: Colors.black, width: 1.5),
                 ),
-                focusedBorder: OutlineInputBorder(
+                focusedBorder: const OutlineInputBorder(
                   borderSide:
-                      BorderSide(color: themeProvider.primaryColor, width: 1.5),
+                      BorderSide(color: Colors.black, width: 1.5),
                 ),
                 contentPadding: const EdgeInsets.symmetric(
                     vertical: 20.0, horizontal: 12.0),
