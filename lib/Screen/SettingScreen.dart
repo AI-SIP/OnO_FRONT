@@ -4,7 +4,6 @@ import 'package:ono/Config/AppConfig.dart';
 import 'package:ono/Model/LoginStatus.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
-import '../GlobalModule/Theme/SnackBarDialog.dart';
 import '../GlobalModule/Theme/StandardText.dart';
 import '../GlobalModule/Theme/ThemeDialog.dart';
 import '../GlobalModule/Theme/ThemeHandler.dart';
@@ -167,7 +166,7 @@ class _SettingScreenState extends State<SettingScreen> {
       title: StandardText(
         text: '$userName님',
         fontSize: 18,
-        color: themeProvider.primaryColor,
+        color: Colors.black,
       ),
       trailing: ElevatedButton(
         onPressed: () {
@@ -203,7 +202,7 @@ class _SettingScreenState extends State<SettingScreen> {
       title: StandardText(
         text: '작성한 오답노트 수',
         fontSize: 18,
-        color: themeProvider.primaryColor,
+        color: Colors.black,
       ),
       trailing: StandardText(
         text: problemCount.toString(),
@@ -226,12 +225,12 @@ class _SettingScreenState extends State<SettingScreen> {
       title: StandardText(
         text: title,
         fontSize: 18,
-        color: themeColor,
+        color: Colors.black,
       ),
       subtitle: StandardText(
         text: subtitle,
         fontSize: 14,
-        color: themeColor.withOpacity(0.6),
+        color: ThemeHandler.desaturatenColor(Colors.black),
       ),
       trailing: Container(
         width: 40,
@@ -258,12 +257,12 @@ class _SettingScreenState extends State<SettingScreen> {
       title: StandardText(
         text: title,
         fontSize: 18,
-        color: themeProvider.primaryColor,
+        color: Colors.black,
       ),
       subtitle: StandardText(
         text: subtitle,
         fontSize: 14,
-        color: themeProvider.primaryColor.withOpacity(0.6),
+        color: ThemeHandler.desaturatenColor(Colors.black),
       ),
       onTap: onTap,
     );

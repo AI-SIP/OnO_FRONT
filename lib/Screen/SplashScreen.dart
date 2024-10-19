@@ -5,7 +5,6 @@ import 'package:provider/provider.dart';
 
 import '../Model/LoginStatus.dart';
 import '../Provider/UserProvider.dart';
-import 'HomeScreen.dart';
 import 'LoginScreen.dart';
 
 class SplashScreen extends StatefulWidget {
