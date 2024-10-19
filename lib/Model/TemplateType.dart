@@ -8,22 +8,22 @@ extension TemplateTypeExtension on TemplateType {
   String get displayName {
     switch (this) {
       case TemplateType.simple:
-        return '국어, 영어 템플릿';
+        return '국어/영어 템플릿';
       case TemplateType.clean:
         return '사회 탐구 템플릿';
       case TemplateType.special:
-        return '수학, 과학 탐구 템플릿';
+        return '수학/과학 탐구 템플릿';
     }
   }
 
   List<String> get description {
     switch (this) {
       case TemplateType.simple:
-        return ['**필기 제거 X, 오답 분석 X**', '빠르게 오답노트를 작성하고, 편리한 복습을 하고 싶은 분들을 위한 템플릿입니다.'];
+        return ['필기 제거 X, 오답 분석 X', '암기에 필요한 최소한의 요소만 빠르게 등록하는 기본 템플릿입니다.'];
       case TemplateType.clean:
-        return ['**필기 제거 O, 오답 분석 X**', '필기 제거 기능을 통해 효율적인 복습을 하고 싶은 분들을 위한 템플릿입니다.'];
+        return ['필기 제거 O, 오답 분석 X', '복습에 방해되는 필기를 제거하여 깔끔한 복습을 도와줍니다.'];
       case TemplateType.special:
-        return ['**필기 제거 O, 오답 분석 O**', '필기 제거 기능과 AI 분석 기능을 통해 고도화된 복습을 하고 싶은 분들을 위한 템플릿입니다.'];
+        return ['필기 제거 O, 오답 분석 O', '복습에 방해되는 필기를 제거하여 깔끔한 복습을 도와줍니다. \n 교과과정 기반 문제 분석으로 나의 취약 개념 파악을 도와줍니다.'];
     }
   }
 
