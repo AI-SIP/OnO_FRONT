@@ -78,7 +78,7 @@ class _FolderSelectionDialogState extends State<FolderSelectionDialog> {
     return AlertDialog(
       backgroundColor: Colors.white,
       insetPadding: const EdgeInsets.symmetric(horizontal: 30, vertical: 30),
-      contentPadding: const EdgeInsets.all(5),
+      contentPadding: const EdgeInsets.all(0),
       titlePadding: const EdgeInsets.only(left: 30, top: 20, right: 20),
       title: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -112,7 +112,7 @@ class _FolderSelectionDialogState extends State<FolderSelectionDialog> {
         child: _isLoading
             ? const Center(child: CircularProgressIndicator())
             : ListView(
-                padding: const EdgeInsets.only(left: 10, top: 10),
+                padding: const EdgeInsets.only(top: 10, right: 10),
                 children: _buildFolderList(_cachedFolders, themeProvider),
               ),
       ),
@@ -160,24 +160,13 @@ class _FolderSelectionDialogState extends State<FolderSelectionDialog> {
 
       folderWidgets.add(
         Padding(
-          padding: EdgeInsets.only(left: level * 12.0),
+          padding: EdgeInsets.only(left: level * 20.0),
           child: ListTile(
-            title: StandardText(
-              text: folder.folderName,
-              fontSize: 16,
-              color: themeProvider.primaryColor,
-            ),
-            leading: SvgPicture.asset(
-              NoteIconHandler.getNoteIcon(i),  // 헬퍼 클래스로 아이콘 설정
-              width: 30,
-              height: 30,
-            ),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
+            leading: Row(
+              mainAxisSize: MainAxisSize.min, // Row가 너무 넓어지지 않도록 설정
               children: [
-                if (isSelected) const Icon(Icons.check, color: Colors.red),
                 IconButton(
-                  icon: Icon(isExpanded ? Icons.expand_less : Icons.expand_more),
+                  icon: Icon(isExpanded ? Icons.expand_more : Icons.chevron_right),
                   color: themeProvider.primaryColor,
                   onPressed: () {
                     setState(() {
@@ -189,15 +178,28 @@ class _FolderSelectionDialogState extends State<FolderSelectionDialog> {
                     });
                   },
                 ),
+                SvgPicture.asset(
+                  NoteIconHandler.getNoteIcon(i),  // 헬퍼 클래스로 아이콘 설정
+                  width: 30,
+                  height: 30,
+                ),
               ],
             ),
+            title: StandardText(
+              text: folder.folderName,
+              fontSize: 16,
+              color: themeProvider.primaryColor,
+            ),
+            trailing: isSelected
+                ? const Icon(Icons.check, color: Colors.red)
+                : null, // 선택된 폴더에만 체크 표시
             selected: isSelected,
             onTap: () {
               setState(() {
                 _selectedFolderId = folder.folderId;
               });
             },
-          ),
+          )
         ),
       );
 
