@@ -1,5 +1,6 @@
 import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:provider/provider.dart';
 import '../GlobalModule/Theme/StandardText.dart';
 import '../GlobalModule/Theme/ThemeHandler.dart';
@@ -62,11 +63,11 @@ class LoginScreen extends StatelessWidget {
   }) {
     return GestureDetector(
       onTap: onPressed,
-      child: Image.asset(
+      child: SvgPicture.asset(
         assetPath,
         width: buttonWidth,
         height: buttonHeight,
-        fit: BoxFit.contain, // 이미지를 버튼 크기에 맞게 조정
+        fit: BoxFit.contain,
       ),
     );
   }
@@ -133,7 +134,7 @@ class LoginScreen extends StatelessWidget {
                     _buildLoginImageButton(
                       context: context,
                       onPressed: () => userProvider.signInWithGoogle(context),
-                      assetPath: 'assets/SocialLogin/GoogleLogin.png',
+                      assetPath: 'assets/SocialLogin/GoogleLogin.svg',
                       buttonWidth: buttonWidth,
                       buttonHeight: buttonHeight,
                     ),
@@ -144,7 +145,7 @@ class LoginScreen extends StatelessWidget {
                       _buildLoginImageButton(
                         context: context,
                         onPressed: () => userProvider.signInWithApple(context),
-                        assetPath: 'assets/SocialLogin/AppleLogin.png',
+                        assetPath: 'assets/SocialLogin/AppleLogin.svg',
                         buttonWidth: buttonWidth,
                         buttonHeight: buttonHeight,
                       ),
@@ -154,7 +155,7 @@ class LoginScreen extends StatelessWidget {
                     _buildLoginImageButton(
                       context: context,
                       onPressed: () => userProvider.signInWithKakao(context),
-                      assetPath: 'assets/SocialLogin/KakaoLogin.png',
+                      assetPath: 'assets/SocialLogin/KakaoLogin.svg',
                       buttonWidth: buttonWidth,
                       buttonHeight: buttonHeight,
                     ),

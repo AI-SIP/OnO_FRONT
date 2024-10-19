@@ -108,6 +108,9 @@ flutter:
     - assets/Icon/Pencil.svg
     - assets/Icon/Eraser.svg
     - assets/Icon/Glass.svg
+    - assets/SocialLogin/AppleLogin.svg
+    - assets/SocialLogin/GoogleLogin.svg
+    - assets/SocialLogin/KakaoLogin.svg
 
   fonts:
     - family: HandWrite

@@ -3,10 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:ono/Config/AppConfig.dart';
 import 'package:ono/Model/LoginStatus.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
+import '../GlobalModule/Theme/SnackBarDialog.dart';
 import '../GlobalModule/Theme/StandardText.dart';
+import '../GlobalModule/Theme/ThemeDialog.dart';
 import '../GlobalModule/Theme/ThemeHandler.dart';
 import '../Provider/UserProvider.dart';
-import '../Service/ScreenUtil/SettingScreenService.dart';
+import 'LoginScreen.dart';
 
 class SettingScreen extends StatefulWidget {
   const SettingScreen({super.key});
@@ -16,12 +19,9 @@ class SettingScreen extends StatefulWidget {
 }
 
 class _SettingScreenState extends State<SettingScreen> {
-  late SettingScreenService _settingScreenService;
-
   @override
   void initState() {
     super.initState();
-    _settingScreenService = SettingScreenService();
   }
 
   @override
@@ -58,7 +58,12 @@ class _SettingScreenState extends State<SettingScreen> {
                         themeColor: themeProvider.primaryColor,
                         context: context,
                         onTap: () {
-                          _settingScreenService.showThemeDialog(context);
+                          showDialog(
+                            context: context,
+                            builder: (BuildContext context) {
+                              return ThemeDialog();
+                            },
+                          );
                         },
                       ),
                       const Divider(),
@@ -72,7 +77,7 @@ class _SettingScreenState extends State<SettingScreen> {
                               parameters: {
                                 'url': AppConfig.feedbackPageUrl,
                               });
-                          _settingScreenService.openFeedbackForm();
+                          openFeedbackForm();
                         },
                       ),
                       const Divider(),
@@ -86,7 +91,7 @@ class _SettingScreenState extends State<SettingScreen> {
                               parameters: {
                                 'url': AppConfig.userTermPageUrl,
                               });
-                          _settingScreenService.openUserTermPage();
+                          openUserTermPage();
                         },
                       ),
                     ],
@@ -102,24 +107,36 @@ class _SettingScreenState extends State<SettingScreen> {
                         '로그아웃',
                         Colors.white,
                         Colors.red,
-                        () => _settingScreenService.showConfirmationDialog(
-                          context,
-                          '로그아웃',
-                          '정말 로그아웃 하시겠습니까?\n(게스트 유저의 경우 모든 정보가 삭제됩니다.)',
-                          () => _settingScreenService.logout(context),
-                        ),
+                        () => showConfirmationDialog(context, '로그아웃',
+                            '정말 로그아웃 하시겠습니까?\n(게스트 유저의 경우 모든 정보가 삭제됩니다.)',
+                            () async {
+                          await Provider.of<UserProvider>(context,
+                                  listen: false)
+                              .signOut();
+
+                          Navigator.of(context).pushReplacement(
+                            MaterialPageRoute(
+                                builder: (context) => const LoginScreen()),
+                          );
+                        }),
                       ),
                       _buildBottomButton(
                         context,
                         '회원 탈퇴',
                         Colors.red,
                         Colors.white,
-                        () => _settingScreenService.showConfirmationDialog(
-                          context,
-                          '회원 탈퇴',
-                          '정말 회원 탈퇴 하시겠습니까?\n그동안 작성했던 모든 오답노트 및 개인정보가 삭제됩니다. 이 작업은 되돌릴 수 없습니다.',
-                          () => _settingScreenService.deleteAccount(context),
-                        ),
+                        () => showConfirmationDialog(context, '회원 탈퇴',
+                            '정말 회원 탈퇴 하시겠습니까?\n그동안 작성했던 모든 오답노트 및 개인정보가 삭제됩니다. 이 작업은 되돌릴 수 없습니다.',
+                            () async {
+                          await Provider.of<UserProvider>(context,
+                                  listen: false)
+                              .deleteAccount();
+
+                          Navigator.of(context).pushReplacement(
+                            MaterialPageRoute(
+                                builder: (context) => const LoginScreen()),
+                          );
+                        }),
                       ),
                     ],
                   ),
@@ -288,34 +305,37 @@ class _SettingScreenState extends State<SettingScreen> {
           backgroundColor: Colors.white,
           title: StandardText(
             text: '이름 수정',
-            fontSize: 16,
+            fontSize: 18,
             color: themeProvider.primaryColor,
           ),
-          content: TextField(
-            controller: nameController,
-            style: standardTextStyle.copyWith(
-                color: themeProvider.primaryColor, fontSize: 16),
-            decoration: InputDecoration(
-              hintText: '수정할 이름을 입력하세요',
-              hintStyle: standardTextStyle.copyWith(
-                  color: themeProvider.desaturateColor, fontSize: 14),
-              border: OutlineInputBorder(
-                borderSide:
-                    BorderSide(color: themeProvider.primaryColor, width: 1.5),
-                borderRadius: BorderRadius.circular(8.0),
+          content: SizedBox(
+            width: MediaQuery.of(context).size.width * 0.8, // 화면 가로의 80%로 설정
+            child: TextField(
+              controller: nameController,
+              style: standardTextStyle.copyWith(
+                  color: themeProvider.primaryColor, fontSize: 16),
+              decoration: InputDecoration(
+                hintText: '수정할 이름을 입력하세요',
+                hintStyle: standardTextStyle.copyWith(
+                    color: themeProvider.desaturateColor, fontSize: 14),
+                border: OutlineInputBorder(
+                  borderSide:
+                  BorderSide(color: themeProvider.primaryColor, width: 1.5),
+                  borderRadius: BorderRadius.circular(8.0),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderSide:
+                  BorderSide(color: themeProvider.primaryColor, width: 1.5),
+                  borderRadius: BorderRadius.circular(8.0),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderSide:
+                  BorderSide(color: themeProvider.primaryColor, width: 2.0),
+                  borderRadius: BorderRadius.circular(8.0),
+                ),
+                contentPadding:
+                const EdgeInsets.symmetric(vertical: 20.0, horizontal: 12.0),
               ),
-              enabledBorder: OutlineInputBorder(
-                borderSide:
-                    BorderSide(color: themeProvider.primaryColor, width: 1.5),
-                borderRadius: BorderRadius.circular(8.0),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderSide:
-                    BorderSide(color: themeProvider.primaryColor, width: 2.0),
-                borderRadius: BorderRadius.circular(8.0),
-              ),
-              contentPadding:
-                  const EdgeInsets.symmetric(vertical: 20.0, horizontal: 12.0),
             ),
           ),
           actions: [
@@ -354,4 +374,65 @@ class _SettingScreenState extends State<SettingScreen> {
       },
     );
   }
+
+  void showConfirmationDialog(BuildContext context, String title,
+      String message, VoidCallback onConfirm) {
+    final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: Colors.white,
+          title: StandardText(
+              text: title, fontSize: 18, color: themeProvider.primaryColor),
+          content: SizedBox(
+            width: MediaQuery.of(context).size.width * 0.8, // 화면 가로의 80%로 설정
+            child: StandardText(
+                text: message, fontSize: 15, color: themeProvider.primaryColor),
+          ),
+          actions: [
+            TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: const StandardText(
+                  text: '취소',
+                  fontSize: 14,
+                  color: Colors.black,
+                )),
+            TextButton(
+                onPressed: () async {
+                  Navigator.of(context).pop();
+                  onConfirm();
+                },
+                child: StandardText(
+                  text: '확인',
+                  fontSize: 14,
+                  color: themeProvider.primaryColor,
+                )),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> openFeedbackForm() async {
+    Uri url = Uri.parse(AppConfig.feedbackPageUrl);
+    if (await canLaunchUrl(url)) {
+      await launchUrl(url);
+    } else {
+      throw 'Could not launch $url';
+    }
+  }
+
+  Future<void> openUserTermPage() async {
+    Uri url = Uri.parse(AppConfig.userTermPageUrl);
+    if (await canLaunchUrl(url)) {
+      await launchUrl(url);
+    } else {
+      throw 'Could not launch $url';
+    }
+  }
+
 }
