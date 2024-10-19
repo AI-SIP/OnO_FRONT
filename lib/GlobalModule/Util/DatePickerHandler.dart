@@ -31,9 +31,8 @@ class _DatePickerHandlerState extends State<DatePickerHandler> {
 
   @override
   Widget build(BuildContext context) {
-    final themeProvider = Provider.of<ThemeHandler>(context);
-
-    return SizedBox(
+    return Container(
+      color: Colors.white,
       height: MediaQuery.of(context).size.height / 3,
       child: Column(
         children: <Widget>[
@@ -49,34 +48,36 @@ class _DatePickerHandlerState extends State<DatePickerHandler> {
                       Navigator.pop(context, _selectedDate);
                     }
                   },
-                  child: StandardText(
+                  child: const StandardText(
                     text: '완료',
                     fontSize: 16,
-                    color: themeProvider.primaryColor,
+                    color: Colors.black,
                   )),
+              const SizedBox(width: 10), // 왼쪽 여백
             ],
           ),
+          const SizedBox(height : 20),
           // 상단 마킹
-          Row(
+          const Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Expanded(
                 child: Align(
                     alignment: Alignment.center,
                     child: StandardText(
-                        text: '년도', fontSize: 16, color: themeProvider.primaryColor)),
+                        text: '년도', fontSize: 16, color: Colors.black)),
               ),
               Expanded(
                 child: Align(
                     alignment: Alignment.center,
                     child: StandardText(
-                        text: '월', fontSize: 16, color: themeProvider.primaryColor)),
+                        text: '월', fontSize: 16, color: Colors.black)),
               ),
               Expanded(
                 child: Align(
                     alignment: Alignment.center,
                     child: StandardText(
-                        text: '일', fontSize: 16, color: themeProvider.primaryColor)),
+                        text: '일', fontSize: 16, color: Colors.black)),
               ),
             ],
           ),
@@ -103,7 +104,7 @@ class _DatePickerHandlerState extends State<DatePickerHandler> {
                     children: _years.map((int year) {
                       return Center(
                           child: StandardText(
-                              text: '$year', fontSize: 16, color: themeProvider.primaryColor));
+                              text: '$year', fontSize: 16, color: Colors.black));
                     }).toList(),
                   ),
                 ),
@@ -125,7 +126,7 @@ class _DatePickerHandlerState extends State<DatePickerHandler> {
                     children: _months.map((int month) {
                       return Center(
                           child: StandardText(
-                              text: '$month', fontSize: 16, color: themeProvider.primaryColor));
+                              text: '$month', fontSize: 16, color: Colors.black));
                     }).toList(),
                   ),
                 ),
@@ -147,7 +148,7 @@ class _DatePickerHandlerState extends State<DatePickerHandler> {
                     children: _days.map((int day) {
                       return Center(
                           child: StandardText(
-                              text: '$day', fontSize: 16, color: themeProvider.primaryColor));
+                              text: '$day', fontSize: 16, color: Colors.black));
                     }).toList(),
                   ),
                 ),
