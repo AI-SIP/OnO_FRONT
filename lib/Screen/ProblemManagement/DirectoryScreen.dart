@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
+import 'package:ono/GlobalModule/Theme/NoteIconHandler.dart';
 import 'package:ono/GlobalModule/Theme/SnackBarDialog.dart';
 import 'package:ono/Model/LoginStatus.dart';
 import 'package:ono/Provider/FoldersProvider.dart';
@@ -498,7 +499,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                 itemBuilder: (context, index) {
                   if (index < folders.length) {
                     var folder = folders[index];
-                    return _buildFolderTile(folder, themeProvider);
+                    return _buildFolderTile(folder, themeProvider, index);
                   } else {
                     var problem = problems[index - folders.length];
                     return _buildProblemTile(problem, themeProvider);
@@ -512,7 +513,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     );
   }
 
-  Widget _buildFolderTile(FolderThumbnailModel folder, ThemeHandler themeProvider) {
+  Widget _buildFolderTile(FolderThumbnailModel folder, ThemeHandler themeProvider, int index) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0), // 아이템 간 간격 추가
       child: GestureDetector(
@@ -530,16 +531,16 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
             child: SizedBox(
               width: 75,
               height: 75,
-              child: Icon(
-                Icons.folder,
-                color: themeProvider.primaryColor,
-                size: 50,
+              child: SvgPicture.asset(
+                NoteIconHandler.getNoteIcon(index),  // 헬퍼 클래스로 아이콘 설정
+                width: 50,
+                height: 50,
               ),
             ),
           ),
           childWhenDragging: Opacity(
             opacity: 0.5,
-            child: _folderTileContent(folder, themeProvider),
+            child: _folderTileContent(folder, themeProvider, index),
           ),
           onDragStarted: () {
             HapticFeedback.lightImpact();
@@ -556,7 +557,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                   await _moveFolderToNewParent(details.data, folder.folderId);
                 },
                 builder: (context, candidateData, rejectedData) {
-                  return _folderTileContent(folder, themeProvider);
+                  return _folderTileContent(folder, themeProvider, index);
                 },
               );
             },
@@ -566,8 +567,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     );
   }
 
-  Widget _folderTileContent(
-      FolderThumbnailModel folder, ThemeHandler themeProvider) {
+  Widget _folderTileContent(FolderThumbnailModel folder, ThemeHandler themeProvider, int index) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
@@ -576,13 +576,13 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
           width: 75,
           height: 75,
           decoration: BoxDecoration(
-            color: themeProvider.primaryColor.withOpacity(0.1),
+            color: Colors.white,
             borderRadius: BorderRadius.circular(8.0),
           ),
-          child: Icon(
-            Icons.folder,
-            color: themeProvider.primaryColor,
-            size: 30,
+          child: SvgPicture.asset(
+            NoteIconHandler.getNoteIcon(index),  // 헬퍼 클래스로 아이콘 설정
+            width: 50,
+            height: 50,
           ),
         ),
         const SizedBox(width: 20), // 아이콘과 텍스트 간 간격
@@ -603,7 +603,6 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       ],
     );
   }
-
 
   Widget _buildProblemTile(ProblemModel problem, ThemeHandler themeProvider) {
     final imageUrl = (problem.templateType == TemplateType.simple)

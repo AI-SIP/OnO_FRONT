@@ -97,6 +97,14 @@ flutter:
     - assets/Logo/GreenFrog.png
     - assets/Logo/IvoryFrog.png
     - assets/Icon/add_note.svg
+    - assets/Icon/GreenNote.svg
+    - assets/Icon/YellowNote.svg
+    - assets/Icon/PinkNote.svg
+    - assets/Icon/BlueNote.svg
+    - assets/Icon/PurpleNote.svg
+    - assets/Icon/BrownNote.svg
+    - assets/Icon/WhiteNote.svg
+    - assets/Icon/GreyNote.svg
 
   fonts:
     - family: HandWrite

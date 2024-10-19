@@ -14,7 +14,7 @@ class ThemeHandler with ChangeNotifier {
   ThemeHandler()
       : _primaryColor = Colors.lightGreen,
         _lightPrimaryColor = _lightenColor(Colors.lightGreen, 0.2),
-        _darkPrimaryColor = _darkenColor(Colors.lightGreen, 0.2),
+        _darkPrimaryColor = _darkenColor(Colors.lightGreen, 0.1),
         _desaturateColor = _desaturatenColor(Colors.lightGreen, 0.5) {
     loadColors(); // 생성자에서 색상을 불러오는 메서드 호출
   }
