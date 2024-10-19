@@ -105,7 +105,7 @@ class ImagePickerHandler {
                   child: StandardText(
                     text: '이미지 업로드 방식을 선택해주세요',
                     color: themeProvider.primaryColor,
-                    fontSize: 18,
+                    fontSize: 20,
                   ),
                 ),
               ),
@@ -115,7 +115,7 @@ class ImagePickerHandler {
                 title: StandardText(
                   text: '카메라로 촬영',
                   color: themeProvider.primaryColor,
-                  fontSize: 15,
+                  fontSize: 16,
                 ),
                 onTap: () async {
 
@@ -132,7 +132,7 @@ class ImagePickerHandler {
                 title: StandardText(
                   text: '갤러리에서 선택',
                   color: themeProvider.primaryColor,
-                  fontSize: 15,
+                  fontSize: 16,
                 ),
                 onTap: () async {
 

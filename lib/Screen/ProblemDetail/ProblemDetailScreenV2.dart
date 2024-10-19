@@ -135,6 +135,7 @@ class _ProblemDetailScreenV2State extends State<ProblemDetailScreenV2> {
     );
   }
 
+  /*
   List<Widget> _buildAppBarActions() {
     final themeProvider = Provider.of<ThemeHandler>(context);
 
@@ -231,6 +232,137 @@ class _ProblemDetailScreenV2State extends State<ProblemDetailScreenV2> {
         },
       ),
     ];
+  }
+
+   */
+  List<Widget> _buildAppBarActions() {
+    final themeProvider = Provider.of<ThemeHandler>(context);
+
+    return [
+      FutureBuilder<ProblemModel?>(
+        future: _problemModelFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.done &&
+              snapshot.hasData) {
+            return IconButton(
+              icon: Icon(Icons.more_vert, color: themeProvider.primaryColor),
+              onPressed: () => _showActionDialog(snapshot.data!, themeProvider),
+            );
+          }
+          return Container();
+        },
+      ),
+    ];
+  }
+
+  void _showActionDialog(ProblemModel problemModel, ThemeHandler themeProvider) {
+    showModalBottomSheet(
+      backgroundColor: Colors.white,
+      context: context,
+      builder: (context) {
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 20.0), // 패딩 추가
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(bottom: 20.0), // 타이틀 아래 여백 추가
+                child: StandardText(
+                  text: '편집하기', // 타이틀 텍스트
+                  fontSize: 20,
+                  color: themeProvider.primaryColor,
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 10.0), // 텍스트 간격 조정
+                child: ListTile(
+                  title: const StandardText(
+                    text: '오답노트 문제 공유하기',
+                    fontSize: 16,
+                    color: Colors.black,
+                  ),
+                  onTap: () async {
+                    FirebaseAnalytics.instance
+                        .logEvent(name: 'problem_share_button_click');
+                    await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ProblemShareScreen(problem: problemModel),
+                      ),
+                    );
+                    Navigator.pop(context);
+                  },
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 10.0), // 텍스트 간격 조정
+                child: ListTile(
+                  title: const StandardText(
+                    text: '오답노트 풀이 공유하기',
+                    fontSize: 16,
+                    color: Colors.black,
+                  ),
+                  onTap: () async {
+                    FirebaseAnalytics.instance
+                        .logEvent(name: 'answer_share_button_click');
+                    await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => AnswerShareScreen(problem: problemModel),
+                      ),
+                    );
+                    Navigator.pop(context);
+                  },
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 10.0), // 텍스트 간격 조정
+                child: ListTile(
+                  title: const StandardText(
+                    text: '오답노트 수정하기',
+                    fontSize: 16,
+                    color: Colors.black,
+                  ),
+                  onTap: () {
+                    FirebaseAnalytics.instance
+                        .logEvent(name: 'problem_edit_button_click');
+                    Navigator.pop(context);
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => ProblemRegisterScreenV2(
+                          problemModel: problemModel,
+                          isEditMode: true,
+                          colors: null,
+                        ),
+                      ),
+                    ).then((_) {
+                      _refreshScreen();
+                    });
+
+                  },
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 10.0), // 텍스트 간격 조정
+                child: ListTile(
+                  title: const StandardText(
+                    text: '오답노트 삭제하기',
+                    fontSize: 16,
+                    color: Colors.red,
+                  ),
+                  onTap: () {
+                    FirebaseAnalytics.instance
+                        .logEvent(name: 'problem_delete_button_click');
+                    Navigator.pop(context);
+                    _deleteProblemDialog(context, problemModel.problemId, themeProvider);
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   void _deleteProblemDialog(BuildContext context, int problemId, ThemeHandler themeProvider) {

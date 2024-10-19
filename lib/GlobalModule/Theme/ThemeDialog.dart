@@ -75,7 +75,7 @@ class _ThemeDialogState extends State<ThemeDialog> {
           },
           child: const StandardText(
             text: '취소',
-            fontSize: 14,
+            fontSize: 16,
             color: Colors.black,
           ),
         ),
@@ -91,7 +91,7 @@ class _ThemeDialogState extends State<ThemeDialog> {
           },
           child: StandardText(
             text: '확인',
-            fontSize: 14,
+            fontSize: 16,
             color: themeProvider.primaryColor,
           ),
         ),
