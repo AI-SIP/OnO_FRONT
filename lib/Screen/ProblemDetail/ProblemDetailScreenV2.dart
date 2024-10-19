@@ -114,14 +114,14 @@ class _ProblemDetailScreenV2State extends State<ProblemDetailScreenV2> {
       future: _problemModelFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const HandWriteText(text: '로딩 중...');
+          return const StandardText(text: '로딩 중...');
         } else if (snapshot.hasError) {
-          return const HandWriteText(text: '에러 발생');
+          return const StandardText(text: '에러 발생');
         } else if (snapshot.hasData && snapshot.data != null) {
           final reference = snapshot.data!.reference;
-          return HandWriteText(
+          return StandardText(
             text: (reference == null || reference.isEmpty) ? '제목 없음' : reference,
-            fontSize: 26,
+            fontSize: 20,
             color: themeProvider.primaryColor,
           );
         } else {

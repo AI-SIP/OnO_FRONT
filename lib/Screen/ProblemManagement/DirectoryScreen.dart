@@ -682,10 +682,18 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 4),
-              StandardText(
-                text: problem.reference ?? '제목 없음',
-                color: themeProvider.primaryColor,
-                fontSize: 18,
+              Row(
+                children: [
+                  _getTemplateIcon(problem.templateType, themeProvider), // 아이콘 추가
+                  const SizedBox(width: 8), // 아이콘과 제목 간 간격
+                  Flexible( // 제목
+                    child: StandardText(
+                      text: problem.reference ?? '제목 없음',
+                      color: themeProvider.primaryColor,
+                      fontSize: 18,
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 4),
               StandardText(
