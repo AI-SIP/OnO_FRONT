@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:provider/provider.dart';
 
 import '../Theme/StandardText.dart';
-import '../Theme/ThemeHandler.dart';
 
 class DatePickerHandler extends StatefulWidget {
   final DateTime initialDate;

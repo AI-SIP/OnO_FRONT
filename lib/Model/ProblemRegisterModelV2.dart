@@ -11,8 +11,6 @@ class ProblemRegisterModelV2 {
   String? reference;
   DateTime? solvedAt;
   int? folderId;
-  //bool? isProcess;
-  //List<Map<String, int>?>? colors;
   TemplateType? templateType;
   String? analysis;
 
@@ -26,8 +24,6 @@ class ProblemRegisterModelV2 {
     this.reference,
     this.solvedAt,
     this.folderId,
-    //this.isProcess,
-    //this.colors,
     this.templateType,
     this.analysis,
   });
@@ -43,8 +39,6 @@ class ProblemRegisterModelV2 {
       'reference': reference,
       'solvedAt': solvedAt?.subtract(const Duration(hours: 9)).toIso8601String(),
       'folderId' : folderId,
-      //'isProcess' : isProcess,
-      //'colors' : colors?.map((color) => color).toList(),
       'templateType' : templateType,
       'analysis' : analysis,
     };
@@ -63,8 +57,6 @@ class ProblemRegisterModelV2 {
       folderId: int.parse(json['folderId']),
       templateType: json['templateType'],
       analysis: json['analysis'],
-      //isProcess : bool.parse(json['isProcess']),
-      //colors: json['colors'],
     );
   }
 }
