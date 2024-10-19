@@ -83,15 +83,15 @@ class _FolderSelectionDialogState extends State<FolderSelectionDialog> {
       title: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          StandardText(
+          const StandardText(
             text: '공책 선택',
             fontSize: 20,
-            color: themeProvider.primaryColor,
+            color: Colors.black,
           ),
           IconButton(
             icon: SvgPicture.asset(
               "assets/Icon/add_note.svg", // SVG 경로
-              color: themeProvider.primaryColor, // SVG의 색상 적용
+              color: Colors.black, // SVG의 색상 적용
               width: 24,
               height: 24,
             ),
@@ -230,32 +230,32 @@ class _FolderSelectionDialogState extends State<FolderSelectionDialog> {
           title: StandardText(
             text: dialogTitle,
             fontSize: 18,
-            color: themeProvider.primaryColor,
+            color: Colors.black,
           ),
           content: SizedBox(
             width: MediaQuery.of(context).size.width * 0.8,
             child: TextField(
               controller: folderNameController,
               style: standardTextStyle.copyWith(
-                color: themeProvider.primaryColor,
+                color: Colors.black,
                 fontSize: 16,
               ),
               decoration: InputDecoration(
                 hintText: '공책 이름을 입력하세요',
                 hintStyle: standardTextStyle.copyWith(
-                  color: themeProvider.desaturateColor,
+                  color: ThemeHandler.desaturatenColor(Colors.black),
                   fontSize: 14,
                 ),
-                border: OutlineInputBorder(
-                  borderSide: BorderSide(color: themeProvider.primaryColor),
+                border: const OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.black),
                 ),
-                enabledBorder: OutlineInputBorder(
+                enabledBorder: const OutlineInputBorder(
                   borderSide:
-                  BorderSide(color: themeProvider.primaryColor, width: 1.5),
+                  BorderSide(color: Colors.black, width: 1.5),
                 ),
-                focusedBorder: OutlineInputBorder(
+                focusedBorder: const OutlineInputBorder(
                   borderSide:
-                  BorderSide(color: themeProvider.primaryColor, width: 1.5),
+                  BorderSide(color: Colors.black, width: 1.5),
                 ),
                 contentPadding: const EdgeInsets.symmetric(
                     vertical: 20.0, horizontal: 12.0),

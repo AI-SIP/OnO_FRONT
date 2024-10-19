@@ -83,8 +83,8 @@ class _ProblemDetailScreenV2State extends State<ProblemDetailScreenV2> {
                   return _buildContent(snapshot.data!);
                 } else {
                   return Center(
-                    child: HandWriteText(
-                      text: '오답노트를 불러올 수 없습니다.',
+                    child: StandardText(
+                      text: '오답노트가 이동되었습니다!',
                       color: themeProvider.primaryColor,
                     ),
                   );
@@ -125,9 +125,9 @@ class _ProblemDetailScreenV2State extends State<ProblemDetailScreenV2> {
             color: themeProvider.primaryColor,
           );
         } else {
-          return HandWriteText(
+          return StandardText(
             text: '오답노트 상세',
-            fontSize: 24,
+            fontSize: 20,
             color: themeProvider.primaryColor,
           );
         }

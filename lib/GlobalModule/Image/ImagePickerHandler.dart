@@ -114,10 +114,10 @@ class ImagePickerHandler {
               Padding(
                 padding: const EdgeInsets.only(bottom: 10.0), // 리스트 항목 간 간격 추가
                 child: ListTile(
-                  leading: Icon(Icons.camera_alt, color: themeProvider.primaryColor),
-                  title: StandardText(
+                  leading: const Icon(Icons.camera_alt, color: Colors.black),
+                  title: const StandardText(
                     text: '카메라로 촬영',
-                    color: themeProvider.primaryColor,
+                    color: Colors.black,
                     fontSize: 16,
                   ),
                   onTap: () async {
@@ -132,10 +132,10 @@ class ImagePickerHandler {
               Padding(
                 padding: const EdgeInsets.only(bottom: 10.0), // 리스트 항목 간 간격 추가
                 child: ListTile(
-                  leading: Icon(Icons.photo_library, color: themeProvider.primaryColor),
-                  title: StandardText(
+                  leading: const Icon(Icons.photo_library, color: Colors.black),
+                  title: const StandardText(
                     text: '갤러리에서 선택',
-                    color: themeProvider.primaryColor,
+                    color: Colors.black,
                     fontSize: 16,
                   ),
                   onTap: () async {

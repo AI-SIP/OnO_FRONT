@@ -96,6 +96,7 @@ flutter:
     - assets/SocialLogin/KakaoLogin.png
     - assets/Logo/GreenFrog.png
     - assets/Logo/IvoryFrog.png
+    - assets/Logo/OnO.svg
     - assets/Icon/add_note.svg
     - assets/Icon/GreenNote.svg
     - assets/Icon/YellowNote.svg
