@@ -2,6 +2,7 @@ import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:ono/GlobalModule/Theme/NoteIconHandler.dart';
 import 'package:provider/provider.dart';
 import '../../Model/FolderThumbnailModel.dart';
 import '../../Provider/FoldersProvider.dart';
@@ -78,7 +79,7 @@ class _FolderSelectionDialogState extends State<FolderSelectionDialog> {
       backgroundColor: Colors.white,
       insetPadding: const EdgeInsets.symmetric(horizontal: 30, vertical: 30),
       contentPadding: const EdgeInsets.all(5),
-      titlePadding: const EdgeInsets.only(left: 20, top: 20, right: 20),
+      titlePadding: const EdgeInsets.only(left: 30, top: 20, right: 20),
       title: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -122,7 +123,7 @@ class _FolderSelectionDialogState extends State<FolderSelectionDialog> {
           },
           child: const StandardText(
             text: '취소',
-            fontSize: 14,
+            fontSize: 16,
             color: Colors.black,
           ),
         ),
@@ -136,7 +137,7 @@ class _FolderSelectionDialogState extends State<FolderSelectionDialog> {
           },
           child: StandardText(
             text: '확인',
-            fontSize: 14,
+            fontSize: 16,
             color: themeProvider.primaryColor,
           ),
         ),
@@ -152,7 +153,8 @@ class _FolderSelectionDialogState extends State<FolderSelectionDialog> {
     var parentFolders =
         folders.where((folder) => folder.parentFolderId == parentId).toList();
 
-    for (var folder in parentFolders) {
+    for (var i = 0; i < parentFolders.length; i++) {
+      var folder = parentFolders[i];
       bool isExpanded = _expandedFolders.contains(folder.folderId);
       bool isSelected = _selectedFolderId == folder.folderId;
 
@@ -162,18 +164,20 @@ class _FolderSelectionDialogState extends State<FolderSelectionDialog> {
           child: ListTile(
             title: StandardText(
               text: folder.folderName,
-              fontSize: 15,
+              fontSize: 16,
               color: themeProvider.primaryColor,
             ),
-            leading: Icon(Icons.menu_book_outlined,
-                color: themeProvider.primaryColor),
+            leading: SvgPicture.asset(
+              NoteIconHandler.getNoteIcon(i),  // 헬퍼 클래스로 아이콘 설정
+              width: 30,
+              height: 30,
+            ),
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 if (isSelected) const Icon(Icons.check, color: Colors.red),
                 IconButton(
-                  icon:
-                      Icon(isExpanded ? Icons.expand_less : Icons.expand_more),
+                  icon: Icon(isExpanded ? Icons.expand_less : Icons.expand_more),
                   color: themeProvider.primaryColor,
                   onPressed: () {
                     setState(() {

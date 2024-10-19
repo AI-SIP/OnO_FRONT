@@ -529,8 +529,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
           data: folder,
           feedback: Material(
             child: SizedBox(
-              width: 75,
-              height: 75,
+              width: 50,
+              height: 70,
               child: SvgPicture.asset(
                 NoteIconHandler.getNoteIcon(index),  // 헬퍼 클래스로 아이콘 설정
                 width: 50,
@@ -573,16 +573,16 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       children: [
         // 아이콘
         Container(
-          width: 75,
-          height: 75,
+          width: 50,
+          height: 70,
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(8.0),
           ),
           child: SvgPicture.asset(
             NoteIconHandler.getNoteIcon(index),  // 헬퍼 클래스로 아이콘 설정
-            width: 50,
-            height: 50,
+            width: 30,
+            height: 30,
           ),
         ),
         const SizedBox(width: 20), // 아이콘과 텍스트 간 간격
@@ -623,8 +623,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
           data: problem,
           feedback: Material(
             child: SizedBox(
-              width: 75,
-              height: 75,
+              width: 50,
+              height: 70,
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(8.0),
                 child: DisplayImage(
@@ -668,8 +668,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
           borderRadius: BorderRadius.circular(8.0),
           child: Image.network(
             imageUrl ?? defaultImage, // 이미지가 없을 경우 기본 이미지 사용
-            width: 75,
-            height: 75,
+            width: 50,
+            height: 70,
             fit: BoxFit.cover,
           ),
         ),
