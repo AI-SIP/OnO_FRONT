@@ -570,10 +570,21 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
               if (folders.isEmpty && problems.isEmpty) {
                 return Center(
-                  child: StandardText(
-                    text: '공책이나 오답 노트가 작성되어 있지 않습니다!',
-                    fontSize: 16,
-                    color: themeProvider.primaryColor,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      SvgPicture.asset(
+                        'assets/Icon/GreenNote.svg', // 아이콘 경로
+                        width: 100, // 적절한 크기 설정
+                        height: 100,
+                      ),
+                      const SizedBox(height: 40), // 아이콘과 텍스트 사이 간격
+                      StandardText(
+                        text: '공책과 오답노트를 추가해보세요!',
+                        fontSize: 16,
+                        color: themeProvider.primaryColor,
+                      ),
+                    ],
                   ),
                 );
               }
