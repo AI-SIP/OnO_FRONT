@@ -683,7 +683,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
               const SizedBox(height: 4),
               Row(
                 children: [
-                  _getTemplateIcon(problem.templateType, themeProvider), // 아이콘 추가
+                  _getTemplateIcon(problem.templateType!), // 아이콘 추가
                   const SizedBox(width: 8), // 아이콘과 제목 간 간격
                   Flexible( // 제목
                     child: StandardText(
@@ -713,6 +713,31 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     return DateFormat('yyyy/MM/dd HH:mm').format(dateTime);
   }
 
+  // 템플릿 타입에 따른 아이콘 설정 (SVG 파일로 교체)
+  Widget _getTemplateIcon(TemplateType templateType) {
+    switch (templateType) {
+      case TemplateType.simple:
+        return SvgPicture.asset(
+          'assets/Icon/Pencil.svg',
+          width: 20, // 적당한 크기로 설정
+          height: 20,
+        );
+      case TemplateType.clean:
+        return SvgPicture.asset(
+          'assets/Icon/Eraser.svg',
+          width: 20,
+          height: 20,
+        );
+      case TemplateType.special:
+        return SvgPicture.asset(
+          'assets/Icon/Glass.svg',
+          width: 20,
+          height: 20,
+        );
+    }
+  }
+
+  /*
   Widget _getTemplateIcon(
       TemplateType? templateType, ThemeHandler themeProvider) {
     switch (templateType) {
@@ -742,6 +767,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         );
     }
   }
+
+   */
 
   Future<void> _moveFolderToNewParent(
       FolderThumbnailModel folder, int? newParentFolderId) async {
