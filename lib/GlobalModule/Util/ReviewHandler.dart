@@ -31,6 +31,7 @@ class ReviewHandler {
       context: context,
       builder: (BuildContext dialogContext) {
         return AlertDialog(
+          backgroundColor: Colors.white,
           title: HandWriteText(text: '리뷰 작성 요청', fontSize: 24, color: themeProvider.primaryColor,),
           content: HandWriteText(text: '작성하신 리뷰는 저희에게 큰 도움이 됩니다. 리뷰를 작성하시겠습니까?', fontSize: 20, color: themeProvider.primaryColor,),
           actions: [

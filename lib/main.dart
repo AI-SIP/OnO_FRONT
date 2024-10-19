@@ -226,6 +226,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
     final standardTextStyle = const StandardText(text: '').getTextStyle();
 
     return BottomNavigationBar(
+      backgroundColor: Colors.white,
       type: BottomNavigationBarType.fixed,
       items: _bottomNavigationItems(),
       currentIndex: _selectedIndex,

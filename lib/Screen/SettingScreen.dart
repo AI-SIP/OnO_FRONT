@@ -31,6 +31,7 @@ class _SettingScreenState extends State<SettingScreen> {
     final themeProvider = Provider.of<ThemeHandler>(context);
 
     return Scaffold(
+      backgroundColor: Colors.white,
       body: !(authService.isLoggedIn == LoginStatus.login)
           ? _buildLoginPrompt(themeProvider)
           : Column(
@@ -284,6 +285,7 @@ class _SettingScreenState extends State<SettingScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
+          backgroundColor: Colors.white,
           title: StandardText(
             text: '이름 수정',
             fontSize: 16,

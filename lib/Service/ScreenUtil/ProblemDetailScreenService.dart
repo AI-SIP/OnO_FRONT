@@ -28,6 +28,7 @@ class ProblemDetailScreenService {
         final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
 
         return AlertDialog(
+          backgroundColor: Colors.white,
           title: StandardText(
               text: '오답노트 삭제', fontSize: 16, color: themeProvider.primaryColor),
           content: StandardText(

@@ -184,6 +184,7 @@ class _NavigationButtonsState extends State<NavigationButtons> {
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
+              backgroundColor: Colors.white,
               insetPadding: const EdgeInsets.symmetric(horizontal: 30, vertical: 30),
               contentPadding: const EdgeInsets.all(15),
               titlePadding: const EdgeInsets.only(left: 20, top: 20, right: 20),

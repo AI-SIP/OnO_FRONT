@@ -78,6 +78,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final double welcomeFontSize = screenHeight * 0.03;
 
     return Scaffold(
+      backgroundColor: Colors.white,
       body: CustomPaint(
         painter: GridPainter(gridColor: themeProvider.primaryColor),
         child: Center(

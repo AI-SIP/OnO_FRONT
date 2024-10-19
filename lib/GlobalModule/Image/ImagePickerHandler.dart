@@ -91,6 +91,7 @@ class ImagePickerHandler {
 
   void showImagePicker(BuildContext context, Function(XFile?) onImagePicked) {
     showModalBottomSheet(
+      backgroundColor: Colors.white,
       context: context,
       builder: (BuildContext context) {
         final themeProvider = Provider.of<ThemeHandler>(context);

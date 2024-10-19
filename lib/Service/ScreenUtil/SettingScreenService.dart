@@ -21,6 +21,7 @@ class SettingScreenService {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
+          backgroundColor: Colors.white,
           title: StandardText(
               text: title, fontSize: 18, color: themeProvider.primaryColor),
           content: StandardText(

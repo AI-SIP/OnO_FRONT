@@ -56,6 +56,7 @@ class ProblemRegisterScreenService {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
+        backgroundColor: Colors.white,
         title: const HandWriteText(text: '로그인 필요',),
         content:
             const HandWriteText(text: '오답노트를 작성하려면 로그인 해주세요!', ),

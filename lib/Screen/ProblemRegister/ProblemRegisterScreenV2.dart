@@ -42,7 +42,9 @@ class _ProblemRegisterScreenV2State extends State<ProblemRegisterScreenV2> {
         templateType: widget.problemModel.templateType!);
 
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
+        backgroundColor: Colors.white,
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: themeProvider.primaryColor),
           onPressed: () {

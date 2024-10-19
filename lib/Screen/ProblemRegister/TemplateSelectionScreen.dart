@@ -21,12 +21,14 @@ class TemplateSelectionScreen extends StatelessWidget {
     final themeProvider = Provider.of<ThemeHandler>(context);
 
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
         title: StandardText(
           text: '오답노트 템플릿 선택',
           fontSize: 20,
           color: themeProvider.primaryColor,
         ),
+        backgroundColor: Colors.white,
       ),
       body: Column(
         children: [
@@ -64,7 +66,7 @@ class TemplateSelectionScreen extends StatelessWidget {
         title: StandardText(
           text: templateType.displayName,
           fontSize: 18,
-          color: themeProvider.primaryColor,
+          color: themeProvider.darkPrimaryColor,
         ),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

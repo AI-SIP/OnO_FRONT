@@ -19,6 +19,7 @@ class _ThemeDialogState extends State<ThemeDialog> {
     final themeProvider = Provider.of<ThemeHandler>(context);
 
     return AlertDialog(
+      backgroundColor: Colors.white,
       title: StandardText(
         text: '테마 색상 선택',
         fontSize: 20,

@@ -62,6 +62,7 @@ class _ProblemDetailScreenV2State extends State<ProblemDetailScreenV2> {
     final themeProvider = Provider.of<ThemeHandler>(context);
 
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: _buildAppBar(themeProvider),
       body: Column(
         children: [
@@ -100,6 +101,7 @@ class _ProblemDetailScreenV2State extends State<ProblemDetailScreenV2> {
 
   AppBar _buildAppBar(ThemeHandler themeProvider) {
     return AppBar(
+      backgroundColor: Colors.white,
       title: buildAppBarTitle(),
       actions: _buildAppBarActions(),
     );

@@ -40,7 +40,9 @@ class _ColorPickerScreenState extends State<ColorPickerScreen> {
     final themeProvider = Provider.of<ThemeHandler>(context);
 
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
+        backgroundColor: Colors.white,
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
@@ -126,10 +128,15 @@ class _ColorPickerScreenState extends State<ColorPickerScreen> {
 
               Navigator.of(context).pop(colorMaps); // 변환된 리스트 반환
             },
-            child: StandardText(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: themeProvider.primaryColor, // 버튼 배경색 변경
+              elevation: 5, // 그림자 깊이 설정 (옵션)
+
+            ),
+            child: const StandardText(
               text: '완료',
               fontSize: 14,
-              color: themeProvider.primaryColor,
+              color: Colors.white,
             ),
           ),
           const SizedBox(height: 20),

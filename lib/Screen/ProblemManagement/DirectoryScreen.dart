@@ -49,6 +49,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     final foldersProvider = Provider.of<FoldersProvider>(context);
 
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: _buildAppBar(themeProvider, foldersProvider), // 상단 AppBar 추가
       body: !(authService.isLoggedIn == LoginStatus.login)
           ? _buildLoginPrompt(themeProvider)
@@ -75,6 +76,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     return AppBar(
       elevation: 0, // AppBar 그림자 제거
       centerTitle: true, // 제목을 항상 가운데로 배치
+      backgroundColor: Colors.white,
       title: StandardText(
         text: (foldersProvider.currentFolder?.parentFolder != null &&
                 foldersProvider.currentFolder?.folderName != null)
@@ -229,6 +231,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
+          backgroundColor: Colors.white,
           title: StandardText(
             text: '공책 위치 변경 불가',
             fontSize: 16,
@@ -264,6 +267,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
+          backgroundColor: Colors.white,
           title: StandardText(
             text: '공책 삭제',
             fontSize: 16,
@@ -334,6 +338,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
+          backgroundColor: Colors.white,
           title: StandardText(
             text: dialogTitle,
             fontSize: 18,
@@ -420,6 +425,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
           value: _selectedSortOption,
           iconEnabledColor: themeProvider.primaryColor,
           underline: Container(),
+          dropdownColor: Colors.white,
           items: [
             DropdownMenuItem(
               value: 'name',

@@ -74,6 +74,7 @@ class _FolderSelectionDialogState extends State<FolderSelectionDialog> {
     final themeProvider = Provider.of<ThemeHandler>(context);
 
     return AlertDialog(
+      backgroundColor: Colors.white,
       insetPadding: const EdgeInsets.symmetric(horizontal: 30, vertical: 30),
       contentPadding: const EdgeInsets.all(5),
       titlePadding: const EdgeInsets.only(left: 20, top: 20, right: 20),
@@ -215,6 +216,7 @@ class _FolderSelectionDialogState extends State<FolderSelectionDialog> {
       context: context,
       builder: (context) {
         return AlertDialog(
+          backgroundColor: Colors.white,
           title: StandardText(
             text: dialogTitle,
             fontSize: 18,

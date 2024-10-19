@@ -42,7 +42,6 @@ class _ProblemRegisterTemplateState
   late TextEditingController sourceController;
   late TextEditingController notesController;
   XFile? answerImage;
-  //XFile? solveImage;
   final _service = ProblemRegisterScreenService();
 
   String? processImageUrl;
@@ -111,6 +110,7 @@ class _ProblemRegisterTemplateState
     final screenWidth = MediaQuery.of(context).size.width;
 
     return Scaffold(
+      backgroundColor: Colors.white,
       body: GestureDetector(
         onTap: () {
           FocusScope.of(context).unfocus();

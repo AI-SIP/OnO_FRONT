@@ -14,6 +14,7 @@ class LoginScreen extends StatelessWidget {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
+        backgroundColor: Colors.white,
         title: const StandardText(
           text: '게스트 로그인 할 경우',
           fontSize: 18,
