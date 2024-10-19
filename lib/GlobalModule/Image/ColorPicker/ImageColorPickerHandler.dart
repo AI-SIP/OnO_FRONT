@@ -48,12 +48,12 @@ class _ColorPickerScreenState extends State<ColorPickerScreen> {
           children: [
             StandardText(
               text: '하단의 + 버튼을 누른 뒤,',
-              fontSize: 14,
+              fontSize: 16,
               color: themeProvider.primaryColor,
             ),
             StandardText(
               text: '펜을 움직여 지우고 싶은 색상을 선택하세요!!',
-              fontSize: 14,
+              fontSize: 16,
               color: themeProvider.primaryColor,
             ),
           ],
@@ -95,7 +95,7 @@ class _ColorPickerScreenState extends State<ColorPickerScreen> {
                 },
                 child: CircleAvatar(
                   radius: 30,
-                  backgroundColor: selectedColors[index] ?? themeProvider.primaryColor,
+                  backgroundColor: selectedColors[index] ?? themeProvider.desaturateColor,
                   child: selectedColors[index] == null
                       ? const Icon(Icons.add, color: Colors.white)
                       : null,
@@ -103,7 +103,7 @@ class _ColorPickerScreenState extends State<ColorPickerScreen> {
               );
             }),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 30),
           ElevatedButton(
             onPressed: () {
               // selectedColors 리스트를 RGB 값이 포함된 Map 형태로 변환
@@ -130,7 +130,7 @@ class _ColorPickerScreenState extends State<ColorPickerScreen> {
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: themeProvider.primaryColor, // 버튼 배경색 변경
-              elevation: 5, // 그림자 깊이 설정 (옵션)
+              //elevation: 5, // 그림자 깊이 설정 (옵션)
 
             ),
             child: const StandardText(
