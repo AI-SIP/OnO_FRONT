@@ -12,8 +12,9 @@ class StandardText extends StatelessWidget {
     required this.text,
     this.color = Colors.green,
     this.fontSize = 16.0,
-    this.fontWeight = FontWeight.normal,
-    this.fontFamily = 'StandardFont',
+    this.fontWeight = FontWeight.bold,
+    //this.fontFamily = 'StandardFont',
+    this.fontFamily = 'PretendardBold',
   });
 
   @override
@@ -31,7 +32,7 @@ class StandardText extends StatelessWidget {
       fontSize: fontSize,
       fontFamily: fontFamily,
       fontWeight: fontWeight,
-      height: 1.5,
+      height: 1.7,
     );
   }
 }

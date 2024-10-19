@@ -585,7 +585,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
             size: 30,
           ),
         ),
-        const SizedBox(width: 12), // 아이콘과 텍스트 간 간격
+        const SizedBox(width: 20), // 아이콘과 텍스트 간 간격
         // 폴더 정보 (이름)
         Expanded(
           child: Column(
@@ -674,7 +674,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
             fit: BoxFit.cover,
           ),
         ),
-        const SizedBox(width: 12), // 이미지와 텍스트 간 간격 추가
+        const SizedBox(width: 20), // 이미지와 텍스트 간 간격 추가
         // 문제 정보 (제목 및 작성 일시)
         Expanded(
           child: Column(

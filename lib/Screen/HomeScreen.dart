@@ -73,8 +73,8 @@ class _HomeScreenState extends State<HomeScreen> {
     final screenHeight = MediaQuery.of(context).size.height;
     final screenWidth = MediaQuery.of(context).size.width;
 
-    final double headerFontSize = screenHeight * 0.04;
-    final double buttonFontSize = screenHeight * 0.025;
+    final double headerFontSize = screenHeight * 0.035;
+    final double buttonFontSize = screenHeight * 0.02;
     final double welcomeFontSize = screenHeight * 0.03;
 
     return Scaffold(
@@ -88,7 +88,7 @@ class _HomeScreenState extends State<HomeScreen> {
             children: [
               SizedBox(height: screenHeight * 0.1),
               HandWriteText(
-                text: '\"OnO, 이제는 나도 오답한다\"',
+                text: '\"나만의 손쉬운 오답노트, OnO\"',
                 fontSize: headerFontSize,
                 color: themeProvider.primaryColor,
               ),

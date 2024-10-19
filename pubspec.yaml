@@ -114,6 +114,10 @@ flutter:
     - family: StandardBold
       fonts:
         - asset: assets/fonts/StandardBold.ttf
+    - family: PretendardBold
+      fonts:
+        - asset: assets/fonts/Pretendard-Bold.otf
+
 
 
   # To add assets to your application, add an assets section, like this:
