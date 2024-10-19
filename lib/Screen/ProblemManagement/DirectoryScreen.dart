@@ -64,6 +64,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                 child: Column(
                   children: [
                     _buildSortDropdown(themeProvider),
+                    const SizedBox(height: 20,),
                     _buildFolderAndProblemGrid(themeProvider),
                   ],
                 ),
@@ -477,12 +478,6 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     return Expanded(
       child: LayoutBuilder(
         builder: (context, constraints) {
-          // 가로/세로 모드에 따라 그리드 레이아웃을 변경
-          int crossAxisCount = constraints.maxWidth > 600 ? 3 : 2;
-          if (constraints.maxWidth > 900) {
-            crossAxisCount = 4;
-          }
-
           return Consumer<FoldersProvider>(
             builder: (context, foldersProvider, child) {
               var folders = foldersProvider.currentFolder?.subFolders ?? [];
@@ -498,13 +493,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                 );
               }
 
-              return GridView.builder(
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: crossAxisCount,
-                  childAspectRatio: 0.7,
-                  crossAxisSpacing: 20,
-                  mainAxisSpacing: 20,
-                ),
+              return ListView.builder(
                 itemCount: folders.length + problems.length,
                 itemBuilder: (context, index) {
                   if (index < folders.length) {
@@ -523,54 +512,55 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     );
   }
 
-  Widget _buildFolderTile(
-      FolderThumbnailModel folder, ThemeHandler themeProvider) {
-    return GestureDetector(
-      onTap: () {
-        // 폴더를 클릭했을 때 해당 폴더로 이동
-        FirebaseAnalytics.instance
-            .logEvent(name: 'move_to_folder', parameters: {
-          'folder_id': folder.folderId,
-        });
-        Provider.of<FoldersProvider>(context, listen: false)
-            .fetchFolderContents(folderId: folder.folderId);
-      },
-      child: LongPressDraggable<FolderThumbnailModel>(
-        data: folder,
-        feedback: Material(
-          child: SizedBox(
-            width: 100,
-            height: 100,
-            child: Icon(
-              Icons.menu_book_outlined,
-              color: themeProvider.primaryColor,
-              size: 80,
+  Widget _buildFolderTile(FolderThumbnailModel folder, ThemeHandler themeProvider) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0), // 아이템 간 간격 추가
+      child: GestureDetector(
+        onTap: () {
+          // 폴더를 클릭했을 때 해당 폴더로 이동
+          FirebaseAnalytics.instance.logEvent(name: 'move_to_folder', parameters: {
+            'folder_id': folder.folderId,
+          });
+          Provider.of<FoldersProvider>(context, listen: false)
+              .fetchFolderContents(folderId: folder.folderId);
+        },
+        child: LongPressDraggable<FolderThumbnailModel>(
+          data: folder,
+          feedback: Material(
+            child: SizedBox(
+              width: 75,
+              height: 75,
+              child: Icon(
+                Icons.folder,
+                color: themeProvider.primaryColor,
+                size: 50,
+              ),
             ),
           ),
-        ),
-        childWhenDragging: Opacity(
-          opacity: 0.5,
-          child: _folderTileContent(folder, themeProvider),
-        ),
-        onDragStarted: () {
-          HapticFeedback.lightImpact();
-        },
-        child: DragTarget<ProblemModel>(
-          onAcceptWithDetails: (details) async {
-            // 문제를 드롭하면 폴더로 이동
-            await _moveProblemToFolder(details.data, folder.folderId);
+          childWhenDragging: Opacity(
+            opacity: 0.5,
+            child: _folderTileContent(folder, themeProvider),
+          ),
+          onDragStarted: () {
+            HapticFeedback.lightImpact();
           },
-          builder: (context, candidateData, rejectedData) {
-            return DragTarget<FolderThumbnailModel>(
-              onAcceptWithDetails: (details) async {
-                // 폴더를 드롭하면 자식 폴더로 이동
-                await _moveFolderToNewParent(details.data, folder.folderId);
-              },
-              builder: (context, candidateData, rejectedData) {
-                return _folderTileContent(folder, themeProvider);
-              },
-            );
-          },
+          child: DragTarget<ProblemModel>(
+            onAcceptWithDetails: (details) async {
+              // 문제를 드롭하면 폴더로 이동
+              await _moveProblemToFolder(details.data, folder.folderId);
+            },
+            builder: (context, candidateData, rejectedData) {
+              return DragTarget<FolderThumbnailModel>(
+                onAcceptWithDetails: (details) async {
+                  // 폴더를 드롭하면 자식 폴더로 이동
+                  await _moveFolderToNewParent(details.data, folder.folderId);
+                },
+                builder: (context, candidateData, rejectedData) {
+                  return _folderTileContent(folder, themeProvider);
+                },
+              );
+            },
+          ),
         ),
       ),
     );
@@ -578,85 +568,90 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
   Widget _folderTileContent(
       FolderThumbnailModel folder, ThemeHandler themeProvider) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        double height = constraints.maxHeight * 0.8;
-        double width = constraints.maxWidth * 0.9;
-        final standardTextStyle = const StandardText(text: '').getTextStyle();
-
-        return GridTile(
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        // 아이콘
+        Container(
+          width: 75,
+          height: 75,
+          decoration: BoxDecoration(
+            color: themeProvider.primaryColor.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(8.0),
+          ),
+          child: Icon(
+            Icons.folder,
+            color: themeProvider.primaryColor,
+            size: 30,
+          ),
+        ),
+        const SizedBox(width: 12), // 아이콘과 텍스트 간 간격
+        // 폴더 정보 (이름)
+        Expanded(
           child: Column(
-            children: <Widget>[
-              Container(
-                width: width,
-                height: height,
-                decoration: BoxDecoration(
-                  color: themeProvider.primaryColor.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12.0),
-                ),
-                child: Icon(
-                  Icons.menu_book_outlined,
-                  color: themeProvider.primaryColor,
-                  size: 70,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                folder.folderName,
-                style: standardTextStyle.copyWith(
-                  color: themeProvider.primaryColor,
-                  fontSize: 16,
-                ),
-                textAlign: TextAlign.center,
-                overflow: TextOverflow.ellipsis,
-                maxLines: 1,
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              StandardText(
+                text: folder.folderName,
+                color: themeProvider.primaryColor,
+                fontSize: 18,
               ),
             ],
           ),
-        );
-      },
+        ),
+      ],
     );
   }
 
-  String formatDateTime(DateTime dateTime) {
-    return DateFormat('yyyy/MM/dd HH:mm').format(dateTime);
-  }
 
   Widget _buildProblemTile(ProblemModel problem, ThemeHandler themeProvider) {
-    return GestureDetector(
-      onTap: () {
-        FirebaseAnalytics.instance
-            .logEvent(name: 'move_to_problem', parameters: {
-          'problem_id': problem.problemId,
-        });
+    final imageUrl = (problem.templateType == TemplateType.simple)
+        ? problem.problemImageUrl
+        : problem.processImageUrl;
 
-        // 문제를 터치했을 때 페이지로 이동
-        _directoryService.navigateToProblemDetail(context, problem.problemId);
-      },
-      child: LongPressDraggable<ProblemModel>(
-        data: problem,
-        delay: const Duration(milliseconds: 500), // 딜레이를 500ms로 줄임
-        onDragStarted: () {
-          HapticFeedback.lightImpact(); // 드래그 시작 시 가벼운 햅틱 피드백 제공
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0), // 아이템 간 간격 추가
+      child: GestureDetector(
+        onTap: () {
+          FirebaseAnalytics.instance.logEvent(name: 'move_to_problem', parameters: {
+            'problem_id': problem.problemId,
+          });
+
+          _directoryService.navigateToProblemDetail(context, problem.problemId);
         },
-        feedback: Material(
-          child: SizedBox(
-            width: 100,
-            height: 100,
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(8.0),
-              child: DisplayImage(
-                imagePath: problem.problemImageUrl,
-                fit: BoxFit.cover, // 문제 썸네일을 드래그 시 보여줌
+        child: LongPressDraggable<ProblemModel>(
+          data: problem,
+          feedback: Material(
+            child: SizedBox(
+              width: 75,
+              height: 75,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(8.0),
+                child: DisplayImage(
+                  imagePath: imageUrl ?? defaultImage, // 이미지가 없을 경우 기본 이미지 사용
+                  fit: BoxFit.cover,
+                ),
               ),
             ),
           ),
+          childWhenDragging: Opacity(
+            opacity: 0.5,
+            child: _problemTileContent(problem, themeProvider),
+          ),
+          onDragStarted: () {
+            HapticFeedback.lightImpact();
+          },
+          child: DragTarget<FolderThumbnailModel>(
+            onAcceptWithDetails: (details) async {
+              // 문제를 드롭하면 해당 폴더로 이동
+              await _moveProblemToFolder(problem, details.data.folderId);
+            },
+            builder: (context, candidateData, rejectedData) {
+              return _problemTileContent(problem, themeProvider);
+            },
+          ),
         ),
-        childWhenDragging: Opacity(
-          opacity: 0.5, // 드래그 중일 때의 UI
-          child: _problemTileContent(problem, themeProvider),
-        ),
-        child: _problemTileContent(problem, themeProvider), // 기본 UI
       ),
     );
   }
@@ -666,72 +661,49 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         ? problem.problemImageUrl
         : problem.processImageUrl;
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        double height = constraints.maxHeight * 0.8;
-        double width = constraints.maxWidth * 0.9;
-        final standardTextStyle = const StandardText(text: '').getTextStyle();
-
-        return GridTile(
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        // 문제 이미지
+        ClipRRect(
+          borderRadius: BorderRadius.circular(8.0),
+          child: Image.network(
+            imageUrl ?? defaultImage, // 이미지가 없을 경우 기본 이미지 사용
+            width: 75,
+            height: 75,
+            fit: BoxFit.cover,
+          ),
+        ),
+        const SizedBox(width: 12), // 이미지와 텍스트 간 간격 추가
+        // 문제 정보 (제목 및 작성 일시)
+        Expanded(
           child: Column(
-            children: <Widget>[
-              Expanded(
-                child: Container(
-                  width: width,
-                  height: height,
-                  decoration: BoxDecoration(
-                    color: themeProvider.primaryColor.withOpacity(0.03),
-                    border: Border.all(
-                      color: themeProvider.primaryColor,
-                      width: 2.0,
-                    ),
-                    borderRadius: BorderRadius.circular(8.0),
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(6.0),
-                    child: DisplayImage(
-                      imagePath: imageUrl, // 선택된 이미지 URL 사용
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 8),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  _getTemplateIcon(problem.templateType, themeProvider),
-                  const SizedBox(width: 10),
-                  Flexible(
-                    child: Text(
-                      (problem.reference != null &&
-                              problem.reference!.isNotEmpty)
-                          ? problem.reference!
-                          : '제목 없음',
-                      style: standardTextStyle.copyWith(
-                        color: themeProvider.primaryColor,
-                        fontSize: 16,
-                      ),
-                      textAlign: TextAlign.left,
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 1,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 2),
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 4),
               StandardText(
-                text: problem.updateAt != null
-                    ? '작성 일시 : ${formatDateTime(problem.createdAt!)}'
-                    : '작성 일시 : 정보 없음',
+                text: problem.reference ?? '제목 없음',
+                color: themeProvider.primaryColor,
+                fontSize: 18,
+              ),
+              const SizedBox(height: 4),
+              StandardText(
+                text: problem.createdAt != null
+                    ? '작성 일시: ${formatDateTime(problem.createdAt!)}'
+                    : '작성 일시: 정보 없음',
+                fontSize: 12,
                 color: themeProvider.desaturateColor,
-                fontSize: 10,
               ),
             ],
           ),
-        );
-      },
+        ),
+      ],
     );
+  }
+
+  String formatDateTime(DateTime dateTime) {
+    return DateFormat('yyyy/MM/dd HH:mm').format(dateTime);
   }
 
   Widget _getTemplateIcon(

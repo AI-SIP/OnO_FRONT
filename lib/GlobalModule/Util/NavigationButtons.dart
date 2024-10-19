@@ -195,6 +195,7 @@ class _NavigationButtonsState extends State<NavigationButtons> {
               ),
               content: Container(
                 height: MediaQuery.of(context).size.height * 0.5,
+                width: MediaQuery.of(context).size.width * 0.8,
                 padding: const EdgeInsets.all(15),
                 child: GestureDetector(
                   onTap: () {
