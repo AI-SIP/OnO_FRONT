@@ -8,7 +8,6 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart';
 import 'package:ono/GlobalModule/Theme/StandardText.dart';
 import 'package:ono/GlobalModule/Theme/ThemeHandler.dart';
-import 'package:ono/Model/LoginStatus.dart';
 import 'package:ono/Provider/FoldersProvider.dart';
 import 'package:ono/Screen/ProblemRegister/ProblemRegisterScreenV2.dart';
 import 'package:ono/Screen/SplashScreen.dart';
@@ -112,9 +111,9 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
   int _selectedIndex = 0;
   final secureStorage = const FlutterSecureStorage();
   static const List<Widget> _widgetOptions = <Widget>[
-    HomeScreen(),
-    TemplateSelectionScreen(),
+    //HomeScreen(),
     DirectoryScreen(),
+    TemplateSelectionScreen(),
     SettingScreen(),
   ];
 
@@ -122,7 +121,6 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    //autoLogin();
   }
 
   @override
@@ -148,15 +146,12 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
     // 탭된 아이템에 따른 스크린 뷰 기록
     switch (index) {
       case 0:
-        _sendScreenView('HomeScreen');
+        _sendScreenView('DirectoryScreen');
         break;
       case 1:
         _sendScreenView('ProblemRegisterScreen');
         break;
       case 2:
-        _sendScreenView('DirectoryScreen');
-        break;
-      case 3:
         _sendScreenView('SettingScreen');
         break;
     }
@@ -205,7 +200,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: (_selectedIndex == 0 || _selectedIndex == 1)
-          ? null // DirectoryScreen을 위한 조건 (index 2일 경우 AppBar를 제거)
+          ? null
           : const AppBarWithLogo(), // 다른 화면에서는 AppBar 표시
       body: IndexedStack(
         index: _selectedIndex,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:ono/GlobalModule/Theme/StandardText.dart';
 
 class UserGuideScreen extends StatefulWidget {
@@ -13,7 +14,7 @@ class UserGuideScreen extends StatefulWidget {
 class _UserGuideScreenState extends State<UserGuideScreen> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
-  final guideScreenLength = 3;
+  final guideScreenLength = 4;
 
   @override
   Widget build(BuildContext context) {
@@ -35,17 +36,22 @@ class _UserGuideScreenState extends State<UserGuideScreen> {
               },
               children: [
                 _buildUserGuidePage(
-                  imagePath: 'assets/GuideScreen/GuideScreen1.png',
+                  imagePath: 'assets/GuideScreen/GuideScreen1.svg',
                   title: '나의 노트',
                   description: '구분이 쉽도록 여러 개의\n오답노트를 만들 수 있어요.',
                 ),
                 _buildUserGuidePage(
-                  imagePath: 'assets/GuideScreen/GuideScreen2.png',
+                  imagePath: 'assets/GuideScreen/GuideScreen2.svg',
                   title: '복습',
                   description: '문제와 노트를 묶어 루틴을 만들고\n처음 보는 문제처럼 풀어봐요.',
                 ),
                 _buildUserGuidePage(
-                  imagePath: 'assets/GuideScreen/GuideScreen3.png',
+                  imagePath: 'assets/GuideScreen/GuideScreen3.svg',
+                  title: '문제 등록',
+                  description: '낙서, 필기를 깔끔하게 지우고\n새로운 문제처럼 등록할 수 있어요.',
+                ),
+                _buildUserGuidePage(
+                  imagePath: 'assets/GuideScreen/GuideScreen4.svg',
                   title: '문제 등록',
                   description: '낙서, 필기를 깔끔하게 지우고\n새로운 문제처럼 등록할 수 있어요.',
                 ),
@@ -67,7 +73,7 @@ class _UserGuideScreenState extends State<UserGuideScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Image.asset(imagePath, width: 200, height: 200), // Onboarding image
+          SvgPicture.asset(imagePath, width: 200, height: 200), // Onboarding image
           Text(
             title,
             style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),

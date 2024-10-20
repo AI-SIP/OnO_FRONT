@@ -88,9 +88,14 @@ flutter:
     - .env
     - assets/no_image.png
     - assets/Logo.png
+    - assets/GuideScreen/GuideScreen1.svg
+    - assets/GuideScreen/GuideScreen2.svg
+    - assets/GuideScreen/GuideScreen3.svg
+    - assets/GuideScreen/GuideScreen4.svg
     - assets/GuideScreen/GuideScreen1.png
     - assets/GuideScreen/GuideScreen2.png
     - assets/GuideScreen/GuideScreen3.png
+    - assets/GuideScreen/GuideScreen4.png
     - assets/SocialLogin/AppleLogin.png
     - assets/SocialLogin/GoogleLogin.png
     - assets/SocialLogin/KakaoLogin.png

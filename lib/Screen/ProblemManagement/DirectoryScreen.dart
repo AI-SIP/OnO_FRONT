@@ -20,6 +20,7 @@ import '../../Service/ScreenUtil/DirectoryScreenService.dart';
 import '../../Model/ProblemModel.dart';
 import '../../Model/FolderThumbnailModel.dart';
 import '../../Provider/UserProvider.dart';
+import '../UserGuideScreen.dart';
 
 class DirectoryScreen extends StatefulWidget {
   const DirectoryScreen({super.key});
@@ -31,6 +32,7 @@ class DirectoryScreen extends StatefulWidget {
 class _DirectoryScreenState extends State<DirectoryScreen> {
   final String defaultImage = 'assets/no_image.png';
   String _selectedSortOption = 'newest';
+  bool modalShown = false;
 
   late DirectoryScreenService _directoryService;
 
@@ -42,6 +44,32 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     );
 
     _directoryService.sortProblems(_selectedSortOption);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final userProvider = Provider.of<UserProvider>(context, listen: false);
+      if (userProvider.isFirstLogin && !modalShown) {
+        modalShown = true;
+        _showUserGuideModal();
+      }
+    });
+  }
+
+  void _showUserGuideModal() async {
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true, // 스크롤 가능 모달 설정
+      backgroundColor: Colors.transparent, // 투명 배경
+      builder: (BuildContext context) {
+        return FractionallySizedBox(
+          heightFactor: 0.6, // 화면 높이의 50% 차지
+          child: UserGuideScreen(
+            onFinish: () {
+              Navigator.of(context).pop(); // 모달 닫기
+            },
+          ),
+        );
+      },
+    );
   }
 
   @override
