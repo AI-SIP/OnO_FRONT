@@ -194,22 +194,17 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
     final userProvider = Provider.of<UserProvider>(context, listen: false);
     final foldersProvider = Provider.of<FoldersProvider>(context, listen: false);
 
-    if(userProvider.loginStatus == LoginStatus.login){
-      setState(() {
-        _selectedIndex = 2;
-      });
-      foldersProvider.fetchRootFolderContents();
-    } else{
-      setState(() {
-        _selectedIndex = 0;
-      });
-    }
+    foldersProvider.fetchRootFolderContents();
+
+    setState(() {
+      _selectedIndex = 0;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: (_selectedIndex == 1 || _selectedIndex == 2)
+      appBar: (_selectedIndex == 0 || _selectedIndex == 1)
           ? null // DirectoryScreen을 위한 조건 (index 2일 경우 AppBar를 제거)
           : const AppBarWithLogo(), // 다른 화면에서는 AppBar 표시
       body: IndexedStack(
@@ -245,18 +240,21 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
 
   List<BottomNavigationBarItem> _bottomNavigationItems() {
     return const [
+      /*
       BottomNavigationBarItem(
         icon: Icon(Icons.home),
         label: '메인',
       ),
-      BottomNavigationBarItem(
-        icon: Icon(Icons.edit),
-        label: '오답노트 작성',
-      ),
+       */
       BottomNavigationBarItem(
         icon: Icon(Icons.menu_book),
-        label: '오답노트 복습',
+        label: '오답 복습',
       ),
+      BottomNavigationBarItem(
+        icon: Icon(Icons.edit),
+        label: '문제 등록',
+      ),
+
       BottomNavigationBarItem(
         icon: Icon(Icons.settings),
         label: '설정',

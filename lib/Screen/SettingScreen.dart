@@ -166,7 +166,7 @@ class _SettingScreenState extends State<SettingScreen> {
       title: StandardText(
         text: '$userName님',
         fontSize: 18,
-        color: Colors.black,
+        color: themeProvider.primaryColor,
       ),
       trailing: ElevatedButton(
         onPressed: () {
@@ -176,17 +176,17 @@ class _SettingScreenState extends State<SettingScreen> {
         },
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.white,
-          foregroundColor: themeProvider.primaryColor,
+          foregroundColor: Colors.black,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),
           ),
-          side: BorderSide(color: themeProvider.primaryColor),
+          side: const BorderSide(color: Colors.black),
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
         ),
-        child: StandardText(
+        child: const StandardText(
           text: '이름 수정',
           fontSize: 14,
-          color: themeProvider.primaryColor,
+          color: Colors.black,
         ),
       ),
     );
@@ -202,12 +202,12 @@ class _SettingScreenState extends State<SettingScreen> {
       title: StandardText(
         text: '작성한 오답노트 수',
         fontSize: 18,
-        color: Colors.black,
+        color: themeProvider.primaryColor,
       ),
       trailing: StandardText(
         text: problemCount.toString(),
         fontSize: 18,
-        color: themeProvider.primaryColor,
+        color: Colors.black,
       ),
     );
   }
@@ -225,12 +225,12 @@ class _SettingScreenState extends State<SettingScreen> {
       title: StandardText(
         text: title,
         fontSize: 18,
-        color: Colors.black,
+        color: themeColor,
       ),
       subtitle: StandardText(
         text: subtitle,
         fontSize: 14,
-        color: ThemeHandler.desaturatenColor(Colors.black),
+        color: ThemeHandler.desaturatenColor(themeColor),
       ),
       trailing: Container(
         width: 40,
@@ -257,12 +257,12 @@ class _SettingScreenState extends State<SettingScreen> {
       title: StandardText(
         text: title,
         fontSize: 18,
-        color: Colors.black,
+        color: themeProvider.primaryColor,
       ),
       subtitle: StandardText(
         text: subtitle,
         fontSize: 14,
-        color: ThemeHandler.desaturatenColor(Colors.black),
+        color: themeProvider.desaturateColor,
       ),
       onTap: onTap,
     );

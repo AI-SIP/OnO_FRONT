@@ -24,7 +24,6 @@ class _UserGuideScreenState extends State<UserGuideScreen> {
       ),
       padding: const EdgeInsets.all(16.0),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Expanded(
             child: PageView(
@@ -64,28 +63,29 @@ class _UserGuideScreenState extends State<UserGuideScreen> {
     required String title,
     required String description,
   }) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Image.asset(imagePath, width: 200, height: 200), // Onboarding image
-        const SizedBox(height: 20),
-        Text(
-          title,
-          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 10),
-        Text(
-          description,
-          style: const TextStyle(fontSize: 16),
-          textAlign: TextAlign.center,
-        ),
-      ],
+    return SingleChildScrollView(  // SingleChildScrollView 추가
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Image.asset(imagePath, width: 200, height: 200), // Onboarding image
+          Text(
+            title,
+            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 20),
+          Text(
+            description,
+            style: const TextStyle(fontSize: 16),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
     );
   }
 
   Widget _buildBottomControls() {
     return Padding(
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.all(10.0),
       child: Column(
         children: [
           Row(
@@ -95,7 +95,7 @@ class _UserGuideScreenState extends State<UserGuideScreen> {
                   (index) => _buildIndicator(index == _currentPage),
             ),
           ),
-          const SizedBox(height: 30),
+          const SizedBox(height: 10),
           LayoutBuilder(
             builder: (context, constraints) {
               // 다이얼로그 크기의 80%로 버튼 너비를 설정

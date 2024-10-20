@@ -7,6 +7,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../Config/AppConfig.dart';
 import '../GlobalModule/Theme/HandWriteText.dart';
 import '../GlobalModule/Theme/GridPainter.dart';
+import '../GlobalModule/Theme/StandardText.dart';
 import '../GlobalModule/Theme/ThemeHandler.dart';
 import '../Model/LoginStatus.dart';
 import '../Provider/UserProvider.dart';
@@ -42,7 +43,7 @@ class _HomeScreenState extends State<HomeScreen> {
       backgroundColor: Colors.transparent, // 투명 배경
       builder: (BuildContext context) {
         return FractionallySizedBox(
-          heightFactor: 0.5, // 화면 높이의 50% 차지
+          heightFactor: 0.6, // 화면 높이의 50% 차지
           child: UserGuideScreen(
             onFinish: () {
               Navigator.of(context).pop(); // 모달 닫기
@@ -73,8 +74,8 @@ class _HomeScreenState extends State<HomeScreen> {
     final screenWidth = MediaQuery.of(context).size.width;
 
     final double headerFontSize = screenHeight * 0.035;
-    final double buttonFontSize = screenHeight * 0.02;
-    final double welcomeFontSize = screenHeight * 0.03;
+    final double buttonFontSize = screenHeight * 0.017;
+    final double welcomeFontSize = screenHeight * 0.02;
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -111,7 +112,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   children: [
                     Icon(Icons.touch_app, color: Colors.white, size: buttonFontSize), // 아이콘 추가
                     const SizedBox(width: 10),
-                    HandWriteText(
+                    StandardText(
                       text: 'OnO 사용 가이드',
                       fontSize: buttonFontSize,
                       color: Colors.white,
@@ -126,7 +127,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   if (authService.isLoggedIn == LoginStatus.login) {
                     return Padding(
                       padding: EdgeInsets.only(top: screenHeight * 0.05),
-                      child: HandWriteText(
+                      child: StandardText(
                         text: '${authService.userName}님 환영합니다!',
                         fontSize: welcomeFontSize,
                         color: themeProvider.primaryColor,
