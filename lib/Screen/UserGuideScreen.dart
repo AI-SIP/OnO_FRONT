@@ -3,7 +3,8 @@ import 'package:flutter_svg/svg.dart';
 import 'package:ono/GlobalModule/Theme/StandardText.dart';
 
 class UserGuideScreen extends StatefulWidget {
-  final VoidCallback onFinish; // Callback to be called when the user finishes the onboarding
+  final VoidCallback
+      onFinish; // Callback to be called when the user finishes the onboarding
 
   const UserGuideScreen({required this.onFinish, Key? key}) : super(key: key);
 
@@ -26,6 +27,15 @@ class _UserGuideScreenState extends State<UserGuideScreen> {
       padding: const EdgeInsets.all(16.0),
       child: Column(
         children: [
+          const Padding(
+            padding: EdgeInsets.only(bottom: 30.0), // 아래쪽 여백 추가
+            child: StandardText(
+              text: 'OnO, 이렇게 사용하세요',
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              color: Colors.black,
+            ),
+          ),
           Expanded(
             child: PageView(
               controller: _pageController,
@@ -37,23 +47,23 @@ class _UserGuideScreenState extends State<UserGuideScreen> {
               children: [
                 _buildUserGuidePage(
                   imagePath: 'assets/GuideScreen/GuideScreen1.svg',
-                  title: '나의 노트',
-                  description: '구분이 쉽도록 여러 개의\n오답노트를 만들 수 있어요.',
+                  title: 'OnO에 오신걸 환영합니다!',
+                  description: 'OnO를 통해 손쉽게\n나만의 오답노트를 작성해보아요!',
                 ),
                 _buildUserGuidePage(
                   imagePath: 'assets/GuideScreen/GuideScreen2.svg',
-                  title: '복습',
-                  description: '문제와 노트를 묶어 루틴을 만들고\n처음 보는 문제처럼 풀어봐요.',
+                  title: '문제 등록',
+                  description: '낙서, 필기를 깔끔하게 지우고\n새로운 문제처럼 등록할 수 있어요.',
                 ),
                 _buildUserGuidePage(
                   imagePath: 'assets/GuideScreen/GuideScreen3.svg',
                   title: '문제 등록',
-                  description: '낙서, 필기를 깔끔하게 지우고\n새로운 문제처럼 등록할 수 있어요.',
+                  description: '오답 분석 기능을 사용해\n나의 취약점을 알아보세요.',
                 ),
                 _buildUserGuidePage(
                   imagePath: 'assets/GuideScreen/GuideScreen4.svg',
-                  title: '문제 등록',
-                  description: '낙서, 필기를 깔끔하게 지우고\n새로운 문제처럼 등록할 수 있어요.',
+                  title: '오답 복습',
+                  description: '구분이 쉽도록 여러 개의 오답노트를 만들 수 있어요.',
                 ),
               ],
             ),
@@ -69,11 +79,14 @@ class _UserGuideScreenState extends State<UserGuideScreen> {
     required String title,
     required String description,
   }) {
-    return SingleChildScrollView(  // SingleChildScrollView 추가
+    return SingleChildScrollView(
+      // SingleChildScrollView 추가
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          SvgPicture.asset(imagePath, width: 200, height: 200), // Onboarding image
+          SvgPicture.asset(imagePath,
+              width: 350, height: 200), // Onboarding image
+          const SizedBox(height: 30),
           Text(
             title,
             style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
@@ -91,14 +104,14 @@ class _UserGuideScreenState extends State<UserGuideScreen> {
 
   Widget _buildBottomControls() {
     return Padding(
-      padding: const EdgeInsets.all(10.0),
+      padding: const EdgeInsets.all(20.0),
       child: Column(
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: List.generate(
               guideScreenLength,
-                  (index) => _buildIndicator(index == _currentPage),
+              (index) => _buildIndicator(index == _currentPage),
             ),
           ),
           const SizedBox(height: 10),
@@ -112,11 +125,11 @@ class _UserGuideScreenState extends State<UserGuideScreen> {
                   onPressed: _currentPage == guideScreenLength - 1
                       ? widget.onFinish
                       : () {
-                    _pageController.nextPage(
-                      duration: const Duration(milliseconds: 300),
-                      curve: Curves.easeIn,
-                    );
-                  },
+                          _pageController.nextPage(
+                            duration: const Duration(milliseconds: 300),
+                            curve: Curves.easeIn,
+                          );
+                        },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.green,
                     shape: RoundedRectangleBorder(

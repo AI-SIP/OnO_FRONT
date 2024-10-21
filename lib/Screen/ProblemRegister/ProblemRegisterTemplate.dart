@@ -197,6 +197,7 @@ class _ProblemRegisterTemplateState
                 onCancel: _resetFields,
                 isEditMode: widget.isEditMode,
               ),
+              const SizedBox(height: 30),
             ],
           ),
         ),
@@ -274,29 +275,6 @@ class _ProblemRegisterTemplateState
               ),
             ),
             const SizedBox(width: 10),
-            /*
-            const Icon(Icons.arrow_forward, size: 30, color: Colors.white),
-            const SizedBox(width: 10),
-            Expanded(
-              flex: 1,
-              child: ProblemRegisterScreenWidget.buildImagePickerWithLabel(
-                context: context,
-                label: '풀이 이미지',
-                image: solveImage,
-                existingImageUrl: problemModel.solveImageUrl,
-                themeProvider: themeProvider,
-                onImagePicked: (XFile? pickedFile) {
-                  setState(() {
-                    solveImage = pickedFile;
-                  });
-                  FirebaseAnalytics.instance.logEvent(
-                    name: 'image_add_solve_image',
-                    parameters: {'type': 'solve_image'},
-                  );
-                },
-              ),
-            ),
-             */
           ],
         ),
       ],
@@ -357,14 +335,14 @@ class _ProblemRegisterTemplateState
             themeProvider: themeProvider,
             maxHeight: screenHeight * 0.33,
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 30),
         ],
         _buildImageSection(
           label: '문제 이미지',
           imageUrl: problemModel.problemImageUrl,
           themeProvider: themeProvider,
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: 30),
         if(widget.templateType != TemplateType.simple) ... [
           _buildImageSection(
               label: '필기 제거 이미지',
@@ -373,8 +351,8 @@ class _ProblemRegisterTemplateState
               isLoading: isLoading,
               loadingMessage: '필기 제거 중....'
           ),
+          const SizedBox(height: 30),
         ],
-        const SizedBox(height: 20),
         ProblemRegisterScreenWidget.buildImagePickerWithLabel(
           context: context,
           label: '정답 이미지',
@@ -392,34 +370,6 @@ class _ProblemRegisterTemplateState
             );
           },
         ),
-        const SizedBox(height: 20),
-        // 보정 이미지와 해설 이미지가 있을 경우 추가
-        /*
-        if (widget.templateType != TemplateType.simple)
-          Column(
-            children: [
-              ProblemRegisterScreenWidget.buildImagePickerWithLabel(
-                context: context,
-                label: '풀이 이미지',
-                image: solveImage,
-                existingImageUrl: problemModel.solveImageUrl,
-                themeProvider: themeProvider,
-                onImagePicked: (XFile? pickedFile) {
-                  setState(() {
-                    solveImage = pickedFile;
-                  });
-
-                  FirebaseAnalytics.instance.logEvent(
-                    name: 'image_add_solve_image',
-                    parameters: {'type': 'solve_image'},
-                  );
-                },
-              ),
-              const SizedBox(height: 20),
-            ],
-          ),
-
-         */
       ],
     );
   }

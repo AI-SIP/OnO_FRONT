@@ -9,6 +9,7 @@ import 'package:ono/GlobalModule/Theme/NoteIconHandler.dart';
 import 'package:ono/GlobalModule/Theme/SnackBarDialog.dart';
 import 'package:ono/Model/LoginStatus.dart';
 import 'package:ono/Provider/FoldersProvider.dart';
+import 'package:ono/main.dart';
 import 'package:provider/provider.dart';
 import '../../GlobalModule/Image/DisplayImage.dart';
 import '../../GlobalModule/Theme/StandardText.dart';
@@ -20,6 +21,7 @@ import '../../Service/ScreenUtil/DirectoryScreenService.dart';
 import '../../Model/ProblemModel.dart';
 import '../../Model/FolderThumbnailModel.dart';
 import '../../Provider/UserProvider.dart';
+import '../ProblemRegister/TemplateSelectionScreen.dart';
 import '../UserGuideScreen.dart';
 
 class DirectoryScreen extends StatefulWidget {
@@ -99,18 +101,40 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                 ),
               ),
             ),
-      floatingActionButton: Padding(
-        padding: const EdgeInsets.only(bottom: 20, right: 10), // 위치 조정 (약간 위로)
-        child: FloatingActionButton(
-          onPressed: () {
-            FirebaseAnalytics.instance
-                .logEvent(name: 'folder_create_button_click');
-            _showCreateFolderDialog(); // 기존에 상단에서 호출하던 폴더 생성 로직
-          },
-          backgroundColor: themeProvider.primaryColor,
-          shape: const CircleBorder(), // 동그란 모양 유지
-          child: SvgPicture.asset("assets/Icon/add_note.svg", color: Colors.white,),
-        ),
+      floatingActionButton: Stack(
+        children: [
+          // 기존의 플로팅 버튼
+          Positioned(
+            bottom: 20,
+            right: 10,
+            child: FloatingActionButton(
+              onPressed: () {
+                FirebaseAnalytics.instance
+                    .logEvent(name: 'folder_create_button_click');
+                _showCreateFolderDialog(); // 기존에 상단에서 호출하던 폴더 생성 로직
+              },
+              backgroundColor: themeProvider.primaryColor,
+              shape: const CircleBorder(), // 동그란 모양 유지
+              child: SvgPicture.asset("assets/Icon/add_note.svg", color: Colors.white,),
+            ),
+          ),
+          // 새로 추가된 플로팅 버튼 (문제 등록 탭으로 이동)
+          Positioned(
+            bottom: 90,  // 기존 버튼 위에 배치
+            right: 10,
+            child: FloatingActionButton(
+              onPressed: () {
+                // 네비게이션 바의 인덱스 변경 (TemplateSelectionScreen 인덱스로 이동)
+                setState(() {
+                  //_selectedIndex = 1; // 문제 등록 탭의 인덱스 (TemplateSelectionScreen)
+                });
+              },
+              backgroundColor: Colors.green, // 색상은 다른 것으로 지정 가능
+              shape: const CircleBorder(),
+              child: const Icon(Icons.edit, color: Colors.white), // 문제 등록 아이콘
+            ),
+          ),
+        ],
       ),
       floatingActionButtonLocation:
           FloatingActionButtonLocation.endFloat, // 오른쪽 하단 기본 위치
