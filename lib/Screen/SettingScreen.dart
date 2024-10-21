@@ -7,6 +7,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../GlobalModule/Theme/StandardText.dart';
 import '../GlobalModule/Theme/ThemeDialog.dart';
 import '../GlobalModule/Theme/ThemeHandler.dart';
+import '../Provider/ScreenIndexProvider.dart';
 import '../Provider/UserProvider.dart';
 import 'LoginScreen.dart';
 
@@ -113,6 +114,9 @@ class _SettingScreenState extends State<SettingScreen> {
                                   listen: false)
                               .signOut();
 
+                          Provider.of<ScreenIndexProvider>(context, listen: false)
+                              .setSelectedIndex(0);
+
                           Navigator.of(context).pushReplacement(
                             MaterialPageRoute(
                                 builder: (context) => const LoginScreen()),
@@ -130,6 +134,9 @@ class _SettingScreenState extends State<SettingScreen> {
                           await Provider.of<UserProvider>(context,
                                   listen: false)
                               .deleteAccount();
+
+                          Provider.of<ScreenIndexProvider>(context, listen: false)
+                              .setSelectedIndex(0);
 
                           Navigator.of(context).pushReplacement(
                             MaterialPageRoute(

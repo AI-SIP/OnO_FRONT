@@ -110,10 +110,8 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
-  //static int _selectedIndex = 0;
   final secureStorage = const FlutterSecureStorage();
   static const List<Widget> _widgetOptions = <Widget>[
-    //HomeScreen(),
     DirectoryScreen(),
     TemplateSelectionScreen(),
     SettingScreen(),
@@ -170,9 +168,6 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
     final foldersProvider = Provider.of<FoldersProvider>(context, listen: false);
 
     foldersProvider.fetchRootFolderContents();
-
-    Provider.of<ScreenIndexProvider>(context, listen: false)
-        .setSelectedIndex(0);
   }
 
   @override

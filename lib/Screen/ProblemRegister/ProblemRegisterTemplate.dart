@@ -14,6 +14,7 @@ import '../../Model/ProblemModel.dart';
 import '../../Model/ProblemRegisterModelV2.dart';
 import '../../Model/TemplateType.dart';
 import '../../Provider/FoldersProvider.dart';
+import '../../Provider/ScreenIndexProvider.dart';
 import '../../Service/ScreenUtil/ProblemRegisterScreenService.dart';
 import 'ProblemRegisterScreenWidget.dart';
 
@@ -556,7 +557,6 @@ class _ProblemRegisterTemplateState
         problemImageUrl: problemModel.problemImageUrl,
         processImageUrl: processImageUrl,
         answerImage: answerImage,
-        //solveImage: solveImage,
         memo: notesController.text,
         reference: sourceController.text,
         analysis: analysisResult,
@@ -572,6 +572,9 @@ class _ProblemRegisterTemplateState
           _resetFields();
           LoadingDialog.hide(context);
           Navigator.of(context).pop(true);
+
+          Provider.of<ScreenIndexProvider>(context, listen: false)
+              .setSelectedIndex(0);
         },
       );
     });

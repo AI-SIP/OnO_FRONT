@@ -109,6 +109,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
             bottom: 20,
             right: 10,
             child: FloatingActionButton(
+              heroTag: 'create_folder',
               onPressed: () {
                 FirebaseAnalytics.instance
                     .logEvent(name: 'folder_create_button_click');
@@ -123,6 +124,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
             bottom: 90,
             right: 10,
             child: FloatingActionButton(
+              heroTag: 'create_problem',
               onPressed: () {
                 Provider.of<ScreenIndexProvider>(context, listen: false)
                     .setSelectedIndex(1);  // 문제 등록 탭으로 이동
