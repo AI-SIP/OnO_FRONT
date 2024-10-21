@@ -24,6 +24,7 @@ class TemplateSelectionScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
+        centerTitle: true,
         title: StandardText(
           text: '오답노트 템플릿 선택',
           fontSize: 20,

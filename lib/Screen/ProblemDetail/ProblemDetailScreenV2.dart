@@ -34,12 +34,6 @@ class _ProblemDetailScreenV2State extends State<ProblemDetailScreenV2> {
   final ProblemDetailScreenService _problemDetailService =
       ProblemDetailScreenService();
 
-
-  static const String shareProblemValue = 'share_problem';
-  static const String shareAnswerValue = 'share_answer';
-  static const String editValue = 'edit';
-  static const String deleteValue = 'delete';
-
   @override
   void initState() {
     super.initState();
@@ -103,6 +97,7 @@ class _ProblemDetailScreenV2State extends State<ProblemDetailScreenV2> {
   AppBar _buildAppBar(ThemeHandler themeProvider) {
     return AppBar(
       backgroundColor: Colors.white,
+      centerTitle: true,
       title: buildAppBarTitle(),
       actions: _buildAppBarActions(),
     );

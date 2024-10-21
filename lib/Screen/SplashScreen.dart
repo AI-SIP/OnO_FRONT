@@ -60,7 +60,7 @@ class _SplashScreenState extends State<SplashScreen> {
             AnimatedTextKit(
               animatedTexts: [
                 TypewriterAnimatedText(
-                  '\"OnO, 이제는 나도 오답한다\"',
+                  '\"나만의 손쉬운 오답노트, OnO\"',
                   textStyle: const TextStyle(
                     fontSize: 28,
                     color: Colors.white,

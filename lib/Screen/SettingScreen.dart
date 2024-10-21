@@ -34,6 +34,7 @@ class _SettingScreenState extends State<SettingScreen> {
 
     return Scaffold(
       appBar: AppBar(
+        centerTitle: true,
         title: StandardText(
           text: '설정',
           fontSize: 20,

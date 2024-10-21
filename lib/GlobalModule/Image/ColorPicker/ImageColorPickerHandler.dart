@@ -42,6 +42,7 @@ class _ColorPickerScreenState extends State<ColorPickerScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
+        centerTitle: true,
         backgroundColor: Colors.white,
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.center,

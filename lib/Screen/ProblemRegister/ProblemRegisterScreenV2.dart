@@ -44,6 +44,7 @@ class _ProblemRegisterScreenV2State extends State<ProblemRegisterScreenV2> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
+        centerTitle: true,
         backgroundColor: Colors.white,
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: themeProvider.primaryColor),

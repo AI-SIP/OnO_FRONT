@@ -685,6 +685,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
           FirebaseAnalytics.instance.logEvent(name: 'move_to_folder', parameters: {
             'folder_id': folder.folderId,
           });
+
           Provider.of<FoldersProvider>(context, listen: false)
               .fetchFolderContents(folderId: folder.folderId);
         },

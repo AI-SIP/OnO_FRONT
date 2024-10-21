@@ -2,6 +2,8 @@ import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:provider/provider.dart';
+import '../GlobalModule/Theme/GridPainter.dart';
+import '../GlobalModule/Theme/HandWriteText.dart';
 import '../GlobalModule/Theme/StandardText.dart';
 import '../GlobalModule/Theme/ThemeHandler.dart';
 import '../Model/LoginStatus.dart';
@@ -10,6 +12,124 @@ import '../main.dart';
 
 class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeHandler>(context);
+    final screenHeight = MediaQuery.of(context).size.height;
+    final screenWidth = MediaQuery.of(context).size.width;
+
+    final double headerFontSize = screenHeight * 0.035;
+    bool isNavigated = false;
+
+    return Scaffold(
+      body: Stack(
+        children: [
+          CustomPaint(
+            size: Size(screenWidth, screenHeight),
+            painter: GridPainter(
+              gridColor: themeProvider.primaryColor, // 원하는 그리드 색상 설정
+              isSpring: true, // 스프링 제본 여부 설정
+            ),
+          ),
+
+          Positioned(
+            top: screenHeight * 0.25, // 화면 상단에서 30% 지점
+            left: 0,
+            right: 0,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // 이미지 추가
+                SvgPicture.asset(
+                  'assets/Logo/GreenFrog.svg',
+                  width: screenWidth * 0.4,
+                  height: screenHeight * 0.15,
+                  fit: BoxFit.contain,
+                ),
+                SizedBox(height: screenHeight * 0.05), // 이미지와 텍스트 간 간격
+                // 텍스트 추가
+                HandWriteText(
+                  text: '\"나만의 손쉬운 오답노트, OnO\"',
+                  fontSize: headerFontSize,
+                  color: themeProvider.primaryColor,
+                ),
+              ],
+            ),
+          ),
+
+          Positioned(
+            bottom: screenHeight * 0.10, // 화면 하단에서 10% 떨어진 위치에 고정
+            left: 0,
+            right: 0,
+            child: Consumer<UserProvider>(
+              builder: (context, userProvider, child) {
+                double buttonWidth = screenWidth * 0.8; // 화면의 80% 크기
+                double buttonHeight = screenHeight * 0.065;
+
+                if (userProvider.loginStatus == LoginStatus.login && !isNavigated){
+                  isNavigated = true;
+
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    Navigator.of(context).pushReplacement(
+                      MaterialPageRoute(builder: (context) => const MyHomePage()),
+                    );
+                  });
+                }
+
+                return Column(
+                  children: [
+                    // Google 로그인 버튼
+                    _buildLoginImageButton(
+                      context: context,
+                      onPressed: () => userProvider.signInWithGoogle(context),
+                      assetPath: 'assets/SocialLogin/GoogleLogin.svg',
+                      buttonWidth: buttonWidth,
+                      buttonHeight: buttonHeight,
+                    ),
+                    SizedBox(height: screenHeight * 0.03),
+
+                    // Apple 로그인 버튼
+                    if (Platform.isIOS || Platform.isMacOS) ...[
+                      _buildLoginImageButton(
+                        context: context,
+                        onPressed: () => userProvider.signInWithApple(context),
+                        assetPath: 'assets/SocialLogin/AppleLogin.svg',
+                        buttonWidth: buttonWidth,
+                        buttonHeight: buttonHeight,
+                      ),
+                      SizedBox(height: screenHeight * 0.03),
+                    ],
+
+                    // Kakao 로그인 버튼
+                    _buildLoginImageButton(
+                      context: context,
+                      onPressed: () => userProvider.signInWithKakao(context),
+                      assetPath: 'assets/SocialLogin/KakaoLogin.svg',
+                      buttonWidth: buttonWidth,
+                      buttonHeight: buttonHeight,
+                    ),
+                    SizedBox(height: screenHeight * 0.03),
+
+                    GestureDetector(
+                      onTap: () => _showGuestLoginDialog(context),
+                      child: const Text(
+                        '게스트로 로그인',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey,
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
   void _showGuestLoginDialog(BuildContext context) {
     showDialog(
@@ -70,116 +190,6 @@ class LoginScreen extends StatelessWidget {
         width: buttonWidth,
         height: buttonHeight,
         fit: BoxFit.contain,
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final themeProvider = Provider.of<ThemeHandler>(context);
-    final screenHeight = MediaQuery.of(context).size.height;
-    final screenWidth = MediaQuery.of(context).size.width;
-
-    final double headerFontSize = screenHeight * 0.025;
-    bool isNavigated = false;
-
-    return Scaffold(
-      body: Stack(
-        children: [
-          Positioned(
-            top: screenHeight * 0.25, // 화면 상단에서 30% 지점
-            left: 0,
-            right: 0,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // 이미지 추가
-                SvgPicture.asset(
-                  'assets/Logo/GreenFrog.svg',
-                  width: screenWidth * 0.4,
-                  height: screenHeight * 0.15,
-                  fit: BoxFit.contain,
-                ),
-                SizedBox(height: screenHeight * 0.05), // 이미지와 텍스트 간 간격
-                // 텍스트 추가
-                StandardText(
-                  text: '\"나만의 손쉬운 오답노트, OnO\"',
-                  fontSize: headerFontSize,
-                  color: themeProvider.primaryColor,
-                ),
-              ],
-            ),
-          ),
-
-          Positioned(
-            bottom: screenHeight * 0.10, // 화면 하단에서 10% 떨어진 위치에 고정
-            left: 0,
-            right: 0,
-            child: Consumer<UserProvider>(
-              builder: (context, userProvider, child) {
-                double buttonWidth = screenWidth * 0.8; // 화면의 80% 크기
-                double buttonHeight = screenHeight * 0.065;
-
-                if (userProvider.loginStatus == LoginStatus.login && !isNavigated){
-                  isNavigated = true;
-
-                  WidgetsBinding.instance.addPostFrameCallback((_) {
-                    Navigator.of(context).pushReplacement(
-                      MaterialPageRoute(builder: (context) => const MyHomePage()),
-                    );
-                  });
-                }
-
-                return Column(
-                  children: [
-                    // Google 로그인 버튼
-                    _buildLoginImageButton(
-                      context: context,
-                      onPressed: () => userProvider.signInWithGoogle(context),
-                      assetPath: 'assets/SocialLogin/GoogleLogin.svg',
-                      buttonWidth: buttonWidth,
-                      buttonHeight: buttonHeight,
-                    ),
-                    SizedBox(height: screenHeight * 0.03),
-
-                    // Apple 로그인 버튼
-                    if (Platform.isIOS || Platform.isMacOS)
-                      _buildLoginImageButton(
-                        context: context,
-                        onPressed: () => userProvider.signInWithApple(context),
-                        assetPath: 'assets/SocialLogin/AppleLogin.svg',
-                        buttonWidth: buttonWidth,
-                        buttonHeight: buttonHeight,
-                      ),
-                    SizedBox(height: screenHeight * 0.03),
-
-                    // Kakao 로그인 버튼
-                    _buildLoginImageButton(
-                      context: context,
-                      onPressed: () => userProvider.signInWithKakao(context),
-                      assetPath: 'assets/SocialLogin/KakaoLogin.svg',
-                      buttonWidth: buttonWidth,
-                      buttonHeight: buttonHeight,
-                    ),
-
-                    // 게스트로 로그인 텍스트 버튼
-                    SizedBox(height: screenHeight * 0.03),
-                    GestureDetector(
-                      onTap: () => _showGuestLoginDialog(context),
-                      child: const Text(
-                        '게스트로 로그인',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey,
-                        ),
-                      ),
-                    ),
-                  ],
-                );
-              },
-            ),
-          ),
-        ],
       ),
     );
   }

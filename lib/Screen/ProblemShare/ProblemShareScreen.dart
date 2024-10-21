@@ -105,6 +105,7 @@ class _ProblemShareScreenState extends State<ProblemShareScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
+        centerTitle: true,
         backgroundColor: Colors.white,
         title: StandardText(
           text: '공유 화면 미리보기',

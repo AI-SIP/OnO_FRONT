@@ -8,6 +8,7 @@ import '../../GlobalModule/Image/DisplayImage.dart';
 import '../../GlobalModule/Image/FullScreenImage.dart';
 import '../../GlobalModule/Theme/GridPainter.dart';
 import '../../GlobalModule/Theme/HandWriteText.dart';
+import '../../GlobalModule/Theme/StandardText.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
 import '../../GlobalModule/Theme/UnderlinedText.dart';
 import '../../GlobalModule/Util/LatexTextHandler.dart';
@@ -25,7 +26,6 @@ class ProblemDetailScreenWidget {
 
   Widget buildCommonDetailView(BuildContext context, ProblemModel problemModel,
       ThemeHandler themeProvider, TemplateType templateType) {
-    final screenWidth = MediaQuery.of(context).size.width;
     double screenHeight = MediaQuery.of(context).size.height;
     final imageUrl = (templateType == TemplateType.simple)
         ? problemModel.problemImageUrl
@@ -242,6 +242,7 @@ class ProblemDetailScreenWidget {
 
   //
   static Widget buildCenteredTitle(String text, Color color) {
+
     return Container(
       width: double.infinity,
       alignment: Alignment.center,
@@ -249,10 +250,15 @@ class ProblemDetailScreenWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const SizedBox(width: 8.0),
-          UnderlinedText(
+          Icon(
+            Icons.touch_app, // 복습 완료 전 터치 아이콘
+            color: color,
+            size: 16,
+          ),
+          const SizedBox(width: 10),
+          StandardText(
             text: text,
-            fontSize: 26,
+            fontSize: 20,
             color: color,
             fontWeight: FontWeight.bold, // 굵은 텍스트로 설정
           ),
