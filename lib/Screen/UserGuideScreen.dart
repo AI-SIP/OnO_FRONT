@@ -19,19 +19,23 @@ class _UserGuideScreenState extends State<UserGuideScreen> {
 
   @override
   Widget build(BuildContext context) {
+
+    double screenHeight = MediaQuery.of(context).size.height; // 화면 높이 가져오기
+    double contentPadding = screenHeight * 0.016; // 화면 높이에 따라 패딩 설정
+
     return Container(
       decoration: const BoxDecoration(
         color: Colors.white, // Background color of the modal
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
-      padding: const EdgeInsets.all(16.0),
+      padding: EdgeInsets.all(contentPadding),
       child: Column(
         children: [
-          const Padding(
-            padding: EdgeInsets.only(bottom: 30.0), // 아래쪽 여백 추가
+          Padding(
+            padding: EdgeInsets.only(bottom: screenHeight * 0.03), // 아래쪽 여백 추가
             child: StandardText(
               text: 'OnO, 이렇게 사용하세요',
-              fontSize: 22,
+              fontSize: screenHeight * 0.025,
               fontWeight: FontWeight.bold,
               color: Colors.black,
             ),
@@ -79,22 +83,28 @@ class _UserGuideScreenState extends State<UserGuideScreen> {
     required String title,
     required String description,
   }) {
+    double screenHeight = MediaQuery.of(context).size.height;
+    double imageWidth = screenHeight * 0.35;
+    double imageHeight = screenHeight * 0.2; // 화면 높이에 비례하여 이미지 크기 설정
+    double titleFontSize = screenHeight * 0.03; // 텍스트 크기 비례 설정
+    double descriptionFontSize = screenHeight * 0.02;
+
     return SingleChildScrollView(
       // SingleChildScrollView 추가
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           SvgPicture.asset(imagePath,
-              width: 350, height: 200), // Onboarding image
-          const SizedBox(height: 30),
+              width: imageWidth, height: imageHeight), // Onboarding image
+          SizedBox(height: screenHeight * 0.03),
           Text(
             title,
-            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+            style: TextStyle(fontSize: screenHeight * 0.022, fontWeight: FontWeight.bold),
           ),
-          const SizedBox(height: 20),
+          SizedBox(height: screenHeight * 0.02),
           Text(
             description,
-            style: const TextStyle(fontSize: 16),
+            style: TextStyle(fontSize: screenHeight * 0.016),
             textAlign: TextAlign.center,
           ),
         ],
@@ -103,8 +113,9 @@ class _UserGuideScreenState extends State<UserGuideScreen> {
   }
 
   Widget _buildBottomControls() {
+    double screenHeight = MediaQuery.of(context).size.height;
     return Padding(
-      padding: const EdgeInsets.all(20.0),
+      padding: EdgeInsets.all(screenHeight * 0.02),
       child: Column(
         children: [
           Row(
@@ -114,13 +125,14 @@ class _UserGuideScreenState extends State<UserGuideScreen> {
               (index) => _buildIndicator(index == _currentPage),
             ),
           ),
-          const SizedBox(height: 10),
+          SizedBox(height: screenHeight * 0.02),
           LayoutBuilder(
             builder: (context, constraints) {
               // 다이얼로그 크기의 80%로 버튼 너비를 설정
               double buttonWidth = constraints.maxWidth * 0.8;
               return SizedBox(
                 width: buttonWidth, // 다이얼로그의 80% 너비로 버튼 설정
+                height: screenHeight * 0.05,
                 child: ElevatedButton(
                   onPressed: _currentPage == guideScreenLength - 1
                       ? widget.onFinish
@@ -139,7 +151,7 @@ class _UserGuideScreenState extends State<UserGuideScreen> {
                   child: StandardText(
                     text: _currentPage == guideScreenLength - 1 ? '확인' : '다음',
                     color: Colors.white,
-                    fontSize: 16,
+                    fontSize: screenHeight * 0.02,
                   ),
                 ),
               );
