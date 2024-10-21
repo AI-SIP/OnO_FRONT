@@ -80,7 +80,7 @@ class LoginScreen extends StatelessWidget {
     final screenHeight = MediaQuery.of(context).size.height;
     final screenWidth = MediaQuery.of(context).size.width;
 
-    final double headerFontSize = screenHeight * 0.03;
+    final double headerFontSize = screenHeight * 0.025;
     bool isNavigated = false;
 
     return Scaffold(
@@ -94,8 +94,8 @@ class LoginScreen extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 // 이미지 추가
-                Image.asset(
-                  'assets/Logo/GreenFrog.png',
+                SvgPicture.asset(
+                  'assets/Logo/GreenFrog.svg',
                   width: screenWidth * 0.4,
                   height: screenHeight * 0.15,
                   fit: BoxFit.contain,

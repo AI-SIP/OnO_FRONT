@@ -92,15 +92,7 @@ flutter:
     - assets/GuideScreen/GuideScreen2.svg
     - assets/GuideScreen/GuideScreen3.svg
     - assets/GuideScreen/GuideScreen4.svg
-    - assets/GuideScreen/GuideScreen1.png
-    - assets/GuideScreen/GuideScreen2.png
-    - assets/GuideScreen/GuideScreen3.png
-    - assets/GuideScreen/GuideScreen4.png
-    - assets/SocialLogin/AppleLogin.png
-    - assets/SocialLogin/GoogleLogin.png
-    - assets/SocialLogin/KakaoLogin.png
-    - assets/Logo/GreenFrog.png
-    - assets/Logo/IvoryFrog.png
+    - assets/Logo/GreenFrog.svg
     - assets/Logo/OnO.svg
     - assets/Icon/add_note.svg
     - assets/Icon/GreenNote.svg
