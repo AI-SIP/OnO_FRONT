@@ -215,62 +215,64 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       backgroundColor: Colors.white,
       context: context,
       builder: (context) {
-        return Padding(
-          padding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 20.0), // 패딩 추가
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(bottom: 20.0), // 타이틀 아래 여백 추가
-                child: StandardText(
-                  text: '편집하기', // 타이틀 텍스트
-                  fontSize: 20,
-                  color: themeProvider.primaryColor,
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(bottom: 10.0), // 텍스트 간격 조정
-                child: ListTile(
-                  title: const StandardText(
-                    text: '공책 이름 수정하기',
-                    fontSize: 16,
-                    color: Colors.black,
+        return SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 20.0), // 패딩 추가
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 20.0), // 타이틀 아래 여백 추가
+                  child: StandardText(
+                    text: '편집하기', // 타이틀 텍스트
+                    fontSize: 20,
+                    color: themeProvider.primaryColor,
                   ),
-                  onTap: () {
-                    Navigator.pop(context);
-                    _showRenameFolderDialog(foldersProvider);
-                  },
                 ),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(bottom: 10.0), // 텍스트 간격 조정
-                child: ListTile(
-                  title: const StandardText(
-                    text: '공책 위치 변경하기',
-                    fontSize: 16,
-                    color: Colors.black,
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 10.0), // 텍스트 간격 조정
+                  child: ListTile(
+                    title: const StandardText(
+                      text: '공책 이름 수정하기',
+                      fontSize: 16,
+                      color: Colors.black,
+                    ),
+                    onTap: () {
+                      Navigator.pop(context);
+                      _showRenameFolderDialog(foldersProvider);
+                    },
                   ),
-                  onTap: () {
-                    Navigator.pop(context);
-                    _showMoveFolderDialog(foldersProvider);
-                  },
                 ),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(bottom: 10.0), // 텍스트 간격 조정
-                child: ListTile(
-                  title: const StandardText(
-                    text: '공책 삭제하기',
-                    fontSize: 16,
-                    color: Colors.red,
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 10.0), // 텍스트 간격 조정
+                  child: ListTile(
+                    title: const StandardText(
+                      text: '공책 위치 변경하기',
+                      fontSize: 16,
+                      color: Colors.black,
+                    ),
+                    onTap: () {
+                      Navigator.pop(context);
+                      _showMoveFolderDialog(foldersProvider);
+                    },
                   ),
-                  onTap: () {
-                    Navigator.pop(context);
-                    _showDeleteFolderDialog(foldersProvider);
-                  },
                 ),
-              ),
-            ],
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 10.0), // 텍스트 간격 조정
+                  child: ListTile(
+                    title: const StandardText(
+                      text: '공책 삭제하기',
+                      fontSize: 16,
+                      color: Colors.red,
+                    ),
+                    onTap: () {
+                      Navigator.pop(context);
+                      _showDeleteFolderDialog(foldersProvider);
+                    },
+                  ),
+                ),
+              ],
+            ),
           ),
         );
       },
@@ -318,72 +320,74 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       backgroundColor: Colors.white,
       context: context,
       builder: (context) {
-        return Padding(
-          padding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 20.0), // 패딩 추가
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.center, // 타이틀을 왼쪽 정렬
-            children: [
-              // 모달 타이틀 추가
-              Padding(
-                padding: const EdgeInsets.only(bottom: 20.0), // 타이틀 아래 여백 추가
-                child: StandardText(
-                  text: '정렬 기준', // 타이틀 텍스트
-                  fontSize: 20,
-                  color: themeProvider.primaryColor,
+        return SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 20.0), // 패딩 추가
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.center, // 타이틀을 왼쪽 정렬
+              children: [
+                // 모달 타이틀 추가
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 20.0), // 타이틀 아래 여백 추가
+                  child: StandardText(
+                    text: '정렬 기준', // 타이틀 텍스트
+                    fontSize: 20,
+                    color: themeProvider.primaryColor,
+                  ),
                 ),
-              ),
-              // 정렬 옵션 리스트
-              ListTile(
-                title: const StandardText(
-                  text: '이름순',
-                  fontSize: 16,
-                  color: Colors.black,
+                // 정렬 옵션 리스트
+                ListTile(
+                  title: const StandardText(
+                    text: '이름순',
+                    fontSize: 16,
+                    color: Colors.black,
+                  ),
+                  onTap: () {
+                    setState(() {
+                      _selectedSortOption = 'name';
+                      _directoryService.sortProblems(_selectedSortOption);
+                      FirebaseAnalytics.instance
+                          .logEvent(name: 'sort_option_button_click_name');
+                    });
+                    Navigator.pop(context);
+                  },
                 ),
-                onTap: () {
-                  setState(() {
-                    _selectedSortOption = 'name';
-                    _directoryService.sortProblems(_selectedSortOption);
-                    FirebaseAnalytics.instance
-                        .logEvent(name: 'sort_option_button_click_name');
-                  });
-                  Navigator.pop(context);
-                },
-              ),
-              ListTile(
-                title: const StandardText(
-                  text: '최신순',
-                  fontSize: 16,
-                  color: Colors.black,
+                ListTile(
+                  title: const StandardText(
+                    text: '최신순',
+                    fontSize: 16,
+                    color: Colors.black,
+                  ),
+                  onTap: () {
+                    setState(() {
+                      _selectedSortOption = 'newest';
+                      _directoryService.sortProblems(_selectedSortOption);
+                      FirebaseAnalytics.instance
+                          .logEvent(name: 'sort_option_button_click_newest');
+                    });
+                    Navigator.pop(context);
+                  },
                 ),
-                onTap: () {
-                  setState(() {
-                    _selectedSortOption = 'newest';
-                    _directoryService.sortProblems(_selectedSortOption);
-                    FirebaseAnalytics.instance
-                        .logEvent(name: 'sort_option_button_click_newest');
-                  });
-                  Navigator.pop(context);
-                },
-              ),
-              ListTile(
-                title: const StandardText(
-                  text: '오래된순',
-                  fontSize: 16,
-                  color: Colors.black,
+                ListTile(
+                  title: const StandardText(
+                    text: '오래된순',
+                    fontSize: 16,
+                    color: Colors.black,
+                  ),
+                  onTap: () {
+                    setState(() {
+                      _selectedSortOption = 'oldest';
+                      _directoryService.sortProblems(_selectedSortOption);
+                      FirebaseAnalytics.instance
+                          .logEvent(name: 'sort_option_button_click_oldest');
+                    });
+                    Navigator.pop(context);
+                  },
                 ),
-                onTap: () {
-                  setState(() {
-                    _selectedSortOption = 'oldest';
-                    _directoryService.sortProblems(_selectedSortOption);
-                    FirebaseAnalytics.instance
-                        .logEvent(name: 'sort_option_button_click_oldest');
-                  });
-                  Navigator.pop(context);
-                },
-              ),
-              const SizedBox(height: 10),
-            ],
+                const SizedBox(height: 10),
+              ],
+            ),
           ),
         );
       },
