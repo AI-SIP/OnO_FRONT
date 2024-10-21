@@ -62,7 +62,14 @@ class _ProblemRegisterTemplateState
     sourceController = TextEditingController(text: problemModel.reference);
     notesController = TextEditingController(text: problemModel.memo);
     _selectedDate = problemModel.solvedAt ?? DateTime.now();
-    _selectedFolderId = problemModel.folderId;
+
+    if(widget.isEditMode){
+      _selectedFolderId = problemModel.folderId;
+    } else{
+      final folderProvider = Provider.of<FoldersProvider>(context, listen: false);
+      _selectedFolderId = folderProvider.currentFolderId;
+    }
+
     _selectedFolderName = null;
 
     _fetchData();
