@@ -60,6 +60,7 @@ class UserProvider with ChangeNotifier {
   // Apple 로그인 함수
   Future<void> signInWithApple(BuildContext context) async {
     final response = await appleAuthService.signInWithApple(context);
+    log(response.toString());
     saveUserToken(response: response, loginMethod: 'apple');
   }
 

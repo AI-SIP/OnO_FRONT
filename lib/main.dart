@@ -127,7 +127,6 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
     super.dispose();
   }
 
-
   Future<void> autoLogin() async {
     try {
       await Provider.of<UserProvider>(context, listen: false).autoLogin();

@@ -246,7 +246,7 @@ class ProblemRegisterScreenWidget {
               ImagePickerHandler().showImagePicker(context, onImagePicked);
             },
             child: ClipRRect( // 이미지에 radius 적용
-              borderRadius: BorderRadius.circular(10), // radius 10 적용
+              //borderRadius: BorderRadius.circular(10), // radius 10 적용
               child: DisplayImage(imagePath: existingImageUrl),
             ),
           )

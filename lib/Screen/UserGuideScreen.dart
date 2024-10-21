@@ -35,7 +35,7 @@ class _UserGuideScreenState extends State<UserGuideScreen> {
             padding: EdgeInsets.only(bottom: screenHeight * 0.03), // 아래쪽 여백 추가
             child: StandardText(
               text: 'OnO, 이렇게 사용하세요',
-              fontSize: screenHeight * 0.025,
+              fontSize: screenHeight * 0.022,
               fontWeight: FontWeight.bold,
               color: Colors.black,
             ),
