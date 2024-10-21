@@ -7,10 +7,12 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
 import 'package:ono/GlobalModule/Theme/NoteIconHandler.dart';
 import 'package:ono/GlobalModule/Theme/SnackBarDialog.dart';
+import 'package:ono/GlobalModule/Util/UrlLauncher.dart';
 import 'package:ono/Model/LoginStatus.dart';
 import 'package:ono/Provider/FoldersProvider.dart';
-import 'package:ono/main.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
+import '../../Config/AppConfig.dart';
 import '../../GlobalModule/Image/DisplayImage.dart';
 import '../../GlobalModule/Theme/StandardText.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
@@ -22,7 +24,6 @@ import '../../Service/ScreenUtil/DirectoryScreenService.dart';
 import '../../Model/ProblemModel.dart';
 import '../../Model/FolderThumbnailModel.dart';
 import '../../Provider/UserProvider.dart';
-import '../ProblemRegister/TemplateSelectionScreen.dart';
 import '../UserGuideScreen.dart';
 
 class DirectoryScreen extends StatefulWidget {
@@ -132,6 +133,19 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
               backgroundColor: themeProvider.primaryColor,
               shape: const CircleBorder(),
               child: const Icon(Icons.edit, color: Colors.white),
+            ),
+          ),
+          Positioned(
+            bottom: 160,
+            right: 10,
+            child: FloatingActionButton(
+              heroTag: 'guide_page',
+              onPressed: () {
+                UrlLauncher.launchGuidePageURL();
+              },
+              backgroundColor: themeProvider.primaryColor,
+              shape: const CircleBorder(),
+              child: const Icon(Icons.question_mark, color: Colors.white),
             ),
           ),
         ],

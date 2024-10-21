@@ -1,6 +1,7 @@
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:ono/Config/AppConfig.dart';
+import 'package:ono/GlobalModule/Util/UrlLauncher.dart';
 import 'package:ono/Model/LoginStatus.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -68,30 +69,29 @@ class _SettingScreenState extends State<SettingScreen> {
                       ),
                       const Divider(),
                       _buildSettingItem(
+                        title: 'OnO 가이드 페이지',
+                        subtitle: 'OnO의 사용 방법을 알아보세요.',
+                        context: context,
+                        onTap: () {
+                          UrlLauncher.launchGuidePageURL();
+                        },
+                      ),
+                      const Divider(),
+                      _buildSettingItem(
                         title: '의견 남기기',
                         subtitle: '앱에 대한 의견을 보내주세요.',
                         context: context,
                         onTap: () {
-                          FirebaseAnalytics.instance.logEvent(
-                              name: 'feedback_button_click',
-                              parameters: {
-                                'url': AppConfig.feedbackPageUrl,
-                              });
-                          openFeedbackForm();
+                          UrlLauncher.launchFeedbackPageURL();
                         },
                       ),
                       const Divider(),
                       _buildSettingItem(
                         title: 'OnO 이용약관',
-                        subtitle: '',
+                        subtitle: 'OnO의 이용 약관을 확인하세요.',
                         context: context,
                         onTap: () {
-                          FirebaseAnalytics.instance.logEvent(
-                              name: 'userTerm_button_click',
-                              parameters: {
-                                'url': AppConfig.userTermPageUrl,
-                              });
-                          openUserTermPage();
+                          UrlLauncher.launchUserTemPageURL();
                         },
                       ),
                     ],
@@ -420,23 +420,4 @@ class _SettingScreenState extends State<SettingScreen> {
       },
     );
   }
-
-  Future<void> openFeedbackForm() async {
-    Uri url = Uri.parse(AppConfig.feedbackPageUrl);
-    if (await canLaunchUrl(url)) {
-      await launchUrl(url);
-    } else {
-      throw 'Could not launch $url';
-    }
-  }
-
-  Future<void> openUserTermPage() async {
-    Uri url = Uri.parse(AppConfig.userTermPageUrl);
-    if (await canLaunchUrl(url)) {
-      await launchUrl(url);
-    } else {
-      throw 'Could not launch $url';
-    }
-  }
-
 }
