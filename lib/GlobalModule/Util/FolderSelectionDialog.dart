@@ -1,6 +1,8 @@
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
+import 'package:ono/GlobalModule/Theme/NoteIconHandler.dart';
 import 'package:provider/provider.dart';
 import '../../Model/FolderThumbnailModel.dart';
 import '../../Provider/FoldersProvider.dart';
@@ -74,19 +76,25 @@ class _FolderSelectionDialogState extends State<FolderSelectionDialog> {
     final themeProvider = Provider.of<ThemeHandler>(context);
 
     return AlertDialog(
+      backgroundColor: Colors.white,
       insetPadding: const EdgeInsets.symmetric(horizontal: 30, vertical: 30),
-      contentPadding: const EdgeInsets.all(5),
-      titlePadding: const EdgeInsets.only(left: 20, top: 20, right: 20),
+      contentPadding: const EdgeInsets.all(0),
+      titlePadding: const EdgeInsets.only(left: 30, top: 20, right: 20),
       title: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          StandardText(
+          const StandardText(
             text: '공책 선택',
             fontSize: 20,
-            color: themeProvider.primaryColor,
+            color: Colors.black,
           ),
           IconButton(
-            icon: Icon(Icons.add_circle_outline, color: themeProvider.primaryColor),
+            icon: SvgPicture.asset(
+              "assets/Icon/add_note.svg", // SVG 경로
+              color: Colors.black, // SVG의 색상 적용
+              width: 24,
+              height: 24,
+            ),
             onPressed: () async {
               await _showFolderNameDialog(
                 dialogTitle: '공책 생성',
@@ -104,7 +112,7 @@ class _FolderSelectionDialogState extends State<FolderSelectionDialog> {
         child: _isLoading
             ? const Center(child: CircularProgressIndicator())
             : ListView(
-                padding: const EdgeInsets.only(left: 10, top: 10),
+                padding: const EdgeInsets.only(top: 10, right: 10),
                 children: _buildFolderList(_cachedFolders, themeProvider),
               ),
       ),
@@ -115,7 +123,7 @@ class _FolderSelectionDialogState extends State<FolderSelectionDialog> {
           },
           child: const StandardText(
             text: '취소',
-            fontSize: 14,
+            fontSize: 16,
             color: Colors.black,
           ),
         ),
@@ -129,7 +137,7 @@ class _FolderSelectionDialogState extends State<FolderSelectionDialog> {
           },
           child: StandardText(
             text: '확인',
-            fontSize: 14,
+            fontSize: 16,
             color: themeProvider.primaryColor,
           ),
         ),
@@ -145,28 +153,20 @@ class _FolderSelectionDialogState extends State<FolderSelectionDialog> {
     var parentFolders =
         folders.where((folder) => folder.parentFolderId == parentId).toList();
 
-    for (var folder in parentFolders) {
+    for (var i = 0; i < parentFolders.length; i++) {
+      var folder = parentFolders[i];
       bool isExpanded = _expandedFolders.contains(folder.folderId);
       bool isSelected = _selectedFolderId == folder.folderId;
 
       folderWidgets.add(
         Padding(
-          padding: EdgeInsets.only(left: level * 12.0),
+          padding: EdgeInsets.only(left: level * 20.0),
           child: ListTile(
-            title: StandardText(
-              text: folder.folderName,
-              fontSize: 15,
-              color: themeProvider.primaryColor,
-            ),
-            leading: Icon(Icons.menu_book_outlined,
-                color: themeProvider.primaryColor),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
+            leading: Row(
+              mainAxisSize: MainAxisSize.min, // Row가 너무 넓어지지 않도록 설정
               children: [
-                if (isSelected) const Icon(Icons.check, color: Colors.red),
                 IconButton(
-                  icon:
-                      Icon(isExpanded ? Icons.expand_less : Icons.expand_more),
+                  icon: Icon(isExpanded ? Icons.expand_more : Icons.chevron_right),
                   color: themeProvider.primaryColor,
                   onPressed: () {
                     setState(() {
@@ -178,15 +178,28 @@ class _FolderSelectionDialogState extends State<FolderSelectionDialog> {
                     });
                   },
                 ),
+                SvgPicture.asset(
+                  NoteIconHandler.getNoteIcon(i),  // 헬퍼 클래스로 아이콘 설정
+                  width: 30,
+                  height: 30,
+                ),
               ],
             ),
+            title: StandardText(
+              text: folder.folderName,
+              fontSize: 16,
+              color: themeProvider.primaryColor,
+            ),
+            trailing: isSelected
+                ? const Icon(Icons.check, color: Colors.red)
+                : null, // 선택된 폴더에만 체크 표시
             selected: isSelected,
             onTap: () {
               setState(() {
                 _selectedFolderId = folder.folderId;
               });
             },
-          ),
+          )
         ),
       );
 
@@ -215,35 +228,36 @@ class _FolderSelectionDialogState extends State<FolderSelectionDialog> {
       context: context,
       builder: (context) {
         return AlertDialog(
+          backgroundColor: Colors.white,
           title: StandardText(
             text: dialogTitle,
             fontSize: 18,
-            color: themeProvider.primaryColor,
+            color: Colors.black,
           ),
           content: SizedBox(
             width: MediaQuery.of(context).size.width * 0.8,
             child: TextField(
               controller: folderNameController,
               style: standardTextStyle.copyWith(
-                color: themeProvider.primaryColor,
+                color: Colors.black,
                 fontSize: 16,
               ),
               decoration: InputDecoration(
                 hintText: '공책 이름을 입력하세요',
                 hintStyle: standardTextStyle.copyWith(
-                  color: themeProvider.desaturateColor,
+                  color: ThemeHandler.desaturatenColor(Colors.black),
                   fontSize: 14,
                 ),
-                border: OutlineInputBorder(
-                  borderSide: BorderSide(color: themeProvider.primaryColor),
+                border: const OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.black),
                 ),
-                enabledBorder: OutlineInputBorder(
+                enabledBorder: const OutlineInputBorder(
                   borderSide:
-                  BorderSide(color: themeProvider.primaryColor, width: 1.5),
+                  BorderSide(color: Colors.black, width: 1.5),
                 ),
-                focusedBorder: OutlineInputBorder(
+                focusedBorder: const OutlineInputBorder(
                   borderSide:
-                  BorderSide(color: themeProvider.primaryColor, width: 1.5),
+                  BorderSide(color: Colors.black, width: 1.5),
                 ),
                 contentPadding: const EdgeInsets.symmetric(
                     vertical: 20.0, horizontal: 12.0),

@@ -1,4 +1,3 @@
-import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -19,10 +18,11 @@ class _ThemeDialogState extends State<ThemeDialog> {
     final themeProvider = Provider.of<ThemeHandler>(context);
 
     return AlertDialog(
-      title: StandardText(
+      backgroundColor: Colors.white,
+      title: const StandardText(
         text: '테마 색상 선택',
         fontSize: 20,
-        color: themeProvider.primaryColor,
+        color: Colors.black,
       ),
       content: SingleChildScrollView(
         child: Column(
@@ -74,7 +74,7 @@ class _ThemeDialogState extends State<ThemeDialog> {
           },
           child: const StandardText(
             text: '취소',
-            fontSize: 14,
+            fontSize: 16,
             color: Colors.black,
           ),
         ),
@@ -90,7 +90,7 @@ class _ThemeDialogState extends State<ThemeDialog> {
           },
           child: StandardText(
             text: '확인',
-            fontSize: 14,
+            fontSize: 16,
             color: themeProvider.primaryColor,
           ),
         ),

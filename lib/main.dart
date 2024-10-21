@@ -8,18 +8,16 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart';
 import 'package:ono/GlobalModule/Theme/StandardText.dart';
 import 'package:ono/GlobalModule/Theme/ThemeHandler.dart';
-import 'package:ono/Model/LoginStatus.dart';
 import 'package:ono/Provider/FoldersProvider.dart';
+import 'package:ono/Provider/ScreenIndexProvider.dart';
 import 'package:ono/Screen/ProblemRegister/ProblemRegisterScreenV2.dart';
 import 'package:ono/Screen/SplashScreen.dart';
 import 'package:provider/provider.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'Provider/UserProvider.dart';
-import 'Screen/HomeScreen.dart';
 import 'Screen/ProblemManagement/DirectoryScreen.dart';
 import 'Screen/ProblemRegister/TemplateSelectionScreen.dart';
 import 'Screen/SettingScreen.dart';
-import 'GlobalModule/Theme/AppbarWithLogo.dart';
 import 'firebase_options.dart';
 
 void main() async {
@@ -51,6 +49,7 @@ void main() async {
         ),
         ChangeNotifierProvider(
             create: (context) => ThemeHandler()..loadColors()),
+        ChangeNotifierProvider(create: (_) => ScreenIndexProvider()),
       ],
       child: const MyApp(),
     ),
@@ -109,13 +108,10 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
-  int _selectedIndex = 0;
   final secureStorage = const FlutterSecureStorage();
   static const List<Widget> _widgetOptions = <Widget>[
-    HomeScreen(),
-    TemplateSelectionScreen(),
-    //ProblemRegisterScreen(),
     DirectoryScreen(),
+    TemplateSelectionScreen(),
     SettingScreen(),
   ];
 
@@ -123,7 +119,6 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    autoLogin();
   }
 
   @override
@@ -131,7 +126,6 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
-
 
   Future<void> autoLogin() async {
     try {
@@ -142,32 +136,8 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
   }
 
   void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-
-    // 탭된 아이템에 따른 스크린 뷰 기록
-    switch (index) {
-      case 0:
-        _sendScreenView('HomeScreen');
-        break;
-      case 1:
-        _sendScreenView('ProblemRegisterScreen');
-        break;
-      case 2:
-        _sendScreenView('DirectoryScreen');
-        break;
-      case 3:
-        _sendScreenView('SettingScreen');
-        break;
-    }
-  }
-
-  // FirebaseAnalytics에 스크린 뷰를 기록하는 함수
-  Future<void> _sendScreenView(String screenName) async {
-    FirebaseAnalytics.instance.logScreenView(
-      screenName: screenName,
-    );
+    Provider.of<ScreenIndexProvider>(context, listen: false)
+        .setSelectedIndex(index);
   }
 
   @override
@@ -192,29 +162,18 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
   }
 
   void _resetAppState() {
-    final userProvider = Provider.of<UserProvider>(context, listen: false);
     final foldersProvider = Provider.of<FoldersProvider>(context, listen: false);
 
-    if(userProvider.loginStatus == LoginStatus.login){
-      setState(() {
-        _selectedIndex = 2;
-      });
-      foldersProvider.fetchRootFolderContents();
-    } else{
-      setState(() {
-        _selectedIndex = 0;
-      });
-    }
+    foldersProvider.fetchRootFolderContents();
   }
 
   @override
   Widget build(BuildContext context) {
+    final screenIndexProvider = Provider.of<ScreenIndexProvider>(context);
+    
     return Scaffold(
-      appBar: (_selectedIndex == 1 || _selectedIndex == 2)
-          ? null // DirectoryScreen을 위한 조건 (index 2일 경우 AppBar를 제거)
-          : const AppBarWithLogo(), // 다른 화면에서는 AppBar 표시
       body: IndexedStack(
-        index: _selectedIndex,
+        index: screenIndexProvider.screenIndex,
         children: _widgetOptions,
       ),
       bottomNavigationBar: _buildBottomNavigationBar(context),
@@ -224,20 +183,23 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
   BottomNavigationBar _buildBottomNavigationBar(BuildContext context) {
     final themeProvider = Provider.of<ThemeHandler>(context);
     final standardTextStyle = const StandardText(text: '').getTextStyle();
+    final screenIndexProvider = Provider.of<ScreenIndexProvider>(context);
+    double screenHeight = MediaQuery.of(context).size.height;
 
     return BottomNavigationBar(
+      backgroundColor: Colors.white,
       type: BottomNavigationBarType.fixed,
       items: _bottomNavigationItems(),
-      currentIndex: _selectedIndex,
+      currentIndex: screenIndexProvider.screenIndex,
       selectedItemColor: themeProvider.primaryColor,
       unselectedItemColor: Colors.grey,
       selectedLabelStyle: standardTextStyle.copyWith(
         color:themeProvider.primaryColor,
-        fontSize: 15,
+        fontSize: screenHeight * 0.015,
       ),
       unselectedLabelStyle: standardTextStyle.copyWith(
         color:Colors.grey,
-        fontSize: 13,
+        fontSize: screenHeight * 0.013,
       ),
       onTap: _onItemTapped,
     );
@@ -246,17 +208,14 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
   List<BottomNavigationBarItem> _bottomNavigationItems() {
     return const [
       BottomNavigationBarItem(
-        icon: Icon(Icons.home),
-        label: '메인',
+        icon: Icon(Icons.menu_book),
+        label: '오답 복습',
       ),
       BottomNavigationBarItem(
         icon: Icon(Icons.edit),
-        label: '오답노트 작성',
+        label: '문제 등록',
       ),
-      BottomNavigationBarItem(
-        icon: Icon(Icons.menu_book),
-        label: '오답노트 복습',
-      ),
+
       BottomNavigationBarItem(
         icon: Icon(Icons.settings),
         label: '설정',

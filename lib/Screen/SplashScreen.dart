@@ -1,7 +1,12 @@
 import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
+import 'package:ono/main.dart';
+import 'package:provider/provider.dart';
 
-import '../main.dart';
+import '../Model/LoginStatus.dart';
+import '../Provider/UserProvider.dart';
+import 'LoginScreen.dart';
 
 class SplashScreen extends StatefulWidget {
   @override
@@ -12,14 +17,29 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    _navigateToHome();
+    _checkLoginStatus();
   }
 
-  _navigateToHome() async {
-    await Future.delayed(const Duration(seconds: 2), () {});
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (context) => const MyHomePage()),
-    );
+  // 유저의 로그인 상태를 확인하는 함수
+  _checkLoginStatus() async {
+    // UserProvider에서 로그인 상태를 가져옴
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+
+    await userProvider.autoLogin();
+
+    // 2초간 대기 후 상태 체크
+    await Future.delayed(const Duration(seconds: 10), () {});
+
+    // 로그인 상태에 따른 화면 이동
+    if (userProvider.loginStatus == LoginStatus.login) {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) => const MyHomePage()), // 로그인 상태면 HomeScreen으로
+      );
+    } else {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) => const LoginScreen()), // 로그아웃 상태면 LoginScreen으로
+      );
+    }
   }
 
   @override
@@ -31,8 +51,8 @@ class _SplashScreenState extends State<SplashScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Image.asset(
-              'assets/Logo.png',
+            SvgPicture.asset(
+              'assets/Logo/GreenFrog.svg',
               width: 200,
               height: 200,
             ),
@@ -40,7 +60,7 @@ class _SplashScreenState extends State<SplashScreen> {
             AnimatedTextKit(
               animatedTexts: [
                 TypewriterAnimatedText(
-                  '\"OnO, 이제는 나도 오답한다\"',
+                  '\"나만의 진정한 오답노트, OnO\"',
                   textStyle: const TextStyle(
                     fontSize: 28,
                     color: Colors.white,

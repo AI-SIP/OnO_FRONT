@@ -1,12 +1,16 @@
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:ono/Config/AppConfig.dart';
+import 'package:ono/GlobalModule/Util/UrlLauncher.dart';
 import 'package:ono/Model/LoginStatus.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../GlobalModule/Theme/StandardText.dart';
+import '../GlobalModule/Theme/ThemeDialog.dart';
 import '../GlobalModule/Theme/ThemeHandler.dart';
+import '../Provider/ScreenIndexProvider.dart';
 import '../Provider/UserProvider.dart';
-import '../Service/ScreenUtil/SettingScreenService.dart';
+import 'LoginScreen.dart';
 
 class SettingScreen extends StatefulWidget {
   const SettingScreen({super.key});
@@ -16,12 +20,9 @@ class SettingScreen extends StatefulWidget {
 }
 
 class _SettingScreenState extends State<SettingScreen> {
-  late SettingScreenService _settingScreenService;
-
   @override
   void initState() {
     super.initState();
-    _settingScreenService = SettingScreenService();
   }
 
   @override
@@ -29,17 +30,28 @@ class _SettingScreenState extends State<SettingScreen> {
     final authService = Provider.of<UserProvider>(context);
     final userProvider = Provider.of<UserProvider>(context);
     final themeProvider = Provider.of<ThemeHandler>(context);
+    double screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
+      appBar: AppBar(
+        centerTitle: true,
+        title: StandardText(
+          text: '설정',
+          fontSize: 20,
+          color: themeProvider.primaryColor,
+        ),
+        backgroundColor: Colors.white,
+      ),
+      backgroundColor: Colors.white,
       body: !(authService.isLoggedIn == LoginStatus.login)
           ? _buildLoginPrompt(themeProvider)
           : Column(
               children: [
                 Expanded(
                   child: ListView(
-                    padding: const EdgeInsets.symmetric(horizontal: 30.0),
+                    padding: EdgeInsets.symmetric(horizontal: screenHeight * 0.03),
                     children: [
-                      const SizedBox(height: 10),
+                      SizedBox(height: screenHeight * 0.01),
                       _buildUserNameTile(
                         context: context,
                         userName: userProvider.userName ?? '이름 없음',
@@ -57,7 +69,21 @@ class _SettingScreenState extends State<SettingScreen> {
                         themeColor: themeProvider.primaryColor,
                         context: context,
                         onTap: () {
-                          _settingScreenService.showThemeDialog(context);
+                          showDialog(
+                            context: context,
+                            builder: (BuildContext context) {
+                              return ThemeDialog();
+                            },
+                          );
+                        },
+                      ),
+                      const Divider(),
+                      _buildSettingItem(
+                        title: 'OnO 가이드 페이지',
+                        subtitle: 'OnO의 사용 방법을 알아보세요.',
+                        context: context,
+                        onTap: () {
+                          UrlLauncher.launchGuidePageURL();
                         },
                       ),
                       const Divider(),
@@ -66,33 +92,23 @@ class _SettingScreenState extends State<SettingScreen> {
                         subtitle: '앱에 대한 의견을 보내주세요.',
                         context: context,
                         onTap: () {
-                          FirebaseAnalytics.instance.logEvent(
-                              name: 'feedback_button_click',
-                              parameters: {
-                                'url': AppConfig.feedbackPageUrl,
-                              });
-                          _settingScreenService.openFeedbackForm();
+                          UrlLauncher.launchFeedbackPageURL();
                         },
                       ),
                       const Divider(),
                       _buildSettingItem(
                         title: 'OnO 이용약관',
-                        subtitle: '',
+                        subtitle: 'OnO의 이용 약관을 확인하세요.',
                         context: context,
                         onTap: () {
-                          FirebaseAnalytics.instance.logEvent(
-                              name: 'userTerm_button_click',
-                              parameters: {
-                                'url': AppConfig.userTermPageUrl,
-                              });
-                          _settingScreenService.openUserTermPage();
+                          UrlLauncher.launchUserTemPageURL();
                         },
                       ),
                     ],
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 10.0),
+                  padding: EdgeInsets.symmetric(vertical: screenHeight * 0.01),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
@@ -101,24 +117,42 @@ class _SettingScreenState extends State<SettingScreen> {
                         '로그아웃',
                         Colors.white,
                         Colors.red,
-                        () => _settingScreenService.showConfirmationDialog(
-                          context,
-                          '로그아웃',
-                          '정말 로그아웃 하시겠습니까?\n(게스트 유저의 경우 모든 정보가 삭제됩니다.)',
-                          () => _settingScreenService.logout(context),
-                        ),
+                        () => showConfirmationDialog(context, '로그아웃',
+                            '정말 로그아웃 하시겠습니까?\n(게스트 유저의 경우 모든 정보가 삭제됩니다.)',
+                            () async {
+                          await Provider.of<UserProvider>(context,
+                                  listen: false)
+                              .signOut();
+
+                          Provider.of<ScreenIndexProvider>(context, listen: false)
+                              .setSelectedIndex(0);
+
+                          Navigator.of(context).pushReplacement(
+                            MaterialPageRoute(
+                                builder: (context) => const LoginScreen()),
+                          );
+                        }),
                       ),
                       _buildBottomButton(
                         context,
                         '회원 탈퇴',
                         Colors.red,
                         Colors.white,
-                        () => _settingScreenService.showConfirmationDialog(
-                          context,
-                          '회원 탈퇴',
-                          '정말 회원 탈퇴 하시겠습니까?\n그동안 작성했던 모든 오답노트 및 개인정보가 삭제됩니다. 이 작업은 되돌릴 수 없습니다.',
-                          () => _settingScreenService.deleteAccount(context),
-                        ),
+                        () => showConfirmationDialog(context, '회원 탈퇴',
+                            '정말 회원 탈퇴 하시겠습니까?\n그동안 작성했던 모든 오답노트 및 개인정보가 삭제됩니다. 이 작업은 되돌릴 수 없습니다.',
+                            () async {
+                          await Provider.of<UserProvider>(context,
+                                  listen: false)
+                              .deleteAccount();
+
+                          Provider.of<ScreenIndexProvider>(context, listen: false)
+                              .setSelectedIndex(0);
+
+                          Navigator.of(context).pushReplacement(
+                            MaterialPageRoute(
+                                builder: (context) => const LoginScreen()),
+                          );
+                        }),
                       ),
                     ],
                   ),
@@ -129,10 +163,11 @@ class _SettingScreenState extends State<SettingScreen> {
   }
 
   Widget _buildLoginPrompt(ThemeHandler themeProvider) {
+    double screenHeight = MediaQuery.of(context).size.height;
     return Center(
       child: StandardText(
         text: '로그인을 통해 설정을 변경해보세요!',
-        fontSize: 16,
+        fontSize: screenHeight * 0.016,
         color: themeProvider.primaryColor,
       ),
     );
@@ -144,8 +179,10 @@ class _SettingScreenState extends State<SettingScreen> {
     required String userName,
     required ThemeHandler themeProvider,
   }) {
+    double screenHeight = MediaQuery.of(context).size.height;
+
     return ListTile(
-      contentPadding: const EdgeInsets.symmetric(vertical: 10.0),
+      contentPadding: EdgeInsets.symmetric(vertical: screenHeight * 0.01),
       title: StandardText(
         text: '$userName님',
         fontSize: 18,
@@ -159,17 +196,17 @@ class _SettingScreenState extends State<SettingScreen> {
         },
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.white,
-          foregroundColor: themeProvider.primaryColor,
+          foregroundColor: Colors.black,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),
           ),
-          side: BorderSide(color: themeProvider.primaryColor),
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+          side: const BorderSide(color: Colors.black),
+          padding: EdgeInsets.symmetric(horizontal: screenHeight * 0.02, vertical: screenHeight * 0.01),
         ),
-        child: StandardText(
+        child: const StandardText(
           text: '이름 수정',
           fontSize: 14,
-          color: themeProvider.primaryColor,
+          color: Colors.black,
         ),
       ),
     );
@@ -180,8 +217,10 @@ class _SettingScreenState extends State<SettingScreen> {
     required int problemCount,
     required ThemeHandler themeProvider,
   }) {
+    double screenHeight = MediaQuery.of(context).size.height;
+
     return ListTile(
-      contentPadding: const EdgeInsets.symmetric(vertical: 10.0),
+      contentPadding: EdgeInsets.symmetric(vertical: screenHeight * 0.01),
       title: StandardText(
         text: '작성한 오답노트 수',
         fontSize: 18,
@@ -190,7 +229,7 @@ class _SettingScreenState extends State<SettingScreen> {
       trailing: StandardText(
         text: problemCount.toString(),
         fontSize: 18,
-        color: themeProvider.primaryColor,
+        color: Colors.black,
       ),
     );
   }
@@ -203,8 +242,10 @@ class _SettingScreenState extends State<SettingScreen> {
     required BuildContext context,
     VoidCallback? onTap,
   }) {
+    double screenHeight = MediaQuery.of(context).size.height;
+
     return ListTile(
-      contentPadding: const EdgeInsets.symmetric(vertical: 10.0),
+      contentPadding: EdgeInsets.symmetric(vertical: screenHeight * 0.01),
       title: StandardText(
         text: title,
         fontSize: 18,
@@ -213,11 +254,11 @@ class _SettingScreenState extends State<SettingScreen> {
       subtitle: StandardText(
         text: subtitle,
         fontSize: 14,
-        color: themeColor.withOpacity(0.6),
+        color: ThemeHandler.desaturatenColor(themeColor),
       ),
       trailing: Container(
-        width: 40,
-        height: 40,
+        width: screenHeight * 0.04,
+        height: screenHeight * 0.04,
         decoration: BoxDecoration(
           color: themeColor,
           shape: BoxShape.circle,
@@ -235,8 +276,10 @@ class _SettingScreenState extends State<SettingScreen> {
     VoidCallback? onTap,
   }) {
     final themeProvider = Provider.of<ThemeHandler>(context);
+    double screenHeight = MediaQuery.of(context).size.height;
+
     return ListTile(
-      contentPadding: const EdgeInsets.symmetric(vertical: 10.0),
+      contentPadding: EdgeInsets.symmetric(vertical: screenHeight * 0.01),
       title: StandardText(
         text: title,
         fontSize: 18,
@@ -245,7 +288,7 @@ class _SettingScreenState extends State<SettingScreen> {
       subtitle: StandardText(
         text: subtitle,
         fontSize: 14,
-        color: themeProvider.primaryColor.withOpacity(0.6),
+        color: themeProvider.desaturateColor,
       ),
       onTap: onTap,
     );
@@ -254,6 +297,8 @@ class _SettingScreenState extends State<SettingScreen> {
   // 하단 버튼 스타일
   Widget _buildBottomButton(BuildContext context, String text,
       Color backgroundColor, Color textColor, VoidCallback onPressed) {
+    double screenHeight = MediaQuery.of(context).size.height;
+
     return ElevatedButton(
       onPressed: onPressed,
       style: ElevatedButton.styleFrom(
@@ -262,11 +307,11 @@ class _SettingScreenState extends State<SettingScreen> {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
         ),
-        padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+        padding: EdgeInsets.symmetric(horizontal: screenHeight * 0.03, vertical: screenHeight * 0.015),
       ),
       child: StandardText(
         text: text,
-        fontSize: 16,
+        fontSize: screenHeight * 0.016,
         color: textColor,
       ),
     );
@@ -279,41 +324,45 @@ class _SettingScreenState extends State<SettingScreen> {
     final TextEditingController nameController =
         TextEditingController(text: currentName);
     final standardTextStyle = const StandardText(text: '').getTextStyle();
+    double screenHeight = MediaQuery.of(context).size.height;
 
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: StandardText(
+          backgroundColor: Colors.white,
+          title: const StandardText(
             text: '이름 수정',
-            fontSize: 16,
-            color: themeProvider.primaryColor,
+            fontSize: 18,
+            color: Colors.black,
           ),
-          content: TextField(
-            controller: nameController,
-            style: standardTextStyle.copyWith(
-                color: themeProvider.primaryColor, fontSize: 16),
-            decoration: InputDecoration(
-              hintText: '수정할 이름을 입력하세요',
-              hintStyle: standardTextStyle.copyWith(
-                  color: themeProvider.desaturateColor, fontSize: 14),
-              border: OutlineInputBorder(
-                borderSide:
-                    BorderSide(color: themeProvider.primaryColor, width: 1.5),
-                borderRadius: BorderRadius.circular(8.0),
+          content: SizedBox(
+            child: TextField(
+              controller: nameController,
+              style: standardTextStyle.copyWith(
+                  color: Colors.black, fontSize: 16),
+              decoration: InputDecoration(
+                hintText: '수정할 이름을 입력하세요',
+                hintStyle: standardTextStyle.copyWith(
+                    color: ThemeHandler.desaturatenColor(Colors.black), fontSize: 14),
+                border: OutlineInputBorder(
+                  borderSide:
+                  const BorderSide(color: Colors.black, width: 1.5),
+                  borderRadius: BorderRadius.circular(8.0),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderSide:
+                  const BorderSide(color: Colors.black, width: 1.5),
+                  borderRadius: BorderRadius.circular(8.0),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderSide:
+                  const BorderSide(color: Colors.black, width: 2.0),
+                  borderRadius: BorderRadius.circular(8.0),
+                ),
+                contentPadding:
+                EdgeInsets.symmetric(vertical: screenHeight * 0.02, horizontal: screenHeight * 0.012),
               ),
-              enabledBorder: OutlineInputBorder(
-                borderSide:
-                    BorderSide(color: themeProvider.primaryColor, width: 1.5),
-                borderRadius: BorderRadius.circular(8.0),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderSide:
-                    BorderSide(color: themeProvider.primaryColor, width: 2.0),
-                borderRadius: BorderRadius.circular(8.0),
-              ),
-              contentPadding:
-                  const EdgeInsets.symmetric(vertical: 20.0, horizontal: 12.0),
             ),
           ),
           actions: [
@@ -347,6 +396,48 @@ class _SettingScreenState extends State<SettingScreen> {
                 color: themeProvider.primaryColor,
               ),
             ),
+          ],
+        );
+      },
+    );
+  }
+
+  void showConfirmationDialog(BuildContext context, String title,
+      String message, VoidCallback onConfirm) {
+    final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
+    double screenHeight = MediaQuery.of(context).size.height;
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: Colors.white,
+          title: StandardText(
+              text: title, fontSize: 18, color: Colors.black),
+          content: SizedBox(
+            child: StandardText(
+                text: message, fontSize: 15, color: Colors.black),
+          ),
+          actions: [
+            TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: const StandardText(
+                  text: '취소',
+                  fontSize: 16,
+                  color: Colors.black,
+                )),
+            TextButton(
+                onPressed: () async {
+                  Navigator.of(context).pop();
+                  onConfirm();
+                },
+                child: const StandardText(
+                  text: '확인',
+                  fontSize: 16,
+                  color: Colors.red,
+                )),
           ],
         );
       },

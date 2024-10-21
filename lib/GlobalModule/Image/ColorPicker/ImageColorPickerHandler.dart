@@ -40,18 +40,21 @@ class _ColorPickerScreenState extends State<ColorPickerScreen> {
     final themeProvider = Provider.of<ThemeHandler>(context);
 
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
+        centerTitle: true,
+        backgroundColor: Colors.white,
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             StandardText(
               text: '하단의 + 버튼을 누른 뒤,',
-              fontSize: 14,
+              fontSize: 16,
               color: themeProvider.primaryColor,
             ),
             StandardText(
               text: '펜을 움직여 지우고 싶은 색상을 선택하세요!!',
-              fontSize: 14,
+              fontSize: 16,
               color: themeProvider.primaryColor,
             ),
           ],
@@ -93,7 +96,7 @@ class _ColorPickerScreenState extends State<ColorPickerScreen> {
                 },
                 child: CircleAvatar(
                   radius: 30,
-                  backgroundColor: selectedColors[index] ?? themeProvider.primaryColor,
+                  backgroundColor: selectedColors[index] ?? themeProvider.desaturateColor,
                   child: selectedColors[index] == null
                       ? const Icon(Icons.add, color: Colors.white)
                       : null,
@@ -101,7 +104,7 @@ class _ColorPickerScreenState extends State<ColorPickerScreen> {
               );
             }),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 30),
           ElevatedButton(
             onPressed: () {
               // selectedColors 리스트를 RGB 값이 포함된 Map 형태로 변환
@@ -126,10 +129,15 @@ class _ColorPickerScreenState extends State<ColorPickerScreen> {
 
               Navigator.of(context).pop(colorMaps); // 변환된 리스트 반환
             },
-            child: StandardText(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: themeProvider.primaryColor, // 버튼 배경색 변경
+              //elevation: 5, // 그림자 깊이 설정 (옵션)
+
+            ),
+            child: const StandardText(
               text: '완료',
               fontSize: 14,
-              color: themeProvider.primaryColor,
+              color: Colors.white,
             ),
           ),
           const SizedBox(height: 20),

@@ -82,19 +82,11 @@ class _AnswerShareScreenState extends State<AnswerShareScreen> {
             ? widget.problem.memo!
             : '메모 없음';
 
-    /*
-    // 이미지가 로드되었고, 공유하지 않았다면 공유 함수 호출
-    if (isImageLoaded && !hasShared) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _shareProblemAsImage();
-      });
-      hasShared = true; // 한 번만 호출되도록 설정
-    }
-
-     */
-
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
+        centerTitle: true,
+        backgroundColor: Colors.white,
         title: StandardText(
           text: '공유 화면 미리보기',
           fontSize: 20,

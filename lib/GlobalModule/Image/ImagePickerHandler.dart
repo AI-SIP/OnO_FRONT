@@ -91,58 +91,64 @@ class ImagePickerHandler {
 
   void showImagePicker(BuildContext context, Function(XFile?) onImagePicked) {
     showModalBottomSheet(
+      backgroundColor: Colors.white,
       context: context,
       builder: (BuildContext context) {
-        final themeProvider = Provider.of<ThemeHandler>(context);
+        final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
 
-        return SafeArea(
-          child: Wrap(
-            children: <Widget>[
-              Padding(
-                padding: const EdgeInsets.all(16.0), // 상하좌우에 약간의 여백을 추가
-                child: Center(
+        return SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 20.0), // 기존 모달과 동일한 여백 적용
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // 타이틀 부분
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 20.0), // 타이틀과 리스트 간 간격 추가
                   child: StandardText(
                     text: '이미지 업로드 방식을 선택해주세요',
                     color: themeProvider.primaryColor,
-                    fontSize: 18,
+                    fontSize: 20,
                   ),
                 ),
-              ),
-              ListTile(
-                leading:
-                    Icon(Icons.camera_alt, color: themeProvider.primaryColor),
-                title: StandardText(
-                  text: '카메라로 촬영',
-                  color: themeProvider.primaryColor,
-                  fontSize: 15,
+                // 카메라로 촬영 옵션
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 10.0), // 리스트 항목 간 간격 추가
+                  child: ListTile(
+                    leading: const Icon(Icons.camera_alt, color: Colors.black),
+                    title: const StandardText(
+                      text: '카메라로 촬영',
+                      color: Colors.black,
+                      fontSize: 16,
+                    ),
+                    onTap: () async {
+                      FirebaseAnalytics.instance.logEvent(name: 'image_select_camera');
+                      Navigator.of(context).pop(); // 모달 닫기
+                      final pickedFile = await pickImageFromCamera(context);
+                      onImagePicked(pickedFile);
+                    },
+                  ),
                 ),
-                onTap: () async {
-
-                  FirebaseAnalytics.instance.logEvent(name: 'image_select_camera');
-
-                  Navigator.of(context).pop(); // Close the popup
-                  final pickedFile = await pickImageFromCamera(context);
-                  onImagePicked(pickedFile);
-                },
-              ),
-              ListTile(
-                leading: Icon(Icons.photo_library,
-                    color: themeProvider.primaryColor),
-                title: StandardText(
-                  text: '갤러리에서 선택',
-                  color: themeProvider.primaryColor,
-                  fontSize: 15,
+                // 갤러리에서 선택 옵션
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 10.0), // 리스트 항목 간 간격 추가
+                  child: ListTile(
+                    leading: const Icon(Icons.photo_library, color: Colors.black),
+                    title: const StandardText(
+                      text: '갤러리에서 선택',
+                      color: Colors.black,
+                      fontSize: 16,
+                    ),
+                    onTap: () async {
+                      FirebaseAnalytics.instance.logEvent(name: 'image_select_gallery');
+                      Navigator.of(context).pop(); // 모달 닫기
+                      final pickedFile = await pickImageFromGallery(context);
+                      onImagePicked(pickedFile);
+                    },
+                  ),
                 ),
-                onTap: () async {
-
-                  FirebaseAnalytics.instance.logEvent(name: 'image_select_gallery');
-
-                  Navigator.of(context).pop(); // Close the popup
-                  final pickedFile = await pickImageFromGallery(context);
-                  onImagePicked(pickedFile);
-                },
-              ),
-            ],
+              ],
+            ),
           ),
         );
       },

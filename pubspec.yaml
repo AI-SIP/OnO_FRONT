@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 2.1.1+29
+version: 2.2.0+31
 
 environment:
   sdk: '>=3.3.3 <4.0.0'
@@ -61,6 +61,7 @@ dependencies:
   image_gallery_saver_plus: ^3.0.5
   flutter_tex: ^4.0.9
   animated_text_kit: ^4.2.2
+  flutter_svg: ^2.0.10+1
 
 dev_dependencies:
   flutter_test:
@@ -85,12 +86,30 @@ flutter:
   uses-material-design: true
   assets:
     - .env
-    - assets/GoogleLogo.png
-    - assets/AppleLogo.png
     - assets/no_image.png
     - assets/Logo.png
-    - assets/KakaoLogo.png
-    - assets/NaverLogo.png
+    - assets/GuideScreen/GuideScreen1.svg
+    - assets/GuideScreen/GuideScreen2.svg
+    - assets/GuideScreen/GuideScreen3.svg
+    - assets/GuideScreen/GuideScreen4.svg
+    - assets/Logo/GreenFrog.svg
+    - assets/Logo/OnO.svg
+    - assets/Icon/add_note.svg
+    - assets/Icon/GreenNote.svg
+    - assets/Icon/YellowNote.svg
+    - assets/Icon/PinkNote.svg
+    - assets/Icon/BlueNote.svg
+    - assets/Icon/PurpleNote.svg
+    - assets/Icon/BrownNote.svg
+    - assets/Icon/WhiteNote.svg
+    - assets/Icon/GreyNote.svg
+    - assets/Icon/Pencil.svg
+    - assets/Icon/Eraser.svg
+    - assets/Icon/Glass.svg
+    - assets/SocialLogin/AppleLogin.svg
+    - assets/SocialLogin/GoogleLogin.svg
+    - assets/SocialLogin/KakaoLogin.svg
+
   fonts:
     - family: HandWrite
       fonts:
@@ -107,6 +126,10 @@ flutter:
     - family: StandardBold
       fonts:
         - asset: assets/fonts/StandardBold.ttf
+    - family: PretendardBold
+      fonts:
+        - asset: assets/fonts/Pretendard-Bold.otf
+
 
 
   # To add assets to your application, add an assets section, like this:

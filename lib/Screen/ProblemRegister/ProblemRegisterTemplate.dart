@@ -14,6 +14,7 @@ import '../../Model/ProblemModel.dart';
 import '../../Model/ProblemRegisterModelV2.dart';
 import '../../Model/TemplateType.dart';
 import '../../Provider/FoldersProvider.dart';
+import '../../Provider/ScreenIndexProvider.dart';
 import '../../Service/ScreenUtil/ProblemRegisterScreenService.dart';
 import 'ProblemRegisterScreenWidget.dart';
 
@@ -42,7 +43,6 @@ class _ProblemRegisterTemplateState
   late TextEditingController sourceController;
   late TextEditingController notesController;
   XFile? answerImage;
-  //XFile? solveImage;
   final _service = ProblemRegisterScreenService();
 
   String? processImageUrl;
@@ -62,7 +62,14 @@ class _ProblemRegisterTemplateState
     sourceController = TextEditingController(text: problemModel.reference);
     notesController = TextEditingController(text: problemModel.memo);
     _selectedDate = problemModel.solvedAt ?? DateTime.now();
-    _selectedFolderId = problemModel.folderId;
+
+    if(widget.isEditMode){
+      _selectedFolderId = problemModel.folderId;
+    } else{
+      final folderProvider = Provider.of<FoldersProvider>(context, listen: false);
+      _selectedFolderId = folderProvider.currentFolderId;
+    }
+
     _selectedFolderName = null;
 
     _fetchData();
@@ -111,6 +118,7 @@ class _ProblemRegisterTemplateState
     final screenWidth = MediaQuery.of(context).size.width;
 
     return Scaffold(
+      backgroundColor: Colors.white,
       body: GestureDetector(
         onTap: () {
           FocusScope.of(context).unfocus();
@@ -197,6 +205,7 @@ class _ProblemRegisterTemplateState
                 onCancel: _resetFields,
                 isEditMode: widget.isEditMode,
               ),
+              const SizedBox(height: 30),
             ],
           ),
         ),
@@ -274,29 +283,6 @@ class _ProblemRegisterTemplateState
               ),
             ),
             const SizedBox(width: 10),
-            /*
-            const Icon(Icons.arrow_forward, size: 30, color: Colors.white),
-            const SizedBox(width: 10),
-            Expanded(
-              flex: 1,
-              child: ProblemRegisterScreenWidget.buildImagePickerWithLabel(
-                context: context,
-                label: '풀이 이미지',
-                image: solveImage,
-                existingImageUrl: problemModel.solveImageUrl,
-                themeProvider: themeProvider,
-                onImagePicked: (XFile? pickedFile) {
-                  setState(() {
-                    solveImage = pickedFile;
-                  });
-                  FirebaseAnalytics.instance.logEvent(
-                    name: 'image_add_solve_image',
-                    parameters: {'type': 'solve_image'},
-                  );
-                },
-              ),
-            ),
-             */
           ],
         ),
       ],
@@ -357,14 +343,14 @@ class _ProblemRegisterTemplateState
             themeProvider: themeProvider,
             maxHeight: screenHeight * 0.33,
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 30),
         ],
         _buildImageSection(
           label: '문제 이미지',
           imageUrl: problemModel.problemImageUrl,
           themeProvider: themeProvider,
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: 30),
         if(widget.templateType != TemplateType.simple) ... [
           _buildImageSection(
               label: '필기 제거 이미지',
@@ -373,8 +359,8 @@ class _ProblemRegisterTemplateState
               isLoading: isLoading,
               loadingMessage: '필기 제거 중....'
           ),
+          const SizedBox(height: 30),
         ],
-        const SizedBox(height: 20),
         ProblemRegisterScreenWidget.buildImagePickerWithLabel(
           context: context,
           label: '정답 이미지',
@@ -392,34 +378,6 @@ class _ProblemRegisterTemplateState
             );
           },
         ),
-        const SizedBox(height: 20),
-        // 보정 이미지와 해설 이미지가 있을 경우 추가
-        /*
-        if (widget.templateType != TemplateType.simple)
-          Column(
-            children: [
-              ProblemRegisterScreenWidget.buildImagePickerWithLabel(
-                context: context,
-                label: '풀이 이미지',
-                image: solveImage,
-                existingImageUrl: problemModel.solveImageUrl,
-                themeProvider: themeProvider,
-                onImagePicked: (XFile? pickedFile) {
-                  setState(() {
-                    solveImage = pickedFile;
-                  });
-
-                  FirebaseAnalytics.instance.logEvent(
-                    name: 'image_add_solve_image',
-                    parameters: {'type': 'solve_image'},
-                  );
-                },
-              ),
-              const SizedBox(height: 20),
-            ],
-          ),
-
-         */
       ],
     );
   }
@@ -507,7 +465,6 @@ class _ProblemRegisterTemplateState
         Container(
           constraints: BoxConstraints(
             maxHeight: maxHeight,
-            minHeight: 200, // 최소 높이를 지정해서 크기를 고정
           ),
           width: double.infinity,
           padding: const EdgeInsets.all(10.0),
@@ -606,7 +563,6 @@ class _ProblemRegisterTemplateState
         problemImageUrl: problemModel.problemImageUrl,
         processImageUrl: processImageUrl,
         answerImage: answerImage,
-        //solveImage: solveImage,
         memo: notesController.text,
         reference: sourceController.text,
         analysis: analysisResult,
@@ -622,6 +578,9 @@ class _ProblemRegisterTemplateState
           _resetFields();
           LoadingDialog.hide(context);
           Navigator.of(context).pop(true);
+
+          Provider.of<ScreenIndexProvider>(context, listen: false)
+              .setSelectedIndex(0);
         },
       );
     });

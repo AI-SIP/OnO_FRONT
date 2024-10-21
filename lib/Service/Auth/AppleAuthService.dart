@@ -47,7 +47,7 @@ class AppleAuthService {
       if (response.statusCode == 200) {
         log('Apple sign-in Success!');
         FirebaseAnalytics.instance.logSignUp(signUpMethod: 'Apple');
-        SnackBarDialog.showSnackBar(context: context, message: "로그인에 성공했습니다.", backgroundColor: Colors.green);
+        //SnackBarDialog.showSnackBar(context: context, message: "로그인에 성공했습니다.", backgroundColor: Colors.green);
 
         return jsonDecode(response.body);
       } else {

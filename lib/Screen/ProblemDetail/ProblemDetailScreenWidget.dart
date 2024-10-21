@@ -8,6 +8,7 @@ import '../../GlobalModule/Image/DisplayImage.dart';
 import '../../GlobalModule/Image/FullScreenImage.dart';
 import '../../GlobalModule/Theme/GridPainter.dart';
 import '../../GlobalModule/Theme/HandWriteText.dart';
+import '../../GlobalModule/Theme/StandardText.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
 import '../../GlobalModule/Theme/UnderlinedText.dart';
 import '../../GlobalModule/Util/LatexTextHandler.dart';
@@ -25,22 +26,22 @@ class ProblemDetailScreenWidget {
 
   Widget buildCommonDetailView(BuildContext context, ProblemModel problemModel,
       ThemeHandler themeProvider, TemplateType templateType) {
-    final screenWidth = MediaQuery.of(context).size.width;
+    double screenHeight = MediaQuery.of(context).size.height;
     final imageUrl = (templateType == TemplateType.simple)
         ? problemModel.problemImageUrl
         : problemModel.processImageUrl;
 
     return SingleChildScrollView(
       child: Padding(
-        padding: const EdgeInsets.all(8.0), // 원하는 경우 여백 추가
+        padding: EdgeInsets.all(screenHeight * 0.008), // 원하는 경우 여백 추가
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(height: 30.0),
+            SizedBox(height: screenHeight * 0.03),
             buildSolvedDate(problemModel.solvedAt, themeProvider),
-            const SizedBox(height: 30.0),
+            SizedBox(height: screenHeight * 0.03),
             buildProblemReference(problemModel.reference, themeProvider),
-            const SizedBox(height: 30.0),
+            SizedBox(height: screenHeight * 0.03,),
             buildImageSection(
                 context,
                 imageUrl,
@@ -61,6 +62,8 @@ class ProblemDetailScreenWidget {
     final ScrollController latexScrollController = ScrollController();
     final ScrollController tileScrollController = ScrollController();
 
+    double screenHeight = MediaQuery.of(context).size.height;
+
     return SingleChildScrollView(
       controller: tileScrollController,
       child: ExpansionTile(
@@ -69,13 +72,13 @@ class ProblemDetailScreenWidget {
           child: buildCenteredTitle('정답 확인', themeProvider.primaryColor),
         ),
         children: [
-          const SizedBox(height: 10.0),
+          SizedBox(height: screenHeight * 0.01),
           buildSectionWithMemo(problemModel.memo, themeProvider),
-          const SizedBox(height: 20.0),
+          SizedBox(height: screenHeight * 0.02),
           if (templateType == TemplateType.special)
             buildLatexView(context, problemModel.analysis,
                 latexScrollController, themeProvider),
-          const SizedBox(height: 20.0),
+          SizedBox(height: screenHeight * 0.02),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: (templateType == TemplateType.simple)
@@ -93,9 +96,9 @@ class ProblemDetailScreenWidget {
                     //_buildImageContainer(context, problemModel.solveImageUrl, '풀이 이미지', themeProvider),
                   ],
           ),
-          const SizedBox(height: 30.0),
+          SizedBox(height: screenHeight * 0.03),
           buildRepeatSection(context, problemModel, themeProvider),
-          const SizedBox(height: 20.0),
+          SizedBox(height: screenHeight * 0.02),
         ],
       ),
     );
@@ -239,6 +242,7 @@ class ProblemDetailScreenWidget {
 
   //
   static Widget buildCenteredTitle(String text, Color color) {
+
     return Container(
       width: double.infinity,
       alignment: Alignment.center,
@@ -246,10 +250,15 @@ class ProblemDetailScreenWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const SizedBox(width: 8.0),
-          UnderlinedText(
+          Icon(
+            Icons.touch_app, // 복습 완료 전 터치 아이콘
+            color: color,
+            size: 16,
+          ),
+          const SizedBox(width: 10),
+          StandardText(
             text: text,
-            fontSize: 26,
+            fontSize: 20,
             color: color,
             fontWeight: FontWeight.bold, // 굵은 텍스트로 설정
           ),
@@ -441,13 +450,5 @@ class ProblemDetailScreenWidget {
         ),
       ],
     );
-  }
-
-  Widget buildNoDataScreen() {
-    return const Center(
-        child: HandWriteText(
-      text: "오답노트 정보를 가져올 수 없습니다.",
-      fontSize: 28,
-    ));
   }
 }

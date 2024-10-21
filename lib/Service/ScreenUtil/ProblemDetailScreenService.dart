@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:ono/Provider/FoldersProvider.dart';
-import 'package:ono/Screen/ProblemRegister/ProblemRegisterScreenV2.dart';
 import 'package:provider/provider.dart';
 
 import '../../GlobalModule/Theme/SnackBarDialog.dart';
@@ -28,12 +27,13 @@ class ProblemDetailScreenService {
         final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
 
         return AlertDialog(
-          title: StandardText(
-              text: '오답노트 삭제', fontSize: 16, color: themeProvider.primaryColor),
-          content: StandardText(
+          backgroundColor: Colors.white,
+          title: const StandardText(
+              text: '오답노트 삭제', fontSize: 18, color: Colors.black),
+          content: const StandardText(
               text: '정말로 이 오답노트를 삭제하시겠습니까?',
-              fontSize: 14,
-              color: themeProvider.primaryColor),
+              fontSize: 16,
+              color: Colors.black),
           actions: [
             TextButton(
               onPressed: () {
