@@ -465,7 +465,6 @@ class _ProblemRegisterTemplateState
         Container(
           constraints: BoxConstraints(
             maxHeight: maxHeight,
-            minHeight: 200, // 최소 높이를 지정해서 크기를 고정
           ),
           width: double.infinity,
           padding: const EdgeInsets.all(10.0),

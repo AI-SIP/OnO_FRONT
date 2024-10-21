@@ -52,7 +52,7 @@ class _UserGuideScreenState extends State<UserGuideScreen> {
                 _buildUserGuidePage(
                   imagePath: 'assets/GuideScreen/GuideScreen1.svg',
                   title: 'OnO에 오신걸 환영합니다!',
-                  description: 'OnO를 통해 손쉽게\n나만의 오답노트를 작성해보아요!',
+                  description: 'OnO를 통해 손쉽게\n나만의 진정한 오답노트를 작성해보아요!',
                 ),
                 _buildUserGuidePage(
                   imagePath: 'assets/GuideScreen/GuideScreen2.svg',

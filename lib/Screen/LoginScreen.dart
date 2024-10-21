@@ -50,13 +50,14 @@ class LoginScreen extends StatelessWidget {
                 SizedBox(height: screenHeight * 0.05), // 이미지와 텍스트 간 간격
                 // 텍스트 추가
                 HandWriteText(
-                  text: '\"나만의 손쉬운 오답노트, OnO\"',
+                  text: '\"나만의 진정한 오답노트, OnO\"',
                   fontSize: headerFontSize,
                   color: themeProvider.primaryColor,
                 ),
               ],
             ),
           ),
+
 
           Positioned(
             bottom: screenHeight * 0.10, // 화면 하단에서 10% 떨어진 위치에 고정
@@ -76,7 +77,6 @@ class LoginScreen extends StatelessWidget {
                     );
                   });
                 }
-
                 return Column(
                   children: [
                     // Google 로그인 버튼

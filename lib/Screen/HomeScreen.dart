@@ -88,7 +88,7 @@ class _HomeScreenState extends State<HomeScreen> {
             children: [
               SizedBox(height: screenHeight * 0.1),
               HandWriteText(
-                text: '\"나만의 손쉬운 오답노트, OnO\"',
+                text: '\"나만의 진정한 오답노트, OnO\"',
                 fontSize: headerFontSize,
                 color: themeProvider.primaryColor,
               ),
