@@ -14,7 +14,6 @@ import 'package:sentry_flutter/sentry_flutter.dart';
 import '../Config/AppConfig.dart';
 import '../Model/FolderModel.dart';
 import '../Model/ProblemModel.dart';
-import '../Model/ProblemRegisterModel.dart';
 import '../Model/ProblemRegisterModelV2.dart';
 import 'TokenProvider.dart';
 import 'package:http/http.dart' as http;
@@ -378,16 +377,10 @@ class FoldersProvider with ChangeNotifier {
     }
   }
 
-  Future<void> updateProblem(ProblemRegisterModel problemData) async {
+  Future<void> updateProblem(ProblemRegisterModelV2 problemData) async {
 
     try {
       final files = <http.MultipartFile>[];
-      if (problemData.problemImage != null) {
-        files.add(await http.MultipartFile.fromPath('problemImage', problemData.problemImage!.path));
-      }
-      if (problemData.solveImage != null) {
-        files.add(await http.MultipartFile.fromPath('solveImage', problemData.solveImage!.path));
-      }
       if (problemData.answerImage != null) {
         files.add(await http.MultipartFile.fromPath('answerImage', problemData.answerImage!.path));
       }
@@ -405,22 +398,11 @@ class FoldersProvider with ChangeNotifier {
           if (problemData.memo != null && problemData.memo!.isNotEmpty)
             'memo': problemData.memo!,
           if (problemData.folderId != null) 'folderId': problemData.folderId!.toString(),
-          'process': problemData.isProcess! ? 'true' : 'false',
-          if (problemData.colors != null) 'colors': jsonEncode(problemData.colors),
         },
       );
 
       if (response.statusCode == 200) {
         log('Problem successfully updated');
-        logProblemSubmission(
-          action: "update",
-          isProblemImageFilled: problemData.problemImage != null,
-          isAnswerImageFilled: problemData.answerImage != null,
-          isSolveImageFilled: problemData.solveImage != null,
-          isReferenceFilled: (problemData.reference != null) && (problemData.reference!.isNotEmpty),
-          isMemoFilled: (problemData.memo != null) && (problemData.memo!.isNotEmpty),
-          isProcess: problemData.isProcess!,
-        );
 
         await fetchCurrentFolderContents();
       } else {

@@ -1,11 +1,13 @@
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:ono/GlobalModule/Theme/HandWriteText.dart';
+import 'package:ono/Model/ProblemRegisterModelV2.dart';
 import 'package:provider/provider.dart';
 
 import '../../GlobalModule/Theme/SnackBarDialog.dart';
 import '../../GlobalModule/Theme/StandardText.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
+import '../../GlobalModule/Util/FolderSelectionDialog.dart';
 import '../../GlobalModule/Util/NavigationButtons.dart';
 import '../../Model/ProblemModel.dart';
 import '../../Model/TemplateType.dart';
@@ -239,6 +241,37 @@ class _ProblemDetailScreenV2State extends State<ProblemDetailScreenV2> {
                         _refreshScreen();
                       });
 
+                    },
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 10.0), // 텍스트 간격 조정
+                  child: ListTile(
+                    title: const StandardText(
+                      text: '오답노트 위치 변경하기',
+                      fontSize: 16,
+                      color: Colors.black,
+                    ),
+                    onTap: () async {
+                      FirebaseAnalytics.instance
+                          .logEvent(name: 'problem_change_path');
+                      Navigator.pop(context);
+
+                      final foldersProvider = Provider.of<FoldersProvider>(context, listen: false);
+
+                      final int? selectedFolderId = await showDialog<int?>(
+                        context: context,
+                        builder: (context) => const FolderSelectionDialog(),
+                      );
+
+                      if(selectedFolderId != null){
+                        await foldersProvider.updateProblem(
+                          ProblemRegisterModelV2(
+                            problemId: problemModel.problemId,
+                            folderId: selectedFolderId,
+                          )
+                        );
+                      }
                     },
                   ),
                 ),

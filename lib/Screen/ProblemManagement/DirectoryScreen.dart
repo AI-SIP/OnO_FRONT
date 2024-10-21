@@ -9,13 +9,13 @@ import 'package:ono/GlobalModule/Theme/NoteIconHandler.dart';
 import 'package:ono/GlobalModule/Theme/SnackBarDialog.dart';
 import 'package:ono/GlobalModule/Util/UrlLauncher.dart';
 import 'package:ono/Model/LoginStatus.dart';
+import 'package:ono/Model/ProblemRegisterModelV2.dart';
 import 'package:ono/Provider/FoldersProvider.dart';
 import 'package:provider/provider.dart';
 import '../../GlobalModule/Image/DisplayImage.dart';
 import '../../GlobalModule/Theme/StandardText.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
 import '../../GlobalModule/Util/FolderSelectionDialog.dart';
-import '../../Model/ProblemRegisterModel.dart';
 import '../../Model/TemplateType.dart';
 import '../../Provider/ScreenIndexProvider.dart';
 import '../../Service/ScreenUtil/DirectoryScreenService.dart';
@@ -927,8 +927,6 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   }
 
   Future<void> _moveProblemToFolder(ProblemModel problem, int? folderId) async {
-    final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
-
     if (folderId == null) {
       log('Problem ID or folderId is null. Cannot move the problem.');
       return; // 문제 ID 또는 폴더 ID가 null이면 실행하지 않음
@@ -942,10 +940,9 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     final foldersProvider =
         Provider.of<FoldersProvider>(context, listen: false);
     await foldersProvider.updateProblem(
-      ProblemRegisterModel(
+      ProblemRegisterModelV2(
         problemId: problem.problemId,
         folderId: folderId, // 폴더 ID로 문제를 이동
-        isProcess: false,
       ),
     );
 
