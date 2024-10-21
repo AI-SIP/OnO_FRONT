@@ -60,6 +60,7 @@ class TemplateSelectionScreen extends StatelessWidget {
     required TemplateType templateType,
     required ThemeHandler themeProvider,
   }) {
+    double screenHeight = MediaQuery.of(context).size.height;
     return Stack(
       children: [
         ListTile(

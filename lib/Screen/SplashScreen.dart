@@ -1,5 +1,6 @@
 import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:ono/main.dart';
 import 'package:provider/provider.dart';
 
@@ -50,8 +51,8 @@ class _SplashScreenState extends State<SplashScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Image.asset(
-              'assets/Logo.png',
+            SvgPicture.asset(
+              'assets/Logo/GreenFrog.svg',
               width: 200,
               height: 200,
             ),

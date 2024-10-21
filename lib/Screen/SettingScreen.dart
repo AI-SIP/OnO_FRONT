@@ -30,6 +30,7 @@ class _SettingScreenState extends State<SettingScreen> {
     final authService = Provider.of<UserProvider>(context);
     final userProvider = Provider.of<UserProvider>(context);
     final themeProvider = Provider.of<ThemeHandler>(context);
+    double screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
       appBar: AppBar(
@@ -47,9 +48,9 @@ class _SettingScreenState extends State<SettingScreen> {
               children: [
                 Expanded(
                   child: ListView(
-                    padding: const EdgeInsets.symmetric(horizontal: 30.0),
+                    padding: EdgeInsets.symmetric(horizontal: screenHeight * 0.03),
                     children: [
-                      const SizedBox(height: 10),
+                      SizedBox(height: screenHeight * 0.01),
                       _buildUserNameTile(
                         context: context,
                         userName: userProvider.userName ?? '이름 없음',
@@ -106,7 +107,7 @@ class _SettingScreenState extends State<SettingScreen> {
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 10.0),
+                  padding: EdgeInsets.symmetric(vertical: screenHeight * 0.01),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
@@ -161,10 +162,11 @@ class _SettingScreenState extends State<SettingScreen> {
   }
 
   Widget _buildLoginPrompt(ThemeHandler themeProvider) {
+    double screenHeight = MediaQuery.of(context).size.height;
     return Center(
       child: StandardText(
         text: '로그인을 통해 설정을 변경해보세요!',
-        fontSize: 16,
+        fontSize: screenHeight * 0.016,
         color: themeProvider.primaryColor,
       ),
     );
@@ -176,8 +178,10 @@ class _SettingScreenState extends State<SettingScreen> {
     required String userName,
     required ThemeHandler themeProvider,
   }) {
+    double screenHeight = MediaQuery.of(context).size.height;
+
     return ListTile(
-      contentPadding: const EdgeInsets.symmetric(vertical: 10.0),
+      contentPadding: EdgeInsets.symmetric(vertical: screenHeight * 0.01),
       title: StandardText(
         text: '$userName님',
         fontSize: 18,
@@ -196,7 +200,7 @@ class _SettingScreenState extends State<SettingScreen> {
             borderRadius: BorderRadius.circular(10),
           ),
           side: const BorderSide(color: Colors.black),
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+          padding: EdgeInsets.symmetric(horizontal: screenHeight * 0.02, vertical: screenHeight * 0.01),
         ),
         child: const StandardText(
           text: '이름 수정',
@@ -212,8 +216,10 @@ class _SettingScreenState extends State<SettingScreen> {
     required int problemCount,
     required ThemeHandler themeProvider,
   }) {
+    double screenHeight = MediaQuery.of(context).size.height;
+
     return ListTile(
-      contentPadding: const EdgeInsets.symmetric(vertical: 10.0),
+      contentPadding: EdgeInsets.symmetric(vertical: screenHeight * 0.01),
       title: StandardText(
         text: '작성한 오답노트 수',
         fontSize: 18,
@@ -235,8 +241,10 @@ class _SettingScreenState extends State<SettingScreen> {
     required BuildContext context,
     VoidCallback? onTap,
   }) {
+    double screenHeight = MediaQuery.of(context).size.height;
+
     return ListTile(
-      contentPadding: const EdgeInsets.symmetric(vertical: 10.0),
+      contentPadding: EdgeInsets.symmetric(vertical: screenHeight * 0.01),
       title: StandardText(
         text: title,
         fontSize: 18,
@@ -248,8 +256,8 @@ class _SettingScreenState extends State<SettingScreen> {
         color: ThemeHandler.desaturatenColor(themeColor),
       ),
       trailing: Container(
-        width: 40,
-        height: 40,
+        width: screenHeight * 0.04,
+        height: screenHeight * 0.04,
         decoration: BoxDecoration(
           color: themeColor,
           shape: BoxShape.circle,
@@ -267,8 +275,10 @@ class _SettingScreenState extends State<SettingScreen> {
     VoidCallback? onTap,
   }) {
     final themeProvider = Provider.of<ThemeHandler>(context);
+    double screenHeight = MediaQuery.of(context).size.height;
+
     return ListTile(
-      contentPadding: const EdgeInsets.symmetric(vertical: 10.0),
+      contentPadding: EdgeInsets.symmetric(vertical: screenHeight * 0.01),
       title: StandardText(
         text: title,
         fontSize: 18,
@@ -286,6 +296,8 @@ class _SettingScreenState extends State<SettingScreen> {
   // 하단 버튼 스타일
   Widget _buildBottomButton(BuildContext context, String text,
       Color backgroundColor, Color textColor, VoidCallback onPressed) {
+    double screenHeight = MediaQuery.of(context).size.height;
+
     return ElevatedButton(
       onPressed: onPressed,
       style: ElevatedButton.styleFrom(
@@ -294,11 +306,11 @@ class _SettingScreenState extends State<SettingScreen> {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
         ),
-        padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+        padding: EdgeInsets.symmetric(horizontal: screenHeight * 0.03, vertical: screenHeight * 0.015),
       ),
       child: StandardText(
         text: text,
-        fontSize: 16,
+        fontSize: screenHeight * 0.016,
         color: textColor,
       ),
     );
@@ -311,6 +323,7 @@ class _SettingScreenState extends State<SettingScreen> {
     final TextEditingController nameController =
         TextEditingController(text: currentName);
     final standardTextStyle = const StandardText(text: '').getTextStyle();
+    double screenHeight = MediaQuery.of(context).size.height;
 
     showDialog(
       context: context,
@@ -347,7 +360,7 @@ class _SettingScreenState extends State<SettingScreen> {
                   borderRadius: BorderRadius.circular(8.0),
                 ),
                 contentPadding:
-                const EdgeInsets.symmetric(vertical: 20.0, horizontal: 12.0),
+                EdgeInsets.symmetric(vertical: screenHeight * 0.02, horizontal: screenHeight * 0.012),
               ),
             ),
           ),
@@ -391,6 +404,7 @@ class _SettingScreenState extends State<SettingScreen> {
   void showConfirmationDialog(BuildContext context, String title,
       String message, VoidCallback onConfirm) {
     final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
+    double screenHeight = MediaQuery.of(context).size.height;
 
     showDialog(
       context: context,
@@ -410,7 +424,7 @@ class _SettingScreenState extends State<SettingScreen> {
                 },
                 child: const StandardText(
                   text: '취소',
-                  fontSize: 14,
+                  fontSize: 16,
                   color: Colors.black,
                 )),
             TextButton(
@@ -420,7 +434,7 @@ class _SettingScreenState extends State<SettingScreen> {
                 },
                 child: const StandardText(
                   text: '확인',
-                  fontSize: 14,
+                  fontSize: 16,
                   color: Colors.red,
                 )),
           ],

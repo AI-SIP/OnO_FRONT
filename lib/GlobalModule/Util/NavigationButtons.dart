@@ -39,6 +39,7 @@ class _NavigationButtonsState extends State<NavigationButtons> {
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeHandler>(context);
     final problemIds = widget.foldersProvider.getProblemIds();
+    double screenHeight = MediaQuery.of(context).size.height;
 
     if (problemIds.isEmpty) {
       return const Center();
@@ -63,7 +64,7 @@ class _NavigationButtonsState extends State<NavigationButtons> {
           },
           style: ElevatedButton.styleFrom(
             padding:
-                const EdgeInsets.symmetric(horizontal: 20.0, vertical: 8.0),
+            EdgeInsets.symmetric(horizontal: screenHeight * 0.02, vertical: screenHeight * 0.008),
             backgroundColor: themeProvider.primaryColor.withOpacity(0.1),
             side: BorderSide(
               color: themeProvider.primaryColor,
@@ -74,7 +75,7 @@ class _NavigationButtonsState extends State<NavigationButtons> {
             ),
           ),
           child: StandardText(
-              text: '< 이전 문제', fontSize: 12, color: themeProvider.primaryColor),
+              text: '< 이전 문제', fontSize: screenHeight * 0.012, color: themeProvider.primaryColor),
         ),
 
         // 복습 완료 버튼
@@ -82,7 +83,7 @@ class _NavigationButtonsState extends State<NavigationButtons> {
           onPressed: () => showReviewDialog(context),
           style: ElevatedButton.styleFrom(
             padding:
-                const EdgeInsets.symmetric(horizontal: 20.0, vertical: 8.0),
+              EdgeInsets.symmetric(horizontal: screenHeight * 0.02, vertical: screenHeight * 0.008),
             backgroundColor: themeProvider.primaryColor.withOpacity(0.1),
             side: BorderSide(
               color: themeProvider.primaryColor,
@@ -96,7 +97,7 @@ class _NavigationButtonsState extends State<NavigationButtons> {
               ? Icon(
                   Icons.check, // 복습 완료 시 체크 아이콘만 표시
                   color: themeProvider.primaryColor,
-                  size: 24,
+                  size: screenHeight * 0.024,
                 )
               : Row(
                   mainAxisSize: MainAxisSize.min, // 터치 아이콘과 텍스트를 한 줄로 표시
@@ -104,12 +105,12 @@ class _NavigationButtonsState extends State<NavigationButtons> {
                     Icon(
                       Icons.touch_app, // 복습 완료 전 터치 아이콘
                       color: themeProvider.primaryColor,
-                      size: 14,
+                      size: screenHeight * 0.014,
                     ),
-                    const SizedBox(width: 8), // 아이콘과 텍스트 간 간격
+                    SizedBox(width: screenHeight * 0.008), // 아이콘과 텍스트 간 간격
                     StandardText(
                       text: '복습 완료', // 복습 완료 텍스트
-                      fontSize: 14,
+                      fontSize: screenHeight * 0.014,
                       color: themeProvider.primaryColor,
                     ),
                   ],
@@ -124,7 +125,7 @@ class _NavigationButtonsState extends State<NavigationButtons> {
           },
           style: ElevatedButton.styleFrom(
             padding:
-                const EdgeInsets.symmetric(horizontal: 20.0, vertical: 8.0),
+                EdgeInsets.symmetric(horizontal: screenHeight * 0.02, vertical: screenHeight * 0.008),
             backgroundColor: themeProvider.primaryColor.withOpacity(0.1),
             side: BorderSide(
               color: themeProvider.primaryColor,
@@ -135,7 +136,7 @@ class _NavigationButtonsState extends State<NavigationButtons> {
             ),
           ),
           child: StandardText(
-              text: '다음 문제 >', fontSize: 12, color: themeProvider.primaryColor),
+              text: '다음 문제 >', fontSize: screenHeight * 0.012, color: themeProvider.primaryColor),
         ),
       ],
     );
