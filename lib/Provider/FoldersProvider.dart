@@ -427,6 +427,7 @@ class FoldersProvider with ChangeNotifier {
 
       if (response.statusCode == 200) {
         log('Problem successfully deleted');
+        await fetchCurrentFolderContents();
         return true;
       } else {
         throw Exception('Failed to delete problem');
