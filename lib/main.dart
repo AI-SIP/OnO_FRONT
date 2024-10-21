@@ -18,7 +18,6 @@ import 'Provider/UserProvider.dart';
 import 'Screen/ProblemManagement/DirectoryScreen.dart';
 import 'Screen/ProblemRegister/TemplateSelectionScreen.dart';
 import 'Screen/SettingScreen.dart';
-import 'GlobalModule/Theme/AppbarWithLogo.dart';
 import 'firebase_options.dart';
 
 void main() async {
@@ -174,9 +173,6 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
     final screenIndexProvider = Provider.of<ScreenIndexProvider>(context);
     
     return Scaffold(
-      appBar: (screenIndexProvider.screenIndex == 0 || screenIndexProvider.screenIndex == 1)
-          ? null
-          : const AppBarWithLogo(), // 다른 화면에서는 AppBar 표시
       body: IndexedStack(
         index: screenIndexProvider.screenIndex,
         children: _widgetOptions,

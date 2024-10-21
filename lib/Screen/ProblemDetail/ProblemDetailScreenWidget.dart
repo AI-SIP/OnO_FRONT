@@ -442,12 +442,4 @@ class ProblemDetailScreenWidget {
       ],
     );
   }
-
-  Widget buildNoDataScreen() {
-    return const Center(
-        child: HandWriteText(
-      text: "오답노트 정보를 가져올 수 없습니다.",
-      fontSize: 28,
-    ));
-  }
 }

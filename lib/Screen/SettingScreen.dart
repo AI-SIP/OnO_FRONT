@@ -32,6 +32,14 @@ class _SettingScreenState extends State<SettingScreen> {
     final themeProvider = Provider.of<ThemeHandler>(context);
 
     return Scaffold(
+      appBar: AppBar(
+        title: StandardText(
+          text: '설정',
+          fontSize: 20,
+          color: themeProvider.primaryColor,
+        ),
+        backgroundColor: Colors.white,
+      ),
       backgroundColor: Colors.white,
       body: !(authService.isLoggedIn == LoginStatus.login)
           ? _buildLoginPrompt(themeProvider)
