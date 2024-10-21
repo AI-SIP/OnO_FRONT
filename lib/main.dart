@@ -9,6 +9,7 @@ import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart';
 import 'package:ono/GlobalModule/Theme/StandardText.dart';
 import 'package:ono/GlobalModule/Theme/ThemeHandler.dart';
 import 'package:ono/Provider/FoldersProvider.dart';
+import 'package:ono/Provider/ScreenIndexProvider.dart';
 import 'package:ono/Screen/ProblemRegister/ProblemRegisterScreenV2.dart';
 import 'package:ono/Screen/SplashScreen.dart';
 import 'package:provider/provider.dart';
@@ -50,6 +51,7 @@ void main() async {
         ),
         ChangeNotifierProvider(
             create: (context) => ThemeHandler()..loadColors()),
+        ChangeNotifierProvider(create: (_) => ScreenIndexProvider()),
       ],
       child: const MyApp(),
     ),
@@ -108,7 +110,7 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
-  static int _selectedIndex = 0;
+  //static int _selectedIndex = 0;
   final secureStorage = const FlutterSecureStorage();
   static const List<Widget> _widgetOptions = <Widget>[
     //HomeScreen(),
@@ -139,29 +141,8 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
   }
 
   void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-
-    // 탭된 아이템에 따른 스크린 뷰 기록
-    switch (index) {
-      case 0:
-        _sendScreenView('DirectoryScreen');
-        break;
-      case 1:
-        _sendScreenView('ProblemRegisterScreen');
-        break;
-      case 2:
-        _sendScreenView('SettingScreen');
-        break;
-    }
-  }
-
-  // FirebaseAnalytics에 스크린 뷰를 기록하는 함수
-  Future<void> _sendScreenView(String screenName) async {
-    FirebaseAnalytics.instance.logScreenView(
-      screenName: screenName,
-    );
+    Provider.of<ScreenIndexProvider>(context, listen: false)
+        .setSelectedIndex(index);
   }
 
   @override
@@ -190,19 +171,20 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
 
     foldersProvider.fetchRootFolderContents();
 
-    setState(() {
-      _selectedIndex = 0;
-    });
+    Provider.of<ScreenIndexProvider>(context, listen: false)
+        .setSelectedIndex(0);
   }
 
   @override
   Widget build(BuildContext context) {
+    final screenIndexProvider = Provider.of<ScreenIndexProvider>(context);
+    
     return Scaffold(
-      appBar: (_selectedIndex == 0 || _selectedIndex == 1)
+      appBar: (screenIndexProvider.screenIndex == 0 || screenIndexProvider.screenIndex == 1)
           ? null
           : const AppBarWithLogo(), // 다른 화면에서는 AppBar 표시
       body: IndexedStack(
-        index: _selectedIndex,
+        index: screenIndexProvider.screenIndex,
         children: _widgetOptions,
       ),
       bottomNavigationBar: _buildBottomNavigationBar(context),
@@ -212,12 +194,13 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
   BottomNavigationBar _buildBottomNavigationBar(BuildContext context) {
     final themeProvider = Provider.of<ThemeHandler>(context);
     final standardTextStyle = const StandardText(text: '').getTextStyle();
+    final screenIndexProvider = Provider.of<ScreenIndexProvider>(context);
 
     return BottomNavigationBar(
       backgroundColor: Colors.white,
       type: BottomNavigationBarType.fixed,
       items: _bottomNavigationItems(),
-      currentIndex: _selectedIndex,
+      currentIndex: screenIndexProvider.screenIndex,
       selectedItemColor: themeProvider.primaryColor,
       unselectedItemColor: Colors.grey,
       selectedLabelStyle: standardTextStyle.copyWith(
@@ -234,12 +217,6 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
 
   List<BottomNavigationBarItem> _bottomNavigationItems() {
     return const [
-      /*
-      BottomNavigationBarItem(
-        icon: Icon(Icons.home),
-        label: '메인',
-      ),
-       */
       BottomNavigationBarItem(
         icon: Icon(Icons.menu_book),
         label: '오답 복습',

@@ -17,6 +17,7 @@ import '../../GlobalModule/Theme/ThemeHandler.dart';
 import '../../GlobalModule/Util/FolderSelectionDialog.dart';
 import '../../Model/ProblemRegisterModel.dart';
 import '../../Model/TemplateType.dart';
+import '../../Provider/ScreenIndexProvider.dart';
 import '../../Service/ScreenUtil/DirectoryScreenService.dart';
 import '../../Model/ProblemModel.dart';
 import '../../Model/FolderThumbnailModel.dart';
@@ -118,20 +119,17 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
               child: SvgPicture.asset("assets/Icon/add_note.svg", color: Colors.white,),
             ),
           ),
-          // 새로 추가된 플로팅 버튼 (문제 등록 탭으로 이동)
           Positioned(
-            bottom: 90,  // 기존 버튼 위에 배치
+            bottom: 90,
             right: 10,
             child: FloatingActionButton(
               onPressed: () {
-                // 네비게이션 바의 인덱스 변경 (TemplateSelectionScreen 인덱스로 이동)
-                setState(() {
-                  //_selectedIndex = 1; // 문제 등록 탭의 인덱스 (TemplateSelectionScreen)
-                });
+                Provider.of<ScreenIndexProvider>(context, listen: false)
+                    .setSelectedIndex(1);  // 문제 등록 탭으로 이동
               },
-              backgroundColor: Colors.green, // 색상은 다른 것으로 지정 가능
+              backgroundColor: themeProvider.primaryColor,
               shape: const CircleBorder(),
-              child: const Icon(Icons.edit, color: Colors.white), // 문제 등록 아이콘
+              child: const Icon(Icons.edit, color: Colors.white),
             ),
           ),
         ],
