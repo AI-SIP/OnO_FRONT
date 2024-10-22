@@ -693,24 +693,9 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
           Navigator.push(
             context,
-            PageRouteBuilder(
-              pageBuilder: (context, animation, secondaryAnimation) {
-                return const DirectoryScreen();
-              },
-              transitionsBuilder: (context, animation, secondaryAnimation, child) {
-                const begin = Offset(1.0, 0.0); // 오른쪽에서 시작
-                const end = Offset.zero;         // 끝 위치 (중앙)
-                const curve = Curves.ease;
-
-                var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
-                var offsetAnimation = animation.drive(tween);
-
-                return SlideTransition(
-                  position: offsetAnimation,
-                  child: child,
-                );
-              },
-            ),
+            MaterialPageRoute(builder: (context){
+              return const DirectoryScreen();
+            }),
           );
 
           Provider.of<FoldersProvider>(context, listen: false)
