@@ -828,13 +828,15 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         // 문제 이미지
-        ClipRRect(
-          borderRadius: BorderRadius.circular(8.0),
-          child: Image.network(
-            imageUrl ?? defaultImage, // 이미지가 없을 경우 기본 이미지 사용
-            width: 50,
-            height: 70,
-            fit: BoxFit.cover,
+        SizedBox(
+          width: 50,
+          height: 70,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(8.0),
+            child: DisplayImage(
+              imagePath: imageUrl ?? defaultImage, // 이미지가 없을 경우 기본 이미지 사용
+              fit: BoxFit.cover,
+            ),
           ),
         ),
         const SizedBox(width: 20), // 이미지와 텍스트 간 간격 추가
