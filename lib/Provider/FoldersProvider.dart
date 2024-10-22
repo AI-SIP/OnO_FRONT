@@ -251,14 +251,19 @@ class FoldersProvider with ChangeNotifier {
     }
   }
 
-  Future<String?> fetchProcessImageUrl(String? fullUrl, List<Map<String, int>?>? colorsList) async {
+  Future<String?> fetchProcessImageUrl(String? fullUrl, Map<String, dynamic> colorPickerResult) async {
+
+    log('remove colors: ${colorPickerResult['colors']}');
+    log('remove intensity: ${colorPickerResult['intensity']}');
+
     try {
       final response = await httpService.sendRequest(
         method: 'POST', // 'GET'에서 'POST'로 변경
         url: '${AppConfig.baseUrl}/api/process/processImage',
         body: {
           'fullUrl': fullUrl,
-          'colorsList': colorsList,
+          'colorsList': colorPickerResult['colors'],
+          'intensity' : colorPickerResult['intensity'],
         },
       );
 

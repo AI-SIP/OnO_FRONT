@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
@@ -97,14 +99,28 @@ class TemplateSelectionScreen extends StatelessWidget {
               final imagePickerHandler = ImagePickerHandler();
               imagePickerHandler.showImagePicker(context, (pickedFile) async {
                 if (pickedFile != null) {
-                  List<Map<String, int>?>? selectedColors;
+                  Map<String, dynamic> colorPickerResult = {'colors': [], 'intensity': 1};
+                  /*
+                  List<Map<String, int>?> selectedColors = [];
+                  int intensity = 1;
+
+                   */
 
                   // TemplateType이 clean이나 special인 경우 색상 선택 화면 표시
                   if (templateType == TemplateType.clean ||
                       templateType == TemplateType.special) {
                     final colorPickerHandler = ImageColorPickerHandler();
-                    selectedColors = await colorPickerHandler.showColorPicker(
+                    colorPickerResult = await colorPickerHandler.showColorPicker(
                         context, pickedFile.path);
+
+                    /*
+                    selectedColors = result['colors'];
+                    intensity = result['intensity'];
+
+                    log('selectedColors : ${selectedColors.toString()}');
+                    log('intensity: $intensity');
+                      */
+
                   }
 
                   LoadingDialog.show(context, '템플릿 불러오는 중...');
@@ -132,7 +148,7 @@ class TemplateSelectionScreen extends StatelessWidget {
                       arguments: {
                         'problemModel': problemModel,
                         'isEditMode': false,
-                        'colors': selectedColors,
+                        'colorPickerResult': colorPickerResult,
                       },
                     );
                   } else {

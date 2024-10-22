@@ -20,13 +20,13 @@ import 'ProblemRegisterScreenWidget.dart';
 
 class ProblemRegisterTemplate extends StatefulWidget {
   final ProblemModel problemModel;
-  final List<Map<String, int>?>? colors;
+  final Map<String, dynamic>? colorPickerResult;
   final bool isEditMode;
   final TemplateType templateType;
 
   const ProblemRegisterTemplate({
     required this.problemModel,
-    required this.colors,
+    required this.colorPickerResult,
     required this.isEditMode,
     required this.templateType,
     super.key,
@@ -98,7 +98,7 @@ class _ProblemRegisterTemplateState
 
         // Fetch processImageUrl and analysis based on the template type
         processImageUrl = await provider.fetchProcessImageUrl(
-            problemModel.problemImageUrl, widget.colors);
+            problemModel.problemImageUrl, widget.colorPickerResult!);
 
         if (widget.templateType == TemplateType.special) {
           analysisResult =

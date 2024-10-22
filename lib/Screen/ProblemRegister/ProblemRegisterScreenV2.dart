@@ -10,13 +10,13 @@ import '../../Provider/FoldersProvider.dart';
 class ProblemRegisterScreenV2 extends StatefulWidget {
   final ProblemModel problemModel;
   final bool isEditMode;
-  final List<Map<String, int>?>? colors;
+  final Map<String, dynamic>? colorPickerResult;
 
   const ProblemRegisterScreenV2({
     super.key,
     required this.problemModel,
     required this.isEditMode,
-    required this.colors,
+    required this.colorPickerResult,
   });
 
   @override
@@ -37,7 +37,7 @@ class _ProblemRegisterScreenV2State extends State<ProblemRegisterScreenV2> {
 
     templateWidget = ProblemRegisterTemplate(
         problemModel: widget.problemModel,
-        colors: widget.colors,
+        colorPickerResult: widget.colorPickerResult,
         isEditMode: widget.isEditMode,
         templateType: widget.problemModel.templateType!);
 

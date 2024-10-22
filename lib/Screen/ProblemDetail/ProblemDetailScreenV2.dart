@@ -229,7 +229,7 @@ class _ProblemDetailScreenV2State extends State<ProblemDetailScreenV2> {
                           builder: (context) => ProblemRegisterScreenV2(
                             problemModel: problemModel,
                             isEditMode: true,
-                            colors: null,
+                            colorPickerResult: null,
                           ),
                         ),
                       ).then((_) {
