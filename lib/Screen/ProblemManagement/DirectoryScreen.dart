@@ -562,6 +562,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         TextEditingController(text: defaultFolderName);
     final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
     final standardTextStyle = const StandardText(text: '').getTextStyle();
+    double screenHeight = MediaQuery.of(context).size.height;
+    double screenWidth = MediaQuery.of(context).size.width;
 
     await showDialog(
       context: context,
@@ -573,7 +575,10 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
             fontSize: 18,
             color: Colors.black,
           ),
-          content: SizedBox(
+          content: Padding(
+            padding: EdgeInsets.symmetric(
+              horizontal: screenWidth * 0.001, // 좌우 여백 추가
+            ),
             child: TextField(
               controller: folderNameController,
               style: standardTextStyle.copyWith(
@@ -597,8 +602,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                   borderSide:
                       BorderSide(color: Colors.black, width: 1.5),
                 ),
-                contentPadding: const EdgeInsets.symmetric(
-                    vertical: 20.0, horizontal: 12.0),
+                contentPadding: EdgeInsets.symmetric(vertical: screenHeight * 0.02, horizontal: screenWidth * 0.03),
               ),
             ),
           ),
