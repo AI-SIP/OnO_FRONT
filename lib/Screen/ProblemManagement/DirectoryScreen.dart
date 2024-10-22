@@ -51,6 +51,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       final userProvider = Provider.of<UserProvider>(context, listen: false);
       if (userProvider.isFirstLogin && !modalShown) {
         modalShown = true;
+        userProvider.isFirstLogin = false;
         _showUserGuideModal();
       }
     });
@@ -136,6 +137,11 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
             child: FloatingActionButton(
               heroTag: 'create_problem',
               onPressed: () {
+                while(Navigator.canPop(context)){
+                  Navigator.pop(context);
+                }
+                const Duration(seconds: 1);
+                foldersProvider.fetchRootFolderContents();
                 Provider.of<ScreenIndexProvider>(context, listen: false)
                     .setSelectedIndex(1);  // 문제 등록 탭으로 이동
               },
@@ -685,15 +691,24 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
             'folder_id': folder.folderId,
           });
 
-          Provider.of<FoldersProvider>(context, listen: false)
-              .clearFolderContents();
-
           Navigator.push(
             context,
-            MaterialPageRoute(
-              builder: (context) {
-                // 새로운 DirectoryScreen을 생성할 때 해당 folderId를 전달
+            PageRouteBuilder(
+              pageBuilder: (context, animation, secondaryAnimation) {
                 return const DirectoryScreen();
+              },
+              transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                const begin = Offset(1.0, 0.0); // 오른쪽에서 시작
+                const end = Offset.zero;         // 끝 위치 (중앙)
+                const curve = Curves.ease;
+
+                var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+                var offsetAnimation = animation.drive(tween);
+
+                return SlideTransition(
+                  position: offsetAnimation,
+                  child: child,
+                );
               },
             ),
           );
