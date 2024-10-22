@@ -210,7 +210,7 @@ class FoldersProvider with ChangeNotifier {
         log('Folder successfully deleted');
         final jsonResponse = json.decode(utf8.decode(response.bodyBytes));
         int parentFolderId = jsonResponse['folderId'] as int;
-        await fetchFolderContents(folderId: parentFolderId);
+        await fetchCurrentFolderContents();
       } else {
         throw Exception('Failed to delete folder');
       }
