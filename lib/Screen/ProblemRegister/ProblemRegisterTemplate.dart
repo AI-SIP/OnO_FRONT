@@ -469,7 +469,7 @@ class _ProblemRegisterTemplateState
           width: double.infinity,
           padding: const EdgeInsets.all(10.0),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: themeProvider.primaryColor.withOpacity(0.1),
             borderRadius: BorderRadius.circular(10),
             border: Border.all(
               color: themeProvider.primaryColor,
