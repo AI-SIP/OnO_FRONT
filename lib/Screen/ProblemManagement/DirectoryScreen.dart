@@ -80,7 +80,18 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     final themeProvider = Provider.of<ThemeHandler>(context);
     final foldersProvider = Provider.of<FoldersProvider>(context);
 
-    return Scaffold(
+    return PopScope(
+        canPop: true,
+        onPopInvokedWithResult: (bool didPop, Object? result) async {
+          if(didPop){
+            if (foldersProvider.currentFolder?.parentFolder != null) {
+              foldersProvider.moveToParentFolder(
+                  foldersProvider.currentFolder!.parentFolder!.folderId);
+            }
+            return;
+          }
+        },
+      child: Scaffold(
       backgroundColor: Colors.white,
       appBar: _buildAppBar(themeProvider, foldersProvider), // 상단 AppBar 추가
       body: !(authService.isLoggedIn == LoginStatus.login)
@@ -150,7 +161,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       ),
       floatingActionButtonLocation:
           FloatingActionButtonLocation.endFloat, // 오른쪽 하단 기본 위치
-    );
+    ));
   }
 
   AppBar _buildAppBar(
@@ -167,18 +178,6 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         fontSize: 20,
         color: themeProvider.primaryColor,
       ),
-      leading: foldersProvider.currentFolder?.parentFolder != null
-          ? IconButton(
-              icon: Icon(
-                Icons.arrow_back,
-                color: themeProvider.primaryColor,
-              ),
-              onPressed: () {
-                foldersProvider.moveToParentFolder(
-                    foldersProvider.currentFolder!.parentFolder?.folderId);
-              },
-            )
-          : null, // 루트 폴더일 경우 leading 버튼 없음
       actions: [
         Padding(
           padding: const EdgeInsets.only(right: 16.0), // 우측에 여백 추가
@@ -685,6 +684,19 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
           FirebaseAnalytics.instance.logEvent(name: 'move_to_folder', parameters: {
             'folder_id': folder.folderId,
           });
+
+          Provider.of<FoldersProvider>(context, listen: false)
+              .clearFolderContents();
+
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) {
+                // 새로운 DirectoryScreen을 생성할 때 해당 folderId를 전달
+                return const DirectoryScreen();
+              },
+            ),
+          );
 
           Provider.of<FoldersProvider>(context, listen: false)
               .fetchFolderContents(folderId: folder.folderId);

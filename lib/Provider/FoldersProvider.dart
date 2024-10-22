@@ -60,6 +60,13 @@ class FoldersProvider with ChangeNotifier {
     }
   }
 
+  Future<void> clearFolderContents() async{
+    _currentFolder = null;
+    _problems = [];
+
+    notifyListeners();
+  }
+
   Future<void> fetchCurrentFolderContents() async {
     try {
       final response = await httpService.sendRequest(
