@@ -38,7 +38,7 @@ class TemplateSelectionScreen extends StatelessWidget {
       ),
       body: Column(
         children: [
-          SizedBox(height: screenHeight * 0.02,),
+          SizedBox(height: screenHeight * 0.015),
           Expanded(
             child: ListView(
               padding: const EdgeInsets.symmetric(horizontal: 30.0),
@@ -78,12 +78,15 @@ class TemplateSelectionScreen extends StatelessWidget {
           ),
           subtitle: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: templateType.description.map((desc) {
+            children: [
+              SizedBox(height: screenHeight * 0.005),
+              ...templateType.description.map((desc) {
               return Padding(
                 padding: const EdgeInsets.only(top: 4.0),
                 child: _getHighlightedDescription(desc, themeProvider),
               );
             }).toList(),
+            ],
           ),
           onTap: () {
             final authService =
@@ -154,8 +157,8 @@ class TemplateSelectionScreen extends StatelessWidget {
           },
         ),
         Positioned(
-          right: 10,
-          top: 10,
+          right: 15,
+          top: 15,
           child: Container(
             width: 50, // 고정된 너비
             height: 50, // 고정된 높이
