@@ -188,46 +188,52 @@ class _ColorPickerScreenState extends State<ColorPickerScreen> {
                 ),
               ),
               SizedBox(height: screenHeight * 0.03),
-              ElevatedButton(
-                onPressed: () {
-                  // selectedColors 리스트를 RGB 값이 포함된 Map 형태로 변환
-                  List<Map<String, int>?> colorMaps =
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.3),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      // selectedColors 리스트를 RGB 값이 포함된 Map 형태로 변환
+                      List<Map<String, int>?> colorMaps =
                       selectedColors.map((color) {
-                    if (color == null) return null;
-                    return {
-                      'red': color.red,
-                      'green': color.green,
-                      'blue': color.blue,
-                    };
-                  }).toList();
+                        if (color == null) return null;
+                        return {
+                          'red': color.red,
+                          'green': color.green,
+                          'blue': color.blue,
+                        };
+                      }).toList();
 
-                  // 선택한 색상 개수 GA 로그로 수집
-                  int selectedColorCount =
-                      colorMaps.where((color) => color != null).length;
+                      // 선택한 색상 개수 GA 로그로 수집
+                      int selectedColorCount =
+                          colorMaps.where((color) => color != null).length;
 
-                  FirebaseAnalytics.instance.logEvent(
-                    name: 'color_picker_counts_$selectedColorCount',
-                    parameters: {
-                      'selected_color_count': selectedColorCount,
+                      FirebaseAnalytics.instance.logEvent(
+                        name: 'color_picker_counts_$selectedColorCount',
+                        parameters: {
+                          'selected_color_count': selectedColorCount,
+                        },
+                      );
+
+                      Navigator.of(context).pop({
+                        'colors': colorMaps,
+                        'intensity': intensity,
+                      }); // 변환된 리스트 반환
                     },
-                  );
-
-                  Navigator.of(context).pop({
-                    'colors': colorMaps,
-                    'intensity': intensity,
-                  }); // 변환된 리스트 반환
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: themeProvider.primaryColor, // 버튼 배경색 변경
-                  //elevation: 5, // 그림자 깊이 설정 (옵션)
-                ),
-                child: const StandardText(
-                  text: '완료',
-                  fontSize: 14,
-                  color: Colors.white,
-                ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: themeProvider.primaryColor, // 버튼 배경색 변경
+                      padding: EdgeInsets.symmetric(vertical: screenHeight * 0.01),
+                    ),
+                    child: const StandardText(
+                      text: '다음',
+                      fontSize: 14,
+                      color: Colors.white,
+                    ),
+                  ),
+                )
               ),
-              SizedBox(height: screenHeight * 0.03),
+              SizedBox(height: screenHeight * 0.04),
             ],
           ),
         ));
