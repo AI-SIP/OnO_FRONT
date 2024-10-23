@@ -102,7 +102,7 @@ class TemplateSelectionScreen extends StatelessWidget {
               final imagePickerHandler = ImagePickerHandler();
               imagePickerHandler.showImagePicker(context, (pickedFile) async {
                 if (pickedFile != null) {
-                  Map<String, dynamic> colorPickerResult = {'colors': [], 'intensity': 1};
+                  Map<String, dynamic>? colorPickerResult;
 
                   // TemplateType이 clean이나 special인 경우 색상 선택 화면 표시
                   if (templateType == TemplateType.clean ||
@@ -112,39 +112,41 @@ class TemplateSelectionScreen extends StatelessWidget {
                         context, pickedFile.path);
                   }
 
-                  LoadingDialog.show(context, '템플릿 불러오는 중...');
+                  if(colorPickerResult != null){
+                    LoadingDialog.show(context, '템플릿 불러오는 중...');
 
-                  final result = await Provider.of<FoldersProvider>(context,
-                      listen: false)
-                      .uploadProblemImage(pickedFile);
+                    final result = await Provider.of<FoldersProvider>(context,
+                        listen: false)
+                        .uploadProblemImage(pickedFile);
 
-                  // `result`에 받은 값을 사용하여 화면 이동
-                  if (result != null) {
-                    final problemId = result['problemId'];
-                    final problemImageUrl = result['problemImageUrl'];
+                    // `result`에 받은 값을 사용하여 화면 이동
+                    if (result != null) {
+                      final problemId = result['problemId'];
+                      final problemImageUrl = result['problemImageUrl'];
 
-                    final problemModel = ProblemModel(
-                      problemId: problemId,
-                      problemImageUrl: problemImageUrl,
-                      templateType: templateType,
-                    );
+                      final problemModel = ProblemModel(
+                        problemId: problemId,
+                        problemImageUrl: problemImageUrl,
+                        templateType: templateType,
+                      );
 
-                    LoadingDialog.hide(context);
+                      LoadingDialog.hide(context);
 
-                    Navigator.pushNamed(
-                      context,
-                      '/problemRegister',
-                      arguments: {
-                        'problemModel': problemModel,
-                        'isEditMode': false,
-                        'colorPickerResult': colorPickerResult,
-                      },
-                    );
-                  } else {
-                    SnackBarDialog.showSnackBar(
-                        context: context,
-                        message: "문제 이미지 업로드에 실패했습니다. 다시 시도해주세요.",
-                        backgroundColor: Colors.red);
+                      Navigator.pushNamed(
+                        context,
+                        '/problemRegister',
+                        arguments: {
+                          'problemModel': problemModel,
+                          'isEditMode': false,
+                          'colorPickerResult': colorPickerResult,
+                        },
+                      );
+                    } else {
+                      SnackBarDialog.showSnackBar(
+                          context: context,
+                          message: "문제 이미지 업로드에 실패했습니다. 다시 시도해주세요.",
+                          backgroundColor: Colors.red);
+                    }
                   }
                 }
               });
