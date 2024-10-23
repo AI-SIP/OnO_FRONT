@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../../Theme/StandardText.dart';
@@ -38,6 +39,28 @@ class _ColorPickerScreenState extends State<ColorPickerScreen> {
       GlobalKey(); // ColorPickerState에 접근하기 위한 Key
 
   @override
+  void initState() {
+    super.initState();
+    // 화면을 세로로 고정
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+    ]);
+  }
+
+  @override
+  void dispose() {
+
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+      DeviceOrientation.landscapeLeft,
+      DeviceOrientation.landscapeRight,
+    ]);
+
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeHandler>(context);
     double screenHeight = MediaQuery.of(context).size.height;
@@ -59,21 +82,36 @@ class _ColorPickerScreenState extends State<ColorPickerScreen> {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 StandardText(
-                  text: '하단의 + 버튼을 누른 뒤, 펜을 움직여',
+                  text: '필기 지우기',
+                  fontSize: 20,
+                  color: themeProvider.primaryColor,
+                ),
+              ],
+              /*
+              children: [
+                StandardText(
+                  text: '하단의 + 버튼을 누른 뒤, 지우개를 움직여',
                   fontSize: 16,
                   color: themeProvider.primaryColor,
                 ),
                 StandardText(
-                  text: '지우고 싶은 색상을 선택하세요',
+                  text: '지우고 싶은 색상들을 선택하세요',
                   fontSize: 16,
                   color: themeProvider.primaryColor,
                 ),
               ],
+
+               */
             ),
           ),
           body: Column(
             children: [
-              SizedBox(height: screenHeight * 0.02), // 상단에 여백 추가
+              StandardText(
+                text: '지우개를 움직여 지우고 싶은 색상들을 선택하세요',
+                fontSize: 14,
+                color: Colors.black, // 원하는 텍스트 색상
+              ),
+              SizedBox(height: screenHeight * 0.01),
               Expanded(
                 child: ColorPicker(
                   key: colorPickerKey, // ColorPicker에 Key 할당
@@ -161,9 +199,9 @@ class _ColorPickerScreenState extends State<ColorPickerScreen> {
                   ],
                 ),
               ),
-              SizedBox(height: screenHeight * 0.02),
+              SizedBox(height: screenHeight * 0.04),
               Padding(
-                padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.1),
+                padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.2),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: List.generate(3, (index) {
@@ -175,21 +213,28 @@ class _ColorPickerScreenState extends State<ColorPickerScreen> {
                         // 펜을 중앙에 표시하고 해당 위치의 색상을 추출
                         colorPickerKey.currentState?.showPen();
                       },
-                      child: CircleAvatar(
-                        radius: screenHeight * 0.025,
-                        backgroundColor: selectedColors[index] ??
-                            themeProvider.desaturateColor,
+                      child: Container(
+                        width: screenWidth * 0.15, // 타원의 너비를 설정
+                        height: screenHeight * 0.04, // 타원의 높이를 설정
+                        decoration: BoxDecoration(
+                          color: selectedColors[index] ?? Colors.white,
+                          borderRadius: BorderRadius.circular(30), // 타원형 모양을 위한 큰 값
+                          border: Border.all(
+                            color: themeProvider.primaryColor,
+                            width: 2.0,
+                          ),
+                        ),
                         child: selectedColors[index] == null
-                            ? const Icon(Icons.add, color: Colors.white)
+                            ? Icon(Icons.touch_app, color: themeProvider.primaryColor, size: screenHeight * 0.02,)
                             : null,
                       ),
                     );
                   }),
                 ),
               ),
-              SizedBox(height: screenHeight * 0.03),
+              SizedBox(height: screenHeight * 0.04),
               Padding(
-                padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.3),
+                padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.2),
                 child: SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
@@ -233,7 +278,7 @@ class _ColorPickerScreenState extends State<ColorPickerScreen> {
                   ),
                 )
               ),
-              SizedBox(height: screenHeight * 0.04),
+              SizedBox(height: screenHeight * 0.03),
             ],
           ),
         ));
