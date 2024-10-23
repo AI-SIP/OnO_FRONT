@@ -1,6 +1,7 @@
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:provider/provider.dart';
 
 import '../../Theme/ThemeHandler.dart';
@@ -33,8 +34,8 @@ class ColorPickerState extends State<ColorPicker> {
 
   final GlobalKey _repaintBoundaryKey = GlobalKey();
 
-  final double penTipOffsetX = 15; // 펜 촉의 x 오프셋
-  final double penTipOffsetY = 104; // 펜 촉의 y 오프셋
+  final double penTipOffsetX = 8; // 펜 촉의 x 오프셋
+  final double penTipOffsetY = 111; // 펜 촉의 y 오프셋
 
   void _centerPen() {
     // RenderBox가 아직 렌더링되지 않았을 수 있기 때문에 WidgetsBinding 사용
@@ -105,7 +106,11 @@ class ColorPickerState extends State<ColorPicker> {
                 });
                 _onInteract(penPosition + Offset(penTipOffsetX, penTipOffsetY));
               },
-              child: const Icon(Icons.edit, size: 120, color: Colors.red),
+              child: SvgPicture.asset(
+                "assets/Icon/EraserWithCircle.svg",
+                width: 120,
+                height: 120,
+              ),
             ),
           ),
         if (widget.showMarker ?? false) ...[

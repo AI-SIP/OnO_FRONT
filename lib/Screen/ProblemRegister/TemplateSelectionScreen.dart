@@ -22,6 +22,8 @@ class TemplateSelectionScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeHandler>(context);
+    double screenHeight = MediaQuery.of(context).size.height;
+    double screenWidth = MediaQuery.of(context).size.width;
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -36,6 +38,7 @@ class TemplateSelectionScreen extends StatelessWidget {
       ),
       body: Column(
         children: [
+          SizedBox(height: screenHeight * 0.02,),
           Expanded(
             child: ListView(
               padding: const EdgeInsets.symmetric(horizontal: 30.0),
@@ -100,11 +103,6 @@ class TemplateSelectionScreen extends StatelessWidget {
               imagePickerHandler.showImagePicker(context, (pickedFile) async {
                 if (pickedFile != null) {
                   Map<String, dynamic> colorPickerResult = {'colors': [], 'intensity': 1};
-                  /*
-                  List<Map<String, int>?> selectedColors = [];
-                  int intensity = 1;
-
-                   */
 
                   // TemplateType이 clean이나 special인 경우 색상 선택 화면 표시
                   if (templateType == TemplateType.clean ||
@@ -112,15 +110,6 @@ class TemplateSelectionScreen extends StatelessWidget {
                     final colorPickerHandler = ImageColorPickerHandler();
                     colorPickerResult = await colorPickerHandler.showColorPicker(
                         context, pickedFile.path);
-
-                    /*
-                    selectedColors = result['colors'];
-                    intensity = result['intensity'];
-
-                    log('selectedColors : ${selectedColors.toString()}');
-                    log('intensity: $intensity');
-                      */
-
                   }
 
                   LoadingDialog.show(context, '템플릿 불러오는 중...');
