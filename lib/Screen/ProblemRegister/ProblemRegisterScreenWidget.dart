@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
@@ -98,11 +99,21 @@ class ProblemRegisterScreenWidget {
               borderRadius: BorderRadius.circular(10.0),
             ),
           ),
-          child: StandardText(
-            text: folderName ?? '공책 선택',
-            fontSize: 14,
-            color: themeProvider.primaryColor,
-          ),
+          child: Row(
+            children: [
+              SvgPicture.asset(
+                'assets/Icon/GreenNote.svg',
+                width: 20,
+                height: 20,
+              ),
+              const SizedBox(width: 15,),
+              StandardText(
+                text: folderName ?? '공책 선택',
+                fontSize: 14,
+                color: themeProvider.primaryColor,
+              ),
+              ],
+            )
         ),
       ],
     );
@@ -176,34 +187,21 @@ class ProblemRegisterScreenWidget {
   }
 
   static Widget buildActionButtons({
+    required BuildContext context,
     required ThemeHandler themeProvider,
     required VoidCallback onSubmit,
     required VoidCallback onCancel,
     required bool isEditMode,
   }) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: <Widget>[
-        TextButton(
-          onPressed: onCancel,
-          style: ElevatedButton.styleFrom(
-            padding: const EdgeInsets.symmetric(horizontal: 25.0, vertical: 8.0),
-            backgroundColor: themeProvider.primaryColor.withOpacity(0.3),
-            foregroundColor: themeProvider.primaryColor,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(15.0), // Adjust corner radius
-            ),
-          ),
-          child: StandardText(
-            text: isEditMode ? '수정 취소' : '작성 취소',
-            fontSize: 14,
-            color: Colors.white,
-          ),
-        ),
-        TextButton(
+    double screenHeight = MediaQuery.of(context).size.height;
+    double screenWidth = MediaQuery.of(context).size.width;
+
+    return SizedBox(
+        width: double.infinity,
+        child: ElevatedButton(
           onPressed: onSubmit,
           style: ElevatedButton.styleFrom(
-            padding: const EdgeInsets.symmetric(horizontal: 25.0, vertical: 8.0),
+            padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.02, vertical: screenHeight * 0.01),
             backgroundColor: themeProvider.primaryColor,
             foregroundColor: Colors.white,
             shape: RoundedRectangleBorder(
@@ -211,12 +209,11 @@ class ProblemRegisterScreenWidget {
             ),
           ),
           child: StandardText(
-            text: isEditMode ? '수정 완료' : '작성 완료',
-            fontSize: 14,
+            text: isEditMode ? '수정 완료' : '문제 등록',
+            fontSize: 16,
             color: Colors.white,
           ),
         ),
-      ],
     );
   }
 
