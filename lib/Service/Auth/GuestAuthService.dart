@@ -25,6 +25,9 @@ class GuestAuthService{
 
       if (response.statusCode == 200) {
         log('Guest sign-in Success!');
+
+        FirebaseAnalytics.instance
+            .logEvent(name: 'user_register_with_guest');
         FirebaseAnalytics.instance.logSignUp(signUpMethod: 'Guest');
         //SnackBarDialog.showSnackBar(context: context, message: "로그인에 성공했습니다.", backgroundColor: Colors.green);
 

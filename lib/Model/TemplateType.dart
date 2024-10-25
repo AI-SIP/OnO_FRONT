@@ -21,9 +21,9 @@ extension TemplateTypeExtension on TemplateType {
       case TemplateType.simple:
         return ['필기 제거 X, 오답 분석 X', '-> 암기에 필요한 최소한의 요소만 빠르게 등록하는 기본 템플릿입니다.'];
       case TemplateType.clean:
-        return ['필기 제거 O, 오답 분석 X', '-> 복습에 방해되는 필기를 제거하여 깔끔한 복습을 도와줍니다.'];
+        return ['필기 제거 O, 오답 분석 X', '-> 복습에 방해되는 필기를 제거해 깔끔한 복습을 도와줍니다.'];
       case TemplateType.special:
-        return ['필기 제거 O, 오답 분석 O', '-> 복습에 방해되는 필기를 제거하여 깔끔한 복습을 도와줍니다. \n교과과정 기반 문제 분석으로 나의 취약 개념 파악을 도와줍니다.'];
+        return ['필기 제거 O, 오답 분석 O', '-> 복습에 방해되는 필기를 제거해 깔끔한 복습을 도와줍니다. \n교과과정 기반 문제 분석으로 나의 취약 개념 파악을 도와줍니다.'];
     }
   }
 

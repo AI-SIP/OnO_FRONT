@@ -116,13 +116,12 @@ class UserProvider with ChangeNotifier {
           ));
         });
 
+        FirebaseAnalytics.instance
+            .logEvent(name: 'fetch_user_info');
+
         _problemCount = await getUserProblemCount();
         if (_loginStatus == LoginStatus.login) {
           await foldersProvider.fetchRootFolderContents();
-
-          if(isFirstLogin){
-            log('this user is first login!');
-          }
         }
       } else {
         _loginStatus = LoginStatus.logout;

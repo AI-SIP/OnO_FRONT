@@ -176,6 +176,10 @@ class _NavigationButtonsState extends State<NavigationButtons> {
   }
 
   void showReviewDialog(BuildContext context) {
+
+    FirebaseAnalytics.instance
+        .logEvent(name: 'problem_repeat_button_click');
+
     final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
     bool isLoading = false; // 로딩 상태 변수 외부로 이동
 
@@ -201,7 +205,7 @@ class _NavigationButtonsState extends State<NavigationButtons> {
                 child: GestureDetector(
                   onTap: () {
                     FirebaseAnalytics.instance.logEvent(
-                      name: 'add_solve_image',
+                      name: 'add_solve_image_button_click',
                     );
 
                     _imagePickerHandler.showImagePicker(context, (pickedFile) async {
@@ -269,7 +273,7 @@ class _NavigationButtonsState extends State<NavigationButtons> {
                     await widget.foldersProvider.addRepeatCount(widget.currentId, selectedImage);
 
                     FirebaseAnalytics.instance.logEvent(
-                      name: 'problem_repeat_complete',
+                      name: 'problem_repeat',
                     );
 
                     setState(() {

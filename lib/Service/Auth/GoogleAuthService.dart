@@ -36,6 +36,8 @@ class GoogleAuthService {
         if (response.statusCode == 200) {
           log('Google sign-in Success!');
           FirebaseAnalytics.instance.logSignUp(signUpMethod: 'Google');
+          FirebaseAnalytics.instance
+              .logEvent(name: 'user_register_with_google');
           //SnackBarDialog.showSnackBar(context: context, message: "로그인에 성공했습니다.", backgroundColor: Colors.green);
 
           return jsonDecode(response.body);

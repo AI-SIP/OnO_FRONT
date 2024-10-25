@@ -41,7 +41,9 @@ class ProblemDetailScreenWidget {
             buildSolvedDate(problemModel.solvedAt, themeProvider),
             SizedBox(height: screenHeight * 0.03),
             buildProblemReference(problemModel.reference, themeProvider),
-            SizedBox(height: screenHeight * 0.03,),
+            SizedBox(
+              height: screenHeight * 0.03,
+            ),
             buildImageSection(
                 context,
                 imageUrl,
@@ -242,7 +244,6 @@ class ProblemDetailScreenWidget {
 
   //
   static Widget buildCenteredTitle(String text, Color color) {
-
     return Container(
       width: double.infinity,
       alignment: Alignment.center,
@@ -403,7 +404,10 @@ class ProblemDetailScreenWidget {
         // 복습 날짜와 이미지 리스트
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: problemModel.repeats?.map((repeat) {
+          children: problemModel.repeats?.asMap().entries.map((entry) {
+                int index = entry.key;
+                var repeat = entry.value;
+
                 return Padding(
                   padding: const EdgeInsets.symmetric(vertical: 8.0),
                   child: Column(
@@ -412,7 +416,7 @@ class ProblemDetailScreenWidget {
                       // 복습 날짜
                       UnderlinedText(
                         text:
-                            '복습 날짜 : ${DateFormat('yyyy년 MM월 dd일').format(repeat.createdAt)}',
+                            '${index + 1}. 복습 날짜 : ${DateFormat('yyyy년 MM월 dd일').format(repeat.createdAt)}',
                         fontSize: 18,
                         color: Colors.black,
                       ),
@@ -421,18 +425,29 @@ class ProblemDetailScreenWidget {
 
                       // 복습 이미지
                       if (repeat.solveImageUrl != null)
-                        Container(
-                          width: mediaQuery.size.width,
-                          height: mediaQuery.size.height * 0.5,
-                          decoration: BoxDecoration(
-                            color: themeProvider.primaryColor.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: AspectRatio(
-                            aspectRatio: 0.5,
+                        GestureDetector(
+                          onTap: () {
+                            FirebaseAnalytics.instance.logEvent(
+                                name: 'image_full_screen_solve_image');
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => FullScreenImage(
+                                    imagePath: repeat.solveImageUrl),
+                              ),
+                            );
+                          },
+                          child: Container(
+                            height: mediaQuery.size.height * 0.5, // 고정된 높이로 변경
+                            decoration: BoxDecoration(
+                              color:
+                                  themeProvider.primaryColor.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
                             child: DisplayImage(
-                                imagePath: repeat.solveImageUrl,
-                                fit: BoxFit.contain),
+                              imagePath: repeat.solveImageUrl,
+                              fit: BoxFit.contain,
+                            ),
                           ),
                         ),
                       const SizedBox(height: 10.0),

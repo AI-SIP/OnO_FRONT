@@ -58,6 +58,10 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   }
 
   void _showUserGuideModal() async {
+
+    FirebaseAnalytics.instance
+        .logEvent(name: 'show_user_guide_modal');
+
     await showModalBottomSheet(
       context: context,
       isScrollControlled: true, // 스크롤 가능 모달 설정
@@ -144,6 +148,9 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                 foldersProvider.fetchRootFolderContents();
                 Provider.of<ScreenIndexProvider>(context, listen: false)
                     .setSelectedIndex(1);  // 문제 등록 탭으로 이동
+
+                FirebaseAnalytics.instance
+                    .logEvent(name: 'move_to_template_page_button_click');
               },
               backgroundColor: themeProvider.primaryColor,
               shape: const CircleBorder(),
@@ -216,6 +223,10 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   }
 
   void _showActionDialog(FoldersProvider foldersProvider, ThemeHandler themeProvider) {
+
+    FirebaseAnalytics.instance
+        .logEvent(name: 'directory_Screen_action_dialog_click');
+
     showModalBottomSheet(
       backgroundColor: Colors.white,
       context: context,
@@ -244,6 +255,10 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                     ),
                     onTap: () {
                       Navigator.pop(context);
+
+                      FirebaseAnalytics.instance
+                          .logEvent(name: 'directory_rename_button_click');
+
                       _showRenameFolderDialog(foldersProvider);
                     },
                   ),
@@ -258,6 +273,10 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                     ),
                     onTap: () {
                       Navigator.pop(context);
+
+                      FirebaseAnalytics.instance
+                          .logEvent(name: 'directory_path_change_button_click');
+
                       _showMoveFolderDialog(foldersProvider);
                     },
                   ),
@@ -272,6 +291,10 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                     ),
                     onTap: () {
                       Navigator.pop(context);
+
+                      FirebaseAnalytics.instance
+                          .logEvent(name: 'directory_remove_button_click');
+
                       _showDeleteFolderDialog(foldersProvider);
                     },
                   ),
