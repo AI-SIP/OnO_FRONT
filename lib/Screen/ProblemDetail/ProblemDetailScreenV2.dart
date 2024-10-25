@@ -169,7 +169,7 @@ class _ProblemDetailScreenV2State extends State<ProblemDetailScreenV2> {
                 Padding(
                   padding: const EdgeInsets.only(bottom: 20.0), // 타이틀 아래 여백 추가
                   child: StandardText(
-                    text: '편집하기', // 타이틀 텍스트
+                    text: '오답노트 편집하기', // 타이틀 텍스트
                     fontSize: 20,
                     color: themeProvider.primaryColor,
                   ),
@@ -177,6 +177,7 @@ class _ProblemDetailScreenV2State extends State<ProblemDetailScreenV2> {
                 Padding(
                   padding: const EdgeInsets.only(bottom: 10.0), // 텍스트 간격 조정
                   child: ListTile(
+                    leading: const Icon(Icons.share, color: Colors.black),
                     title: const StandardText(
                       text: '오답노트 문제 공유하기',
                       fontSize: 16,
@@ -198,6 +199,7 @@ class _ProblemDetailScreenV2State extends State<ProblemDetailScreenV2> {
                 Padding(
                   padding: const EdgeInsets.only(bottom: 10.0), // 텍스트 간격 조정
                   child: ListTile(
+                    leading: const Icon(Icons.share, color: Colors.black),
                     title: const StandardText(
                       text: '오답노트 풀이 공유하기',
                       fontSize: 16,
@@ -219,6 +221,7 @@ class _ProblemDetailScreenV2State extends State<ProblemDetailScreenV2> {
                 Padding(
                   padding: const EdgeInsets.only(bottom: 10.0), // 텍스트 간격 조정
                   child: ListTile(
+                    leading: const Icon(Icons.edit, color: Colors.black),
                     title: const StandardText(
                       text: '오답노트 수정하기',
                       fontSize: 16,
@@ -246,6 +249,7 @@ class _ProblemDetailScreenV2State extends State<ProblemDetailScreenV2> {
                 Padding(
                   padding: const EdgeInsets.only(bottom: 10.0), // 텍스트 간격 조정
                   child: ListTile(
+                    leading: const Icon(Icons.folder_open, color: Colors.black),
                     title: const StandardText(
                       text: '오답노트 위치 변경하기',
                       fontSize: 16,
@@ -277,6 +281,7 @@ class _ProblemDetailScreenV2State extends State<ProblemDetailScreenV2> {
                 Padding(
                   padding: const EdgeInsets.only(bottom: 10.0), // 텍스트 간격 조정
                   child: ListTile(
+                    leading: const Icon(Icons.delete_forever, color: Colors.red),
                     title: const StandardText(
                       text: '오답노트 삭제하기',
                       fontSize: 16,
