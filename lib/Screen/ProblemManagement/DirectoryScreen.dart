@@ -923,26 +923,11 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
   // 템플릿 타입에 따른 아이콘 설정 (SVG 파일로 교체)
   Widget _getTemplateIcon(TemplateType templateType) {
-    switch (templateType) {
-      case TemplateType.simple:
-        return SvgPicture.asset(
-          'assets/Icon/Pencil.svg',
-          width: 20, // 적당한 크기로 설정
-          height: 20,
-        );
-      case TemplateType.clean:
-        return SvgPicture.asset(
-          'assets/Icon/Eraser.svg',
-          width: 20,
-          height: 20,
-        );
-      case TemplateType.special:
-        return SvgPicture.asset(
-          'assets/Icon/Glass.svg',
-          width: 20,
-          height: 20,
-        );
-    }
+    return SvgPicture.asset(
+      templateType.templateThumbnailImage,
+      width:20,
+      height:20,
+    );
   }
 
   Future<void> _moveFolderToNewParent(
