@@ -123,51 +123,73 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
           Positioned(
             bottom: 20,
             right: 10,
-            child: FloatingActionButton(
-              heroTag: 'create_folder',
-              onPressed: () {
-                FirebaseAnalytics.instance
-                    .logEvent(name: 'folder_create_button_click');
-                _showCreateFolderDialog(); // 기존에 상단에서 호출하던 폴더 생성 로직
-              },
-              backgroundColor: themeProvider.primaryColor,
-              shape: const CircleBorder(), // 동그란 모양 유지
-              child: SvgPicture.asset("assets/Icon/GreenNote.svg"),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+                border: Border.all(color: themeProvider.primaryColor, width: 2),
+              ),
+              child: FloatingActionButton(
+                heroTag: 'create_folder',
+                onPressed: () {
+                  FirebaseAnalytics.instance
+                      .logEvent(name: 'folder_create_button_click');
+                  _showCreateFolderDialog(); // 기존에 상단에서 호출하던 폴더 생성 로직
+                },
+                backgroundColor: Colors.transparent,
+                elevation: 0, // 그림자 제거
+                child: SvgPicture.asset("assets/Icon/GreenNote.svg",),
+              ),
             ),
           ),
           Positioned(
             bottom: 90,
             right: 10,
-            child: FloatingActionButton(
-              heroTag: 'create_problem',
-              onPressed: () {
-                while(Navigator.canPop(context)){
-                  Navigator.pop(context);
-                }
-                const Duration(seconds: 1);
-                foldersProvider.fetchRootFolderContents();
-                Provider.of<ScreenIndexProvider>(context, listen: false)
-                    .setSelectedIndex(1);  // 문제 등록 탭으로 이동
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+                border: Border.all(color: themeProvider.primaryColor, width: 2),
+              ),
+              child: FloatingActionButton(
+                heroTag: 'create_problem',
+                onPressed: () {
+                  while(Navigator.canPop(context)){
+                    Navigator.pop(context);
+                  }
+                  const Duration(seconds: 1);
+                  foldersProvider.fetchRootFolderContents();
+                  Provider.of<ScreenIndexProvider>(context, listen: false)
+                      .setSelectedIndex(1);  // 문제 등록 탭으로 이동
 
-                FirebaseAnalytics.instance
-                    .logEvent(name: 'move_to_template_page_button_click');
-              },
-              backgroundColor: themeProvider.primaryColor,
-              shape: const CircleBorder(),
-              child: SvgPicture.asset("assets/Icon/Pencil.svg"),
+                  FirebaseAnalytics.instance
+                      .logEvent(name: 'move_to_template_page_button_click');
+                },
+                backgroundColor: Colors.transparent,
+                elevation: 0, // 그림자 제거
+                child: SvgPicture.asset("assets/Icon/Pencil.svg"),
+              ),
             ),
           ),
           Positioned(
             bottom: 160,
             right: 10,
-            child: FloatingActionButton(
-              heroTag: 'guide_page',
-              onPressed: () {
-                UrlLauncher.launchGuidePageURL();
-              },
-              backgroundColor: themeProvider.primaryColor,
-              shape: const CircleBorder(),
-              child: const Icon(Icons.question_mark, color: Colors.white),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+                border: Border.all(color: themeProvider.primaryColor, width: 2),
+              ),
+              child: FloatingActionButton(
+                heroTag: 'guide_page',
+                onPressed: () {
+                  UrlLauncher.launchGuidePageURL();
+                },
+                backgroundColor: Colors.transparent,
+                elevation: 0, // 그림자 제거
+                child: Icon(Icons.question_mark,
+                    color: themeProvider.primaryColor),
+              ),
             ),
           ),
         ],

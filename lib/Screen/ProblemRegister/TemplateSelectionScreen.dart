@@ -164,7 +164,7 @@ class _TemplateSelectionScreenState extends State<TemplateSelectionScreen> {
             fontSize: 24,
             color: themeProvider.primaryColor,
           ),
-          SizedBox(height: screenHeight * 0.02),
+          SizedBox(height: screenHeight * 0.03),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -186,7 +186,7 @@ class _TemplateSelectionScreenState extends State<TemplateSelectionScreen> {
           left: 0,
           top: screenHeight * 0.3,
           child: IconButton(
-            icon: const Icon(Icons.arrow_back_ios, size: 32, color: Colors.grey),
+            icon: const Icon(Icons.arrow_back_ios, size: 24, color: Colors.grey),
             onPressed: () {
               if (_selectedIndex == 0) {
                 _pageController.jumpToPage(TemplateType.values.length - 1);
@@ -203,7 +203,7 @@ class _TemplateSelectionScreenState extends State<TemplateSelectionScreen> {
           right: 0,
           top: screenHeight * 0.3,
           child: IconButton(
-            icon: const Icon(Icons.arrow_forward_ios, size: 32, color: Colors.grey),
+            icon: const Icon(Icons.arrow_forward_ios, size: 24, color: Colors.grey),
             onPressed: () {
               if (_selectedIndex == TemplateType.values.length - 1) {
                 _pageController.jumpToPage(0);
@@ -250,7 +250,7 @@ class _TemplateSelectionScreenState extends State<TemplateSelectionScreen> {
   // 태그 빌드 함수
   Widget _buildTag(String text, bool isActive, ThemeHandler themeProvider) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
       decoration: BoxDecoration(
         color: Colors.white,
         border: Border.all(
