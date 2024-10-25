@@ -132,7 +132,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
               },
               backgroundColor: themeProvider.primaryColor,
               shape: const CircleBorder(), // 동그란 모양 유지
-              child: SvgPicture.asset("assets/Icon/add_note.svg", color: Colors.white,),
+              child: SvgPicture.asset("assets/Icon/GreenNote.svg"),
             ),
           ),
           Positioned(
@@ -154,7 +154,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
               },
               backgroundColor: themeProvider.primaryColor,
               shape: const CircleBorder(),
-              child: const Icon(Icons.edit, color: Colors.white),
+              child: SvgPicture.asset("assets/Icon/Pencil.svg"),
             ),
           ),
           Positioned(
