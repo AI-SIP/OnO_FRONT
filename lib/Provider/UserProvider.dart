@@ -32,6 +32,11 @@ class UserProvider with ChangeNotifier {
   bool _isLoading = true;
   bool _isFirstLogin = false;
 
+  set isFirstLogin(bool value) {
+    _isFirstLogin = value;
+    notifyListeners(); // 상태 변경 시 화면 업데이트
+  }
+
   LoginStatus get isLoggedIn => _loginStatus;
   int? get userId => _userId;
   int? get problemCount => _problemCount;
@@ -77,6 +82,7 @@ class UserProvider with ChangeNotifier {
       await storage.write(key: 'loginMethod', value: loginMethod);
       await tokenProvider.setAccessToken(response['accessToken']);
       await tokenProvider.setRefreshToken(response['refreshToken']);
+      _isFirstLogin = true;
 
       FirebaseAnalytics.instance.logLogin(loginMethod: loginMethod);
       await fetchUserInfo();
@@ -95,7 +101,7 @@ class UserProvider with ChangeNotifier {
         _userId = responseBody['userId'] ?? 0;
         _userName = responseBody['userName'] ?? '이름 없음';
         _userEmail = responseBody['userEmail'];
-        _isFirstLogin = responseBody['firstLogin'] ? true : false;
+        //_isFirstLogin = responseBody['firstLogin'] ? true : false;
         _loginStatus = LoginStatus.login;
 
         FirebaseAnalytics.instance.logLogin();
@@ -110,13 +116,12 @@ class UserProvider with ChangeNotifier {
           ));
         });
 
+        FirebaseAnalytics.instance
+            .logEvent(name: 'fetch_user_info');
+
         _problemCount = await getUserProblemCount();
         if (_loginStatus == LoginStatus.login) {
           await foldersProvider.fetchRootFolderContents();
-
-          if(isFirstLogin){
-            log('this user is first login!');
-          }
         }
       } else {
         _loginStatus = LoginStatus.logout;
@@ -200,6 +205,7 @@ class UserProvider with ChangeNotifier {
     String? refreshToken = await storage.read(key: 'refreshToken');
 
     _isLoading = false;
+    _isFirstLogin = false;
     if (refreshToken == null) {
       _loginStatus = LoginStatus.logout;
       notifyListeners();

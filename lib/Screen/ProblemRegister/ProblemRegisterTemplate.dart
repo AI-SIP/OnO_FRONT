@@ -1,5 +1,6 @@
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:flutter_tex/flutter_tex.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
@@ -20,13 +21,13 @@ import 'ProblemRegisterScreenWidget.dart';
 
 class ProblemRegisterTemplate extends StatefulWidget {
   final ProblemModel problemModel;
-  final List<Map<String, int>?>? colors;
+  final Map<String, dynamic>? colorPickerResult;
   final bool isEditMode;
   final TemplateType templateType;
 
   const ProblemRegisterTemplate({
     required this.problemModel,
-    required this.colors,
+    required this.colorPickerResult,
     required this.isEditMode,
     required this.templateType,
     super.key,
@@ -98,7 +99,7 @@ class _ProblemRegisterTemplateState
 
         // Fetch processImageUrl and analysis based on the template type
         processImageUrl = await provider.fetchProcessImageUrl(
-            problemModel.problemImageUrl, widget.colors);
+            problemModel.problemImageUrl, widget.colorPickerResult!);
 
         if (widget.templateType == TemplateType.special) {
           analysisResult =
@@ -200,6 +201,7 @@ class _ProblemRegisterTemplateState
                 _buildNarrowScreenLayout(themeProvider, widget.templateType),
               const SizedBox(height: 30),
               ProblemRegisterScreenWidget.buildActionButtons(
+                context: context,
                 themeProvider: themeProvider,
                 onSubmit: _submitProblem,
                 onCancel: _resetFields,
@@ -223,6 +225,7 @@ class _ProblemRegisterTemplateState
       children: [
         if (templateType == TemplateType.special) ...[
           _buildAnalysisSection(
+            context: context,
             analysisResult: analysisResult,
             themeProvider: themeProvider,
             maxHeight: screenHeight * 0.33,
@@ -339,6 +342,7 @@ class _ProblemRegisterTemplateState
       children: [
         if (templateType == TemplateType.special) ...[
           _buildAnalysisSection(
+            context: context,
             analysisResult: analysisResult,
             themeProvider: themeProvider,
             maxHeight: screenHeight * 0.33,
@@ -423,11 +427,13 @@ class _ProblemRegisterTemplateState
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const SizedBox(height: 30),
-                CircularProgressIndicator(
-                  color: themeProvider.primaryColor,
+                SizedBox(height: screenHeight * 0.03),
+                SvgPicture.asset(
+                  'assets/Icon/Eraser.svg', // Eraser 아이콘 경로
+                  width: screenHeight * 0.1, // 적절한 크기 설정
+                  height: screenHeight * 0.1,
                 ),
-                const SizedBox(height: 30),
+                SizedBox(height: screenHeight * 0.02),
                 StandardText(
                   text: loadingMessage, // 로딩 중 메시지 출력
                   fontSize: 16,
@@ -443,10 +449,14 @@ class _ProblemRegisterTemplateState
   }
 
   Widget _buildAnalysisSection({
+    required BuildContext context,
     required String? analysisResult,
     required ThemeHandler themeProvider,
     required double maxHeight,
   }) {
+    double screenHeight = MediaQuery.of(context).size.height;
+    double screenWidth = MediaQuery.of(context).size.width;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -469,7 +479,7 @@ class _ProblemRegisterTemplateState
           width: double.infinity,
           padding: const EdgeInsets.all(10.0),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: themeProvider.primaryColor.withOpacity(0.1),
             borderRadius: BorderRadius.circular(10),
             border: Border.all(
               color: themeProvider.primaryColor,
@@ -481,11 +491,13 @@ class _ProblemRegisterTemplateState
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const SizedBox(height: 20),
-                CircularProgressIndicator(
-                  color: themeProvider.primaryColor,
+                SizedBox(height: screenHeight * 0.03),
+                SvgPicture.asset(
+                  'assets/Icon/Glass.svg', // Eraser 아이콘 경로
+                  width: screenHeight * 0.1, // 적절한 크기 설정
+                  height: screenHeight * 0.1,
                 ),
-                const SizedBox(height: 20),
+                SizedBox(height: screenHeight * 0.02),
                 StandardText(
                   text: '문제 분석 중...',
                   fontSize: 16,

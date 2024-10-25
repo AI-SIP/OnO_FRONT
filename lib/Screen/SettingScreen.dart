@@ -325,6 +325,7 @@ class _SettingScreenState extends State<SettingScreen> {
         TextEditingController(text: currentName);
     final standardTextStyle = const StandardText(text: '').getTextStyle();
     double screenHeight = MediaQuery.of(context).size.height;
+    double screenWidth = MediaQuery.of(context).size.width;
 
     showDialog(
       context: context,
@@ -336,7 +337,10 @@ class _SettingScreenState extends State<SettingScreen> {
             fontSize: 18,
             color: Colors.black,
           ),
-          content: SizedBox(
+          content: Padding(
+            padding: EdgeInsets.symmetric(
+              horizontal: screenWidth * 0.001, // 좌우 여백 추가
+            ),
             child: TextField(
               controller: nameController,
               style: standardTextStyle.copyWith(
@@ -360,8 +364,7 @@ class _SettingScreenState extends State<SettingScreen> {
                   const BorderSide(color: Colors.black, width: 2.0),
                   borderRadius: BorderRadius.circular(8.0),
                 ),
-                contentPadding:
-                EdgeInsets.symmetric(vertical: screenHeight * 0.02, horizontal: screenHeight * 0.012),
+                contentPadding: EdgeInsets.symmetric(vertical: screenHeight * 0.02, horizontal: screenWidth * 0.03),
               ),
             ),
           ),

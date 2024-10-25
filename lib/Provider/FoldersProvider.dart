@@ -60,6 +60,13 @@ class FoldersProvider with ChangeNotifier {
     }
   }
 
+  Future<void> clearFolderContents() async{
+    _currentFolder = null;
+    _problems = [];
+
+    notifyListeners();
+  }
+
   Future<void> fetchCurrentFolderContents() async {
     try {
       final response = await httpService.sendRequest(
@@ -203,7 +210,7 @@ class FoldersProvider with ChangeNotifier {
         log('Folder successfully deleted');
         final jsonResponse = json.decode(utf8.decode(response.bodyBytes));
         int parentFolderId = jsonResponse['folderId'] as int;
-        await fetchFolderContents(folderId: parentFolderId);
+        await fetchCurrentFolderContents();
       } else {
         throw Exception('Failed to delete folder');
       }
@@ -244,14 +251,19 @@ class FoldersProvider with ChangeNotifier {
     }
   }
 
-  Future<String?> fetchProcessImageUrl(String? fullUrl, List<Map<String, int>?>? colorsList) async {
+  Future<String?> fetchProcessImageUrl(String? fullUrl, Map<String, dynamic> colorPickerResult) async {
+
+    log('remove colors: ${colorPickerResult['colors']}');
+    log('remove intensity: ${colorPickerResult['intensity']}');
+
     try {
       final response = await httpService.sendRequest(
         method: 'POST', // 'GET'에서 'POST'로 변경
         url: '${AppConfig.baseUrl}/api/process/processImage',
         body: {
           'fullUrl': fullUrl,
-          'colorsList': colorsList,
+          'colorsList': colorPickerResult['colors'],
+          'intensity' : colorPickerResult['intensity'],
         },
       );
 

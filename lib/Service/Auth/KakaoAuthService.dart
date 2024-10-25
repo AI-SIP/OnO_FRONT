@@ -20,7 +20,6 @@ class KakaoAuthService {
       try {
         await UserApi.instance.loginWithKakaoTalk().then((_) async {
           User user = await UserApi.instance.me();
-          FirebaseAnalytics.instance.logSignUp(signUpMethod: 'Kakao');
 
           result = await registerUser(context, user);
         });
@@ -98,6 +97,10 @@ class KakaoAuthService {
 
       if (response.statusCode == 200) {
         log('kakao sign-in Success!');
+        FirebaseAnalytics.instance
+            .logEvent(name: 'user_register_with_kakao');
+        FirebaseAnalytics.instance.logSignUp(signUpMethod: 'Kakao');
+
         //SnackBarDialog.showSnackBar(context: context, message: "로그인에 성공했습니다.", backgroundColor: Colors.green);
 
         return jsonDecode(response.body);

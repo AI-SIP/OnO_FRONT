@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
@@ -20,6 +22,8 @@ class TemplateSelectionScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeHandler>(context);
+    double screenHeight = MediaQuery.of(context).size.height;
+    double screenWidth = MediaQuery.of(context).size.width;
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -34,6 +38,7 @@ class TemplateSelectionScreen extends StatelessWidget {
       ),
       body: Column(
         children: [
+          SizedBox(height: screenHeight * 0.015),
           Expanded(
             child: ListView(
               padding: const EdgeInsets.symmetric(horizontal: 30.0),
@@ -73,12 +78,15 @@ class TemplateSelectionScreen extends StatelessWidget {
           ),
           subtitle: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: templateType.description.map((desc) {
+            children: [
+              SizedBox(height: screenHeight * 0.005),
+              ...templateType.description.map((desc) {
               return Padding(
                 padding: const EdgeInsets.only(top: 4.0),
                 child: _getHighlightedDescription(desc, themeProvider),
               );
             }).toList(),
+            ],
           ),
           onTap: () {
             final authService =
@@ -97,49 +105,51 @@ class TemplateSelectionScreen extends StatelessWidget {
               final imagePickerHandler = ImagePickerHandler();
               imagePickerHandler.showImagePicker(context, (pickedFile) async {
                 if (pickedFile != null) {
-                  List<Map<String, int>?>? selectedColors;
+                  Map<String, dynamic>? colorPickerResult;
 
                   // TemplateType이 clean이나 special인 경우 색상 선택 화면 표시
                   if (templateType == TemplateType.clean ||
                       templateType == TemplateType.special) {
                     final colorPickerHandler = ImageColorPickerHandler();
-                    selectedColors = await colorPickerHandler.showColorPicker(
+                    colorPickerResult = await colorPickerHandler.showColorPicker(
                         context, pickedFile.path);
                   }
 
-                  LoadingDialog.show(context, '템플릿 불러오는 중...');
+                  if(colorPickerResult != null){
+                    LoadingDialog.show(context, '템플릿 불러오는 중...');
 
-                  final result = await Provider.of<FoldersProvider>(context,
-                      listen: false)
-                      .uploadProblemImage(pickedFile);
+                    final result = await Provider.of<FoldersProvider>(context,
+                        listen: false)
+                        .uploadProblemImage(pickedFile);
 
-                  // `result`에 받은 값을 사용하여 화면 이동
-                  if (result != null) {
-                    final problemId = result['problemId'];
-                    final problemImageUrl = result['problemImageUrl'];
+                    // `result`에 받은 값을 사용하여 화면 이동
+                    if (result != null) {
+                      final problemId = result['problemId'];
+                      final problemImageUrl = result['problemImageUrl'];
 
-                    final problemModel = ProblemModel(
-                      problemId: problemId,
-                      problemImageUrl: problemImageUrl,
-                      templateType: templateType,
-                    );
+                      final problemModel = ProblemModel(
+                        problemId: problemId,
+                        problemImageUrl: problemImageUrl,
+                        templateType: templateType,
+                      );
 
-                    LoadingDialog.hide(context);
+                      LoadingDialog.hide(context);
 
-                    Navigator.pushNamed(
-                      context,
-                      '/problemRegister',
-                      arguments: {
-                        'problemModel': problemModel,
-                        'isEditMode': false,
-                        'colors': selectedColors,
-                      },
-                    );
-                  } else {
-                    SnackBarDialog.showSnackBar(
-                        context: context,
-                        message: "문제 이미지 업로드에 실패했습니다. 다시 시도해주세요.",
-                        backgroundColor: Colors.red);
+                      Navigator.pushNamed(
+                        context,
+                        '/problemRegister',
+                        arguments: {
+                          'problemModel': problemModel,
+                          'isEditMode': false,
+                          'colorPickerResult': colorPickerResult,
+                        },
+                      );
+                    } else {
+                      SnackBarDialog.showSnackBar(
+                          context: context,
+                          message: "문제 이미지 업로드에 실패했습니다. 다시 시도해주세요.",
+                          backgroundColor: Colors.red);
+                    }
                   }
                 }
               });
@@ -147,8 +157,8 @@ class TemplateSelectionScreen extends StatelessWidget {
           },
         ),
         Positioned(
-          right: 10,
-          top: 10,
+          right: 15,
+          top: 15,
           child: Container(
             width: 50, // 고정된 너비
             height: 50, // 고정된 높이

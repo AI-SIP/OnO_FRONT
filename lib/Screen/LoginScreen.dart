@@ -73,7 +73,22 @@ class LoginScreen extends StatelessWidget {
 
                   WidgetsBinding.instance.addPostFrameCallback((_) {
                     Navigator.of(context).pushReplacement(
-                      MaterialPageRoute(builder: (context) => const MyHomePage()),
+                      PageRouteBuilder(
+                        pageBuilder: (context, animation, secondaryAnimation) => const MyHomePage(),
+                        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                          const begin = Offset(1.0, 0.0); // 오른쪽에서 왼쪽으로 슬라이드
+                          const end = Offset.zero;
+                          const curve = Curves.ease;
+
+                          var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+                          var offsetAnimation = animation.drive(tween);
+
+                          return SlideTransition(
+                            position: offsetAnimation,
+                            child: child,
+                          );
+                        },
+                      ),
                     );
                   });
                 }

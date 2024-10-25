@@ -152,13 +152,17 @@ class _ProblemDetailScreenV2State extends State<ProblemDetailScreenV2> {
   }
 
   void _showActionDialog(ProblemModel problemModel, ThemeHandler themeProvider) {
+
+    FirebaseAnalytics.instance
+        .logEvent(name: 'problem_detail_screen_action_dialog_button_click');
+
     showModalBottomSheet(
       backgroundColor: Colors.white,
       context: context,
       builder: (context) {
         return SingleChildScrollView(
           child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 20.0), // 패딩 추가
+            padding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 10.0), // 패딩 추가
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -229,7 +233,7 @@ class _ProblemDetailScreenV2State extends State<ProblemDetailScreenV2> {
                           builder: (context) => ProblemRegisterScreenV2(
                             problemModel: problemModel,
                             isEditMode: true,
-                            colors: null,
+                            colorPickerResult: null,
                           ),
                         ),
                       ).then((_) {
@@ -249,7 +253,7 @@ class _ProblemDetailScreenV2State extends State<ProblemDetailScreenV2> {
                     ),
                     onTap: () async {
                       FirebaseAnalytics.instance
-                          .logEvent(name: 'problem_change_path');
+                          .logEvent(name: 'problem_change_path_button_click');
                       Navigator.pop(context);
 
                       final foldersProvider = Provider.of<FoldersProvider>(context, listen: false);
@@ -345,11 +349,8 @@ class _ProblemDetailScreenV2State extends State<ProblemDetailScreenV2> {
     double screenHeight = MediaQuery.of(context).size.height;
 
     // 화면 높이에 따라 패딩 값을 동적으로 설정
-    double topPadding = screenHeight >= 1000 ? 25.0 : 15.0;
-    double bottomPadding = screenHeight >= 1000 ? 30.0 : 25.0;
-    double topBottomPadding = screenHeight >= 1000
-        ? 25.0
-        : 25.0; // 아이패드 13인치(높이 1024 이상) 기준으로 35, 그 외는 20
+    double topPadding = screenHeight * 0.01;
+    double bottomPadding = screenHeight * 0.03;
 
     return Padding(
       padding: EdgeInsets.only(top: topPadding, bottom: bottomPadding),

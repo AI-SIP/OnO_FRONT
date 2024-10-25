@@ -80,7 +80,7 @@ class MyApp extends StatelessWidget {
               return ProblemRegisterScreenV2(
                 problemModel: args['problemModel'],
                 isEditMode: args['isEditMode'],
-                colors: args['colors'],
+                colorPickerResult: args['colorPickerResult'],
               );
             },
           );

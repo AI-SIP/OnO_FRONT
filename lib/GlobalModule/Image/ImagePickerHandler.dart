@@ -98,7 +98,7 @@ class ImagePickerHandler {
 
         return SingleChildScrollView(
           child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 20.0), // 기존 모달과 동일한 여백 적용
+            padding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 10.0), // 기존 모달과 동일한 여백 적용
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -108,7 +108,7 @@ class ImagePickerHandler {
                   child: StandardText(
                     text: '이미지 업로드 방식을 선택해주세요',
                     color: themeProvider.primaryColor,
-                    fontSize: 20,
+                    fontSize: 18,
                   ),
                 ),
                 // 카메라로 촬영 옵션

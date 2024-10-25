@@ -28,7 +28,7 @@ class _SplashScreenState extends State<SplashScreen> {
     await userProvider.autoLogin();
 
     // 2초간 대기 후 상태 체크
-    await Future.delayed(const Duration(seconds: 10), () {});
+    await Future.delayed(const Duration(seconds: 2), () {});
 
     // 로그인 상태에 따른 화면 이동
     if (userProvider.loginStatus == LoginStatus.login) {

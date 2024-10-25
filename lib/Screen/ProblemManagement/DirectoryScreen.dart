@@ -51,12 +51,17 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       final userProvider = Provider.of<UserProvider>(context, listen: false);
       if (userProvider.isFirstLogin && !modalShown) {
         modalShown = true;
+        userProvider.isFirstLogin = false;
         _showUserGuideModal();
       }
     });
   }
 
   void _showUserGuideModal() async {
+
+    FirebaseAnalytics.instance
+        .logEvent(name: 'show_user_guide_modal');
+
     await showModalBottomSheet(
       context: context,
       isScrollControlled: true, // 스크롤 가능 모달 설정
@@ -80,7 +85,18 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     final themeProvider = Provider.of<ThemeHandler>(context);
     final foldersProvider = Provider.of<FoldersProvider>(context);
 
-    return Scaffold(
+    return PopScope(
+        canPop: true,
+        onPopInvokedWithResult: (bool didPop, Object? result) async {
+          if(didPop){
+            if (foldersProvider.currentFolder?.parentFolder != null) {
+              foldersProvider.moveToParentFolder(
+                  foldersProvider.currentFolder!.parentFolder!.folderId);
+            }
+            return;
+          }
+        },
+      child: Scaffold(
       backgroundColor: Colors.white,
       appBar: _buildAppBar(themeProvider, foldersProvider), // 상단 AppBar 추가
       body: !(authService.isLoggedIn == LoginStatus.login)
@@ -125,8 +141,16 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
             child: FloatingActionButton(
               heroTag: 'create_problem',
               onPressed: () {
+                while(Navigator.canPop(context)){
+                  Navigator.pop(context);
+                }
+                const Duration(seconds: 1);
+                foldersProvider.fetchRootFolderContents();
                 Provider.of<ScreenIndexProvider>(context, listen: false)
                     .setSelectedIndex(1);  // 문제 등록 탭으로 이동
+
+                FirebaseAnalytics.instance
+                    .logEvent(name: 'move_to_template_page_button_click');
               },
               backgroundColor: themeProvider.primaryColor,
               shape: const CircleBorder(),
@@ -150,7 +174,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       ),
       floatingActionButtonLocation:
           FloatingActionButtonLocation.endFloat, // 오른쪽 하단 기본 위치
-    );
+    ));
   }
 
   AppBar _buildAppBar(
@@ -167,18 +191,6 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         fontSize: 20,
         color: themeProvider.primaryColor,
       ),
-      leading: foldersProvider.currentFolder?.parentFolder != null
-          ? IconButton(
-              icon: Icon(
-                Icons.arrow_back,
-                color: themeProvider.primaryColor,
-              ),
-              onPressed: () {
-                foldersProvider.moveToParentFolder(
-                    foldersProvider.currentFolder!.parentFolder?.folderId);
-              },
-            )
-          : null, // 루트 폴더일 경우 leading 버튼 없음
       actions: [
         Padding(
           padding: const EdgeInsets.only(right: 16.0), // 우측에 여백 추가
@@ -211,13 +223,17 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   }
 
   void _showActionDialog(FoldersProvider foldersProvider, ThemeHandler themeProvider) {
+
+    FirebaseAnalytics.instance
+        .logEvent(name: 'directory_Screen_action_dialog_click');
+
     showModalBottomSheet(
       backgroundColor: Colors.white,
       context: context,
       builder: (context) {
         return SingleChildScrollView(
           child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 20.0), // 패딩 추가
+            padding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 10.0), // 패딩 추가
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -239,6 +255,10 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                     ),
                     onTap: () {
                       Navigator.pop(context);
+
+                      FirebaseAnalytics.instance
+                          .logEvent(name: 'directory_rename_button_click');
+
                       _showRenameFolderDialog(foldersProvider);
                     },
                   ),
@@ -253,6 +273,10 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                     ),
                     onTap: () {
                       Navigator.pop(context);
+
+                      FirebaseAnalytics.instance
+                          .logEvent(name: 'directory_path_change_button_click');
+
                       _showMoveFolderDialog(foldersProvider);
                     },
                   ),
@@ -267,6 +291,10 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                     ),
                     onTap: () {
                       Navigator.pop(context);
+
+                      FirebaseAnalytics.instance
+                          .logEvent(name: 'directory_remove_button_click');
+
                       _showDeleteFolderDialog(foldersProvider);
                     },
                   ),
@@ -322,7 +350,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       builder: (context) {
         return SingleChildScrollView(
           child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 20.0), // 패딩 추가
+            padding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 10.0), // 패딩 추가
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.center, // 타이틀을 왼쪽 정렬
@@ -517,9 +545,12 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
               TextButton(
                 onPressed: () async {
                   if (foldersProvider.currentFolder != null) {
+                    Navigator.pop(context); // 다이얼로그 닫기
+                    Navigator.pop(context);
+
                     await foldersProvider
                         .deleteFolder(foldersProvider.currentFolder!.folderId);
-                    Navigator.pop(context); // 다이얼로그 닫기
+
                     SnackBarDialog.showSnackBar(
                         context: context,
                         message: '공책이 삭제되었습니다!',
@@ -557,6 +588,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         TextEditingController(text: defaultFolderName);
     final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
     final standardTextStyle = const StandardText(text: '').getTextStyle();
+    double screenHeight = MediaQuery.of(context).size.height;
+    double screenWidth = MediaQuery.of(context).size.width;
 
     await showDialog(
       context: context,
@@ -568,7 +601,10 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
             fontSize: 18,
             color: Colors.black,
           ),
-          content: SizedBox(
+          content: Padding(
+            padding: EdgeInsets.symmetric(
+              horizontal: screenWidth * 0.001, // 좌우 여백 추가
+            ),
             child: TextField(
               controller: folderNameController,
               style: standardTextStyle.copyWith(
@@ -592,8 +628,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                   borderSide:
                       BorderSide(color: Colors.black, width: 1.5),
                 ),
-                contentPadding: const EdgeInsets.symmetric(
-                    vertical: 20.0, horizontal: 12.0),
+                contentPadding: EdgeInsets.symmetric(vertical: screenHeight * 0.02, horizontal: screenWidth * 0.03),
               ),
             ),
           ),
@@ -685,6 +720,13 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
           FirebaseAnalytics.instance.logEvent(name: 'move_to_folder', parameters: {
             'folder_id': folder.folderId,
           });
+
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context){
+              return const DirectoryScreen();
+            }),
+          );
 
           Provider.of<FoldersProvider>(context, listen: false)
               .fetchFolderContents(folderId: folder.folderId);
@@ -828,13 +870,15 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         // 문제 이미지
-        ClipRRect(
-          borderRadius: BorderRadius.circular(8.0),
-          child: Image.network(
-            imageUrl ?? defaultImage, // 이미지가 없을 경우 기본 이미지 사용
-            width: 50,
-            height: 70,
-            fit: BoxFit.cover,
+        SizedBox(
+          width: 50,
+          height: 70,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(8.0),
+            child: DisplayImage(
+              imagePath: imageUrl ?? defaultImage, // 이미지가 없을 경우 기본 이미지 사용
+              fit: BoxFit.cover,
+            ),
           ),
         ),
         const SizedBox(width: 20), // 이미지와 텍스트 간 간격 추가
