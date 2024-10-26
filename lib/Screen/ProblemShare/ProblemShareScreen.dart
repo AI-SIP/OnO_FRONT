@@ -132,7 +132,7 @@ class _ProblemShareScreenState extends State<ProblemShareScreen> {
                           (widget.problem.reference != null &&
                                   widget.problem.reference!.isNotEmpty)
                               ? widget.problem.reference!
-                              : "출처 없음",
+                              : "제목 없음",
                           style: TextStyle(
                             color: themeProvider.primaryColor,
                             fontSize: 24,
@@ -187,6 +187,7 @@ class _ProblemShareScreenState extends State<ProblemShareScreen> {
                               ],
                             ),
                             const SizedBox(height: 30),
+                            /*
                             Row(
                               crossAxisAlignment:
                                   CrossAxisAlignment.start, // 레이블을 위로 정렬
@@ -225,6 +226,8 @@ class _ProblemShareScreenState extends State<ProblemShareScreen> {
                               ],
                             ),
                             const SizedBox(height: 30),
+
+                             */
                             Row(
                               children: [
                                 Icon(Icons.camera_alt,

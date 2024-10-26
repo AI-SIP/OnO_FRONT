@@ -169,12 +169,12 @@ class _ProblemRegisterTemplateState
               ),
               const SizedBox(height: 30),
               ProblemRegisterScreenWidget.buildLabeledField(
-                label: "출처",
+                label: "제목",
                 themeProvider: themeProvider,
                 icon: Icons.info,
                 child: ProblemRegisterScreenWidget.textField(
                   controller: sourceController,
-                  hintText: '문제집, 페이지, 문제번호 등 문제의 출처를 작성해주세요!',
+                  hintText: '오답노트의 제목을 작성해주세요!',
                   themeProvider: themeProvider,
                 ),
               ),

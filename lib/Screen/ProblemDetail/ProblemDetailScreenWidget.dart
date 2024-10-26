@@ -39,11 +39,12 @@ class ProblemDetailScreenWidget {
           children: [
             SizedBox(height: screenHeight * 0.03),
             buildSolvedDate(problemModel.solvedAt, themeProvider),
+            /*
             SizedBox(height: screenHeight * 0.03),
             buildProblemReference(problemModel.reference, themeProvider),
-            SizedBox(
-              height: screenHeight * 0.03,
-            ),
+
+             */
+            SizedBox(height: screenHeight * 0.03,),
             buildImageSection(
                 context,
                 imageUrl,
