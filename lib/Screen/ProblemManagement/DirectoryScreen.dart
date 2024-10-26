@@ -123,51 +123,73 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
           Positioned(
             bottom: 20,
             right: 10,
-            child: FloatingActionButton(
-              heroTag: 'create_folder',
-              onPressed: () {
-                FirebaseAnalytics.instance
-                    .logEvent(name: 'folder_create_button_click');
-                _showCreateFolderDialog(); // 기존에 상단에서 호출하던 폴더 생성 로직
-              },
-              backgroundColor: themeProvider.primaryColor,
-              shape: const CircleBorder(), // 동그란 모양 유지
-              child: SvgPicture.asset("assets/Icon/add_note.svg", color: Colors.white,),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+                border: Border.all(color: themeProvider.primaryColor, width: 2),
+              ),
+              child: FloatingActionButton(
+                heroTag: 'create_folder',
+                onPressed: () {
+                  FirebaseAnalytics.instance
+                      .logEvent(name: 'folder_create_button_click');
+                  _showCreateFolderDialog(); // 기존에 상단에서 호출하던 폴더 생성 로직
+                },
+                backgroundColor: Colors.transparent,
+                elevation: 0, // 그림자 제거
+                child: SvgPicture.asset("assets/Icon/addNote.svg",),
+              ),
             ),
           ),
           Positioned(
             bottom: 90,
             right: 10,
-            child: FloatingActionButton(
-              heroTag: 'create_problem',
-              onPressed: () {
-                while(Navigator.canPop(context)){
-                  Navigator.pop(context);
-                }
-                const Duration(seconds: 1);
-                foldersProvider.fetchRootFolderContents();
-                Provider.of<ScreenIndexProvider>(context, listen: false)
-                    .setSelectedIndex(1);  // 문제 등록 탭으로 이동
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+                border: Border.all(color: themeProvider.primaryColor, width: 2),
+              ),
+              child: FloatingActionButton(
+                heroTag: 'create_problem',
+                onPressed: () {
+                  while(Navigator.canPop(context)){
+                    Navigator.pop(context);
+                  }
+                  const Duration(seconds: 1);
+                  foldersProvider.fetchRootFolderContents();
+                  Provider.of<ScreenIndexProvider>(context, listen: false)
+                      .setSelectedIndex(1);  // 문제 등록 탭으로 이동
 
-                FirebaseAnalytics.instance
-                    .logEvent(name: 'move_to_template_page_button_click');
-              },
-              backgroundColor: themeProvider.primaryColor,
-              shape: const CircleBorder(),
-              child: const Icon(Icons.edit, color: Colors.white),
+                  FirebaseAnalytics.instance
+                      .logEvent(name: 'move_to_template_page_button_click');
+                },
+                backgroundColor: Colors.transparent,
+                elevation: 0, // 그림자 제거
+                child: SvgPicture.asset("assets/Icon/PencilDetail.svg"),
+              ),
             ),
           ),
           Positioned(
             bottom: 160,
             right: 10,
-            child: FloatingActionButton(
-              heroTag: 'guide_page',
-              onPressed: () {
-                UrlLauncher.launchGuidePageURL();
-              },
-              backgroundColor: themeProvider.primaryColor,
-              shape: const CircleBorder(),
-              child: const Icon(Icons.question_mark, color: Colors.white),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+                border: Border.all(color: themeProvider.primaryColor, width: 2),
+              ),
+              child: FloatingActionButton(
+                heroTag: 'guide_page',
+                onPressed: () {
+                  UrlLauncher.launchGuidePageURL();
+                },
+                backgroundColor: Colors.transparent,
+                elevation: 0, // 그림자 제거
+                child: Icon(Icons.question_mark,
+                    color: themeProvider.primaryColor),
+              ),
             ),
           ),
         ],
@@ -240,7 +262,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                 Padding(
                   padding: const EdgeInsets.only(bottom: 20.0), // 타이틀 아래 여백 추가
                   child: StandardText(
-                    text: '편집하기', // 타이틀 텍스트
+                    text: '공책 편집하기', // 타이틀 텍스트
                     fontSize: 20,
                     color: themeProvider.primaryColor,
                   ),
@@ -248,6 +270,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                 Padding(
                   padding: const EdgeInsets.only(bottom: 10.0), // 텍스트 간격 조정
                   child: ListTile(
+                    leading: const Icon(Icons.edit, color: Colors.black),
                     title: const StandardText(
                       text: '공책 이름 수정하기',
                       fontSize: 16,
@@ -266,6 +289,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                 Padding(
                   padding: const EdgeInsets.only(bottom: 10.0), // 텍스트 간격 조정
                   child: ListTile(
+                    leading: const Icon(Icons.folder_open, color: Colors.black),
                     title: const StandardText(
                       text: '공책 위치 변경하기',
                       fontSize: 16,
@@ -284,6 +308,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                 Padding(
                   padding: const EdgeInsets.only(bottom: 10.0), // 텍스트 간격 조정
                   child: ListTile(
+                    leading: const Icon(Icons.delete_forever, color: Colors.red),
                     title: const StandardText(
                       text: '공책 삭제하기',
                       fontSize: 16,
@@ -799,7 +824,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               StandardText(
-                text: folder.folderName,
+                text: folder.folderName.isNotEmpty ? folder.folderName : '제목 없음',
                 color: themeProvider.primaryColor,
                 fontSize: 18,
               ),
@@ -834,7 +859,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(8.0),
                 child: DisplayImage(
-                  imagePath: imageUrl ?? defaultImage, // 이미지가 없을 경우 기본 이미지 사용
+                  imagePath: imageUrl,
                   fit: BoxFit.cover,
                 ),
               ),
@@ -876,7 +901,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
           child: ClipRRect(
             borderRadius: BorderRadius.circular(8.0),
             child: DisplayImage(
-              imagePath: imageUrl ?? defaultImage, // 이미지가 없을 경우 기본 이미지 사용
+              imagePath: imageUrl,
               fit: BoxFit.cover,
             ),
           ),
@@ -895,7 +920,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                   const SizedBox(width: 8), // 아이콘과 제목 간 간격
                   Flexible( // 제목
                     child: StandardText(
-                      text: problem.reference ?? '제목 없음',
+                      text: (problem.reference != null && problem.reference!.isNotEmpty) ? problem.reference! : '제목 없음',
                       color: themeProvider.primaryColor,
                       fontSize: 18,
                     ),
@@ -923,26 +948,11 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
   // 템플릿 타입에 따른 아이콘 설정 (SVG 파일로 교체)
   Widget _getTemplateIcon(TemplateType templateType) {
-    switch (templateType) {
-      case TemplateType.simple:
-        return SvgPicture.asset(
-          'assets/Icon/Pencil.svg',
-          width: 20, // 적당한 크기로 설정
-          height: 20,
-        );
-      case TemplateType.clean:
-        return SvgPicture.asset(
-          'assets/Icon/Eraser.svg',
-          width: 20,
-          height: 20,
-        );
-      case TemplateType.special:
-        return SvgPicture.asset(
-          'assets/Icon/Glass.svg',
-          width: 20,
-          height: 20,
-        );
-    }
+    return SvgPicture.asset(
+      templateType.templateThumbnailImage,
+      width:20,
+      height:20,
+    );
   }
 
   Future<void> _moveFolderToNewParent(

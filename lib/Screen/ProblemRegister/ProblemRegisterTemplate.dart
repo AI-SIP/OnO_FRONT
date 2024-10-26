@@ -169,12 +169,12 @@ class _ProblemRegisterTemplateState
               ),
               const SizedBox(height: 30),
               ProblemRegisterScreenWidget.buildLabeledField(
-                label: "출처",
+                label: "제목",
                 themeProvider: themeProvider,
                 icon: Icons.info,
                 child: ProblemRegisterScreenWidget.textField(
                   controller: sourceController,
-                  hintText: '문제집, 페이지, 문제번호 등 문제의 출처를 작성해주세요!',
+                  hintText: '오답노트의 제목을 작성해주세요!',
                   themeProvider: themeProvider,
                 ),
               ),
@@ -429,7 +429,7 @@ class _ProblemRegisterTemplateState
               children: [
                 SizedBox(height: screenHeight * 0.03),
                 SvgPicture.asset(
-                  'assets/Icon/Eraser.svg', // Eraser 아이콘 경로
+                  'assets/Icon/EraserDetail.svg', // Eraser 아이콘 경로
                   width: screenHeight * 0.1, // 적절한 크기 설정
                   height: screenHeight * 0.1,
                 ),
@@ -507,7 +507,7 @@ class _ProblemRegisterTemplateState
               ],
             ),
           )
-              : analysisResult != null
+              : analysisResult != null || analysisResult!.isEmpty
               ? Scrollbar(
             controller: scrollControllerForAnalysis,
             thumbVisibility: true,

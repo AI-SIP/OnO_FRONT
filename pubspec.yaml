@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 2.2.1+32
+version: 2.3.0+35
 
 environment:
   sdk: '>=3.3.3 <4.0.0'
@@ -94,7 +94,8 @@ flutter:
     - assets/GuideScreen/GuideScreen4.svg
     - assets/Logo/GreenFrog.svg
     - assets/Logo/OnO.svg
-    - assets/Icon/add_note.svg
+    - assets/Icon/addNote.svg
+    - assets/Icon/noImage.svg
     - assets/Icon/GreenNote.svg
     - assets/Icon/YellowNote.svg
     - assets/Icon/PinkNote.svg
@@ -107,6 +108,9 @@ flutter:
     - assets/Icon/Eraser.svg
     - assets/Icon/EraserWithCircle.svg
     - assets/Icon/Glass.svg
+    - assets/Icon/PencilDetail.svg
+    - assets/Icon/EraserDetail.svg
+    - assets/Icon/GlassDetail.svg
     - assets/SocialLogin/AppleLogin.svg
     - assets/SocialLogin/GoogleLogin.svg
     - assets/SocialLogin/KakaoLogin.svg
@@ -115,21 +119,12 @@ flutter:
     - family: HandWrite
       fonts:
         - asset: assets/fonts/HandWrite.ttf
-    - family: StandardFont
-      fonts:
-        - asset: assets/fonts/StandardFont.otf
-    - family: StandardLight
-      fonts:
-        - asset: assets/fonts/StandardLight.ttf
-    - family: StandardMedium
-      fonts:
-        - asset: assets/fonts/StandardMedium.ttf
-    - family: StandardBold
-      fonts:
-        - asset: assets/fonts/StandardBold.ttf
     - family: PretendardBold
       fonts:
         - asset: assets/fonts/Pretendard-Bold.otf
+    - family: PretendardThin
+      fonts:
+        - asset: assets/fonts/Pretendard-Thin.otf
 
 
 

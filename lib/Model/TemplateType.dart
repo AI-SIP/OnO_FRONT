@@ -8,22 +8,22 @@ extension TemplateTypeExtension on TemplateType {
   String get displayName {
     switch (this) {
       case TemplateType.simple:
-        return '국어/영어 템플릿';
+        return '빠른 등록';
       case TemplateType.clean:
-        return '사회 탐구 템플릿';
+        return '필기 지우개';
       case TemplateType.special:
-        return '수학/과학 탐구 템플릿';
+        return '필기 지우개 & 문제 분석';
     }
   }
 
-  List<String> get description {
+  String get description {
     switch (this) {
       case TemplateType.simple:
-        return ['필기 제거 X, 오답 분석 X', '-> 암기에 필요한 최소한의 요소만 빠르게 등록하는 기본 템플릿입니다.'];
+        return '빠르고 간편하게 문제를 등록하세요.';
       case TemplateType.clean:
-        return ['필기 제거 O, 오답 분석 X', '-> 복습에 방해되는 필기를 제거해 깔끔한 복습을 도와줍니다.'];
+        return '문제 이미지의 필기를 제거해 깔끔한 복습을 해보세요.';
       case TemplateType.special:
-        return ['필기 제거 O, 오답 분석 O', '-> 복습에 방해되는 필기를 제거해 깔끔한 복습을 도와줍니다. \n교과과정 기반 문제 분석으로 나의 취약 개념 파악을 도와줍니다.'];
+        return '필기 제거와 문제 분석을 통해 고도화된 복습을 해보세요.';
     }
   }
 
@@ -35,6 +35,50 @@ extension TemplateTypeExtension on TemplateType {
         return 2;
       case TemplateType.special:
         return 3;
+    }
+  }
+
+  bool get hasEraseFeature{
+    switch (this) {
+      case TemplateType.simple:
+        return false;
+      case TemplateType.clean:
+        return true;
+      case TemplateType.special:
+        return true;
+    }
+  }
+
+  bool get hasAnalysisFeature{
+    switch (this) {
+      case TemplateType.simple:
+        return false;
+      case TemplateType.clean:
+        return false;
+      case TemplateType.special:
+        return true;
+    }
+  }
+
+  String get templateThumbnailImage{
+    switch (this) {
+      case TemplateType.simple:
+        return "assets/Icon/Pencil.svg";
+      case TemplateType.clean:
+        return "assets/Icon/Eraser.svg";
+      case TemplateType.special:
+        return "assets/Icon/Glass.svg";
+    }
+  }
+
+  String get templateDetailImage{
+    switch (this) {
+      case TemplateType.simple:
+        return "assets/Icon/PencilDetail.svg";
+      case TemplateType.clean:
+        return "assets/Icon/EraserDetail.svg";
+      case TemplateType.special:
+        return "assets/Icon/GlassDetail.svg";
     }
   }
 

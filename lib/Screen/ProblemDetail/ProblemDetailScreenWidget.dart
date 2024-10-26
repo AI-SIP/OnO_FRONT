@@ -39,11 +39,12 @@ class ProblemDetailScreenWidget {
           children: [
             SizedBox(height: screenHeight * 0.03),
             buildSolvedDate(problemModel.solvedAt, themeProvider),
+            /*
             SizedBox(height: screenHeight * 0.03),
             buildProblemReference(problemModel.reference, themeProvider),
-            SizedBox(
-              height: screenHeight * 0.03,
-            ),
+
+             */
+            SizedBox(height: screenHeight * 0.03,),
             buildImageSection(
                 context,
                 imageUrl,
@@ -212,7 +213,7 @@ class ProblemDetailScreenWidget {
                     src: 'assets/fonts/HandWrite.ttf',
                   ),
                 ],
-                child: LatexTextHandler.renderLatex(analysis ?? ""),
+                child: LatexTextHandler.renderLatex(analysis ?? "분석 결과가 없습니다!"),
                 renderingEngine: const TeXViewRenderingEngine.mathjax(),
                 style: const TeXViewStyle(
                   elevation: 0,
@@ -353,6 +354,7 @@ class ProblemDetailScreenWidget {
               );
             },
             child: Container(
+              width: mediaQuery.size.width,
               height: mediaQuery.size.height * 0.5, // 고정된 높이로 변경
               decoration: BoxDecoration(
                 color: themeProvider.primaryColor.withOpacity(0.1),

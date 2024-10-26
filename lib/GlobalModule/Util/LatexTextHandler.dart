@@ -7,16 +7,29 @@ class LatexTextHandler {
     // 가독성 향상을 위해 변환 작업 수행
     String convertedContent = _convertToReadableLatex(latexContent);
 
+    String latexWithLineSpacing = '''
+      <html>
+        <head>
+          <style>
+            body { line-height: 1.8; font-family: 'PrentendardThin'; font-size: 10pt; }
+          </style>
+        </head>
+        <body>
+          $convertedContent
+        </body>
+      </html>
+    ''';
+
     return TeXViewDocument(
-      convertedContent,
+      latexWithLineSpacing,
       style: TeXViewStyle(
         margin: const TeXViewMargin.all(10),
         padding: const TeXViewPadding.all(10),
         borderRadius: const TeXViewBorderRadius.all(10),
         backgroundColor: Colors.white,
         fontStyle: TeXViewFontStyle(
-          fontFamily: 'HandWrite', // Custom Font 적용
-          fontSize: 14,
+          fontFamily: 'PrentendardThin', // Custom Font 적용
+          fontSize: 10,
           sizeUnit: TeXViewSizeUnit.pt,
         ),
       ),

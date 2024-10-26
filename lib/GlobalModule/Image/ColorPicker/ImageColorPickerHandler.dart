@@ -87,26 +87,11 @@ class _ColorPickerScreenState extends State<ColorPickerScreen> {
                   color: themeProvider.primaryColor,
                 ),
               ],
-              /*
-              children: [
-                StandardText(
-                  text: '하단의 + 버튼을 누른 뒤, 지우개를 움직여',
-                  fontSize: 16,
-                  color: themeProvider.primaryColor,
-                ),
-                StandardText(
-                  text: '지우고 싶은 색상들을 선택하세요',
-                  fontSize: 16,
-                  color: themeProvider.primaryColor,
-                ),
-              ],
-
-               */
             ),
           ),
           body: Column(
             children: [
-              StandardText(
+              const StandardText(
                 text: '지우개를 움직여 지우고 싶은 색상들을 선택하세요',
                 fontSize: 14,
                 color: Colors.black, // 원하는 텍스트 색상

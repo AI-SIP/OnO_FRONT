@@ -109,7 +109,7 @@ class _AnswerShareScreenState extends State<AnswerShareScreen> {
                       children: [
                         Expanded(
                           child: Text(
-                            (widget.problem.reference != null && widget.problem.reference!.isNotEmpty) ? widget.problem.reference! : "출처 없음",
+                            (widget.problem.reference != null && widget.problem.reference!.isNotEmpty) ? widget.problem.reference! : "제목 없음",
                             style: TextStyle(
                               color: themeProvider.primaryColor,
                               fontSize: 24,
