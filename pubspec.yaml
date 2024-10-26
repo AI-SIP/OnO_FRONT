@@ -94,7 +94,7 @@ flutter:
     - assets/GuideScreen/GuideScreen4.svg
     - assets/Logo/GreenFrog.svg
     - assets/Logo/OnO.svg
-    - assets/Icon/add_note.svg
+    - assets/Icon/addNote.svg
     - assets/Icon/noImage.svg
     - assets/Icon/GreenNote.svg
     - assets/Icon/YellowNote.svg

@@ -90,10 +90,9 @@ class _FolderSelectionDialogState extends State<FolderSelectionDialog> {
           ),
           IconButton(
             icon: SvgPicture.asset(
-              "assets/Icon/add_note.svg", // SVG 경로
-              color: Colors.black, // SVG의 색상 적용
-              width: 24,
-              height: 24,
+              "assets/Icon/addNote.svg", // SVG 경로
+              width: 30,
+              height: 30,
             ),
             onPressed: () async {
               await _showFolderNameDialog(
