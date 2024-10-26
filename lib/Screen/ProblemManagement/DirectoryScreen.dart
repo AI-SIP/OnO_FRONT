@@ -859,7 +859,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(8.0),
                 child: DisplayImage(
-                  imagePath: imageUrl ?? defaultImage, // 이미지가 없을 경우 기본 이미지 사용
+                  imagePath: imageUrl,
                   fit: BoxFit.cover,
                 ),
               ),
@@ -901,7 +901,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
           child: ClipRRect(
             borderRadius: BorderRadius.circular(8.0),
             child: DisplayImage(
-              imagePath: imageUrl ?? defaultImage, // 이미지가 없을 경우 기본 이미지 사용
+              imagePath: imageUrl,
               fit: BoxFit.cover,
             ),
           ),
