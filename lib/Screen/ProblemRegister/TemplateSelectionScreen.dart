@@ -2,6 +2,7 @@ import 'dart:developer';
 
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:ono/GlobalModule/Theme/LoadingDialog.dart';
 import 'package:provider/provider.dart';
@@ -25,9 +26,23 @@ class TemplateSelectionScreen extends StatefulWidget {
 }
 
 class _TemplateSelectionScreenState extends State<TemplateSelectionScreen> {
-  int _selectedIndex = 0;
+  int _selectedIndex = 2;
 
+  final storage = const FlutterSecureStorage();
   final PageController _pageController = PageController();
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeSelectedIndex();
+  }
+
+  Future<void> _initializeSelectedIndex() async {
+    _selectedIndex = await getTemplateMethod();
+    setState(() {
+      _pageController.jumpToPage(_selectedIndex);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -280,6 +295,7 @@ class _TemplateSelectionScreenState extends State<TemplateSelectionScreen> {
     }
 
     FirebaseAnalytics.instance.logEvent(name: 'template_selection_${templateType.name}');
+    saveTemplateMethod(templateType);
 
     final imagePickerHandler = ImagePickerHandler();
     imagePickerHandler.showImagePicker(context, (pickedFile) async {
@@ -326,5 +342,19 @@ class _TemplateSelectionScreenState extends State<TemplateSelectionScreen> {
         }
       }
     });
+  }
+
+  Future<void> saveTemplateMethod(TemplateType templateType) async {
+    await storage.write(key: 'templateMethod', value: templateType.index.toString());
+  }
+
+  Future<int> getTemplateMethod() async {
+    String? templateIndex = await storage.read(key: 'templateMethod');
+
+    if(templateIndex != null){
+      return int.parse(templateIndex);
+    }
+
+    return TemplateType.special.index;
   }
 }
