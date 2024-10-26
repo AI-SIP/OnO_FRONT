@@ -119,21 +119,12 @@ flutter:
     - family: HandWrite
       fonts:
         - asset: assets/fonts/HandWrite.ttf
-    - family: StandardFont
-      fonts:
-        - asset: assets/fonts/StandardFont.otf
-    - family: StandardLight
-      fonts:
-        - asset: assets/fonts/StandardLight.ttf
-    - family: StandardMedium
-      fonts:
-        - asset: assets/fonts/StandardMedium.ttf
-    - family: StandardBold
-      fonts:
-        - asset: assets/fonts/StandardBold.ttf
     - family: PretendardBold
       fonts:
         - asset: assets/fonts/Pretendard-Bold.otf
+    - family: PretendardThin
+      fonts:
+        - asset: assets/fonts/Pretendard-Thin.otf
 
 
 

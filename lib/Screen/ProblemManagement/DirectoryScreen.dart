@@ -167,7 +167,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                 },
                 backgroundColor: Colors.transparent,
                 elevation: 0, // 그림자 제거
-                child: SvgPicture.asset("assets/Icon/Pencil.svg"),
+                child: SvgPicture.asset("assets/Icon/PencilDetail.svg"),
               ),
             ),
           ),
