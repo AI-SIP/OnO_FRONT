@@ -824,7 +824,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               StandardText(
-                text: folder.folderName,
+                text: folder.folderName.isNotEmpty ? folder.folderName : '제목 없음',
                 color: themeProvider.primaryColor,
                 fontSize: 18,
               ),
@@ -920,7 +920,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                   const SizedBox(width: 8), // 아이콘과 제목 간 간격
                   Flexible( // 제목
                     child: StandardText(
-                      text: problem.reference ?? '제목 없음',
+                      text: (problem.reference != null && problem.reference!.isNotEmpty) ? problem.reference! : '제목 없음',
                       color: themeProvider.primaryColor,
                       fontSize: 18,
                     ),
