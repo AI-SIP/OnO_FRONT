@@ -13,11 +13,12 @@ import 'TokenProvider.dart';
 
 class ProblemPracticeProvider with ChangeNotifier{
 
-  List<ProblemModel> _problems = [];
+  List<ProblemPracticeModel>? practiceThumbnails = [];
+  List<ProblemModel> problems = [];
   final TokenProvider tokenProvider = TokenProvider();
   final HttpService httpService = HttpService();
 
-  Future<List<ProblemPracticeModel>?> fetchAllPracticeThumbnails() async {
+  Future<void> fetchAllPracticeThumbnails() async {
     try {
       final response = await httpService.sendRequest(
         method: 'GET',
@@ -29,12 +30,12 @@ class ProblemPracticeProvider with ChangeNotifier{
 
         log('fetch all practice thumbnails result: $jsonResponse');
 
-        List<ProblemPracticeModel> practiceThumbnails = (jsonResponse as List)
+        practiceThumbnails = (jsonResponse as List)
             .map((e) => ProblemPracticeModel.fromJson(e))
             .toList();
 
-        log('Practice contents fetched : ${practiceThumbnails.length} problem practices');
-        return practiceThumbnails;
+        notifyListeners();
+        log('Practice contents fetched : ${practiceThumbnails?.length} problem practices');
       } else {
         throw Exception('Failed to load RootFolderContents');
       }

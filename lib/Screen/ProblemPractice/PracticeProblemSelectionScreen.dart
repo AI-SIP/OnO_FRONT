@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:ono/GlobalModule/Theme/SnackBarDialog.dart';
 import 'package:ono/Screen/ProblemPractice/PracticeTitleWriteScreen.dart';
 import 'package:provider/provider.dart';
 import '../../GlobalModule/Theme/StandardText.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
 import '../../Model/TemplateType.dart';
 import '../../Provider/FoldersProvider.dart';
-import '../../Provider/ProblemPracticeProvider.dart';
 import '../../Model/FolderThumbnailModel.dart';
 import '../../Model/ProblemModel.dart';
 import '../../GlobalModule/Theme/NoteIconHandler.dart';
@@ -35,9 +33,9 @@ class _PracticeProblemSelectionScreenState
 
   Future<void> _fetchFolders() async {
     final foldersProvider =
-    Provider.of<FoldersProvider>(context, listen: false);
+        Provider.of<FoldersProvider>(context, listen: false);
     List<FolderThumbnailModel> folders =
-    await foldersProvider.fetchAllFolderThumbnails();
+        await foldersProvider.fetchAllFolderThumbnails();
     setState(() {
       allFolderThumbnails = folders;
     });
@@ -45,186 +43,148 @@ class _PracticeProblemSelectionScreenState
 
   @override
   Widget build(BuildContext context) {
-    final problemPracticeProvider =
-    Provider.of<ProblemPracticeProvider>(context, listen: false);
-    final foldersProvider = Provider.of<FoldersProvider>(context);
     final themeProvider = Provider.of<ThemeHandler>(context);
     double screenHeight = MediaQuery.of(context).size.height;
-    double screenWidth = MediaQuery.of(context).size.width;
 
     return Scaffold(
-      appBar: AppBar(
-        centerTitle: true,
-        title: StandardText(
-          text: '복습할 문제 선택',
-          fontSize: 20,
-          color: themeProvider.primaryColor,
-        ),
-        backgroundColor: Colors.white,
-      ),
+      appBar: _buildAppBar(themeProvider),
       backgroundColor: Colors.white,
       body: Column(
         children: [
-          SizedBox(height: screenHeight * 0.035), // AppBar와 폴더 목록 사이 여백 증가
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 10.0),
-            child: SizedBox(
-              height: 120,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                itemCount: allFolderThumbnails.length,
-                itemBuilder: (context, index) {
-                  final folder = allFolderThumbnails[index];
-                  return GestureDetector(
-                    onTap: () async {
-                      setState(() {
-                        selectedFolderId = folder.folderId;
-                      });
-                      await foldersProvider.fetchFolderContents(
-                          folderId: folder.folderId);
-                    },
-                    child: Padding(
-                      padding: EdgeInsets.only(
-                        right : screenWidth * 0.04, // 첫 번째 노트만 왼쪽 여백 조정
-                      ),
-                      child: Column(
-                        children: [
-                          SvgPicture.asset(
-                            NoteIconHandler.getNoteIcon(index),
-                            width: 60,
-                            height: 60,
-                          ),
-                          const SizedBox(height: 8),
-                          SizedBox(
-                            width: screenWidth * 0.2, // 일정 너비로 설정하여 이름이 잘리면 ... 처리
-                            child: StandardText(
-                              text: folder.folderName.length > 10
-                                  ? '${folder.folderName.substring(0, 10)}..'
-                                  : folder.folderName,
-                              fontSize: 14,
-                              color: Colors.black,
-                              textAlign: TextAlign.center,
-                              overflow: TextOverflow.ellipsis,
-                              maxLines: 1,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
+          SizedBox(height: screenHeight * 0.035),
+          _buildFolderList(context, themeProvider),
+          const SizedBox(height: 20),
+          _buildProblemList(context, themeProvider),
+          _buildSubmitButton(context, themeProvider),
+        ],
+      ),
+    );
+  }
+
+  AppBar _buildAppBar(ThemeHandler themeProvider) {
+    return AppBar(
+      centerTitle: true,
+      title: StandardText(
+        text: '복습할 문제 선택',
+        fontSize: 20,
+        color: themeProvider.primaryColor,
+      ),
+      backgroundColor: Colors.white,
+    );
+  }
+
+  Widget _buildFolderList(BuildContext context, ThemeHandler themeProvider) {
+    double screenWidth = MediaQuery.of(context).size.width;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 10.0),
+      child: SizedBox(
+        height: 120,
+        child: ListView.builder(
+          scrollDirection: Axis.horizontal,
+          itemCount: allFolderThumbnails.length,
+          itemBuilder: (context, index) {
+            final folder = allFolderThumbnails[index];
+            return GestureDetector(
+              onTap: () async {
+                setState(() {
+                  selectedFolderId = folder.folderId;
+                });
+                await Provider.of<FoldersProvider>(context, listen: false)
+                    .fetchFolderContents(folderId: folder.folderId);
+              },
+              child: Padding(
+                padding: EdgeInsets.only(right: screenWidth * 0.04),
+                child: _buildFolderThumbnail(folder, themeProvider),
               ),
-            ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFolderThumbnail(
+      FolderThumbnailModel folder, ThemeHandler themeProvider) {
+    return Column(
+      children: [
+        SvgPicture.asset(
+          NoteIconHandler.getNoteIcon(allFolderThumbnails.indexOf(folder)),
+          width: 60,
+          height: 60,
+        ),
+        const SizedBox(height: 8),
+        SizedBox(
+          width: MediaQuery.of(context).size.width * 0.2,
+          child: StandardText(
+            text: folder.folderName.length > 10
+                ? '${folder.folderName.substring(0, 10)}..'
+                : folder.folderName,
+            fontSize: 14,
+            color: Colors.black,
+            textAlign: TextAlign.center,
+            overflow: TextOverflow.ellipsis,
+            maxLines: 1,
           ),
-          const SizedBox(height: 20), // 폴더 목록과 문제 목록 사이 여백
-          Expanded(
-            child: Padding(
-              padding:
-              const EdgeInsets.symmetric(horizontal: 30), // 문제 목록 좌우 패딩
-              child: foldersProvider.problems.isNotEmpty
-                  ? ListView.builder(
+        ),
+      ],
+    );
+  }
+
+  Widget _buildProblemList(BuildContext context, ThemeHandler themeProvider) {
+    final foldersProvider = Provider.of<FoldersProvider>(context);
+
+    return Expanded(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 30),
+        child: foldersProvider.problems.isNotEmpty
+            ? ListView.builder(
                 itemCount: foldersProvider.problems.length,
                 itemBuilder: (context, index) {
                   final problem = foldersProvider.problems[index];
                   final isSelected =
-                  selectedProblems.contains(problem.problemId);
+                      selectedProblems.contains(problem.problemId);
 
                   return GestureDetector(
                     onTap: () {
                       setState(() {
-                        if (isSelected) {
-                          selectedProblems.remove(problem.problemId);
-                        } else {
-                          selectedProblems.add(problem.problemId);
-                        }
+                        isSelected
+                            ? selectedProblems.remove(problem.problemId)
+                            : selectedProblems.add(problem.problemId);
                       });
                     },
-                    child: _problemTileContent(
-                        problem, themeProvider, isSelected),
+                    child:
+                        _problemTileContent(problem, themeProvider, isSelected),
                   );
                 },
-              ): SingleChildScrollView(
-                child: Align(
-                  alignment: Alignment.center,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      SizedBox(height: screenHeight * 0.15), // 아이콘과 텍스트 사이 간격 조정
-                      SvgPicture.asset(
-                        'assets/Icon/PencilDetail.svg', // 아이콘 경로 설정
-                        width: 100, // 원하는 아이콘 크기
-                        height: 100,
-                      ),
-                      const SizedBox(height: 16), // 아이콘과 텍스트 사이 간격 조정
-                      const StandardText(
-                        text: "작성한 오답노트가 없습니다!",
-                        color: Colors.black,
-                        fontSize: 16,
-                      ),
-                    ],
-                  ),
-                ),
               )
+            : _buildEmptyProblemMessage(),
+      ),
+    );
+  }
+
+  Widget _buildEmptyProblemMessage() {
+    return SingleChildScrollView(
+      child: Align(
+        alignment: Alignment.center,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            SizedBox(height: MediaQuery.of(context).size.height * 0.15),
+            SvgPicture.asset(
+              'assets/Icon/PencilDetail.svg',
+              width: 100,
+              height: 100,
             ),
-          ),
-          Container(
-            padding: const EdgeInsets.all(16.0),
-            margin: const EdgeInsets.only(bottom: 16.0),
-            width: MediaQuery.of(context).size.width * 0.8, // 버튼 너비를 화면의 80%로 설정
-            child: ElevatedButton(
-              onPressed: selectedProblems.isNotEmpty
-                  ? () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => PracticeTitleWriteScreen(
-                      selectedProblemIds: selectedProblems, // 선택된 문제 ID 리스트 전달
-                    ),
-                  ),
-                );
-              }
-                  : () {
-                _showSelectProblemDialog(context); // 문제 선택 경고 다이얼로그 표시
-              },
-              style: ElevatedButton.styleFrom(
-                minimumSize: const Size.fromHeight(50),
-                backgroundColor: themeProvider.primaryColor, // 버튼 색상 설정
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20), // 버튼 모양 유지
-                ),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Expanded(
-                    child: Center(
-                      child: StandardText(
-                        text: "다음",
-                        fontSize: 18,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                  Container(
-                    width: 24,
-                    height: 24,
-                    alignment: Alignment.center,
-                    decoration: const BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
-                    ),
-                    child: StandardText(
-                      text: selectedProblems.length.toString(),
-                      fontSize: 16,
-                      color: themeProvider.primaryColor,
-                    ),
-                  ),
-                ],
-              ),
+            const SizedBox(height: 16),
+            const StandardText(
+              text: "작성한 오답노트가 없습니다!",
+              color: Colors.black,
+              fontSize: 16,
             ),
-          )
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -240,7 +200,6 @@ class _PracticeProblemSelectionScreenState
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // 문제 이미지
           SizedBox(
             width: 50,
             height: 70,
@@ -255,18 +214,15 @@ class _PracticeProblemSelectionScreenState
           const SizedBox(width: 20),
           Expanded(
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SizedBox(height: 4),
                 Row(
                   children: [
                     _getTemplateIcon(problem.templateType!),
                     const SizedBox(width: 8),
                     Flexible(
                       child: StandardText(
-                        text: (problem.reference != null &&
-                            problem.reference!.isNotEmpty)
+                        text: problem.reference?.isNotEmpty == true
                             ? problem.reference!
                             : '제목 없음',
                         color: themeProvider.primaryColor,
@@ -287,8 +243,9 @@ class _PracticeProblemSelectionScreenState
             ),
           ),
           isSelected
-              ? Icon(Icons.check_circle, color: themeProvider.primaryColor, size: 25,)
-              : const Icon(Icons.circle_outlined, color: Colors.grey,),
+              ? Icon(Icons.check_circle,
+                  color: themeProvider.primaryColor, size: 25)
+              : const Icon(Icons.circle_outlined, color: Colors.grey),
         ],
       ),
     );
@@ -302,8 +259,61 @@ class _PracticeProblemSelectionScreenState
     );
   }
 
-  String formatDateTime(DateTime dateTime) {
-    return '${dateTime.year}/${dateTime.month}/${dateTime.day} ${dateTime.hour}:${dateTime.minute}';
+  Widget _buildSubmitButton(BuildContext context, ThemeHandler themeProvider) {
+    return Container(
+      padding: const EdgeInsets.all(16.0),
+      margin: const EdgeInsets.only(bottom: 16.0),
+      width: MediaQuery.of(context).size.width * 0.8,
+      child: ElevatedButton(
+        onPressed: selectedProblems.isNotEmpty
+            ? () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => PracticeTitleWriteScreen(
+                      selectedProblemIds: selectedProblems,
+                    ),
+                  ),
+                );
+              }
+            : () => _showSelectProblemDialog(context),
+        style: ElevatedButton.styleFrom(
+          minimumSize: const Size.fromHeight(50),
+          backgroundColor: themeProvider.primaryColor,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Expanded(
+              child: Center(
+                child: StandardText(
+                  text: "다음",
+                  fontSize: 18,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+            Container(
+              width: 24,
+              height: 24,
+              alignment: Alignment.center,
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+              ),
+              child: StandardText(
+                text: selectedProblems.length.toString(),
+                fontSize: 16,
+                color: themeProvider.primaryColor,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   void _showSelectProblemDialog(BuildContext context) {
@@ -312,11 +322,23 @@ class _PracticeProblemSelectionScreenState
       builder: (BuildContext context) {
         return AlertDialog(
           backgroundColor: Colors.white,
-          title: const StandardText(text: "경고", fontSize: 18, color: Colors.black,),
-          content: const StandardText(text: "하나 이상의 문제를 선택해주세요!", fontSize: 15, color: Colors.black),
+          title: const StandardText(
+            text: "경고",
+            fontSize: 18,
+            color: Colors.black,
+          ),
+          content: const StandardText(
+            text: "하나 이상의 문제를 선택해주세요!",
+            fontSize: 15,
+            color: Colors.black,
+          ),
           actions: <Widget>[
             TextButton(
-              child: const StandardText(text: "확인", fontSize: 14, color: Colors.red,),
+              child: const StandardText(
+                text: "확인",
+                fontSize: 14,
+                color: Colors.red,
+              ),
               onPressed: () {
                 Navigator.of(context).pop();
               },
@@ -325,5 +347,9 @@ class _PracticeProblemSelectionScreenState
         );
       },
     );
+  }
+
+  String formatDateTime(DateTime dateTime) {
+    return '${dateTime.year}/${dateTime.month}/${dateTime.day} ${dateTime.hour}:${dateTime.minute}';
   }
 }

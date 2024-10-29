@@ -17,8 +17,6 @@ class ProblemPracticeScreen extends StatefulWidget {
 }
 
 class _ProblemPracticeScreen extends State<ProblemPracticeScreen> {
-  List<ProblemPracticeModel>? practiceThumbnails;
-
   @override
   void initState() {
     super.initState();
@@ -27,10 +25,7 @@ class _ProblemPracticeScreen extends State<ProblemPracticeScreen> {
 
   Future<void> _fetchPracticeThumbnails() async {
     final provider = Provider.of<ProblemPracticeProvider>(context, listen: false);
-    List<ProblemPracticeModel>? fetchedThumbnails = await provider.fetchAllPracticeThumbnails();
-    setState(() {
-      practiceThumbnails = fetchedThumbnails;
-    });
+    await provider.fetchAllPracticeThumbnails();
   }
 
   @override
@@ -38,147 +33,153 @@ class _ProblemPracticeScreen extends State<ProblemPracticeScreen> {
     final themeProvider = Provider.of<ThemeHandler>(context);
 
     return Scaffold(
-      appBar: AppBar(
-        centerTitle: true,
-        title: StandardText(
-          text: '오답 복습',
-          fontSize: 20,
-          color: themeProvider.primaryColor,
-        ),
-        backgroundColor: Colors.white,
-      ),
+      appBar: _buildAppBar(themeProvider),
       backgroundColor: Colors.white,
-      body: practiceThumbnails == null
-          ? const Center(child: CircularProgressIndicator())
-          : practiceThumbnails!.isEmpty
-          ? Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            SvgPicture.asset(
-              'assets/Icon/RainbowNote.svg',
-              width: 100,
-              height: 100,
-            ),
-            const SizedBox(height: 40),
-            StandardText(
-              text: '오답 복습 루틴을 추가해보세요!',
-              fontSize: 16,
-              color: themeProvider.primaryColor,
-            ),
-          ],
-        ),
-      )
-          : ListView.builder(
-        padding: const EdgeInsets.symmetric(vertical: 10),
-        itemCount: practiceThumbnails!.length,
-        itemBuilder: (context, index) {
-          final practice = practiceThumbnails![index];
-          return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.withOpacity(0.2),
-                    spreadRadius: 1,
-                    blurRadius: 5,
-                    offset: const Offset(0, 3),
-                  ),
-                ],
-              ),
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Container(
-                    width: 50,
-                    height: 50,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(10),
-                      color: Colors.grey[200],
-                    ),
-                    child: Center(
-                      child: SvgPicture.asset(
-                        'assets/Icon/RainbowNote.svg',
-                        width: 40,
-                        height: 40,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        StandardText(
-                          text: practice.practiceTitle,
-                          fontSize: 18,
-                          color: Colors.black,
-                        ),
-                        const SizedBox(height: 8),
-                        Row(
-                          children: [
-                            _buildTag('${practice.practiceSize} 문제', themeProvider),
-                            const SizedBox(width: 8),
-                            practice.practiceCount >= 3
-                                ? _buildTag('복습 완료', themeProvider, highlight: true)
-                                : _buildTag('${practice.practiceCount}회 복습', themeProvider),
-                            const SizedBox(width: 8),
-                            ..._buildStatusIcons(practice.practiceCount),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        Row(
-                          children: [
-                            StandardText(
-                              text: '마지막 복습 날짜: ${formatDateTime(practice.lastSolvedAt) ?? '복습 기록 없음'}',
-                              fontSize: 12,
-                              color: Colors.grey,
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
+      body: Consumer<ProblemPracticeProvider>(
+        builder: (context, provider, child) {
+          if (provider.practiceThumbnails == null) {
+            return _buildLoadingIndicator();
+          } else if (provider.practiceThumbnails!.isEmpty) {
+            return _buildEmptyState(themeProvider);
+          } else {
+            return _buildPracticeListView(provider.practiceThumbnails!, themeProvider);
+          }
         },
       ),
-      floatingActionButton: Stack(
+      floatingActionButton: _buildFloatingActionButton(context, themeProvider),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+    );
+  }
+
+  PreferredSizeWidget _buildAppBar(ThemeHandler themeProvider) {
+    return AppBar(
+      centerTitle: true,
+      title: StandardText(
+        text: '오답 복습',
+        fontSize: 20,
+        color: themeProvider.primaryColor,
+      ),
+      backgroundColor: Colors.white,
+    );
+  }
+
+  Widget _buildLoadingIndicator() {
+    return const Center(child: CircularProgressIndicator());
+  }
+
+  Widget _buildEmptyState(ThemeHandler themeProvider) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Positioned(
-            bottom: 20,
-            right: 10,
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                shape: BoxShape.circle,
-                border: Border.all(color: themeProvider.primaryColor, width: 2),
-              ),
-              child: FloatingActionButton(
-                heroTag: 'create_problem_practice',
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const PracticeProblemSelectionScreen(),
-                    ),
-                  );
-                },
-                backgroundColor: Colors.transparent,
-                elevation: 0,
-                child: SvgPicture.asset("assets/Icon/addPractice.svg"),
-              ),
-            ),
+          SvgPicture.asset(
+            'assets/Icon/RainbowNote.svg',
+            width: 100,
+            height: 100,
+          ),
+          const SizedBox(height: 40),
+          StandardText(
+            text: '오답 복습 루틴을 추가해보세요!',
+            fontSize: 16,
+            color: themeProvider.primaryColor,
           ),
         ],
       ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+    );
+  }
+
+  Widget _buildPracticeListView(List<ProblemPracticeModel> practiceThumbnails, ThemeHandler themeProvider) {
+    return ListView.builder(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      itemCount: practiceThumbnails.length,
+      itemBuilder: (context, index) {
+        final practice = practiceThumbnails[index];
+        return _buildPracticeItem(practice, themeProvider);
+      },
+    );
+  }
+
+  Widget _buildPracticeItem(ProblemPracticeModel practice, ThemeHandler themeProvider) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Container(
+        decoration: _buildBoxDecoration(),
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            _buildIconContainer(),
+            const SizedBox(width: 16),
+            _buildPracticeInfo(practice, themeProvider),
+          ],
+        ),
+      ),
+    );
+  }
+
+  BoxDecoration _buildBoxDecoration() {
+    return BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(12),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.grey.withOpacity(0.2),
+          spreadRadius: 1,
+          blurRadius: 5,
+          offset: const Offset(0, 3),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildIconContainer() {
+    return Container(
+      width: 50,
+      height: 50,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(10),
+        color: Colors.grey[200],
+      ),
+      child: Center(
+        child: SvgPicture.asset(
+          'assets/Icon/RainbowNote.svg',
+          width: 40,
+          height: 40,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPracticeInfo(ProblemPracticeModel practice, ThemeHandler themeProvider) {
+    return Expanded(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          StandardText(
+            text: practice.practiceTitle,
+            fontSize: 18,
+            color: Colors.black,
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              _buildTag('${practice.practiceSize} 문제', themeProvider),
+              const SizedBox(width: 8),
+              practice.practiceCount >= 3
+                  ? _buildTag('복습 완료', themeProvider, highlight: true)
+                  : _buildTag('${practice.practiceCount}회 복습', themeProvider),
+              const SizedBox(width: 8),
+              ..._buildStatusIcons(practice.practiceCount),
+            ],
+          ),
+          const SizedBox(height: 8),
+          StandardText(
+            text: '마지막 복습 날짜: ${formatDateTime(practice.lastSolvedAt) ?? '복습 기록 없음'}',
+            fontSize: 12,
+            color: Colors.grey,
+          ),
+        ],
+      ),
     );
   }
 
@@ -217,8 +218,40 @@ class _ProblemPracticeScreen extends State<ProblemPracticeScreen> {
     });
   }
 
+  Widget _buildFloatingActionButton(BuildContext context, ThemeHandler themeProvider) {
+    return Stack(
+      children: [
+        Positioned(
+          bottom: 20,
+          right: 10,
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+              border: Border.all(color: themeProvider.primaryColor, width: 2),
+            ),
+            child: FloatingActionButton(
+              heroTag: 'create_problem_practice',
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const PracticeProblemSelectionScreen(),
+                  ),
+                );
+              },
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              child: SvgPicture.asset("assets/Icon/addPractice.svg"),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   String? formatDateTime(DateTime? dateTime) {
-    if(dateTime == null){
+    if (dateTime == null) {
       return null;
     }
     return DateFormat('yyyy/MM/dd').format(dateTime);
