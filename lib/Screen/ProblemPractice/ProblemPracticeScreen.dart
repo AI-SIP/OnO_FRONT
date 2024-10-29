@@ -1,11 +1,13 @@
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:provider/provider.dart';
 
-import '../GlobalModule/Theme/StandardText.dart';
-import '../GlobalModule/Theme/ThemeHandler.dart';
-import '../Model/ProblemPracticeModel.dart';
-import '../Provider/ProblemPracticeProvider.dart';
+import '../../GlobalModule/Theme/StandardText.dart';
+import '../../GlobalModule/Theme/ThemeHandler.dart';
+import '../../Model/ProblemPracticeModel.dart';
+import '../../Provider/ProblemPracticeProvider.dart';
+import 'PracticeProblemSelectionScreen.dart';
 
 class ProblemPracticeScreen extends StatefulWidget {
   const ProblemPracticeScreen({super.key});
@@ -97,6 +99,41 @@ class _ProblemPracticeScreen extends State<ProblemPracticeScreen> {
           );
         },
       ),
+      floatingActionButton: Stack(
+        children: [
+          // 기존의 플로팅 버튼
+          Positioned(
+            bottom: 20,
+            right: 10,
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+                border: Border.all(color: themeProvider.primaryColor, width: 2),
+              ),
+              child: FloatingActionButton(
+                heroTag: 'create_problem_practice',
+                onPressed: () {
+                  FirebaseAnalytics.instance
+                      .logEvent(name: 'practice_create_button_click');
+
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const PracticeProblemSelectionScreen(),
+                    ),
+                  );
+                },
+                backgroundColor: Colors.transparent,
+                elevation: 0, // 그림자 제거
+                child: SvgPicture.asset("assets/Icon/addPractice.svg",),
+              ),
+            ),
+          ),
+        ],
+      ),
+      floatingActionButtonLocation:
+      FloatingActionButtonLocation.endFloat,
     );
   }
 

@@ -137,6 +137,7 @@ class FoldersProvider with ChangeNotifier {
       if (response.statusCode == 200) {
         final jsonResponse = json.decode(utf8.decode(response.bodyBytes));
         log('AllFolderThumbnail Fetch Complete : $jsonResponse');
+
         return (jsonResponse as List)
             .map((e) => FolderThumbnailModel.fromJson(e))
             .toList();

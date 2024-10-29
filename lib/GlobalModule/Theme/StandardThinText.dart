@@ -10,11 +10,11 @@ class StandardThinText extends StatelessWidget {
   const StandardThinText({
     super.key,
     required this.text,
-    this.color = Colors.green,
+    this.color = Colors.black,
     this.fontSize = 16.0,
-    this.fontWeight = FontWeight.normal,
+    this.fontWeight = FontWeight.bold,
     //this.fontFamily = 'StandardFont',
-    this.fontFamily = 'PretendardBold',
+    this.fontFamily = 'PretendardThin',
   });
 
   @override

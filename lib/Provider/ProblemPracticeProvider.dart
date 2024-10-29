@@ -44,4 +44,27 @@ class ProblemPracticeProvider with ChangeNotifier{
       return null;
     }
   }
+
+  Future<void> submitPracticeProblems(List<int> problemIds) async {
+    try {
+      log('practice problem list: ${problemIds.toString()}');
+      /*
+      final response = await httpService.sendRequest(
+        method: 'POST',
+        url: '${AppConfig.baseUrl}/api/problem/practice',
+        headers: {'Content-Type': 'application/json'},
+      );
+
+      if (response.statusCode == 200) {
+        log('복습 루틴 생성 성공');
+      } else {
+        throw Exception('복습 루틴 생성 실패');
+      }
+
+       */
+    } catch (error, stackTrace) {
+      log('Error submitting selected problems: $error');
+      await Sentry.captureException(error, stackTrace: stackTrace);
+    }
+  }
 }

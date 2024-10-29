@@ -17,7 +17,7 @@ import 'package:provider/provider.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'Provider/UserProvider.dart';
 import 'Screen/ProblemManagement/DirectoryScreen.dart';
-import 'Screen/ProblemPracticeScreen.dart';
+import 'Screen/ProblemPractice/ProblemPracticeScreen.dart';
 import 'Screen/ProblemRegister/TemplateSelectionScreen.dart';
 import 'Screen/SettingScreen.dart';
 import 'firebase_options.dart';
