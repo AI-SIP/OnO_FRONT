@@ -12,13 +12,13 @@ import '../Theme/SnackBarDialog.dart';
 import '../Theme/StandardText.dart';
 import '../Theme/ThemeHandler.dart';
 
-class NavigationButtons extends StatefulWidget {
+class FolderNavigationButtons extends StatefulWidget {
   final BuildContext context;
   final FoldersProvider foldersProvider;
   final int currentId;
   final VoidCallback onRefresh;
 
-  const NavigationButtons({
+  const FolderNavigationButtons({
     super.key,
     required this.context,
     required this.foldersProvider,
@@ -27,10 +27,10 @@ class NavigationButtons extends StatefulWidget {
   });
 
   @override
-  _NavigationButtonsState createState() => _NavigationButtonsState();
+  _FolderNavigationButtonsState createState() => _FolderNavigationButtonsState();
 }
 
-class _NavigationButtonsState extends State<NavigationButtons> {
+class _FolderNavigationButtonsState extends State<FolderNavigationButtons> {
   bool isReviewed = false;
   final ImagePickerHandler _imagePickerHandler = ImagePickerHandler();
   XFile? selectedImage;

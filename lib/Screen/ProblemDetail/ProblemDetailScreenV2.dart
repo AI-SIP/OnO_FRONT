@@ -8,7 +8,7 @@ import '../../GlobalModule/Theme/SnackBarDialog.dart';
 import '../../GlobalModule/Theme/StandardText.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
 import '../../GlobalModule/Util/FolderSelectionDialog.dart';
-import '../../GlobalModule/Util/NavigationButtons.dart';
+import '../../GlobalModule/Util/FolderNavigationButtons.dart';
 import '../../Model/ProblemModel.dart';
 import '../../Model/TemplateType.dart';
 import '../../Provider/FoldersProvider.dart';
@@ -359,7 +359,7 @@ class _ProblemDetailScreenV2State extends State<ProblemDetailScreenV2> {
 
     return Padding(
       padding: EdgeInsets.only(top: topPadding, bottom: bottomPadding),
-      child: NavigationButtons(
+      child: FolderNavigationButtons(
         context: context,
         foldersProvider: Provider.of<FoldersProvider>(context, listen: false),
         currentId: widget.problemId,

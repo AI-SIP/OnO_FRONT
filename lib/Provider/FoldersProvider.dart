@@ -427,7 +427,6 @@ class FoldersProvider with ChangeNotifier {
   }
 
   Future<bool> deleteProblem(int problemId) async {
-
     try {
       final response = await httpService.sendRequest(
         method: 'DELETE',
@@ -528,7 +527,6 @@ class FoldersProvider with ChangeNotifier {
   }
 
   Future<ProblemModel?> getProblemDetails(int? problemId) async {
-
     try {
       var problemDetails =
       _problems.firstWhere((problem) => problem.problemId == problemId);
