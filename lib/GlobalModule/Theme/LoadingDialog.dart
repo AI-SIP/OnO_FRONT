@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 
 import 'HandWriteText.dart';
 
@@ -16,8 +17,8 @@ class LoadingDialog {
             children: [
               ClipRRect(
                 borderRadius: BorderRadius.circular(10),
-                child: Image.asset(
-                  'assets/Logo.png',  // 로고 이미지 경로
+                child: SvgPicture.asset(
+                  'assets/Logo/GreenFrog.svg',  // 로고 이미지 경로
                   width: 100,
                   height: 100,
                 ),

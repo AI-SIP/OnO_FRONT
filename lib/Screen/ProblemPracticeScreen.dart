@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:provider/provider.dart';
 
 import '../GlobalModule/Theme/StandardText.dart';
 import '../GlobalModule/Theme/ThemeHandler.dart';
 import '../Model/ProblemPracticeModel.dart';
 import '../Provider/ProblemPracticeProvider.dart';
-import '../Provider/UserProvider.dart';
 
 class ProblemPracticeScreen extends StatefulWidget {
   const ProblemPracticeScreen({super.key});
@@ -50,10 +50,21 @@ class _ProblemPracticeScreen extends State<ProblemPracticeScreen> {
           ? const Center(child: CircularProgressIndicator())
           : practiceThumbnails!.isEmpty
           ? Center(
-        child: StandardText(
-          text: "복습 항목이 없습니다!",
-          fontSize: 16,
-          color: themeProvider.primaryColor,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SvgPicture.asset(
+              'assets/Icon/RainbowNote.svg', // 아이콘 경로
+              width: 100, // 적절한 크기 설정
+              height: 100,
+            ),
+            const SizedBox(height: 40), // 아이콘과 텍스트 사이 간격
+            StandardText(
+              text: '오답 복습 루틴을 추가해보세요!',
+              fontSize: 16,
+              color: themeProvider.primaryColor,
+            ),
+          ],
         ),
       )
           : ListView.builder(

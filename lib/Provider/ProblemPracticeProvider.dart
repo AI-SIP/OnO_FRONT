@@ -32,7 +32,7 @@ class ProblemPracticeProvider with ChangeNotifier{
             .map((e) => ProblemPracticeModel.fromJson(e))
             .toList();
 
-        log('Practice contents fetched: , ${practiceThumbnails.length} problem practices');
+        log('Practice contents fetched : ${practiceThumbnails.length} problem practices');
         return practiceThumbnails;
       } else {
         throw Exception('Failed to load RootFolderContents');
