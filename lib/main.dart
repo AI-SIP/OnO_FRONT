@@ -111,6 +111,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
   final secureStorage = const FlutterSecureStorage();
   static const List<Widget> _widgetOptions = <Widget>[
     DirectoryScreen(),
+    DirectoryScreen(),
     TemplateSelectionScreen(),
     SettingScreen(),
   ];
@@ -209,6 +210,10 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
     return const [
       BottomNavigationBarItem(
         icon: Icon(Icons.menu_book),
+        label: '오답 관리',
+      ),
+      BottomNavigationBarItem(
+        icon: Icon(Icons.history),
         label: '오답 복습',
       ),
       BottomNavigationBarItem(

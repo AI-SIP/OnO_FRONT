@@ -1,10 +1,8 @@
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
-import 'package:ono/Config/AppConfig.dart';
 import 'package:ono/GlobalModule/Util/UrlLauncher.dart';
 import 'package:ono/Model/LoginStatus.dart';
 import 'package:provider/provider.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../GlobalModule/Theme/StandardText.dart';
 import '../GlobalModule/Theme/ThemeDialog.dart';
 import '../GlobalModule/Theme/ThemeHandler.dart';
