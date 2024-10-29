@@ -3,6 +3,7 @@ import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:ono/Model/ProblemPracticeModel.dart';
+import 'package:ono/Model/ProblemPracticeRegisterModel.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
 import '../Config/AppConfig.dart';
@@ -45,9 +46,10 @@ class ProblemPracticeProvider with ChangeNotifier{
     }
   }
 
-  Future<void> submitPracticeProblems(List<int> problemIds) async {
+  Future<void> submitPracticeProblems(ProblemPracticeRegisterModel problemPracticeRegisterModel) async {
     try {
-      log('practice problem list: ${problemIds.toString()}');
+      log('practice problem list: ${problemPracticeRegisterModel.registerProblemIds.toString()}');
+      log('practice problem title: ${problemPracticeRegisterModel.practiceTitle}');
       /*
       final response = await httpService.sendRequest(
         method: 'POST',

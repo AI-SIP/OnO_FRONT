@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:ono/GlobalModule/Theme/SnackBarDialog.dart';
+import 'package:ono/Screen/ProblemPractice/PracticeTitleWriteScreen.dart';
 import 'package:provider/provider.dart';
 import '../../GlobalModule/Theme/StandardText.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
@@ -173,12 +174,14 @@ class _PracticeProblemSelectionScreenState
             width: MediaQuery.of(context).size.width * 0.8, // 버튼 너비를 화면의 80%로 설정
             child: ElevatedButton(
               onPressed: selectedProblems.isNotEmpty
-                  ? () async {
-                await problemPracticeProvider.submitPracticeProblems(selectedProblems);
-                SnackBarDialog.showSnackBar(
-                  context: context,
-                  message: '복습 루틴이 생성되었습니다.',
-                  backgroundColor: themeProvider.primaryColor,
+                  ? () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => PracticeTitleWriteScreen(
+                      selectedProblemIds: selectedProblems, // 선택된 문제 ID 리스트 전달
+                    ),
+                  ),
                 );
               }
                   : () {
@@ -197,7 +200,7 @@ class _PracticeProblemSelectionScreenState
                   const Expanded(
                     child: Center(
                       child: StandardText(
-                        text: "루틴 만들기",
+                        text: "다음",
                         fontSize: 18,
                         color: Colors.white,
                       ),
