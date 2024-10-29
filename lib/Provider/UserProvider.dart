@@ -77,7 +77,7 @@ class UserProvider with ChangeNotifier {
   Future<void> saveUserToken({Map<String,dynamic>? response, String? loginMethod}) async{
     if(response == null){
       _loginStatus = LoginStatus.logout;
-      notifyListeners();
+      await resetUserInfo();
     } else{
       await storage.write(key: 'loginMethod', value: loginMethod);
       await tokenProvider.setAccessToken(response['accessToken']);
@@ -201,8 +201,7 @@ class UserProvider with ChangeNotifier {
   }
 
   Future<void> autoLogin() async {
-    //_loginStatus = LoginStatus.waiting;
-    String? refreshToken = await storage.read(key: 'refreshToken');
+    String? refreshToken = await tokenProvider.getRefreshToken();
 
     _isLoading = false;
     _isFirstLogin = false;
