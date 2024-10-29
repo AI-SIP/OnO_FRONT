@@ -46,27 +46,33 @@ class ProblemPracticeProvider with ChangeNotifier{
     }
   }
 
-  Future<void> submitPracticeProblems(ProblemPracticeRegisterModel problemPracticeRegisterModel) async {
+  Future<bool> submitPracticeProblems(ProblemPracticeRegisterModel problemPracticeRegisterModel) async {
     try {
       log('practice problem list: ${problemPracticeRegisterModel.registerProblemIds.toString()}');
       log('practice problem title: ${problemPracticeRegisterModel.practiceTitle}');
-      /*
+
       final response = await httpService.sendRequest(
         method: 'POST',
         url: '${AppConfig.baseUrl}/api/problem/practice',
-        headers: {'Content-Type': 'application/json'},
+        //headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: {
+          'practiceTitle': problemPracticeRegisterModel.practiceTitle.toString(),
+          'registerProblemIds': problemPracticeRegisterModel.registerProblemIds.map((id) => id.toString()).toList(),
+        },
       );
 
-      if (response.statusCode == 200) {
-        log('복습 루틴 생성 성공');
-      } else {
-        throw Exception('복습 루틴 생성 실패');
-      }
+      log('response: ${response.body}');
 
-       */
+      if(response.statusCode == 200){
+        return true;
+      } else{
+        return false;
+      }
     } catch (error, stackTrace) {
       log('Error submitting selected problems: $error');
       await Sentry.captureException(error, stackTrace: stackTrace);
+
+      return false;
     }
   }
 }

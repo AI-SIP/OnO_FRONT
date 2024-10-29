@@ -21,20 +21,29 @@ class PracticeTitleWriteScreen extends StatelessWidget {
       final problemPracticeProvider =
       Provider.of<ProblemPracticeProvider>(context, listen: false);
       final model = ProblemPracticeRegisterModel(
-        practiceCount: 3,
+        practiceCount: 0,
         practiceTitle: _titleController.text,
         registerProblemIds: selectedProblemIds,
         removeProblemIds: [],
       );
 
-      await problemPracticeProvider.submitPracticeProblems(model);
+      bool isSubmit =  await problemPracticeProvider.submitPracticeProblems(model);
       Navigator.pop(context);
       Navigator.pop(context);
-      SnackBarDialog.showSnackBar(
-        context: context,
-        message: '복습 루틴이 생성되었습니다.',
-        backgroundColor: themeProvider.primaryColor,
-      );
+
+      if(isSubmit){
+        SnackBarDialog.showSnackBar(
+          context: context,
+          message: '복습 루틴이 생성되었습니다.',
+          backgroundColor: themeProvider.primaryColor,
+        );
+      } else{
+        SnackBarDialog.showSnackBar(
+          context: context,
+          message: '복습 루틴에 실패했습니다.',
+          backgroundColor: Colors.red,
+        );
+      }
     }
   }
 
@@ -137,7 +146,7 @@ class PracticeTitleWriteScreen extends StatelessWidget {
                             const SizedBox(width: 8),
                             StandardText(
                               text: "3회 반복 복습 시스템",
-                              fontSize: 16,
+                              fontSize: 20,
                               color: themeProvider.primaryColor,
                               fontWeight: FontWeight.bold,
                             ),
@@ -148,7 +157,7 @@ class PracticeTitleWriteScreen extends StatelessWidget {
                           "뇌과학적으로 1일차, 1주일 후, 1달 후 간격을 둔 반복 복습이 "
                               "기억에 가장 잘 남는다고 해요. 이를 참고해서 잊지 않고 "
                               "3번의 복습이 이루어지도록 도와드려요.",
-                          style: TextStyle(fontSize: 14, color: Colors.black),
+                          style: TextStyle(fontSize: 15, color: Colors.black),
                         ),
                       ],
                     ),
