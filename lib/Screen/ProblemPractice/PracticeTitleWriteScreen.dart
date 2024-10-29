@@ -32,6 +32,8 @@ class PracticeTitleWriteScreen extends StatelessWidget {
       Navigator.pop(context);
 
       if(isSubmit){
+        await problemPracticeProvider.fetchAllPracticeThumbnails();
+
         SnackBarDialog.showSnackBar(
           context: context,
           message: '복습 루틴이 생성되었습니다.',

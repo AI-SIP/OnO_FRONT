@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../GlobalModule/Theme/StandardText.dart';
@@ -90,7 +91,7 @@ class _ProblemPracticeScreen extends State<ProblemPracticeScreen> {
               ),
               padding: const EdgeInsets.all(16),
               child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Container(
                     width: 50,
@@ -100,7 +101,11 @@ class _ProblemPracticeScreen extends State<ProblemPracticeScreen> {
                       color: Colors.grey[200],
                     ),
                     child: Center(
-                      child: Icon(Icons.book, color: themeProvider.primaryColor),
+                      child: SvgPicture.asset(
+                        'assets/Icon/RainbowNote.svg',
+                        width: 40,
+                        height: 40,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -110,7 +115,7 @@ class _ProblemPracticeScreen extends State<ProblemPracticeScreen> {
                       children: [
                         StandardText(
                           text: practice.practiceTitle,
-                          fontSize: 16,
+                          fontSize: 18,
                           color: Colors.black,
                         ),
                         const SizedBox(height: 8),
@@ -118,12 +123,22 @@ class _ProblemPracticeScreen extends State<ProblemPracticeScreen> {
                           children: [
                             _buildTag('${practice.practiceSize} 문제', themeProvider),
                             const SizedBox(width: 8),
-                            _buildTag('${practice.practiceCount}회 복습', themeProvider),
+                            practice.practiceCount >= 3
+                                ? _buildTag('복습 완료', themeProvider, highlight: true)
+                                : _buildTag('${practice.practiceCount}회 복습', themeProvider),
+                            const SizedBox(width: 8),
+                            ..._buildStatusIcons(practice.practiceCount),
                           ],
                         ),
                         const SizedBox(height: 8),
                         Row(
-                          children: _buildStatusIcons(practice.practiceCount),
+                          children: [
+                            StandardText(
+                              text: '마지막 복습 날짜: ${formatDateTime(practice.lastSolvedAt) ?? '복습 기록 없음'}',
+                              fontSize: 12,
+                              color: Colors.grey,
+                            ),
+                          ],
                         ),
                       ],
                     ),
@@ -167,35 +182,45 @@ class _ProblemPracticeScreen extends State<ProblemPracticeScreen> {
     );
   }
 
-  Widget _buildTag(String text, ThemeHandler themeProvider) {
+  Widget _buildTag(String text, ThemeHandler themeProvider, {bool highlight = false}) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: Colors.grey[200],
+        color: highlight ? themeProvider.primaryColor : themeProvider.primaryColor.withOpacity(0.5),
         borderRadius: BorderRadius.circular(5),
       ),
       child: StandardText(
         text: text,
         fontSize: 12,
-        color: Colors.grey,
+        color: Colors.white,
       ),
     );
   }
 
   List<Widget> _buildStatusIcons(int practiceCount) {
-    List<Widget> icons = [];
-    for (int i = 0; i < 3; i++) {
-      icons.add(
-        Padding(
-          padding: const EdgeInsets.only(right: 4.0),
-          child: Icon(
-            Icons.circle,
-            color: i < practiceCount ? Colors.green : Colors.grey,
-            size: 16,
-          ),
+    List<String> icons = [
+      'assets/Icon/SmallGreenFrog.svg',
+      'assets/Icon/SmallYellowFrog.svg',
+      'assets/Icon/SmallPinkFrog.svg'
+    ];
+
+    return List<Widget>.generate(3, (index) {
+      return Padding(
+        padding: const EdgeInsets.only(right: 4.0),
+        child: SvgPicture.asset(
+          icons[index],
+          width: 20,
+          height: 20,
+          color: index < practiceCount ? null : Colors.white,
         ),
       );
+    });
+  }
+
+  String? formatDateTime(DateTime? dateTime) {
+    if(dateTime == null){
+      return null;
     }
-    return icons;
+    return DateFormat('yyyy/MM/dd').format(dateTime);
   }
 }
