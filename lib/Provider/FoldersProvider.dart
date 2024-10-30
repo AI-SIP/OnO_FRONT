@@ -533,7 +533,6 @@ class FoldersProvider with ChangeNotifier {
       _problems.firstWhere((problem) => problem.problemId == problemId);
 
       if (problemDetails != null) {
-        //return ProblemModel.fromJson(problemDetails.toJson());
         return problemDetails;
       } else {
         throw Exception('Problem with ID $problemId not found');

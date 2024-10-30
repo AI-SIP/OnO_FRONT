@@ -15,6 +15,7 @@ class ProblemPracticeProvider with ChangeNotifier{
 
   List<ProblemPracticeModel>? practiceThumbnails = [];
   List<ProblemModel> problems = [];
+  List<int> problemIds = [];
   final TokenProvider tokenProvider = TokenProvider();
   final HttpService httpService = HttpService();
 
@@ -59,6 +60,8 @@ class ProblemPracticeProvider with ChangeNotifier{
             .map((e) => ProblemModel.fromJson(e))
             .toList();
 
+        problemIds = problems.map((problem) => problem.problemId).toList();
+
         log('Fetched ${problems.length} problems for practice ID: $practiceId');
         notifyListeners();
       } else {
@@ -97,6 +100,25 @@ class ProblemPracticeProvider with ChangeNotifier{
       await Sentry.captureException(error, stackTrace: stackTrace);
 
       return false;
+    }
+  }
+
+  Future<ProblemModel?> getProblemDetails(int? problemId) async {
+    try {
+      var problemDetails = problems.firstWhere((problem) => problem.problemId == problemId);
+
+      if (problemDetails != null) {
+        return problemDetails;
+      } else {
+        throw Exception('Problem with ID $problemId not found');
+      }
+    } catch (error, stackTrace) {
+      log('Error fetching problem details for ID $problemId: $error');
+      await Sentry.captureException(
+        error,
+        stackTrace: stackTrace,
+      );
+      return null;
     }
   }
 }

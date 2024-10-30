@@ -1,175 +1,138 @@
 import 'dart:io';
 
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:ono/GlobalModule/Theme/LoadingDialog.dart';
 import 'package:ono/Provider/FoldersProvider.dart';
+import 'package:ono/Provider/ProblemPracticeProvider.dart';
 import 'package:ono/Screen/ProblemDetail/ProblemDetailScreenV2.dart';
 import 'package:provider/provider.dart';
+import '../Image/ImagePickerHandler.dart';
+import '../Theme/SnackBarDialog.dart';
+import '../Theme/StandardText.dart';
+import '../Theme/ThemeHandler.dart';
 
-import '../../GlobalModule/Theme/SnackBarDialog.dart';
-import '../../GlobalModule/Theme/StandardText.dart';
-import '../../GlobalModule/Theme/ThemeHandler.dart';
+class PracticeNavigationButtons extends StatefulWidget {
+  final BuildContext context;
+  final ProblemPracticeProvider practiceProvider;
+  final int currentId;
+  final VoidCallback onRefresh;
 
-class PracticeNavigationScreen extends StatefulWidget {
-  final List<int> problemIds; // 복습할 문제 ID 목록
-  final int initialIndex;
-
-  const PracticeNavigationScreen({
+  const PracticeNavigationButtons({
     super.key,
-    required this.problemIds,
-    this.initialIndex = 0,
+    required this.context,
+    required this.practiceProvider,
+    required this.currentId,
+    required this.onRefresh,
   });
 
   @override
-  _PracticeNavigationScreenState createState() => _PracticeNavigationScreenState();
+  _PracticeNavigationButtonsState createState() => _PracticeNavigationButtonsState();
 }
 
-class _PracticeNavigationScreenState extends State<PracticeNavigationScreen> {
-  int currentIndex = 0;
+class _PracticeNavigationButtonsState extends State<PracticeNavigationButtons> {
   bool isReviewed = false;
+  XFile? selectedImage;
 
   @override
-  void initState() {
-    super.initState();
-    currentIndex = widget.initialIndex;
-  }
+  Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeHandler>(context);
+    final problemIds = widget.practiceProvider.problemIds;
+    double screenHeight = MediaQuery.of(context).size.height;
 
-  void navigateToNextProblem() {
-    setState(() {
-      if (currentIndex < widget.problemIds.length - 1) {
-        currentIndex++;
-        isReviewed = false; // 다음 문제로 이동하면 초기화
-      } else {
-        _showCompletionScreen(); // 마지막 문제일 때 완료 화면으로 이동
-      }
-    });
-  }
-
-  void navigateToPreviousProblem() {
-    if (currentIndex > 0) {
-      setState(() {
-        currentIndex--;
-        isReviewed = false; // 이전 문제로 이동 시 초기화
-      });
+    if (problemIds.isEmpty) {
+      return const Center();
     }
-  }
 
-  /*
-  void markAsReviewed() async {
-    final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
-    final foldersProvider = Provider.of<FoldersProvider>(context, listen: false);
+    int currentIndex = problemIds.indexOf(widget.currentId);
+    int previousProblemId =
+    currentIndex > 0 ? problemIds[currentIndex - 1] : problemIds.last;
+    int nextProblemId = currentIndex < problemIds.length - 1
+        ? problemIds[currentIndex + 1]
+        : problemIds.first;
 
-    LoadingDialog.show(context, '복습 중...');
-    await foldersProvider.addRepeatCount(widget.problemIds[currentIndex]);
-    setState(() {
-      isReviewed = true;
-    });
-
-    LoadingDialog.hide(context);
-    SnackBarDialog.showSnackBar(
-      context: context,
-      message: '복습이 완료되었습니다!',
-      backgroundColor: themeProvider.primaryColor,
-    );
-  }
-
-   */
-
-  void _showCompletionScreen() {
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (context) => const ReviewCompletionScreen()),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final themeProvider = Provider.of<ThemeHandler>(context);
-
-    return Scaffold(
-      appBar: AppBar(
-        title: StandardText(
-          text: '문제 복습 (${currentIndex + 1}/${widget.problemIds.length})',
-          fontSize: 18,
-          color: themeProvider.primaryColor,
-        ),
-        backgroundColor: Colors.white,
-        centerTitle: true,
-      ),
-      body: ProblemDetailScreenV2(problemId: widget.problemIds[currentIndex]),
-      bottomNavigationBar: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8.0),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            TextButton(
-              onPressed: navigateToPreviousProblem,
-              style: _buildButtonStyle(themeProvider),
-              child: const StandardText(text: '< 이전 문제'),
-            ),
-            /*
-            TextButton(
-              onPressed: isReviewed ? null : markAsReviewed,
-              style: _buildButtonStyle(themeProvider),
-              child: isReviewed
-                  ? const Icon(Icons.check, color: Colors.green)
-                  : const StandardText(text: '복습 완료'),
-            ),
-
-             */
-            TextButton(
-              onPressed: navigateToNextProblem,
-              style: _buildButtonStyle(themeProvider),
-              child: const StandardText(text: '다음 문제 >'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  ButtonStyle _buildButtonStyle(ThemeHandler themeProvider) {
-    return ElevatedButton.styleFrom(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-      backgroundColor: themeProvider.primaryColor.withOpacity(0.1),
-      side: BorderSide(color: themeProvider.primaryColor, width: 2.0),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15.0)),
-    );
-  }
-}
-
-class ReviewCompletionScreen extends StatelessWidget {
-  const ReviewCompletionScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final themeProvider = Provider.of<ThemeHandler>(context);
-
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('복습 완료'),
-        backgroundColor: themeProvider.primaryColor,
-        centerTitle: true,
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.done, size: 100, color: Colors.green),
-            const SizedBox(height: 20),
-            StandardText(
-              text: '모든 복습을 완료하였습니다!',
-              fontSize: 20,
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: [
+        TextButton(
+          onPressed: () {
+            FirebaseAnalytics.instance.logEvent(
+              name: 'navigate_previous_problem',
+            );
+            navigateToProblem(context, previousProblemId, isNext: false);
+          },
+          style: ElevatedButton.styleFrom(
+            padding:
+            EdgeInsets.symmetric(horizontal: screenHeight * 0.02, vertical: screenHeight * 0.008),
+            backgroundColor: themeProvider.primaryColor.withOpacity(0.1),
+            side: BorderSide(
               color: themeProvider.primaryColor,
+              width: 2.0,
             ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text('홈으로 돌아가기'),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(15.0),
             ),
-          ],
+          ),
+          child: StandardText(
+              text: '< 이전 문제', fontSize: screenHeight * 0.012, color: themeProvider.primaryColor),
         ),
+
+        TextButton(
+          onPressed: () {
+            FirebaseAnalytics.instance.logEvent(
+              name: 'navigate_next_problem',
+            );
+            navigateToProblem(context, nextProblemId, isNext: true);
+          },
+          style: ElevatedButton.styleFrom(
+            padding:
+            EdgeInsets.symmetric(horizontal: screenHeight * 0.02, vertical: screenHeight * 0.008),
+            backgroundColor: themeProvider.primaryColor.withOpacity(0.1),
+            side: BorderSide(
+              color: themeProvider.primaryColor,
+              width: 2.0,
+            ),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(15.0),
+            ),
+          ),
+          child: StandardText(
+              text: '다음 문제 >', fontSize: screenHeight * 0.012, color: themeProvider.primaryColor),
+        ),
+      ],
+    );
+  }
+
+  void navigateToProblem(BuildContext context, int newProblemId,
+      {required bool isNext}) {
+    Navigator.pushReplacement(
+      context,
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            ProblemDetailScreenV2(problemId: newProblemId, isPractice: true,),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          // 다음 문제인지 이전 문제인지에 따라 시작 위치와 애니메이션 설정
+          final Offset begin =
+          !isNext ? const Offset(-1.0, 0.0) : const Offset(1.0, 0.0);
+          const end = Offset.zero;
+          const curve = Curves.easeInOut;
+
+          var tween =
+          Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+          var offsetAnimation = animation.drive(tween);
+
+          // 회전 애니메이션 설정
+          return SlideTransition(
+            position: offsetAnimation,
+            child: RotationTransition(
+              alignment: Alignment.bottomRight, // 오른쪽 아래를 기준으로 회전
+              turns: Tween(begin: !isNext ? -0.1 : 0.1, end: 0.0)
+                  .animate(animation), // 시계 방향으로 회전
+              child: child,
+            ),
+          );
+        },
       ),
     );
   }

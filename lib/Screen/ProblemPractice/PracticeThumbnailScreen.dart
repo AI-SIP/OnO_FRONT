@@ -1,24 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
+import 'package:ono/GlobalModule/Theme/LoadingDialog.dart';
 import 'package:ono/GlobalModule/Theme/SnackBarDialog.dart';
 import 'package:provider/provider.dart';
 
 import '../../GlobalModule/Theme/StandardText.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
-import '../../GlobalModule/Util/PracticeNavigationButtons.dart';
+import '../ProblemDetail/ProblemDetailScreenV2.dart';
 import '../../Model/ProblemPracticeModel.dart';
 import '../../Provider/ProblemPracticeProvider.dart';
 import 'PracticeProblemSelectionScreen.dart';
 
-class ProblemPracticeScreen extends StatefulWidget {
-  const ProblemPracticeScreen({super.key});
+class PracticeThumbnailScreen extends StatefulWidget {
+  const PracticeThumbnailScreen({super.key});
 
   @override
   _ProblemPracticeScreen createState() => _ProblemPracticeScreen();
 }
 
-class _ProblemPracticeScreen extends State<ProblemPracticeScreen> {
+class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
   @override
   void initState() {
     super.initState();
@@ -108,18 +109,28 @@ class _ProblemPracticeScreen extends State<ProblemPracticeScreen> {
       ProblemPracticeModel practice, ThemeHandler themeProvider) {
     return GestureDetector(
       onTap: () async {
-        // 문제가 정상적으로 로드되었을 때만 이동
-        if(practice.problemIds != null && practice.problemIds!.isNotEmpty){
+        // 문제 리스트를 먼저 갱신
+        final provider = Provider.of<ProblemPracticeProvider>(context, listen: false);
+
+        LoadingDialog.show(context, '복습 루틴 생성 중...');
+
+        await provider.fetchPracticeProblems(practice.practiceId);
+
+        LoadingDialog.hide(context);
+
+        if (provider.problems.isNotEmpty) {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => PracticeNavigationScreen(
-                  problemIds: practice.problemIds!
-              ),
+              builder: (context) => ProblemDetailScreenV2(problemId: provider.problemIds[0], isPractice: true,),
             ),
           );
-        } else{
-          SnackBarDialog.showSnackBar(context: context, message: '복습 루틴이 비어있습니다!', backgroundColor: Colors.red);
+        } else {
+          SnackBarDialog.showSnackBar(
+            context: context,
+            message: '복습 루틴이 비어있습니다!',
+            backgroundColor: Colors.red,
+          );
         }
       },
       child: Padding(
