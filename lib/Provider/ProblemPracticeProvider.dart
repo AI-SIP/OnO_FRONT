@@ -13,6 +13,7 @@ import 'TokenProvider.dart';
 
 class ProblemPracticeProvider with ChangeNotifier{
 
+  int currentPracticeId = -1;
   List<ProblemPracticeModel>? practiceThumbnails = [];
   List<ProblemModel> problems = [];
   List<int> problemIds = [];
@@ -55,6 +56,8 @@ class ProblemPracticeProvider with ChangeNotifier{
 
       if (response.statusCode == 200) {
         final jsonResponse = json.decode(utf8.decode(response.bodyBytes));
+
+        currentPracticeId = practiceId;
 
         problems = (jsonResponse as List)
             .map((e) => ProblemModel.fromJson(e))
@@ -119,6 +122,27 @@ class ProblemPracticeProvider with ChangeNotifier{
         stackTrace: stackTrace,
       );
       return null;
+    }
+  }
+
+  Future<bool> addPracticeCount(int practiceId) async {
+    try {
+      final response = await httpService.sendRequest(
+        method: 'PATCH',
+        url: '${AppConfig.baseUrl}/api/problem/practice/complete/$practiceId',
+      );
+
+      if (response.statusCode == 200) {
+        log('Practice count updated for practice ID: $practiceId');
+        return true;
+      } else {
+        log('Failed to update practice count for practice ID: $practiceId');
+        return false;
+      }
+    } catch (error, stackTrace) {
+      log('Error completing practice for practice ID $practiceId: $error');
+      await Sentry.captureException(error, stackTrace: stackTrace);
+      return false;
     }
   }
 }

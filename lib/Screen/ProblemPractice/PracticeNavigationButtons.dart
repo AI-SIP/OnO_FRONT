@@ -50,7 +50,7 @@ class _PracticeNavigationButtonsState extends State<PracticeNavigationButtons> {
           onPressed: currentIndex > 0
               ? () => navigateToProblem(context, previousProblemId, isNext: false)
               : null,
-          style: _buildButtonStyle(themeProvider, screenHeight, isCompletion: falsedes),
+          style: _buildButtonStyle(themeProvider, screenHeight, isCompletion: false),
           child: StandardText(
             text: '< 이전 문제',
             fontSize: screenHeight * 0.012,
@@ -65,7 +65,7 @@ class _PracticeNavigationButtonsState extends State<PracticeNavigationButtons> {
         TextButton(
           onPressed: nextProblemId != -1
               ? () => navigateToProblem(context, nextProblemId, isNext: true)
-              : _showCompletionScreen,
+              : () => _showCompletionScreen(widget.practiceProvider),
           style: _buildButtonStyle(themeProvider, screenHeight, isCompletion: nextProblemId == -1),
           child: StandardText(
             text: nextProblemId != -1 ? '다음 문제 >' : '복습 마치기',
@@ -108,9 +108,22 @@ class _PracticeNavigationButtonsState extends State<PracticeNavigationButtons> {
     );
   }
 
-  void _showCompletionScreen() {
+  void _showCompletionScreen(ProblemPracticeProvider practiceProvider) {
+    // 현재 practiceId, totalProblems, practiceRound 정보를 전달합니다.
+    final practiceId = practiceProvider.currentPracticeId;
+    final totalProblems = practiceProvider.problemIds.length;
+    final practiceRound = practiceProvider.practiceThumbnails
+        ?.firstWhere((thumbnail) => thumbnail.practiceId == practiceId)
+        .practiceCount ?? 0;
+
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (context) => const PracticeCompletionScreen()),
+      MaterialPageRoute(
+        builder: (context) => PracticeCompletionScreen(
+          practiceId: practiceId,
+          totalProblems: totalProblems,
+          practiceRound: practiceRound + 1,
+        ),
+      ),
     );
   }
 
