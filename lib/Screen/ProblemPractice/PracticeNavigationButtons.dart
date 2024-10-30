@@ -53,7 +53,7 @@ class _PracticeNavigationButtonsState extends State<PracticeNavigationButtons> {
       style: _buildButtonStyle(themeProvider, screenHeight, isCompletion: false),
       child: StandardText(
         text: '< 이전 문제',
-        fontSize: screenHeight * 0.012,
+        fontSize: 14,
         color: themeProvider.primaryColor,
       ),
     );
@@ -81,7 +81,7 @@ class _PracticeNavigationButtonsState extends State<PracticeNavigationButtons> {
       style: _buildButtonStyle(themeProvider, screenHeight, isCompletion: nextProblemId == -1),
       child: StandardText(
         text: nextProblemId != -1 ? '다음 문제 >' : '복습 마치기',
-        fontSize: screenHeight * 0.012,
+        fontSize: 14,
         color: nextProblemId != -1 ? themeProvider.primaryColor : Colors.white,
       ),
     );
@@ -151,7 +151,7 @@ class _PracticeNavigationButtonsState extends State<PracticeNavigationButtons> {
 
   ButtonStyle _buildButtonStyle(ThemeHandler themeProvider, double screenHeight, {required bool isCompletion}) {
     return ElevatedButton.styleFrom(
-      padding: EdgeInsets.symmetric(horizontal: screenHeight * 0.02, vertical: screenHeight * 0.008),
+      padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
       backgroundColor: isCompletion ? themeProvider.primaryColor : Colors.white,
       side: BorderSide(color: themeProvider.primaryColor, width: 2.0),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15.0)),

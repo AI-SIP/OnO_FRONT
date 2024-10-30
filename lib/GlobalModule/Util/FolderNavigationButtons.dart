@@ -64,7 +64,7 @@ class _FolderNavigationButtonsState extends State<FolderNavigationButtons> {
           },
           style: ElevatedButton.styleFrom(
             padding:
-            EdgeInsets.symmetric(horizontal: screenHeight * 0.02, vertical: screenHeight * 0.008),
+            const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
             backgroundColor: Colors.white,
             side: BorderSide(
               color: themeProvider.primaryColor,
@@ -75,7 +75,7 @@ class _FolderNavigationButtonsState extends State<FolderNavigationButtons> {
             ),
           ),
           child: StandardText(
-              text: '< 이전 문제', fontSize: screenHeight * 0.012, color: themeProvider.primaryColor),
+              text: '< 이전 문제', fontSize: 14, color: themeProvider.primaryColor),
         ),
 
         // 복습 완료 버튼
@@ -83,7 +83,7 @@ class _FolderNavigationButtonsState extends State<FolderNavigationButtons> {
           onPressed: () => showReviewDialog(context),
           style: ElevatedButton.styleFrom(
             padding:
-              EdgeInsets.symmetric(horizontal: screenHeight * 0.02, vertical: screenHeight * 0.008),
+              const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
             backgroundColor: Colors.white,
             side: BorderSide(
               color: themeProvider.primaryColor,
@@ -97,7 +97,7 @@ class _FolderNavigationButtonsState extends State<FolderNavigationButtons> {
               ? Icon(
                   Icons.check, // 복습 완료 시 체크 아이콘만 표시
                   color: themeProvider.primaryColor,
-                  size: screenHeight * 0.024,
+                  size: 20,
                 )
               : Row(
                   mainAxisSize: MainAxisSize.min, // 터치 아이콘과 텍스트를 한 줄로 표시
@@ -105,12 +105,12 @@ class _FolderNavigationButtonsState extends State<FolderNavigationButtons> {
                     Icon(
                       Icons.touch_app, // 복습 완료 전 터치 아이콘
                       color: themeProvider.primaryColor,
-                      size: screenHeight * 0.014,
+                      size: 15,
                     ),
-                    SizedBox(width: screenHeight * 0.008), // 아이콘과 텍스트 간 간격
+                    const SizedBox(width: 10), // 아이콘과 텍스트 간 간격
                     StandardText(
                       text: '복습 완료', // 복습 완료 텍스트
-                      fontSize: screenHeight * 0.014,
+                      fontSize: 15,
                       color: themeProvider.primaryColor,
                     ),
                   ],
@@ -125,7 +125,7 @@ class _FolderNavigationButtonsState extends State<FolderNavigationButtons> {
           },
           style: ElevatedButton.styleFrom(
             padding:
-                EdgeInsets.symmetric(horizontal: screenHeight * 0.02, vertical: screenHeight * 0.008),
+                EdgeInsets.symmetric(horizontal: 15, vertical: 5),
             backgroundColor: Colors.white,
             side: BorderSide(
               color: themeProvider.primaryColor,
@@ -136,7 +136,7 @@ class _FolderNavigationButtonsState extends State<FolderNavigationButtons> {
             ),
           ),
           child: StandardText(
-              text: '다음 문제 >', fontSize: screenHeight * 0.012, color: themeProvider.primaryColor),
+              text: '다음 문제 >', fontSize: 14, color: themeProvider.primaryColor),
         ),
       ],
     );
