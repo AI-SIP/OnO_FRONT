@@ -160,7 +160,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                   const Duration(seconds: 1);
                   foldersProvider.fetchRootFolderContents();
                   Provider.of<ScreenIndexProvider>(context, listen: false)
-                      .setSelectedIndex(1);  // 문제 등록 탭으로 이동
+                      .setSelectedIndex(2);  // 문제 등록 탭으로 이동
 
                   FirebaseAnalytics.instance
                       .logEvent(name: 'move_to_template_page_button_click');

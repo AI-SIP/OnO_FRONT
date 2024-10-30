@@ -24,7 +24,8 @@ class _ProblemPracticeScreen extends State<ProblemPracticeScreen> {
   }
 
   Future<void> _fetchPracticeThumbnails() async {
-    final provider = Provider.of<ProblemPracticeProvider>(context, listen: false);
+    final provider =
+        Provider.of<ProblemPracticeProvider>(context, listen: false);
     await provider.fetchAllPracticeThumbnails();
   }
 
@@ -42,7 +43,8 @@ class _ProblemPracticeScreen extends State<ProblemPracticeScreen> {
           } else if (provider.practiceThumbnails!.isEmpty) {
             return _buildEmptyState(themeProvider);
           } else {
-            return _buildPracticeListView(provider.practiceThumbnails!, themeProvider);
+            return _buildPracticeListView(
+                provider.practiceThumbnails!, themeProvider);
           }
         },
       ),
@@ -88,7 +90,8 @@ class _ProblemPracticeScreen extends State<ProblemPracticeScreen> {
     );
   }
 
-  Widget _buildPracticeListView(List<ProblemPracticeModel> practiceThumbnails, ThemeHandler themeProvider) {
+  Widget _buildPracticeListView(List<ProblemPracticeModel> practiceThumbnails,
+      ThemeHandler themeProvider) {
     return ListView.builder(
       padding: const EdgeInsets.symmetric(vertical: 10),
       itemCount: practiceThumbnails.length,
@@ -99,19 +102,27 @@ class _ProblemPracticeScreen extends State<ProblemPracticeScreen> {
     );
   }
 
-  Widget _buildPracticeItem(ProblemPracticeModel practice, ThemeHandler themeProvider) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Container(
-        decoration: _buildBoxDecoration(),
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            _buildIconContainer(),
-            const SizedBox(width: 16),
-            _buildPracticeInfo(practice, themeProvider),
-          ],
+  Widget _buildPracticeItem(
+      ProblemPracticeModel practice, ThemeHandler themeProvider) {
+    return GestureDetector(
+      onTap: () async {
+        // 타일을 탭하면 fetchPracticeProblems 메서드 호출
+        await Provider.of<ProblemPracticeProvider>(context, listen: false)
+            .fetchPracticeProblems(practice.practiceId);
+      },
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        child: Container(
+          decoration: _buildBoxDecoration(),
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              _buildIconContainer(),
+              const SizedBox(width: 16),
+              _buildPracticeInfo(practice, themeProvider),
+            ],
+          ),
         ),
       ),
     );
@@ -150,7 +161,8 @@ class _ProblemPracticeScreen extends State<ProblemPracticeScreen> {
     );
   }
 
-  Widget _buildPracticeInfo(ProblemPracticeModel practice, ThemeHandler themeProvider) {
+  Widget _buildPracticeInfo(
+      ProblemPracticeModel practice, ThemeHandler themeProvider) {
     return Expanded(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -174,7 +186,8 @@ class _ProblemPracticeScreen extends State<ProblemPracticeScreen> {
           ),
           const SizedBox(height: 8),
           StandardText(
-            text: '마지막 복습 날짜: ${formatDateTime(practice.lastSolvedAt) ?? '복습 기록 없음'}',
+            text:
+                '마지막 복습 날짜: ${formatDateTime(practice.lastSolvedAt) ?? '복습 기록 없음'}',
             fontSize: 12,
             color: Colors.grey,
           ),
@@ -183,11 +196,14 @@ class _ProblemPracticeScreen extends State<ProblemPracticeScreen> {
     );
   }
 
-  Widget _buildTag(String text, ThemeHandler themeProvider, {bool highlight = false}) {
+  Widget _buildTag(String text, ThemeHandler themeProvider,
+      {bool highlight = false}) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: highlight ? themeProvider.primaryColor : themeProvider.primaryColor.withOpacity(0.5),
+        color: highlight
+            ? themeProvider.primaryColor
+            : themeProvider.primaryColor.withOpacity(0.5),
         borderRadius: BorderRadius.circular(5),
       ),
       child: StandardText(
@@ -218,7 +234,8 @@ class _ProblemPracticeScreen extends State<ProblemPracticeScreen> {
     });
   }
 
-  Widget _buildFloatingActionButton(BuildContext context, ThemeHandler themeProvider) {
+  Widget _buildFloatingActionButton(
+      BuildContext context, ThemeHandler themeProvider) {
     return Stack(
       children: [
         Positioned(
@@ -236,7 +253,8 @@ class _ProblemPracticeScreen extends State<ProblemPracticeScreen> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => const PracticeProblemSelectionScreen(),
+                    builder: (context) =>
+                        const PracticeProblemSelectionScreen(),
                   ),
                 );
               },

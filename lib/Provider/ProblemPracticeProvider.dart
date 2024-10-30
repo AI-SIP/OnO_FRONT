@@ -42,8 +42,31 @@ class ProblemPracticeProvider with ChangeNotifier{
     } catch (error, stackTrace) {
       log('Error fetching root folder contents: $error');
       await Sentry.captureException(error, stackTrace: stackTrace);
+    }
+  }
 
-      return null;
+  Future<void> fetchPracticeProblems(int practiceId) async {
+    try {
+      final response = await httpService.sendRequest(
+        method: 'GET',
+        url: '${AppConfig.baseUrl}/api/problem/practice/$practiceId',
+      );
+
+      if (response.statusCode == 200) {
+        final jsonResponse = json.decode(utf8.decode(response.bodyBytes));
+
+        problems = (jsonResponse as List)
+            .map((e) => ProblemModel.fromJson(e))
+            .toList();
+
+        log('Fetched ${problems.length} problems for practice ID: $practiceId');
+        notifyListeners();
+      } else {
+        throw Exception('Failed to load problems for practice ID: $practiceId');
+      }
+    } catch (error, stackTrace) {
+      log('Error fetching problems for practice ID $practiceId: $error');
+      await Sentry.captureException(error, stackTrace: stackTrace);
     }
   }
 
