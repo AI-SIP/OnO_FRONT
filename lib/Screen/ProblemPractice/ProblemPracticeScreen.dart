@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
+import 'package:ono/GlobalModule/Theme/SnackBarDialog.dart';
 import 'package:provider/provider.dart';
 
 import '../../GlobalModule/Theme/StandardText.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
+import '../../GlobalModule/Util/PracticeNavigationButtons.dart';
 import '../../Model/ProblemPracticeModel.dart';
 import '../../Provider/ProblemPracticeProvider.dart';
 import 'PracticeProblemSelectionScreen.dart';
@@ -106,9 +108,19 @@ class _ProblemPracticeScreen extends State<ProblemPracticeScreen> {
       ProblemPracticeModel practice, ThemeHandler themeProvider) {
     return GestureDetector(
       onTap: () async {
-        // 타일을 탭하면 fetchPracticeProblems 메서드 호출
-        await Provider.of<ProblemPracticeProvider>(context, listen: false)
-            .fetchPracticeProblems(practice.practiceId);
+        // 문제가 정상적으로 로드되었을 때만 이동
+        if(practice.problemIds != null && practice.problemIds!.isNotEmpty){
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => PracticeNavigationScreen(
+                  problemIds: practice.problemIds!
+              ),
+            ),
+          );
+        } else{
+          SnackBarDialog.showSnackBar(context: context, message: '복습 루틴이 비어있습니다!', backgroundColor: Colors.red);
+        }
       },
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
