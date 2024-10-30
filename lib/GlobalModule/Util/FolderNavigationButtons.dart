@@ -65,7 +65,7 @@ class _FolderNavigationButtonsState extends State<FolderNavigationButtons> {
           style: ElevatedButton.styleFrom(
             padding:
             EdgeInsets.symmetric(horizontal: screenHeight * 0.02, vertical: screenHeight * 0.008),
-            backgroundColor: themeProvider.primaryColor.withOpacity(0.1),
+            backgroundColor: Colors.white,
             side: BorderSide(
               color: themeProvider.primaryColor,
               width: 2.0,
@@ -84,7 +84,7 @@ class _FolderNavigationButtonsState extends State<FolderNavigationButtons> {
           style: ElevatedButton.styleFrom(
             padding:
               EdgeInsets.symmetric(horizontal: screenHeight * 0.02, vertical: screenHeight * 0.008),
-            backgroundColor: themeProvider.primaryColor.withOpacity(0.1),
+            backgroundColor: Colors.white,
             side: BorderSide(
               color: themeProvider.primaryColor,
               width: 2.0,
@@ -126,7 +126,7 @@ class _FolderNavigationButtonsState extends State<FolderNavigationButtons> {
           style: ElevatedButton.styleFrom(
             padding:
                 EdgeInsets.symmetric(horizontal: screenHeight * 0.02, vertical: screenHeight * 0.008),
-            backgroundColor: themeProvider.primaryColor.withOpacity(0.1),
+            backgroundColor: Colors.white,
             side: BorderSide(
               color: themeProvider.primaryColor,
               width: 2.0,

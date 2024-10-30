@@ -10,7 +10,7 @@ import '../../GlobalModule/Theme/StandardText.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
 import '../../GlobalModule/Util/FolderSelectionDialog.dart';
 import '../../GlobalModule/Util/FolderNavigationButtons.dart';
-import '../../GlobalModule/Util/PracticeNavigationButtons.dart';
+import '../ProblemPractice/PracticeNavigationButtons.dart';
 import '../../Model/ProblemModel.dart';
 import '../../Model/TemplateType.dart';
 import '../../Provider/FoldersProvider.dart';
@@ -107,12 +107,21 @@ class _ProblemDetailScreenV2State extends State<ProblemDetailScreenV2> {
   }
 
   AppBar _buildAppBar(ThemeHandler themeProvider) {
-    return AppBar(
-      backgroundColor: Colors.white,
-      centerTitle: true,
-      title: buildAppBarTitle(),
-      actions: _buildAppBarActions(),
-    );
+    if(widget.isPractice){
+      return AppBar(
+        backgroundColor: Colors.white,
+        centerTitle: true,
+        title: buildAppBarTitle(),
+      );
+    } else{
+      return AppBar(
+        backgroundColor: Colors.white,
+        centerTitle: true,
+        title: buildAppBarTitle(),
+        actions: _buildAppBarActions(),
+      );
+    }
+
   }
 
   Widget buildAppBarTitle(){
