@@ -309,7 +309,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                   child: ListTile(
                     leading: const Icon(Icons.delete_forever, color: Colors.red),
                     title: const StandardText(
-                      text: '공책 삭제하기',
+                      text: '현재 공책 삭제하기',
                       fontSize: 16,
                       color: Colors.red,
                     ),
@@ -836,7 +836,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
               children: [
                 StandardText(
                   text: folder.folderName.isNotEmpty ? folder.folderName : '제목 없음',
-                  color: themeProvider.primaryColor,
+                  color: Colors.black,
                   fontSize: 18,
                 ),
               ],
@@ -945,7 +945,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                     Flexible(
                       child: StandardText(
                         text: (problem.reference != null && problem.reference!.isNotEmpty) ? problem.reference! : '제목 없음',
-                        color: themeProvider.primaryColor,
+                        color: Colors.black,
                         fontSize: 18,
                       ),
                     ),
@@ -957,7 +957,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                       ? '작성 일시: ${formatDateTime(problem.createdAt!)}'
                       : '작성 일시: 정보 없음',
                   fontSize: 12,
-                  color: themeProvider.desaturateColor,
+                  color: Colors.grey,
                 ),
               ],
             ),

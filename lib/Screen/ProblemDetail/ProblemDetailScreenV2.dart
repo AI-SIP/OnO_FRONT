@@ -304,7 +304,7 @@ class _ProblemDetailScreenV2State extends State<ProblemDetailScreenV2> {
                   child: ListTile(
                     leading: const Icon(Icons.delete_forever, color: Colors.red),
                     title: const StandardText(
-                      text: '오답노트 삭제하기',
+                      text: '현재 오답노트 삭제하기',
                       fontSize: 16,
                       color: Colors.red,
                     ),
