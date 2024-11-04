@@ -32,7 +32,6 @@ class DirectoryScreen extends StatefulWidget {
 }
 
 class _DirectoryScreenState extends State<DirectoryScreen> {
-  final String defaultImage = 'assets/no_image.png';
   String _selectedSortOption = 'newest';
   bool modalShown = false;
 

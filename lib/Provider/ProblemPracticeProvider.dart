@@ -106,6 +106,39 @@ class ProblemPracticeProvider with ChangeNotifier{
     }
   }
 
+  Future<bool> deletePractices(List<int> deletePracticeIds) async {
+    try {
+      log('practice problem list: ${deletePracticeIds.toString()}');
+
+      final queryParams = {
+        'deletePracticeIds': deletePracticeIds.join(','), // 쉼표로 구분된 문자열로 변환
+      };
+
+
+      final response = await httpService.sendRequest(
+        method: 'DELETE',
+        url: '${AppConfig.baseUrl}/api/problem/practice',
+        queryParams: queryParams,
+      );
+
+      log('response: ${response.body}');
+
+      if(response.statusCode == 200){
+
+        await fetchAllPracticeThumbnails();
+
+        return true;
+      } else{
+        return false;
+      }
+    } catch (error, stackTrace) {
+      log('Error submitting selected problems: $error');
+      await Sentry.captureException(error, stackTrace: stackTrace);
+
+      return false;
+    }
+  }
+
   Future<ProblemModel?> getProblemDetails(int? problemId) async {
     try {
       var problemDetails = problems.firstWhere((problem) => problem.problemId == problemId);
