@@ -101,6 +101,7 @@ class PracticeCompletionScreen extends StatelessWidget {
             final success = await practiceProvider.addPracticeCount(practiceId);
             if (success) {
               Navigator.of(context).pop();
+              Navigator.of(context).pop();
               SnackBarDialog.showSnackBar(
                 context: context,
                 message: '복습을 완료했습니다!',

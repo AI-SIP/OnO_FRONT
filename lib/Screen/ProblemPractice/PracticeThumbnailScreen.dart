@@ -11,6 +11,7 @@ import '../../GlobalModule/Theme/ThemeHandler.dart';
 import '../ProblemDetail/ProblemDetailScreenV2.dart';
 import '../../Model/ProblemPracticeModel.dart';
 import '../../Provider/ProblemPracticeProvider.dart';
+import 'PracticeDetailScreen.dart';
 import 'PracticeProblemSelectionScreen.dart';
 
 class PracticeThumbnailScreen extends StatefulWidget {
@@ -324,7 +325,8 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
                 : _selectedPracticeIds.add(practice.practiceId);
           });
         } else {
-          _navigateToProblemDetail(practice);
+          _navigateToPracticeDetail(practice);
+          //_navigateToProblemDetail(practice);
         }
       },
       child: Padding(
@@ -345,6 +347,25 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
     );
   }
 
+
+  void _navigateToPracticeDetail(ProblemPracticeModel practice) async {
+
+    final practiceProvider = Provider.of<ProblemPracticeProvider>(context, listen: false);
+    LoadingDialog.show(context, '복습 리스트 로딩 중...');
+
+    await practiceProvider.fetchPracticeProblems(practice.practiceId);
+
+    LoadingDialog.hide(context);
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => PracticeDetailScreen(practice: practice),
+      ),
+    );
+  }
+
+  /*
   Future<void> _navigateToProblemDetail(ProblemPracticeModel practice) async {
     final provider = Provider.of<ProblemPracticeProvider>(context, listen: false);
     LoadingDialog.show(context, '복습 루틴 생성 중...');
@@ -371,6 +392,8 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
       );
     }
   }
+
+   */
 
 
   BoxDecoration _buildBoxDecoration(bool isSelected, ThemeHandler themeProvider) {
