@@ -1,4 +1,3 @@
-import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
@@ -8,7 +7,6 @@ import 'package:provider/provider.dart';
 
 import '../../GlobalModule/Theme/StandardText.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
-import '../ProblemDetail/ProblemDetailScreenV2.dart';
 import '../../Model/ProblemPracticeModel.dart';
 import '../../Provider/ProblemPracticeProvider.dart';
 import 'PracticeDetailScreen.dart';
@@ -291,7 +289,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
           ),
           const SizedBox(height: 40),
           StandardText(
-            text: '오답 복습 루틴을 추가해보세요!',
+            text: '오답 복습 리스트를 추가해보세요!',
             fontSize: 16,
             color: themeProvider.primaryColor,
           ),
@@ -364,37 +362,6 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
       ),
     );
   }
-
-  /*
-  Future<void> _navigateToProblemDetail(ProblemPracticeModel practice) async {
-    final provider = Provider.of<ProblemPracticeProvider>(context, listen: false);
-    LoadingDialog.show(context, '복습 루틴 생성 중...');
-
-    await provider.fetchPracticeProblems(practice.practiceId);
-
-    LoadingDialog.hide(context);
-
-    if (provider.problems.isNotEmpty) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => ProblemDetailScreenV2(
-            problemId: provider.problemIds[0],
-            isPractice: true,
-          ),
-        ),
-      );
-    } else {
-      SnackBarDialog.showSnackBar(
-        context: context,
-        message: '복습 루틴이 비어있습니다!',
-        backgroundColor: Colors.red,
-      );
-    }
-  }
-
-   */
-
 
   BoxDecoration _buildBoxDecoration(bool isSelected, ThemeHandler themeProvider) {
     return BoxDecoration(
@@ -507,6 +474,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
 
   Widget _buildFloatingActionButton(
       BuildContext context, ThemeHandler themeProvider) {
+
     return Stack(
       children: [
         Positioned(

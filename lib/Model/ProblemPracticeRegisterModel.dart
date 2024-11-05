@@ -1,22 +1,23 @@
 class ProblemPracticeRegisterModel {
-  final int practiceCount;
-  final String practiceTitle;
+  final int? practiceId;
+  String practiceTitle;
   final List<int> registerProblemIds;
-  final List<int> removeProblemIds;
 
   ProblemPracticeRegisterModel({
-    required this.practiceCount,
+    this.practiceId,
     required this.practiceTitle,
     required this.registerProblemIds,
-    required this.removeProblemIds,
   });
+
+  void setPracticeTitle(String newTitle) {
+    practiceTitle = newTitle;
+  }
 
   Map<String, dynamic> toJson() {
     return {
-      'practiceCount': practiceCount,
+      'practiceId': practiceId,
       'practiceTitle': practiceTitle,
       'registerProblemIds': registerProblemIds,
-      'removeProblemIds': removeProblemIds,
     };
   }
 }

@@ -8,33 +8,40 @@ import '../../Provider/ProblemPracticeProvider.dart';
 import '../../Model/ProblemPracticeRegisterModel.dart';
 
 class PracticeTitleWriteScreen extends StatelessWidget {
-  final List<int> selectedProblemIds;
-  final TextEditingController _titleController = TextEditingController();
+  final ProblemPracticeRegisterModel practiceRegisterModel;
+  final TextEditingController _titleController;
 
-  PracticeTitleWriteScreen({required this.selectedProblemIds});
+  PracticeTitleWriteScreen({required this.practiceRegisterModel})
+      : _titleController = TextEditingController(text: practiceRegisterModel.practiceTitle);
 
   void _submitPractice(BuildContext context, ThemeHandler themeProvider) async {
     if (_titleController.text.isEmpty) {
       _showTitleRequiredDialog(context);
     } else {
-      final problemPracticeProvider =
-      Provider.of<ProblemPracticeProvider>(context, listen: false);
-      final model = ProblemPracticeRegisterModel(
-        practiceCount: 0,
-        practiceTitle: _titleController.text,
-        registerProblemIds: selectedProblemIds,
-        removeProblemIds: [],
-      );
+      final problemPracticeProvider = Provider.of<ProblemPracticeProvider>(context, listen: false);
 
-      bool isSubmit = await problemPracticeProvider.submitPracticeProblems(model);
+      practiceRegisterModel.setPracticeTitle(_titleController.text);
+
+      bool isSubmit = false, isUpdate = false;
+      if(practiceRegisterModel.practiceId == null){
+        isSubmit = await problemPracticeProvider.registerPractice(practiceRegisterModel);
+      } else{
+        isUpdate = await problemPracticeProvider.updatePractice(practiceRegisterModel);
+      }
+
       Navigator.pop(context);
       Navigator.pop(context);
 
       if (isSubmit) {
         await problemPracticeProvider.fetchAllPracticeThumbnails();
-        _showSnackBar(context, themeProvider, '복습 루틴이 생성되었습니다.', themeProvider.primaryColor);
-      } else {
-        _showSnackBar(context, themeProvider, '복습 루틴에 실패했습니다.', Colors.red);
+        _showSnackBar(context, themeProvider, '복습 리스트가 생성되었습니다.', themeProvider.primaryColor);
+      } else if(isUpdate) {
+        await problemPracticeProvider.fetchAllPracticeThumbnails();
+        Navigator.pop(context);
+        _showSnackBar(context, themeProvider, '복습 리스트가 수정되었습니다.', themeProvider.primaryColor);
+      }
+      else {
+        _showSnackBar(context, themeProvider, '복습 리스트가 실패했습니다.', Colors.red);
       }
     }
   }
@@ -88,7 +95,7 @@ class PracticeTitleWriteScreen extends StatelessWidget {
   AppBar _buildAppBar(ThemeHandler themeProvider) {
     return AppBar(
       title: StandardText(
-        text: "복습 루틴 만들기",
+        text: practiceRegisterModel.practiceId == null ? "복습 리스트 만들기" : "복습 리스트 수정하기",
         fontSize: 20,
         color: themeProvider.primaryColor,
       ),
@@ -114,8 +121,8 @@ class PracticeTitleWriteScreen extends StatelessWidget {
   }
 
   Widget _buildTitleText() {
-    return const StandardText(
-      text: "복습 루틴의 이름을 정해주세요",
+    return StandardText(
+      text: practiceRegisterModel.practiceId == null ? "복습 리스트의 이름을 입력해주세요" : "수정할 이름을 입력해주세요",
       fontSize: 18,
       color: Colors.black,
     );
@@ -203,14 +210,14 @@ class PracticeTitleWriteScreen extends StatelessWidget {
         child: ElevatedButton(
           onPressed: () => _submitPractice(context, themeProvider),
           style: ElevatedButton.styleFrom(
-            minimumSize: const Size.fromHeight(50),
             backgroundColor: themeProvider.primaryColor,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(15),
             ),
+            padding: const EdgeInsets.symmetric(vertical: 15),
           ),
-          child: const StandardText(
-            text: "복습 루틴 만들기",
+          child: StandardText(
+            text: practiceRegisterModel.practiceId == null ? "복습 리스트 만들기" : "복습 리스트 수정하기",
             fontSize: 18,
             color: Colors.white,
           ),

@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:ono/Model/ProblemPracticeModel.dart';
 import 'package:ono/Screen/ProblemPractice/PracticeTitleWriteScreen.dart';
 import 'package:provider/provider.dart';
 import '../../GlobalModule/Theme/StandardText.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
+import '../../Model/ProblemPracticeRegisterModel.dart';
 import '../../Model/TemplateType.dart';
 import '../../Provider/FoldersProvider.dart';
 import '../../Model/FolderThumbnailModel.dart';
@@ -12,7 +14,10 @@ import '../../GlobalModule/Theme/NoteIconHandler.dart';
 import '../../GlobalModule/Image/DisplayImage.dart';
 
 class PracticeProblemSelectionScreen extends StatefulWidget {
-  const PracticeProblemSelectionScreen({Key? key}) : super(key: key);
+  final ProblemPracticeModel? practiceModel;
+
+  const PracticeProblemSelectionScreen({Key? key, this.practiceModel})
+      : super(key: key);
 
   @override
   _PracticeProblemSelectionScreenState createState() =>
@@ -29,6 +34,10 @@ class _PracticeProblemSelectionScreenState
   void initState() {
     super.initState();
     _fetchFolders();
+
+    if (widget.practiceModel != null) {
+      selectedProblems = widget.practiceModel!.problemIds!;
+    }
   }
 
   Future<void> _fetchFolders() async {
@@ -267,22 +276,31 @@ class _PracticeProblemSelectionScreenState
       child: ElevatedButton(
         onPressed: selectedProblems.isNotEmpty
             ? () {
+
+                ProblemPracticeRegisterModel practiceRegisterModel;
+
+                if(widget.practiceModel != null){
+                  practiceRegisterModel = ProblemPracticeRegisterModel(practiceId: widget.practiceModel!.practiceId, practiceTitle: widget.practiceModel!.practiceTitle, registerProblemIds: selectedProblems);
+                } else{
+                  practiceRegisterModel = ProblemPracticeRegisterModel(practiceTitle: "", registerProblemIds: selectedProblems);
+                }
+
                 Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (context) => PracticeTitleWriteScreen(
-                      selectedProblemIds: selectedProblems,
+                      practiceRegisterModel: practiceRegisterModel,
                     ),
                   ),
                 );
               }
             : () => _showSelectProblemDialog(context),
         style: ElevatedButton.styleFrom(
-          minimumSize: const Size.fromHeight(50),
           backgroundColor: themeProvider.primaryColor,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(15),
           ),
+          padding: const EdgeInsets.all(15),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,

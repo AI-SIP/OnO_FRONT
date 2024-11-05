@@ -76,7 +76,7 @@ class ProblemPracticeProvider with ChangeNotifier{
     }
   }
 
-  Future<bool> submitPracticeProblems(ProblemPracticeRegisterModel problemPracticeRegisterModel) async {
+  Future<bool> registerPractice(ProblemPracticeRegisterModel problemPracticeRegisterModel) async {
     try {
       log('practice problem list: ${problemPracticeRegisterModel.registerProblemIds.toString()}');
       log('practice problem title: ${problemPracticeRegisterModel.practiceTitle}');
@@ -102,6 +102,34 @@ class ProblemPracticeProvider with ChangeNotifier{
       log('Error submitting selected problems: $error');
       await Sentry.captureException(error, stackTrace: stackTrace);
 
+      return false;
+    }
+  }
+
+  Future<bool> updatePractice(
+    ProblemPracticeRegisterModel problemPracticeRegisterModel
+  ) async {
+    try {
+      final practiceId = problemPracticeRegisterModel.practiceId;
+
+      // 서버에 PATCH 요청 보내기
+      final response = await httpService.sendRequest(
+        method: 'PATCH',
+        url: '${AppConfig.baseUrl}/api/problem/practice',
+        body: problemPracticeRegisterModel.toJson(),
+      );
+
+      if (response.statusCode == 200) {
+        await fetchAllPracticeThumbnails();
+        log('Practice problems updated successfully for practice ID: $practiceId');
+        return true;
+      } else {
+        log('Failed to update practice problems for practice ID: $practiceId');
+        return false;
+      }
+    } catch (error, stackTrace) {
+      log('Error updating practice : $error');
+      await Sentry.captureException(error, stackTrace: stackTrace);
       return false;
     }
   }
@@ -137,6 +165,12 @@ class ProblemPracticeProvider with ChangeNotifier{
 
       return false;
     }
+  }
+
+  Future<void> resetProblems() async {
+    problems = [];
+    problemIds = [];
+    notifyListeners();
   }
 
   Future<ProblemModel?> getProblemDetails(int? problemId) async {
