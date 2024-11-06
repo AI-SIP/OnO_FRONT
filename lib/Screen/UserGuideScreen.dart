@@ -15,7 +15,7 @@ class UserGuideScreen extends StatefulWidget {
 class _UserGuideScreenState extends State<UserGuideScreen> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
-  final guideScreenLength = 4;
+  final guideScreenLength = 5;
 
   @override
   Widget build(BuildContext context) {
@@ -57,17 +57,22 @@ class _UserGuideScreenState extends State<UserGuideScreen> {
                 _buildUserGuidePage(
                   imagePath: 'assets/GuideScreen/GuideScreen2.svg',
                   title: '문제 등록',
-                  description: '낙서, 필기를 깔끔하게 지우고\n새로운 문제처럼 등록할 수 있어요.',
+                  description: '필기 제거, AI 분석 등 다양한 템플릿을 사용해\n내게 알맞은 오답노트를 작성하세요.',
                 ),
                 _buildUserGuidePage(
                   imagePath: 'assets/GuideScreen/GuideScreen3.svg',
-                  title: '문제 등록',
-                  description: '오답 분석 기능을 사용해\n나의 취약점을 알아보세요.',
+                  title: '오답 관리',
+                  description: '공책을 생성해 작성한 오답노트를\n편리하게 관리하세요.',
                 ),
                 _buildUserGuidePage(
                   imagePath: 'assets/GuideScreen/GuideScreen4.svg',
                   title: '오답 복습',
-                  description: '구분이 쉽도록 여러 개의 오답노트를 만들 수 있어요.',
+                  description: '작성한 오답노트로 복습 리스트를 만들어\n필요한 문제만 빠르게 복습하세요.',
+                ),
+                _buildUserGuidePage(
+                  imagePath: 'assets/GuideScreen/GuideScreen5.svg',
+                  title: '이제 복습을 시작해볼까요?',
+                  description: 'OnO와 함께 진정한 복습을 시작하세요!',
                 ),
               ],
             ),
@@ -97,15 +102,17 @@ class _UserGuideScreenState extends State<UserGuideScreen> {
           SvgPicture.asset(imagePath,
               width: imageWidth, height: imageHeight), // Onboarding image
           SizedBox(height: screenHeight * 0.03),
-          Text(
-            title,
-            style: TextStyle(fontSize: screenHeight * 0.022, fontWeight: FontWeight.bold),
-          ),
-          SizedBox(height: screenHeight * 0.02),
+          StandardText(text: title, fontSize: screenHeight * 0.022, color: Colors.black,),
+          // Text(
+          //   title,
+          //   style: TextStyle(fontSize: screenHeight * 0.022, fontWeight: FontWeight.bold),
+          // ),
+          SizedBox(height: screenHeight * 0.03),
           Text(
             description,
-            style: TextStyle(fontSize: screenHeight * 0.016),
+            style: TextStyle(fontSize: screenHeight * 0.017, height: 1.5),
             textAlign: TextAlign.center,
+
           ),
         ],
       ),

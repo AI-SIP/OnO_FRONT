@@ -9,6 +9,7 @@ import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart';
 import 'package:ono/GlobalModule/Theme/StandardText.dart';
 import 'package:ono/GlobalModule/Theme/ThemeHandler.dart';
 import 'package:ono/Provider/FoldersProvider.dart';
+import 'package:ono/Provider/ProblemPracticeProvider.dart';
 import 'package:ono/Provider/ScreenIndexProvider.dart';
 import 'package:ono/Screen/ProblemRegister/ProblemRegisterScreenV2.dart';
 import 'package:ono/Screen/SplashScreen.dart';
@@ -16,6 +17,7 @@ import 'package:provider/provider.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'Provider/UserProvider.dart';
 import 'Screen/ProblemManagement/DirectoryScreen.dart';
+import 'Screen/ProblemPractice/PracticeThumbnailScreen.dart';
 import 'Screen/ProblemRegister/TemplateSelectionScreen.dart';
 import 'Screen/SettingScreen.dart';
 import 'firebase_options.dart';
@@ -47,6 +49,7 @@ void main() async {
             Provider.of<FoldersProvider>(context, listen: false),
           ),
         ),
+        ChangeNotifierProvider(create: (_) => ProblemPracticeProvider()),
         ChangeNotifierProvider(
             create: (context) => ThemeHandler()..loadColors()),
         ChangeNotifierProvider(create: (_) => ScreenIndexProvider()),
@@ -111,6 +114,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
   final secureStorage = const FlutterSecureStorage();
   static const List<Widget> _widgetOptions = <Widget>[
     DirectoryScreen(),
+    PracticeThumbnailScreen(),
     TemplateSelectionScreen(),
     SettingScreen(),
   ];
@@ -209,6 +213,10 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
     return const [
       BottomNavigationBarItem(
         icon: Icon(Icons.menu_book),
+        label: '오답 관리',
+      ),
+      BottomNavigationBarItem(
+        icon: Icon(Icons.history),
         label: '오답 복습',
       ),
       BottomNavigationBarItem(

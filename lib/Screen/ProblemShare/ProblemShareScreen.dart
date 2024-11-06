@@ -187,47 +187,6 @@ class _ProblemShareScreenState extends State<ProblemShareScreen> {
                               ],
                             ),
                             const SizedBox(height: 30),
-                            /*
-                            Row(
-                              crossAxisAlignment:
-                                  CrossAxisAlignment.start, // 레이블을 위로 정렬
-                              children: [
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Row(
-                                        children: [
-                                          Icon(Icons.info,
-                                              color:
-                                                  themeProvider.primaryColor),
-                                          const SizedBox(width: 8),
-                                          HandWriteText(
-                                            text: '문제 출처',
-                                            fontSize: 20,
-                                            color: themeProvider.primaryColor,
-                                          ),
-                                        ],
-                                      ),
-                                      const SizedBox(height: 10.0),
-                                      UnderlinedText(
-                                        text:
-                                            (widget.problem.reference != null &&
-                                                    widget.problem.reference!
-                                                        .isNotEmpty)
-                                                ? widget.problem.reference!
-                                                : "출처 없음",
-                                        fontSize: 18,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 30),
-
-                             */
                             Row(
                               children: [
                                 Icon(Icons.camera_alt,
@@ -268,39 +227,6 @@ class _ProblemShareScreenState extends State<ProblemShareScreen> {
     );
   }
 
-  Future<void> _loadImageAndShare() async {
-    if (widget.problem.templateType == TemplateType.simple) {
-      imageUrl = widget.problem.problemImageUrl ?? 'assets/no_image.png';
-    } else {
-      imageUrl = widget.problem.processImageUrl ?? 'assets/no_image.png';
-    }
-
-    if (imageUrl != null) {
-      _image = Image.network(imageUrl!, fit: BoxFit.contain);
-    } else {
-      _image = Image.asset('assets/no_image.png', fit: BoxFit.contain);
-    }
-
-    _imageStreamListener =
-        ImageStreamListener((ImageInfo imageInfo, bool synchronousCall) {
-      if (!isImageLoaded) {
-        setState(() {
-          isImageLoaded = true;
-        });
-      }
-    });
-
-    final ImageStream imageStream =
-        _image!.image.resolve(const ImageConfiguration());
-    imageStream.addListener(_imageStreamListener!);
-
-    if (isImageLoaded && !hasShared) {
-      await Future.delayed(Duration(milliseconds: 50));
-      _shareProblemAsImage();
-      hasShared = true; // 여러 번 호출되지 않도록 설정
-    }
-  }
-
   // 문제 이미지 출력 함수
   Widget buildProblemImage(BuildContext context, String? imageUrl) {
     final mediaQuery = MediaQuery.of(context);
@@ -328,7 +254,7 @@ class _ProblemShareScreenState extends State<ProblemShareScreen> {
     try {
       await WidgetsBinding.instance.endOfFrame;
 
-      await Future.delayed(const Duration(milliseconds: 20));
+      await Future.delayed(const Duration(milliseconds: 30));
 
       RenderRepaintBoundary boundary = widget._globalKey.currentContext!
           .findRenderObject() as RenderRepaintBoundary;

@@ -95,4 +95,9 @@ class TokenProvider {
       return false;
     }
   }
+
+  Future<void> deleteToken() async{
+    await storage.delete(key: 'accessToken');
+    await storage.delete(key: 'refreshToken');
+  }
 }

@@ -12,6 +12,7 @@ class HttpService {
     required String url,
     Map<String, String>? headers,
     Map<String, dynamic>? body,
+    Map<String, String>? queryParams,
     bool isMultipart = false,
     List<http.MultipartFile>? files,
   }) async {
@@ -26,12 +27,20 @@ class HttpService {
       ...?headers,
     };
 
+    Uri uri = Uri.parse(url);
+    if (queryParams != null) {
+      uri = uri.replace(queryParameters: {
+        ...uri.queryParameters,
+        ...queryParams, // 기존 쿼리 파라미터에 새 쿼리 파라미터 추가
+      });
+    }
+
     switch (method.toUpperCase()) {
       case 'GET':
-        return await http.get(Uri.parse(url), headers: mergedHeaders);
+        return await http.get(uri, headers: mergedHeaders);
       case 'POST':
         if (isMultipart && files != null) {
-          var request = http.MultipartRequest('POST', Uri.parse(url));
+          var request = http.MultipartRequest('POST', uri);
           request.headers.addAll(mergedHeaders);
           if (body != null) {
             request.fields.addAll(body.map((key, value) => MapEntry(key, value.toString())));
@@ -40,11 +49,11 @@ class HttpService {
           final streamedResponse = await request.send();
           return await http.Response.fromStream(streamedResponse);
         } else {
-          return await http.post(Uri.parse(url), headers: mergedHeaders, body: json.encode(body));
+          return await http.post(uri, headers: mergedHeaders, body: json.encode(body));
         }
       case 'PATCH':
         if (isMultipart && files != null) {
-          var request = http.MultipartRequest('PATCH', Uri.parse(url));
+          var request = http.MultipartRequest('PATCH', uri);
           request.headers.addAll(mergedHeaders);
           if (body != null) {
             request.fields.addAll(body.map((key, value) => MapEntry(key, value.toString())));
@@ -54,10 +63,10 @@ class HttpService {
           return await http.Response.fromStream(streamedResponse);
         }
         else{
-          return await http.patch(Uri.parse(url), headers: mergedHeaders, body: json.encode(body));
+          return await http.patch(uri, headers: mergedHeaders, body: json.encode(body));
         }
       case 'DELETE':
-        return await http.delete(Uri.parse(url), headers: mergedHeaders);
+        return await http.delete(uri, headers: mergedHeaders);
       default:
         throw Exception('Unsupported HTTP method');
     }

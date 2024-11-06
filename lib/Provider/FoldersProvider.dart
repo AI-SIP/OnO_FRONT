@@ -137,6 +137,7 @@ class FoldersProvider with ChangeNotifier {
       if (response.statusCode == 200) {
         final jsonResponse = json.decode(utf8.decode(response.bodyBytes));
         log('AllFolderThumbnail Fetch Complete : $jsonResponse');
+
         return (jsonResponse as List)
             .map((e) => FolderThumbnailModel.fromJson(e))
             .toList();
@@ -427,7 +428,6 @@ class FoldersProvider with ChangeNotifier {
   }
 
   Future<bool> deleteProblem(int problemId) async {
-
     try {
       final response = await httpService.sendRequest(
         method: 'DELETE',
@@ -528,13 +528,11 @@ class FoldersProvider with ChangeNotifier {
   }
 
   Future<ProblemModel?> getProblemDetails(int? problemId) async {
-
     try {
       var problemDetails =
       _problems.firstWhere((problem) => problem.problemId == problemId);
 
       if (problemDetails != null) {
-        //return ProblemModel.fromJson(problemDetails.toJson());
         return problemDetails;
       } else {
         throw Exception('Problem with ID $problemId not found');

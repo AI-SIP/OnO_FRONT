@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 2.3.0+35
+version: 2.4.0+36
 
 environment:
   sdk: '>=3.3.3 <4.0.0'
@@ -86,34 +86,11 @@ flutter:
   uses-material-design: true
   assets:
     - .env
+    - assets/Icon/
+    - assets/GuideScreen/
+    - assets/Logo/
+    - assets/SocialLogin/
     - assets/no_image.png
-    - assets/Logo.png
-    - assets/GuideScreen/GuideScreen1.svg
-    - assets/GuideScreen/GuideScreen2.svg
-    - assets/GuideScreen/GuideScreen3.svg
-    - assets/GuideScreen/GuideScreen4.svg
-    - assets/Logo/GreenFrog.svg
-    - assets/Logo/OnO.svg
-    - assets/Icon/addNote.svg
-    - assets/Icon/noImage.svg
-    - assets/Icon/GreenNote.svg
-    - assets/Icon/YellowNote.svg
-    - assets/Icon/PinkNote.svg
-    - assets/Icon/BlueNote.svg
-    - assets/Icon/PurpleNote.svg
-    - assets/Icon/BrownNote.svg
-    - assets/Icon/WhiteNote.svg
-    - assets/Icon/GreyNote.svg
-    - assets/Icon/Pencil.svg
-    - assets/Icon/Eraser.svg
-    - assets/Icon/EraserWithCircle.svg
-    - assets/Icon/Glass.svg
-    - assets/Icon/PencilDetail.svg
-    - assets/Icon/EraserDetail.svg
-    - assets/Icon/GlassDetail.svg
-    - assets/SocialLogin/AppleLogin.svg
-    - assets/SocialLogin/GoogleLogin.svg
-    - assets/SocialLogin/KakaoLogin.svg
 
   fonts:
     - family: HandWrite

@@ -72,7 +72,7 @@ class ProblemDetailScreenWidget {
       child: ExpansionTile(
         title: Container(
           padding: const EdgeInsets.all(8.0),
-          child: buildCenteredTitle('정답 확인', themeProvider.primaryColor),
+          child: buildCenteredTitle('정답 확인', Colors.black),
         ),
         children: [
           SizedBox(height: screenHeight * 0.01),

@@ -32,7 +32,6 @@ class DirectoryScreen extends StatefulWidget {
 }
 
 class _DirectoryScreenState extends State<DirectoryScreen> {
-  final String defaultImage = 'assets/no_image.png';
   String _selectedSortOption = 'newest';
   bool modalShown = false;
 
@@ -107,11 +106,11 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                 await _directoryService.fetchProblems();
               },
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(30, 10, 30, 20),
+                padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
                 child: Column(
                   children: [
                     _buildSortDropdown(themeProvider),
-                    const SizedBox(height: 20,),
+                    const SizedBox(height: 10,),
                     _buildFolderAndProblemGrid(themeProvider),
                   ],
                 ),
@@ -160,7 +159,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                   const Duration(seconds: 1);
                   foldersProvider.fetchRootFolderContents();
                   Provider.of<ScreenIndexProvider>(context, listen: false)
-                      .setSelectedIndex(1);  // 문제 등록 탭으로 이동
+                      .setSelectedIndex(2);  // 문제 등록 탭으로 이동
 
                   FirebaseAnalytics.instance
                       .logEvent(name: 'move_to_template_page_button_click');
@@ -310,7 +309,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                   child: ListTile(
                     leading: const Icon(Icons.delete_forever, color: Colors.red),
                     title: const StandardText(
-                      text: '공책 삭제하기',
+                      text: '현재 공책 삭제하기',
                       fontSize: 16,
                       color: Colors.red,
                     ),
@@ -340,7 +339,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Padding(
-            padding: const EdgeInsets.only(top: 10), // 왼쪽 여백 추가
+            padding: const EdgeInsets.only(top: 10, left: 10, right: 10), // 왼쪽 여백 추가
             child: Consumer<FoldersProvider>(
               builder: (context, foldersProvider, child) {
                 int problemCount = foldersProvider.problems.length;
@@ -799,39 +798,52 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   }
 
   Widget _folderTileContent(FolderThumbnailModel folder, ThemeHandler themeProvider, int index) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        // 아이콘
-        Container(
-          width: 50,
-          height: 70,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(8.0),
+    return Container(
+      padding: const EdgeInsets.all(12.0),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.2),
+            spreadRadius: 1,
+            blurRadius: 5,
+            offset: const Offset(0, 3),
           ),
-          child: SvgPicture.asset(
-            NoteIconHandler.getNoteIcon(index),  // 헬퍼 클래스로 아이콘 설정
-            width: 30,
-            height: 30,
+        ],
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Container(
+            width: 50,
+            height: 70,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(8.0),
+            ),
+            child: SvgPicture.asset(
+              NoteIconHandler.getNoteIcon(index),
+              width: 30,
+              height: 30,
+            ),
           ),
-        ),
-        const SizedBox(width: 20), // 아이콘과 텍스트 간 간격
-        // 폴더 정보 (이름)
-        Expanded(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              StandardText(
-                text: folder.folderName.isNotEmpty ? folder.folderName : '제목 없음',
-                color: themeProvider.primaryColor,
-                fontSize: 18,
-              ),
-            ],
+          const SizedBox(width: 20),
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                StandardText(
+                  text: folder.folderName.isNotEmpty ? folder.folderName : '제목 없음',
+                  color: Colors.black,
+                  fontSize: 18,
+                ),
+              ],
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -891,54 +903,67 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         ? problem.problemImageUrl
         : problem.processImageUrl;
 
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        // 문제 이미지
-        SizedBox(
-          width: 50,
-          height: 70,
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(8.0),
-            child: DisplayImage(
-              imagePath: imageUrl,
-              fit: BoxFit.cover,
+    return Container(
+      padding: const EdgeInsets.all(12.0),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.2),
+            spreadRadius: 1,
+            blurRadius: 5,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          SizedBox(
+            width: 50,
+            height: 70,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(8.0),
+              child: DisplayImage(
+                imagePath: imageUrl,
+                fit: BoxFit.cover,
+              ),
             ),
           ),
-        ),
-        const SizedBox(width: 20), // 이미지와 텍스트 간 간격 추가
-        // 문제 정보 (제목 및 작성 일시)
-        Expanded(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 4),
-              Row(
-                children: [
-                  _getTemplateIcon(problem.templateType!), // 아이콘 추가
-                  const SizedBox(width: 8), // 아이콘과 제목 간 간격
-                  Flexible( // 제목
-                    child: StandardText(
-                      text: (problem.reference != null && problem.reference!.isNotEmpty) ? problem.reference! : '제목 없음',
-                      color: themeProvider.primaryColor,
-                      fontSize: 18,
+          const SizedBox(width: 20),
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    _getTemplateIcon(problem.templateType!),
+                    const SizedBox(width: 8),
+                    Flexible(
+                      child: StandardText(
+                        text: (problem.reference != null && problem.reference!.isNotEmpty) ? problem.reference! : '제목 없음',
+                        color: Colors.black,
+                        fontSize: 18,
+                      ),
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 4),
-              StandardText(
-                text: problem.createdAt != null
-                    ? '작성 일시: ${formatDateTime(problem.createdAt!)}'
-                    : '작성 일시: 정보 없음',
-                fontSize: 12,
-                color: themeProvider.desaturateColor,
-              ),
-            ],
+                  ],
+                ),
+                const SizedBox(height: 4),
+                StandardText(
+                  text: problem.createdAt != null
+                      ? '작성 일시: ${formatDateTime(problem.createdAt!)}'
+                      : '작성 일시: 정보 없음',
+                  fontSize: 12,
+                  color: Colors.grey,
+                ),
+              ],
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 

@@ -242,14 +242,10 @@ class _AnswerShareScreenState extends State<AnswerShareScreen> {
       // 프레임 완료 후 실행되도록 대기
       await WidgetsBinding.instance.endOfFrame;
 
-      RenderRepaintBoundary? boundary = widget._globalKey.currentContext!
-          .findRenderObject() as RenderRepaintBoundary?;
+      await Future.delayed(const Duration(milliseconds: 30));
 
-      // boundary가 null인 경우 종료
-      if (boundary == null) return;
-
-      // 추가적인 딜레이를 줘서 boundary가 준비될 시간을 확보합니다.
-      await Future.delayed(const Duration(milliseconds: 20));
+      RenderRepaintBoundary boundary = widget._globalKey.currentContext!
+          .findRenderObject() as RenderRepaintBoundary;
 
       // 이미지를 캡처합니다.
       ui.Image image = await boundary.toImage(pixelRatio: MediaQuery.of(context).devicePixelRatio);

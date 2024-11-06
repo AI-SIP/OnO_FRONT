@@ -250,7 +250,7 @@ class _TemplateSelectionScreenState extends State<TemplateSelectionScreen> {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(15),
             ),
-            padding: EdgeInsets.symmetric(vertical: screenHeight * 0.015), // 버튼 높이
+            padding: const EdgeInsets.symmetric(vertical: 15), // 버튼 높이
           ),
           child: const StandardText(
             text: '문제 등록하러 가기',
