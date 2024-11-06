@@ -324,7 +324,6 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
           });
         } else {
           _navigateToPracticeDetail(practice);
-          //_navigateToProblemDetail(practice);
         }
       },
       child: Padding(
@@ -406,7 +405,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           StandardText(
-            text: practice.practiceTitle,
+            text: practice.practiceTitle.isNotEmpty ? practice.practiceTitle : "제목 없음",
             fontSize: 18,
             color: Colors.black,
           ),

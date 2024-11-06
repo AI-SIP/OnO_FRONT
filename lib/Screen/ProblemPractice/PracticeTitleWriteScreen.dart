@@ -4,6 +4,7 @@ import '../../GlobalModule/Theme/SnackBarDialog.dart';
 import '../../GlobalModule/Theme/StandardText.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
 import 'package:provider/provider.dart';
+import '../../Provider/FoldersProvider.dart';
 import '../../Provider/ProblemPracticeProvider.dart';
 import '../../Model/ProblemPracticeRegisterModel.dart';
 
@@ -18,6 +19,7 @@ class PracticeTitleWriteScreen extends StatelessWidget {
     if (_titleController.text.isEmpty) {
       _showTitleRequiredDialog(context);
     } else {
+      final folderProvider = Provider.of<FoldersProvider>(context, listen: false);
       final problemPracticeProvider = Provider.of<ProblemPracticeProvider>(context, listen: false);
 
       practiceRegisterModel.setPracticeTitle(_titleController.text);
@@ -29,6 +31,7 @@ class PracticeTitleWriteScreen extends StatelessWidget {
         isUpdate = await problemPracticeProvider.updatePractice(practiceRegisterModel);
       }
 
+      await folderProvider.fetchRootFolderContents();
       Navigator.pop(context);
       Navigator.pop(context);
 

@@ -257,7 +257,7 @@ class PracticeDetailScreen extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           StandardText(
-            text: problem.reference ?? '제목 없음',
+            text: (problem.reference != null && problem.reference!.isNotEmpty) ? problem.reference! : '제목 없음',
             fontSize: 16,
             color: Colors.black,
           ),
