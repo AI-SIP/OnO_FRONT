@@ -47,6 +47,7 @@ class _PracticeProblemSelectionScreenState
         await foldersProvider.fetchAllFolderThumbnails();
     setState(() {
       allFolderThumbnails = folders;
+      selectedFolderId = allFolderThumbnails[0].folderId;
     });
   }
 
@@ -54,20 +55,29 @@ class _PracticeProblemSelectionScreenState
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeHandler>(context);
     double screenHeight = MediaQuery.of(context).size.height;
+    final foldersProvider = Provider.of<FoldersProvider>(context);
 
-    return Scaffold(
-      appBar: _buildAppBar(themeProvider),
-      backgroundColor: Colors.white,
-      body: Column(
-        children: [
-          SizedBox(height: screenHeight * 0.035),
-          _buildFolderList(context, themeProvider),
-          const SizedBox(height: 20),
-          _buildProblemList(context, themeProvider),
-          _buildSubmitButton(context, themeProvider),
-        ],
-      ),
-    );
+    return PopScope(
+        canPop: true,
+        onPopInvokedWithResult: (bool didPop, Object? result) async {
+          if (didPop) {
+            await foldersProvider.fetchRootFolderContents();
+            return;
+          }
+        },
+        child: Scaffold(
+          appBar: _buildAppBar(themeProvider),
+          backgroundColor: Colors.white,
+          body: Column(
+            children: [
+              SizedBox(height: screenHeight * 0.035),
+              _buildFolderList(context, themeProvider),
+              const SizedBox(height: 20),
+              _buildProblemList(context, themeProvider),
+              _buildSubmitButton(context, themeProvider),
+            ],
+          ),
+        ));
   }
 
   AppBar _buildAppBar(ThemeHandler themeProvider) {
@@ -113,30 +123,34 @@ class _PracticeProblemSelectionScreenState
     );
   }
 
-  Widget _buildFolderThumbnail(
-      FolderThumbnailModel folder, ThemeHandler themeProvider) {
-    return Column(
-      children: [
-        SvgPicture.asset(
-          NoteIconHandler.getNoteIcon(allFolderThumbnails.indexOf(folder)),
-          width: 60,
-          height: 60,
-        ),
-        const SizedBox(height: 8),
-        SizedBox(
-          width: MediaQuery.of(context).size.width * 0.2,
-          child: StandardText(
-            text: folder.folderName.length > 10
-                ? '${folder.folderName.substring(0, 10)}..'
-                : folder.folderName,
-            fontSize: 14,
-            color: Colors.black,
-            textAlign: TextAlign.center,
-            overflow: TextOverflow.ellipsis,
-            maxLines: 1,
+  Widget _buildFolderThumbnail(FolderThumbnailModel folder, ThemeHandler themeProvider) {
+    bool isSelected = selectedFolderId == folder.folderId; // 선택된 폴더인지 확인
+
+    return Opacity(
+      opacity: isSelected ? 1.0 : 0.5, // 선택된 폴더가 아니라면 흐리게 표시
+      child: Column(
+        children: [
+          SvgPicture.asset(
+            NoteIconHandler.getNoteIcon(allFolderThumbnails.indexOf(folder)),
+            width: 60,
+            height: 60,
           ),
-        ),
-      ],
+          const SizedBox(height: 8),
+          SizedBox(
+            width: MediaQuery.of(context).size.width * 0.2,
+            child: StandardText(
+              text: folder.folderName.length > 10
+                  ? '${folder.folderName.substring(0, 10)}..'
+                  : folder.folderName,
+              fontSize: 14,
+              color: Colors.black,
+              textAlign: TextAlign.center,
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -276,13 +290,16 @@ class _PracticeProblemSelectionScreenState
       child: ElevatedButton(
         onPressed: selectedProblems.isNotEmpty
             ? () {
-
                 ProblemPracticeRegisterModel practiceRegisterModel;
 
-                if(widget.practiceModel != null){
-                  practiceRegisterModel = ProblemPracticeRegisterModel(practiceId: widget.practiceModel!.practiceId, practiceTitle: widget.practiceModel!.practiceTitle, registerProblemIds: selectedProblems);
-                } else{
-                  practiceRegisterModel = ProblemPracticeRegisterModel(practiceTitle: "", registerProblemIds: selectedProblems);
+                if (widget.practiceModel != null) {
+                  practiceRegisterModel = ProblemPracticeRegisterModel(
+                      practiceId: widget.practiceModel!.practiceId,
+                      practiceTitle: widget.practiceModel!.practiceTitle,
+                      registerProblemIds: selectedProblems);
+                } else {
+                  practiceRegisterModel = ProblemPracticeRegisterModel(
+                      practiceTitle: "", registerProblemIds: selectedProblems);
                 }
 
                 Navigator.push(
