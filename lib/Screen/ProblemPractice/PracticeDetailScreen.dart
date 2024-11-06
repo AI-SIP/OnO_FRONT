@@ -126,7 +126,7 @@ class PracticeDetailScreen extends StatelessWidget {
 
                     onTap: () {
                       Navigator.pop(context); // BottomSheet 닫기
-
+                      _showDeletePracticeDialog(context);
                     },
                   ),
                 ),
@@ -313,5 +313,68 @@ class PracticeDetailScreen extends StatelessWidget {
         backgroundColor: Colors.red,
       );
     }
+  }
+
+  Future<void> _showDeletePracticeDialog(BuildContext context) async {
+    final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
+
+    return showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: Colors.white,
+          title: const StandardText(
+            text: '복습 리스트 삭제',
+            fontSize: 18,
+            color: Colors.black,
+          ),
+          content: const StandardText(
+            text: '정말로 이 복습 리스트를 삭제하시겠습니까?',
+            fontSize: 16,
+            color: Colors.black,
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const StandardText(
+                text: '취소',
+                fontSize: 14,
+                color: Colors.black,
+              ),
+            ),
+            TextButton(
+              onPressed: () async {
+                Navigator.pop(context);
+
+                final provider = Provider.of<ProblemPracticeProvider>(context,
+                    listen: false);
+                List<int> deletePracticeIds = [practice.practiceId];
+                bool isDelete = await provider.deletePractices(deletePracticeIds);
+
+                if(isDelete){
+                  Navigator.pop(context);
+                  SnackBarDialog.showSnackBar(
+                      context: context,
+                      message: '공책이 삭제되었습니다!',
+                      backgroundColor: themeProvider.primaryColor);
+                } else {
+                  SnackBarDialog.showSnackBar(
+                      context: context,
+                      message: '삭제 과정에서 문제가 발생했습니다!',
+                      backgroundColor: Colors.red);
+                }
+              },
+              child: const StandardText(
+                text: '삭제',
+                fontSize: 14,
+                color: Colors.red,
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
 }
