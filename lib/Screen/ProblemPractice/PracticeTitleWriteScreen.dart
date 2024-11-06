@@ -82,15 +82,20 @@ class PracticeTitleWriteScreen extends StatelessWidget {
     double screenHeight = MediaQuery.of(context).size.height;
     final standardTextStyle = const StandardText(text: '').getTextStyle();
 
-    return Scaffold(
-      appBar: _buildAppBar(themeProvider),
-      backgroundColor: Colors.white,
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Expanded(child: _buildContent(screenHeight, standardTextStyle, themeProvider)),
-          _buildSubmitButton(context, themeProvider),
-        ],
+    return GestureDetector(
+      onTap: () {
+        FocusScope.of(context).unfocus(); // 다른 곳을 클릭하면 키보드를 숨깁니다.
+      },
+      child: Scaffold(
+        appBar: _buildAppBar(themeProvider),
+        backgroundColor: Colors.white,
+        body: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Expanded(child: _buildContent(screenHeight, standardTextStyle, themeProvider)),
+            _buildSubmitButton(context, themeProvider),
+          ],
+        ),
       ),
     );
   }
