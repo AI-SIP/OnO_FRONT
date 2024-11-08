@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
 
@@ -93,7 +94,7 @@ class KakaoAuthService {
         headers: {'Content-Type': 'application/json; charset=UTF-8'},
         body: jsonEncode(
             {'email': email, 'name': name, 'identifier': identifier}),
-      );
+      ).timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
         log('kakao sign-in Success!');
@@ -107,6 +108,13 @@ class KakaoAuthService {
       } else {
         throw Exception("Failed to Register kakao user on server");
       }
+    } on TimeoutException catch (_) {
+      SnackBarDialog.showSnackBar(
+        context: context,
+        message: "요청 시간이 초과되었습니다. 다시 시도해주세요.",
+        backgroundColor: Colors.red,
+      );
+      return null;
     } catch (error, stackTrace) {
       log(error.toString());
       await Sentry.captureException(

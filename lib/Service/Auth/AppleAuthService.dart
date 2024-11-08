@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:core';
 import 'dart:developer';
@@ -42,7 +43,7 @@ class AppleAuthService {
           'name': name,
           'identifier': identifier,
         }),
-      );
+      ).timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
         log('Apple sign-in Success!');
@@ -55,6 +56,13 @@ class AppleAuthService {
       } else {
         throw Exception("Failed to Register user on server");
       }
+    } on TimeoutException catch (_) {
+      SnackBarDialog.showSnackBar(
+        context: context,
+        message: "요청 시간이 초과되었습니다. 다시 시도해주세요.",
+        backgroundColor: Colors.red,
+      );
+      return null;
     } catch (error, stackTrace) {
       if(error == AuthorizationErrorCode.canceled){
         return null;

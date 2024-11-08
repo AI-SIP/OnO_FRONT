@@ -354,11 +354,11 @@ class PracticeDetailScreen extends StatelessWidget {
                 bool isDelete = await provider.deletePractices(deletePracticeIds);
 
                 if(isDelete){
-                  Navigator.pop(context);
                   SnackBarDialog.showSnackBar(
                       context: context,
                       message: '공책이 삭제되었습니다!',
                       backgroundColor: themeProvider.primaryColor);
+                  Navigator.pop(context);
                 } else {
                   SnackBarDialog.showSnackBar(
                       context: context,

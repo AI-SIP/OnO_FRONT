@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
 
@@ -14,14 +15,13 @@ class GuestAuthService{
   final storage = const FlutterSecureStorage();
 
   Future<Map<String, dynamic>?> signInWithGuest(BuildContext context) async{
-
     try{
       final url = Uri.parse('${AppConfig.baseUrl}/api/auth/guest');
 
       final response = await http.post(
         url,
         headers: {'Content-Type': 'application/json; charset=UTF-8'},
-      );
+      ).timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
         log('Guest sign-in Success!');
@@ -35,7 +35,14 @@ class GuestAuthService{
       } else {
         throw Exception("Failed to Register user on server");
       }
-    } catch(error, stackTrace) {
+    } on TimeoutException catch (_) {
+      SnackBarDialog.showSnackBar(
+        context: context,
+        message: "요청 시간이 초과되었습니다. 다시 시도해주세요.",
+        backgroundColor: Colors.red,
+      );
+      return null;
+    }catch(error, stackTrace) {
       SnackBarDialog.showSnackBar(context: context, message: "로그인 과정에서 오류가 발생했습니다. 다시 시도해주세요.", backgroundColor: Colors.red);
       await Sentry.captureException(
         error,

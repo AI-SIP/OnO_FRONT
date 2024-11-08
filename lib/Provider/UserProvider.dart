@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:core';
 import 'dart:developer';
-import 'dart:io' show Platform;
+import 'dart:io' show Platform, SocketException;
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -52,26 +52,49 @@ class UserProvider with ChangeNotifier {
   final KakaoAuthService kakaoAuthService = KakaoAuthService();
 
   Future<void> signInWithGuest(BuildContext context) async {
-    final response = await guestAuthService.signInWithGuest(context);
-    saveUserToken(response: response, loginMethod: 'guest');
+    try {
+      final response = await guestAuthService.signInWithGuest(context);
+      saveUserToken(response: response, loginMethod: 'guest');
+    } catch (e) {
+      _handleGeneralError(context, e.toString());
+    }
   }
 
-  // Google 로그인 함수(앱 처음 설치하고 구글 로그인 버튼 누르면 실행)
   Future<void> signInWithGoogle(BuildContext context) async {
-    final response = await googleAuthService.signInWithGoogle(context);
-    saveUserToken(response: response, loginMethod: 'google');
+    try {
+      final response = await googleAuthService.signInWithGoogle(context);
+      saveUserToken(response: response, loginMethod: 'google');
+    } catch (e) {
+      _handleGeneralError(context, e.toString());
+    }
   }
 
-  // Apple 로그인 함수
   Future<void> signInWithApple(BuildContext context) async {
-    final response = await appleAuthService.signInWithApple(context);
-    log(response.toString());
-    saveUserToken(response: response, loginMethod: 'apple');
+    try {
+      final response = await appleAuthService.signInWithApple(context);
+      saveUserToken(response: response, loginMethod: 'apple');
+    } catch (e) {
+      _handleGeneralError(context, e.toString());
+    }
   }
 
   Future<void> signInWithKakao(BuildContext context) async {
-    final response = await kakaoAuthService.signInWithKakao(context);
-    saveUserToken(response: response, loginMethod: 'kakao');
+    try {
+      final response = await kakaoAuthService.signInWithKakao(context);
+      saveUserToken(response: response, loginMethod: 'kakao');
+    } catch (e) {
+      _handleGeneralError(context, e.toString());
+    }
+  }
+
+// 일반 오류 처리 메서드
+  void _handleGeneralError(BuildContext context, String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('오류가 발생했습니다: $message'),
+        backgroundColor: Colors.red,
+      ),
+    );
   }
 
   Future<void> saveUserToken({Map<String,dynamic>? response, String? loginMethod}) async{

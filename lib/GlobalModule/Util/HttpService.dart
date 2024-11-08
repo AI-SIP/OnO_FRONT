@@ -1,6 +1,8 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
+import 'package:ono/GlobalModule/Theme/SnackBarDialog.dart';
 
 import '../../Provider/TokenProvider.dart';
 
@@ -35,40 +37,56 @@ class HttpService {
       });
     }
 
-    switch (method.toUpperCase()) {
-      case 'GET':
-        return await http.get(uri, headers: mergedHeaders);
-      case 'POST':
-        if (isMultipart && files != null) {
-          var request = http.MultipartRequest('POST', uri);
-          request.headers.addAll(mergedHeaders);
-          if (body != null) {
-            request.fields.addAll(body.map((key, value) => MapEntry(key, value.toString())));
+    try {
+      switch (method.toUpperCase()) {
+        case 'GET':
+          return await http
+              .get(uri, headers: mergedHeaders)
+              .timeout(const Duration(seconds: 30));
+        case 'POST':
+          if (isMultipart && files != null) {
+            var request = http.MultipartRequest('POST', uri);
+            request.headers.addAll(mergedHeaders);
+            if (body != null) {
+              request.fields.addAll(
+                  body.map((key, value) => MapEntry(key, value.toString())));
+            }
+            request.files.addAll(files);
+            final streamedResponse =
+                await request.send().timeout(const Duration(seconds: 30));
+            return await http.Response.fromStream(streamedResponse);
+          } else {
+            return await http.post(uri,
+                headers: mergedHeaders, body: json.encode(body));
           }
-          request.files.addAll(files);
-          final streamedResponse = await request.send();
-          return await http.Response.fromStream(streamedResponse);
-        } else {
-          return await http.post(uri, headers: mergedHeaders, body: json.encode(body));
-        }
-      case 'PATCH':
-        if (isMultipart && files != null) {
-          var request = http.MultipartRequest('PATCH', uri);
-          request.headers.addAll(mergedHeaders);
-          if (body != null) {
-            request.fields.addAll(body.map((key, value) => MapEntry(key, value.toString())));
+        case 'PATCH':
+          if (isMultipart && files != null) {
+            var request = http.MultipartRequest('PATCH', uri);
+            request.headers.addAll(mergedHeaders);
+            if (body != null) {
+              request.fields.addAll(
+                  body.map((key, value) => MapEntry(key, value.toString())));
+            }
+            request.files.addAll(files);
+            final streamedResponse =
+                await request.send().timeout(const Duration(seconds: 30));
+            return await http.Response.fromStream(streamedResponse);
+          } else {
+            return await http
+                .patch(uri, headers: mergedHeaders, body: json.encode(body))
+                .timeout(const Duration(seconds: 30));
           }
-          request.files.addAll(files);
-          final streamedResponse = await request.send();
-          return await http.Response.fromStream(streamedResponse);
-        }
-        else{
-          return await http.patch(uri, headers: mergedHeaders, body: json.encode(body));
-        }
-      case 'DELETE':
-        return await http.delete(uri, headers: mergedHeaders);
-      default:
-        throw Exception('Unsupported HTTP method');
+        case 'DELETE':
+          return await http
+              .delete(uri, headers: mergedHeaders)
+              .timeout(const Duration(seconds: 30));
+        default:
+          throw Exception('Unsupported HTTP method');
+      }
+    } on TimeoutException {
+      throw Exception('Request timed out. Please try again.');
+    } catch (error) {
+      throw Exception('An error occurred: $error');
     }
   }
 }
