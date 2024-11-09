@@ -30,7 +30,7 @@ class TokenProvider {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $accessToken',
         },
-      );
+      ).timeout(const Duration(seconds: 5));
 
       if (response.statusCode == 200) {
         return accessToken;
@@ -75,7 +75,7 @@ class TokenProvider {
         Uri.parse('${AppConfig.baseUrl}/api/auth/refresh'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'refreshToken': refreshToken}),
-      );
+      ).timeout(const Duration(seconds: 5));
 
       if (response.statusCode == 200) {
         var data = jsonDecode(response.body);

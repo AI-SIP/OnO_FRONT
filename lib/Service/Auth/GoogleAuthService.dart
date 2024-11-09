@@ -17,8 +17,6 @@ class GoogleAuthService {
     try {
       final googleSignInAccount = await _googleSignIn.signIn();
       if(googleSignInAccount != null){
-        final GoogleSignInAuthentication googleSignInAuthentication = await googleSignInAccount.authentication;
-
         String? email = googleSignInAccount.email;
         String? name = googleSignInAccount.displayName;
         String? identifier = googleSignInAccount.id;
@@ -39,7 +37,6 @@ class GoogleAuthService {
           FirebaseAnalytics.instance.logSignUp(signUpMethod: 'Google');
           FirebaseAnalytics.instance
               .logEvent(name: 'user_register_with_google');
-          //SnackBarDialog.showSnackBar(context: context, message: "로그인에 성공했습니다.", backgroundColor: Colors.green);
 
           return jsonDecode(response.body);
         } else {

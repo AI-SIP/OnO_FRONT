@@ -88,7 +88,7 @@ class UserProvider with ChangeNotifier {
   }
 
 // 일반 오류 처리 메서드
-  void _handleGeneralError(BuildContext context, String message) {
+  void _handleGeneralError(BuildContext context, String message) async {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('오류가 발생했습니다: $message'),

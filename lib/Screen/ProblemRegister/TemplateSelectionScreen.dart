@@ -177,7 +177,7 @@ class _TemplateSelectionScreenState extends State<TemplateSelectionScreen> {
           StandardText(
             text: templateType.displayName,
             fontSize: 24,
-            color: themeProvider.primaryColor,
+            color: Colors.black,
           ),
           SizedBox(height: screenHeight * 0.03),
           Row(
