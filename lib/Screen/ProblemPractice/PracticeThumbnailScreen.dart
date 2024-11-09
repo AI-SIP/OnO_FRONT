@@ -247,7 +247,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
                 if(isDelete){
                   SnackBarDialog.showSnackBar(
                       context: context,
-                      message: '공책이 삭제되었습니다!',
+                      message: '복습 리스트가 삭제되었습니다!',
                       backgroundColor: themeProvider.primaryColor);
                 } else{
                   SnackBarDialog.showSnackBar(
