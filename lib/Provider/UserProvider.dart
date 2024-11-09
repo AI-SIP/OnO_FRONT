@@ -11,6 +11,7 @@ import 'package:ono/Service/Auth/GuestAuthService.dart';
 import 'package:ono/Service/Auth/KakaoAuthService.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import '../Config/AppConfig.dart';
+import '../GlobalModule/Theme/StandardText.dart';
 import '../GlobalModule/Util/HttpService.dart';
 import 'TokenProvider.dart';
 import '../Service/Auth/AppleAuthService.dart';
@@ -89,9 +90,11 @@ class UserProvider with ChangeNotifier {
 
 // 일반 오류 처리 메서드
   void _handleGeneralError(BuildContext context, String message) async {
+    await resetUserInfo();
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('오류가 발생했습니다: $message'),
+        content: StandardText(text: '오류가 발생했습니다: $message'),
         backgroundColor: Colors.red,
       ),
     );
@@ -101,10 +104,23 @@ class UserProvider with ChangeNotifier {
     if(response == null){
       _loginStatus = LoginStatus.logout;
       await resetUserInfo();
+
+      return;
     } else{
+
+      String? accessToken = response['accessToken'];
+      String? refreshToken = response['refreshToken'];
+
+      if(accessToken == null || refreshToken == null){
+        _loginStatus = LoginStatus.logout;
+        await resetUserInfo();
+
+        return;
+      }
+
       await storage.write(key: 'loginMethod', value: loginMethod);
-      await tokenProvider.setAccessToken(response['accessToken']);
-      await tokenProvider.setRefreshToken(response['refreshToken']);
+      await tokenProvider.setAccessToken(accessToken);
+      await tokenProvider.setRefreshToken(refreshToken);
       _isFirstLogin = true;
 
       FirebaseAnalytics.instance.logLogin(loginMethod: loginMethod);
