@@ -5,6 +5,8 @@ import 'dart:io' show Platform, SocketException;
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:ono/GlobalModule/Theme/LoadingDialog.dart';
+import 'package:ono/GlobalModule/Theme/SnackBarDialog.dart';
 import 'package:ono/Model/LoginStatus.dart';
 import 'package:ono/Provider/FoldersProvider.dart';
 import 'package:ono/Service/Auth/GuestAuthService.dart';
@@ -55,59 +57,102 @@ class UserProvider with ChangeNotifier {
   Future<void> signInWithGuest(BuildContext context) async {
     try {
       final response = await guestAuthService.signInWithGuest(context);
-      saveUserToken(response: response, loginMethod: 'guest');
-    } catch (e) {
-      _handleGeneralError(context, e.toString());
+      bool isRegister = await saveUserToken(response: response, loginMethod: 'guest');
+
+      if(!isRegister){
+        log('register failed!, response: ${response.toString()}');
+        throw Exception('response: ${response.toString()}');
+      }
+    } on SocketException catch(error, stackTrace){
+      LoadingDialog.show(context, '잠시만 기다려주세요...');
+      await Future.delayed(const Duration(seconds: 5));
+      await Sentry.captureException(error, stackTrace: stackTrace);
+      SnackBarDialog.showSnackBar(context: context, message: '잠시 후에 다시 요청해주세요!', backgroundColor: Colors.red);
+    } catch (error, stackTrace) {
+      _handleGeneralError(context, error, stackTrace);
     }
   }
 
   Future<void> signInWithGoogle(BuildContext context) async {
     try {
       final response = await googleAuthService.signInWithGoogle(context);
-      saveUserToken(response: response, loginMethod: 'google');
-    } catch (e) {
-      _handleGeneralError(context, e.toString());
+      bool isRegister = await saveUserToken(response: response, loginMethod: 'google');
+
+      if(!isRegister){
+        log('register failed!, response: ${response.toString()}');
+        throw Exception('response: ${response.toString()}');
+      }
+    } on SocketException catch(error, stackTrace){
+      LoadingDialog.show(context, '잠시만 기다려주세요...');
+      await Future.delayed(const Duration(seconds: 5));
+      await Sentry.captureException(error, stackTrace: stackTrace);
+      SnackBarDialog.showSnackBar(context: context, message: '잠시 후에 다시 요청해주세요!', backgroundColor: Colors.red);
+    } catch (error, stackTrace) {
+      _handleGeneralError(context, error, stackTrace);
     }
   }
 
   Future<void> signInWithApple(BuildContext context) async {
     try {
       final response = await appleAuthService.signInWithApple(context);
-      saveUserToken(response: response, loginMethod: 'apple');
-    } catch (e) {
-      _handleGeneralError(context, e.toString());
+      bool isRegister = await saveUserToken(response: response, loginMethod: 'apple');
+
+      if(!isRegister){
+        log('register failed!, response: ${response.toString()}');
+        throw Exception('response: ${response.toString()}');
+      }
+    } on SocketException catch(error, stackTrace){
+      LoadingDialog.show(context, '잠시만 기다려주세요...');
+      await Future.delayed(const Duration(seconds: 5));
+      await Sentry.captureException(error, stackTrace: stackTrace);
+      SnackBarDialog.showSnackBar(context: context, message: '잠시 후에 다시 요청해주세요!', backgroundColor: Colors.red);
+    } catch (error, stackTrace) {
+      _handleGeneralError(context, error, stackTrace);
     }
   }
 
   Future<void> signInWithKakao(BuildContext context) async {
     try {
       final response = await kakaoAuthService.signInWithKakao(context);
-      saveUserToken(response: response, loginMethod: 'kakao');
-    } catch (e) {
-      _handleGeneralError(context, e.toString());
+      bool isRegister = await saveUserToken(
+          response: response, loginMethod: 'kakao');
+
+      if (!isRegister) {
+        log('register failed!, response: ${response.toString()}');
+        throw Exception('response: ${response.toString()}');
+      }
+    } on SocketException catch (error, stackTrace) {
+      LoadingDialog.show(context, '잠시만 기다려주세요...');
+      await Future.delayed(const Duration(seconds: 5));
+      await Sentry.captureException(error, stackTrace: stackTrace);
+      SnackBarDialog.showSnackBar(context: context,
+          message: '잠시 후에 다시 요청해주세요!',
+          backgroundColor: Colors.red);
+    } catch (error, stackTrace) {
+      _handleGeneralError(context, error, stackTrace);
     }
   }
 
 // 일반 오류 처리 메서드
-  void _handleGeneralError(BuildContext context, String message) async {
+  void _handleGeneralError(BuildContext context, Object error, StackTrace stackTrace) async {
     await resetUserInfo();
+    await Sentry.captureException(error, stackTrace: stackTrace);
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: StandardText(text: '오류가 발생했습니다: $message'),
+        content: StandardText(text: '오류가 발생했습니다: ${error.toString()}'),
         backgroundColor: Colors.red,
       ),
     );
   }
 
-  Future<void> saveUserToken({Map<String,dynamic>? response, String? loginMethod}) async{
+  Future<bool> saveUserToken({Map<String,dynamic>? response, String? loginMethod}) async{
     if(response == null){
       _loginStatus = LoginStatus.logout;
       await resetUserInfo();
 
-      return;
+      return false;
     } else{
-
       String? accessToken = response['accessToken'];
       String? refreshToken = response['refreshToken'];
 
@@ -115,7 +160,7 @@ class UserProvider with ChangeNotifier {
         _loginStatus = LoginStatus.logout;
         await resetUserInfo();
 
-        return;
+        return false;
       }
 
       await storage.write(key: 'loginMethod', value: loginMethod);
@@ -124,11 +169,11 @@ class UserProvider with ChangeNotifier {
       _isFirstLogin = true;
 
       FirebaseAnalytics.instance.logLogin(loginMethod: loginMethod);
-      await fetchUserInfo();
+      return await fetchUserInfo();
     }
   }
 
-  Future<void> fetchUserInfo() async {
+  Future<bool> fetchUserInfo() async {
     try {
       final response = await httpService.sendRequest(
         method: 'GET',
@@ -161,16 +206,27 @@ class UserProvider with ChangeNotifier {
         _problemCount = await getUserProblemCount();
         if (_loginStatus == LoginStatus.login) {
           await foldersProvider.fetchRootFolderContents();
+          return true;
         }
+
+        return true;
       } else {
         _loginStatus = LoginStatus.logout;
+        return false;
       }
+    } on SocketException catch(error, stackTrace){
+      _loginStatus = LoginStatus.logout;
+      await Sentry.captureException(error, stackTrace: stackTrace);
+
+      return false;
     } catch (error, stackTrace) {
       _loginStatus = LoginStatus.logout;
       await Sentry.captureException(error, stackTrace: stackTrace);
-    }
 
-    notifyListeners();
+      return false;
+    } finally{
+      notifyListeners();
+    }
   }
 
   Future<void> setUserInfoInFirebase(int? userId, String? userName, String? userEmail) async {
@@ -336,7 +392,8 @@ class UserProvider with ChangeNotifier {
     _userEmail = '';
     _problemCount = 0;
     _isFirstLogin = false;
-    await storage.deleteAll();
     notifyListeners();
+
+    await storage.deleteAll();
   }
 }

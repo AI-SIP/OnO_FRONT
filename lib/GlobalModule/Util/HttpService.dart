@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:http/http.dart' as http;
 
@@ -84,6 +85,8 @@ class HttpService {
       }
     } on TimeoutException {
       throw Exception('Request timed out. Please try again.');
+    } on SocketException {
+      throw Exception('Socket Exception!');
     } catch (error) {
       throw Exception('An error occurred: $error');
     }
