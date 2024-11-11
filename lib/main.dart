@@ -70,7 +70,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
 
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'OnO',
       theme: _buildThemeData(context),
       navigatorObservers: <NavigatorObserver>[observer],
       home: SplashScreen(),

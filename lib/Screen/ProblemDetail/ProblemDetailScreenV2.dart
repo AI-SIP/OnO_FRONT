@@ -312,7 +312,7 @@ class _ProblemDetailScreenV2State extends State<ProblemDetailScreenV2> {
                       FirebaseAnalytics.instance
                           .logEvent(name: 'problem_delete_button_click');
                       Navigator.pop(context);
-                      _deleteProblemDialog(context, problemModel.problemId, themeProvider);
+                      _showDeleteProblemDialog(problemModel.problemId, themeProvider);
                     },
                   ),
                 ),
@@ -324,29 +324,47 @@ class _ProblemDetailScreenV2State extends State<ProblemDetailScreenV2> {
     );
   }
 
-  void _deleteProblemDialog(BuildContext context, int problemId, ThemeHandler themeProvider) {
-    _problemDetailService.deleteProblem(
-      context,
-      problemId,
-          () {
-        FirebaseAnalytics.instance.logEvent(name: 'problem_delete');
-        Navigator.of(context).pop(true);
-        if (mounted) {
-          SnackBarDialog.showSnackBar(
-            context: context,
-            message: '오답노트가 삭제되었습니다!',
-            backgroundColor: themeProvider.primaryColor,
-          );
-        }
-      },
-          (errorMessage) {
-        if (mounted) {
-          SnackBarDialog.showSnackBar(
-            context: context,
-            message: errorMessage,
-            backgroundColor: Colors.red,
-          );
-        }
+  Future<void> _showDeleteProblemDialog(int problemId, ThemeHandler themeProvider) async {
+    final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
+
+    return showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: Colors.white,
+          title: const StandardText(
+              text: '오답노트 삭제', fontSize: 18, color: Colors.black),
+          content: const StandardText(
+              text: '정말로 이 오답노트를 삭제하시겠습니까?',
+              fontSize: 16,
+              color: Colors.black),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const StandardText(
+                text: '취소',
+                fontSize: 14,
+                color: Colors.black,
+              ),
+            ),
+            TextButton(
+              onPressed: () async {
+                Navigator.pop(context);
+                Navigator.pop(context);
+                FirebaseAnalytics.instance.logEvent(name: 'problem_delete');
+
+                bool isRemoved = await Provider.of<FoldersProvider>(context, listen: false).deleteProblem(problemId);
+              },
+              child: const StandardText(
+                text: '삭제',
+                fontSize: 14,
+                color: Colors.red,
+              ),
+            ),
+          ],
+        );
       },
     );
   }

@@ -507,7 +507,7 @@ class _ProblemRegisterTemplateState
               ],
             ),
           )
-              : analysisResult != null || analysisResult!.isEmpty
+              : analysisResult != null && analysisResult.isEmpty
               ? Scrollbar(
             controller: scrollControllerForAnalysis,
             thumbVisibility: true,
@@ -524,7 +524,7 @@ class _ProblemRegisterTemplateState
                   ),
                 ],
                 renderingEngine: const TeXViewRenderingEngine.mathjax(),
-                child: LatexTextHandler.renderLatex(analysisResult!),
+                child: LatexTextHandler.renderLatex(analysisResult),
                 style: const TeXViewStyle(
                   elevation: 5,
                   borderRadius: TeXViewBorderRadius.all(10),

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:core';
 import 'dart:developer';
@@ -42,12 +43,12 @@ class AppleAuthService {
           'name': name,
           'identifier': identifier,
         }),
-      );
+      ).timeout(const Duration(seconds: 30));
 
       if (response.statusCode == 200) {
         log('Apple sign-in Success!');
-        FirebaseAnalytics.instance.logSignUp(signUpMethod: 'Apple');
-        FirebaseAnalytics.instance
+        await FirebaseAnalytics.instance.logSignUp(signUpMethod: 'Apple');
+        await FirebaseAnalytics.instance
             .logEvent(name: 'user_register_with_apple');
         //SnackBarDialog.showSnackBar(context: context, message: "로그인에 성공했습니다.", backgroundColor: Colors.green);
 
@@ -55,6 +56,13 @@ class AppleAuthService {
       } else {
         throw Exception("Failed to Register user on server");
       }
+    } on TimeoutException catch (_) {
+      SnackBarDialog.showSnackBar(
+        context: context,
+        message: "요청 시간이 초과되었습니다. 다시 시도해주세요.",
+        backgroundColor: Colors.red,
+      );
+      return null;
     } catch (error, stackTrace) {
       if(error == AuthorizationErrorCode.canceled){
         return null;
@@ -64,7 +72,7 @@ class AppleAuthService {
       }
 
       log('Apple sign-in error: $error');
-      SnackBarDialog.showSnackBar(context: context, message: "로그인 과정에서 오류가 발생했습니다. 다시 시도해주세요.", backgroundColor: Colors.red);
+      //SnackBarDialog.showSnackBar(context: context, message: "로그인 과정에서 오류가 발생했습니다. 다시 시도해주세요.", backgroundColor: Colors.red);
       await Sentry.captureException(
         error,
         stackTrace: stackTrace,
