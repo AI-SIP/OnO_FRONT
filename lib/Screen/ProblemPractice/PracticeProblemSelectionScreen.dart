@@ -341,7 +341,7 @@ class _PracticeProblemSelectionScreenState
               ),
               child: StandardText(
                 text: selectedProblems.length.toString(),
-                fontSize: 16,
+                fontSize: 12,
                 color: themeProvider.primaryColor,
               ),
             ),
