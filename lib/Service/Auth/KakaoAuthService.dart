@@ -54,7 +54,7 @@ class KakaoAuthService {
             stackTrace: stackTrace,
           );
 
-          SnackBarDialog.showSnackBar(context: context, message: "로그인 과정에서 오류가 발생했습니다. 다시 시도해주세요.", backgroundColor: Colors.red);
+          //SnackBarDialog.showSnackBar(context: context, message: "로그인 과정에서 오류가 발생했습니다. 다시 시도해주세요.", backgroundColor: Colors.red);
           result = null;
         }
       }
@@ -71,7 +71,7 @@ class KakaoAuthService {
           result = null;
         }
 
-        SnackBarDialog.showSnackBar(context: context, message: "로그인 과정에서 오류가 발생했습니다. 다시 시도해주세요.", backgroundColor: Colors.red);
+        //SnackBarDialog.showSnackBar(context: context, message: "로그인 과정에서 오류가 발생했습니다. 다시 시도해주세요.", backgroundColor: Colors.red);
         log('카카오계정으로 로그인 실패 $error');
         await Sentry.captureException(
           error,

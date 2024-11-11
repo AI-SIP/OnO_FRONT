@@ -57,7 +57,7 @@ class UserProvider with ChangeNotifier {
 
   Future<void> signIn(BuildContext context, Future<Map<String, dynamic>?> Function(BuildContext) signInMethod, String loginMethod) async {
     try {
-      LoadingDialog.show(context, '로그인중입니다...');
+      LoadingDialog.show(context, '로그인 중 입니다...');
       final response = await signInMethod(context);
       bool isRegister = await saveUserToken(response: response, loginMethod: loginMethod);
       LoadingDialog.hide(context);
@@ -68,9 +68,14 @@ class UserProvider with ChangeNotifier {
       }
     } on SocketException catch (error, stackTrace) {
       LoadingDialog.show(context, '잠시만 기다려주세요...');
-      await Future.delayed(const Duration(seconds: 5));
+      await Future.delayed(const Duration(seconds: 3));
       await Sentry.captureException(error, stackTrace: stackTrace);
-      SnackBarDialog.showSnackBar(context: context, message: '잠시 후에 다시 요청해주세요!', backgroundColor: Colors.red);
+      SnackBarDialog.showSnackBar(context: context, message: '네트워크 오류로 인해 로그인에 실패했습니다.', backgroundColor: Colors.red);
+    } on TimeoutException catch (error, stackTrace) {
+      LoadingDialog.show(context, '잠시만 기다려주세요...');
+      await Future.delayed(const Duration(seconds: 3));
+      await Sentry.captureException(error, stackTrace: stackTrace);
+      SnackBarDialog.showSnackBar(context: context, message: '네트워크 오류로 인해 로그인에 실패했습니다.', backgroundColor: Colors.red);
     } catch (error, stackTrace) {
       _handleGeneralError(context, error, stackTrace);
     }
@@ -99,7 +104,7 @@ class UserProvider with ChangeNotifier {
 
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-        content: StandardText(text: '로그인에 실패했습니다.', color: Colors.white, fontSize: 14,),
+        content: StandardText(text: '로그인 과정에서 오류가 발생했습니다.', color: Colors.white, fontSize: 14,),
         backgroundColor: Colors.red,
       ),
     );
@@ -200,7 +205,6 @@ class UserProvider with ChangeNotifier {
   }
 
   Future<int> getUserProblemCount() async{
-
     try {
       final response = await httpService.sendRequest(
         method: 'GET',

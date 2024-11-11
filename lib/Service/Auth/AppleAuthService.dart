@@ -72,7 +72,7 @@ class AppleAuthService {
       }
 
       log('Apple sign-in error: $error');
-      SnackBarDialog.showSnackBar(context: context, message: "로그인 과정에서 오류가 발생했습니다. 다시 시도해주세요.", backgroundColor: Colors.red);
+      //SnackBarDialog.showSnackBar(context: context, message: "로그인 과정에서 오류가 발생했습니다. 다시 시도해주세요.", backgroundColor: Colors.red);
       await Sentry.captureException(
         error,
         stackTrace: stackTrace,
