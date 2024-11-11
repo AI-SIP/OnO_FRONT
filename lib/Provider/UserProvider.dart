@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:core';
 import 'dart:developer';
@@ -54,68 +55,12 @@ class UserProvider with ChangeNotifier {
   final GoogleAuthService googleAuthService = GoogleAuthService();
   final KakaoAuthService kakaoAuthService = KakaoAuthService();
 
-  Future<void> signInWithGuest(BuildContext context) async {
+  Future<void> signIn(BuildContext context, Future<Map<String, dynamic>?> Function(BuildContext) signInMethod, String loginMethod) async {
     try {
-      final response = await guestAuthService.signInWithGuest(context);
-      bool isRegister = await saveUserToken(response: response, loginMethod: 'guest');
-
-      if(!isRegister){
-        log('register failed!, response: ${response.toString()}');
-        throw Exception('response: ${response.toString()}');
-      }
-    } on SocketException catch(error, stackTrace){
-      LoadingDialog.show(context, '잠시만 기다려주세요...');
-      await Future.delayed(const Duration(seconds: 5));
-      await Sentry.captureException(error, stackTrace: stackTrace);
-      SnackBarDialog.showSnackBar(context: context, message: '잠시 후에 다시 요청해주세요!', backgroundColor: Colors.red);
-    } catch (error, stackTrace) {
-      _handleGeneralError(context, error, stackTrace);
-    }
-  }
-
-  Future<void> signInWithGoogle(BuildContext context) async {
-    try {
-      final response = await googleAuthService.signInWithGoogle(context);
-      bool isRegister = await saveUserToken(response: response, loginMethod: 'google');
-
-      if(!isRegister){
-        log('register failed!, response: ${response.toString()}');
-        throw Exception('response: ${response.toString()}');
-      }
-    } on SocketException catch(error, stackTrace){
-      LoadingDialog.show(context, '잠시만 기다려주세요...');
-      await Future.delayed(const Duration(seconds: 5));
-      await Sentry.captureException(error, stackTrace: stackTrace);
-      SnackBarDialog.showSnackBar(context: context, message: '잠시 후에 다시 요청해주세요!', backgroundColor: Colors.red);
-    } catch (error, stackTrace) {
-      _handleGeneralError(context, error, stackTrace);
-    }
-  }
-
-  Future<void> signInWithApple(BuildContext context) async {
-    try {
-      final response = await appleAuthService.signInWithApple(context);
-      bool isRegister = await saveUserToken(response: response, loginMethod: 'apple');
-
-      if(!isRegister){
-        log('register failed!, response: ${response.toString()}');
-        throw Exception('response: ${response.toString()}');
-      }
-    } on SocketException catch(error, stackTrace){
-      LoadingDialog.show(context, '잠시만 기다려주세요...');
-      await Future.delayed(const Duration(seconds: 5));
-      await Sentry.captureException(error, stackTrace: stackTrace);
-      SnackBarDialog.showSnackBar(context: context, message: '잠시 후에 다시 요청해주세요!', backgroundColor: Colors.red);
-    } catch (error, stackTrace) {
-      _handleGeneralError(context, error, stackTrace);
-    }
-  }
-
-  Future<void> signInWithKakao(BuildContext context) async {
-    try {
-      final response = await kakaoAuthService.signInWithKakao(context);
-      bool isRegister = await saveUserToken(
-          response: response, loginMethod: 'kakao');
+      LoadingDialog.show(context, '로그인중입니다...');
+      final response = await signInMethod(context);
+      bool isRegister = await saveUserToken(response: response, loginMethod: loginMethod);
+      LoadingDialog.hide(context);
 
       if (!isRegister) {
         log('register failed!, response: ${response.toString()}');
@@ -125,22 +70,36 @@ class UserProvider with ChangeNotifier {
       LoadingDialog.show(context, '잠시만 기다려주세요...');
       await Future.delayed(const Duration(seconds: 5));
       await Sentry.captureException(error, stackTrace: stackTrace);
-      SnackBarDialog.showSnackBar(context: context,
-          message: '잠시 후에 다시 요청해주세요!',
-          backgroundColor: Colors.red);
+      SnackBarDialog.showSnackBar(context: context, message: '잠시 후에 다시 요청해주세요!', backgroundColor: Colors.red);
     } catch (error, stackTrace) {
       _handleGeneralError(context, error, stackTrace);
     }
   }
 
-// 일반 오류 처리 메서드
+  Future<void> signInWithGuest(BuildContext context) async {
+    await signIn(context, guestAuthService.signInWithGuest, 'guest');
+  }
+
+  Future<void> signInWithGoogle(BuildContext context) async {
+    await signIn(context, googleAuthService.signInWithGoogle, 'google');
+  }
+
+  Future<void> signInWithApple(BuildContext context) async {
+    await signIn(context, appleAuthService.signInWithApple, 'apple');
+  }
+
+  Future<void> signInWithKakao(BuildContext context) async {
+    await signIn(context, kakaoAuthService.signInWithKakao, 'kakao');
+  }
+
+  // 일반 오류 처리 메서드
   void _handleGeneralError(BuildContext context, Object error, StackTrace stackTrace) async {
     await resetUserInfo();
     await Sentry.captureException(error, stackTrace: stackTrace);
 
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: StandardText(text: '오류가 발생했습니다: ${error.toString()}'),
+      const SnackBar(
+        content: StandardText(text: '로그인에 실패했습니다.', color: Colors.white, fontSize: 14,),
         backgroundColor: Colors.red,
       ),
     );
@@ -215,6 +174,11 @@ class UserProvider with ChangeNotifier {
         return false;
       }
     } on SocketException catch(error, stackTrace){
+      _loginStatus = LoginStatus.logout;
+      await Sentry.captureException(error, stackTrace: stackTrace);
+
+      return false;
+    } on TimeoutException catch(error, stackTrace){
       _loginStatus = LoginStatus.logout;
       await Sentry.captureException(error, stackTrace: stackTrace);
 

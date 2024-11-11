@@ -43,12 +43,12 @@ class AppleAuthService {
           'name': name,
           'identifier': identifier,
         }),
-      ).timeout(const Duration(seconds: 10));
+      ).timeout(const Duration(seconds: 30));
 
       if (response.statusCode == 200) {
         log('Apple sign-in Success!');
-        FirebaseAnalytics.instance.logSignUp(signUpMethod: 'Apple');
-        FirebaseAnalytics.instance
+        await FirebaseAnalytics.instance.logSignUp(signUpMethod: 'Apple');
+        await FirebaseAnalytics.instance
             .logEvent(name: 'user_register_with_apple');
         //SnackBarDialog.showSnackBar(context: context, message: "로그인에 성공했습니다.", backgroundColor: Colors.green);
 

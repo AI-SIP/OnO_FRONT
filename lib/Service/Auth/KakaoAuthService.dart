@@ -95,13 +95,13 @@ class KakaoAuthService {
         headers: {'Content-Type': 'application/json; charset=UTF-8'},
         body: jsonEncode(
             {'email': email, 'name': name, 'identifier': identifier}),
-      ).timeout(const Duration(seconds: 10));
+      ).timeout(const Duration(seconds: 30));
 
       if (response.statusCode == 200) {
         log('kakao sign-in Success!');
-        FirebaseAnalytics.instance
+        await FirebaseAnalytics.instance
             .logEvent(name: 'user_register_with_kakao');
-        FirebaseAnalytics.instance.logSignUp(signUpMethod: 'Kakao');
+        await FirebaseAnalytics.instance.logSignUp(signUpMethod: 'Kakao');
 
         //SnackBarDialog.showSnackBar(context: context, message: "로그인에 성공했습니다.", backgroundColor: Colors.green);
 

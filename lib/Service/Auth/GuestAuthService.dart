@@ -22,14 +22,14 @@ class GuestAuthService{
       final response = await http.post(
         url,
         headers: {'Content-Type': 'application/json; charset=UTF-8'},
-      ).timeout(const Duration(seconds: 10));
+      ).timeout(const Duration(seconds: 30));
 
       if (response.statusCode == 200) {
         log('Guest sign-in Success!');
 
-        FirebaseAnalytics.instance
+        await FirebaseAnalytics.instance
             .logEvent(name: 'user_register_with_guest');
-        FirebaseAnalytics.instance.logSignUp(signUpMethod: 'Guest');
+        await FirebaseAnalytics.instance.logSignUp(signUpMethod: 'Guest');
         //SnackBarDialog.showSnackBar(context: context, message: "로그인에 성공했습니다.", backgroundColor: Colors.green);
 
         return jsonDecode(response.body);

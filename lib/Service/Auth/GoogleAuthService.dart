@@ -30,12 +30,12 @@ class GoogleAuthService {
             'name': name,
             'identifier': identifier
           }),
-        ).timeout(const Duration(seconds: 10));
+        ).timeout(const Duration(seconds: 20));
 
         if (response.statusCode == 200) {
           log('Google sign-in Success!');
-          FirebaseAnalytics.instance.logSignUp(signUpMethod: 'Google');
-          FirebaseAnalytics.instance
+          await FirebaseAnalytics.instance.logSignUp(signUpMethod: 'Google');
+          await FirebaseAnalytics.instance
               .logEvent(name: 'user_register_with_google');
 
           return jsonDecode(response.body);
@@ -90,7 +90,7 @@ class GoogleAuthService {
         log('Google sign-out Success!');
       } else {
         log('Failed to revoke Google token');
-        throw new Exception('Failed to revoke Google token');
+        throw Exception('Failed to revoke Google token');
       }
     } catch (error, stackTrace) {
       log('Google sign-out error: $error');
