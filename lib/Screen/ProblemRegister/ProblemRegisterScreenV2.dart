@@ -11,12 +11,14 @@ class ProblemRegisterScreenV2 extends StatefulWidget {
   final ProblemModel problemModel;
   final bool isEditMode;
   final Map<String, dynamic>? colorPickerResult;
+  final List<List<double>>? coordinatePickerResult;
 
   const ProblemRegisterScreenV2({
     super.key,
     required this.problemModel,
     required this.isEditMode,
     required this.colorPickerResult,
+    required this.coordinatePickerResult,
   });
 
   @override
@@ -38,6 +40,7 @@ class _ProblemRegisterScreenV2State extends State<ProblemRegisterScreenV2> {
     templateWidget = ProblemRegisterTemplate(
         problemModel: widget.problemModel,
         colorPickerResult: widget.colorPickerResult,
+        coordinatePickerResult: widget.coordinatePickerResult,
         isEditMode: widget.isEditMode,
         templateType: widget.problemModel.templateType!);
 

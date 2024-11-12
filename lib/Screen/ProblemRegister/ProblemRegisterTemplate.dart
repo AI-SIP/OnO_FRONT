@@ -22,12 +22,14 @@ import 'ProblemRegisterScreenWidget.dart';
 class ProblemRegisterTemplate extends StatefulWidget {
   final ProblemModel problemModel;
   final Map<String, dynamic>? colorPickerResult;
+  final List<List<double>>? coordinatePickerResult;
   final bool isEditMode;
   final TemplateType templateType;
 
   const ProblemRegisterTemplate({
     required this.problemModel,
     required this.colorPickerResult,
+    required this.coordinatePickerResult,
     required this.isEditMode,
     required this.templateType,
     super.key,
@@ -98,8 +100,11 @@ class _ProblemRegisterTemplateState
         final provider = Provider.of<FoldersProvider>(context, listen: false);
 
         // Fetch processImageUrl and analysis based on the template type
-        processImageUrl = await provider.fetchProcessImageUrl(
-            problemModel.problemImageUrl, widget.colorPickerResult!);
+        processImageUrl = await provider.fetchProcessImageByColor(
+            problemModel.problemImageUrl,
+            widget.colorPickerResult,
+            widget.coordinatePickerResult,
+        );
 
         if (widget.templateType == TemplateType.special) {
           analysisResult =

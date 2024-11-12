@@ -302,13 +302,11 @@ class _TemplateSelectionScreenState extends State<TemplateSelectionScreen> {
     imagePickerHandler.showImagePicker(context, (pickedFile) async {
       if (pickedFile != null) {
         Map<String, dynamic>? colorPickerResult;
-        Map<String, dynamic>? coordinatePickerResult;
-
+        List<List<double>>? coordinatePickerResult;
 
         if (templateType == TemplateType.clean || templateType == TemplateType.special) {
           final colorPickerHandler = ImageColorPickerHandler();
           final coordinatePickerHandler = ImageCoordinatePickerHandler();
-
 
           coordinatePickerResult = await coordinatePickerHandler.showCoordinatePicker(
               context,
@@ -316,18 +314,15 @@ class _TemplateSelectionScreenState extends State<TemplateSelectionScreen> {
           );
           log(coordinatePickerResult.toString());
 
-
           /*
           colorPickerResult = await colorPickerHandler.showColorPicker(
             context,
             pickedFile.path,
           );
-
            */
-
         }
 
-        if (templateType == TemplateType.simple || colorPickerResult != null) {
+        if (templateType == TemplateType.simple || coordinatePickerResult != null) {
           LoadingDialog.show(context, '템플릿 불러오는 중...');
           final result = await Provider.of<FoldersProvider>(context, listen: false)
               .uploadProblemImage(pickedFile);

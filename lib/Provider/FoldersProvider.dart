@@ -253,19 +253,23 @@ class FoldersProvider with ChangeNotifier {
     }
   }
 
-  Future<String?> fetchProcessImageUrl(String? fullUrl, Map<String, dynamic> colorPickerResult) async {
+  Future<String?> fetchProcessImageByColor(String? fullUrl, Map<String, dynamic>? colorPickerResult, List<List<double>>? coordinatePickerResult) async {
 
-    log('remove colors: ${colorPickerResult['colors']}');
-    log('remove intensity: ${colorPickerResult['intensity']}');
-
+    if(colorPickerResult != null){
+      log('remove colors: ${colorPickerResult['colors']}');
+      log('remove intensity: ${colorPickerResult['intensity']}');
+    } else if(coordinatePickerResult != null){
+      log('coordinate list: ${coordinatePickerResult.toString()}');
+    }
     try {
       final response = await httpService.sendRequest(
-        method: 'POST', // 'GET'에서 'POST'로 변경
+        method: 'POST',
         url: '${AppConfig.baseUrl}/api/process/processImage',
         body: {
           'fullUrl': fullUrl,
-          'colorsList': colorPickerResult['colors'],
-          'intensity' : colorPickerResult['intensity'],
+          'colorsList': colorPickerResult != null ? colorPickerResult['colors'] : null,
+          'intensity' : colorPickerResult != null ? colorPickerResult['intensity'] : null,
+          'coordinateList' : coordinatePickerResult,
         },
       );
 

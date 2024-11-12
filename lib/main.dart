@@ -84,6 +84,7 @@ class MyApp extends StatelessWidget {
                 problemModel: args['problemModel'],
                 isEditMode: args['isEditMode'],
                 colorPickerResult: args['colorPickerResult'],
+                coordinatePickerResult: args['coordinatePickerResult'],
               );
             },
           );
