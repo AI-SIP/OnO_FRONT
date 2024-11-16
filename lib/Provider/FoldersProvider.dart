@@ -4,7 +4,6 @@ import 'dart:developer';
 import 'package:camera/camera.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
-import 'package:ono/GlobalModule/Theme/SnackBarDialog.dart';
 import 'package:ono/GlobalModule/Util/HttpService.dart';
 import 'package:ono/GlobalModule/Util/ProblemSorting.dart';
 import 'package:ono/GlobalModule/Util/ReviewHandler.dart';
@@ -259,7 +258,7 @@ class FoldersProvider with ChangeNotifier {
       log('remove colors: ${colorPickerResult['colors']}');
       log('remove intensity: ${colorPickerResult['intensity']}');
     } else if(coordinatePickerResult != null){
-      log('coordinate list: ${coordinatePickerResult.toString()}');
+      log('point list: ${coordinatePickerResult.toString()}');
     }
     try {
       final response = await httpService.sendRequest(
@@ -269,7 +268,7 @@ class FoldersProvider with ChangeNotifier {
           'fullUrl': fullUrl,
           'colorsList': colorPickerResult != null ? colorPickerResult['colors'] : null,
           'intensity' : colorPickerResult != null ? colorPickerResult['intensity'] : null,
-          'coordinateList' : coordinatePickerResult,
+          'points' : coordinatePickerResult,
         },
       );
 

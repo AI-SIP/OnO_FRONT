@@ -22,7 +22,7 @@ class GuestAuthService{
       final response = await http.post(
         url,
         headers: {'Content-Type': 'application/json; charset=UTF-8'},
-      ).timeout(const Duration(seconds: 30));
+      ).timeout(const Duration(seconds: 60));
 
       if (response.statusCode == 200) {
         log('Guest sign-in Success!');

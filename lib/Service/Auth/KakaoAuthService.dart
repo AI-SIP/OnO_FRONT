@@ -95,7 +95,7 @@ class KakaoAuthService {
         headers: {'Content-Type': 'application/json; charset=UTF-8'},
         body: jsonEncode(
             {'email': email, 'name': name, 'identifier': identifier}),
-      ).timeout(const Duration(seconds: 30));
+      ).timeout(const Duration(seconds: 60));
 
       if (response.statusCode == 200) {
         log('kakao sign-in Success!');

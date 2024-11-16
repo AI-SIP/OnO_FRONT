@@ -314,11 +314,13 @@ class _TemplateSelectionScreenState extends State<TemplateSelectionScreen> {
           );
           log(coordinatePickerResult.toString());
 
+
           /*
           colorPickerResult = await colorPickerHandler.showColorPicker(
             context,
             pickedFile.path,
           );
+
            */
         }
 

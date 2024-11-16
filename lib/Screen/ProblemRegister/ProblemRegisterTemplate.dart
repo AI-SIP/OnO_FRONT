@@ -512,7 +512,7 @@ class _ProblemRegisterTemplateState
               ],
             ),
           )
-              : analysisResult != null && analysisResult.isEmpty
+              : analysisResult != null && analysisResult.isNotEmpty
               ? Scrollbar(
             controller: scrollControllerForAnalysis,
             thumbVisibility: true,
