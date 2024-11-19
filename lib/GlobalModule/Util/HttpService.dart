@@ -42,7 +42,7 @@ class HttpService {
         case 'GET':
           return await http
               .get(uri, headers: mergedHeaders)
-              .timeout(const Duration(seconds: 60));
+              .timeout(const Duration(seconds: 90));
         case 'POST':
           if (isMultipart && files != null) {
             var request = http.MultipartRequest('POST', uri);
@@ -53,7 +53,7 @@ class HttpService {
             }
             request.files.addAll(files);
             final streamedResponse =
-                await request.send().timeout(const Duration(seconds: 60));
+                await request.send().timeout(const Duration(seconds: 90));
             return await http.Response.fromStream(streamedResponse);
           } else {
             return await http.post(uri,
@@ -69,17 +69,17 @@ class HttpService {
             }
             request.files.addAll(files);
             final streamedResponse =
-                await request.send().timeout(const Duration(seconds: 30));
+                await request.send().timeout(const Duration(seconds: 90));
             return await http.Response.fromStream(streamedResponse);
           } else {
             return await http
                 .patch(uri, headers: mergedHeaders, body: json.encode(body))
-                .timeout(const Duration(seconds: 60));
+                .timeout(const Duration(seconds: 90));
           }
         case 'DELETE':
           return await http
               .delete(uri, headers: mergedHeaders)
-              .timeout(const Duration(seconds: 60));
+              .timeout(const Duration(seconds: 90));
         default:
           throw Exception('Unsupported HTTP method');
       }

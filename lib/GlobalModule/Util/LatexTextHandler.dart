@@ -55,7 +55,7 @@ class LatexTextHandler {
 
   /// #이 2개 이상 붙은 텍스트를 굵게하고 크기를 키우는 함수
   static String _convertHeaders(String content) {
-    // 정규식을 사용하여 ##으로 시작하는 텍스트를 <h1> 태그로 변환
+    // 정규식을 사용하여 ###으로 시작하는 텍스트를 <h1> 태그로 변환
     return content.replaceAllMapped(RegExp(r'###\s*(.*?)\n'), (match) {
       return "<h4>${match.group(1)}</h4>";
     });
@@ -70,7 +70,7 @@ class LatexTextHandler {
   static String _convertBoldText(String content) {
     // 정규식을 사용하여 **로 감싸진 텍스트를 <b>태그로 감싸진 형태로 변환하고 줄바꿈 추가
     return content.replaceAllMapped(RegExp(r'\*\*\s*(.*?)\s*\*\*'), (match) {
-      return "<b>${match.group(1)}</b><br><br>";
+      return "<b>${match.group(1)}</b><br>";
     });
   }
 

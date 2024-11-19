@@ -238,6 +238,7 @@ class FoldersProvider with ChangeNotifier {
 
       if (response.statusCode == 200) {
         final jsonResponse = json.decode(utf8.decode(response.bodyBytes));
+        log('success for upload problem image: ${jsonResponse['problemImageUrl']}');
         return {
           'problemId': jsonResponse['problemId'],
           'problemImageUrl': jsonResponse['problemImageUrl'],
@@ -254,6 +255,10 @@ class FoldersProvider with ChangeNotifier {
 
   Future<String?> fetchProcessImageByColor(String? fullUrl, Map<String, dynamic>? colorPickerResult, List<List<double>>? coordinatePickerResult) async {
 
+    List<int>? labels = coordinatePickerResult != null
+        ? List<int>.filled(coordinatePickerResult.length, 1)
+        : null;
+
     if(colorPickerResult != null){
       log('remove colors: ${colorPickerResult['colors']}');
       log('remove intensity: ${colorPickerResult['intensity']}');
@@ -269,11 +274,13 @@ class FoldersProvider with ChangeNotifier {
           'colorsList': colorPickerResult != null ? colorPickerResult['colors'] : null,
           'intensity' : colorPickerResult != null ? colorPickerResult['intensity'] : null,
           'points' : coordinatePickerResult,
+          'labels': labels,
         },
       );
 
       if (response.statusCode == 200) {
         final jsonResponse = json.decode(utf8.decode(response.bodyBytes));
+        log('image process result : ${jsonResponse['processImageUrl']}');
         return jsonResponse['processImageUrl'];
       } else {
         log('Failed to fetch process image URL: ${response.body}');
