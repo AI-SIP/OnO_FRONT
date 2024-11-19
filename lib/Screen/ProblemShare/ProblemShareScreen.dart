@@ -295,7 +295,7 @@ class _ProblemShareScreenState extends State<ProblemShareScreen> {
       if (rect.size.width > 0 && rect.size.height > 0) {
         Share.shareXFiles(
           [xFile],
-          text: '내 오답노트야! 어때?',
+          text: '내 오답노트야! 어때?\n\nOnO 다운로드: https://ono-app.com/home',
           sharePositionOrigin: Rect.fromPoints(
             Offset.zero,
             Offset(size.width / 3 * 2, size.height),
@@ -303,7 +303,7 @@ class _ProblemShareScreenState extends State<ProblemShareScreen> {
         );
       } else {
         log('Invalid box size, defaulting to basic share...');
-        Share.shareXFiles([xFile], text: '내 오답노트야! 어때?');
+        Share.shareXFiles([xFile], text: '내 오답노트야! 어때?\n\nOnO 다운로드: https://ono-app.com/home');
       }
 
       Navigator.pop(context);

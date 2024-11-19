@@ -307,7 +307,6 @@ class _TemplateSelectionScreenState extends State<TemplateSelectionScreen> {
         if (templateType == TemplateType.clean || templateType == TemplateType.special) {
           final colorPickerHandler = ImageColorPickerHandler();
           final coordinatePickerHandler = ImageCoordinatePickerHandler();
-
           coordinatePickerResult = await coordinatePickerHandler.showCoordinatePicker(
               context,
               pickedFile.path

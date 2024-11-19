@@ -151,79 +151,6 @@ class _ProblemRegisterTemplateState
     }
   }
 
-  /*
-  Future<void> _fetchData() async {
-    if (widget.isEditMode) {
-      // 편집 모드에서는 기존 데이터를 사용
-      processImageUrl = problemModel.processImageUrl;
-      analysisResult = problemModel.analysis;
-    } else {
-      // 로딩 상태 초기화
-      setState(() {
-        isLoading = true;
-        isAnalysisLoading = true;
-        isProcessImageLoading = true;
-      });
-
-      final provider = Provider.of<FoldersProvider>(context, listen: false);
-
-      // 분석 결과 로드
-      if (widget.templateType == TemplateType.special) {
-        provider.fetchAnalysisResult(problemModel.problemImageUrl).then((result) {
-          setState(() {
-            analysisResult = result;
-            isAnalysisLoading = false;
-          });
-        }).catchError((error) {
-          setState(() {
-            isAnalysisLoading = false;
-          });
-          log('Error fetching analysis result: $error');
-        });
-      } else {
-        setState(() {
-          isAnalysisLoading = false; // Simple 타입의 경우 분석 결과를 로드하지 않음
-        });
-      }
-
-      // 필기 제거 이미지 로드
-      if (widget.templateType != TemplateType.simple) {
-        setState(() {
-          isAnalysisLoading = false;
-        });
-
-        provider
-            .fetchProcessImageByColor(
-          problemModel.problemImageUrl,
-          widget.colorPickerResult,
-          widget.coordinatePickerResult,
-        )
-            .then((result) {
-          setState(() {
-            processImageUrl = result;
-            isProcessImageLoading = false;
-          });
-        }).catchError((error) {
-          setState(() {
-            isProcessImageLoading = false;
-          });
-          log('Error fetching process image URL: $error');
-        });
-      } else {
-        setState(() {
-          isProcessImageLoading = false; // Simple 타입의 경우 필기 제거 이미지 로드하지 않음
-        });
-      }
-    }
-
-    // 로딩 상태 초기화
-    setState(() {
-      isLoading = isAnalysisLoading || isProcessImageLoading;
-    });
-  }
-
-   */
-
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeHandler>(context);
@@ -667,7 +594,7 @@ class _ProblemRegisterTemplateState
   }
 
   Future<void> _waitForLoadingToComplete() async {
-    while (isLoading) {
+    while (isProcessImageLoading || isAnalysisLoading) {
       await Future.delayed(const Duration(milliseconds: 500));
     }
   }

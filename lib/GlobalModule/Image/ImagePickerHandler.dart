@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:ono/GlobalModule/Image/CameraHandler.dart';
+import 'package:ono/GlobalModule/Theme/LoadingDialog.dart';
 import 'package:provider/provider.dart';
 
 import '../Theme/StandardText.dart';
@@ -32,7 +33,6 @@ class ImagePickerHandler {
     try {
       final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
       if (pickedFile != null) {
-
         return _cropImage(pickedFile);
       }
       return null;
@@ -142,6 +142,7 @@ class ImagePickerHandler {
                     onTap: () async {
                       FirebaseAnalytics.instance.logEvent(name: 'image_select_gallery');
                       Navigator.of(context).pop(); // 모달 닫기
+
                       final pickedFile = await pickImageFromGallery(context);
                       onImagePicked(pickedFile);
                     },
