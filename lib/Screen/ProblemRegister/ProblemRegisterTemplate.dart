@@ -91,37 +91,64 @@ class _ProblemRegisterTemplateState
     super.dispose();
   }
 
-
   Future<void> _fetchData() async {
     if(widget.isEditMode){
       processImageUrl = problemModel.processImageUrl;
       analysisResult = problemModel.analysis;
+      setState(() {});
+
+      return;
     } else{
 
       setState(() {
-        isLoading = true;
+        isAnalysisLoading = true;
+        isProcessImageLoading = true;
       });
 
+      final provider = Provider.of<FoldersProvider>(context, listen: false);
+
+      if (widget.templateType == TemplateType.special) {
+        provider.fetchAnalysisResult(problemModel.problemImageUrl).then((result) {
+          setState(() {
+            analysisResult = result;
+            isAnalysisLoading = false; // 분석 로드 완료
+          });
+        }).catchError((error) {
+          setState(() {
+            isAnalysisLoading = false; // 에러 발생 시 로딩 종료
+          });
+          log('Error fetching analysis result: $error');
+        });
+      } else {
+        setState(() {
+          isAnalysisLoading = false;
+        });
+      }
+
       if (widget.templateType != TemplateType.simple) {
-        final provider = Provider.of<FoldersProvider>(context, listen: false);
-
-        if (widget.templateType == TemplateType.special) {
-          analysisResult =
-          await provider.fetchAnalysisResult(problemModel.problemImageUrl);
-        }
-
-        // Fetch processImageUrl and analysis based on the template type
-        processImageUrl = await provider.fetchProcessImageByColor(
-            problemModel.problemImageUrl,
-            widget.colorPickerResult,
-            widget.coordinatePickerResult,
-        );
+        provider
+            .fetchProcessImageByColor(
+          problemModel.problemImageUrl,
+          widget.colorPickerResult,
+          widget.coordinatePickerResult,
+        )
+            .then((result) {
+          setState(() {
+            processImageUrl = result;
+            isProcessImageLoading = false; // 필기 제거 이미지 로드 완료
+          });
+        }).catchError((error) {
+          setState(() {
+            isProcessImageLoading = false; // 에러 발생 시 로딩 종료
+          });
+          log('Error fetching process image URL: $error');
+        });
+      } else {
+        setState(() {
+          isProcessImageLoading = false;
+        });
       }
     }
-
-    setState(() {
-      isLoading = false;
-    });
   }
 
   /*
@@ -338,7 +365,7 @@ class _ProblemRegisterTemplateState
                 label: '필기 제거 이미지',
                 imageUrl: processImageUrl,
                 themeProvider: themeProvider,
-                isLoading: isLoading,
+                isLoading: isProcessImageLoading,
                 loadingMessage: '필기 제거 중....'
               ),
             ),
@@ -444,7 +471,7 @@ class _ProblemRegisterTemplateState
               label: '필기 제거 이미지',
               imageUrl: processImageUrl,
               themeProvider: themeProvider,
-              isLoading: isLoading,
+              isLoading: isProcessImageLoading,
               loadingMessage: '필기 제거 중....'
           ),
           const SizedBox(height: 30),
@@ -539,7 +566,6 @@ class _ProblemRegisterTemplateState
     required double maxHeight,
   }) {
     double screenHeight = MediaQuery.of(context).size.height;
-    double screenWidth = MediaQuery.of(context).size.width;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -570,7 +596,7 @@ class _ProblemRegisterTemplateState
               width: 2.0,
             ),
           ),
-          child: isLoading
+          child: isAnalysisLoading
               ? Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
