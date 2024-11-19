@@ -129,14 +129,14 @@ class _CoordinatePickerScreenState extends State<CoordinatePickerScreen> {
                     ),
                     // 터치한 부분에 빨간 원 표시 (상대적 좌표 이용)
                     ...displayCoordinates.map((coord) => Positioned(
-                      left: coord.dx - 10,
-                      top: coord.dy - 10,
+                      left: coord.dx - 7, // 원의 반지름(10에서 7로 줄임)
+                      top: coord.dy - 7, // 원의 반지름(10에서 7로 줄임)
                       child: Container(
-                        width: 20,
-                        height: 20,
+                        width: 14, // 원의 지름(20에서 14로 줄임)
+                        height: 14, // 원의 지름(20에서 14로 줄임)
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          border: Border.all(color: Colors.red, width: 2),
+                          border: Border.all(color: Colors.red, width: 3), // 두께 증가(2에서 3으로)
                           color: Colors.transparent,
                         ),
                       ),
