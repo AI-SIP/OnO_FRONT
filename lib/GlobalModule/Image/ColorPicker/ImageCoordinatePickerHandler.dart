@@ -89,10 +89,13 @@ class _CoordinatePickerScreenState extends State<CoordinatePickerScreen> {
           text: '제거할 필기를 모두 눌러주세요!',
           fontSize: 20,
           color: themeProvider.primaryColor,
+          textAlign: TextAlign.center,
         ),
       ),
       body: Column(
         children: [
+          StandardText(text: '(문제 위에 적힌 필기는 선택하지 않아도 괜찮아요!)', color: themeProvider.primaryColor, fontSize: 15,),
+          const SizedBox(height: 10,),
           Expanded(
             child: Center(
               child: GestureDetector(
