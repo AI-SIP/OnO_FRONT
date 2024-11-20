@@ -7,7 +7,7 @@ import '../../Theme/StandardText.dart';
 import '../../Theme/ThemeHandler.dart';
 
 class ImageCoordinatePickerHandler {
-  Future<List<List<double>>?> showCoordinatePicker(
+  Future<List<double>?> showCoordinatePicker(
       BuildContext context, String imagePath) async {
     final result = await Navigator.of(context).push(
       MaterialPageRoute(
@@ -57,6 +57,18 @@ class _CoordinatePickerScreenState extends State<CoordinatePickerScreen> {
   void dispose() {
     SystemChrome.setPreferredOrientations(DeviceOrientation.values);
     super.dispose();
+  }
+
+  List<double> _calculateBoundingBox() {
+    if (selectedCoordinates.isEmpty) return [];
+
+    // 최소/최대 x, y 값 계산
+    final minX = selectedCoordinates.map((coord) => coord[0]).reduce((a, b) => a < b ? a : b);
+    final minY = selectedCoordinates.map((coord) => coord[1]).reduce((a, b) => a < b ? a : b);
+    final maxX = selectedCoordinates.map((coord) => coord[0]).reduce((a, b) => a > b ? a : b);
+    final maxY = selectedCoordinates.map((coord) => coord[1]).reduce((a, b) => a > b ? a : b);
+
+    return [minX, minY, maxX, maxY];
   }
 
   @override
@@ -161,7 +173,8 @@ class _CoordinatePickerScreenState extends State<CoordinatePickerScreen> {
                   });
                 }),
                 _buildActionButton('선택 완료', themeProvider.primaryColor, () {
-                  Navigator.of(context).pop(selectedCoordinates);
+                  final boundingBox = _calculateBoundingBox();
+                  Navigator.of(context).pop(boundingBox);
                 }, selectedCoordinates.length),
               ],
             )

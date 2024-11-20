@@ -24,7 +24,7 @@ import 'ProblemRegisterScreenWidget.dart';
 class ProblemRegisterTemplate extends StatefulWidget {
   final ProblemModel problemModel;
   final Map<String, dynamic>? colorPickerResult;
-  final List<List<double>>? coordinatePickerResult;
+  final List<double>? coordinatePickerResult;
   final bool isEditMode;
   final TemplateType templateType;
 

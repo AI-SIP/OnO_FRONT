@@ -253,7 +253,7 @@ class FoldersProvider with ChangeNotifier {
     }
   }
 
-  Future<String?> fetchProcessImageByColor(String? fullUrl, Map<String, dynamic>? colorPickerResult, List<List<double>>? coordinatePickerResult) async {
+  Future<String?> fetchProcessImageByColor(String? fullUrl, Map<String, dynamic>? colorPickerResult, List<double>? coordinatePickerResult) async {
 
     List<int>? labels = coordinatePickerResult != null
         ? List<int>.filled(coordinatePickerResult.length, 1)

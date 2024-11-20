@@ -11,7 +11,7 @@ class ProblemRegisterScreenV2 extends StatefulWidget {
   final ProblemModel problemModel;
   final bool isEditMode;
   final Map<String, dynamic>? colorPickerResult;
-  final List<List<double>>? coordinatePickerResult;
+  final List<double>? coordinatePickerResult;
 
   const ProblemRegisterScreenV2({
     super.key,
