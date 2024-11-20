@@ -43,7 +43,7 @@ class AppleAuthService {
           'name': name,
           'identifier': identifier,
         }),
-      ).timeout(const Duration(seconds: 30));
+      ).timeout(const Duration(seconds: 60));
 
       if (response.statusCode == 200) {
         log('Apple sign-in Success!');

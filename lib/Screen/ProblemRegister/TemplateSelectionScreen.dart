@@ -4,6 +4,7 @@ import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:ono/GlobalModule/Image/ColorPicker/ImageCoordinatePickerHandler.dart';
 import 'package:ono/GlobalModule/Theme/LoadingDialog.dart';
 import 'package:provider/provider.dart';
 import '../../GlobalModule/Image/ColorPicker/ImageColorPickerHandler.dart';
@@ -250,7 +251,7 @@ class _TemplateSelectionScreenState extends State<TemplateSelectionScreen> {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(15),
             ),
-            padding: const EdgeInsets.symmetric(vertical: 15), // 버튼 높이
+            padding: const EdgeInsets.symmetric(vertical: 12), // 버튼 높이
           ),
           child: const StandardText(
             text: '문제 등록하러 가기',
@@ -301,16 +302,27 @@ class _TemplateSelectionScreenState extends State<TemplateSelectionScreen> {
     imagePickerHandler.showImagePicker(context, (pickedFile) async {
       if (pickedFile != null) {
         Map<String, dynamic>? colorPickerResult;
+        List<double>? coordinatePickerResult;
 
         if (templateType == TemplateType.clean || templateType == TemplateType.special) {
           final colorPickerHandler = ImageColorPickerHandler();
+          final coordinatePickerHandler = ImageCoordinatePickerHandler();
+          coordinatePickerResult = await coordinatePickerHandler.showCoordinatePicker(
+              context,
+              pickedFile.path
+          );
+          log(coordinatePickerResult.toString());
+
+          /*
           colorPickerResult = await colorPickerHandler.showColorPicker(
             context,
             pickedFile.path,
           );
+
+           */
         }
 
-        if (templateType == TemplateType.simple || colorPickerResult != null) {
+        if (templateType == TemplateType.simple || coordinatePickerResult != null) {
           LoadingDialog.show(context, '템플릿 불러오는 중...');
           final result = await Provider.of<FoldersProvider>(context, listen: false)
               .uploadProblemImage(pickedFile);
@@ -330,6 +342,7 @@ class _TemplateSelectionScreenState extends State<TemplateSelectionScreen> {
                 'problemModel': problemModel,
                 'isEditMode': false,
                 'colorPickerResult': colorPickerResult,
+                'coordinatePickerResult' : coordinatePickerResult,
               },
             );
           } else {

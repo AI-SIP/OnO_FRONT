@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
@@ -22,12 +24,14 @@ import 'ProblemRegisterScreenWidget.dart';
 class ProblemRegisterTemplate extends StatefulWidget {
   final ProblemModel problemModel;
   final Map<String, dynamic>? colorPickerResult;
+  final List<double>? coordinatePickerResult;
   final bool isEditMode;
   final TemplateType templateType;
 
   const ProblemRegisterTemplate({
     required this.problemModel,
     required this.colorPickerResult,
+    required this.coordinatePickerResult,
     required this.isEditMode,
     required this.templateType,
     super.key,
@@ -49,6 +53,8 @@ class _ProblemRegisterTemplateState
   String? processImageUrl;
   String? analysisResult;
   bool isLoading = false;
+  bool isAnalysisLoading = false;
+  bool isProcessImageLoading = false;
   DateTime _selectedDate = DateTime.now();
   int? _selectedFolderId;
   String? _selectedFolderName;
@@ -89,28 +95,60 @@ class _ProblemRegisterTemplateState
     if(widget.isEditMode){
       processImageUrl = problemModel.processImageUrl;
       analysisResult = problemModel.analysis;
+      setState(() {});
+
+      return;
     } else{
+
       setState(() {
-        isLoading = true;
+        isAnalysisLoading = true;
+        isProcessImageLoading = true;
       });
 
+      final provider = Provider.of<FoldersProvider>(context, listen: false);
+
+      if (widget.templateType == TemplateType.special) {
+        provider.fetchAnalysisResult(problemModel.problemImageUrl).then((result) {
+          setState(() {
+            analysisResult = result;
+            isAnalysisLoading = false; // 분석 로드 완료
+          });
+        }).catchError((error) {
+          setState(() {
+            isAnalysisLoading = false; // 에러 발생 시 로딩 종료
+          });
+          log('Error fetching analysis result: $error');
+        });
+      } else {
+        setState(() {
+          isAnalysisLoading = false;
+        });
+      }
+
       if (widget.templateType != TemplateType.simple) {
-        final provider = Provider.of<FoldersProvider>(context, listen: false);
-
-        // Fetch processImageUrl and analysis based on the template type
-        processImageUrl = await provider.fetchProcessImageUrl(
-            problemModel.problemImageUrl, widget.colorPickerResult!);
-
-        if (widget.templateType == TemplateType.special) {
-          analysisResult =
-          await provider.fetchAnalysisResult(problemModel.problemImageUrl);
-        }
+        provider
+            .fetchProcessImageByColor(
+          problemModel.problemImageUrl,
+          widget.colorPickerResult,
+          widget.coordinatePickerResult,
+        )
+            .then((result) {
+          setState(() {
+            processImageUrl = result;
+            isProcessImageLoading = false; // 필기 제거 이미지 로드 완료
+          });
+        }).catchError((error) {
+          setState(() {
+            isProcessImageLoading = false; // 에러 발생 시 로딩 종료
+          });
+          log('Error fetching process image URL: $error');
+        });
+      } else {
+        setState(() {
+          isProcessImageLoading = false;
+        });
       }
     }
-
-    setState(() {
-      isLoading = false;
-    });
   }
 
   @override
@@ -254,8 +292,8 @@ class _ProblemRegisterTemplateState
                 label: '필기 제거 이미지',
                 imageUrl: processImageUrl,
                 themeProvider: themeProvider,
-                isLoading: isLoading,
-                loadingMessage: '필기 제거 중....'
+                isLoading: isProcessImageLoading,
+                loadingMessage: '필기 제거 중...'
               ),
             ),
           ],
@@ -360,8 +398,8 @@ class _ProblemRegisterTemplateState
               label: '필기 제거 이미지',
               imageUrl: processImageUrl,
               themeProvider: themeProvider,
-              isLoading: isLoading,
-              loadingMessage: '필기 제거 중....'
+              isLoading: isProcessImageLoading,
+              loadingMessage: '필기 제거 중...'
           ),
           const SizedBox(height: 30),
         ],
@@ -455,7 +493,6 @@ class _ProblemRegisterTemplateState
     required double maxHeight,
   }) {
     double screenHeight = MediaQuery.of(context).size.height;
-    double screenWidth = MediaQuery.of(context).size.width;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -486,7 +523,7 @@ class _ProblemRegisterTemplateState
               width: 2.0,
             ),
           ),
-          child: isLoading
+          child: isAnalysisLoading
               ? Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -507,7 +544,7 @@ class _ProblemRegisterTemplateState
               ],
             ),
           )
-              : analysisResult != null && analysisResult.isEmpty
+              : analysisResult != null && analysisResult.isNotEmpty
               ? Scrollbar(
             controller: scrollControllerForAnalysis,
             thumbVisibility: true,
@@ -557,7 +594,7 @@ class _ProblemRegisterTemplateState
   }
 
   Future<void> _waitForLoadingToComplete() async {
-    while (isLoading) {
+    while (isProcessImageLoading || isAnalysisLoading) {
       await Future.delayed(const Duration(milliseconds: 500));
     }
   }

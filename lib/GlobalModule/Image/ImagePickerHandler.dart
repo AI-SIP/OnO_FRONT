@@ -32,7 +32,6 @@ class ImagePickerHandler {
     try {
       final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
       if (pickedFile != null) {
-
         return _cropImage(pickedFile);
       }
       return null;
@@ -142,6 +141,7 @@ class ImagePickerHandler {
                     onTap: () async {
                       FirebaseAnalytics.instance.logEvent(name: 'image_select_gallery');
                       Navigator.of(context).pop(); // 모달 닫기
+
                       final pickedFile = await pickImageFromGallery(context);
                       onImagePicked(pickedFile);
                     },

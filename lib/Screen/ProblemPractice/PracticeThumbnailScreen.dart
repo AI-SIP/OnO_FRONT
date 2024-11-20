@@ -194,7 +194,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
                     ),
                     child: StandardText(
                       text:  '${_selectedPracticeIds.length}',
-                      fontSize: 14,
+                      fontSize: 12,
                       color: themeProvider.primaryColor,
                     ),
                   ),

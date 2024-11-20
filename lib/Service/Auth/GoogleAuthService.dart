@@ -30,7 +30,7 @@ class GoogleAuthService {
             'name': name,
             'identifier': identifier
           }),
-        ).timeout(const Duration(seconds: 20));
+        ).timeout(const Duration(seconds: 60));
 
         if (response.statusCode == 200) {
           log('Google sign-in Success!');

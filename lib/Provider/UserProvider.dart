@@ -145,18 +145,18 @@ class UserProvider with ChangeNotifier {
       );
 
       if (response.statusCode == 200) {
-        final responseBody = jsonDecode(utf8.decode(response.bodyBytes));
+        final responseBody = await jsonDecode(utf8.decode(response.bodyBytes));
         _userId = responseBody['userId'] ?? 0;
         _userName = responseBody['userName'] ?? '이름 없음';
         _userEmail = responseBody['userEmail'];
         //_isFirstLogin = responseBody['firstLogin'] ? true : false;
         _loginStatus = LoginStatus.login;
 
-        FirebaseAnalytics.instance.logLogin();
-        setUserInfoInFirebase(_userId, _userName, _userEmail);
+        await FirebaseAnalytics.instance.logLogin();
+        await setUserInfoInFirebase(_userId, _userName, _userEmail);
 
         // Sentry에 유저 정보 설정
-        Sentry.configureScope((scope) {
+        await Sentry.configureScope((scope) {
           scope.setUser(SentryUser(
             id: _userId.toString(),
             username: _userName,
@@ -164,7 +164,7 @@ class UserProvider with ChangeNotifier {
           ));
         });
 
-        FirebaseAnalytics.instance
+        await FirebaseAnalytics.instance
             .logEvent(name: 'fetch_user_info');
 
         _problemCount = await getUserProblemCount();
@@ -199,9 +199,9 @@ class UserProvider with ChangeNotifier {
   }
 
   Future<void> setUserInfoInFirebase(int? userId, String? userName, String? userEmail) async {
-    FirebaseAnalytics.instance.setUserId(id: userId.toString());
-    FirebaseAnalytics.instance.setUserProperty(name: 'userName', value: userName);
-    FirebaseAnalytics.instance.setUserProperty(name: 'userEmail', value: userEmail);
+    await FirebaseAnalytics.instance.setUserId(id: userId.toString());
+    await FirebaseAnalytics.instance.setUserProperty(name: 'userName', value: userName);
+    await FirebaseAnalytics.instance.setUserProperty(name: 'userEmail', value: userEmail);
   }
 
   Future<int> getUserProblemCount() async{

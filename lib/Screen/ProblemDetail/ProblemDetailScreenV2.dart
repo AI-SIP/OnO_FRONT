@@ -258,6 +258,7 @@ class _ProblemDetailScreenV2State extends State<ProblemDetailScreenV2> {
                             problemModel: problemModel,
                             isEditMode: true,
                             colorPickerResult: null,
+                            coordinatePickerResult: null,
                           ),
                         ),
                       ).then((_) {

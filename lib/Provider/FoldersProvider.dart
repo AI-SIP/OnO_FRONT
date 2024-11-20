@@ -4,7 +4,6 @@ import 'dart:developer';
 import 'package:camera/camera.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
-import 'package:ono/GlobalModule/Theme/SnackBarDialog.dart';
 import 'package:ono/GlobalModule/Util/HttpService.dart';
 import 'package:ono/GlobalModule/Util/ProblemSorting.dart';
 import 'package:ono/GlobalModule/Util/ReviewHandler.dart';
@@ -239,6 +238,7 @@ class FoldersProvider with ChangeNotifier {
 
       if (response.statusCode == 200) {
         final jsonResponse = json.decode(utf8.decode(response.bodyBytes));
+        log('success for upload problem image: ${jsonResponse['problemImageUrl']}');
         return {
           'problemId': jsonResponse['problemId'],
           'problemImageUrl': jsonResponse['problemImageUrl'],
@@ -253,24 +253,34 @@ class FoldersProvider with ChangeNotifier {
     }
   }
 
-  Future<String?> fetchProcessImageUrl(String? fullUrl, Map<String, dynamic> colorPickerResult) async {
+  Future<String?> fetchProcessImageByColor(String? fullUrl, Map<String, dynamic>? colorPickerResult, List<double>? coordinatePickerResult) async {
 
-    log('remove colors: ${colorPickerResult['colors']}');
-    log('remove intensity: ${colorPickerResult['intensity']}');
+    List<int>? labels = coordinatePickerResult != null
+        ? List<int>.filled(coordinatePickerResult.length, 1)
+        : null;
 
+    if(colorPickerResult != null){
+      log('remove colors: ${colorPickerResult['colors']}');
+      log('remove intensity: ${colorPickerResult['intensity']}');
+    } else if(coordinatePickerResult != null){
+      log('point list: ${coordinatePickerResult.toString()}');
+    }
     try {
       final response = await httpService.sendRequest(
-        method: 'POST', // 'GET'에서 'POST'로 변경
+        method: 'POST',
         url: '${AppConfig.baseUrl}/api/process/processImage',
         body: {
           'fullUrl': fullUrl,
-          'colorsList': colorPickerResult['colors'],
-          'intensity' : colorPickerResult['intensity'],
+          'colorsList': colorPickerResult != null ? colorPickerResult['colors'] : null,
+          'intensity' : colorPickerResult != null ? colorPickerResult['intensity'] : null,
+          'points' : coordinatePickerResult,
+          'labels': labels,
         },
       );
 
       if (response.statusCode == 200) {
         final jsonResponse = json.decode(utf8.decode(response.bodyBytes));
+        log('image process result : ${jsonResponse['processImageUrl']}');
         return jsonResponse['processImageUrl'];
       } else {
         log('Failed to fetch process image URL: ${response.body}');
