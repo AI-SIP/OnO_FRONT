@@ -293,7 +293,7 @@ class _ProblemRegisterTemplateState
                 imageUrl: processImageUrl,
                 themeProvider: themeProvider,
                 isLoading: isProcessImageLoading,
-                loadingMessage: '필기 제거 중....'
+                loadingMessage: '필기 제거 중...'
               ),
             ),
           ],
@@ -399,7 +399,7 @@ class _ProblemRegisterTemplateState
               imageUrl: processImageUrl,
               themeProvider: themeProvider,
               isLoading: isProcessImageLoading,
-              loadingMessage: '필기 제거 중....'
+              loadingMessage: '필기 제거 중...'
           ),
           const SizedBox(height: 30),
         ],

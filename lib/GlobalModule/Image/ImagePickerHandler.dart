@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:ono/GlobalModule/Image/CameraHandler.dart';
-import 'package:ono/GlobalModule/Theme/LoadingDialog.dart';
 import 'package:provider/provider.dart';
 
 import '../Theme/StandardText.dart';
