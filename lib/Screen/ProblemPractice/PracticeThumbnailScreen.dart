@@ -288,10 +288,38 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
             height: 100,
           ),
           const SizedBox(height: 40),
-          StandardText(
-            text: '오답 복습 리스트를 추가해보세요!',
+          const StandardText(
+            text: '작성한 오답노트로 복습 리스트를\n 생성해 시험을 준비하세요!',
             fontSize: 16,
-            color: themeProvider.primaryColor,
+            color: Colors.black,
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 20),
+          ElevatedButton(
+            onPressed: () {
+              // 복습 리스트 추가 화면으로 이동
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const PracticeProblemSelectionScreen(),
+                ),
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: themeProvider.primaryColor, // primaryColor 적용
+              padding: const EdgeInsets.symmetric(
+                horizontal: 20,
+                vertical: 8,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(15),
+              ),
+            ),
+            child: const StandardText(
+              text: '복습 리스트 추가하기',
+              fontSize: 16,
+              color: Colors.white,
+            ),
           ),
         ],
       ),

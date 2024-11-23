@@ -39,7 +39,7 @@ class StandardText extends StatelessWidget {
       fontSize: fontSize,
       fontFamily: fontFamily,
       fontWeight: fontWeight,
-      height: 1.7,
+      height: 1.8,
     );
   }
 }
