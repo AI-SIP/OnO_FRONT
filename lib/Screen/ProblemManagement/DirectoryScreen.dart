@@ -707,9 +707,40 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                       ),
                       const SizedBox(height: 40), // 아이콘과 텍스트 사이 간격
                       StandardText(
-                        text: '공책과 오답노트를 추가해보세요!',
+                        text: '오답노트를 작성해서 공책에 저장해보아요!',
                         fontSize: 16,
                         color: themeProvider.primaryColor,
+                      ),
+                      const SizedBox(height: 20,),
+                      ElevatedButton(
+                        onPressed: () {
+                          // 문제 등록 페이지로 이동
+                          while (Navigator.canPop(context)) {
+                            Navigator.pop(context);
+                          }
+                          const Duration(seconds: 1);
+                          foldersProvider.fetchRootFolderContents();
+                          Provider.of<ScreenIndexProvider>(context, listen: false)
+                              .setSelectedIndex(2); // 문제 등록 탭으로 이동
+                          FirebaseAnalytics.instance.logEvent(
+                            name: 'move_to_template_page_button_click',
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: themeProvider.primaryColor, // primaryColor 적용
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 8,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(15),
+                          ),
+                        ),
+                        child: const StandardText(
+                          text: '오답노트 작성하기',
+                          fontSize: 16,
+                          color: Colors.white,
+                        ),
                       ),
                     ],
                   ),
