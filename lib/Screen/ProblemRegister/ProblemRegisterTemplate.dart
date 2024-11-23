@@ -308,7 +308,7 @@ class _ProblemRegisterTemplateState
               flex: 1,
               child: ProblemRegisterScreenWidget.buildImagePickerWithLabel(
                 context: context,
-                label: '정답 이미지',
+                label: '해설 이미지',
                 image: answerImage,
                 existingImageUrl: problemModel.answerImageUrl,
                 themeProvider: themeProvider,
@@ -351,7 +351,7 @@ class _ProblemRegisterTemplateState
               flex: 1,
               child: ProblemRegisterScreenWidget.buildImagePickerWithLabel(
                 context: context,
-                label: '정답 이미지',
+                label: '해설 이미지',
                 image: answerImage,
                 existingImageUrl: problemModel.answerImageUrl,
                 themeProvider: themeProvider,
@@ -405,7 +405,7 @@ class _ProblemRegisterTemplateState
         ],
         ProblemRegisterScreenWidget.buildImagePickerWithLabel(
           context: context,
-          label: '정답 이미지',
+          label: '해설 이미지',
           image: answerImage,
           existingImageUrl: problemModel.answerImageUrl,
           themeProvider: themeProvider,
