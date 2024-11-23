@@ -294,7 +294,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
             color: Colors.black,
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 30),
           ElevatedButton(
             onPressed: () {
               // 복습 리스트 추가 화면으로 이동
@@ -308,7 +308,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
             style: ElevatedButton.styleFrom(
               backgroundColor: themeProvider.primaryColor, // primaryColor 적용
               padding: const EdgeInsets.symmetric(
-                horizontal: 20,
+                horizontal: 30,
                 vertical: 8,
               ),
               shape: RoundedRectangleBorder(

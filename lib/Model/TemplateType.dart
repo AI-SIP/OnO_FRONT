@@ -19,11 +19,11 @@ extension TemplateTypeExtension on TemplateType {
   String get description {
     switch (this) {
       case TemplateType.simple:
-        return '빠르고 간편하게 문제를 등록하세요.';
+        return '빠르고 간편하게 오답노트를 작성하세요.';
       case TemplateType.clean:
         return '문제 이미지의 필기를 제거해\n깔끔한 복습을 해보세요.';
       case TemplateType.special:
-        return '필기 제거와 문제 분석을 통해\n고도화된 복습을 해보세요.';
+        return '필기 제거와 문제 분석을 통해\n한층 더 고도화된 복습을 해보세요.';
     }
   }
 

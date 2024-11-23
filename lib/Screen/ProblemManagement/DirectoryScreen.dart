@@ -707,11 +707,12 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                       ),
                       const SizedBox(height: 40), // 아이콘과 텍스트 사이 간격
                       const StandardText(
-                        text: '작성한 오답노트를 공책에 저장하세요!',
+                        text: '작성한 오답노트를\n공책에 저장해 관리하세요!',
                         fontSize: 16,
                         color: Colors.black,
+                        textAlign: TextAlign.center,
                       ),
-                      const SizedBox(height: 20,),
+                      const SizedBox(height: 30,),
                       ElevatedButton(
                         onPressed: () {
                           // 플로팅 버튼의 공책 생성 로직과 동일하게 동작
@@ -722,7 +723,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: themeProvider.primaryColor, // primaryColor 적용
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 20,
+                            horizontal: 40,
                             vertical: 8,
                           ),
                           shape: RoundedRectangleBorder(
