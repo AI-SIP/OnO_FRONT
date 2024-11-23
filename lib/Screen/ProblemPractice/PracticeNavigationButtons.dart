@@ -1,8 +1,14 @@
+import 'dart:io';
+
+import 'package:camera/camera.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
+import 'package:ono/Provider/FoldersProvider.dart';
 import 'package:ono/Screen/ProblemDetail/ProblemDetailScreenV2.dart';
 import 'package:ono/Screen/ProblemPractice/PracticeCompletionScreen.dart';
 import 'package:provider/provider.dart';
 
+import '../../GlobalModule/Image/ImagePickerHandler.dart';
 import '../../GlobalModule/Theme/StandardText.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
 import '../../Provider/ProblemPracticeProvider.dart';
@@ -27,17 +33,32 @@ class PracticeNavigationButtons extends StatefulWidget {
 }
 
 class _PracticeNavigationButtonsState extends State<PracticeNavigationButtons> {
+  bool isReviewed = false;
+  final ImagePickerHandler _imagePickerHandler = ImagePickerHandler();
+  XFile? selectedImage;
+
+
+
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeHandler>(context);
     final screenHeight = MediaQuery.of(context).size.height;
 
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+    return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        buildPreviousButton(themeProvider, screenHeight),
+        // Progress Text가 상단에 단독으로 표시되도록 설정
         buildProgressText(themeProvider),
-        buildNextOrCompleteButton(themeProvider, screenHeight),
+        const SizedBox(height: 8), // 간격 추가
+        // 아래에 버튼들이 나란히 배치
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            buildPreviousButton(themeProvider, screenHeight),
+            buildReviewButton(themeProvider, screenHeight),
+            buildNextOrCompleteButton(themeProvider, screenHeight),
+          ],
+        ),
       ],
     );
   }
@@ -67,6 +88,47 @@ class _PracticeNavigationButtonsState extends State<PracticeNavigationButtons> {
       text: '${currentIndex + 1} / $totalProblems',
       fontSize: 16,
       color: themeProvider.primaryColor,
+    );
+  }
+
+  TextButton buildReviewButton(ThemeHandler themeProvider, double screenHeight) {
+    return TextButton(
+      onPressed: isReviewed
+          ? null
+          : () => showReviewDialog(context),
+      style: ElevatedButton.styleFrom(
+        padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
+        backgroundColor: Colors.white,
+        side: BorderSide(
+          color: themeProvider.primaryColor,
+          width: 2.0,
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(15.0),
+        ),
+      ),
+      child: isReviewed
+          ? Icon(
+        Icons.check,
+        color: themeProvider.primaryColor,
+        size: 20,
+      )
+          : Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.touch_app,
+            color: themeProvider.primaryColor,
+            size: 15,
+          ),
+          const SizedBox(width: 10),
+          StandardText(
+            text: '복습 인증',
+            fontSize: 14,
+            color: themeProvider.primaryColor,
+          ),
+        ],
+      ),
     );
   }
 
@@ -148,6 +210,129 @@ class _PracticeNavigationButtonsState extends State<PracticeNavigationButtons> {
       ),
     );
   }
+
+  void showReviewDialog(BuildContext context) {
+    FirebaseAnalytics.instance.logEvent(name: 'problem_repeat_button_click');
+
+    final folderProvider = Provider.of<FoldersProvider>(context, listen: false);
+    final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
+    bool isLoading = false;
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              backgroundColor: Colors.white,
+              insetPadding: const EdgeInsets.symmetric(horizontal: 30, vertical: 30),
+              contentPadding: const EdgeInsets.all(15),
+              titlePadding: const EdgeInsets.only(left: 20, top: 20, right: 20),
+              title: const StandardText(
+                text: '복습을 완료했나요?',
+                fontSize: 18,
+                color: Colors.black,
+              ),
+              content: Container(
+                height: MediaQuery.of(context).size.height * 0.5,
+                width: MediaQuery.of(context).size.width * 0.8,
+                padding: const EdgeInsets.all(15),
+                child: GestureDetector(
+                  onTap: () {
+                    _imagePickerHandler.showImagePicker(context, (pickedFile) async {
+                      if (pickedFile != null) {
+                        setState(() {
+                          selectedImage = pickedFile;
+                        });
+                      }
+                    });
+                  },
+                  child: Container(
+                    width: double.maxFinite,
+                    margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: themeProvider.primaryColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: selectedImage == null
+                        ? Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.photo_library,
+                          size: 60,
+                          color: themeProvider.primaryColor,
+                        ),
+                        const SizedBox(height: 8),
+                        StandardText(
+                          text: '풀이 이미지를 등록하세요',
+                          color: themeProvider.primaryColor,
+                        ),
+                      ],
+                    )
+                        : ClipRRect(
+                      borderRadius: BorderRadius.circular(10),
+                      child: Image.file(
+                        File(selectedImage!.path),
+                        fit: BoxFit.cover,
+                        width: double.infinity,
+                        height: double.infinity,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const StandardText(
+                    text: '취소',
+                    fontSize: 14,
+                    color: Colors.black,
+                  ),
+                ),
+                TextButton(
+                  onPressed: isLoading
+                      ? null
+                      : () async {
+                    setState(() {
+                      isLoading = true;
+                    });
+
+                    await folderProvider.addRepeatCount(
+                        widget.currentId, selectedImage);
+
+                    FirebaseAnalytics.instance.logEvent(
+                      name: 'problem_repeat',
+                    );
+
+                    setState(() {
+                      isReviewed = true;
+                      isLoading = false;
+                    });
+
+                    Navigator.of(context).pop();
+                    widget.onRefresh();
+                  },
+                  child: isLoading
+                      ? CircularProgressIndicator(
+                    strokeWidth: 2.0,
+                    color: themeProvider.primaryColor,
+                  )
+                      : StandardText(
+                    text: '복습 인증',
+                    fontSize: 14,
+                    color: themeProvider.primaryColor,
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
 
   ButtonStyle _buildButtonStyle(ThemeHandler themeProvider, double screenHeight, {required bool isCompletion}) {
     return ElevatedButton.styleFrom(
