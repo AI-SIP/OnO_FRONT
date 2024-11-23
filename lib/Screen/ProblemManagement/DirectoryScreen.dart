@@ -707,7 +707,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                       ),
                       const SizedBox(height: 40), // 아이콘과 텍스트 사이 간격
                       const StandardText(
-                        text: '오답노트를 작성해서 공책에 저장해보아요!',
+                        text: '작성한 오답노트를 공책에 저장하세요!',
                         fontSize: 16,
                         color: Colors.black,
                       ),

@@ -6,9 +6,11 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:ono/GlobalModule/Image/ColorPicker/ImageCoordinatePickerHandler.dart';
 import 'package:ono/GlobalModule/Theme/LoadingDialog.dart';
+import 'package:ono/GlobalModule/Theme/UnderlinedText.dart';
 import 'package:provider/provider.dart';
 import '../../GlobalModule/Image/ColorPicker/ImageColorPickerHandler.dart';
 import '../../GlobalModule/Image/ImagePickerHandler.dart';
+import '../../GlobalModule/Theme/HandWriteText.dart';
 import '../../GlobalModule/Theme/SnackBarDialog.dart';
 import '../../GlobalModule/Theme/StandardText.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
@@ -149,9 +151,12 @@ class _TemplateSelectionScreenState extends State<TemplateSelectionScreen> {
                       text: templateType.description,
                       fontSize: 16,
                       color: Colors.black,
+                      textAlign: TextAlign.center,
                     ),
                   ),
-                  SizedBox(height: screenHeight * 0.01),
+                  SizedBox(height: screenHeight * 0.02),
+                  _buildHashTags(templateType, themeProvider), // 해시태그 추가
+                  SizedBox(height: screenHeight * 0.02),
                 ],
               ),
             );
@@ -180,7 +185,7 @@ class _TemplateSelectionScreenState extends State<TemplateSelectionScreen> {
             fontSize: 24,
             color: Colors.black,
           ),
-          SizedBox(height: screenHeight * 0.03),
+          SizedBox(height: screenHeight * 0.02),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -194,6 +199,21 @@ class _TemplateSelectionScreenState extends State<TemplateSelectionScreen> {
     );
   }
 
+  Widget _buildHashTags(TemplateType templateType, ThemeHandler themeProvider) {
+    return Wrap(
+      alignment: WrapAlignment.center,
+      spacing: 8.0,
+      runSpacing: 8.0,
+      children: templateType.hashTags.map((tag) {
+        return UnderlinedText(
+          text: tag,
+          fontSize: 18,
+          color: Colors.black,
+        );
+      }).toList(),
+    );
+  }
+
   // 좌우 네비게이션 버튼 빌드 함수
   Widget _buildNavigationButtons(double screenHeight) {
     return Stack(
@@ -202,7 +222,7 @@ class _TemplateSelectionScreenState extends State<TemplateSelectionScreen> {
           left: 0,
           top: screenHeight * 0.3,
           child: IconButton(
-            icon: const Icon(Icons.arrow_back_ios, size: 24, color: Colors.grey),
+            icon: const Icon(Icons.arrow_back_ios, size: 24, color: Colors.black),
             onPressed: () {
               if (_selectedIndex == 0) {
                 _pageController.jumpToPage(TemplateType.values.length - 1);
@@ -219,7 +239,7 @@ class _TemplateSelectionScreenState extends State<TemplateSelectionScreen> {
           right: 0,
           top: screenHeight * 0.3,
           child: IconButton(
-            icon: const Icon(Icons.arrow_forward_ios, size: 24, color: Colors.grey),
+            icon: const Icon(Icons.arrow_forward_ios, size: 24, color: Colors.black),
             onPressed: () {
               if (_selectedIndex == TemplateType.values.length - 1) {
                 _pageController.jumpToPage(0);

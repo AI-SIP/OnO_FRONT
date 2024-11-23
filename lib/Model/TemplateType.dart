@@ -21,9 +21,9 @@ extension TemplateTypeExtension on TemplateType {
       case TemplateType.simple:
         return '빠르고 간편하게 문제를 등록하세요.';
       case TemplateType.clean:
-        return '문제 이미지의 필기를 제거해 깔끔한 복습을 해보세요.';
+        return '문제 이미지의 필기를 제거해\n깔끔한 복습을 해보세요.';
       case TemplateType.special:
-        return '필기 제거와 문제 분석을 통해 고도화된 복습을 해보세요.';
+        return '필기 제거와 문제 분석을 통해\n고도화된 복습을 해보세요.';
     }
   }
 
@@ -79,6 +79,17 @@ extension TemplateTypeExtension on TemplateType {
         return "assets/Icon/EraserDetail.svg";
       case TemplateType.special:
         return "assets/Icon/GlassDetail.svg";
+    }
+  }
+
+  List<String> get hashTags {
+    switch (this) {
+      case TemplateType.simple:
+        return ['#국어', '#영어'];
+      case TemplateType.clean:
+        return ['#사회', '#역사'];
+      case TemplateType.special:
+        return ['#수학', '#과학'];
     }
   }
 
