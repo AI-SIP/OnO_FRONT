@@ -344,7 +344,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
               builder: (context, foldersProvider, child) {
                 int problemCount = foldersProvider.problems.length;
                 return StandardText(
-                  text: '문제 수 : $problemCount',
+                  text: '오답노트 수 : $problemCount',
                   fontSize: 15,
                   color: themeProvider.primaryColor,
                 );
@@ -714,17 +714,10 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                       const SizedBox(height: 20,),
                       ElevatedButton(
                         onPressed: () {
-                          // 문제 등록 페이지로 이동
-                          while (Navigator.canPop(context)) {
-                            Navigator.pop(context);
-                          }
-                          const Duration(seconds: 1);
-                          foldersProvider.fetchRootFolderContents();
-                          Provider.of<ScreenIndexProvider>(context, listen: false)
-                              .setSelectedIndex(2); // 문제 등록 탭으로 이동
-                          FirebaseAnalytics.instance.logEvent(
-                            name: 'move_to_template_page_button_click',
-                          );
+                          // 플로팅 버튼의 공책 생성 로직과 동일하게 동작
+                          FirebaseAnalytics.instance
+                              .logEvent(name: 'folder_create_button_click');
+                          _showCreateFolderDialog();
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: themeProvider.primaryColor, // primaryColor 적용
@@ -737,7 +730,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                           ),
                         ),
                         child: const StandardText(
-                          text: '오답노트 작성하기',
+                          text: '공책 추가하기',
                           fontSize: 16,
                           color: Colors.white,
                         ),

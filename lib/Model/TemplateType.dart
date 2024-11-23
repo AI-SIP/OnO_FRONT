@@ -8,7 +8,7 @@ extension TemplateTypeExtension on TemplateType {
   String get displayName {
     switch (this) {
       case TemplateType.simple:
-        return '빠른 등록';
+        return '빠른 작성';
       case TemplateType.clean:
         return '필기 지우개';
       case TemplateType.special:

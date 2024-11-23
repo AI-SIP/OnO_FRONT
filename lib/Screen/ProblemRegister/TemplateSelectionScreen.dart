@@ -274,7 +274,7 @@ class _TemplateSelectionScreenState extends State<TemplateSelectionScreen> {
             padding: const EdgeInsets.symmetric(vertical: 12), // 버튼 높이
           ),
           child: const StandardText(
-            text: '문제 등록하러 가기',
+            text: '오답노트 작성하러 가기',
             fontSize: 16,
             color: Colors.white,
           ),

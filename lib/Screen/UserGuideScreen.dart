@@ -56,7 +56,7 @@ class _UserGuideScreenState extends State<UserGuideScreen> {
                 ),
                 _buildUserGuidePage(
                   imagePath: 'assets/GuideScreen/GuideScreen2.svg',
-                  title: '문제 등록',
+                  title: '오답노트 등록',
                   description: '필기 제거, AI 분석 등 다양한 템플릿을 사용해\n내게 알맞은 오답노트를 작성하세요.',
                 ),
                 _buildUserGuidePage(
