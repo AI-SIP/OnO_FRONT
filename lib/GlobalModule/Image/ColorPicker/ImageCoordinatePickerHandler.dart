@@ -7,7 +7,7 @@ import '../../Theme/ThemeHandler.dart';
 import 'ImageCoordinateGuideDialog.dart';
 
 class ImageCoordinatePickerHandler {
-  Future<List<double>?> showCoordinatePicker(
+  Future<List<List<double>>?> showCoordinatePicker(
       BuildContext context, String imagePath) async {
     final result = await Navigator.of(context).push(
       MaterialPageRoute(
@@ -28,33 +28,29 @@ class CoordinatePickerScreen extends StatefulWidget {
 }
 
 class _CoordinatePickerScreenState extends State<CoordinatePickerScreen> {
-  double rectLeft = 100;
-  double rectTop = 100;
-  double rectWidth = 150;
-  double rectHeight = 150;
-
-  double initialRectLeft = 100;
-  double initialRectTop = 100;
-  double initialRectWidth = 150;
-  double initialRectHeight = 150;
-
-  double originalImageWidth = 1;
-  double originalImageHeight = 1;
-
-  bool isRectangleVisible = false; // 영역 선택 상태
-  bool isInitialButtonsVisible = true; // 초기 버튼 표시 여부
+  final List<Rect> boxes = [];
+  final List<List<Rect>> history = []; // 상태를 저장하는 스택
+  final List<Color> boxColors = [
+    Colors.red.withOpacity(0.3),
+    Colors.blue.withOpacity(0.3),
+    Colors.green.withOpacity(0.3),
+    Colors.yellow.withOpacity(0.3),
+    Colors.orange.withOpacity(0.3),
+    Colors.purple.withOpacity(0.3),
+    Colors.cyan.withOpacity(0.3),
+    Colors.brown.withOpacity(0.3),
+    Colors.pink.withOpacity(0.3),
+    Colors.lime.withOpacity(0.3),
+  ];
 
   final GlobalKey _imageKey = GlobalKey();
+  double originalImageWidth = 1;
+  double originalImageHeight = 1;
 
   @override
   void initState() {
     super.initState();
     _getImageDimensions();
-
-    initialRectLeft = rectLeft;
-    initialRectTop = rectTop;
-    initialRectWidth = rectWidth;
-    initialRectHeight = rectHeight;
   }
 
   Future<void> _getImageDimensions() async {
@@ -67,24 +63,49 @@ class _CoordinatePickerScreenState extends State<CoordinatePickerScreen> {
     });
   }
 
-  void _resetToInitialState() {
+  void _addBox() {
+    _saveToHistory(); // 현재 상태 저장
     setState(() {
-      rectLeft = initialRectLeft;
-      rectTop = initialRectTop;
-      rectWidth = initialRectWidth;
-      rectHeight = initialRectHeight;
-      isRectangleVisible = false;
-      isInitialButtonsVisible = true;
+      boxes.add(const Rect.fromLTWH(100, 100, 150, 150));
     });
+  }
+
+  void _undo() {
+    if (history.isNotEmpty) {
+      setState(() {
+        boxes
+          ..clear()
+          ..addAll(history.removeLast()); // 가장 최근 상태로 복원
+      });
+    }
+  }
+
+  void _clearBoxes() {
+    _saveToHistory(); // 현재 상태 저장
+    setState(() {
+      boxes.clear();
+    });
+  }
+
+  void _saveToHistory() {
+    history.add(List.from(boxes)); // 현재 상태를 복사해 스택에 저장
+  }
+
+  List<List<double>> _getBoxCoordinates() {
+    return boxes.map((box) {
+      return [
+        box.left,
+        box.top,
+        box.right,
+        box.bottom,
+      ];
+    }).toList();
   }
 
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeHandler>(context);
     final double screenWidth = MediaQuery.of(context).size.width;
-
-    final double displayImageWidth = screenWidth * 0.9;
-    final double displayImageHeight = displayImageWidth * originalImageHeight / originalImageWidth;
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -112,8 +133,10 @@ class _CoordinatePickerScreenState extends State<CoordinatePickerScreen> {
                   },
                   style: OutlinedButton.styleFrom(
                     backgroundColor: Colors.white,
-                    side: BorderSide(color: themeProvider.primaryColor, width: 2.0),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.0)),
+                    side: BorderSide(
+                        color: themeProvider.primaryColor, width: 2.0),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20.0)),
                     padding: const EdgeInsets.symmetric(vertical: 10),
                   ),
                   child: Row(
@@ -156,41 +179,48 @@ class _CoordinatePickerScreenState extends State<CoordinatePickerScreen> {
                   // 이미지
                   Container(
                     decoration: BoxDecoration(
-                      border: Border.all(color: themeProvider.primaryColor.withOpacity(0.2), width: 2),
+                      border: Border.all(
+                          color: themeProvider.primaryColor.withOpacity(0.2),
+                          width: 2),
                     ),
                     child: Image.file(
                       File(widget.imagePath),
                       key: _imageKey,
-                      width: displayImageWidth,
-                      height: displayImageHeight,
+                      width: screenWidth * 0.9,
+                      height: screenWidth *
+                          0.9 *
+                          originalImageHeight /
+                          originalImageWidth,
                       fit: BoxFit.contain,
                     ),
                   ),
-                  // 직사각형
-                  if (isRectangleVisible)
-                    Positioned(
-                      left: rectLeft,
-                      top: rectTop,
+                  // 박스들
+                  for (int i = 0; i < boxes.length; i++)
+                    Positioned.fromRect(
+                      rect: boxes[i],
                       child: GestureDetector(
+                        onPanStart: (details) {
+                          _saveToHistory(); // 이동 시작 시 기록
+                        },
                         onPanUpdate: (details) {
                           setState(() {
-                            rectLeft += details.delta.dx;
-                            rectTop += details.delta.dy;
+                            boxes[i] = boxes[i]
+                                .translate(details.delta.dx, details.delta.dy);
                           });
+                        },
+                        onPanEnd: (details) {
+                          _saveToHistory(); // 이동 종료 시 기록
                         },
                         child: Stack(
                           children: [
-                            // 직사각형
+                            // 박스 본체
                             Container(
-                              width: rectWidth,
-                              height: rectHeight,
                               decoration: BoxDecoration(
-                                color: Colors.green.withOpacity(0.2),
-                                border: Border.all(color: Colors.green, width: 2),
+                                color: boxColors[i % boxColors.length],
                               ),
                             ),
-                            // 흰색 동그라미 핸들
-                            ..._buildCornerHandles(),
+                            // 핸들
+                            ..._buildCornerHandles(i),
                           ],
                         ),
                       ),
@@ -201,43 +231,26 @@ class _CoordinatePickerScreenState extends State<CoordinatePickerScreen> {
           ),
           // 하단 버튼
           Padding(
-            padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 30),
-            child: isInitialButtonsVisible
-                ? Row(
+            padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 15),
+            child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _buildActionButton(
-                  "건너뛰기",
+                _buildOutlinedActionButton(
+                  "되돌리기",
                   Colors.grey,
-                      () {
-                    Navigator.of(context).pop([0.0, 0.0, 0.0, 0.0]);
-                  },
+                  _undo,
                 ),
-                _buildActionButton(
-                  "영역 선택",
+                _buildOutlinedActionButton(
+                  "영역 추가",
                   themeProvider.primaryColor,
-                      () {
-                    setState(() {
-                      isInitialButtonsVisible = false;
-                      isRectangleVisible = true;
-                    });
-                  },
-                ),
-              ],
-            )
-                : Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _buildActionButton(
-                  "취소하기",
-                  Colors.grey,
-                  _resetToInitialState,
+                  _addBox,
                 ),
                 _buildActionButton(
                   "완료",
                   themeProvider.primaryColor,
-                      () {
-                    final rectCoordinates = _convertRectToOriginalCoordinates();
+                  Colors.white,
+                  () {
+                    final rectCoordinates = _getBoxCoordinates();
                     log(rectCoordinates.toString());
                     Navigator.of(context).pop(rectCoordinates);
                   },
@@ -245,207 +258,154 @@ class _CoordinatePickerScreenState extends State<CoordinatePickerScreen> {
               ],
             ),
           ),
-          const SizedBox(height: 20),
         ],
       ),
     );
   }
 
-  List<Widget> _buildCornerHandles() {
+  List<Widget> _buildCornerHandles(int index) {
+    final box = boxes[index]; // 현재 박스 정보
     return [
-      // 왼쪽 위
       _buildHandle(
+        box: box,
+        alignment: Alignment.topLeft,
         onDrag: (dx, dy) {
           setState(() {
-            rectWidth -= dx;
-            rectHeight -= dy;
-            rectLeft += dx;
-            rectTop += dy;
-            _validateDimensions();
+            boxes[index] = Rect.fromLTRB(
+              boxes[index].left + dx,
+              boxes[index].top + dy,
+              boxes[index].right,
+              boxes[index].bottom,
+            );
           });
         },
-        top: -16,
-        left: -16,
       ),
-      // 오른쪽 위
       _buildHandle(
+        box: box,
+        alignment: Alignment.topRight,
         onDrag: (dx, dy) {
           setState(() {
-            rectWidth += dx;
-            rectHeight -= dy;
-            rectTop += dy;
-            _validateDimensions();
+            boxes[index] = Rect.fromLTRB(
+              boxes[index].left,
+              boxes[index].top + dy,
+              boxes[index].right + dx,
+              boxes[index].bottom,
+            );
           });
         },
-        top: -16,
-        right: -16,
       ),
-      // 왼쪽 아래
       _buildHandle(
+        box: box,
+        alignment: Alignment.bottomLeft,
         onDrag: (dx, dy) {
           setState(() {
-            rectWidth -= dx;
-            rectHeight += dy;
-            rectLeft += dx;
-            _validateDimensions();
+            boxes[index] = Rect.fromLTRB(
+              boxes[index].left + dx,
+              boxes[index].top,
+              boxes[index].right,
+              boxes[index].bottom + dy,
+            );
           });
         },
-        bottom: -16,
-        left: -16,
       ),
-      // 오른쪽 아래
       _buildHandle(
+        box: box,
+        alignment: Alignment.bottomRight,
         onDrag: (dx, dy) {
           setState(() {
-            rectWidth += dx;
-            rectHeight += dy;
-            _validateDimensions();
+            boxes[index] = Rect.fromLTRB(
+              boxes[index].left,
+              boxes[index].top,
+              boxes[index].right + dx,
+              boxes[index].bottom + dy,
+            );
           });
         },
-        bottom: -16,
-        right: -16,
       ),
     ];
   }
 
   Widget _buildHandle({
-    required Function(double dx, double dy) onDrag,
-    double? top,
-    double? bottom,
-    double? left,
-    double? right,
+    required Rect box, // 박스의 크기와 위치 정보
+    required Alignment alignment,
+    required void Function(double dx, double dy) onDrag,
   }) {
-    return Positioned(
-      top: top,
-      bottom: bottom,
-      left: left,
-      right: right,
+    const double handleSize = 8; // 실제로 보이는 원 크기
+    const double handleSizeRatio = 0.2; // 터치 영역 크기의 박스 크기 비율
+    const double minTouchArea = 20; // 최소 터치 영역 크기
+    const double maxTouchArea = 50; // 최대 터치 영역 크기
+
+    // 박스 크기를 기준으로 터치 영역 크기 계산
+    final double touchAreaWidth = (box.width * handleSizeRatio).clamp(minTouchArea, maxTouchArea);
+    final double touchAreaHeight = (box.height * handleSizeRatio).clamp(minTouchArea, maxTouchArea);
+
+    return Align(
+      alignment: alignment,
       child: GestureDetector(
-        onPanUpdate: (details) => onDrag(details.delta.dx, details.delta.dy),
+        onPanUpdate: (details) {
+          onDrag(details.delta.dx, details.delta.dy);
+        },
         child: Container(
-          width: 40, // 확대된 터치 영역
-          height: 40,
+          width: touchAreaWidth,
+          height: touchAreaHeight,
+          color: Colors.transparent, // 터치 영역을 시각적으로 표시하지 않음
           alignment: Alignment.center,
           child: Container(
-            width: 20, // 실제 표시되는 핸들
-            height: 20,
+            width: handleSize,
+            height: handleSize,
             decoration: BoxDecoration(
               color: Colors.white,
+              border: Border.all(color: Colors.black, width: 0.5),
               shape: BoxShape.circle,
-              border: Border.all(color: Colors.black, width: 1),
             ),
           ),
         ),
       ),
     );
   }
+}
 
-  Widget _buildActionButton(String text, Color color, VoidCallback onPressed) {
-    return SizedBox(
-      width: 150,
-      child: ElevatedButton(
-        onPressed: onPressed,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: color,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(15.0),
-          ),
-          padding: const EdgeInsets.symmetric(vertical: 10),
+Widget _buildActionButton(String text, Color backgroundColor, Color textColor,
+    VoidCallback onPressed) {
+  return SizedBox(
+    width: 80,
+    child: ElevatedButton(
+      onPressed: onPressed,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: backgroundColor,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(15.0),
         ),
-        child: StandardText(
-          text: text,
-          fontSize: 16,
-          color: Colors.white,
-        ),
+        padding: const EdgeInsets.symmetric(vertical: 10),
       ),
-    );
-  }
+      child: StandardText(
+        text: text,
+        fontSize: 15,
+        color: textColor,
+      ),
+    ),
+  );
+}
 
-  /// 이미지 렌더링된 크기와 오프셋을 계산
-  Map<String, dynamic> _getRenderedImageSizeAndOffset() {
-    final renderBox = _imageKey.currentContext?.findRenderObject() as RenderBox?;
-    if (renderBox != null) {
-      final containerSize = renderBox.size; // 컨테이너 크기
-      final aspectRatio = originalImageWidth / originalImageHeight;
-
-      double displayImageWidth;
-      double displayImageHeight;
-      double offsetX = 0;
-      double offsetY = 0;
-
-      // 이미지 비율에 맞춰 렌더링 크기 계산
-      if (containerSize.width / containerSize.height > aspectRatio) {
-        // 세로 기준으로 맞추기
-        displayImageHeight = containerSize.height;
-        displayImageWidth = displayImageHeight * aspectRatio;
-        offsetX = (containerSize.width - displayImageWidth) / 2;
-      } else {
-        // 가로 기준으로 맞추기
-        displayImageWidth = containerSize.width;
-        displayImageHeight = displayImageWidth / aspectRatio;
-        offsetY = (containerSize.height - displayImageHeight) / 2;
-      }
-
-      return {
-        'width': displayImageWidth,
-        'height': displayImageHeight,
-        'offset': Offset(offsetX, offsetY),
-      };
-    }
-    return {
-      'width': 0.0,
-      'height': 0.0,
-      'offset': Offset.zero,
-    };
-  }
-
-  List<double> _convertRectToOriginalCoordinates() {
-    final renderBox = _imageKey.currentContext?.findRenderObject() as RenderBox?;
-    if (renderBox != null) {
-      final imageInfo = _getRenderedImageSizeAndOffset();
-      final displayImageWidth = imageInfo['width'];
-      final displayImageHeight = imageInfo['height'];
-      final offset = imageInfo['offset'] as Offset;
-
-      // 이미지 내부의 실제 좌표 계산
-      double left = ((rectLeft - offset.dx) / displayImageWidth) * originalImageWidth;
-      double top = ((rectTop - offset.dy) / displayImageHeight) * originalImageHeight;
-      double right = ((rectLeft + rectWidth - offset.dx) / displayImageWidth) * originalImageWidth;
-      double bottom = ((rectTop + rectHeight - offset.dy) / displayImageHeight) * originalImageHeight;
-      // 음수 좌표는 0으로, 초과 좌표는 경계값으로 제한
-      left = left < 0 ? 0 : (left > originalImageWidth ? originalImageWidth : left);
-      top = top < 0 ? 0 : (top > originalImageHeight ? originalImageHeight : top);
-      right = right < 0 ? 0 : (right > originalImageWidth ? originalImageWidth : right);
-      bottom = bottom < 0 ? 0 : (bottom > originalImageHeight ? originalImageHeight : bottom);
-
-      return [left, top, right, bottom];
-    }
-    return [];
-  }
-
-  /// 박스 위치와 크기 검증
-  void _validateDimensions() {
-    final renderBox = _imageKey.currentContext?.findRenderObject() as RenderBox?;
-    if (renderBox != null) {
-      final imageInfo = _getRenderedImageSizeAndOffset();
-      final displayImageWidth = imageInfo['width'];
-      final displayImageHeight = imageInfo['height'];
-      final offset = imageInfo['offset'] as Offset;
-
-      // 최소 크기 보장
-      if (rectWidth < 20) rectWidth = 20;
-      if (rectHeight < 20) rectHeight = 20;
-
-      // 화면 밖으로 나가지 않도록 제한
-      if (rectLeft < offset.dx) rectLeft = offset.dx;
-      if (rectTop < offset.dy) rectTop = offset.dy;
-
-      if (rectLeft + rectWidth > offset.dx + displayImageWidth) {
-        rectLeft = offset.dx + displayImageWidth - rectWidth;
-      }
-      if (rectTop + rectHeight > offset.dy + displayImageHeight) {
-        rectTop = offset.dy + displayImageHeight - rectHeight;
-      }
-    }
-  }
+Widget _buildOutlinedActionButton(
+    String text, Color borderColor, VoidCallback onPressed) {
+  return SizedBox(
+    width: 80,
+    child: OutlinedButton(
+      onPressed: onPressed,
+      style: OutlinedButton.styleFrom(
+        backgroundColor: Colors.white, // 흰색 배경
+        side: BorderSide(color: borderColor, width: 2), // 테두리 색상
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(15.0),
+        ),
+        padding: const EdgeInsets.symmetric(vertical: 10),
+      ),
+      child: StandardText(
+        text: text,
+        fontSize: 15,
+        color: borderColor, // 글자색을 테두리 색과 동일하게
+      ),
+    ),
+  );
 }

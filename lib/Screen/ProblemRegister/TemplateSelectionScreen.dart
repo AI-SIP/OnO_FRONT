@@ -349,7 +349,7 @@ class _TemplateSelectionScreenState extends State<TemplateSelectionScreen> {
     imagePickerHandler.showImagePicker(context, (pickedFile) async {
       if (pickedFile != null) {
         Map<String, dynamic>? colorPickerResult;
-        List<double>? coordinatePickerResult;
+        List<List<double>>? coordinatePickerResult;
 
         if (templateType == TemplateType.clean || templateType == TemplateType.special) {
           final colorPickerHandler = ImageColorPickerHandler();
