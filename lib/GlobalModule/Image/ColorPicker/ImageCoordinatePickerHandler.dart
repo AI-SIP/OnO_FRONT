@@ -210,7 +210,7 @@ class _CoordinatePickerScreenState extends State<CoordinatePickerScreen> {
                   "건너뛰기",
                   Colors.grey,
                       () {
-                    Navigator.of(context).pop([]);
+                    Navigator.of(context).pop([0.0, 0.0, 0.0, 0.0]);
                   },
                 ),
                 _buildActionButton(
