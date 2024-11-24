@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import '../../Theme/StandardText.dart';
 
 class ImageCoordinateGuideDialog {
@@ -23,11 +22,6 @@ class ImageCoordinateGuideDialog {
                 fontSize: 20,
                 color: primaryColor,
               ),
-              SvgPicture.asset(
-                'assets/GuideScreen/ImageCoordinateGuide.svg', // SVG 경로
-                width: 40,
-                height: 40,
-              ),
             ],
           ),
           content: SizedBox(
@@ -39,9 +33,9 @@ class ImageCoordinateGuideDialog {
                   Padding(
                     padding: const EdgeInsets.all(10.0), // 이미지와 테두리 사이의 패딩
                     child: Container(
-                      height: screenHeight * 0.5, // 화면 높이의 50%
+                      height: screenHeight * 0.45, // 화면 높이의 50%
                       decoration: BoxDecoration(
-                        border: Border.all(color: primaryColor.withOpacity(0.5)),
+                        border: Border.all(color: primaryColor.withOpacity(0.7)),
                       ),
                       child: Padding(
                         padding: const EdgeInsets.all(10.0), // 이미지 내부 패딩
@@ -52,7 +46,7 @@ class ImageCoordinateGuideDialog {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 30),
+                  const SizedBox(height: 10),
                   const StandardText(
                     text: "-  영역 선택 버튼을 누른 후, 사진처럼 문제 아래에 있는 필기를 선택하면 끝이에요!\n\n"
                         "-  문제 아래에 필기가 없다구요? 건너뛰기를 하고 계속 등록하시면 됩니다!\n",
