@@ -15,10 +15,10 @@ class ImageCoordinateGuideDialog {
           contentPadding: const EdgeInsets.all(20),
           titlePadding: const EdgeInsets.only(left: 20, top: 20, right: 20),
           title: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               StandardText(
-                text: '사용 방법',
+                text: '필기 제거 방법',
                 fontSize: 20,
                 color: primaryColor,
               ),
@@ -29,6 +29,7 @@ class ImageCoordinateGuideDialog {
             child: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Padding(
                     padding: const EdgeInsets.all(10.0), // 이미지와 테두리 사이의 패딩
@@ -47,12 +48,37 @@ class ImageCoordinateGuideDialog {
                     ),
                   ),
                   const SizedBox(height: 10),
-                  const StandardText(
-                    text: "-  영역 선택 버튼을 누른 후, 사진처럼 문제 아래에 있는 필기를 선택하면 끝이에요!\n\n"
-                        "-  문제 아래에 필기가 없다구요? 건너뛰기를 하고 계속 등록하시면 됩니다!\n",
-                    fontSize: 15,
-                    color: Colors.black,
-                    fontWeight: FontWeight.normal,
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 10.0), // 좌우 패딩 추가
+                    child: StandardText(
+                      text: "-  영역 추가 버튼을 누른 후, 사진처럼 필기 부분을 박스로 선택하면 끝이에요!",
+                      fontSize: 15,
+                      color: Colors.black,
+                      fontWeight: FontWeight.normal,
+                      textAlign: TextAlign.start,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 10.0), // 좌우 패딩 추가
+                    child: StandardText(
+                      text: "(문제와 겹치는 필기는 선택하지 않아도 돼요! OnO가 제거하니까요!)",
+                      fontSize: 15,
+                      color: Colors.red,
+                      fontWeight: FontWeight.normal,
+                      textAlign: TextAlign.start,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 10.0), // 좌우 패딩 추가
+                    child: StandardText(
+                      text: "-  문제에 필기가 없다구요? 바로 완료를 누르면 돼요!",
+                      fontSize: 15,
+                      color: Colors.black,
+                      fontWeight: FontWeight.normal,
+                      textAlign: TextAlign.start,
+                    ),
                   ),
                 ],
               ),
@@ -64,7 +90,7 @@ class ImageCoordinateGuideDialog {
                 Navigator.pop(context);
               },
               child: StandardText(
-                text: '닫기',
+                text: '확인',
                 fontSize: 16,
                 color: primaryColor,
               ),

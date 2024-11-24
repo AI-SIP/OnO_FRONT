@@ -113,8 +113,8 @@ class _CoordinatePickerScreenState extends State<CoordinatePickerScreen> {
         centerTitle: true,
         backgroundColor: Colors.white,
         title: StandardText(
-          text: '문제 아래 영역을 선택해주세요!',
-          fontSize: 20,
+          text: '문제와 겹치지 않는 필기들을 박스로 선택해주세요!',
+          fontSize: 16,
           color: themeProvider.primaryColor,
           textAlign: TextAlign.center,
         ),
@@ -241,7 +241,7 @@ class _CoordinatePickerScreenState extends State<CoordinatePickerScreen> {
                   _undo,
                 ),
                 _buildOutlinedActionButton(
-                  "영역 추가",
+                  "박스 추가",
                   themeProvider.primaryColor,
                   _addBox,
                 ),
@@ -376,7 +376,7 @@ Widget _buildActionButton(String text, Color backgroundColor, Color textColor,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(15.0),
         ),
-        padding: const EdgeInsets.symmetric(vertical: 10),
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
       ),
       child: StandardText(
         text: text,
@@ -399,7 +399,7 @@ Widget _buildOutlinedActionButton(
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(15.0),
         ),
-        padding: const EdgeInsets.symmetric(vertical: 10),
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
       ),
       child: StandardText(
         text: text,
