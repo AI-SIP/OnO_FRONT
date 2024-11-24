@@ -37,8 +37,6 @@ class _PracticeNavigationButtonsState extends State<PracticeNavigationButtons> {
   final ImagePickerHandler _imagePickerHandler = ImagePickerHandler();
   XFile? selectedImage;
 
-
-
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeHandler>(context);
@@ -301,6 +299,8 @@ class _PracticeNavigationButtonsState extends State<PracticeNavigationButtons> {
 
                     await folderProvider.addRepeatCount(
                         widget.currentId, selectedImage);
+
+                    await widget.practiceProvider.fetchPracticeProblems(widget.practiceProvider.currentPracticeId);
 
                     FirebaseAnalytics.instance.logEvent(
                       name: 'problem_repeat',

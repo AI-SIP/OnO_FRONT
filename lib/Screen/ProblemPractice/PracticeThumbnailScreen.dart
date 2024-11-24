@@ -282,6 +282,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
+          const SizedBox(height: 40),
           SvgPicture.asset(
             'assets/Icon/RainbowNote.svg',
             width: 100,
@@ -329,7 +330,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
   Widget _buildPracticeListView(List<ProblemPracticeModel> practiceThumbnails,
       ThemeHandler themeProvider) {
     return ListView.builder(
-      padding: const EdgeInsets.symmetric(vertical: 10),
+      padding: const EdgeInsets.symmetric(vertical: 20),
       itemCount: practiceThumbnails.length,
       itemBuilder: (context, index) {
         final practice = practiceThumbnails[index];
