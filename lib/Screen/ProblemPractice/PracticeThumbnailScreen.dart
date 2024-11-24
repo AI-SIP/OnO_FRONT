@@ -115,7 +115,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
                 Padding(
                   padding: const EdgeInsets.only(bottom: 10.0), // 텍스트 간격 조정
                   child: ListTile(
-                    leading: const Icon(Icons.edit, color: Colors.black),
+                    leading: const Icon(Icons.add, color: Colors.black),
                     title: const StandardText(
                       text: '복습 리스트 생성하기',
                       fontSize: 16,

@@ -267,6 +267,23 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                   ),
                 ),
                 Padding(
+                  padding: const EdgeInsets.only(bottom: 10.0),
+                  child: ListTile(
+                    leading: const Icon(Icons.add, color: Colors.black),
+                    title: const StandardText(
+                      text: '공책 추가하기',
+                      fontSize: 16,
+                      color: Colors.black,
+                    ),
+                    onTap: () {
+                      Navigator.pop(context);
+                      FirebaseAnalytics.instance
+                          .logEvent(name: 'directory_create_folder_button_click');
+                      _showCreateFolderDialog();
+                    },
+                  ),
+                ),
+                Padding(
                   padding: const EdgeInsets.only(bottom: 10.0), // 텍스트 간격 조정
                   child: ListTile(
                     leading: const Icon(Icons.edit, color: Colors.black),
