@@ -82,7 +82,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
                   Icons.more_vert,
                   color: themeProvider.primaryColor,
                 ),
-                onPressed: _showBottomSheetForDeletion,
+                onPressed: _showBottomSheet,
               ),
             ],
           ),
@@ -91,7 +91,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
     );
   }
 
-  void _showBottomSheetForDeletion() {
+  void _showBottomSheet() {
     final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
 
     showModalBottomSheet(
@@ -110,6 +110,27 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
                     text: '복습 리스트 편집하기', // 타이틀 텍스트
                     fontSize: 20,
                     color: themeProvider.primaryColor,
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 10.0), // 텍스트 간격 조정
+                  child: ListTile(
+                    leading: const Icon(Icons.edit, color: Colors.black),
+                    title: const StandardText(
+                      text: '복습 리스트 생성하기',
+                      fontSize: 16,
+                      color: Colors.black,
+                    ),
+                    onTap: () {
+                      Navigator.pop(context); // BottomSheet 닫기
+                      // PracticeProblemSelectionScreen으로 이동
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const PracticeProblemSelectionScreen(),
+                        ),
+                      );
+                    },
                   ),
                 ),
                 Padding(
