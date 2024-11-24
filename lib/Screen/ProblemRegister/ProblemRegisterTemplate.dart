@@ -392,8 +392,16 @@ class _ProblemRegisterTemplateState
           imageUrl: problemModel.problemImageUrl,
           themeProvider: themeProvider,
         ),
-        const SizedBox(height: 30),
+        const SizedBox(height: 10),
         if(widget.templateType != TemplateType.simple) ... [
+          const Center(
+            child: Icon(
+              Icons.arrow_drop_down_outlined,
+              size: 50,
+              color: Colors.red,
+            ),
+          ),
+          const SizedBox(height: 10),
           _buildImageSection(
               label: '필기 제거 이미지',
               imageUrl: processImageUrl,

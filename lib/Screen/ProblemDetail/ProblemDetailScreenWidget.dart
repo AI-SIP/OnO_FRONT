@@ -48,7 +48,7 @@ class ProblemDetailScreenWidget {
             buildImageSection(
                 context,
                 imageUrl,
-                (templateType == TemplateType.simple) ? '문제 이미지' : '보정 이미지',
+                '문제 이미지',
                 themeProvider.primaryColor,
                 themeProvider),
           ],
@@ -91,7 +91,7 @@ class ProblemDetailScreenWidget {
                   ]
                 : [
                     _buildImageContainer(context, problemModel.problemImageUrl,
-                        '원본 이미지', themeProvider),
+                        '문제 원본 이미지', themeProvider),
                     const SizedBox(height: 20.0),
                     _buildImageContainer(context, problemModel.answerImageUrl,
                         '해설 이미지', themeProvider),
