@@ -54,8 +54,8 @@ class ImageCoordinateGuideDialog {
                   ),
                   const SizedBox(height: 30),
                   const StandardText(
-                    text: "1. 영역 선택 버튼을 누른 후, 사진처럼 문제 아래에 있는 필기를 선택하면 끝이에요!\n\n"
-                        "2. 문제 아래에 필기가 없다구요? 건너뛰기를 하고 계속 등록하시면 됩니다!\n",
+                    text: "-  영역 선택 버튼을 누른 후, 사진처럼 문제 아래에 있는 필기를 선택하면 끝이에요!\n\n"
+                        "-  문제 아래에 필기가 없다구요? 건너뛰기를 하고 계속 등록하시면 됩니다!\n",
                     fontSize: 15,
                     color: Colors.black,
                     fontWeight: FontWeight.normal,

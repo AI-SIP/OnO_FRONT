@@ -92,7 +92,7 @@ class _CoordinatePickerScreenState extends State<CoordinatePickerScreen> {
         centerTitle: true,
         backgroundColor: Colors.white,
         title: StandardText(
-          text: '필기만 작성된 영역을 선택해주세요!',
+          text: '문제 바깥 영역을 선택해주세요!',
           fontSize: 20,
           color: themeProvider.primaryColor,
           textAlign: TextAlign.center,
