@@ -80,13 +80,6 @@ class _CoordinatePickerScreenState extends State<CoordinatePickerScreen> {
     }
   }
 
-  void _clearBoxes() {
-    _saveToHistory(); // 현재 상태 저장
-    setState(() {
-      boxes.clear();
-    });
-  }
-
   void _saveToHistory() {
     history.add(List.from(boxes)); // 현재 상태를 복사해 스택에 저장
   }
@@ -405,7 +398,7 @@ class _CoordinatePickerScreenState extends State<CoordinatePickerScreen> {
 Widget _buildActionButton(String text, Color backgroundColor, Color textColor,
     VoidCallback onPressed) {
   return SizedBox(
-    width: 80,
+    width: 90,
     child: ElevatedButton(
       onPressed: onPressed,
       style: ElevatedButton.styleFrom(
@@ -427,7 +420,7 @@ Widget _buildActionButton(String text, Color backgroundColor, Color textColor,
 Widget _buildOutlinedActionButton(
     String text, Color borderColor, VoidCallback onPressed) {
   return SizedBox(
-    width: 80,
+    width: 90,
     child: OutlinedButton(
       onPressed: onPressed,
       style: OutlinedButton.styleFrom(
@@ -436,7 +429,7 @@ Widget _buildOutlinedActionButton(
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(15.0),
         ),
-        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 5),
       ),
       child: StandardText(
         text: text,

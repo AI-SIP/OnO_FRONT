@@ -286,7 +286,7 @@ class _PracticeProblemSelectionScreenState
     return Container(
       padding: const EdgeInsets.all(16.0),
       margin: const EdgeInsets.only(bottom: 16.0),
-      width: MediaQuery.of(context).size.width * 0.8,
+      width: MediaQuery.of(context).size.width * 0.7,
       child: ElevatedButton(
         onPressed: selectedProblems.isNotEmpty
             ? () {
@@ -317,7 +317,7 @@ class _PracticeProblemSelectionScreenState
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(15),
           ),
-          padding: const EdgeInsets.all(15),
+          padding: const EdgeInsets.all(10),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,

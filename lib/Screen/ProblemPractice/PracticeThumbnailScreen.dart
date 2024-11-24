@@ -1,3 +1,4 @@
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
@@ -7,8 +8,10 @@ import 'package:provider/provider.dart';
 
 import '../../GlobalModule/Theme/StandardText.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
+import '../../GlobalModule/Util/UrlLauncher.dart';
 import '../../Model/ProblemPracticeModel.dart';
 import '../../Provider/ProblemPracticeProvider.dart';
+import '../../Provider/ScreenIndexProvider.dart';
 import 'PracticeDetailScreen.dart';
 import 'PracticeProblemSelectionScreen.dart';
 
@@ -528,6 +531,51 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
               backgroundColor: Colors.transparent,
               elevation: 0,
               child: SvgPicture.asset("assets/Icon/addPractice.svg"),
+            ),
+          ),
+        ),
+        Positioned(
+          bottom: 90,
+          right: 10,
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+              border: Border.all(color: themeProvider.primaryColor, width: 2),
+            ),
+            child: FloatingActionButton(
+              heroTag: 'create_problem2',
+              onPressed: () {
+                Provider.of<ScreenIndexProvider>(context, listen: false)
+                    .setSelectedIndex(2);  // 문제 등록 탭으로 이동
+
+                FirebaseAnalytics.instance
+                    .logEvent(name: 'move_to_template_page_button_click');
+              },
+              backgroundColor: Colors.transparent,
+              elevation: 0, // 그림자 제거
+              child: SvgPicture.asset("assets/Icon/PencilDetail.svg"),
+            ),
+          ),
+        ),
+        Positioned(
+          bottom: 160,
+          right: 10,
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+              border: Border.all(color: themeProvider.primaryColor, width: 2),
+            ),
+            child: FloatingActionButton(
+              heroTag: 'guide_page2',
+              onPressed: () {
+                UrlLauncher.launchGuidePageURL();
+              },
+              backgroundColor: Colors.transparent,
+              elevation: 0, // 그림자 제거
+              child: Icon(Icons.question_mark,
+                  color: themeProvider.primaryColor),
             ),
           ),
         ),
