@@ -92,14 +92,51 @@ class _CoordinatePickerScreenState extends State<CoordinatePickerScreen> {
   }
 
   List<List<double>> _getBoxCoordinates() {
-    return boxes.map((box) {
-      return [
-        box.left,
-        box.top,
-        box.right,
-        box.bottom,
-      ];
-    }).toList();
+    final renderBox = _imageKey.currentContext?.findRenderObject() as RenderBox?;
+    if (renderBox != null) {
+      final containerSize = renderBox.size; // 컨테이너 크기
+
+      // 이미지 비율
+      final double aspectRatio = originalImageWidth / originalImageHeight;
+
+      double displayImageWidth, displayImageHeight;
+      double offsetX = 0, offsetY = 0;
+
+      // 이미지 렌더링 크기 및 여백 계산
+      if (containerSize.width / containerSize.height > aspectRatio) {
+        // 세로 기준 맞춤: 양옆에 여백이 생김
+        displayImageHeight = containerSize.height;
+        displayImageWidth = displayImageHeight * aspectRatio;
+        offsetX = (containerSize.width - displayImageWidth) / 2;
+      } else {
+        // 가로 기준 맞춤: 위아래 여백이 생김
+        displayImageWidth = containerSize.width;
+        displayImageHeight = displayImageWidth / aspectRatio;
+        offsetY = (containerSize.height - displayImageHeight) / 2;
+      }
+
+      // 이미지 좌표로 변환
+      final double widthRatio = originalImageWidth / displayImageWidth;
+      final double heightRatio = originalImageHeight / displayImageHeight;
+
+      return boxes.map((box) {
+        // 박스 좌표에서 이미지 여백을 뺌
+        final double adjustedLeft = (box.left - offsetX).clamp(0, displayImageWidth);
+        final double adjustedTop = (box.top - offsetY).clamp(0, displayImageHeight);
+        final double adjustedRight = (box.right - offsetX).clamp(0, displayImageWidth);
+        final double adjustedBottom = (box.bottom - offsetY).clamp(0, displayImageHeight);
+
+        // 원본 이미지 좌표로 변환
+        return [
+          adjustedLeft * widthRatio,
+          adjustedTop * heightRatio,
+          adjustedRight * widthRatio,
+          adjustedBottom * heightRatio,
+        ];
+      }).toList();
+    } else {
+      return [];
+    }
   }
 
   @override
