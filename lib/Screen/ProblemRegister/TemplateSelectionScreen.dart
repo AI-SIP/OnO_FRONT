@@ -65,13 +65,11 @@ class _TemplateSelectionScreenState extends State<TemplateSelectionScreen> {
         backgroundColor: Colors.white,
       ),
       body: Padding(
-        padding: const EdgeInsets.all(20.0),
+        padding: const EdgeInsets.all(10.0),
         child: Column(
           children: [
             _buildTopTabs(screenHeight, screenWidth, themeProvider),
-            const SizedBox(height: 20),
             Expanded(child: _buildPageView(screenHeight, screenWidth, themeProvider)),
-            SizedBox(height: screenHeight * 0.01),  // '문제 등록하러 가기' 버튼과 콘텐츠 사이 여백을 줄임
             _buildSubmitButton(screenHeight, screenWidth, themeProvider),
           ],
         ),
@@ -99,8 +97,8 @@ class _TemplateSelectionScreenState extends State<TemplateSelectionScreen> {
             children: [
               Container(
                 margin: EdgeInsets.symmetric(horizontal: screenWidth * 0.02),
-                height: screenHeight * 0.05,
-                width: screenWidth * 0.2,
+                height: 40,
+                width: 80,
                 decoration: BoxDecoration(
                   color: Colors.white,
                   border: Border.all(
@@ -114,8 +112,8 @@ class _TemplateSelectionScreenState extends State<TemplateSelectionScreen> {
                 child: Center(
                   child: SvgPicture.asset(
                     TemplateType.values[index].templateDetailImage,
-                    width: screenHeight * 0.035,
-                    height: screenHeight * 0.035,
+                    width: 30,
+                    height: 30,
                   ),
                 ),
               ),
@@ -142,11 +140,12 @@ class _TemplateSelectionScreenState extends State<TemplateSelectionScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
+                  SizedBox(height: screenHeight * 0.08),
                   _buildTemplateImageAndTags(screenHeight, templateType, themeProvider),
-                  SizedBox(height: screenHeight * 0.01),
+                  const SizedBox(height: 40),
                   // 템플릿 설명은 유동적으로 길어질 수 있도록 처리
                   Padding(
-                    padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.15),
+                    padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.1),
                     child: StandardText(
                       text: templateType.description,
                       fontSize: 16,
@@ -154,9 +153,9 @@ class _TemplateSelectionScreenState extends State<TemplateSelectionScreen> {
                       textAlign: TextAlign.center,
                     ),
                   ),
-                  SizedBox(height: screenHeight * 0.02),
+                  const SizedBox(height: 20),
                   _buildHashTags(templateType, themeProvider), // 해시태그 추가
-                  SizedBox(height: screenHeight * 0.02),
+                  const SizedBox(height: 20),
                 ],
               ),
             );
@@ -169,17 +168,43 @@ class _TemplateSelectionScreenState extends State<TemplateSelectionScreen> {
 
   // 템플릿 이미지와 태그 빌드 함수
   Widget _buildTemplateImageAndTags(double screenHeight, TemplateType templateType, ThemeHandler themeProvider) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        SvgPicture.asset(
+          templateType.templateDetailImage,
+          height: screenHeight * 0.18,
+          fit: BoxFit.contain,
+        ),
+        const SizedBox(height: 20),
+        StandardText(
+          text: templateType.displayName,
+          fontSize: 25,
+          color: Colors.black,
+        ),
+        const SizedBox(height: 20),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            _buildTag('필기 제거', templateType.hasEraseFeature, themeProvider),
+            const SizedBox(width: 20),
+            _buildTag('문제 분석', templateType.hasAnalysisFeature, themeProvider),
+          ],
+        ),
+      ],
+    );
+    /*
     return SizedBox(
-      height: screenHeight * 0.45, // 이미지와 태그가 차지하는 고정된 공간
+      height: screenHeight * 0.4, // 이미지와 태그가 차지하는 고정된 공간
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           SvgPicture.asset(
             templateType.templateDetailImage,
-            height: screenHeight * 0.2,
+            height: screenHeight * 0.16,
             fit: BoxFit.contain,
           ),
-          SizedBox(height: screenHeight * 0.03),
+          SizedBox(height: screenHeight * 0.02),
           StandardText(
             text: templateType.displayName,
             fontSize: 24,
@@ -197,6 +222,8 @@ class _TemplateSelectionScreenState extends State<TemplateSelectionScreen> {
         ],
       ),
     );
+
+     */
   }
 
   Widget _buildHashTags(TemplateType templateType, ThemeHandler themeProvider) {
@@ -261,7 +288,7 @@ class _TemplateSelectionScreenState extends State<TemplateSelectionScreen> {
     return Padding(
       padding: EdgeInsets.symmetric(vertical: screenHeight * 0.01), // 여백 줄임
       child: SizedBox(
-        width: screenWidth * 0.8, // 가로 길이 화면의 80%
+        width: screenWidth * 0.7, // 가로 길이 화면의 80%
         child: ElevatedButton(
           onPressed: () {
             _onTemplateSelected(context, TemplateType.values[_selectedIndex]);
@@ -271,11 +298,11 @@ class _TemplateSelectionScreenState extends State<TemplateSelectionScreen> {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(15),
             ),
-            padding: const EdgeInsets.symmetric(vertical: 12), // 버튼 높이
+            padding: const EdgeInsets.symmetric(vertical: 10), // 버튼 높이
           ),
           child: const StandardText(
             text: '오답노트 작성하러 가기',
-            fontSize: 16,
+            fontSize: 15,
             color: Colors.white,
           ),
         ),
@@ -297,7 +324,7 @@ class _TemplateSelectionScreenState extends State<TemplateSelectionScreen> {
       ),
       child: StandardText(
         text: text,
-        fontSize: 14,
+        fontSize: 13,
         color: isActive ? themeProvider.primaryColor : Colors.grey,
       ),
     );

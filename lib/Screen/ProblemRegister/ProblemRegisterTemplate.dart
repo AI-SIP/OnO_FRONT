@@ -77,7 +77,7 @@ class _ProblemRegisterTemplateState
       _selectedFolderId = folderProvider.currentFolderId;
     }
 
-    _selectedFolderName = null;
+    _selectedFolderName = '책장';
 
     _fetchData();
   }

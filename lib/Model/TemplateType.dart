@@ -8,22 +8,22 @@ extension TemplateTypeExtension on TemplateType {
   String get displayName {
     switch (this) {
       case TemplateType.simple:
-        return '빠른 작성';
+        return '암기왕 템플릿';
       case TemplateType.clean:
-        return '필기 지우개';
+        return '문풀왕 템플릿';
       case TemplateType.special:
-        return '필기 지우개 & 문제 분석';
+        return '길잡이 템플릿';
     }
   }
 
   String get description {
     switch (this) {
       case TemplateType.simple:
-        return '빠르고 간편하게 오답노트를 작성하세요.';
+        return '오답노트를 쉽고 빠르게 작성해요!\n필기 제거가 필요없는 암기 문제에 좋아요.';
       case TemplateType.clean:
-        return '문제 이미지의 필기를 제거해\n깔끔한 복습을 해보세요.';
+        return '진정한 복습을 위해 공부한 흔적을 가려보아요!\n필기가 중요한 힌트인 문제에 좋아요.';
       case TemplateType.special:
-        return '필기 제거와 문제 분석을 통해\n한층 더 고도화된 복습을 해보세요.';
+        return '문제 분석을 통해 나의 취약점을 알아보아요!\n오답노트의 효과를 제대로 경험할 수 있어요.';
     }
   }
 
@@ -85,11 +85,11 @@ extension TemplateTypeExtension on TemplateType {
   List<String> get hashTags {
     switch (this) {
       case TemplateType.simple:
-        return ['#국어', '#영어'];
+        return ['#간편한', "#빠른", '#영단어',];
       case TemplateType.clean:
-        return ['#사회', '#역사'];
+        return ['#필기 제거', '#국어', '#영어','#사회'];
       case TemplateType.special:
-        return ['#수학', '#과학'];
+        return ['#AI 분석', '#필기 제거', '#수학', '#과학'];
     }
   }
 
