@@ -187,7 +187,7 @@ class PracticeDetailScreen extends StatelessWidget {
     if (problems.isEmpty) {
       return Center(
         child: StandardText(
-          text: '복습할 문제가 없습니다.',
+          text: '복습할 오답노트가 없습니다.',
           fontSize: 16,
           color: themeProvider.primaryColor,
         ),

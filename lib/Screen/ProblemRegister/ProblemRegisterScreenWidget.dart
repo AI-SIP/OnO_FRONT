@@ -108,7 +108,7 @@ class ProblemRegisterScreenWidget {
               ),
               const SizedBox(width: 15,),
               StandardText(
-                text: folderName ?? '공책 선택',
+                text: folderName ?? '책장',
                 fontSize: 14,
                 color: themeProvider.primaryColor,
               ),

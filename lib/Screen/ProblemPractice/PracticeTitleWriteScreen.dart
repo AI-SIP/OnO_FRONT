@@ -214,7 +214,7 @@ class PracticeTitleWriteScreen extends StatelessWidget {
       padding: const EdgeInsets.all(16.0),
       margin: const EdgeInsets.only(bottom: 16.0),
       child: SizedBox(
-        width: MediaQuery.of(context).size.width * 0.7,
+        width: MediaQuery.of(context).size.width * 0.6,
         child: ElevatedButton(
           onPressed: () => _submitPractice(context, themeProvider),
           style: ElevatedButton.styleFrom(
@@ -222,7 +222,7 @@ class PracticeTitleWriteScreen extends StatelessWidget {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(15),
             ),
-            padding: const EdgeInsets.symmetric(vertical: 15),
+            padding: const EdgeInsets.symmetric(vertical: 10),
           ),
           child: StandardText(
             text: practiceRegisterModel.practiceId == null ? "복습 리스트 만들기" : "복습 리스트 수정하기",

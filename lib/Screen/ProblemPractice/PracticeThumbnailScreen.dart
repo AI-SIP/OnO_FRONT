@@ -1,3 +1,4 @@
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
@@ -7,8 +8,10 @@ import 'package:provider/provider.dart';
 
 import '../../GlobalModule/Theme/StandardText.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
+import '../../GlobalModule/Util/UrlLauncher.dart';
 import '../../Model/ProblemPracticeModel.dart';
 import '../../Provider/ProblemPracticeProvider.dart';
+import '../../Provider/ScreenIndexProvider.dart';
 import 'PracticeDetailScreen.dart';
 import 'PracticeProblemSelectionScreen.dart';
 
@@ -79,7 +82,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
                   Icons.more_vert,
                   color: themeProvider.primaryColor,
                 ),
-                onPressed: _showBottomSheetForDeletion,
+                onPressed: _showBottomSheet,
               ),
             ],
           ),
@@ -88,7 +91,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
     );
   }
 
-  void _showBottomSheetForDeletion() {
+  void _showBottomSheet() {
     final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
 
     showModalBottomSheet(
@@ -107,6 +110,27 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
                     text: '복습 리스트 편집하기', // 타이틀 텍스트
                     fontSize: 20,
                     color: themeProvider.primaryColor,
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 10.0), // 텍스트 간격 조정
+                  child: ListTile(
+                    leading: const Icon(Icons.add, color: Colors.black),
+                    title: const StandardText(
+                      text: '복습 리스트 생성하기',
+                      fontSize: 16,
+                      color: Colors.black,
+                    ),
+                    onTap: () {
+                      Navigator.pop(context); // BottomSheet 닫기
+                      // PracticeProblemSelectionScreen으로 이동
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const PracticeProblemSelectionScreen(),
+                        ),
+                      );
+                    },
                   ),
                 ),
                 Padding(
@@ -282,16 +306,45 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
+          const SizedBox(height: 40),
           SvgPicture.asset(
             'assets/Icon/RainbowNote.svg',
             width: 100,
             height: 100,
           ),
           const SizedBox(height: 40),
-          StandardText(
-            text: '오답 복습 리스트를 추가해보세요!',
+          const StandardText(
+            text: '작성한 오답노트로 복습 리스트를\n 생성해 시험을 준비하세요!',
             fontSize: 16,
-            color: themeProvider.primaryColor,
+            color: Colors.black,
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 30),
+          ElevatedButton(
+            onPressed: () {
+              // 복습 리스트 추가 화면으로 이동
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const PracticeProblemSelectionScreen(),
+                ),
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: themeProvider.primaryColor, // primaryColor 적용
+              padding: const EdgeInsets.symmetric(
+                horizontal: 30,
+                vertical: 8,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(15),
+              ),
+            ),
+            child: const StandardText(
+              text: '복습 리스트 추가하기',
+              fontSize: 16,
+              color: Colors.white,
+            ),
           ),
         ],
       ),
@@ -301,7 +354,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
   Widget _buildPracticeListView(List<ProblemPracticeModel> practiceThumbnails,
       ThemeHandler themeProvider) {
     return ListView.builder(
-      padding: const EdgeInsets.symmetric(vertical: 10),
+      padding: const EdgeInsets.symmetric(vertical: 20),
       itemCount: practiceThumbnails.length,
       itemBuilder: (context, index) {
         final practice = practiceThumbnails[index];
@@ -499,6 +552,51 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
               backgroundColor: Colors.transparent,
               elevation: 0,
               child: SvgPicture.asset("assets/Icon/addPractice.svg"),
+            ),
+          ),
+        ),
+        Positioned(
+          bottom: 90,
+          right: 10,
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+              border: Border.all(color: themeProvider.primaryColor, width: 2),
+            ),
+            child: FloatingActionButton(
+              heroTag: 'create_problem2',
+              onPressed: () {
+                Provider.of<ScreenIndexProvider>(context, listen: false)
+                    .setSelectedIndex(2);  // 문제 등록 탭으로 이동
+
+                FirebaseAnalytics.instance
+                    .logEvent(name: 'move_to_template_page_button_click');
+              },
+              backgroundColor: Colors.transparent,
+              elevation: 0, // 그림자 제거
+              child: SvgPicture.asset("assets/Icon/PencilDetail.svg"),
+            ),
+          ),
+        ),
+        Positioned(
+          bottom: 160,
+          right: 10,
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+              border: Border.all(color: themeProvider.primaryColor, width: 2),
+            ),
+            child: FloatingActionButton(
+              heroTag: 'guide_page2',
+              onPressed: () {
+                UrlLauncher.launchGuidePageURL();
+              },
+              backgroundColor: Colors.transparent,
+              elevation: 0, // 그림자 제거
+              child: Icon(Icons.question_mark,
+                  color: themeProvider.primaryColor),
             ),
           ),
         ),

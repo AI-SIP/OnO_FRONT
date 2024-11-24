@@ -24,7 +24,7 @@ import 'ProblemRegisterScreenWidget.dart';
 class ProblemRegisterTemplate extends StatefulWidget {
   final ProblemModel problemModel;
   final Map<String, dynamic>? colorPickerResult;
-  final List<double>? coordinatePickerResult;
+  final List<List<double>>? coordinatePickerResult;
   final bool isEditMode;
   final TemplateType templateType;
 
@@ -77,7 +77,7 @@ class _ProblemRegisterTemplateState
       _selectedFolderId = folderProvider.currentFolderId;
     }
 
-    _selectedFolderName = null;
+    _selectedFolderName = '책장';
 
     _fetchData();
   }
@@ -308,7 +308,7 @@ class _ProblemRegisterTemplateState
               flex: 1,
               child: ProblemRegisterScreenWidget.buildImagePickerWithLabel(
                 context: context,
-                label: '정답 이미지',
+                label: '해설 이미지',
                 image: answerImage,
                 existingImageUrl: problemModel.answerImageUrl,
                 themeProvider: themeProvider,
@@ -351,7 +351,7 @@ class _ProblemRegisterTemplateState
               flex: 1,
               child: ProblemRegisterScreenWidget.buildImagePickerWithLabel(
                 context: context,
-                label: '정답 이미지',
+                label: '해설 이미지',
                 image: answerImage,
                 existingImageUrl: problemModel.answerImageUrl,
                 themeProvider: themeProvider,
@@ -392,8 +392,16 @@ class _ProblemRegisterTemplateState
           imageUrl: problemModel.problemImageUrl,
           themeProvider: themeProvider,
         ),
-        const SizedBox(height: 30),
+        const SizedBox(height: 10),
         if(widget.templateType != TemplateType.simple) ... [
+          const Center(
+            child: Icon(
+              Icons.arrow_drop_down_outlined,
+              size: 50,
+              color: Colors.red,
+            ),
+          ),
+          const SizedBox(height: 10),
           _buildImageSection(
               label: '필기 제거 이미지',
               imageUrl: processImageUrl,
@@ -405,7 +413,7 @@ class _ProblemRegisterTemplateState
         ],
         ProblemRegisterScreenWidget.buildImagePickerWithLabel(
           context: context,
-          label: '정답 이미지',
+          label: '해설 이미지',
           image: answerImage,
           existingImageUrl: problemModel.answerImageUrl,
           themeProvider: themeProvider,

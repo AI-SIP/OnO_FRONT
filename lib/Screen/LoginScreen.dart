@@ -158,7 +158,7 @@ class LoginScreen extends StatelessWidget {
         ),
         content: const SizedBox(
           child: StandardText(
-            text: '기기 간 오답노트 연동이 불가능하며, 로그아웃 시 모든 정보가 삭제됩니다.',
+            text: '기기 간 오답노트 연동이 불가능하며,\n로그아웃 시 모든 정보가 삭제됩니다.',
             fontSize: 16,
             color: Colors.black,
           ),
