@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../Theme/StandardText.dart';
 import '../../Theme/ThemeHandler.dart';
+import 'ImageCoordinateGuideDialog.dart';
 
 class ImageCoordinatePickerHandler {
   Future<List<double>?> showCoordinatePicker(
@@ -107,7 +108,7 @@ class _CoordinatePickerScreenState extends State<CoordinatePickerScreen> {
                 width: screenWidth * 0.5,
                 child: OutlinedButton(
                   onPressed: () {
-                    _showUsageDialog(context, themeProvider.primaryColor);
+                    ImageCoordinateGuideDialog.show(context);
                   },
                   style: OutlinedButton.styleFrom(
                     backgroundColor: Colors.white,
@@ -357,39 +358,6 @@ class _CoordinatePickerScreenState extends State<CoordinatePickerScreen> {
           color: Colors.white,
         ),
       ),
-    );
-  }
-
-  void _showUsageDialog(BuildContext context, Color primaryColor) {
-    showDialog(
-        context: context,
-        builder: (context) {
-      return AlertDialog(
-          title: Text(
-          "사용 방법",
-          style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold),
-    ),
-        content: const Text(
-          "1. 영역 선택 버튼을 누르면 이미지를 기반으로 직사각형을 조절할 수 있습니다.\n"
-              "2. 직사각형의 모서리를 드래그하여 크기를 조정하세요.\n"
-              "3. 직사각형 내부를 드래그하여 위치를 조정하세요.\n"
-              "4. 완료 버튼을 누르면 선택한 영역의 좌표가 저장됩니다.\n"
-              "5. 건너뛰기 버튼을 누르면 선택 없이 진행됩니다.",
-          style: TextStyle(fontSize: 14),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
-            child: Text(
-              "확인",
-              style: TextStyle(color: primaryColor),
-            ),
-          ),
-        ],
-      );
-        },
     );
   }
 
