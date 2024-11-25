@@ -144,9 +144,9 @@ class _CoordinatePickerScreenState extends State<CoordinatePickerScreen> {
         backgroundColor: Colors.white,
         title: StandardText(
           text: '문제와 겹치지 않는 필기들을 박스로 선택해주세요!',
-          fontSize: 16,
+          fontSize: 13,
           color: themeProvider.primaryColor,
-          textAlign: TextAlign.center,
+          //textAlign: TextAlign.center,
         ),
       ),
       body: Column(
@@ -156,7 +156,7 @@ class _CoordinatePickerScreenState extends State<CoordinatePickerScreen> {
             padding: const EdgeInsets.symmetric(vertical: 20),
             child: Center(
               child: SizedBox(
-                width: screenWidth * 0.5,
+                width: screenWidth * 0.45,
                 child: OutlinedButton(
                   onPressed: () {
                     ImageCoordinateGuideDialog.show(context);
@@ -167,7 +167,7 @@ class _CoordinatePickerScreenState extends State<CoordinatePickerScreen> {
                         color: themeProvider.primaryColor, width: 2.0),
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(20.0)),
-                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    padding: const EdgeInsets.symmetric(vertical: 8),
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -406,7 +406,7 @@ Widget _buildActionButton(String text, Color backgroundColor, Color textColor,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(15.0),
         ),
-        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
+        padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 10),
       ),
       child: StandardText(
         text: text,
@@ -429,7 +429,7 @@ Widget _buildOutlinedActionButton(
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(15.0),
         ),
-        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 5),
+        padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 5),
       ),
       child: StandardText(
         text: text,
