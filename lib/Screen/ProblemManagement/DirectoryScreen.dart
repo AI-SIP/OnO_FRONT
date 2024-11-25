@@ -120,7 +120,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         children: [
           // 기존의 플로팅 버튼
           Positioned(
-            bottom: 20,
+            bottom: 160,
             right: 10,
             child: Container(
               decoration: BoxDecoration(
@@ -171,7 +171,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
             ),
           ),
           Positioned(
-            bottom: 160,
+            bottom: 20,
             right: 10,
             child: Container(
               decoration: BoxDecoration(

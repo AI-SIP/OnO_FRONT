@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
@@ -347,24 +349,14 @@ class PracticeDetailScreen extends StatelessWidget {
             TextButton(
               onPressed: () async {
                 Navigator.pop(context);
+                if (Navigator.canPop(context)) {
+                  Navigator.pop(context);
+                }
 
                 final provider = Provider.of<ProblemPracticeProvider>(context,
                     listen: false);
                 List<int> deletePracticeIds = [practice.practiceId];
-                bool isDelete = await provider.deletePractices(deletePracticeIds);
-
-                if(isDelete){
-                  SnackBarDialog.showSnackBar(
-                      context: context,
-                      message: '공책이 삭제되었습니다!',
-                      backgroundColor: themeProvider.primaryColor);
-                  Navigator.pop(context);
-                } else {
-                  SnackBarDialog.showSnackBar(
-                      context: context,
-                      message: '삭제 과정에서 문제가 발생했습니다!',
-                      backgroundColor: Colors.red);
-                }
+                await provider.deletePractices(deletePracticeIds);
               },
               child: const StandardText(
                 text: '삭제',
