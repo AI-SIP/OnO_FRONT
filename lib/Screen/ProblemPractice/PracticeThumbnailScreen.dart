@@ -308,9 +308,9 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
         children: [
           const SizedBox(height: 40),
           SvgPicture.asset(
-            'assets/Icon/RainbowNote.svg',
-            width: 100,
-            height: 100,
+            'assets/Icon/BigGreenFrog.svg',
+            width: 90,
+            height: 90,
           ),
           const SizedBox(height: 40),
           const StandardText(
@@ -530,7 +530,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
     return Stack(
       children: [
         Positioned(
-          bottom: 20,
+          bottom: 160,
           right: 10,
           child: Container(
             decoration: BoxDecoration(
@@ -580,7 +580,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
           ),
         ),
         Positioned(
-          bottom: 160,
+          bottom: 20,
           right: 10,
           child: Container(
             decoration: BoxDecoration(
