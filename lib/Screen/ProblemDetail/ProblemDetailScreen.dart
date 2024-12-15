@@ -1,11 +1,10 @@
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:ono/GlobalModule/Theme/HandWriteText.dart';
-import 'package:ono/Model/ProblemRegisterModelV2.dart';
+import 'package:ono/Model/ProblemRegisterModel.dart';
 import 'package:ono/Provider/ProblemPracticeProvider.dart';
 import 'package:provider/provider.dart';
 
-import '../../GlobalModule/Theme/SnackBarDialog.dart';
 import '../../GlobalModule/Theme/StandardText.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
 import '../../GlobalModule/Util/FolderSelectionDialog.dart';
@@ -15,28 +14,28 @@ import '../../Model/ProblemModel.dart';
 import '../../Model/TemplateType.dart';
 import '../../Provider/FoldersProvider.dart';
 import '../../Service/ScreenUtil/ProblemDetailScreenService.dart';
-import '../ProblemRegister/ProblemRegisterScreenV2.dart';
+import '../ProblemRegister/ProblemRegisterScreen.dart';
 import '../ProblemShare/AnswerShareScreen.dart';
 import '../ProblemShare/ProblemShareScreen.dart';
 import 'Template/CleanProblemDetailTemplate.dart';
 import 'Template/SimpleProblemDetailTemplate.dart';
 import 'Template/SpecialProblemDetailTemplate.dart';
 
-class ProblemDetailScreenV2 extends StatefulWidget {
+class ProblemDetailScreen extends StatefulWidget {
   final int problemId;
   final bool isPractice;
 
-  const ProblemDetailScreenV2({
+  const ProblemDetailScreen({
     required this.problemId,
     this.isPractice = false,
     super.key
   });
 
   @override
-  _ProblemDetailScreenV2State createState() => _ProblemDetailScreenV2State();
+  _ProblemDetailScreenState createState() => _ProblemDetailScreenState();
 }
 
-class _ProblemDetailScreenV2State extends State<ProblemDetailScreenV2> {
+class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
   Future<ProblemModel?>? _problemModelFuture;
   final ProblemDetailScreenService _problemDetailService =
       ProblemDetailScreenService();
@@ -254,7 +253,7 @@ class _ProblemDetailScreenV2State extends State<ProblemDetailScreenV2> {
                       Navigator.pop(context);
                       Navigator.of(context).push(
                         MaterialPageRoute(
-                          builder: (context) => ProblemRegisterScreenV2(
+                          builder: (context) => ProblemRegisterScreen(
                             problemModel: problemModel,
                             isEditMode: true,
                             colorPickerResult: null,
@@ -291,7 +290,7 @@ class _ProblemDetailScreenV2State extends State<ProblemDetailScreenV2> {
 
                       if(selectedFolderId != null){
                         await foldersProvider.updateProblem(
-                          ProblemRegisterModelV2(
+                          ProblemRegisterModel(
                             problemId: problemModel.problemId,
                             folderId: selectedFolderId,
                           )

@@ -21,11 +21,12 @@ class GoogleAuthService {
         String? name = googleSignInAccount.displayName;
         String? identifier = googleSignInAccount.id;
 
-        final url = Uri.parse('${AppConfig.baseUrl}/api/auth/google');
+        final url = Uri.parse('${AppConfig.baseUrl}/api/auth/login/social');
         final response = await http.post(
           url,
           headers: {'Content-Type': 'application/json; charset=UTF-8'},
           body: jsonEncode({
+            'platform': 'GOOGLE',
             'email': email,
             'name': name,
             'identifier': identifier

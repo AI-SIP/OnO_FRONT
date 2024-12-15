@@ -7,7 +7,7 @@ import 'package:provider/provider.dart';
 import '../../GlobalModule/Image/ImagePickerHandler.dart';
 import '../../GlobalModule/Theme/SnackBarDialog.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
-import '../../Model/ProblemRegisterModelV2.dart';
+import '../../Model/ProblemRegisterModel.dart';
 import '../../Provider/UserProvider.dart';
 
 class ProblemRegisterScreenService {
@@ -29,7 +29,7 @@ class ProblemRegisterScreenService {
 
   Future<void> submitProblemV2(
       BuildContext context,
-      ProblemRegisterModelV2 problemData,
+      ProblemRegisterModel problemData,
       VoidCallback onSuccess) async {
     final authService = Provider.of<UserProvider>(context, listen: false);
     if (authService.isLoggedIn == LoginStatus.logout) {

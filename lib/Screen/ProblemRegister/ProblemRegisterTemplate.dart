@@ -14,7 +14,7 @@ import '../../GlobalModule/Theme/ThemeHandler.dart';
 import '../../GlobalModule/Util/FolderSelectionDialog.dart';
 import '../../GlobalModule/Util/LatexTextHandler.dart';
 import '../../Model/ProblemModel.dart';
-import '../../Model/ProblemRegisterModelV2.dart';
+import '../../Model/ProblemRegisterModel.dart';
 import '../../Model/TemplateType.dart';
 import '../../Provider/FoldersProvider.dart';
 import '../../Provider/ScreenIndexProvider.dart';
@@ -615,7 +615,7 @@ class _ProblemRegisterTemplateState
     LoadingDialog.show(context, '오답노트 작성 중...');
 
     _waitForLoadingToComplete().then((_) {
-      final problemRegisterModel = ProblemRegisterModelV2(
+      final problemRegisterModel = ProblemRegisterModel(
         problemId: problemModel.problemId,
         problemImageUrl: problemModel.problemImageUrl,
         processImageUrl: processImageUrl,

@@ -9,7 +9,7 @@ import 'package:ono/GlobalModule/Theme/NoteIconHandler.dart';
 import 'package:ono/GlobalModule/Theme/SnackBarDialog.dart';
 import 'package:ono/GlobalModule/Util/UrlLauncher.dart';
 import 'package:ono/Model/LoginStatus.dart';
-import 'package:ono/Model/ProblemRegisterModelV2.dart';
+import 'package:ono/Model/ProblemRegisterModel.dart';
 import 'package:ono/Provider/FoldersProvider.dart';
 import 'package:provider/provider.dart';
 import '../../GlobalModule/Image/DisplayImage.dart';
@@ -1062,7 +1062,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     final foldersProvider =
         Provider.of<FoldersProvider>(context, listen: false);
     await foldersProvider.updateProblem(
-      ProblemRegisterModelV2(
+      ProblemRegisterModel(
         problemId: problem.problemId,
         folderId: folderId, // 폴더 ID로 문제를 이동
       ),

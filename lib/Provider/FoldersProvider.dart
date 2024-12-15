@@ -14,7 +14,7 @@ import 'package:sentry_flutter/sentry_flutter.dart';
 import '../Config/AppConfig.dart';
 import '../Model/FolderModel.dart';
 import '../Model/ProblemModel.dart';
-import '../Model/ProblemRegisterModelV2.dart';
+import '../Model/ProblemRegisterModel.dart';
 import 'TokenProvider.dart';
 import 'package:http/http.dart' as http;
 
@@ -315,7 +315,7 @@ class FoldersProvider with ChangeNotifier {
   }
 
   Future<void> submitProblemV2(
-      ProblemRegisterModelV2 problemData, BuildContext context) async {
+      ProblemRegisterModel problemData, BuildContext context) async {
 
     try {
       final files = <http.MultipartFile>[];
@@ -401,7 +401,7 @@ class FoldersProvider with ChangeNotifier {
     }
   }
 
-  Future<void> updateProblem(ProblemRegisterModelV2 problemData) async {
+  Future<void> updateProblem(ProblemRegisterModel problemData) async {
 
     try {
       final files = <http.MultipartFile>[];

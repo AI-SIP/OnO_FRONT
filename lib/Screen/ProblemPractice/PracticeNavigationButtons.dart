@@ -4,7 +4,7 @@ import 'package:camera/camera.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:ono/Provider/FoldersProvider.dart';
-import 'package:ono/Screen/ProblemDetail/ProblemDetailScreenV2.dart';
+import 'package:ono/Screen/ProblemDetail/ProblemDetailScreen.dart';
 import 'package:ono/Screen/ProblemPractice/PracticeCompletionScreen.dart';
 import 'package:provider/provider.dart';
 
@@ -166,7 +166,7 @@ class _PracticeNavigationButtonsState extends State<PracticeNavigationButtons> {
       context,
       PageRouteBuilder(
         pageBuilder: (context, animation, secondaryAnimation) =>
-            ProblemDetailScreenV2(
+            ProblemDetailScreen(
               problemId: problemId,
               isPractice: true,
             ),

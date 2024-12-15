@@ -11,7 +11,7 @@ import '../../GlobalModule/Theme/StandardText.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
 import '../../Model/TemplateType.dart';
 import '../../Provider/ProblemPracticeProvider.dart';
-import '../ProblemDetail/ProblemDetailScreenV2.dart';
+import '../ProblemDetail/ProblemDetailScreen.dart';
 import 'PracticeProblemSelectionScreen.dart';
 
 class PracticeDetailScreen extends StatelessWidget {
@@ -302,7 +302,7 @@ class PracticeDetailScreen extends StatelessWidget {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => ProblemDetailScreenV2(
+          builder: (context) => ProblemDetailScreen(
             problemId: practiceProvider.problems.first.problemId,
             isPractice: true,
           ),

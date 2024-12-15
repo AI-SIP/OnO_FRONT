@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:core';
 import 'dart:developer';
 import 'dart:io' show Platform, SocketException;
+import 'package:http/http.dart' as http;
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -145,57 +146,50 @@ class UserProvider with ChangeNotifier {
       );
 
       if (response.statusCode == 200) {
-        final responseBody = await jsonDecode(utf8.decode(response.bodyBytes));
-        _userId = responseBody['userId'] ?? 0;
-        _userName = responseBody['userName'] ?? '이름 없음';
-        _userEmail = responseBody['userEmail'];
-        //_isFirstLogin = responseBody['firstLogin'] ? true : false;
-        _loginStatus = LoginStatus.login;
-
-        await FirebaseAnalytics.instance.logLogin();
-        await setUserInfoInFirebase(_userId, _userName, _userEmail);
-
-        // Sentry에 유저 정보 설정
-        await Sentry.configureScope((scope) {
-          scope.setUser(SentryUser(
-            id: _userId.toString(),
-            username: _userName,
-            email: _userEmail,
-          ));
-        });
-
-        await FirebaseAnalytics.instance
-            .logEvent(name: 'fetch_user_info');
-
+        await _processUserInfoResponse(response);
         _problemCount = await getUserProblemCount();
+
         if (_loginStatus == LoginStatus.login) {
           await foldersProvider.fetchRootFolderContents();
-          return true;
         }
-
         return true;
       } else {
-        _loginStatus = LoginStatus.logout;
-        return false;
+        return _handleFetchError();
       }
-    } on SocketException catch(error, stackTrace){
-      _loginStatus = LoginStatus.logout;
-      await Sentry.captureException(error, stackTrace: stackTrace);
-
-      return false;
-    } on TimeoutException catch(error, stackTrace){
-      _loginStatus = LoginStatus.logout;
-      await Sentry.captureException(error, stackTrace: stackTrace);
-
-      return false;
     } catch (error, stackTrace) {
-      _loginStatus = LoginStatus.logout;
-      await Sentry.captureException(error, stackTrace: stackTrace);
-
-      return false;
-    } finally{
+      return _handleFetchError(error: error, stackTrace: stackTrace);
+    } finally {
       notifyListeners();
     }
+  }
+
+  Future<void> _processUserInfoResponse(http.Response response) async {
+    final responseBody = await jsonDecode(utf8.decode(response.bodyBytes));
+    _userId = responseBody['userId'] ?? 0;
+    _userName = responseBody['userName'] ?? '이름 없음';
+    _userEmail = responseBody['userEmail'];
+    _loginStatus = LoginStatus.login;
+
+    await FirebaseAnalytics.instance.logLogin();
+    await setUserInfoInFirebase(_userId, _userName, _userEmail);
+
+    await Sentry.configureScope((scope) {
+      scope.setUser(SentryUser(
+        id: _userId.toString(),
+        username: _userName,
+        email: _userEmail,
+      ));
+    });
+
+    await FirebaseAnalytics.instance.logEvent(name: 'fetch_user_info');
+  }
+
+  Future<bool> _handleFetchError({Object? error, StackTrace? stackTrace}) async {
+    _loginStatus = LoginStatus.logout;
+    if (error != null) {
+      await Sentry.captureException(error, stackTrace: stackTrace);
+    }
+    return false;
   }
 
   Future<void> setUserInfoInFirebase(int? userId, String? userName, String? userEmail) async {

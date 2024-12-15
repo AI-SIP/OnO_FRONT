@@ -7,13 +7,13 @@ import '../../GlobalModule/Theme/StandardText.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
 import '../../Provider/FoldersProvider.dart';
 
-class ProblemRegisterScreenV2 extends StatefulWidget {
+class ProblemRegisterScreen extends StatefulWidget {
   final ProblemModel problemModel;
   final bool isEditMode;
   final Map<String, dynamic>? colorPickerResult;
   final List<List<double>>? coordinatePickerResult;
 
-  const ProblemRegisterScreenV2({
+  const ProblemRegisterScreen({
     super.key,
     required this.problemModel,
     required this.isEditMode,
@@ -22,11 +22,11 @@ class ProblemRegisterScreenV2 extends StatefulWidget {
   });
 
   @override
-  _ProblemRegisterScreenV2State createState() =>
-      _ProblemRegisterScreenV2State();
+  _ProblemRegisterScreenState createState() =>
+      _ProblemRegisterScreenState();
 }
 
-class _ProblemRegisterScreenV2State extends State<ProblemRegisterScreenV2> {
+class _ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
   @override
   void initState() {
     super.initState();

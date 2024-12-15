@@ -25,20 +25,20 @@ class AppleAuthService {
         ],
       );
 
-      //final String? idToken = appleCredential.identityToken;
       final String? email = appleCredential.email;
       final String? firstName = appleCredential.givenName;
       final String? lastName = appleCredential.familyName;
       final String? name = (lastName ?? "") + (firstName ?? "");
       final String? identifier = appleCredential.userIdentifier;
 
-      final url = Uri.parse('${AppConfig.baseUrl}/api/auth/apple');
+      final url = Uri.parse('${AppConfig.baseUrl}/api/auth/login/social');
       final response = await http.post(
         url,
         headers: {
           'Content-Type': 'application/json; charset=UTF-8',
         },
         body: jsonEncode({
+          'platform': 'APPLE',
           'email': email,
           'name': name,
           'identifier': identifier,
@@ -50,7 +50,6 @@ class AppleAuthService {
         await FirebaseAnalytics.instance.logSignUp(signUpMethod: 'Apple');
         await FirebaseAnalytics.instance
             .logEvent(name: 'user_register_with_apple');
-        //SnackBarDialog.showSnackBar(context: context, message: "로그인에 성공했습니다.", backgroundColor: Colors.green);
 
         return jsonDecode(response.body);
       } else {
@@ -72,7 +71,6 @@ class AppleAuthService {
       }
 
       log('Apple sign-in error: $error');
-      //SnackBarDialog.showSnackBar(context: context, message: "로그인 과정에서 오류가 발생했습니다. 다시 시도해주세요.", backgroundColor: Colors.red);
       await Sentry.captureException(
         error,
         stackTrace: stackTrace,

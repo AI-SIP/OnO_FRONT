@@ -11,7 +11,7 @@ import 'package:ono/GlobalModule/Theme/ThemeHandler.dart';
 import 'package:ono/Provider/FoldersProvider.dart';
 import 'package:ono/Provider/ProblemPracticeProvider.dart';
 import 'package:ono/Provider/ScreenIndexProvider.dart';
-import 'package:ono/Screen/ProblemRegister/ProblemRegisterScreenV2.dart';
+import 'package:ono/Screen/ProblemRegister/ProblemRegisterScreen.dart';
 import 'package:ono/Screen/SplashScreen.dart';
 import 'package:provider/provider.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
@@ -80,7 +80,7 @@ class MyApp extends StatelessWidget {
           final args = settings.arguments as Map<String, dynamic>;
           return MaterialPageRoute(
             builder: (context) {
-              return ProblemRegisterScreenV2(
+              return ProblemRegisterScreen(
                 problemModel: args['problemModel'],
                 isEditMode: args['isEditMode'],
                 colorPickerResult: args['colorPickerResult'],
