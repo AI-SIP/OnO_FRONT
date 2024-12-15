@@ -628,7 +628,7 @@ class _ProblemRegisterTemplateState
         folderId: _selectedFolderId,
       );
 
-      _service.submitProblemV2(
+      _service.submitProblem(
         context,
         problemRegisterModel,
         () {

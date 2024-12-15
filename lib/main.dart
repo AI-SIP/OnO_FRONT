@@ -12,6 +12,7 @@ import 'package:ono/Provider/FoldersProvider.dart';
 import 'package:ono/Provider/ProblemPracticeProvider.dart';
 import 'package:ono/Provider/ScreenIndexProvider.dart';
 import 'package:ono/Screen/ProblemRegister/ProblemRegisterScreen.dart';
+import 'package:ono/Screen/ProblemRegister/ProblemRegisterScreenV2.dart';
 import 'package:ono/Screen/SplashScreen.dart';
 import 'package:provider/provider.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
@@ -116,7 +117,8 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
   static const List<Widget> _widgetOptions = <Widget>[
     DirectoryScreen(),
     PracticeThumbnailScreen(),
-    TemplateSelectionScreen(),
+    ProblemRegisterScreenV2(problemModel: null, isEditMode: false),
+    //TemplateSelectionScreen(),
     SettingScreen(),
   ];
 

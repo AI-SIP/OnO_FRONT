@@ -8,6 +8,7 @@ import '../../GlobalModule/Image/ImagePickerHandler.dart';
 import '../../GlobalModule/Theme/SnackBarDialog.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
 import '../../Model/ProblemRegisterModel.dart';
+import '../../Model/ProblemRegisterModelV2.dart';
 import '../../Provider/UserProvider.dart';
 
 class ProblemRegisterScreenService {
@@ -27,9 +28,29 @@ class ProblemRegisterScreenService {
     Navigator.of(context).pop(true);
   }
 
-  Future<void> submitProblemV2(
+  Future<void> submitProblem(
       BuildContext context,
       ProblemRegisterModel problemData,
+      VoidCallback onSuccess) async {
+    final authService = Provider.of<UserProvider>(context, listen: false);
+    if (authService.isLoggedIn == LoginStatus.logout) {
+      _showLoginRequiredDialog(context);
+      return;
+    }
+
+    try {
+      await Provider.of<FoldersProvider>(context, listen: false)
+          .submitProblem(problemData, context);
+      onSuccess();
+      showSuccessDialog(context);
+    } catch (error) {
+      hideLoadingDialog(context);
+    }
+  }
+
+  Future<void> submitProblemV2(
+      BuildContext context,
+      ProblemRegisterModelV2 problemData,
       VoidCallback onSuccess) async {
     final authService = Provider.of<UserProvider>(context, listen: false);
     if (authService.isLoggedIn == LoginStatus.logout) {

@@ -15,6 +15,7 @@ import '../Config/AppConfig.dart';
 import '../Model/FolderModel.dart';
 import '../Model/ProblemModel.dart';
 import '../Model/ProblemRegisterModel.dart';
+import '../Model/ProblemRegisterModelV2.dart';
 import 'TokenProvider.dart';
 import 'package:http/http.dart' as http;
 
@@ -314,7 +315,7 @@ class FoldersProvider with ChangeNotifier {
     }
   }
 
-  Future<void> submitProblemV2(
+  Future<void> submitProblem(
       ProblemRegisterModel problemData, BuildContext context) async {
 
     try {
@@ -363,6 +364,53 @@ class FoldersProvider with ChangeNotifier {
           isMemoFilled: (problemData.memo != null) && (problemData.memo!.isNotEmpty),
           isProcess: problemData.problemImageUrl != null,
         );
+
+        await fetchCurrentFolderContents();
+
+        int userProblemCount = await getUserProblemCount();
+        if (userProblemCount > 0 && userProblemCount % 10 == 0) {
+          reviewHandler.requestReview(context);
+        }
+      } else {
+        throw Exception('Failed to submit problem');
+      }
+    } catch (error, stackTrace) {
+      log('Error submitting problem: $error');
+      await Sentry.captureException(error, stackTrace: stackTrace);
+    }
+  }
+
+  Future<void> submitProblemV2(
+      ProblemRegisterModelV2 problemData, BuildContext context) async {
+
+    try {
+      final files = <http.MultipartFile>[];
+
+      if (problemData.problemImage != null) {
+        files.add(await http.MultipartFile.fromPath('problemImage', problemData.problemImage!.path));
+      }
+      if (problemData.answerImage != null) {
+        files.add(await http.MultipartFile.fromPath('answerImage', problemData.answerImage!.path));
+      }
+
+      final requestBody = {
+        'problemId': problemData.problemId.toString(),
+        'solvedAt': (problemData.solvedAt ?? DateTime.now()).toIso8601String(),
+        'reference': problemData.reference ?? "",
+        'memo': problemData.memo ?? "",
+        'folderId': (problemData.folderId ?? currentFolderId).toString(),
+      };
+
+      final response = await httpService.sendRequest(
+        method: 'POST',
+        url: '${AppConfig.baseUrl}/api/problem/V2',
+        isMultipart: true,
+        files: files,
+        body: requestBody,
+      );
+
+      if (response.statusCode == 200) {
+        log('Problem successfully submitted');
 
         await fetchCurrentFolderContents();
 

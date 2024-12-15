@@ -982,8 +982,11 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                 const SizedBox(height: 4),
                 Row(
                   children: [
+                    /*
                     _getTemplateIcon(problem.templateType!),
                     const SizedBox(width: 8),
+
+                     */
                     Flexible(
                       child: StandardText(
                         text: (problem.reference != null && problem.reference!.isNotEmpty) ? problem.reference! : '제목 없음',
