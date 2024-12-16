@@ -586,11 +586,13 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
               TextButton(
                 onPressed: () async {
                   if (foldersProvider.currentFolder != null) {
-                    Navigator.pop(context); // 다이얼로그 닫기
+                    //Navigator.pop(context); // 다이얼로그 닫기
                     Navigator.pop(context);
 
                     await foldersProvider
                         .deleteFolder(foldersProvider.currentFolder!.folderId);
+
+                    Navigator.pop(context);
 
                     SnackBarDialog.showSnackBar(
                         context: context,

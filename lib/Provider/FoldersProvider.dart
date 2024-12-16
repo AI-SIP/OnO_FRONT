@@ -44,7 +44,7 @@ class FoldersProvider with ChangeNotifier {
       _currentFolder = targetFolder;
       _problems = _currentFolder!.problems;
 
-      log('Moved to folder: ${_currentFolder!.folderName}, Problems: ${_problems.length}');
+      log('Moved to folder: ${_currentFolder!.folderId}, Problems: ${_problems.length}');
 
       // UI 갱신
       notifyListeners();
@@ -126,38 +126,6 @@ class FoldersProvider with ChangeNotifier {
     }
   }
 
-  /*
-  Future<void> fetchRootFolderContents() async {
-    try {
-      final response = await httpService.sendRequest(
-        method: 'GET',
-        url: '${AppConfig.baseUrl}/api/folder/root',
-      );
-
-      if (response.statusCode == 200) {
-        final jsonResponse = json.decode(utf8.decode(response.bodyBytes));
-
-        // 폴더 및 문제 데이터 초기화
-        _currentFolder = FolderModel.fromJson(jsonResponse);
-        _problems = (jsonResponse['problems'] as List)
-            .map((e) => ProblemModel.fromJson(e))
-            .toList();
-
-        sortProblemsByOption(sortOption);
-        currentFolderId = jsonResponse['folderId']; // 현재 폴더 ID 업데이트
-        notifyListeners(); // 데이터 갱신
-        log('Folder contents fetched: ${_currentFolder?.folderName}, ${problems.length} problems');
-      } else {
-        throw Exception('Failed to load RootFolderContents');
-      }
-    } catch (error, stackTrace) {
-      log('Error fetching root folder contents: $error');
-      await Sentry.captureException(error, stackTrace: stackTrace);
-    }
-  }
-
-   */
-
   Future<void> clearFolderContents() async{
     _currentFolder = null;
     _folders = [];
@@ -165,34 +133,6 @@ class FoldersProvider with ChangeNotifier {
 
     notifyListeners();
   }
-
-  /*
-  Future<void> fetchCurrentFolderContents() async {
-    try {
-      final response = await httpService.sendRequest(
-        method: 'GET',
-        url: '${AppConfig.baseUrl}/api/folder/$currentFolderId',
-      );
-
-      if (response.statusCode == 200) {
-        final jsonResponse = json.decode(utf8.decode(response.bodyBytes));
-        _currentFolder = FolderModel.fromJson(jsonResponse);
-        _problems = (jsonResponse['problems'] as List)
-            .map((e) => ProblemModel.fromJson(e))
-            .toList();
-        currentFolderId = jsonResponse['folderId'];
-        sortProblemsByOption(sortOption);
-        notifyListeners();
-      } else {
-        throw Exception('Failed to load CurrentFolderContents');
-      }
-    } catch (error, stackTrace) {
-      log('Error fetching current folder contents: $error');
-      await Sentry.captureException(error, stackTrace: stackTrace);
-    }
-  }
-
-   */
 
   Future<List<FolderThumbnailModel>> fetchAllFolderThumbnails() async {
     try {
@@ -264,6 +204,8 @@ class FoldersProvider with ChangeNotifier {
         log('Folder name successfully updated to $newName');
 
         await fetchFolderContents(_currentFolder!.folderId);
+
+        await moveToFolder(currentFolder!.folderId);
       } else {
         throw Exception('Failed to update folder name');
       }
@@ -275,6 +217,8 @@ class FoldersProvider with ChangeNotifier {
 
   // 폴더 삭제
   Future<void> deleteFolder(int folderId) async {
+    log('user try to remove folderId: $folderId');
+
     try {
       final response = await httpService.sendRequest(
         method: 'DELETE',
@@ -287,6 +231,8 @@ class FoldersProvider with ChangeNotifier {
         int parentFolderId = jsonResponse['folderId'] as int;
 
         await fetchFolderContents(parentFolderId);
+
+        await moveToFolder(parentFolderId);
       } else {
         throw Exception('Failed to delete folder');
       }
