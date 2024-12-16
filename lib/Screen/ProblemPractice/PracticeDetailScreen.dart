@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 
+import '../../GlobalModule/Image/DisplayImage.dart';
 import '../../GlobalModule/Theme/SnackBarDialog.dart';
 import '../../Model/ProblemPracticeModel.dart';
 import '../../Model/ProblemModel.dart';
@@ -243,12 +244,10 @@ class PracticeDetailScreen extends StatelessWidget {
       height: 70,
       child: ClipRRect(
         borderRadius: BorderRadius.circular(8.0),
-        child: imageUrl != null
-            ? Image.network(
-          imageUrl,
+        child: DisplayImage(
+          imagePath: imageUrl,
           fit: BoxFit.cover,
-        )
-            : const Icon(Icons.image, color: Colors.grey),
+        ),
       ),
     );
   }

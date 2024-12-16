@@ -54,6 +54,24 @@ class FoldersProvider with ChangeNotifier {
     }
   }
 
+  Future<void> moveToRootFolder() async {
+    try {
+      // 전달받은 folderId에 해당하는 폴더를 _folders에서 검색
+      final targetFolder = _folders[0];
+
+      _currentFolder = targetFolder;
+      _problems = _currentFolder!.problems;
+
+      log('Moved to folder: ${_currentFolder!.folderId}, Problems: ${_problems.length}');
+
+      // UI 갱신
+      notifyListeners();
+    } catch (error, stackTrace) {
+      log('Error moving to root folder: $error');
+      await Sentry.captureException(error, stackTrace: stackTrace);
+    }
+  }
+
   // 폴더 내용 로드 (특정 폴더 ID로)
   Future<void> fetchFolderContents(int? folderId) async {
     try {
@@ -543,6 +561,8 @@ class FoldersProvider with ChangeNotifier {
         if (response.statusCode == 200) {
           log('Problem successfully repeated with image');
           await fetchFolderContents(_currentFolder!.folderId);
+          await moveToFolder(_currentFolder!.folderId);
+
         } else {
           throw Exception('Failed to repeat problem with image');
         }
