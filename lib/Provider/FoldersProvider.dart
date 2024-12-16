@@ -21,6 +21,7 @@ import 'package:http/http.dart' as http;
 
 class FoldersProvider with ChangeNotifier {
   FolderModel? _currentFolder;
+  List<FolderModel> _folders = [];
   List<ProblemModel> _problems = [];
   final TokenProvider tokenProvider = TokenProvider();
   final ReviewHandler reviewHandler = ReviewHandler();
@@ -32,11 +33,53 @@ class FoldersProvider with ChangeNotifier {
   FolderModel? get currentFolder => _currentFolder;
   List<ProblemModel> get problems => List.unmodifiable(_problems);
 
-  Future<void> fetchRootFolderContents() async {
+  Future<void> fetchAllFolderContents() async {
     try {
       final response = await httpService.sendRequest(
         method: 'GET',
         url: '${AppConfig.baseUrl}/api/folder',
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> jsonResponse = json.decode(utf8.decode(response.bodyBytes));
+
+        _folders = jsonResponse.map((folderData) => FolderModel.fromJson(folderData)).toList();
+
+        _folders.forEach((folder) {
+          log('Folder ID: ${folder.folderId}');
+          log('Folder Name: ${folder.folderName}');
+          log('Parent Folder: ${folder.parentFolder?.folderName ?? "No Parent"}');
+          log('problems: ');
+          folder.problems.forEach((problem){log('${problem.problemId}, ');});
+          log('Number of Problems: ${folder.problems.length}');
+          log('Number of Subfolders: ${folder.subFolders.length}');
+          log('Created At: ${folder.createdAt}');
+          log('Updated At: ${folder.updateAt}');
+          log('-----------------------------------------');
+        });
+
+        // 루트 폴더 설정
+        _currentFolder = _folders.firstWhere(
+              (folder) => folder.parentFolder == null,
+        );
+
+        _problems = _currentFolder!.problems;
+
+        notifyListeners();
+      } else {
+        throw Exception('Failed to load RootFolderContents');
+      }
+    } catch (error, stackTrace) {
+      log('Error fetching root folder contents: $error');
+      await Sentry.captureException(error, stackTrace: stackTrace);
+    }
+  }
+
+  Future<void> fetchRootFolderContents() async {
+    try {
+      final response = await httpService.sendRequest(
+        method: 'GET',
+        url: '${AppConfig.baseUrl}/api/folder/root',
       );
 
       if (response.statusCode == 200) {
@@ -108,22 +151,23 @@ class FoldersProvider with ChangeNotifier {
       );
 
       if (response.statusCode == 200) {
-        final jsonResponse = json.decode(utf8.decode(response.bodyBytes));
+        final folderData = json.decode(utf8.decode(response.bodyBytes));
+        final updatedFolder = FolderModel.fromJson(folderData);
 
-        _currentFolder = FolderModel.fromJson(jsonResponse);
-        _problems = (jsonResponse['problems'] as List)
-            .map((e) => ProblemModel.fromJson(e))
-            .toList();
+        // 기존 데이터를 업데이트
+        final index = _folders.indexWhere((folder) => folder.folderId == folderId);
+        if (index != -1) {
+          _folders[index] = updatedFolder;
+        } else {
+          _folders.add(updatedFolder);
+        }
 
-        sortProblemsByOption(sortOption);
-        currentFolderId = folderId;
         notifyListeners();
-        log('Folder contents fetched folderId : ${_currentFolder?.folderId}, folderName : ${_currentFolder?.folderName}, ${problems.length} problems');
       } else {
-        throw Exception('Failed to load FolderContents');
+        throw Exception('Failed to fetch folder by ID');
       }
     } catch (error, stackTrace) {
-      log('Error fetching folder contents: $error');
+      log('Error fetching folder by ID: $error');
       await Sentry.captureException(error, stackTrace: stackTrace);
     }
   }
@@ -254,7 +298,7 @@ class FoldersProvider with ChangeNotifier {
     }
   }
 
-  Future<String?> fetchProcessImageByColor(String? fullUrl, Map<String, dynamic>? colorPickerResult, List<List<double>>? coordinatePickerResult) async {
+  Future<String?> fetchProcessImage(String? fullUrl, Map<String, dynamic>? colorPickerResult, List<List<double>>? coordinatePickerResult) async {
 
     List<int>? labels = coordinatePickerResult != null
         ? List<int>.filled(coordinatePickerResult.length, 1)
@@ -355,16 +399,6 @@ class FoldersProvider with ChangeNotifier {
 
       if (response.statusCode == 200) {
         log('Problem successfully submitted');
-        logProblemSubmission(
-          action: "submit",
-          isProblemImageFilled: problemData.problemImageUrl != null,
-          isAnswerImageFilled: problemData.answerImage != null,
-          isSolveImageFilled: problemData.solveImage != null,
-          isReferenceFilled: (problemData.reference != null) && (problemData.reference!.isNotEmpty),
-          isMemoFilled: (problemData.memo != null) && (problemData.memo!.isNotEmpty),
-          isProcess: problemData.problemImageUrl != null,
-        );
-
         await fetchCurrentFolderContents();
 
         int userProblemCount = await getUserProblemCount();
@@ -583,7 +617,7 @@ class FoldersProvider with ChangeNotifier {
   }
 
   List<int> getProblemIds() {
-    return _problems.map((problem) => problem.problemId as int).toList();
+    return _problems.map((problem) => problem.problemId).toList();
   }
 
   Future<ProblemModel?> getProblemDetails(int? problemId) async {
@@ -604,31 +638,5 @@ class FoldersProvider with ChangeNotifier {
       );
       return null;
     }
-  }
-
-  Future<void> logProblemSubmission({
-    required String action, // "등록" or "수정"
-    required bool isProblemImageFilled,
-    required bool isAnswerImageFilled,
-    required bool isSolveImageFilled,
-    required bool isReferenceFilled,
-    required bool isMemoFilled,
-    required bool isProcess,
-  }) async {
-    FirebaseAnalytics analytics = FirebaseAnalytics.instance;
-
-    // Log the overall action
-    await analytics.logEvent(
-      name: 'problem_submit',
-      parameters: {
-        'method': action,
-        'problem_image': isProblemImageFilled ? "filled" : "null",
-        'answer_image': isAnswerImageFilled ? "filled" : "null",
-        'solve_image': isSolveImageFilled ? "filled" : "null",
-        'reference': isReferenceFilled ? "filled" : "null",
-        'memo': isMemoFilled ? "filled" : "null",
-        'isProcess' : isProcess ? "true" : "false",
-      },
-    );
   }
 }

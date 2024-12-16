@@ -127,7 +127,7 @@ class _ProblemRegisterTemplateState
 
       if (widget.templateType != TemplateType.simple) {
         provider
-            .fetchProcessImageByColor(
+            .fetchProcessImage(
           problemModel.problemImageUrl,
           widget.colorPickerResult,
           widget.coordinatePickerResult,

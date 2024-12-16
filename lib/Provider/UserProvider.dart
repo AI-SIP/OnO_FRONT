@@ -150,7 +150,8 @@ class UserProvider with ChangeNotifier {
         _problemCount = await getUserProblemCount();
 
         if (_loginStatus == LoginStatus.login) {
-          await foldersProvider.fetchRootFolderContents();
+          //await foldersProvider.fetchRootFolderContents();
+          await foldersProvider.fetchAllFolderContents();
         }
         return true;
       } else {
