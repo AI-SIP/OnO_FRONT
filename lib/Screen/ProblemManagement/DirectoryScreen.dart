@@ -89,7 +89,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         onPopInvokedWithResult: (bool didPop, Object? result) async {
           if(didPop){
             if (foldersProvider.currentFolder?.parentFolder != null) {
-              foldersProvider.moveToParentFolder(
+              foldersProvider.moveToFolder(
                   foldersProvider.currentFolder!.parentFolder!.folderId);
             }
             return;
@@ -157,7 +157,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                     Navigator.pop(context);
                   }
                   const Duration(seconds: 1);
-                  foldersProvider.fetchRootFolderContents();
+                  //foldersProvider.fetchRootFolderContents();
                   Provider.of<ScreenIndexProvider>(context, listen: false)
                       .setSelectedIndex(2);  // 문제 등록 탭으로 이동
 
@@ -492,7 +492,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     final foldersProvider =
         Provider.of<FoldersProvider>(context, listen: false);
     await foldersProvider.updateFolder(
-        newName, foldersProvider.currentFolderId, null);
+        newName, foldersProvider.currentFolder!.folderId, null);
   }
 
   // 폴더 이동 다이얼로그 출력
@@ -511,7 +511,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     if (selectedFolderId != null) {
       await foldersProvider.updateFolder(
           foldersProvider.currentFolder!.folderName,
-          foldersProvider.currentFolderId,
+          foldersProvider.currentFolder!.folderId,
           selectedFolderId); // 부모 폴더 변경
     }
   }
@@ -795,7 +795,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
           );
 
           Provider.of<FoldersProvider>(context, listen: false)
-              .fetchFolderContents(folderId: folder.folderId);
+              .moveToFolder(folder.folderId);
+              //.fetchFolderContents(folderId: folder.folderId);
         },
         child: LongPressDraggable<FolderThumbnailModel>(
           data: folder,

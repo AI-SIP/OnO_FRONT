@@ -31,7 +31,7 @@ class PracticeTitleWriteScreen extends StatelessWidget {
         isUpdate = await problemPracticeProvider.updatePractice(practiceRegisterModel);
       }
 
-      await folderProvider.fetchRootFolderContents();
+      //await folderProvider.fetchRootFolderContents();
       Navigator.pop(context);
       Navigator.pop(context);
 

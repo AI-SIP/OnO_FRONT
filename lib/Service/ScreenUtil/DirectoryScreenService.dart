@@ -24,7 +24,7 @@ class DirectoryScreenService {
 
   Future<void> fetchProblems() async {
     try {
-      await foldersProvider.fetchCurrentFolderContents();
+      await foldersProvider.fetchAllFolderContents();
     } catch (error, stackTrace) {
       log('Failed to fetch problems: $error');
       await Sentry.captureException(

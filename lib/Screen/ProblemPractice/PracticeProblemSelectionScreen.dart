@@ -61,7 +61,7 @@ class _PracticeProblemSelectionScreenState
         canPop: true,
         onPopInvokedWithResult: (bool didPop, Object? result) async {
           if (didPop) {
-            await foldersProvider.fetchRootFolderContents();
+            //await foldersProvider.fetchRootFolderContents();
             return;
           }
         },
@@ -110,7 +110,7 @@ class _PracticeProblemSelectionScreenState
                   selectedFolderId = folder.folderId;
                 });
                 await Provider.of<FoldersProvider>(context, listen: false)
-                    .fetchFolderContents(folderId: folder.folderId);
+                    .fetchFolderContents(folder.folderId);
               },
               child: Padding(
                 padding: EdgeInsets.only(right: screenWidth * 0.04),
