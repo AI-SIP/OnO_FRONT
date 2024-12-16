@@ -399,12 +399,16 @@ class FoldersProvider with ChangeNotifier {
       }
 
       final requestBody = {
-        'problemId': problemData.problemId.toString(),
+        //'problemId': problemData.problemId.toString(),
         'solvedAt': (problemData.solvedAt ?? DateTime.now()).toIso8601String(),
         'reference': problemData.reference ?? "",
         'memo': problemData.memo ?? "",
         'folderId': (problemData.folderId ?? currentFolder!.folderId).toString(),
       };
+
+      if (problemData.problemId != null) {
+        requestBody['problemId'] = problemData.problemId.toString();
+      }
 
       final response = await httpService.sendRequest(
         method: 'POST',
@@ -417,7 +421,8 @@ class FoldersProvider with ChangeNotifier {
       if (response.statusCode == 200) {
         log('Problem successfully submitted');
 
-        await fetchFolderContents(_currentFolder!.folderId);
+        await fetchFolderContents(problemData.folderId ?? currentFolder!.folderId);
+        await moveToFolder(currentFolder!.folderId);
 
         int userProblemCount = await getUserProblemCount();
         if (userProblemCount > 0 && userProblemCount % 10 == 0) {
@@ -482,6 +487,7 @@ class FoldersProvider with ChangeNotifier {
         log('Problem successfully updated');
 
         await fetchFolderContents(_currentFolder!.folderId);
+        await moveToFolder(_currentFolder!.folderId);
       } else {
         throw Exception('Failed to update problem');
       }
@@ -504,6 +510,8 @@ class FoldersProvider with ChangeNotifier {
       if (response.statusCode == 200) {
         log('Problem successfully deleted');
         await fetchFolderContents(_currentFolder!.folderId);
+        await moveToFolder(_currentFolder!.folderId);
+
         return true;
       } else {
         throw Exception('Failed to delete problem');
