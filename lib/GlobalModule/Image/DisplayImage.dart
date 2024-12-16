@@ -26,10 +26,14 @@ class DisplayImage extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.all(10.0), // 원하는 padding 값
         child: imagePath == null || imagePath!.isEmpty
-            ? SvgPicture.asset(
-                defaultImagePath,
-                fit: BoxFit.contain,
-                alignment: Alignment.center,
+            ? Center(
+                child: SvgPicture.asset(
+                  defaultImagePath,
+                  fit: BoxFit.contain,
+                  alignment: Alignment.center,
+                  width: 200, // 원하는 크기 설정
+                  height: 200,
+                ),
               )
             : CachedNetworkImage(
                 imageUrl: imagePath!,
@@ -43,11 +47,13 @@ class DisplayImage extends StatelessWidget {
                     //borderRadius: BorderRadius.circular(10), // 이미지 둥근 모서리
                   ),
                 ),
-                errorWidget: (context, url, error) => Container(
-                  alignment: Alignment.center,
-                  child: StandardText(
-                    text: '이미지가 없습니다!',
-                    color: themeProvider.primaryColor,
+                errorWidget: (context, url, error) => Center(
+                  child: SvgPicture.asset(
+                    defaultImagePath,
+                    fit: BoxFit.contain,
+                    alignment: Alignment.center,
+                    width: 200, // 에러 시 이미지 크기 설정
+                    height: 200,
                   ),
                 ),
               ),

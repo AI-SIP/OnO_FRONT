@@ -36,7 +36,7 @@ class SimpleProblemDetailTemplate extends StatelessWidget {
                 // 오른쪽 스크롤 가능한 영역
                 Flexible(
                   flex: 1,
-                  child: problemDetailScreenWidget.buildAnalysisExpansionTile(context, problemModel, themeProvider, problemModel.templateType!),
+                  child: problemDetailScreenWidget.buildExpansionTile(context, problemModel, themeProvider, problemModel.templateType!),
                 ),
               ],
             )
@@ -48,7 +48,7 @@ class SimpleProblemDetailTemplate extends StatelessWidget {
                     context, problemModel, themeProvider, problemModel.templateType!,
                   ),
                   const SizedBox(height: 30.0),
-                  problemDetailScreenWidget.buildAnalysisExpansionTile(
+                  problemDetailScreenWidget.buildExpansionTile(
                     context, problemModel, themeProvider, problemModel.templateType!,
                   ),
                 ],

@@ -57,7 +57,7 @@ class ProblemDetailScreenWidget {
     );
   }
 
-  Widget buildAnalysisExpansionTile(
+  Widget buildExpansionTile(
       BuildContext context,
       ProblemModel problemModel,
       ThemeHandler themeProvider,
@@ -440,6 +440,7 @@ class ProblemDetailScreenWidget {
                             );
                           },
                           child: Container(
+                            width: mediaQuery.size.width,
                             height: mediaQuery.size.height * 0.5, // 고정된 높이로 변경
                             decoration: BoxDecoration(
                               color:
