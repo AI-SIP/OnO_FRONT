@@ -29,131 +29,162 @@ class _DatePickerHandlerState extends State<DatePickerHandler> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: Colors.white,
-      height: MediaQuery.of(context).size.height / 3,
-      child: Column(
-        children: <Widget>[
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const SizedBox(width: 10), // 왼쪽 여백
-              const Spacer(), // 가운데 비우기
-              TextButton(
-                  onPressed: () {
-                    // 완료 버튼을 누르면 선택한 날짜만 전달하고 모달 닫기
-                    if (Navigator.of(context).canPop()) {
-                      Navigator.pop(context, _selectedDate);
-                    }
-                  },
-                  child: const StandardText(
-                    text: '완료',
-                    fontSize: 16,
-                    color: Colors.black,
-                  )),
-              const SizedBox(width: 10), // 왼쪽 여백
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 0.0), // 좌우 여백 추가
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20.0), // 모서리를 둥글게 처리
+        child: Container(
+          color: Colors.white,
+          height: MediaQuery.of(context).size.height / 3,
+          child: Column(
+            children: <Widget>[
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const SizedBox(width: 10), // 왼쪽 여백
+                  const Spacer(), // 가운데 비우기
+                  TextButton(
+                    onPressed: () {
+                      // 완료 버튼을 누르면 선택한 날짜만 전달하고 모달 닫기
+                      if (Navigator.of(context).canPop()) {
+                        Navigator.pop(context, _selectedDate);
+                      }
+                    },
+                    child: const StandardText(
+                      text: '완료',
+                      fontSize: 16,
+                      color: Colors.black,
+                    ),
+                  ),
+                  const SizedBox(width: 10), // 오른쪽 여백
+                ],
+              ),
+              const SizedBox(height: 20),
+              // 상단 마킹
+              const Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Align(
+                      alignment: Alignment.center,
+                      child: StandardText(
+                        text: '년도',
+                        fontSize: 16,
+                        color: Colors.black,
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: Align(
+                      alignment: Alignment.center,
+                      child: StandardText(
+                        text: '월',
+                        fontSize: 16,
+                        color: Colors.black,
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: Align(
+                      alignment: Alignment.center,
+                      child: StandardText(
+                        text: '일',
+                        fontSize: 16,
+                        color: Colors.black,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8), // 텍스트 아래에 약간의 여백 추가
+              // 날짜 선택기
+              Expanded(
+                child: Row(
+                  children: <Widget>[
+                    Expanded(
+                      child: CupertinoPicker(
+                        scrollController: FixedExtentScrollController(
+                          initialItem: _selectedDate.year - 2020,
+                        ),
+                        itemExtent: 32.0,
+                        onSelectedItemChanged: (int index) {
+                          setState(() {
+                            _selectedDate = DateTime(
+                              _years[index],
+                              _selectedDate.month,
+                              _selectedDate.day,
+                            );
+                          });
+                        },
+                        children: _years.map((int year) {
+                          return Center(
+                            child: StandardText(
+                              text: '$year',
+                              fontSize: 16,
+                              color: Colors.black,
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                    Expanded(
+                      child: CupertinoPicker(
+                        scrollController: FixedExtentScrollController(
+                          initialItem: _selectedDate.month - 1,
+                        ),
+                        itemExtent: 32.0,
+                        onSelectedItemChanged: (int index) {
+                          setState(() {
+                            _selectedDate = DateTime(
+                              _selectedDate.year,
+                              _months[index],
+                              _selectedDate.day,
+                            );
+                          });
+                        },
+                        children: _months.map((int month) {
+                          return Center(
+                            child: StandardText(
+                              text: '$month',
+                              fontSize: 16,
+                              color: Colors.black,
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                    Expanded(
+                      child: CupertinoPicker(
+                        scrollController: FixedExtentScrollController(
+                          initialItem: _selectedDate.day - 1,
+                        ),
+                        itemExtent: 32.0,
+                        onSelectedItemChanged: (int index) {
+                          setState(() {
+                            _selectedDate = DateTime(
+                              _selectedDate.year,
+                              _selectedDate.month,
+                              _days[index],
+                            );
+                          });
+                        },
+                        children: _days.map((int day) {
+                          return Center(
+                            child: StandardText(
+                              text: '$day',
+                              fontSize: 16,
+                              color: Colors.black,
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
-          const SizedBox(height : 20),
-          // 상단 마킹
-          const Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Align(
-                    alignment: Alignment.center,
-                    child: StandardText(
-                        text: '년도', fontSize: 16, color: Colors.black)),
-              ),
-              Expanded(
-                child: Align(
-                    alignment: Alignment.center,
-                    child: StandardText(
-                        text: '월', fontSize: 16, color: Colors.black)),
-              ),
-              Expanded(
-                child: Align(
-                    alignment: Alignment.center,
-                    child: StandardText(
-                        text: '일', fontSize: 16, color: Colors.black)),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8), // 텍스트 아래에 약간의 여백 추가
-          // 날짜 선택기
-          Expanded(
-            child: Row(
-              children: <Widget>[
-                Expanded(
-                  child: CupertinoPicker(
-                    scrollController: FixedExtentScrollController(
-                      initialItem: _selectedDate.year - 2020,
-                    ),
-                    itemExtent: 32.0,
-                    onSelectedItemChanged: (int index) {
-                      setState(() {
-                        _selectedDate = DateTime(
-                          _years[index],
-                          _selectedDate.month,
-                          _selectedDate.day,
-                        );
-                      });
-                    },
-                    children: _years.map((int year) {
-                      return Center(
-                          child: StandardText(
-                              text: '$year', fontSize: 16, color: Colors.black));
-                    }).toList(),
-                  ),
-                ),
-                Expanded(
-                  child: CupertinoPicker(
-                    scrollController: FixedExtentScrollController(
-                      initialItem: _selectedDate.month - 1,
-                    ),
-                    itemExtent: 32.0,
-                    onSelectedItemChanged: (int index) {
-                      setState(() {
-                        _selectedDate = DateTime(
-                          _selectedDate.year,
-                          _months[index],
-                          _selectedDate.day,
-                        );
-                      });
-                    },
-                    children: _months.map((int month) {
-                      return Center(
-                          child: StandardText(
-                              text: '$month', fontSize: 16, color: Colors.black));
-                    }).toList(),
-                  ),
-                ),
-                Expanded(
-                  child: CupertinoPicker(
-                    scrollController: FixedExtentScrollController(
-                      initialItem: _selectedDate.day - 1,
-                    ),
-                    itemExtent: 32.0,
-                    onSelectedItemChanged: (int index) {
-                      setState(() {
-                        _selectedDate = DateTime(
-                          _selectedDate.year,
-                          _selectedDate.month,
-                          _days[index],
-                        );
-                      });
-                    },
-                    children: _days.map((int day) {
-                      return Center(
-                          child: StandardText(
-                              text: '$day', fontSize: 16, color: Colors.black));
-                    }).toList(),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
