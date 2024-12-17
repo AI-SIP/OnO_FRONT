@@ -36,7 +36,7 @@ class _PracticeProblemSelectionScreenState
     _fetchFolders();
 
     if (widget.practiceModel != null) {
-      selectedProblems = widget.practiceModel!.problems!;
+      selectedProblems = widget.practiceModel!.problems;
     }
   }
 
@@ -166,15 +166,16 @@ class _PracticeProblemSelectionScreenState
                 itemCount: foldersProvider.currentProblems.length,
                 itemBuilder: (context, index) {
                   final problem = foldersProvider.currentProblems[index];
-                  final isSelected =
-                      selectedProblems.contains(problem);
+                  final isSelected = selectedProblems.any((selectedProblem) => selectedProblem.problemId == problem.problemId);
 
                   return GestureDetector(
                     onTap: () {
                       setState(() {
-                        isSelected
-                            ? selectedProblems.remove(problem)
-                            : selectedProblems.add(problem);
+                        if (isSelected) {
+                          selectedProblems.removeWhere((p) => p.problemId == problem.problemId);
+                        } else {
+                          selectedProblems.add(problem);
+                        }
                       });
                     },
                     child:
