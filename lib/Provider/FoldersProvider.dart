@@ -22,7 +22,7 @@ import 'package:http/http.dart' as http;
 class FoldersProvider with ChangeNotifier {
   FolderModel? _currentFolder;
   List<FolderModel> _folders = [];
-  List<ProblemModel> _problems = [];
+  List<ProblemModel> _currentProblems = [];
   final TokenProvider tokenProvider = TokenProvider();
   final ReviewHandler reviewHandler = ReviewHandler();
   final HttpService httpService = HttpService();
@@ -30,7 +30,7 @@ class FoldersProvider with ChangeNotifier {
   String sortOption = 'newest';
 
   FolderModel? get currentFolder => _currentFolder;
-  List<ProblemModel> get problems => List.unmodifiable(_problems);
+  List<ProblemModel> get currentProblems => List.unmodifiable(_currentProblems);
 
   // 상위 폴더로 이동
   Future<void> moveToFolder(int? folderId) async {
@@ -42,9 +42,9 @@ class FoldersProvider with ChangeNotifier {
       );
 
       _currentFolder = targetFolder;
-      _problems = _currentFolder!.problems;
+      _currentProblems = _currentFolder!.problems;
 
-      log('Moved to folder: ${_currentFolder!.folderId}, Problems: ${_problems.length}');
+      log('Moved to folder: ${_currentFolder!.folderId}, Problems: ${_currentProblems.length}');
 
       // UI 갱신
       notifyListeners();
@@ -60,9 +60,9 @@ class FoldersProvider with ChangeNotifier {
       final targetFolder = _folders[0];
 
       _currentFolder = targetFolder;
-      _problems = _currentFolder!.problems;
+      _currentProblems = _currentFolder!.problems;
 
-      log('Moved to folder: ${_currentFolder!.folderId}, Problems: ${_problems.length}');
+      log('Moved to folder: ${_currentFolder!.folderId}, Problems: ${_currentProblems.length}');
 
       // UI 갱신
       notifyListeners();
@@ -132,7 +132,7 @@ class FoldersProvider with ChangeNotifier {
               (folder) => folder.parentFolder == null,
         );
 
-        _problems = _currentFolder!.problems;
+        _currentProblems = _currentFolder!.problems;
 
         notifyListeners();
       } else {
@@ -147,7 +147,7 @@ class FoldersProvider with ChangeNotifier {
   Future<void> clearFolderContents() async{
     _currentFolder = null;
     _folders = [];
-    _problems = [];
+    _currentProblems = [];
 
     notifyListeners();
   }
@@ -601,28 +601,28 @@ class FoldersProvider with ChangeNotifier {
   }
 
   void sortProblemsByName() {
-    _problems.sortByName();
+    _currentProblems.sortByName();
     sortOption = 'name';
   }
 
   void sortProblemsByNewest() {
-    _problems.sortByNewest();
+    _currentProblems.sortByNewest();
     sortOption = 'newest';
   }
 
   void sortProblemsByOldest() {
-    _problems.sortByOldest();
+    _currentProblems.sortByOldest();
     sortOption = 'oldest';
   }
 
   List<int> getProblemIds() {
-    return _problems.map((problem) => problem.problemId).toList();
+    return _currentProblems.map((problem) => problem.problemId).toList();
   }
 
   Future<ProblemModel?> getProblemDetails(int? problemId) async {
     try {
       var problemDetails =
-      _problems.firstWhere((problem) => problem.problemId == problemId);
+      _currentProblems.firstWhere((problem) => problem.problemId == problemId);
 
       if (problemDetails != null) {
         return problemDetails;

@@ -160,11 +160,11 @@ class _PracticeProblemSelectionScreenState
     return Expanded(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 30),
-        child: foldersProvider.problems.isNotEmpty
+        child: foldersProvider.currentProblems.isNotEmpty
             ? ListView.builder(
-                itemCount: foldersProvider.problems.length,
+                itemCount: foldersProvider.currentProblems.length,
                 itemBuilder: (context, index) {
-                  final problem = foldersProvider.problems[index];
+                  final problem = foldersProvider.currentProblems[index];
                   final isSelected =
                       selectedProblems.contains(problem.problemId);
 

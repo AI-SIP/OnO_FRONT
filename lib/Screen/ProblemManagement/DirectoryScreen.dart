@@ -359,7 +359,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
             padding: const EdgeInsets.only(top: 10, left: 10, right: 10), // 왼쪽 여백 추가
             child: Consumer<FoldersProvider>(
               builder: (context, foldersProvider, child) {
-                int problemCount = foldersProvider.problems.length;
+                int problemCount = foldersProvider.currentProblems.length;
                 return StandardText(
                   text: '오답노트 수 : $problemCount',
                   fontSize: 15,
@@ -712,7 +712,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
           return Consumer<FoldersProvider>(
             builder: (context, foldersProvider, child) {
               var folders = foldersProvider.currentFolder?.subFolders ?? [];
-              var problems = foldersProvider.problems;
+              var problems = foldersProvider.currentProblems;
 
               if (folders.isEmpty && problems.isEmpty) {
                 return Center(

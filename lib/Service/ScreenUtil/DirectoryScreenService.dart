@@ -12,8 +12,8 @@ class DirectoryScreenService {
   DirectoryScreenService(this.foldersProvider);
 
   List<ProblemThumbnailModel> loadProblems() {
-    if (foldersProvider.problems.isNotEmpty) {
-      return foldersProvider.problems
+    if (foldersProvider.currentProblems.isNotEmpty) {
+      return foldersProvider.currentProblems
           .map((problem) => ProblemThumbnailModel.fromJson(problem.toJson()))
           .toList();
     } else {

@@ -1,5 +1,7 @@
 import 'package:intl/intl.dart';
 
+import 'ProblemModel.dart';
+
 class ProblemPracticeModel {
   final int practiceId;
   final String practiceTitle;
@@ -7,6 +9,7 @@ class ProblemPracticeModel {
   final int practiceSize;
   final DateTime createdAt;
   final DateTime? lastSolvedAt;
+  List<ProblemModel> problems = [];
   final List<int>? problemIds; // 추가된 필드
 
   ProblemPracticeModel({
@@ -16,6 +19,7 @@ class ProblemPracticeModel {
     required this.practiceSize,
     required this.createdAt,
     required this.lastSolvedAt,
+    required this.problems,
     this.problemIds,
   });
 
@@ -27,6 +31,7 @@ class ProblemPracticeModel {
       practiceSize: json['practiceSize'] ?? 0,
       createdAt: DateTime.parse(json['createdAt']).add(const Duration(hours: 9)),
       lastSolvedAt: json['lastSolvedAt'] != null ? DateTime.parse(json['lastSolvedAt']).add(const Duration(hours: 9)) : null,
+      problems: (json['problems'] as List?)?.map((e) => ProblemModel.fromJson(e)).toList() ?? [], // null 체크
       problemIds: json['problemIds'] != null
           ? List<int>.from(json['problemIds']) // problemIds 파싱
           : [],
@@ -41,6 +46,7 @@ class ProblemPracticeModel {
       'practiceSize': practiceSize,
       'createdAt': _formatDateTime(createdAt),
       'lastSolvedAt': _formatDateTime(lastSolvedAt),
+      'problems': problems.map((e) => e.toJson()).toList(),
       'problemIds': problemIds, // 추가된 필드
     };
   }

@@ -15,6 +15,7 @@ class ProblemPracticeProvider with ChangeNotifier{
 
   int currentPracticeId = -1;
   List<ProblemPracticeModel>? practiceThumbnails = [];
+  List<ProblemPracticeModel> practices = [];
   List<ProblemModel> problems = [];
   List<int> problemIds = [];
   final TokenProvider tokenProvider = TokenProvider();
