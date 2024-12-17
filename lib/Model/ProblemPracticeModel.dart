@@ -10,7 +10,6 @@ class ProblemPracticeModel {
   final DateTime createdAt;
   final DateTime? lastSolvedAt;
   List<ProblemModel> problems = [];
-  final List<int>? problemIds; // 추가된 필드
 
   ProblemPracticeModel({
     required this.practiceId,
@@ -20,7 +19,6 @@ class ProblemPracticeModel {
     required this.createdAt,
     required this.lastSolvedAt,
     required this.problems,
-    this.problemIds,
   });
 
   factory ProblemPracticeModel.fromJson(Map<String, dynamic> json) {
@@ -32,9 +30,6 @@ class ProblemPracticeModel {
       createdAt: DateTime.parse(json['createdAt']).add(const Duration(hours: 9)),
       lastSolvedAt: json['lastSolvedAt'] != null ? DateTime.parse(json['lastSolvedAt']).add(const Duration(hours: 9)) : null,
       problems: (json['problems'] as List?)?.map((e) => ProblemModel.fromJson(e)).toList() ?? [], // null 체크
-      problemIds: json['problemIds'] != null
-          ? List<int>.from(json['problemIds']) // problemIds 파싱
-          : [],
     );
   }
 
@@ -47,7 +42,6 @@ class ProblemPracticeModel {
       'createdAt': _formatDateTime(createdAt),
       'lastSolvedAt': _formatDateTime(lastSolvedAt),
       'problems': problems.map((e) => e.toJson()).toList(),
-      'problemIds': problemIds, // 추가된 필드
     };
   }
 

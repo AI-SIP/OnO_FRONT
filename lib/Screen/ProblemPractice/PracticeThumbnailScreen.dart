@@ -29,13 +29,13 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
   @override
   void initState() {
     super.initState();
-    _fetchPracticeThumbnails();
+    _fetchAllPracticeContents();
   }
 
-  Future<void> _fetchPracticeThumbnails() async {
+  Future<void> _fetchAllPracticeContents() async {
     final provider =
         Provider.of<ProblemPracticeProvider>(context, listen: false);
-    await provider.fetchAllPracticeThumbnails();
+    await provider.fetchAllPracticeContents();
   }
 
   @override
@@ -47,13 +47,11 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
       backgroundColor: Colors.white,
       body: Consumer<ProblemPracticeProvider>(
         builder: (context, provider, child) {
-          if (provider.practiceThumbnails == null) {
-            return _buildLoadingIndicator();
-          } else if (provider.practiceThumbnails!.isEmpty) {
+          if (provider.practices.isEmpty) {
             return _buildEmptyState(themeProvider);
           } else {
             return _buildPracticeListView(
-                provider.practiceThumbnails!, themeProvider);
+                provider.practices, themeProvider);
           }
         },
       ),
@@ -403,7 +401,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
     final practiceProvider = Provider.of<ProblemPracticeProvider>(context, listen: false);
     LoadingDialog.show(context, '복습 리스트 로딩 중...');
 
-    await practiceProvider.fetchPracticeProblems(practice.practiceId);
+    await practiceProvider.moveToPractice(practice.practiceId);
 
     LoadingDialog.hide(context);
 

@@ -16,14 +16,14 @@ import '../../Provider/ProblemPracticeProvider.dart';
 class PracticeNavigationButtons extends StatefulWidget {
   final BuildContext context;
   final ProblemPracticeProvider practiceProvider;
-  final int currentId;
+  final int currentProblemId;
   final VoidCallback onRefresh;
 
   const PracticeNavigationButtons({
     super.key,
     required this.context,
     required this.practiceProvider,
-    required this.currentId,
+    required this.currentProblemId,
     required this.onRefresh,
   });
 
@@ -62,7 +62,7 @@ class _PracticeNavigationButtonsState extends State<PracticeNavigationButtons> {
   }
 
   TextButton buildPreviousButton(ThemeHandler themeProvider, double screenHeight) {
-    final int currentIndex = getCurrentIndex();
+    final int currentIndex = getCurrentProblemIndex();
     final int previousProblemId = getPreviousProblemId(currentIndex);
 
     return TextButton(
@@ -79,8 +79,8 @@ class _PracticeNavigationButtonsState extends State<PracticeNavigationButtons> {
   }
 
   StandardText buildProgressText(ThemeHandler themeProvider) {
-    final int currentIndex = getCurrentIndex();
-    final int totalProblems = widget.practiceProvider.problemIds.length;
+    final int currentIndex = getCurrentProblemIndex();
+    final int totalProblems = widget.practiceProvider.currentProblems.length;
 
     return StandardText(
       text: '${currentIndex + 1} / $totalProblems',
@@ -131,7 +131,7 @@ class _PracticeNavigationButtonsState extends State<PracticeNavigationButtons> {
   }
 
   TextButton buildNextOrCompleteButton(ThemeHandler themeProvider, double screenHeight) {
-    final int currentIndex = getCurrentIndex();
+    final int currentIndex = getCurrentProblemIndex();
     final int nextProblemId = getNextProblemId(currentIndex);
 
     return TextButton(
@@ -147,18 +147,20 @@ class _PracticeNavigationButtonsState extends State<PracticeNavigationButtons> {
     );
   }
 
-  int getCurrentIndex() {
-    return widget.practiceProvider.problemIds.indexOf(widget.currentId);
+  int getCurrentProblemIndex() {
+    return widget.practiceProvider.currentProblems.indexWhere(
+          (problem) => problem.problemId == widget.currentProblemId,
+    );
   }
 
   int getPreviousProblemId(int currentIndex) {
-    final problemIds = widget.practiceProvider.problemIds;
-    return currentIndex > 0 ? problemIds[currentIndex - 1] : problemIds.first;
+    final currentProblems = widget.practiceProvider.currentProblems;
+    return currentIndex > 0 ? currentProblems[currentIndex - 1].problemId : currentProblems.first.problemId;
   }
 
   int getNextProblemId(int currentIndex) {
-    final problemIds = widget.practiceProvider.problemIds;
-    return currentIndex < problemIds.length - 1 ? problemIds[currentIndex + 1] : -1;
+    final currentProblems = widget.practiceProvider.currentProblems;
+    return currentIndex < currentProblems.length - 1 ? currentProblems[currentIndex + 1].problemId : -1;
   }
 
   void navigateToProblem(int problemId, {required bool isNext}) {
@@ -193,9 +195,9 @@ class _PracticeNavigationButtonsState extends State<PracticeNavigationButtons> {
 
   void _showCompletionScreen() {
     final practiceId = widget.practiceProvider.currentPracticeId;
-    final totalProblems = widget.practiceProvider.problemIds.length;
-    final practiceRound = widget.practiceProvider.practiceThumbnails
-        ?.firstWhere((thumbnail) => thumbnail.practiceId == practiceId)
+    final totalProblems = widget.practiceProvider.currentProblems.length;
+    final practiceRound = widget.practiceProvider.practices
+        .firstWhere((practice) => practice.practiceId == practiceId)
         .practiceCount ?? 0;
 
     Navigator.of(context).pushReplacement(
@@ -298,9 +300,9 @@ class _PracticeNavigationButtonsState extends State<PracticeNavigationButtons> {
                     });
 
                     await folderProvider.addRepeatCount(
-                        widget.currentId, selectedImage);
+                        widget.currentProblemId, selectedImage);
 
-                    await widget.practiceProvider.fetchPracticeProblems(widget.practiceProvider.currentPracticeId);
+                    await widget.practiceProvider.moveToPractice(widget.practiceProvider.currentPracticeId);
 
                     FirebaseAnalytics.instance.logEvent(
                       name: 'problem_repeat',

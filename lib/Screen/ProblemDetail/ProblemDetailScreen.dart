@@ -15,7 +15,6 @@ import '../../Model/ProblemModel.dart';
 import '../../Model/TemplateType.dart';
 import '../../Provider/FoldersProvider.dart';
 import '../../Service/ScreenUtil/ProblemDetailScreenService.dart';
-import '../ProblemRegister/ProblemRegisterScreen.dart';
 import '../ProblemShare/AnswerShareScreen.dart';
 import '../ProblemShare/ProblemShareScreen.dart';
 import 'Template/CleanProblemDetailTemplate.dart';
@@ -411,7 +410,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
         child: PracticeNavigationButtons(
           context: context,
           practiceProvider: Provider.of<ProblemPracticeProvider>(context, listen: false),
-          currentId: widget.problemId,
+          currentProblemId: widget.problemId,
           onRefresh: _setProblemModel,
         ),
       );

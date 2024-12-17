@@ -185,7 +185,7 @@ class PracticeDetailScreen extends StatelessWidget {
   }
 
   Widget _buildProblemList(BuildContext context, ProblemPracticeProvider provider, ThemeHandler themeProvider) {
-    final problems = provider.problems;
+    final problems = provider.currentProblems;
 
     if (problems.isEmpty) {
       return Center(
@@ -297,12 +297,12 @@ class PracticeDetailScreen extends StatelessWidget {
   }
 
   void _onNextButtonPressed(BuildContext context, ProblemPracticeProvider practiceProvider) {
-    if (practiceProvider.problems.isNotEmpty) {
+    if (practiceProvider.currentProblems.isNotEmpty) {
       Navigator.push(
         context,
         MaterialPageRoute(
           builder: (context) => ProblemDetailScreen(
-            problemId: practiceProvider.problems.first.problemId,
+            problemId: practiceProvider.currentProblems.first.problemId,
             isPractice: true,
           ),
         ),

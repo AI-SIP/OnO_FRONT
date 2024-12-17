@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:developer';
 
 import 'package:camera/camera.dart';
-import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:ono/GlobalModule/Util/HttpService.dart';
 import 'package:ono/GlobalModule/Util/ProblemSorting.dart';
@@ -113,8 +112,9 @@ class FoldersProvider with ChangeNotifier {
         final List<dynamic> jsonResponse = json.decode(utf8.decode(response.bodyBytes));
 
         _folders = jsonResponse.map((folderData) => FolderModel.fromJson(folderData)).toList();
+        log('fetch all folder contents');
 
-        _folders.forEach((folder) {
+        for (var folder in _folders) {
           log('-----------------------------------------');
           log('Folder ID: ${folder.folderId}');
           log('Folder Name: ${folder.folderName}');
@@ -125,7 +125,7 @@ class FoldersProvider with ChangeNotifier {
           log('Created At: ${folder.createdAt}');
           log('Updated At: ${folder.updateAt}');
           log('-----------------------------------------');
-        });
+        }
 
         // 루트 폴더 설정
         _currentFolder = _folders.firstWhere(
@@ -156,7 +156,7 @@ class FoldersProvider with ChangeNotifier {
     try {
       final response = await httpService.sendRequest(
         method: 'GET',
-        url: '${AppConfig.baseUrl}/api/folder/thumbnail/tree',
+        url: '${AppConfig.baseUrl}/api/folder/thumbnail/all',
       );
 
       if (response.statusCode == 200) {

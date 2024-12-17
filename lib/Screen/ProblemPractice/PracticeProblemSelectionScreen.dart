@@ -27,7 +27,7 @@ class PracticeProblemSelectionScreen extends StatefulWidget {
 class _PracticeProblemSelectionScreenState
     extends State<PracticeProblemSelectionScreen> {
   int? selectedFolderId;
-  List<int> selectedProblems = [];
+  List<ProblemModel> selectedProblems = [];
   List<FolderThumbnailModel> allFolderThumbnails = [];
 
   @override
@@ -36,15 +36,17 @@ class _PracticeProblemSelectionScreenState
     _fetchFolders();
 
     if (widget.practiceModel != null) {
-      selectedProblems = widget.practiceModel!.problemIds!;
+      selectedProblems = widget.practiceModel!.problems!;
     }
   }
 
   Future<void> _fetchFolders() async {
     final foldersProvider =
         Provider.of<FoldersProvider>(context, listen: false);
+
     List<FolderThumbnailModel> folders =
         await foldersProvider.fetchAllFolderThumbnails();
+
     setState(() {
       allFolderThumbnails = folders;
       selectedFolderId = allFolderThumbnails[0].folderId;
@@ -166,14 +168,14 @@ class _PracticeProblemSelectionScreenState
                 itemBuilder: (context, index) {
                   final problem = foldersProvider.currentProblems[index];
                   final isSelected =
-                      selectedProblems.contains(problem.problemId);
+                      selectedProblems.contains(problem);
 
                   return GestureDetector(
                     onTap: () {
                       setState(() {
                         isSelected
-                            ? selectedProblems.remove(problem.problemId)
-                            : selectedProblems.add(problem.problemId);
+                            ? selectedProblems.remove(problem)
+                            : selectedProblems.add(problem);
                       });
                     },
                     child:
@@ -291,15 +293,21 @@ class _PracticeProblemSelectionScreenState
         onPressed: selectedProblems.isNotEmpty
             ? () {
                 ProblemPracticeRegisterModel practiceRegisterModel;
+                List<int> selectedProblemIds = selectedProblems
+                    .map((problem) => problem.problemId) // problemId만 추출
+                    .toList();
 
                 if (widget.practiceModel != null) {
                   practiceRegisterModel = ProblemPracticeRegisterModel(
                       practiceId: widget.practiceModel!.practiceId,
                       practiceTitle: widget.practiceModel!.practiceTitle,
-                      registerProblemIds: selectedProblems);
+                      registerProblemIds: selectedProblemIds
+                  );
                 } else {
                   practiceRegisterModel = ProblemPracticeRegisterModel(
-                      practiceTitle: "", registerProblemIds: selectedProblems);
+                      practiceTitle: "",
+                      registerProblemIds: selectedProblemIds
+                  );
                 }
 
                 Navigator.push(
