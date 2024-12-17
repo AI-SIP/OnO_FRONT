@@ -29,7 +29,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
   @override
   void initState() {
     super.initState();
-    _fetchAllPracticeContents();
+    //_fetchAllPracticeContents();
   }
 
   Future<void> _fetchAllPracticeContents() async {

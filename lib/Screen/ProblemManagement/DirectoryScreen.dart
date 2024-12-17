@@ -8,6 +8,7 @@ import 'package:intl/intl.dart';
 import 'package:ono/GlobalModule/Theme/NoteIconHandler.dart';
 import 'package:ono/GlobalModule/Theme/SnackBarDialog.dart';
 import 'package:ono/GlobalModule/Util/UrlLauncher.dart';
+import 'package:ono/Model/FolderModel.dart';
 import 'package:ono/Model/LoginStatus.dart';
 import 'package:ono/Model/ProblemRegisterModel.dart';
 import 'package:ono/Provider/FoldersProvider.dart';
@@ -20,7 +21,6 @@ import '../../Model/TemplateType.dart';
 import '../../Provider/ScreenIndexProvider.dart';
 import '../../Service/ScreenUtil/DirectoryScreenService.dart';
 import '../../Model/ProblemModel.dart';
-import '../../Model/FolderThumbnailModel.dart';
 import '../../Provider/UserProvider.dart';
 import '../UserGuideScreen.dart';
 
@@ -88,9 +88,9 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         canPop: true,
         onPopInvokedWithResult: (bool didPop, Object? result) async {
           if(didPop){
-            if (foldersProvider.currentFolder?.parentFolder != null) {
+            if (foldersProvider.currentFolder?.parentFolderId != null) {
               foldersProvider.moveToFolder(
-                  foldersProvider.currentFolder!.parentFolder!.folderId);
+                  foldersProvider.currentFolder!.parentFolderId);
             }
             return;
           }
@@ -205,7 +205,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       centerTitle: true, // 제목을 항상 가운데로 배치
       backgroundColor: Colors.white,
       title: StandardText(
-        text: (foldersProvider.currentFolder?.parentFolder != null &&
+        text: (foldersProvider.currentFolder?.parentFolderId != null &&
                 foldersProvider.currentFolder?.folderName != null)
             ? foldersProvider.currentFolder!.folderName
             : '책장',
@@ -498,7 +498,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   // 폴더 이동 다이얼로그 출력
   Future<void> _showMoveFolderDialog(FoldersProvider foldersProvider) async {
     // 루트 폴더인지 확인
-    if (foldersProvider.currentFolder?.parentFolder == null) {
+    if (foldersProvider.currentFolder?.parentFolderId == null) {
       _showCannotMoveRootFolderDialog();
       return;
     }
@@ -554,7 +554,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
   Future<void> _showDeleteFolderDialog(FoldersProvider foldersProvider) async {
     final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
-    bool isRootFolder = foldersProvider.currentFolder?.parentFolder == null;
+    bool isRootFolder = foldersProvider.currentFolder?.parentFolderId == null;
 
     return showDialog(
       context: context,
@@ -711,10 +711,10 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         builder: (context, constraints) {
           return Consumer<FoldersProvider>(
             builder: (context, foldersProvider, child) {
-              var folders = foldersProvider.currentFolder?.subFolders ?? [];
-              var problems = foldersProvider.currentProblems;
+              var subFolderIds = foldersProvider.currentFolder?.subFolderIds ?? [];
+              var currentProblems = foldersProvider.currentProblems;
 
-              if (folders.isEmpty && problems.isEmpty) {
+              if (subFolderIds.isEmpty && currentProblems.isEmpty) {
                 return Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -761,13 +761,15 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
               }
 
               return ListView.builder(
-                itemCount: folders.length + problems.length,
+                itemCount: subFolderIds.length + currentProblems.length,
                 itemBuilder: (context, index) {
-                  if (index < folders.length) {
-                    var folder = folders[index];
-                    return _buildFolderTile(folder, themeProvider, index);
+                  if (index < subFolderIds.length) {
+                    var subFolderId = subFolderIds[index];
+
+                    var subFolder = foldersProvider.getFolderContents(subFolderId);
+                    return _buildFolderTile(subFolder, themeProvider, index);
                   } else {
-                    var problem = problems[index - folders.length];
+                    var problem = currentProblems[index - subFolderIds.length];
                     return _buildProblemTile(problem, themeProvider);
                   }
                 },
@@ -779,7 +781,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     );
   }
 
-  Widget _buildFolderTile(FolderThumbnailModel folder, ThemeHandler themeProvider, int index) {
+  Widget _buildFolderTile(FolderModel folder, ThemeHandler themeProvider, int index) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0), // 아이템 간 간격 추가
       child: GestureDetector(
@@ -800,7 +802,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
               .moveToFolder(folder.folderId);
               //.fetchFolderContents(folderId: folder.folderId);
         },
-        child: LongPressDraggable<FolderThumbnailModel>(
+        child: LongPressDraggable<FolderModel>(
           data: folder,
           feedback: Material(
             child: SizedBox(
@@ -826,7 +828,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
               await _moveProblemToFolder(details.data, folder.folderId);
             },
             builder: (context, candidateData, rejectedData) {
-              return DragTarget<FolderThumbnailModel>(
+              return DragTarget<FolderModel>(
                 onAcceptWithDetails: (details) async {
                   // 폴더를 드롭하면 자식 폴더로 이동
                   await _moveFolderToNewParent(details.data, folder.folderId);
@@ -842,7 +844,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     );
   }
 
-  Widget _folderTileContent(FolderThumbnailModel folder, ThemeHandler themeProvider, int index) {
+  Widget _folderTileContent(FolderModel folder, ThemeHandler themeProvider, int index) {
     return Container(
       padding: const EdgeInsets.all(12.0),
       decoration: BoxDecoration(
@@ -929,7 +931,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
           onDragStarted: () {
             HapticFeedback.lightImpact();
           },
-          child: DragTarget<FolderThumbnailModel>(
+          child: DragTarget<FolderModel>(
             onAcceptWithDetails: (details) async {
               // 문제를 드롭하면 해당 폴더로 이동
               await _moveProblemToFolder(problem, details.data.folderId);
@@ -1029,7 +1031,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   }
 
   Future<void> _moveFolderToNewParent(
-      FolderThumbnailModel folder, int? newParentFolderId) async {
+      FolderModel folder, int? newParentFolderId) async {
     if (newParentFolderId == null) {
       log('New parent folder ID is null.');
       return;

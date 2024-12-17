@@ -11,6 +11,7 @@ import 'package:ono/GlobalModule/Theme/LoadingDialog.dart';
 import 'package:ono/GlobalModule/Theme/SnackBarDialog.dart';
 import 'package:ono/Model/LoginStatus.dart';
 import 'package:ono/Provider/FoldersProvider.dart';
+import 'package:ono/Provider/ProblemPracticeProvider.dart';
 import 'package:ono/Service/Auth/GuestAuthService.dart';
 import 'package:ono/Service/Auth/KakaoAuthService.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
@@ -24,10 +25,11 @@ import '../Service/Auth/GoogleAuthService.dart';
 class UserProvider with ChangeNotifier {
   final storage = const FlutterSecureStorage();
   final FoldersProvider foldersProvider;
+  final ProblemPracticeProvider practiceProvider;
   final TokenProvider tokenProvider = TokenProvider();
   final HttpService httpService = HttpService();
 
-  UserProvider(this.foldersProvider);
+  UserProvider(this.foldersProvider, this.practiceProvider);
 
   LoginStatus _loginStatus = LoginStatus.waiting;
   int? _userId = 0;
@@ -152,6 +154,7 @@ class UserProvider with ChangeNotifier {
         if (_loginStatus == LoginStatus.login) {
           //await foldersProvider.fetchRootFolderContents();
           await foldersProvider.fetchAllFolderContents();
+          await practiceProvider.fetchAllPracticeContents();
         }
         return true;
       } else {

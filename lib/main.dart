@@ -45,12 +45,13 @@ void main() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => FoldersProvider()),
+        ChangeNotifierProvider(create: (_) => ProblemPracticeProvider()),
         ChangeNotifierProvider(
           create: (context) => UserProvider(
             Provider.of<FoldersProvider>(context, listen: false),
+            Provider.of<ProblemPracticeProvider>(context, listen: false),
           ),
         ),
-        ChangeNotifierProvider(create: (_) => ProblemPracticeProvider()),
         ChangeNotifierProvider(
             create: (context) => ThemeHandler()..loadColors()),
         ChangeNotifierProvider(create: (_) => ScreenIndexProvider()),

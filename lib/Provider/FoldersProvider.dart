@@ -6,7 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:ono/GlobalModule/Util/HttpService.dart';
 import 'package:ono/GlobalModule/Util/ProblemSorting.dart';
 import 'package:ono/GlobalModule/Util/ReviewHandler.dart';
-import 'package:ono/Model/FolderThumbnailModel.dart';
 import 'package:ono/Model/TemplateType.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
@@ -30,6 +29,7 @@ class FoldersProvider with ChangeNotifier {
 
   FolderModel? get currentFolder => _currentFolder;
   List<ProblemModel> get currentProblems => List.unmodifiable(_currentProblems);
+  List<FolderModel> get folders => _folders;
 
   // 상위 폴더로 이동
   Future<void> moveToFolder(int? folderId) async {
@@ -42,6 +42,7 @@ class FoldersProvider with ChangeNotifier {
 
       _currentFolder = targetFolder;
       _currentProblems = _currentFolder!.problems;
+      sortProblemsByOption(sortOption);
 
       log('Moved to folder: ${_currentFolder!.folderId}, Problems: ${_currentProblems.length}');
 
@@ -56,19 +57,20 @@ class FoldersProvider with ChangeNotifier {
   Future<void> moveToRootFolder() async {
     try {
       // 전달받은 folderId에 해당하는 폴더를 _folders에서 검색
-      final targetFolder = _folders[0];
+      final rootFolder = _folders[0];
+      moveToFolder(rootFolder.folderId);
 
-      _currentFolder = targetFolder;
-      _currentProblems = _currentFolder!.problems;
-
-      log('Moved to folder: ${_currentFolder!.folderId}, Problems: ${_currentProblems.length}');
-
-      // UI 갱신
-      notifyListeners();
     } catch (error, stackTrace) {
       log('Error moving to root folder: $error');
       await Sentry.captureException(error, stackTrace: stackTrace);
     }
+  }
+
+  FolderModel getFolderContents(int? folderId) {
+    return _folders.firstWhere(
+          (folder) => folder.folderId == folderId,
+      orElse: () => throw Exception('Folder with ID $folderId not found'),
+    );
   }
 
   // 폴더 내용 로드 (특정 폴더 ID로)
@@ -118,23 +120,16 @@ class FoldersProvider with ChangeNotifier {
           log('-----------------------------------------');
           log('Folder ID: ${folder.folderId}');
           log('Folder Name: ${folder.folderName}');
-          log('Parent Folder: ${folder.parentFolder?.folderName ?? "No Parent"}');
+          log('Parent Folder Id: ${folder.parentFolderId ?? "No Parent"}');
           log('problem length: ${folder.problems.length}');
           log('Number of Problems: ${folder.problems.length}');
-          log('Number of Subfolders: ${folder.subFolders.length}');
+          log('Length of Subfolders: ${folder.subFolderIds?.length}');
           log('Created At: ${folder.createdAt}');
           log('Updated At: ${folder.updateAt}');
           log('-----------------------------------------');
         }
 
-        // 루트 폴더 설정
-        _currentFolder = _folders.firstWhere(
-              (folder) => folder.parentFolder == null,
-        );
-
-        _currentProblems = _currentFolder!.problems;
-
-        notifyListeners();
+        await moveToRootFolder();
       } else {
         throw Exception('Failed to load RootFolderContents');
       }
@@ -152,6 +147,7 @@ class FoldersProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  /*
   Future<List<FolderThumbnailModel>> fetchAllFolderThumbnails() async {
     try {
       final response = await httpService.sendRequest(
@@ -175,6 +171,8 @@ class FoldersProvider with ChangeNotifier {
       return [];
     }
   }
+
+   */
 
   // 폴더 생성
   Future<void> createFolder(String folderName, {int? parentFolderId}) async {
@@ -221,7 +219,9 @@ class FoldersProvider with ChangeNotifier {
       if (response.statusCode == 200) {
         log('Folder name successfully updated to $newName');
 
-        await fetchFolderContents(_currentFolder!.folderId);
+        await fetchFolderContents(parentId);
+        await fetchFolderContents(folderId);
+        await fetchFolderContents(currentFolder!.folderId);
 
         await moveToFolder(currentFolder!.folderId);
       } else {
@@ -504,7 +504,11 @@ class FoldersProvider with ChangeNotifier {
       if (response.statusCode == 200) {
         log('Problem successfully updated');
 
+        if (problemData.folderId != null){
+          await fetchFolderContents(problemData.folderId!);
+        }
         await fetchFolderContents(_currentFolder!.folderId);
+
         await moveToFolder(_currentFolder!.folderId);
       } else {
         throw Exception('Failed to update problem');

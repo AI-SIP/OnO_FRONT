@@ -5,10 +5,10 @@ import 'package:ono/Screen/ProblemPractice/PracticeTitleWriteScreen.dart';
 import 'package:provider/provider.dart';
 import '../../GlobalModule/Theme/StandardText.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
+import '../../Model/FolderModel.dart';
 import '../../Model/ProblemPracticeRegisterModel.dart';
 import '../../Model/TemplateType.dart';
 import '../../Provider/FoldersProvider.dart';
-import '../../Model/FolderThumbnailModel.dart';
 import '../../Model/ProblemModel.dart';
 import '../../GlobalModule/Theme/NoteIconHandler.dart';
 import '../../GlobalModule/Image/DisplayImage.dart';
@@ -28,7 +28,7 @@ class _PracticeProblemSelectionScreenState
     extends State<PracticeProblemSelectionScreen> {
   int? selectedFolderId;
   List<ProblemModel> selectedProblems = [];
-  List<FolderThumbnailModel> allFolderThumbnails = [];
+  List<FolderModel> allFolders = [];
 
   @override
   void initState() {
@@ -44,12 +44,11 @@ class _PracticeProblemSelectionScreenState
     final foldersProvider =
         Provider.of<FoldersProvider>(context, listen: false);
 
-    List<FolderThumbnailModel> folders =
-        await foldersProvider.fetchAllFolderThumbnails();
+    List<FolderModel> folders = foldersProvider.folders;
 
     setState(() {
-      allFolderThumbnails = folders;
-      selectedFolderId = allFolderThumbnails[0].folderId;
+      allFolders = folders;
+      selectedFolderId = allFolders[0].folderId;
     });
   }
 
@@ -103,9 +102,9 @@ class _PracticeProblemSelectionScreenState
         height: 120,
         child: ListView.builder(
           scrollDirection: Axis.horizontal,
-          itemCount: allFolderThumbnails.length,
+          itemCount: allFolders.length,
           itemBuilder: (context, index) {
-            final folder = allFolderThumbnails[index];
+            final folder = allFolders[index];
             return GestureDetector(
               onTap: () async {
                 setState(() {
@@ -125,7 +124,7 @@ class _PracticeProblemSelectionScreenState
     );
   }
 
-  Widget _buildFolderThumbnail(FolderThumbnailModel folder, ThemeHandler themeProvider) {
+  Widget _buildFolderThumbnail(FolderModel folder, ThemeHandler themeProvider) {
     bool isSelected = selectedFolderId == folder.folderId; // 선택된 폴더인지 확인
 
     return Opacity(
@@ -133,7 +132,7 @@ class _PracticeProblemSelectionScreenState
       child: Column(
         children: [
           SvgPicture.asset(
-            NoteIconHandler.getNoteIcon(allFolderThumbnails.indexOf(folder)),
+            NoteIconHandler.getNoteIcon(allFolders.indexOf(folder)),
             width: 60,
             height: 60,
           ),
