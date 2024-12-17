@@ -107,7 +107,7 @@ class PracticeCompletionScreen extends StatelessWidget {
                 message: '복습을 완료했습니다!',
                 backgroundColor: themeProvider.primaryColor,
               );
-              await practiceProvider.fetchPracticeContents(practiceId);
+              await practiceProvider.fetchPracticeContent(practiceId);
             } else {
               SnackBarDialog.showSnackBar(
                 context: context,

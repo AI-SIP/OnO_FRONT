@@ -74,7 +74,7 @@ class FoldersProvider with ChangeNotifier {
   }
 
   // 폴더 내용 로드 (특정 폴더 ID로)
-  Future<void> fetchFolderContents(int? folderId) async {
+  Future<void> fetchFolderContent(int? folderId) async {
     try {
       final response = await httpService.sendRequest(
         method: 'GET',
@@ -147,33 +147,6 @@ class FoldersProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  /*
-  Future<List<FolderThumbnailModel>> fetchAllFolderThumbnails() async {
-    try {
-      final response = await httpService.sendRequest(
-        method: 'GET',
-        url: '${AppConfig.baseUrl}/api/folder/thumbnail/all',
-      );
-
-      if (response.statusCode == 200) {
-        final jsonResponse = json.decode(utf8.decode(response.bodyBytes));
-        log('AllFolderThumbnail Fetch Complete : $jsonResponse');
-
-        return (jsonResponse as List)
-            .map((e) => FolderThumbnailModel.fromJson(e))
-            .toList();
-      } else {
-        throw Exception('Failed to load AllFolderThumbnails');
-      }
-    } catch (error, stackTrace) {
-      log('Error fetching all folder thumbnails: $error');
-      await Sentry.captureException(error, stackTrace: stackTrace);
-      return [];
-    }
-  }
-
-   */
-
   // 폴더 생성
   Future<void> createFolder(String folderName, {int? parentFolderId}) async {
     try {
@@ -192,8 +165,8 @@ class FoldersProvider with ChangeNotifier {
         final folderData = json.decode(utf8.decode(response.bodyBytes));
         final updatedFolder = FolderModel.fromJson(folderData);
 
-        await fetchFolderContents(updatedFolder.folderId);
-        await fetchFolderContents(_currentFolder!.folderId);
+        await fetchFolderContent(updatedFolder.folderId);
+        await fetchFolderContent(_currentFolder!.folderId);
 
         await moveToFolder(currentFolder!.folderId);
       } else {
@@ -219,9 +192,9 @@ class FoldersProvider with ChangeNotifier {
       if (response.statusCode == 200) {
         log('Folder name successfully updated to $newName');
 
-        await fetchFolderContents(parentId);
-        await fetchFolderContents(folderId);
-        await fetchFolderContents(currentFolder!.folderId);
+        await fetchFolderContent(parentId);
+        await fetchFolderContent(folderId);
+        await fetchFolderContent(currentFolder!.folderId);
 
         await moveToFolder(currentFolder!.folderId);
       } else {
@@ -248,7 +221,7 @@ class FoldersProvider with ChangeNotifier {
         final jsonResponse = json.decode(utf8.decode(response.bodyBytes));
         int parentFolderId = jsonResponse['folderId'] as int;
 
-        await fetchFolderContents(parentFolderId);
+        await fetchFolderContent(parentFolderId);
 
         await moveToFolder(parentFolderId);
       } else {
@@ -388,7 +361,7 @@ class FoldersProvider with ChangeNotifier {
 
       if (response.statusCode == 200) {
         log('Problem successfully submitted');
-        await fetchFolderContents(_currentFolder!.folderId);
+        await fetchFolderContent(_currentFolder!.folderId);
 
         int userProblemCount = await getUserProblemCount();
         if (userProblemCount > 0 && userProblemCount % 10 == 0) {
@@ -417,7 +390,6 @@ class FoldersProvider with ChangeNotifier {
       }
 
       final requestBody = {
-        //'problemId': problemData.problemId.toString(),
         'solvedAt': (problemData.solvedAt ?? DateTime.now()).toIso8601String(),
         'reference': problemData.reference ?? "",
         'memo': problemData.memo ?? "",
@@ -439,7 +411,7 @@ class FoldersProvider with ChangeNotifier {
       if (response.statusCode == 200) {
         log('Problem successfully submitted');
 
-        await fetchFolderContents(problemData.folderId ?? currentFolder!.folderId);
+        await fetchFolderContent(problemData.folderId ?? currentFolder!.folderId);
         await moveToFolder(currentFolder!.folderId);
 
         int userProblemCount = await getUserProblemCount();
@@ -505,9 +477,9 @@ class FoldersProvider with ChangeNotifier {
         log('Problem successfully updated');
 
         if (problemData.folderId != null){
-          await fetchFolderContents(problemData.folderId!);
+          await fetchFolderContent(problemData.folderId!);
         }
-        await fetchFolderContents(_currentFolder!.folderId);
+        await fetchFolderContent(_currentFolder!.folderId);
 
         await moveToFolder(_currentFolder!.folderId);
       } else {
@@ -531,7 +503,7 @@ class FoldersProvider with ChangeNotifier {
 
       if (response.statusCode == 200) {
         log('Problem successfully deleted');
-        await fetchFolderContents(_currentFolder!.folderId);
+        await fetchFolderContent(_currentFolder!.folderId);
         await moveToFolder(_currentFolder!.folderId);
 
         return true;
@@ -564,7 +536,7 @@ class FoldersProvider with ChangeNotifier {
 
         if (response.statusCode == 200) {
           log('Problem successfully repeated with image');
-          await fetchFolderContents(_currentFolder!.folderId);
+          await fetchFolderContent(_currentFolder!.folderId);
           await moveToFolder(_currentFolder!.folderId);
 
         } else {
@@ -583,7 +555,7 @@ class FoldersProvider with ChangeNotifier {
 
         if (response.statusCode == 200) {
           log('Problem successfully repeated without image');
-          await fetchFolderContents(_currentFolder!.folderId);
+          await fetchFolderContent(_currentFolder!.folderId);
         } else {
           throw Exception('Failed to repeat problem without image');
         }

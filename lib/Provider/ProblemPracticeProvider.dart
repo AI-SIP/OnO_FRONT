@@ -60,35 +60,13 @@ class ProblemPracticeProvider with ChangeNotifier{
       );
 
       currentProblems = targetPractice.problems;
-
-      final response = await httpService.sendRequest(
-        method: 'GET',
-        url: '${AppConfig.baseUrl}/api/problem/practice/$practiceId',
-      );
-
-      if (response.statusCode == 200) {
-        final jsonResponse = json.decode(utf8.decode(response.bodyBytes));
-
-        currentPracticeId = practiceId;
-
-        currentProblems = (jsonResponse as List)
-            .map((e) => ProblemModel.fromJson(e))
-            .toList();
-
-        //problemIds = currentProblems.map((problem) => problem.problemId).toList();
-
-        log('Fetched ${currentProblems.length} problems for practice ID: $practiceId');
-        notifyListeners();
-      } else {
-        throw Exception('Failed to load problems for practice ID: $practiceId');
-      }
     } catch (error, stackTrace) {
       log('Error fetching problems for practice ID $practiceId: $error');
       await Sentry.captureException(error, stackTrace: stackTrace);
     }
   }
 
-  Future<void> fetchPracticeContents(int? practiceId) async {
+  Future<void> fetchPracticeContent(int? practiceId) async {
     try {
       final response = await httpService.sendRequest(
         method: 'GET',
@@ -137,7 +115,7 @@ class ProblemPracticeProvider with ChangeNotifier{
         final practiceData = json.decode(utf8.decode(response.bodyBytes));
         final updatedPractice = ProblemPracticeModel.fromJson(practiceData);
 
-        await fetchPracticeContents(updatedPractice.practiceId);
+        await fetchPracticeContent(updatedPractice.practiceId);
 
         return true;
       } else{
@@ -165,7 +143,7 @@ class ProblemPracticeProvider with ChangeNotifier{
       );
 
       if (response.statusCode == 200) {
-        await fetchPracticeContents(practiceId);
+        await fetchPracticeContent(practiceId);
         log('Practice problems updated successfully for practice ID: $practiceId');
         return true;
       } else {
