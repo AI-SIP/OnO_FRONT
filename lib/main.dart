@@ -81,12 +81,18 @@ class MyApp extends StatelessWidget {
           final args = settings.arguments as Map<String, dynamic>;
           return MaterialPageRoute(
             builder: (context) {
+              return ProblemRegisterScreenV2(
+                problemModel: args['problemModel'],
+                isEditMode: args['isEditMode'],
+              );
+              /*
               return ProblemRegisterScreen(
                 problemModel: args['problemModel'],
                 isEditMode: args['isEditMode'],
                 colorPickerResult: args['colorPickerResult'],
                 coordinatePickerResult: args['coordinatePickerResult'],
               );
+               */
             },
           );
         }

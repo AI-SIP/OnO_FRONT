@@ -24,7 +24,7 @@ class ProblemPracticeProvider with ChangeNotifier{
     try {
       final response = await httpService.sendRequest(
         method: 'GET',
-        url: '${AppConfig.baseUrl}/api/problem/practice/all',
+        url: '${AppConfig.baseUrl}/api/problem/practice/thumbnail/all',
       );
 
       if (response.statusCode == 200) {
@@ -84,7 +84,6 @@ class ProblemPracticeProvider with ChangeNotifier{
       final response = await httpService.sendRequest(
         method: 'POST',
         url: '${AppConfig.baseUrl}/api/problem/practice',
-        //headers: {'Content-Type': 'application/x-www-form-urlencoded'},
         body: {
           'practiceTitle': problemPracticeRegisterModel.practiceTitle.toString(),
           'registerProblemIds': problemPracticeRegisterModel.registerProblemIds.map((id) => id.toString()).toList(),

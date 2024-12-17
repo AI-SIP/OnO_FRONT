@@ -156,7 +156,7 @@ class FoldersProvider with ChangeNotifier {
     try {
       final response = await httpService.sendRequest(
         method: 'GET',
-        url: '${AppConfig.baseUrl}/api/folder/folders',
+        url: '${AppConfig.baseUrl}/api/folder/thumbnail/tree',
       );
 
       if (response.statusCode == 200) {

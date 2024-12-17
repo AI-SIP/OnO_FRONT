@@ -2,13 +2,10 @@ import 'dart:developer';
 
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
-import '../../GlobalModule/Image/DisplayImage.dart';
 import '../../GlobalModule/Theme/LoadingDialog.dart';
-import '../../GlobalModule/Theme/StandardText.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
 import '../../GlobalModule/Util/FolderSelectionDialog.dart';
 import '../../Model/ProblemModel.dart';
@@ -276,68 +273,6 @@ class _ProblemRegisterTemplateStateV2
     );
   }
 
-  Widget _buildImageSection({
-    required String label,
-    required String? imageUrl,
-    required ThemeHandler themeProvider,
-    bool isLoading = false,
-    String loadingMessage = '이미지 로딩 중...', // 로딩 메시지를 받을 수 있도록 수정
-  }) {
-    final screenHeight = MediaQuery.of(context).size.height;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Icon(Icons.image, color: themeProvider.primaryColor),
-            const SizedBox(width: 10),
-            StandardText(
-              text: label,
-              fontSize: 16,
-              color: themeProvider.primaryColor,
-            ),
-          ],
-        ),
-        const SizedBox(height: 10),
-        Container(
-          height: screenHeight * 0.4,
-          width: double.infinity,
-          decoration: BoxDecoration(
-            color: themeProvider.primaryColor.withOpacity(0.1), // 흰색 배경 적용
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(
-              color: themeProvider.primaryColor,
-              width: 1.5,
-            ),
-          ),
-          padding: const EdgeInsets.all(10), // 이미지와 테두리 사이에 패딩 추가
-          child: isLoading
-              ? Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                SizedBox(height: screenHeight * 0.03),
-                SvgPicture.asset(
-                  'assets/Icon/EraserDetail.svg', // Eraser 아이콘 경로
-                  width: screenHeight * 0.1, // 적절한 크기 설정
-                  height: screenHeight * 0.1,
-                ),
-                SizedBox(height: screenHeight * 0.02),
-                StandardText(
-                  text: loadingMessage, // 로딩 중 메시지 출력
-                  fontSize: 16,
-                  color: themeProvider.primaryColor,
-                ),
-              ],
-            ),
-          )
-              : DisplayImage(imagePath: imageUrl ?? '', fit: BoxFit.contain,),
-        ),
-      ],
-    );
-  }
-
   void _resetFields() {
     FirebaseAnalytics.instance.logEvent(
       name: 'problem_register_cancel_button_click',
@@ -376,8 +311,12 @@ class _ProblemRegisterTemplateStateV2
         _resetFields();
         LoadingDialog.hide(context);
 
-        Provider.of<ScreenIndexProvider>(context, listen: false)
-            .setSelectedIndex(0);
+        if(widget.isEditMode){
+          Navigator.of(context).pop(true);
+        } else{
+          Provider.of<ScreenIndexProvider>(context, listen: false)
+              .setSelectedIndex(0);
+        }
       },
     );
   }

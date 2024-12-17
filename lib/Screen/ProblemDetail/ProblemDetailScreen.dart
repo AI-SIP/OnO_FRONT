@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:ono/GlobalModule/Theme/HandWriteText.dart';
 import 'package:ono/Model/ProblemRegisterModel.dart';
 import 'package:ono/Provider/ProblemPracticeProvider.dart';
+import 'package:ono/Screen/ProblemRegister/ProblemRegisterScreenV2.dart';
 import 'package:provider/provider.dart';
 
 import '../../GlobalModule/Theme/StandardText.dart';
@@ -253,6 +254,13 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                       Navigator.pop(context);
                       Navigator.of(context).push(
                         MaterialPageRoute(
+                          builder: (context) => ProblemRegisterScreenV2(
+                            problemModel: problemModel,
+                            isEditMode: true,
+                          ),
+                        ),
+                        /*
+                        MaterialPageRoute(
                           builder: (context) => ProblemRegisterScreen(
                             problemModel: problemModel,
                             isEditMode: true,
@@ -260,6 +268,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                             coordinatePickerResult: null,
                           ),
                         ),
+                         */
                       ).then((_) {
                         _setProblemModel();
                       });
