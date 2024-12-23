@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'StandardText.dart';
+import '../Text/StandardText.dart';
 import 'ThemeHandler.dart';
 
 class AppBarWithLogo extends StatelessWidget implements PreferredSizeWidget {

@@ -3,7 +3,7 @@ import 'package:ono/Model/ProblemModel.dart';
 import 'package:ono/Screen/ProblemRegister/ProblemRegisterTemplate.dart';
 import 'package:provider/provider.dart';
 
-import '../../GlobalModule/Theme/StandardText.dart';
+import '../../GlobalModule/Text/StandardText.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
 import '../../Provider/FoldersProvider.dart';
 

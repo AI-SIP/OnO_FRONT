@@ -10,7 +10,7 @@ import 'package:ono/Screen/ProblemPractice/PracticeCompletionScreen.dart';
 import 'package:provider/provider.dart';
 
 import '../../GlobalModule/Image/ImagePickerHandler.dart';
-import '../../GlobalModule/Theme/StandardText.dart';
+import '../../GlobalModule/Text/StandardText.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
 import '../../Provider/ProblemPracticeProvider.dart';
 

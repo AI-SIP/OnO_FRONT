@@ -8,10 +8,10 @@ import 'package:provider/provider.dart';
 
 import '../../GlobalModule/Image/DisplayImage.dart';
 import '../../GlobalModule/Image/ImagePickerHandler.dart';
-import '../../GlobalModule/Theme/StandardText.dart';
+import '../../GlobalModule/Text/StandardText.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
 import '../../GlobalModule/Util/DatePickerHandler.dart';
-import '../../GlobalModule/Util/FolderSelectionDialog.dart';
+import '../../GlobalModule/Dialog/FolderSelectionDialog.dart';
 
 class ProblemRegisterScreenWidget {
   // 날짜 선택 위젯

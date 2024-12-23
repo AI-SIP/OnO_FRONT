@@ -1,7 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:ono/GlobalModule/Theme/StandardText.dart';
+import 'package:ono/GlobalModule/Text/StandardText.dart';
 import 'package:provider/provider.dart';
 
 import '../Theme/ThemeHandler.dart';

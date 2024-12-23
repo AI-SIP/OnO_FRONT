@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'StandardText.dart';
+import '../Text/StandardText.dart';
 
 class SnackBarDialog {
   static void showSnackBar({

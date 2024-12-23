@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:ono/GlobalModule/Image/ColorPicker/ImageColorPickerHandler.dart';
-import 'package:ono/GlobalModule/Theme/HandWriteText.dart';
+import 'package:ono/GlobalModule/Text/HandWriteText.dart';
 import 'package:ono/Model/LoginStatus.dart';
 import 'package:ono/Provider/FoldersProvider.dart';
 import 'package:provider/provider.dart';
 import '../../GlobalModule/Image/ImagePickerHandler.dart';
-import '../../GlobalModule/Theme/SnackBarDialog.dart';
+import '../../GlobalModule/Dialog/SnackBarDialog.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
 import '../../Model/ProblemRegisterModel.dart';
 import '../../Model/ProblemRegisterModelV2.dart';

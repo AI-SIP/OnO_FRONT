@@ -3,7 +3,7 @@ import 'package:in_app_review/in_app_review.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../Theme/HandWriteText.dart';
+import '../Text/HandWriteText.dart';
 import '../Theme/ThemeHandler.dart';
 
 class ReviewHandler {

@@ -8,10 +8,10 @@ import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
 import '../../GlobalModule/Image/DisplayImage.dart';
-import '../../GlobalModule/Theme/LoadingDialog.dart';
-import '../../GlobalModule/Theme/StandardText.dart';
+import '../../GlobalModule/Dialog/LoadingDialog.dart';
+import '../../GlobalModule/Text/StandardText.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
-import '../../GlobalModule/Util/FolderSelectionDialog.dart';
+import '../../GlobalModule/Dialog/FolderSelectionDialog.dart';
 import '../../GlobalModule/Util/LatexTextHandler.dart';
 import '../../Model/ProblemModel.dart';
 import '../../Model/ProblemRegisterModel.dart';

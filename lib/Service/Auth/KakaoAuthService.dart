@@ -11,7 +11,7 @@ import 'package:http/http.dart' as http;
 import 'package:sentry_flutter/sentry_flutter.dart';
 
 import '../../Config/AppConfig.dart';
-import '../../GlobalModule/Theme/SnackBarDialog.dart';
+import '../../GlobalModule/Dialog/SnackBarDialog.dart';
 
 class KakaoAuthService {
   Future<Map<String, dynamic>?> signInWithKakao(BuildContext context) async {

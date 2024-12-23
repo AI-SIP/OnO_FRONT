@@ -7,7 +7,7 @@ import 'package:ono/Model/ProblemPracticeRegisterModel.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
 import '../Config/AppConfig.dart';
-import '../GlobalModule/Util/HttpService.dart';
+import '../Service/Network/HttpService.dart';
 import '../Model/ProblemModel.dart';
 import 'TokenProvider.dart';
 

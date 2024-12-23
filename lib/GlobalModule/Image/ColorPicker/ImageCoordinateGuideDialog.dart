@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../Theme/StandardText.dart';
+import '../../Text/StandardText.dart';
 
 class ImageCoordinateGuideDialog {
   static Future<void> show(BuildContext context) async {

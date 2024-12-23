@@ -8,7 +8,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
 import 'package:sentry_flutter/sentry_flutter.dart';
 import '../../Config/AppConfig.dart';
-import '../../GlobalModule/Theme/SnackBarDialog.dart';
+import '../../GlobalModule/Dialog/SnackBarDialog.dart';
 
 class GoogleAuthService {
   final GoogleSignIn _googleSignIn = GoogleSignIn();

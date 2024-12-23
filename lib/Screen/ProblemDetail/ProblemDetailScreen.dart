@@ -1,14 +1,14 @@
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
-import 'package:ono/GlobalModule/Theme/HandWriteText.dart';
+import 'package:ono/GlobalModule/Text/HandWriteText.dart';
 import 'package:ono/Model/ProblemRegisterModel.dart';
 import 'package:ono/Provider/ProblemPracticeProvider.dart';
 import 'package:ono/Screen/ProblemRegister/ProblemRegisterScreenV2.dart';
 import 'package:provider/provider.dart';
 
-import '../../GlobalModule/Theme/StandardText.dart';
+import '../../GlobalModule/Text/StandardText.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
-import '../../GlobalModule/Util/FolderSelectionDialog.dart';
+import '../../GlobalModule/Dialog/FolderSelectionDialog.dart';
 import '../../GlobalModule/Util/FolderNavigationButtons.dart';
 import '../ProblemPractice/PracticeNavigationButtons.dart';
 import '../../Model/ProblemModel.dart';

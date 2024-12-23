@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'StandardText.dart';
-import 'ThemeHandler.dart';
+import '../Text/StandardText.dart';
+import '../Theme/ThemeHandler.dart';
 
 class ThemeDialog extends StatefulWidget {
   @override

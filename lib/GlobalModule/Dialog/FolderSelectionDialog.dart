@@ -6,7 +6,7 @@ import 'package:ono/GlobalModule/Theme/NoteIconHandler.dart';
 import 'package:ono/Model/FolderModel.dart';
 import 'package:provider/provider.dart';
 import '../../Provider/FoldersProvider.dart';
-import '../Theme/StandardText.dart';
+import '../Text/StandardText.dart';
 import '../Theme/ThemeHandler.dart';
 
 class FolderSelectionDialog extends StatefulWidget {

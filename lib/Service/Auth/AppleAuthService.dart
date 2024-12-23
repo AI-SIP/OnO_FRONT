@@ -11,7 +11,7 @@ import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:http/http.dart' as http;
 import '../../Config/AppConfig.dart';
-import '../../GlobalModule/Theme/SnackBarDialog.dart';
+import '../../GlobalModule/Dialog/SnackBarDialog.dart';
 
 class AppleAuthService {
   final storage = const FlutterSecureStorage();

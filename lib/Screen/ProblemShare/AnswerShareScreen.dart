@@ -10,11 +10,11 @@ import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../GlobalModule/Image/DisplayImage.dart';
-import '../../GlobalModule/Theme/HandWriteText.dart';
+import '../../GlobalModule/Text/HandWriteText.dart';
 import '../../GlobalModule/Theme/GridPainter.dart';
-import '../../GlobalModule/Theme/StandardText.dart';
+import '../../GlobalModule/Text/StandardText.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
-import '../../GlobalModule/Theme/UnderlinedText.dart';
+import '../../GlobalModule/Text/UnderlinedText.dart';
 import '../../Model/ProblemModel.dart';
 
 class AnswerShareScreen extends StatefulWidget {

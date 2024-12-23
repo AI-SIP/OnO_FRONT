@@ -2,11 +2,11 @@ import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
-import 'package:ono/GlobalModule/Theme/LoadingDialog.dart';
-import 'package:ono/GlobalModule/Theme/SnackBarDialog.dart';
+import 'package:ono/GlobalModule/Dialog/LoadingDialog.dart';
+import 'package:ono/GlobalModule/Dialog/SnackBarDialog.dart';
 import 'package:provider/provider.dart';
 
-import '../../GlobalModule/Theme/StandardText.dart';
+import '../../GlobalModule/Text/StandardText.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
 import '../../GlobalModule/Util/UrlLauncher.dart';
 import '../../Model/ProblemPracticeModel.dart';

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import '../../GlobalModule/Theme/SnackBarDialog.dart';
-import '../../GlobalModule/Theme/StandardText.dart';
+import '../../GlobalModule/Dialog/SnackBarDialog.dart';
+import '../../GlobalModule/Text/StandardText.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
 import 'package:provider/provider.dart';
 import '../../Provider/FoldersProvider.dart';

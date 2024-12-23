@@ -3,7 +3,7 @@ import 'dart:developer';
 
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
-import 'package:ono/GlobalModule/Util/HttpService.dart';
+import 'package:ono/Service/Network/HttpService.dart';
 import 'package:ono/GlobalModule/Util/ProblemSorting.dart';
 import 'package:ono/GlobalModule/Util/ReviewHandler.dart';
 import 'package:ono/Model/TemplateType.dart';

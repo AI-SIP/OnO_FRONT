@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:ono/GlobalModule/Theme/SnackBarDialog.dart';
+import 'package:ono/GlobalModule/Dialog/SnackBarDialog.dart';
 import 'package:provider/provider.dart';
 
-import '../../GlobalModule/Theme/StandardText.dart';
+import '../../GlobalModule/Text/StandardText.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
 import '../../Provider/ProblemPracticeProvider.dart';
 

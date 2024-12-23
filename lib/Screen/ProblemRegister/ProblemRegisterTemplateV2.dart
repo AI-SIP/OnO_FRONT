@@ -5,9 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
-import '../../GlobalModule/Theme/LoadingDialog.dart';
+import '../../GlobalModule/Dialog/LoadingDialog.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
-import '../../GlobalModule/Util/FolderSelectionDialog.dart';
+import '../../GlobalModule/Dialog/FolderSelectionDialog.dart';
 import '../../Model/ProblemModel.dart';
 import '../../Model/ProblemRegisterModelV2.dart';
 import '../../Provider/FoldersProvider.dart';

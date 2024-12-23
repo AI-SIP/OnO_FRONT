@@ -2,7 +2,7 @@ import 'dart:developer';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../Theme/StandardText.dart';
+import '../../Text/StandardText.dart';
 import '../../Theme/ThemeHandler.dart';
 import 'ImageCoordinateGuideDialog.dart';
 
