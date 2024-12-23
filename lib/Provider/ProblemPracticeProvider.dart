@@ -60,6 +60,7 @@ class ProblemPracticeProvider with ChangeNotifier{
       );
 
       currentProblems = targetPractice.problems;
+      currentPracticeId = targetPractice.practiceId;
     } catch (error, stackTrace) {
       log('Error fetching problems for practice ID $practiceId: $error');
       await Sentry.captureException(error, stackTrace: stackTrace);
