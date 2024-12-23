@@ -221,7 +221,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                   child: ListTile(
                     leading: const Icon(Icons.share, color: Colors.black),
                     title: const StandardText(
-                      text: '오답노트 풀이 공유하기',
+                      text: '오답노트 해설 공유하기',
                       fontSize: 16,
                       color: Colors.black,
                     ),
