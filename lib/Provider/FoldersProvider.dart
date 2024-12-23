@@ -75,6 +75,8 @@ class FoldersProvider with ChangeNotifier {
 
   // 폴더 내용 로드 (특정 폴더 ID로)
   Future<void> fetchFolderContent(int? folderId) async {
+    folderId ??= currentFolder!.folderId;
+
     try {
       final response = await httpService.sendRequest(
         method: 'GET',
@@ -223,8 +225,6 @@ class FoldersProvider with ChangeNotifier {
 
       if (response.statusCode == 200) {
         log('Folder successfully deleted');
-        final jsonResponse = json.decode(utf8.decode(response.bodyBytes));
-        int parentFolderId = jsonResponse['folderId'] as int;
 
         await fetchFolderContent(currentFolder!.folderId);
         await moveToFolder(currentFolder!.folderId);
