@@ -74,6 +74,6 @@ class _ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
 
   Future<void> _deleteProblem() async {
     await Provider.of<FoldersProvider>(context, listen: false)
-        .deleteProblem(widget.problemModel.problemId);
+        .deleteProblems([widget.problemModel.problemId]);
   }
 }

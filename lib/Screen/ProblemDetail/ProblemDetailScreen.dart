@@ -363,7 +363,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                 Navigator.pop(context);
                 FirebaseAnalytics.instance.logEvent(name: 'problem_delete');
 
-                await Provider.of<FoldersProvider>(context, listen: false).deleteProblem(problemId);
+                await Provider.of<FoldersProvider>(context, listen: false).deleteProblems([problemId]);
                 await Provider.of<ProblemPracticeProvider>(context, listen: false).fetchAllPracticeContents();
               },
               child: const StandardText(

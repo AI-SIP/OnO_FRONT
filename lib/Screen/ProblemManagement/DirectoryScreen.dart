@@ -590,7 +590,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                     Navigator.pop(context);
 
                     await foldersProvider
-                        .deleteFolder(foldersProvider.currentFolder!.folderId);
+                        .deleteFolders([foldersProvider.currentFolder!.folderId]);
 
                     Navigator.pop(context);
 

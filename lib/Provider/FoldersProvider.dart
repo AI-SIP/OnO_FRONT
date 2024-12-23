@@ -207,13 +207,18 @@ class FoldersProvider with ChangeNotifier {
   }
 
   // 폴더 삭제
-  Future<void> deleteFolder(int folderId) async {
-    log('user try to remove folderId: $folderId');
+  Future<void> deleteFolders(List<int> deleteFolderIdList) async {
+    log('user try to remove folder, Id List: $deleteFolderIdList');
+
+    final queryParams = {
+      'deleteFolderIdList': deleteFolderIdList.join(','), // 쉼표로 구분된 문자열로 변환
+    };
 
     try {
       final response = await httpService.sendRequest(
         method: 'DELETE',
-        url: '${AppConfig.baseUrl}/api/folder/$folderId',
+        url: '${AppConfig.baseUrl}/api/folder',
+        queryParams: queryParams,
       );
 
       if (response.statusCode == 200) {
@@ -221,9 +226,8 @@ class FoldersProvider with ChangeNotifier {
         final jsonResponse = json.decode(utf8.decode(response.bodyBytes));
         int parentFolderId = jsonResponse['folderId'] as int;
 
-        await fetchFolderContent(parentFolderId);
-
-        await moveToFolder(parentFolderId);
+        await fetchFolderContent(currentFolder!.folderId);
+        await moveToFolder(currentFolder!.folderId);
       } else {
         throw Exception('Failed to delete folder');
       }
@@ -491,14 +495,16 @@ class FoldersProvider with ChangeNotifier {
     }
   }
 
-  Future<bool> deleteProblem(int problemId) async {
+  Future<bool> deleteProblems(List<int> deleteProblemIdList) async {
     try {
+      final queryParams = {
+        'deleteProblemIdList': deleteProblemIdList.join(','), // 쉼표로 구분된 문자열로 변환
+      };
+
       final response = await httpService.sendRequest(
         method: 'DELETE',
         url: '${AppConfig.baseUrl}/api/problem',
-        headers: {
-          'problemId': problemId.toString(),
-        },
+        queryParams: queryParams
       );
 
       if (response.statusCode == 200) {
