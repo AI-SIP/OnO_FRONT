@@ -20,172 +20,134 @@ class ProblemPracticeProvider with ChangeNotifier{
   final HttpService httpService = HttpService();
 
   Future<void> fetchAllPracticeContents() async {
-    try {
-      final response = await httpService.sendRequest(
-        method: 'GET',
-        url: '${AppConfig.baseUrl}/api/practices/thumbnail',
-      );
+    final response = await httpService.sendRequest(
+      method: 'GET',
+      url: '${AppConfig.baseUrl}/api/practices/thumbnail',
+    );
 
-      if (response != null) {
-        final List<dynamic> jsonResponse = json.decode(utf8.decode(response.bodyBytes));
-        practices = jsonResponse.map((practiceData) => ProblemPracticeModel.fromJson(practiceData)).toList();
-        log('fetch all practice contents');
+    if (response != null) {
+      final List<dynamic> jsonResponse = json.decode(utf8.decode(response.bodyBytes));
+      practices = jsonResponse.map((practiceData) => ProblemPracticeModel.fromJson(practiceData)).toList();
+      log('fetch all practice contents');
 
-        for (var practice in practices) {
-          log('-----------------------------------------');
-          log('Practice ID: ${practice.practiceId}');
-          log('Practice Name: ${practice.practiceTitle}');
-          log('Practice length: ${practice.problems.length}');
-          log('Created At: ${practice.createdAt}');
-          log('last solved At: ${practice.lastSolvedAt}');
-          log('-----------------------------------------');
-        }
-
-        notifyListeners();
-        log('Practice contents fetched : ${practices.length} problem practices');
-      } else {
-        throw Exception('Failed to load RootFolderContents');
+      for (var practice in practices) {
+        log('-----------------------------------------');
+        log('Practice ID: ${practice.practiceId}');
+        log('Practice Name: ${practice.practiceTitle}');
+        log('Practice length: ${practice.problems.length}');
+        log('Created At: ${practice.createdAt}');
+        log('last solved At: ${practice.lastSolvedAt}');
+        log('-----------------------------------------');
       }
-    } catch (error, stackTrace) {
-      log('Error fetching root folder contents: $error');
-      await Sentry.captureException(error, stackTrace: stackTrace);
+
+      notifyListeners();
+      log('Practice contents fetched : ${practices.length} problem practices');
+    } else {
+      throw Exception('Failed to load RootFolderContents');
     }
   }
 
   Future<void> moveToPractice(int practiceId) async {
-    try {
-      final targetPractice = practices.firstWhere(
+    final targetPractice = practices.firstWhere(
           (practice) => practice.practiceId == practiceId,
-        orElse: () => throw Exception('Practice with ID $practiceId not found'),
-      );
+      orElse: () => throw Exception('Practice with ID $practiceId not found'),
+    );
 
-      currentProblems = targetPractice.problems;
-      currentPracticeId = targetPractice.practiceId;
-    } catch (error, stackTrace) {
-      log('Error fetching problems for practice ID $practiceId: $error');
-      await Sentry.captureException(error, stackTrace: stackTrace);
-    }
+    currentProblems = targetPractice.problems;
+    currentPracticeId = targetPractice.practiceId;
   }
 
   Future<void> fetchPracticeContent(int? practiceId) async {
-    try {
-      final response = await httpService.sendRequest(
-        method: 'GET',
-        url: '${AppConfig.baseUrl}/api/problem/practice/$practiceId',
-      );
+    final response = await httpService.sendRequest(
+      method: 'GET',
+      url: '${AppConfig.baseUrl}/api/problem/practice/$practiceId',
+    );
 
-      if (response.statusCode == 200) {
-        final practiceData = json.decode(utf8.decode(response.bodyBytes));
-        final updatedPractice = ProblemPracticeModel.fromJson(practiceData);
+    if (response != null) {
+      final practiceData = json.decode(utf8.decode(response.bodyBytes));
+      final updatedPractice = ProblemPracticeModel.fromJson(practiceData);
 
-        // 기존 데이터를 업데이트
-        final index = practices.indexWhere((practice) => practice.practiceId == practiceId);
-        if (index != -1) {
-          practices[index] = updatedPractice;
-        } else {
-          practices.add(updatedPractice);
-        }
-
-        notifyListeners();
+      // 기존 데이터를 업데이트
+      final index = practices.indexWhere((practice) => practice.practiceId == practiceId);
+      if (index != -1) {
+        practices[index] = updatedPractice;
       } else {
-        throw Exception('Failed to load problems for practice ID: $practiceId');
+        practices.add(updatedPractice);
       }
-    } catch (error, stackTrace) {
-      log('Error fetching problems for practice ID $practiceId: $error');
-      await Sentry.captureException(error, stackTrace: stackTrace);
+
+      notifyListeners();
+    } else {
+      throw Exception('Failed to load problems for practice ID: $practiceId');
     }
   }
 
   Future<bool> registerPractice(ProblemPracticeRegisterModel problemPracticeRegisterModel) async {
-    try {
-      log('practice problem list: ${problemPracticeRegisterModel.registerProblemIds.toString()}');
-      log('practice problem title: ${problemPracticeRegisterModel.practiceTitle}');
+    final response = await httpService.sendRequest(
+      method: 'POST',
+      url: '${AppConfig.baseUrl}/api/problem/practice',
+      body: {
+        'practiceTitle': problemPracticeRegisterModel.practiceTitle.toString(),
+        'registerProblemIds': problemPracticeRegisterModel.registerProblemIds.map((id) => id.toString()).toList(),
+      },
+    );
 
-      final response = await httpService.sendRequest(
-        method: 'POST',
-        url: '${AppConfig.baseUrl}/api/problem/practice',
-        body: {
-          'practiceTitle': problemPracticeRegisterModel.practiceTitle.toString(),
-          'registerProblemIds': problemPracticeRegisterModel.registerProblemIds.map((id) => id.toString()).toList(),
-        },
-      );
+    log('response: ${response.body}');
 
-      log('response: ${response.body}');
-
-      if(response.statusCode == 200){
-        final practiceData = json.decode(utf8.decode(response.bodyBytes));
-        final updatedPractice = ProblemPracticeModel.fromJson(practiceData);
-
-        await fetchPracticeContent(updatedPractice.practiceId);
-
-        return true;
-      } else{
-        return false;
-      }
-    } catch (error, stackTrace) {
-      log('Error submitting selected problems: $error');
-      await Sentry.captureException(error, stackTrace: stackTrace);
-
+    if(response == null){
       return false;
     }
+
+    final practiceData = json.decode(utf8.decode(response.bodyBytes));
+    final updatedPractice = ProblemPracticeModel.fromJson(practiceData);
+
+    await fetchPracticeContent(updatedPractice.practiceId);
+
+    return true;
   }
 
   Future<bool> updatePractice(
     ProblemPracticeRegisterModel problemPracticeRegisterModel
   ) async {
-    try {
-      final practiceId = problemPracticeRegisterModel.practiceId;
+    final practiceId = problemPracticeRegisterModel.practiceId;
 
-      // 서버에 PATCH 요청 보내기
-      final response = await httpService.sendRequest(
-        method: 'PATCH',
-        url: '${AppConfig.baseUrl}/api/problem/practice',
-        body: problemPracticeRegisterModel.toJson(),
-      );
+    // 서버에 PATCH 요청 보내기
+    final response = await httpService.sendRequest(
+      method: 'PATCH',
+      url: '${AppConfig.baseUrl}/api/problem/practice',
+      body: problemPracticeRegisterModel.toJson(),
+    );
 
-      if (response.statusCode == 200) {
-        await fetchPracticeContent(practiceId);
-        log('Practice problems updated successfully for practice ID: $practiceId');
-        return true;
-      } else {
-        log('Failed to update practice problems for practice ID: $practiceId');
-        return false;
-      }
-    } catch (error, stackTrace) {
-      log('Error updating practice : $error');
-      await Sentry.captureException(error, stackTrace: stackTrace);
+    if (response != null) {
+      await fetchPracticeContent(practiceId);
+      log('Practice problems updated successfully for practice ID: $practiceId');
+      return true;
+    } else {
+      log('Failed to update practice problems for practice ID: $practiceId');
       return false;
     }
   }
 
   Future<bool> deletePractices(List<int> deletePracticeIds) async {
-    try {
-      log('practice problem list: ${deletePracticeIds.toString()}');
+    log('practice problem list: ${deletePracticeIds.toString()}');
 
-      final queryParams = {
-        'deletePracticeIds': deletePracticeIds.join(','), // 쉼표로 구분된 문자열로 변환
-      };
+    final queryParams = {
+      'deletePracticeIds': deletePracticeIds.join(','), // 쉼표로 구분된 문자열로 변환
+    };
 
-      final response = await httpService.sendRequest(
-        method: 'DELETE',
-        url: '${AppConfig.baseUrl}/api/problem/practice',
-        queryParams: queryParams,
-      );
+    final response = await httpService.sendRequest(
+      method: 'DELETE',
+      url: '${AppConfig.baseUrl}/api/problem/practice',
+      queryParams: queryParams,
+    );
 
-      log('response: ${response.body}');
+    log('response: ${response.body}');
 
-      if(response.statusCode == 200){
+    if(response != null){
 
-        await fetchAllPracticeContents();
+      await fetchAllPracticeContents();
 
-        return true;
-      } else{
-        return false;
-      }
-    } catch (error, stackTrace) {
-      log('Error submitting selected problems: $error');
-      await Sentry.captureException(error, stackTrace: stackTrace);
-
+      return true;
+    } else{
       return false;
     }
   }
@@ -196,41 +158,20 @@ class ProblemPracticeProvider with ChangeNotifier{
   }
 
   Future<ProblemModel?> getProblemDetails(int? problemId) async {
-    try {
-      var problemDetails = currentProblems.firstWhere((problem) => problem.problemId == problemId);
-
-      if (problemDetails != null) {
-        return problemDetails;
-      } else {
-        throw Exception('Problem with ID $problemId not found');
-      }
-    } catch (error, stackTrace) {
-      log('Error fetching problem details for ID $problemId: $error');
-      await Sentry.captureException(
-        error,
-        stackTrace: stackTrace,
-      );
-      return null;
-    }
+    return currentProblems.firstWhere((problem) => problem.problemId == problemId);
   }
 
   Future<bool> addPracticeCount(int practiceId) async {
-    try {
-      final response = await httpService.sendRequest(
-        method: 'PATCH',
-        url: '${AppConfig.baseUrl}/api/problem/practice/complete/$practiceId',
-      );
+    final response = await httpService.sendRequest(
+      method: 'PATCH',
+      url: '${AppConfig.baseUrl}/api/problem/practice/complete/$practiceId',
+    );
 
-      if (response.statusCode == 200) {
-        log('Practice count updated for practice ID: $practiceId');
-        return true;
-      } else {
-        log('Failed to update practice count for practice ID: $practiceId');
-        return false;
-      }
-    } catch (error, stackTrace) {
-      log('Error completing practice for practice ID $practiceId: $error');
-      await Sentry.captureException(error, stackTrace: stackTrace);
+    if (response != null) {
+      log('Practice count updated for practice ID: $practiceId');
+      return true;
+    } else {
+      log('Failed to update practice count for practice ID: $practiceId');
       return false;
     }
   }

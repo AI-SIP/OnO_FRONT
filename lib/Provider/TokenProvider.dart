@@ -14,26 +14,16 @@ class TokenProvider {
   }
 
   Future<String?> getAccessToken() async {
-    try {
-      String? accessToken = await storage.read(key: 'accessToken');
+    String? accessToken = await storage.read(key: 'accessToken');
 
-      if (accessToken != null) {
-        return accessToken;
-      }
-
-      log('Access token is not available.');
-      await refreshAccessToken();
-
-      accessToken = await storage.read(key: 'accessToken');
-    } catch (error, stackTrace) {
-      log('getAccessToken() error: $error');
-      await Sentry.captureException(
-        error,
-        stackTrace: stackTrace,
-      );
-
-      return null;
+    if (accessToken != null) {
+      return accessToken;
     }
+
+    log('Access token is not available.');
+    await refreshAccessToken();
+
+    accessToken = await storage.read(key: 'accessToken');
   }
 
   Future<void> setRefreshToken(String refreshToken) async {

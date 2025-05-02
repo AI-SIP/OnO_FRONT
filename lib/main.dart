@@ -41,6 +41,17 @@ void main() async {
       },
   );
 
+  // 1) Flutter 프레임워크 예외 (동기 빌드 에러 등) 잡기
+  FlutterError.onError = (FlutterErrorDetails details) {
+    // 콘솔에도 출력
+    FlutterError.dumpErrorToConsole(details);
+    // Sentry에 보고
+    Sentry.captureException(
+      details.exception,
+      stackTrace: details.stack,
+    );
+  };
+
   runApp(
     MultiProvider(
       providers: [

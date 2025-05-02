@@ -33,19 +33,8 @@ class FoldersProvider with ChangeNotifier {
 
   // 상위 폴더로 이동
   Future<void> moveToFolder(int? folderId) async {
-    try {
-      // 1) 로컬 리스트에서 찾기
-      FolderModel targetFolder;
-      try {
-        targetFolder = _folders.firstWhere((f) => f.folderId == folderId);
-      } on StateError {
-        // 2) 로컬에 없으면 서버에서 조회해 추가
-        log('Folder $folderId not found locally, fetching from server…');
-        await fetchFolderContent(folderId);   // fetchFolderContent 에서 없으면 예외 발생
-        targetFolder = _folders.firstWhere((f) => f.folderId == folderId);
-      }
+      FolderModel targetFolder = _folders.firstWhere((f) => f.folderId == folderId);
 
-      // 3) 현재 폴더 및 문제 목록 설정
       _currentFolder = targetFolder;
       _currentProblems = targetFolder.problems;
       sortProblemsByOption(sortOption);
@@ -54,23 +43,12 @@ class FoldersProvider with ChangeNotifier {
 
       // 4) UI 갱신
       notifyListeners();
-    } catch (error, stackTrace) {
-      log('Error moving to folder with ID $folderId: $error');
-      await Sentry.captureException(error, stackTrace: stackTrace);
-      rethrow; // 필요 시 상위 로직에서도 예외 처리 가능하도록 다시 던짐
-    }
   }
 
   Future<void> moveToRootFolder() async {
-    try {
       // 전달받은 folderId에 해당하는 폴더를 _folders에서 검색
       final rootFolder = _folders[0];
       moveToFolder(rootFolder.folderId);
-
-    } catch (error, stackTrace) {
-      log('Error moving to root folder: $error');
-      await Sentry.captureException(error, stackTrace: stackTrace);
-    }
   }
 
   FolderModel getFolderContents(int? folderId) {
@@ -83,69 +61,60 @@ class FoldersProvider with ChangeNotifier {
   // 폴더 내용 로드 (특정 폴더 ID로)
   Future<void> fetchFolderContent(int? folderId) async {
     folderId ??= currentFolder!.folderId;
-    try {
-      final response = await httpService.sendRequest(
-        method: 'GET',
-        url: '${AppConfig.baseUrl}/api/folders/$folderId',
-      );
 
-      print("Folder Response: ${response}");
-      if (response != null) {
-        final updatedFolder = FolderModel.fromJson(response);
+    final response = await httpService.sendRequest(
+      method: 'GET',
+      url: '${AppConfig.baseUrl}/api/folders/$folderId',
+    );
 
-        // 기존 데이터를 업데이트
-        final index = _folders.indexWhere((folder) => folder.folderId == folderId);
-        if (index != -1) {
-          _folders[index] = updatedFolder;
-        } else {
-          _folders.add(updatedFolder);
-        }
+    print("Folder Response: ${response}");
+    if (response != null) {
+      final updatedFolder = FolderModel.fromJson(response);
 
-        print("folder fetch complete");
-        notifyListeners();
+      // 기존 데이터를 업데이트
+      final index = _folders.indexWhere((folder) => folder.folderId == folderId);
+      if (index != -1) {
+        _folders[index] = updatedFolder;
       } else {
-        throw Exception('Failed to fetch folder by ID');
+        _folders.add(updatedFolder);
       }
-    } catch (error, stackTrace) {
-      log('Error fetching folder by ID: $error');
-      await Sentry.captureException(error, stackTrace: stackTrace);
+
+      print("folder fetch complete");
+      notifyListeners();
+    } else {
+      throw Exception('Failed to fetch folder by ID');
     }
   }
 
   Future<void> fetchAllFolderContents() async {
-    try {
-      final response = await httpService.sendRequest(
-        method: 'GET',
-        url: '${AppConfig.baseUrl}/api/folders',
-      );
+    final response = await httpService.sendRequest(
+      method: 'GET',
+      url: '${AppConfig.baseUrl}/api/folders',
+    );
 
-      if (response != null) {
-        final dataList = response as List<dynamic>;
-        _folders = dataList
-            .map((e) => FolderModel.fromJson(e as Map<String, dynamic>))
-            .toList();
-        log('fetch all folder contents');
+    if (response != null) {
+      final dataList = response as List<dynamic>;
+      _folders = dataList
+          .map((e) => FolderModel.fromJson(e as Map<String, dynamic>))
+          .toList();
+      log('fetch all folder contents');
 
-        for (var folder in _folders) {
-          log('-----------------------------------------');
-          log('Folder ID: ${folder.folderId}');
-          log('Folder Name: ${folder.folderName}');
-          log('Parent Folder Id: ${folder.parentFolder?.folderId ?? "No Parent"}');
-          log('problem length: ${folder.problems.length}');
-          log('Number of Problems: ${folder.problems.length}');
-          log('Length of Subfolders: ${folder.subFolderList.length}');
-          log('Created At: ${folder.createdAt}');
-          log('Updated At: ${folder.updateAt}');
-          log('-----------------------------------------');
-        }
-
-        await moveToRootFolder();
-      } else {
-        throw Exception('Failed to load RootFolderContents');
+      for (var folder in _folders) {
+        log('-----------------------------------------');
+        log('Folder ID: ${folder.folderId}');
+        log('Folder Name: ${folder.folderName}');
+        log('Parent Folder Id: ${folder.parentFolder?.folderId ?? "No Parent"}');
+        log('problem length: ${folder.problems.length}');
+        log('Number of Problems: ${folder.problems.length}');
+        log('Length of Subfolders: ${folder.subFolderList.length}');
+        log('Created At: ${folder.createdAt}');
+        log('Updated At: ${folder.updateAt}');
+        log('-----------------------------------------');
       }
-    } catch (error, stackTrace) {
-      log('Error fetching root folder contents: $error');
-      await Sentry.captureException(error, stackTrace: stackTrace);
+
+      await moveToRootFolder();
+    } else {
+      throw Exception('Failed to load RootFolderContents');
     }
   }
 
@@ -159,111 +128,89 @@ class FoldersProvider with ChangeNotifier {
 
   // 폴더 생성
   Future<void> createFolder(String folderName, {int? parentFolderId}) async {
-    try {
-      final response = await httpService.sendRequest(
-        method: 'POST',
-        url: '${AppConfig.baseUrl}/api/folders',
-        body: {
-          'folderName': folderName,
-          'parentFolderId': parentFolderId ?? currentFolder!.folderId,
-        },
-      );
+    final response = await httpService.sendRequest(
+      method: 'POST',
+      url: '${AppConfig.baseUrl}/api/folders',
+      body: {
+        'folderName': folderName,
+        'parentFolderId': parentFolderId ?? currentFolder!.folderId,
+      },
+    );
 
-      if (response != null) {
-        log('Folder successfully created, folderId: ${response}');
+    if (response != null) {
+      log('Folder successfully created, folderId: ${response}');
 
-        await fetchFolderContent(response);
-        await fetchFolderContent(_currentFolder!.folderId);
-        await moveToFolder(_currentFolder!.folderId);
-      } else {
-        throw Exception('Failed to create folder');
-      }
-    } catch (error, stackTrace) {
-      log('Error creating folder: $error');
-      await Sentry.captureException(error, stackTrace: stackTrace);
+      await fetchFolderContent(response);
+      await fetchFolderContent(_currentFolder!.folderId);
+      await moveToFolder(_currentFolder!.folderId);
+    } else {
+      throw Exception('Failed to create folder');
     }
   }
 
   Future<void> updateFolder(String? newName, int? folderId, int? parentId) async {
-    try {
-      final response = await httpService.sendRequest(
-        method: 'PATCH',
-        url: '${AppConfig.baseUrl}/api/folders/$folderId',
-        body: {
-          'folderName': newName,
-          'parentFolderId': parentId,
-        },
-      );
+    final response = await httpService.sendRequest(
+      method: 'PATCH',
+      url: '${AppConfig.baseUrl}/api/folders/$folderId',
+      body: {
+        'folderName': newName,
+        'parentFolderId': parentId,
+      },
+    );
 
-      if (response != null) {
-        log('Folder name successfully updated to $newName');
+    if (response != null) {
+      log('Folder name successfully updated to $newName');
 
-        await fetchFolderContent(parentId);
-        await fetchFolderContent(folderId);
-        await fetchFolderContent(currentFolder!.folderId);
+      await fetchFolderContent(parentId);
+      await fetchFolderContent(folderId);
+      await fetchFolderContent(currentFolder!.folderId);
 
-        await moveToFolder(currentFolder!.folderId);
-      } else {
-        throw Exception('Failed to update folder name');
-      }
-    } catch (error, stackTrace) {
-      log('Error updating folder name: $error');
-      await Sentry.captureException(error, stackTrace: stackTrace);
+      await moveToFolder(currentFolder!.folderId);
+    } else {
+      throw Exception('Failed to update folder name');
     }
   }
 
   // 폴더 삭제
   Future<void> deleteFolders(List<int> deleteFolderIdList) async {
-    log('user try to remove folder, Id List: $deleteFolderIdList');
-
     final queryParams = {
       'deleteFolderIdList': deleteFolderIdList.join(','), // 쉼표로 구분된 문자열로 변환
     };
 
-    try {
-      final response = await httpService.sendRequest(
-        method: 'DELETE',
-        url: '${AppConfig.baseUrl}/api/folders',
-        queryParams: queryParams,
-      );
+    final response = await httpService.sendRequest(
+      method: 'DELETE',
+      url: '${AppConfig.baseUrl}/api/folders',
+      queryParams: queryParams,
+    );
 
-      if (response != null) {
-        log('Folder successfully deleted');
+    if (response != null) {
+      log('Folder successfully deleted');
 
-        await fetchFolderContent(currentFolder!.folderId);
-        await moveToFolder(currentFolder!.folderId);
-      } else {
-        throw Exception('Failed to delete folder');
-      }
-    } catch (error, stackTrace) {
-      log('Error deleting folder: $error');
-      await Sentry.captureException(error, stackTrace: stackTrace);
+      await fetchFolderContent(currentFolder!.folderId);
+      await moveToFolder(currentFolder!.folderId);
+    } else {
+      throw Exception('Failed to delete folder');
     }
   }
 
   // 문제 이미지 미리 전송
   Future<Map<String, dynamic>?> uploadProblemImage(XFile? problemImage) async{
-    try {
-      final response = await httpService.sendRequest(
-        method: 'POST',
-        url: '${AppConfig.baseUrl}/api/process/problemImage',
-        isMultipart: true,
-        files: [await http.MultipartFile.fromPath('problemImage', problemImage!.path)],
-      );
+    final response = await httpService.sendRequest(
+      method: 'POST',
+      url: '${AppConfig.baseUrl}/api/process/problemImage',
+      isMultipart: true,
+      files: [await http.MultipartFile.fromPath('problemImage', problemImage!.path)],
+    );
 
-      if (response != null) {
-        final jsonResponse = json.decode(utf8.decode(response.bodyBytes));
-        log('success for upload problem image: ${jsonResponse['problemImageUrl']}');
-        return {
-          'problemId': jsonResponse['problemId'],
-          'problemImageUrl': jsonResponse['problemImageUrl'],
-        };
-      } else {
-        throw Exception('Failed to upload problem image');
-      }
-    } catch (error, stackTrace) {
-      log('Error uploading problem image: $error');
-      await Sentry.captureException(error, stackTrace: stackTrace);
+    if (response != null) {
+      final jsonResponse = json.decode(utf8.decode(response.bodyBytes));
+      log('success for upload problem image: ${jsonResponse['problemImageUrl']}');
+      return {
+        'problemId': jsonResponse['problemId'],
+        'problemImageUrl': jsonResponse['problemImageUrl'],
+      };
+    } else {
+      throw Exception('Failed to upload problem image');
       return null;
     }
   }
@@ -280,51 +227,41 @@ class FoldersProvider with ChangeNotifier {
     } else if(coordinatePickerResult != null){
       log('point list: ${coordinatePickerResult.toString()}');
     }
-    try {
-      final response = await httpService.sendRequest(
-        method: 'POST',
-        url: '${AppConfig.baseUrl}/api/process/processImage',
-        body: {
-          'fullUrl': fullUrl,
-          'colorsList': colorPickerResult != null ? colorPickerResult['colors'] : null,
-          'intensity' : colorPickerResult != null ? colorPickerResult['intensity'] : null,
-          'points' : coordinatePickerResult,
-          'labels': labels,
-        },
-      );
+    final response = await httpService.sendRequest(
+      method: 'POST',
+      url: '${AppConfig.baseUrl}/api/process/processImage',
+      body: {
+        'fullUrl': fullUrl,
+        'colorsList': colorPickerResult != null ? colorPickerResult['colors'] : null,
+        'intensity' : colorPickerResult != null ? colorPickerResult['intensity'] : null,
+        'points' : coordinatePickerResult,
+        'labels': labels,
+      },
+    );
 
-      if (response != null) {
-        final jsonResponse = json.decode(utf8.decode(response.bodyBytes));
-        log('image process result : ${jsonResponse['processImageUrl']}');
-        return jsonResponse['processImageUrl'];
-      } else {
-        log('Failed to fetch process image URL: ${response.body}');
-        return null;
-      }
-    } catch (error) {
-      log('Error fetching process image URL: $error');
+    if (response != null) {
+      final jsonResponse = json.decode(utf8.decode(response.bodyBytes));
+      log('image process result : ${jsonResponse['processImageUrl']}');
+      return jsonResponse['processImageUrl'];
+    } else {
+      log('Failed to fetch process image URL: ${response.body}');
       return null;
     }
   }
 
   Future<String?> fetchAnalysisResult(String? problemImageUrl) async {
-    try {
-      final response = await httpService.sendRequest(
-        method: 'POST', // 'GET'에서 'POST'로 변경
-        url: '${AppConfig.baseUrl}/api/process/analysis',
-        body: {'problemImageUrl': problemImageUrl},
-      );
+    final response = await httpService.sendRequest(
+      method: 'POST', // 'GET'에서 'POST'로 변경
+      url: '${AppConfig.baseUrl}/api/process/analysis',
+      body: {'problemImageUrl': problemImageUrl},
+    );
 
-      if (response != null) {
-        final jsonResponse = json.decode(utf8.decode(response.bodyBytes));
-        log('analysis : ${jsonResponse['analysis']}');
-        return jsonResponse['analysis'];
-      } else {
-        log('Failed to fetch analysis result: ${response.body}');
-        return null;
-      }
-    } catch (error) {
-      log('Error fetching analysis result: $error');
+    if (response != null) {
+      final jsonResponse = json.decode(utf8.decode(response.bodyBytes));
+      log('analysis : ${jsonResponse['analysis']}');
+      return jsonResponse['analysis'];
+    } else {
+      log('Failed to fetch analysis result: ${response.body}');
       return null;
     }
   }
@@ -332,247 +269,214 @@ class FoldersProvider with ChangeNotifier {
   Future<void> submitProblem(
       ProblemRegisterModel problemData, BuildContext context) async {
 
-    try {
-      final files = <http.MultipartFile>[];
+    final files = <http.MultipartFile>[];
 
-      if (problemData.solveImage != null) {
-        files.add(await http.MultipartFile.fromPath('solveImage', problemData.solveImage!.path));
+    if (problemData.solveImage != null) {
+      files.add(await http.MultipartFile.fromPath('solveImage', problemData.solveImage!.path));
+    }
+    if (problemData.answerImage != null) {
+      files.add(await http.MultipartFile.fromPath('answerImage', problemData.answerImage!.path));
+    }
+
+    final requestBody = {
+      'problemId': problemData.problemId.toString(),
+      'solvedAt': (problemData.solvedAt ?? DateTime.now()).toIso8601String(),
+      'reference': problemData.reference ?? "",
+      'memo': problemData.memo ?? "",
+      'folderId': (problemData.folderId ?? currentFolder!.folderId).toString(),
+      'templateType': problemData.templateType!.templateTypeCode.toString(),
+      'analysis': problemData.analysis ?? "",
+    };
+
+    if (problemData.templateType == TemplateType.clean ||
+        problemData.templateType == TemplateType.special) {
+      if(problemData.processImageUrl != null){
+        requestBody['processImageUrl'] = problemData.processImageUrl!;
       }
-      if (problemData.answerImage != null) {
-        files.add(await http.MultipartFile.fromPath('answerImage', problemData.answerImage!.path));
+    }
+
+    final response = await httpService.sendRequest(
+      method: 'POST',
+      url: '${AppConfig.baseUrl}/api/problem/V2',
+      isMultipart: true,
+      files: files,
+      body: requestBody,
+    );
+
+    if (response != null) {
+      log('Problem successfully submitted');
+      await fetchFolderContent(_currentFolder!.folderId);
+
+      int userProblemCount = await getUserProblemCount();
+      if (userProblemCount > 0 && userProblemCount % 10 == 0) {
+        reviewHandler.requestReview(context);
       }
-
-      final requestBody = {
-        'problemId': problemData.problemId.toString(),
-        'solvedAt': (problemData.solvedAt ?? DateTime.now()).toIso8601String(),
-        'reference': problemData.reference ?? "",
-        'memo': problemData.memo ?? "",
-        'folderId': (problemData.folderId ?? currentFolder!.folderId).toString(),
-        'templateType': problemData.templateType!.templateTypeCode.toString(),
-        'analysis': problemData.analysis ?? "",
-      };
-
-      if (problemData.templateType == TemplateType.clean ||
-          problemData.templateType == TemplateType.special) {
-          if(problemData.processImageUrl != null){
-            requestBody['processImageUrl'] = problemData.processImageUrl!;
-          }
-      }
-
-      final response = await httpService.sendRequest(
-        method: 'POST',
-        url: '${AppConfig.baseUrl}/api/problem/V2',
-        isMultipart: true,
-        files: files,
-        body: requestBody,
-      );
-
-      if (response != null) {
-        log('Problem successfully submitted');
-        await fetchFolderContent(_currentFolder!.folderId);
-
-        int userProblemCount = await getUserProblemCount();
-        if (userProblemCount > 0 && userProblemCount % 10 == 0) {
-          reviewHandler.requestReview(context);
-        }
-      } else {
-        throw Exception('Failed to submit problem');
-      }
-    } catch (error, stackTrace) {
-      log('Error submitting problem: $error');
-      await Sentry.captureException(error, stackTrace: stackTrace);
+    } else {
+      throw Exception('Failed to submit problem');
     }
   }
 
   Future<void> submitProblemV2(
       ProblemRegisterModelV2 problemData, BuildContext context) async {
 
-    try {
-      final files = <http.MultipartFile>[];
+    final files = <http.MultipartFile>[];
 
-      if (problemData.problemImage != null) {
-        files.add(await http.MultipartFile.fromPath('problemImage', problemData.problemImage!.path));
+    if (problemData.problemImage != null) {
+      files.add(await http.MultipartFile.fromPath('problemImage', problemData.problemImage!.path));
+    }
+    if (problemData.answerImage != null) {
+      files.add(await http.MultipartFile.fromPath('answerImage', problemData.answerImage!.path));
+    }
+
+    final requestBody = {
+      'solvedAt': (problemData.solvedAt ?? DateTime.now()).toIso8601String(),
+      'reference': problemData.reference ?? "",
+      'memo': problemData.memo ?? "",
+      'folderId': (problemData.folderId ?? currentFolder!.folderId).toString(),
+    };
+
+    if (problemData.problemId != null) {
+      requestBody['problemId'] = problemData.problemId.toString();
+    }
+
+    final response = await httpService.sendRequest(
+      method: 'POST',
+      url: '${AppConfig.baseUrl}/api/problem/V2',
+      isMultipart: true,
+      files: files,
+      body: requestBody,
+    );
+
+    if (response != null) {
+      log('Problem successfully submitted');
+
+      await fetchFolderContent(problemData.folderId ?? currentFolder!.folderId);
+      await moveToFolder(currentFolder!.folderId);
+
+      int userProblemCount = await getUserProblemCount();
+      if (userProblemCount > 0 && userProblemCount % 10 == 0) {
+        reviewHandler.requestReview(context);
       }
-      if (problemData.answerImage != null) {
-        files.add(await http.MultipartFile.fromPath('answerImage', problemData.answerImage!.path));
-      }
-
-      final requestBody = {
-        'solvedAt': (problemData.solvedAt ?? DateTime.now()).toIso8601String(),
-        'reference': problemData.reference ?? "",
-        'memo': problemData.memo ?? "",
-        'folderId': (problemData.folderId ?? currentFolder!.folderId).toString(),
-      };
-
-      if (problemData.problemId != null) {
-        requestBody['problemId'] = problemData.problemId.toString();
-      }
-
-      final response = await httpService.sendRequest(
-        method: 'POST',
-        url: '${AppConfig.baseUrl}/api/problem/V2',
-        isMultipart: true,
-        files: files,
-        body: requestBody,
-      );
-
-      if (response != null) {
-        log('Problem successfully submitted');
-
-        await fetchFolderContent(problemData.folderId ?? currentFolder!.folderId);
-        await moveToFolder(currentFolder!.folderId);
-
-        int userProblemCount = await getUserProblemCount();
-        if (userProblemCount > 0 && userProblemCount % 10 == 0) {
-          reviewHandler.requestReview(context);
-        }
-      } else {
-        throw Exception('Failed to submit problem');
-      }
-    } catch (error, stackTrace) {
-      log('Error submitting problem: $error');
-      await Sentry.captureException(error, stackTrace: stackTrace);
+    } else {
+      throw Exception('Failed to submit problem');
     }
   }
 
   Future<int> getUserProblemCount() async {
 
-    try {
-      final response = await httpService.sendRequest(
-        method: 'GET',
-        url: '${AppConfig.baseUrl}/api/user/problemCount',
-      );
+    final response = await httpService.sendRequest(
+      method: 'GET',
+      url: '${AppConfig.baseUrl}/api/user/problemCount',
+    );
 
-      if (response != null) {
-        int userProblemCount = int.parse(response.body);
-        log('User problem count: $userProblemCount');
-        return userProblemCount;
-      } else {
-        throw Exception('Failed to get user problem count');
-      }
-    } catch (error, stackTrace) {
-      log('Error fetching user problem count: $error');
-      await Sentry.captureException(error, stackTrace: stackTrace);
-      return 0;
+    if (response != null) {
+      int userProblemCount = int.parse(response.body);
+      log('User problem count: $userProblemCount');
+      return userProblemCount;
+    } else {
+      throw Exception('Failed to get user problem count');
     }
   }
 
   Future<void> updateProblem(ProblemRegisterModel problemData) async {
+    final files = <http.MultipartFile>[];
+    if (problemData.answerImage != null) {
+      files.add(await http.MultipartFile.fromPath('answerImage', problemData.answerImage!.path));
+    }
 
-    try {
-      final files = <http.MultipartFile>[];
-      if (problemData.answerImage != null) {
-        files.add(await http.MultipartFile.fromPath('answerImage', problemData.answerImage!.path));
+    final response = await httpService.sendRequest(
+      method: 'PATCH',
+      url: '${AppConfig.baseUrl}/api/problem',
+      isMultipart: true,
+      files: files,
+      body: {
+        'problemId': (problemData.problemId ?? -1).toString(),
+        if (problemData.solvedAt != null) 'solvedAt': problemData.solvedAt!.toIso8601String(),
+        if (problemData.reference != null && problemData.reference!.isNotEmpty)
+          'reference': problemData.reference!,
+        if (problemData.memo != null && problemData.memo!.isNotEmpty)
+          'memo': problemData.memo!,
+        if (problemData.folderId != null) 'folderId': problemData.folderId!.toString(),
+      },
+    );
+
+    if (response != null) {
+      log('Problem successfully updated');
+
+      if (problemData.folderId != null){
+        await fetchFolderContent(problemData.folderId!);
       }
+      await fetchFolderContent(_currentFolder!.folderId);
 
-      final response = await httpService.sendRequest(
-        method: 'PATCH',
-        url: '${AppConfig.baseUrl}/api/problem',
-        isMultipart: true,
-        files: files,
-        body: {
-          'problemId': (problemData.problemId ?? -1).toString(),
-          if (problemData.solvedAt != null) 'solvedAt': problemData.solvedAt!.toIso8601String(),
-          if (problemData.reference != null && problemData.reference!.isNotEmpty)
-            'reference': problemData.reference!,
-          if (problemData.memo != null && problemData.memo!.isNotEmpty)
-            'memo': problemData.memo!,
-          if (problemData.folderId != null) 'folderId': problemData.folderId!.toString(),
-        },
-      );
-
-      if (response != null) {
-        log('Problem successfully updated');
-
-        if (problemData.folderId != null){
-          await fetchFolderContent(problemData.folderId!);
-        }
-        await fetchFolderContent(_currentFolder!.folderId);
-
-        await moveToFolder(_currentFolder!.folderId);
-      } else {
-        throw Exception('Failed to update problem');
-      }
-    } catch (error, stackTrace) {
-      log('Error updating problem: $error');
-      await Sentry.captureException(error, stackTrace: stackTrace);
+      await moveToFolder(_currentFolder!.folderId);
+    } else {
+      throw Exception('Failed to update problem');
     }
   }
 
   Future<bool> deleteProblems(List<int> deleteProblemIdList) async {
-    try {
-      final queryParams = {
-        'deleteProblemIdList': deleteProblemIdList.join(','), // 쉼표로 구분된 문자열로 변환
-      };
+    final queryParams = {
+      'deleteProblemIdList': deleteProblemIdList.join(','), // 쉼표로 구분된 문자열로 변환
+    };
 
-      final response = await httpService.sendRequest(
+    final response = await httpService.sendRequest(
         method: 'DELETE',
         url: '${AppConfig.baseUrl}/api/problem',
         queryParams: queryParams
-      );
+    );
 
-      if (response != null) {
-        log('Problem successfully deleted');
-        await fetchFolderContent(_currentFolder!.folderId);
-        await moveToFolder(_currentFolder!.folderId);
+    if (response != null) {
+      log('Problem successfully deleted');
+      await fetchFolderContent(_currentFolder!.folderId);
+      await moveToFolder(_currentFolder!.folderId);
 
-        return true;
-      } else {
-        throw Exception('Failed to delete problem');
-      }
-    } catch (error, stackTrace) {
-      log('Error deleting problem: $error');
-      await Sentry.captureException(error, stackTrace: stackTrace);
-      return false;
+      return true;
+    } else {
+      throw Exception('Failed to delete problem');
     }
   }
 
   Future<void> addRepeatCount(int problemId, XFile? solveImage) async {
-    try {
-      if (solveImage != null) {
-        // Multipart 파일로 변환
-        final file = await http.MultipartFile.fromPath('solveImage', solveImage.path);
+    if (solveImage != null) {
+      // Multipart 파일로 변환
+      final file = await http.MultipartFile.fromPath('solveImage', solveImage.path);
 
-        // Multipart 요청 생성
-        final response = await httpService.sendRequest(
-          method: 'POST',
-          url: '${AppConfig.baseUrl}/api/problem/repeat',
-          headers: {
-            'problemId': problemId.toString(),
-          },
-          isMultipart: true,
-          files: [file],
-        );
+      // Multipart 요청 생성
+      final response = await httpService.sendRequest(
+        method: 'POST',
+        url: '${AppConfig.baseUrl}/api/problem/repeat',
+        headers: {
+          'problemId': problemId.toString(),
+        },
+        isMultipart: true,
+        files: [file],
+      );
 
-        if (response != null) {
-          log('Problem successfully repeated with image');
-          await fetchFolderContent(_currentFolder!.folderId);
-          await moveToFolder(_currentFolder!.folderId);
+      if (response != null) {
+        log('Problem successfully repeated with image');
+        await fetchFolderContent(_currentFolder!.folderId);
+        await moveToFolder(_currentFolder!.folderId);
 
-        } else {
-          throw Exception('Failed to repeat problem with image');
-        }
       } else {
-        // solveImage가 null인 경우, 일반 POST 요청으로 전송
-        final response = await httpService.sendRequest(
-          method: 'POST',
-          url: '${AppConfig.baseUrl}/api/problem/repeat',
-          headers: {
-            'problemId': problemId.toString(),
-          },
-          isMultipart: false,
-        );
-
-        if (response != null) {
-          log('Problem successfully repeated without image');
-          await fetchFolderContent(_currentFolder!.folderId);
-        } else {
-          throw Exception('Failed to repeat problem without image');
-        }
+        throw Exception('Failed to repeat problem with image');
       }
-    } catch (error, stackTrace) {
-      log('Error deleting problem: $error');
-      await Sentry.captureException(error, stackTrace: stackTrace);
+    } else {
+      // solveImage가 null인 경우, 일반 POST 요청으로 전송
+      final response = await httpService.sendRequest(
+        method: 'POST',
+        url: '${AppConfig.baseUrl}/api/problem/repeat',
+        headers: {
+          'problemId': problemId.toString(),
+        },
+        isMultipart: false,
+      );
+
+      if (response != null) {
+        log('Problem successfully repeated without image');
+        await fetchFolderContent(_currentFolder!.folderId);
+      } else {
+        throw Exception('Failed to repeat problem without image');
+      }
     }
   }
 
@@ -606,22 +510,13 @@ class FoldersProvider with ChangeNotifier {
   }
 
   Future<ProblemModel?> getProblemDetails(int? problemId) async {
-    try {
-      var problemDetails =
-      _currentProblems.firstWhere((problem) => problem.problemId == problemId);
+    var problemDetails =
+    _currentProblems.firstWhere((problem) => problem.problemId == problemId);
 
-      if (problemDetails != null) {
-        return problemDetails;
-      } else {
-        throw Exception('Problem with ID $problemId not found');
-      }
-    } catch (error, stackTrace) {
-      log('Error fetching problem details for ID $problemId: $error');
-      await Sentry.captureException(
-        error,
-        stackTrace: stackTrace,
-      );
-      return null;
+    if (problemDetails != null) {
+      return problemDetails;
+    } else {
+      throw Exception('Problem with ID $problemId not found');
     }
   }
 }

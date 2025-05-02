@@ -140,30 +140,27 @@ class UserProvider with ChangeNotifier {
   }
 
   Future<bool> fetchUserInfo() async {
-    try {
-      final response = await httpService.sendRequest(
-        method: 'GET',
-        url: '${AppConfig.baseUrl}/api/users',
-      );
 
-      print("fetchUserInfo() response: ${response}");
-      if (response != null) {
-        await _processUserInfoResponse(response);
-        _problemCount = await getUserProblemCount();
+    final response = await httpService.sendRequest(
+      method: 'GET',
+      url: '${AppConfig.baseUrl}/api/users',
+    );
 
-        if (_loginStatus == LoginStatus.login) {
-          //await foldersProvider.fetchRootFolderContents();
-          await foldersProvider.fetchAllFolderContents();
-          await practiceProvider.fetchAllPracticeContents();
-        }
-        return true;
-      } else {
-        return _handleFetchError();
+    print("fetchUserInfo() response: ${response}");
+    if (response != null) {
+      await _processUserInfoResponse(response);
+      _problemCount = await getUserProblemCount();
+
+      if (_loginStatus == LoginStatus.login) {
+        //await foldersProvider.fetchRootFolderContents();
+        await foldersProvider.fetchAllFolderContents();
+        await practiceProvider.fetchAllPracticeContents();
+
+        notifyListeners();
       }
-    } catch (error, stackTrace) {
-      return _handleFetchError(error: error, stackTrace: stackTrace);
-    } finally {
-      notifyListeners();
+      return true;
+    } else {
+      return _handleFetchError();
     }
   }
 
@@ -203,23 +200,17 @@ class UserProvider with ChangeNotifier {
   }
 
   Future<int> getUserProblemCount() async{
-    try {
-      final response = await httpService.sendRequest(
-        method: 'GET',
-        url: '${AppConfig.baseUrl}/api/problems/problemCount',
-      );
+    final response = await httpService.sendRequest(
+      method: 'GET',
+      url: '${AppConfig.baseUrl}/api/problems/problemCount',
+    );
 
-      if (response != null) {
-        int userProblemCount = response;
-        log('user problem count : $userProblemCount');
-        return userProblemCount;
-      } else {
-        throw Exception('Failed to get user problem count');
-      }
-    } catch (error, stackTrace) {
-      log('error in getUserProblemCount() : $error');
-      await Sentry.captureException(error, stackTrace: stackTrace);
-      return 0;
+    if (response != null) {
+      int userProblemCount = response;
+      log('user problem count : $userProblemCount');
+      return userProblemCount;
+    } else {
+      throw Exception('Failed to get user problem count');
     }
   }
 
@@ -230,34 +221,29 @@ class UserProvider with ChangeNotifier {
     String? userType,
   }) async {
 
-    try {
-      final requestBody = {
-        if (email != null) 'email': email,
-        if (name != null) 'name': name,
-        if (identifier != null) 'identifier': identifier,
-        if (userType != null) 'type': userType,
-      };
+    final requestBody = {
+      if (email != null) 'email': email,
+      if (name != null) 'name': name,
+      if (identifier != null) 'identifier': identifier,
+      if (userType != null) 'type': userType,
+    };
 
-      final response = await httpService.sendRequest(
-        method: 'PATCH',
-        url: '${AppConfig.baseUrl}/api/user',
-        body: requestBody,
-      );
+    final response = await httpService.sendRequest(
+      method: 'PATCH',
+      url: '${AppConfig.baseUrl}/api/user',
+      body: requestBody,
+    );
 
-      if (response.statusCode == 200) {
-        final responseBody = jsonDecode(utf8.decode(response.bodyBytes));
-        if (responseBody['userName'] != null) _userName = responseBody['userName'];
-        if (responseBody['userEmail'] != null) _userEmail = responseBody['userEmail'];
+    if (response.statusCode == 200) {
+      final responseBody = jsonDecode(utf8.decode(response.bodyBytes));
+      if (responseBody['userName'] != null) _userName = responseBody['userName'];
+      if (responseBody['userEmail'] != null) _userEmail = responseBody['userEmail'];
 
-        log("User info updated successfully: $responseBody");
-        notifyListeners();
-      } else {
-        log('Failed to update user info: ${response.statusCode}');
-        throw Exception('Failed to update user info');
-      }
-    } catch (error, stackTrace) {
-      log('Error updating user info: $error');
-      await Sentry.captureException(error, stackTrace: stackTrace);
+      log("User info updated successfully: $responseBody");
+      notifyListeners();
+    } else {
+      log('Failed to update user info: ${response.statusCode}');
+      throw Exception('Failed to update user info');
     }
   }
 
@@ -275,34 +261,26 @@ class UserProvider with ChangeNotifier {
   }
 
   Future<void> signOut() async {
-    try {
-      String? loginMethod = await storage.read(key: 'loginMethod');
-      if (loginMethod == 'google') {
-        googleAuthService.logoutGoogleSignIn();
-      } else if (loginMethod == 'apple') {
-        // apple 은 별도의 로그아웃 로직이 없습니다.
-      } else if (loginMethod == 'kakao') {
-        await kakaoAuthService.logoutKakaoSignIn();
-      }
-      else if (loginMethod == 'guest') {
-        deleteAccount();
-      }
-
-      await FirebaseAnalytics.instance.logEvent(
-        name: 'user_logout',
-        parameters: {
-          'user_id': _userId.toString(), // 유저 ID 등 추가적인 정보도 포함 가능
-        },
-      );
-
-      await resetUserInfo();
-    } catch (error, stackTrace) {
-      log('Error signing out: $error');
-      await Sentry.captureException(
-        error,
-        stackTrace: stackTrace,
-      );
+    String? loginMethod = await storage.read(key: 'loginMethod');
+    if (loginMethod == 'google') {
+      googleAuthService.logoutGoogleSignIn();
+    } else if (loginMethod == 'apple') {
+      // apple 은 별도의 로그아웃 로직이 없습니다.
+    } else if (loginMethod == 'kakao') {
+      await kakaoAuthService.logoutKakaoSignIn();
     }
+    else if (loginMethod == 'guest') {
+      deleteAccount();
+    }
+
+    await FirebaseAnalytics.instance.logEvent(
+      name: 'user_logout',
+      parameters: {
+        'user_id': _userId.toString(), // 유저 ID 등 추가적인 정보도 포함 가능
+      },
+    );
+
+    await resetUserInfo();
   }
 
   // 회원 탈퇴 함수
@@ -324,32 +302,27 @@ class UserProvider with ChangeNotifier {
 
     }
 
-    try {
-      final response = await httpService.sendRequest(
-        method: 'DELETE',
-        url: '${AppConfig.baseUrl}/api/user',
+    final response = await httpService.sendRequest(
+      method: 'DELETE',
+      url: '${AppConfig.baseUrl}/api/user',
+    );
+
+    print("response: ${response}");
+
+    if (response.statusCode == 200) {
+      log('Account deletion Success!');
+
+      await FirebaseAnalytics.instance.logEvent(
+        name: 'user_delete',
+        parameters: {
+          'user_id': _userId.toString(),
+        },
       );
 
-      print("response: ${response}");
-
-      if (response.statusCode == 200) {
-        log('Account deletion Success!');
-
-        await FirebaseAnalytics.instance.logEvent(
-          name: 'user_delete',
-          parameters: {
-            'user_id': _userId.toString(),
-          },
-        );
-
-        await resetUserInfo();
-      } else {
-        log('Failed to delete account: ${response.reasonPhrase}');
-        throw Exception("Failed to delete account");
-      }
-    } catch (error, stackTrace) {
-      log('Account deletion error: $error');
-      await Sentry.captureException(error, stackTrace: stackTrace);
+      await resetUserInfo();
+    } else {
+      log('Failed to delete account: ${response.reasonPhrase}');
+      throw Exception("Failed to delete account");
     }
   }
 
