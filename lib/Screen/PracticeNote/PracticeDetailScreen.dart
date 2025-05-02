@@ -6,12 +6,12 @@ import 'package:intl/intl.dart';
 
 import '../../GlobalModule/Image/DisplayImage.dart';
 import '../../GlobalModule/Dialog/SnackBarDialog.dart';
-import '../../Model/ProblemPracticeModel.dart';
+import '../../Model/PracticeNoteModel.dart';
 import '../../Model/ProblemModel.dart';
 import '../../GlobalModule/Text/StandardText.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
 import '../../Model/TemplateType.dart';
-import '../../Provider/ProblemPracticeProvider.dart';
+import '../../Provider/PracticeNoteProvider.dart';
 import '../ProblemDetail/ProblemDetailScreen.dart';
 import 'PracticeProblemSelectionScreen.dart';
 

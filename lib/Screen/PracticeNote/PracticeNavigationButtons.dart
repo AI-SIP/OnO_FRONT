@@ -12,7 +12,7 @@ import 'package:provider/provider.dart';
 import '../../GlobalModule/Image/ImagePickerHandler.dart';
 import '../../GlobalModule/Text/StandardText.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
-import '../../Provider/ProblemPracticeProvider.dart';
+import '../../Provider/PracticeNoteProvider.dart';
 
 class PracticeNavigationButtons extends StatefulWidget {
   final BuildContext context;

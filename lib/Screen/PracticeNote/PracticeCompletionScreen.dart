@@ -5,7 +5,7 @@ import 'package:provider/provider.dart';
 
 import '../../GlobalModule/Text/StandardText.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
-import '../../Provider/ProblemPracticeProvider.dart';
+import '../../Provider/PracticeNoteProvider.dart';
 
 class PracticeCompletionScreen extends StatelessWidget {
   final int practiceId;

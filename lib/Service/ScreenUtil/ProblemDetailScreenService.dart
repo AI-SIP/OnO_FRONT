@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:ono/Provider/FoldersProvider.dart';
-import 'package:ono/Provider/ProblemPracticeProvider.dart';
+import 'package:ono/Provider/PracticeNoteProvider.dart';
 import 'package:provider/provider.dart';
 
 import '../../GlobalModule/Dialog/SnackBarDialog.dart';

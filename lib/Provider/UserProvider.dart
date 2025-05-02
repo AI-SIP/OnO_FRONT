@@ -11,7 +11,7 @@ import 'package:ono/GlobalModule/Dialog/LoadingDialog.dart';
 import 'package:ono/GlobalModule/Dialog/SnackBarDialog.dart';
 import 'package:ono/Model/LoginStatus.dart';
 import 'package:ono/Provider/FoldersProvider.dart';
-import 'package:ono/Provider/ProblemPracticeProvider.dart';
+import 'package:ono/Provider/PracticeNoteProvider.dart';
 import 'package:ono/Service/Auth/GuestAuthService.dart';
 import 'package:ono/Service/Auth/KakaoAuthService.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';

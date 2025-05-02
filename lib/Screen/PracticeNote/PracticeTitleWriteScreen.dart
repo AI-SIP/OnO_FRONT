@@ -5,8 +5,8 @@ import '../../GlobalModule/Text/StandardText.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
 import 'package:provider/provider.dart';
 import '../../Provider/FoldersProvider.dart';
-import '../../Provider/ProblemPracticeProvider.dart';
-import '../../Model/ProblemPracticeRegisterModel.dart';
+import '../../Provider/PracticeNoteProvider.dart';
+import '../../Model/PracticeNoteRegisterModel.dart';
 
 class PracticeTitleWriteScreen extends StatelessWidget {
   final ProblemPracticeRegisterModel practiceRegisterModel;

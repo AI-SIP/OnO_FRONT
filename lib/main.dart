@@ -9,7 +9,7 @@ import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart';
 import 'package:ono/GlobalModule/Text/StandardText.dart';
 import 'package:ono/GlobalModule/Theme/ThemeHandler.dart';
 import 'package:ono/Provider/FoldersProvider.dart';
-import 'package:ono/Provider/ProblemPracticeProvider.dart';
+import 'package:ono/Provider/PracticeNoteProvider.dart';
 import 'package:ono/Provider/ScreenIndexProvider.dart';
 import 'package:ono/Screen/ProblemRegister/ProblemRegisterScreen.dart';
 import 'package:ono/Screen/ProblemRegister/ProblemRegisterScreenV2.dart';

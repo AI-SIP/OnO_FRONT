@@ -2,8 +2,8 @@ import 'dart:convert';
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
-import 'package:ono/Model/ProblemPracticeModel.dart';
-import 'package:ono/Model/ProblemPracticeRegisterModel.dart';
+import 'package:ono/Model/PracticeNoteModel.dart';
+import 'package:ono/Model/PracticeNoteRegisterModel.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
 import '../Config/AppConfig.dart';
