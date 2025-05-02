@@ -10,7 +10,7 @@ import 'package:ono/Model/TemplateType.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
 import '../Config/AppConfig.dart';
-import '../Model/FolderModel.dart';
+import '../Model/Folder/FolderModel.dart';
 import '../Model/ProblemModel.dart';
 import '../Model/ProblemRegisterModel.dart';
 import '../Model/ProblemRegisterModelV2.dart';
@@ -80,10 +80,11 @@ class FoldersProvider with ChangeNotifier {
     try {
       final response = await httpService.sendRequest(
         method: 'GET',
-        url: '${AppConfig.baseUrl}/api/folder/$folderId',
+        url: '${AppConfig.baseUrl}/api/folders/$folderId',
       );
 
-      if (response.statusCode == 200) {
+      print(response);
+      if (response != null) {
         final folderData = json.decode(utf8.decode(response.bodyBytes));
         final updatedFolder = FolderModel.fromJson(folderData);
 
@@ -109,23 +110,24 @@ class FoldersProvider with ChangeNotifier {
     try {
       final response = await httpService.sendRequest(
         method: 'GET',
-        url: '${AppConfig.baseUrl}/api/folder',
+        url: '${AppConfig.baseUrl}/api/folders',
       );
 
-      if (response.statusCode == 200) {
-        final List<dynamic> jsonResponse = json.decode(utf8.decode(response.bodyBytes));
-
-        _folders = jsonResponse.map((folderData) => FolderModel.fromJson(folderData)).toList();
+      if (response != null) {
+        final dataList = response as List<dynamic>;
+        _folders = dataList
+            .map((e) => FolderModel.fromJson(e as Map<String, dynamic>))
+            .toList();
         log('fetch all folder contents');
 
         for (var folder in _folders) {
           log('-----------------------------------------');
           log('Folder ID: ${folder.folderId}');
           log('Folder Name: ${folder.folderName}');
-          log('Parent Folder Id: ${folder.parentFolderId ?? "No Parent"}');
+          log('Parent Folder Id: ${folder.parentFolder?.folderId ?? "No Parent"}');
           log('problem length: ${folder.problems.length}');
           log('Number of Problems: ${folder.problems.length}');
-          log('Length of Subfolders: ${folder.subFolderIds?.length}');
+          log('Length of Subfolders: ${folder.subFolderList.length}');
           log('Created At: ${folder.createdAt}');
           log('Updated At: ${folder.updateAt}');
           log('-----------------------------------------');
@@ -154,14 +156,14 @@ class FoldersProvider with ChangeNotifier {
     try {
       final response = await httpService.sendRequest(
         method: 'POST',
-        url: '${AppConfig.baseUrl}/api/folder',
+        url: '${AppConfig.baseUrl}/api/folders',
         body: {
           'folderName': folderName,
           'parentFolderId': parentFolderId ?? currentFolder!.folderId,
         },
       );
 
-      if (response.statusCode == 200) {
+      if (response != null) {
         log('Folder successfully created');
 
         final folderData = json.decode(utf8.decode(response.bodyBytes));
@@ -184,14 +186,14 @@ class FoldersProvider with ChangeNotifier {
     try {
       final response = await httpService.sendRequest(
         method: 'PATCH',
-        url: '${AppConfig.baseUrl}/api/folder/$folderId',
+        url: '${AppConfig.baseUrl}/api/folders/$folderId',
         body: {
           'folderName': newName,
           'parentFolderId': parentId,
         },
       );
 
-      if (response.statusCode == 200) {
+      if (response != null) {
         log('Folder name successfully updated to $newName');
 
         await fetchFolderContent(parentId);
@@ -219,11 +221,11 @@ class FoldersProvider with ChangeNotifier {
     try {
       final response = await httpService.sendRequest(
         method: 'DELETE',
-        url: '${AppConfig.baseUrl}/api/folder',
+        url: '${AppConfig.baseUrl}/api/folders',
         queryParams: queryParams,
       );
 
-      if (response.statusCode == 200) {
+      if (response != null) {
         log('Folder successfully deleted');
 
         await fetchFolderContent(currentFolder!.folderId);
@@ -247,7 +249,7 @@ class FoldersProvider with ChangeNotifier {
         files: [await http.MultipartFile.fromPath('problemImage', problemImage!.path)],
       );
 
-      if (response.statusCode == 200) {
+      if (response != null) {
         final jsonResponse = json.decode(utf8.decode(response.bodyBytes));
         log('success for upload problem image: ${jsonResponse['problemImageUrl']}');
         return {
@@ -289,7 +291,7 @@ class FoldersProvider with ChangeNotifier {
         },
       );
 
-      if (response.statusCode == 200) {
+      if (response != null) {
         final jsonResponse = json.decode(utf8.decode(response.bodyBytes));
         log('image process result : ${jsonResponse['processImageUrl']}');
         return jsonResponse['processImageUrl'];
@@ -311,7 +313,7 @@ class FoldersProvider with ChangeNotifier {
         body: {'problemImageUrl': problemImageUrl},
       );
 
-      if (response.statusCode == 200) {
+      if (response != null) {
         final jsonResponse = json.decode(utf8.decode(response.bodyBytes));
         log('analysis : ${jsonResponse['analysis']}');
         return jsonResponse['analysis'];
@@ -363,7 +365,7 @@ class FoldersProvider with ChangeNotifier {
         body: requestBody,
       );
 
-      if (response.statusCode == 200) {
+      if (response != null) {
         log('Problem successfully submitted');
         await fetchFolderContent(_currentFolder!.folderId);
 
@@ -412,7 +414,7 @@ class FoldersProvider with ChangeNotifier {
         body: requestBody,
       );
 
-      if (response.statusCode == 200) {
+      if (response != null) {
         log('Problem successfully submitted');
 
         await fetchFolderContent(problemData.folderId ?? currentFolder!.folderId);
@@ -439,7 +441,7 @@ class FoldersProvider with ChangeNotifier {
         url: '${AppConfig.baseUrl}/api/user/problemCount',
       );
 
-      if (response.statusCode == 200) {
+      if (response != null) {
         int userProblemCount = int.parse(response.body);
         log('User problem count: $userProblemCount');
         return userProblemCount;
@@ -477,7 +479,7 @@ class FoldersProvider with ChangeNotifier {
         },
       );
 
-      if (response.statusCode == 200) {
+      if (response != null) {
         log('Problem successfully updated');
 
         if (problemData.folderId != null){
@@ -507,7 +509,7 @@ class FoldersProvider with ChangeNotifier {
         queryParams: queryParams
       );
 
-      if (response.statusCode == 200) {
+      if (response != null) {
         log('Problem successfully deleted');
         await fetchFolderContent(_currentFolder!.folderId);
         await moveToFolder(_currentFolder!.folderId);
@@ -540,7 +542,7 @@ class FoldersProvider with ChangeNotifier {
           files: [file],
         );
 
-        if (response.statusCode == 200) {
+        if (response != null) {
           log('Problem successfully repeated with image');
           await fetchFolderContent(_currentFolder!.folderId);
           await moveToFolder(_currentFolder!.folderId);
@@ -559,7 +561,7 @@ class FoldersProvider with ChangeNotifier {
           isMultipart: false,
         );
 
-        if (response.statusCode == 200) {
+        if (response != null) {
           log('Problem successfully repeated without image');
           await fetchFolderContent(_currentFolder!.folderId);
         } else {

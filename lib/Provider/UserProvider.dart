@@ -136,20 +136,18 @@ class UserProvider with ChangeNotifier {
     _isFirstLogin = true;
     FirebaseAnalytics.instance.logLogin(loginMethod: loginMethod);
 
-    print("start fetchUserInfo()");
     return await fetchUserInfo();
   }
 
   Future<bool> fetchUserInfo() async {
     try {
-      print("send request");
       final response = await httpService.sendRequest(
         method: 'GET',
         url: '${AppConfig.baseUrl}/api/users',
       );
 
       print("fetchUserInfo() response: ${response}");
-      if (response.statusCode == 200) {
+      if (response != null) {
         await _processUserInfoResponse(response);
         _problemCount = await getUserProblemCount();
 
@@ -169,12 +167,11 @@ class UserProvider with ChangeNotifier {
     }
   }
 
-  Future<void> _processUserInfoResponse(http.Response response) async {
-    final responseBody = await jsonDecode(utf8.decode(response.bodyBytes));
+  Future<void> _processUserInfoResponse(dynamic response) async {
 
-    _userId = responseBody['data']['userId'] ?? 0;
-    _userName = responseBody['data']['userName'] ?? '이름 없음';
-    _userEmail = responseBody['data']['userEmail'];
+    _userId = response['userId'] ?? 0;
+    _userName = response['name'] ?? '이름 없음';
+    _userEmail = response['email'];
     _loginStatus = LoginStatus.login;
 
     await FirebaseAnalytics.instance.logLogin();
@@ -209,11 +206,11 @@ class UserProvider with ChangeNotifier {
     try {
       final response = await httpService.sendRequest(
         method: 'GET',
-        url: '${AppConfig.baseUrl}/api/user/problemCount',
+        url: '${AppConfig.baseUrl}/api/problems/problemCount',
       );
 
-      if (response.statusCode == 200) {
-        int userProblemCount = int.parse(response.body);
+      if (response != null) {
+        int userProblemCount = response;
         log('user problem count : $userProblemCount');
         return userProblemCount;
       } else {
@@ -332,6 +329,8 @@ class UserProvider with ChangeNotifier {
         method: 'DELETE',
         url: '${AppConfig.baseUrl}/api/user',
       );
+
+      print("response: ${response}");
 
       if (response.statusCode == 200) {
         log('Account deletion Success!');

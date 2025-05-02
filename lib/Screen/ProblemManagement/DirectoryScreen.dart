@@ -8,7 +8,7 @@ import 'package:intl/intl.dart';
 import 'package:ono/GlobalModule/Theme/NoteIconHandler.dart';
 import 'package:ono/GlobalModule/Dialog/SnackBarDialog.dart';
 import 'package:ono/GlobalModule/Util/UrlLauncher.dart';
-import 'package:ono/Model/FolderModel.dart';
+import 'package:ono/Model/Folder/FolderModel.dart';
 import 'package:ono/Model/LoginStatus.dart';
 import 'package:ono/Model/ProblemRegisterModel.dart';
 import 'package:ono/Provider/FoldersProvider.dart';
@@ -91,9 +91,9 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         canPop: true,
         onPopInvokedWithResult: (bool didPop, Object? result) async {
           if (didPop) {
-            if (foldersProvider.currentFolder?.parentFolderId != null) {
+            if (foldersProvider.currentFolder?.parentFolder?.folderId != null) {
               foldersProvider
-                  .moveToFolder(foldersProvider.currentFolder!.parentFolderId);
+                  .moveToFolder(foldersProvider.currentFolder?.parentFolder?.folderId);
             }
             return;
           }
@@ -220,7 +220,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       title: StandardText(
         text: _isSelectionMode
             ? '삭제할 항목 선택'
-            : ((foldersProvider.currentFolder?.parentFolderId != null &&
+            : ((foldersProvider.currentFolder?.parentFolder?.folderId != null &&
                     foldersProvider.currentFolder?.folderName != null)
                 ? foldersProvider.currentFolder!.folderName
                 : '책장'),
@@ -532,7 +532,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   // 폴더 이동 다이얼로그 출력
   Future<void> _showMoveFolderDialog(FoldersProvider foldersProvider) async {
     // 루트 폴더인지 확인
-    if (foldersProvider.currentFolder?.parentFolderId == null) {
+    if (foldersProvider.currentFolder?.parentFolder?.folderId == null) {
       _showCannotMoveRootFolderDialog();
       return;
     }
@@ -689,7 +689,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
               return Consumer<FoldersProvider>(
                 builder: (context, foldersProvider, child) {
                   var subFolderIds =
-                      foldersProvider.currentFolder?.subFolderIds ?? [];
+                      foldersProvider.currentFolder?.subFolderList ?? [];
                   var currentProblems = foldersProvider.currentProblems;
 
                   if (subFolderIds.isEmpty && currentProblems.isEmpty) {
@@ -745,7 +745,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                     itemCount: subFolderIds.length + currentProblems.length,
                     itemBuilder: (context, index) {
                       if (index < subFolderIds.length) {
-                        var subFolderId = subFolderIds[index];
+                        var subFolderId = subFolderIds[index].folderId;
 
                         var subFolder =
                             foldersProvider.getFolderContents(subFolderId);

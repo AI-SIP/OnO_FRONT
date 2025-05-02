@@ -9,7 +9,7 @@ import '../../Provider/TokenProvider.dart';
 class HttpService {
   final TokenProvider tokenProvider = TokenProvider();
 
-  Future<http.Response> sendRequest({
+  Future<dynamic> sendRequest({
     required String method,
     required String url,
     Map<String, String>? headers,
@@ -37,51 +37,55 @@ class HttpService {
       });
     }
 
+    http.Response response;
     try {
       switch (method.toUpperCase()) {
         case 'GET':
-          return await http
+          response = await http
               .get(uri, headers: mergedHeaders)
               .timeout(const Duration(seconds: 90));
+          break;
+
         case 'POST':
           if (isMultipart && files != null) {
-            var request = http.MultipartRequest('POST', uri);
-            request.headers.addAll(mergedHeaders);
-            if (body != null) {
-              request.fields.addAll(
-                  body.map((key, value) => MapEntry(key, value.toString())));
-            }
-            request.files.addAll(files);
-            final streamedResponse =
-                await request.send().timeout(const Duration(seconds: 90));
-            return await http.Response.fromStream(streamedResponse);
+            final req = http.MultipartRequest('POST', uri)
+              ..headers.addAll(mergedHeaders)
+              ..fields.addAll(body?.map((k, v) => MapEntry(k, v.toString())) ?? {})
+              ..files.addAll(files);
+            final streamed = await req.send().timeout(const Duration(seconds: 90));
+            response = await http.Response.fromStream(streamed);
           } else {
-            return await http.post(uri,
-                headers: mergedHeaders, body: json.encode(body));
+            response = await http.post(
+              uri,
+              headers: mergedHeaders,
+              body: json.encode(body),
+            );
           }
+          break;
+
         case 'PATCH':
           if (isMultipart && files != null) {
-            var request = http.MultipartRequest('PATCH', uri);
-            request.headers.addAll(mergedHeaders);
-            if (body != null) {
-              request.fields.addAll(
-                  body.map((key, value) => MapEntry(key, value.toString())));
-            }
-            request.files.addAll(files);
-            final streamedResponse =
-                await request.send().timeout(const Duration(seconds: 90));
-            return await http.Response.fromStream(streamedResponse);
+            final req = http.MultipartRequest('PATCH', uri)
+              ..headers.addAll(mergedHeaders)
+              ..fields.addAll(body?.map((k, v) => MapEntry(k, v.toString())) ?? {})
+              ..files.addAll(files);
+            final streamed = await req.send().timeout(const Duration(seconds: 90));
+            response = await http.Response.fromStream(streamed);
           } else {
-            return await http
+            response = await http
                 .patch(uri, headers: mergedHeaders, body: json.encode(body))
                 .timeout(const Duration(seconds: 90));
           }
+          break;
+
         case 'DELETE':
-          return await http
+          response = await http
               .delete(uri, headers: mergedHeaders)
               .timeout(const Duration(seconds: 90));
+          break;
+
         default:
-          throw Exception('Unsupported HTTP method');
+          throw Exception('Unsupported HTTP method: $method');
       }
     } on TimeoutException {
       throw Exception('Request timed out. Please try again.');
@@ -90,5 +94,17 @@ class HttpService {
     } catch (error) {
       throw Exception('An error occurred: $error');
     }
+
+    // 4. Check for HTTP errors
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw Exception('HTTP ${response.statusCode}: ${response.reasonPhrase}');
+    }
+
+    // 5. Parse JSON and extract data
+    final decoded = jsonDecode(utf8.decode(response.bodyBytes));
+    if (decoded is Map<String, dynamic> && decoded.containsKey('data')) {
+      return decoded['data'];
+    }
+    return decoded;
   }
 }

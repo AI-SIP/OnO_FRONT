@@ -5,7 +5,7 @@ import 'package:ono/Screen/ProblemPractice/PracticeTitleWriteScreen.dart';
 import 'package:provider/provider.dart';
 import '../../GlobalModule/Text/StandardText.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
-import '../../Model/FolderModel.dart';
+import '../../Model/Folder/FolderModel.dart';
 import '../../Model/ProblemPracticeRegisterModel.dart';
 import '../../Model/TemplateType.dart';
 import '../../Provider/FoldersProvider.dart';

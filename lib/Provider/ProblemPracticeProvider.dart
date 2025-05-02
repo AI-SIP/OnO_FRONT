@@ -23,7 +23,7 @@ class ProblemPracticeProvider with ChangeNotifier{
     try {
       final response = await httpService.sendRequest(
         method: 'GET',
-        url: '${AppConfig.baseUrl}/api/problem/practice/all',
+        url: '${AppConfig.baseUrl}/api/practices/thumbnail',
       );
 
       if (response.statusCode == 200) {
