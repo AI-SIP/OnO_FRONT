@@ -3,28 +3,27 @@ import 'package:ono/Model/ProblemModel.dart';
 import 'package:ono/Screen/ProblemRegister/ProblemRegisterTemplate.dart';
 import 'package:provider/provider.dart';
 
-import '../../GlobalModule/Theme/StandardText.dart';
+import '../../GlobalModule/Text/StandardText.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
 import '../../Provider/FoldersProvider.dart';
+import 'ProblemRegisterTemplateV2.dart';
 
 class ProblemRegisterScreenV2 extends StatefulWidget {
-  final ProblemModel problemModel;
+  final ProblemModel? problemModel;
   final bool isEditMode;
-  final Map<String, dynamic>? colorPickerResult;
 
   const ProblemRegisterScreenV2({
     super.key,
     required this.problemModel,
     required this.isEditMode,
-    required this.colorPickerResult,
   });
 
   @override
-  _ProblemRegisterScreenV2State createState() =>
-      _ProblemRegisterScreenV2State();
+  _ProblemRegisterScreenStateV2 createState() =>
+      _ProblemRegisterScreenStateV2();
 }
 
-class _ProblemRegisterScreenV2State extends State<ProblemRegisterScreenV2> {
+class _ProblemRegisterScreenStateV2 extends State<ProblemRegisterScreenV2> {
   @override
   void initState() {
     super.initState();
@@ -35,26 +34,16 @@ class _ProblemRegisterScreenV2State extends State<ProblemRegisterScreenV2> {
     Widget templateWidget;
     final themeProvider = Provider.of<ThemeHandler>(context);
 
-    templateWidget = ProblemRegisterTemplate(
+    templateWidget = ProblemRegisterTemplateV2(
         problemModel: widget.problemModel,
-        colorPickerResult: widget.colorPickerResult,
         isEditMode: widget.isEditMode,
-        templateType: widget.problemModel.templateType!);
+    );
 
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
         centerTitle: true,
         backgroundColor: Colors.white,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: themeProvider.primaryColor),
-          onPressed: () {
-            if (!widget.isEditMode) {
-              _deleteProblem();
-            }
-            Navigator.pop(context);
-          },
-        ),
         title: StandardText(
           text: widget.isEditMode ? '오답노트 수정' : '오답노트 작성',
           color: themeProvider.primaryColor,
@@ -67,10 +56,5 @@ class _ProblemRegisterScreenV2State extends State<ProblemRegisterScreenV2> {
         child: templateWidget,
       ),
     );
-  }
-
-  Future<void> _deleteProblem() async {
-    await Provider.of<FoldersProvider>(context, listen: false)
-        .deleteProblem(widget.problemModel.problemId);
   }
 }

@@ -4,12 +4,15 @@ import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:ono/GlobalModule/Theme/LoadingDialog.dart';
+import 'package:ono/GlobalModule/Image/ColorPicker/ImageCoordinatePickerHandler.dart';
+import 'package:ono/GlobalModule/Dialog/LoadingDialog.dart';
+import 'package:ono/GlobalModule/Text/UnderlinedText.dart';
 import 'package:provider/provider.dart';
 import '../../GlobalModule/Image/ColorPicker/ImageColorPickerHandler.dart';
 import '../../GlobalModule/Image/ImagePickerHandler.dart';
-import '../../GlobalModule/Theme/SnackBarDialog.dart';
-import '../../GlobalModule/Theme/StandardText.dart';
+import '../../GlobalModule/Text/HandWriteText.dart';
+import '../../GlobalModule/Dialog/SnackBarDialog.dart';
+import '../../GlobalModule/Text/StandardText.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
 import '../../Model/LoginStatus.dart';
 import '../../Model/ProblemModel.dart';
@@ -62,13 +65,11 @@ class _TemplateSelectionScreenState extends State<TemplateSelectionScreen> {
         backgroundColor: Colors.white,
       ),
       body: Padding(
-        padding: const EdgeInsets.all(20.0),
+        padding: const EdgeInsets.all(10.0),
         child: Column(
           children: [
             _buildTopTabs(screenHeight, screenWidth, themeProvider),
-            const SizedBox(height: 20),
             Expanded(child: _buildPageView(screenHeight, screenWidth, themeProvider)),
-            SizedBox(height: screenHeight * 0.01),  // '문제 등록하러 가기' 버튼과 콘텐츠 사이 여백을 줄임
             _buildSubmitButton(screenHeight, screenWidth, themeProvider),
           ],
         ),
@@ -96,8 +97,8 @@ class _TemplateSelectionScreenState extends State<TemplateSelectionScreen> {
             children: [
               Container(
                 margin: EdgeInsets.symmetric(horizontal: screenWidth * 0.02),
-                height: screenHeight * 0.05,
-                width: screenWidth * 0.2,
+                height: 40,
+                width: 80,
                 decoration: BoxDecoration(
                   color: Colors.white,
                   border: Border.all(
@@ -111,8 +112,8 @@ class _TemplateSelectionScreenState extends State<TemplateSelectionScreen> {
                 child: Center(
                   child: SvgPicture.asset(
                     TemplateType.values[index].templateDetailImage,
-                    width: screenHeight * 0.035,
-                    height: screenHeight * 0.035,
+                    width: 30,
+                    height: 30,
                   ),
                 ),
               ),
@@ -139,18 +140,22 @@ class _TemplateSelectionScreenState extends State<TemplateSelectionScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
+                  SizedBox(height: screenHeight * 0.08),
                   _buildTemplateImageAndTags(screenHeight, templateType, themeProvider),
-                  SizedBox(height: screenHeight * 0.01),
+                  const SizedBox(height: 40),
                   // 템플릿 설명은 유동적으로 길어질 수 있도록 처리
                   Padding(
-                    padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.15),
+                    padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.1),
                     child: StandardText(
                       text: templateType.description,
                       fontSize: 16,
                       color: Colors.black,
+                      textAlign: TextAlign.center,
                     ),
                   ),
-                  SizedBox(height: screenHeight * 0.01),
+                  const SizedBox(height: 20),
+                  _buildHashTags(templateType, themeProvider), // 해시태그 추가
+                  const SizedBox(height: 20),
                 ],
               ),
             );
@@ -163,23 +168,49 @@ class _TemplateSelectionScreenState extends State<TemplateSelectionScreen> {
 
   // 템플릿 이미지와 태그 빌드 함수
   Widget _buildTemplateImageAndTags(double screenHeight, TemplateType templateType, ThemeHandler themeProvider) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        SvgPicture.asset(
+          templateType.templateDetailImage,
+          height: screenHeight * 0.18,
+          fit: BoxFit.contain,
+        ),
+        const SizedBox(height: 20),
+        StandardText(
+          text: templateType.displayName,
+          fontSize: 25,
+          color: Colors.black,
+        ),
+        const SizedBox(height: 20),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            _buildTag('필기 제거', templateType.hasEraseFeature, themeProvider),
+            const SizedBox(width: 20),
+            _buildTag('문제 분석', templateType.hasAnalysisFeature, themeProvider),
+          ],
+        ),
+      ],
+    );
+    /*
     return SizedBox(
-      height: screenHeight * 0.45, // 이미지와 태그가 차지하는 고정된 공간
+      height: screenHeight * 0.4, // 이미지와 태그가 차지하는 고정된 공간
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           SvgPicture.asset(
             templateType.templateDetailImage,
-            height: screenHeight * 0.2,
+            height: screenHeight * 0.16,
             fit: BoxFit.contain,
           ),
-          SizedBox(height: screenHeight * 0.03),
+          SizedBox(height: screenHeight * 0.02),
           StandardText(
             text: templateType.displayName,
             fontSize: 24,
-            color: themeProvider.primaryColor,
+            color: Colors.black,
           ),
-          SizedBox(height: screenHeight * 0.03),
+          SizedBox(height: screenHeight * 0.02),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -191,6 +222,23 @@ class _TemplateSelectionScreenState extends State<TemplateSelectionScreen> {
         ],
       ),
     );
+
+     */
+  }
+
+  Widget _buildHashTags(TemplateType templateType, ThemeHandler themeProvider) {
+    return Wrap(
+      alignment: WrapAlignment.center,
+      spacing: 8.0,
+      runSpacing: 8.0,
+      children: templateType.hashTags.map((tag) {
+        return UnderlinedText(
+          text: tag,
+          fontSize: 18,
+          color: Colors.black,
+        );
+      }).toList(),
+    );
   }
 
   // 좌우 네비게이션 버튼 빌드 함수
@@ -201,7 +249,7 @@ class _TemplateSelectionScreenState extends State<TemplateSelectionScreen> {
           left: 0,
           top: screenHeight * 0.3,
           child: IconButton(
-            icon: const Icon(Icons.arrow_back_ios, size: 24, color: Colors.grey),
+            icon: const Icon(Icons.arrow_back_ios, size: 24, color: Colors.black),
             onPressed: () {
               if (_selectedIndex == 0) {
                 _pageController.jumpToPage(TemplateType.values.length - 1);
@@ -218,7 +266,7 @@ class _TemplateSelectionScreenState extends State<TemplateSelectionScreen> {
           right: 0,
           top: screenHeight * 0.3,
           child: IconButton(
-            icon: const Icon(Icons.arrow_forward_ios, size: 24, color: Colors.grey),
+            icon: const Icon(Icons.arrow_forward_ios, size: 24, color: Colors.black),
             onPressed: () {
               if (_selectedIndex == TemplateType.values.length - 1) {
                 _pageController.jumpToPage(0);
@@ -240,7 +288,7 @@ class _TemplateSelectionScreenState extends State<TemplateSelectionScreen> {
     return Padding(
       padding: EdgeInsets.symmetric(vertical: screenHeight * 0.01), // 여백 줄임
       child: SizedBox(
-        width: screenWidth * 0.8, // 가로 길이 화면의 80%
+        width: screenWidth * 0.7, // 가로 길이 화면의 80%
         child: ElevatedButton(
           onPressed: () {
             _onTemplateSelected(context, TemplateType.values[_selectedIndex]);
@@ -250,11 +298,11 @@ class _TemplateSelectionScreenState extends State<TemplateSelectionScreen> {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(15),
             ),
-            padding: EdgeInsets.symmetric(vertical: screenHeight * 0.015), // 버튼 높이
+            padding: const EdgeInsets.symmetric(vertical: 10), // 버튼 높이
           ),
           child: const StandardText(
-            text: '문제 등록하러 가기',
-            fontSize: 16,
+            text: '오답노트 작성하러 가기',
+            fontSize: 15,
             color: Colors.white,
           ),
         ),
@@ -276,7 +324,7 @@ class _TemplateSelectionScreenState extends State<TemplateSelectionScreen> {
       ),
       child: StandardText(
         text: text,
-        fontSize: 14,
+        fontSize: 13,
         color: isActive ? themeProvider.primaryColor : Colors.grey,
       ),
     );
@@ -301,16 +349,19 @@ class _TemplateSelectionScreenState extends State<TemplateSelectionScreen> {
     imagePickerHandler.showImagePicker(context, (pickedFile) async {
       if (pickedFile != null) {
         Map<String, dynamic>? colorPickerResult;
+        List<List<double>>? coordinatePickerResult;
 
         if (templateType == TemplateType.clean || templateType == TemplateType.special) {
           final colorPickerHandler = ImageColorPickerHandler();
-          colorPickerResult = await colorPickerHandler.showColorPicker(
-            context,
-            pickedFile.path,
+          final coordinatePickerHandler = ImageCoordinatePickerHandler();
+          coordinatePickerResult = await coordinatePickerHandler.showCoordinatePicker(
+              context,
+              pickedFile.path
           );
+          log(coordinatePickerResult.toString());
         }
 
-        if (templateType == TemplateType.simple || colorPickerResult != null) {
+        if (templateType == TemplateType.simple || coordinatePickerResult != null) {
           LoadingDialog.show(context, '템플릿 불러오는 중...');
           final result = await Provider.of<FoldersProvider>(context, listen: false)
               .uploadProblemImage(pickedFile);
@@ -330,6 +381,7 @@ class _TemplateSelectionScreenState extends State<TemplateSelectionScreen> {
                 'problemModel': problemModel,
                 'isEditMode': false,
                 'colorPickerResult': colorPickerResult,
+                'coordinatePickerResult' : coordinatePickerResult,
               },
             );
           } else {

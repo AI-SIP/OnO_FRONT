@@ -7,10 +7,10 @@ import 'package:ono/Model/TemplateType.dart';
 import '../../GlobalModule/Image/DisplayImage.dart';
 import '../../GlobalModule/Image/FullScreenImage.dart';
 import '../../GlobalModule/Theme/GridPainter.dart';
-import '../../GlobalModule/Theme/HandWriteText.dart';
-import '../../GlobalModule/Theme/StandardText.dart';
+import '../../GlobalModule/Text/HandWriteText.dart';
+import '../../GlobalModule/Text/StandardText.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
-import '../../GlobalModule/Theme/UnderlinedText.dart';
+import '../../GlobalModule/Text/UnderlinedText.dart';
 import '../../GlobalModule/Util/LatexTextHandler.dart';
 import '../../Model/ProblemModel.dart';
 
@@ -48,7 +48,7 @@ class ProblemDetailScreenWidget {
             buildImageSection(
                 context,
                 imageUrl,
-                (templateType == TemplateType.simple) ? '문제 이미지' : '보정 이미지',
+                '문제 이미지',
                 themeProvider.primaryColor,
                 themeProvider),
           ],
@@ -57,7 +57,7 @@ class ProblemDetailScreenWidget {
     );
   }
 
-  Widget buildAnalysisExpansionTile(
+  Widget buildExpansionTile(
       BuildContext context,
       ProblemModel problemModel,
       ThemeHandler themeProvider,
@@ -72,7 +72,7 @@ class ProblemDetailScreenWidget {
       child: ExpansionTile(
         title: Container(
           padding: const EdgeInsets.all(8.0),
-          child: buildCenteredTitle('정답 확인', themeProvider.primaryColor),
+          child: buildCenteredTitle('정답 확인', Colors.black),
         ),
         children: [
           SizedBox(height: screenHeight * 0.01),
@@ -87,14 +87,14 @@ class ProblemDetailScreenWidget {
             children: (templateType == TemplateType.simple)
                 ? [
                     _buildImageContainer(context, problemModel.answerImageUrl,
-                        '정답 이미지', themeProvider)
+                        '해설 이미지', themeProvider)
                   ]
                 : [
                     _buildImageContainer(context, problemModel.problemImageUrl,
-                        '원본 이미지', themeProvider),
+                        '문제 원본 이미지', themeProvider),
                     const SizedBox(height: 20.0),
                     _buildImageContainer(context, problemModel.answerImageUrl,
-                        '정답 이미지', themeProvider),
+                        '해설 이미지', themeProvider),
                     //const SizedBox(height: 20.0),
                     //_buildImageContainer(context, problemModel.solveImageUrl, '풀이 이미지', themeProvider),
                   ],
@@ -440,6 +440,7 @@ class ProblemDetailScreenWidget {
                             );
                           },
                           child: Container(
+                            width: mediaQuery.size.width,
                             height: mediaQuery.size.height * 0.5, // 고정된 높이로 변경
                             decoration: BoxDecoration(
                               color:

@@ -1,9 +1,8 @@
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
-import 'package:ono/Screen/ProblemDetail/ProblemDetailScreenV2.dart';
+import 'package:ono/Screen/ProblemDetail/ProblemDetailScreen.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
-
 import '../../Model/ProblemThumbnailModel.dart';
 import '../../Provider/FoldersProvider.dart';
 
@@ -13,8 +12,8 @@ class DirectoryScreenService {
   DirectoryScreenService(this.foldersProvider);
 
   List<ProblemThumbnailModel> loadProblems() {
-    if (foldersProvider.problems.isNotEmpty) {
-      return foldersProvider.problems
+    if (foldersProvider.currentProblems.isNotEmpty) {
+      return foldersProvider.currentProblems
           .map((problem) => ProblemThumbnailModel.fromJson(problem.toJson()))
           .toList();
     } else {
@@ -25,7 +24,7 @@ class DirectoryScreenService {
 
   Future<void> fetchProblems() async {
     try {
-      await foldersProvider.fetchCurrentFolderContents();
+      await foldersProvider.fetchFolderContent(null);
     } catch (error, stackTrace) {
       log('Failed to fetch problems: $error');
       await Sentry.captureException(
@@ -50,7 +49,7 @@ class DirectoryScreenService {
       context,
       MaterialPageRoute(
         //builder: (context) => ProblemDetailScreen(problemId: problemId),
-        builder: (context) => ProblemDetailScreenV2(problemId: problemId),
+        builder: (context) => ProblemDetailScreen(problemId: problemId),
       ),
     ).then((value) {
       if (value == true) {

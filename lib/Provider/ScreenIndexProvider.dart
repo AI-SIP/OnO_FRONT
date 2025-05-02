@@ -15,9 +15,12 @@ class ScreenIndexProvider extends ChangeNotifier {
         _sendScreenView('DirectoryScreen');
         break;
       case 1:
-        _sendScreenView('ProblemRegisterScreen');
+        _sendScreenView('ProblemPracticeScreen');
         break;
       case 2:
+        _sendScreenView('ProblemRegisterScreen');
+        break;
+      case 3:
         _sendScreenView('SettingScreen');
         break;
     }

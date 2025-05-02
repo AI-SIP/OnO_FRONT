@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
@@ -6,13 +8,13 @@ import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
 import '../../GlobalModule/Image/DisplayImage.dart';
-import '../../GlobalModule/Theme/LoadingDialog.dart';
-import '../../GlobalModule/Theme/StandardText.dart';
+import '../../GlobalModule/Dialog/LoadingDialog.dart';
+import '../../GlobalModule/Text/StandardText.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
-import '../../GlobalModule/Util/FolderSelectionDialog.dart';
+import '../../GlobalModule/Dialog/FolderSelectionDialog.dart';
 import '../../GlobalModule/Util/LatexTextHandler.dart';
 import '../../Model/ProblemModel.dart';
-import '../../Model/ProblemRegisterModelV2.dart';
+import '../../Model/ProblemRegisterModel.dart';
 import '../../Model/TemplateType.dart';
 import '../../Provider/FoldersProvider.dart';
 import '../../Provider/ScreenIndexProvider.dart';
@@ -22,12 +24,14 @@ import 'ProblemRegisterScreenWidget.dart';
 class ProblemRegisterTemplate extends StatefulWidget {
   final ProblemModel problemModel;
   final Map<String, dynamic>? colorPickerResult;
+  final List<List<double>>? coordinatePickerResult;
   final bool isEditMode;
   final TemplateType templateType;
 
   const ProblemRegisterTemplate({
     required this.problemModel,
     required this.colorPickerResult,
+    required this.coordinatePickerResult,
     required this.isEditMode,
     required this.templateType,
     super.key,
@@ -49,6 +53,8 @@ class _ProblemRegisterTemplateState
   String? processImageUrl;
   String? analysisResult;
   bool isLoading = false;
+  bool isAnalysisLoading = false;
+  bool isProcessImageLoading = false;
   DateTime _selectedDate = DateTime.now();
   int? _selectedFolderId;
   String? _selectedFolderName;
@@ -68,10 +74,10 @@ class _ProblemRegisterTemplateState
       _selectedFolderId = problemModel.folderId;
     } else{
       final folderProvider = Provider.of<FoldersProvider>(context, listen: false);
-      _selectedFolderId = folderProvider.currentFolderId;
+      _selectedFolderId = folderProvider.currentFolder!.folderId;
     }
 
-    _selectedFolderName = null;
+    _selectedFolderName = '책장';
 
     _fetchData();
   }
@@ -89,28 +95,60 @@ class _ProblemRegisterTemplateState
     if(widget.isEditMode){
       processImageUrl = problemModel.processImageUrl;
       analysisResult = problemModel.analysis;
+      setState(() {});
+
+      return;
     } else{
+
       setState(() {
-        isLoading = true;
+        isAnalysisLoading = true;
+        isProcessImageLoading = true;
       });
 
+      final provider = Provider.of<FoldersProvider>(context, listen: false);
+
+      if (widget.templateType == TemplateType.special) {
+        provider.fetchAnalysisResult(problemModel.problemImageUrl).then((result) {
+          setState(() {
+            analysisResult = result;
+            isAnalysisLoading = false; // 분석 로드 완료
+          });
+        }).catchError((error) {
+          setState(() {
+            isAnalysisLoading = false; // 에러 발생 시 로딩 종료
+          });
+          log('Error fetching analysis result: $error');
+        });
+      } else {
+        setState(() {
+          isAnalysisLoading = false;
+        });
+      }
+
       if (widget.templateType != TemplateType.simple) {
-        final provider = Provider.of<FoldersProvider>(context, listen: false);
-
-        // Fetch processImageUrl and analysis based on the template type
-        processImageUrl = await provider.fetchProcessImageUrl(
-            problemModel.problemImageUrl, widget.colorPickerResult!);
-
-        if (widget.templateType == TemplateType.special) {
-          analysisResult =
-          await provider.fetchAnalysisResult(problemModel.problemImageUrl);
-        }
+        provider
+            .fetchProcessImage(
+          problemModel.problemImageUrl,
+          widget.colorPickerResult,
+          widget.coordinatePickerResult,
+        )
+            .then((result) {
+          setState(() {
+            processImageUrl = result;
+            isProcessImageLoading = false; // 필기 제거 이미지 로드 완료
+          });
+        }).catchError((error) {
+          setState(() {
+            isProcessImageLoading = false; // 에러 발생 시 로딩 종료
+          });
+          log('Error fetching process image URL: $error');
+        });
+      } else {
+        setState(() {
+          isProcessImageLoading = false;
+        });
       }
     }
-
-    setState(() {
-      isLoading = false;
-    });
   }
 
   @override
@@ -254,8 +292,8 @@ class _ProblemRegisterTemplateState
                 label: '필기 제거 이미지',
                 imageUrl: processImageUrl,
                 themeProvider: themeProvider,
-                isLoading: isLoading,
-                loadingMessage: '필기 제거 중....'
+                isLoading: isProcessImageLoading,
+                loadingMessage: '필기 제거 중...'
               ),
             ),
           ],
@@ -270,7 +308,7 @@ class _ProblemRegisterTemplateState
               flex: 1,
               child: ProblemRegisterScreenWidget.buildImagePickerWithLabel(
                 context: context,
-                label: '정답 이미지',
+                label: '해설 이미지',
                 image: answerImage,
                 existingImageUrl: problemModel.answerImageUrl,
                 themeProvider: themeProvider,
@@ -313,7 +351,7 @@ class _ProblemRegisterTemplateState
               flex: 1,
               child: ProblemRegisterScreenWidget.buildImagePickerWithLabel(
                 context: context,
-                label: '정답 이미지',
+                label: '해설 이미지',
                 image: answerImage,
                 existingImageUrl: problemModel.answerImageUrl,
                 themeProvider: themeProvider,
@@ -354,20 +392,28 @@ class _ProblemRegisterTemplateState
           imageUrl: problemModel.problemImageUrl,
           themeProvider: themeProvider,
         ),
-        const SizedBox(height: 30),
+        const SizedBox(height: 10),
         if(widget.templateType != TemplateType.simple) ... [
+          const Center(
+            child: Icon(
+              Icons.arrow_drop_down_outlined,
+              size: 50,
+              color: Colors.red,
+            ),
+          ),
+          const SizedBox(height: 10),
           _buildImageSection(
               label: '필기 제거 이미지',
               imageUrl: processImageUrl,
               themeProvider: themeProvider,
-              isLoading: isLoading,
-              loadingMessage: '필기 제거 중....'
+              isLoading: isProcessImageLoading,
+              loadingMessage: '필기 제거 중...'
           ),
           const SizedBox(height: 30),
         ],
         ProblemRegisterScreenWidget.buildImagePickerWithLabel(
           context: context,
-          label: '정답 이미지',
+          label: '해설 이미지',
           image: answerImage,
           existingImageUrl: problemModel.answerImageUrl,
           themeProvider: themeProvider,
@@ -455,7 +501,6 @@ class _ProblemRegisterTemplateState
     required double maxHeight,
   }) {
     double screenHeight = MediaQuery.of(context).size.height;
-    double screenWidth = MediaQuery.of(context).size.width;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -486,7 +531,7 @@ class _ProblemRegisterTemplateState
               width: 2.0,
             ),
           ),
-          child: isLoading
+          child: isAnalysisLoading
               ? Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -507,7 +552,7 @@ class _ProblemRegisterTemplateState
               ],
             ),
           )
-              : analysisResult != null || analysisResult!.isEmpty
+              : analysisResult != null && analysisResult.isNotEmpty
               ? Scrollbar(
             controller: scrollControllerForAnalysis,
             thumbVisibility: true,
@@ -524,7 +569,7 @@ class _ProblemRegisterTemplateState
                   ),
                 ],
                 renderingEngine: const TeXViewRenderingEngine.mathjax(),
-                child: LatexTextHandler.renderLatex(analysisResult!),
+                child: LatexTextHandler.renderLatex(analysisResult),
                 style: const TeXViewStyle(
                   elevation: 5,
                   borderRadius: TeXViewBorderRadius.all(10),
@@ -557,7 +602,7 @@ class _ProblemRegisterTemplateState
   }
 
   Future<void> _waitForLoadingToComplete() async {
-    while (isLoading) {
+    while (isProcessImageLoading || isAnalysisLoading) {
       await Future.delayed(const Duration(milliseconds: 500));
     }
   }
@@ -570,7 +615,7 @@ class _ProblemRegisterTemplateState
     LoadingDialog.show(context, '오답노트 작성 중...');
 
     _waitForLoadingToComplete().then((_) {
-      final problemRegisterModel = ProblemRegisterModelV2(
+      final problemRegisterModel = ProblemRegisterModel(
         problemId: problemModel.problemId,
         problemImageUrl: problemModel.problemImageUrl,
         processImageUrl: processImageUrl,
@@ -583,7 +628,7 @@ class _ProblemRegisterTemplateState
         folderId: _selectedFolderId,
       );
 
-      _service.submitProblemV2(
+      _service.submitProblem(
         context,
         problemRegisterModel,
         () {

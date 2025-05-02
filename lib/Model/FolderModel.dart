@@ -1,21 +1,20 @@
-import 'package:ono/Model/FolderThumbnailModel.dart';
 import 'ProblemModel.dart';
 
 class FolderModel {
   int folderId;
   String folderName;
-  FolderThumbnailModel? parentFolder;
+  int? parentFolderId;
   List<ProblemModel> problems = [];
-  List<FolderThumbnailModel> subFolders = [];
+  List<int>? subFolderIds = [];
   final DateTime? createdAt;
   final DateTime? updateAt;
 
   FolderModel({
     required this.folderId,
     required this.folderName,
-    this.parentFolder,
+    this.parentFolderId,
     required this.problems,
-    required this.subFolders,
+    this.subFolderIds,
     required this.createdAt,
     required this.updateAt,
   });
@@ -24,11 +23,11 @@ class FolderModel {
     return FolderModel(
       folderId: json['folderId'],
       folderName: json['folderName'],
-      parentFolder: json['parentFolder'] != null
-          ? FolderThumbnailModel.fromJson(json['parentFolder'])
-          : null, // null 체크
+      parentFolderId: json['parentFolderId'],
       problems: (json['problems'] as List?)?.map((e) => ProblemModel.fromJson(e)).toList() ?? [], // null 체크
-      subFolders: (json['subFolders'] as List?)?.map((e) => FolderThumbnailModel.fromJson(e)).toList() ?? [], // null 체크
+      subFolderIds: json['subFolderIds'] != null
+          ? List<int>.from(json['subFolderIds'])
+          : [], // null이면 빈 리스트로 처리
       createdAt: json['createdAt'] != null
           ? DateTime.parse(json['createdAt'])
           : null, // null 체크
@@ -42,9 +41,9 @@ class FolderModel {
     return {
       'folderId': folderId,
       'folderName': folderName,
-      'parentFolder': parentFolder?.toJson(),
+      'parentFolderId': parentFolderId,
       'problems': problems.map((e) => e.toJson()).toList(),
-      'subFolders': subFolders.map((e) => e.toJson()).toList(),
+      'subFolderIds': subFolderIds ?? [],
       'createdAt': createdAt?.toIso8601String(),
       'updateAt': updateAt?.toIso8601String(),
     };

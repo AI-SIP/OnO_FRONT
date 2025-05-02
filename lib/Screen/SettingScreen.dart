@@ -1,12 +1,10 @@
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
-import 'package:ono/Config/AppConfig.dart';
 import 'package:ono/GlobalModule/Util/UrlLauncher.dart';
 import 'package:ono/Model/LoginStatus.dart';
 import 'package:provider/provider.dart';
-import 'package:url_launcher/url_launcher.dart';
-import '../GlobalModule/Theme/StandardText.dart';
-import '../GlobalModule/Theme/ThemeDialog.dart';
+import '../GlobalModule/Text/StandardText.dart';
+import '../GlobalModule/Dialog/ThemeDialog.dart';
 import '../GlobalModule/Theme/ThemeHandler.dart';
 import '../Provider/ScreenIndexProvider.dart';
 import '../Provider/UserProvider.dart';
@@ -305,9 +303,9 @@ class _SettingScreenState extends State<SettingScreen> {
         backgroundColor: backgroundColor,
         foregroundColor: textColor,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(15),
         ),
-        padding: EdgeInsets.symmetric(horizontal: screenHeight * 0.03, vertical: screenHeight * 0.015),
+        padding: EdgeInsets.symmetric(horizontal: screenHeight * 0.03, vertical: screenHeight * 0.01),
       ),
       child: StandardText(
         text: text,

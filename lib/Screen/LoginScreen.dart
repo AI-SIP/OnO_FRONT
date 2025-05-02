@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:provider/provider.dart';
 import '../GlobalModule/Theme/GridPainter.dart';
-import '../GlobalModule/Theme/HandWriteText.dart';
-import '../GlobalModule/Theme/StandardText.dart';
+import '../GlobalModule/Text/HandWriteText.dart';
+import '../GlobalModule/Text/StandardText.dart';
 import '../GlobalModule/Theme/ThemeHandler.dart';
 import '../Model/LoginStatus.dart';
 import '../Provider/UserProvider.dart';
@@ -158,7 +158,7 @@ class LoginScreen extends StatelessWidget {
         ),
         content: const SizedBox(
           child: StandardText(
-            text: '기기 간 오답노트 연동이 불가능하며, 로그아웃 시 모든 정보가 삭제됩니다.',
+            text: '기기 간 오답노트 연동이 불가능하며,\n로그아웃 시 모든 정보가 삭제됩니다.',
             fontSize: 16,
             color: Colors.black,
           ),

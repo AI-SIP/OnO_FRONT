@@ -10,11 +10,11 @@ import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../GlobalModule/Image/DisplayImage.dart';
-import '../../GlobalModule/Theme/HandWriteText.dart';
+import '../../GlobalModule/Text/HandWriteText.dart';
 import '../../GlobalModule/Theme/GridPainter.dart';
-import '../../GlobalModule/Theme/StandardText.dart';
+import '../../GlobalModule/Text/StandardText.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
-import '../../GlobalModule/Theme/UnderlinedText.dart';
+import '../../GlobalModule/Text/UnderlinedText.dart';
 import '../../Model/ProblemModel.dart';
 
 class AnswerShareScreen extends StatefulWidget {
@@ -170,14 +170,14 @@ class _AnswerShareScreenState extends State<AnswerShareScreen> {
                                     ),
                                   ],
                                 ),
-                                const SizedBox(height: 30),
+                                const SizedBox(height: 40),
                                 Row(
                                   children: [
                                     Icon(Icons.camera_alt,
                                         color: themeProvider.primaryColor),
                                     const SizedBox(width: 8),
                                     HandWriteText(
-                                      text: '정답 이미지',
+                                      text: '해설 이미지',
                                       fontSize: 20,
                                       color: themeProvider.primaryColor,
                                     ),
@@ -220,7 +220,7 @@ class _AnswerShareScreenState extends State<AnswerShareScreen> {
 
     return Center(
       child: Container(
-        width: mediaQuery.size.width * 0.8,
+        width: mediaQuery.size.width * 0.9,
         decoration: BoxDecoration(
           color: themeProvider.primaryColor.withOpacity(0.1), // 배경색 추가
           borderRadius: BorderRadius.circular(10), // 모서리 둥글게 설정
@@ -242,14 +242,10 @@ class _AnswerShareScreenState extends State<AnswerShareScreen> {
       // 프레임 완료 후 실행되도록 대기
       await WidgetsBinding.instance.endOfFrame;
 
-      RenderRepaintBoundary? boundary = widget._globalKey.currentContext!
-          .findRenderObject() as RenderRepaintBoundary?;
+      await Future.delayed(const Duration(milliseconds: 30));
 
-      // boundary가 null인 경우 종료
-      if (boundary == null) return;
-
-      // 추가적인 딜레이를 줘서 boundary가 준비될 시간을 확보합니다.
-      await Future.delayed(const Duration(milliseconds: 20));
+      RenderRepaintBoundary boundary = widget._globalKey.currentContext!
+          .findRenderObject() as RenderRepaintBoundary;
 
       // 이미지를 캡처합니다.
       ui.Image image = await boundary.toImage(pixelRatio: MediaQuery.of(context).devicePixelRatio);
@@ -284,7 +280,7 @@ class _AnswerShareScreenState extends State<AnswerShareScreen> {
       if (rect.size.width > 0 && rect.size.height > 0) {
         Share.shareXFiles(
           [xFile],
-          text: '내 오답노트야! 어때?',
+          text: '내 오답노트야! 어때?\n\nOnO 다운로드: https://ono-app.com/home',
           sharePositionOrigin: Rect.fromPoints(
             Offset.zero,
             Offset(size.width / 3 * 2, size.height),
@@ -292,7 +288,7 @@ class _AnswerShareScreenState extends State<AnswerShareScreen> {
         );
       } else {
         log('Invalid box size, defaulting to basic share...');
-        Share.shareXFiles([xFile], text: '내 오답노트야! 어때?');
+        Share.shareXFiles([xFile], text: '내 오답노트야! 어때?\n\nOnO 다운로드: https://ono-app.com/home',);
       }
 
       // 공유 후 화면을 닫습니다.

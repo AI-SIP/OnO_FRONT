@@ -3,22 +3,22 @@ import 'dart:io';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:ono/GlobalModule/Theme/LoadingDialog.dart';
+import 'package:ono/GlobalModule/Dialog/LoadingDialog.dart';
 import 'package:ono/Provider/FoldersProvider.dart';
-import 'package:ono/Screen/ProblemDetail/ProblemDetailScreenV2.dart';
+import 'package:ono/Screen/ProblemDetail/ProblemDetailScreen.dart';
 import 'package:provider/provider.dart';
 import '../Image/ImagePickerHandler.dart';
-import '../Theme/SnackBarDialog.dart';
-import '../Theme/StandardText.dart';
+import '../Dialog/SnackBarDialog.dart';
+import '../Text/StandardText.dart';
 import '../Theme/ThemeHandler.dart';
 
-class NavigationButtons extends StatefulWidget {
+class FolderNavigationButtons extends StatefulWidget {
   final BuildContext context;
   final FoldersProvider foldersProvider;
   final int currentId;
   final VoidCallback onRefresh;
 
-  const NavigationButtons({
+  const FolderNavigationButtons({
     super.key,
     required this.context,
     required this.foldersProvider,
@@ -27,10 +27,10 @@ class NavigationButtons extends StatefulWidget {
   });
 
   @override
-  _NavigationButtonsState createState() => _NavigationButtonsState();
+  _FolderNavigationButtonsState createState() => _FolderNavigationButtonsState();
 }
 
-class _NavigationButtonsState extends State<NavigationButtons> {
+class _FolderNavigationButtonsState extends State<FolderNavigationButtons> {
   bool isReviewed = false;
   final ImagePickerHandler _imagePickerHandler = ImagePickerHandler();
   XFile? selectedImage;
@@ -64,8 +64,8 @@ class _NavigationButtonsState extends State<NavigationButtons> {
           },
           style: ElevatedButton.styleFrom(
             padding:
-            EdgeInsets.symmetric(horizontal: screenHeight * 0.02, vertical: screenHeight * 0.008),
-            backgroundColor: themeProvider.primaryColor.withOpacity(0.1),
+            const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
+            backgroundColor: Colors.white,
             side: BorderSide(
               color: themeProvider.primaryColor,
               width: 2.0,
@@ -75,7 +75,7 @@ class _NavigationButtonsState extends State<NavigationButtons> {
             ),
           ),
           child: StandardText(
-              text: '< 이전 문제', fontSize: screenHeight * 0.012, color: themeProvider.primaryColor),
+              text: '< 이전 문제', fontSize: 14, color: themeProvider.primaryColor),
         ),
 
         // 복습 완료 버튼
@@ -83,8 +83,8 @@ class _NavigationButtonsState extends State<NavigationButtons> {
           onPressed: () => showReviewDialog(context),
           style: ElevatedButton.styleFrom(
             padding:
-              EdgeInsets.symmetric(horizontal: screenHeight * 0.02, vertical: screenHeight * 0.008),
-            backgroundColor: themeProvider.primaryColor.withOpacity(0.1),
+              const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
+            backgroundColor: Colors.white,
             side: BorderSide(
               color: themeProvider.primaryColor,
               width: 2.0,
@@ -97,7 +97,7 @@ class _NavigationButtonsState extends State<NavigationButtons> {
               ? Icon(
                   Icons.check, // 복습 완료 시 체크 아이콘만 표시
                   color: themeProvider.primaryColor,
-                  size: screenHeight * 0.024,
+                  size: 20,
                 )
               : Row(
                   mainAxisSize: MainAxisSize.min, // 터치 아이콘과 텍스트를 한 줄로 표시
@@ -105,12 +105,12 @@ class _NavigationButtonsState extends State<NavigationButtons> {
                     Icon(
                       Icons.touch_app, // 복습 완료 전 터치 아이콘
                       color: themeProvider.primaryColor,
-                      size: screenHeight * 0.014,
+                      size: 15,
                     ),
-                    SizedBox(width: screenHeight * 0.008), // 아이콘과 텍스트 간 간격
+                    const SizedBox(width: 10), // 아이콘과 텍스트 간 간격
                     StandardText(
-                      text: '복습 완료', // 복습 완료 텍스트
-                      fontSize: screenHeight * 0.014,
+                      text: '복습 인증', // 복습 완료 텍스트
+                      fontSize: 15,
                       color: themeProvider.primaryColor,
                     ),
                   ],
@@ -125,8 +125,8 @@ class _NavigationButtonsState extends State<NavigationButtons> {
           },
           style: ElevatedButton.styleFrom(
             padding:
-                EdgeInsets.symmetric(horizontal: screenHeight * 0.02, vertical: screenHeight * 0.008),
-            backgroundColor: themeProvider.primaryColor.withOpacity(0.1),
+                EdgeInsets.symmetric(horizontal: 15, vertical: 5),
+            backgroundColor: Colors.white,
             side: BorderSide(
               color: themeProvider.primaryColor,
               width: 2.0,
@@ -136,7 +136,7 @@ class _NavigationButtonsState extends State<NavigationButtons> {
             ),
           ),
           child: StandardText(
-              text: '다음 문제 >', fontSize: screenHeight * 0.012, color: themeProvider.primaryColor),
+              text: '다음 문제 >', fontSize: 14, color: themeProvider.primaryColor),
         ),
       ],
     );
@@ -148,7 +148,7 @@ class _NavigationButtonsState extends State<NavigationButtons> {
       context,
       PageRouteBuilder(
         pageBuilder: (context, animation, secondaryAnimation) =>
-            ProblemDetailScreenV2(problemId: newProblemId),
+            ProblemDetailScreen(problemId: newProblemId),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           // 다음 문제인지 이전 문제인지에 따라 시작 위치와 애니메이션 설정
           final Offset begin =
@@ -302,7 +302,7 @@ class _NavigationButtonsState extends State<NavigationButtons> {
                     ),
                   )
                       : StandardText(
-                    text: '복습 완료',
+                    text: '복습 인증',
                     fontSize: 14,
                     color: themeProvider.primaryColor,
                   ),

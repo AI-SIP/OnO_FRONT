@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:developer';
+import 'dart:io';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:sentry_flutter/sentry_flutter.dart';
@@ -30,7 +31,7 @@ class TokenProvider {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $accessToken',
         },
-      );
+      ).timeout(const Duration(seconds: 30));
 
       if (response.statusCode == 200) {
         return accessToken;
@@ -44,6 +45,8 @@ class TokenProvider {
           throw Exception("Can not refresh access token");
         }
       }
+    } on SocketException catch(_){
+      return null;
     } catch (error, stackTrace) {
       log('getAccessToken() error: $error');
       await Sentry.captureException(
@@ -75,7 +78,7 @@ class TokenProvider {
         Uri.parse('${AppConfig.baseUrl}/api/auth/refresh'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'refreshToken': refreshToken}),
-      );
+      ).timeout(const Duration(seconds: 30));
 
       if (response.statusCode == 200) {
         var data = jsonDecode(response.body);
@@ -94,5 +97,10 @@ class TokenProvider {
       );
       return false;
     }
+  }
+
+  Future<void> deleteToken() async{
+    await storage.delete(key: 'accessToken');
+    await storage.delete(key: 'refreshToken');
   }
 }

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
@@ -7,7 +8,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
 import 'package:sentry_flutter/sentry_flutter.dart';
 import '../../Config/AppConfig.dart';
-import '../../GlobalModule/Theme/SnackBarDialog.dart';
+import '../../GlobalModule/Dialog/SnackBarDialog.dart';
 
 class GoogleAuthService {
   final GoogleSignIn _googleSignIn = GoogleSignIn();
@@ -16,29 +17,27 @@ class GoogleAuthService {
     try {
       final googleSignInAccount = await _googleSignIn.signIn();
       if(googleSignInAccount != null){
-        final GoogleSignInAuthentication googleSignInAuthentication = await googleSignInAccount.authentication;
-
         String? email = googleSignInAccount.email;
         String? name = googleSignInAccount.displayName;
         String? identifier = googleSignInAccount.id;
 
-        final url = Uri.parse('${AppConfig.baseUrl}/api/auth/google');
+        final url = Uri.parse('${AppConfig.baseUrl}/api/auth/login/social');
         final response = await http.post(
           url,
           headers: {'Content-Type': 'application/json; charset=UTF-8'},
           body: jsonEncode({
+            'platform': 'GOOGLE',
             'email': email,
             'name': name,
             'identifier': identifier
           }),
-        );
+        ).timeout(const Duration(seconds: 60));
 
         if (response.statusCode == 200) {
           log('Google sign-in Success!');
-          FirebaseAnalytics.instance.logSignUp(signUpMethod: 'Google');
-          FirebaseAnalytics.instance
+          await FirebaseAnalytics.instance.logSignUp(signUpMethod: 'Google');
+          await FirebaseAnalytics.instance
               .logEvent(name: 'user_register_with_google');
-          //SnackBarDialog.showSnackBar(context: context, message: "로그인에 성공했습니다.", backgroundColor: Colors.green);
 
           return jsonDecode(response.body);
         } else {
@@ -47,8 +46,15 @@ class GoogleAuthService {
       } else{
         return null;
       }
+    } on TimeoutException catch (_) {
+      SnackBarDialog.showSnackBar(
+        context: context,
+        message: "요청 시간이 초과되었습니다. 다시 시도해주세요.",
+        backgroundColor: Colors.red,
+      );
+      return null;
     } catch (error, stackTrace) {
-      SnackBarDialog.showSnackBar(context: context, message: "로그인 과정에서 오류가 발생했습니다. 다시 시도해주세요.", backgroundColor: Colors.red);
+      //SnackBarDialog.showSnackBar(context: context, message: "로그인 과정에서 오류가 발생했습니다. 다시 시도해주세요.", backgroundColor: Colors.red);
       log(error.toString());
       await Sentry.captureException(
         error,
@@ -85,7 +91,7 @@ class GoogleAuthService {
         log('Google sign-out Success!');
       } else {
         log('Failed to revoke Google token');
-        throw new Exception('Failed to revoke Google token');
+        throw Exception('Failed to revoke Google token');
       }
     } catch (error, stackTrace) {
       log('Google sign-out error: $error');

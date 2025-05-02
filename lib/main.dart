@@ -6,16 +6,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart';
-import 'package:ono/GlobalModule/Theme/StandardText.dart';
+import 'package:ono/GlobalModule/Text/StandardText.dart';
 import 'package:ono/GlobalModule/Theme/ThemeHandler.dart';
 import 'package:ono/Provider/FoldersProvider.dart';
+import 'package:ono/Provider/ProblemPracticeProvider.dart';
 import 'package:ono/Provider/ScreenIndexProvider.dart';
+import 'package:ono/Screen/ProblemRegister/ProblemRegisterScreen.dart';
 import 'package:ono/Screen/ProblemRegister/ProblemRegisterScreenV2.dart';
 import 'package:ono/Screen/SplashScreen.dart';
 import 'package:provider/provider.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'Provider/UserProvider.dart';
 import 'Screen/ProblemManagement/DirectoryScreen.dart';
+import 'Screen/ProblemPractice/PracticeThumbnailScreen.dart';
 import 'Screen/ProblemRegister/TemplateSelectionScreen.dart';
 import 'Screen/SettingScreen.dart';
 import 'firebase_options.dart';
@@ -42,9 +45,11 @@ void main() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => FoldersProvider()),
+        ChangeNotifierProvider(create: (_) => ProblemPracticeProvider()),
         ChangeNotifierProvider(
           create: (context) => UserProvider(
             Provider.of<FoldersProvider>(context, listen: false),
+            Provider.of<ProblemPracticeProvider>(context, listen: false),
           ),
         ),
         ChangeNotifierProvider(
@@ -67,7 +72,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
 
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'OnO',
       theme: _buildThemeData(context),
       navigatorObservers: <NavigatorObserver>[observer],
       home: SplashScreen(),
@@ -80,8 +85,15 @@ class MyApp extends StatelessWidget {
               return ProblemRegisterScreenV2(
                 problemModel: args['problemModel'],
                 isEditMode: args['isEditMode'],
-                colorPickerResult: args['colorPickerResult'],
               );
+              /*
+              return ProblemRegisterScreen(
+                problemModel: args['problemModel'],
+                isEditMode: args['isEditMode'],
+                colorPickerResult: args['colorPickerResult'],
+                coordinatePickerResult: args['coordinatePickerResult'],
+              );
+               */
             },
           );
         }
@@ -111,7 +123,9 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
   final secureStorage = const FlutterSecureStorage();
   static const List<Widget> _widgetOptions = <Widget>[
     DirectoryScreen(),
-    TemplateSelectionScreen(),
+    PracticeThumbnailScreen(),
+    ProblemRegisterScreenV2(problemModel: null, isEditMode: false),
+    //TemplateSelectionScreen(),
     SettingScreen(),
   ];
 
@@ -164,7 +178,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
   void _resetAppState() {
     final foldersProvider = Provider.of<FoldersProvider>(context, listen: false);
 
-    foldersProvider.fetchRootFolderContents();
+    foldersProvider.fetchAllFolderContents();
   }
 
   @override
@@ -209,11 +223,15 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
     return const [
       BottomNavigationBarItem(
         icon: Icon(Icons.menu_book),
+        label: '오답 관리',
+      ),
+      BottomNavigationBarItem(
+        icon: Icon(Icons.history),
         label: '오답 복습',
       ),
       BottomNavigationBarItem(
         icon: Icon(Icons.edit),
-        label: '문제 등록',
+        label: '오답노트 작성',
       ),
 
       BottomNavigationBarItem(

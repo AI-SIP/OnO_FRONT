@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'StandardText.dart';
-import 'ThemeHandler.dart';
+import '../Text/StandardText.dart';
+import '../Theme/ThemeHandler.dart';
 
 class ThemeDialog extends StatefulWidget {
   @override
@@ -83,7 +83,7 @@ class _ThemeDialogState extends State<ThemeDialog> {
             if (_selectedColor != null) {
               // Change the PrimaryColor to the selected color
               final darkerColor = _darken(_selectedColor!, 0.1);
-              themeProvider.changePrimaryColor(darkerColor, _selectedColorName!);
+              themeProvider.changePrimaryColor(_selectedColor!, _selectedColorName!);
 
               Navigator.of(context).pop();
             }

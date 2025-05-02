@@ -1,35 +1,41 @@
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
-import 'package:ono/GlobalModule/Theme/HandWriteText.dart';
-import 'package:ono/Model/ProblemRegisterModelV2.dart';
+import 'package:ono/GlobalModule/Text/HandWriteText.dart';
+import 'package:ono/Model/ProblemRegisterModel.dart';
+import 'package:ono/Provider/ProblemPracticeProvider.dart';
+import 'package:ono/Screen/ProblemRegister/ProblemRegisterScreenV2.dart';
 import 'package:provider/provider.dart';
 
-import '../../GlobalModule/Theme/SnackBarDialog.dart';
-import '../../GlobalModule/Theme/StandardText.dart';
+import '../../GlobalModule/Text/StandardText.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
-import '../../GlobalModule/Util/FolderSelectionDialog.dart';
-import '../../GlobalModule/Util/NavigationButtons.dart';
+import '../../GlobalModule/Dialog/FolderSelectionDialog.dart';
+import '../../GlobalModule/Util/FolderNavigationButtons.dart';
+import '../ProblemPractice/PracticeNavigationButtons.dart';
 import '../../Model/ProblemModel.dart';
 import '../../Model/TemplateType.dart';
 import '../../Provider/FoldersProvider.dart';
 import '../../Service/ScreenUtil/ProblemDetailScreenService.dart';
-import '../ProblemRegister/ProblemRegisterScreenV2.dart';
 import '../ProblemShare/AnswerShareScreen.dart';
 import '../ProblemShare/ProblemShareScreen.dart';
 import 'Template/CleanProblemDetailTemplate.dart';
 import 'Template/SimpleProblemDetailTemplate.dart';
 import 'Template/SpecialProblemDetailTemplate.dart';
 
-class ProblemDetailScreenV2 extends StatefulWidget {
+class ProblemDetailScreen extends StatefulWidget {
   final int problemId;
+  final bool isPractice;
 
-  const ProblemDetailScreenV2({required this.problemId, super.key});
+  const ProblemDetailScreen({
+    required this.problemId,
+    this.isPractice = false,
+    super.key
+  });
 
   @override
-  _ProblemDetailScreenV2State createState() => _ProblemDetailScreenV2State();
+  _ProblemDetailScreenState createState() => _ProblemDetailScreenState();
 }
 
-class _ProblemDetailScreenV2State extends State<ProblemDetailScreenV2> {
+class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
   Future<ProblemModel?>? _problemModelFuture;
   final ProblemDetailScreenService _problemDetailService =
       ProblemDetailScreenService();
@@ -37,18 +43,23 @@ class _ProblemDetailScreenV2State extends State<ProblemDetailScreenV2> {
   @override
   void initState() {
     super.initState();
-    _problemModelFuture = _problemDetailService.fetchProblemDetails(context, widget.problemId);
+
+    _setProblemModel();
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _refreshScreen();
+    _setProblemModel();
   }
 
-  void _refreshScreen() {
+  void _setProblemModel() {
     setState(() {
-      _problemModelFuture = _problemDetailService.fetchProblemDetails(context, widget.problemId);
+      if(widget.isPractice){
+        _problemModelFuture = _problemDetailService.fetchProblemDetailsFromPractice(context, widget.problemId);
+      } else{
+        _problemModelFuture = _problemDetailService.fetchProblemDetailsFromFolder(context, widget.problemId);
+      }
     });
   }
 
@@ -87,20 +98,29 @@ class _ProblemDetailScreenV2State extends State<ProblemDetailScreenV2> {
               },
             ),
           ),
-          const SizedBox(height: 10,),
-          _buildNavigationButtons(context), // 항상 하단에 고정된 네비게이션 바
+          const SizedBox(height: 10),
+          _buildNavigationButtons(context, widget.isPractice),
         ],
       ),
     );
   }
 
   AppBar _buildAppBar(ThemeHandler themeProvider) {
-    return AppBar(
-      backgroundColor: Colors.white,
-      centerTitle: true,
-      title: buildAppBarTitle(),
-      actions: _buildAppBarActions(),
-    );
+    if(widget.isPractice){
+      return AppBar(
+        backgroundColor: Colors.white,
+        centerTitle: true,
+        title: buildAppBarTitle(),
+      );
+    } else{
+      return AppBar(
+        backgroundColor: Colors.white,
+        centerTitle: true,
+        title: buildAppBarTitle(),
+        actions: _buildAppBarActions(),
+      );
+    }
+
   }
 
   Widget buildAppBarTitle(){
@@ -201,7 +221,7 @@ class _ProblemDetailScreenV2State extends State<ProblemDetailScreenV2> {
                   child: ListTile(
                     leading: const Icon(Icons.share, color: Colors.black),
                     title: const StandardText(
-                      text: '오답노트 풀이 공유하기',
+                      text: '오답노트 해설 공유하기',
                       fontSize: 16,
                       color: Colors.black,
                     ),
@@ -236,11 +256,20 @@ class _ProblemDetailScreenV2State extends State<ProblemDetailScreenV2> {
                           builder: (context) => ProblemRegisterScreenV2(
                             problemModel: problemModel,
                             isEditMode: true,
-                            colorPickerResult: null,
                           ),
                         ),
+                        /*
+                        MaterialPageRoute(
+                          builder: (context) => ProblemRegisterScreen(
+                            problemModel: problemModel,
+                            isEditMode: true,
+                            colorPickerResult: null,
+                            coordinatePickerResult: null,
+                          ),
+                        ),
+                         */
                       ).then((_) {
-                        _refreshScreen();
+                        _setProblemModel();
                       });
 
                     },
@@ -269,7 +298,7 @@ class _ProblemDetailScreenV2State extends State<ProblemDetailScreenV2> {
 
                       if(selectedFolderId != null){
                         await foldersProvider.updateProblem(
-                          ProblemRegisterModelV2(
+                          ProblemRegisterModel(
                             problemId: problemModel.problemId,
                             folderId: selectedFolderId,
                           )
@@ -283,7 +312,7 @@ class _ProblemDetailScreenV2State extends State<ProblemDetailScreenV2> {
                   child: ListTile(
                     leading: const Icon(Icons.delete_forever, color: Colors.red),
                     title: const StandardText(
-                      text: '오답노트 삭제하기',
+                      text: '현재 오답노트 삭제하기',
                       fontSize: 16,
                       color: Colors.red,
                     ),
@@ -291,7 +320,7 @@ class _ProblemDetailScreenV2State extends State<ProblemDetailScreenV2> {
                       FirebaseAnalytics.instance
                           .logEvent(name: 'problem_delete_button_click');
                       Navigator.pop(context);
-                      _deleteProblemDialog(context, problemModel.problemId, themeProvider);
+                      _showDeleteProblemDialog(problemModel.problemId, themeProvider);
                     },
                   ),
                 ),
@@ -303,29 +332,48 @@ class _ProblemDetailScreenV2State extends State<ProblemDetailScreenV2> {
     );
   }
 
-  void _deleteProblemDialog(BuildContext context, int problemId, ThemeHandler themeProvider) {
-    _problemDetailService.deleteProblem(
-      context,
-      problemId,
-          () {
-        FirebaseAnalytics.instance.logEvent(name: 'problem_delete');
-        Navigator.of(context).pop(true);
-        if (mounted) {
-          SnackBarDialog.showSnackBar(
-            context: context,
-            message: '오답노트가 삭제되었습니다!',
-            backgroundColor: themeProvider.primaryColor,
-          );
-        }
-      },
-          (errorMessage) {
-        if (mounted) {
-          SnackBarDialog.showSnackBar(
-            context: context,
-            message: errorMessage,
-            backgroundColor: Colors.red,
-          );
-        }
+  Future<void> _showDeleteProblemDialog(int problemId, ThemeHandler themeProvider) async {
+    final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
+
+    return showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: Colors.white,
+          title: const StandardText(
+              text: '오답노트 삭제', fontSize: 18, color: Colors.black),
+          content: const StandardText(
+              text: '정말로 이 오답노트를 삭제하시겠습니까?',
+              fontSize: 16,
+              color: Colors.black),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const StandardText(
+                text: '취소',
+                fontSize: 14,
+                color: Colors.black,
+              ),
+            ),
+            TextButton(
+              onPressed: () async {
+                Navigator.pop(context);
+                Navigator.pop(context);
+                FirebaseAnalytics.instance.logEvent(name: 'problem_delete');
+
+                await Provider.of<FoldersProvider>(context, listen: false).deleteProblems([problemId]);
+                await Provider.of<ProblemPracticeProvider>(context, listen: false).fetchAllPracticeContents();
+              },
+              child: const StandardText(
+                text: '삭제',
+                fontSize: 14,
+                color: Colors.red,
+              ),
+            ),
+          ],
+        );
       },
     );
   }
@@ -349,7 +397,7 @@ class _ProblemDetailScreenV2State extends State<ProblemDetailScreenV2> {
   }
 
   // 네비게이션 버튼 구성 함수
-  Widget _buildNavigationButtons(BuildContext context) {
+  Widget _buildNavigationButtons(BuildContext context, bool isPractice) {
     // 기기의 높이 정보를 가져옴
     double screenHeight = MediaQuery.of(context).size.height;
 
@@ -357,14 +405,26 @@ class _ProblemDetailScreenV2State extends State<ProblemDetailScreenV2> {
     double topPadding = screenHeight * 0.01;
     double bottomPadding = screenHeight * 0.03;
 
-    return Padding(
-      padding: EdgeInsets.only(top: topPadding, bottom: bottomPadding),
-      child: NavigationButtons(
-        context: context,
-        foldersProvider: Provider.of<FoldersProvider>(context, listen: false),
-        currentId: widget.problemId,
-        onRefresh: _refreshScreen,
-      ),
-    );
+    if(isPractice){
+      return Padding(
+        padding: EdgeInsets.only(top: topPadding, bottom: bottomPadding),
+        child: PracticeNavigationButtons(
+          context: context,
+          practiceProvider: Provider.of<ProblemPracticeProvider>(context, listen: false),
+          currentProblemId: widget.problemId,
+          onRefresh: _setProblemModel,
+        ),
+      );
+    } else{
+      return Padding(
+        padding: EdgeInsets.only(top: topPadding, bottom: bottomPadding),
+        child: FolderNavigationButtons(
+          context: context,
+          foldersProvider: Provider.of<FoldersProvider>(context, listen: false),
+          currentId: widget.problemId,
+          onRefresh: _setProblemModel,
+        ),
+      );
+    }
   }
 }

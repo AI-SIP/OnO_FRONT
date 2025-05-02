@@ -1,17 +1,23 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:core';
 import 'dart:developer';
-import 'dart:io' show Platform;
+import 'dart:io' show Platform, SocketException;
+import 'package:http/http.dart' as http;
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:ono/GlobalModule/Dialog/LoadingDialog.dart';
+import 'package:ono/GlobalModule/Dialog/SnackBarDialog.dart';
 import 'package:ono/Model/LoginStatus.dart';
 import 'package:ono/Provider/FoldersProvider.dart';
+import 'package:ono/Provider/ProblemPracticeProvider.dart';
 import 'package:ono/Service/Auth/GuestAuthService.dart';
 import 'package:ono/Service/Auth/KakaoAuthService.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import '../Config/AppConfig.dart';
-import '../GlobalModule/Util/HttpService.dart';
+import '../GlobalModule/Text/StandardText.dart';
+import '../Service/Network/HttpService.dart';
 import 'TokenProvider.dart';
 import '../Service/Auth/AppleAuthService.dart';
 import '../Service/Auth/GoogleAuthService.dart';
@@ -19,10 +25,11 @@ import '../Service/Auth/GoogleAuthService.dart';
 class UserProvider with ChangeNotifier {
   final storage = const FlutterSecureStorage();
   final FoldersProvider foldersProvider;
+  final ProblemPracticeProvider practiceProvider;
   final TokenProvider tokenProvider = TokenProvider();
   final HttpService httpService = HttpService();
 
-  UserProvider(this.foldersProvider);
+  UserProvider(this.foldersProvider, this.practiceProvider);
 
   LoginStatus _loginStatus = LoginStatus.waiting;
   int? _userId = 0;
@@ -51,45 +58,79 @@ class UserProvider with ChangeNotifier {
   final GoogleAuthService googleAuthService = GoogleAuthService();
   final KakaoAuthService kakaoAuthService = KakaoAuthService();
 
-  Future<void> signInWithGuest(BuildContext context) async {
-    final response = await guestAuthService.signInWithGuest(context);
-    saveUserToken(response: response, loginMethod: 'guest');
-  }
+  Future<void> signIn(BuildContext context, Future<Map<String, dynamic>?> Function(BuildContext) signInMethod, String loginMethod) async {
+    try {
+      LoadingDialog.show(context, '로그인 중 입니다...');
+      final response = await signInMethod(context);
+      bool isRegister = await saveUserToken(response: response, loginMethod: loginMethod);
+      LoadingDialog.hide(context);
 
-  // Google 로그인 함수(앱 처음 설치하고 구글 로그인 버튼 누르면 실행)
-  Future<void> signInWithGoogle(BuildContext context) async {
-    final response = await googleAuthService.signInWithGoogle(context);
-    saveUserToken(response: response, loginMethod: 'google');
-  }
-
-  // Apple 로그인 함수
-  Future<void> signInWithApple(BuildContext context) async {
-    final response = await appleAuthService.signInWithApple(context);
-    log(response.toString());
-    saveUserToken(response: response, loginMethod: 'apple');
-  }
-
-  Future<void> signInWithKakao(BuildContext context) async {
-    final response = await kakaoAuthService.signInWithKakao(context);
-    saveUserToken(response: response, loginMethod: 'kakao');
-  }
-
-  Future<void> saveUserToken({Map<String,dynamic>? response, String? loginMethod}) async{
-    if(response == null){
-      _loginStatus = LoginStatus.logout;
-      notifyListeners();
-    } else{
-      await storage.write(key: 'loginMethod', value: loginMethod);
-      await tokenProvider.setAccessToken(response['accessToken']);
-      await tokenProvider.setRefreshToken(response['refreshToken']);
-      _isFirstLogin = true;
-
-      FirebaseAnalytics.instance.logLogin(loginMethod: loginMethod);
-      await fetchUserInfo();
+      if (!isRegister) {
+        log('register failed!, response: ${response.toString()}');
+        throw Exception('response: ${response.toString()}');
+      }
+    } catch (error, stackTrace) {
+      _handleGeneralError(context, error, stackTrace);
     }
   }
 
-  Future<void> fetchUserInfo() async {
+  Future<void> signInWithGuest(BuildContext context) async {
+    await signIn(context, guestAuthService.signInWithGuest, 'guest');
+  }
+
+  Future<void> signInWithGoogle(BuildContext context) async {
+    await signIn(context, googleAuthService.signInWithGoogle, 'google');
+  }
+
+  Future<void> signInWithApple(BuildContext context) async {
+    await signIn(context, appleAuthService.signInWithApple, 'apple');
+  }
+
+  Future<void> signInWithKakao(BuildContext context) async {
+    await signIn(context, kakaoAuthService.signInWithKakao, 'kakao');
+  }
+
+  // 일반 오류 처리 메서드
+  void _handleGeneralError(BuildContext context, Object error, StackTrace stackTrace) async {
+    await resetUserInfo();
+    await Sentry.captureException(error, stackTrace: stackTrace);
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: StandardText(text: '로그인 과정에서 오류가 발생했습니다.', color: Colors.white, fontSize: 14,),
+        backgroundColor: Colors.red,
+      ),
+    );
+  }
+
+  Future<bool> saveUserToken({Map<String,dynamic>? response, String? loginMethod}) async{
+    if(response == null){
+      _loginStatus = LoginStatus.logout;
+      await resetUserInfo();
+
+      return false;
+    } else{
+      String? accessToken = response['accessToken'];
+      String? refreshToken = response['refreshToken'];
+
+      if(accessToken == null || refreshToken == null){
+        _loginStatus = LoginStatus.logout;
+        await resetUserInfo();
+
+        return false;
+      }
+
+      await storage.write(key: 'loginMethod', value: loginMethod);
+      await tokenProvider.setAccessToken(accessToken);
+      await tokenProvider.setRefreshToken(refreshToken);
+      _isFirstLogin = true;
+
+      FirebaseAnalytics.instance.logLogin(loginMethod: loginMethod);
+      return await fetchUserInfo();
+    }
+  }
+
+  Future<bool> fetchUserInfo() async {
     try {
       final response = await httpService.sendRequest(
         method: 'GET',
@@ -97,51 +138,61 @@ class UserProvider with ChangeNotifier {
       );
 
       if (response.statusCode == 200) {
-        final responseBody = jsonDecode(utf8.decode(response.bodyBytes));
-        _userId = responseBody['userId'] ?? 0;
-        _userName = responseBody['userName'] ?? '이름 없음';
-        _userEmail = responseBody['userEmail'];
-        //_isFirstLogin = responseBody['firstLogin'] ? true : false;
-        _loginStatus = LoginStatus.login;
-
-        FirebaseAnalytics.instance.logLogin();
-        setUserInfoInFirebase(_userId, _userName, _userEmail);
-
-        // Sentry에 유저 정보 설정
-        Sentry.configureScope((scope) {
-          scope.setUser(SentryUser(
-            id: _userId.toString(),
-            username: _userName,
-            email: _userEmail,
-          ));
-        });
-
-        FirebaseAnalytics.instance
-            .logEvent(name: 'fetch_user_info');
-
+        await _processUserInfoResponse(response);
         _problemCount = await getUserProblemCount();
+
         if (_loginStatus == LoginStatus.login) {
-          await foldersProvider.fetchRootFolderContents();
+          //await foldersProvider.fetchRootFolderContents();
+          await foldersProvider.fetchAllFolderContents();
+          await practiceProvider.fetchAllPracticeContents();
         }
+        return true;
       } else {
-        _loginStatus = LoginStatus.logout;
+        return _handleFetchError();
       }
     } catch (error, stackTrace) {
-      _loginStatus = LoginStatus.logout;
+      return _handleFetchError(error: error, stackTrace: stackTrace);
+    } finally {
+      notifyListeners();
+    }
+  }
+
+  Future<void> _processUserInfoResponse(http.Response response) async {
+    final responseBody = await jsonDecode(utf8.decode(response.bodyBytes));
+    _userId = responseBody['userId'] ?? 0;
+    _userName = responseBody['userName'] ?? '이름 없음';
+    _userEmail = responseBody['userEmail'];
+    _loginStatus = LoginStatus.login;
+
+    await FirebaseAnalytics.instance.logLogin();
+    await setUserInfoInFirebase(_userId, _userName, _userEmail);
+
+    await Sentry.configureScope((scope) {
+      scope.setUser(SentryUser(
+        id: _userId.toString(),
+        username: _userName,
+        email: _userEmail,
+      ));
+    });
+
+    await FirebaseAnalytics.instance.logEvent(name: 'fetch_user_info');
+  }
+
+  Future<bool> _handleFetchError({Object? error, StackTrace? stackTrace}) async {
+    _loginStatus = LoginStatus.logout;
+    if (error != null) {
       await Sentry.captureException(error, stackTrace: stackTrace);
     }
-
-    notifyListeners();
+    return false;
   }
 
   Future<void> setUserInfoInFirebase(int? userId, String? userName, String? userEmail) async {
-    FirebaseAnalytics.instance.setUserId(id: userId.toString());
-    FirebaseAnalytics.instance.setUserProperty(name: 'userName', value: userName);
-    FirebaseAnalytics.instance.setUserProperty(name: 'userEmail', value: userEmail);
+    await FirebaseAnalytics.instance.setUserId(id: userId.toString());
+    await FirebaseAnalytics.instance.setUserProperty(name: 'userName', value: userName);
+    await FirebaseAnalytics.instance.setUserProperty(name: 'userEmail', value: userEmail);
   }
 
   Future<int> getUserProblemCount() async{
-
     try {
       final response = await httpService.sendRequest(
         method: 'GET',
@@ -201,8 +252,7 @@ class UserProvider with ChangeNotifier {
   }
 
   Future<void> autoLogin() async {
-    //_loginStatus = LoginStatus.waiting;
-    String? refreshToken = await storage.read(key: 'refreshToken');
+    String? refreshToken = await tokenProvider.getRefreshToken();
 
     _isLoading = false;
     _isFirstLogin = false;
@@ -298,7 +348,8 @@ class UserProvider with ChangeNotifier {
     _userEmail = '';
     _problemCount = 0;
     _isFirstLogin = false;
-    await storage.deleteAll();
     notifyListeners();
+
+    await storage.deleteAll();
   }
 }
