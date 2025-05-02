@@ -3,19 +3,21 @@ import 'dart:convert';
 import 'dart:core';
 import 'dart:developer';
 import 'dart:io' show Platform, SocketException;
+import 'package:http/http.dart' as http;
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:ono/GlobalModule/Theme/LoadingDialog.dart';
-import 'package:ono/GlobalModule/Theme/SnackBarDialog.dart';
+import 'package:ono/GlobalModule/Dialog/LoadingDialog.dart';
+import 'package:ono/GlobalModule/Dialog/SnackBarDialog.dart';
 import 'package:ono/Model/LoginStatus.dart';
 import 'package:ono/Provider/FoldersProvider.dart';
+import 'package:ono/Provider/ProblemPracticeProvider.dart';
 import 'package:ono/Service/Auth/GuestAuthService.dart';
 import 'package:ono/Service/Auth/KakaoAuthService.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import '../Config/AppConfig.dart';
-import '../GlobalModule/Theme/StandardText.dart';
-import '../GlobalModule/Util/HttpService.dart';
+import '../GlobalModule/Text/StandardText.dart';
+import '../Service/Network/HttpService.dart';
 import 'TokenProvider.dart';
 import '../Service/Auth/AppleAuthService.dart';
 import '../Service/Auth/GoogleAuthService.dart';
@@ -23,10 +25,11 @@ import '../Service/Auth/GoogleAuthService.dart';
 class UserProvider with ChangeNotifier {
   final storage = const FlutterSecureStorage();
   final FoldersProvider foldersProvider;
+  final ProblemPracticeProvider practiceProvider;
   final TokenProvider tokenProvider = TokenProvider();
   final HttpService httpService = HttpService();
 
-  UserProvider(this.foldersProvider);
+  UserProvider(this.foldersProvider, this.practiceProvider);
 
   LoginStatus _loginStatus = LoginStatus.waiting;
   int? _userId = 0;
@@ -66,16 +69,6 @@ class UserProvider with ChangeNotifier {
         log('register failed!, response: ${response.toString()}');
         throw Exception('response: ${response.toString()}');
       }
-    } on SocketException catch (error, stackTrace) {
-      LoadingDialog.show(context, '잠시만 기다려주세요...');
-      await Future.delayed(const Duration(seconds: 3));
-      await Sentry.captureException(error, stackTrace: stackTrace);
-      SnackBarDialog.showSnackBar(context: context, message: '네트워크 오류로 인해 로그인에 실패했습니다.', backgroundColor: Colors.red);
-    } on TimeoutException catch (error, stackTrace) {
-      LoadingDialog.show(context, '잠시만 기다려주세요...');
-      await Future.delayed(const Duration(seconds: 3));
-      await Sentry.captureException(error, stackTrace: stackTrace);
-      SnackBarDialog.showSnackBar(context: context, message: '네트워크 오류로 인해 로그인에 실패했습니다.', backgroundColor: Colors.red);
     } catch (error, stackTrace) {
       _handleGeneralError(context, error, stackTrace);
     }
@@ -145,57 +138,52 @@ class UserProvider with ChangeNotifier {
       );
 
       if (response.statusCode == 200) {
-        final responseBody = await jsonDecode(utf8.decode(response.bodyBytes));
-        _userId = responseBody['userId'] ?? 0;
-        _userName = responseBody['userName'] ?? '이름 없음';
-        _userEmail = responseBody['userEmail'];
-        //_isFirstLogin = responseBody['firstLogin'] ? true : false;
-        _loginStatus = LoginStatus.login;
-
-        await FirebaseAnalytics.instance.logLogin();
-        await setUserInfoInFirebase(_userId, _userName, _userEmail);
-
-        // Sentry에 유저 정보 설정
-        await Sentry.configureScope((scope) {
-          scope.setUser(SentryUser(
-            id: _userId.toString(),
-            username: _userName,
-            email: _userEmail,
-          ));
-        });
-
-        await FirebaseAnalytics.instance
-            .logEvent(name: 'fetch_user_info');
-
+        await _processUserInfoResponse(response);
         _problemCount = await getUserProblemCount();
-        if (_loginStatus == LoginStatus.login) {
-          await foldersProvider.fetchRootFolderContents();
-          return true;
-        }
 
+        if (_loginStatus == LoginStatus.login) {
+          //await foldersProvider.fetchRootFolderContents();
+          await foldersProvider.fetchAllFolderContents();
+          await practiceProvider.fetchAllPracticeContents();
+        }
         return true;
       } else {
-        _loginStatus = LoginStatus.logout;
-        return false;
+        return _handleFetchError();
       }
-    } on SocketException catch(error, stackTrace){
-      _loginStatus = LoginStatus.logout;
-      await Sentry.captureException(error, stackTrace: stackTrace);
-
-      return false;
-    } on TimeoutException catch(error, stackTrace){
-      _loginStatus = LoginStatus.logout;
-      await Sentry.captureException(error, stackTrace: stackTrace);
-
-      return false;
     } catch (error, stackTrace) {
-      _loginStatus = LoginStatus.logout;
-      await Sentry.captureException(error, stackTrace: stackTrace);
-
-      return false;
-    } finally{
+      return _handleFetchError(error: error, stackTrace: stackTrace);
+    } finally {
       notifyListeners();
     }
+  }
+
+  Future<void> _processUserInfoResponse(http.Response response) async {
+    final responseBody = await jsonDecode(utf8.decode(response.bodyBytes));
+    _userId = responseBody['userId'] ?? 0;
+    _userName = responseBody['userName'] ?? '이름 없음';
+    _userEmail = responseBody['userEmail'];
+    _loginStatus = LoginStatus.login;
+
+    await FirebaseAnalytics.instance.logLogin();
+    await setUserInfoInFirebase(_userId, _userName, _userEmail);
+
+    await Sentry.configureScope((scope) {
+      scope.setUser(SentryUser(
+        id: _userId.toString(),
+        username: _userName,
+        email: _userEmail,
+      ));
+    });
+
+    await FirebaseAnalytics.instance.logEvent(name: 'fetch_user_info');
+  }
+
+  Future<bool> _handleFetchError({Object? error, StackTrace? stackTrace}) async {
+    _loginStatus = LoginStatus.logout;
+    if (error != null) {
+      await Sentry.captureException(error, stackTrace: stackTrace);
+    }
+    return false;
   }
 
   Future<void> setUserInfoInFirebase(int? userId, String? userName, String? userEmail) async {

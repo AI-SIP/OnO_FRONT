@@ -13,10 +13,10 @@ import 'package:share_plus/share_plus.dart';
 
 import '../../GlobalModule/Image/DisplayImage.dart';
 import '../../GlobalModule/Theme/GridPainter.dart';
-import '../../GlobalModule/Theme/StandardText.dart';
+import '../../GlobalModule/Text/StandardText.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
-import '../../GlobalModule/Theme/HandWriteText.dart';
-import '../../GlobalModule/Theme/UnderlinedText.dart';
+import '../../GlobalModule/Text/HandWriteText.dart';
+import '../../GlobalModule/Text/UnderlinedText.dart';
 import '../../Model/ProblemModel.dart';
 
 class ProblemShareScreen extends StatefulWidget {
@@ -186,7 +186,7 @@ class _ProblemShareScreenState extends State<ProblemShareScreen> {
                                 ),
                               ],
                             ),
-                            const SizedBox(height: 30),
+                            const SizedBox(height: 40),
                             Row(
                               children: [
                                 Icon(Icons.camera_alt,
@@ -234,7 +234,7 @@ class _ProblemShareScreenState extends State<ProblemShareScreen> {
 
     return Center(
       child: Container(
-        width: mediaQuery.size.width * 0.8,
+        width: mediaQuery.size.width * 0.9,
         decoration: BoxDecoration(
           color: themeProvider.primaryColor.withOpacity(0.1), // 배경색 추가
           borderRadius: BorderRadius.circular(10), // 모서리 둥글게 설정

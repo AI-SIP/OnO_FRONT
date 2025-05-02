@@ -8,7 +8,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
 import 'package:sentry_flutter/sentry_flutter.dart';
 import '../../Config/AppConfig.dart';
-import '../../GlobalModule/Theme/SnackBarDialog.dart';
+import '../../GlobalModule/Dialog/SnackBarDialog.dart';
 
 class GoogleAuthService {
   final GoogleSignIn _googleSignIn = GoogleSignIn();
@@ -21,11 +21,12 @@ class GoogleAuthService {
         String? name = googleSignInAccount.displayName;
         String? identifier = googleSignInAccount.id;
 
-        final url = Uri.parse('${AppConfig.baseUrl}/api/auth/google');
+        final url = Uri.parse('${AppConfig.baseUrl}/api/auth/login/social');
         final response = await http.post(
           url,
           headers: {'Content-Type': 'application/json; charset=UTF-8'},
           body: jsonEncode({
+            'platform': 'GOOGLE',
             'email': email,
             'name': name,
             'identifier': identifier

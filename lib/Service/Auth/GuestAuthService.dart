@@ -10,14 +10,14 @@ import 'package:http/http.dart' as http;
 import 'package:sentry_flutter/sentry_flutter.dart';
 
 import '../../Config/AppConfig.dart';
-import '../../GlobalModule/Theme/SnackBarDialog.dart';
+import '../../GlobalModule/Dialog/SnackBarDialog.dart';
 
 class GuestAuthService{
   final storage = const FlutterSecureStorage();
 
   Future<Map<String, dynamic>?> signInWithGuest(BuildContext context) async{
     try{
-      final url = Uri.parse('${AppConfig.baseUrl}/api/auth/guest');
+      final url = Uri.parse('${AppConfig.baseUrl}/api/auth/login/guest');
 
       final response = await http.post(
         url,

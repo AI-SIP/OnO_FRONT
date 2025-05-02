@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:ono/GlobalModule/Theme/SnackBarDialog.dart';
+import 'package:ono/GlobalModule/Dialog/SnackBarDialog.dart';
 import 'package:provider/provider.dart';
 
-import '../../GlobalModule/Theme/StandardText.dart';
+import '../../GlobalModule/Text/StandardText.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
 import '../../Provider/ProblemPracticeProvider.dart';
 
@@ -107,7 +107,7 @@ class PracticeCompletionScreen extends StatelessWidget {
                 message: '복습을 완료했습니다!',
                 backgroundColor: themeProvider.primaryColor,
               );
-              await practiceProvider.fetchAllPracticeThumbnails();
+              await practiceProvider.fetchPracticeContent(practiceId);
             } else {
               SnackBarDialog.showSnackBar(
                 context: context,

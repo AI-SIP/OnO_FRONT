@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import '../../GlobalModule/Theme/SnackBarDialog.dart';
-import '../../GlobalModule/Theme/StandardText.dart';
+import '../../GlobalModule/Dialog/SnackBarDialog.dart';
+import '../../GlobalModule/Text/StandardText.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
 import 'package:provider/provider.dart';
 import '../../Provider/FoldersProvider.dart';
@@ -19,7 +19,6 @@ class PracticeTitleWriteScreen extends StatelessWidget {
     if (_titleController.text.isEmpty) {
       _showTitleRequiredDialog(context);
     } else {
-      final folderProvider = Provider.of<FoldersProvider>(context, listen: false);
       final problemPracticeProvider = Provider.of<ProblemPracticeProvider>(context, listen: false);
 
       practiceRegisterModel.setPracticeTitle(_titleController.text);
@@ -31,15 +30,12 @@ class PracticeTitleWriteScreen extends StatelessWidget {
         isUpdate = await problemPracticeProvider.updatePractice(practiceRegisterModel);
       }
 
-      await folderProvider.fetchRootFolderContents();
       Navigator.pop(context);
       Navigator.pop(context);
 
       if (isSubmit) {
-        await problemPracticeProvider.fetchAllPracticeThumbnails();
         _showSnackBar(context, themeProvider, '복습 리스트가 생성되었습니다.', themeProvider.primaryColor);
       } else if(isUpdate) {
-        await problemPracticeProvider.fetchAllPracticeThumbnails();
         Navigator.pop(context);
         _showSnackBar(context, themeProvider, '복습 리스트가 수정되었습니다.', themeProvider.primaryColor);
       }

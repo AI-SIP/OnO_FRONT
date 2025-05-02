@@ -4,14 +4,15 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 
-import '../../GlobalModule/Theme/SnackBarDialog.dart';
+import '../../GlobalModule/Image/DisplayImage.dart';
+import '../../GlobalModule/Dialog/SnackBarDialog.dart';
 import '../../Model/ProblemPracticeModel.dart';
 import '../../Model/ProblemModel.dart';
-import '../../GlobalModule/Theme/StandardText.dart';
+import '../../GlobalModule/Text/StandardText.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
 import '../../Model/TemplateType.dart';
 import '../../Provider/ProblemPracticeProvider.dart';
-import '../ProblemDetail/ProblemDetailScreenV2.dart';
+import '../ProblemDetail/ProblemDetailScreen.dart';
 import 'PracticeProblemSelectionScreen.dart';
 
 class PracticeDetailScreen extends StatelessWidget {
@@ -184,7 +185,7 @@ class PracticeDetailScreen extends StatelessWidget {
   }
 
   Widget _buildProblemList(BuildContext context, ProblemPracticeProvider provider, ThemeHandler themeProvider) {
-    final problems = provider.problems;
+    final problems = provider.currentProblems;
 
     if (problems.isEmpty) {
       return Center(
@@ -243,12 +244,10 @@ class PracticeDetailScreen extends StatelessWidget {
       height: 70,
       child: ClipRRect(
         borderRadius: BorderRadius.circular(8.0),
-        child: imageUrl != null
-            ? Image.network(
-          imageUrl,
+        child: DisplayImage(
+          imagePath: imageUrl,
           fit: BoxFit.cover,
-        )
-            : const Icon(Icons.image, color: Colors.grey),
+        ),
       ),
     );
   }
@@ -298,12 +297,12 @@ class PracticeDetailScreen extends StatelessWidget {
   }
 
   void _onNextButtonPressed(BuildContext context, ProblemPracticeProvider practiceProvider) {
-    if (practiceProvider.problems.isNotEmpty) {
+    if (practiceProvider.currentProblems.isNotEmpty) {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => ProblemDetailScreenV2(
-            problemId: practiceProvider.problems.first.problemId,
+          builder: (context) => ProblemDetailScreen(
+            problemId: practiceProvider.currentProblems.first.problemId,
             isPractice: true,
           ),
         ),

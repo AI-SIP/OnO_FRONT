@@ -8,13 +8,13 @@ import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
 import '../../GlobalModule/Image/DisplayImage.dart';
-import '../../GlobalModule/Theme/LoadingDialog.dart';
-import '../../GlobalModule/Theme/StandardText.dart';
+import '../../GlobalModule/Dialog/LoadingDialog.dart';
+import '../../GlobalModule/Text/StandardText.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
-import '../../GlobalModule/Util/FolderSelectionDialog.dart';
+import '../../GlobalModule/Dialog/FolderSelectionDialog.dart';
 import '../../GlobalModule/Util/LatexTextHandler.dart';
 import '../../Model/ProblemModel.dart';
-import '../../Model/ProblemRegisterModelV2.dart';
+import '../../Model/ProblemRegisterModel.dart';
 import '../../Model/TemplateType.dart';
 import '../../Provider/FoldersProvider.dart';
 import '../../Provider/ScreenIndexProvider.dart';
@@ -74,7 +74,7 @@ class _ProblemRegisterTemplateState
       _selectedFolderId = problemModel.folderId;
     } else{
       final folderProvider = Provider.of<FoldersProvider>(context, listen: false);
-      _selectedFolderId = folderProvider.currentFolderId;
+      _selectedFolderId = folderProvider.currentFolder!.folderId;
     }
 
     _selectedFolderName = '책장';
@@ -127,7 +127,7 @@ class _ProblemRegisterTemplateState
 
       if (widget.templateType != TemplateType.simple) {
         provider
-            .fetchProcessImageByColor(
+            .fetchProcessImage(
           problemModel.problemImageUrl,
           widget.colorPickerResult,
           widget.coordinatePickerResult,
@@ -615,7 +615,7 @@ class _ProblemRegisterTemplateState
     LoadingDialog.show(context, '오답노트 작성 중...');
 
     _waitForLoadingToComplete().then((_) {
-      final problemRegisterModel = ProblemRegisterModelV2(
+      final problemRegisterModel = ProblemRegisterModel(
         problemId: problemModel.problemId,
         problemImageUrl: problemModel.problemImageUrl,
         processImageUrl: processImageUrl,
@@ -628,7 +628,7 @@ class _ProblemRegisterTemplateState
         folderId: _selectedFolderId,
       );
 
-      _service.submitProblemV2(
+      _service.submitProblem(
         context,
         problemRegisterModel,
         () {

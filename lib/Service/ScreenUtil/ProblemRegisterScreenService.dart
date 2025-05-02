@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:ono/GlobalModule/Image/ColorPicker/ImageColorPickerHandler.dart';
-import 'package:ono/GlobalModule/Theme/HandWriteText.dart';
+import 'package:ono/GlobalModule/Text/HandWriteText.dart';
 import 'package:ono/Model/LoginStatus.dart';
 import 'package:ono/Provider/FoldersProvider.dart';
 import 'package:provider/provider.dart';
 import '../../GlobalModule/Image/ImagePickerHandler.dart';
-import '../../GlobalModule/Theme/SnackBarDialog.dart';
+import '../../GlobalModule/Dialog/SnackBarDialog.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
+import '../../Model/ProblemRegisterModel.dart';
 import '../../Model/ProblemRegisterModelV2.dart';
 import '../../Provider/UserProvider.dart';
 
@@ -25,6 +26,26 @@ class ProblemRegisterScreenService {
 
   void hideLoadingDialog(BuildContext context) {
     Navigator.of(context).pop(true);
+  }
+
+  Future<void> submitProblem(
+      BuildContext context,
+      ProblemRegisterModel problemData,
+      VoidCallback onSuccess) async {
+    final authService = Provider.of<UserProvider>(context, listen: false);
+    if (authService.isLoggedIn == LoginStatus.logout) {
+      _showLoginRequiredDialog(context);
+      return;
+    }
+
+    try {
+      await Provider.of<FoldersProvider>(context, listen: false)
+          .submitProblem(problemData, context);
+      onSuccess();
+      showSuccessDialog(context);
+    } catch (error) {
+      hideLoadingDialog(context);
+    }
   }
 
   Future<void> submitProblemV2(

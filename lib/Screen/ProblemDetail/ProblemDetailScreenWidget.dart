@@ -7,10 +7,10 @@ import 'package:ono/Model/TemplateType.dart';
 import '../../GlobalModule/Image/DisplayImage.dart';
 import '../../GlobalModule/Image/FullScreenImage.dart';
 import '../../GlobalModule/Theme/GridPainter.dart';
-import '../../GlobalModule/Theme/HandWriteText.dart';
-import '../../GlobalModule/Theme/StandardText.dart';
+import '../../GlobalModule/Text/HandWriteText.dart';
+import '../../GlobalModule/Text/StandardText.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
-import '../../GlobalModule/Theme/UnderlinedText.dart';
+import '../../GlobalModule/Text/UnderlinedText.dart';
 import '../../GlobalModule/Util/LatexTextHandler.dart';
 import '../../Model/ProblemModel.dart';
 
@@ -57,7 +57,7 @@ class ProblemDetailScreenWidget {
     );
   }
 
-  Widget buildAnalysisExpansionTile(
+  Widget buildExpansionTile(
       BuildContext context,
       ProblemModel problemModel,
       ThemeHandler themeProvider,
@@ -440,6 +440,7 @@ class ProblemDetailScreenWidget {
                             );
                           },
                           child: Container(
+                            width: mediaQuery.size.width,
                             height: mediaQuery.size.height * 0.5, // 고정된 높이로 변경
                             decoration: BoxDecoration(
                               color:

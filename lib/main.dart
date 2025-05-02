@@ -6,11 +6,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart';
-import 'package:ono/GlobalModule/Theme/StandardText.dart';
+import 'package:ono/GlobalModule/Text/StandardText.dart';
 import 'package:ono/GlobalModule/Theme/ThemeHandler.dart';
 import 'package:ono/Provider/FoldersProvider.dart';
 import 'package:ono/Provider/ProblemPracticeProvider.dart';
 import 'package:ono/Provider/ScreenIndexProvider.dart';
+import 'package:ono/Screen/ProblemRegister/ProblemRegisterScreen.dart';
 import 'package:ono/Screen/ProblemRegister/ProblemRegisterScreenV2.dart';
 import 'package:ono/Screen/SplashScreen.dart';
 import 'package:provider/provider.dart';
@@ -44,12 +45,13 @@ void main() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => FoldersProvider()),
+        ChangeNotifierProvider(create: (_) => ProblemPracticeProvider()),
         ChangeNotifierProvider(
           create: (context) => UserProvider(
             Provider.of<FoldersProvider>(context, listen: false),
+            Provider.of<ProblemPracticeProvider>(context, listen: false),
           ),
         ),
-        ChangeNotifierProvider(create: (_) => ProblemPracticeProvider()),
         ChangeNotifierProvider(
             create: (context) => ThemeHandler()..loadColors()),
         ChangeNotifierProvider(create: (_) => ScreenIndexProvider()),
@@ -83,9 +85,15 @@ class MyApp extends StatelessWidget {
               return ProblemRegisterScreenV2(
                 problemModel: args['problemModel'],
                 isEditMode: args['isEditMode'],
+              );
+              /*
+              return ProblemRegisterScreen(
+                problemModel: args['problemModel'],
+                isEditMode: args['isEditMode'],
                 colorPickerResult: args['colorPickerResult'],
                 coordinatePickerResult: args['coordinatePickerResult'],
               );
+               */
             },
           );
         }
@@ -116,7 +124,8 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
   static const List<Widget> _widgetOptions = <Widget>[
     DirectoryScreen(),
     PracticeThumbnailScreen(),
-    TemplateSelectionScreen(),
+    ProblemRegisterScreenV2(problemModel: null, isEditMode: false),
+    //TemplateSelectionScreen(),
     SettingScreen(),
   ];
 
@@ -169,7 +178,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
   void _resetAppState() {
     final foldersProvider = Provider.of<FoldersProvider>(context, listen: false);
 
-    foldersProvider.fetchRootFolderContents();
+    foldersProvider.fetchAllFolderContents();
   }
 
   @override

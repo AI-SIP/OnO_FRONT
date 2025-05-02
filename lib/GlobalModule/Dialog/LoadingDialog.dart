@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 
-import 'HandWriteText.dart';
+import '../Text/HandWriteText.dart';
 
 class LoadingDialog {
   static void show(BuildContext context, String message) {

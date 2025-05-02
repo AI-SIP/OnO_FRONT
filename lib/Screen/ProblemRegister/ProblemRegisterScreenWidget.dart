@@ -8,10 +8,10 @@ import 'package:provider/provider.dart';
 
 import '../../GlobalModule/Image/DisplayImage.dart';
 import '../../GlobalModule/Image/ImagePickerHandler.dart';
-import '../../GlobalModule/Theme/StandardText.dart';
+import '../../GlobalModule/Text/StandardText.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
 import '../../GlobalModule/Util/DatePickerHandler.dart';
-import '../../GlobalModule/Util/FolderSelectionDialog.dart';
+import '../../GlobalModule/Dialog/FolderSelectionDialog.dart';
 
 class ProblemRegisterScreenWidget {
   // 날짜 선택 위젯
@@ -196,24 +196,50 @@ class ProblemRegisterScreenWidget {
     double screenHeight = MediaQuery.of(context).size.height;
     double screenWidth = MediaQuery.of(context).size.width;
 
-    return SizedBox(
-        width: double.infinity,
-        child: ElevatedButton(
-          onPressed: onSubmit,
-          style: ElevatedButton.styleFrom(
-            padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.02, vertical: screenHeight * 0.01),
-            backgroundColor: themeProvider.primaryColor,
-            foregroundColor: Colors.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(15.0), // Adjust corner radius
+    return Row(
+      children: [
+        // 취소하기 버튼
+        Expanded(
+          child: ElevatedButton(
+            onPressed: onCancel,
+            style: ElevatedButton.styleFrom(
+              padding: EdgeInsets.symmetric(
+                  horizontal: screenWidth * 0.02, vertical: screenHeight * 0.01),
+              backgroundColor: Colors.grey, // 회색 배경
+              foregroundColor: Colors.white, // 흰 글씨
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(15.0),
+              ),
+            ),
+            child: const StandardText(
+              text: '취소하기',
+              fontSize: 16,
+              color: Colors.white,
             ),
           ),
-          child: StandardText(
-            text: isEditMode ? '수정 완료' : '문제 등록',
-            fontSize: 16,
-            color: Colors.white,
+        ),
+        const SizedBox(width: 16), // 버튼 간 간격
+        // 문제 등록 버튼
+        Expanded(
+          child: ElevatedButton(
+            onPressed: onSubmit,
+            style: ElevatedButton.styleFrom(
+              padding: EdgeInsets.symmetric(
+                  horizontal: screenWidth * 0.02, vertical: screenHeight * 0.01),
+              backgroundColor: themeProvider.primaryColor, // 테마 색상
+              foregroundColor: Colors.white, // 흰 글씨
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(15.0),
+              ),
+            ),
+            child: StandardText(
+              text: isEditMode ? '수정 완료' : '문제 등록',
+              fontSize: 16,
+              color: Colors.white,
+            ),
           ),
         ),
+      ],
     );
   }
 

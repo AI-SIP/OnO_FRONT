@@ -3,13 +3,13 @@ import 'dart:io';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:ono/GlobalModule/Theme/LoadingDialog.dart';
+import 'package:ono/GlobalModule/Dialog/LoadingDialog.dart';
 import 'package:ono/Provider/FoldersProvider.dart';
-import 'package:ono/Screen/ProblemDetail/ProblemDetailScreenV2.dart';
+import 'package:ono/Screen/ProblemDetail/ProblemDetailScreen.dart';
 import 'package:provider/provider.dart';
 import '../Image/ImagePickerHandler.dart';
-import '../Theme/SnackBarDialog.dart';
-import '../Theme/StandardText.dart';
+import '../Dialog/SnackBarDialog.dart';
+import '../Text/StandardText.dart';
 import '../Theme/ThemeHandler.dart';
 
 class FolderNavigationButtons extends StatefulWidget {
@@ -148,7 +148,7 @@ class _FolderNavigationButtonsState extends State<FolderNavigationButtons> {
       context,
       PageRouteBuilder(
         pageBuilder: (context, animation, secondaryAnimation) =>
-            ProblemDetailScreenV2(problemId: newProblemId),
+            ProblemDetailScreen(problemId: newProblemId),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           // 다음 문제인지 이전 문제인지에 따라 시작 위치와 애니메이션 설정
           final Offset begin =

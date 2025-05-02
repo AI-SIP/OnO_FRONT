@@ -7,20 +7,19 @@ import 'package:ono/Model/ProblemPracticeRegisterModel.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
 import '../Config/AppConfig.dart';
-import '../GlobalModule/Util/HttpService.dart';
+import '../Service/Network/HttpService.dart';
 import '../Model/ProblemModel.dart';
 import 'TokenProvider.dart';
 
 class ProblemPracticeProvider with ChangeNotifier{
 
   int currentPracticeId = -1;
-  List<ProblemPracticeModel>? practiceThumbnails = [];
-  List<ProblemModel> problems = [];
-  List<int> problemIds = [];
+  List<ProblemPracticeModel> practices = [];
+  List<ProblemModel> currentProblems = [];
   final TokenProvider tokenProvider = TokenProvider();
   final HttpService httpService = HttpService();
 
-  Future<void> fetchAllPracticeThumbnails() async {
+  Future<void> fetchAllPracticeContents() async {
     try {
       final response = await httpService.sendRequest(
         method: 'GET',
@@ -28,16 +27,22 @@ class ProblemPracticeProvider with ChangeNotifier{
       );
 
       if (response.statusCode == 200) {
-        final jsonResponse = json.decode(utf8.decode(response.bodyBytes));
+        final List<dynamic> jsonResponse = json.decode(utf8.decode(response.bodyBytes));
+        practices = jsonResponse.map((practiceData) => ProblemPracticeModel.fromJson(practiceData)).toList();
+        log('fetch all practice contents');
 
-        log('fetch all practice thumbnails result: $jsonResponse');
-
-        practiceThumbnails = (jsonResponse as List)
-            .map((e) => ProblemPracticeModel.fromJson(e))
-            .toList();
+        for (var practice in practices) {
+          log('-----------------------------------------');
+          log('Practice ID: ${practice.practiceId}');
+          log('Practice Name: ${practice.practiceTitle}');
+          log('Practice length: ${practice.problems.length}');
+          log('Created At: ${practice.createdAt}');
+          log('last solved At: ${practice.lastSolvedAt}');
+          log('-----------------------------------------');
+        }
 
         notifyListeners();
-        log('Practice contents fetched : ${practiceThumbnails?.length} problem practices');
+        log('Practice contents fetched : ${practices.length} problem practices');
       } else {
         throw Exception('Failed to load RootFolderContents');
       }
@@ -47,7 +52,22 @@ class ProblemPracticeProvider with ChangeNotifier{
     }
   }
 
-  Future<void> fetchPracticeProblems(int practiceId) async {
+  Future<void> moveToPractice(int practiceId) async {
+    try {
+      final targetPractice = practices.firstWhere(
+          (practice) => practice.practiceId == practiceId,
+        orElse: () => throw Exception('Practice with ID $practiceId not found'),
+      );
+
+      currentProblems = targetPractice.problems;
+      currentPracticeId = targetPractice.practiceId;
+    } catch (error, stackTrace) {
+      log('Error fetching problems for practice ID $practiceId: $error');
+      await Sentry.captureException(error, stackTrace: stackTrace);
+    }
+  }
+
+  Future<void> fetchPracticeContent(int? practiceId) async {
     try {
       final response = await httpService.sendRequest(
         method: 'GET',
@@ -55,17 +75,17 @@ class ProblemPracticeProvider with ChangeNotifier{
       );
 
       if (response.statusCode == 200) {
-        final jsonResponse = json.decode(utf8.decode(response.bodyBytes));
+        final practiceData = json.decode(utf8.decode(response.bodyBytes));
+        final updatedPractice = ProblemPracticeModel.fromJson(practiceData);
 
-        currentPracticeId = practiceId;
+        // 기존 데이터를 업데이트
+        final index = practices.indexWhere((practice) => practice.practiceId == practiceId);
+        if (index != -1) {
+          practices[index] = updatedPractice;
+        } else {
+          practices.add(updatedPractice);
+        }
 
-        problems = (jsonResponse as List)
-            .map((e) => ProblemModel.fromJson(e))
-            .toList();
-
-        problemIds = problems.map((problem) => problem.problemId).toList();
-
-        log('Fetched ${problems.length} problems for practice ID: $practiceId');
         notifyListeners();
       } else {
         throw Exception('Failed to load problems for practice ID: $practiceId');
@@ -84,7 +104,6 @@ class ProblemPracticeProvider with ChangeNotifier{
       final response = await httpService.sendRequest(
         method: 'POST',
         url: '${AppConfig.baseUrl}/api/problem/practice',
-        //headers: {'Content-Type': 'application/x-www-form-urlencoded'},
         body: {
           'practiceTitle': problemPracticeRegisterModel.practiceTitle.toString(),
           'registerProblemIds': problemPracticeRegisterModel.registerProblemIds.map((id) => id.toString()).toList(),
@@ -94,6 +113,11 @@ class ProblemPracticeProvider with ChangeNotifier{
       log('response: ${response.body}');
 
       if(response.statusCode == 200){
+        final practiceData = json.decode(utf8.decode(response.bodyBytes));
+        final updatedPractice = ProblemPracticeModel.fromJson(practiceData);
+
+        await fetchPracticeContent(updatedPractice.practiceId);
+
         return true;
       } else{
         return false;
@@ -120,7 +144,7 @@ class ProblemPracticeProvider with ChangeNotifier{
       );
 
       if (response.statusCode == 200) {
-        await fetchAllPracticeThumbnails();
+        await fetchPracticeContent(practiceId);
         log('Practice problems updated successfully for practice ID: $practiceId');
         return true;
       } else {
@@ -152,7 +176,7 @@ class ProblemPracticeProvider with ChangeNotifier{
 
       if(response.statusCode == 200){
 
-        await fetchAllPracticeThumbnails();
+        await fetchAllPracticeContents();
 
         return true;
       } else{
@@ -167,14 +191,13 @@ class ProblemPracticeProvider with ChangeNotifier{
   }
 
   Future<void> resetProblems() async {
-    problems = [];
-    problemIds = [];
+    currentProblems = [];
     notifyListeners();
   }
 
   Future<ProblemModel?> getProblemDetails(int? problemId) async {
     try {
-      var problemDetails = problems.firstWhere((problem) => problem.problemId == problemId);
+      var problemDetails = currentProblems.firstWhere((problem) => problem.problemId == problemId);
 
       if (problemDetails != null) {
         return problemDetails;

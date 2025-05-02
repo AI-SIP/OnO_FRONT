@@ -1,5 +1,7 @@
 import 'package:intl/intl.dart';
 
+import 'ProblemModel.dart';
+
 class ProblemPracticeModel {
   final int practiceId;
   final String practiceTitle;
@@ -7,7 +9,7 @@ class ProblemPracticeModel {
   final int practiceSize;
   final DateTime createdAt;
   final DateTime? lastSolvedAt;
-  final List<int>? problemIds; // 추가된 필드
+  List<ProblemModel> problems = [];
 
   ProblemPracticeModel({
     required this.practiceId,
@@ -16,7 +18,7 @@ class ProblemPracticeModel {
     required this.practiceSize,
     required this.createdAt,
     required this.lastSolvedAt,
-    this.problemIds,
+    required this.problems,
   });
 
   factory ProblemPracticeModel.fromJson(Map<String, dynamic> json) {
@@ -27,9 +29,7 @@ class ProblemPracticeModel {
       practiceSize: json['practiceSize'] ?? 0,
       createdAt: DateTime.parse(json['createdAt']).add(const Duration(hours: 9)),
       lastSolvedAt: json['lastSolvedAt'] != null ? DateTime.parse(json['lastSolvedAt']).add(const Duration(hours: 9)) : null,
-      problemIds: json['problemIds'] != null
-          ? List<int>.from(json['problemIds']) // problemIds 파싱
-          : [],
+      problems: (json['problems'] as List?)?.map((e) => ProblemModel.fromJson(e)).toList() ?? [], // null 체크
     );
   }
 
@@ -41,7 +41,7 @@ class ProblemPracticeModel {
       'practiceSize': practiceSize,
       'createdAt': _formatDateTime(createdAt),
       'lastSolvedAt': _formatDateTime(lastSolvedAt),
-      'problemIds': problemIds, // 추가된 필드
+      'problems': problems.map((e) => e.toJson()).toList(),
     };
   }
 

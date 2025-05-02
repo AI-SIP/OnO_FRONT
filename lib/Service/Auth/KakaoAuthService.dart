@@ -11,7 +11,7 @@ import 'package:http/http.dart' as http;
 import 'package:sentry_flutter/sentry_flutter.dart';
 
 import '../../Config/AppConfig.dart';
-import '../../GlobalModule/Theme/SnackBarDialog.dart';
+import '../../GlobalModule/Dialog/SnackBarDialog.dart';
 
 class KakaoAuthService {
   Future<Map<String, dynamic>?> signInWithKakao(BuildContext context) async {
@@ -89,12 +89,16 @@ class KakaoAuthService {
       final String? name = user.kakaoAccount?.profile?.nickname;
       final int identifier = user.id;
 
-      final url = Uri.parse('${AppConfig.baseUrl}/api/auth/kakao');
+      final url = Uri.parse('${AppConfig.baseUrl}/api/auth/login/social');
       final response = await http.post(
         url,
         headers: {'Content-Type': 'application/json; charset=UTF-8'},
-        body: jsonEncode(
-            {'email': email, 'name': name, 'identifier': identifier}),
+        body: jsonEncode({
+          'platform': 'KAKAO',
+          'email': email,
+          'name': name,
+          'identifier': identifier
+        }),
       ).timeout(const Duration(seconds: 60));
 
       if (response.statusCode == 200) {

@@ -3,10 +3,10 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:ono/GlobalModule/Theme/NoteIconHandler.dart';
+import 'package:ono/Model/FolderModel.dart';
 import 'package:provider/provider.dart';
-import '../../Model/FolderThumbnailModel.dart';
 import '../../Provider/FoldersProvider.dart';
-import '../Theme/StandardText.dart';
+import '../Text/StandardText.dart';
 import '../Theme/ThemeHandler.dart';
 
 class FolderSelectionDialog extends StatefulWidget {
@@ -24,19 +24,18 @@ class FolderSelectionDialog extends StatefulWidget {
     // 해당 folderId가 있는지 확인하고, 없으면 기본값 반환
     final folder = _cachedFolders.firstWhere(
       (folder) => folder.folderId == folderId,
-      orElse: () => FolderThumbnailModel(folderId: -1, folderName: '책장'),
     );
 
     return folder.folderId != -1 ? folder.folderName : '책장';
   }
 
-  static List<FolderThumbnailModel> _cachedFolders = [];
+  static List<FolderModel> _cachedFolders = [];
 }
 
 class _FolderSelectionDialogState extends State<FolderSelectionDialog> {
   int? _selectedFolderId;
   Set<int> _expandedFolders = {}; // 확장된 폴더 ID를 저장하는 Set
-  List<FolderThumbnailModel> _cachedFolders = []; // 폴더 데이터를 캐싱하기 위한 리스트
+  List<FolderModel> _cachedFolders = []; // 폴더 데이터를 캐싱하기 위한 리스트
   bool _isLoading = true; // 데이터를 로딩 중인지 여부를 나타내는 상태
 
   @override
@@ -50,7 +49,7 @@ class _FolderSelectionDialogState extends State<FolderSelectionDialog> {
     final foldersProvider =
         Provider.of<FoldersProvider>(context, listen: false);
     try {
-      _cachedFolders = await foldersProvider.fetchAllFolderThumbnails();
+      _cachedFolders = foldersProvider.folders;
       FolderSelectionDialog._cachedFolders = _cachedFolders;
       _expandedFolders = _cachedFolders
           .map((folder) => folder.folderId)
@@ -145,7 +144,7 @@ class _FolderSelectionDialogState extends State<FolderSelectionDialog> {
   }
 
   List<Widget> _buildFolderList(
-      List<FolderThumbnailModel> folders, ThemeHandler themeProvider,
+      List<FolderModel> folders, ThemeHandler themeProvider,
       {int? parentId, int level = 0}) {
     List<Widget> folderWidgets = [];
 

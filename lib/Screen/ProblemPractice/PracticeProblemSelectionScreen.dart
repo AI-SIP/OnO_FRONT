@@ -3,12 +3,12 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:ono/Model/ProblemPracticeModel.dart';
 import 'package:ono/Screen/ProblemPractice/PracticeTitleWriteScreen.dart';
 import 'package:provider/provider.dart';
-import '../../GlobalModule/Theme/StandardText.dart';
+import '../../GlobalModule/Text/StandardText.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
+import '../../Model/FolderModel.dart';
 import '../../Model/ProblemPracticeRegisterModel.dart';
 import '../../Model/TemplateType.dart';
 import '../../Provider/FoldersProvider.dart';
-import '../../Model/FolderThumbnailModel.dart';
 import '../../Model/ProblemModel.dart';
 import '../../GlobalModule/Theme/NoteIconHandler.dart';
 import '../../GlobalModule/Image/DisplayImage.dart';
@@ -27,8 +27,8 @@ class PracticeProblemSelectionScreen extends StatefulWidget {
 class _PracticeProblemSelectionScreenState
     extends State<PracticeProblemSelectionScreen> {
   int? selectedFolderId;
-  List<int> selectedProblems = [];
-  List<FolderThumbnailModel> allFolderThumbnails = [];
+  List<ProblemModel> selectedProblems = [];
+  List<FolderModel> allFolders = [];
 
   @override
   void initState() {
@@ -36,18 +36,19 @@ class _PracticeProblemSelectionScreenState
     _fetchFolders();
 
     if (widget.practiceModel != null) {
-      selectedProblems = widget.practiceModel!.problemIds!;
+      selectedProblems = widget.practiceModel!.problems;
     }
   }
 
   Future<void> _fetchFolders() async {
     final foldersProvider =
         Provider.of<FoldersProvider>(context, listen: false);
-    List<FolderThumbnailModel> folders =
-        await foldersProvider.fetchAllFolderThumbnails();
+
+    List<FolderModel> folders = foldersProvider.folders;
+
     setState(() {
-      allFolderThumbnails = folders;
-      selectedFolderId = allFolderThumbnails[0].folderId;
+      allFolders = folders;
+      selectedFolderId = allFolders[0].folderId;
     });
   }
 
@@ -61,7 +62,7 @@ class _PracticeProblemSelectionScreenState
         canPop: true,
         onPopInvokedWithResult: (bool didPop, Object? result) async {
           if (didPop) {
-            await foldersProvider.fetchRootFolderContents();
+            await foldersProvider.moveToRootFolder();
             return;
           }
         },
@@ -101,16 +102,16 @@ class _PracticeProblemSelectionScreenState
         height: 120,
         child: ListView.builder(
           scrollDirection: Axis.horizontal,
-          itemCount: allFolderThumbnails.length,
+          itemCount: allFolders.length,
           itemBuilder: (context, index) {
-            final folder = allFolderThumbnails[index];
+            final folder = allFolders[index];
             return GestureDetector(
               onTap: () async {
                 setState(() {
                   selectedFolderId = folder.folderId;
                 });
                 await Provider.of<FoldersProvider>(context, listen: false)
-                    .fetchFolderContents(folderId: folder.folderId);
+                    .moveToFolder(folder.folderId);
               },
               child: Padding(
                 padding: EdgeInsets.only(right: screenWidth * 0.04),
@@ -123,7 +124,7 @@ class _PracticeProblemSelectionScreenState
     );
   }
 
-  Widget _buildFolderThumbnail(FolderThumbnailModel folder, ThemeHandler themeProvider) {
+  Widget _buildFolderThumbnail(FolderModel folder, ThemeHandler themeProvider) {
     bool isSelected = selectedFolderId == folder.folderId; // 선택된 폴더인지 확인
 
     return Opacity(
@@ -131,7 +132,7 @@ class _PracticeProblemSelectionScreenState
       child: Column(
         children: [
           SvgPicture.asset(
-            NoteIconHandler.getNoteIcon(allFolderThumbnails.indexOf(folder)),
+            NoteIconHandler.getNoteIcon(allFolders.indexOf(folder)),
             width: 60,
             height: 60,
           ),
@@ -160,20 +161,21 @@ class _PracticeProblemSelectionScreenState
     return Expanded(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 30),
-        child: foldersProvider.problems.isNotEmpty
+        child: foldersProvider.currentProblems.isNotEmpty
             ? ListView.builder(
-                itemCount: foldersProvider.problems.length,
+                itemCount: foldersProvider.currentProblems.length,
                 itemBuilder: (context, index) {
-                  final problem = foldersProvider.problems[index];
-                  final isSelected =
-                      selectedProblems.contains(problem.problemId);
+                  final problem = foldersProvider.currentProblems[index];
+                  final isSelected = selectedProblems.any((selectedProblem) => selectedProblem.problemId == problem.problemId);
 
                   return GestureDetector(
                     onTap: () {
                       setState(() {
-                        isSelected
-                            ? selectedProblems.remove(problem.problemId)
-                            : selectedProblems.add(problem.problemId);
+                        if (isSelected) {
+                          selectedProblems.removeWhere((p) => p.problemId == problem.problemId);
+                        } else {
+                          selectedProblems.add(problem);
+                        }
                       });
                     },
                     child:
@@ -291,15 +293,21 @@ class _PracticeProblemSelectionScreenState
         onPressed: selectedProblems.isNotEmpty
             ? () {
                 ProblemPracticeRegisterModel practiceRegisterModel;
+                List<int> selectedProblemIds = selectedProblems
+                    .map((problem) => problem.problemId) // problemId만 추출
+                    .toList();
 
                 if (widget.practiceModel != null) {
                   practiceRegisterModel = ProblemPracticeRegisterModel(
                       practiceId: widget.practiceModel!.practiceId,
                       practiceTitle: widget.practiceModel!.practiceTitle,
-                      registerProblemIds: selectedProblems);
+                      registerProblemIds: selectedProblemIds
+                  );
                 } else {
                   practiceRegisterModel = ProblemPracticeRegisterModel(
-                      practiceTitle: "", registerProblemIds: selectedProblems);
+                      practiceTitle: "",
+                      registerProblemIds: selectedProblemIds
+                  );
                 }
 
                 Navigator.push(
