@@ -26,7 +26,7 @@ class ProblemPracticeProvider with ChangeNotifier{
         url: '${AppConfig.baseUrl}/api/practices/thumbnail',
       );
 
-      if (response.statusCode == 200) {
+      if (response != null) {
         final List<dynamic> jsonResponse = json.decode(utf8.decode(response.bodyBytes));
         practices = jsonResponse.map((practiceData) => ProblemPracticeModel.fromJson(practiceData)).toList();
         log('fetch all practice contents');

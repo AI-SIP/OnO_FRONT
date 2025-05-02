@@ -34,23 +34,30 @@ class FoldersProvider with ChangeNotifier {
   // 상위 폴더로 이동
   Future<void> moveToFolder(int? folderId) async {
     try {
-      // 전달받은 folderId에 해당하는 폴더를 _folders에서 검색
-      final targetFolder = _folders.firstWhere(
-            (folder) => folder.folderId == folderId,
-        orElse: () => throw Exception('Folder with ID $folderId not found'),
-      );
+      // 1) 로컬 리스트에서 찾기
+      FolderModel targetFolder;
+      try {
+        targetFolder = _folders.firstWhere((f) => f.folderId == folderId);
+      } on StateError {
+        // 2) 로컬에 없으면 서버에서 조회해 추가
+        log('Folder $folderId not found locally, fetching from server…');
+        await fetchFolderContent(folderId);   // fetchFolderContent 에서 없으면 예외 발생
+        targetFolder = _folders.firstWhere((f) => f.folderId == folderId);
+      }
 
+      // 3) 현재 폴더 및 문제 목록 설정
       _currentFolder = targetFolder;
-      _currentProblems = _currentFolder!.problems;
+      _currentProblems = targetFolder.problems;
       sortProblemsByOption(sortOption);
 
-      log('Moved to folder: ${_currentFolder!.folderId}, Problems: ${_currentProblems.length}');
+      log('Moved to folder: ${targetFolder.folderId}, Problems: ${_currentProblems.length}');
 
-      // UI 갱신
+      // 4) UI 갱신
       notifyListeners();
     } catch (error, stackTrace) {
       log('Error moving to folder with ID $folderId: $error');
       await Sentry.captureException(error, stackTrace: stackTrace);
+      rethrow; // 필요 시 상위 로직에서도 예외 처리 가능하도록 다시 던짐
     }
   }
 
@@ -76,17 +83,15 @@ class FoldersProvider with ChangeNotifier {
   // 폴더 내용 로드 (특정 폴더 ID로)
   Future<void> fetchFolderContent(int? folderId) async {
     folderId ??= currentFolder!.folderId;
-
     try {
       final response = await httpService.sendRequest(
         method: 'GET',
         url: '${AppConfig.baseUrl}/api/folders/$folderId',
       );
 
-      print(response);
+      print("Folder Response: ${response}");
       if (response != null) {
-        final folderData = json.decode(utf8.decode(response.bodyBytes));
-        final updatedFolder = FolderModel.fromJson(folderData);
+        final updatedFolder = FolderModel.fromJson(response);
 
         // 기존 데이터를 업데이트
         final index = _folders.indexWhere((folder) => folder.folderId == folderId);
@@ -96,6 +101,7 @@ class FoldersProvider with ChangeNotifier {
           _folders.add(updatedFolder);
         }
 
+        print("folder fetch complete");
         notifyListeners();
       } else {
         throw Exception('Failed to fetch folder by ID');
@@ -164,15 +170,11 @@ class FoldersProvider with ChangeNotifier {
       );
 
       if (response != null) {
-        log('Folder successfully created');
+        log('Folder successfully created, folderId: ${response}');
 
-        final folderData = json.decode(utf8.decode(response.bodyBytes));
-        final updatedFolder = FolderModel.fromJson(folderData);
-
-        await fetchFolderContent(updatedFolder.folderId);
+        await fetchFolderContent(response);
         await fetchFolderContent(_currentFolder!.folderId);
-
-        await moveToFolder(currentFolder!.folderId);
+        await moveToFolder(_currentFolder!.folderId);
       } else {
         throw Exception('Failed to create folder');
       }
