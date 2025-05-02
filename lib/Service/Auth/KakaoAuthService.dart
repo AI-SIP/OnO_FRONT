@@ -89,7 +89,7 @@ class KakaoAuthService {
       final String? name = user.kakaoAccount?.profile?.nickname;
       final int identifier = user.id;
 
-      final url = Uri.parse('${AppConfig.baseUrl}/api/auth/login/social');
+      final url = Uri.parse('${AppConfig.baseUrl}/api/auth/signup/member');
       final response = await http.post(
         url,
         headers: {'Content-Type': 'application/json; charset=UTF-8'},

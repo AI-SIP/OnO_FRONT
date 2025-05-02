@@ -24,7 +24,7 @@ class HttpService {
     }
 
     Map<String, String> mergedHeaders = {
-      'Authorization': 'Bearer $accessToken',
+      'Authorization': '$accessToken',
       'Content-Type': 'application/json; charset=UTF-8',
       ...?headers,
     };

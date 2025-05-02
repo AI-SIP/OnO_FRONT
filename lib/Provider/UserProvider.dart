@@ -62,6 +62,8 @@ class UserProvider with ChangeNotifier {
     try {
       LoadingDialog.show(context, '로그인 중 입니다...');
       final response = await signInMethod(context);
+      print(response);
+
       bool isRegister = await saveUserToken(response: response, loginMethod: loginMethod);
       LoadingDialog.hide(context);
 
@@ -109,34 +111,44 @@ class UserProvider with ChangeNotifier {
       await resetUserInfo();
 
       return false;
-    } else{
-      String? accessToken = response['accessToken'];
-      String? refreshToken = response['refreshToken'];
-
-      if(accessToken == null || refreshToken == null){
-        _loginStatus = LoginStatus.logout;
-        await resetUserInfo();
-
-        return false;
-      }
-
-      await storage.write(key: 'loginMethod', value: loginMethod);
-      await tokenProvider.setAccessToken(accessToken);
-      await tokenProvider.setRefreshToken(refreshToken);
-      _isFirstLogin = true;
-
-      FirebaseAnalytics.instance.logLogin(loginMethod: loginMethod);
-      return await fetchUserInfo();
     }
+
+    final data = response['data'];
+    if (data == null || data is! Map<String, dynamic>) {
+      _loginStatus = LoginStatus.logout;
+      await resetUserInfo();
+      return false;
+    }
+
+    String? accessToken = data['accessToken'] as String?;
+    String? refreshToken = data['refreshToken'] as String?;
+
+    if (accessToken == null || refreshToken == null) {
+      _loginStatus = LoginStatus.logout;
+      await resetUserInfo();
+      return false;
+    }
+
+    // 나머지 저장 로직은 그대로
+    await storage.write(key: 'loginMethod', value: loginMethod);
+    await tokenProvider.setAccessToken(accessToken);
+    await tokenProvider.setRefreshToken(refreshToken);
+    _isFirstLogin = true;
+    FirebaseAnalytics.instance.logLogin(loginMethod: loginMethod);
+
+    print("start fetchUserInfo()");
+    return await fetchUserInfo();
   }
 
   Future<bool> fetchUserInfo() async {
     try {
+      print("send request");
       final response = await httpService.sendRequest(
         method: 'GET',
-        url: '${AppConfig.baseUrl}/api/user',
+        url: '${AppConfig.baseUrl}/api/users',
       );
 
+      print("fetchUserInfo() response: ${response}");
       if (response.statusCode == 200) {
         await _processUserInfoResponse(response);
         _problemCount = await getUserProblemCount();
@@ -159,9 +171,10 @@ class UserProvider with ChangeNotifier {
 
   Future<void> _processUserInfoResponse(http.Response response) async {
     final responseBody = await jsonDecode(utf8.decode(response.bodyBytes));
-    _userId = responseBody['userId'] ?? 0;
-    _userName = responseBody['userName'] ?? '이름 없음';
-    _userEmail = responseBody['userEmail'];
+
+    _userId = responseBody['data']['userId'] ?? 0;
+    _userName = responseBody['data']['userName'] ?? '이름 없음';
+    _userEmail = responseBody['data']['userEmail'];
     _loginStatus = LoginStatus.login;
 
     await FirebaseAnalytics.instance.logLogin();

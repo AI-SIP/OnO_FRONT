@@ -31,7 +31,7 @@ class AppleAuthService {
       final String? name = (lastName ?? "") + (firstName ?? "");
       final String? identifier = appleCredential.userIdentifier;
 
-      final url = Uri.parse('${AppConfig.baseUrl}/api/auth/login/social');
+      final url = Uri.parse('${AppConfig.baseUrl}/api/auth/signup/member');
       final response = await http.post(
         url,
         headers: {

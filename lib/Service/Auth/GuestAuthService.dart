@@ -17,7 +17,7 @@ class GuestAuthService{
 
   Future<Map<String, dynamic>?> signInWithGuest(BuildContext context) async{
     try{
-      final url = Uri.parse('${AppConfig.baseUrl}/api/auth/login/guest');
+      final url = Uri.parse('${AppConfig.baseUrl}/api/auth/signup/guest');
 
       final response = await http.post(
         url,

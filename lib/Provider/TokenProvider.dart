@@ -17,36 +17,14 @@ class TokenProvider {
     try {
       String? accessToken = await storage.read(key: 'accessToken');
 
-      if (accessToken == null) {
-        log('Access token is not available.');
-        await refreshAccessToken();
-
-        accessToken = await storage.read(key: 'accessToken');
-      }
-
-      final url = Uri.parse('${AppConfig.baseUrl}/api/auth/verifyAccessToken');
-      final response = await http.get(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $accessToken',
-        },
-      ).timeout(const Duration(seconds: 30));
-
-      if (response.statusCode == 200) {
+      if (accessToken != null) {
         return accessToken;
-      } else {
-        log('Access token is invalid or expired, trying to refresh...');
-        bool isRefreshAccessToken = await refreshAccessToken();
-        if (isRefreshAccessToken) {
-          accessToken = await storage.read(key: 'accessToken');
-          return accessToken;
-        } else {
-          throw Exception("Can not refresh access token");
-        }
       }
-    } on SocketException catch(_){
-      return null;
+
+      log('Access token is not available.');
+      await refreshAccessToken();
+
+      accessToken = await storage.read(key: 'accessToken');
     } catch (error, stackTrace) {
       log('getAccessToken() error: $error');
       await Sentry.captureException(
@@ -81,9 +59,22 @@ class TokenProvider {
       ).timeout(const Duration(seconds: 30));
 
       if (response.statusCode == 200) {
-        var data = jsonDecode(response.body);
-        await setAccessToken(data['accessToken']);
-        await setRefreshToken(data['refreshToken']);
+        final body = jsonDecode(response.body) as Map<String, dynamic>;
+        final data = body['data'] as Map<String, dynamic>?;
+
+        if (data == null) {
+          throw Exception('Malformed refresh response: missing data field.');
+        }
+
+        final newAccessToken = data['accessToken'] as String?;
+        final newRefreshToken = data['refreshToken'] as String?;
+
+        if (newAccessToken == null || newRefreshToken == null) {
+          throw Exception('Malformed refresh response: missing tokens.');
+        }
+
+        await setAccessToken(newAccessToken);
+        await setRefreshToken(newRefreshToken);
         log('Access token refreshed.');
         return true;
       } else {
