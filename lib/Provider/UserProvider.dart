@@ -154,7 +154,7 @@ class UserProvider with ChangeNotifier {
       if (_loginStatus == LoginStatus.login) {
         //await foldersProvider.fetchRootFolderContents();
         await foldersProvider.fetchAllFolderContents();
-        await practiceProvider.fetchAllPracticeContents();
+        //await practiceProvider.fetchAllPracticeContents();
 
         notifyListeners();
       }

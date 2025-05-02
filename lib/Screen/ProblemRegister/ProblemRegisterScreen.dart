@@ -6,27 +6,24 @@ import 'package:provider/provider.dart';
 import '../../GlobalModule/Text/StandardText.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
 import '../../Provider/FoldersProvider.dart';
+import 'ProblemRegisterTemplateV2.dart';
 
-class ProblemRegisterScreen extends StatefulWidget {
-  final ProblemModel problemModel;
+class ProblemRegisterScreenV2 extends StatefulWidget {
+  final ProblemModel? problemModel;
   final bool isEditMode;
-  final Map<String, dynamic>? colorPickerResult;
-  final List<List<double>>? coordinatePickerResult;
 
-  const ProblemRegisterScreen({
+  const ProblemRegisterScreenV2({
     super.key,
     required this.problemModel,
     required this.isEditMode,
-    required this.colorPickerResult,
-    required this.coordinatePickerResult,
   });
 
   @override
-  _ProblemRegisterScreenState createState() =>
-      _ProblemRegisterScreenState();
+  _ProblemRegisterScreenStateV2 createState() =>
+      _ProblemRegisterScreenStateV2();
 }
 
-class _ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
+class _ProblemRegisterScreenStateV2 extends State<ProblemRegisterScreenV2> {
   @override
   void initState() {
     super.initState();
@@ -37,27 +34,16 @@ class _ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
     Widget templateWidget;
     final themeProvider = Provider.of<ThemeHandler>(context);
 
-    templateWidget = ProblemRegisterTemplate(
+    templateWidget = ProblemRegisterTemplateV2(
         problemModel: widget.problemModel,
-        colorPickerResult: widget.colorPickerResult,
-        coordinatePickerResult: widget.coordinatePickerResult,
         isEditMode: widget.isEditMode,
-        templateType: widget.problemModel.templateType!);
+    );
 
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
         centerTitle: true,
         backgroundColor: Colors.white,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: themeProvider.primaryColor),
-          onPressed: () {
-            if (!widget.isEditMode) {
-              _deleteProblem();
-            }
-            Navigator.pop(context);
-          },
-        ),
         title: StandardText(
           text: widget.isEditMode ? '오답노트 수정' : '오답노트 작성',
           color: themeProvider.primaryColor,
@@ -70,10 +56,5 @@ class _ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
         child: templateWidget,
       ),
     );
-  }
-
-  Future<void> _deleteProblem() async {
-    await Provider.of<FoldersProvider>(context, listen: false)
-        .deleteProblems([widget.problemModel.problemId]);
   }
 }

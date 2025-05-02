@@ -3,14 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:ono/GlobalModule/Text/HandWriteText.dart';
 import 'package:ono/Model/ProblemRegisterModel.dart';
 import 'package:ono/Provider/PracticeNoteProvider.dart';
-import 'package:ono/Screen/ProblemRegister/ProblemRegisterScreenV2.dart';
+import 'package:ono/Screen/ProblemRegister/ProblemRegisterScreen.dart';
 import 'package:provider/provider.dart';
 
 import '../../GlobalModule/Text/StandardText.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
 import '../../GlobalModule/Dialog/FolderSelectionDialog.dart';
 import '../../GlobalModule/Util/FolderNavigationButtons.dart';
-import '../ProblemPractice/PracticeNavigationButtons.dart';
+import '../PracticeNote/PracticeNavigationButtons.dart';
 import '../../Model/ProblemModel.dart';
 import '../../Model/TemplateType.dart';
 import '../../Provider/FoldersProvider.dart';

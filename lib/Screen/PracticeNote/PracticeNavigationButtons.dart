@@ -6,7 +6,7 @@ import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:ono/Provider/FoldersProvider.dart';
 import 'package:ono/Screen/ProblemDetail/ProblemDetailScreen.dart';
-import 'package:ono/Screen/ProblemPractice/PracticeCompletionScreen.dart';
+import 'package:ono/Screen/PracticeNote/PracticeCompletionScreen.dart';
 import 'package:provider/provider.dart';
 
 import '../../GlobalModule/Image/ImagePickerHandler.dart';
