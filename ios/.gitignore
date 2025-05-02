@@ -33,3 +33,5 @@ Runner/GeneratedPluginRegistrant.*
 !default.pbxuser
 !default.perspectivev3
 ios/Podfile.lock
+ios/Podfile.lock
+ios/Podfile.lock
