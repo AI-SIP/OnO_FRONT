@@ -69,16 +69,6 @@ class UserProvider with ChangeNotifier {
         log('register failed!, response: ${response.toString()}');
         throw Exception('response: ${response.toString()}');
       }
-    } on SocketException catch (error, stackTrace) {
-      LoadingDialog.show(context, '잠시만 기다려주세요...');
-      await Future.delayed(const Duration(seconds: 3));
-      await Sentry.captureException(error, stackTrace: stackTrace);
-      SnackBarDialog.showSnackBar(context: context, message: '네트워크 오류로 인해 로그인에 실패했습니다.', backgroundColor: Colors.red);
-    } on TimeoutException catch (error, stackTrace) {
-      LoadingDialog.show(context, '잠시만 기다려주세요...');
-      await Future.delayed(const Duration(seconds: 3));
-      await Sentry.captureException(error, stackTrace: stackTrace);
-      SnackBarDialog.showSnackBar(context: context, message: '네트워크 오류로 인해 로그인에 실패했습니다.', backgroundColor: Colors.red);
     } catch (error, stackTrace) {
       _handleGeneralError(context, error, stackTrace);
     }
