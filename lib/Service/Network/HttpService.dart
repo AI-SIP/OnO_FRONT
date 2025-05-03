@@ -97,7 +97,16 @@ class HttpService {
 
     // 4. Check for HTTP errors
     if (response.statusCode < 200 || response.statusCode >= 300) {
-      throw Exception('HTTP ${response.statusCode}: ${response.reasonPhrase}');
+      // 응답 본문을 JSON 으로 파싱
+      String errorMessage;
+      try {
+        final errJson = jsonDecode(utf8.decode(response.bodyBytes));
+        errorMessage = errJson['message'] as String?
+            ?? 'Unknown error';
+      } catch (_) {
+        errorMessage = response.reasonPhrase ?? 'Unknown error';
+      }
+      throw Exception('HTTP ${response.statusCode}: $errorMessage');
     }
 
     // 5. Parse JSON and extract data
