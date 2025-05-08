@@ -10,7 +10,7 @@ import 'package:ono/GlobalModule/Dialog/SnackBarDialog.dart';
 import 'package:ono/GlobalModule/Util/UrlLauncher.dart';
 import 'package:ono/Model/Folder/FolderModel.dart';
 import 'package:ono/Model/Common/LoginStatus.dart';
-import 'package:ono/Model/ProblemRegisterModel.dart';
+import 'package:ono/Model/Problem/ProblemRegisterModel.dart';
 import 'package:ono/Provider/FoldersProvider.dart';
 import 'package:provider/provider.dart';
 import '../../GlobalModule/Image/DisplayImage.dart';

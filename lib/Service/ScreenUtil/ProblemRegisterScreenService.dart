@@ -7,8 +7,8 @@ import 'package:provider/provider.dart';
 import '../../GlobalModule/Image/ImagePickerHandler.dart';
 import '../../GlobalModule/Dialog/SnackBarDialog.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
-import '../../Model/ProblemRegisterModel.dart';
-import '../../Model/ProblemRegisterModelV2.dart';
+import '../../Model/Problem/ProblemRegisterModel.dart';
+import '../../Model/Problem/ProblemRegisterModelV2.dart';
 import '../../Provider/UserProvider.dart';
 
 class ProblemRegisterScreenService {

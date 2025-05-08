@@ -3,7 +3,7 @@ import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:ono/Model/PracticeNote/PracticeNoteModel.dart';
-import 'package:ono/Model/PracticeNoteRegisterModel.dart';
+import 'package:ono/Model/PracticeNote/PracticeNoteRegisterModel.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
 import '../Config/AppConfig.dart';

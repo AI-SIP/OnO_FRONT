@@ -12,8 +12,8 @@ import 'package:sentry_flutter/sentry_flutter.dart';
 import '../Config/AppConfig.dart';
 import '../Model/Folder/FolderModel.dart';
 import '../Model/Problem/ProblemModel.dart';
-import '../Model/ProblemRegisterModel.dart';
-import '../Model/ProblemRegisterModelV2.dart';
+import '../Model/Problem/ProblemRegisterModel.dart';
+import '../Model/Problem/ProblemRegisterModelV2.dart';
 import 'TokenProvider.dart';
 import 'package:http/http.dart' as http;
 

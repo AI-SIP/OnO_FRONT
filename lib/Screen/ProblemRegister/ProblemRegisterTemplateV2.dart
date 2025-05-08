@@ -9,7 +9,7 @@ import '../../GlobalModule/Dialog/LoadingDialog.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
 import '../../GlobalModule/Dialog/FolderSelectionDialog.dart';
 import '../../Model/Problem/ProblemModel.dart';
-import '../../Model/ProblemRegisterModelV2.dart';
+import '../../Model/Problem/ProblemRegisterModelV2.dart';
 import '../../Provider/FoldersProvider.dart';
 import '../../Provider/ScreenIndexProvider.dart';
 import '../../Service/ScreenUtil/ProblemRegisterScreenService.dart';

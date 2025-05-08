@@ -14,7 +14,7 @@ import '../../GlobalModule/Theme/ThemeHandler.dart';
 import '../../GlobalModule/Dialog/FolderSelectionDialog.dart';
 import '../../GlobalModule/Util/LatexTextHandler.dart';
 import '../../Model/Problem/ProblemModel.dart';
-import '../../Model/ProblemRegisterModel.dart';
+import '../../Model/Problem/ProblemRegisterModel.dart';
 import '../../Model/Problem/TemplateType.dart';
 import '../../Provider/FoldersProvider.dart';
 import '../../Provider/ScreenIndexProvider.dart';

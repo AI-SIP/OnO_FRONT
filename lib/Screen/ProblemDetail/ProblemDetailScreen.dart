@@ -1,7 +1,7 @@
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:ono/GlobalModule/Text/HandWriteText.dart';
-import 'package:ono/Model/ProblemRegisterModel.dart';
+import 'package:ono/Model/Problem/ProblemRegisterModel.dart';
 import 'package:ono/Provider/PracticeNoteProvider.dart';
 import 'package:ono/Screen/ProblemRegister/ProblemRegisterScreen.dart';
 import 'package:provider/provider.dart';
