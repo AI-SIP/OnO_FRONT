@@ -6,7 +6,7 @@ import 'package:provider/provider.dart';
 import '../../GlobalModule/Dialog/SnackBarDialog.dart';
 import '../../GlobalModule/Text/StandardText.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
-import '../../Model/ProblemModel.dart';
+import '../../Model/Problem/ProblemModel.dart';
 
 class ProblemDetailScreenService {
   Future<ProblemModel?> fetchProblemDetailsFromFolder(

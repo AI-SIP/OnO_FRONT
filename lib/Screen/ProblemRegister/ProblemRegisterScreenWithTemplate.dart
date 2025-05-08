@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:ono/Model/ProblemModel.dart';
+import 'package:ono/Model/Problem/ProblemModel.dart';
 import 'package:ono/Screen/ProblemRegister/ProblemRegisterTemplate.dart';
 import 'package:provider/provider.dart';
 

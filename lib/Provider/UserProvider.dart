@@ -9,7 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:ono/GlobalModule/Dialog/LoadingDialog.dart';
 import 'package:ono/GlobalModule/Dialog/SnackBarDialog.dart';
-import 'package:ono/Model/LoginStatus.dart';
+import 'package:ono/Model/Common/LoginStatus.dart';
 import 'package:ono/Provider/FoldersProvider.dart';
 import 'package:ono/Provider/PracticeNoteProvider.dart';
 import 'package:ono/Service/Auth/GuestAuthService.dart';

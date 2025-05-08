@@ -1,5 +1,5 @@
 import 'package:intl/intl.dart';
-import 'package:ono/Model/TemplateType.dart';
+import 'package:ono/Model/Problem/TemplateType.dart';
 
 import 'ProblemRepeatModel.dart';
 

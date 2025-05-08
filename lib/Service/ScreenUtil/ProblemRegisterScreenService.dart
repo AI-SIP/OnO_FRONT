@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:ono/GlobalModule/Image/ColorPicker/ImageColorPickerHandler.dart';
 import 'package:ono/GlobalModule/Text/HandWriteText.dart';
-import 'package:ono/Model/LoginStatus.dart';
+import 'package:ono/Model/Common/LoginStatus.dart';
 import 'package:ono/Provider/FoldersProvider.dart';
 import 'package:provider/provider.dart';
 import '../../GlobalModule/Image/ImagePickerHandler.dart';

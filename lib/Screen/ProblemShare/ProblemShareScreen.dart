@@ -6,7 +6,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:intl/intl.dart';
-import 'package:ono/Model/TemplateType.dart';
+import 'package:ono/Model/Problem/TemplateType.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
@@ -17,7 +17,7 @@ import '../../GlobalModule/Text/StandardText.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
 import '../../GlobalModule/Text/HandWriteText.dart';
 import '../../GlobalModule/Text/UnderlinedText.dart';
-import '../../Model/ProblemModel.dart';
+import '../../Model/Problem/ProblemModel.dart';
 
 class ProblemShareScreen extends StatefulWidget {
   final ProblemModel problem;

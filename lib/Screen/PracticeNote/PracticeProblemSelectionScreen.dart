@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:ono/Model/PracticeNoteModel.dart';
+import 'package:ono/Model/PracticeNote/PracticeNoteModel.dart';
 import 'package:ono/Screen/PracticeNote/PracticeTitleWriteScreen.dart';
 import 'package:provider/provider.dart';
 import '../../GlobalModule/Text/StandardText.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
 import '../../Model/Folder/FolderModel.dart';
 import '../../Model/PracticeNoteRegisterModel.dart';
-import '../../Model/TemplateType.dart';
+import '../../Model/Problem/TemplateType.dart';
 import '../../Provider/FoldersProvider.dart';
-import '../../Model/ProblemModel.dart';
+import '../../Model/Problem/ProblemModel.dart';
 import '../../GlobalModule/Theme/NoteIconHandler.dart';
 import '../../GlobalModule/Image/DisplayImage.dart';
 

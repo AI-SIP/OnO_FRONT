@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../GlobalModule/Theme/ThemeHandler.dart';
-import '../../../Model/ProblemModel.dart';
+import '../../../Model/Problem/ProblemModel.dart';
 import '../ProblemDetailScreenWidget.dart';
 
 class CleanProblemDetailTemplate extends StatelessWidget {

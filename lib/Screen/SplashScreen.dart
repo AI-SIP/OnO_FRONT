@@ -4,7 +4,7 @@ import 'package:flutter_svg/svg.dart';
 import 'package:ono/main.dart';
 import 'package:provider/provider.dart';
 
-import '../Model/LoginStatus.dart';
+import '../Model/Common/LoginStatus.dart';
 import '../Provider/UserProvider.dart';
 import 'LoginScreen.dart';
 

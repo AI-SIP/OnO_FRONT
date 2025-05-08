@@ -6,7 +6,7 @@ import '../GlobalModule/Theme/GridPainter.dart';
 import '../GlobalModule/Text/HandWriteText.dart';
 import '../GlobalModule/Text/StandardText.dart';
 import '../GlobalModule/Theme/ThemeHandler.dart';
-import '../Model/LoginStatus.dart';
+import '../Model/Common/LoginStatus.dart';
 import '../Provider/UserProvider.dart';
 import '../main.dart';
 

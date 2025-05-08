@@ -1,6 +1,6 @@
 // FolderModel.dart
 import 'FolderThumbnailModel.dart';
-import '../ProblemModel.dart';
+import '../Problem/ProblemModel.dart';
 
 class FolderModel {
   final int folderId;

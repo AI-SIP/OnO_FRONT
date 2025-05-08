@@ -15,7 +15,7 @@ import '../../GlobalModule/Theme/GridPainter.dart';
 import '../../GlobalModule/Text/StandardText.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
 import '../../GlobalModule/Text/UnderlinedText.dart';
-import '../../Model/ProblemModel.dart';
+import '../../Model/Problem/ProblemModel.dart';
 
 class AnswerShareScreen extends StatefulWidget {
   final ProblemModel problem;

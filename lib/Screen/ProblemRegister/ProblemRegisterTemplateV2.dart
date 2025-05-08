@@ -8,7 +8,7 @@ import 'package:provider/provider.dart';
 import '../../GlobalModule/Dialog/LoadingDialog.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
 import '../../GlobalModule/Dialog/FolderSelectionDialog.dart';
-import '../../Model/ProblemModel.dart';
+import '../../Model/Problem/ProblemModel.dart';
 import '../../Model/ProblemRegisterModelV2.dart';
 import '../../Provider/FoldersProvider.dart';
 import '../../Provider/ScreenIndexProvider.dart';

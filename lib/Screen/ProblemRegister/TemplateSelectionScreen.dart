@@ -14,9 +14,9 @@ import '../../GlobalModule/Text/HandWriteText.dart';
 import '../../GlobalModule/Dialog/SnackBarDialog.dart';
 import '../../GlobalModule/Text/StandardText.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
-import '../../Model/LoginStatus.dart';
-import '../../Model/ProblemModel.dart';
-import '../../Model/TemplateType.dart';
+import '../../Model/Common/LoginStatus.dart';
+import '../../Model/Problem/ProblemModel.dart';
+import '../../Model/Problem/TemplateType.dart';
 import '../../Provider/FoldersProvider.dart';
 import '../../Provider/UserProvider.dart';
 

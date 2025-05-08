@@ -1,4 +1,4 @@
-import '../../Model/ProblemModel.dart';
+import '../../Model/Problem/ProblemModel.dart';
 
 extension ProblemSorting on List<ProblemModel> {
   void sortByName() {

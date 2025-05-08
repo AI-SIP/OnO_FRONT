@@ -1,6 +1,6 @@
 import 'package:intl/intl.dart';
 
-import 'ProblemModel.dart';
+import '../Problem/ProblemModel.dart';
 
 class ProblemPracticeModel {
   final int practiceId;

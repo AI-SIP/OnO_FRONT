@@ -2,7 +2,7 @@ import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_tex/flutter_tex.dart';
 import 'package:intl/intl.dart';
-import 'package:ono/Model/TemplateType.dart';
+import 'package:ono/Model/Problem/TemplateType.dart';
 
 import '../../GlobalModule/Image/DisplayImage.dart';
 import '../../GlobalModule/Image/FullScreenImage.dart';
@@ -12,7 +12,7 @@ import '../../GlobalModule/Text/StandardText.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
 import '../../GlobalModule/Text/UnderlinedText.dart';
 import '../../GlobalModule/Util/LatexTextHandler.dart';
-import '../../Model/ProblemModel.dart';
+import '../../Model/Problem/ProblemModel.dart';
 
 class ProblemDetailScreenWidget {
   // 배경 구현 함수

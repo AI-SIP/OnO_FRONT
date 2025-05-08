@@ -3,7 +3,7 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:ono/Screen/ProblemDetail/ProblemDetailScreen.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
-import '../../Model/ProblemThumbnailModel.dart';
+import '../../Model/Problem/ProblemThumbnailModel.dart';
 import '../../Provider/FoldersProvider.dart';
 
 class DirectoryScreenService {

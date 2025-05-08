@@ -9,7 +9,7 @@ import 'package:provider/provider.dart';
 import '../../GlobalModule/Text/StandardText.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
 import '../../GlobalModule/Util/UrlLauncher.dart';
-import '../../Model/PracticeNoteModel.dart';
+import '../../Model/PracticeNote/PracticeNoteModel.dart';
 import '../../Provider/PracticeNoteProvider.dart';
 import '../../Provider/ScreenIndexProvider.dart';
 import 'PracticeDetailScreen.dart';
