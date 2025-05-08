@@ -297,8 +297,8 @@ class FoldersProvider with ChangeNotifier {
 
     final response = await httpService.sendRequest(
       method: 'POST',
-      url: '${AppConfig.baseUrl}/api/problem/V2',
-      isMultipart: true,
+      url: '${AppConfig.baseUrl}/api/problems',
+      isMultipart: false,
       files: files,
       body: requestBody,
     );
@@ -333,6 +333,7 @@ class FoldersProvider with ChangeNotifier {
       'reference': problemData.reference ?? "",
       'memo': problemData.memo ?? "",
       'folderId': (problemData.folderId ?? currentFolder!.folderId).toString(),
+      'imageDataDtoList' : []
     };
 
     if (problemData.problemId != null) {
@@ -341,8 +342,8 @@ class FoldersProvider with ChangeNotifier {
 
     final response = await httpService.sendRequest(
       method: 'POST',
-      url: '${AppConfig.baseUrl}/api/problem/V2',
-      isMultipart: true,
+      url: '${AppConfig.baseUrl}/api/problems',
+      isMultipart: false,
       files: files,
       body: requestBody,
     );
@@ -366,7 +367,7 @@ class FoldersProvider with ChangeNotifier {
 
     final response = await httpService.sendRequest(
       method: 'GET',
-      url: '${AppConfig.baseUrl}/api/user/problemCount',
+      url: '${AppConfig.baseUrl}/api/problems/problemCount',
     );
 
     if (response != null) {
@@ -386,7 +387,7 @@ class FoldersProvider with ChangeNotifier {
 
     final response = await httpService.sendRequest(
       method: 'PATCH',
-      url: '${AppConfig.baseUrl}/api/problem',
+      url: '${AppConfig.baseUrl}/api/problems',
       isMultipart: true,
       files: files,
       body: {
@@ -444,7 +445,7 @@ class FoldersProvider with ChangeNotifier {
       // Multipart 요청 생성
       final response = await httpService.sendRequest(
         method: 'POST',
-        url: '${AppConfig.baseUrl}/api/problem/repeat',
+        url: '${AppConfig.baseUrl}/api/problems/repeat',
         headers: {
           'problemId': problemId.toString(),
         },

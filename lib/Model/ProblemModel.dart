@@ -46,7 +46,7 @@ class ProblemModel {
       memo: json['memo'],
       reference: json['reference'],
       folderId: json['folderId'],
-      templateType: TemplateTypeExtension.fromTemplateTypeCode(json['templateType']) ?? TemplateType.simple,
+      templateType: json['templateType'] != null ? TemplateTypeExtension.fromTemplateTypeCode(json['templateType']) : TemplateType.simple,
       analysis: json['analysis'],
       repeats: json['repeats'] != null
           ? (json['repeats'] as List).map((e) => ProblemRepeatModel.fromJson(e)).toList()

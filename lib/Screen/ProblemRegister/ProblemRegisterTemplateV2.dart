@@ -62,7 +62,7 @@ class _ProblemRegisterTemplateStateV2
       _selectedFolderId = problemModel?.folderId;
     } else{
       final folderProvider = Provider.of<FoldersProvider>(context, listen: false);
-      _selectedFolderId = folderProvider.currentFolder!.folderId;
+      _selectedFolderId = folderProvider.currentFolder?.folderId ?? 1;
     }
 
     _selectedFolderName = '책장';
