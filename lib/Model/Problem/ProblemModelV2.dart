@@ -1,3 +1,6 @@
+import 'package:ono/Model/Problem/ProblemRepeatModel.dart';
+import 'package:ono/Model/Problem/TemplateType.dart';
+
 class ProblemImageDataModel {
   final String imageUrl;
   final String problemImageType;
@@ -52,7 +55,7 @@ class ProblemModelV2 {
     required this.imageUrlList,
   });
 
-  factory ProblemModel.fromJson(Map<String, dynamic> json) {
+  fromJson(Map<String, dynamic> json) {
     // 3) imageUrlList 파싱
     final imageListJson = json['imageUrlList'] as List<dynamic>? ?? [];
     final imageUrlList = imageListJson
@@ -66,7 +69,7 @@ class ProblemModelV2 {
       // 아래 필드들은 API 에서 내려오는 것에 맞추어 필요하면 수정하세요.
       templateType: json['templateType'] != null
           ? TemplateTypeExtension
-          .fromTemplateTypeCode(json['templateType'] as String)
+          .fromTemplateTypeCode(json['templateType'])
           : null,
       analysis: json['analysis'] as String?,
       repeats: (json['repeats'] as List<dynamic>?)

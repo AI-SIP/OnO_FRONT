@@ -8,22 +8,23 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart';
 import 'package:http/http.dart' as http;
+import 'package:ono/Model/User/UserRegisterModel.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
 import '../../Config/AppConfig.dart';
 import '../../GlobalModule/Dialog/SnackBarDialog.dart';
 
 class KakaoAuthService {
-  Future<Map<String, dynamic>?> signInWithKakao(BuildContext context) async {
+  Future<UserRegisterModel?> signInWithKakao(BuildContext context) async {
 
-    Map<String, dynamic>? result;
+    UserRegisterModel? userRegisterModel;
 
     if (await isKakaoTalkInstalled()) {
       try {
         await UserApi.instance.loginWithKakaoTalk().then((_) async {
           User user = await UserApi.instance.me();
 
-          result = await registerUser(context, user);
+          userRegisterModel = await registerUser(context, user);
         });
       } catch (error, stackTrace) {
         log('카카오톡으로 로그인 실패 $error');
@@ -35,7 +36,7 @@ class KakaoAuthService {
         // 사용자가 카카오톡 설치 후 디바이스 권한 요청 화면에서 로그인을 취소한 경우,
         // 의도적인 로그인 취소로 보고 카카오계정으로 로그인 시도 없이 로그인 취소로 처리 (예: 뒤로 가기)
         if (error is PlatformException && error.code == 'CANCELED') {
-          result = null;
+          userRegisterModel = null;
         }
 
         // 카카오톡에 연결된 카카오계정이 없는 경우, 카카오계정으로 로그인
@@ -44,7 +45,7 @@ class KakaoAuthService {
             await UserApi.instance.loginWithKakaoAccount();
             User user = await UserApi.instance.me();
 
-            result = await registerUser(context, user);
+            userRegisterModel = await registerUser(context, user);
           });
         }
         catch (error, stackTrace) {
@@ -55,7 +56,7 @@ class KakaoAuthService {
           );
 
           //SnackBarDialog.showSnackBar(context: context, message: "로그인 과정에서 오류가 발생했습니다. 다시 시도해주세요.", backgroundColor: Colors.red);
-          result = null;
+          userRegisterModel = null;
         }
       }
     } else {
@@ -64,11 +65,11 @@ class KakaoAuthService {
           await UserApi.instance.loginWithKakaoAccount();
           User user = await UserApi.instance.me();
 
-          result = await registerUser(context, user);
+          userRegisterModel = await registerUser(context, user);
         });
       } catch (error, stackTrace) {
         if (error is PlatformException && error.code == 'CANCELED') {
-          result = null;
+          userRegisterModel = null;
         }
 
         //SnackBarDialog.showSnackBar(context: context, message: "로그인 과정에서 오류가 발생했습니다. 다시 시도해주세요.", backgroundColor: Colors.red);
@@ -80,46 +81,21 @@ class KakaoAuthService {
       }
     }
 
-    return result;
+    return userRegisterModel;
   }
 
-  Future<Map<String, dynamic>?> registerUser(BuildContext context, User user) async {
-    try {
+  Future<UserRegisterModel?> registerUser(BuildContext context, User user) async {
+    try{
       final String? email = user.kakaoAccount?.email;
       final String? name = user.kakaoAccount?.profile?.nickname;
       final int identifier = user.id;
 
-      final url = Uri.parse('${AppConfig.baseUrl}/api/auth/signup/member');
-      final response = await http.post(
-        url,
-        headers: {'Content-Type': 'application/json; charset=UTF-8'},
-        body: jsonEncode({
-          'platform': 'KAKAO',
-          'email': email,
-          'name': name,
-          'identifier': identifier
-        }),
-      ).timeout(const Duration(seconds: 60));
-
-      if (response.statusCode == 200) {
-        log('kakao sign-in Success!');
-        await FirebaseAnalytics.instance
-            .logEvent(name: 'user_register_with_kakao');
-        await FirebaseAnalytics.instance.logSignUp(signUpMethod: 'Kakao');
-
-        //SnackBarDialog.showSnackBar(context: context, message: "로그인에 성공했습니다.", backgroundColor: Colors.green);
-
-        return jsonDecode(response.body);
-      } else {
-        throw Exception("Failed to Register kakao user on server");
-      }
-    } on TimeoutException catch (_) {
-      SnackBarDialog.showSnackBar(
-        context: context,
-        message: "요청 시간이 초과되었습니다. 다시 시도해주세요.",
-        backgroundColor: Colors.red,
+      return UserRegisterModel(
+          email: email,
+          name: name,
+          identifier: identifier.toString(),
+          platform: 'KAKAO'
       );
-      return null;
     } catch (error, stackTrace) {
       log(error.toString());
       await Sentry.captureException(

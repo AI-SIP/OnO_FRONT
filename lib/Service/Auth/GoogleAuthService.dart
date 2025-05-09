@@ -6,6 +6,7 @@ import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
+import 'package:ono/Model/User/UserRegisterModel.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import '../../Config/AppConfig.dart';
 import '../../GlobalModule/Dialog/SnackBarDialog.dart';
@@ -13,53 +14,20 @@ import '../../GlobalModule/Dialog/SnackBarDialog.dart';
 class GoogleAuthService {
   final GoogleSignIn _googleSignIn = GoogleSignIn();
 
-  Future<Map<String, dynamic>?> signInWithGoogle(BuildContext context) async {
-    try {
-      final googleSignInAccount = await _googleSignIn.signIn();
-      if(googleSignInAccount != null){
-        String? email = googleSignInAccount.email;
-        String? name = googleSignInAccount.displayName;
-        String? identifier = googleSignInAccount.id;
+  Future<UserRegisterModel?> signInWithGoogle(BuildContext context) async {
+    final googleSignInAccount = await _googleSignIn.signIn();
+    if(googleSignInAccount != null){
+      String? email = googleSignInAccount.email;
+      String? name = googleSignInAccount.displayName;
+      String? identifier = googleSignInAccount.id;
 
-        final url = Uri.parse('${AppConfig.baseUrl}/api/auth/signup/member');
-        final response = await http.post(
-          url,
-          headers: {'Content-Type': 'application/json; charset=UTF-8'},
-          body: jsonEncode({
-            'platform': 'GOOGLE',
-            'email': email,
-            'name': name,
-            'identifier': identifier
-          }),
-        ).timeout(const Duration(seconds: 60));
-
-        if (response.statusCode == 200) {
-          log('Google sign-in Success!');
-          await FirebaseAnalytics.instance.logSignUp(signUpMethod: 'Google');
-          await FirebaseAnalytics.instance
-              .logEvent(name: 'user_register_with_google');
-
-          return jsonDecode(response.body);
-        } else {
-          throw Exception("Failed to Register user on server");
-        }
-      } else{
-        return null;
-      }
-    } on TimeoutException catch (_) {
-      SnackBarDialog.showSnackBar(
-        context: context,
-        message: "요청 시간이 초과되었습니다. 다시 시도해주세요.",
-        backgroundColor: Colors.red,
+      return UserRegisterModel(
+          email: email,
+          name: name,
+          identifier: identifier,
+          platform: 'GOOGLE'
       );
-      return null;
-    } catch (error, stackTrace) {
-      //SnackBarDialog.showSnackBar(context: context, message: "로그인 과정에서 오류가 발생했습니다. 다시 시도해주세요.", backgroundColor: Colors.red);
-      log(error.toString());
-      await Sentry.captureException(
-        error,
-        stackTrace: stackTrace,
-      );
+    } else{
       return null;
     }
   }

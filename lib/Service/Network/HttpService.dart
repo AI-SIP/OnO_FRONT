@@ -17,14 +17,20 @@ class HttpService {
     Map<String, String>? queryParams,
     bool isMultipart = false,
     List<http.MultipartFile>? files,
+    bool requiredToken = true,
   }) async {
-    final accessToken = await tokenProvider.getAccessToken();
-    if (accessToken == null) {
-      throw Exception('Access token is not available');
+    String? accessToken;
+
+    if(requiredToken){
+      accessToken = await tokenProvider.getAccessToken();
+
+      if (accessToken == null) {
+        throw Exception('Access token is not available');
+      }
     }
 
     Map<String, String> mergedHeaders = {
-      'Authorization': '$accessToken',
+      if (requiredToken) 'Authorization': 'Bearer $accessToken',
       'Content-Type': 'application/json; charset=UTF-8',
       ...?headers,
     };

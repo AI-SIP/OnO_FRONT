@@ -10,9 +10,10 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:ono/GlobalModule/Dialog/LoadingDialog.dart';
 import 'package:ono/GlobalModule/Dialog/SnackBarDialog.dart';
 import 'package:ono/Model/Common/LoginStatus.dart';
+import 'package:ono/Model/User/UserRegisterModel.dart';
 import 'package:ono/Provider/FoldersProvider.dart';
 import 'package:ono/Provider/PracticeNoteProvider.dart';
-import 'package:ono/Service/Auth/GuestAuthService.dart';
+import 'package:ono/Service/Api/User/UserService.dart';
 import 'package:ono/Service/Auth/KakaoAuthService.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import '../Config/AppConfig.dart';
@@ -27,7 +28,8 @@ class UserProvider with ChangeNotifier {
   final FoldersProvider foldersProvider;
   final ProblemPracticeProvider practiceProvider;
   final TokenProvider tokenProvider = TokenProvider();
-  final HttpService httpService = HttpService();
+  final httpService = HttpService();
+  final userService = UserService();
 
   UserProvider(this.foldersProvider, this.practiceProvider);
 
@@ -53,18 +55,18 @@ class UserProvider with ChangeNotifier {
   bool get isLoading => _isLoading;
   bool get isFirstLogin => _isFirstLogin;
 
-  final GuestAuthService guestAuthService = GuestAuthService();
   final AppleAuthService appleAuthService = AppleAuthService();
   final GoogleAuthService googleAuthService = GoogleAuthService();
   final KakaoAuthService kakaoAuthService = KakaoAuthService();
 
-  Future<void> signIn(BuildContext context, Future<Map<String, dynamic>?> Function(BuildContext) signInMethod, String loginMethod) async {
+  Future<void> signInWithMember(BuildContext context, Future<UserRegisterModel?> Function(BuildContext) socialLogin) async {
     try {
       LoadingDialog.show(context, '로그인 중 입니다...');
-      final response = await signInMethod(context);
-      print(response);
+      final userRegisterModel = await socialLogin(context);
+      final response = await userService.signInWithMember(userRegisterModel);
+      print('user signIn success, response: ${response}');
 
-      bool isRegister = await saveUserToken(response: response, loginMethod: loginMethod);
+      bool isRegister = await saveUserToken(response: response, loginMethod: userRegisterModel?.platform);
       LoadingDialog.hide(context);
 
       if (!isRegister) {
@@ -77,19 +79,34 @@ class UserProvider with ChangeNotifier {
   }
 
   Future<void> signInWithGuest(BuildContext context) async {
-    await signIn(context, guestAuthService.signInWithGuest, 'guest');
+    try{
+      LoadingDialog.show(context, '로그인 중 입니다...');
+      final response = await userService.signInWithGuest();
+
+      print('user signIn success, response: ${response}');
+      bool isRegister = await saveUserToken(response: response, loginMethod: 'GUEST');
+
+      LoadingDialog.hide(context);
+
+      if (!isRegister) {
+        log('register failed!, response: ${response.toString()}');
+        throw Exception('response: ${response.toString()}');
+      }
+    } catch (error, stackTrace) {
+      _handleGeneralError(context, error, stackTrace);
+    }
   }
 
   Future<void> signInWithGoogle(BuildContext context) async {
-    await signIn(context, googleAuthService.signInWithGoogle, 'google');
+    await signInWithMember(context, googleAuthService.signInWithGoogle);
   }
 
   Future<void> signInWithApple(BuildContext context) async {
-    await signIn(context, appleAuthService.signInWithApple, 'apple');
+    await signInWithMember(context, appleAuthService.signInWithApple);
   }
 
   Future<void> signInWithKakao(BuildContext context) async {
-    await signIn(context, kakaoAuthService.signInWithKakao, 'kakao');
+    await signInWithMember(context, kakaoAuthService.signInWithKakao);
   }
 
   // 일반 오류 처리 메서드
@@ -113,15 +130,8 @@ class UserProvider with ChangeNotifier {
       return false;
     }
 
-    final data = response['data'];
-    if (data == null || data is! Map<String, dynamic>) {
-      _loginStatus = LoginStatus.logout;
-      await resetUserInfo();
-      return false;
-    }
-
-    String? accessToken = data['accessToken'] as String?;
-    String? refreshToken = data['refreshToken'] as String?;
+    String? accessToken = response['accessToken'] as String?;
+    String? refreshToken = response['refreshToken'] as String?;
 
     if (accessToken == null || refreshToken == null) {
       _loginStatus = LoginStatus.logout;

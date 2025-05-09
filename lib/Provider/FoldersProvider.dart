@@ -7,7 +7,6 @@ import 'package:ono/Service/Network/HttpService.dart';
 import 'package:ono/GlobalModule/Util/ProblemSorting.dart';
 import 'package:ono/GlobalModule/Util/ReviewHandler.dart';
 import 'package:ono/Model/Problem/TemplateType.dart';
-import 'package:sentry_flutter/sentry_flutter.dart';
 
 import '../Config/AppConfig.dart';
 import '../Model/Folder/FolderModel.dart';
@@ -211,7 +210,6 @@ class FoldersProvider with ChangeNotifier {
       };
     } else {
       throw Exception('Failed to upload problem image');
-      return null;
     }
   }
 

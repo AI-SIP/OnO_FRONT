@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:jose/jose.dart';
+import 'package:ono/Model/User/UserRegisterModel.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:http/http.dart' as http;
@@ -16,7 +17,7 @@ import '../../GlobalModule/Dialog/SnackBarDialog.dart';
 class AppleAuthService {
   final storage = const FlutterSecureStorage();
 
-  Future<Map<String, dynamic>?> signInWithApple(BuildContext context) async {
+  Future<UserRegisterModel?> signInWithApple(BuildContext context) async {
     try {
       final appleCredential = await SignInWithApple.getAppleIDCredential(
         scopes: [
@@ -31,42 +32,19 @@ class AppleAuthService {
       final String? name = (lastName ?? "") + (firstName ?? "");
       final String? identifier = appleCredential.userIdentifier;
 
-      final url = Uri.parse('${AppConfig.baseUrl}/api/auth/signup/member');
-      final response = await http.post(
-        url,
-        headers: {
-          'Content-Type': 'application/json; charset=UTF-8',
-        },
-        body: jsonEncode({
-          'platform': 'APPLE',
-          'email': email,
-          'name': name,
-          'identifier': identifier,
-        }),
-      ).timeout(const Duration(seconds: 60));
-
-      if (response.statusCode == 200) {
-        log('Apple sign-in Success!');
-        await FirebaseAnalytics.instance.logSignUp(signUpMethod: 'Apple');
-        await FirebaseAnalytics.instance
-            .logEvent(name: 'user_register_with_apple');
-
-        return jsonDecode(response.body);
-      } else {
-        throw Exception("Failed to Register user on server");
-      }
-    } on TimeoutException catch (_) {
-      SnackBarDialog.showSnackBar(
-        context: context,
-        message: "요청 시간이 초과되었습니다. 다시 시도해주세요.",
-        backgroundColor: Colors.red,
+      return UserRegisterModel(
+          email: email,
+          name: name,
+          identifier: identifier,
+          platform: "APPLE"
       );
-      return null;
-    } catch (error, stackTrace) {
-      if(error == AuthorizationErrorCode.canceled){
+    }
+
+    catch (error, stackTrace) {
+      if (error == AuthorizationErrorCode.canceled) {
         return null;
       }
-      if(error == AuthorizationErrorCode.unknown){
+      if (error == AuthorizationErrorCode.unknown) {
         return null;
       }
 
