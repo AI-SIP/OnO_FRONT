@@ -64,8 +64,10 @@ class DefaultFirebaseOptions {
     messagingSenderId: '41920987554',
     projectId: 'aisip-ono',
     storageBucket: 'aisip-ono.appspot.com',
-    androidClientId: '41920987554-3npfho91l117nk3bnuhu51caff3ip44v.apps.googleusercontent.com',
-    iosClientId: '41920987554-6lp5n7jr9v81pu2r6ulihp3ggu25kpse.apps.googleusercontent.com',
+    androidClientId:
+        '41920987554-3npfho91l117nk3bnuhu51caff3ip44v.apps.googleusercontent.com',
+    iosClientId:
+        '41920987554-6lp5n7jr9v81pu2r6ulihp3ggu25kpse.apps.googleusercontent.com',
     iosBundleId: 'com.aisip.OnO',
   );
 
@@ -75,7 +77,8 @@ class DefaultFirebaseOptions {
     messagingSenderId: '41920987554',
     projectId: 'aisip-ono',
     storageBucket: 'aisip-ono.appspot.com',
-    androidClientId: '41920987554-3npfho91l117nk3bnuhu51caff3ip44v.apps.googleusercontent.com',
+    androidClientId:
+        '41920987554-3npfho91l117nk3bnuhu51caff3ip44v.apps.googleusercontent.com',
     iosBundleId: 'com.example.mvpFront',
   );
 

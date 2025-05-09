@@ -1,9 +1,10 @@
 import 'dart:convert';
 import 'dart:developer';
-import 'dart:io';
+
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:sentry_flutter/sentry_flutter.dart';
+
 import '../Config/AppConfig.dart';
 
 class TokenProvider {
@@ -42,11 +43,13 @@ class TokenProvider {
         return false;
       }
 
-      final response = await http.post(
-        Uri.parse('${AppConfig.baseUrl}/api/auth/refresh'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'refreshToken': refreshToken}),
-      ).timeout(const Duration(seconds: 30));
+      final response = await http
+          .post(
+            Uri.parse('${AppConfig.baseUrl}/api/auth/refresh'),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({'refreshToken': refreshToken}),
+          )
+          .timeout(const Duration(seconds: 30));
 
       if (response.statusCode == 200) {
         final body = jsonDecode(response.body) as Map<String, dynamic>;
@@ -80,7 +83,7 @@ class TokenProvider {
     }
   }
 
-  Future<void> deleteToken() async{
+  Future<void> deleteToken() async {
     await storage.delete(key: 'accessToken');
     await storage.delete(key: 'refreshToken');
   }

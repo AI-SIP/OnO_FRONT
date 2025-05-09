@@ -71,14 +71,12 @@ class _CameraScreenState extends State<CameraScreen> {
 
   @override
   void dispose() {
-
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,
       DeviceOrientation.portraitDown,
       DeviceOrientation.landscapeLeft,
       DeviceOrientation.landscapeRight,
     ]);
-
 
     _controller.dispose();
     super.dispose();

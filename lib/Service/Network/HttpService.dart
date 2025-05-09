@@ -21,7 +21,7 @@ class HttpService {
   }) async {
     String? accessToken;
 
-    if(requiredToken){
+    if (requiredToken) {
       accessToken = await tokenProvider.getAccessToken();
 
       if (accessToken == null) {
@@ -56,9 +56,11 @@ class HttpService {
           if (isMultipart && files != null) {
             final req = http.MultipartRequest('POST', uri)
               ..headers.addAll(mergedHeaders)
-              ..fields.addAll(body?.map((k, v) => MapEntry(k, v.toString())) ?? {})
+              ..fields
+                  .addAll(body?.map((k, v) => MapEntry(k, v.toString())) ?? {})
               ..files.addAll(files);
-            final streamed = await req.send().timeout(const Duration(seconds: 90));
+            final streamed =
+                await req.send().timeout(const Duration(seconds: 90));
             response = await http.Response.fromStream(streamed);
           } else {
             response = await http.post(
@@ -73,9 +75,11 @@ class HttpService {
           if (isMultipart && files != null) {
             final req = http.MultipartRequest('PATCH', uri)
               ..headers.addAll(mergedHeaders)
-              ..fields.addAll(body?.map((k, v) => MapEntry(k, v.toString())) ?? {})
+              ..fields
+                  .addAll(body?.map((k, v) => MapEntry(k, v.toString())) ?? {})
               ..files.addAll(files);
-            final streamed = await req.send().timeout(const Duration(seconds: 90));
+            final streamed =
+                await req.send().timeout(const Duration(seconds: 90));
             response = await http.Response.fromStream(streamed);
           } else {
             response = await http
@@ -107,8 +111,7 @@ class HttpService {
       String errorMessage;
       try {
         final errJson = jsonDecode(utf8.decode(response.bodyBytes));
-        errorMessage = errJson['message'] as String?
-            ?? 'Unknown error';
+        errorMessage = errJson['message'] as String? ?? 'Unknown error';
       } catch (_) {
         errorMessage = response.reasonPhrase ?? 'Unknown error';
       }

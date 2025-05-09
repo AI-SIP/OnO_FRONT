@@ -36,19 +36,20 @@ class ThemeHandler with ChangeNotifier {
     saveColor('darkPrimaryColor', _darkPrimaryColor);
     saveColor('desaturateColor', _desaturateColor);
 
-    FirebaseAnalytics.instance.logEvent(name: 'theme_color_change_to_$colorName');
+    FirebaseAnalytics.instance
+        .logEvent(name: 'theme_color_change_to_$colorName');
     notifyListeners();
   }
 
   // 저장된 색상을 로드하는 메서드
   Future<void> loadColors() async {
     _primaryColor = await loadColor('primaryColor', Colors.lightGreen);
-    _lightPrimaryColor = await loadColor(
-        'lightPrimaryColor', lightenColor(Colors.lightGreen));
-    _darkPrimaryColor = await loadColor(
-        'darkPrimaryColor', darkenColor(Colors.lightGreen));
-    _desaturateColor = await loadColor(
-        'desaturateColor', desaturatenColor(Colors.lightGreen));
+    _lightPrimaryColor =
+        await loadColor('lightPrimaryColor', lightenColor(Colors.lightGreen));
+    _darkPrimaryColor =
+        await loadColor('darkPrimaryColor', darkenColor(Colors.lightGreen));
+    _desaturateColor =
+        await loadColor('desaturateColor', desaturatenColor(Colors.lightGreen));
     notifyListeners();
   }
 

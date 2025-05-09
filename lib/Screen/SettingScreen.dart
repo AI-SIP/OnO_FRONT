@@ -3,8 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:ono/GlobalModule/Util/UrlLauncher.dart';
 import 'package:ono/Model/Common/LoginStatus.dart';
 import 'package:provider/provider.dart';
-import '../GlobalModule/Text/StandardText.dart';
+
 import '../GlobalModule/Dialog/ThemeDialog.dart';
+import '../GlobalModule/Text/StandardText.dart';
 import '../GlobalModule/Theme/ThemeHandler.dart';
 import '../Provider/ScreenIndexProvider.dart';
 import '../Provider/UserProvider.dart';
@@ -47,7 +48,8 @@ class _SettingScreenState extends State<SettingScreen> {
               children: [
                 Expanded(
                   child: ListView(
-                    padding: EdgeInsets.symmetric(horizontal: screenHeight * 0.03),
+                    padding:
+                        EdgeInsets.symmetric(horizontal: screenHeight * 0.03),
                     children: [
                       SizedBox(height: screenHeight * 0.01),
                       _buildUserNameTile(
@@ -122,7 +124,8 @@ class _SettingScreenState extends State<SettingScreen> {
                                   listen: false)
                               .signOut();
 
-                          Provider.of<ScreenIndexProvider>(context, listen: false)
+                          Provider.of<ScreenIndexProvider>(context,
+                                  listen: false)
                               .setSelectedIndex(0);
 
                           Navigator.of(context).pushReplacement(
@@ -143,7 +146,8 @@ class _SettingScreenState extends State<SettingScreen> {
                                   listen: false)
                               .deleteAccount();
 
-                          Provider.of<ScreenIndexProvider>(context, listen: false)
+                          Provider.of<ScreenIndexProvider>(context,
+                                  listen: false)
                               .setSelectedIndex(0);
 
                           Navigator.of(context).pushReplacement(
@@ -199,7 +203,8 @@ class _SettingScreenState extends State<SettingScreen> {
             borderRadius: BorderRadius.circular(10),
           ),
           side: const BorderSide(color: Colors.black),
-          padding: EdgeInsets.symmetric(horizontal: screenHeight * 0.02, vertical: screenHeight * 0.01),
+          padding: EdgeInsets.symmetric(
+              horizontal: screenHeight * 0.02, vertical: screenHeight * 0.01),
         ),
         child: const StandardText(
           text: '이름 수정',
@@ -305,7 +310,8 @@ class _SettingScreenState extends State<SettingScreen> {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(15),
         ),
-        padding: EdgeInsets.symmetric(horizontal: screenHeight * 0.03, vertical: screenHeight * 0.01),
+        padding: EdgeInsets.symmetric(
+            horizontal: screenHeight * 0.03, vertical: screenHeight * 0.01),
       ),
       child: StandardText(
         text: text,
@@ -341,28 +347,28 @@ class _SettingScreenState extends State<SettingScreen> {
             ),
             child: TextField(
               controller: nameController,
-              style: standardTextStyle.copyWith(
-                  color: Colors.black, fontSize: 16),
+              style:
+                  standardTextStyle.copyWith(color: Colors.black, fontSize: 16),
               decoration: InputDecoration(
                 hintText: '수정할 이름을 입력하세요',
                 hintStyle: standardTextStyle.copyWith(
-                    color: ThemeHandler.desaturatenColor(Colors.black), fontSize: 14),
+                    color: ThemeHandler.desaturatenColor(Colors.black),
+                    fontSize: 14),
                 border: OutlineInputBorder(
-                  borderSide:
-                  const BorderSide(color: Colors.black, width: 1.5),
+                  borderSide: const BorderSide(color: Colors.black, width: 1.5),
                   borderRadius: BorderRadius.circular(8.0),
                 ),
                 enabledBorder: OutlineInputBorder(
-                  borderSide:
-                  const BorderSide(color: Colors.black, width: 1.5),
+                  borderSide: const BorderSide(color: Colors.black, width: 1.5),
                   borderRadius: BorderRadius.circular(8.0),
                 ),
                 focusedBorder: OutlineInputBorder(
-                  borderSide:
-                  const BorderSide(color: Colors.black, width: 2.0),
+                  borderSide: const BorderSide(color: Colors.black, width: 2.0),
                   borderRadius: BorderRadius.circular(8.0),
                 ),
-                contentPadding: EdgeInsets.symmetric(vertical: screenHeight * 0.02, horizontal: screenWidth * 0.03),
+                contentPadding: EdgeInsets.symmetric(
+                    vertical: screenHeight * 0.02,
+                    horizontal: screenWidth * 0.03),
               ),
             ),
           ),
@@ -384,9 +390,9 @@ class _SettingScreenState extends State<SettingScreen> {
                   // 이름 업데이트 요청, 나머지 필드는 null로 보냄
                   await userProvider.updateUser(
                     name: newName,
-                    email: null,
-                    identifier: null,
-                    userType: null,
+                    email: '',
+                    identifier: '',
+                    userType: '',
                   );
                 }
                 Navigator.pop(context);
@@ -413,11 +419,10 @@ class _SettingScreenState extends State<SettingScreen> {
       builder: (BuildContext context) {
         return AlertDialog(
           backgroundColor: Colors.white,
-          title: StandardText(
-              text: title, fontSize: 18, color: Colors.black),
+          title: StandardText(text: title, fontSize: 18, color: Colors.black),
           content: SizedBox(
-            child: StandardText(
-                text: message, fontSize: 15, color: Colors.black),
+            child:
+                StandardText(text: message, fontSize: 15, color: Colors.black),
           ),
           actions: [
             TextButton(

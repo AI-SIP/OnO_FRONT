@@ -7,8 +7,9 @@ import 'package:ono/GlobalModule/Dialog/LoadingDialog.dart';
 import 'package:ono/Provider/FoldersProvider.dart';
 import 'package:ono/Screen/ProblemDetail/ProblemDetailScreen.dart';
 import 'package:provider/provider.dart';
-import '../Image/ImagePickerHandler.dart';
+
 import '../Dialog/SnackBarDialog.dart';
+import '../Image/ImagePickerHandler.dart';
 import '../Text/StandardText.dart';
 import '../Theme/ThemeHandler.dart';
 
@@ -27,7 +28,8 @@ class FolderNavigationButtons extends StatefulWidget {
   });
 
   @override
-  _FolderNavigationButtonsState createState() => _FolderNavigationButtonsState();
+  _FolderNavigationButtonsState createState() =>
+      _FolderNavigationButtonsState();
 }
 
 class _FolderNavigationButtonsState extends State<FolderNavigationButtons> {
@@ -63,8 +65,7 @@ class _FolderNavigationButtonsState extends State<FolderNavigationButtons> {
             navigateToProblem(context, previousProblemId, isNext: false);
           },
           style: ElevatedButton.styleFrom(
-            padding:
-            const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
+            padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
             backgroundColor: Colors.white,
             side: BorderSide(
               color: themeProvider.primaryColor,
@@ -82,8 +83,7 @@ class _FolderNavigationButtonsState extends State<FolderNavigationButtons> {
         TextButton(
           onPressed: () => showReviewDialog(context),
           style: ElevatedButton.styleFrom(
-            padding:
-              const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
+            padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
             backgroundColor: Colors.white,
             side: BorderSide(
               color: themeProvider.primaryColor,
@@ -124,8 +124,7 @@ class _FolderNavigationButtonsState extends State<FolderNavigationButtons> {
             navigateToProblem(context, nextProblemId, isNext: true);
           },
           style: ElevatedButton.styleFrom(
-            padding:
-                EdgeInsets.symmetric(horizontal: 15, vertical: 5),
+            padding: EdgeInsets.symmetric(horizontal: 15, vertical: 5),
             backgroundColor: Colors.white,
             side: BorderSide(
               color: themeProvider.primaryColor,
@@ -176,9 +175,7 @@ class _FolderNavigationButtonsState extends State<FolderNavigationButtons> {
   }
 
   void showReviewDialog(BuildContext context) {
-
-    FirebaseAnalytics.instance
-        .logEvent(name: 'problem_repeat_button_click');
+    FirebaseAnalytics.instance.logEvent(name: 'problem_repeat_button_click');
 
     final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
     bool isLoading = false; // 로딩 상태 변수 외부로 이동
@@ -190,7 +187,8 @@ class _FolderNavigationButtonsState extends State<FolderNavigationButtons> {
           builder: (context, setState) {
             return AlertDialog(
               backgroundColor: Colors.white,
-              insetPadding: const EdgeInsets.symmetric(horizontal: 30, vertical: 30),
+              insetPadding:
+                  const EdgeInsets.symmetric(horizontal: 30, vertical: 30),
               contentPadding: const EdgeInsets.all(15),
               titlePadding: const EdgeInsets.only(left: 20, top: 20, right: 20),
               title: const StandardText(
@@ -208,7 +206,8 @@ class _FolderNavigationButtonsState extends State<FolderNavigationButtons> {
                       name: 'add_solve_image_button_click',
                     );
 
-                    _imagePickerHandler.showImagePicker(context, (pickedFile) async {
+                    _imagePickerHandler.showImagePicker(context,
+                        (pickedFile) async {
                       if (pickedFile != null) {
                         setState(() {
                           selectedImage = pickedFile;
@@ -218,36 +217,37 @@ class _FolderNavigationButtonsState extends State<FolderNavigationButtons> {
                   },
                   child: Container(
                     width: double.maxFinite,
-                    margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                    margin: const EdgeInsets.symmetric(
+                        horizontal: 10, vertical: 10),
                     decoration: BoxDecoration(
                       color: themeProvider.primaryColor.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: selectedImage == null
                         ? Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.photo_library,
-                          size: 60,
-                          color: themeProvider.primaryColor,
-                        ),
-                        const SizedBox(height: 8),
-                        StandardText(
-                          text: '풀이 이미지를 등록하세요',
-                          color: themeProvider.primaryColor,
-                        ),
-                      ],
-                    )
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.photo_library,
+                                size: 60,
+                                color: themeProvider.primaryColor,
+                              ),
+                              const SizedBox(height: 8),
+                              StandardText(
+                                text: '풀이 이미지를 등록하세요',
+                                color: themeProvider.primaryColor,
+                              ),
+                            ],
+                          )
                         : ClipRRect(
-                      borderRadius: BorderRadius.circular(10),
-                      child: Image.file(
-                        File(selectedImage!.path),
-                        fit: BoxFit.cover,
-                        width: double.infinity,
-                        height: double.infinity,
-                      ),
-                    ),
+                            borderRadius: BorderRadius.circular(10),
+                            child: Image.file(
+                              File(selectedImage!.path),
+                              fit: BoxFit.cover,
+                              width: double.infinity,
+                              height: double.infinity,
+                            ),
+                          ),
                   ),
                 ),
               ),
@@ -264,48 +264,49 @@ class _FolderNavigationButtonsState extends State<FolderNavigationButtons> {
                   onPressed: isLoading
                       ? null
                       : () async {
-                    setState(() {
-                      isLoading = true;
-                    });
+                          setState(() {
+                            isLoading = true;
+                          });
 
-                    LoadingDialog.show(context, '오답 복습 중...');
+                          LoadingDialog.show(context, '오답 복습 중...');
 
-                    await widget.foldersProvider.addRepeatCount(widget.currentId, selectedImage);
+                          await widget.foldersProvider
+                              .addRepeatCount(widget.currentId, selectedImage);
 
-                    FirebaseAnalytics.instance.logEvent(
-                      name: 'problem_repeat',
-                    );
+                          FirebaseAnalytics.instance.logEvent(
+                            name: 'problem_repeat',
+                          );
 
-                    setState(() {
-                      isReviewed = true;
-                      isLoading = false;
-                    });
+                          setState(() {
+                            isReviewed = true;
+                            isLoading = false;
+                          });
 
-                    LoadingDialog.hide(context);
-                    Navigator.of(context).pop();
+                          LoadingDialog.hide(context);
+                          Navigator.of(context).pop();
 
-                    SnackBarDialog.showSnackBar(
-                      context: context,
-                      message: '복습이 완료되었습니다!',
-                      backgroundColor: themeProvider.primaryColor,
-                    );
+                          SnackBarDialog.showSnackBar(
+                            context: context,
+                            message: '복습이 완료되었습니다!',
+                            backgroundColor: themeProvider.primaryColor,
+                          );
 
-                    widget.onRefresh();
-                  },
+                          widget.onRefresh();
+                        },
                   child: isLoading
                       ? SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2.0,
-                      color: themeProvider.primaryColor,
-                    ),
-                  )
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.0,
+                            color: themeProvider.primaryColor,
+                          ),
+                        )
                       : StandardText(
-                    text: '복습 인증',
-                    fontSize: 14,
-                    color: themeProvider.primaryColor,
-                  ),
+                          text: '복습 인증',
+                          fontSize: 14,
+                          color: themeProvider.primaryColor,
+                        ),
                 ),
               ],
             );

@@ -4,8 +4,9 @@ import 'package:ono/GlobalModule/Text/HandWriteText.dart';
 import 'package:ono/Model/Common/LoginStatus.dart';
 import 'package:ono/Provider/FoldersProvider.dart';
 import 'package:provider/provider.dart';
-import '../../GlobalModule/Image/ImagePickerHandler.dart';
+
 import '../../GlobalModule/Dialog/SnackBarDialog.dart';
+import '../../GlobalModule/Image/ImagePickerHandler.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
 import '../../Model/Problem/ProblemRegisterModel.dart';
 import '../../Model/Problem/ProblemRegisterModelV2.dart';
@@ -13,25 +14,30 @@ import '../../Provider/UserProvider.dart';
 
 class ProblemRegisterScreenService {
   final ImagePickerHandler imagePickerHandler = ImagePickerHandler();
-  final ImageColorPickerHandler imageColorPickerHandler = ImageColorPickerHandler();
+  final ImageColorPickerHandler imageColorPickerHandler =
+      ImageColorPickerHandler();
 
   void showSuccessDialog(BuildContext context) {
     final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
-    SnackBarDialog.showSnackBar(context: context, message: "오답노트가 성공적으로 저장되었습니다.", backgroundColor: themeProvider.primaryColor);
+    SnackBarDialog.showSnackBar(
+        context: context,
+        message: "오답노트가 성공적으로 저장되었습니다.",
+        backgroundColor: themeProvider.primaryColor);
   }
 
   void showValidationMessage(BuildContext context, String message) {
-    SnackBarDialog.showSnackBar(context: context, message: "오답노트 작성 과정에서 오류가 발생했습니다.", backgroundColor: Colors.red);
+    SnackBarDialog.showSnackBar(
+        context: context,
+        message: "오답노트 작성 과정에서 오류가 발생했습니다.",
+        backgroundColor: Colors.red);
   }
 
   void hideLoadingDialog(BuildContext context) {
     Navigator.of(context).pop(true);
   }
 
-  Future<void> submitProblem(
-      BuildContext context,
-      ProblemRegisterModel problemData,
-      VoidCallback onSuccess) async {
+  Future<void> submitProblem(BuildContext context,
+      ProblemRegisterModel problemData, VoidCallback onSuccess) async {
     final authService = Provider.of<UserProvider>(context, listen: false);
     if (authService.isLoggedIn == LoginStatus.logout) {
       _showLoginRequiredDialog(context);
@@ -48,10 +54,8 @@ class ProblemRegisterScreenService {
     }
   }
 
-  Future<void> submitProblemV2(
-      BuildContext context,
-      ProblemRegisterModelV2 problemData,
-      VoidCallback onSuccess) async {
+  Future<void> submitProblemV2(BuildContext context,
+      ProblemRegisterModelV2 problemData, VoidCallback onSuccess) async {
     final authService = Provider.of<UserProvider>(context, listen: false);
     if (authService.isLoggedIn == LoginStatus.logout) {
       _showLoginRequiredDialog(context);
@@ -73,9 +77,12 @@ class ProblemRegisterScreenService {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: Colors.white,
-        title: const HandWriteText(text: '로그인 필요',),
-        content:
-            const HandWriteText(text: '오답노트를 작성하려면 로그인 해주세요!', ),
+        title: const HandWriteText(
+          text: '로그인 필요',
+        ),
+        content: const HandWriteText(
+          text: '오답노트를 작성하려면 로그인 해주세요!',
+        ),
         actions: <Widget>[
           TextButton(
             child: const HandWriteText(

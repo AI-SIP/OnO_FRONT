@@ -8,7 +8,7 @@ class ScreenIndexProvider extends ChangeNotifier {
 
   void setSelectedIndex(int index) {
     _screenIndex = index;
-    notifyListeners();  // 상태 변화 알림
+    notifyListeners(); // 상태 변화 알림
 
     switch (index) {
       case 0:

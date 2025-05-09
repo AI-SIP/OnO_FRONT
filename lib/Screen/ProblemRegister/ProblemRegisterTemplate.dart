@@ -7,11 +7,11 @@ import 'package:flutter_tex/flutter_tex.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
-import '../../GlobalModule/Image/DisplayImage.dart';
+import '../../GlobalModule/Dialog/FolderSelectionDialog.dart';
 import '../../GlobalModule/Dialog/LoadingDialog.dart';
+import '../../GlobalModule/Image/DisplayImage.dart';
 import '../../GlobalModule/Text/StandardText.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
-import '../../GlobalModule/Dialog/FolderSelectionDialog.dart';
 import '../../GlobalModule/Util/LatexTextHandler.dart';
 import '../../Model/Problem/ProblemModel.dart';
 import '../../Model/Problem/ProblemRegisterModel.dart';
@@ -42,8 +42,7 @@ class ProblemRegisterTemplate extends StatefulWidget {
       _ProblemRegisterTemplateState();
 }
 
-class _ProblemRegisterTemplateState
-    extends State<ProblemRegisterTemplate> {
+class _ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
   late ProblemModel problemModel;
   late TextEditingController sourceController;
   late TextEditingController notesController;
@@ -70,10 +69,11 @@ class _ProblemRegisterTemplateState
     notesController = TextEditingController(text: problemModel.memo);
     _selectedDate = problemModel.solvedAt ?? DateTime.now();
 
-    if(widget.isEditMode){
+    if (widget.isEditMode) {
       _selectedFolderId = problemModel.folderId;
-    } else{
-      final folderProvider = Provider.of<FoldersProvider>(context, listen: false);
+    } else {
+      final folderProvider =
+          Provider.of<FoldersProvider>(context, listen: false);
       _selectedFolderId = folderProvider.currentFolder!.folderId;
     }
 
@@ -92,14 +92,13 @@ class _ProblemRegisterTemplateState
   }
 
   Future<void> _fetchData() async {
-    if(widget.isEditMode){
+    if (widget.isEditMode) {
       processImageUrl = problemModel.processImageUrl;
       analysisResult = problemModel.analysis;
       setState(() {});
 
       return;
-    } else{
-
+    } else {
       setState(() {
         isAnalysisLoading = true;
         isProcessImageLoading = true;
@@ -108,7 +107,9 @@ class _ProblemRegisterTemplateState
       final provider = Provider.of<FoldersProvider>(context, listen: false);
 
       if (widget.templateType == TemplateType.special) {
-        provider.fetchAnalysisResult(problemModel.problemImageUrl).then((result) {
+        provider
+            .fetchAnalysisResult(problemModel.problemImageUrl)
+            .then((result) {
           setState(() {
             analysisResult = result;
             isAnalysisLoading = false; // 분석 로드 완료
@@ -195,9 +196,11 @@ class _ProblemRegisterTemplateState
                   if (selectedFolderId != null) {
                     setState(() {
                       _selectedFolderId = selectedFolderId;
-                      _selectedFolderName = FolderSelectionDialog.getFolderNameByFolderId(selectedFolderId);
+                      _selectedFolderName =
+                          FolderSelectionDialog.getFolderNameByFolderId(
+                              selectedFolderId);
 
-                      if(sourceController.text.isEmpty){
+                      if (sourceController.text.isEmpty) {
                         sourceController.text = '$_selectedFolderName ';
                       }
                     });
@@ -255,7 +258,6 @@ class _ProblemRegisterTemplateState
 
   Widget _buildSpecialWideScreenLayout(ThemeHandler themeProvider,
       double screenWidth, TemplateType templateType) {
-
     final screenHeight = MediaQuery.of(context).size.height;
 
     return Column(
@@ -289,12 +291,11 @@ class _ProblemRegisterTemplateState
             Expanded(
               flex: 1,
               child: _buildImageSection(
-                label: '필기 제거 이미지',
-                imageUrl: processImageUrl,
-                themeProvider: themeProvider,
-                isLoading: isProcessImageLoading,
-                loadingMessage: '필기 제거 중...'
-              ),
+                  label: '필기 제거 이미지',
+                  imageUrl: processImageUrl,
+                  themeProvider: themeProvider,
+                  isLoading: isProcessImageLoading,
+                  loadingMessage: '필기 제거 중...'),
             ),
           ],
         ),
@@ -372,7 +373,8 @@ class _ProblemRegisterTemplateState
     );
   }
 
-  Widget _buildNarrowScreenLayout(ThemeHandler themeProvider, TemplateType templateType) {
+  Widget _buildNarrowScreenLayout(
+      ThemeHandler themeProvider, TemplateType templateType) {
     final screenHeight = MediaQuery.of(context).size.height;
 
     return Column(
@@ -393,7 +395,7 @@ class _ProblemRegisterTemplateState
           themeProvider: themeProvider,
         ),
         const SizedBox(height: 10),
-        if(widget.templateType != TemplateType.simple) ... [
+        if (widget.templateType != TemplateType.simple) ...[
           const Center(
             child: Icon(
               Icons.arrow_drop_down_outlined,
@@ -407,8 +409,7 @@ class _ProblemRegisterTemplateState
               imageUrl: processImageUrl,
               themeProvider: themeProvider,
               isLoading: isProcessImageLoading,
-              loadingMessage: '필기 제거 중...'
-          ),
+              loadingMessage: '필기 제거 중...'),
           const SizedBox(height: 30),
         ],
         ProblemRegisterScreenWidget.buildImagePickerWithLabel(
@@ -470,25 +471,28 @@ class _ProblemRegisterTemplateState
           padding: const EdgeInsets.all(10), // 이미지와 테두리 사이에 패딩 추가
           child: isLoading
               ? Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                SizedBox(height: screenHeight * 0.03),
-                SvgPicture.asset(
-                  'assets/Icon/EraserDetail.svg', // Eraser 아이콘 경로
-                  width: screenHeight * 0.1, // 적절한 크기 설정
-                  height: screenHeight * 0.1,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      SizedBox(height: screenHeight * 0.03),
+                      SvgPicture.asset(
+                        'assets/Icon/EraserDetail.svg', // Eraser 아이콘 경로
+                        width: screenHeight * 0.1, // 적절한 크기 설정
+                        height: screenHeight * 0.1,
+                      ),
+                      SizedBox(height: screenHeight * 0.02),
+                      StandardText(
+                        text: loadingMessage, // 로딩 중 메시지 출력
+                        fontSize: 16,
+                        color: themeProvider.primaryColor,
+                      ),
+                    ],
+                  ),
+                )
+              : DisplayImage(
+                  imagePath: imageUrl ?? '',
+                  fit: BoxFit.contain,
                 ),
-                SizedBox(height: screenHeight * 0.02),
-                StandardText(
-                  text: loadingMessage, // 로딩 중 메시지 출력
-                  fontSize: 16,
-                  color: themeProvider.primaryColor,
-                ),
-              ],
-            ),
-          )
-              : DisplayImage(imagePath: imageUrl ?? '', fit: BoxFit.contain,),
         ),
       ],
     );
@@ -533,56 +537,57 @@ class _ProblemRegisterTemplateState
           ),
           child: isAnalysisLoading
               ? Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                SizedBox(height: screenHeight * 0.03),
-                SvgPicture.asset(
-                  'assets/Icon/Glass.svg', // Eraser 아이콘 경로
-                  width: screenHeight * 0.1, // 적절한 크기 설정
-                  height: screenHeight * 0.1,
-                ),
-                SizedBox(height: screenHeight * 0.02),
-                StandardText(
-                  text: '문제 분석 중...',
-                  fontSize: 16,
-                  color: themeProvider.primaryColor,
-                ),
-                const SizedBox(height: 10),
-              ],
-            ),
-          )
-              : analysisResult != null && analysisResult.isNotEmpty
-              ? Scrollbar(
-            controller: scrollControllerForAnalysis,
-            thumbVisibility: true,
-            thickness: 6.0,
-            radius: const Radius.circular(10),
-            child: SingleChildScrollView(
-              controller: scrollControllerForAnalysis,
-              scrollDirection: Axis.vertical,
-              child: TeXView(
-                fonts: const [
-                  TeXViewFont(
-                    fontFamily: 'HandWrite',
-                    src: 'assets/fonts/HandWrite.ttf',
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      SizedBox(height: screenHeight * 0.03),
+                      SvgPicture.asset(
+                        'assets/Icon/Glass.svg', // Eraser 아이콘 경로
+                        width: screenHeight * 0.1, // 적절한 크기 설정
+                        height: screenHeight * 0.1,
+                      ),
+                      SizedBox(height: screenHeight * 0.02),
+                      StandardText(
+                        text: '문제 분석 중...',
+                        fontSize: 16,
+                        color: themeProvider.primaryColor,
+                      ),
+                      const SizedBox(height: 10),
+                    ],
                   ),
-                ],
-                renderingEngine: const TeXViewRenderingEngine.mathjax(),
-                child: LatexTextHandler.renderLatex(analysisResult),
-                style: const TeXViewStyle(
-                  elevation: 5,
-                  borderRadius: TeXViewBorderRadius.all(10),
-                  backgroundColor: Colors.white,
-                ),
-              ),
-            ),
-          )
-              : StandardText(
-            text: "분석 결과가 없습니다.",
-            color: themeProvider.primaryColor,
-            fontSize: 16,
-          ),
+                )
+              : analysisResult != null && analysisResult.isNotEmpty
+                  ? Scrollbar(
+                      controller: scrollControllerForAnalysis,
+                      thumbVisibility: true,
+                      thickness: 6.0,
+                      radius: const Radius.circular(10),
+                      child: SingleChildScrollView(
+                        controller: scrollControllerForAnalysis,
+                        scrollDirection: Axis.vertical,
+                        child: TeXView(
+                          fonts: const [
+                            TeXViewFont(
+                              fontFamily: 'HandWrite',
+                              src: 'assets/fonts/HandWrite.ttf',
+                            ),
+                          ],
+                          renderingEngine:
+                              const TeXViewRenderingEngine.mathjax(),
+                          child: LatexTextHandler.renderLatex(analysisResult),
+                          style: const TeXViewStyle(
+                            elevation: 5,
+                            borderRadius: TeXViewBorderRadius.all(10),
+                            backgroundColor: Colors.white,
+                          ),
+                        ),
+                      ),
+                    )
+                  : StandardText(
+                      text: "분석 결과가 없습니다.",
+                      color: themeProvider.primaryColor,
+                      fontSize: 16,
+                    ),
         ),
       ],
     );

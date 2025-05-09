@@ -33,18 +33,20 @@ class _SplashScreenState extends State<SplashScreen> {
     // 로그인 상태에 따른 화면 이동
     if (userProvider.loginStatus == LoginStatus.login) {
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => const MyHomePage()), // 로그인 상태면 HomeScreen으로
+        MaterialPageRoute(
+            builder: (context) => const MyHomePage()), // 로그인 상태면 HomeScreen으로
       );
     } else {
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => const LoginScreen()), // 로그아웃 상태면 LoginScreen으로
+        MaterialPageRoute(
+            builder: (context) =>
+                const LoginScreen()), // 로그아웃 상태면 LoginScreen으로
       );
     }
   }
 
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
       backgroundColor: const Color(0xFFCBEAB7),
       body: Center(

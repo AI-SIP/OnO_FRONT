@@ -21,10 +21,10 @@ class ProblemImageDataModel {
   }
 
   Map<String, dynamic> toJson() => {
-    'imageUrl': imageUrl,
-    'problemImageType': problemImageType,
-    'createdAt': createdAt.toIso8601String(),
-  };
+        'imageUrl': imageUrl,
+        'problemImageType': problemImageType,
+        'createdAt': createdAt.toIso8601String(),
+      };
 }
 
 /// 2) 기존 ProblemModel 에 imageUrlList 필드를 추가합니다.
@@ -68,8 +68,7 @@ class ProblemModelV2 {
       reference: json['reference'] as String?,
       // 아래 필드들은 API 에서 내려오는 것에 맞추어 필요하면 수정하세요.
       templateType: json['templateType'] != null
-          ? TemplateTypeExtension
-          .fromTemplateTypeCode(json['templateType'])
+          ? TemplateTypeExtension.fromTemplateTypeCode(json['templateType'])
           : null,
       analysis: json['analysis'] as String?,
       repeats: (json['repeats'] as List<dynamic>?)
@@ -94,7 +93,7 @@ class ProblemModelV2 {
       'memo': memo,
       'reference': reference,
       'templateType':
-      templateType != null ? templateType!.name : null, // or code
+          templateType != null ? templateType!.name : null, // or code
       'analysis': analysis,
       'repeats': repeats?.map((e) => e.toJson()).toList(),
       'solvedAt': _toIso(solvedAt),

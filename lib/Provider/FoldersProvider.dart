@@ -3,10 +3,11 @@ import 'dart:developer';
 
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
-import 'package:ono/Service/Network/HttpService.dart';
+import 'package:http/http.dart' as http;
 import 'package:ono/GlobalModule/Util/ProblemSorting.dart';
 import 'package:ono/GlobalModule/Util/ReviewHandler.dart';
 import 'package:ono/Model/Problem/TemplateType.dart';
+import 'package:ono/Service/Network/HttpService.dart';
 
 import '../Config/AppConfig.dart';
 import '../Model/Folder/FolderModel.dart';
@@ -14,7 +15,6 @@ import '../Model/Problem/ProblemModel.dart';
 import '../Model/Problem/ProblemRegisterModel.dart';
 import '../Model/Problem/ProblemRegisterModelV2.dart';
 import 'TokenProvider.dart';
-import 'package:http/http.dart' as http;
 
 class FoldersProvider with ChangeNotifier {
   FolderModel? _currentFolder;
@@ -32,27 +32,28 @@ class FoldersProvider with ChangeNotifier {
 
   // 상위 폴더로 이동
   Future<void> moveToFolder(int? folderId) async {
-      FolderModel targetFolder = _folders.firstWhere((f) => f.folderId == folderId);
+    FolderModel targetFolder =
+        _folders.firstWhere((f) => f.folderId == folderId);
 
-      _currentFolder = targetFolder;
-      _currentProblems = targetFolder.problems;
-      sortProblemsByOption(sortOption);
+    _currentFolder = targetFolder;
+    _currentProblems = targetFolder.problems;
+    sortProblemsByOption(sortOption);
 
-      log('Moved to folder: ${targetFolder.folderId}, Problems: ${_currentProblems.length}');
+    log('Moved to folder: ${targetFolder.folderId}, Problems: ${_currentProblems.length}');
 
-      // 4) UI 갱신
-      notifyListeners();
+    // 4) UI 갱신
+    notifyListeners();
   }
 
   Future<void> moveToRootFolder() async {
-      // 전달받은 folderId에 해당하는 폴더를 _folders에서 검색
-      final rootFolder = _folders[0];
-      moveToFolder(rootFolder.folderId);
+    // 전달받은 folderId에 해당하는 폴더를 _folders에서 검색
+    final rootFolder = _folders[0];
+    moveToFolder(rootFolder.folderId);
   }
 
   FolderModel getFolderContents(int? folderId) {
     return _folders.firstWhere(
-          (folder) => folder.folderId == folderId,
+      (folder) => folder.folderId == folderId,
       orElse: () => throw Exception('Folder with ID $folderId not found'),
     );
   }
@@ -71,7 +72,8 @@ class FoldersProvider with ChangeNotifier {
       final updatedFolder = FolderModel.fromJson(response);
 
       // 기존 데이터를 업데이트
-      final index = _folders.indexWhere((folder) => folder.folderId == folderId);
+      final index =
+          _folders.indexWhere((folder) => folder.folderId == folderId);
       if (index != -1) {
         _folders[index] = updatedFolder;
       } else {
@@ -117,7 +119,7 @@ class FoldersProvider with ChangeNotifier {
     }
   }
 
-  Future<void> clearFolderContents() async{
+  Future<void> clearFolderContents() async {
     _currentFolder = null;
     _folders = [];
     _currentProblems = [];
@@ -147,7 +149,8 @@ class FoldersProvider with ChangeNotifier {
     }
   }
 
-  Future<void> updateFolder(String? newName, int? folderId, int? parentId) async {
+  Future<void> updateFolder(
+      String? newName, int? folderId, int? parentId) async {
     final response = await httpService.sendRequest(
       method: 'PATCH',
       url: '${AppConfig.baseUrl}/api/folders/$folderId',
@@ -193,12 +196,14 @@ class FoldersProvider with ChangeNotifier {
   }
 
   // 문제 이미지 미리 전송
-  Future<Map<String, dynamic>?> uploadProblemImage(XFile? problemImage) async{
+  Future<Map<String, dynamic>?> uploadProblemImage(XFile? problemImage) async {
     final response = await httpService.sendRequest(
       method: 'POST',
       url: '${AppConfig.baseUrl}/api/process/problemImage',
       isMultipart: true,
-      files: [await http.MultipartFile.fromPath('problemImage', problemImage!.path)],
+      files: [
+        await http.MultipartFile.fromPath('problemImage', problemImage!.path)
+      ],
     );
 
     if (response != null) {
@@ -213,16 +218,18 @@ class FoldersProvider with ChangeNotifier {
     }
   }
 
-  Future<String?> fetchProcessImage(String? fullUrl, Map<String, dynamic>? colorPickerResult, List<List<double>>? coordinatePickerResult) async {
-
+  Future<String?> fetchProcessImage(
+      String? fullUrl,
+      Map<String, dynamic>? colorPickerResult,
+      List<List<double>>? coordinatePickerResult) async {
     List<int>? labels = coordinatePickerResult != null
         ? List<int>.filled(coordinatePickerResult.length, 1)
         : null;
 
-    if(colorPickerResult != null){
+    if (colorPickerResult != null) {
       log('remove colors: ${colorPickerResult['colors']}');
       log('remove intensity: ${colorPickerResult['intensity']}');
-    } else if(coordinatePickerResult != null){
+    } else if (coordinatePickerResult != null) {
       log('point list: ${coordinatePickerResult.toString()}');
     }
     final response = await httpService.sendRequest(
@@ -230,9 +237,11 @@ class FoldersProvider with ChangeNotifier {
       url: '${AppConfig.baseUrl}/api/process/processImage',
       body: {
         'fullUrl': fullUrl,
-        'colorsList': colorPickerResult != null ? colorPickerResult['colors'] : null,
-        'intensity' : colorPickerResult != null ? colorPickerResult['intensity'] : null,
-        'points' : coordinatePickerResult,
+        'colorsList':
+            colorPickerResult != null ? colorPickerResult['colors'] : null,
+        'intensity':
+            colorPickerResult != null ? colorPickerResult['intensity'] : null,
+        'points': coordinatePickerResult,
         'labels': labels,
       },
     );
@@ -266,14 +275,15 @@ class FoldersProvider with ChangeNotifier {
 
   Future<void> submitProblem(
       ProblemRegisterModel problemData, BuildContext context) async {
-
     final files = <http.MultipartFile>[];
 
     if (problemData.solveImage != null) {
-      files.add(await http.MultipartFile.fromPath('solveImage', problemData.solveImage!.path));
+      files.add(await http.MultipartFile.fromPath(
+          'solveImage', problemData.solveImage!.path));
     }
     if (problemData.answerImage != null) {
-      files.add(await http.MultipartFile.fromPath('answerImage', problemData.answerImage!.path));
+      files.add(await http.MultipartFile.fromPath(
+          'answerImage', problemData.answerImage!.path));
     }
 
     final requestBody = {
@@ -288,7 +298,7 @@ class FoldersProvider with ChangeNotifier {
 
     if (problemData.templateType == TemplateType.clean ||
         problemData.templateType == TemplateType.special) {
-      if(problemData.processImageUrl != null){
+      if (problemData.processImageUrl != null) {
         requestBody['processImageUrl'] = problemData.processImageUrl!;
       }
     }
@@ -316,14 +326,15 @@ class FoldersProvider with ChangeNotifier {
 
   Future<void> submitProblemV2(
       ProblemRegisterModelV2 problemData, BuildContext context) async {
-
     final files = <http.MultipartFile>[];
 
     if (problemData.problemImage != null) {
-      files.add(await http.MultipartFile.fromPath('problemImage', problemData.problemImage!.path));
+      files.add(await http.MultipartFile.fromPath(
+          'problemImage', problemData.problemImage!.path));
     }
     if (problemData.answerImage != null) {
-      files.add(await http.MultipartFile.fromPath('answerImage', problemData.answerImage!.path));
+      files.add(await http.MultipartFile.fromPath(
+          'answerImage', problemData.answerImage!.path));
     }
 
     final requestBody = {
@@ -331,7 +342,7 @@ class FoldersProvider with ChangeNotifier {
       'reference': problemData.reference ?? "",
       'memo': problemData.memo ?? "",
       'folderId': (problemData.folderId ?? currentFolder!.folderId).toString(),
-      'imageDataDtoList' : []
+      'imageDataDtoList': []
     };
 
     if (problemData.problemId != null) {
@@ -362,7 +373,6 @@ class FoldersProvider with ChangeNotifier {
   }
 
   Future<int> getUserProblemCount() async {
-
     final response = await httpService.sendRequest(
       method: 'GET',
       url: '${AppConfig.baseUrl}/api/problems/problemCount',
@@ -380,7 +390,8 @@ class FoldersProvider with ChangeNotifier {
   Future<void> updateProblem(ProblemRegisterModel problemData) async {
     final files = <http.MultipartFile>[];
     if (problemData.answerImage != null) {
-      files.add(await http.MultipartFile.fromPath('answerImage', problemData.answerImage!.path));
+      files.add(await http.MultipartFile.fromPath(
+          'answerImage', problemData.answerImage!.path));
     }
 
     final response = await httpService.sendRequest(
@@ -390,19 +401,21 @@ class FoldersProvider with ChangeNotifier {
       files: files,
       body: {
         'problemId': (problemData.problemId ?? -1).toString(),
-        if (problemData.solvedAt != null) 'solvedAt': problemData.solvedAt!.toIso8601String(),
+        if (problemData.solvedAt != null)
+          'solvedAt': problemData.solvedAt!.toIso8601String(),
         if (problemData.reference != null && problemData.reference!.isNotEmpty)
           'reference': problemData.reference!,
         if (problemData.memo != null && problemData.memo!.isNotEmpty)
           'memo': problemData.memo!,
-        if (problemData.folderId != null) 'folderId': problemData.folderId!.toString(),
+        if (problemData.folderId != null)
+          'folderId': problemData.folderId!.toString(),
       },
     );
 
     if (response != null) {
       log('Problem successfully updated');
 
-      if (problemData.folderId != null){
+      if (problemData.folderId != null) {
         await fetchFolderContent(problemData.folderId!);
       }
       await fetchFolderContent(_currentFolder!.folderId);
@@ -421,8 +434,7 @@ class FoldersProvider with ChangeNotifier {
     final response = await httpService.sendRequest(
         method: 'DELETE',
         url: '${AppConfig.baseUrl}/api/problem',
-        queryParams: queryParams
-    );
+        queryParams: queryParams);
 
     if (response != null) {
       log('Problem successfully deleted');
@@ -438,7 +450,8 @@ class FoldersProvider with ChangeNotifier {
   Future<void> addRepeatCount(int problemId, XFile? solveImage) async {
     if (solveImage != null) {
       // Multipart 파일로 변환
-      final file = await http.MultipartFile.fromPath('solveImage', solveImage.path);
+      final file =
+          await http.MultipartFile.fromPath('solveImage', solveImage.path);
 
       // Multipart 요청 생성
       final response = await httpService.sendRequest(
@@ -455,7 +468,6 @@ class FoldersProvider with ChangeNotifier {
         log('Problem successfully repeated with image');
         await fetchFolderContent(_currentFolder!.folderId);
         await moveToFolder(_currentFolder!.folderId);
-
       } else {
         throw Exception('Failed to repeat problem with image');
       }
@@ -509,8 +521,8 @@ class FoldersProvider with ChangeNotifier {
   }
 
   Future<ProblemModel?> getProblemDetails(int? problemId) async {
-    var problemDetails =
-    _currentProblems.firstWhere((problem) => problem.problemId == problemId);
+    var problemDetails = _currentProblems
+        .firstWhere((problem) => problem.problemId == problemId);
 
     if (problemDetails != null) {
       return problemDetails;

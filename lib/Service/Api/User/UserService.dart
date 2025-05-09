@@ -1,13 +1,11 @@
 import 'package:ono/Config/AppConfig.dart';
 import 'package:ono/Model/User/UserRegisterModel.dart';
 import 'package:ono/Service/Network/HttpService.dart';
-import 'package:http/http.dart' as http;
 
 class UserService {
   final HttpService httpService = HttpService();
 
   Future<dynamic> signInWithGuest() async {
-
     return await httpService.sendRequest(
       method: 'POST',
       url: '${AppConfig.baseUrl}/api/auth/signup/guest',
@@ -43,15 +41,15 @@ class UserService {
     return data as int;
   }
 
-  Future<void> updateUserProfile(Map<String, dynamic> payload) {
-    return httpService.sendRequest(
+  void updateUserProfile(UserRegisterModel? userRegisterModel) async {
+    httpService.sendRequest(
       method: 'PATCH',
       url: '${AppConfig.baseUrl}/api/users',
-      body: payload,
+      body: userRegisterModel?.toJson(),
     );
   }
 
-  Future<void> deleteAccount() {
+  void deleteAccount() async {
     return httpService.sendRequest(
       method: 'DELETE',
       url: '${AppConfig.baseUrl}/api/users',

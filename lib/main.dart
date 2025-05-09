@@ -11,15 +11,14 @@ import 'package:ono/GlobalModule/Theme/ThemeHandler.dart';
 import 'package:ono/Provider/FoldersProvider.dart';
 import 'package:ono/Provider/PracticeNoteProvider.dart';
 import 'package:ono/Provider/ScreenIndexProvider.dart';
-import 'package:ono/Screen/ProblemRegister/ProblemRegisterScreenWithTemplate.dart';
 import 'package:ono/Screen/ProblemRegister/ProblemRegisterScreen.dart';
 import 'package:ono/Screen/SplashScreen.dart';
 import 'package:provider/provider.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
+
 import 'Provider/UserProvider.dart';
 import 'Screen/Folder/DirectoryScreen.dart';
 import 'Screen/PracticeNote/PracticeThumbnailScreen.dart';
-import 'Screen/ProblemRegister/TemplateSelectionScreen.dart';
 import 'Screen/SettingScreen.dart';
 import 'firebase_options.dart';
 
@@ -34,11 +33,12 @@ void main() async {
   KakaoSdk.init(nativeAppKey: '7fd2fa49895af63319fd6b11e084d0d5');
 
   await SentryFlutter.init(
-          (options) {
-        options.dsn = 'https://ef02bb2a25f04c4141b3edb8c51ff128@o4507978249273344.ingest.us.sentry.io/4507978250911744';
-        options.tracesSampleRate = 1.0;
-        options.profilesSampleRate = 1.0;
-      },
+    (options) {
+      options.dsn =
+          'https://ef02bb2a25f04c4141b3edb8c51ff128@o4507978249273344.ingest.us.sentry.io/4507978250911744';
+      options.tracesSampleRate = 1.0;
+      options.profilesSampleRate = 1.0;
+    },
   );
 
   // 1) Flutter 프레임워크 예외 (동기 빌드 에러 등) 잡기
@@ -73,15 +73,14 @@ void main() async {
 }
 
 class MyApp extends StatelessWidget {
-
   const MyApp({super.key});
 
   static FirebaseAnalytics analytics = FirebaseAnalytics.instance;
-  static FirebaseAnalyticsObserver observer = FirebaseAnalyticsObserver(analytics: analytics);
+  static FirebaseAnalyticsObserver observer =
+      FirebaseAnalyticsObserver(analytics: analytics);
 
   @override
   Widget build(BuildContext context) {
-
     return MaterialApp(
       title: 'OnO',
       theme: _buildThemeData(context),
@@ -130,7 +129,7 @@ class MyHomePage extends StatefulWidget {
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
+class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   final secureStorage = const FlutterSecureStorage();
   static const List<Widget> _widgetOptions = <Widget>[
     DirectoryScreen(),
@@ -177,7 +176,8 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
       // 앱이 포그라운드로 전환될 때 시간 비교
       String? lastPaused = await secureStorage.read(key: 'lastPaused');
       if (lastPaused != null) {
-        final difference = DateTime.now().millisecondsSinceEpoch - int.parse(lastPaused);
+        final difference =
+            DateTime.now().millisecondsSinceEpoch - int.parse(lastPaused);
         final minutes = difference / 1000 / 60;
         if (minutes > 1) {
           _resetAppState();
@@ -187,7 +187,8 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
   }
 
   void _resetAppState() {
-    final foldersProvider = Provider.of<FoldersProvider>(context, listen: false);
+    final foldersProvider =
+        Provider.of<FoldersProvider>(context, listen: false);
 
     foldersProvider.fetchAllFolderContents();
   }
@@ -195,7 +196,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
   @override
   Widget build(BuildContext context) {
     final screenIndexProvider = Provider.of<ScreenIndexProvider>(context);
-    
+
     return Scaffold(
       body: IndexedStack(
         index: screenIndexProvider.screenIndex,
@@ -219,11 +220,11 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
       selectedItemColor: themeProvider.primaryColor,
       unselectedItemColor: Colors.grey,
       selectedLabelStyle: standardTextStyle.copyWith(
-        color:themeProvider.primaryColor,
+        color: themeProvider.primaryColor,
         fontSize: screenHeight * 0.015,
       ),
       unselectedLabelStyle: standardTextStyle.copyWith(
-        color:Colors.grey,
+        color: Colors.grey,
         fontSize: screenHeight * 0.013,
       ),
       onTap: _onItemTapped,
@@ -244,7 +245,6 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
         icon: Icon(Icons.edit),
         label: '오답노트 작성',
       ),
-
       BottomNavigationBarItem(
         icon: Icon(Icons.settings),
         label: '설정',

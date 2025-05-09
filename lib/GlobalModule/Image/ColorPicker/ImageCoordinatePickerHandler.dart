@@ -1,7 +1,9 @@
 import 'dart:developer';
 import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import '../../Text/StandardText.dart';
 import '../../Theme/ThemeHandler.dart';
 import 'ImageCoordinateGuideDialog.dart';
@@ -85,7 +87,8 @@ class _CoordinatePickerScreenState extends State<CoordinatePickerScreen> {
   }
 
   List<List<double>> _getBoxCoordinates() {
-    final renderBox = _imageKey.currentContext?.findRenderObject() as RenderBox?;
+    final renderBox =
+        _imageKey.currentContext?.findRenderObject() as RenderBox?;
     if (renderBox != null) {
       final containerSize = renderBox.size; // 컨테이너 크기
 
@@ -114,10 +117,14 @@ class _CoordinatePickerScreenState extends State<CoordinatePickerScreen> {
 
       return boxes.map((box) {
         // 박스 좌표에서 이미지 여백을 뺌
-        final double adjustedLeft = (box.left - offsetX).clamp(0, displayImageWidth);
-        final double adjustedTop = (box.top - offsetY).clamp(0, displayImageHeight);
-        final double adjustedRight = (box.right - offsetX).clamp(0, displayImageWidth);
-        final double adjustedBottom = (box.bottom - offsetY).clamp(0, displayImageHeight);
+        final double adjustedLeft =
+            (box.left - offsetX).clamp(0, displayImageWidth);
+        final double adjustedTop =
+            (box.top - offsetY).clamp(0, displayImageHeight);
+        final double adjustedRight =
+            (box.right - offsetX).clamp(0, displayImageWidth);
+        final double adjustedBottom =
+            (box.bottom - offsetY).clamp(0, displayImageHeight);
 
         // 원본 이미지 좌표로 변환
         return [
@@ -366,8 +373,10 @@ class _CoordinatePickerScreenState extends State<CoordinatePickerScreen> {
     const double maxTouchArea = 50; // 최대 터치 영역 크기
 
     // 박스 크기를 기준으로 터치 영역 크기 계산
-    final double touchAreaWidth = (box.width * handleSizeRatio).clamp(minTouchArea, maxTouchArea);
-    final double touchAreaHeight = (box.height * handleSizeRatio).clamp(minTouchArea, maxTouchArea);
+    final double touchAreaWidth =
+        (box.width * handleSizeRatio).clamp(minTouchArea, maxTouchArea);
+    final double touchAreaHeight =
+        (box.height * handleSizeRatio).clamp(minTouchArea, maxTouchArea);
 
     return Align(
       alignment: alignment,

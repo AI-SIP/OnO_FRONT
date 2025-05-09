@@ -3,15 +3,16 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:ono/Model/PracticeNote/PracticeNoteModel.dart';
 import 'package:ono/Screen/PracticeNote/PracticeTitleWriteScreen.dart';
 import 'package:provider/provider.dart';
+
+import '../../GlobalModule/Image/DisplayImage.dart';
 import '../../GlobalModule/Text/StandardText.dart';
+import '../../GlobalModule/Theme/NoteIconHandler.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
 import '../../Model/Folder/FolderModel.dart';
 import '../../Model/PracticeNote/PracticeNoteRegisterModel.dart';
+import '../../Model/Problem/ProblemModel.dart';
 import '../../Model/Problem/TemplateType.dart';
 import '../../Provider/FoldersProvider.dart';
-import '../../Model/Problem/ProblemModel.dart';
-import '../../GlobalModule/Theme/NoteIconHandler.dart';
-import '../../GlobalModule/Image/DisplayImage.dart';
 
 class PracticeProblemSelectionScreen extends StatefulWidget {
   final ProblemPracticeModel? practiceModel;
@@ -166,13 +167,15 @@ class _PracticeProblemSelectionScreenState
                 itemCount: foldersProvider.currentProblems.length,
                 itemBuilder: (context, index) {
                   final problem = foldersProvider.currentProblems[index];
-                  final isSelected = selectedProblems.any((selectedProblem) => selectedProblem.problemId == problem.problemId);
+                  final isSelected = selectedProblems.any((selectedProblem) =>
+                      selectedProblem.problemId == problem.problemId);
 
                   return GestureDetector(
                     onTap: () {
                       setState(() {
                         if (isSelected) {
-                          selectedProblems.removeWhere((p) => p.problemId == problem.problemId);
+                          selectedProblems.removeWhere(
+                              (p) => p.problemId == problem.problemId);
                         } else {
                           selectedProblems.add(problem);
                         }
@@ -301,13 +304,11 @@ class _PracticeProblemSelectionScreenState
                   practiceRegisterModel = ProblemPracticeRegisterModel(
                       practiceId: widget.practiceModel!.practiceId,
                       practiceTitle: widget.practiceModel!.practiceTitle,
-                      registerProblemIds: selectedProblemIds
-                  );
+                      registerProblemIds: selectedProblemIds);
                 } else {
                   practiceRegisterModel = ProblemPracticeRegisterModel(
                       practiceTitle: "",
-                      registerProblemIds: selectedProblemIds
-                  );
+                      registerProblemIds: selectedProblemIds);
                 }
 
                 Navigator.push(

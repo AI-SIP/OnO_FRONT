@@ -21,13 +21,14 @@ class ProblemRegisterModelV2 {
 
   Map<String, dynamic> toJson() {
     return {
-      'problemId' : problemId,
+      'problemId': problemId,
       'problemImage': problemImage,
       'answerImage': answerImage,
       'memo': memo,
       'reference': reference,
-      'solvedAt': solvedAt?.subtract(const Duration(hours: 9)).toIso8601String(),
-      'folderId' : folderId,
+      'solvedAt':
+          solvedAt?.subtract(const Duration(hours: 9)).toIso8601String(),
+      'folderId': folderId,
     };
   }
 
@@ -38,7 +39,8 @@ class ProblemRegisterModelV2 {
       answerImage: json['answerImage'],
       memo: json['memo'],
       reference: json['reference'],
-      solvedAt: DateTime.parse(json['solvedAt']).subtract(const Duration(hours: 9)),
+      solvedAt:
+          DateTime.parse(json['solvedAt']).subtract(const Duration(hours: 9)),
       folderId: int.parse(json['folderId']),
     );
   }

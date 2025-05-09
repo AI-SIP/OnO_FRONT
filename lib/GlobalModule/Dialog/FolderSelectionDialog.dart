@@ -5,6 +5,7 @@ import 'package:flutter_svg/svg.dart';
 import 'package:ono/GlobalModule/Theme/NoteIconHandler.dart';
 import 'package:ono/Model/Folder/FolderModel.dart';
 import 'package:provider/provider.dart';
+
 import '../../Provider/FoldersProvider.dart';
 import '../Text/StandardText.dart';
 import '../Theme/ThemeHandler.dart';
@@ -148,8 +149,9 @@ class _FolderSelectionDialogState extends State<FolderSelectionDialog> {
       {int? parentId, int level = 0}) {
     List<Widget> folderWidgets = [];
 
-    var parentFolders =
-        folders.where((folder) => folder.parentFolder?.folderId == parentId).toList();
+    var parentFolders = folders
+        .where((folder) => folder.parentFolder?.folderId == parentId)
+        .toList();
 
     for (var i = 0; i < parentFolders.length; i++) {
       var folder = parentFolders[i];
@@ -158,47 +160,47 @@ class _FolderSelectionDialogState extends State<FolderSelectionDialog> {
 
       folderWidgets.add(
         Padding(
-          padding: EdgeInsets.only(left: level * 20.0),
-          child: ListTile(
-            leading: Row(
-              mainAxisSize: MainAxisSize.min, // Row가 너무 넓어지지 않도록 설정
-              children: [
-                IconButton(
-                  icon: Icon(isExpanded ? Icons.expand_more : Icons.chevron_right),
-                  color: themeProvider.primaryColor,
-                  onPressed: () {
-                    setState(() {
-                      if (isExpanded) {
-                        _expandedFolders.remove(folder.folderId);
-                      } else {
-                        _expandedFolders.add(folder.folderId);
-                      }
-                    });
-                  },
-                ),
-                SvgPicture.asset(
-                  NoteIconHandler.getNoteIcon(i),  // 헬퍼 클래스로 아이콘 설정
-                  width: 30,
-                  height: 30,
-                ),
-              ],
-            ),
-            title: StandardText(
-              text: folder.folderName,
-              fontSize: 16,
-              color: themeProvider.primaryColor,
-            ),
-            trailing: isSelected
-                ? const Icon(Icons.check, color: Colors.red)
-                : null, // 선택된 폴더에만 체크 표시
-            selected: isSelected,
-            onTap: () {
-              setState(() {
-                _selectedFolderId = folder.folderId;
-              });
-            },
-          )
-        ),
+            padding: EdgeInsets.only(left: level * 20.0),
+            child: ListTile(
+              leading: Row(
+                mainAxisSize: MainAxisSize.min, // Row가 너무 넓어지지 않도록 설정
+                children: [
+                  IconButton(
+                    icon: Icon(
+                        isExpanded ? Icons.expand_more : Icons.chevron_right),
+                    color: themeProvider.primaryColor,
+                    onPressed: () {
+                      setState(() {
+                        if (isExpanded) {
+                          _expandedFolders.remove(folder.folderId);
+                        } else {
+                          _expandedFolders.add(folder.folderId);
+                        }
+                      });
+                    },
+                  ),
+                  SvgPicture.asset(
+                    NoteIconHandler.getNoteIcon(i), // 헬퍼 클래스로 아이콘 설정
+                    width: 30,
+                    height: 30,
+                  ),
+                ],
+              ),
+              title: StandardText(
+                text: folder.folderName,
+                fontSize: 16,
+                color: themeProvider.primaryColor,
+              ),
+              trailing: isSelected
+                  ? const Icon(Icons.check, color: Colors.red)
+                  : null, // 선택된 폴더에만 체크 표시
+              selected: isSelected,
+              onTap: () {
+                setState(() {
+                  _selectedFolderId = folder.folderId;
+                });
+              },
+            )),
       );
 
       if (isExpanded) {
@@ -218,7 +220,7 @@ class _FolderSelectionDialogState extends State<FolderSelectionDialog> {
     required Function(String) onFolderNameSubmitted,
   }) async {
     TextEditingController folderNameController =
-    TextEditingController(text: defaultFolderName);
+        TextEditingController(text: defaultFolderName);
     final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
     final standardTextStyle = const StandardText(text: '').getTextStyle();
 
@@ -250,12 +252,10 @@ class _FolderSelectionDialogState extends State<FolderSelectionDialog> {
                   borderSide: BorderSide(color: Colors.black),
                 ),
                 enabledBorder: const OutlineInputBorder(
-                  borderSide:
-                  BorderSide(color: Colors.black, width: 1.5),
+                  borderSide: BorderSide(color: Colors.black, width: 1.5),
                 ),
                 focusedBorder: const OutlineInputBorder(
-                  borderSide:
-                  BorderSide(color: Colors.black, width: 1.5),
+                  borderSide: BorderSide(color: Colors.black, width: 1.5),
                 ),
                 contentPadding: const EdgeInsets.symmetric(
                     vertical: 20.0, horizontal: 12.0),
@@ -294,8 +294,9 @@ class _FolderSelectionDialogState extends State<FolderSelectionDialog> {
 
   Future<void> _createFolder(String folderName, int? parentFolderId) async {
     final foldersProvider =
-    Provider.of<FoldersProvider>(context, listen: false);
-    await foldersProvider.createFolder(folderName, parentFolderId: parentFolderId);
+        Provider.of<FoldersProvider>(context, listen: false);
+    await foldersProvider.createFolder(folderName,
+        parentFolderId: parentFolderId);
     await _loadFolders();
   }
 }

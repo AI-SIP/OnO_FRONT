@@ -7,9 +7,11 @@ import '../ProblemDetailScreenWidget.dart';
 
 class SimpleProblemDetailTemplate extends StatelessWidget {
   final ProblemModel problemModel;
-  final ProblemDetailScreenWidget problemDetailScreenWidget = ProblemDetailScreenWidget();
+  final ProblemDetailScreenWidget problemDetailScreenWidget =
+      ProblemDetailScreenWidget();
 
-  SimpleProblemDetailTemplate({required this.problemModel, Key? key}) : super(key: key);
+  SimpleProblemDetailTemplate({required this.problemModel, Key? key})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -25,35 +27,50 @@ class SimpleProblemDetailTemplate extends StatelessWidget {
             constraints: BoxConstraints(maxWidth: screenWidth),
             child: screenWidth > 600
                 ? Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // 왼쪽 고정 영역
-                Flexible(
-                  flex: 1,
-                  child: problemDetailScreenWidget.buildCommonDetailView(context, problemModel, themeProvider, problemModel.templateType!),
-                ),
-                const SizedBox(width: 30.0),
-                // 오른쪽 스크롤 가능한 영역
-                Flexible(
-                  flex: 1,
-                  child: problemDetailScreenWidget.buildExpansionTile(context, problemModel, themeProvider, problemModel.templateType!),
-                ),
-              ],
-            )
-                : SingleChildScrollView( // 화면이 좁을 경우 전체를 스크롤 가능하게
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  problemDetailScreenWidget.buildCommonDetailView(
-                    context, problemModel, themeProvider, problemModel.templateType!,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // 왼쪽 고정 영역
+                      Flexible(
+                        flex: 1,
+                        child: problemDetailScreenWidget.buildCommonDetailView(
+                            context,
+                            problemModel,
+                            themeProvider,
+                            problemModel.templateType!),
+                      ),
+                      const SizedBox(width: 30.0),
+                      // 오른쪽 스크롤 가능한 영역
+                      Flexible(
+                        flex: 1,
+                        child: problemDetailScreenWidget.buildExpansionTile(
+                            context,
+                            problemModel,
+                            themeProvider,
+                            problemModel.templateType!),
+                      ),
+                    ],
+                  )
+                : SingleChildScrollView(
+                    // 화면이 좁을 경우 전체를 스크롤 가능하게
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        problemDetailScreenWidget.buildCommonDetailView(
+                          context,
+                          problemModel,
+                          themeProvider,
+                          problemModel.templateType!,
+                        ),
+                        const SizedBox(height: 30.0),
+                        problemDetailScreenWidget.buildExpansionTile(
+                          context,
+                          problemModel,
+                          themeProvider,
+                          problemModel.templateType!,
+                        ),
+                      ],
+                    ),
                   ),
-                  const SizedBox(height: 30.0),
-                  problemDetailScreenWidget.buildExpansionTile(
-                    context, problemModel, themeProvider, problemModel.templateType!,
-                  ),
-                ],
-              ),
-            ),
           ),
         ),
       ],

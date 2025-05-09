@@ -4,14 +4,14 @@ import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:ono/GlobalModule/Image/ColorPicker/ImageCoordinatePickerHandler.dart';
 import 'package:ono/GlobalModule/Dialog/LoadingDialog.dart';
+import 'package:ono/GlobalModule/Image/ColorPicker/ImageCoordinatePickerHandler.dart';
 import 'package:ono/GlobalModule/Text/UnderlinedText.dart';
 import 'package:provider/provider.dart';
+
+import '../../GlobalModule/Dialog/SnackBarDialog.dart';
 import '../../GlobalModule/Image/ColorPicker/ImageColorPickerHandler.dart';
 import '../../GlobalModule/Image/ImagePickerHandler.dart';
-import '../../GlobalModule/Text/HandWriteText.dart';
-import '../../GlobalModule/Dialog/SnackBarDialog.dart';
 import '../../GlobalModule/Text/StandardText.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
 import '../../Model/Common/LoginStatus.dart';
@@ -20,12 +20,12 @@ import '../../Model/Problem/TemplateType.dart';
 import '../../Provider/FoldersProvider.dart';
 import '../../Provider/UserProvider.dart';
 
-
 class TemplateSelectionScreen extends StatefulWidget {
   const TemplateSelectionScreen({super.key});
 
   @override
-  _TemplateSelectionScreenState createState() => _TemplateSelectionScreenState();
+  _TemplateSelectionScreenState createState() =>
+      _TemplateSelectionScreenState();
 }
 
 class _TemplateSelectionScreenState extends State<TemplateSelectionScreen> {
@@ -69,7 +69,9 @@ class _TemplateSelectionScreenState extends State<TemplateSelectionScreen> {
         child: Column(
           children: [
             _buildTopTabs(screenHeight, screenWidth, themeProvider),
-            Expanded(child: _buildPageView(screenHeight, screenWidth, themeProvider)),
+            Expanded(
+                child:
+                    _buildPageView(screenHeight, screenWidth, themeProvider)),
             _buildSubmitButton(screenHeight, screenWidth, themeProvider),
           ],
         ),
@@ -78,7 +80,8 @@ class _TemplateSelectionScreenState extends State<TemplateSelectionScreen> {
   }
 
   // 상단 탭 빌드 함수
-  Widget _buildTopTabs(double screenHeight, double screenWidth, ThemeHandler themeProvider) {
+  Widget _buildTopTabs(
+      double screenHeight, double screenWidth, ThemeHandler themeProvider) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: List.generate(TemplateType.values.length, (index) {
@@ -125,7 +128,8 @@ class _TemplateSelectionScreenState extends State<TemplateSelectionScreen> {
   }
 
   // 페이지 뷰 빌드 함수
-  Widget _buildPageView(double screenHeight, double screenWidth, ThemeHandler themeProvider) {
+  Widget _buildPageView(
+      double screenHeight, double screenWidth, ThemeHandler themeProvider) {
     return Stack(
       children: [
         PageView.builder(
@@ -141,11 +145,13 @@ class _TemplateSelectionScreenState extends State<TemplateSelectionScreen> {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   SizedBox(height: screenHeight * 0.08),
-                  _buildTemplateImageAndTags(screenHeight, templateType, themeProvider),
+                  _buildTemplateImageAndTags(
+                      screenHeight, templateType, themeProvider),
                   const SizedBox(height: 40),
                   // 템플릿 설명은 유동적으로 길어질 수 있도록 처리
                   Padding(
-                    padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.1),
+                    padding:
+                        EdgeInsets.symmetric(horizontal: screenWidth * 0.1),
                     child: StandardText(
                       text: templateType.description,
                       fontSize: 16,
@@ -167,7 +173,8 @@ class _TemplateSelectionScreenState extends State<TemplateSelectionScreen> {
   }
 
   // 템플릿 이미지와 태그 빌드 함수
-  Widget _buildTemplateImageAndTags(double screenHeight, TemplateType templateType, ThemeHandler themeProvider) {
+  Widget _buildTemplateImageAndTags(double screenHeight,
+      TemplateType templateType, ThemeHandler themeProvider) {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -249,7 +256,8 @@ class _TemplateSelectionScreenState extends State<TemplateSelectionScreen> {
           left: 0,
           top: screenHeight * 0.3,
           child: IconButton(
-            icon: const Icon(Icons.arrow_back_ios, size: 24, color: Colors.black),
+            icon:
+                const Icon(Icons.arrow_back_ios, size: 24, color: Colors.black),
             onPressed: () {
               if (_selectedIndex == 0) {
                 _pageController.jumpToPage(TemplateType.values.length - 1);
@@ -266,7 +274,8 @@ class _TemplateSelectionScreenState extends State<TemplateSelectionScreen> {
           right: 0,
           top: screenHeight * 0.3,
           child: IconButton(
-            icon: const Icon(Icons.arrow_forward_ios, size: 24, color: Colors.black),
+            icon: const Icon(Icons.arrow_forward_ios,
+                size: 24, color: Colors.black),
             onPressed: () {
               if (_selectedIndex == TemplateType.values.length - 1) {
                 _pageController.jumpToPage(0);
@@ -284,7 +293,8 @@ class _TemplateSelectionScreenState extends State<TemplateSelectionScreen> {
   }
 
   // 문제 등록 버튼 빌드 함수
-  Widget _buildSubmitButton(double screenHeight, double screenWidth, ThemeHandler themeProvider) {
+  Widget _buildSubmitButton(
+      double screenHeight, double screenWidth, ThemeHandler themeProvider) {
     return Padding(
       padding: EdgeInsets.symmetric(vertical: screenHeight * 0.01), // 여백 줄임
       child: SizedBox(
@@ -342,7 +352,8 @@ class _TemplateSelectionScreenState extends State<TemplateSelectionScreen> {
       return;
     }
 
-    FirebaseAnalytics.instance.logEvent(name: 'template_selection_${templateType.name}');
+    FirebaseAnalytics.instance
+        .logEvent(name: 'template_selection_${templateType.name}');
     saveTemplateMethod(templateType);
 
     final imagePickerHandler = ImagePickerHandler();
@@ -351,20 +362,21 @@ class _TemplateSelectionScreenState extends State<TemplateSelectionScreen> {
         Map<String, dynamic>? colorPickerResult;
         List<List<double>>? coordinatePickerResult;
 
-        if (templateType == TemplateType.clean || templateType == TemplateType.special) {
+        if (templateType == TemplateType.clean ||
+            templateType == TemplateType.special) {
           final colorPickerHandler = ImageColorPickerHandler();
           final coordinatePickerHandler = ImageCoordinatePickerHandler();
-          coordinatePickerResult = await coordinatePickerHandler.showCoordinatePicker(
-              context,
-              pickedFile.path
-          );
+          coordinatePickerResult = await coordinatePickerHandler
+              .showCoordinatePicker(context, pickedFile.path);
           log(coordinatePickerResult.toString());
         }
 
-        if (templateType == TemplateType.simple || coordinatePickerResult != null) {
+        if (templateType == TemplateType.simple ||
+            coordinatePickerResult != null) {
           LoadingDialog.show(context, '템플릿 불러오는 중...');
-          final result = await Provider.of<FoldersProvider>(context, listen: false)
-              .uploadProblemImage(pickedFile);
+          final result =
+              await Provider.of<FoldersProvider>(context, listen: false)
+                  .uploadProblemImage(pickedFile);
 
           if (result != null) {
             final problemModel = ProblemModel(
@@ -381,7 +393,7 @@ class _TemplateSelectionScreenState extends State<TemplateSelectionScreen> {
                 'problemModel': problemModel,
                 'isEditMode': false,
                 'colorPickerResult': colorPickerResult,
-                'coordinatePickerResult' : coordinatePickerResult,
+                'coordinatePickerResult': coordinatePickerResult,
               },
             );
           } else {
@@ -397,13 +409,14 @@ class _TemplateSelectionScreenState extends State<TemplateSelectionScreen> {
   }
 
   Future<void> saveTemplateMethod(TemplateType templateType) async {
-    await storage.write(key: 'templateMethod', value: templateType.index.toString());
+    await storage.write(
+        key: 'templateMethod', value: templateType.index.toString());
   }
 
   Future<int> getTemplateMethod() async {
     String? templateIndex = await storage.read(key: 'templateMethod');
 
-    if(templateIndex != null){
+    if (templateIndex != null) {
       return int.parse(templateIndex);
     }
 

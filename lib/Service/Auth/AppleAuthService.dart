@@ -1,18 +1,15 @@
-import 'dart:async';
 import 'dart:convert';
 import 'dart:core';
 import 'dart:developer';
-import 'package:firebase_analytics/firebase_analytics.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:http/http.dart' as http;
 import 'package:jose/jose.dart';
 import 'package:ono/Model/User/UserRegisterModel.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
-import 'package:http/http.dart' as http;
-import '../../Config/AppConfig.dart';
-import '../../GlobalModule/Dialog/SnackBarDialog.dart';
 
 class AppleAuthService {
   final storage = const FlutterSecureStorage();
@@ -33,14 +30,8 @@ class AppleAuthService {
       final String? identifier = appleCredential.userIdentifier;
 
       return UserRegisterModel(
-          email: email,
-          name: name,
-          identifier: identifier,
-          platform: "APPLE"
-      );
-    }
-
-    catch (error, stackTrace) {
+          email: email, name: name, identifier: identifier, platform: "APPLE");
+    } catch (error, stackTrace) {
       if (error == AuthorizationErrorCode.canceled) {
         return null;
       }

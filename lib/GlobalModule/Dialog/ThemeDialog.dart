@@ -26,7 +26,8 @@ class _ThemeDialogState extends State<ThemeDialog> {
       ),
       content: SingleChildScrollView(
         child: Column(
-          mainAxisSize: MainAxisSize.min, // Ensures the dialog fits content size
+          mainAxisSize:
+              MainAxisSize.min, // Ensures the dialog fits content size
           children: [
             const SizedBox(height: 20), // Add vertical spacing
             SizedBox(
@@ -83,7 +84,8 @@ class _ThemeDialogState extends State<ThemeDialog> {
             if (_selectedColor != null) {
               // Change the PrimaryColor to the selected color
               final darkerColor = _darken(_selectedColor!, 0.1);
-              themeProvider.changePrimaryColor(_selectedColor!, _selectedColorName!);
+              themeProvider.changePrimaryColor(
+                  _selectedColor!, _selectedColorName!);
 
               Navigator.of(context).pop();
             }

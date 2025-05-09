@@ -1,14 +1,10 @@
-import 'dart:async';
-import 'dart:convert';
 import 'dart:core';
 import 'dart:developer';
-import 'dart:io' show Platform, SocketException;
-import 'package:http/http.dart' as http;
+
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:ono/GlobalModule/Dialog/LoadingDialog.dart';
-import 'package:ono/GlobalModule/Dialog/SnackBarDialog.dart';
 import 'package:ono/Model/Common/LoginStatus.dart';
 import 'package:ono/Model/User/UserRegisterModel.dart';
 import 'package:ono/Provider/FoldersProvider.dart';
@@ -16,12 +12,13 @@ import 'package:ono/Provider/PracticeNoteProvider.dart';
 import 'package:ono/Service/Api/User/UserService.dart';
 import 'package:ono/Service/Auth/KakaoAuthService.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
+
 import '../Config/AppConfig.dart';
 import '../GlobalModule/Text/StandardText.dart';
-import '../Service/Network/HttpService.dart';
-import 'TokenProvider.dart';
 import '../Service/Auth/AppleAuthService.dart';
 import '../Service/Auth/GoogleAuthService.dart';
+import '../Service/Network/HttpService.dart';
+import 'TokenProvider.dart';
 
 class UserProvider with ChangeNotifier {
   final storage = const FlutterSecureStorage();
@@ -59,14 +56,16 @@ class UserProvider with ChangeNotifier {
   final GoogleAuthService googleAuthService = GoogleAuthService();
   final KakaoAuthService kakaoAuthService = KakaoAuthService();
 
-  Future<void> signInWithMember(BuildContext context, Future<UserRegisterModel?> Function(BuildContext) socialLogin) async {
+  Future<void> signInWithMember(BuildContext context,
+      Future<UserRegisterModel?> Function(BuildContext) socialLogin) async {
     try {
       LoadingDialog.show(context, '로그인 중 입니다...');
       final userRegisterModel = await socialLogin(context);
       final response = await userService.signInWithMember(userRegisterModel);
       print('user signIn success, response: ${response}');
 
-      bool isRegister = await saveUserToken(response: response, loginMethod: userRegisterModel?.platform);
+      bool isRegister = await saveUserToken(
+          response: response, loginMethod: userRegisterModel?.platform);
       LoadingDialog.hide(context);
 
       if (!isRegister) {
@@ -79,12 +78,13 @@ class UserProvider with ChangeNotifier {
   }
 
   Future<void> signInWithGuest(BuildContext context) async {
-    try{
+    try {
       LoadingDialog.show(context, '로그인 중 입니다...');
       final response = await userService.signInWithGuest();
 
       print('user signIn success, response: ${response}');
-      bool isRegister = await saveUserToken(response: response, loginMethod: 'GUEST');
+      bool isRegister =
+          await saveUserToken(response: response, loginMethod: 'GUEST');
 
       LoadingDialog.hide(context);
 
@@ -110,20 +110,26 @@ class UserProvider with ChangeNotifier {
   }
 
   // 일반 오류 처리 메서드
-  void _handleGeneralError(BuildContext context, Object error, StackTrace stackTrace) async {
+  void _handleGeneralError(
+      BuildContext context, Object error, StackTrace stackTrace) async {
     await resetUserInfo();
     await Sentry.captureException(error, stackTrace: stackTrace);
 
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-        content: StandardText(text: '로그인 과정에서 오류가 발생했습니다.', color: Colors.white, fontSize: 14,),
+        content: StandardText(
+          text: '로그인 과정에서 오류가 발생했습니다.',
+          color: Colors.white,
+          fontSize: 14,
+        ),
         backgroundColor: Colors.red,
       ),
     );
   }
 
-  Future<bool> saveUserToken({Map<String,dynamic>? response, String? loginMethod}) async{
-    if(response == null){
+  Future<bool> saveUserToken(
+      {Map<String, dynamic>? response, String? loginMethod}) async {
+    if (response == null) {
       _loginStatus = LoginStatus.logout;
       await resetUserInfo();
 
@@ -150,7 +156,6 @@ class UserProvider with ChangeNotifier {
   }
 
   Future<bool> fetchUserInfo() async {
-
     final response = await httpService.sendRequest(
       method: 'GET',
       url: '${AppConfig.baseUrl}/api/users',
@@ -175,7 +180,6 @@ class UserProvider with ChangeNotifier {
   }
 
   Future<void> _processUserInfoResponse(dynamic response) async {
-
     _userId = response['userId'] ?? 0;
     _userName = response['name'] ?? '이름 없음';
     _userEmail = response['email'];
@@ -195,7 +199,8 @@ class UserProvider with ChangeNotifier {
     await FirebaseAnalytics.instance.logEvent(name: 'fetch_user_info');
   }
 
-  Future<bool> _handleFetchError({Object? error, StackTrace? stackTrace}) async {
+  Future<bool> _handleFetchError(
+      {Object? error, StackTrace? stackTrace}) async {
     _loginStatus = LoginStatus.logout;
     if (error != null) {
       await Sentry.captureException(error, stackTrace: stackTrace);
@@ -203,58 +208,33 @@ class UserProvider with ChangeNotifier {
     return false;
   }
 
-  Future<void> setUserInfoInFirebase(int? userId, String? userName, String? userEmail) async {
+  Future<void> setUserInfoInFirebase(
+      int? userId, String? userName, String? userEmail) async {
     await FirebaseAnalytics.instance.setUserId(id: userId.toString());
-    await FirebaseAnalytics.instance.setUserProperty(name: 'userName', value: userName);
-    await FirebaseAnalytics.instance.setUserProperty(name: 'userEmail', value: userEmail);
+    await FirebaseAnalytics.instance
+        .setUserProperty(name: 'userName', value: userName);
+    await FirebaseAnalytics.instance
+        .setUserProperty(name: 'userEmail', value: userEmail);
   }
 
-  Future<int> getUserProblemCount() async{
-    final response = await httpService.sendRequest(
-      method: 'GET',
-      url: '${AppConfig.baseUrl}/api/problems/problemCount',
-    );
-
-    if (response != null) {
-      int userProblemCount = response;
-      log('user problem count : $userProblemCount');
-      return userProblemCount;
-    } else {
-      throw Exception('Failed to get user problem count');
-    }
+  Future<int> getUserProblemCount() async {
+    return userService.fetchProblemCount();
   }
 
   Future<void> updateUser({
-    String? email,
-    String? name,
-    String? identifier,
-    String? userType,
+    String email = '',
+    String name = '',
+    String identifier = '',
+    String userType = '',
   }) async {
-
-    final requestBody = {
-      if (email != null) 'email': email,
-      if (name != null) 'name': name,
-      if (identifier != null) 'identifier': identifier,
-      if (userType != null) 'type': userType,
-    };
-
-    final response = await httpService.sendRequest(
-      method: 'PATCH',
-      url: '${AppConfig.baseUrl}/api/user',
-      body: requestBody,
+    final UserRegisterModel updateUserRegisterModel = UserRegisterModel(
+      email: email,
+      name: name,
+      identifier: identifier,
+      platform: '',
     );
 
-    if (response.statusCode == 200) {
-      final responseBody = jsonDecode(utf8.decode(response.bodyBytes));
-      if (responseBody['userName'] != null) _userName = responseBody['userName'];
-      if (responseBody['userEmail'] != null) _userEmail = responseBody['userEmail'];
-
-      log("User info updated successfully: $responseBody");
-      notifyListeners();
-    } else {
-      log('Failed to update user info: ${response.statusCode}');
-      throw Exception('Failed to update user info');
-    }
+    userService.updateUserProfile(updateUserRegisterModel);
   }
 
   Future<void> autoLogin() async {
@@ -278,8 +258,7 @@ class UserProvider with ChangeNotifier {
       // apple 은 별도의 로그아웃 로직이 없습니다.
     } else if (loginMethod == 'kakao') {
       await kakaoAuthService.logoutKakaoSignIn();
-    }
-    else if (loginMethod == 'guest') {
+    } else if (loginMethod == 'guest') {
       deleteAccount();
     }
 
@@ -302,41 +281,21 @@ class UserProvider with ChangeNotifier {
     } else if (loginMethod == 'apple') {
       // 애플 회원 탈퇴 로직
       await appleAuthService.revokeSignInWithApple();
-    } else if(loginMethod == 'kakao'){
+    } else if (loginMethod == 'kakao') {
       // 카카오 회원 탈퇴 로직
       await kakaoAuthService.revokeKakaoSignIn();
-    }
-    else if (loginMethod == 'guest') {
+    } else if (loginMethod == 'guest') {
+    } else {}
 
-    } else {
+    userService.deleteAccount();
+    await resetUserInfo();
 
-    }
-
-    final response = await httpService.sendRequest(
-      method: 'DELETE',
-      url: '${AppConfig.baseUrl}/api/user',
+    await FirebaseAnalytics.instance.logEvent(
+      name: 'user_delete',
     );
-
-    print("response: ${response}");
-
-    if (response.statusCode == 200) {
-      log('Account deletion Success!');
-
-      await FirebaseAnalytics.instance.logEvent(
-        name: 'user_delete',
-        parameters: {
-          'user_id': _userId.toString(),
-        },
-      );
-
-      await resetUserInfo();
-    } else {
-      log('Failed to delete account: ${response.reasonPhrase}');
-      throw Exception("Failed to delete account");
-    }
   }
 
-  Future<void> resetUserInfo() async{
+  Future<void> resetUserInfo() async {
     _userId = 0;
     _loginStatus = LoginStatus.logout;
     _userName = '';

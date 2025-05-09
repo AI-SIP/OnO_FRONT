@@ -22,8 +22,7 @@ class ProblemRegisterScreen extends StatefulWidget {
   });
 
   @override
-  _ProblemRegisterScreenState createState() =>
-      _ProblemRegisterScreenState();
+  _ProblemRegisterScreenState createState() => _ProblemRegisterScreenState();
 }
 
 class _ProblemRegisterScreenState extends State<ProblemRegisterScreen> {

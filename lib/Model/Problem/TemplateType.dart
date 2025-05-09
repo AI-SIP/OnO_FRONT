@@ -38,7 +38,7 @@ extension TemplateTypeExtension on TemplateType {
     }
   }
 
-  bool get hasEraseFeature{
+  bool get hasEraseFeature {
     switch (this) {
       case TemplateType.simple:
         return false;
@@ -49,7 +49,7 @@ extension TemplateTypeExtension on TemplateType {
     }
   }
 
-  bool get hasAnalysisFeature{
+  bool get hasAnalysisFeature {
     switch (this) {
       case TemplateType.simple:
         return false;
@@ -60,7 +60,7 @@ extension TemplateTypeExtension on TemplateType {
     }
   }
 
-  String get templateThumbnailImage{
+  String get templateThumbnailImage {
     switch (this) {
       case TemplateType.simple:
         return "assets/Icon/Pencil.svg";
@@ -71,7 +71,7 @@ extension TemplateTypeExtension on TemplateType {
     }
   }
 
-  String get templateDetailImage{
+  String get templateDetailImage {
     switch (this) {
       case TemplateType.simple:
         return "assets/Icon/PencilDetail.svg";
@@ -85,9 +85,13 @@ extension TemplateTypeExtension on TemplateType {
   List<String> get hashTags {
     switch (this) {
       case TemplateType.simple:
-        return ['#간편한', "#빠른", '#영단어',];
+        return [
+          '#간편한',
+          "#빠른",
+          '#영단어',
+        ];
       case TemplateType.clean:
-        return ['#필기 제거', '#국어', '#영어','#사회'];
+        return ['#필기 제거', '#국어', '#영어', '#사회'];
       case TemplateType.special:
         return ['#AI 분석', '#필기 제거', '#수학', '#과학'];
     }

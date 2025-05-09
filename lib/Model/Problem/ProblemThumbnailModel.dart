@@ -7,7 +7,8 @@ class ProblemThumbnailModel {
   ProblemThumbnailModel(
       {required this.problemId,
       required this.reference,
-      required this.processImageUrl, required this.createdAt});
+      required this.processImageUrl,
+      required this.createdAt});
 
   factory ProblemThumbnailModel.fromJson(Map<String, dynamic> json) {
     return ProblemThumbnailModel(

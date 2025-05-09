@@ -1,45 +1,50 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:provider/provider.dart';
+
 import '../../GlobalModule/Dialog/SnackBarDialog.dart';
 import '../../GlobalModule/Text/StandardText.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
-import 'package:provider/provider.dart';
-import '../../Provider/FoldersProvider.dart';
-import '../../Provider/PracticeNoteProvider.dart';
 import '../../Model/PracticeNote/PracticeNoteRegisterModel.dart';
+import '../../Provider/PracticeNoteProvider.dart';
 
 class PracticeTitleWriteScreen extends StatelessWidget {
   final ProblemPracticeRegisterModel practiceRegisterModel;
   final TextEditingController _titleController;
 
   PracticeTitleWriteScreen({required this.practiceRegisterModel})
-      : _titleController = TextEditingController(text: practiceRegisterModel.practiceTitle);
+      : _titleController =
+            TextEditingController(text: practiceRegisterModel.practiceTitle);
 
   void _submitPractice(BuildContext context, ThemeHandler themeProvider) async {
     if (_titleController.text.isEmpty) {
       _showTitleRequiredDialog(context);
     } else {
-      final problemPracticeProvider = Provider.of<ProblemPracticeProvider>(context, listen: false);
+      final problemPracticeProvider =
+          Provider.of<ProblemPracticeProvider>(context, listen: false);
 
       practiceRegisterModel.setPracticeTitle(_titleController.text);
 
       bool isSubmit = false, isUpdate = false;
-      if(practiceRegisterModel.practiceId == null){
-        isSubmit = await problemPracticeProvider.registerPractice(practiceRegisterModel);
-      } else{
-        isUpdate = await problemPracticeProvider.updatePractice(practiceRegisterModel);
+      if (practiceRegisterModel.practiceId == null) {
+        isSubmit = await problemPracticeProvider
+            .registerPractice(practiceRegisterModel);
+      } else {
+        isUpdate =
+            await problemPracticeProvider.updatePractice(practiceRegisterModel);
       }
 
       Navigator.pop(context);
       Navigator.pop(context);
 
       if (isSubmit) {
-        _showSnackBar(context, themeProvider, '복습 리스트가 생성되었습니다.', themeProvider.primaryColor);
-      } else if(isUpdate) {
+        _showSnackBar(context, themeProvider, '복습 리스트가 생성되었습니다.',
+            themeProvider.primaryColor);
+      } else if (isUpdate) {
         Navigator.pop(context);
-        _showSnackBar(context, themeProvider, '복습 리스트가 수정되었습니다.', themeProvider.primaryColor);
-      }
-      else {
+        _showSnackBar(context, themeProvider, '복습 리스트가 수정되었습니다.',
+            themeProvider.primaryColor);
+      } else {
         _showSnackBar(context, themeProvider, '복습 리스트가 실패했습니다.', Colors.red);
       }
     }
@@ -51,12 +56,15 @@ class PracticeTitleWriteScreen extends StatelessWidget {
       builder: (BuildContext context) {
         return AlertDialog(
           backgroundColor: Colors.white,
-          title: const StandardText(text: "경고", fontSize: 18, color: Colors.black),
-          content: const StandardText(text: "제목을 입력해 주세요!", fontSize: 16, color: Colors.black),
+          title:
+              const StandardText(text: "경고", fontSize: 18, color: Colors.black),
+          content: const StandardText(
+              text: "제목을 입력해 주세요!", fontSize: 16, color: Colors.black),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const StandardText(text: "확인", fontSize: 14, color: Colors.red),
+              child: const StandardText(
+                  text: "확인", fontSize: 14, color: Colors.red),
             ),
           ],
         );
@@ -64,7 +72,8 @@ class PracticeTitleWriteScreen extends StatelessWidget {
     );
   }
 
-  void _showSnackBar(BuildContext context, ThemeHandler themeProvider, String message, Color color) {
+  void _showSnackBar(BuildContext context, ThemeHandler themeProvider,
+      String message, Color color) {
     SnackBarDialog.showSnackBar(
       context: context,
       message: message,
@@ -88,7 +97,9 @@ class PracticeTitleWriteScreen extends StatelessWidget {
         body: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Expanded(child: _buildContent(screenHeight, standardTextStyle, themeProvider)),
+            Expanded(
+                child: _buildContent(
+                    screenHeight, standardTextStyle, themeProvider)),
             _buildSubmitButton(context, themeProvider),
           ],
         ),
@@ -99,7 +110,9 @@ class PracticeTitleWriteScreen extends StatelessWidget {
   AppBar _buildAppBar(ThemeHandler themeProvider) {
     return AppBar(
       title: StandardText(
-        text: practiceRegisterModel.practiceId == null ? "복습 리스트 만들기" : "복습 리스트 수정하기",
+        text: practiceRegisterModel.practiceId == null
+            ? "복습 리스트 만들기"
+            : "복습 리스트 수정하기",
         fontSize: 20,
         color: themeProvider.primaryColor,
       ),
@@ -108,7 +121,8 @@ class PracticeTitleWriteScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildContent(double screenHeight, TextStyle standardTextStyle, ThemeHandler themeProvider) {
+  Widget _buildContent(double screenHeight, TextStyle standardTextStyle,
+      ThemeHandler themeProvider) {
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(20.0, 30.0, 20.0, 30.0),
       child: Column(
@@ -126,13 +140,16 @@ class PracticeTitleWriteScreen extends StatelessWidget {
 
   Widget _buildTitleText() {
     return StandardText(
-      text: practiceRegisterModel.practiceId == null ? "복습 리스트의 이름을 입력해주세요" : "수정할 이름을 입력해주세요",
+      text: practiceRegisterModel.practiceId == null
+          ? "복습 리스트의 이름을 입력해주세요"
+          : "수정할 이름을 입력해주세요",
       fontSize: 18,
       color: Colors.black,
     );
   }
 
-  Widget _buildTextField(TextStyle standardTextStyle, ThemeHandler themeProvider) {
+  Widget _buildTextField(
+      TextStyle standardTextStyle, ThemeHandler themeProvider) {
     return TextField(
       controller: _titleController,
       style: standardTextStyle.copyWith(
@@ -221,7 +238,9 @@ class PracticeTitleWriteScreen extends StatelessWidget {
             padding: const EdgeInsets.symmetric(vertical: 10),
           ),
           child: StandardText(
-            text: practiceRegisterModel.practiceId == null ? "복습 리스트 만들기" : "복습 리스트 수정하기",
+            text: practiceRegisterModel.practiceId == null
+                ? "복습 리스트 만들기"
+                : "복습 리스트 수정하기",
             fontSize: 18,
             color: Colors.white,
           ),

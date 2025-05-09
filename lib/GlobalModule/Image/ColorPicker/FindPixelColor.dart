@@ -4,7 +4,6 @@ import 'dart:ui' as ui hide Image;
 import 'package:flutter/rendering.dart';
 import 'package:image/image.dart' as img;
 
-
 class FindPixelColor {
   final Uint8List? bytes;
 

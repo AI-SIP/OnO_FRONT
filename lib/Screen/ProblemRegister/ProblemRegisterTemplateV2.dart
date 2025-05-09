@@ -1,13 +1,11 @@
-import 'dart:developer';
-
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
+import '../../GlobalModule/Dialog/FolderSelectionDialog.dart';
 import '../../GlobalModule/Dialog/LoadingDialog.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
-import '../../GlobalModule/Dialog/FolderSelectionDialog.dart';
 import '../../Model/Problem/ProblemModel.dart';
 import '../../Model/Problem/ProblemRegisterModelV2.dart';
 import '../../Provider/FoldersProvider.dart';
@@ -30,8 +28,7 @@ class ProblemRegisterTemplateV2 extends StatefulWidget {
       _ProblemRegisterTemplateStateV2();
 }
 
-class _ProblemRegisterTemplateStateV2
-    extends State<ProblemRegisterTemplateV2> {
+class _ProblemRegisterTemplateStateV2 extends State<ProblemRegisterTemplateV2> {
   late ProblemModel? problemModel;
   late TextEditingController sourceController;
   late TextEditingController notesController;
@@ -58,10 +55,11 @@ class _ProblemRegisterTemplateStateV2
     notesController = TextEditingController(text: problemModel?.memo);
     _selectedDate = problemModel?.solvedAt ?? DateTime.now();
 
-    if(widget.isEditMode){
+    if (widget.isEditMode) {
       _selectedFolderId = problemModel?.folderId;
-    } else{
-      final folderProvider = Provider.of<FoldersProvider>(context, listen: false);
+    } else {
+      final folderProvider =
+          Provider.of<FoldersProvider>(context, listen: false);
       _selectedFolderId = folderProvider.currentFolder?.folderId ?? 1;
     }
 
@@ -121,9 +119,11 @@ class _ProblemRegisterTemplateStateV2
                   if (selectedFolderId != null) {
                     setState(() {
                       _selectedFolderId = selectedFolderId;
-                      _selectedFolderName = FolderSelectionDialog.getFolderNameByFolderId(selectedFolderId);
+                      _selectedFolderName =
+                          FolderSelectionDialog.getFolderNameByFolderId(
+                              selectedFolderId);
 
-                      if(sourceController.text.isEmpty){
+                      if (sourceController.text.isEmpty) {
                         sourceController.text = '$_selectedFolderName ';
                       }
                     });
@@ -307,13 +307,13 @@ class _ProblemRegisterTemplateStateV2
     _service.submitProblemV2(
       context,
       problemRegisterModel,
-          () {
+      () {
         _resetFields();
         LoadingDialog.hide(context);
 
-        if(widget.isEditMode){
+        if (widget.isEditMode) {
           Navigator.of(context).pop(true);
-        } else{
+        } else {
           Provider.of<ScreenIndexProvider>(context, listen: false)
               .setSelectedIndex(0);
         }

@@ -1,12 +1,11 @@
-import 'dart:developer';
 import 'dart:io';
 
 import 'package:camera/camera.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:ono/Provider/FoldersProvider.dart';
-import 'package:ono/Screen/ProblemDetail/ProblemDetailScreen.dart';
 import 'package:ono/Screen/PracticeNote/PracticeCompletionScreen.dart';
+import 'package:ono/Screen/ProblemDetail/ProblemDetailScreen.dart';
 import 'package:provider/provider.dart';
 
 import '../../GlobalModule/Image/ImagePickerHandler.dart';
@@ -62,7 +61,8 @@ class _PracticeNavigationButtonsState extends State<PracticeNavigationButtons> {
     );
   }
 
-  TextButton buildPreviousButton(ThemeHandler themeProvider, double screenHeight) {
+  TextButton buildPreviousButton(
+      ThemeHandler themeProvider, double screenHeight) {
     final int currentIndex = getCurrentProblemIndex();
     final int previousProblemId = getPreviousProblemId(currentIndex);
 
@@ -70,7 +70,8 @@ class _PracticeNavigationButtonsState extends State<PracticeNavigationButtons> {
       onPressed: currentIndex > 0
           ? () => navigateToProblem(previousProblemId, isNext: false)
           : null,
-      style: _buildButtonStyle(themeProvider, screenHeight, isCompletion: false),
+      style:
+          _buildButtonStyle(themeProvider, screenHeight, isCompletion: false),
       child: StandardText(
         text: '< 이전 문제',
         fontSize: 14,
@@ -90,11 +91,10 @@ class _PracticeNavigationButtonsState extends State<PracticeNavigationButtons> {
     );
   }
 
-  TextButton buildReviewButton(ThemeHandler themeProvider, double screenHeight) {
+  TextButton buildReviewButton(
+      ThemeHandler themeProvider, double screenHeight) {
     return TextButton(
-      onPressed: isReviewed
-          ? null
-          : () => showReviewDialog(context),
+      onPressed: isReviewed ? null : () => showReviewDialog(context),
       style: ElevatedButton.styleFrom(
         padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
         backgroundColor: Colors.white,
@@ -108,30 +108,31 @@ class _PracticeNavigationButtonsState extends State<PracticeNavigationButtons> {
       ),
       child: isReviewed
           ? Icon(
-        Icons.check,
-        color: themeProvider.primaryColor,
-        size: 20,
-      )
+              Icons.check,
+              color: themeProvider.primaryColor,
+              size: 20,
+            )
           : Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            Icons.touch_app,
-            color: themeProvider.primaryColor,
-            size: 15,
-          ),
-          const SizedBox(width: 10),
-          StandardText(
-            text: '복습 인증',
-            fontSize: 14,
-            color: themeProvider.primaryColor,
-          ),
-        ],
-      ),
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.touch_app,
+                  color: themeProvider.primaryColor,
+                  size: 15,
+                ),
+                const SizedBox(width: 10),
+                StandardText(
+                  text: '복습 인증',
+                  fontSize: 14,
+                  color: themeProvider.primaryColor,
+                ),
+              ],
+            ),
     );
   }
 
-  TextButton buildNextOrCompleteButton(ThemeHandler themeProvider, double screenHeight) {
+  TextButton buildNextOrCompleteButton(
+      ThemeHandler themeProvider, double screenHeight) {
     final int currentIndex = getCurrentProblemIndex();
     final int nextProblemId = getNextProblemId(currentIndex);
 
@@ -139,7 +140,8 @@ class _PracticeNavigationButtonsState extends State<PracticeNavigationButtons> {
       onPressed: nextProblemId != -1
           ? () => navigateToProblem(nextProblemId, isNext: true)
           : () => _showCompletionScreen(),
-      style: _buildButtonStyle(themeProvider, screenHeight, isCompletion: nextProblemId == -1),
+      style: _buildButtonStyle(themeProvider, screenHeight,
+          isCompletion: nextProblemId == -1),
       child: StandardText(
         text: nextProblemId != -1 ? '다음 문제 >' : '복습 마치기',
         fontSize: 14,
@@ -150,18 +152,22 @@ class _PracticeNavigationButtonsState extends State<PracticeNavigationButtons> {
 
   int getCurrentProblemIndex() {
     return widget.practiceProvider.currentProblems.indexWhere(
-          (problem) => problem.problemId == widget.currentProblemId,
+      (problem) => problem.problemId == widget.currentProblemId,
     );
   }
 
   int getPreviousProblemId(int currentIndex) {
     final currentProblems = widget.practiceProvider.currentProblems;
-    return currentIndex > 0 ? currentProblems[currentIndex - 1].problemId : currentProblems.first.problemId;
+    return currentIndex > 0
+        ? currentProblems[currentIndex - 1].problemId
+        : currentProblems.first.problemId;
   }
 
   int getNextProblemId(int currentIndex) {
     final currentProblems = widget.practiceProvider.currentProblems;
-    return currentIndex < currentProblems.length - 1 ? currentProblems[currentIndex + 1].problemId : -1;
+    return currentIndex < currentProblems.length - 1
+        ? currentProblems[currentIndex + 1].problemId
+        : -1;
   }
 
   void navigateToProblem(int problemId, {required bool isNext}) {
@@ -170,22 +176,25 @@ class _PracticeNavigationButtonsState extends State<PracticeNavigationButtons> {
       PageRouteBuilder(
         pageBuilder: (context, animation, secondaryAnimation) =>
             ProblemDetailScreen(
-              problemId: problemId,
-              isPractice: true,
-            ),
+          problemId: problemId,
+          isPractice: true,
+        ),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          final Offset begin = isNext ? const Offset(1.0, 0.0) : const Offset(-1.0, 0.0);
+          final Offset begin =
+              isNext ? const Offset(1.0, 0.0) : const Offset(-1.0, 0.0);
           const end = Offset.zero;
           const curve = Curves.easeInOut;
 
-          var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+          var tween =
+              Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
           var offsetAnimation = animation.drive(tween);
 
           return SlideTransition(
             position: offsetAnimation,
             child: RotationTransition(
               alignment: Alignment.bottomRight,
-              turns: Tween(begin: isNext ? 0.1 : -0.1, end: 0.0).animate(animation),
+              turns: Tween(begin: isNext ? 0.1 : -0.1, end: 0.0)
+                  .animate(animation),
               child: child,
             ),
           );
@@ -198,8 +207,9 @@ class _PracticeNavigationButtonsState extends State<PracticeNavigationButtons> {
     final practiceId = widget.practiceProvider.currentPracticeId;
     final totalProblems = widget.practiceProvider.currentProblems.length;
     final practiceRound = widget.practiceProvider.practices
-        .firstWhere((practice) => practice.practiceId == practiceId)
-        .practiceCount ?? 0;
+            .firstWhere((practice) => practice.practiceId == practiceId)
+            .practiceCount ??
+        0;
 
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(
@@ -226,7 +236,8 @@ class _PracticeNavigationButtonsState extends State<PracticeNavigationButtons> {
           builder: (context, setState) {
             return AlertDialog(
               backgroundColor: Colors.white,
-              insetPadding: const EdgeInsets.symmetric(horizontal: 30, vertical: 30),
+              insetPadding:
+                  const EdgeInsets.symmetric(horizontal: 30, vertical: 30),
               contentPadding: const EdgeInsets.all(15),
               titlePadding: const EdgeInsets.only(left: 20, top: 20, right: 20),
               title: const StandardText(
@@ -240,7 +251,8 @@ class _PracticeNavigationButtonsState extends State<PracticeNavigationButtons> {
                 padding: const EdgeInsets.all(15),
                 child: GestureDetector(
                   onTap: () {
-                    _imagePickerHandler.showImagePicker(context, (pickedFile) async {
+                    _imagePickerHandler.showImagePicker(context,
+                        (pickedFile) async {
                       if (pickedFile != null) {
                         setState(() {
                           selectedImage = pickedFile;
@@ -250,36 +262,37 @@ class _PracticeNavigationButtonsState extends State<PracticeNavigationButtons> {
                   },
                   child: Container(
                     width: double.maxFinite,
-                    margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                    margin: const EdgeInsets.symmetric(
+                        horizontal: 10, vertical: 10),
                     decoration: BoxDecoration(
                       color: themeProvider.primaryColor.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: selectedImage == null
                         ? Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.photo_library,
-                          size: 60,
-                          color: themeProvider.primaryColor,
-                        ),
-                        const SizedBox(height: 8),
-                        StandardText(
-                          text: '풀이 이미지를 등록하세요',
-                          color: themeProvider.primaryColor,
-                        ),
-                      ],
-                    )
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.photo_library,
+                                size: 60,
+                                color: themeProvider.primaryColor,
+                              ),
+                              const SizedBox(height: 8),
+                              StandardText(
+                                text: '풀이 이미지를 등록하세요',
+                                color: themeProvider.primaryColor,
+                              ),
+                            ],
+                          )
                         : ClipRRect(
-                      borderRadius: BorderRadius.circular(10),
-                      child: Image.file(
-                        File(selectedImage!.path),
-                        fit: BoxFit.cover,
-                        width: double.infinity,
-                        height: double.infinity,
-                      ),
-                    ),
+                            borderRadius: BorderRadius.circular(10),
+                            child: Image.file(
+                              File(selectedImage!.path),
+                              fit: BoxFit.cover,
+                              width: double.infinity,
+                              height: double.infinity,
+                            ),
+                          ),
                   ),
                 ),
               ),
@@ -296,37 +309,38 @@ class _PracticeNavigationButtonsState extends State<PracticeNavigationButtons> {
                   onPressed: isLoading
                       ? null
                       : () async {
-                    setState(() {
-                      isLoading = true;
-                    });
+                          setState(() {
+                            isLoading = true;
+                          });
 
-                    await folderProvider.addRepeatCount(
-                        widget.currentProblemId, selectedImage);
+                          await folderProvider.addRepeatCount(
+                              widget.currentProblemId, selectedImage);
 
-                    await widget.practiceProvider.moveToPractice(widget.practiceProvider.currentPracticeId);
+                          await widget.practiceProvider.moveToPractice(
+                              widget.practiceProvider.currentPracticeId);
 
-                    FirebaseAnalytics.instance.logEvent(
-                      name: 'problem_repeat',
-                    );
+                          FirebaseAnalytics.instance.logEvent(
+                            name: 'problem_repeat',
+                          );
 
-                    setState(() {
-                      isReviewed = true;
-                      isLoading = false;
-                    });
+                          setState(() {
+                            isReviewed = true;
+                            isLoading = false;
+                          });
 
-                    Navigator.of(context).pop();
-                    widget.onRefresh();
-                  },
+                          Navigator.of(context).pop();
+                          widget.onRefresh();
+                        },
                   child: isLoading
                       ? CircularProgressIndicator(
-                    strokeWidth: 2.0,
-                    color: themeProvider.primaryColor,
-                  )
+                          strokeWidth: 2.0,
+                          color: themeProvider.primaryColor,
+                        )
                       : StandardText(
-                    text: '복습 인증',
-                    fontSize: 14,
-                    color: themeProvider.primaryColor,
-                  ),
+                          text: '복습 인증',
+                          fontSize: 14,
+                          color: themeProvider.primaryColor,
+                        ),
                 ),
               ],
             );
@@ -336,8 +350,8 @@ class _PracticeNavigationButtonsState extends State<PracticeNavigationButtons> {
     );
   }
 
-
-  ButtonStyle _buildButtonStyle(ThemeHandler themeProvider, double screenHeight, {required bool isCompletion}) {
+  ButtonStyle _buildButtonStyle(ThemeHandler themeProvider, double screenHeight,
+      {required bool isCompletion}) {
     return ElevatedButton.styleFrom(
       padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
       backgroundColor: isCompletion ? themeProvider.primaryColor : Colors.white,

@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:ono/Model/Problem/ProblemModel.dart';
-import 'package:ono/Screen/ProblemRegister/ProblemRegisterTemplate.dart';
 import 'package:provider/provider.dart';
 
 import '../../GlobalModule/Text/StandardText.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
-import '../../Provider/FoldersProvider.dart';
 import 'ProblemRegisterTemplateV2.dart';
 
 class ProblemRegisterScreenV2 extends StatefulWidget {
@@ -35,8 +33,8 @@ class _ProblemRegisterScreenStateV2 extends State<ProblemRegisterScreenV2> {
     final themeProvider = Provider.of<ThemeHandler>(context);
 
     templateWidget = ProblemRegisterTemplateV2(
-        problemModel: widget.problemModel,
-        isEditMode: widget.isEditMode,
+      problemModel: widget.problemModel,
+      isEditMode: widget.isEditMode,
     );
 
     return Scaffold(

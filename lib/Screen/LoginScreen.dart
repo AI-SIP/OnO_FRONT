@@ -1,10 +1,12 @@
 import 'dart:io' show Platform;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:provider/provider.dart';
-import '../GlobalModule/Theme/GridPainter.dart';
+
 import '../GlobalModule/Text/HandWriteText.dart';
 import '../GlobalModule/Text/StandardText.dart';
+import '../GlobalModule/Theme/GridPainter.dart';
 import '../GlobalModule/Theme/ThemeHandler.dart';
 import '../Model/Common/LoginStatus.dart';
 import '../Provider/UserProvider.dart';
@@ -32,7 +34,6 @@ class LoginScreen extends StatelessWidget {
               isSpring: true, // 스프링 제본 여부 설정
             ),
           ),
-
           Positioned(
             top: screenHeight * 0.25, // 화면 상단에서 30% 지점
             left: 0,
@@ -57,8 +58,6 @@ class LoginScreen extends StatelessWidget {
               ],
             ),
           ),
-
-
           Positioned(
             bottom: screenHeight * 0.10, // 화면 하단에서 10% 떨어진 위치에 고정
             left: 0,
@@ -68,19 +67,23 @@ class LoginScreen extends StatelessWidget {
                 double buttonWidth = screenWidth * 0.8; // 화면의 80% 크기
                 double buttonHeight = screenHeight * 0.065;
 
-                if (userProvider.loginStatus == LoginStatus.login && !isNavigated){
+                if (userProvider.loginStatus == LoginStatus.login &&
+                    !isNavigated) {
                   isNavigated = true;
 
                   WidgetsBinding.instance.addPostFrameCallback((_) {
                     Navigator.of(context).pushReplacement(
                       PageRouteBuilder(
-                        pageBuilder: (context, animation, secondaryAnimation) => const MyHomePage(),
-                        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                        pageBuilder: (context, animation, secondaryAnimation) =>
+                            const MyHomePage(),
+                        transitionsBuilder:
+                            (context, animation, secondaryAnimation, child) {
                           const begin = Offset(1.0, 0.0); // 오른쪽에서 왼쪽으로 슬라이드
                           const end = Offset.zero;
                           const curve = Curves.ease;
 
-                          var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+                          var tween = Tween(begin: begin, end: end)
+                              .chain(CurveTween(curve: curve));
                           var offsetAnimation = animation.drive(tween);
 
                           return SlideTransition(

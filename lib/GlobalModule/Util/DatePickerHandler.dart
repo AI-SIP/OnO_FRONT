@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 
 import '../Text/StandardText.dart';
 
@@ -17,9 +17,12 @@ class DatePickerHandler extends StatefulWidget {
 class _DatePickerHandlerState extends State<DatePickerHandler> {
   late DateTime _selectedDate;
 
-  final List<int> _years = List<int>.generate(101, (int index) => 2020 + index); // 2020부터 2120까지
-  final List<int> _months = List<int>.generate(12, (int index) => index + 1); // 1부터 12까지
-  final List<int> _days = List<int>.generate(31, (int index) => index + 1); // 1부터 31까지
+  final List<int> _years =
+      List<int>.generate(101, (int index) => 2020 + index); // 2020부터 2120까지
+  final List<int> _months =
+      List<int>.generate(12, (int index) => index + 1); // 1부터 12까지
+  final List<int> _days =
+      List<int>.generate(31, (int index) => index + 1); // 1부터 31까지
 
   @override
   void initState() {

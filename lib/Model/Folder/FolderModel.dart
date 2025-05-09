@@ -1,6 +1,6 @@
 // FolderModel.dart
-import 'FolderThumbnailModel.dart';
 import '../Problem/ProblemModel.dart';
+import 'FolderThumbnailModel.dart';
 
 class FolderModel {
   final int folderId;
@@ -24,9 +24,8 @@ class FolderModel {
   factory FolderModel.fromJson(Map<String, dynamic> json) {
     // parentFolder: null or Map
     final parentJson = json['parentFolder'] as Map<String, dynamic>?;
-    final parent = parentJson != null
-        ? FolderThumbnailModel.fromJson(parentJson)
-        : null;
+    final parent =
+        parentJson != null ? FolderThumbnailModel.fromJson(parentJson) : null;
 
     // problemList → problems
     final problemList = json['problemList'] as List<dynamic>? ?? [];
@@ -57,12 +56,12 @@ class FolderModel {
   }
 
   Map<String, dynamic> toJson() => {
-    'folderId': folderId,
-    'folderName': folderName,
-    'parentFolder': parentFolder?.toJson(),
-    'problemList': problems.map((e) => e.toJson()).toList(),
-    'subFolderList': subFolderList.map((e) => e.toJson()).toList(),
-    'createdAt': createdAt?.toIso8601String(),
-    'updateAt': updateAt?.toIso8601String(),
-  };
+        'folderId': folderId,
+        'folderName': folderName,
+        'parentFolder': parentFolder?.toJson(),
+        'problemList': problems.map((e) => e.toJson()).toList(),
+        'subFolderList': subFolderList.map((e) => e.toJson()).toList(),
+        'createdAt': createdAt?.toIso8601String(),
+        'updateAt': updateAt?.toIso8601String(),
+      };
 }

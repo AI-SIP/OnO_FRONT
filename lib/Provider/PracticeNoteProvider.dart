@@ -4,15 +4,13 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:ono/Model/PracticeNote/PracticeNoteModel.dart';
 import 'package:ono/Model/PracticeNote/PracticeNoteRegisterModel.dart';
-import 'package:sentry_flutter/sentry_flutter.dart';
 
 import '../Config/AppConfig.dart';
-import '../Service/Network/HttpService.dart';
 import '../Model/Problem/ProblemModel.dart';
+import '../Service/Network/HttpService.dart';
 import 'TokenProvider.dart';
 
-class ProblemPracticeProvider with ChangeNotifier{
-
+class ProblemPracticeProvider with ChangeNotifier {
   int currentPracticeId = -1;
   List<ProblemPracticeModel> practices = [];
   List<ProblemModel> currentProblems = [];
@@ -26,8 +24,11 @@ class ProblemPracticeProvider with ChangeNotifier{
     );
 
     if (response != null) {
-      final List<dynamic> jsonResponse = json.decode(utf8.decode(response.bodyBytes));
-      practices = jsonResponse.map((practiceData) => ProblemPracticeModel.fromJson(practiceData)).toList();
+      final List<dynamic> jsonResponse =
+          json.decode(utf8.decode(response.bodyBytes));
+      practices = jsonResponse
+          .map((practiceData) => ProblemPracticeModel.fromJson(practiceData))
+          .toList();
       log('fetch all practice contents');
 
       for (var practice in practices) {
@@ -49,7 +50,7 @@ class ProblemPracticeProvider with ChangeNotifier{
 
   Future<void> moveToPractice(int practiceId) async {
     final targetPractice = practices.firstWhere(
-          (practice) => practice.practiceId == practiceId,
+      (practice) => practice.practiceId == practiceId,
       orElse: () => throw Exception('Practice with ID $practiceId not found'),
     );
 
@@ -68,7 +69,8 @@ class ProblemPracticeProvider with ChangeNotifier{
       final updatedPractice = ProblemPracticeModel.fromJson(practiceData);
 
       // 기존 데이터를 업데이트
-      final index = practices.indexWhere((practice) => practice.practiceId == practiceId);
+      final index =
+          practices.indexWhere((practice) => practice.practiceId == practiceId);
       if (index != -1) {
         practices[index] = updatedPractice;
       } else {
@@ -81,19 +83,22 @@ class ProblemPracticeProvider with ChangeNotifier{
     }
   }
 
-  Future<bool> registerPractice(ProblemPracticeRegisterModel problemPracticeRegisterModel) async {
+  Future<bool> registerPractice(
+      ProblemPracticeRegisterModel problemPracticeRegisterModel) async {
     final response = await httpService.sendRequest(
       method: 'POST',
       url: '${AppConfig.baseUrl}/api/problem/practice',
       body: {
         'practiceTitle': problemPracticeRegisterModel.practiceTitle.toString(),
-        'registerProblemIds': problemPracticeRegisterModel.registerProblemIds.map((id) => id.toString()).toList(),
+        'registerProblemIds': problemPracticeRegisterModel.registerProblemIds
+            .map((id) => id.toString())
+            .toList(),
       },
     );
 
     log('response: ${response.body}');
 
-    if(response == null){
+    if (response == null) {
       return false;
     }
 
@@ -106,8 +111,7 @@ class ProblemPracticeProvider with ChangeNotifier{
   }
 
   Future<bool> updatePractice(
-    ProblemPracticeRegisterModel problemPracticeRegisterModel
-  ) async {
+      ProblemPracticeRegisterModel problemPracticeRegisterModel) async {
     final practiceId = problemPracticeRegisterModel.practiceId;
 
     // 서버에 PATCH 요청 보내기
@@ -142,12 +146,11 @@ class ProblemPracticeProvider with ChangeNotifier{
 
     log('response: ${response.body}');
 
-    if(response != null){
-
+    if (response != null) {
       await fetchAllPracticeContents();
 
       return true;
-    } else{
+    } else {
       return false;
     }
   }
@@ -158,7 +161,8 @@ class ProblemPracticeProvider with ChangeNotifier{
   }
 
   Future<ProblemModel?> getProblemDetails(int? problemId) async {
-    return currentProblems.firstWhere((problem) => problem.problemId == problemId);
+    return currentProblems
+        .firstWhere((problem) => problem.problemId == problemId);
   }
 
   Future<bool> addPracticeCount(int practiceId) async {

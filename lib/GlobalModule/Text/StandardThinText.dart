@@ -19,7 +19,6 @@ class StandardThinText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-
     return Text(
       text,
       style: getTextStyle(),

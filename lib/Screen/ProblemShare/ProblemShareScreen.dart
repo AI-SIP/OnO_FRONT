@@ -1,7 +1,7 @@
 import 'dart:developer';
 import 'dart:io';
-import 'dart:ui' as ui;
 import 'dart:typed_data';
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -12,11 +12,11 @@ import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../GlobalModule/Image/DisplayImage.dart';
-import '../../GlobalModule/Theme/GridPainter.dart';
-import '../../GlobalModule/Text/StandardText.dart';
-import '../../GlobalModule/Theme/ThemeHandler.dart';
 import '../../GlobalModule/Text/HandWriteText.dart';
+import '../../GlobalModule/Text/StandardText.dart';
 import '../../GlobalModule/Text/UnderlinedText.dart';
+import '../../GlobalModule/Theme/GridPainter.dart';
+import '../../GlobalModule/Theme/ThemeHandler.dart';
 import '../../Model/Problem/ProblemModel.dart';
 
 class ProblemShareScreen extends StatefulWidget {
@@ -303,7 +303,8 @@ class _ProblemShareScreenState extends State<ProblemShareScreen> {
         );
       } else {
         log('Invalid box size, defaulting to basic share...');
-        Share.shareXFiles([xFile], text: '내 오답노트야! 어때?\n\nOnO 다운로드: https://ono-app.com/home');
+        Share.shareXFiles([xFile],
+            text: '내 오답노트야! 어때?\n\nOnO 다운로드: https://ono-app.com/home');
       }
 
       Navigator.pop(context);

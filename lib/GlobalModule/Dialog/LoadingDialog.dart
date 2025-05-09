@@ -18,7 +18,7 @@ class LoadingDialog {
               ClipRRect(
                 borderRadius: BorderRadius.circular(10),
                 child: SvgPicture.asset(
-                  'assets/Logo/GreenFrog.svg',  // 로고 이미지 경로
+                  'assets/Logo/GreenFrog.svg', // 로고 이미지 경로
                   width: 100,
                   height: 100,
                 ),

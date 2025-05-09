@@ -10,13 +10,11 @@ class UnderlinedText extends StatelessWidget {
   const UnderlinedText({
     super.key,
     required this.text,
-
     this.fontSize = 20,
     this.color = Colors.black,
     this.fontFamily = 'HandWrite',
     this.fontWeight = FontWeight.bold,
   });
-
 
   @override
   Widget build(BuildContext context) {

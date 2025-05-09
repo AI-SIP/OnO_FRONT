@@ -1,15 +1,13 @@
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 
-import '../../GlobalModule/Image/DisplayImage.dart';
 import '../../GlobalModule/Dialog/SnackBarDialog.dart';
-import '../../Model/PracticeNote/PracticeNoteModel.dart';
-import '../../Model/Problem/ProblemModel.dart';
+import '../../GlobalModule/Image/DisplayImage.dart';
 import '../../GlobalModule/Text/StandardText.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
+import '../../Model/PracticeNote/PracticeNoteModel.dart';
+import '../../Model/Problem/ProblemModel.dart';
 import '../../Model/Problem/TemplateType.dart';
 import '../../Provider/PracticeNoteProvider.dart';
 import '../ProblemDetail/ProblemDetailScreen.dart';
@@ -37,7 +35,9 @@ class PracticeDetailScreen extends StatelessWidget {
         children: [
           _buildPracticeInfo(context, themeProvider),
           const Divider(),
-          Expanded(child: _buildProblemList(context, practiceProvider, themeProvider)),
+          Expanded(
+              child:
+                  _buildProblemList(context, practiceProvider, themeProvider)),
           _buildNextButton(context, themeProvider, practiceProvider),
         ],
       ),
@@ -82,7 +82,8 @@ class PracticeDetailScreen extends StatelessWidget {
       builder: (context) {
         return SingleChildScrollView(
           child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 10.0), // 패딩 추가
+            padding: const EdgeInsets.symmetric(
+                vertical: 20.0, horizontal: 10.0), // 패딩 추가
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -103,14 +104,14 @@ class PracticeDetailScreen extends StatelessWidget {
                       fontSize: 16,
                       color: Colors.black,
                     ),
-
                     onTap: () {
                       Navigator.pop(context); // BottomSheet 닫기
                       Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (context) => PracticeProblemSelectionScreen(
-                            practiceModel: practice, // ProblemPracticeModel 전체 전달
+                            practiceModel:
+                                practice, // ProblemPracticeModel 전체 전달
                           ),
                         ),
                       );
@@ -120,13 +121,13 @@ class PracticeDetailScreen extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.only(bottom: 10.0), // 텍스트 간격 조정
                   child: ListTile(
-                    leading: const Icon(Icons.delete_forever, color: Colors.red),
+                    leading:
+                        const Icon(Icons.delete_forever, color: Colors.red),
                     title: const StandardText(
                       text: '복습 리스트 삭제하기',
                       fontSize: 16,
                       color: Colors.red,
                     ),
-
                     onTap: () {
                       Navigator.pop(context); // BottomSheet 닫기
                       _showDeletePracticeDialog(context);
@@ -149,11 +150,14 @@ class PracticeDetailScreen extends StatelessWidget {
         children: [
           _buildPracticeTile('문제 수', '${practice.practiceSize}', themeProvider),
           const VerticalDivider(thickness: 1, color: Colors.grey, width: 1),
-          _buildPracticeTile('복습 횟수', '${practice.practiceCount}회', themeProvider),
+          _buildPracticeTile(
+              '복습 횟수', '${practice.practiceCount}회', themeProvider),
           const VerticalDivider(thickness: 1, color: Colors.grey, width: 1),
           _buildPracticeTile(
             '마지막 복습 일시',
-            practice.lastSolvedAt != null ? formatDateTime(practice.lastSolvedAt!) : "기록 없음",
+            practice.lastSolvedAt != null
+                ? formatDateTime(practice.lastSolvedAt!)
+                : "기록 없음",
             themeProvider,
           ),
         ],
@@ -161,7 +165,8 @@ class PracticeDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildPracticeTile(String title, String value, ThemeHandler themeProvider) {
+  Widget _buildPracticeTile(
+      String title, String value, ThemeHandler themeProvider) {
     return Expanded(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -184,7 +189,8 @@ class PracticeDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildProblemList(BuildContext context, ProblemPracticeProvider provider, ThemeHandler themeProvider) {
+  Widget _buildProblemList(BuildContext context,
+      ProblemPracticeProvider provider, ThemeHandler themeProvider) {
     final problems = provider.currentProblems;
 
     if (problems.isEmpty) {
@@ -258,13 +264,16 @@ class PracticeDetailScreen extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           StandardText(
-            text: (problem.reference != null && problem.reference!.isNotEmpty) ? problem.reference! : '제목 없음',
+            text: (problem.reference != null && problem.reference!.isNotEmpty)
+                ? problem.reference!
+                : '제목 없음',
             fontSize: 16,
             color: Colors.black,
           ),
           const SizedBox(height: 4),
           StandardText(
-            text: '작성 일시: ${problem.createdAt != null ? formatDateTime(problem.createdAt!) : '정보 없음'}',
+            text:
+                '작성 일시: ${problem.createdAt != null ? formatDateTime(problem.createdAt!) : '정보 없음'}',
             fontSize: 12,
             color: Colors.grey,
           ),
@@ -273,7 +282,8 @@ class PracticeDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildNextButton(BuildContext context, ThemeHandler themeProvider, ProblemPracticeProvider practiceProvider) {
+  Widget _buildNextButton(BuildContext context, ThemeHandler themeProvider,
+      ProblemPracticeProvider practiceProvider) {
     return Container(
       padding: const EdgeInsets.all(16.0),
       margin: const EdgeInsets.only(bottom: 16.0),
@@ -296,7 +306,8 @@ class PracticeDetailScreen extends StatelessWidget {
     );
   }
 
-  void _onNextButtonPressed(BuildContext context, ProblemPracticeProvider practiceProvider) {
+  void _onNextButtonPressed(
+      BuildContext context, ProblemPracticeProvider practiceProvider) {
     if (practiceProvider.currentProblems.isNotEmpty) {
       Navigator.push(
         context,

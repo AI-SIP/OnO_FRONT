@@ -19,7 +19,6 @@ class _UserGuideScreenState extends State<UserGuideScreen> {
 
   @override
   Widget build(BuildContext context) {
-
     double screenHeight = MediaQuery.of(context).size.height; // 화면 높이 가져오기
     double contentPadding = screenHeight * 0.016; // 화면 높이에 따라 패딩 설정
 
@@ -57,7 +56,8 @@ class _UserGuideScreenState extends State<UserGuideScreen> {
                 _buildUserGuidePage(
                   imagePath: 'assets/GuideScreen/GuideScreen2.svg',
                   title: '오답노트 등록',
-                  description: '필기 제거, AI 분석 등 다양한 템플릿을 사용해\n내게 알맞은 오답노트를 작성하세요.',
+                  description:
+                      '필기 제거, AI 분석 등 다양한 템플릿을 사용해\n내게 알맞은 오답노트를 작성하세요.',
                 ),
                 _buildUserGuidePage(
                   imagePath: 'assets/GuideScreen/GuideScreen3.svg',
@@ -102,7 +102,11 @@ class _UserGuideScreenState extends State<UserGuideScreen> {
           SvgPicture.asset(imagePath,
               width: imageWidth, height: imageHeight), // Onboarding image
           SizedBox(height: screenHeight * 0.03),
-          StandardText(text: title, fontSize: screenHeight * 0.022, color: Colors.black,),
+          StandardText(
+            text: title,
+            fontSize: screenHeight * 0.022,
+            color: Colors.black,
+          ),
           // Text(
           //   title,
           //   style: TextStyle(fontSize: screenHeight * 0.022, fontWeight: FontWeight.bold),
@@ -112,7 +116,6 @@ class _UserGuideScreenState extends State<UserGuideScreen> {
             description,
             style: TextStyle(fontSize: screenHeight * 0.017, height: 1.5),
             textAlign: TextAlign.center,
-
           ),
         ],
       ),

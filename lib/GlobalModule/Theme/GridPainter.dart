@@ -2,11 +2,15 @@ import 'package:flutter/material.dart';
 
 class GridPainter extends CustomPainter {
   final Color gridColor;
-  final double step;    // 격자 무늬 간격
-  final double strokeWidth;   // 격자무늬 두께
+  final double step; // 격자 무늬 간격
+  final double strokeWidth; // 격자무늬 두께
   final bool isSpring;
 
-  GridPainter({required this.gridColor, this.step = 15.0, this.strokeWidth = 0.7, this.isSpring = false});
+  GridPainter(
+      {required this.gridColor,
+      this.step = 15.0,
+      this.strokeWidth = 0.7,
+      this.isSpring = false});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -24,7 +28,7 @@ class GridPainter extends CustomPainter {
       canvas.drawLine(Offset(0, y), Offset(size.width, y), gridPaint);
     }
 
-    if(isSpring){
+    if (isSpring) {
       // 스프링 제본 그리기
       final springPaint = Paint()
         ..color = Colors.black.withOpacity(0.5)
@@ -36,7 +40,8 @@ class GridPainter extends CustomPainter {
 
       // 왼쪽 가장자리에서 springRadius만큼 떨어진 곳에 스프링 그리기
       for (double y = springSpacing; y < size.height; y += springSpacing * 2) {
-        canvas.drawCircle(Offset(springRadius*0.5, y), springRadius, springPaint);
+        canvas.drawCircle(
+            Offset(springRadius * 0.5, y), springRadius, springPaint);
       }
     }
   }

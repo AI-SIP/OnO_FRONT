@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../../Text/StandardText.dart';
 
 class ImageCoordinateGuideDialog {
@@ -11,7 +12,8 @@ class ImageCoordinateGuideDialog {
 
         return AlertDialog(
           backgroundColor: Colors.white,
-          insetPadding: const EdgeInsets.symmetric(horizontal: 30, vertical: 20),
+          insetPadding:
+              const EdgeInsets.symmetric(horizontal: 30, vertical: 20),
           contentPadding: const EdgeInsets.all(20),
           titlePadding: const EdgeInsets.only(left: 20, top: 20, right: 20),
           title: Row(
@@ -36,7 +38,8 @@ class ImageCoordinateGuideDialog {
                     child: Container(
                       height: screenHeight * 0.45, // 화면 높이의 50%
                       decoration: BoxDecoration(
-                        border: Border.all(color: primaryColor.withOpacity(0.7)),
+                        border:
+                            Border.all(color: primaryColor.withOpacity(0.7)),
                       ),
                       child: Padding(
                         padding: const EdgeInsets.all(10.0), // 이미지 내부 패딩

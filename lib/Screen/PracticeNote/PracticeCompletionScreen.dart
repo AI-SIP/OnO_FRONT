@@ -23,7 +23,7 @@ class PracticeCompletionScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeHandler>(context);
     final practiceProvider =
-    Provider.of<ProblemPracticeProvider>(context, listen: false);
+        Provider.of<ProblemPracticeProvider>(context, listen: false);
     final screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
@@ -90,7 +90,8 @@ class PracticeCompletionScreen extends StatelessWidget {
     );
   }
 
-  Widget buildConfirmationButton(BuildContext context, ThemeHandler themeProvider, ProblemPracticeProvider practiceProvider) {
+  Widget buildConfirmationButton(BuildContext context,
+      ThemeHandler themeProvider, ProblemPracticeProvider practiceProvider) {
     return Container(
       padding: const EdgeInsets.all(16.0),
       margin: const EdgeInsets.only(bottom: 16.0),

@@ -1,11 +1,12 @@
 import 'dart:typed_data';
+
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:http/http.dart' as http;
-import 'package:permission_handler/permission_handler.dart';
 import 'package:image_gallery_saver_plus/image_gallery_saver_plus.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 import '../Dialog/SnackBarDialog.dart';
 
@@ -17,7 +18,10 @@ class FullScreenImage extends StatelessWidget {
 
   Future<void> _downloadImage(BuildContext context) async {
     if (imagePath == null) {
-      SnackBarDialog.showSnackBar(context: context, message: "이미지를 다운로드할 수 없습니다.", backgroundColor: Colors.white);
+      SnackBarDialog.showSnackBar(
+          context: context,
+          message: "이미지를 다운로드할 수 없습니다.",
+          backgroundColor: Colors.white);
       return;
     }
 
@@ -35,17 +39,28 @@ class FullScreenImage extends StatelessWidget {
             name: "downloaded_image",
           );
           if (result["isSuccess"]) {
-            SnackBarDialog.showSnackBar(context: context, message: "이미지가 다운로드 되었습니다.", backgroundColor: Colors.green);
+            SnackBarDialog.showSnackBar(
+                context: context,
+                message: "이미지가 다운로드 되었습니다.",
+                backgroundColor: Colors.green);
           } else {
-            SnackBarDialog.showSnackBar(context: context, message: "다운로드에 실패했습니다.", backgroundColor: Colors.red);
+            SnackBarDialog.showSnackBar(
+                context: context,
+                message: "다운로드에 실패했습니다.",
+                backgroundColor: Colors.red);
           }
         }
       } catch (e) {
-        SnackBarDialog.showSnackBar(context: context, message: "다운로드에 실패했습니다.", backgroundColor: Colors.red);
-
+        SnackBarDialog.showSnackBar(
+            context: context,
+            message: "다운로드에 실패했습니다.",
+            backgroundColor: Colors.red);
       }
     } else {
-      SnackBarDialog.showSnackBar(context: context, message: "저장 권한이 필요합니다.", backgroundColor: Colors.red);
+      SnackBarDialog.showSnackBar(
+          context: context,
+          message: "저장 권한이 필요합니다.",
+          backgroundColor: Colors.red);
     }
   }
 
@@ -68,10 +83,13 @@ class FullScreenImage extends StatelessWidget {
               FirebaseAnalytics.instance.logEvent(
                 name: 'image_download_button_click',
               );
-              if(imagePath != null){
+              if (imagePath != null) {
                 _downloadImage(context);
-              } else{
-                SnackBarDialog.showSnackBar(context: context, message: '이미지가 없습니다!', backgroundColor: Colors.red);
+              } else {
+                SnackBarDialog.showSnackBar(
+                    context: context,
+                    message: '이미지가 없습니다!',
+                    backgroundColor: Colors.red);
               }
             },
           ),
@@ -89,19 +107,19 @@ class FullScreenImage extends StatelessWidget {
                 height: constraints.maxHeight,
                 child: imagePath == null || imagePath!.isEmpty
                     ? SvgPicture.asset(
-                  defaultImagePath,
-                  fit: BoxFit.contain,
-                )
+                        defaultImagePath,
+                        fit: BoxFit.contain,
+                      )
                     : CachedNetworkImage(
-                  imageUrl: imagePath!,
-                  placeholder: (context, url) =>
-                  const CircularProgressIndicator(),
-                  errorWidget: (context, url, error) => SvgPicture.asset(
-                    defaultImagePath,
-                    fit: BoxFit.contain,
-                  ),
-                  fit: BoxFit.contain,
-                ),
+                        imageUrl: imagePath!,
+                        placeholder: (context, url) =>
+                            const CircularProgressIndicator(),
+                        errorWidget: (context, url, error) => SvgPicture.asset(
+                          defaultImagePath,
+                          fit: BoxFit.contain,
+                        ),
+                        fit: BoxFit.contain,
+                      ),
               ),
             );
           },

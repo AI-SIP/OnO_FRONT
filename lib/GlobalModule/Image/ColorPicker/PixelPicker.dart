@@ -1,4 +1,5 @@
 import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_svg/svg.dart';
@@ -41,7 +42,7 @@ class ColorPickerState extends State<ColorPicker> {
     // RenderBox가 아직 렌더링되지 않았을 수 있기 때문에 WidgetsBinding 사용
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final renderBox =
-      _repaintBoundaryKey.currentContext?.findRenderObject() as RenderBox?;
+          _repaintBoundaryKey.currentContext?.findRenderObject() as RenderBox?;
       if (renderBox != null) {
         final Size imageSize = renderBox.size;
 
@@ -59,8 +60,8 @@ class ColorPickerState extends State<ColorPicker> {
 
   Future<ui.Image> _loadSnapshot() async {
     final RenderRepaintBoundary repaintBoundary =
-    _repaintBoundaryKey.currentContext!.findRenderObject()
-    as RenderRepaintBoundary;
+        _repaintBoundaryKey.currentContext!.findRenderObject()
+            as RenderRepaintBoundary;
 
     final snapshot = await repaintBoundary.toImage();
 
@@ -69,7 +70,6 @@ class ColorPickerState extends State<ColorPicker> {
 
   @override
   Widget build(BuildContext context) {
-
     final themeProvider = Provider.of<ThemeHandler>(context);
 
     return Stack(
@@ -80,7 +80,8 @@ class ColorPickerState extends State<ColorPicker> {
           child: Container(
             margin: const EdgeInsets.symmetric(horizontal: 16.0), // 좌우 여백 추가
             decoration: BoxDecoration(
-              border: Border.all(color: themeProvider.primaryColor, width: 2.0), // 이미지에 테두리 추가
+              border: Border.all(
+                  color: themeProvider.primaryColor, width: 2.0), // 이미지에 테두리 추가
             ),
             child: widget.child,
           ),
@@ -95,13 +96,15 @@ class ColorPickerState extends State<ColorPicker> {
                   final newPos = penPosition + details.delta;
 
                   // 펜이 이미지 밖으로 나가지 않도록 제한
-                  final renderBox =
-                  _repaintBoundaryKey.currentContext?.findRenderObject() as RenderBox?;
+                  final renderBox = _repaintBoundaryKey.currentContext
+                      ?.findRenderObject() as RenderBox?;
                   final Size imageSize = renderBox?.size ?? Size.zero;
 
                   penPosition = Offset(
-                    newPos.dx.clamp(-penTipOffsetX, imageSize.width - penTipOffsetX),
-                    newPos.dy.clamp(-penTipOffsetY, imageSize.height - penTipOffsetY),
+                    newPos.dx
+                        .clamp(-penTipOffsetX, imageSize.width - penTipOffsetX),
+                    newPos.dy.clamp(
+                        -penTipOffsetY, imageSize.height - penTipOffsetY),
                   );
                 });
                 _onInteract(penPosition + Offset(penTipOffsetX, penTipOffsetY));
@@ -119,18 +122,18 @@ class ColorPickerState extends State<ColorPicker> {
             top: penPosition.dy - 50,
             child: widget.trackerImage == null
                 ? Container(
-              width: 50,
-              height: 50,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(25),
-                border: Border.all(
-                  color: selectedColor ?? Colors.transparent,
-                  width: 10,
-                ),
-              ),
-              child: const Text("+"),
-            )
+                    width: 50,
+                    height: 50,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(25),
+                      border: Border.all(
+                        color: selectedColor ?? Colors.transparent,
+                        width: 10,
+                      ),
+                    ),
+                    child: const Text("+"),
+                  )
                 : widget.trackerImage!,
           )
         ]
@@ -147,7 +150,7 @@ class ColorPickerState extends State<ColorPicker> {
       final snapshot = await _loadSnapshot();
 
       final imageByteData =
-      await snapshot.toByteData(format: ui.ImageByteFormat.png);
+          await snapshot.toByteData(format: ui.ImageByteFormat.png);
 
       final imageBuffer = imageByteData!.buffer;
 

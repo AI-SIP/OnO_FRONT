@@ -1,33 +1,25 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:developer';
-import 'dart:io';
-import 'package:firebase_analytics/firebase_analytics.dart';
+
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
 import 'package:ono/Model/User/UserRegisterModel.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
-import '../../Config/AppConfig.dart';
-import '../../GlobalModule/Dialog/SnackBarDialog.dart';
 
 class GoogleAuthService {
   final GoogleSignIn _googleSignIn = GoogleSignIn();
 
   Future<UserRegisterModel?> signInWithGoogle(BuildContext context) async {
     final googleSignInAccount = await _googleSignIn.signIn();
-    if(googleSignInAccount != null){
+    if (googleSignInAccount != null) {
       String? email = googleSignInAccount.email;
       String? name = googleSignInAccount.displayName;
       String? identifier = googleSignInAccount.id;
 
       return UserRegisterModel(
-          email: email,
-          name: name,
-          identifier: identifier,
-          platform: 'GOOGLE'
-      );
-    } else{
+          email: email, name: name, identifier: identifier, platform: 'GOOGLE');
+    } else {
       return null;
     }
   }

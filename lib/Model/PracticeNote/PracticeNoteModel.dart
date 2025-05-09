@@ -27,9 +27,15 @@ class ProblemPracticeModel {
       practiceTitle: json['practiceTitle'] ?? '제목 없음',
       practiceCount: json['practiceCount'] ?? 0,
       practiceSize: json['practiceSize'] ?? 0,
-      createdAt: DateTime.parse(json['createdAt']).add(const Duration(hours: 9)),
-      lastSolvedAt: json['lastSolvedAt'] != null ? DateTime.parse(json['lastSolvedAt']).add(const Duration(hours: 9)) : null,
-      problems: (json['problems'] as List?)?.map((e) => ProblemModel.fromJson(e)).toList() ?? [], // null 체크
+      createdAt:
+          DateTime.parse(json['createdAt']).add(const Duration(hours: 9)),
+      lastSolvedAt: json['lastSolvedAt'] != null
+          ? DateTime.parse(json['lastSolvedAt']).add(const Duration(hours: 9))
+          : null,
+      problems: (json['problems'] as List?)
+              ?.map((e) => ProblemModel.fromJson(e))
+              .toList() ??
+          [], // null 체크
     );
   }
 

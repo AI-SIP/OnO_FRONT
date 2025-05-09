@@ -1,22 +1,14 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:developer';
-import 'dart:io';
 
-import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart';
-import 'package:http/http.dart' as http;
 import 'package:ono/Model/User/UserRegisterModel.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
-import '../../Config/AppConfig.dart';
-import '../../GlobalModule/Dialog/SnackBarDialog.dart';
-
 class KakaoAuthService {
   Future<UserRegisterModel?> signInWithKakao(BuildContext context) async {
-
     UserRegisterModel? userRegisterModel;
 
     if (await isKakaoTalkInstalled()) {
@@ -47,8 +39,7 @@ class KakaoAuthService {
 
             userRegisterModel = await registerUser(context, user);
           });
-        }
-        catch (error, stackTrace) {
+        } catch (error, stackTrace) {
           log('카카오계정으로 로그인 실패 $error');
           await Sentry.captureException(
             error,
@@ -84,8 +75,9 @@ class KakaoAuthService {
     return userRegisterModel;
   }
 
-  Future<UserRegisterModel?> registerUser(BuildContext context, User user) async {
-    try{
+  Future<UserRegisterModel?> registerUser(
+      BuildContext context, User user) async {
+    try {
       final String? email = user.kakaoAccount?.email;
       final String? name = user.kakaoAccount?.profile?.nickname;
       final int identifier = user.id;
@@ -94,8 +86,7 @@ class KakaoAuthService {
           email: email,
           name: name,
           identifier: identifier.toString(),
-          platform: 'KAKAO'
-      );
+          platform: 'KAKAO');
     } catch (error, stackTrace) {
       log(error.toString());
       await Sentry.captureException(
@@ -106,7 +97,7 @@ class KakaoAuthService {
     }
   }
 
-  Future<void> logoutKakaoSignIn() async{
+  Future<void> logoutKakaoSignIn() async {
     await UserApi.instance.logout();
   }
 

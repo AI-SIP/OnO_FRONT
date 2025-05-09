@@ -6,11 +6,11 @@ import 'package:ono/Model/Problem/TemplateType.dart';
 
 import '../../GlobalModule/Image/DisplayImage.dart';
 import '../../GlobalModule/Image/FullScreenImage.dart';
-import '../../GlobalModule/Theme/GridPainter.dart';
 import '../../GlobalModule/Text/HandWriteText.dart';
 import '../../GlobalModule/Text/StandardText.dart';
-import '../../GlobalModule/Theme/ThemeHandler.dart';
 import '../../GlobalModule/Text/UnderlinedText.dart';
+import '../../GlobalModule/Theme/GridPainter.dart';
+import '../../GlobalModule/Theme/ThemeHandler.dart';
 import '../../GlobalModule/Util/LatexTextHandler.dart';
 import '../../Model/Problem/ProblemModel.dart';
 
@@ -44,24 +44,19 @@ class ProblemDetailScreenWidget {
             buildProblemReference(problemModel.reference, themeProvider),
 
              */
-            SizedBox(height: screenHeight * 0.03,),
-            buildImageSection(
-                context,
-                imageUrl,
-                '문제 이미지',
-                themeProvider.primaryColor,
-                themeProvider),
+            SizedBox(
+              height: screenHeight * 0.03,
+            ),
+            buildImageSection(context, imageUrl, '문제 이미지',
+                themeProvider.primaryColor, themeProvider),
           ],
         ),
       ),
     );
   }
 
-  Widget buildExpansionTile(
-      BuildContext context,
-      ProblemModel problemModel,
-      ThemeHandler themeProvider,
-      TemplateType templateType) {
+  Widget buildExpansionTile(BuildContext context, ProblemModel problemModel,
+      ThemeHandler themeProvider, TemplateType templateType) {
     final ScrollController latexScrollController = ScrollController();
     final ScrollController tileScrollController = ScrollController();
 

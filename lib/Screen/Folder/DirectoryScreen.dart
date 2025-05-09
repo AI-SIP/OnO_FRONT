@@ -5,23 +5,24 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
-import 'package:ono/GlobalModule/Theme/NoteIconHandler.dart';
 import 'package:ono/GlobalModule/Dialog/SnackBarDialog.dart';
+import 'package:ono/GlobalModule/Theme/NoteIconHandler.dart';
 import 'package:ono/GlobalModule/Util/UrlLauncher.dart';
-import 'package:ono/Model/Folder/FolderModel.dart';
 import 'package:ono/Model/Common/LoginStatus.dart';
+import 'package:ono/Model/Folder/FolderModel.dart';
 import 'package:ono/Model/Problem/ProblemRegisterModel.dart';
 import 'package:ono/Provider/FoldersProvider.dart';
 import 'package:provider/provider.dart';
+
+import '../../GlobalModule/Dialog/FolderSelectionDialog.dart';
 import '../../GlobalModule/Image/DisplayImage.dart';
 import '../../GlobalModule/Text/StandardText.dart';
 import '../../GlobalModule/Theme/ThemeHandler.dart';
-import '../../GlobalModule/Dialog/FolderSelectionDialog.dart';
+import '../../Model/Problem/ProblemModel.dart';
 import '../../Model/Problem/TemplateType.dart';
 import '../../Provider/ScreenIndexProvider.dart';
-import '../../Service/ScreenUtil/DirectoryScreenService.dart';
-import '../../Model/Problem/ProblemModel.dart';
 import '../../Provider/UserProvider.dart';
+import '../../Service/ScreenUtil/DirectoryScreenService.dart';
 import '../UserGuideScreen.dart';
 
 class DirectoryScreen extends StatefulWidget {
@@ -92,8 +93,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         onPopInvokedWithResult: (bool didPop, Object? result) async {
           if (didPop) {
             if (foldersProvider.currentFolder?.parentFolder?.folderId != null) {
-              foldersProvider
-                  .moveToFolder(foldersProvider.currentFolder?.parentFolder?.folderId);
+              foldersProvider.moveToFolder(
+                  foldersProvider.currentFolder?.parentFolder?.folderId);
             }
             return;
           }
@@ -925,7 +926,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
               }
             });
           } else {
-            _directoryService.navigateToProblemDetail(context, problem.problemId);
+            _directoryService.navigateToProblemDetail(
+                context, problem.problemId);
           }
         },
         child: LongPressDraggable<ProblemModel>(
@@ -992,11 +994,12 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
             height: 70,
             child: ClipRRect(
               borderRadius: BorderRadius.circular(8.0),
-              child:  isSelected
-                  ? Icon(Icons.check, color: themeProvider.primaryColor): DisplayImage(
-                imagePath: imageUrl,
-                fit: BoxFit.cover,
-              ),
+              child: isSelected
+                  ? Icon(Icons.check, color: themeProvider.primaryColor)
+                  : DisplayImage(
+                      imagePath: imageUrl,
+                      fit: BoxFit.cover,
+                    ),
             ),
           ),
           const SizedBox(width: 20),

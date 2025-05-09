@@ -1,4 +1,5 @@
 import 'dart:developer';
+
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:image_cropper/image_cropper.dart';
@@ -42,7 +43,6 @@ class ImagePickerHandler {
   }
 
   Future<XFile?> _cropImage(XFile imageFile) async {
-
     try {
       final croppedFile = await ImageCropper().cropImage(
         sourcePath: imageFile.path,
@@ -97,13 +97,15 @@ class ImagePickerHandler {
 
         return SingleChildScrollView(
           child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 10.0), // 기존 모달과 동일한 여백 적용
+            padding: const EdgeInsets.symmetric(
+                vertical: 20.0, horizontal: 10.0), // 기존 모달과 동일한 여백 적용
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 // 타이틀 부분
                 Padding(
-                  padding: const EdgeInsets.only(bottom: 20.0), // 타이틀과 리스트 간 간격 추가
+                  padding:
+                      const EdgeInsets.only(bottom: 20.0), // 타이틀과 리스트 간 간격 추가
                   child: StandardText(
                     text: '이미지 업로드 방식을 선택해주세요',
                     color: themeProvider.primaryColor,
@@ -112,7 +114,8 @@ class ImagePickerHandler {
                 ),
                 // 카메라로 촬영 옵션
                 Padding(
-                  padding: const EdgeInsets.only(bottom: 10.0), // 리스트 항목 간 간격 추가
+                  padding:
+                      const EdgeInsets.only(bottom: 10.0), // 리스트 항목 간 간격 추가
                   child: ListTile(
                     leading: const Icon(Icons.camera_alt, color: Colors.black),
                     title: const StandardText(
@@ -121,7 +124,8 @@ class ImagePickerHandler {
                       fontSize: 16,
                     ),
                     onTap: () async {
-                      FirebaseAnalytics.instance.logEvent(name: 'image_select_camera');
+                      FirebaseAnalytics.instance
+                          .logEvent(name: 'image_select_camera');
                       Navigator.of(context).pop(); // 모달 닫기
                       final pickedFile = await pickImageFromCamera(context);
                       onImagePicked(pickedFile);
@@ -130,16 +134,19 @@ class ImagePickerHandler {
                 ),
                 // 갤러리에서 선택 옵션
                 Padding(
-                  padding: const EdgeInsets.only(bottom: 10.0), // 리스트 항목 간 간격 추가
+                  padding:
+                      const EdgeInsets.only(bottom: 10.0), // 리스트 항목 간 간격 추가
                   child: ListTile(
-                    leading: const Icon(Icons.photo_library, color: Colors.black),
+                    leading:
+                        const Icon(Icons.photo_library, color: Colors.black),
                     title: const StandardText(
                       text: '갤러리에서 선택',
                       color: Colors.black,
                       fontSize: 16,
                     ),
                     onTap: () async {
-                      FirebaseAnalytics.instance.logEvent(name: 'image_select_gallery');
+                      FirebaseAnalytics.instance
+                          .logEvent(name: 'image_select_gallery');
                       Navigator.of(context).pop(); // 모달 닫기
 
                       final pickedFile = await pickImageFromGallery(context);
