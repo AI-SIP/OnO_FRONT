@@ -26,7 +26,7 @@ class UserService {
     );
   }
 
-  Future<dynamic> fetchUserInfo() {
+  Future<dynamic> fetchUserInfo() async {
     return httpService.sendRequest(
       method: 'GET',
       url: '${AppConfig.baseUrl}/api/users',

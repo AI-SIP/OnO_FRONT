@@ -54,12 +54,13 @@ class _SettingScreenState extends State<SettingScreen> {
                       SizedBox(height: screenHeight * 0.01),
                       _buildUserNameTile(
                         context: context,
-                        userName: userProvider.userName ?? '이름 없음',
+                        userName: userProvider?.userInfoModel?.name ?? '이름 없음',
                         themeProvider: themeProvider,
                       ),
                       const Divider(),
                       _buildProblemCountTile(
-                        problemCount: userProvider.problemCount ?? 0,
+                        problemCount:
+                            userProvider?.userInfoModel?.problemCount ?? 0,
                         themeProvider: themeProvider,
                       ),
                       const Divider(),

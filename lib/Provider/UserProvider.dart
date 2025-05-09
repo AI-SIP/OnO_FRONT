@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:ono/GlobalModule/Dialog/LoadingDialog.dart';
 import 'package:ono/Model/Common/LoginStatus.dart';
+import 'package:ono/Model/User/UserInfoModel.dart';
 import 'package:ono/Model/User/UserRegisterModel.dart';
 import 'package:ono/Provider/FoldersProvider.dart';
 import 'package:ono/Provider/PracticeNoteProvider.dart';
@@ -13,7 +14,6 @@ import 'package:ono/Service/Api/User/UserService.dart';
 import 'package:ono/Service/Auth/KakaoAuthService.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
-import '../Config/AppConfig.dart';
 import '../GlobalModule/Text/StandardText.dart';
 import '../Service/Auth/AppleAuthService.dart';
 import '../Service/Auth/GoogleAuthService.dart';
@@ -27,30 +27,16 @@ class UserProvider with ChangeNotifier {
   final TokenProvider tokenProvider = TokenProvider();
   final httpService = HttpService();
   final userService = UserService();
+  UserInfoModel? userInfoModel = null;
 
   UserProvider(this.foldersProvider, this.practiceProvider);
 
   LoginStatus _loginStatus = LoginStatus.waiting;
-  int? _userId = 0;
-  int? _problemCount = 0;
-  String? _userName = '';
-  String? _userEmail = '';
   bool _isLoading = true;
-  bool _isFirstLogin = false;
-
-  set isFirstLogin(bool value) {
-    _isFirstLogin = value;
-    notifyListeners(); // 상태 변경 시 화면 업데이트
-  }
 
   LoginStatus get isLoggedIn => _loginStatus;
-  int? get userId => _userId;
-  int? get problemCount => _problemCount;
   LoginStatus? get loginStatus => _loginStatus;
-  String? get userName => _userName;
-  String? get userEmail => _userEmail;
   bool get isLoading => _isLoading;
-  bool get isFirstLogin => _isFirstLogin;
 
   final AppleAuthService appleAuthService = AppleAuthService();
   final GoogleAuthService googleAuthService = GoogleAuthService();
@@ -64,8 +50,10 @@ class UserProvider with ChangeNotifier {
       final response = await userService.signInWithMember(userRegisterModel);
       print('user signIn success, response: ${response}');
 
-      bool isRegister = await saveUserToken(
-          response: response, loginMethod: userRegisterModel?.platform);
+      saveUserLoginInfo(userRegisterModel?.platform);
+      bool isRegister = await saveUserToken(response: response);
+
+      await fetchAllData();
       LoadingDialog.hide(context);
 
       if (!isRegister) {
@@ -83,8 +71,7 @@ class UserProvider with ChangeNotifier {
       final response = await userService.signInWithGuest();
 
       print('user signIn success, response: ${response}');
-      bool isRegister =
-          await saveUserToken(response: response, loginMethod: 'GUEST');
+      bool isRegister = await saveUserToken(response: response);
 
       LoadingDialog.hide(context);
 
@@ -127,8 +114,12 @@ class UserProvider with ChangeNotifier {
     );
   }
 
-  Future<bool> saveUserToken(
-      {Map<String, dynamic>? response, String? loginMethod}) async {
+  Future<void> saveUserLoginInfo(String? loginMethod) async {
+    await storage.write(key: 'loginMethod', value: loginMethod);
+    FirebaseAnalytics.instance.logLogin(loginMethod: loginMethod);
+  }
+
+  Future<bool> saveUserToken({dynamic? response}) async {
     if (response == null) {
       _loginStatus = LoginStatus.logout;
       await resetUserInfo();
@@ -146,57 +137,34 @@ class UserProvider with ChangeNotifier {
     }
 
     // 나머지 저장 로직은 그대로
-    await storage.write(key: 'loginMethod', value: loginMethod);
     await tokenProvider.setAccessToken(accessToken);
     await tokenProvider.setRefreshToken(refreshToken);
-    _isFirstLogin = true;
-    FirebaseAnalytics.instance.logLogin(loginMethod: loginMethod);
 
-    return await fetchUserInfo();
+    return true;
   }
 
-  Future<bool> fetchUserInfo() async {
-    final response = await httpService.sendRequest(
-      method: 'GET',
-      url: '${AppConfig.baseUrl}/api/users',
-    );
+  Future<void> fetchAllData() async {
+    await fetchUserInfo();
+    await foldersProvider.fetchAllFolderContents();
+    //await foldersProvider.fetchRootFolderContents();
+    //await practiceProvider.fetchAllPracticeContents();
 
-    print("fetchUserInfo() response: ${response}");
-    if (response != null) {
-      await _processUserInfoResponse(response);
-      _problemCount = await getUserProblemCount();
-
-      if (_loginStatus == LoginStatus.login) {
-        //await foldersProvider.fetchRootFolderContents();
-        await foldersProvider.fetchAllFolderContents();
-        //await practiceProvider.fetchAllPracticeContents();
-
-        notifyListeners();
-      }
-      return true;
-    } else {
-      return _handleFetchError();
-    }
-  }
-
-  Future<void> _processUserInfoResponse(dynamic response) async {
-    _userId = response['userId'] ?? 0;
-    _userName = response['name'] ?? '이름 없음';
-    _userEmail = response['email'];
     _loginStatus = LoginStatus.login;
+    notifyListeners();
+  }
 
-    await FirebaseAnalytics.instance.logLogin();
-    await setUserInfoInFirebase(_userId, _userName, _userEmail);
+  Future<void> fetchUserInfo() async {
+    print('fetch user info start');
 
-    await Sentry.configureScope((scope) {
-      scope.setUser(SentryUser(
-        id: _userId.toString(),
-        username: _userName,
-        email: _userEmail,
-      ));
-    });
+    final userProblemCount = await userService.fetchProblemCount();
+    print('userProblemCount: ${userProblemCount}');
+    final userInfo = await userService.fetchUserInfo();
+    print('userInfo: ${userInfo}');
 
-    await FirebaseAnalytics.instance.logEvent(name: 'fetch_user_info');
+    userInfoModel = UserInfoModel.fromJson(userInfo);
+    userInfoModel?.problemCount = userProblemCount ?? 0;
+
+    print(userInfoModel.toString());
   }
 
   Future<bool> _handleFetchError(
@@ -206,15 +174,6 @@ class UserProvider with ChangeNotifier {
       await Sentry.captureException(error, stackTrace: stackTrace);
     }
     return false;
-  }
-
-  Future<void> setUserInfoInFirebase(
-      int? userId, String? userName, String? userEmail) async {
-    await FirebaseAnalytics.instance.setUserId(id: userId.toString());
-    await FirebaseAnalytics.instance
-        .setUserProperty(name: 'userName', value: userName);
-    await FirebaseAnalytics.instance
-        .setUserProperty(name: 'userEmail', value: userEmail);
   }
 
   Future<int> getUserProblemCount() async {
@@ -235,13 +194,13 @@ class UserProvider with ChangeNotifier {
     );
 
     userService.updateUserProfile(updateUserRegisterModel);
+    await fetchUserInfo();
   }
 
   Future<void> autoLogin() async {
     String? refreshToken = await tokenProvider.getRefreshToken();
 
     _isLoading = false;
-    _isFirstLogin = false;
     if (refreshToken == null) {
       _loginStatus = LoginStatus.logout;
       notifyListeners();
@@ -261,13 +220,6 @@ class UserProvider with ChangeNotifier {
     } else if (loginMethod == 'guest') {
       deleteAccount();
     }
-
-    await FirebaseAnalytics.instance.logEvent(
-      name: 'user_logout',
-      parameters: {
-        'user_id': _userId.toString(), // 유저 ID 등 추가적인 정보도 포함 가능
-      },
-    );
 
     await resetUserInfo();
   }
@@ -296,12 +248,8 @@ class UserProvider with ChangeNotifier {
   }
 
   Future<void> resetUserInfo() async {
-    _userId = 0;
     _loginStatus = LoginStatus.logout;
-    _userName = '';
-    _userEmail = '';
-    _problemCount = 0;
-    _isFirstLogin = false;
+    userInfoModel = null;
     notifyListeners();
 
     await storage.deleteAll();

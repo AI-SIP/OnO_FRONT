@@ -54,9 +54,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final userProvider = Provider.of<UserProvider>(context, listen: false);
-      if (userProvider.isFirstLogin && !modalShown) {
+      if (!modalShown) {
         modalShown = true;
-        userProvider.isFirstLogin = false;
         _showUserGuideModal();
       }
     });
