@@ -104,6 +104,8 @@ class UserProvider with ChangeNotifier {
     await resetUserInfo();
     await Sentry.captureException(error, stackTrace: stackTrace);
 
+    LoadingDialog.hide(context);
+
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: StandardText(
