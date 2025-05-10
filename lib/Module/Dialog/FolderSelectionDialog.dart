@@ -292,7 +292,7 @@ class _FolderSelectionDialogState extends State<FolderSelectionDialog> {
     );
   }
 
-  Future<void> _createFolder(String folderName, int? parentFolderId) async {
+  Future<void> _createFolder(String folderName, int parentFolderId) async {
     final foldersProvider =
         Provider.of<FoldersProvider>(context, listen: false);
     await foldersProvider.createFolder(folderName,

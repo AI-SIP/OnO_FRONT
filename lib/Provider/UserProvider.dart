@@ -163,22 +163,10 @@ class UserProvider with ChangeNotifier {
   }
 
   Future<void> fetchUserInfo() async {
-    final userProblemCount = await problemService.getProblemCount();
-    final userInfo = await userService.fetchUserInfo();
-
-    userInfoModel = UserInfoModel.fromJson(userInfo);
-    userInfoModel?.problemCount = userProblemCount ?? 0;
+    userInfoModel = await userService.fetchUserInfo();
+    userInfoModel?.problemCount = await problemService.getProblemCount() ?? 0;
 
     print('userInfoModel: ${userInfoModel.toString()}');
-  }
-
-  Future<bool> _handleFetchError(
-      {Object? error, StackTrace? stackTrace}) async {
-    _loginStatus = LoginStatus.logout;
-    if (error != null) {
-      await Sentry.captureException(error, stackTrace: stackTrace);
-    }
-    return false;
   }
 
   Future<void> updateUser({

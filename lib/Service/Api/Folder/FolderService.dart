@@ -10,7 +10,7 @@ class FolderService {
   final baseUrl = "${AppConfig.baseUrl}/api/folders";
 
   Future<FolderModel> getFolderById(int folderId) async {
-    final data = httpService.sendRequest(
+    final data = await httpService.sendRequest(
       method: 'GET',
       url: '$baseUrl/$folderId',
     );
@@ -19,7 +19,7 @@ class FolderService {
   }
 
   Future<FolderModel> getRootFolder() async {
-    final data = httpService.sendRequest(
+    final data = await httpService.sendRequest(
       method: 'GET',
       url: '$baseUrl/root',
     );
@@ -28,7 +28,7 @@ class FolderService {
   }
 
   Future<List<FolderThumbnailModel>> getAllFolderThumbnails() async {
-    final data = httpService.sendRequest(
+    final data = await httpService.sendRequest(
       method: 'GET',
       url: '$baseUrl/thumbnails',
     ) as List<dynamic>;
@@ -39,26 +39,31 @@ class FolderService {
   }
 
   Future<List<FolderModel>> getAllFolderDetails() async {
-    final data = httpService.sendRequest(
+    final data = await httpService.sendRequest(
       method: 'GET',
       url: '$baseUrl',
     ) as List<dynamic>;
 
-    return data
+    print(data);
+
+    final result = data
         .map((d) => FolderModel.fromJson(d as Map<String, dynamic>))
         .toList();
+
+    print(result);
+    return result;
   }
 
-  Future<void> registerFolder(FolderRegisterModel folderRegisterModel) async {
-    httpService.sendRequest(
+  Future<int> registerFolder(FolderRegisterModel folderRegisterModel) async {
+    return await httpService.sendRequest(
       method: 'POST',
       url: baseUrl,
       body: folderRegisterModel.toJson(),
-    );
+    ) as int;
   }
 
   Future<void> updateFolderInfo(FolderRegisterModel folderRegisterModel) async {
-    httpService.sendRequest(
+    await httpService.sendRequest(
       method: 'PATCH',
       url: '$baseUrl',
       body: folderRegisterModel.toJson(),

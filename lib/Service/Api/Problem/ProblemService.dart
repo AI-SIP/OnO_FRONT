@@ -10,7 +10,7 @@ class ProblemService {
   final baseUrl = "${AppConfig.baseUrl}/api/problems";
 
   Future<ProblemModel> getProblem(int? problemId) async {
-    final data = httpService.sendRequest(
+    final data = await httpService.sendRequest(
       method: 'GET',
       url: '$baseUrl/$problemId',
     );
@@ -19,7 +19,7 @@ class ProblemService {
   }
 
   Future<List<ProblemModel>> getAllProblems() async {
-    final data = httpService.sendRequest(
+    final data = await httpService.sendRequest(
       method: 'GET',
       url: '$baseUrl/user',
     ) as List<dynamic>;
@@ -30,7 +30,7 @@ class ProblemService {
   }
 
   Future<int> getProblemCount() async {
-    return httpService.sendRequest(
+    return await httpService.sendRequest(
       method: 'GET',
       url: '$baseUrl/problemCount',
     ) as int;
@@ -38,7 +38,7 @@ class ProblemService {
 
   Future<void> registerProblem(
       ProblemRegisterModel problemRegisterModel) async {
-    httpService.sendRequest(
+    await httpService.sendRequest(
       method: 'POST',
       url: baseUrl,
       body: problemRegisterModel.toJson(),
@@ -47,7 +47,7 @@ class ProblemService {
 
   Future<void> registerProblemImageData(
       ProblemImageDataRegisterModel problemImageDataRegisterModel) async {
-    httpService.sendRequest(
+    await httpService.sendRequest(
       method: 'POST',
       url: '$baseUrl/imageData',
       body: problemImageDataRegisterModel.toJson(),
@@ -56,7 +56,7 @@ class ProblemService {
 
   Future<void> updateProblemInfo(
       ProblemRegisterModel problemRegisterModel) async {
-    httpService.sendRequest(
+    await httpService.sendRequest(
       method: 'PATCH',
       url: '$baseUrl/info',
       body: problemRegisterModel.toJson(),
@@ -65,7 +65,7 @@ class ProblemService {
 
   Future<void> updateProblemPath(
       ProblemRegisterModel problemRegisterModel) async {
-    httpService.sendRequest(
+    await httpService.sendRequest(
       method: 'PATCH',
       url: '$baseUrl/path',
       body: problemRegisterModel.toJson(),
@@ -74,7 +74,7 @@ class ProblemService {
 
   Future<void> updateProblemImageData(
       ProblemRegisterModel problemRegisterModel) async {
-    httpService.sendRequest(
+    await httpService.sendRequest(
       method: 'PATCH',
       url: '$baseUrl/imageData',
       body: problemRegisterModel.toJson(),

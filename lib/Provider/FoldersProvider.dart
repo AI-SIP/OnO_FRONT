@@ -4,9 +4,11 @@ import 'dart:developer';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:ono/Model/Folder/FolderRegisterModel.dart';
 import 'package:ono/Model/Problem/TemplateType.dart';
 import 'package:ono/Module/Util/ProblemSorting.dart';
 import 'package:ono/Module/Util/ReviewHandler.dart';
+import 'package:ono/Service/Api/Folder/FolderService.dart';
 import 'package:ono/Service/Api/HttpService.dart';
 
 import '../Config/AppConfig.dart';
@@ -14,6 +16,7 @@ import '../Model/Folder/FolderModel.dart';
 import '../Model/Problem/ProblemModelWithTemplate.dart';
 import '../Model/Problem/ProblemRegisterModel.dart';
 import '../Model/Problem/ProblemRegisterModelWithTemplate.dart';
+import '../Service/Api/Problem/ProblemService.dart';
 import 'TokenProvider.dart';
 
 class FoldersProvider with ChangeNotifier {
@@ -23,6 +26,8 @@ class FoldersProvider with ChangeNotifier {
   final TokenProvider tokenProvider = TokenProvider();
   final ReviewHandler reviewHandler = ReviewHandler();
   final HttpService httpService = HttpService();
+  final folderService = FolderService();
+  final problemService = ProblemService();
 
   String sortOption = 'newest';
 
@@ -63,61 +68,38 @@ class FoldersProvider with ChangeNotifier {
   Future<void> fetchFolderContent(int? folderId) async {
     folderId ??= currentFolder!.folderId;
 
-    final response = await httpService.sendRequest(
-      method: 'GET',
-      url: '${AppConfig.baseUrl}/api/folders/$folderId',
-    );
+    final updatedFolder = await folderService.getFolderById(folderId);
 
-    print("Folder Response: ${response}");
-    if (response != null) {
-      final updatedFolder = FolderModel.fromJson(response);
-
-      // 기존 데이터를 업데이트
-      final index =
-          _folders.indexWhere((folder) => folder.folderId == folderId);
-      if (index != -1) {
-        _folders[index] = updatedFolder;
-      } else {
-        _folders.add(updatedFolder);
-      }
-
-      print("folder fetch complete");
-      notifyListeners();
+    // 기존 데이터를 업데이트
+    final index = _folders.indexWhere((folder) => folder.folderId == folderId);
+    if (index != -1) {
+      _folders[index] = updatedFolder;
     } else {
-      throw Exception('Failed to fetch folder by ID');
+      _folders.add(updatedFolder);
     }
+
+    print("folder fetch complete");
+    notifyListeners();
   }
 
   Future<void> fetchAllFolderContents() async {
-    final response = await httpService.sendRequest(
-      method: 'GET',
-      url: '${AppConfig.baseUrl}/api/folders',
-    );
+    _folders = await folderService.getAllFolderDetails();
+    log('fetch all folder contents');
 
-    if (response != null) {
-      final dataList = response as List<dynamic>;
-      _folders = dataList
-          .map((e) => FolderModel.fromJson(e as Map<String, dynamic>))
-          .toList();
-      log('fetch all folder contents');
-
-      for (var folder in _folders) {
-        log('-----------------------------------------');
-        log('Folder ID: ${folder.folderId}');
-        log('Folder Name: ${folder.folderName}');
-        log('Parent Folder Id: ${folder.parentFolder?.folderId ?? "No Parent"}');
-        log('problem length: ${folder.problems.length}');
-        log('Number of Problems: ${folder.problems.length}');
-        log('Length of Subfolders: ${folder.subFolderList.length}');
-        log('Created At: ${folder.createdAt}');
-        log('Updated At: ${folder.updateAt}');
-        log('-----------------------------------------');
-      }
-
-      await moveToRootFolder();
-    } else {
-      throw Exception('Failed to load RootFolderContents');
+    for (var folder in _folders) {
+      log('-----------------------------------------');
+      log('Folder ID: ${folder.folderId}');
+      log('Folder Name: ${folder.folderName}');
+      log('Parent Folder Id: ${folder.parentFolder?.folderId ?? "No Parent"}');
+      log('problem length: ${folder.problems.length}');
+      log('Number of Problems: ${folder.problems.length}');
+      log('Length of Subfolders: ${folder.subFolderList.length}');
+      log('Created At: ${folder.createdAt}');
+      log('Updated At: ${folder.updateAt}');
+      log('-----------------------------------------');
     }
+
+    await moveToRootFolder();
   }
 
   Future<void> clearFolderContents() async {
@@ -130,70 +112,40 @@ class FoldersProvider with ChangeNotifier {
 
   // 폴더 생성
   Future<void> createFolder(String folderName, {int? parentFolderId}) async {
-    final response = await httpService.sendRequest(
-      method: 'POST',
-      url: '${AppConfig.baseUrl}/api/folders',
-      body: {
-        'folderName': folderName,
-        'parentFolderId': parentFolderId ?? currentFolder!.folderId,
-      },
-    );
+    parentFolderId = parentFolderId ?? currentFolder!.folderId;
+    FolderRegisterModel folderRegisterModel = FolderRegisterModel(
+        folderName: folderName, parentFolderId: parentFolderId);
 
-    if (response != null) {
-      log('Folder successfully created, folderId: ${response}');
+    final createdFolderId =
+        await folderService.registerFolder(folderRegisterModel);
 
-      await fetchFolderContent(response);
-      await fetchFolderContent(_currentFolder!.folderId);
-      await moveToFolder(_currentFolder!.folderId);
-    } else {
-      throw Exception('Failed to create folder');
-    }
+    print(createdFolderId);
+
+    await fetchFolderContent(createdFolderId);
+    await fetchFolderContent(_currentFolder!.folderId);
+    await moveToFolder(_currentFolder!.folderId);
   }
 
   Future<void> updateFolder(
       String? newName, int? folderId, int? parentId) async {
-    final response = await httpService.sendRequest(
-      method: 'PATCH',
-      url: '${AppConfig.baseUrl}/api/folders/$folderId',
-      body: {
-        'folderName': newName,
-        'parentFolderId': parentId,
-      },
-    );
+    FolderRegisterModel folderRegisterModel = FolderRegisterModel(
+        folderName: newName!, parentFolderId: parentId!, folderId: folderId);
 
-    if (response != null) {
-      log('Folder name successfully updated to $newName');
+    await folderService.updateFolderInfo(folderRegisterModel);
 
-      await fetchFolderContent(parentId);
-      await fetchFolderContent(folderId);
-      await fetchFolderContent(currentFolder!.folderId);
+    await fetchFolderContent(parentId);
+    await fetchFolderContent(folderId);
+    await fetchFolderContent(currentFolder!.folderId);
 
-      await moveToFolder(currentFolder!.folderId);
-    } else {
-      throw Exception('Failed to update folder name');
-    }
+    await moveToFolder(currentFolder!.folderId);
   }
 
   // 폴더 삭제
   Future<void> deleteFolders(List<int> deleteFolderIdList) async {
-    final queryParams = {
-      'deleteFolderIdList': deleteFolderIdList.join(','), // 쉼표로 구분된 문자열로 변환
-    };
+    await folderService.deleteFolders(deleteFolderIdList);
 
-    final response = await httpService.sendRequest(
-      method: 'DELETE',
-      url: '${AppConfig.baseUrl}/api/folders',
-      queryParams: queryParams,
-    );
-
-    if (response != null) {
-      log('Folder successfully deleted');
-
-      await fetchFolderContent(currentFolder!.folderId);
-      await moveToFolder(currentFolder!.folderId);
-    } else {
-      throw Exception('Failed to delete folder');
-    }
+    await fetchFolderContent(currentFolder!.folderId);
+    await moveToFolder(currentFolder!.folderId);
   }
 
   // 문제 이미지 미리 전송
