@@ -1194,7 +1194,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     final foldersProvider =
         Provider.of<FoldersProvider>(context, listen: false);
     await foldersProvider.updateProblem(
-      ProblemRegisterModel(
+      ProblemRegisterModelWithTemplate(
         problemId: problem.problemId,
         folderId: folderId, // 폴더 ID로 문제를 이동
       ),

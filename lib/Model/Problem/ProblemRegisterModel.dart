@@ -1,6 +1,6 @@
 import 'package:image_picker/image_picker.dart';
 
-class ProblemRegisterModelV2 {
+class ProblemRegisterModel {
   int? problemId;
   XFile? problemImage;
   XFile? answerImage;
@@ -9,7 +9,7 @@ class ProblemRegisterModelV2 {
   DateTime? solvedAt;
   int? folderId;
 
-  ProblemRegisterModelV2({
+  ProblemRegisterModel({
     this.problemId,
     this.problemImage,
     this.answerImage,
@@ -32,8 +32,8 @@ class ProblemRegisterModelV2 {
     };
   }
 
-  factory ProblemRegisterModelV2.fromJson(Map<String, dynamic> json) {
-    return ProblemRegisterModelV2(
+  factory ProblemRegisterModel.fromJson(Map<String, dynamic> json) {
+    return ProblemRegisterModel(
       problemId: int.parse(json['problemId']),
       problemImage: json['problemImage'],
       answerImage: json['answerImage'],

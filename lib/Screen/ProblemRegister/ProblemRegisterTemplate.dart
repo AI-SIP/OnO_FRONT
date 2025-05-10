@@ -620,7 +620,7 @@ class _ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
     LoadingDialog.show(context, '오답노트 작성 중...');
 
     _waitForLoadingToComplete().then((_) {
-      final problemRegisterModel = ProblemRegisterModel(
+      final problemRegisterModel = ProblemRegisterModelWithTemplate(
         problemId: problemModel.problemId,
         problemImageUrl: problemModel.problemImageUrl,
         processImageUrl: processImageUrl,

@@ -306,7 +306,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
 
                       if (selectedFolderId != null) {
                         await foldersProvider
-                            .updateProblem(ProblemRegisterModel(
+                            .updateProblem(ProblemRegisterModelWithTemplate(
                           problemId: problemModel.problemId,
                           folderId: selectedFolderId,
                         ));

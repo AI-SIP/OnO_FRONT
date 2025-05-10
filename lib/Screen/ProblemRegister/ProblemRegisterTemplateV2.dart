@@ -294,7 +294,7 @@ class _ProblemRegisterTemplateStateV2 extends State<ProblemRegisterTemplateV2> {
 
     LoadingDialog.show(context, '오답노트 작성 중...');
 
-    final problemRegisterModel = ProblemRegisterModelV2(
+    final problemRegisterModel = ProblemRegisterModel(
       problemId: problemModel?.problemId,
       problemImage: problemImage,
       answerImage: answerImage,

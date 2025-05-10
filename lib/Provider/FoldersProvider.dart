@@ -274,8 +274,8 @@ class FoldersProvider with ChangeNotifier {
     }
   }
 
-  Future<void> submitProblem(
-      ProblemRegisterModel problemData, BuildContext context) async {
+  Future<void> submitProblem(ProblemRegisterModelWithTemplate problemData,
+      BuildContext context) async {
     final files = <http.MultipartFile>[];
 
     if (problemData.solveImage != null) {
@@ -326,7 +326,7 @@ class FoldersProvider with ChangeNotifier {
   }
 
   Future<void> submitProblemV2(
-      ProblemRegisterModelV2 problemData, BuildContext context) async {
+      ProblemRegisterModel problemData, BuildContext context) async {
     final files = <http.MultipartFile>[];
 
     if (problemData.problemImage != null) {
@@ -388,7 +388,8 @@ class FoldersProvider with ChangeNotifier {
     }
   }
 
-  Future<void> updateProblem(ProblemRegisterModel problemData) async {
+  Future<void> updateProblem(
+      ProblemRegisterModelWithTemplate problemData) async {
     final files = <http.MultipartFile>[];
     if (problemData.answerImage != null) {
       files.add(await http.MultipartFile.fromPath(

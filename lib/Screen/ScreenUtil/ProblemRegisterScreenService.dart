@@ -36,8 +36,10 @@ class ProblemRegisterScreenService {
     Navigator.of(context).pop(true);
   }
 
-  Future<void> submitProblem(BuildContext context,
-      ProblemRegisterModel problemData, VoidCallback onSuccess) async {
+  Future<void> submitProblem(
+      BuildContext context,
+      ProblemRegisterModelWithTemplate problemData,
+      VoidCallback onSuccess) async {
     final authService = Provider.of<UserProvider>(context, listen: false);
     if (authService.isLoggedIn == LoginStatus.logout) {
       _showLoginRequiredDialog(context);
@@ -55,7 +57,7 @@ class ProblemRegisterScreenService {
   }
 
   Future<void> submitProblemV2(BuildContext context,
-      ProblemRegisterModelV2 problemData, VoidCallback onSuccess) async {
+      ProblemRegisterModel problemData, VoidCallback onSuccess) async {
     final authService = Provider.of<UserProvider>(context, listen: false);
     if (authService.isLoggedIn == LoginStatus.logout) {
       _showLoginRequiredDialog(context);

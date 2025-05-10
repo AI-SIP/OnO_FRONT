@@ -1,7 +1,7 @@
 import 'package:image_picker/image_picker.dart';
 import 'package:ono/Model/Problem/TemplateType.dart';
 
-class ProblemRegisterModel {
+class ProblemRegisterModelWithTemplate {
   int? problemId;
   String? problemImageUrl;
   String? processImageUrl;
@@ -14,7 +14,7 @@ class ProblemRegisterModel {
   TemplateType? templateType;
   String? analysis;
 
-  ProblemRegisterModel({
+  ProblemRegisterModelWithTemplate({
     this.problemId,
     this.problemImageUrl,
     this.processImageUrl,
@@ -45,8 +45,8 @@ class ProblemRegisterModel {
     };
   }
 
-  factory ProblemRegisterModel.fromJson(Map<String, dynamic> json) {
-    return ProblemRegisterModel(
+  factory ProblemRegisterModelWithTemplate.fromJson(Map<String, dynamic> json) {
+    return ProblemRegisterModelWithTemplate(
       problemId: int.parse(json['problemId']),
       problemImageUrl: json['problemImageUrl'],
       processImageUrl: json['processImageUrl'],
