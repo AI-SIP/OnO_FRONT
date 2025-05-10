@@ -10,6 +10,7 @@ import 'package:ono/Model/User/UserRegisterModel.dart';
 import 'package:ono/Module/Dialog/LoadingDialog.dart';
 import 'package:ono/Provider/FoldersProvider.dart';
 import 'package:ono/Provider/PracticeNoteProvider.dart';
+import 'package:ono/Service/Api/Problem/ProblemService.dart';
 import 'package:ono/Service/Api/User/UserService.dart';
 import 'package:ono/Service/SocialLogin//KakaoAuthService.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
@@ -27,6 +28,7 @@ class UserProvider with ChangeNotifier {
   final TokenProvider tokenProvider = TokenProvider();
   final httpService = HttpService();
   final userService = UserService();
+  final problemService = ProblemService();
   UserInfoModel? userInfoModel;
 
   UserProvider(this.foldersProvider, this.practiceProvider);
@@ -159,7 +161,7 @@ class UserProvider with ChangeNotifier {
   }
 
   Future<void> fetchUserInfo() async {
-    final userProblemCount = await userService.fetchProblemCount();
+    final userProblemCount = await problemService.getProblemCount();
     final userInfo = await userService.fetchUserInfo();
 
     userInfoModel = UserInfoModel.fromJson(userInfo);

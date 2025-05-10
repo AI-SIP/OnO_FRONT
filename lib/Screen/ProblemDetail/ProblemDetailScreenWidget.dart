@@ -4,7 +4,7 @@ import 'package:flutter_tex/flutter_tex.dart';
 import 'package:intl/intl.dart';
 import 'package:ono/Model/Problem/TemplateType.dart';
 
-import '../../Model/Problem/ProblemModel.dart';
+import '../../Model/Problem/ProblemModelWithTemplate.dart';
 import '../../Module/Image/DisplayImage.dart';
 import '../../Module/Image/FullScreenImage.dart';
 import '../../Module/Text/HandWriteText.dart';
@@ -24,8 +24,11 @@ class ProblemDetailScreenWidget {
     );
   }
 
-  Widget buildCommonDetailView(BuildContext context, ProblemModel problemModel,
-      ThemeHandler themeProvider, TemplateType templateType) {
+  Widget buildCommonDetailView(
+      BuildContext context,
+      ProblemModelWithTemplate problemModel,
+      ThemeHandler themeProvider,
+      TemplateType templateType) {
     double screenHeight = MediaQuery.of(context).size.height;
     final imageUrl = (templateType == TemplateType.simple)
         ? problemModel.problemImageUrl
@@ -55,8 +58,11 @@ class ProblemDetailScreenWidget {
     );
   }
 
-  Widget buildExpansionTile(BuildContext context, ProblemModel problemModel,
-      ThemeHandler themeProvider, TemplateType templateType) {
+  Widget buildExpansionTile(
+      BuildContext context,
+      ProblemModelWithTemplate problemModel,
+      ThemeHandler themeProvider,
+      TemplateType templateType) {
     final ScrollController latexScrollController = ScrollController();
     final ScrollController tileScrollController = ScrollController();
 
@@ -366,8 +372,8 @@ class ProblemDetailScreenWidget {
     );
   }
 
-  Widget buildRepeatSection(BuildContext context, ProblemModel problemModel,
-      ThemeHandler themeProvider) {
+  Widget buildRepeatSection(BuildContext context,
+      ProblemModelWithTemplate problemModel, ThemeHandler themeProvider) {
     final mediaQuery = MediaQuery.of(context);
 
     return Column(

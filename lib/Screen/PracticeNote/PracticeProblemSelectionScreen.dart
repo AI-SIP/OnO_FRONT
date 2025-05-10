@@ -6,7 +6,7 @@ import 'package:provider/provider.dart';
 
 import '../../Model/Folder/FolderModel.dart';
 import '../../Model/PracticeNote/PracticeNoteRegisterModel.dart';
-import '../../Model/Problem/ProblemModel.dart';
+import '../../Model/Problem/ProblemModelWithTemplate.dart';
 import '../../Model/Problem/TemplateType.dart';
 import '../../Module/Image/DisplayImage.dart';
 import '../../Module/Text/StandardText.dart';
@@ -28,7 +28,7 @@ class PracticeProblemSelectionScreen extends StatefulWidget {
 class _PracticeProblemSelectionScreenState
     extends State<PracticeProblemSelectionScreen> {
   int? selectedFolderId;
-  List<ProblemModel> selectedProblems = [];
+  List<ProblemModelWithTemplate> selectedProblems = [];
   List<FolderModel> allFolders = [];
 
   @override
@@ -217,8 +217,8 @@ class _PracticeProblemSelectionScreenState
     );
   }
 
-  Widget _problemTileContent(
-      ProblemModel problem, ThemeHandler themeProvider, bool isSelected) {
+  Widget _problemTileContent(ProblemModelWithTemplate problem,
+      ThemeHandler themeProvider, bool isSelected) {
     final imageUrl = (problem.templateType == TemplateType.simple)
         ? problem.problemImageUrl
         : problem.processImageUrl;

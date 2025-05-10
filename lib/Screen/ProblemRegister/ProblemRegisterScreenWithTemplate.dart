@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:ono/Model/Problem/ProblemModel.dart';
+import 'package:ono/Model/Problem/ProblemModelWithTemplate.dart';
 import 'package:ono/Screen/ProblemRegister/ProblemRegisterTemplate.dart';
 import 'package:provider/provider.dart';
 
@@ -8,7 +8,7 @@ import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/FoldersProvider.dart';
 
 class ProblemRegisterScreen extends StatefulWidget {
-  final ProblemModel problemModel;
+  final ProblemModelWithTemplate problemModel;
   final bool isEditMode;
   final Map<String, dynamic>? colorPickerResult;
   final List<List<double>>? coordinatePickerResult;

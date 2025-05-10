@@ -7,8 +7,8 @@ import 'package:flutter_tex/flutter_tex.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
-import '../../Model/Problem/ProblemModel.dart';
-import '../../Model/Problem/ProblemRegisterModel.dart';
+import '../../Model/Problem/ProblemModelWithTemplate.dart';
+import '../../Model/Problem/ProblemRegisterModelWithTemplate.dart';
 import '../../Model/Problem/TemplateType.dart';
 import '../../Module/Dialog/FolderSelectionDialog.dart';
 import '../../Module/Dialog/LoadingDialog.dart';
@@ -22,7 +22,7 @@ import '../../Screen/ScreenUtil/ProblemRegisterScreenService.dart';
 import 'ProblemRegisterScreenWidget.dart';
 
 class ProblemRegisterTemplate extends StatefulWidget {
-  final ProblemModel problemModel;
+  final ProblemModelWithTemplate problemModel;
   final Map<String, dynamic>? colorPickerResult;
   final List<List<double>>? coordinatePickerResult;
   final bool isEditMode;
@@ -43,7 +43,7 @@ class ProblemRegisterTemplate extends StatefulWidget {
 }
 
 class _ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
-  late ProblemModel problemModel;
+  late ProblemModelWithTemplate problemModel;
   late TextEditingController sourceController;
   late TextEditingController notesController;
   XFile? answerImage;

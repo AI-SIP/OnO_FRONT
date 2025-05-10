@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../../Model/Problem/ProblemModel.dart';
+import '../../../Model/Problem/ProblemModelWithTemplate.dart';
 import '../../../Module/Theme/ThemeHandler.dart';
 import '../ProblemDetailScreenWidget.dart';
 
 class SpecialProblemDetailTemplate extends StatelessWidget {
-  final ProblemModel problemModel;
+  final ProblemModelWithTemplate problemModel;
   final ProblemDetailScreenWidget problemDetailScreenWidget =
       ProblemDetailScreenWidget();
 

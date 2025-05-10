@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
-import '../../Model/Problem/ProblemModel.dart';
-import '../../Model/Problem/ProblemRegisterModelV2.dart';
+import '../../Model/Problem/ProblemModelWithTemplate.dart';
+import '../../Model/Problem/ProblemRegisterModel.dart';
 import '../../Module/Dialog/FolderSelectionDialog.dart';
 import '../../Module/Dialog/LoadingDialog.dart';
 import '../../Module/Theme/ThemeHandler.dart';
@@ -14,7 +14,7 @@ import '../../Screen/ScreenUtil/ProblemRegisterScreenService.dart';
 import 'ProblemRegisterScreenWidget.dart';
 
 class ProblemRegisterTemplateV2 extends StatefulWidget {
-  final ProblemModel? problemModel;
+  final ProblemModelWithTemplate? problemModel;
   final bool isEditMode;
 
   const ProblemRegisterTemplateV2({
@@ -29,7 +29,7 @@ class ProblemRegisterTemplateV2 extends StatefulWidget {
 }
 
 class _ProblemRegisterTemplateStateV2 extends State<ProblemRegisterTemplateV2> {
-  late ProblemModel? problemModel;
+  late ProblemModelWithTemplate? problemModel;
   late TextEditingController sourceController;
   late TextEditingController notesController;
 

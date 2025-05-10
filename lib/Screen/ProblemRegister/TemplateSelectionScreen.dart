@@ -10,7 +10,7 @@ import 'package:ono/Module/Text/UnderlinedText.dart';
 import 'package:provider/provider.dart';
 
 import '../../Model/Common/LoginStatus.dart';
-import '../../Model/Problem/ProblemModel.dart';
+import '../../Model/Problem/ProblemModelWithTemplate.dart';
 import '../../Model/Problem/TemplateType.dart';
 import '../../Module/Dialog/SnackBarDialog.dart';
 import '../../Module/Image/ColorPicker/ImageColorPickerHandler.dart';
@@ -379,7 +379,7 @@ class _TemplateSelectionScreenState extends State<TemplateSelectionScreen> {
                   .uploadProblemImage(pickedFile);
 
           if (result != null) {
-            final problemModel = ProblemModel(
+            final problemModel = ProblemModelWithTemplate(
               problemId: result['problemId'],
               problemImageUrl: result['problemImageUrl'],
               templateType: templateType,

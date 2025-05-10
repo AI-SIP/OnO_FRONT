@@ -3,7 +3,8 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:ono/Screen/ProblemDetail/ProblemDetailScreen.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
-import '../../Model/Problem/ProblemThumbnailModel.dart';
+
+import '../../Model/Problem/ProblemThumbnailModelWithTemplate.dart';
 import '../../Provider/FoldersProvider.dart';
 
 class DirectoryScreenService {
@@ -11,10 +12,11 @@ class DirectoryScreenService {
 
   DirectoryScreenService(this.foldersProvider);
 
-  List<ProblemThumbnailModel> loadProblems() {
+  List<ProblemThumbnailModelWithTemplate> loadProblems() {
     if (foldersProvider.currentProblems.isNotEmpty) {
       return foldersProvider.currentProblems
-          .map((problem) => ProblemThumbnailModel.fromJson(problem.toJson()))
+          .map((problem) =>
+              ProblemThumbnailModelWithTemplate.fromJson(problem.toJson()))
           .toList();
     } else {
       log('No problems loaded');

@@ -6,14 +6,14 @@ import 'package:ono/Model/PracticeNote/PracticeNoteModel.dart';
 import 'package:ono/Model/PracticeNote/PracticeNoteRegisterModel.dart';
 
 import '../Config/AppConfig.dart';
-import '../Model/Problem/ProblemModel.dart';
+import '../Model/Problem/ProblemModelWithTemplate.dart';
 import '../Service/Api/HttpService.dart';
 import 'TokenProvider.dart';
 
 class ProblemPracticeProvider with ChangeNotifier {
   int currentPracticeId = -1;
   List<ProblemPracticeModel> practices = [];
-  List<ProblemModel> currentProblems = [];
+  List<ProblemModelWithTemplate> currentProblems = [];
   final TokenProvider tokenProvider = TokenProvider();
   final HttpService httpService = HttpService();
 
@@ -160,7 +160,7 @@ class ProblemPracticeProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<ProblemModel?> getProblemDetails(int? problemId) async {
+  Future<ProblemModelWithTemplate?> getProblemDetails(int? problemId) async {
     return currentProblems
         .firstWhere((problem) => problem.problemId == problemId);
   }

@@ -1,17 +1,37 @@
-import 'package:intl/intl.dart';
+import 'package:ono/Model/Problem/ProblemRepeatModel.dart';
 import 'package:ono/Model/Problem/TemplateType.dart';
 
-import 'ProblemRepeatModel.dart';
+class ProblemImageDataModel {
+  final String imageUrl;
+  final String problemImageType;
+  final DateTime createdAt;
 
+  ProblemImageDataModel({
+    required this.imageUrl,
+    required this.problemImageType,
+    required this.createdAt,
+  });
+
+  factory ProblemImageDataModel.fromJson(Map<String, dynamic> json) {
+    return ProblemImageDataModel(
+      imageUrl: json['imageUrl'] as String,
+      problemImageType: json['problemImageType'] as String,
+      createdAt: DateTime.parse(json['createdAt'] as String),
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'imageUrl': imageUrl,
+        'problemImageType': problemImageType,
+        'createdAt': createdAt.toIso8601String(),
+      };
+}
+
+/// 2) 기존 ProblemModel 에 imageUrlList 필드를 추가합니다.
 class ProblemModel {
   final int problemId;
-  final String? processImageUrl;
-  final String? problemImageUrl;
-  final String? solveImageUrl;
-  final String? answerImageUrl;
   final String? memo;
   final String? reference;
-  final int? folderId;
   final TemplateType? templateType;
   final String? analysis;
   final List<ProblemRepeatModel>? repeats;
@@ -19,76 +39,69 @@ class ProblemModel {
   final DateTime? createdAt;
   final DateTime? updateAt;
 
+  /// 새로 추가된 부분
+  final List<ProblemImageDataModel> imageUrlList;
+
   ProblemModel({
     this.problemId = -1,
-    this.processImageUrl,
-    this.problemImageUrl,
-    this.solveImageUrl,
-    this.answerImageUrl,
     this.memo,
     this.reference,
-    this.folderId,
     this.templateType,
     this.analysis,
     this.repeats,
     this.solvedAt,
     this.createdAt,
     this.updateAt,
+    required this.imageUrlList,
   });
 
-  factory ProblemModel.fromJson(Map<String, dynamic> json) {
+  fromJson(Map<String, dynamic> json) {
+    // 3) imageUrlList 파싱
+    final imageListJson = json['imageUrlList'] as List<dynamic>? ?? [];
+    final imageUrlList = imageListJson
+        .map((e) => ProblemImageDataModel.fromJson(e as Map<String, dynamic>))
+        .toList();
+
     return ProblemModel(
-      problemId: json['problemId'],
-      problemImageUrl: json['problemImageUrl'],
-      solveImageUrl: json['solveImageUrl'],
-      answerImageUrl: json['answerImageUrl'],
-      processImageUrl: json['processImageUrl'],
-      memo: json['memo'],
-      reference: json['reference'],
-      folderId: json['folderId'],
+      problemId: json['problemId'] as int,
+      memo: json['memo'] as String?,
+      reference: json['reference'] as String?,
+      // 아래 필드들은 API 에서 내려오는 것에 맞추어 필요하면 수정하세요.
       templateType: json['templateType'] != null
           ? TemplateTypeExtension.fromTemplateTypeCode(json['templateType'])
-          : TemplateType.simple,
-      analysis: json['analysis'],
-      repeats: json['repeats'] != null
-          ? (json['repeats'] as List)
-              .map((e) => ProblemRepeatModel.fromJson(e))
-              .toList()
-          : [],
+          : null,
+      analysis: json['analysis'] as String?,
+      repeats: (json['repeats'] as List<dynamic>?)
+          ?.map((e) => ProblemRepeatModel.fromJson(e as Map<String, dynamic>))
+          .toList(),
       solvedAt: json['solvedAt'] != null
-          ? DateTime.parse(json['solvedAt']).subtract(const Duration(hours: 9))
-          : DateTime.parse(json['createdAt']).add(const Duration(hours: 9)),
+          ? DateTime.parse(json['solvedAt'] as String)
+          : null,
       createdAt: json['createdAt'] != null
-          ? DateTime.parse(json['createdAt']).add(const Duration(hours: 9))
-          : DateTime.parse(json['solvedAt']).subtract(const Duration(hours: 9)),
-      updateAt: json['updateAt'] != null
-          ? DateTime.parse(json['updateAt']).add(const Duration(hours: 9))
-          : DateTime.parse(json['solvedAt']).subtract(const Duration(hours: 9)),
+          ? DateTime.parse(json['createdAt'] as String)
+          : null,
+      updateAt: json['updatedAt'] != null
+          ? DateTime.parse(json['updatedAt'] as String)
+          : null,
+      imageUrlList: imageUrlList,
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
       'problemId': problemId,
-      'processImageUrl': processImageUrl,
-      'problemImageUrl': problemImageUrl,
-      'solveImageUrl': solveImageUrl,
-      'answerImageUrl': answerImageUrl,
       'memo': memo,
       'reference': reference,
-      'folderId': folderId,
-      'templateType': templateType,
+      'templateType':
+          templateType != null ? templateType!.name : null, // or code
       'analysis': analysis,
       'repeats': repeats?.map((e) => e.toJson()).toList(),
-      'solvedAt': _formatDateTime(solvedAt),
-      'createdAt': _formatDateTime(createdAt),
-      'updateAt': _formatDateTime(updateAt),
+      'solvedAt': _toIso(solvedAt),
+      'createdAt': _toIso(createdAt),
+      'updatedAt': _toIso(updateAt),
+      'imageUrlList': imageUrlList.map((e) => e.toJson()).toList(),
     };
   }
 
-  // 날짜 포맷팅 함수
-  String? _formatDateTime(DateTime? dateTime) {
-    if (dateTime == null) return null;
-    return DateFormat('yyyy-MM-dd HH:mm').format(dateTime);
-  }
+  String? _toIso(DateTime? dt) => dt?.toIso8601String();
 }

@@ -3,7 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../Model/PracticeNote/PracticeNoteModel.dart';
-import '../../Model/Problem/ProblemModel.dart';
+import '../../Model/Problem/ProblemModelWithTemplate.dart';
 import '../../Model/Problem/TemplateType.dart';
 import '../../Module/Dialog/SnackBarDialog.dart';
 import '../../Module/Image/DisplayImage.dart';
@@ -211,7 +211,8 @@ class PracticeDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildProblemItem(ProblemModel problem, ThemeHandler themeProvider) {
+  Widget _buildProblemItem(
+      ProblemModelWithTemplate problem, ThemeHandler themeProvider) {
     final imageUrl = (problem.templateType == TemplateType.simple)
         ? problem.problemImageUrl
         : problem.processImageUrl;
@@ -258,7 +259,7 @@ class PracticeDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildProblemDetails(ProblemModel problem) {
+  Widget _buildProblemDetails(ProblemModelWithTemplate problem) {
     return Expanded(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

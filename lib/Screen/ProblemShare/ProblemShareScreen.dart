@@ -11,7 +11,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 
-import '../../Model/Problem/ProblemModel.dart';
+import '../../Model/Problem/ProblemModelWithTemplate.dart';
 import '../../Module/Image/DisplayImage.dart';
 import '../../Module/Text/HandWriteText.dart';
 import '../../Module/Text/StandardText.dart';
@@ -20,7 +20,7 @@ import '../../Module/Theme/GridPainter.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 
 class ProblemShareScreen extends StatefulWidget {
-  final ProblemModel problem;
+  final ProblemModelWithTemplate problem;
   final GlobalKey _globalKey = GlobalKey();
 
   ProblemShareScreen({super.key, required this.problem});

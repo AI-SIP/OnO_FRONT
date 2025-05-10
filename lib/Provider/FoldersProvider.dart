@@ -11,15 +11,15 @@ import 'package:ono/Service/Api/HttpService.dart';
 
 import '../Config/AppConfig.dart';
 import '../Model/Folder/FolderModel.dart';
-import '../Model/Problem/ProblemModel.dart';
+import '../Model/Problem/ProblemModelWithTemplate.dart';
 import '../Model/Problem/ProblemRegisterModel.dart';
-import '../Model/Problem/ProblemRegisterModelV2.dart';
+import '../Model/Problem/ProblemRegisterModelWithTemplate.dart';
 import 'TokenProvider.dart';
 
 class FoldersProvider with ChangeNotifier {
   FolderModel? _currentFolder;
   List<FolderModel> _folders = [];
-  List<ProblemModel> _currentProblems = [];
+  List<ProblemModelWithTemplate> _currentProblems = [];
   final TokenProvider tokenProvider = TokenProvider();
   final ReviewHandler reviewHandler = ReviewHandler();
   final HttpService httpService = HttpService();
@@ -27,7 +27,8 @@ class FoldersProvider with ChangeNotifier {
   String sortOption = 'newest';
 
   FolderModel? get currentFolder => _currentFolder;
-  List<ProblemModel> get currentProblems => List.unmodifiable(_currentProblems);
+  List<ProblemModelWithTemplate> get currentProblems =>
+      List.unmodifiable(_currentProblems);
   List<FolderModel> get folders => _folders;
 
   // 상위 폴더로 이동
@@ -520,7 +521,7 @@ class FoldersProvider with ChangeNotifier {
     return _currentProblems.map((problem) => problem.problemId).toList();
   }
 
-  Future<ProblemModel?> getProblemDetails(int? problemId) async {
+  Future<ProblemModelWithTemplate?> getProblemDetails(int? problemId) async {
     var problemDetails = _currentProblems
         .firstWhere((problem) => problem.problemId == problemId);
 

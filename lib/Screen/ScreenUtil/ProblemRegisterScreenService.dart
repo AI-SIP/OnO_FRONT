@@ -6,7 +6,7 @@ import 'package:ono/Provider/FoldersProvider.dart';
 import 'package:provider/provider.dart';
 
 import '../../Model/Problem/ProblemRegisterModel.dart';
-import '../../Model/Problem/ProblemRegisterModelV2.dart';
+import '../../Model/Problem/ProblemRegisterModelWithTemplate.dart';
 import '../../Module/Dialog/SnackBarDialog.dart';
 import '../../Module/Image/ImagePickerHandler.dart';
 import '../../Module/Theme/ThemeHandler.dart';

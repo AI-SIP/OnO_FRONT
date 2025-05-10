@@ -7,14 +7,14 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
 import 'package:ono/Model/Common/LoginStatus.dart';
 import 'package:ono/Model/Folder/FolderModel.dart';
-import 'package:ono/Model/Problem/ProblemRegisterModel.dart';
+import 'package:ono/Model/Problem/ProblemRegisterModelWithTemplate.dart';
 import 'package:ono/Module/Dialog/SnackBarDialog.dart';
 import 'package:ono/Module/Theme/NoteIconHandler.dart';
 import 'package:ono/Module/Util/UrlLauncher.dart';
 import 'package:ono/Provider/FoldersProvider.dart';
 import 'package:provider/provider.dart';
 
-import '../../Model/Problem/ProblemModel.dart';
+import '../../Model/Problem/ProblemModelWithTemplate.dart';
 import '../../Model/Problem/TemplateType.dart';
 import '../../Module/Dialog/FolderSelectionDialog.dart';
 import '../../Module/Image/DisplayImage.dart';
@@ -823,7 +823,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
           onDragStarted: () {
             HapticFeedback.lightImpact();
           },
-          child: DragTarget<ProblemModel>(
+          child: DragTarget<ProblemModelWithTemplate>(
             onAcceptWithDetails: (details) async {
               // 문제를 드롭하면 폴더로 이동
               await _moveProblemToFolder(details.data, folder.folderId);
@@ -901,7 +901,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     );
   }
 
-  Widget _buildProblemTile(ProblemModel problem, ThemeHandler themeProvider) {
+  Widget _buildProblemTile(
+      ProblemModelWithTemplate problem, ThemeHandler themeProvider) {
     final isSelected = _selectedProblemIds.contains(problem.problemId);
 
     final imageUrl = (problem.templateType == TemplateType.simple)
@@ -930,7 +931,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                 context, problem.problemId);
           }
         },
-        child: LongPressDraggable<ProblemModel>(
+        child: LongPressDraggable<ProblemModelWithTemplate>(
           data: problem,
           feedback: Material(
             child: SizedBox(
@@ -966,7 +967,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     );
   }
 
-  Widget _problemTileContent(ProblemModel problem, ThemeHandler themeProvider) {
+  Widget _problemTileContent(
+      ProblemModelWithTemplate problem, ThemeHandler themeProvider) {
     final isSelected = _selectedProblemIds.contains(problem.problemId);
     final imageUrl = (problem.templateType == TemplateType.simple)
         ? problem.problemImageUrl
@@ -1177,7 +1179,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     }
   }
 
-  Future<void> _moveProblemToFolder(ProblemModel problem, int? folderId) async {
+  Future<void> _moveProblemToFolder(
+      ProblemModelWithTemplate problem, int? folderId) async {
     if (folderId == null) {
       log('Problem ID or folderId is null. Cannot move the problem.');
       return; // 문제 ID 또는 폴더 ID가 null이면 실행하지 않음

@@ -1,12 +1,12 @@
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
-import 'package:ono/Model/Problem/ProblemRegisterModel.dart';
+import 'package:ono/Model/Problem/ProblemRegisterModelWithTemplate.dart';
 import 'package:ono/Module/Text/HandWriteText.dart';
 import 'package:ono/Provider/PracticeNoteProvider.dart';
 import 'package:ono/Screen/ProblemRegister/ProblemRegisterScreen.dart';
 import 'package:provider/provider.dart';
 
-import '../../Model/Problem/ProblemModel.dart';
+import '../../Model/Problem/ProblemModelWithTemplate.dart';
 import '../../Model/Problem/TemplateType.dart';
 import '../../Module/Dialog/FolderSelectionDialog.dart';
 import '../../Module/Text/StandardText.dart';
@@ -33,7 +33,7 @@ class ProblemDetailScreen extends StatefulWidget {
 }
 
 class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
-  Future<ProblemModel?>? _problemModelFuture;
+  Future<ProblemModelWithTemplate?>? _problemModelFuture;
   final ProblemDetailScreenService _problemDetailService =
       ProblemDetailScreenService();
 
@@ -72,7 +72,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
       body: Column(
         children: [
           Expanded(
-            child: FutureBuilder<ProblemModel?>(
+            child: FutureBuilder<ProblemModelWithTemplate?>(
               future: _problemModelFuture,
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
@@ -128,7 +128,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
   Widget buildAppBarTitle() {
     final themeProvider = Provider.of<ThemeHandler>(context);
 
-    return FutureBuilder<ProblemModel?>(
+    return FutureBuilder<ProblemModelWithTemplate?>(
       future: _problemModelFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
@@ -158,7 +158,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
     final themeProvider = Provider.of<ThemeHandler>(context);
 
     return [
-      FutureBuilder<ProblemModel?>(
+      FutureBuilder<ProblemModelWithTemplate?>(
         future: _problemModelFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.done &&
@@ -175,7 +175,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
   }
 
   void _showActionDialog(
-      ProblemModel problemModel, ThemeHandler themeProvider) {
+      ProblemModelWithTemplate problemModel, ThemeHandler themeProvider) {
     FirebaseAnalytics.instance
         .logEvent(name: 'problem_detail_screen_action_dialog_button_click');
 
@@ -389,7 +389,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
     );
   }
 
-  Widget _buildContent(ProblemModel problemModel) {
+  Widget _buildContent(ProblemModelWithTemplate problemModel) {
     switch (problemModel.templateType) {
       case TemplateType.simple:
         return SimpleProblemDetailTemplate(problemModel: problemModel);

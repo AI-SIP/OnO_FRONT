@@ -1,6 +1,6 @@
-import '../../Model/Problem/ProblemModel.dart';
+import '../../Model/Problem/ProblemModelWithTemplate.dart';
 
-extension ProblemSorting on List<ProblemModel> {
+extension ProblemSorting on List<ProblemModelWithTemplate> {
   void sortByName() {
     sort((a, b) => (a.reference ?? '').compareTo(b.reference ?? ''));
   }

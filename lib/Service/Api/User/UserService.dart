@@ -33,15 +33,6 @@ class UserService {
     );
   }
 
-  Future<int> fetchProblemCount() async {
-    final data = await httpService.sendRequest(
-      method: 'GET',
-      url: '${AppConfig.baseUrl}/api/problems/problemCount',
-    );
-    print(data);
-    return data as int;
-  }
-
   void updateUserProfile(UserRegisterModel? userRegisterModel) async {
     httpService.sendRequest(
       method: 'PATCH',

@@ -1,6 +1,6 @@
 import 'package:intl/intl.dart';
 
-import '../Problem/ProblemModel.dart';
+import '../Problem/ProblemModelWithTemplate.dart';
 
 class ProblemPracticeModel {
   final int practiceId;
@@ -9,7 +9,7 @@ class ProblemPracticeModel {
   final int practiceSize;
   final DateTime createdAt;
   final DateTime? lastSolvedAt;
-  List<ProblemModel> problems = [];
+  List<ProblemModelWithTemplate> problems = [];
 
   ProblemPracticeModel({
     required this.practiceId,
@@ -33,7 +33,7 @@ class ProblemPracticeModel {
           ? DateTime.parse(json['lastSolvedAt']).add(const Duration(hours: 9))
           : null,
       problems: (json['problems'] as List?)
-              ?.map((e) => ProblemModel.fromJson(e))
+              ?.map((e) => ProblemModelWithTemplate.fromJson(e))
               .toList() ??
           [], // null 체크
     );
