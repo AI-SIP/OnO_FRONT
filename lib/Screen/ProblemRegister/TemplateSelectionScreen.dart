@@ -4,19 +4,19 @@ import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:ono/GlobalModule/Dialog/LoadingDialog.dart';
-import 'package:ono/GlobalModule/Image/ColorPicker/ImageCoordinatePickerHandler.dart';
-import 'package:ono/GlobalModule/Text/UnderlinedText.dart';
+import 'package:ono/Module/Dialog/LoadingDialog.dart';
+import 'package:ono/Module/Image/ColorPicker/ImageCoordinatePickerHandler.dart';
+import 'package:ono/Module/Text/UnderlinedText.dart';
 import 'package:provider/provider.dart';
 
-import '../../GlobalModule/Dialog/SnackBarDialog.dart';
-import '../../GlobalModule/Image/ColorPicker/ImageColorPickerHandler.dart';
-import '../../GlobalModule/Image/ImagePickerHandler.dart';
-import '../../GlobalModule/Text/StandardText.dart';
-import '../../GlobalModule/Theme/ThemeHandler.dart';
 import '../../Model/Common/LoginStatus.dart';
 import '../../Model/Problem/ProblemModel.dart';
 import '../../Model/Problem/TemplateType.dart';
+import '../../Module/Dialog/SnackBarDialog.dart';
+import '../../Module/Image/ColorPicker/ImageColorPickerHandler.dart';
+import '../../Module/Image/ImagePickerHandler.dart';
+import '../../Module/Text/StandardText.dart';
+import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/FoldersProvider.dart';
 import '../../Provider/UserProvider.dart';
 

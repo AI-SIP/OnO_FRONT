@@ -1,6 +1,6 @@
 import 'package:ono/Config/AppConfig.dart';
 import 'package:ono/Model/User/UserRegisterModel.dart';
-import 'package:ono/Service/Network/HttpService.dart';
+import 'package:ono/Service/Api/HttpService.dart';
 
 class UserService {
   final HttpService httpService = HttpService();

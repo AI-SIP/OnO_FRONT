@@ -11,13 +11,13 @@ import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 
-import '../../GlobalModule/Image/DisplayImage.dart';
-import '../../GlobalModule/Text/HandWriteText.dart';
-import '../../GlobalModule/Text/StandardText.dart';
-import '../../GlobalModule/Text/UnderlinedText.dart';
-import '../../GlobalModule/Theme/GridPainter.dart';
-import '../../GlobalModule/Theme/ThemeHandler.dart';
 import '../../Model/Problem/ProblemModel.dart';
+import '../../Module/Image/DisplayImage.dart';
+import '../../Module/Text/HandWriteText.dart';
+import '../../Module/Text/StandardText.dart';
+import '../../Module/Text/UnderlinedText.dart';
+import '../../Module/Theme/GridPainter.dart';
+import '../../Module/Theme/ThemeHandler.dart';
 
 class ProblemShareScreen extends StatefulWidget {
   final ProblemModel problem;

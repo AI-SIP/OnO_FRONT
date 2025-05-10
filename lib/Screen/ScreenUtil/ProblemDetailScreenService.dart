@@ -3,9 +3,6 @@ import 'package:ono/Provider/FoldersProvider.dart';
 import 'package:ono/Provider/PracticeNoteProvider.dart';
 import 'package:provider/provider.dart';
 
-import '../../GlobalModule/Dialog/SnackBarDialog.dart';
-import '../../GlobalModule/Text/StandardText.dart';
-import '../../GlobalModule/Theme/ThemeHandler.dart';
 import '../../Model/Problem/ProblemModel.dart';
 
 class ProblemDetailScreenService {

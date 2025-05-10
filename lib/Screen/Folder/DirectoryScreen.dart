@@ -5,24 +5,24 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
-import 'package:ono/GlobalModule/Dialog/SnackBarDialog.dart';
-import 'package:ono/GlobalModule/Theme/NoteIconHandler.dart';
-import 'package:ono/GlobalModule/Util/UrlLauncher.dart';
 import 'package:ono/Model/Common/LoginStatus.dart';
 import 'package:ono/Model/Folder/FolderModel.dart';
 import 'package:ono/Model/Problem/ProblemRegisterModel.dart';
+import 'package:ono/Module/Dialog/SnackBarDialog.dart';
+import 'package:ono/Module/Theme/NoteIconHandler.dart';
+import 'package:ono/Module/Util/UrlLauncher.dart';
 import 'package:ono/Provider/FoldersProvider.dart';
 import 'package:provider/provider.dart';
 
-import '../../GlobalModule/Dialog/FolderSelectionDialog.dart';
-import '../../GlobalModule/Image/DisplayImage.dart';
-import '../../GlobalModule/Text/StandardText.dart';
-import '../../GlobalModule/Theme/ThemeHandler.dart';
 import '../../Model/Problem/ProblemModel.dart';
 import '../../Model/Problem/TemplateType.dart';
+import '../../Module/Dialog/FolderSelectionDialog.dart';
+import '../../Module/Image/DisplayImage.dart';
+import '../../Module/Text/StandardText.dart';
+import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/ScreenIndexProvider.dart';
 import '../../Provider/UserProvider.dart';
-import '../../Service/ScreenUtil/DirectoryScreenService.dart';
+import '../../Screen/ScreenUtil/DirectoryScreenService.dart';
 import '../UserGuideScreen.dart';
 
 class DirectoryScreen extends StatefulWidget {

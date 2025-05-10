@@ -4,11 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:provider/provider.dart';
 
-import '../GlobalModule/Text/HandWriteText.dart';
-import '../GlobalModule/Text/StandardText.dart';
-import '../GlobalModule/Theme/GridPainter.dart';
-import '../GlobalModule/Theme/ThemeHandler.dart';
 import '../Model/Common/LoginStatus.dart';
+import '../Module/Text/HandWriteText.dart';
+import '../Module/Text/StandardText.dart';
+import '../Module/Theme/GridPainter.dart';
+import '../Module/Theme/ThemeHandler.dart';
 import '../Provider/UserProvider.dart';
 import '../main.dart';
 

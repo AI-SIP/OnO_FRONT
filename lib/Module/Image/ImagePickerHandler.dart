@@ -4,7 +4,7 @@ import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:ono/GlobalModule/Image/CameraHandler.dart';
+import 'package:ono/Module/Image/CameraHandler.dart';
 import 'package:provider/provider.dart';
 
 import '../Text/StandardText.dart';

@@ -4,20 +4,20 @@ import 'dart:developer';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:ono/GlobalModule/Dialog/LoadingDialog.dart';
 import 'package:ono/Model/Common/LoginStatus.dart';
 import 'package:ono/Model/User/UserInfoModel.dart';
 import 'package:ono/Model/User/UserRegisterModel.dart';
+import 'package:ono/Module/Dialog/LoadingDialog.dart';
 import 'package:ono/Provider/FoldersProvider.dart';
 import 'package:ono/Provider/PracticeNoteProvider.dart';
 import 'package:ono/Service/Api/User/UserService.dart';
-import 'package:ono/Service/Auth/KakaoAuthService.dart';
+import 'package:ono/Service/SocialLogin//KakaoAuthService.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
-import '../GlobalModule/Text/StandardText.dart';
-import '../Service/Auth/AppleAuthService.dart';
-import '../Service/Auth/GoogleAuthService.dart';
-import '../Service/Network/HttpService.dart';
+import '../Module/Text/StandardText.dart';
+import '../Service/Api/HttpService.dart';
+import '../Service/SocialLogin//AppleAuthService.dart';
+import '../Service/SocialLogin//GoogleAuthService.dart';
 import 'TokenProvider.dart';
 
 class UserProvider with ChangeNotifier {

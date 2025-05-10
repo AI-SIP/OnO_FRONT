@@ -1,12 +1,12 @@
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
-import 'package:ono/GlobalModule/Util/UrlLauncher.dart';
 import 'package:ono/Model/Common/LoginStatus.dart';
+import 'package:ono/Module/Util/UrlLauncher.dart';
 import 'package:provider/provider.dart';
 
-import '../GlobalModule/Dialog/ThemeDialog.dart';
-import '../GlobalModule/Text/StandardText.dart';
-import '../GlobalModule/Theme/ThemeHandler.dart';
+import '../Module/Dialog/ThemeDialog.dart';
+import '../Module/Text/StandardText.dart';
+import '../Module/Theme/ThemeHandler.dart';
 import '../Provider/ScreenIndexProvider.dart';
 import '../Provider/UserProvider.dart';
 import 'LoginScreen.dart';

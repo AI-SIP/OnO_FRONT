@@ -3,8 +3,8 @@ import 'package:ono/Model/Problem/ProblemModel.dart';
 import 'package:ono/Screen/ProblemRegister/ProblemRegisterTemplate.dart';
 import 'package:provider/provider.dart';
 
-import '../../GlobalModule/Text/StandardText.dart';
-import '../../GlobalModule/Theme/ThemeHandler.dart';
+import '../../Module/Text/StandardText.dart';
+import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/FoldersProvider.dart';
 
 class ProblemRegisterScreen extends StatefulWidget {

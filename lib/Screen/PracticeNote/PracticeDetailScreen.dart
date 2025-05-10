@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
-import '../../GlobalModule/Dialog/SnackBarDialog.dart';
-import '../../GlobalModule/Image/DisplayImage.dart';
-import '../../GlobalModule/Text/StandardText.dart';
-import '../../GlobalModule/Theme/ThemeHandler.dart';
 import '../../Model/PracticeNote/PracticeNoteModel.dart';
 import '../../Model/Problem/ProblemModel.dart';
 import '../../Model/Problem/TemplateType.dart';
+import '../../Module/Dialog/SnackBarDialog.dart';
+import '../../Module/Image/DisplayImage.dart';
+import '../../Module/Text/StandardText.dart';
+import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/PracticeNoteProvider.dart';
 import '../ProblemDetail/ProblemDetailScreen.dart';
 import 'PracticeProblemSelectionScreen.dart';

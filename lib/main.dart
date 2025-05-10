@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart';
-import 'package:ono/GlobalModule/Text/StandardText.dart';
-import 'package:ono/GlobalModule/Theme/ThemeHandler.dart';
+import 'package:ono/Module/Text/StandardText.dart';
+import 'package:ono/Module/Theme/ThemeHandler.dart';
 import 'package:ono/Provider/FoldersProvider.dart';
 import 'package:ono/Provider/PracticeNoteProvider.dart';
 import 'package:ono/Provider/ScreenIndexProvider.dart';
@@ -14,11 +14,11 @@ import 'package:ono/Screen/SplashScreen.dart';
 import 'package:provider/provider.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
+import 'Config/firebase_options.dart';
 import 'Provider/UserProvider.dart';
 import 'Screen/Folder/DirectoryScreen.dart';
 import 'Screen/PracticeNote/PracticeThumbnailScreen.dart';
 import 'Screen/SettingScreen.dart';
-import 'firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

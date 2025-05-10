@@ -4,10 +4,10 @@ import 'dart:developer';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:ono/GlobalModule/Util/ProblemSorting.dart';
-import 'package:ono/GlobalModule/Util/ReviewHandler.dart';
 import 'package:ono/Model/Problem/TemplateType.dart';
-import 'package:ono/Service/Network/HttpService.dart';
+import 'package:ono/Module/Util/ProblemSorting.dart';
+import 'package:ono/Module/Util/ReviewHandler.dart';
+import 'package:ono/Service/Api/HttpService.dart';
 
 import '../Config/AppConfig.dart';
 import '../Model/Folder/FolderModel.dart';

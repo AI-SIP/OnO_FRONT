@@ -7,18 +7,18 @@ import 'package:flutter_tex/flutter_tex.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
-import '../../GlobalModule/Dialog/FolderSelectionDialog.dart';
-import '../../GlobalModule/Dialog/LoadingDialog.dart';
-import '../../GlobalModule/Image/DisplayImage.dart';
-import '../../GlobalModule/Text/StandardText.dart';
-import '../../GlobalModule/Theme/ThemeHandler.dart';
-import '../../GlobalModule/Util/LatexTextHandler.dart';
 import '../../Model/Problem/ProblemModel.dart';
 import '../../Model/Problem/ProblemRegisterModel.dart';
 import '../../Model/Problem/TemplateType.dart';
+import '../../Module/Dialog/FolderSelectionDialog.dart';
+import '../../Module/Dialog/LoadingDialog.dart';
+import '../../Module/Image/DisplayImage.dart';
+import '../../Module/Text/StandardText.dart';
+import '../../Module/Theme/ThemeHandler.dart';
+import '../../Module/Util/LatexTextHandler.dart';
 import '../../Provider/FoldersProvider.dart';
 import '../../Provider/ScreenIndexProvider.dart';
-import '../../Service/ScreenUtil/ProblemRegisterScreenService.dart';
+import '../../Screen/ScreenUtil/ProblemRegisterScreenService.dart';
 import 'ProblemRegisterScreenWidget.dart';
 
 class ProblemRegisterTemplate extends StatefulWidget {

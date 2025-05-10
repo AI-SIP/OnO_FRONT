@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:ono/GlobalModule/Image/ColorPicker/ImageColorPickerHandler.dart';
-import 'package:ono/GlobalModule/Text/HandWriteText.dart';
 import 'package:ono/Model/Common/LoginStatus.dart';
+import 'package:ono/Module/Image/ColorPicker/ImageColorPickerHandler.dart';
+import 'package:ono/Module/Text/HandWriteText.dart';
 import 'package:ono/Provider/FoldersProvider.dart';
 import 'package:provider/provider.dart';
 
-import '../../GlobalModule/Dialog/SnackBarDialog.dart';
-import '../../GlobalModule/Image/ImagePickerHandler.dart';
-import '../../GlobalModule/Theme/ThemeHandler.dart';
 import '../../Model/Problem/ProblemRegisterModel.dart';
 import '../../Model/Problem/ProblemRegisterModelV2.dart';
+import '../../Module/Dialog/SnackBarDialog.dart';
+import '../../Module/Image/ImagePickerHandler.dart';
+import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/UserProvider.dart';
 
 class ProblemRegisterScreenService {

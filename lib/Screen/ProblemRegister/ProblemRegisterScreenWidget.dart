@@ -6,12 +6,12 @@ import 'package:flutter_svg/svg.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
-import '../../GlobalModule/Dialog/FolderSelectionDialog.dart';
-import '../../GlobalModule/Image/DisplayImage.dart';
-import '../../GlobalModule/Image/ImagePickerHandler.dart';
-import '../../GlobalModule/Text/StandardText.dart';
-import '../../GlobalModule/Theme/ThemeHandler.dart';
-import '../../GlobalModule/Util/DatePickerHandler.dart';
+import '../../Module/Dialog/FolderSelectionDialog.dart';
+import '../../Module/Image/DisplayImage.dart';
+import '../../Module/Image/ImagePickerHandler.dart';
+import '../../Module/Text/StandardText.dart';
+import '../../Module/Theme/ThemeHandler.dart';
+import '../../Module/Util/DatePickerHandler.dart';
 
 class ProblemRegisterScreenWidget {
   // 날짜 선택 위젯

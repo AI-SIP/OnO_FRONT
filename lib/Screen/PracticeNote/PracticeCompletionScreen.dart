@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:ono/GlobalModule/Dialog/SnackBarDialog.dart';
+import 'package:ono/Module/Dialog/SnackBarDialog.dart';
 import 'package:provider/provider.dart';
 
-import '../../GlobalModule/Text/StandardText.dart';
-import '../../GlobalModule/Theme/ThemeHandler.dart';
+import '../../Module/Text/StandardText.dart';
+import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/PracticeNoteProvider.dart';
 
 class PracticeCompletionScreen extends StatelessWidget {

@@ -2,8 +2,8 @@ import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:ono/GlobalModule/Theme/NoteIconHandler.dart';
 import 'package:ono/Model/Folder/FolderModel.dart';
+import 'package:ono/Module/Theme/NoteIconHandler.dart';
 import 'package:provider/provider.dart';
 
 import '../../Provider/FoldersProvider.dart';

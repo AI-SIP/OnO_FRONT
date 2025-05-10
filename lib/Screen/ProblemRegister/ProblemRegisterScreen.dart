@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:ono/Model/Problem/ProblemModel.dart';
 import 'package:provider/provider.dart';
 
-import '../../GlobalModule/Text/StandardText.dart';
-import '../../GlobalModule/Theme/ThemeHandler.dart';
+import '../../Module/Text/StandardText.dart';
+import '../../Module/Theme/ThemeHandler.dart';
 import 'ProblemRegisterTemplateV2.dart';
 
 class ProblemRegisterScreenV2 extends StatefulWidget {

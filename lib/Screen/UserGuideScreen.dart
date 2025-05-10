@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:ono/GlobalModule/Text/StandardText.dart';
+import 'package:ono/Module/Text/StandardText.dart';
 
 class UserGuideScreen extends StatefulWidget {
   final VoidCallback

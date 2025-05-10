@@ -8,9 +8,9 @@ import 'package:ono/Screen/PracticeNote/PracticeCompletionScreen.dart';
 import 'package:ono/Screen/ProblemDetail/ProblemDetailScreen.dart';
 import 'package:provider/provider.dart';
 
-import '../../GlobalModule/Image/ImagePickerHandler.dart';
-import '../../GlobalModule/Text/StandardText.dart';
-import '../../GlobalModule/Theme/ThemeHandler.dart';
+import '../../Module/Image/ImagePickerHandler.dart';
+import '../../Module/Text/StandardText.dart';
+import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/PracticeNoteProvider.dart';
 
 class PracticeNavigationButtons extends StatefulWidget {

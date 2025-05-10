@@ -7,7 +7,7 @@ import 'package:ono/Model/PracticeNote/PracticeNoteRegisterModel.dart';
 
 import '../Config/AppConfig.dart';
 import '../Model/Problem/ProblemModel.dart';
-import '../Service/Network/HttpService.dart';
+import '../Service/Api/HttpService.dart';
 import 'TokenProvider.dart';
 
 class ProblemPracticeProvider with ChangeNotifier {

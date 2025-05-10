@@ -1,19 +1,19 @@
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
-import 'package:ono/GlobalModule/Text/HandWriteText.dart';
 import 'package:ono/Model/Problem/ProblemRegisterModel.dart';
+import 'package:ono/Module/Text/HandWriteText.dart';
 import 'package:ono/Provider/PracticeNoteProvider.dart';
 import 'package:ono/Screen/ProblemRegister/ProblemRegisterScreen.dart';
 import 'package:provider/provider.dart';
 
-import '../../GlobalModule/Dialog/FolderSelectionDialog.dart';
-import '../../GlobalModule/Text/StandardText.dart';
-import '../../GlobalModule/Theme/ThemeHandler.dart';
-import '../../GlobalModule/Util/FolderNavigationButtons.dart';
 import '../../Model/Problem/ProblemModel.dart';
 import '../../Model/Problem/TemplateType.dart';
+import '../../Module/Dialog/FolderSelectionDialog.dart';
+import '../../Module/Text/StandardText.dart';
+import '../../Module/Theme/ThemeHandler.dart';
+import '../../Module/Util/FolderNavigationButtons.dart';
 import '../../Provider/FoldersProvider.dart';
-import '../../Service/ScreenUtil/ProblemDetailScreenService.dart';
+import '../../Screen/ScreenUtil/ProblemDetailScreenService.dart';
 import '../PracticeNote/PracticeNavigationButtons.dart';
 import '../ProblemShare/AnswerShareScreen.dart';
 import '../ProblemShare/ProblemShareScreen.dart';

@@ -4,14 +4,14 @@ import 'package:ono/Model/PracticeNote/PracticeNoteModel.dart';
 import 'package:ono/Screen/PracticeNote/PracticeTitleWriteScreen.dart';
 import 'package:provider/provider.dart';
 
-import '../../GlobalModule/Image/DisplayImage.dart';
-import '../../GlobalModule/Text/StandardText.dart';
-import '../../GlobalModule/Theme/NoteIconHandler.dart';
-import '../../GlobalModule/Theme/ThemeHandler.dart';
 import '../../Model/Folder/FolderModel.dart';
 import '../../Model/PracticeNote/PracticeNoteRegisterModel.dart';
 import '../../Model/Problem/ProblemModel.dart';
 import '../../Model/Problem/TemplateType.dart';
+import '../../Module/Image/DisplayImage.dart';
+import '../../Module/Text/StandardText.dart';
+import '../../Module/Theme/NoteIconHandler.dart';
+import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/FoldersProvider.dart';
 
 class PracticeProblemSelectionScreen extends StatefulWidget {

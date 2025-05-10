@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 
-import '../../GlobalModule/Dialog/SnackBarDialog.dart';
-import '../../GlobalModule/Text/StandardText.dart';
-import '../../GlobalModule/Theme/ThemeHandler.dart';
 import '../../Model/PracticeNote/PracticeNoteRegisterModel.dart';
+import '../../Module/Dialog/SnackBarDialog.dart';
+import '../../Module/Text/StandardText.dart';
+import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/PracticeNoteProvider.dart';
 
 class PracticeTitleWriteScreen extends StatelessWidget {

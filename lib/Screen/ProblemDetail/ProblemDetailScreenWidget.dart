@@ -4,15 +4,15 @@ import 'package:flutter_tex/flutter_tex.dart';
 import 'package:intl/intl.dart';
 import 'package:ono/Model/Problem/TemplateType.dart';
 
-import '../../GlobalModule/Image/DisplayImage.dart';
-import '../../GlobalModule/Image/FullScreenImage.dart';
-import '../../GlobalModule/Text/HandWriteText.dart';
-import '../../GlobalModule/Text/StandardText.dart';
-import '../../GlobalModule/Text/UnderlinedText.dart';
-import '../../GlobalModule/Theme/GridPainter.dart';
-import '../../GlobalModule/Theme/ThemeHandler.dart';
-import '../../GlobalModule/Util/LatexTextHandler.dart';
 import '../../Model/Problem/ProblemModel.dart';
+import '../../Module/Image/DisplayImage.dart';
+import '../../Module/Image/FullScreenImage.dart';
+import '../../Module/Text/HandWriteText.dart';
+import '../../Module/Text/StandardText.dart';
+import '../../Module/Text/UnderlinedText.dart';
+import '../../Module/Theme/GridPainter.dart';
+import '../../Module/Theme/ThemeHandler.dart';
+import '../../Module/Util/LatexTextHandler.dart';
 
 class ProblemDetailScreenWidget {
   // 배경 구현 함수

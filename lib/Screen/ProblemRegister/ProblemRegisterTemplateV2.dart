@@ -3,14 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
-import '../../GlobalModule/Dialog/FolderSelectionDialog.dart';
-import '../../GlobalModule/Dialog/LoadingDialog.dart';
-import '../../GlobalModule/Theme/ThemeHandler.dart';
 import '../../Model/Problem/ProblemModel.dart';
 import '../../Model/Problem/ProblemRegisterModelV2.dart';
+import '../../Module/Dialog/FolderSelectionDialog.dart';
+import '../../Module/Dialog/LoadingDialog.dart';
+import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/FoldersProvider.dart';
 import '../../Provider/ScreenIndexProvider.dart';
-import '../../Service/ScreenUtil/ProblemRegisterScreenService.dart';
+import '../../Screen/ScreenUtil/ProblemRegisterScreenService.dart';
 import 'ProblemRegisterScreenWidget.dart';
 
 class ProblemRegisterTemplateV2 extends StatefulWidget {

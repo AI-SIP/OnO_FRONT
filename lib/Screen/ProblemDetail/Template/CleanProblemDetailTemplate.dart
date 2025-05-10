@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../../GlobalModule/Theme/ThemeHandler.dart';
 import '../../../Model/Problem/ProblemModel.dart';
+import '../../../Module/Theme/ThemeHandler.dart';
 import '../ProblemDetailScreenWidget.dart';
 
 class CleanProblemDetailTemplate extends StatelessWidget {
