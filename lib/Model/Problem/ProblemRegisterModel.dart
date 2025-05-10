@@ -1,47 +1,31 @@
-import 'package:image_picker/image_picker.dart';
+import 'ProblemImageDataRegisterModel.dart';
 
 class ProblemRegisterModel {
   int? problemId;
-  XFile? problemImage;
-  XFile? answerImage;
   String? memo;
   String? reference;
-  DateTime? solvedAt;
   int? folderId;
+  DateTime? solvedAt;
+  List<ProblemImageDataRegisterModel>? imageDataDtoList;
 
   ProblemRegisterModel({
     this.problemId,
-    this.problemImage,
-    this.answerImage,
     this.memo,
     this.reference,
-    this.solvedAt,
     this.folderId,
+    this.solvedAt,
+    this.imageDataDtoList,
   });
 
   Map<String, dynamic> toJson() {
     return {
       'problemId': problemId,
-      'problemImage': problemImage,
-      'answerImage': answerImage,
       'memo': memo,
       'reference': reference,
+      'folderId': folderId,
       'solvedAt':
           solvedAt?.subtract(const Duration(hours: 9)).toIso8601String(),
-      'folderId': folderId,
+      'imageDataDtoList': imageDataDtoList?.map((e) => e.toJson()).toList(),
     };
-  }
-
-  factory ProblemRegisterModel.fromJson(Map<String, dynamic> json) {
-    return ProblemRegisterModel(
-      problemId: int.parse(json['problemId']),
-      problemImage: json['problemImage'],
-      answerImage: json['answerImage'],
-      memo: json['memo'],
-      reference: json['reference'],
-      solvedAt:
-          DateTime.parse(json['solvedAt']).subtract(const Duration(hours: 9)),
-      folderId: int.parse(json['folderId']),
-    );
   }
 }

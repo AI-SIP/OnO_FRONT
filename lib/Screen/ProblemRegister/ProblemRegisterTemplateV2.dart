@@ -296,12 +296,13 @@ class _ProblemRegisterTemplateStateV2 extends State<ProblemRegisterTemplateV2> {
 
     final problemRegisterModel = ProblemRegisterModel(
       problemId: problemModel?.problemId,
-      problemImage: problemImage,
-      answerImage: answerImage,
+      //problemImage: problemImage,
+      //answerImage: answerImage,
       memo: notesController.text,
       reference: sourceController.text,
       solvedAt: _selectedDate,
       folderId: _selectedFolderId,
+      imageDataDtoList: [],
     );
 
     _service.submitProblemV2(
