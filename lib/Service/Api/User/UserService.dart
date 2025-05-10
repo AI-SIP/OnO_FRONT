@@ -18,7 +18,7 @@ class UserService {
       throw Exception("소셜 로그인 실패. 잘못된 유저 정보입니다.");
     }
 
-    return await httpService.sendRequest(
+    return httpService.sendRequest(
       method: 'POST',
       url: '${AppConfig.baseUrl}/api/auth/signup/member',
       body: userRegisterModel.toJson(),
@@ -38,6 +38,7 @@ class UserService {
       method: 'GET',
       url: '${AppConfig.baseUrl}/api/problems/problemCount',
     );
+    print(data);
     return data as int;
   }
 

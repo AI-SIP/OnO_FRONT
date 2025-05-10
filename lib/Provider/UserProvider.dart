@@ -32,11 +32,11 @@ class UserProvider with ChangeNotifier {
   UserProvider(this.foldersProvider, this.practiceProvider);
 
   LoginStatus _loginStatus = LoginStatus.waiting;
-  bool _isLoading = true;
+  bool _isFirstLogin = true;
 
   LoginStatus get isLoggedIn => _loginStatus;
   LoginStatus? get loginStatus => _loginStatus;
-  bool get isLoading => _isLoading;
+  bool get isFirstLogin => _isFirstLogin;
 
   final AppleAuthService appleAuthService = AppleAuthService();
   final GoogleAuthService googleAuthService = GoogleAuthService();
@@ -114,6 +114,11 @@ class UserProvider with ChangeNotifier {
     );
   }
 
+  void changeIsFirstLogin() {
+    _isFirstLogin = false;
+    notifyListeners();
+  }
+
   Future<void> saveUserLoginInfo(String? loginMethod) async {
     await storage.write(key: 'loginMethod', value: loginMethod);
     FirebaseAnalytics.instance.logLogin(loginMethod: loginMethod);
@@ -172,10 +177,6 @@ class UserProvider with ChangeNotifier {
     return false;
   }
 
-  Future<int> getUserProblemCount() async {
-    return userService.fetchProblemCount();
-  }
-
   Future<void> updateUser({
     String email = '',
     String name = '',
@@ -196,15 +197,16 @@ class UserProvider with ChangeNotifier {
   Future<void> autoLogin() async {
     String? refreshToken = await tokenProvider.getRefreshToken();
 
-    _isLoading = false;
     if (refreshToken == null) {
       _loginStatus = LoginStatus.logout;
-      notifyListeners();
     } else {
       await tokenProvider.refreshAccessToken();
       _loginStatus = LoginStatus.login;
-      fetchUserInfo();
+      _isFirstLogin = false;
+      fetchAllData();
     }
+
+    notifyListeners();
   }
 
   Future<void> signOut() async {
@@ -247,6 +249,7 @@ class UserProvider with ChangeNotifier {
 
   Future<void> resetUserInfo() async {
     _loginStatus = LoginStatus.logout;
+    _isFirstLogin = true;
     userInfoModel = null;
     notifyListeners();
 

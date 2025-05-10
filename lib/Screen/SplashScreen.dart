@@ -24,11 +24,15 @@ class _SplashScreenState extends State<SplashScreen> {
   _checkLoginStatus() async {
     // UserProvider에서 로그인 상태를 가져옴
     final userProvider = Provider.of<UserProvider>(context, listen: false);
-
     await userProvider.autoLogin();
 
+    print('login status: ${userProvider.loginStatus}');
     // 2초간 대기 후 상태 체크
+
     await Future.delayed(const Duration(seconds: 2), () {});
+    while (userProvider.loginStatus == LoginStatus.waiting) {
+      await Future.delayed(const Duration(seconds: 1));
+    }
 
     // 로그인 상태에 따른 화면 이동
     if (userProvider.loginStatus == LoginStatus.login) {

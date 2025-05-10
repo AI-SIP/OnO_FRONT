@@ -179,8 +179,11 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   void _resetAppState() {
     final foldersProvider =
         Provider.of<FoldersProvider>(context, listen: false);
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
 
-    foldersProvider.fetchAllFolderContents();
+    userProvider.autoLogin();
+    //userProvider.fetchAllData();
+    //foldersProvider.fetchAllFolderContents();
   }
 
   @override

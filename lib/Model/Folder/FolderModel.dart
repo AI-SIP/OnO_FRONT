@@ -21,7 +21,7 @@ class FolderModel {
     this.updateAt,
   });
 
-  factory FolderModel.fromJson(Map<String, dynamic> json) {
+  factory FolderModel.fromJson(dynamic json) {
     // parentFolder: null or Map
     final parentJson = json['parentFolder'] as Map<String, dynamic>?;
     final parent =
