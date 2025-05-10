@@ -329,6 +329,7 @@ class FoldersProvider with ChangeNotifier {
       ProblemRegisterModel problemData, BuildContext context) async {
     final files = <http.MultipartFile>[];
 
+    /*
     if (problemData.problemImage != null) {
       files.add(await http.MultipartFile.fromPath(
           'problemImage', problemData.problemImage!.path));
@@ -337,6 +338,8 @@ class FoldersProvider with ChangeNotifier {
       files.add(await http.MultipartFile.fromPath(
           'answerImage', problemData.answerImage!.path));
     }
+
+     */
 
     final requestBody = {
       'solvedAt': (problemData.solvedAt ?? DateTime.now()).toIso8601String(),
