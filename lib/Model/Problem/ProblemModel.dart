@@ -55,7 +55,7 @@ class ProblemModel {
     required this.imageUrlList,
   });
 
-  fromJson(Map<String, dynamic> json) {
+  factory ProblemModel.fromJson(Map<String, dynamic> json) {
     // 3) imageUrlList 파싱
     final imageListJson = json['imageUrlList'] as List<dynamic>? ?? [];
     final imageUrlList = imageListJson

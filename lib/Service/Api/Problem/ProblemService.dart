@@ -1,4 +1,5 @@
 import 'package:ono/Model/Problem/ProblemImageDataRegisterModel.dart';
+import 'package:ono/Model/Problem/ProblemModel.dart';
 import 'package:ono/Model/Problem/ProblemRegisterModel.dart';
 
 import '../../../Config/AppConfig.dart';
@@ -8,18 +9,24 @@ class ProblemService {
   final HttpService httpService = HttpService();
   final baseUrl = "${AppConfig.baseUrl}/api/problems";
 
-  Future<dynamic> getProblem(int? problemId) async {
-    return httpService.sendRequest(
+  Future<ProblemModel> getProblem(int? problemId) async {
+    final data = httpService.sendRequest(
       method: 'GET',
       url: '$baseUrl/$problemId',
     );
+
+    return ProblemModel.fromJson(data as Map<String, dynamic>);
   }
 
-  Future<dynamic> getAllProblems() async {
-    return httpService.sendRequest(
+  Future<List<ProblemModel>> getAllProblems() async {
+    final data = httpService.sendRequest(
       method: 'GET',
       url: '$baseUrl/user',
-    );
+    ) as List<dynamic>;
+
+    return data
+        .map((d) => ProblemModel.fromJson(d as Map<String, dynamic>))
+        .toList();
   }
 
   Future<int> getProblemCount() async {
