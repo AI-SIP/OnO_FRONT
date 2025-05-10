@@ -49,7 +49,7 @@ class HttpService {
         case 'GET':
           response = await http
               .get(uri, headers: mergedHeaders)
-              .timeout(const Duration(seconds: 90));
+              .timeout(const Duration(seconds: 30));
           break;
 
         case 'POST':
@@ -79,19 +79,19 @@ class HttpService {
                   .addAll(body?.map((k, v) => MapEntry(k, v.toString())) ?? {})
               ..files.addAll(files);
             final streamed =
-                await req.send().timeout(const Duration(seconds: 90));
+                await req.send().timeout(const Duration(seconds: 30));
             response = await http.Response.fromStream(streamed);
           } else {
             response = await http
                 .patch(uri, headers: mergedHeaders, body: json.encode(body))
-                .timeout(const Duration(seconds: 90));
+                .timeout(const Duration(seconds: 30));
           }
           break;
 
         case 'DELETE':
           response = await http
               .delete(uri, headers: mergedHeaders)
-              .timeout(const Duration(seconds: 90));
+              .timeout(const Duration(seconds: 30));
           break;
 
         default:

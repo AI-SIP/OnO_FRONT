@@ -25,6 +25,7 @@ class TokenProvider {
     await refreshAccessToken();
 
     accessToken = await storage.read(key: 'accessToken');
+    return accessToken;
   }
 
   Future<void> setRefreshToken(String refreshToken) async {

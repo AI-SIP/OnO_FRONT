@@ -27,7 +27,7 @@ class UserProvider with ChangeNotifier {
   final TokenProvider tokenProvider = TokenProvider();
   final httpService = HttpService();
   final userService = UserService();
-  UserInfoModel? userInfoModel = null;
+  UserInfoModel? userInfoModel;
 
   UserProvider(this.foldersProvider, this.practiceProvider);
 
@@ -154,17 +154,13 @@ class UserProvider with ChangeNotifier {
   }
 
   Future<void> fetchUserInfo() async {
-    print('fetch user info start');
-
     final userProblemCount = await userService.fetchProblemCount();
-    print('userProblemCount: ${userProblemCount}');
     final userInfo = await userService.fetchUserInfo();
-    print('userInfo: ${userInfo}');
 
     userInfoModel = UserInfoModel.fromJson(userInfo);
     userInfoModel?.problemCount = userProblemCount ?? 0;
 
-    print(userInfoModel.toString());
+    print('userInfoModel: ${userInfoModel.toString()}');
   }
 
   Future<bool> _handleFetchError(
@@ -205,6 +201,8 @@ class UserProvider with ChangeNotifier {
       _loginStatus = LoginStatus.logout;
       notifyListeners();
     } else {
+      await tokenProvider.refreshAccessToken();
+      _loginStatus = LoginStatus.login;
       fetchUserInfo();
     }
   }

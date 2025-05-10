@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -149,14 +147,6 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
-  }
-
-  Future<void> autoLogin() async {
-    try {
-      await Provider.of<UserProvider>(context, listen: false).autoLogin();
-    } catch (e) {
-      log('Auto login failed: $e');
-    }
   }
 
   void _onItemTapped(int index) {
