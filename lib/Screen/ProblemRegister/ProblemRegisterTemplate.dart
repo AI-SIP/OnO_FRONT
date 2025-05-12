@@ -1,6 +1,7 @@
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:ono/Module/Image/ImagePickerHandler.dart';
 import 'package:provider/provider.dart';
 
 import '../../Model/Common/LoginStatus.dart';
@@ -178,6 +179,7 @@ class _ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
 
   Widget _buildSimpleWideScreenLayout(
       ThemeHandler themeProvider, double screenWidth) {
+    final imagePicker = ImagePickerHandler();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -186,41 +188,36 @@ class _ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
           children: [
             Expanded(
               flex: 1,
-              child: ProblemRegisterScreenWidget.buildImagePickerWithLabel(
-                context: context,
+              child: ProblemRegisterScreenWidget.buildImageGrid(
+                files: problemImages,
                 label: '문제 이미지',
-                image: null,
-                existingImageUrl: null,
                 themeProvider: themeProvider,
-                onImagePicked: (XFile? pickedFile) {
-                  if (pickedFile != null) {
-                    setState(() => problemImages.add(pickedFile));
-                  }
-                  FirebaseAnalytics.instance.logEvent(
-                    name: 'image_add_problem_image',
-                    parameters: {'type': 'problem_image'},
-                  );
+                onAdd: () async {
+                  //await imagePicker.initializeCamera();
+                  imagePicker.showImagePicker(context, (XFile? file) {
+                    if (file != null) {
+                      setState(() => problemImages.add(file));
+                    }
+                  });
                 },
+                onRemove: (idx) => setState(() => problemImages.removeAt(idx)),
               ),
             ),
             const SizedBox(width: 30),
             Expanded(
               flex: 1,
-              child: ProblemRegisterScreenWidget.buildImagePickerWithLabel(
-                context: context,
+              child: ProblemRegisterScreenWidget.buildImageGrid(
+                files: answerImages,
                 label: '해설 이미지',
-                image: null,
-                existingImageUrl: null,
                 themeProvider: themeProvider,
-                onImagePicked: (XFile? pickedFile) {
-                  if (pickedFile != null) {
-                    setState(() => answerImages.add(pickedFile));
-                  }
-                  FirebaseAnalytics.instance.logEvent(
-                    name: 'image_add_answer_image',
-                    parameters: {'type': 'answer_image'},
-                  );
+                onAdd: () async {
+                  imagePicker.showImagePicker(context, (XFile? file) {
+                    if (file != null) {
+                      setState(() => answerImages.add(file));
+                    }
+                  });
                 },
+                onRemove: (idx) => setState(() => answerImages.removeAt(idx)),
               ),
             ),
           ],
@@ -231,39 +228,37 @@ class _ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
 
   Widget _buildNarrowScreenLayout(ThemeHandler themeProvider) {
     final screenHeight = MediaQuery.of(context).size.height;
+    final imagePicker = ImagePickerHandler();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        ProblemRegisterScreenWidget.buildImagePickerWithLabel(
-          context: context,
+        ProblemRegisterScreenWidget.buildImageGrid(
+          files: problemImages,
           label: '문제 이미지',
-          image: null,
-          existingImageUrl: null,
           themeProvider: themeProvider,
-          onImagePicked: (XFile? pickedFile) {
-            if (pickedFile != null) {
-              setState(() => problemImages.add(pickedFile));
-            }
-
-            FirebaseAnalytics.instance.logEvent(
-              name: 'image_add_problem_image',
-              parameters: {'type': 'problem_image'},
-            );
+          onAdd: () async {
+            imagePicker.showImagePicker(context, (XFile? file) {
+              if (file != null) {
+                setState(() => problemImages.add(file));
+              }
+            });
           },
+          onRemove: (idx) => setState(() => problemImages.removeAt(idx)),
         ),
         const SizedBox(height: 30),
-        ProblemRegisterScreenWidget.buildImagePickerWithLabel(
-          context: context,
+        ProblemRegisterScreenWidget.buildImageGrid(
+          files: answerImages,
           label: '해설 이미지',
-          image: null,
-          existingImageUrl: null,
           themeProvider: themeProvider,
-          onImagePicked: (XFile? pickedFile) {
-            if (pickedFile != null) {
-              setState(() => answerImages.add(pickedFile));
-            }
+          onAdd: () async {
+            imagePicker.showImagePicker(context, (XFile? file) {
+              if (file != null) {
+                setState(() => answerImages.add(file));
+              }
+            });
           },
+          onRemove: (idx) => setState(() => answerImages.removeAt(idx)),
         ),
       ],
     );
@@ -313,8 +308,6 @@ class _ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
 
     final problemRegisterModel = ProblemRegisterModel(
       problemId: problemModel?.problemId,
-      //problemImage: problemImage,
-      //answerImage: answerImage,
       memo: notesController.text,
       reference: sourceController.text,
       solvedAt: _selectedDate,

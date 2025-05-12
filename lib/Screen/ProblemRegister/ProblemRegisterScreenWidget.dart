@@ -353,4 +353,87 @@ class ProblemRegisterScreenWidget {
       ],
     );
   }
+
+  static Widget buildImageGrid({
+    required List<XFile> files,
+    required String label,
+    required ThemeHandler themeProvider,
+    required Future<void> Function() onAdd,
+    required void Function(int index) onRemove,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(Icons.image, color: themeProvider.primaryColor),
+            const SizedBox(width: 10),
+            StandardText(
+              text: label,
+              fontSize: 16,
+              color: themeProvider.primaryColor,
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        SizedBox(
+          height: 80,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: files.length + 1,
+            separatorBuilder: (_, __) => const SizedBox(width: 12),
+            itemBuilder: (context, idx) {
+              if (idx == 0) {
+                // + 버튼
+                return GestureDetector(
+                  onTap: onAdd,
+                  child: Container(
+                    width: 80,
+                    height: 80,
+                    decoration: BoxDecoration(
+                      color: themeProvider.primaryColor.withOpacity(0.1),
+                      border: Border.all(color: themeProvider.primaryColor),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(Icons.add,
+                        color: themeProvider.primaryColor, size: 32),
+                  ),
+                );
+              } else {
+                final file = files[idx - 1];
+                return Stack(
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Image.file(
+                        File(file.path),
+                        width: 80,
+                        height: 80,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                    Positioned(
+                      top: 4,
+                      right: 4,
+                      child: GestureDetector(
+                        onTap: () => onRemove(idx - 1),
+                        child: Container(
+                          decoration: const BoxDecoration(
+                            color: Colors.red,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(Icons.close,
+                              size: 16, color: Colors.white),
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              }
+            },
+          ),
+        ),
+      ],
+    );
+  }
 }
