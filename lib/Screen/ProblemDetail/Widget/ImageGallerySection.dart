@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:ono/Module/Text/HandWriteText.dart';
 
-import '../Theme/ThemeHandler.dart';
-import 'DisplayImage.dart';
-import 'FullScreenImage.dart';
+import '../../../Module/Image/DisplayImage.dart';
+import '../../../Module/Image/FullScreenImage.dart';
+import '../../../Module/Theme/ThemeHandler.dart';
 
 class ImageGallerySection extends StatefulWidget {
   final List<String> imageUrls;

@@ -5,12 +5,12 @@ import 'package:intl/intl.dart';
 import '../../Model/Problem/ProblemModel.dart';
 import '../../Module/Image/DisplayImage.dart';
 import '../../Module/Image/FullScreenImage.dart';
-import '../../Module/Image/ImageGallerySection.dart';
 import '../../Module/Text/HandWriteText.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Text/UnderlinedText.dart';
 import '../../Module/Theme/GridPainter.dart';
 import '../../Module/Theme/ThemeHandler.dart';
+import 'Widget/ImageGallerySection.dart';
 
 class ProblemDetailScreenWidget {
   // 배경 구현 함수
@@ -33,11 +33,8 @@ class ProblemDetailScreenWidget {
           children: [
             SizedBox(height: screenHeight * 0.03),
             buildSolvedDate(problemModel.solvedAt, themeProvider),
-            /*
             SizedBox(height: screenHeight * 0.03),
             buildProblemReference(problemModel.reference, themeProvider),
-
-             */
             SizedBox(
               height: screenHeight * 0.03,
             ),
@@ -51,12 +48,6 @@ class ProblemDetailScreenWidget {
               color: themeProvider.primaryColor,
               themeProvider: themeProvider,
             ),
-
-            /*
-            buildImageSection(context, imageUrl, '문제 이미지',
-                themeProvider.primaryColor, themeProvider),
-
-             */
           ],
         ),
       ),
