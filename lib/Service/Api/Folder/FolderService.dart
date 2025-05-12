@@ -44,13 +44,10 @@ class FolderService {
       url: '$baseUrl',
     ) as List<dynamic>;
 
-    print(data);
-
     final result = data
         .map((d) => FolderModel.fromJson(d as Map<String, dynamic>))
         .toList();
 
-    print(result);
     return result;
   }
 

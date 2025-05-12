@@ -50,13 +50,15 @@ class UserProvider with ChangeNotifier {
       LoadingDialog.show(context, '로그인 중 입니다...');
       final userRegisterModel = await socialLogin(context);
       final response = await userService.signInWithMember(userRegisterModel);
-      print('user signIn success, response: ${response}');
 
       saveUserLoginInfo(userRegisterModel?.platform);
       bool isRegister = await saveUserToken(response: response);
 
       await fetchAllData();
       LoadingDialog.hide(context);
+
+      _loginStatus = LoginStatus.login;
+      notifyListeners();
 
       if (!isRegister) {
         log('register failed!, response: ${response.toString()}');
@@ -190,7 +192,7 @@ class UserProvider with ChangeNotifier {
         _loginStatus = LoginStatus.logout;
       } else {
         await tokenProvider.refreshAccessToken();
-        fetchAllData();
+        await fetchAllData();
         _isFirstLogin = false;
         _loginStatus = LoginStatus.login;
       }
