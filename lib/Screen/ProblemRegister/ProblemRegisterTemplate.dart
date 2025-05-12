@@ -103,7 +103,7 @@ class _ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
                 },
                 themeProvider: themeProvider,
               ),
-              const SizedBox(height: 30),
+              const SizedBox(height: 25),
               ProblemRegisterScreenWidget.folderSelection(
                 selectedFolderId: _selectedFolderId,
                 onFolderSelected: () async {
@@ -133,7 +133,7 @@ class _ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
                 },
                 themeProvider: themeProvider,
               ),
-              const SizedBox(height: 30),
+              const SizedBox(height: 25),
               ProblemRegisterScreenWidget.buildLabeledField(
                 label: "제목",
                 themeProvider: themeProvider,
@@ -144,7 +144,7 @@ class _ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
                   themeProvider: themeProvider,
                 ),
               ),
-              const SizedBox(height: 30),
+              const SizedBox(height: 25),
               ProblemRegisterScreenWidget.buildLabeledField(
                 label: "메모",
                 themeProvider: themeProvider,
@@ -161,7 +161,7 @@ class _ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
                 _buildSimpleWideScreenLayout(themeProvider, screenWidth)
               else
                 _buildNarrowScreenLayout(themeProvider),
-              const SizedBox(height: 30),
+              const SizedBox(height: 40),
               ProblemRegisterScreenWidget.buildActionButtons(
                 context: context,
                 themeProvider: themeProvider,
@@ -193,7 +193,6 @@ class _ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
                 label: '문제 이미지',
                 themeProvider: themeProvider,
                 onAdd: () async {
-                  //await imagePicker.initializeCamera();
                   imagePicker.showImagePicker(context, (XFile? file) {
                     if (file != null) {
                       setState(() => problemImages.add(file));

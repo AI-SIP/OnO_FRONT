@@ -24,7 +24,7 @@ class ProblemRegisterScreenWidget {
     return Row(
       children: <Widget>[
         Icon(Icons.calendar_today, color: themeProvider.primaryColor),
-        const SizedBox(width: 10),
+        const SizedBox(width: 6),
         StandardText(
           text: '푼 날짜',
           fontSize: 16,
@@ -57,7 +57,7 @@ class ProblemRegisterScreenWidget {
             padding:
                 const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
             backgroundColor: themeProvider.primaryColor.withOpacity(0.1),
-            side: BorderSide(color: themeProvider.primaryColor, width: 2.0),
+            side: BorderSide(color: themeProvider.primaryColor, width: 1.5),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(10.0),
             ),
@@ -84,7 +84,7 @@ class ProblemRegisterScreenWidget {
     return Row(
       children: [
         Icon(Icons.menu_book_outlined, color: themeProvider.primaryColor),
-        const SizedBox(width: 10),
+        const SizedBox(width: 6),
         StandardText(
           text: '공책 선택',
           fontSize: 16,
@@ -97,7 +97,7 @@ class ProblemRegisterScreenWidget {
               padding:
                   const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
               backgroundColor: themeProvider.primaryColor.withOpacity(0.1),
-              side: BorderSide(color: themeProvider.primaryColor, width: 2.0),
+              side: BorderSide(color: themeProvider.primaryColor, width: 1.5),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10.0),
               ),
@@ -138,7 +138,7 @@ class ProblemRegisterScreenWidget {
             Icon(icon ?? Icons.label,
                 color: themeProvider
                     .primaryColor), // Use provided icon or default to label
-            const SizedBox(width: 10),
+            const SizedBox(width: 6),
             StandardText(
               text: label,
               fontSize: 16,
@@ -168,15 +168,15 @@ class ProblemRegisterScreenWidget {
       decoration: InputDecoration(
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide(color: themeProvider.primaryColor, width: 2.0),
+          borderSide: BorderSide(color: themeProvider.primaryColor, width: 1.5),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide(color: themeProvider.primaryColor, width: 2.0),
+          borderSide: BorderSide(color: themeProvider.primaryColor, width: 1.5),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide(color: themeProvider.primaryColor, width: 2.0),
+          borderSide: BorderSide(color: themeProvider.primaryColor, width: 1.5),
         ),
         fillColor: themeProvider.primaryColor.withOpacity(0.1),
         filled: true,
@@ -209,11 +209,11 @@ class ProblemRegisterScreenWidget {
             style: ElevatedButton.styleFrom(
               padding: EdgeInsets.symmetric(
                   horizontal: screenWidth * 0.02,
-                  vertical: screenHeight * 0.01),
+                  vertical: screenHeight * 0.012),
               backgroundColor: Colors.grey, // 회색 배경
               foregroundColor: Colors.white, // 흰 글씨
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(15.0),
+                borderRadius: BorderRadius.circular(12.0),
               ),
             ),
             child: const StandardText(
@@ -223,7 +223,7 @@ class ProblemRegisterScreenWidget {
             ),
           ),
         ),
-        const SizedBox(width: 16), // 버튼 간 간격
+        const SizedBox(width: 25), // 버튼 간 간격
         // 문제 등록 버튼
         Expanded(
           child: ElevatedButton(
@@ -231,11 +231,11 @@ class ProblemRegisterScreenWidget {
             style: ElevatedButton.styleFrom(
               padding: EdgeInsets.symmetric(
                   horizontal: screenWidth * 0.02,
-                  vertical: screenHeight * 0.01),
+                  vertical: screenHeight * 0.012),
               backgroundColor: themeProvider.primaryColor, // 테마 색상
               foregroundColor: Colors.white, // 흰 글씨
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(15.0),
+                borderRadius: BorderRadius.circular(12.0),
               ),
             ),
             child: StandardText(
@@ -367,7 +367,7 @@ class ProblemRegisterScreenWidget {
         Row(
           children: [
             Icon(Icons.image, color: themeProvider.primaryColor),
-            const SizedBox(width: 10),
+            const SizedBox(width: 6),
             StandardText(
               text: label,
               fontSize: 16,
