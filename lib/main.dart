@@ -43,6 +43,9 @@ void main() async {
   FlutterError.onError = (FlutterErrorDetails details) {
     // 콘솔에도 출력
     FlutterError.dumpErrorToConsole(details);
+
+    print(details);
+
     // Sentry에 보고
     Sentry.captureException(
       details.exception,

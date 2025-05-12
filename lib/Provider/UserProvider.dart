@@ -29,20 +29,18 @@ class UserProvider with ChangeNotifier {
   final httpService = HttpService();
   final userService = UserService();
   final problemService = ProblemService();
+  final AppleAuthService appleAuthService = AppleAuthService();
+  final GoogleAuthService googleAuthService = GoogleAuthService();
+  final KakaoAuthService kakaoAuthService = KakaoAuthService();
   UserInfoModel? userInfoModel;
 
   UserProvider(this.foldersProvider, this.practiceProvider);
 
   LoginStatus _loginStatus = LoginStatus.waiting;
   bool _isFirstLogin = true;
-
   LoginStatus get isLoggedIn => _loginStatus;
   LoginStatus? get loginStatus => _loginStatus;
   bool get isFirstLogin => _isFirstLogin;
-
-  final AppleAuthService appleAuthService = AppleAuthService();
-  final GoogleAuthService googleAuthService = GoogleAuthService();
-  final KakaoAuthService kakaoAuthService = KakaoAuthService();
 
   Future<void> signInWithMember(BuildContext context,
       Future<UserRegisterModel?> Function(BuildContext) socialLogin) async {

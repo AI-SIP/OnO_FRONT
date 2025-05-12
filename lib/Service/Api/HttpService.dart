@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:http/http.dart' as http;
 
@@ -18,6 +17,7 @@ class HttpService {
     bool isMultipart = false,
     List<http.MultipartFile>? files,
     bool requiredToken = true,
+    bool retry = false,
   }) async {
     String? accessToken;
 
@@ -97,25 +97,35 @@ class HttpService {
         default:
           throw Exception('Unsupported HTTP method: $method');
       }
-    } on TimeoutException {
-      throw Exception('Request timed out. Please try again.');
-    } on SocketException {
-      throw Exception('Socket Exception!');
     } catch (error) {
       throw Exception('An error occurred: $error');
     }
 
-    // 4. Check for HTTP errors
-    if (response.statusCode < 200 || response.statusCode >= 300) {
-      // 응답 본문을 JSON 으로 파싱
-      String errorMessage;
-      try {
-        final errJson = jsonDecode(utf8.decode(response.bodyBytes));
-        errorMessage = errJson['message'] as String? ?? 'Unknown error';
-      } catch (_) {
-        errorMessage = response.reasonPhrase ?? 'Unknown error';
+    final status = response.statusCode;
+    final decodedBody = jsonDecode(utf8.decode(response.bodyBytes));
+
+    if (status < 200 || status >= 300) {
+      final errorCode = decodedBody['errorCode'] as int?;
+      final message =
+          decodedBody['message'] as String? ?? response.reasonPhrase;
+
+      // 토큰 만료(가정: errorCode == 1005) 이고, 아직 재시도 전이라면
+      if (requiredToken && !retry && errorCode == 1005) {
+        await tokenProvider.refreshAccessToken();
+        return sendRequest(
+          method: method,
+          url: url,
+          headers: headers,
+          body: body,
+          queryParams: queryParams,
+          isMultipart: isMultipart,
+          files: files,
+          requiredToken: requiredToken,
+          retry: true,
+        );
       }
-      throw Exception('HTTP ${response.statusCode}: $errorMessage');
+
+      throw Exception('HTTP $status: $message (code=$errorCode)');
     }
 
     // 5. Parse JSON and extract data

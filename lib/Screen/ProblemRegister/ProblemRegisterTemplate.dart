@@ -4,6 +4,8 @@ import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
 import '../../Model/Common/LoginStatus.dart';
+import '../../Model/Common/ProblemImageDataType.dart';
+import '../../Model/Problem/ProblemImageDataRegisterModel.dart';
 import '../../Model/Problem/ProblemModel.dart';
 import '../../Model/Problem/ProblemRegisterModel.dart';
 import '../../Module/Dialog/FolderSelectionDialog.dart';
@@ -14,6 +16,7 @@ import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/FoldersProvider.dart';
 import '../../Provider/ScreenIndexProvider.dart';
 import '../../Provider/UserProvider.dart';
+import '../../Service/Api/FileUpload/FileUploadService.dart';
 import 'ProblemRegisterScreenWidget.dart';
 
 class ProblemRegisterTemplate extends StatefulWidget {
@@ -36,8 +39,8 @@ class _ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
   late TextEditingController sourceController;
   late TextEditingController notesController;
 
-  XFile? problemImage;
-  XFile? answerImage;
+  List<XFile> problemImages = [];
+  List<XFile> answerImages = [];
 
   bool isLoading = false;
   DateTime _selectedDate = DateTime.now();
@@ -45,7 +48,6 @@ class _ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
   String? _selectedFolderName;
 
   final ScrollController scrollControllerForPage = ScrollController();
-  final ScrollController scrollControllerForAnalysis = ScrollController();
 
   @override
   void initState() {
@@ -69,7 +71,6 @@ class _ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
   @override
   void dispose() {
     scrollControllerForPage.dispose();
-    scrollControllerForAnalysis.dispose();
     sourceController.dispose();
     notesController.dispose();
     super.dispose();
@@ -188,13 +189,13 @@ class _ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
               child: ProblemRegisterScreenWidget.buildImagePickerWithLabel(
                 context: context,
                 label: '문제 이미지',
-                image: problemImage,
+                image: null,
                 existingImageUrl: null,
                 themeProvider: themeProvider,
                 onImagePicked: (XFile? pickedFile) {
-                  setState(() {
-                    problemImage = pickedFile;
-                  });
+                  if (pickedFile != null) {
+                    setState(() => problemImages.add(pickedFile));
+                  }
                   FirebaseAnalytics.instance.logEvent(
                     name: 'image_add_problem_image',
                     parameters: {'type': 'problem_image'},
@@ -208,13 +209,13 @@ class _ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
               child: ProblemRegisterScreenWidget.buildImagePickerWithLabel(
                 context: context,
                 label: '해설 이미지',
-                image: answerImage,
+                image: null,
                 existingImageUrl: null,
                 themeProvider: themeProvider,
                 onImagePicked: (XFile? pickedFile) {
-                  setState(() {
-                    answerImage = pickedFile;
-                  });
+                  if (pickedFile != null) {
+                    setState(() => answerImages.add(pickedFile));
+                  }
                   FirebaseAnalytics.instance.logEvent(
                     name: 'image_add_answer_image',
                     parameters: {'type': 'answer_image'},
@@ -237,13 +238,13 @@ class _ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
         ProblemRegisterScreenWidget.buildImagePickerWithLabel(
           context: context,
           label: '문제 이미지',
-          image: problemImage,
+          image: null,
           existingImageUrl: null,
           themeProvider: themeProvider,
           onImagePicked: (XFile? pickedFile) {
-            setState(() {
-              problemImage = pickedFile;
-            });
+            if (pickedFile != null) {
+              setState(() => problemImages.add(pickedFile));
+            }
 
             FirebaseAnalytics.instance.logEvent(
               name: 'image_add_problem_image',
@@ -255,18 +256,13 @@ class _ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
         ProblemRegisterScreenWidget.buildImagePickerWithLabel(
           context: context,
           label: '해설 이미지',
-          image: answerImage,
+          image: null,
           existingImageUrl: null,
           themeProvider: themeProvider,
           onImagePicked: (XFile? pickedFile) {
-            setState(() {
-              answerImage = pickedFile;
-            });
-
-            FirebaseAnalytics.instance.logEvent(
-              name: 'image_add_answer_image',
-              parameters: {'type': 'answer_image'},
-            );
+            if (pickedFile != null) {
+              setState(() => answerImages.add(pickedFile));
+            }
           },
         ),
       ],
@@ -282,19 +278,38 @@ class _ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
       sourceController.clear();
       notesController.clear();
 
-      problemImage = null;
-      answerImage = null;
+      problemImages.clear();
+      answerImages.clear();
     });
   }
 
   void registerImages() {}
 
-  void _submitProblem() {
-    FirebaseAnalytics.instance.logEvent(
-      name: 'problem_register_complete_button_click',
-    );
-
+  void _submitProblem() async {
     LoadingDialog.show(context, '오답노트 작성 중...');
+    final fileService = FileUploadService();
+
+    final problemUrls =
+        await fileService.uploadMultipleImageFiles(problemImages);
+    final answerUrls = await fileService.uploadMultipleImageFiles(answerImages);
+
+    final now = DateTime.now();
+    final imageDataList = <ProblemImageDataRegisterModel>[
+      // 문제 이미지들
+      for (var url in problemUrls)
+        ProblemImageDataRegisterModel(
+          imageUrl: url,
+          problemImageType: ProblemImageType.PROBLEM_IMAGE,
+          createdAt: now,
+        ),
+      // 해설 이미지들
+      for (var url in answerUrls)
+        ProblemImageDataRegisterModel(
+          imageUrl: url,
+          problemImageType: ProblemImageType.ANSWER_IMAGE,
+          createdAt: now,
+        ),
+    ];
 
     final problemRegisterModel = ProblemRegisterModel(
       problemId: problemModel?.problemId,
@@ -304,7 +319,7 @@ class _ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
       reference: sourceController.text,
       solvedAt: _selectedDate,
       folderId: _selectedFolderId,
-      imageDataDtoList: [],
+      imageDataDtoList: imageDataList,
     );
 
     submitProblem(
