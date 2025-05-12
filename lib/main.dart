@@ -93,7 +93,7 @@ class MyApp extends StatelessWidget {
           final args = settings.arguments as Map<String, dynamic>;
           return MaterialPageRoute(
             builder: (context) {
-              return ProblemRegisterScreenV2(
+              return ProblemRegisterScreen(
                 problemModel: args['problemModel'],
                 isEditMode: args['isEditMode'],
               );
@@ -135,7 +135,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   static const List<Widget> _widgetOptions = <Widget>[
     DirectoryScreen(),
     PracticeThumbnailScreen(),
-    ProblemRegisterScreenV2(problemModel: null, isEditMode: false),
+    ProblemRegisterScreen(problemModel: null, isEditMode: false),
     //TemplateSelectionScreen(),
     SettingScreen(),
   ];

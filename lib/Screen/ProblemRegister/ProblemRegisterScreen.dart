@@ -6,22 +6,21 @@ import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import 'ProblemRegisterTemplate.dart';
 
-class ProblemRegisterScreenV2 extends StatefulWidget {
+class ProblemRegisterScreen extends StatefulWidget {
   final ProblemModel? problemModel;
   final bool isEditMode;
 
-  const ProblemRegisterScreenV2({
+  const ProblemRegisterScreen({
     super.key,
     required this.problemModel,
     required this.isEditMode,
   });
 
   @override
-  _ProblemRegisterScreenStateV2 createState() =>
-      _ProblemRegisterScreenStateV2();
+  _ProblemRegisterScreenState createState() => _ProblemRegisterScreenState();
 }
 
-class _ProblemRegisterScreenStateV2 extends State<ProblemRegisterScreenV2> {
+class _ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
   @override
   void initState() {
     super.initState();

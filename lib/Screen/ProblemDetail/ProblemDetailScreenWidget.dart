@@ -2,7 +2,6 @@ import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_tex/flutter_tex.dart';
 import 'package:intl/intl.dart';
-import 'package:ono/Model/Problem/TemplateType.dart';
 
 import '../../Model/Problem/ProblemModel.dart';
 import '../../Module/Image/DisplayImage.dart';
@@ -25,7 +24,7 @@ class ProblemDetailScreenWidget {
   }
 
   Widget buildCommonDetailView(BuildContext context, ProblemModel problemModel,
-      ThemeHandler themeProvider, TemplateType templateType) {
+      ThemeHandler themeProvider) {
     double screenHeight = MediaQuery.of(context).size.height;
     final imageUrl = null;
 
@@ -54,7 +53,7 @@ class ProblemDetailScreenWidget {
   }
 
   Widget buildExpansionTile(BuildContext context, ProblemModel problemModel,
-      ThemeHandler themeProvider, TemplateType templateType) {
+      ThemeHandler themeProvider) {
     final ScrollController latexScrollController = ScrollController();
     final ScrollController tileScrollController = ScrollController();
 
@@ -72,20 +71,9 @@ class ProblemDetailScreenWidget {
           buildSectionWithMemo(problemModel.memo, themeProvider),
           SizedBox(height: screenHeight * 0.02),
           SizedBox(height: screenHeight * 0.02),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: (templateType == TemplateType.simple)
-                ? [_buildImageContainer(context, null, '해설 이미지', themeProvider)]
-                : [
-                    _buildImageContainer(
-                        context, null, '문제 원본 이미지', themeProvider),
-                    const SizedBox(height: 20.0),
-                    _buildImageContainer(
-                        context, null, '해설 이미지', themeProvider),
-                    //const SizedBox(height: 20.0),
-                    //_buildImageContainer(context, problemModel.solveImageUrl, '풀이 이미지', themeProvider),
-                  ],
-          ),
+          Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            _buildImageContainer(context, null, '해설 이미지', themeProvider)
+          ]),
           SizedBox(height: screenHeight * 0.03),
           buildRepeatSection(context, problemModel, themeProvider),
           SizedBox(height: screenHeight * 0.02),

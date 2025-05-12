@@ -15,6 +15,7 @@ import '../../Provider/FoldersProvider.dart';
 import '../PracticeNote/PracticeNavigationButtons.dart';
 import '../ProblemShare/AnswerShareScreen.dart';
 import '../ProblemShare/ProblemShareScreen.dart';
+import 'ProblemDetailTemplate.dart';
 
 class ProblemDetailScreen extends StatefulWidget {
   final int problemId;
@@ -247,21 +248,11 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                       Navigator.of(context)
                           .push(
                         MaterialPageRoute(
-                          builder: (context) => ProblemRegisterScreenV2(
-                            problemModel: problemModel,
-                            isEditMode: true,
-                          ),
-                        ),
-                        /*
-                        MaterialPageRoute(
                           builder: (context) => ProblemRegisterScreen(
                             problemModel: problemModel,
                             isEditMode: true,
-                            colorPickerResult: null,
-                            coordinatePickerResult: null,
                           ),
                         ),
-                         */
                       )
                           .then((_) {
                         _setProblemModel();
@@ -377,31 +368,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
   }
 
   Widget _buildContent(ProblemModel problemModel) {
-    /*
-    switch (problemModel.templateType) {
-      case TemplateType.simple:
-        return SimpleProblemDetailTemplate(problemModel: problemModel);
-      case TemplateType.clean:
-        return CleanProblemDetailTemplate(problemModel: problemModel);
-      case TemplateType.special:
-        return SpecialProblemDetailTemplate(problemModel: problemModel);
-      default:
-        return Center(
-          child: HandWriteText(
-            text: '알 수 없는 템플릿 유형입니다.',
-            color: ThemeHandler().primaryColor,
-          ),
-        );
-    }
-
-     */
-
-    return Center(
-      child: HandWriteText(
-        text: '알 수 없는 템플릿 유형입니다.',
-        color: ThemeHandler().primaryColor,
-      ),
-    );
+    return ProblemDetailTemplate(problemModel: problemModel);
   }
 
   // 네비게이션 버튼 구성 함수
