@@ -385,7 +385,7 @@ class _TemplateSelectionScreenState extends State<TemplateSelectionScreen> {
           if (result != null) {
             final problemModel = ProblemModel(
               problemId: result['problemId'],
-              imageDataList: [],
+              //imageDataList: [],
               //problemImageUrl: result['problemImageUrl'],
               //templateType: templateType,
             );

@@ -54,14 +54,4 @@ class FolderModel {
       updateAt: updated != null ? DateTime.parse(updated) : null,
     );
   }
-
-  Map<String, dynamic> toJson() => {
-        'folderId': folderId,
-        'folderName': folderName,
-        'parentFolder': parentFolder?.toJson(),
-        'problemList': problems.map((e) => e.toJson()).toList(),
-        'subFolderList': subFolderList.map((e) => e.toJson()).toList(),
-        'createdAt': createdAt?.toIso8601String(),
-        'updateAt': updateAt?.toIso8601String(),
-      };
 }

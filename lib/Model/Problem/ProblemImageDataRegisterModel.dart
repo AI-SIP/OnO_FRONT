@@ -13,7 +13,7 @@ class ProblemImageDataRegisterModel {
 
   Map<String, dynamic> toJson() => {
         'imageUrl': imageUrl,
-        'problemImageType': problemImageType.value,
+        'problemImageType': problemImageType.name,
         'createdAt': createdAt.toIso8601String(),
       };
 }

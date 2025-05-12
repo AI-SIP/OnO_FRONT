@@ -1125,7 +1125,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
     if (foldersProvider.currentProblems.isNotEmpty) {
       return foldersProvider.currentProblems
-          .map((problem) => ProblemThumbnailModel.fromJson(problem.toJson()))
+          .map((problem) => ProblemThumbnailModel.fromProblem(problem))
           .toList();
     } else {
       log('No problems loaded');

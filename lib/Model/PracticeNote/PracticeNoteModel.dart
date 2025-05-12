@@ -39,18 +39,6 @@ class ProblemPracticeModel {
     );
   }
 
-  Map<String, dynamic> toJson() {
-    return {
-      'practiceId': practiceId,
-      'practiceTitle': practiceTitle,
-      'practiceCount': practiceCount,
-      'practiceSize': practiceSize,
-      'createdAt': _formatDateTime(createdAt),
-      'lastSolvedAt': _formatDateTime(lastSolvedAt),
-      'problems': problems.map((e) => e.toJson()).toList(),
-    };
-  }
-
   // 날짜 포맷팅 함수
   String? _formatDateTime(DateTime? dateTime) {
     if (dateTime == null) return null;

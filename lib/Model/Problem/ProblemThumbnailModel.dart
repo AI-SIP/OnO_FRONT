@@ -1,7 +1,9 @@
+import 'package:ono/Model/Problem/ProblemModel.dart';
+
 class ProblemThumbnailModel {
   final int problemId;
-  final String reference;
-  final String problemImageUrl;
+  final String? reference;
+  final String? problemImageUrl;
   final DateTime? createdAt;
 
   ProblemThumbnailModel(
@@ -16,6 +18,17 @@ class ProblemThumbnailModel {
       reference: json['reference'],
       problemImageUrl: json['problemImageUrl'],
       createdAt: json['createdAt'],
+    );
+  }
+
+  factory ProblemThumbnailModel.fromProblem(ProblemModel problemModel) {
+    return ProblemThumbnailModel(
+      problemId: problemModel.problemId,
+      reference: problemModel.reference,
+      problemImageUrl: problemModel.problemImageDataList != null
+          ? problemModel.problemImageDataList![0].imageUrl
+          : null,
+      createdAt: problemModel.createdAt,
     );
   }
 }
