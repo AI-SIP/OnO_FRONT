@@ -155,18 +155,14 @@ class UserProvider with ChangeNotifier {
   Future<void> fetchAllData() async {
     await fetchUserInfo();
     await foldersProvider.fetchAllFolderContents();
-    //await foldersProvider.fetchRootFolderContents();
     //await practiceProvider.fetchAllPracticeContents();
 
-    _loginStatus = LoginStatus.login;
     notifyListeners();
   }
 
   Future<void> fetchUserInfo() async {
     userInfoModel = await userService.fetchUserInfo();
     userInfoModel?.problemCount = await problemService.getProblemCount() ?? 0;
-
-    print('userInfoModel: ${userInfoModel.toString()}');
   }
 
   Future<void> updateUser({
@@ -187,18 +183,23 @@ class UserProvider with ChangeNotifier {
   }
 
   Future<void> autoLogin() async {
-    String? refreshToken = await tokenProvider.getRefreshToken();
+    try {
+      String? refreshToken = await tokenProvider.getRefreshToken();
 
-    if (refreshToken == null) {
+      if (refreshToken == null) {
+        _loginStatus = LoginStatus.logout;
+      } else {
+        await tokenProvider.refreshAccessToken();
+        fetchAllData();
+        _isFirstLogin = false;
+        _loginStatus = LoginStatus.login;
+      }
+    } catch (error) {
       _loginStatus = LoginStatus.logout;
-    } else {
-      await tokenProvider.refreshAccessToken();
-      _loginStatus = LoginStatus.login;
-      _isFirstLogin = false;
-      fetchAllData();
+      throw Exception("자동 로그인 실패, error: ${error.toString()}");
+    } finally {
+      notifyListeners();
     }
-
-    notifyListeners();
   }
 
   Future<void> signOut() async {

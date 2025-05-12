@@ -3,7 +3,6 @@ import 'dart:developer';
 
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
-import 'package:sentry_flutter/sentry_flutter.dart';
 
 import '../Config/AppConfig.dart';
 
@@ -36,52 +35,52 @@ class TokenProvider {
     return await storage.read(key: 'refreshToken');
   }
 
-  Future<bool> refreshAccessToken() async {
-    try {
-      String? refreshToken = await storage.read(key: 'refreshToken');
-      if (refreshToken == null) {
-        log('No refresh token available.');
-        return false;
-      }
-
-      final response = await http
-          .post(
-            Uri.parse('${AppConfig.baseUrl}/api/auth/refresh'),
-            headers: {'Content-Type': 'application/json'},
-            body: jsonEncode({'refreshToken': refreshToken}),
-          )
-          .timeout(const Duration(seconds: 30));
-
-      if (response.statusCode == 200) {
-        final body = jsonDecode(response.body) as Map<String, dynamic>;
-        final data = body['data'] as Map<String, dynamic>?;
-
-        if (data == null) {
-          throw Exception('Malformed refresh response: missing data field.');
-        }
-
-        final newAccessToken = data['accessToken'] as String?;
-        final newRefreshToken = data['refreshToken'] as String?;
-
-        if (newAccessToken == null || newRefreshToken == null) {
-          throw Exception('Malformed refresh response: missing tokens.');
-        }
-
-        await setAccessToken(newAccessToken);
-        await setRefreshToken(newRefreshToken);
-        log('Access token refreshed.');
-        return true;
-      } else {
-        throw Exception('Failed to refresh token. Logging out.');
-      }
-    } catch (error, stackTrace) {
-      log('Error refreshing token: $error');
-      await Sentry.captureException(
-        error,
-        stackTrace: stackTrace,
-      );
-      return false;
+  Future<void> refreshAccessToken() async {
+    String? refreshToken = await storage.read(key: 'refreshToken');
+    if (refreshToken == null) {
+      log('No refresh token available.');
+      throw Exception('No Refresh Token Exist');
     }
+
+    final response = await http
+        .post(
+          Uri.parse('${AppConfig.baseUrl}/api/auth/refresh'),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({'refreshToken': refreshToken}),
+        )
+        .timeout(const Duration(seconds: 30));
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      // 응답 본문을 JSON 으로 파싱
+      String errorMessage;
+      try {
+        final errJson = jsonDecode(utf8.decode(response.bodyBytes));
+        errorMessage = errJson['message'] as String? ?? 'Unknown error';
+      } catch (_) {
+        errorMessage = response.reasonPhrase ?? 'Unknown error';
+      }
+
+      await deleteToken();
+      throw Exception('HTTP ${response.statusCode}: $errorMessage');
+    }
+
+    final body = jsonDecode(response.body) as Map<String, dynamic>;
+    final data = body['data'] as Map<String, dynamic>?;
+
+    if (data == null) {
+      throw Exception('Malformed refresh response: missing data field.');
+    }
+
+    final newAccessToken = data['accessToken'] as String?;
+    final newRefreshToken = data['refreshToken'] as String?;
+
+    if (newAccessToken == null || newRefreshToken == null) {
+      throw Exception('Malformed refresh response: missing tokens.');
+    }
+
+    await setAccessToken(newAccessToken);
+    await setRefreshToken(newRefreshToken);
+    log('Access token refreshed.');
   }
 
   Future<void> deleteToken() async {
