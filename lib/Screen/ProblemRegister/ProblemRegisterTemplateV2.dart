@@ -3,14 +3,17 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
+import '../../Model/Common/LoginStatus.dart';
 import '../../Model/Problem/ProblemModel.dart';
 import '../../Model/Problem/ProblemRegisterModel.dart';
 import '../../Module/Dialog/FolderSelectionDialog.dart';
 import '../../Module/Dialog/LoadingDialog.dart';
+import '../../Module/Dialog/SnackBarDialog.dart';
+import '../../Module/Text/HandWriteText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/FoldersProvider.dart';
 import '../../Provider/ScreenIndexProvider.dart';
-import '../../Screen/ScreenUtil/ProblemRegisterScreenService.dart';
+import '../../Provider/UserProvider.dart';
 import 'ProblemRegisterScreenWidget.dart';
 
 class ProblemRegisterTemplateV2 extends StatefulWidget {
@@ -35,7 +38,6 @@ class _ProblemRegisterTemplateStateV2 extends State<ProblemRegisterTemplateV2> {
 
   XFile? problemImage;
   XFile? answerImage;
-  final _service = ProblemRegisterScreenService();
 
   bool isLoading = false;
   DateTime _selectedDate = DateTime.now();
@@ -305,7 +307,7 @@ class _ProblemRegisterTemplateStateV2 extends State<ProblemRegisterTemplateV2> {
       imageDataDtoList: [],
     );
 
-    _service.submitProblemV2(
+    submitProblem(
       context,
       problemRegisterModel,
       () {
@@ -319,6 +321,69 @@ class _ProblemRegisterTemplateStateV2 extends State<ProblemRegisterTemplateV2> {
               .setSelectedIndex(0);
         }
       },
+    );
+  }
+
+  void showSuccessDialog(BuildContext context) {
+    final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
+    SnackBarDialog.showSnackBar(
+        context: context,
+        message: "오답노트가 성공적으로 저장되었습니다.",
+        backgroundColor: themeProvider.primaryColor);
+  }
+
+  void showValidationMessage(BuildContext context, String message) {
+    SnackBarDialog.showSnackBar(
+        context: context,
+        message: "오답노트 작성 과정에서 오류가 발생했습니다.",
+        backgroundColor: Colors.red);
+  }
+
+  void hideLoadingDialog(BuildContext context) {
+    Navigator.of(context).pop(true);
+  }
+
+  Future<void> submitProblem(BuildContext context,
+      ProblemRegisterModel problemData, VoidCallback onSuccess) async {
+    final authService = Provider.of<UserProvider>(context, listen: false);
+    if (authService.isLoggedIn == LoginStatus.logout) {
+      _showLoginRequiredDialog(context);
+      return;
+    }
+
+    try {
+      await Provider.of<FoldersProvider>(context, listen: false)
+          .submitProblem(problemData, context);
+      onSuccess();
+      showSuccessDialog(context);
+    } catch (error) {
+      hideLoadingDialog(context);
+    }
+  }
+
+  void _showLoginRequiredDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Colors.white,
+        title: const HandWriteText(
+          text: '로그인 필요',
+        ),
+        content: const HandWriteText(
+          text: '오답노트를 작성하려면 로그인 해주세요!',
+        ),
+        actions: <Widget>[
+          TextButton(
+            child: const HandWriteText(
+              text: '확인',
+              fontSize: 20,
+            ),
+            onPressed: () {
+              Navigator.of(ctx).pop(); // 다이얼로그 닫기
+            },
+          )
+        ],
+      ),
     );
   }
 }
