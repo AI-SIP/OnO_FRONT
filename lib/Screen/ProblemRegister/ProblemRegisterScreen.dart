@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import '../../Model/Problem/ProblemModel.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
-import 'ProblemRegisterTemplateV2.dart';
+import 'ProblemRegisterTemplate.dart';
 
 class ProblemRegisterScreenV2 extends StatefulWidget {
   final ProblemModel? problemModel;
@@ -32,7 +32,7 @@ class _ProblemRegisterScreenStateV2 extends State<ProblemRegisterScreenV2> {
     Widget templateWidget;
     final themeProvider = Provider.of<ThemeHandler>(context);
 
-    templateWidget = ProblemRegisterTemplateV2(
+    templateWidget = ProblemRegisterTemplate(
       problemModel: widget.problemModel,
       isEditMode: widget.isEditMode,
     );

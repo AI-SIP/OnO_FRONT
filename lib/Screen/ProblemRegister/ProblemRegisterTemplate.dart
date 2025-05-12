@@ -16,22 +16,22 @@ import '../../Provider/ScreenIndexProvider.dart';
 import '../../Provider/UserProvider.dart';
 import 'ProblemRegisterScreenWidget.dart';
 
-class ProblemRegisterTemplateV2 extends StatefulWidget {
+class ProblemRegisterTemplate extends StatefulWidget {
   final ProblemModel? problemModel;
   final bool isEditMode;
 
-  const ProblemRegisterTemplateV2({
+  const ProblemRegisterTemplate({
     required this.problemModel,
     required this.isEditMode,
     super.key,
   });
 
   @override
-  _ProblemRegisterTemplateStateV2 createState() =>
-      _ProblemRegisterTemplateStateV2();
+  _ProblemRegisterTemplateState createState() =>
+      _ProblemRegisterTemplateState();
 }
 
-class _ProblemRegisterTemplateStateV2 extends State<ProblemRegisterTemplateV2> {
+class _ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
   late ProblemModel? problemModel;
   late TextEditingController sourceController;
   late TextEditingController notesController;
