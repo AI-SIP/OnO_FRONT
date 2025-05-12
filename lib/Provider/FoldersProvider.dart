@@ -1,21 +1,18 @@
-import 'dart:convert';
 import 'dart:developer';
 
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:ono/Model/Folder/FolderRegisterModel.dart';
-import 'package:ono/Model/Problem/TemplateType.dart';
+import 'package:ono/Model/Problem/ProblemRepeatRegisterModel.dart';
 import 'package:ono/Module/Util/ProblemSorting.dart';
 import 'package:ono/Module/Util/ReviewHandler.dart';
+import 'package:ono/Service/Api/FileUpload/FileUploadService.dart';
 import 'package:ono/Service/Api/Folder/FolderService.dart';
 import 'package:ono/Service/Api/HttpService.dart';
 
-import '../Config/AppConfig.dart';
 import '../Model/Folder/FolderModel.dart';
 import '../Model/Problem/ProblemModelWithTemplate.dart';
 import '../Model/Problem/ProblemRegisterModel.dart';
-import '../Model/Problem/ProblemRegisterModelWithTemplate.dart';
 import '../Service/Api/Problem/ProblemService.dart';
 import 'TokenProvider.dart';
 
@@ -28,6 +25,7 @@ class FoldersProvider with ChangeNotifier {
   final HttpService httpService = HttpService();
   final folderService = FolderService();
   final problemService = ProblemService();
+  final fileUploadService = FileUploadService();
 
   String sortOption = 'newest';
 
@@ -148,304 +146,57 @@ class FoldersProvider with ChangeNotifier {
     await moveToFolder(currentFolder!.folderId);
   }
 
-  // 문제 이미지 미리 전송
-  Future<Map<String, dynamic>?> uploadProblemImage(XFile? problemImage) async {
-    final response = await httpService.sendRequest(
-      method: 'POST',
-      url: '${AppConfig.baseUrl}/api/process/problemImage',
-      isMultipart: true,
-      files: [
-        await http.MultipartFile.fromPath('problemImage', problemImage!.path)
-      ],
-    );
-
-    if (response != null) {
-      final jsonResponse = json.decode(utf8.decode(response.bodyBytes));
-      log('success for upload problem image: ${jsonResponse['problemImageUrl']}');
-      return {
-        'problemId': jsonResponse['problemId'],
-        'problemImageUrl': jsonResponse['problemImageUrl'],
-      };
-    } else {
-      throw Exception('Failed to upload problem image');
-    }
+  Future<String> uploadImage(XFile image) async {
+    return await fileUploadService.uploadImageFile(image);
   }
 
-  Future<String?> fetchProcessImage(
-      String? fullUrl,
-      Map<String, dynamic>? colorPickerResult,
-      List<List<double>>? coordinatePickerResult) async {
-    List<int>? labels = coordinatePickerResult != null
-        ? List<int>.filled(coordinatePickerResult.length, 1)
-        : null;
-
-    if (colorPickerResult != null) {
-      log('remove colors: ${colorPickerResult['colors']}');
-      log('remove intensity: ${colorPickerResult['intensity']}');
-    } else if (coordinatePickerResult != null) {
-      log('point list: ${coordinatePickerResult.toString()}');
-    }
-    final response = await httpService.sendRequest(
-      method: 'POST',
-      url: '${AppConfig.baseUrl}/api/process/processImage',
-      body: {
-        'fullUrl': fullUrl,
-        'colorsList':
-            colorPickerResult != null ? colorPickerResult['colors'] : null,
-        'intensity':
-            colorPickerResult != null ? colorPickerResult['intensity'] : null,
-        'points': coordinatePickerResult,
-        'labels': labels,
-      },
-    );
-
-    if (response != null) {
-      final jsonResponse = json.decode(utf8.decode(response.bodyBytes));
-      log('image process result : ${jsonResponse['processImageUrl']}');
-      return jsonResponse['processImageUrl'];
-    } else {
-      log('Failed to fetch process image URL: ${response.body}');
-      return null;
-    }
-  }
-
-  Future<String?> fetchAnalysisResult(String? problemImageUrl) async {
-    final response = await httpService.sendRequest(
-      method: 'POST', // 'GET'에서 'POST'로 변경
-      url: '${AppConfig.baseUrl}/api/process/analysis',
-      body: {'problemImageUrl': problemImageUrl},
-    );
-
-    if (response != null) {
-      final jsonResponse = json.decode(utf8.decode(response.bodyBytes));
-      log('analysis : ${jsonResponse['analysis']}');
-      return jsonResponse['analysis'];
-    } else {
-      log('Failed to fetch analysis result: ${response.body}');
-      return null;
-    }
-  }
-
-  Future<void> submitProblem(ProblemRegisterModelWithTemplate problemData,
-      BuildContext context) async {
-    final files = <http.MultipartFile>[];
-
-    if (problemData.solveImage != null) {
-      files.add(await http.MultipartFile.fromPath(
-          'solveImage', problemData.solveImage!.path));
-    }
-    if (problemData.answerImage != null) {
-      files.add(await http.MultipartFile.fromPath(
-          'answerImage', problemData.answerImage!.path));
-    }
-
-    final requestBody = {
-      'problemId': problemData.problemId.toString(),
-      'solvedAt': (problemData.solvedAt ?? DateTime.now()).toIso8601String(),
-      'reference': problemData.reference ?? "",
-      'memo': problemData.memo ?? "",
-      'folderId': (problemData.folderId ?? currentFolder!.folderId).toString(),
-      'templateType': problemData.templateType!.templateTypeCode.toString(),
-      'analysis': problemData.analysis ?? "",
-    };
-
-    if (problemData.templateType == TemplateType.clean ||
-        problemData.templateType == TemplateType.special) {
-      if (problemData.processImageUrl != null) {
-        requestBody['processImageUrl'] = problemData.processImageUrl!;
-      }
-    }
-
-    final response = await httpService.sendRequest(
-      method: 'POST',
-      url: '${AppConfig.baseUrl}/api/problems',
-      isMultipart: false,
-      files: files,
-      body: requestBody,
-    );
-
-    if (response != null) {
-      log('Problem successfully submitted');
-      await fetchFolderContent(_currentFolder!.folderId);
-
-      int userProblemCount = await getUserProblemCount();
-      if (userProblemCount > 0 && userProblemCount % 10 == 0) {
-        reviewHandler.requestReview(context);
-      }
-    } else {
-      throw Exception('Failed to submit problem');
-    }
-  }
-
-  Future<void> submitProblemV2(
+  Future<void> submitProblem(
       ProblemRegisterModel problemData, BuildContext context) async {
-    final files = <http.MultipartFile>[];
+    await problemService.registerProblem(problemData);
 
-    /*
-    if (problemData.problemImage != null) {
-      files.add(await http.MultipartFile.fromPath(
-          'problemImage', problemData.problemImage!.path));
-    }
-    if (problemData.answerImage != null) {
-      files.add(await http.MultipartFile.fromPath(
-          'answerImage', problemData.answerImage!.path));
-    }
+    await fetchFolderContent(problemData.folderId ?? currentFolder!.folderId);
+    await moveToFolder(currentFolder!.folderId);
 
-     */
-
-    final requestBody = {
-      'solvedAt': (problemData.solvedAt ?? DateTime.now()).toIso8601String(),
-      'reference': problemData.reference ?? "",
-      'memo': problemData.memo ?? "",
-      'folderId': (problemData.folderId ?? currentFolder!.folderId).toString(),
-      'imageDataDtoList': []
-    };
-
-    if (problemData.problemId != null) {
-      requestBody['problemId'] = problemData.problemId.toString();
-    }
-
-    final response = await httpService.sendRequest(
-      method: 'POST',
-      url: '${AppConfig.baseUrl}/api/problems',
-      isMultipart: false,
-      files: files,
-      body: requestBody,
-    );
-
-    if (response != null) {
-      log('Problem successfully submitted');
-
-      await fetchFolderContent(problemData.folderId ?? currentFolder!.folderId);
-      await moveToFolder(currentFolder!.folderId);
-
-      int userProblemCount = await getUserProblemCount();
-      if (userProblemCount > 0 && userProblemCount % 10 == 0) {
-        reviewHandler.requestReview(context);
-      }
-    } else {
-      throw Exception('Failed to submit problem');
+    int userProblemCount = await getUserProblemCount();
+    if (userProblemCount > 0 && userProblemCount % 10 == 0) {
+      reviewHandler.requestReview(context);
     }
   }
 
   Future<int> getUserProblemCount() async {
-    final response = await httpService.sendRequest(
-      method: 'GET',
-      url: '${AppConfig.baseUrl}/api/problems/problemCount',
-    );
-
-    if (response != null) {
-      int userProblemCount = int.parse(response.body);
-      log('User problem count: $userProblemCount');
-      return userProblemCount;
-    } else {
-      throw Exception('Failed to get user problem count');
-    }
+    return await problemService.getProblemCount();
   }
 
-  Future<void> updateProblem(
-      ProblemRegisterModelWithTemplate problemData) async {
-    final files = <http.MultipartFile>[];
-    if (problemData.answerImage != null) {
-      files.add(await http.MultipartFile.fromPath(
-          'answerImage', problemData.answerImage!.path));
+  Future<void> updateProblem(ProblemRegisterModel problemData) async {
+    if (problemData.imageDataDtoList != null &&
+        problemData.imageDataDtoList!.isNotEmpty) {
+      await problemService.updateProblemImageData(problemData);
     }
 
-    final response = await httpService.sendRequest(
-      method: 'PATCH',
-      url: '${AppConfig.baseUrl}/api/problems',
-      isMultipart: true,
-      files: files,
-      body: {
-        'problemId': (problemData.problemId ?? -1).toString(),
-        if (problemData.solvedAt != null)
-          'solvedAt': problemData.solvedAt!.toIso8601String(),
-        if (problemData.reference != null && problemData.reference!.isNotEmpty)
-          'reference': problemData.reference!,
-        if (problemData.memo != null && problemData.memo!.isNotEmpty)
-          'memo': problemData.memo!,
-        if (problemData.folderId != null)
-          'folderId': problemData.folderId!.toString(),
-      },
-    );
-
-    if (response != null) {
-      log('Problem successfully updated');
-
-      if (problemData.folderId != null) {
-        await fetchFolderContent(problemData.folderId!);
-      }
-      await fetchFolderContent(_currentFolder!.folderId);
-
-      await moveToFolder(_currentFolder!.folderId);
-    } else {
-      throw Exception('Failed to update problem');
+    if (problemData.memo != null || problemData.reference != null) {
+      await problemService.updateProblemInfo(problemData);
     }
+
+    if (problemData.folderId != null) {
+      await problemService.updateProblemPath(problemData);
+      await fetchFolderContent(problemData.folderId!);
+    }
+
+    await fetchFolderContent(_currentFolder!.folderId);
+    await moveToFolder(_currentFolder!.folderId);
   }
 
-  Future<bool> deleteProblems(List<int> deleteProblemIdList) async {
-    final queryParams = {
-      'deleteProblemIdList': deleteProblemIdList.join(','), // 쉼표로 구분된 문자열로 변환
-    };
+  Future<void> deleteProblems(List<int> deleteProblemIdList) async {
+    await problemService.deleteProblems(deleteProblemIdList);
 
-    final response = await httpService.sendRequest(
-        method: 'DELETE',
-        url: '${AppConfig.baseUrl}/api/problem',
-        queryParams: queryParams);
-
-    if (response != null) {
-      log('Problem successfully deleted');
-      await fetchFolderContent(_currentFolder!.folderId);
-      await moveToFolder(_currentFolder!.folderId);
-
-      return true;
-    } else {
-      throw Exception('Failed to delete problem');
-    }
+    await fetchFolderContent(_currentFolder!.folderId);
+    await moveToFolder(_currentFolder!.folderId);
   }
 
-  Future<void> addRepeatCount(int problemId, XFile? solveImage) async {
-    if (solveImage != null) {
-      // Multipart 파일로 변환
-      final file =
-          await http.MultipartFile.fromPath('solveImage', solveImage.path);
-
-      // Multipart 요청 생성
-      final response = await httpService.sendRequest(
-        method: 'POST',
-        url: '${AppConfig.baseUrl}/api/problems/repeat',
-        headers: {
-          'problemId': problemId.toString(),
-        },
-        isMultipart: true,
-        files: [file],
-      );
-
-      if (response != null) {
-        log('Problem successfully repeated with image');
-        await fetchFolderContent(_currentFolder!.folderId);
-        await moveToFolder(_currentFolder!.folderId);
-      } else {
-        throw Exception('Failed to repeat problem with image');
-      }
-    } else {
-      // solveImage가 null인 경우, 일반 POST 요청으로 전송
-      final response = await httpService.sendRequest(
-        method: 'POST',
-        url: '${AppConfig.baseUrl}/api/problem/repeat',
-        headers: {
-          'problemId': problemId.toString(),
-        },
-        isMultipart: false,
-      );
-
-      if (response != null) {
-        log('Problem successfully repeated without image');
-        await fetchFolderContent(_currentFolder!.folderId);
-      } else {
-        throw Exception('Failed to repeat problem without image');
-      }
-    }
+  Future<void> addRepeatCount(
+      ProblemRepeatRegisterModel problemRepeatRegisterModel) async {
+    await problemService.repeatProblem(problemRepeatRegisterModel);
+    await fetchFolderContent(_currentFolder!.folderId);
   }
 
   void sortProblemsByOption(String option) {

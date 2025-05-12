@@ -287,6 +287,8 @@ class _ProblemRegisterTemplateStateV2 extends State<ProblemRegisterTemplateV2> {
     });
   }
 
+  void registerImages() {}
+
   void _submitProblem() {
     FirebaseAnalytics.instance.logEvent(
       name: 'problem_register_complete_button_click',

@@ -6,7 +6,6 @@ import 'package:ono/Provider/FoldersProvider.dart';
 import 'package:provider/provider.dart';
 
 import '../../Model/Problem/ProblemRegisterModel.dart';
-import '../../Model/Problem/ProblemRegisterModelWithTemplate.dart';
 import '../../Module/Dialog/SnackBarDialog.dart';
 import '../../Module/Image/ImagePickerHandler.dart';
 import '../../Module/Theme/ThemeHandler.dart';
@@ -36,10 +35,8 @@ class ProblemRegisterScreenService {
     Navigator.of(context).pop(true);
   }
 
-  Future<void> submitProblem(
-      BuildContext context,
-      ProblemRegisterModelWithTemplate problemData,
-      VoidCallback onSuccess) async {
+  Future<void> submitProblem(BuildContext context,
+      ProblemRegisterModel problemData, VoidCallback onSuccess) async {
     final authService = Provider.of<UserProvider>(context, listen: false);
     if (authService.isLoggedIn == LoginStatus.logout) {
       _showLoginRequiredDialog(context);
@@ -66,7 +63,7 @@ class ProblemRegisterScreenService {
 
     try {
       await Provider.of<FoldersProvider>(context, listen: false)
-          .submitProblemV2(problemData, context);
+          .submitProblem(problemData, context);
       onSuccess();
       showSuccessDialog(context);
     } catch (error) {

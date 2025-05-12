@@ -79,7 +79,7 @@ class ProblemModelWithTemplate {
       'folderId': folderId,
       'templateType': templateType,
       'analysis': analysis,
-      'repeats': repeats?.map((e) => e.toJson()).toList(),
+      //'repeats': repeats?.map((e) => e.toJson()).toList(),
       'solvedAt': _formatDateTime(solvedAt),
       'createdAt': _formatDateTime(createdAt),
       'updateAt': _formatDateTime(updateAt),

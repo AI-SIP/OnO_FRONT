@@ -313,8 +313,11 @@ class _PracticeNavigationButtonsState extends State<PracticeNavigationButtons> {
                             isLoading = true;
                           });
 
+                          /*
                           await folderProvider.addRepeatCount(
                               widget.currentProblemId, selectedImage);
+
+                           */
 
                           await widget.practiceProvider.moveToPractice(
                               widget.practiceProvider.currentPracticeId);

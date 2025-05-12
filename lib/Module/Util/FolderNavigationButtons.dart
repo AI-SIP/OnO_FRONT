@@ -270,12 +270,15 @@ class _FolderNavigationButtonsState extends State<FolderNavigationButtons> {
 
                           LoadingDialog.show(context, '오답 복습 중...');
 
+                          /*
                           await widget.foldersProvider
                               .addRepeatCount(widget.currentId, selectedImage);
 
                           FirebaseAnalytics.instance.logEvent(
                             name: 'problem_repeat',
                           );
+
+                           */
 
                           setState(() {
                             isReviewed = true;

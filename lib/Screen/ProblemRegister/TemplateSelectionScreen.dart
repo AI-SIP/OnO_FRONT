@@ -17,7 +17,6 @@ import '../../Module/Image/ColorPicker/ImageColorPickerHandler.dart';
 import '../../Module/Image/ImagePickerHandler.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
-import '../../Provider/FoldersProvider.dart';
 import '../../Provider/UserProvider.dart';
 
 class TemplateSelectionScreen extends StatefulWidget {
@@ -374,9 +373,14 @@ class _TemplateSelectionScreenState extends State<TemplateSelectionScreen> {
         if (templateType == TemplateType.simple ||
             coordinatePickerResult != null) {
           LoadingDialog.show(context, '템플릿 불러오는 중...');
+          final result = null;
+
+          /*
           final result =
               await Provider.of<FoldersProvider>(context, listen: false)
                   .uploadProblemImage(pickedFile);
+
+           */
 
           if (result != null) {
             final problemModel = ProblemModelWithTemplate(

@@ -1,6 +1,7 @@
 import 'package:ono/Model/Problem/ProblemImageDataRegisterModel.dart';
 import 'package:ono/Model/Problem/ProblemModel.dart';
 import 'package:ono/Model/Problem/ProblemRegisterModel.dart';
+import 'package:ono/Model/Problem/ProblemRepeatRegisterModel.dart';
 
 import '../../../Config/AppConfig.dart';
 import '../HttpService.dart';
@@ -51,6 +52,15 @@ class ProblemService {
       method: 'POST',
       url: '$baseUrl/imageData',
       body: problemImageDataRegisterModel.toJson(),
+    );
+  }
+
+  Future<void> repeatProblem(
+      ProblemRepeatRegisterModel problemRepeatRegisterModel) async {
+    await httpService.sendRequest(
+      method: 'POST',
+      url: '$baseUrl/repeat',
+      body: problemRepeatRegisterModel.toJson(),
     );
   }
 

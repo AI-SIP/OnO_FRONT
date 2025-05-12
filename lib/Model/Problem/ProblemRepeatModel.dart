@@ -25,16 +25,6 @@ class ProblemRepeatModel {
     );
   }
 
-  // 객체를 JSON 형식으로 변환하는 메서드 (서버로 전송할 때 사용)
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'solveImageUrl': solveImageUrl,
-      'createdAt': _formatDateTime(createdAt),
-      'updatedAt': _formatDateTime(updatedAt),
-    };
-  }
-
   // 날짜 포맷팅 함수
   String? _formatDateTime(DateTime? dateTime) {
     if (dateTime == null) return null;

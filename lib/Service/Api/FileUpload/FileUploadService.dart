@@ -8,13 +8,18 @@ class FileUploadService {
   final HttpService httpService = HttpService();
   final baseUrl = "${AppConfig.baseUrl}/api/fileUpload";
 
-  Future<void> uploadImageFile(XFile file) async {
+  Future<String> uploadImageFile(XFile file) async {
     final files = <http.MultipartFile>[];
 
     files.add(await http.MultipartFile.fromPath('image', file.path));
 
-    httpService.sendRequest(
-        method: 'POST', url: '$baseUrl', isMultipart: true, files: files);
+    final result = httpService.sendRequest(
+        method: 'POST',
+        url: '$baseUrl',
+        isMultipart: true,
+        files: files) as dynamic;
+
+    return result['imageUrl'];
   }
 
   Future<List<String>> uploadMultipleImageFiles(List<XFile> files) async {

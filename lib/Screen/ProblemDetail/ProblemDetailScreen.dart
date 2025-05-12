@@ -1,12 +1,12 @@
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
-import 'package:ono/Model/Problem/ProblemRegisterModelWithTemplate.dart';
 import 'package:ono/Module/Text/HandWriteText.dart';
 import 'package:ono/Provider/PracticeNoteProvider.dart';
 import 'package:ono/Screen/ProblemRegister/ProblemRegisterScreen.dart';
 import 'package:provider/provider.dart';
 
 import '../../Model/Problem/ProblemModelWithTemplate.dart';
+import '../../Model/Problem/ProblemRegisterModel.dart';
 import '../../Model/Problem/TemplateType.dart';
 import '../../Module/Dialog/FolderSelectionDialog.dart';
 import '../../Module/Text/StandardText.dart';
@@ -306,7 +306,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
 
                       if (selectedFolderId != null) {
                         await foldersProvider
-                            .updateProblem(ProblemRegisterModelWithTemplate(
+                            .updateProblem(ProblemRegisterModel(
                           problemId: problemModel.problemId,
                           folderId: selectedFolderId,
                         ));

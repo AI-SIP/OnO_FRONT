@@ -15,8 +15,7 @@ class ProblemModel {
   final DateTime? createdAt;
   final DateTime? updateAt;
 
-  /// 새로 추가된 부분
-  final List<ProblemImageDataModel> imageUrlList;
+  final List<ProblemImageDataModel> imageDataList;
 
   ProblemModel({
     this.problemId = -1,
@@ -28,11 +27,10 @@ class ProblemModel {
     this.solvedAt,
     this.createdAt,
     this.updateAt,
-    required this.imageUrlList,
+    required this.imageDataList,
   });
 
   factory ProblemModel.fromJson(Map<String, dynamic> json) {
-    // 3) imageUrlList 파싱
     final imageListJson = json['imageUrlList'] as List<dynamic>? ?? [];
     final imageUrlList = imageListJson
         .map((e) => ProblemImageDataModel.fromJson(e as Map<String, dynamic>))
@@ -42,7 +40,6 @@ class ProblemModel {
       problemId: json['problemId'] as int,
       memo: json['memo'] as String?,
       reference: json['reference'] as String?,
-      // 아래 필드들은 API 에서 내려오는 것에 맞추어 필요하면 수정하세요.
       templateType: json['templateType'] != null
           ? TemplateTypeExtension.fromTemplateTypeCode(json['templateType'])
           : null,
@@ -59,7 +56,7 @@ class ProblemModel {
       updateAt: json['updatedAt'] != null
           ? DateTime.parse(json['updatedAt'] as String)
           : null,
-      imageUrlList: imageUrlList,
+      imageDataList: imageUrlList,
     );
   }
 
@@ -75,7 +72,7 @@ class ProblemModel {
       'solvedAt': _toIso(solvedAt),
       'createdAt': _toIso(createdAt),
       'updatedAt': _toIso(updateAt),
-      'imageUrlList': imageUrlList.map((e) => e.toJson()).toList(),
+      'imageUrlList': imageDataList.map((e) => e.toJson()).toList(),
     };
   }
 

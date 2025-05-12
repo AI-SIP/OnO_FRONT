@@ -7,7 +7,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
 import 'package:ono/Model/Common/LoginStatus.dart';
 import 'package:ono/Model/Folder/FolderModel.dart';
-import 'package:ono/Model/Problem/ProblemRegisterModelWithTemplate.dart';
+import 'package:ono/Model/Problem/ProblemRegisterModel.dart';
 import 'package:ono/Module/Dialog/SnackBarDialog.dart';
 import 'package:ono/Module/Theme/NoteIconHandler.dart';
 import 'package:ono/Module/Util/UrlLauncher.dart';
@@ -1193,12 +1193,10 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
     final foldersProvider =
         Provider.of<FoldersProvider>(context, listen: false);
-    await foldersProvider.updateProblem(
-      ProblemRegisterModelWithTemplate(
-        problemId: problem.problemId,
-        folderId: folderId, // 폴더 ID로 문제를 이동
-      ),
-    );
+    await foldersProvider.updateProblem(ProblemRegisterModel(
+      problemId: problem.problemId,
+      folderId: folderId, // 폴더 ID로 문제를 이동
+    ));
 
     if (mounted) {
       SnackBarDialog.showSnackBar(
