@@ -1,31 +1,7 @@
 import 'package:ono/Model/Problem/ProblemRepeatModel.dart';
 import 'package:ono/Model/Problem/TemplateType.dart';
 
-class ProblemImageDataModel {
-  final String imageUrl;
-  final String problemImageType;
-  final DateTime createdAt;
-
-  ProblemImageDataModel({
-    required this.imageUrl,
-    required this.problemImageType,
-    required this.createdAt,
-  });
-
-  factory ProblemImageDataModel.fromJson(Map<String, dynamic> json) {
-    return ProblemImageDataModel(
-      imageUrl: json['imageUrl'] as String,
-      problemImageType: json['problemImageType'] as String,
-      createdAt: DateTime.parse(json['createdAt'] as String),
-    );
-  }
-
-  Map<String, dynamic> toJson() => {
-        'imageUrl': imageUrl,
-        'problemImageType': problemImageType,
-        'createdAt': createdAt.toIso8601String(),
-      };
-}
+import 'ProblemImageDataModel.dart';
 
 /// 2) 기존 ProblemModel 에 imageUrlList 필드를 추가합니다.
 class ProblemModel {
@@ -95,7 +71,7 @@ class ProblemModel {
       'templateType':
           templateType != null ? templateType!.name : null, // or code
       'analysis': analysis,
-      'repeats': repeats?.map((e) => e.toJson()).toList(),
+      //'repeats': repeats?.map((e) => e.toJson()).toList(),
       'solvedAt': _toIso(solvedAt),
       'createdAt': _toIso(createdAt),
       'updatedAt': _toIso(updateAt),
