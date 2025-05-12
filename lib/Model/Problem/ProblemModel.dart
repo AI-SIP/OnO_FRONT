@@ -1,15 +1,13 @@
 import 'package:ono/Model/Problem/ProblemRepeatModel.dart';
-import 'package:ono/Model/Problem/TemplateType.dart';
 
 import 'ProblemImageDataModel.dart';
 
 /// 2) 기존 ProblemModel 에 imageUrlList 필드를 추가합니다.
 class ProblemModel {
   final int problemId;
+  final int? folderId;
   final String? memo;
   final String? reference;
-  final TemplateType? templateType;
-  final String? analysis;
   final List<ProblemRepeatModel>? repeats;
   final DateTime? solvedAt;
   final DateTime? createdAt;
@@ -19,10 +17,9 @@ class ProblemModel {
 
   ProblemModel({
     this.problemId = -1,
+    this.folderId,
     this.memo,
     this.reference,
-    this.templateType,
-    this.analysis,
     this.repeats,
     this.solvedAt,
     this.createdAt,
@@ -38,12 +35,9 @@ class ProblemModel {
 
     return ProblemModel(
       problemId: json['problemId'] as int,
+      folderId: json['folderId'] as int,
       memo: json['memo'] as String?,
       reference: json['reference'] as String?,
-      templateType: json['templateType'] != null
-          ? TemplateTypeExtension.fromTemplateTypeCode(json['templateType'])
-          : null,
-      analysis: json['analysis'] as String?,
       repeats: (json['repeats'] as List<dynamic>?)
           ?.map((e) => ProblemRepeatModel.fromJson(e as Map<String, dynamic>))
           .toList(),
@@ -63,11 +57,9 @@ class ProblemModel {
   Map<String, dynamic> toJson() {
     return {
       'problemId': problemId,
+      'folderId': folderId,
       'memo': memo,
       'reference': reference,
-      'templateType':
-          templateType != null ? templateType!.name : null, // or code
-      'analysis': analysis,
       //'repeats': repeats?.map((e) => e.toJson()).toList(),
       'solvedAt': _toIso(solvedAt),
       'createdAt': _toIso(createdAt),

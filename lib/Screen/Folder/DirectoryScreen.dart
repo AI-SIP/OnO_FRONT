@@ -14,7 +14,8 @@ import 'package:ono/Module/Util/UrlLauncher.dart';
 import 'package:ono/Provider/FoldersProvider.dart';
 import 'package:provider/provider.dart';
 
-import '../../Model/Problem/ProblemModelWithTemplate.dart';
+import '../../Model/Problem/ProblemModel.dart';
+import '../../Model/Problem/ProblemThumbnailModel.dart';
 import '../../Model/Problem/TemplateType.dart';
 import '../../Module/Dialog/FolderSelectionDialog.dart';
 import '../../Module/Image/DisplayImage.dart';
@@ -22,7 +23,7 @@ import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/ScreenIndexProvider.dart';
 import '../../Provider/UserProvider.dart';
-import '../../Screen/ScreenUtil/DirectoryScreenService.dart';
+import '../ProblemDetail/ProblemDetailScreen.dart';
 import '../UserGuideScreen.dart';
 
 class DirectoryScreen extends StatefulWidget {
@@ -39,16 +40,11 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   final List<int> _selectedFolderIds = []; // 선택된 폴더 ID 리스트
   final List<int> _selectedProblemIds = []; // 선택된 문제 ID 리스트
 
-  late DirectoryScreenService _directoryService;
-
   @override
   void initState() {
     super.initState();
-    _directoryService = DirectoryScreenService(
-      Provider.of<FoldersProvider>(context, listen: false),
-    );
 
-    _directoryService.sortProblems(_selectedSortOption);
+    sortProblems(_selectedSortOption);
 
     _isSelectionMode = false; // 선택 모드 활성화 여부
 
@@ -106,8 +102,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
               ? _buildLoginPrompt(themeProvider)
               : RefreshIndicator(
                   onRefresh: () async {
-                    _directoryService.sortProblems(_selectedSortOption);
-                    await _directoryService.fetchProblems();
+                    sortProblems(_selectedSortOption);
+                    await fetchProblems();
                   },
                   child: Padding(
                     padding: const EdgeInsets.all(20),
@@ -450,7 +446,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                   onTap: () {
                     setState(() {
                       _selectedSortOption = 'name';
-                      _directoryService.sortProblems(_selectedSortOption);
+                      sortProblems(_selectedSortOption);
                       FirebaseAnalytics.instance
                           .logEvent(name: 'sort_option_button_click_name');
                     });
@@ -466,7 +462,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                   onTap: () {
                     setState(() {
                       _selectedSortOption = 'newest';
-                      _directoryService.sortProblems(_selectedSortOption);
+                      sortProblems(_selectedSortOption);
                       FirebaseAnalytics.instance
                           .logEvent(name: 'sort_option_button_click_newest');
                     });
@@ -482,7 +478,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                   onTap: () {
                     setState(() {
                       _selectedSortOption = 'oldest';
-                      _directoryService.sortProblems(_selectedSortOption);
+                      sortProblems(_selectedSortOption);
                       FirebaseAnalytics.instance
                           .logEvent(name: 'sort_option_button_click_oldest');
                     });
@@ -823,7 +819,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
           onDragStarted: () {
             HapticFeedback.lightImpact();
           },
-          child: DragTarget<ProblemModelWithTemplate>(
+          child: DragTarget<ProblemModel>(
             onAcceptWithDetails: (details) async {
               // 문제를 드롭하면 폴더로 이동
               await _moveProblemToFolder(details.data, folder.folderId);
@@ -901,13 +897,10 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     );
   }
 
-  Widget _buildProblemTile(
-      ProblemModelWithTemplate problem, ThemeHandler themeProvider) {
+  Widget _buildProblemTile(ProblemModel problem, ThemeHandler themeProvider) {
     final isSelected = _selectedProblemIds.contains(problem.problemId);
 
-    final imageUrl = (problem.templateType == TemplateType.simple)
-        ? problem.problemImageUrl
-        : problem.processImageUrl;
+    final imageUrl = null;
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0), // 아이템 간 간격 추가
@@ -927,11 +920,10 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
               }
             });
           } else {
-            _directoryService.navigateToProblemDetail(
-                context, problem.problemId);
+            navigateToProblemDetail(context, problem.problemId);
           }
         },
-        child: LongPressDraggable<ProblemModelWithTemplate>(
+        child: LongPressDraggable<ProblemModel>(
           data: problem,
           feedback: Material(
             child: SizedBox(
@@ -967,12 +959,9 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     );
   }
 
-  Widget _problemTileContent(
-      ProblemModelWithTemplate problem, ThemeHandler themeProvider) {
+  Widget _problemTileContent(ProblemModel problem, ThemeHandler themeProvider) {
     final isSelected = _selectedProblemIds.contains(problem.problemId);
-    final imageUrl = (problem.templateType == TemplateType.simple)
-        ? problem.problemImageUrl
-        : problem.processImageUrl;
+    final imageUrl = null;
 
     return Container(
       padding: const EdgeInsets.all(12.0),
@@ -1179,8 +1168,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     }
   }
 
-  Future<void> _moveProblemToFolder(
-      ProblemModelWithTemplate problem, int? folderId) async {
+  Future<void> _moveProblemToFolder(ProblemModel problem, int? folderId) async {
     if (folderId == null) {
       log('Problem ID or folderId is null. Cannot move the problem.');
       return; // 문제 ID 또는 폴더 ID가 null이면 실행하지 않음
@@ -1205,5 +1193,53 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         backgroundColor: Theme.of(context).primaryColor,
       );
     }
+  }
+
+  List<ProblemThumbnailModel> loadProblems() {
+    final foldersProvider =
+        Provider.of<FoldersProvider>(context, listen: false);
+
+    if (foldersProvider.currentProblems.isNotEmpty) {
+      return foldersProvider.currentProblems
+          .map((problem) => ProblemThumbnailModel.fromJson(problem.toJson()))
+          .toList();
+    } else {
+      log('No problems loaded');
+      return [];
+    }
+  }
+
+  Future<void> fetchProblems() async {
+    final foldersProvider =
+        Provider.of<FoldersProvider>(context, listen: false);
+
+    await foldersProvider.fetchFolderContent(null);
+  }
+
+  void sortProblems(String option) {
+    final foldersProvider =
+        Provider.of<FoldersProvider>(context, listen: false);
+
+    if (option == 'name') {
+      foldersProvider.sortProblemsByName();
+    } else if (option == 'newest') {
+      foldersProvider.sortProblemsByNewest();
+    } else if (option == 'oldest') {
+      foldersProvider.sortProblemsByOldest();
+    }
+  }
+
+  void navigateToProblemDetail(BuildContext context, int problemId) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        //builder: (context) => ProblemDetailScreen(problemId: problemId),
+        builder: (context) => ProblemDetailScreen(problemId: problemId),
+      ),
+    ).then((value) {
+      if (value == true) {
+        fetchProblems();
+      }
+    });
   }
 }

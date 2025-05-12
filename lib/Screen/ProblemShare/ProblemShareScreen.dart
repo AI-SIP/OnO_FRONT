@@ -6,12 +6,11 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:intl/intl.dart';
-import 'package:ono/Model/Problem/TemplateType.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 
-import '../../Model/Problem/ProblemModelWithTemplate.dart';
+import '../../Model/Problem/ProblemModel.dart';
 import '../../Module/Image/DisplayImage.dart';
 import '../../Module/Text/HandWriteText.dart';
 import '../../Module/Text/StandardText.dart';
@@ -20,7 +19,7 @@ import '../../Module/Theme/GridPainter.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 
 class ProblemShareScreen extends StatefulWidget {
-  final ProblemModelWithTemplate problem;
+  final ProblemModel problem;
   final GlobalKey _globalKey = GlobalKey();
 
   ProblemShareScreen({super.key, required this.problem});
@@ -40,8 +39,10 @@ class _ProblemShareScreenState extends State<ProblemShareScreen> {
   void initState() {
     super.initState();
 
+    /*
     // 이미지가 있을 경우 네트워크 이미지를 사용
     if (widget.problem.templateType == TemplateType.simple) {
+
       if (widget.problem.problemImageUrl != null) {
         imageUrl = widget.problem.problemImageUrl;
         _image = Image.network(
@@ -70,6 +71,14 @@ class _ProblemShareScreenState extends State<ProblemShareScreen> {
         );
       }
     }
+    }
+
+    */
+
+    _image = Image.asset(
+      'assets/no_image.png',
+      fit: BoxFit.contain,
+    );
 
     // 이미지 로딩이 완료되면 상태 업데이트
     final ImageStream imageStream =

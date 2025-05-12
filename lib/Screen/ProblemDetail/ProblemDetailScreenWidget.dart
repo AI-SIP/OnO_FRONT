@@ -4,7 +4,7 @@ import 'package:flutter_tex/flutter_tex.dart';
 import 'package:intl/intl.dart';
 import 'package:ono/Model/Problem/TemplateType.dart';
 
-import '../../Model/Problem/ProblemModelWithTemplate.dart';
+import '../../Model/Problem/ProblemModel.dart';
 import '../../Module/Image/DisplayImage.dart';
 import '../../Module/Image/FullScreenImage.dart';
 import '../../Module/Text/HandWriteText.dart';
@@ -24,15 +24,10 @@ class ProblemDetailScreenWidget {
     );
   }
 
-  Widget buildCommonDetailView(
-      BuildContext context,
-      ProblemModelWithTemplate problemModel,
-      ThemeHandler themeProvider,
-      TemplateType templateType) {
+  Widget buildCommonDetailView(BuildContext context, ProblemModel problemModel,
+      ThemeHandler themeProvider, TemplateType templateType) {
     double screenHeight = MediaQuery.of(context).size.height;
-    final imageUrl = (templateType == TemplateType.simple)
-        ? problemModel.problemImageUrl
-        : problemModel.processImageUrl;
+    final imageUrl = null;
 
     return SingleChildScrollView(
       child: Padding(
@@ -58,11 +53,8 @@ class ProblemDetailScreenWidget {
     );
   }
 
-  Widget buildExpansionTile(
-      BuildContext context,
-      ProblemModelWithTemplate problemModel,
-      ThemeHandler themeProvider,
-      TemplateType templateType) {
+  Widget buildExpansionTile(BuildContext context, ProblemModel problemModel,
+      ThemeHandler themeProvider, TemplateType templateType) {
     final ScrollController latexScrollController = ScrollController();
     final ScrollController tileScrollController = ScrollController();
 
@@ -79,23 +71,17 @@ class ProblemDetailScreenWidget {
           SizedBox(height: screenHeight * 0.01),
           buildSectionWithMemo(problemModel.memo, themeProvider),
           SizedBox(height: screenHeight * 0.02),
-          if (templateType == TemplateType.special)
-            buildLatexView(context, problemModel.analysis,
-                latexScrollController, themeProvider),
           SizedBox(height: screenHeight * 0.02),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: (templateType == TemplateType.simple)
-                ? [
-                    _buildImageContainer(context, problemModel.answerImageUrl,
-                        '해설 이미지', themeProvider)
-                  ]
+                ? [_buildImageContainer(context, null, '해설 이미지', themeProvider)]
                 : [
-                    _buildImageContainer(context, problemModel.problemImageUrl,
-                        '문제 원본 이미지', themeProvider),
+                    _buildImageContainer(
+                        context, null, '문제 원본 이미지', themeProvider),
                     const SizedBox(height: 20.0),
-                    _buildImageContainer(context, problemModel.answerImageUrl,
-                        '해설 이미지', themeProvider),
+                    _buildImageContainer(
+                        context, null, '해설 이미지', themeProvider),
                     //const SizedBox(height: 20.0),
                     //_buildImageContainer(context, problemModel.solveImageUrl, '풀이 이미지', themeProvider),
                   ],
@@ -372,8 +358,8 @@ class ProblemDetailScreenWidget {
     );
   }
 
-  Widget buildRepeatSection(BuildContext context,
-      ProblemModelWithTemplate problemModel, ThemeHandler themeProvider) {
+  Widget buildRepeatSection(BuildContext context, ProblemModel problemModel,
+      ThemeHandler themeProvider) {
     final mediaQuery = MediaQuery.of(context);
 
     return Column(

@@ -1,12 +1,12 @@
 // FolderModel.dart
-import '../Problem/ProblemModelWithTemplate.dart';
+import '../Problem/ProblemModel.dart';
 import 'FolderThumbnailModel.dart';
 
 class FolderModel {
   final int folderId;
   final String folderName;
   final FolderThumbnailModel? parentFolder;
-  final List<ProblemModelWithTemplate> problems;
+  final List<ProblemModel> problems;
   final List<FolderThumbnailModel> subFolderList;
   final DateTime? createdAt;
   final DateTime? updateAt;
@@ -30,8 +30,7 @@ class FolderModel {
     // problemList → problems
     final problemList = json['problemList'] as List<dynamic>? ?? [];
     final problems = problemList
-        .map(
-            (e) => ProblemModelWithTemplate.fromJson(e as Map<String, dynamic>))
+        .map((e) => ProblemModel.fromJson(e as Map<String, dynamic>))
         .toList();
 
     // subFolderList: List<Map> → List<FolderThumbnailModel>

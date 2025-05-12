@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:ono/Model/Problem/ProblemModelWithTemplate.dart';
 import 'package:provider/provider.dart';
 
+import '../../Model/Problem/ProblemModel.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import 'ProblemRegisterTemplateV2.dart';
 
 class ProblemRegisterScreenV2 extends StatefulWidget {
-  final ProblemModelWithTemplate? problemModel;
+  final ProblemModel? problemModel;
   final bool isEditMode;
 
   const ProblemRegisterScreenV2({

@@ -9,7 +9,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 
-import '../../Model/Problem/ProblemModelWithTemplate.dart';
+import '../../Model/Problem/ProblemModel.dart';
 import '../../Module/Image/DisplayImage.dart';
 import '../../Module/Text/HandWriteText.dart';
 import '../../Module/Text/StandardText.dart';
@@ -18,7 +18,7 @@ import '../../Module/Theme/GridPainter.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 
 class AnswerShareScreen extends StatefulWidget {
-  final ProblemModelWithTemplate problem;
+  final ProblemModel problem;
   final GlobalKey _globalKey = GlobalKey();
 
   AnswerShareScreen({super.key, required this.problem});
@@ -36,6 +36,7 @@ class _AnswerShareScreenState extends State<AnswerShareScreen> {
   @override
   void initState() {
     super.initState();
+    /*
     if (widget.problem.answerImageUrl != null &&
         widget.problem.answerImageUrl!.isNotEmpty) {
       _image = Image.network(
@@ -49,6 +50,12 @@ class _AnswerShareScreenState extends State<AnswerShareScreen> {
         fit: BoxFit.contain,
       );
     }
+
+     */
+    _image = Image.asset(
+      'assets/no_image.png',
+      fit: BoxFit.contain,
+    );
 
     final ImageStream imageStream =
         _image!.image.resolve(const ImageConfiguration());
@@ -194,9 +201,12 @@ class _AnswerShareScreenState extends State<AnswerShareScreen> {
                                           CrossAxisAlignment.start,
                                       children: [
                                         if (_image != null)
+                                          /*
                                           buildAnswerImage(context,
                                               widget.problem.answerImageUrl),
-                                        const SizedBox(height: 10),
+
+                                           */
+                                          const SizedBox(height: 10),
                                       ],
                                     ),
                                   ),

@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
-import '../../Model/Problem/ProblemModelWithTemplate.dart';
+import '../../Model/Problem/ProblemModel.dart';
 import '../../Model/Problem/ProblemRegisterModel.dart';
 import '../../Module/Dialog/FolderSelectionDialog.dart';
 import '../../Module/Dialog/LoadingDialog.dart';
@@ -14,7 +14,7 @@ import '../../Screen/ScreenUtil/ProblemRegisterScreenService.dart';
 import 'ProblemRegisterScreenWidget.dart';
 
 class ProblemRegisterTemplateV2 extends StatefulWidget {
-  final ProblemModelWithTemplate? problemModel;
+  final ProblemModel? problemModel;
   final bool isEditMode;
 
   const ProblemRegisterTemplateV2({
@@ -29,7 +29,7 @@ class ProblemRegisterTemplateV2 extends StatefulWidget {
 }
 
 class _ProblemRegisterTemplateStateV2 extends State<ProblemRegisterTemplateV2> {
-  late ProblemModelWithTemplate? problemModel;
+  late ProblemModel? problemModel;
   late TextEditingController sourceController;
   late TextEditingController notesController;
 
@@ -37,9 +37,7 @@ class _ProblemRegisterTemplateStateV2 extends State<ProblemRegisterTemplateV2> {
   XFile? answerImage;
   final _service = ProblemRegisterScreenService();
 
-  String? analysisResult;
   bool isLoading = false;
-  bool isAnalysisLoading = false;
   DateTime _selectedDate = DateTime.now();
   int? _selectedFolderId;
   String? _selectedFolderName;
@@ -189,7 +187,7 @@ class _ProblemRegisterTemplateStateV2 extends State<ProblemRegisterTemplateV2> {
                 context: context,
                 label: '문제 이미지',
                 image: problemImage,
-                existingImageUrl: problemModel?.problemImageUrl,
+                existingImageUrl: null,
                 themeProvider: themeProvider,
                 onImagePicked: (XFile? pickedFile) {
                   setState(() {
@@ -209,7 +207,7 @@ class _ProblemRegisterTemplateStateV2 extends State<ProblemRegisterTemplateV2> {
                 context: context,
                 label: '해설 이미지',
                 image: answerImage,
-                existingImageUrl: problemModel?.answerImageUrl,
+                existingImageUrl: null,
                 themeProvider: themeProvider,
                 onImagePicked: (XFile? pickedFile) {
                   setState(() {
@@ -238,7 +236,7 @@ class _ProblemRegisterTemplateStateV2 extends State<ProblemRegisterTemplateV2> {
           context: context,
           label: '문제 이미지',
           image: problemImage,
-          existingImageUrl: problemModel?.problemImageUrl,
+          existingImageUrl: null,
           themeProvider: themeProvider,
           onImagePicked: (XFile? pickedFile) {
             setState(() {
@@ -256,7 +254,7 @@ class _ProblemRegisterTemplateStateV2 extends State<ProblemRegisterTemplateV2> {
           context: context,
           label: '해설 이미지',
           image: answerImage,
-          existingImageUrl: problemModel?.answerImageUrl,
+          existingImageUrl: null,
           themeProvider: themeProvider,
           onImagePicked: (XFile? pickedFile) {
             setState(() {

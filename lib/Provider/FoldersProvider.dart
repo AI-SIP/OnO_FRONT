@@ -11,7 +11,7 @@ import 'package:ono/Service/Api/Folder/FolderService.dart';
 import 'package:ono/Service/Api/HttpService.dart';
 
 import '../Model/Folder/FolderModel.dart';
-import '../Model/Problem/ProblemModelWithTemplate.dart';
+import '../Model/Problem/ProblemModel.dart';
 import '../Model/Problem/ProblemRegisterModel.dart';
 import '../Service/Api/Problem/ProblemService.dart';
 import 'TokenProvider.dart';
@@ -19,7 +19,7 @@ import 'TokenProvider.dart';
 class FoldersProvider with ChangeNotifier {
   FolderModel? _currentFolder;
   List<FolderModel> _folders = [];
-  List<ProblemModelWithTemplate> _currentProblems = [];
+  List<ProblemModel> _currentProblems = [];
   final TokenProvider tokenProvider = TokenProvider();
   final ReviewHandler reviewHandler = ReviewHandler();
   final HttpService httpService = HttpService();
@@ -30,8 +30,7 @@ class FoldersProvider with ChangeNotifier {
   String sortOption = 'newest';
 
   FolderModel? get currentFolder => _currentFolder;
-  List<ProblemModelWithTemplate> get currentProblems =>
-      List.unmodifiable(_currentProblems);
+  List<ProblemModel> get currentProblems => List.unmodifiable(_currentProblems);
   List<FolderModel> get folders => _folders;
 
   // 상위 폴더로 이동
@@ -228,13 +227,14 @@ class FoldersProvider with ChangeNotifier {
     return _currentProblems.map((problem) => problem.problemId).toList();
   }
 
-  Future<ProblemModelWithTemplate?> getProblemDetails(int? problemId) async {
+  Future<ProblemModel?> getProblemDetails(int? problemId) async {
     var problemDetails = _currentProblems
         .firstWhere((problem) => problem.problemId == problemId);
 
     if (problemDetails != null) {
       return problemDetails;
     } else {
+      return problemService.getProblem(problemId);
       throw Exception('Problem with ID $problemId not found');
     }
   }

@@ -5,21 +5,16 @@ import 'package:ono/Provider/PracticeNoteProvider.dart';
 import 'package:ono/Screen/ProblemRegister/ProblemRegisterScreen.dart';
 import 'package:provider/provider.dart';
 
-import '../../Model/Problem/ProblemModelWithTemplate.dart';
+import '../../Model/Problem/ProblemModel.dart';
 import '../../Model/Problem/ProblemRegisterModel.dart';
-import '../../Model/Problem/TemplateType.dart';
 import '../../Module/Dialog/FolderSelectionDialog.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Module/Util/FolderNavigationButtons.dart';
 import '../../Provider/FoldersProvider.dart';
-import '../../Screen/ScreenUtil/ProblemDetailScreenService.dart';
 import '../PracticeNote/PracticeNavigationButtons.dart';
 import '../ProblemShare/AnswerShareScreen.dart';
 import '../ProblemShare/ProblemShareScreen.dart';
-import 'Template/CleanProblemDetailTemplate.dart';
-import 'Template/SimpleProblemDetailTemplate.dart';
-import 'Template/SpecialProblemDetailTemplate.dart';
 
 class ProblemDetailScreen extends StatefulWidget {
   final int problemId;
@@ -33,9 +28,7 @@ class ProblemDetailScreen extends StatefulWidget {
 }
 
 class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
-  Future<ProblemModelWithTemplate?>? _problemModelFuture;
-  final ProblemDetailScreenService _problemDetailService =
-      ProblemDetailScreenService();
+  Future<ProblemModel?>? _problemModelFuture;
 
   @override
   void initState() {
@@ -52,13 +45,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
 
   void _setProblemModel() {
     setState(() {
-      if (widget.isPractice) {
-        _problemModelFuture = _problemDetailService
-            .fetchProblemDetailsFromPractice(context, widget.problemId);
-      } else {
-        _problemModelFuture = _problemDetailService
-            .fetchProblemDetailsFromFolder(context, widget.problemId);
-      }
+      _problemModelFuture = fetchProblemDetails(context, widget.problemId);
     });
   }
 
@@ -72,7 +59,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
       body: Column(
         children: [
           Expanded(
-            child: FutureBuilder<ProblemModelWithTemplate?>(
+            child: FutureBuilder<ProblemModel?>(
               future: _problemModelFuture,
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
@@ -128,7 +115,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
   Widget buildAppBarTitle() {
     final themeProvider = Provider.of<ThemeHandler>(context);
 
-    return FutureBuilder<ProblemModelWithTemplate?>(
+    return FutureBuilder<ProblemModel?>(
       future: _problemModelFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
@@ -158,7 +145,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
     final themeProvider = Provider.of<ThemeHandler>(context);
 
     return [
-      FutureBuilder<ProblemModelWithTemplate?>(
+      FutureBuilder<ProblemModel?>(
         future: _problemModelFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.done &&
@@ -175,7 +162,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
   }
 
   void _showActionDialog(
-      ProblemModelWithTemplate problemModel, ThemeHandler themeProvider) {
+      ProblemModel problemModel, ThemeHandler themeProvider) {
     FirebaseAnalytics.instance
         .logEvent(name: 'problem_detail_screen_action_dialog_button_click');
 
@@ -389,7 +376,8 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
     );
   }
 
-  Widget _buildContent(ProblemModelWithTemplate problemModel) {
+  Widget _buildContent(ProblemModel problemModel) {
+    /*
     switch (problemModel.templateType) {
       case TemplateType.simple:
         return SimpleProblemDetailTemplate(problemModel: problemModel);
@@ -405,6 +393,15 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
           ),
         );
     }
+
+     */
+
+    return Center(
+      child: HandWriteText(
+        text: '알 수 없는 템플릿 유형입니다.',
+        color: ThemeHandler().primaryColor,
+      ),
+    );
   }
 
   // 네비게이션 버튼 구성 함수
@@ -438,5 +435,11 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
         ),
       );
     }
+  }
+
+  Future<ProblemModel?> fetchProblemDetails(
+      BuildContext context, int? problemId) async {
+    return Provider.of<FoldersProvider>(context, listen: false)
+        .getProblemDetails(problemId);
   }
 }
