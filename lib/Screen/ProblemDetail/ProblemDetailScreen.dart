@@ -7,12 +7,12 @@ import 'package:provider/provider.dart';
 
 import '../../Model/Problem/ProblemModel.dart';
 import '../../Model/Problem/ProblemRegisterModel.dart';
-import '../../Module/Dialog/FolderSelectionDialog.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Module/Util/FolderNavigationButtons.dart';
 import '../../Provider/FoldersProvider.dart';
 import '../PracticeNote/PracticeNavigationButtons.dart';
+import '../ProblemRegister/widgets/FolderPickerDialog.dart';
 import '../ProblemShare/AnswerShareScreen.dart';
 import '../ProblemShare/ProblemShareScreen.dart';
 import 'ProblemDetailTemplate.dart';
@@ -279,7 +279,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
 
                       final int? selectedFolderId = await showDialog<int?>(
                         context: context,
-                        builder: (context) => const FolderSelectionDialog(),
+                        builder: (context) => const FolderPickerDialog(),
                       );
 
                       if (selectedFolderId != null) {

@@ -1,7 +1,11 @@
-import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:ono/Module/Image/ImagePickerHandler.dart';
+import 'package:ono/Module/Text/StandardText.dart';
+import 'package:ono/Screen/ProblemRegister/widgets/ActionButtons.dart';
+import 'package:ono/Screen/ProblemRegister/widgets/DatePickerWidget.dart';
+import 'package:ono/Screen/ProblemRegister/widgets/FolderPickerWidget.dart';
+import 'package:ono/Screen/ProblemRegister/widgets/ImageGridWidget.dart';
+import 'package:ono/Screen/ProblemRegister/widgets/LabledTextField.dart';
 import 'package:provider/provider.dart';
 
 import '../../Model/Common/LoginStatus.dart';
@@ -9,26 +13,24 @@ import '../../Model/Common/ProblemImageDataType.dart';
 import '../../Model/Problem/ProblemImageDataRegisterModel.dart';
 import '../../Model/Problem/ProblemModel.dart';
 import '../../Model/Problem/ProblemRegisterModel.dart';
-import '../../Module/Dialog/FolderSelectionDialog.dart';
 import '../../Module/Dialog/LoadingDialog.dart';
 import '../../Module/Dialog/SnackBarDialog.dart';
-import '../../Module/Text/HandWriteText.dart';
+import '../../Module/Image/ImagePickerHandler.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/FoldersProvider.dart';
 import '../../Provider/ScreenIndexProvider.dart';
 import '../../Provider/UserProvider.dart';
 import '../../Service/Api/FileUpload/FileUploadService.dart';
-import 'ProblemRegisterScreenWidget.dart';
 
 class ProblemRegisterTemplate extends StatefulWidget {
   final ProblemModel? problemModel;
   final bool isEditMode;
 
   const ProblemRegisterTemplate({
-    required this.problemModel,
+    Key? key,
+    this.problemModel,
     required this.isEditMode,
-    super.key,
-  });
+  }) : super(key: key);
 
   @override
   _ProblemRegisterTemplateState createState() =>
@@ -36,28 +38,18 @@ class ProblemRegisterTemplate extends StatefulWidget {
 }
 
 class _ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
-  late ProblemModel? problemModel;
-  late TextEditingController sourceController;
-  late TextEditingController notesController;
-
-  List<XFile> problemImages = [];
-  List<XFile> answerImages = [];
-
-  bool isLoading = false;
-  DateTime _selectedDate = DateTime.now();
-  int? _selectedFolderId;
-  String? _selectedFolderName;
-
-  final ScrollController scrollControllerForPage = ScrollController();
+  late DateTime _selectedDate;
+  late int? _selectedFolderId;
+  final _titleCtrl = TextEditingController();
+  final _memoCtrl = TextEditingController();
+  final List<XFile> _problemImages = [];
+  final List<XFile> _answerImages = [];
 
   @override
   void initState() {
     super.initState();
-    problemModel = widget.problemModel;
-    sourceController = TextEditingController(text: problemModel?.reference);
-    notesController = TextEditingController(text: problemModel?.memo);
+    final problemModel = widget.problemModel;
     _selectedDate = problemModel?.solvedAt ?? DateTime.now();
-
     if (widget.isEditMode) {
       _selectedFolderId = problemModel?.folderId;
     } else {
@@ -65,270 +57,190 @@ class _ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
           Provider.of<FoldersProvider>(context, listen: false);
       _selectedFolderId = folderProvider.currentFolder?.folderId ?? 1;
     }
-
-    _selectedFolderName = '책장';
+    _titleCtrl.text = problemModel?.reference ?? '';
+    _memoCtrl.text = problemModel?.memo ?? '';
   }
 
   @override
   void dispose() {
-    scrollControllerForPage.dispose();
-    sourceController.dispose();
-    notesController.dispose();
+    _titleCtrl.dispose();
+    _memoCtrl.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final themeProvider = Provider.of<ThemeHandler>(context);
-    final screenWidth = MediaQuery.of(context).size.width;
+    final isWide = MediaQuery.of(context).size.width >= 600;
 
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: GestureDetector(
-        onTap: () {
-          FocusScope.of(context).unfocus();
-        },
-        child: SingleChildScrollView(
-          controller: scrollControllerForPage,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              ProblemRegisterScreenWidget.dateSelection(
-                context: context,
-                selectedDate: _selectedDate,
-                onDateChanged: (newDate) {
-                  setState(() {
-                    _selectedDate = newDate;
-                  });
-                },
-                themeProvider: themeProvider,
-              ),
-              const SizedBox(height: 25),
-              ProblemRegisterScreenWidget.folderSelection(
-                selectedFolderId: _selectedFolderId,
-                onFolderSelected: () async {
-                  FirebaseAnalytics.instance.logEvent(
-                    name: 'problem_register_folder_select',
-                  );
-
-                  final selectedFolderId = await showDialog<int>(
-                    context: context,
-                    builder: (BuildContext context) => FolderSelectionDialog(
-                      initialFolderId: _selectedFolderId,
-                    ),
-                  );
-
-                  if (selectedFolderId != null) {
-                    setState(() {
-                      _selectedFolderId = selectedFolderId;
-                      _selectedFolderName =
-                          FolderSelectionDialog.getFolderNameByFolderId(
-                              selectedFolderId);
-
-                      if (sourceController.text.isEmpty) {
-                        sourceController.text = '$_selectedFolderName ';
-                      }
-                    });
-                  }
-                },
-                themeProvider: themeProvider,
-              ),
-              const SizedBox(height: 25),
-              ProblemRegisterScreenWidget.buildLabeledField(
-                label: "제목",
-                themeProvider: themeProvider,
-                icon: Icons.info,
-                child: ProblemRegisterScreenWidget.textField(
-                  controller: sourceController,
-                  hintText: '오답노트의 제목을 작성해주세요!',
-                  themeProvider: themeProvider,
-                ),
-              ),
-              const SizedBox(height: 25),
-              ProblemRegisterScreenWidget.buildLabeledField(
-                label: "메모",
-                themeProvider: themeProvider,
-                icon: Icons.edit,
-                child: ProblemRegisterScreenWidget.textField(
-                  controller: notesController,
-                  hintText: '기록하고 싶은 내용을 간단하게 작성해주세요!',
-                  themeProvider: themeProvider,
-                  maxLines: 3,
-                ),
-              ),
-              const SizedBox(height: 30),
-              if (screenWidth >= 600)
-                _buildSimpleWideScreenLayout(themeProvider, screenWidth)
-              else
-                _buildNarrowScreenLayout(themeProvider),
-              const SizedBox(height: 40),
-              ProblemRegisterScreenWidget.buildActionButtons(
-                context: context,
-                themeProvider: themeProvider,
-                onSubmit: _submitProblem,
-                onCancel: _resetFields,
-                isEditMode: widget.isEditMode,
-              ),
-              const SizedBox(height: 10),
-            ],
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          DatePickerWidget(
+            selectedDate: _selectedDate,
+            onDateChanged: (d) => setState(() => _selectedDate = d),
           ),
-        ),
+          const SizedBox(height: 30),
+          FolderPickerWidget(
+            selectedId: _selectedFolderId,
+            onPicked: (id) => setState(() => _selectedFolderId = id),
+          ),
+          const SizedBox(height: 30),
+          LabeledTextField(
+            label: '제목',
+            hintText: '오답노트의 제목을 작성해주세요!',
+            icon: Icons.info,
+            controller: _titleCtrl,
+          ),
+          const SizedBox(height: 30),
+          LabeledTextField(
+            label: '메모',
+            controller: _memoCtrl,
+            icon: Icons.edit,
+            hintText: '기록하고 싶은 내용을 간단하게 작성해주세요!',
+            maxLines: 3,
+          ),
+          const SizedBox(height: 30),
+          if (isWide)
+            Row(
+              children: [
+                Expanded(
+                  child: ImageGridWidget(
+                    label: '문제 이미지',
+                    files: _problemImages,
+                    onAdd: _pickProblemImage,
+                    onRemove: (i) => setState(() => _problemImages.removeAt(i)),
+                  ),
+                ),
+                const SizedBox(width: 30),
+                Expanded(
+                  child: ImageGridWidget(
+                    label: '해설 이미지',
+                    files: _answerImages,
+                    onAdd: _pickAnswerImage,
+                    onRemove: (i) => setState(() => _answerImages.removeAt(i)),
+                  ),
+                ),
+              ],
+            )
+          else
+            Column(
+              children: [
+                ImageGridWidget(
+                  label: '문제 이미지',
+                  files: _problemImages,
+                  onAdd: _pickProblemImage,
+                  onRemove: (i) => setState(() => _problemImages.removeAt(i)),
+                ),
+                const SizedBox(height: 30),
+                ImageGridWidget(
+                  label: '해설 이미지',
+                  files: _answerImages,
+                  onAdd: _pickAnswerImage,
+                  onRemove: (i) => setState(() => _answerImages.removeAt(i)),
+                ),
+              ],
+            ),
+          const SizedBox(height: 30),
+          ActionButtons(
+            isEdit: widget.isEditMode,
+            onCancel: _resetAll,
+            onSubmit: _submit,
+          ),
+          const SizedBox(height: 10),
+        ],
       ),
     );
   }
 
-  Widget _buildSimpleWideScreenLayout(
-      ThemeHandler themeProvider, double screenWidth) {
+  Future<void> _pickProblemImage() async {
     final imagePicker = ImagePickerHandler();
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Expanded(
-              flex: 1,
-              child: ProblemRegisterScreenWidget.buildImageGrid(
-                files: problemImages,
-                label: '문제 이미지',
-                themeProvider: themeProvider,
-                onAdd: () async {
-                  imagePicker.showImagePicker(context, (XFile? file) {
-                    if (file != null) {
-                      setState(() => problemImages.add(file));
-                    }
-                  });
-                },
-                onRemove: (idx) => setState(() => problemImages.removeAt(idx)),
-              ),
-            ),
-            const SizedBox(width: 30),
-            Expanded(
-              flex: 1,
-              child: ProblemRegisterScreenWidget.buildImageGrid(
-                files: answerImages,
-                label: '해설 이미지',
-                themeProvider: themeProvider,
-                onAdd: () async {
-                  imagePicker.showImagePicker(context, (XFile? file) {
-                    if (file != null) {
-                      setState(() => answerImages.add(file));
-                    }
-                  });
-                },
-                onRemove: (idx) => setState(() => answerImages.removeAt(idx)),
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildNarrowScreenLayout(ThemeHandler themeProvider) {
-    final screenHeight = MediaQuery.of(context).size.height;
-    final imagePicker = ImagePickerHandler();
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        ProblemRegisterScreenWidget.buildImageGrid(
-          files: problemImages,
-          label: '문제 이미지',
-          themeProvider: themeProvider,
-          onAdd: () async {
-            imagePicker.showImagePicker(context, (XFile? file) {
-              if (file != null) {
-                setState(() => problemImages.add(file));
-              }
-            });
-          },
-          onRemove: (idx) => setState(() => problemImages.removeAt(idx)),
-        ),
-        const SizedBox(height: 30),
-        ProblemRegisterScreenWidget.buildImageGrid(
-          files: answerImages,
-          label: '해설 이미지',
-          themeProvider: themeProvider,
-          onAdd: () async {
-            imagePicker.showImagePicker(context, (XFile? file) {
-              if (file != null) {
-                setState(() => answerImages.add(file));
-              }
-            });
-          },
-          onRemove: (idx) => setState(() => answerImages.removeAt(idx)),
-        ),
-      ],
-    );
-  }
-
-  void _resetFields() {
-    FirebaseAnalytics.instance.logEvent(
-      name: 'problem_register_cancel_button_click',
-    );
-
-    setState(() {
-      sourceController.clear();
-      notesController.clear();
-
-      problemImages.clear();
-      answerImages.clear();
+    imagePicker.showImagePicker(context, (XFile? file) {
+      if (file != null) {
+        setState(() => _problemImages.add(file));
+      }
     });
   }
 
-  void registerImages() {}
+  Future<void> _pickAnswerImage() async {
+    final imagePicker = ImagePickerHandler();
+    imagePicker.showImagePicker(context, (XFile? file) {
+      if (file != null) {
+        setState(() => _answerImages.add(file));
+      }
+    });
+  }
 
-  void _submitProblem() async {
+  void _resetAll() {
+    setState(() {
+      _titleCtrl.clear();
+      _memoCtrl.clear();
+      _problemImages.clear();
+      _answerImages.clear();
+    });
+  }
+
+  Future<void> _submit() async {
     LoadingDialog.show(context, '오답노트 작성 중...');
-    final fileService = FileUploadService();
+    try {
+      final service = FileUploadService();
+      final problemImageUrlList =
+          await service.uploadMultipleImageFiles(_problemImages);
+      final answerImageUrlList =
+          await service.uploadMultipleImageFiles(_answerImages);
+      final now = DateTime.now();
+      final imageDataList = [
+        for (var imageUrl in problemImageUrlList)
+          ProblemImageDataRegisterModel(
+            imageUrl: imageUrl,
+            problemImageType: ProblemImageType.PROBLEM_IMAGE,
+            createdAt: now,
+          ),
+        for (var imageUrl in answerImageUrlList)
+          ProblemImageDataRegisterModel(
+            imageUrl: imageUrl,
+            problemImageType: ProblemImageType.ANSWER_IMAGE,
+            createdAt: now,
+          ),
+      ];
 
-    final problemUrls =
-        await fileService.uploadMultipleImageFiles(problemImages);
-    final answerUrls = await fileService.uploadMultipleImageFiles(answerImages);
+      final problemRegisterModel = ProblemRegisterModel(
+        problemId: widget.problemModel?.problemId,
+        memo: _memoCtrl.text,
+        reference: _titleCtrl.text,
+        solvedAt: _selectedDate,
+        folderId: _selectedFolderId,
+        imageDataDtoList: imageDataList,
+      );
 
-    final now = DateTime.now();
-    final imageDataList = <ProblemImageDataRegisterModel>[
-      // 문제 이미지들
-      for (var url in problemUrls)
-        ProblemImageDataRegisterModel(
-          imageUrl: url,
-          problemImageType: ProblemImageType.PROBLEM_IMAGE,
-          createdAt: now,
-        ),
-      // 해설 이미지들
-      for (var url in answerUrls)
-        ProblemImageDataRegisterModel(
-          imageUrl: url,
-          problemImageType: ProblemImageType.ANSWER_IMAGE,
-          createdAt: now,
-        ),
-    ];
+      final authService = Provider.of<UserProvider>(context, listen: false);
+      if (authService.isLoggedIn == LoginStatus.logout) {
+        _showLoginRequiredDialog(context);
+        return;
+      }
 
-    final problemRegisterModel = ProblemRegisterModel(
-      problemId: problemModel?.problemId,
-      memo: notesController.text,
-      reference: sourceController.text,
-      solvedAt: _selectedDate,
-      folderId: _selectedFolderId,
-      imageDataDtoList: imageDataList,
-    );
+      if (widget.isEditMode) {
+        await Provider.of<FoldersProvider>(context, listen: false)
+            .updateProblem(problemRegisterModel);
 
-    submitProblem(
-      context,
-      problemRegisterModel,
-      () {
-        _resetFields();
-        LoadingDialog.hide(context);
+        _resetAll();
+        Navigator.of(context).pop(true);
+      } else {
+        await Provider.of<FoldersProvider>(context, listen: false)
+            .submitProblem(problemRegisterModel, context);
 
-        if (widget.isEditMode) {
-          Navigator.of(context).pop(true);
-        } else {
-          Provider.of<ScreenIndexProvider>(context, listen: false)
-              .setSelectedIndex(0);
-        }
-      },
-    );
+        _resetAll();
+
+        Provider.of<ScreenIndexProvider>(context, listen: false)
+            .setSelectedIndex(0);
+      }
+
+      showSuccessDialog(context);
+    } catch (_) {
+      //…
+    } finally {
+      LoadingDialog.hide(context);
+    }
   }
 
   void showSuccessDialog(BuildContext context) {
@@ -339,49 +251,20 @@ class _ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
         backgroundColor: themeProvider.primaryColor);
   }
 
-  void showValidationMessage(BuildContext context, String message) {
-    SnackBarDialog.showSnackBar(
-        context: context,
-        message: "오답노트 작성 과정에서 오류가 발생했습니다.",
-        backgroundColor: Colors.red);
-  }
-
-  void hideLoadingDialog(BuildContext context) {
-    Navigator.of(context).pop(true);
-  }
-
-  Future<void> submitProblem(BuildContext context,
-      ProblemRegisterModel problemData, VoidCallback onSuccess) async {
-    final authService = Provider.of<UserProvider>(context, listen: false);
-    if (authService.isLoggedIn == LoginStatus.logout) {
-      _showLoginRequiredDialog(context);
-      return;
-    }
-
-    try {
-      await Provider.of<FoldersProvider>(context, listen: false)
-          .submitProblem(problemData, context);
-      onSuccess();
-      showSuccessDialog(context);
-    } catch (error) {
-      hideLoadingDialog(context);
-    }
-  }
-
   void _showLoginRequiredDialog(BuildContext context) {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: Colors.white,
-        title: const HandWriteText(
+        title: const StandardText(
           text: '로그인 필요',
         ),
-        content: const HandWriteText(
+        content: const StandardText(
           text: '오답노트를 작성하려면 로그인 해주세요!',
         ),
         actions: <Widget>[
           TextButton(
-            child: const HandWriteText(
+            child: const StandardText(
               text: '확인',
               fontSize: 20,
             ),

@@ -22,18 +22,22 @@ class FileUploadService {
     return result['imageUrl'];
   }
 
-  Future<List<String>> uploadMultipleImageFiles(List<XFile> files) async {
-    final multipartFiles = await Future.wait(
-        files.map((f) => http.MultipartFile.fromPath('images', f.path)));
+  Future<List<String>> uploadMultipleImageFiles(List<XFile>? files) async {
+    if (files != null && files.isNotEmpty) {
+      final multipartFiles = await Future.wait(
+          files.map((f) => http.MultipartFile.fromPath('images', f.path)));
 
-    final data = await httpService.sendRequest(
-      method: 'POST',
-      url: '$baseUrl/images',
-      isMultipart: true,
-      files: multipartFiles,
-    );
+      final data = await httpService.sendRequest(
+        method: 'POST',
+        url: '$baseUrl/images',
+        isMultipart: true,
+        files: multipartFiles,
+      );
 
-    return List<String>.from(data as List);
+      return List<String>.from(data as List);
+    } else {
+      return [];
+    }
   }
 
   Future<void> deleteImage(String imageUrl) async {

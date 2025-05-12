@@ -6,17 +6,17 @@ import 'package:ono/Model/Folder/FolderModel.dart';
 import 'package:ono/Module/Theme/NoteIconHandler.dart';
 import 'package:provider/provider.dart';
 
-import '../../Provider/FoldersProvider.dart';
-import '../Text/StandardText.dart';
-import '../Theme/ThemeHandler.dart';
+import '../../../Module/Text/StandardText.dart';
+import '../../../Module/Theme/ThemeHandler.dart';
+import '../../../Provider/FoldersProvider.dart';
 
-class FolderSelectionDialog extends StatefulWidget {
+class FolderPickerDialog extends StatefulWidget {
   final int? initialFolderId; // 추가: 처음 선택된 폴더 ID
 
-  const FolderSelectionDialog({super.key, this.initialFolderId});
+  const FolderPickerDialog({super.key, this.initialFolderId});
 
   @override
-  _FolderSelectionDialogState createState() => _FolderSelectionDialogState();
+  _FolderPickerDialogState createState() => _FolderPickerDialogState();
 
   // folderId로 folderName을 찾아 반환하는 함수
   static String? getFolderNameByFolderId(int? folderId) {
@@ -33,7 +33,7 @@ class FolderSelectionDialog extends StatefulWidget {
   static List<FolderModel> _cachedFolders = [];
 }
 
-class _FolderSelectionDialogState extends State<FolderSelectionDialog> {
+class _FolderPickerDialogState extends State<FolderPickerDialog> {
   int? _selectedFolderId;
   Set<int> _expandedFolders = {}; // 확장된 폴더 ID를 저장하는 Set
   List<FolderModel> _cachedFolders = []; // 폴더 데이터를 캐싱하기 위한 리스트
@@ -51,7 +51,7 @@ class _FolderSelectionDialogState extends State<FolderSelectionDialog> {
         Provider.of<FoldersProvider>(context, listen: false);
     try {
       _cachedFolders = foldersProvider.folders;
-      FolderSelectionDialog._cachedFolders = _cachedFolders;
+      FolderPickerDialog._cachedFolders = _cachedFolders;
       _expandedFolders = _cachedFolders
           .map((folder) => folder.folderId)
           .toSet(); // 모든 폴더를 기본적으로 확장

@@ -16,12 +16,12 @@ import 'package:provider/provider.dart';
 import '../../Model/Problem/ProblemModel.dart';
 import '../../Model/Problem/ProblemThumbnailModel.dart';
 import '../../Model/Problem/TemplateType.dart';
-import '../../Module/Dialog/FolderSelectionDialog.dart';
 import '../../Module/Image/DisplayImage.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/UserProvider.dart';
 import '../ProblemDetail/ProblemDetailScreen.dart';
+import '../ProblemRegister/widgets/FolderPickerDialog.dart';
 import 'UserGuideScreen.dart';
 
 class DirectoryScreen extends StatefulWidget {
@@ -460,7 +460,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
     final int? selectedFolderId = await showDialog<int?>(
       context: context,
-      builder: (context) => const FolderSelectionDialog(),
+      builder: (context) => const FolderPickerDialog(),
     );
 
     if (selectedFolderId != null) {
