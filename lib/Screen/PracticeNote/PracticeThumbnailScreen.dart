@@ -1,4 +1,3 @@
-import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
@@ -9,9 +8,7 @@ import 'package:provider/provider.dart';
 import '../../Model/PracticeNote/PracticeNoteModel.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
-import '../../Module/Util/UrlLauncher.dart';
 import '../../Provider/PracticeNoteProvider.dart';
-import '../../Provider/ScreenIndexProvider.dart';
 import 'PracticeDetailScreen.dart';
 import 'PracticeProblemSelectionScreen.dart';
 
@@ -60,7 +57,6 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
               child: _buildBottomActionButtons(themeProvider),
             )
           : null,
-      floatingActionButton: _buildFloatingActionButton(context, themeProvider),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
@@ -79,6 +75,21 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
           padding: const EdgeInsets.only(right: 16.0), // 우측에 여백 추가
           child: Row(
             children: [
+              FloatingActionButton(
+                heroTag: 'create_problem_practice',
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          const PracticeProblemSelectionScreen(),
+                    ),
+                  );
+                },
+                backgroundColor: Colors.transparent,
+                elevation: 0,
+                child: SvgPicture.asset("assets/Icon/addPractice.svg"),
+              ),
               IconButton(
                 icon: Icon(
                   Icons.more_vert,
@@ -530,85 +541,6 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
         ),
       );
     });
-  }
-
-  Widget _buildFloatingActionButton(
-      BuildContext context, ThemeHandler themeProvider) {
-    return Stack(
-      children: [
-        Positioned(
-          bottom: 160,
-          right: 10,
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              shape: BoxShape.circle,
-              border: Border.all(color: themeProvider.primaryColor, width: 2),
-            ),
-            child: FloatingActionButton(
-              heroTag: 'create_problem_practice',
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) =>
-                        const PracticeProblemSelectionScreen(),
-                  ),
-                );
-              },
-              backgroundColor: Colors.transparent,
-              elevation: 0,
-              child: SvgPicture.asset("assets/Icon/addPractice.svg"),
-            ),
-          ),
-        ),
-        Positioned(
-          bottom: 90,
-          right: 10,
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              shape: BoxShape.circle,
-              border: Border.all(color: themeProvider.primaryColor, width: 2),
-            ),
-            child: FloatingActionButton(
-              heroTag: 'create_problem2',
-              onPressed: () {
-                Provider.of<ScreenIndexProvider>(context, listen: false)
-                    .setSelectedIndex(2); // 문제 등록 탭으로 이동
-
-                FirebaseAnalytics.instance
-                    .logEvent(name: 'move_to_template_page_button_click');
-              },
-              backgroundColor: Colors.transparent,
-              elevation: 0, // 그림자 제거
-              child: SvgPicture.asset("assets/Icon/PencilDetail.svg"),
-            ),
-          ),
-        ),
-        Positioned(
-          bottom: 20,
-          right: 10,
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              shape: BoxShape.circle,
-              border: Border.all(color: themeProvider.primaryColor, width: 2),
-            ),
-            child: FloatingActionButton(
-              heroTag: 'guide_page2',
-              onPressed: () {
-                UrlLauncher.launchGuidePageURL();
-              },
-              backgroundColor: Colors.transparent,
-              elevation: 0, // 그림자 제거
-              child:
-                  Icon(Icons.question_mark, color: themeProvider.primaryColor),
-            ),
-          ),
-        ),
-      ],
-    );
   }
 
   String? formatDateTime(DateTime? dateTime) {
