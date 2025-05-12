@@ -104,8 +104,12 @@ class HttpService {
     final status = response.statusCode;
     final decodedBody = jsonDecode(utf8.decode(response.bodyBytes));
 
+    final dynamic rawErrorCode = decodedBody['errorCode'];
+    final int? errorCode = rawErrorCode is int
+        ? rawErrorCode
+        : (rawErrorCode is String ? int.tryParse(rawErrorCode) : null);
+
     if (status < 200 || status >= 300) {
-      final errorCode = decodedBody['errorCode'] as int?;
       final message =
           decodedBody['message'] as String? ?? response.reasonPhrase;
 

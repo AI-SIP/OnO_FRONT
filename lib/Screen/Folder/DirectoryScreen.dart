@@ -10,7 +10,6 @@ import 'package:ono/Model/Folder/FolderModel.dart';
 import 'package:ono/Model/Problem/ProblemRegisterModel.dart';
 import 'package:ono/Module/Dialog/SnackBarDialog.dart';
 import 'package:ono/Module/Theme/NoteIconHandler.dart';
-import 'package:ono/Module/Util/UrlLauncher.dart';
 import 'package:ono/Provider/FoldersProvider.dart';
 import 'package:provider/provider.dart';
 
@@ -21,7 +20,6 @@ import '../../Module/Dialog/FolderSelectionDialog.dart';
 import '../../Module/Image/DisplayImage.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
-import '../../Provider/ScreenIndexProvider.dart';
 import '../../Provider/UserProvider.dart';
 import '../ProblemDetail/ProblemDetailScreen.dart';
 import 'UserGuideScreen.dart';
@@ -118,93 +116,6 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                     ),
                   ),
                 ),
-          floatingActionButton: _isSelectionMode
-              ? null
-              : Stack(
-                  children: [
-                    // 기존의 플로팅 버튼
-                    Positioned(
-                      bottom: 160,
-                      right: 10,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                              color: themeProvider.primaryColor, width: 2),
-                        ),
-                        child: FloatingActionButton(
-                          heroTag: 'create_folder',
-                          onPressed: () {
-                            FirebaseAnalytics.instance
-                                .logEvent(name: 'folder_create_button_click');
-                            _showCreateFolderDialog(); // 기존에 상단에서 호출하던 폴더 생성 로직
-                          },
-                          backgroundColor: Colors.transparent,
-                          elevation: 0, // 그림자 제거
-                          child: SvgPicture.asset(
-                            "assets/Icon/addNote.svg",
-                          ),
-                        ),
-                      ),
-                    ),
-                    Positioned(
-                      bottom: 90,
-                      right: 10,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                              color: themeProvider.primaryColor, width: 2),
-                        ),
-                        child: FloatingActionButton(
-                          heroTag: 'create_problem',
-                          onPressed: () {
-                            while (Navigator.canPop(context)) {
-                              Navigator.pop(context);
-                            }
-                            const Duration(seconds: 1);
-                            Provider.of<ScreenIndexProvider>(context,
-                                    listen: false)
-                                .setSelectedIndex(2); // 문제 등록 탭으로 이동
-
-                            FirebaseAnalytics.instance.logEvent(
-                                name: 'move_to_template_page_button_click');
-                          },
-                          backgroundColor: Colors.transparent,
-                          elevation: 0, // 그림자 제거
-                          child:
-                              SvgPicture.asset("assets/Icon/PencilDetail.svg"),
-                        ),
-                      ),
-                    ),
-                    Positioned(
-                      bottom: 20,
-                      right: 10,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                              color: themeProvider.primaryColor, width: 2),
-                        ),
-                        child: FloatingActionButton(
-                          heroTag: 'guide_page',
-                          onPressed: () {
-                            UrlLauncher.launchGuidePageURL();
-                          },
-                          backgroundColor: Colors.transparent,
-                          elevation: 0, // 그림자 제거
-                          child: Icon(Icons.question_mark,
-                              color: themeProvider.primaryColor),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-          floatingActionButtonLocation:
-              FloatingActionButtonLocation.endFloat, // 오른쪽 하단 기본 위치
         ));
   }
 
@@ -225,6 +136,19 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         color: themeProvider.primaryColor,
       ),
       actions: [
+        FloatingActionButton(
+          heroTag: 'create_folder',
+          onPressed: () {
+            FirebaseAnalytics.instance
+                .logEvent(name: 'folder_create_button_click');
+            _showCreateFolderDialog(); // 기존에 상단에서 호출하던 폴더 생성 로직
+          },
+          backgroundColor: Colors.transparent,
+          elevation: 0, // 그림자 제거
+          child: SvgPicture.asset(
+            "assets/Icon/addNote.svg",
+          ),
+        ),
         Padding(
           padding: const EdgeInsets.only(right: 16.0), // 우측에 여백 추가
           child: Row(
