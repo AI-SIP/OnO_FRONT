@@ -4,13 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:provider/provider.dart';
 
-import '../Model/Common/LoginStatus.dart';
-import '../Module/Text/HandWriteText.dart';
-import '../Module/Text/StandardText.dart';
-import '../Module/Theme/GridPainter.dart';
-import '../Module/Theme/ThemeHandler.dart';
-import '../Provider/UserProvider.dart';
-import '../main.dart';
+import '../../Model/Common/LoginStatus.dart';
+import '../../Module/Text/HandWriteText.dart';
+import '../../Module/Text/StandardText.dart';
+import '../../Module/Theme/GridPainter.dart';
+import '../../Module/Theme/ThemeHandler.dart';
+import '../../Provider/UserProvider.dart';
+import '../../main.dart';
 
 class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});

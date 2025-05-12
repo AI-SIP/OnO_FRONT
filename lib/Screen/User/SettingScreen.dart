@@ -4,11 +4,11 @@ import 'package:ono/Model/Common/LoginStatus.dart';
 import 'package:ono/Module/Util/UrlLauncher.dart';
 import 'package:provider/provider.dart';
 
-import '../Module/Dialog/ThemeDialog.dart';
-import '../Module/Text/StandardText.dart';
-import '../Module/Theme/ThemeHandler.dart';
-import '../Provider/ScreenIndexProvider.dart';
-import '../Provider/UserProvider.dart';
+import '../../Module/Dialog/ThemeDialog.dart';
+import '../../Module/Text/StandardText.dart';
+import '../../Module/Theme/ThemeHandler.dart';
+import '../../Provider/ScreenIndexProvider.dart';
+import '../../Provider/UserProvider.dart';
 import 'LoginScreen.dart';
 
 class SettingScreen extends StatefulWidget {
