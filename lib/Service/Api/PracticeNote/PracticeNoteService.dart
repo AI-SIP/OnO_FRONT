@@ -18,7 +18,7 @@ class PracticeNoteService {
     return PracticeNoteModel.fromJson(data);
   }
 
-  Future<List<PracticeNoteThumbnailModel>> getPracticeNoteThumbnails() async {
+  Future<List<PracticeNoteThumbnailModel>> fetchPracticeNoteThumbnails() async {
     final data = await httpService.sendRequest(
       method: 'GET',
       url: '$baseUrl/thumbnail',

@@ -27,11 +27,11 @@ class PracticeTitleWriteScreen extends StatelessWidget {
 
       bool isSubmit = false, isUpdate = false;
       if (practiceRegisterModel.practiceId == null) {
-        isSubmit = await problemPracticeProvider
-            .registerPractice(practiceRegisterModel);
+        await problemPracticeProvider.registerPractice(practiceRegisterModel);
+        isSubmit = true;
       } else {
-        isUpdate =
-            await problemPracticeProvider.updatePractice(practiceRegisterModel);
+        await problemPracticeProvider.updatePractice(practiceRegisterModel);
+        isUpdate = true;
       }
 
       Navigator.pop(context);

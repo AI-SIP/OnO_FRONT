@@ -204,9 +204,9 @@ class _PracticeNavigationButtonsState extends State<PracticeNavigationButtons> {
   }
 
   void _showCompletionScreen() {
-    final practiceId = widget.practiceProvider.currentPracticeId;
+    final practiceId = widget.practiceProvider.currentPracticeNote!.practiceId;
     final totalProblems = widget.practiceProvider.currentProblems.length;
-    final practiceRound = widget.practiceProvider.practices
+    final practiceRound = widget.practiceProvider.practiceThumbnails
             .firstWhere((practice) => practice.practiceId == practiceId)
             .practiceCount ??
         0;
@@ -319,8 +319,10 @@ class _PracticeNavigationButtonsState extends State<PracticeNavigationButtons> {
 
                            */
 
-                          await widget.practiceProvider.moveToPractice(
-                              widget.practiceProvider.currentPracticeId);
+                          await widget.practiceProvider.moveToPractice(widget
+                              .practiceProvider
+                              .currentPracticeNote!
+                              .practiceId);
 
                           FirebaseAnalytics.instance.logEvent(
                             name: 'problem_repeat',

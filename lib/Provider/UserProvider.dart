@@ -155,7 +155,7 @@ class UserProvider with ChangeNotifier {
   Future<void> fetchAllData() async {
     await fetchUserInfo();
     await foldersProvider.fetchAllFolderContents();
-    //await practiceProvider.fetchAllPracticeContents();
+    await practiceProvider.fetchAllPracticeContents();
 
     notifyListeners();
   }

@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
+import 'package:ono/Model/PracticeNote/PracticeNoteThumbnailModel.dart';
 import 'package:ono/Module/Dialog/LoadingDialog.dart';
 import 'package:ono/Module/Dialog/SnackBarDialog.dart';
 import 'package:provider/provider.dart';
 
-import '../../Model/PracticeNote/PracticeNoteModel.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/PracticeNoteProvider.dart';
@@ -44,10 +44,11 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
       backgroundColor: Colors.white,
       body: Consumer<ProblemPracticeProvider>(
         builder: (context, provider, child) {
-          if (provider.practices.isEmpty) {
+          if (provider.practiceThumbnails.isEmpty) {
             return _buildEmptyState(themeProvider);
           } else {
-            return _buildPracticeListView(provider.practices, themeProvider);
+            return _buildPracticeListView(
+                provider.practiceThumbnails, themeProvider);
           }
         },
       ),
@@ -281,20 +282,12 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
 
                 final provider = Provider.of<ProblemPracticeProvider>(context,
                     listen: false);
-                bool isDelete =
-                    await provider.deletePractices(deletePracticeIds);
+                await provider.deletePractices(deletePracticeIds);
 
-                if (isDelete) {
-                  SnackBarDialog.showSnackBar(
-                      context: context,
-                      message: '복습 리스트가 삭제되었습니다!',
-                      backgroundColor: themeProvider.primaryColor);
-                } else {
-                  SnackBarDialog.showSnackBar(
-                      context: context,
-                      message: '삭제 과정에서 문제가 발생했습니다!',
-                      backgroundColor: Colors.red);
-                }
+                SnackBarDialog.showSnackBar(
+                    context: context,
+                    message: '복습 리스트가 삭제되었습니다!',
+                    backgroundColor: themeProvider.primaryColor);
 
                 setState(() {
                   _isSelectionMode = false;
@@ -368,7 +361,8 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
   }
 
   Widget _buildPracticeListView(
-      List<PracticeNoteModel> practiceThumbnails, ThemeHandler themeProvider) {
+      List<PracticeNoteThumbnailModel> practiceThumbnails,
+      ThemeHandler themeProvider) {
     return ListView.builder(
       padding: const EdgeInsets.symmetric(vertical: 20),
       itemCount: practiceThumbnails.length,
@@ -380,7 +374,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
   }
 
   Widget _buildPracticeItem(
-      PracticeNoteModel practice, ThemeHandler themeProvider) {
+      PracticeNoteThumbnailModel practice, ThemeHandler themeProvider) {
     final isSelected = _selectedPracticeIds.contains(practice.practiceId);
 
     return GestureDetector(
@@ -413,7 +407,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
     );
   }
 
-  void _navigateToPracticeDetail(PracticeNoteModel practice) async {
+  void _navigateToPracticeDetail(PracticeNoteThumbnailModel practice) async {
     final practiceProvider =
         Provider.of<ProblemPracticeProvider>(context, listen: false);
     LoadingDialog.show(context, '복습 리스트 로딩 중...');
@@ -425,7 +419,8 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => PracticeDetailScreen(practice: practice),
+        builder: (context) => PracticeDetailScreen(
+            practice: practiceProvider.currentPracticeNote!),
       ),
     );
   }
@@ -469,7 +464,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
   }
 
   Widget _buildPracticeInfo(
-      PracticeNoteModel practice, ThemeHandler themeProvider) {
+      PracticeNoteThumbnailModel practice, ThemeHandler themeProvider) {
     return Expanded(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -484,7 +479,6 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
           const SizedBox(height: 8),
           Row(
             children: [
-              _buildTag('${practice.practiceSize} 문제', themeProvider),
               const SizedBox(width: 8),
               practice.practiceCount >= 3
                   ? _buildTag('복습 완료', themeProvider, highlight: true)

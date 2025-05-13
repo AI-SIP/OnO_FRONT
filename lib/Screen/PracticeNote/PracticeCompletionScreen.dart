@@ -99,23 +99,14 @@ class PracticeCompletionScreen extends StatelessWidget {
         width: MediaQuery.of(context).size.width * 0.7,
         child: ElevatedButton(
           onPressed: () async {
-            final success = await practiceProvider.addPracticeCount(practiceId);
-            if (success) {
-              Navigator.of(context).pop();
-              Navigator.of(context).pop();
-              SnackBarDialog.showSnackBar(
-                context: context,
-                message: '복습을 완료했습니다!',
-                backgroundColor: themeProvider.primaryColor,
-              );
-              await practiceProvider.fetchPracticeContent(practiceId);
-            } else {
-              SnackBarDialog.showSnackBar(
-                context: context,
-                message: '복습 과정에서 문제가 발생했습니다!',
-                backgroundColor: Colors.red,
-              );
-            }
+            await practiceProvider.addPracticeCount(practiceId);
+            Navigator.of(context).pop();
+            Navigator.of(context).pop();
+            SnackBarDialog.showSnackBar(
+              context: context,
+              message: '복습을 완료했습니다!',
+              backgroundColor: themeProvider.primaryColor,
+            );
           },
           style: ElevatedButton.styleFrom(
             minimumSize: const Size.fromHeight(50),

@@ -23,7 +23,7 @@ class PracticeNoteModel {
 
   factory PracticeNoteModel.fromJson(Map<String, dynamic> json) {
     return PracticeNoteModel(
-      practiceId: json['practiceId'],
+      practiceId: json['practiceNoteId'],
       practiceTitle: json['practiceTitle'] ?? '제목 없음',
       practiceCount: json['practiceCount'] ?? 0,
       practiceSize: json['practiceSize'] ?? 0,
@@ -32,7 +32,7 @@ class PracticeNoteModel {
       lastSolvedAt: json['lastSolvedAt'] != null
           ? DateTime.parse(json['lastSolvedAt']).add(const Duration(hours: 9))
           : null,
-      problems: (json['problems'] as List?)
+      problems: (json['problemResponseDtoList'] as List?)
               ?.map((e) => ProblemModel.fromJson(e))
               .toList() ??
           [], // null 체크

@@ -3,7 +3,7 @@ import 'package:intl/intl.dart';
 class PracticeNoteThumbnailModel {
   final int practiceId;
   final String practiceTitle;
-  final int practiceCount;
+  int practiceCount;
   final DateTime? lastSolvedAt;
 
   PracticeNoteThumbnailModel({
@@ -15,7 +15,7 @@ class PracticeNoteThumbnailModel {
 
   factory PracticeNoteThumbnailModel.fromJson(Map<String, dynamic> json) {
     return PracticeNoteThumbnailModel(
-      practiceId: json['practiceId'],
+      practiceId: json['practiceNoteId'],
       practiceTitle: json['practiceTitle'] ?? '제목 없음',
       practiceCount: json['practiceCount'] ?? 0,
       lastSolvedAt: json['lastSolvedAt'] != null
@@ -28,5 +28,9 @@ class PracticeNoteThumbnailModel {
   String? _formatDateTime(DateTime? dateTime) {
     if (dateTime == null) return null;
     return DateFormat('yyyy-MM-dd').format(dateTime);
+  }
+
+  void addPracticeCount() {
+    practiceCount += 1;
   }
 }
