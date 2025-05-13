@@ -13,7 +13,7 @@ import '../ProblemDetail/ProblemDetailScreen.dart';
 import 'PracticeProblemSelectionScreen.dart';
 
 class PracticeDetailScreen extends StatelessWidget {
-  final ProblemPracticeModel practice;
+  final PracticeNoteModel practice;
 
   const PracticeDetailScreen({super.key, required this.practice});
 

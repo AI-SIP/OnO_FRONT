@@ -367,8 +367,8 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
     );
   }
 
-  Widget _buildPracticeListView(List<ProblemPracticeModel> practiceThumbnails,
-      ThemeHandler themeProvider) {
+  Widget _buildPracticeListView(
+      List<PracticeNoteModel> practiceThumbnails, ThemeHandler themeProvider) {
     return ListView.builder(
       padding: const EdgeInsets.symmetric(vertical: 20),
       itemCount: practiceThumbnails.length,
@@ -380,7 +380,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
   }
 
   Widget _buildPracticeItem(
-      ProblemPracticeModel practice, ThemeHandler themeProvider) {
+      PracticeNoteModel practice, ThemeHandler themeProvider) {
     final isSelected = _selectedPracticeIds.contains(practice.practiceId);
 
     return GestureDetector(
@@ -413,7 +413,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
     );
   }
 
-  void _navigateToPracticeDetail(ProblemPracticeModel practice) async {
+  void _navigateToPracticeDetail(PracticeNoteModel practice) async {
     final practiceProvider =
         Provider.of<ProblemPracticeProvider>(context, listen: false);
     LoadingDialog.show(context, '복습 리스트 로딩 중...');
@@ -469,7 +469,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
   }
 
   Widget _buildPracticeInfo(
-      ProblemPracticeModel practice, ThemeHandler themeProvider) {
+      PracticeNoteModel practice, ThemeHandler themeProvider) {
     return Expanded(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

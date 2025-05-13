@@ -1,9 +1,9 @@
-class ProblemPracticeRegisterModel {
+class PracticeNoteRegisterModel {
   final int? practiceId;
   String practiceTitle;
   final List<int> registerProblemIds;
 
-  ProblemPracticeRegisterModel({
+  PracticeNoteRegisterModel({
     this.practiceId,
     required this.practiceTitle,
     required this.registerProblemIds,

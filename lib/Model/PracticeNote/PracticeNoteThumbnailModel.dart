@@ -1,41 +1,26 @@
 import 'package:intl/intl.dart';
 
-import '../Problem/ProblemModel.dart';
-
-class PracticeNoteModel {
+class PracticeNoteThumbnailModel {
   final int practiceId;
   final String practiceTitle;
   final int practiceCount;
-  final int practiceSize;
-  final DateTime createdAt;
   final DateTime? lastSolvedAt;
-  List<ProblemModel> problems = [];
 
-  PracticeNoteModel({
+  PracticeNoteThumbnailModel({
     required this.practiceId,
     required this.practiceTitle,
     required this.practiceCount,
-    required this.practiceSize,
-    required this.createdAt,
     required this.lastSolvedAt,
-    required this.problems,
   });
 
-  factory PracticeNoteModel.fromJson(Map<String, dynamic> json) {
-    return PracticeNoteModel(
+  factory PracticeNoteThumbnailModel.fromJson(Map<String, dynamic> json) {
+    return PracticeNoteThumbnailModel(
       practiceId: json['practiceId'],
       practiceTitle: json['practiceTitle'] ?? '제목 없음',
       practiceCount: json['practiceCount'] ?? 0,
-      practiceSize: json['practiceSize'] ?? 0,
-      createdAt:
-          DateTime.parse(json['createdAt']).add(const Duration(hours: 9)),
       lastSolvedAt: json['lastSolvedAt'] != null
           ? DateTime.parse(json['lastSolvedAt']).add(const Duration(hours: 9))
           : null,
-      problems: (json['problems'] as List?)
-              ?.map((e) => ProblemModel.fromJson(e))
-              .toList() ??
-          [], // null 체크
     );
   }
 

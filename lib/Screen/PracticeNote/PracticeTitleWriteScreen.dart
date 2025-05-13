@@ -9,7 +9,7 @@ import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/PracticeNoteProvider.dart';
 
 class PracticeTitleWriteScreen extends StatelessWidget {
-  final ProblemPracticeRegisterModel practiceRegisterModel;
+  final PracticeNoteRegisterModel practiceRegisterModel;
   final TextEditingController _titleController;
 
   PracticeTitleWriteScreen({required this.practiceRegisterModel})

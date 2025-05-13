@@ -15,7 +15,7 @@ import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/FoldersProvider.dart';
 
 class PracticeProblemSelectionScreen extends StatefulWidget {
-  final ProblemPracticeModel? practiceModel;
+  final PracticeNoteModel? practiceModel;
 
   const PracticeProblemSelectionScreen({Key? key, this.practiceModel})
       : super(key: key);
@@ -293,18 +293,18 @@ class _PracticeProblemSelectionScreenState
       child: ElevatedButton(
         onPressed: selectedProblems.isNotEmpty
             ? () {
-                ProblemPracticeRegisterModel practiceRegisterModel;
+                PracticeNoteRegisterModel practiceRegisterModel;
                 List<int> selectedProblemIds = selectedProblems
                     .map((problem) => problem.problemId) // problemId만 추출
                     .toList();
 
                 if (widget.practiceModel != null) {
-                  practiceRegisterModel = ProblemPracticeRegisterModel(
+                  practiceRegisterModel = PracticeNoteRegisterModel(
                       practiceId: widget.practiceModel!.practiceId,
                       practiceTitle: widget.practiceModel!.practiceTitle,
                       registerProblemIds: selectedProblemIds);
                 } else {
-                  practiceRegisterModel = ProblemPracticeRegisterModel(
+                  practiceRegisterModel = PracticeNoteRegisterModel(
                       practiceTitle: "",
                       registerProblemIds: selectedProblemIds);
                 }

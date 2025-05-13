@@ -12,7 +12,7 @@ import 'TokenProvider.dart';
 
 class ProblemPracticeProvider with ChangeNotifier {
   int currentPracticeId = -1;
-  List<ProblemPracticeModel> practices = [];
+  List<PracticeNoteModel> practices = [];
   List<ProblemModel> currentProblems = [];
   final TokenProvider tokenProvider = TokenProvider();
   final HttpService httpService = HttpService();
@@ -27,7 +27,7 @@ class ProblemPracticeProvider with ChangeNotifier {
       final List<dynamic> jsonResponse =
           json.decode(utf8.decode(response.bodyBytes));
       practices = jsonResponse
-          .map((practiceData) => ProblemPracticeModel.fromJson(practiceData))
+          .map((practiceData) => PracticeNoteModel.fromJson(practiceData))
           .toList();
       log('fetch all practice contents');
 
@@ -66,7 +66,7 @@ class ProblemPracticeProvider with ChangeNotifier {
 
     if (response != null) {
       final practiceData = json.decode(utf8.decode(response.bodyBytes));
-      final updatedPractice = ProblemPracticeModel.fromJson(practiceData);
+      final updatedPractice = PracticeNoteModel.fromJson(practiceData);
 
       // 기존 데이터를 업데이트
       final index =
@@ -84,7 +84,7 @@ class ProblemPracticeProvider with ChangeNotifier {
   }
 
   Future<bool> registerPractice(
-      ProblemPracticeRegisterModel problemPracticeRegisterModel) async {
+      PracticeNoteRegisterModel problemPracticeRegisterModel) async {
     final response = await httpService.sendRequest(
       method: 'POST',
       url: '${AppConfig.baseUrl}/api/problem/practice',
@@ -103,7 +103,7 @@ class ProblemPracticeProvider with ChangeNotifier {
     }
 
     final practiceData = json.decode(utf8.decode(response.bodyBytes));
-    final updatedPractice = ProblemPracticeModel.fromJson(practiceData);
+    final updatedPractice = PracticeNoteModel.fromJson(practiceData);
 
     await fetchPracticeContent(updatedPractice.practiceId);
 
@@ -111,7 +111,7 @@ class ProblemPracticeProvider with ChangeNotifier {
   }
 
   Future<bool> updatePractice(
-      ProblemPracticeRegisterModel problemPracticeRegisterModel) async {
+      PracticeNoteRegisterModel problemPracticeRegisterModel) async {
     final practiceId = problemPracticeRegisterModel.practiceId;
 
     // 서버에 PATCH 요청 보내기
