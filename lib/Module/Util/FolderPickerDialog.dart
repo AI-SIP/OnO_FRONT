@@ -6,9 +6,9 @@ import 'package:ono/Model/Folder/FolderModel.dart';
 import 'package:ono/Module/Theme/NoteIconHandler.dart';
 import 'package:provider/provider.dart';
 
-import '../../../Module/Text/StandardText.dart';
-import '../../../Module/Theme/ThemeHandler.dart';
-import '../../../Provider/FoldersProvider.dart';
+import '../../Provider/FoldersProvider.dart';
+import '../Text/StandardText.dart';
+import '../Theme/ThemeHandler.dart';
 
 class FolderPickerDialog extends StatefulWidget {
   final int? initialFolderId; // 추가: 처음 선택된 폴더 ID

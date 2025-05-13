@@ -1,11 +1,6 @@
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:ono/Module/Text/StandardText.dart';
-import 'package:ono/Screen/ProblemRegister/widgets/ActionButtons.dart';
-import 'package:ono/Screen/ProblemRegister/widgets/DatePickerWidget.dart';
-import 'package:ono/Screen/ProblemRegister/widgets/FolderPickerWidget.dart';
-import 'package:ono/Screen/ProblemRegister/widgets/ImageGridWidget.dart';
-import 'package:ono/Screen/ProblemRegister/widgets/LabledTextField.dart';
 import 'package:provider/provider.dart';
 
 import '../../Model/Common/LoginStatus.dart';
@@ -17,10 +12,15 @@ import '../../Module/Dialog/LoadingDialog.dart';
 import '../../Module/Dialog/SnackBarDialog.dart';
 import '../../Module/Image/ImagePickerHandler.dart';
 import '../../Module/Theme/ThemeHandler.dart';
+import '../../Module/Util/FolderPickerWidget.dart';
 import '../../Provider/FoldersProvider.dart';
 import '../../Provider/ScreenIndexProvider.dart';
 import '../../Provider/UserProvider.dart';
 import '../../Service/Api/FileUpload/FileUploadService.dart';
+import 'Widget/ActionButtons.dart';
+import 'Widget/DatePickerWidget.dart';
+import 'Widget/ImageGridWidget.dart';
+import 'Widget/LabledTextField.dart';
 
 class ProblemRegisterTemplate extends StatefulWidget {
   final ProblemModel? problemModel;
