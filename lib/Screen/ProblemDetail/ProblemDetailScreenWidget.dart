@@ -227,10 +227,11 @@ class ProblemDetailScreenWidget {
         borderRadius: BorderRadius.circular(10),
       ),
       child: Center(
-        child: Text(
-          '$label\n이미지가 없습니다.',
+        child: StandardText(
+          text: '이미지가 없습니다.',
           textAlign: TextAlign.center,
-          style: TextStyle(color: themeProvider.primaryColor),
+          color: themeProvider.primaryColor,
+          fontSize: 14,
         ),
       ),
     );

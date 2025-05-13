@@ -11,7 +11,7 @@ import '../Text/StandardText.dart';
 import '../Theme/ThemeHandler.dart';
 
 class FolderPickerDialog extends StatefulWidget {
-  final int? initialFolderId; // 추가: 처음 선택된 폴더 ID
+  final int? initialFolderId;
 
   const FolderPickerDialog({super.key, this.initialFolderId});
 
