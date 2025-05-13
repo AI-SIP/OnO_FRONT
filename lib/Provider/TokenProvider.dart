@@ -1,9 +1,9 @@
 import 'dart:convert';
 import 'dart:developer';
-import 'dart:io';
+
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
-import 'package:sentry_flutter/sentry_flutter.dart';
+
 import '../Config/AppConfig.dart';
 
 class TokenProvider {
@@ -14,48 +14,17 @@ class TokenProvider {
   }
 
   Future<String?> getAccessToken() async {
-    try {
-      String? accessToken = await storage.read(key: 'accessToken');
+    String? accessToken = await storage.read(key: 'accessToken');
 
-      if (accessToken == null) {
-        log('Access token is not available.');
-        await refreshAccessToken();
-
-        accessToken = await storage.read(key: 'accessToken');
-      }
-
-      final url = Uri.parse('${AppConfig.baseUrl}/api/auth/verifyAccessToken');
-      final response = await http.get(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $accessToken',
-        },
-      ).timeout(const Duration(seconds: 30));
-
-      if (response.statusCode == 200) {
-        return accessToken;
-      } else {
-        log('Access token is invalid or expired, trying to refresh...');
-        bool isRefreshAccessToken = await refreshAccessToken();
-        if (isRefreshAccessToken) {
-          accessToken = await storage.read(key: 'accessToken');
-          return accessToken;
-        } else {
-          throw Exception("Can not refresh access token");
-        }
-      }
-    } on SocketException catch(_){
-      return null;
-    } catch (error, stackTrace) {
-      log('getAccessToken() error: $error');
-      await Sentry.captureException(
-        error,
-        stackTrace: stackTrace,
-      );
-
-      return null;
+    if (accessToken != null) {
+      return accessToken;
     }
+
+    log('Access token is not available.');
+    await refreshAccessToken();
+
+    accessToken = await storage.read(key: 'accessToken');
+    return accessToken;
   }
 
   Future<void> setRefreshToken(String refreshToken) async {
@@ -66,40 +35,55 @@ class TokenProvider {
     return await storage.read(key: 'refreshToken');
   }
 
-  Future<bool> refreshAccessToken() async {
-    try {
-      String? refreshToken = await storage.read(key: 'refreshToken');
-      if (refreshToken == null) {
-        log('No refresh token available.');
-        return false;
-      }
-
-      final response = await http.post(
-        Uri.parse('${AppConfig.baseUrl}/api/auth/refresh'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'refreshToken': refreshToken}),
-      ).timeout(const Duration(seconds: 30));
-
-      if (response.statusCode == 200) {
-        var data = jsonDecode(response.body);
-        await setAccessToken(data['accessToken']);
-        await setRefreshToken(data['refreshToken']);
-        log('Access token refreshed.');
-        return true;
-      } else {
-        throw Exception('Failed to refresh token. Logging out.');
-      }
-    } catch (error, stackTrace) {
-      log('Error refreshing token: $error');
-      await Sentry.captureException(
-        error,
-        stackTrace: stackTrace,
-      );
-      return false;
+  Future<void> refreshAccessToken() async {
+    String? refreshToken = await storage.read(key: 'refreshToken');
+    if (refreshToken == null) {
+      log('No refresh token available.');
+      throw Exception('No Refresh Token Exist');
     }
+
+    final response = await http
+        .post(
+          Uri.parse('${AppConfig.baseUrl}/api/auth/refresh'),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({'refreshToken': refreshToken}),
+        )
+        .timeout(const Duration(seconds: 30));
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      // 응답 본문을 JSON 으로 파싱
+      String errorMessage;
+      try {
+        final errJson = jsonDecode(utf8.decode(response.bodyBytes));
+        errorMessage = errJson['message'] as String? ?? 'Unknown error';
+      } catch (_) {
+        errorMessage = response.reasonPhrase ?? 'Unknown error';
+      }
+
+      await deleteToken();
+      throw Exception('HTTP ${response.statusCode}: $errorMessage');
+    }
+
+    final body = jsonDecode(response.body) as Map<String, dynamic>;
+    final data = body['data'] as Map<String, dynamic>?;
+
+    if (data == null) {
+      throw Exception('Malformed refresh response: missing data field.');
+    }
+
+    final newAccessToken = data['accessToken'] as String?;
+    final newRefreshToken = data['refreshToken'] as String?;
+
+    if (newAccessToken == null || newRefreshToken == null) {
+      throw Exception('Malformed refresh response: missing tokens.');
+    }
+
+    await setAccessToken(newAccessToken);
+    await setRefreshToken(newRefreshToken);
+    log('Access token refreshed.');
   }
 
-  Future<void> deleteToken() async{
+  Future<void> deleteToken() async {
     await storage.delete(key: 'accessToken');
     await storage.delete(key: 'refreshToken');
   }

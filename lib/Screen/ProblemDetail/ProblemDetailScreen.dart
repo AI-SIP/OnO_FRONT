@@ -1,35 +1,28 @@
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
-import 'package:ono/GlobalModule/Text/HandWriteText.dart';
-import 'package:ono/Model/ProblemRegisterModel.dart';
-import 'package:ono/Provider/ProblemPracticeProvider.dart';
-import 'package:ono/Screen/ProblemRegister/ProblemRegisterScreenV2.dart';
+import 'package:ono/Module/Text/HandWriteText.dart';
+import 'package:ono/Provider/PracticeNoteProvider.dart';
+import 'package:ono/Screen/ProblemRegister/ProblemRegisterScreen.dart';
 import 'package:provider/provider.dart';
 
-import '../../GlobalModule/Text/StandardText.dart';
-import '../../GlobalModule/Theme/ThemeHandler.dart';
-import '../../GlobalModule/Dialog/FolderSelectionDialog.dart';
-import '../../GlobalModule/Util/FolderNavigationButtons.dart';
-import '../ProblemPractice/PracticeNavigationButtons.dart';
-import '../../Model/ProblemModel.dart';
-import '../../Model/TemplateType.dart';
+import '../../Model/Problem/ProblemModel.dart';
+import '../../Model/Problem/ProblemRegisterModel.dart';
+import '../../Module/Text/StandardText.dart';
+import '../../Module/Theme/ThemeHandler.dart';
+import '../../Module/Util/FolderNavigationButtons.dart';
 import '../../Provider/FoldersProvider.dart';
-import '../../Service/ScreenUtil/ProblemDetailScreenService.dart';
+import '../PracticeNote/PracticeNavigationButtons.dart';
+import '../ProblemRegister/widgets/FolderPickerDialog.dart';
 import '../ProblemShare/AnswerShareScreen.dart';
 import '../ProblemShare/ProblemShareScreen.dart';
-import 'Template/CleanProblemDetailTemplate.dart';
-import 'Template/SimpleProblemDetailTemplate.dart';
-import 'Template/SpecialProblemDetailTemplate.dart';
+import 'ProblemDetailTemplate.dart';
 
 class ProblemDetailScreen extends StatefulWidget {
   final int problemId;
   final bool isPractice;
 
-  const ProblemDetailScreen({
-    required this.problemId,
-    this.isPractice = false,
-    super.key
-  });
+  const ProblemDetailScreen(
+      {required this.problemId, this.isPractice = false, super.key});
 
   @override
   _ProblemDetailScreenState createState() => _ProblemDetailScreenState();
@@ -37,8 +30,6 @@ class ProblemDetailScreen extends StatefulWidget {
 
 class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
   Future<ProblemModel?>? _problemModelFuture;
-  final ProblemDetailScreenService _problemDetailService =
-      ProblemDetailScreenService();
 
   @override
   void initState() {
@@ -55,11 +46,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
 
   void _setProblemModel() {
     setState(() {
-      if(widget.isPractice){
-        _problemModelFuture = _problemDetailService.fetchProblemDetailsFromPractice(context, widget.problemId);
-      } else{
-        _problemModelFuture = _problemDetailService.fetchProblemDetailsFromFolder(context, widget.problemId);
-      }
+      _problemModelFuture = fetchProblemDetails(context, widget.problemId);
     });
   }
 
@@ -77,7 +64,11 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
               future: _problemModelFuture,
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return Center(child: CircularProgressIndicator(color: themeProvider.primaryColor,),);
+                  return Center(
+                    child: CircularProgressIndicator(
+                      color: themeProvider.primaryColor,
+                    ),
+                  );
                 } else if (snapshot.hasError) {
                   return Center(
                     child: HandWriteText(
@@ -106,13 +97,13 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
   }
 
   AppBar _buildAppBar(ThemeHandler themeProvider) {
-    if(widget.isPractice){
+    if (widget.isPractice) {
       return AppBar(
         backgroundColor: Colors.white,
         centerTitle: true,
         title: buildAppBarTitle(),
       );
-    } else{
+    } else {
       return AppBar(
         backgroundColor: Colors.white,
         centerTitle: true,
@@ -120,10 +111,9 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
         actions: _buildAppBarActions(),
       );
     }
-
   }
 
-  Widget buildAppBarTitle(){
+  Widget buildAppBarTitle() {
     final themeProvider = Provider.of<ThemeHandler>(context);
 
     return FutureBuilder<ProblemModel?>(
@@ -136,7 +126,8 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
         } else if (snapshot.hasData && snapshot.data != null) {
           final reference = snapshot.data!.reference;
           return StandardText(
-            text: (reference == null || reference.isEmpty) ? '제목 없음' : reference,
+            text:
+                (reference == null || reference.isEmpty) ? '제목 없음' : reference,
             fontSize: 20,
             color: themeProvider.primaryColor,
           );
@@ -171,8 +162,8 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
     ];
   }
 
-  void _showActionDialog(ProblemModel problemModel, ThemeHandler themeProvider) {
-
+  void _showActionDialog(
+      ProblemModel problemModel, ThemeHandler themeProvider) {
     FirebaseAnalytics.instance
         .logEvent(name: 'problem_detail_screen_action_dialog_button_click');
 
@@ -182,7 +173,8 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
       builder: (context) {
         return SingleChildScrollView(
           child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 10.0), // 패딩 추가
+            padding: const EdgeInsets.symmetric(
+                vertical: 20.0, horizontal: 10.0), // 패딩 추가
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -209,7 +201,8 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                       await Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => ProblemShareScreen(problem: problemModel),
+                          builder: (context) =>
+                              ProblemShareScreen(problem: problemModel),
                         ),
                       );
                       Navigator.pop(context);
@@ -231,7 +224,8 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                       await Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => AnswerShareScreen(problem: problemModel),
+                          builder: (context) =>
+                              AnswerShareScreen(problem: problemModel),
                         ),
                       );
                       Navigator.pop(context);
@@ -251,27 +245,18 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                       FirebaseAnalytics.instance
                           .logEvent(name: 'problem_edit_button_click');
                       Navigator.pop(context);
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (context) => ProblemRegisterScreenV2(
-                            problemModel: problemModel,
-                            isEditMode: true,
-                          ),
-                        ),
-                        /*
+                      Navigator.of(context)
+                          .push(
                         MaterialPageRoute(
                           builder: (context) => ProblemRegisterScreen(
                             problemModel: problemModel,
                             isEditMode: true,
-                            colorPickerResult: null,
-                            coordinatePickerResult: null,
                           ),
                         ),
-                         */
-                      ).then((_) {
+                      )
+                          .then((_) {
                         _setProblemModel();
                       });
-
                     },
                   ),
                 ),
@@ -289,20 +274,20 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                           .logEvent(name: 'problem_change_path_button_click');
                       Navigator.pop(context);
 
-                      final foldersProvider = Provider.of<FoldersProvider>(context, listen: false);
+                      final foldersProvider =
+                          Provider.of<FoldersProvider>(context, listen: false);
 
                       final int? selectedFolderId = await showDialog<int?>(
                         context: context,
-                        builder: (context) => const FolderSelectionDialog(),
+                        builder: (context) => const FolderPickerDialog(),
                       );
 
-                      if(selectedFolderId != null){
-                        await foldersProvider.updateProblem(
-                          ProblemRegisterModel(
-                            problemId: problemModel.problemId,
-                            folderId: selectedFolderId,
-                          )
-                        );
+                      if (selectedFolderId != null) {
+                        await foldersProvider
+                            .updateProblem(ProblemRegisterModel(
+                          problemId: problemModel.problemId,
+                          folderId: selectedFolderId,
+                        ));
                       }
                     },
                   ),
@@ -310,7 +295,8 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                 Padding(
                   padding: const EdgeInsets.only(bottom: 10.0), // 텍스트 간격 조정
                   child: ListTile(
-                    leading: const Icon(Icons.delete_forever, color: Colors.red),
+                    leading:
+                        const Icon(Icons.delete_forever, color: Colors.red),
                     title: const StandardText(
                       text: '현재 오답노트 삭제하기',
                       fontSize: 16,
@@ -320,7 +306,8 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                       FirebaseAnalytics.instance
                           .logEvent(name: 'problem_delete_button_click');
                       Navigator.pop(context);
-                      _showDeleteProblemDialog(problemModel.problemId, themeProvider);
+                      _showDeleteProblemDialog(
+                          problemModel.problemId, themeProvider);
                     },
                   ),
                 ),
@@ -332,7 +319,8 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
     );
   }
 
-  Future<void> _showDeleteProblemDialog(int problemId, ThemeHandler themeProvider) async {
+  Future<void> _showDeleteProblemDialog(
+      int problemId, ThemeHandler themeProvider) async {
     final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
 
     return showDialog(
@@ -343,9 +331,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
           title: const StandardText(
               text: '오답노트 삭제', fontSize: 18, color: Colors.black),
           content: const StandardText(
-              text: '정말로 이 오답노트를 삭제하시겠습니까?',
-              fontSize: 16,
-              color: Colors.black),
+              text: '정말로 이 오답노트를 삭제하시겠습니까?', fontSize: 16, color: Colors.black),
           actions: [
             TextButton(
               onPressed: () {
@@ -363,8 +349,11 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                 Navigator.pop(context);
                 FirebaseAnalytics.instance.logEvent(name: 'problem_delete');
 
-                await Provider.of<FoldersProvider>(context, listen: false).deleteProblems([problemId]);
-                await Provider.of<ProblemPracticeProvider>(context, listen: false).fetchAllPracticeContents();
+                await Provider.of<FoldersProvider>(context, listen: false)
+                    .deleteProblems([problemId]);
+                await Provider.of<ProblemPracticeProvider>(context,
+                        listen: false)
+                    .fetchAllPracticeContents();
               },
               child: const StandardText(
                 text: '삭제',
@@ -379,21 +368,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
   }
 
   Widget _buildContent(ProblemModel problemModel) {
-    switch (problemModel.templateType) {
-      case TemplateType.simple:
-        return SimpleProblemDetailTemplate(problemModel: problemModel);
-      case TemplateType.clean:
-        return CleanProblemDetailTemplate(problemModel: problemModel);
-      case TemplateType.special:
-        return SpecialProblemDetailTemplate(problemModel: problemModel);
-      default:
-        return Center(
-          child: HandWriteText(
-            text: '알 수 없는 템플릿 유형입니다.',
-            color: ThemeHandler().primaryColor,
-          ),
-        );
-    }
+    return ProblemDetailTemplate(problemModel: problemModel);
   }
 
   // 네비게이션 버튼 구성 함수
@@ -405,17 +380,18 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
     double topPadding = screenHeight * 0.01;
     double bottomPadding = screenHeight * 0.03;
 
-    if(isPractice){
+    if (isPractice) {
       return Padding(
         padding: EdgeInsets.only(top: topPadding, bottom: bottomPadding),
         child: PracticeNavigationButtons(
           context: context,
-          practiceProvider: Provider.of<ProblemPracticeProvider>(context, listen: false),
+          practiceProvider:
+              Provider.of<ProblemPracticeProvider>(context, listen: false),
           currentProblemId: widget.problemId,
           onRefresh: _setProblemModel,
         ),
       );
-    } else{
+    } else {
       return Padding(
         padding: EdgeInsets.only(top: topPadding, bottom: bottomPadding),
         child: FolderNavigationButtons(
@@ -426,5 +402,11 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
         ),
       );
     }
+  }
+
+  Future<ProblemModel?> fetchProblemDetails(
+      BuildContext context, int? problemId) async {
+    return Provider.of<FoldersProvider>(context, listen: false)
+        .getProblemDetails(problemId);
   }
 }

@@ -1,0 +1,6 @@
+enum ProblemImageType {
+  PROBLEM_IMAGE,
+  ANSWER_IMAGE,
+  SOLVE_IMAGE,
+  PROCESS_IMAGE,
+}

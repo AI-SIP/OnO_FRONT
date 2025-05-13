@@ -1,27 +1,24 @@
-import 'dart:developer';
-
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart';
-import 'package:ono/GlobalModule/Text/StandardText.dart';
-import 'package:ono/GlobalModule/Theme/ThemeHandler.dart';
+import 'package:ono/Module/Text/StandardText.dart';
+import 'package:ono/Module/Theme/ThemeHandler.dart';
 import 'package:ono/Provider/FoldersProvider.dart';
-import 'package:ono/Provider/ProblemPracticeProvider.dart';
+import 'package:ono/Provider/PracticeNoteProvider.dart';
 import 'package:ono/Provider/ScreenIndexProvider.dart';
 import 'package:ono/Screen/ProblemRegister/ProblemRegisterScreen.dart';
-import 'package:ono/Screen/ProblemRegister/ProblemRegisterScreenV2.dart';
-import 'package:ono/Screen/SplashScreen.dart';
+import 'package:ono/Screen/User/SplashScreen.dart';
 import 'package:provider/provider.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
+
+import 'Config/firebase_options.dart';
 import 'Provider/UserProvider.dart';
-import 'Screen/ProblemManagement/DirectoryScreen.dart';
-import 'Screen/ProblemPractice/PracticeThumbnailScreen.dart';
-import 'Screen/ProblemRegister/TemplateSelectionScreen.dart';
-import 'Screen/SettingScreen.dart';
-import 'firebase_options.dart';
+import 'Screen/Folder/DirectoryScreen.dart';
+import 'Screen/PracticeNote/PracticeThumbnailScreen.dart';
+import 'Screen/User/SettingScreen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -34,12 +31,27 @@ void main() async {
   KakaoSdk.init(nativeAppKey: '7fd2fa49895af63319fd6b11e084d0d5');
 
   await SentryFlutter.init(
-          (options) {
-        options.dsn = 'https://ef02bb2a25f04c4141b3edb8c51ff128@o4507978249273344.ingest.us.sentry.io/4507978250911744';
-        options.tracesSampleRate = 1.0;
-        options.profilesSampleRate = 1.0;
-      },
+    (options) {
+      options.dsn =
+          'https://ef02bb2a25f04c4141b3edb8c51ff128@o4507978249273344.ingest.us.sentry.io/4507978250911744';
+      options.tracesSampleRate = 1.0;
+      options.profilesSampleRate = 1.0;
+    },
   );
+
+  // 1) Flutter 프레임워크 예외 (동기 빌드 에러 등) 잡기
+  FlutterError.onError = (FlutterErrorDetails details) {
+    // 콘솔에도 출력
+    FlutterError.dumpErrorToConsole(details);
+
+    print(details);
+
+    // Sentry에 보고
+    Sentry.captureException(
+      details.exception,
+      stackTrace: details.stack,
+    );
+  };
 
   runApp(
     MultiProvider(
@@ -62,15 +74,14 @@ void main() async {
 }
 
 class MyApp extends StatelessWidget {
-
   const MyApp({super.key});
 
   static FirebaseAnalytics analytics = FirebaseAnalytics.instance;
-  static FirebaseAnalyticsObserver observer = FirebaseAnalyticsObserver(analytics: analytics);
+  static FirebaseAnalyticsObserver observer =
+      FirebaseAnalyticsObserver(analytics: analytics);
 
   @override
   Widget build(BuildContext context) {
-
     return MaterialApp(
       title: 'OnO',
       theme: _buildThemeData(context),
@@ -82,7 +93,7 @@ class MyApp extends StatelessWidget {
           final args = settings.arguments as Map<String, dynamic>;
           return MaterialPageRoute(
             builder: (context) {
-              return ProblemRegisterScreenV2(
+              return ProblemRegisterScreen(
                 problemModel: args['problemModel'],
                 isEditMode: args['isEditMode'],
               );
@@ -119,12 +130,12 @@ class MyHomePage extends StatefulWidget {
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
+class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   final secureStorage = const FlutterSecureStorage();
   static const List<Widget> _widgetOptions = <Widget>[
     DirectoryScreen(),
     PracticeThumbnailScreen(),
-    ProblemRegisterScreenV2(problemModel: null, isEditMode: false),
+    ProblemRegisterScreen(problemModel: null, isEditMode: false),
     //TemplateSelectionScreen(),
     SettingScreen(),
   ];
@@ -139,14 +150,6 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
-  }
-
-  Future<void> autoLogin() async {
-    try {
-      await Provider.of<UserProvider>(context, listen: false).autoLogin();
-    } catch (e) {
-      log('Auto login failed: $e');
-    }
   }
 
   void _onItemTapped(int index) {
@@ -166,7 +169,8 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
       // 앱이 포그라운드로 전환될 때 시간 비교
       String? lastPaused = await secureStorage.read(key: 'lastPaused');
       if (lastPaused != null) {
-        final difference = DateTime.now().millisecondsSinceEpoch - int.parse(lastPaused);
+        final difference =
+            DateTime.now().millisecondsSinceEpoch - int.parse(lastPaused);
         final minutes = difference / 1000 / 60;
         if (minutes > 1) {
           _resetAppState();
@@ -176,15 +180,19 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
   }
 
   void _resetAppState() {
-    final foldersProvider = Provider.of<FoldersProvider>(context, listen: false);
+    final foldersProvider =
+        Provider.of<FoldersProvider>(context, listen: false);
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
 
-    foldersProvider.fetchAllFolderContents();
+    userProvider.autoLogin();
+    //userProvider.fetchAllData();
+    //foldersProvider.fetchAllFolderContents();
   }
 
   @override
   Widget build(BuildContext context) {
     final screenIndexProvider = Provider.of<ScreenIndexProvider>(context);
-    
+
     return Scaffold(
       body: IndexedStack(
         index: screenIndexProvider.screenIndex,
@@ -208,11 +216,11 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
       selectedItemColor: themeProvider.primaryColor,
       unselectedItemColor: Colors.grey,
       selectedLabelStyle: standardTextStyle.copyWith(
-        color:themeProvider.primaryColor,
+        color: themeProvider.primaryColor,
         fontSize: screenHeight * 0.015,
       ),
       unselectedLabelStyle: standardTextStyle.copyWith(
-        color:Colors.grey,
+        color: Colors.grey,
         fontSize: screenHeight * 0.013,
       ),
       onTap: _onItemTapped,
@@ -233,7 +241,6 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
         icon: Icon(Icons.edit),
         label: '오답노트 작성',
       ),
-
       BottomNavigationBarItem(
         icon: Icon(Icons.settings),
         label: '설정',

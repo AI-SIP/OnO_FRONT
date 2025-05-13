@@ -1,18 +1,16 @@
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_tex/flutter_tex.dart';
 import 'package:intl/intl.dart';
-import 'package:ono/Model/TemplateType.dart';
 
-import '../../GlobalModule/Image/DisplayImage.dart';
-import '../../GlobalModule/Image/FullScreenImage.dart';
-import '../../GlobalModule/Theme/GridPainter.dart';
-import '../../GlobalModule/Text/HandWriteText.dart';
-import '../../GlobalModule/Text/StandardText.dart';
-import '../../GlobalModule/Theme/ThemeHandler.dart';
-import '../../GlobalModule/Text/UnderlinedText.dart';
-import '../../GlobalModule/Util/LatexTextHandler.dart';
-import '../../Model/ProblemModel.dart';
+import '../../Model/Problem/ProblemModel.dart';
+import '../../Module/Image/DisplayImage.dart';
+import '../../Module/Image/FullScreenImage.dart';
+import '../../Module/Text/HandWriteText.dart';
+import '../../Module/Text/StandardText.dart';
+import '../../Module/Text/UnderlinedText.dart';
+import '../../Module/Theme/GridPainter.dart';
+import '../../Module/Theme/ThemeHandler.dart';
+import 'Widget/ImageGallerySection.dart';
 
 class ProblemDetailScreenWidget {
   // 배경 구현 함수
@@ -25,12 +23,8 @@ class ProblemDetailScreenWidget {
   }
 
   Widget buildCommonDetailView(BuildContext context, ProblemModel problemModel,
-      ThemeHandler themeProvider, TemplateType templateType) {
+      ThemeHandler themeProvider) {
     double screenHeight = MediaQuery.of(context).size.height;
-    final imageUrl = (templateType == TemplateType.simple)
-        ? problemModel.problemImageUrl
-        : problemModel.processImageUrl;
-
     return SingleChildScrollView(
       child: Padding(
         padding: EdgeInsets.all(screenHeight * 0.008), // 원하는 경우 여백 추가
@@ -39,30 +33,29 @@ class ProblemDetailScreenWidget {
           children: [
             SizedBox(height: screenHeight * 0.03),
             buildSolvedDate(problemModel.solvedAt, themeProvider),
-            /*
             SizedBox(height: screenHeight * 0.03),
             buildProblemReference(problemModel.reference, themeProvider),
-
-             */
-            SizedBox(height: screenHeight * 0.03,),
-            buildImageSection(
-                context,
-                imageUrl,
-                '문제 이미지',
-                themeProvider.primaryColor,
-                themeProvider),
+            SizedBox(
+              height: screenHeight * 0.03,
+            ),
+            buildImageGallery(
+              context: context,
+              imageUrls: problemModel.problemImageDataList
+                      ?.map((m) => m.imageUrl)
+                      .toList() ??
+                  [],
+              label: '문제 이미지',
+              color: themeProvider.primaryColor,
+              themeProvider: themeProvider,
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget buildExpansionTile(
-      BuildContext context,
-      ProblemModel problemModel,
-      ThemeHandler themeProvider,
-      TemplateType templateType) {
-    final ScrollController latexScrollController = ScrollController();
+  Widget buildExpansionTile(BuildContext context, ProblemModel problemModel,
+      ThemeHandler themeProvider) {
     final ScrollController tileScrollController = ScrollController();
 
     double screenHeight = MediaQuery.of(context).size.height;
@@ -78,27 +71,19 @@ class ProblemDetailScreenWidget {
           SizedBox(height: screenHeight * 0.01),
           buildSectionWithMemo(problemModel.memo, themeProvider),
           SizedBox(height: screenHeight * 0.02),
-          if (templateType == TemplateType.special)
-            buildLatexView(context, problemModel.analysis,
-                latexScrollController, themeProvider),
           SizedBox(height: screenHeight * 0.02),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: (templateType == TemplateType.simple)
-                ? [
-                    _buildImageContainer(context, problemModel.answerImageUrl,
-                        '해설 이미지', themeProvider)
-                  ]
-                : [
-                    _buildImageContainer(context, problemModel.problemImageUrl,
-                        '문제 원본 이미지', themeProvider),
-                    const SizedBox(height: 20.0),
-                    _buildImageContainer(context, problemModel.answerImageUrl,
-                        '해설 이미지', themeProvider),
-                    //const SizedBox(height: 20.0),
-                    //_buildImageContainer(context, problemModel.solveImageUrl, '풀이 이미지', themeProvider),
-                  ],
-          ),
+          Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            buildImageGallery(
+              context: context,
+              imageUrls: problemModel.answerImageDataList
+                      ?.map((m) => m.imageUrl)
+                      .toList() ??
+                  [],
+              label: '해설 이미지',
+              color: themeProvider.primaryColor,
+              themeProvider: themeProvider,
+            ),
+          ]),
           SizedBox(height: screenHeight * 0.03),
           buildRepeatSection(context, problemModel, themeProvider),
           SizedBox(height: screenHeight * 0.02),
@@ -171,63 +156,6 @@ class ProblemDetailScreenWidget {
     );
   }
 
-  // Latex 형태의 텍스트를 출력해주는 함수
-  Widget buildLatexView(BuildContext context, String? analysis,
-      ScrollController scrollController, ThemeHandler themeProvider) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Icon(Icons.analytics, color: themeProvider.primaryColor),
-            const SizedBox(width: 10),
-            HandWriteText(
-                text: '문제 분석', fontSize: 20, color: themeProvider.primaryColor),
-          ],
-        ),
-        const SizedBox(height: 5),
-        Container(
-          constraints: BoxConstraints(
-            maxWidth: MediaQuery.of(context).size.width - 70, // 제한된 너비 설정
-            maxHeight:
-                MediaQuery.of(context).size.height / 3, // 필요에 따라 최대 높이 설정
-          ),
-          padding: const EdgeInsets.all(10.0),
-          decoration: BoxDecoration(
-            color: themeProvider.primaryColor.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Scrollbar(
-            controller: scrollController,
-            thumbVisibility: true, // 스크롤바 항상 보이도록 설정
-            thickness: 6.0, // 스크롤바 두께
-            radius: const Radius.circular(10), // 스크롤바 모서리 반경
-            scrollbarOrientation: ScrollbarOrientation.right, // 스크롤바 위치
-            child: SingleChildScrollView(
-              controller: scrollController,
-              scrollDirection: Axis.vertical,
-              child: TeXView(
-                fonts: const [
-                  TeXViewFont(
-                    fontFamily: 'HandWrite',
-                    src: 'assets/fonts/HandWrite.ttf',
-                  ),
-                ],
-                child: LatexTextHandler.renderLatex(analysis ?? "분석 결과가 없습니다!"),
-                renderingEngine: const TeXViewRenderingEngine.mathjax(),
-                style: const TeXViewStyle(
-                  elevation: 0,
-                  borderRadius: TeXViewBorderRadius.all(10),
-                  backgroundColor: Colors.white,
-                ),
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
   // 한 줄에 아이콘과 텍스트가 동시에 오도록 하는 함수
   Widget buildIconTextRow(IconData icon, String label, Widget trailing,
       ThemeHandler themeProvider) {
@@ -269,105 +197,42 @@ class ProblemDetailScreenWidget {
     );
   }
 
-  // 이미지 섹션 빌드 함수
-  Widget buildImageSection(BuildContext context, String? imageUrl, String label,
-      Color color, ThemeHandler themeProvider) {
-    final mediaQuery = MediaQuery.of(context);
-    double aspectRatio = 1.0;
+  Widget buildImageGallery({
+    required BuildContext context,
+    required List<String> imageUrls,
+    required String label,
+    required Color color,
+    required ThemeHandler themeProvider,
+  }) {
+    if (imageUrls.isEmpty) {
+      return _buildEmptyImageSection(label, color, themeProvider);
+    }
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          width: double.infinity,
-          alignment: Alignment.centerLeft,
-          padding: const EdgeInsets.symmetric(vertical: 4.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              Icon(Icons.camera_alt, color: color),
-              const SizedBox(width: 8.0),
-              HandWriteText(text: label, fontSize: 20, color: color),
-            ],
-          ),
-        ),
-        const SizedBox(height: 10.0),
-        Center(
-          child: GestureDetector(
-            onTap: () {
-              Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) =>
-                          FullScreenImage(imagePath: imageUrl)));
-            },
-            child: Container(
-              width: mediaQuery.size.width,
-              height: mediaQuery.size.height * 0.5,
-              decoration: BoxDecoration(
-                color: themeProvider.primaryColor.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: AspectRatio(
-                aspectRatio: aspectRatio,
-                child: DisplayImage(imagePath: imageUrl, fit: BoxFit.contain),
-              ),
-            ),
-          ),
-        ),
-      ],
+    return ImageGallerySection(
+      imageUrls: imageUrls,
+      label: label,
+      color: color,
+      themeProvider: themeProvider,
     );
   }
 
-  Widget _buildImageContainer(BuildContext context, String? imageUrl,
-      String label, ThemeHandler themeProvider) {
-    final mediaQuery = MediaQuery.of(context);
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          width: double.infinity,
-          alignment: Alignment.centerLeft,
-          padding: const EdgeInsets.symmetric(vertical: 4.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              Icon(Icons.camera_alt, color: themeProvider.primaryColor),
-              const SizedBox(width: 8.0),
-              HandWriteText(
-                  text: label, fontSize: 20, color: themeProvider.primaryColor),
-            ],
-          ),
+  Widget _buildEmptyImageSection(
+      String label, Color color, ThemeHandler themeProvider) {
+    // 기존에 아무 이미지 없을 때 보여주던 박스
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 10),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: themeProvider.primaryColor.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Center(
+        child: Text(
+          '$label\n이미지가 없습니다.',
+          textAlign: TextAlign.center,
+          style: TextStyle(color: themeProvider.primaryColor),
         ),
-        const SizedBox(height: 10.0),
-        Center(
-          child: GestureDetector(
-            onTap: () {
-              FirebaseAnalytics.instance
-                  .logEvent(name: 'image_full_screen_$label');
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => FullScreenImage(imagePath: imageUrl),
-                ),
-              );
-            },
-            child: Container(
-              width: mediaQuery.size.width,
-              height: mediaQuery.size.height * 0.5, // 고정된 높이로 변경
-              decoration: BoxDecoration(
-                color: themeProvider.primaryColor.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: DisplayImage(
-                imagePath: imageUrl,
-                fit: BoxFit.contain,
-              ),
-            ),
-          ),
-        ),
-      ],
+      ),
     );
   }
 

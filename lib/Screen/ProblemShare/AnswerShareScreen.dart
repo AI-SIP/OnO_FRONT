@@ -1,7 +1,7 @@
 import 'dart:developer';
 import 'dart:io';
-import 'dart:ui' as ui;
 import 'dart:typed_data';
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -9,13 +9,13 @@ import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 
-import '../../GlobalModule/Image/DisplayImage.dart';
-import '../../GlobalModule/Text/HandWriteText.dart';
-import '../../GlobalModule/Theme/GridPainter.dart';
-import '../../GlobalModule/Text/StandardText.dart';
-import '../../GlobalModule/Theme/ThemeHandler.dart';
-import '../../GlobalModule/Text/UnderlinedText.dart';
-import '../../Model/ProblemModel.dart';
+import '../../Model/Problem/ProblemModel.dart';
+import '../../Module/Image/DisplayImage.dart';
+import '../../Module/Text/HandWriteText.dart';
+import '../../Module/Text/StandardText.dart';
+import '../../Module/Text/UnderlinedText.dart';
+import '../../Module/Theme/GridPainter.dart';
+import '../../Module/Theme/ThemeHandler.dart';
 
 class AnswerShareScreen extends StatefulWidget {
   final ProblemModel problem;
@@ -36,6 +36,7 @@ class _AnswerShareScreenState extends State<AnswerShareScreen> {
   @override
   void initState() {
     super.initState();
+    /*
     if (widget.problem.answerImageUrl != null &&
         widget.problem.answerImageUrl!.isNotEmpty) {
       _image = Image.network(
@@ -49,6 +50,12 @@ class _AnswerShareScreenState extends State<AnswerShareScreen> {
         fit: BoxFit.contain,
       );
     }
+
+     */
+    _image = Image.asset(
+      'assets/no_image.png',
+      fit: BoxFit.contain,
+    );
 
     final ImageStream imageStream =
         _image!.image.resolve(const ImageConfiguration());
@@ -109,7 +116,10 @@ class _AnswerShareScreenState extends State<AnswerShareScreen> {
                       children: [
                         Expanded(
                           child: Text(
-                            (widget.problem.reference != null && widget.problem.reference!.isNotEmpty) ? widget.problem.reference! : "제목 없음",
+                            (widget.problem.reference != null &&
+                                    widget.problem.reference!.isNotEmpty)
+                                ? widget.problem.reference!
+                                : "제목 없음",
                             style: TextStyle(
                               color: themeProvider.primaryColor,
                               fontSize: 24,
@@ -130,7 +140,7 @@ class _AnswerShareScreenState extends State<AnswerShareScreen> {
                       CustomPaint(
                         size: Size.infinite,
                         painter: GridPainter(
-                            gridColor: themeProvider.primaryColor,
+                          gridColor: themeProvider.primaryColor,
                           isSpring: true,
                         ),
                       ),
@@ -191,9 +201,12 @@ class _AnswerShareScreenState extends State<AnswerShareScreen> {
                                           CrossAxisAlignment.start,
                                       children: [
                                         if (_image != null)
+                                          /*
                                           buildAnswerImage(context,
                                               widget.problem.answerImageUrl),
-                                        const SizedBox(height: 10),
+
+                                           */
+                                          const SizedBox(height: 10),
                                       ],
                                     ),
                                   ),
@@ -234,7 +247,6 @@ class _AnswerShareScreenState extends State<AnswerShareScreen> {
         ),
       ),
     );
-
   }
 
   Future<void> _shareProblemAsImage() async {
@@ -248,13 +260,15 @@ class _AnswerShareScreenState extends State<AnswerShareScreen> {
           .findRenderObject() as RenderRepaintBoundary;
 
       // 이미지를 캡처합니다.
-      ui.Image image = await boundary.toImage(pixelRatio: MediaQuery.of(context).devicePixelRatio);
+      ui.Image image = await boundary.toImage(
+          pixelRatio: MediaQuery.of(context).devicePixelRatio);
 
       // 불투명한 배경을 가진 새로운 캔버스를 생성합니다.
       final paint = Paint();
       final recorder = ui.PictureRecorder();
       final canvas = Canvas(recorder);
-      final imageRect = Rect.fromLTWH(0, 0, image.width.toDouble(), image.height.toDouble());
+      final imageRect =
+          Rect.fromLTWH(0, 0, image.width.toDouble(), image.height.toDouble());
 
       // 캔버스에 불투명 배경을 먼저 채운 후, 캡처된 이미지를 덧씁니다.
       canvas.drawRect(imageRect, paint..color = Colors.white);
@@ -262,7 +276,8 @@ class _AnswerShareScreenState extends State<AnswerShareScreen> {
       final picture = recorder.endRecording();
       final imgWithOpaqueBg = await picture.toImage(image.width, image.height);
 
-      ByteData? byteData = await imgWithOpaqueBg.toByteData(format: ui.ImageByteFormat.png);
+      ByteData? byteData =
+          await imgWithOpaqueBg.toByteData(format: ui.ImageByteFormat.png);
       Uint8List pngBytes = byteData!.buffer.asUint8List();
 
       final tempDir = await getTemporaryDirectory();
@@ -288,7 +303,10 @@ class _AnswerShareScreenState extends State<AnswerShareScreen> {
         );
       } else {
         log('Invalid box size, defaulting to basic share...');
-        Share.shareXFiles([xFile], text: '내 오답노트야! 어때?\n\nOnO 다운로드: https://ono-app.com/home',);
+        Share.shareXFiles(
+          [xFile],
+          text: '내 오답노트야! 어때?\n\nOnO 다운로드: https://ono-app.com/home',
+        );
       }
 
       // 공유 후 화면을 닫습니다.
