@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:ono/Model/PracticeNote/PracticeNoteUpdateModel.dart';
 import 'package:provider/provider.dart';
 
 import '../../Model/PracticeNote/PracticeNoteRegisterModel.dart';
@@ -9,12 +10,17 @@ import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/PracticeNoteProvider.dart';
 
 class PracticeTitleWriteScreen extends StatelessWidget {
-  final PracticeNoteRegisterModel practiceRegisterModel;
+  final PracticeNoteRegisterModel? practiceRegisterModel;
+  final PracticeNoteUpdateModel? practiceNoteUpdateModel;
   final TextEditingController _titleController;
 
-  PracticeTitleWriteScreen({required this.practiceRegisterModel})
-      : _titleController =
-            TextEditingController(text: practiceRegisterModel.practiceTitle);
+  PracticeTitleWriteScreen(
+      {super.key, this.practiceRegisterModel, this.practiceNoteUpdateModel})
+      : _titleController = TextEditingController(
+          text: practiceNoteUpdateModel != null
+              ? practiceNoteUpdateModel.practiceTitle
+              : practiceRegisterModel?.practiceTitle ?? '',
+        );
 
   void _submitPractice(BuildContext context, ThemeHandler themeProvider) async {
     if (_titleController.text.isEmpty) {
@@ -23,28 +29,27 @@ class PracticeTitleWriteScreen extends StatelessWidget {
       final problemPracticeProvider =
           Provider.of<ProblemPracticeProvider>(context, listen: false);
 
-      practiceRegisterModel.setPracticeTitle(_titleController.text);
-
-      bool isSubmit = false, isUpdate = false;
-      if (practiceRegisterModel.practiceId == null) {
-        await problemPracticeProvider.registerPractice(practiceRegisterModel);
-        isSubmit = true;
-      } else {
-        await problemPracticeProvider.updatePractice(practiceRegisterModel);
-        isUpdate = true;
-      }
-
       Navigator.pop(context);
       Navigator.pop(context);
 
-      if (isSubmit) {
-        _showSnackBar(context, themeProvider, '복습 리스트가 생성되었습니다.',
-            themeProvider.primaryColor);
-      } else if (isUpdate) {
-        Navigator.pop(context);
-        _showSnackBar(context, themeProvider, '복습 리스트가 수정되었습니다.',
-            themeProvider.primaryColor);
-      } else {
+      try {
+        if (practiceNoteUpdateModel != null) {
+          practiceNoteUpdateModel!.setPracticeTitle(_titleController.text);
+          await problemPracticeProvider
+              .updatePractice(practiceNoteUpdateModel!);
+
+          Navigator.pop(context);
+          _showSnackBar(context, themeProvider, '복습 리스트가 수정되었습니다.',
+              themeProvider.primaryColor);
+        } else {
+          practiceRegisterModel!.setPracticeTitle(_titleController.text);
+          await problemPracticeProvider
+              .registerPractice(practiceRegisterModel!);
+
+          _showSnackBar(context, themeProvider, '복습 리스트가 생성되었습니다.',
+              themeProvider.primaryColor);
+        }
+      } catch (error) {
         _showSnackBar(context, themeProvider, '복습 리스트가 실패했습니다.', Colors.red);
       }
     }
@@ -110,9 +115,7 @@ class PracticeTitleWriteScreen extends StatelessWidget {
   AppBar _buildAppBar(ThemeHandler themeProvider) {
     return AppBar(
       title: StandardText(
-        text: practiceRegisterModel.practiceId == null
-            ? "복습 리스트 만들기"
-            : "복습 리스트 수정하기",
+        text: practiceNoteUpdateModel == null ? "복습 리스트 만들기" : "복습 리스트 수정하기",
         fontSize: 20,
         color: themeProvider.primaryColor,
       ),
@@ -140,7 +143,7 @@ class PracticeTitleWriteScreen extends StatelessWidget {
 
   Widget _buildTitleText() {
     return StandardText(
-      text: practiceRegisterModel.practiceId == null
+      text: practiceNoteUpdateModel == null
           ? "복습 리스트의 이름을 입력해주세요"
           : "수정할 이름을 입력해주세요",
       fontSize: 18,
@@ -238,9 +241,7 @@ class PracticeTitleWriteScreen extends StatelessWidget {
             padding: const EdgeInsets.symmetric(vertical: 10),
           ),
           child: StandardText(
-            text: practiceRegisterModel.practiceId == null
-                ? "복습 리스트 만들기"
-                : "복습 리스트 수정하기",
+            text: practiceRegisterModel == null ? "복습 리스트 수정하기" : "복습 리스트 만들기",
             fontSize: 18,
             color: Colors.white,
           ),

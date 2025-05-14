@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:ono/Model/PracticeNote/PracticeNoteModel.dart';
 import 'package:ono/Model/PracticeNote/PracticeNoteRegisterModel.dart';
 import 'package:ono/Model/PracticeNote/PracticeNoteThumbnailModel.dart';
+import 'package:ono/Model/PracticeNote/PracticeNoteUpdateModel.dart';
 
 import '../Model/Problem/ProblemModel.dart';
 import '../Service/Api/HttpService.dart';
@@ -56,8 +57,10 @@ class ProblemPracticeProvider with ChangeNotifier {
   }
 
   Future<void> updatePractice(
-      PracticeNoteRegisterModel practiceNoteRegisterModel) async {
-    await practiceNoteService.updatePracticeNote(practiceNoteRegisterModel);
+      PracticeNoteUpdateModel practiceNoteUpdateModel) async {
+    await practiceNoteService.updatePracticeNote(practiceNoteUpdateModel);
+
+    moveToPractice(practiceNoteUpdateModel.practiceNoteId);
   }
 
   Future<void> deletePractices(List<int> deletePracticeIds) async {

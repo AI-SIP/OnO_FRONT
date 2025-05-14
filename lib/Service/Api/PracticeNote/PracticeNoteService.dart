@@ -1,4 +1,5 @@
 import 'package:ono/Model/PracticeNote/PracticeNoteThumbnailModel.dart';
+import 'package:ono/Model/PracticeNote/PracticeNoteUpdateModel.dart';
 
 import '../../../Config/AppConfig.dart';
 import '../../../Model/PracticeNote/PracticeNoteModel.dart';
@@ -47,11 +48,11 @@ class PracticeNoteService {
   }
 
   Future<void> updatePracticeNote(
-      PracticeNoteRegisterModel practiceNoteRegisterModel) async {
+      PracticeNoteUpdateModel practiceNoteUpdateModel) async {
     await httpService.sendRequest(
       method: 'PATCH',
       url: '$baseUrl',
-      body: practiceNoteRegisterModel.toJson(),
+      body: practiceNoteUpdateModel.toJson(),
     );
   }
 

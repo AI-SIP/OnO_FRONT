@@ -279,6 +279,10 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
             TextButton(
               onPressed: () async {
                 Navigator.pop(context);
+                setState(() {
+                  _isSelectionMode = false;
+                  _selectedPracticeIds.clear();
+                });
 
                 final provider = Provider.of<ProblemPracticeProvider>(context,
                     listen: false);
@@ -288,11 +292,6 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
                     context: context,
                     message: '복습 리스트가 삭제되었습니다!',
                     backgroundColor: themeProvider.primaryColor);
-
-                setState(() {
-                  _isSelectionMode = false;
-                  _selectedPracticeIds.clear();
-                });
               },
               child: const StandardText(
                 text: '삭제',

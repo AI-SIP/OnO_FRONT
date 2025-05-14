@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 
 import '../../Model/Folder/FolderModel.dart';
 import '../../Model/PracticeNote/PracticeNoteRegisterModel.dart';
+import '../../Model/PracticeNote/PracticeNoteUpdateModel.dart';
 import '../../Model/Problem/ProblemModel.dart';
 import '../../Model/Problem/TemplateType.dart';
 import '../../Module/Image/DisplayImage.dart';
@@ -29,6 +30,7 @@ class _PracticeProblemSelectionScreenState
   int? selectedFolderId;
   List<ProblemModel> selectedProblems = [];
   List<FolderModel> allFolders = [];
+  late final List<int> _originalProblemIds;
 
   @override
   void initState() {
@@ -36,7 +38,11 @@ class _PracticeProblemSelectionScreenState
     _fetchFolders();
 
     if (widget.practiceModel != null) {
-      selectedProblems = widget.practiceModel!.problems;
+      selectedProblems = List.from(widget.practiceModel!.problems);
+      _originalProblemIds =
+          widget.practiceModel!.problems.map((p) => p.problemId).toList();
+    } else {
+      _originalProblemIds = [];
     }
   }
 
@@ -292,30 +298,51 @@ class _PracticeProblemSelectionScreenState
       child: ElevatedButton(
         onPressed: selectedProblems.isNotEmpty
             ? () {
-                PracticeNoteRegisterModel practiceRegisterModel;
-                List<int> selectedProblemIds = selectedProblems
-                    .map((problem) => problem.problemId) // problemId만 추출
+                final newIds =
+                    selectedProblems.map((p) => p.problemId).toList();
+
+                // 추가된 문제: newIds 에는 있지만 원본에는 없는 것
+                final addList = newIds
+                    .where((id) => !_originalProblemIds.contains(id))
+                    .toList();
+                // 삭제된 문제: 원본에는 있고 newIds에는 없는 것
+                final removeList = _originalProblemIds
+                    .where((id) => !newIds.contains(id))
                     .toList();
 
                 if (widget.practiceModel != null) {
-                  practiceRegisterModel = PracticeNoteRegisterModel(
-                      practiceId: widget.practiceModel!.practiceId,
-                      practiceTitle: widget.practiceModel!.practiceTitle,
-                      registerProblemIdList: selectedProblemIds);
-                } else {
-                  practiceRegisterModel = PracticeNoteRegisterModel(
-                      practiceTitle: "",
-                      registerProblemIdList: selectedProblemIds);
-                }
-
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => PracticeTitleWriteScreen(
-                      practiceRegisterModel: practiceRegisterModel,
+                  // 수정 모드
+                  final updateModel = PracticeNoteUpdateModel(
+                    practiceNoteId: widget.practiceModel!.practiceId,
+                    practiceTitle: widget.practiceModel!.practiceTitle,
+                    addProblemIdList: addList,
+                    removeProblemIdList: removeList,
+                  );
+                  // 다음 화면으로 updateModel 넘기기
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => PracticeTitleWriteScreen(
+                        practiceNoteUpdateModel: updateModel,
+                      ),
                     ),
-                  ),
-                );
+                  );
+                } else {
+                  // 신규 등록 모드 → 기존대로 RegisterModel
+                  final registerModel = PracticeNoteRegisterModel(
+                    practiceId: null,
+                    practiceTitle: "",
+                    registerProblemIdList: newIds,
+                  );
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => PracticeTitleWriteScreen(
+                        practiceRegisterModel: registerModel,
+                      ),
+                    ),
+                  );
+                }
               }
             : () => _showSelectProblemDialog(context),
         style: ElevatedButton.styleFrom(

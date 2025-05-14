@@ -15,7 +15,6 @@ import 'package:provider/provider.dart';
 
 import '../../Model/Problem/ProblemModel.dart';
 import '../../Model/Problem/ProblemThumbnailModel.dart';
-import '../../Model/Problem/TemplateType.dart';
 import '../../Module/Image/DisplayImage.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
@@ -1000,7 +999,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
               onPressed: () {
                 if (_selectedFolderIds.isNotEmpty ||
                     _selectedProblemIds.isNotEmpty) {
-                  _deleteSelectedItems();
+                  _confirmDelete();
                 }
               },
               child: const StandardText(
@@ -1053,17 +1052,50 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     }
   }
 
-  String formatDateTime(DateTime dateTime) {
-    return DateFormat('yyyy/MM/dd HH:mm').format(dateTime);
+  void _confirmDelete() {
+    final theme = Provider.of<ThemeHandler>(context, listen: false);
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Colors.white,
+        title: const StandardText(
+          text: '삭제 확인',
+          fontSize: 18,
+          color: Colors.black,
+        ),
+        content: const StandardText(
+          text: '선택한 항목을 정말 삭제하시겠습니까?',
+          fontSize: 16,
+          color: Colors.black,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(), // 취소
+            child: const StandardText(
+              text: '취소',
+              fontSize: 14,
+              color: Colors.black,
+            ),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(ctx).pop(); // 다이얼로그 닫고
+              _deleteSelectedItems(); // 실제 삭제 실행
+            },
+            child: StandardText(
+              text: '확인',
+              fontSize: 14,
+              color: theme.primaryColor,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
-  // 템플릿 타입에 따른 아이콘 설정 (SVG 파일로 교체)
-  Widget _getTemplateIcon(TemplateType templateType) {
-    return SvgPicture.asset(
-      templateType.templateThumbnailImage,
-      width: 20,
-      height: 20,
-    );
+  String formatDateTime(DateTime dateTime) {
+    return DateFormat('yyyy/MM/dd HH:mm').format(dateTime);
   }
 
   Future<void> _moveFolderToNewParent(
