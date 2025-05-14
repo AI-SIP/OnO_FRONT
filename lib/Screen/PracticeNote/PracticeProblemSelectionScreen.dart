@@ -17,8 +17,7 @@ import '../../Provider/FoldersProvider.dart';
 class PracticeProblemSelectionScreen extends StatefulWidget {
   final PracticeNoteModel? practiceModel;
 
-  const PracticeProblemSelectionScreen({Key? key, this.practiceModel})
-      : super(key: key);
+  const PracticeProblemSelectionScreen({super.key, this.practiceModel});
 
   @override
   _PracticeProblemSelectionScreenState createState() =>
@@ -302,11 +301,11 @@ class _PracticeProblemSelectionScreenState
                   practiceRegisterModel = PracticeNoteRegisterModel(
                       practiceId: widget.practiceModel!.practiceId,
                       practiceTitle: widget.practiceModel!.practiceTitle,
-                      registerProblemIds: selectedProblemIds);
+                      registerProblemIdList: selectedProblemIds);
                 } else {
                   practiceRegisterModel = PracticeNoteRegisterModel(
                       practiceTitle: "",
-                      registerProblemIds: selectedProblemIds);
+                      registerProblemIdList: selectedProblemIds);
                 }
 
                 Navigator.push(

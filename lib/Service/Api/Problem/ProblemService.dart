@@ -95,7 +95,7 @@ class ProblemService {
     await httpService.sendRequest(
       method: 'DELETE',
       url: baseUrl,
-      body: {'problemIdList': problemIdList},
+      body: {'deleteProblemIdList': problemIdList},
     );
   }
 

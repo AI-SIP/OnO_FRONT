@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:ono/Model/PracticeNote/PracticeNoteModel.dart';
 import 'package:ono/Model/PracticeNote/PracticeNoteRegisterModel.dart';
@@ -24,6 +26,15 @@ class ProblemPracticeProvider with ChangeNotifier {
   Future<void> fetchAllPracticeContents() async {
     practiceThumbnails =
         await practiceNoteService.fetchPracticeNoteThumbnails();
+
+    for (var practice in practiceThumbnails) {
+      log('-----------------------------------------');
+      log('practice ID: ${practice.practiceId}');
+      log('practice Name: ${practice.practiceTitle}');
+      log('lastSolved at: ${practice.lastSolvedAt}');
+      log('practiceCount: ${practice.practiceCount}');
+      log('-----------------------------------------');
+    }
     notifyListeners();
   }
 

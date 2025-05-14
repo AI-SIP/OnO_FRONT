@@ -413,7 +413,6 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
     LoadingDialog.show(context, '복습 리스트 로딩 중...');
 
     await practiceProvider.moveToPractice(practice.practiceId);
-
     LoadingDialog.hide(context);
 
     Navigator.push(

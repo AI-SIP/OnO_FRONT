@@ -71,7 +71,7 @@ class FolderService {
     await httpService.sendRequest(
       method: 'DELETE',
       url: baseUrl,
-      body: {'folderIdList': folderIdList},
+      body: {'deleteFolderIdList': folderIdList},
     );
   }
 

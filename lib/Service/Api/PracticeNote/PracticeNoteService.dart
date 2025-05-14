@@ -58,7 +58,7 @@ class PracticeNoteService {
   Future<void> deletePracticeNotes(List<int> practiceNoteIdList) async {
     await httpService.sendRequest(
       method: 'DELETE',
-      url: baseUrl,
+      url: '$baseUrl',
       body: {'deletePracticeIdList': practiceNoteIdList},
     );
   }
