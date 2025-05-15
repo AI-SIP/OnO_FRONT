@@ -6,13 +6,15 @@ import 'package:ono/Model/Problem/ProblemModel.dart';
 import 'package:ono/Service/Api/Problem/ProblemService.dart';
 
 import '../Model/Problem/ProblemRegisterModel.dart';
-import '../Model/Problem/ProblemRepeatRegisterModel.dart';
 import '../Module/Util/ReviewHandler.dart';
 import '../Service/Api/FileUpload/FileUploadService.dart';
 
 class ProblemsProvider with ChangeNotifier {
   List<ProblemModel> _problems = [];
   List<ProblemModel> get problems => _problems;
+
+  int _problemCount = 0;
+  int get problemCount => _problemCount;
 
   final problemService = ProblemService();
   final fileUploadService = FileUploadService();
@@ -65,6 +67,7 @@ class ProblemsProvider with ChangeNotifier {
 
   Future<void> fetchAllProblems() async {
     _problems = await problemService.getAllProblems();
+    _problemCount = await getUserProblemCount();
 
     for (var problem in _problems) {
       log('-----------------------------------------');
@@ -89,10 +92,9 @@ class ProblemsProvider with ChangeNotifier {
     await fetchProblem(registerProblemId);
 
     int userProblemCount = await getUserProblemCount();
-    final ReviewHandler reviewHandler = ReviewHandler();
-    if (userProblemCount > 0 && userProblemCount % 10 == 0) {
-      reviewHandler.requestReview(context);
-    }
+    _problemCount = userProblemCount;
+
+    await requestReview(context);
 
     log('register problem id: $registerProblemId complete');
     notifyListeners();
@@ -115,10 +117,9 @@ class ProblemsProvider with ChangeNotifier {
     await fetchProblem(problemData.problemId!);
   }
 
-  Future<void> addRepeatCount(
-      ProblemRepeatRegisterModel problemRepeatRegisterModel) async {
-    await problemService.repeatProblem(problemRepeatRegisterModel);
-    await fetchProblem(problemRepeatRegisterModel.problemId);
+  Future<void> updateProblemCount(int amount) async {
+    _problemCount += amount;
+    notifyListeners();
   }
 
   Future<void> deleteProblems(List<int> deleteProblemIdList) async {
@@ -128,5 +129,12 @@ class ProblemsProvider with ChangeNotifier {
 
   Future<String> uploadImage(XFile image) async {
     return await fileUploadService.uploadImageFile(image);
+  }
+
+  Future<void> requestReview(BuildContext context) async {
+    final ReviewHandler reviewHandler = ReviewHandler();
+    if (_problemCount > 0 && _problemCount % 10 == 0) {
+      reviewHandler.requestReview(context);
+    }
   }
 }

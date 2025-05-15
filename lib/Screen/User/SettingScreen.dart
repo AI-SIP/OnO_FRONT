@@ -2,6 +2,7 @@ import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:ono/Model/Common/LoginStatus.dart';
 import 'package:ono/Module/Util/UrlLauncher.dart';
+import 'package:ono/Provider/ProblemsProvider.dart';
 import 'package:provider/provider.dart';
 
 import '../../Module/Dialog/ThemeDialog.dart';
@@ -26,8 +27,9 @@ class _SettingScreenState extends State<SettingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final authService = Provider.of<UserProvider>(context);
     final userProvider = Provider.of<UserProvider>(context);
+    final problemsProvider =
+        Provider.of<ProblemsProvider>(context, listen: false);
     final themeProvider = Provider.of<ThemeHandler>(context);
     double screenHeight = MediaQuery.of(context).size.height;
 
@@ -42,7 +44,7 @@ class _SettingScreenState extends State<SettingScreen> {
         backgroundColor: Colors.white,
       ),
       backgroundColor: Colors.white,
-      body: !(authService.isLoggedIn == LoginStatus.login)
+      body: !(userProvider.isLoggedIn == LoginStatus.login)
           ? _buildLoginPrompt(themeProvider)
           : Column(
               children: [
@@ -54,13 +56,12 @@ class _SettingScreenState extends State<SettingScreen> {
                       SizedBox(height: screenHeight * 0.01),
                       _buildUserNameTile(
                         context: context,
-                        userName: userProvider?.userInfoModel?.name ?? '이름 없음',
+                        userName: userProvider.userInfoModel?.name ?? '이름 없음',
                         themeProvider: themeProvider,
                       ),
                       const Divider(),
                       _buildProblemCountTile(
-                        problemCount:
-                            userProvider?.userInfoModel?.problemCount ?? 0,
+                        problemCount: problemsProvider.problemCount,
                         themeProvider: themeProvider,
                       ),
                       const Divider(),

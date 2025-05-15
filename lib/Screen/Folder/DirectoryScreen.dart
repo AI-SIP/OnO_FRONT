@@ -680,7 +680,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
               borderRadius: BorderRadius.circular(8.0),
             ),
             child: isSelected
-                ? Icon(Icons.check, color: themeProvider.primaryColor)
+                ? const Icon(Icons.check, color: Colors.red)
                 : SvgPicture.asset(
                     NoteIconHandler.getNoteIcon(index),
                     width: 30,
@@ -931,6 +931,9 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         message: '선택된 항목이 삭제되었습니다!',
         backgroundColor: Theme.of(context).primaryColor,
       );
+
+      await foldersProvider
+          .fetchFolderContent(foldersProvider.currentFolder!.folderId);
     } catch (e) {
       // 에러 처리
       log('Error deleting items: $e');

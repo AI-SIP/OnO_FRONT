@@ -74,6 +74,10 @@ class FoldersProvider with ChangeNotifier {
     final index = _folders.indexWhere((folder) => folder.folderId == folderId);
     if (index != -1) {
       _folders[index] = updatedFolder;
+
+      if (folderId == _currentFolder!.folderId) {
+        moveToFolder(folderId);
+      }
     } else {
       _folders.add(updatedFolder);
     }

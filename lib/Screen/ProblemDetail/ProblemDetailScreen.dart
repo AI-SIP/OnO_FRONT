@@ -322,8 +322,6 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
 
   Future<void> _showDeleteProblemDialog(
       int problemId, ThemeHandler themeProvider) async {
-    final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
-
     return showDialog(
       context: context,
       builder: (context) {
@@ -350,8 +348,14 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                 Navigator.pop(context);
                 FirebaseAnalytics.instance.logEvent(name: 'problem_delete');
 
-                await Provider.of<ProblemsProvider>(context, listen: false)
-                    .deleteProblems([problemId]);
+                ProblemsProvider problemsProvider =
+                    Provider.of<ProblemsProvider>(context, listen: false);
+                await problemsProvider.deleteProblems([problemId]);
+
+                ProblemModel problemModel =
+                    problemsProvider.getProblem(problemId);
+                await Provider.of<FoldersProvider>(context, listen: false)
+                    .fetchFolderContent(problemModel.folderId);
                 await Provider.of<ProblemPracticeProvider>(context,
                         listen: false)
                     .fetchAllPracticeContents();

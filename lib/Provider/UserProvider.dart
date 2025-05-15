@@ -166,7 +166,6 @@ class UserProvider with ChangeNotifier {
 
   Future<void> fetchUserInfo() async {
     userInfoModel = await userService.fetchUserInfo();
-    userInfoModel?.problemCount = await problemService.getProblemCount() ?? 0;
   }
 
   Future<void> updateUser({
