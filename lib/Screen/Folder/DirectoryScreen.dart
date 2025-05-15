@@ -599,7 +599,6 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
               }
             });
           } else {
-            // 일반 모드에서는 폴더로 이동
             Navigator.push(
               context,
               MaterialPageRoute(builder: (context) {

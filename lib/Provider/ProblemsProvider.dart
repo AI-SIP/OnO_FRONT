@@ -25,7 +25,7 @@ class ProblemsProvider with ChangeNotifier {
     int low = 0, high = _problems.length - 1;
     while (low <= high) {
       final mid = (low + high) >> 1;
-      final midId = _problems[mid].problemId!;
+      final midId = _problems[mid].problemId;
       if (midId == problemId) {
         log('find problemId: $problemId');
         return _problems[mid];
@@ -87,13 +87,10 @@ class ProblemsProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> submitProblem(
+  Future<void> registerProblem(
       ProblemRegisterModel problemData, BuildContext context) async {
     int registerProblemId = await problemService.registerProblem(problemData);
-    ProblemModel registerProblem =
-        await problemService.getProblem(registerProblemId);
-
-    problems.add(registerProblem);
+    await fetchProblem(registerProblemId);
 
     int userProblemCount = await getUserProblemCount();
     final ReviewHandler reviewHandler = ReviewHandler();
@@ -101,6 +98,7 @@ class ProblemsProvider with ChangeNotifier {
       reviewHandler.requestReview(context);
     }
 
+    log('register problem id: $registerProblemId complete');
     notifyListeners();
   }
 

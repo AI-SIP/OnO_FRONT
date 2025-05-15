@@ -58,8 +58,16 @@ void main() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => ProblemsProvider()),
-        ChangeNotifierProvider(create: (_) => FoldersProvider()),
-        ChangeNotifierProvider(create: (_) => ProblemPracticeProvider()),
+        ChangeNotifierProvider(
+            create: (context) => FoldersProvider(
+                  problemsProvider:
+                      Provider.of<ProblemsProvider>(context, listen: false),
+                )),
+        ChangeNotifierProvider(
+            create: (context) => ProblemPracticeProvider(
+                  problemsProvider:
+                      Provider.of<ProblemsProvider>(context, listen: false),
+                )),
         ChangeNotifierProvider(
           create: (context) => UserProvider(
             Provider.of<ProblemsProvider>(context, listen: false),

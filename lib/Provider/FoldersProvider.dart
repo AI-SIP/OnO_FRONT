@@ -10,19 +10,21 @@ import '../Model/Folder/FolderModel.dart';
 import '../Model/Problem/ProblemModel.dart';
 
 class FoldersProvider with ChangeNotifier {
+  final ProblemsProvider problemsProvider;
   FolderModel? _currentFolder;
   List<FolderModel> _folders = [];
   List<ProblemModel> _currentProblems = [];
 
   final folderService = FolderService();
   final fileUploadService = FileUploadService();
-  final problemsProvider = ProblemsProvider();
 
   FolderModel? get currentFolder => _currentFolder;
 
-  List<ProblemModel> get currentProblems => List.unmodifiable(_currentProblems);
+  List<ProblemModel> get currentProblems => _currentProblems;
 
   List<FolderModel> get folders => _folders;
+
+  FoldersProvider({required this.problemsProvider});
 
   // 상위 폴더로 이동
   Future<void> moveToFolder(int? folderId) async {
@@ -53,7 +55,6 @@ class FoldersProvider with ChangeNotifier {
     );
   }
 
-  // 폴더 내용 로드 (특정 폴더 ID로)
   Future<void> fetchFolderContent(int? folderId) async {
     folderId ??= currentFolder!.folderId;
 
@@ -65,6 +66,7 @@ class FoldersProvider with ChangeNotifier {
     } else {
       _folders.add(updatedFolder);
     }
+    log('folderId: ${folderId} fetch complete');
 
     notifyListeners();
   }
@@ -99,7 +101,9 @@ class FoldersProvider with ChangeNotifier {
 
     await fetchFolderContent(createdFolderId);
     await fetchFolderContent(_currentFolder!.folderId);
-    await moveToFolder(_currentFolder!.folderId);
+    _currentFolder = getFolder(_currentFolder!.folderId);
+
+    notifyListeners();
   }
 
   Future<void> updateFolder(
@@ -112,8 +116,6 @@ class FoldersProvider with ChangeNotifier {
     await fetchFolderContent(parentId);
     await fetchFolderContent(folderId);
     await fetchFolderContent(currentFolder!.folderId);
-
-    await moveToFolder(currentFolder!.folderId);
   }
 
   // 폴더 삭제
@@ -121,6 +123,5 @@ class FoldersProvider with ChangeNotifier {
     await folderService.deleteFolders(deleteFolderIdList);
 
     await fetchFolderContent(currentFolder!.folderId);
-    await moveToFolder(currentFolder!.folderId);
   }
 }

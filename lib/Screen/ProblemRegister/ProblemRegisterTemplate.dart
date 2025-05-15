@@ -224,11 +224,17 @@ class _ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
         await Provider.of<ProblemsProvider>(context, listen: false)
             .updateProblem(problemRegisterModel);
 
+        await Provider.of<FoldersProvider>(context, listen: false)
+            .fetchFolderContent(_selectedFolderId);
+
         _resetAll();
         Navigator.of(context).pop(true);
       } else {
         await Provider.of<ProblemsProvider>(context, listen: false)
-            .submitProblem(problemRegisterModel, context);
+            .registerProblem(problemRegisterModel, context);
+
+        await Provider.of<FoldersProvider>(context, listen: false)
+            .fetchFolderContent(_selectedFolderId);
 
         _resetAll();
 

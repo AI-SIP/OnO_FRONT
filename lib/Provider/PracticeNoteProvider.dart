@@ -17,9 +17,11 @@ class ProblemPracticeProvider with ChangeNotifier {
   List<PracticeNoteThumbnailModel> practiceThumbnails = [];
   List<ProblemModel> currentProblems = [];
   final TokenProvider tokenProvider = TokenProvider();
-  final ProblemsProvider problemsProvider = ProblemsProvider();
   final HttpService httpService = HttpService();
   final PracticeNoteService practiceNoteService = PracticeNoteService();
+  final ProblemsProvider problemsProvider;
+
+  ProblemPracticeProvider({required this.problemsProvider});
 
   Future<PracticeNoteThumbnailModel> findPracticeNote(
       int practiceNoteId) async {
