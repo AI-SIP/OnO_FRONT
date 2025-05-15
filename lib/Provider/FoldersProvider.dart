@@ -26,10 +26,28 @@ class FoldersProvider with ChangeNotifier {
 
   FoldersProvider({required this.problemsProvider});
 
+  FolderModel getFolder(int folderId) {
+    int low = 0, high = _folders.length - 1;
+    while (low <= high) {
+      final mid = (low + high) >> 1;
+      final midId = _folders[mid].folderId;
+      if (midId == folderId) {
+        log('find problemId: $folderId');
+        return _folders[mid];
+      } else if (midId < folderId) {
+        low = mid + 1;
+      } else {
+        high = mid - 1;
+      }
+    }
+
+    log('can\'t find problemId: $folderId');
+    throw Exception('Problem with id $folderId not found.');
+  }
+
   // 상위 폴더로 이동
   Future<void> moveToFolder(int? folderId) async {
-    FolderModel targetFolder =
-        _folders.firstWhere((f) => f.folderId == folderId);
+    FolderModel targetFolder = await getFolder(folderId!);
 
     _currentFolder = targetFolder;
     _currentProblems.clear();
@@ -46,13 +64,6 @@ class FoldersProvider with ChangeNotifier {
   Future<void> moveToRootFolder() async {
     final rootFolder = _folders[0];
     moveToFolder(rootFolder.folderId);
-  }
-
-  FolderModel getFolder(int? folderId) {
-    return _folders.firstWhere(
-      (folder) => folder.folderId == folderId,
-      orElse: () => throw Exception('Folder with ID $folderId not found'),
-    );
   }
 
   Future<void> fetchFolderContent(int? folderId) async {
@@ -101,7 +112,7 @@ class FoldersProvider with ChangeNotifier {
 
     await fetchFolderContent(createdFolderId);
     await fetchFolderContent(_currentFolder!.folderId);
-    _currentFolder = getFolder(_currentFolder!.folderId);
+    _currentFolder = await getFolder(_currentFolder!.folderId);
 
     notifyListeners();
   }

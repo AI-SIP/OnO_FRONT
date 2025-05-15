@@ -17,11 +17,7 @@ class ProblemsProvider with ChangeNotifier {
   final problemService = ProblemService();
   final fileUploadService = FileUploadService();
 
-  Future<ProblemModel> getProblem(int problemId) async {
-    if (_problems.isEmpty) {
-      _problems = await problemService.getAllProblems();
-    }
-
+  ProblemModel getProblem(int problemId) {
     int low = 0, high = _problems.length - 1;
     while (low <= high) {
       final mid = (low + high) >> 1;
