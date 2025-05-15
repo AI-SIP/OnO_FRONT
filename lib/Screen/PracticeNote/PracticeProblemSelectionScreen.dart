@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:ono/Model/PracticeNote/PracticeNoteModel.dart';
+import 'package:ono/Model/PracticeNote/PracticeNoteDetailModel.dart';
 import 'package:ono/Provider/PracticeNoteProvider.dart';
 import 'package:ono/Screen/PracticeNote/PracticeTitleWriteScreen.dart';
 import 'package:provider/provider.dart';
@@ -17,7 +17,7 @@ import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/FoldersProvider.dart';
 
 class PracticeProblemSelectionScreen extends StatefulWidget {
-  final PracticeNoteModel? practiceModel;
+  final PracticeNoteDetailModel? practiceModel;
 
   const PracticeProblemSelectionScreen({super.key, this.practiceModel});
 

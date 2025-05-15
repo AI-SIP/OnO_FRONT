@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
-import '../../Model/PracticeNote/PracticeNoteModel.dart';
+import '../../Model/PracticeNote/PracticeNoteDetailModel.dart';
 import '../../Model/Problem/ProblemModel.dart';
 import '../../Module/Dialog/SnackBarDialog.dart';
 import '../../Module/Image/DisplayImage.dart';
@@ -13,7 +13,7 @@ import '../ProblemDetail/ProblemDetailScreen.dart';
 import 'PracticeProblemSelectionScreen.dart';
 
 class PracticeDetailScreen extends StatelessWidget {
-  final PracticeNoteModel practice;
+  final PracticeNoteDetailModel practice;
 
   const PracticeDetailScreen({super.key, required this.practice});
 

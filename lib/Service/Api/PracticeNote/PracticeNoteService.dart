@@ -1,8 +1,8 @@
+import 'package:ono/Model/PracticeNote/PracticeNoteDetailModel.dart';
 import 'package:ono/Model/PracticeNote/PracticeNoteThumbnailModel.dart';
 import 'package:ono/Model/PracticeNote/PracticeNoteUpdateModel.dart';
 
 import '../../../Config/AppConfig.dart';
-import '../../../Model/PracticeNote/PracticeNoteModel.dart';
 import '../../../Model/PracticeNote/PracticeNoteRegisterModel.dart';
 import '../HttpService.dart';
 
@@ -10,34 +10,44 @@ class PracticeNoteService {
   final HttpService httpService = HttpService();
   final baseUrl = "${AppConfig.baseUrl}/api/practiceNotes";
 
-  Future<PracticeNoteModel> getPracticeNoteById(int practiceId) async {
+  Future<PracticeNoteDetailModel> getPracticeNoteById(int practiceId) async {
     final data = await httpService.sendRequest(
       method: 'GET',
       url: '$baseUrl/$practiceId',
     );
 
-    return PracticeNoteModel.fromJson(data);
+    return PracticeNoteDetailModel.fromJson(data);
   }
 
-  Future<List<PracticeNoteThumbnailModel>> fetchPracticeNoteThumbnails() async {
+  Future<List<PracticeNoteThumbnails>> getAllPracticeNoteThumbnails() async {
     final data = await httpService.sendRequest(
       method: 'GET',
       url: '$baseUrl/thumbnail',
     ) as List<dynamic>;
 
     return data
-        .map((d) =>
-            PracticeNoteThumbnailModel.fromJson(d as Map<String, dynamic>))
+        .map((d) => PracticeNoteThumbnails.fromJson(d as Map<String, dynamic>))
         .toList();
   }
 
-  Future<void> registerPracticeNote(
+  Future<List<PracticeNoteDetailModel>> getAllPracticeNoteDetails() async {
+    final data = await httpService.sendRequest(
+      method: 'GET',
+      url: '$baseUrl/all',
+    ) as List<dynamic>;
+
+    return data
+        .map((d) => PracticeNoteDetailModel.fromJson(d as Map<String, dynamic>))
+        .toList();
+  }
+
+  Future<int> registerPracticeNote(
       PracticeNoteRegisterModel practiceNoteRegisterModel) async {
-    await httpService.sendRequest(
+    return await httpService.sendRequest(
       method: 'POST',
       url: baseUrl,
       body: practiceNoteRegisterModel.toJson(),
-    );
+    ) as int;
   }
 
   Future<void> addPracticeNoteCount(int practiceId) async {

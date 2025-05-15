@@ -1,15 +1,15 @@
 import 'package:intl/intl.dart';
 
-class PracticeNoteModel {
+class PracticeNoteDetailModel {
   final int practiceId;
   final String practiceTitle;
-  final int practiceCount;
+  int practiceCount;
   final int practiceSize;
   final DateTime createdAt;
   final DateTime? lastSolvedAt;
   List<int> problemIdList = [];
 
-  PracticeNoteModel({
+  PracticeNoteDetailModel({
     required this.practiceId,
     required this.practiceTitle,
     required this.practiceCount,
@@ -19,8 +19,11 @@ class PracticeNoteModel {
     required this.problemIdList,
   });
 
-  factory PracticeNoteModel.fromJson(Map<String, dynamic> json) {
-    return PracticeNoteModel(
+  factory PracticeNoteDetailModel.fromJson(Map<String, dynamic> json) {
+    final problemIdDynamic = json['problemIdList'] as List<dynamic>? ?? [];
+    final problemIdList = problemIdDynamic.map((e) => e as int).toList();
+
+    return PracticeNoteDetailModel(
       practiceId: json['practiceNoteId'],
       practiceTitle: json['practiceTitle'] ?? '제목 없음',
       practiceCount: json['practiceCount'] ?? 0,
@@ -30,7 +33,7 @@ class PracticeNoteModel {
       lastSolvedAt: json['lastSolvedAt'] != null
           ? DateTime.parse(json['lastSolvedAt']).add(const Duration(hours: 9))
           : null,
-      problemIdList: json['problemIdList'] as List<int> ?? [],
+      problemIdList: problemIdList,
     );
   }
 
@@ -38,5 +41,9 @@ class PracticeNoteModel {
   String? _formatDateTime(DateTime? dateTime) {
     if (dateTime == null) return null;
     return DateFormat('yyyy-MM-dd').format(dateTime);
+  }
+
+  void addPracticeCount() {
+    practiceCount += 1;
   }
 }

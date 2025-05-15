@@ -206,7 +206,7 @@ class _PracticeNavigationButtonsState extends State<PracticeNavigationButtons> {
   void _showCompletionScreen() {
     final practiceId = widget.practiceProvider.currentPracticeNote!.practiceId;
     final totalProblems = widget.practiceProvider.currentProblems.length;
-    final practiceRound = widget.practiceProvider.practiceThumbnails
+    final practiceRound = widget.practiceProvider.practices
             .firstWhere((practice) => practice.practiceId == practiceId)
             .practiceCount ??
         0;

@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
-import 'package:ono/Model/PracticeNote/PracticeNoteThumbnailModel.dart';
 import 'package:ono/Module/Dialog/LoadingDialog.dart';
 import 'package:ono/Module/Dialog/SnackBarDialog.dart';
 import 'package:provider/provider.dart';
 
+import '../../Model/PracticeNote/PracticeNoteDetailModel.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/PracticeNoteProvider.dart';
@@ -44,11 +44,10 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
       backgroundColor: Colors.white,
       body: Consumer<ProblemPracticeProvider>(
         builder: (context, provider, child) {
-          if (provider.practiceThumbnails.isEmpty) {
+          if (provider.practices.isEmpty) {
             return _buildEmptyState(themeProvider);
           } else {
-            return _buildPracticeListView(
-                provider.practiceThumbnails, themeProvider);
+            return _buildPracticeListView(provider.practices, themeProvider);
           }
         },
       ),
@@ -360,7 +359,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
   }
 
   Widget _buildPracticeListView(
-      List<PracticeNoteThumbnailModel> practiceThumbnails,
+      List<PracticeNoteDetailModel> practiceThumbnails,
       ThemeHandler themeProvider) {
     return ListView.builder(
       padding: const EdgeInsets.symmetric(vertical: 20),
@@ -373,7 +372,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
   }
 
   Widget _buildPracticeItem(
-      PracticeNoteThumbnailModel practice, ThemeHandler themeProvider) {
+      PracticeNoteDetailModel practice, ThemeHandler themeProvider) {
     final isSelected = _selectedPracticeIds.contains(practice.practiceId);
 
     return GestureDetector(
@@ -406,7 +405,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
     );
   }
 
-  void _navigateToPracticeDetail(PracticeNoteThumbnailModel practice) async {
+  void _navigateToPracticeDetail(PracticeNoteDetailModel practice) async {
     final practiceProvider =
         Provider.of<ProblemPracticeProvider>(context, listen: false);
     LoadingDialog.show(context, '복습 리스트 로딩 중...');
@@ -462,7 +461,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
   }
 
   Widget _buildPracticeInfo(
-      PracticeNoteThumbnailModel practice, ThemeHandler themeProvider) {
+      PracticeNoteDetailModel practice, ThemeHandler themeProvider) {
     return Expanded(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

@@ -1,20 +1,20 @@
 import 'package:intl/intl.dart';
 
-class PracticeNoteThumbnailModel {
+class PracticeNoteThumbnails {
   final int practiceId;
   final String practiceTitle;
   int practiceCount;
   final DateTime? lastSolvedAt;
 
-  PracticeNoteThumbnailModel({
+  PracticeNoteThumbnails({
     required this.practiceId,
     required this.practiceTitle,
     required this.practiceCount,
     required this.lastSolvedAt,
   });
 
-  factory PracticeNoteThumbnailModel.fromJson(Map<String, dynamic> json) {
-    return PracticeNoteThumbnailModel(
+  factory PracticeNoteThumbnails.fromJson(Map<String, dynamic> json) {
+    return PracticeNoteThumbnails(
       practiceId: json['practiceNoteId'],
       practiceTitle: json['practiceTitle'] ?? '제목 없음',
       practiceCount: json['practiceCount'] ?? 0,

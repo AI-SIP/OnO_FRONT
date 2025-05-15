@@ -1,39 +1,73 @@
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
-import 'package:ono/Model/PracticeNote/PracticeNoteModel.dart';
 import 'package:ono/Model/PracticeNote/PracticeNoteRegisterModel.dart';
-import 'package:ono/Model/PracticeNote/PracticeNoteThumbnailModel.dart';
 import 'package:ono/Model/PracticeNote/PracticeNoteUpdateModel.dart';
 import 'package:ono/Provider/ProblemsProvider.dart';
 
+import '../Model/PracticeNote/PracticeNoteDetailModel.dart';
 import '../Model/Problem/ProblemModel.dart';
 import '../Service/Api/HttpService.dart';
 import '../Service/Api/PracticeNote/PracticeNoteService.dart';
 import 'TokenProvider.dart';
 
 class ProblemPracticeProvider with ChangeNotifier {
-  PracticeNoteModel? currentPracticeNote;
-  List<PracticeNoteThumbnailModel> practiceThumbnails = [];
+  PracticeNoteDetailModel? currentPracticeNote;
+  List<PracticeNoteDetailModel> _practices = [];
   List<ProblemModel> currentProblems = [];
   final TokenProvider tokenProvider = TokenProvider();
   final HttpService httpService = HttpService();
   final PracticeNoteService practiceNoteService = PracticeNoteService();
   final ProblemsProvider problemsProvider;
 
+  List<PracticeNoteDetailModel> get practices => _practices;
+
   ProblemPracticeProvider({required this.problemsProvider});
 
-  Future<PracticeNoteThumbnailModel> findPracticeNote(
-      int practiceNoteId) async {
-    return practiceThumbnails.firstWhere((p) => p.practiceId == practiceNoteId);
+  PracticeNoteDetailModel getPracticeNote(int practiceNoteId) {
+    int low = 0, high = _practices.length - 1;
+    while (low <= high) {
+      final mid = (low + high) >> 1;
+      final midId = _practices[mid].practiceId;
+      if (midId == practiceNoteId) {
+        log('find problemId: $practiceNoteId');
+        return _practices[mid];
+      } else if (midId < practiceNoteId) {
+        low = mid + 1;
+      } else {
+        high = mid - 1;
+      }
+    }
+
+    log('can\'t find problemId: $practiceNoteId');
+    throw Exception('Problem with id $practiceNoteId not found.');
+  }
+
+  Future<void> fetchPracticeNote(int? practiceNoteId) async {
+    final practiceNote =
+        await practiceNoteService.getPracticeNoteById(practiceNoteId!);
+
+    final index = _practices
+        .indexWhere((folder) => practiceNote.practiceId == practiceNoteId);
+    if (index != -1) {
+      _practices[index] = practiceNote;
+      if (practiceNoteId == currentPracticeNote!.practiceId) {
+        await moveToPractice(practiceNoteId);
+      }
+    } else {
+      _practices.add(practiceNote);
+    }
+    log('practiceId: ${practiceNoteId} fetch complete');
+
+    notifyListeners();
   }
 
   Future<void> fetchAllPracticeContents() async {
-    practiceThumbnails =
-        await practiceNoteService.fetchPracticeNoteThumbnails();
+    _practices = await practiceNoteService.getAllPracticeNoteDetails();
 
-    for (var practice in practiceThumbnails) {
+    for (var practice in _practices) {
       log('-----------------------------------------');
+      log('fetch all practice contents');
       log('practice ID: ${practice.practiceId}');
       log('practice Name: ${practice.practiceTitle}');
       log('lastSolved at: ${practice.lastSolvedAt}');
@@ -44,32 +78,31 @@ class ProblemPracticeProvider with ChangeNotifier {
   }
 
   Future<void> moveToPractice(int practiceId) async {
-    final targetPractice =
-        await practiceNoteService.getPracticeNoteById(practiceId);
+    final targetPractice = getPracticeNote(practiceId);
 
     currentProblems.clear();
     for (var problemId in targetPractice.problemIdList) {
-      ProblemModel problemModel = await problemsProvider.getProblem(problemId);
+      ProblemModel problemModel = problemsProvider.getProblem(problemId);
       currentProblems.add(problemModel);
     }
 
     currentPracticeNote = targetPractice;
-
     notifyListeners();
   }
 
   Future<void> registerPractice(
       PracticeNoteRegisterModel practiceNoteRegisterModel) async {
-    await practiceNoteService.registerPracticeNote(practiceNoteRegisterModel);
+    int createdPracticeId = await practiceNoteService
+        .registerPracticeNote(practiceNoteRegisterModel);
 
-    await fetchAllPracticeContents();
+    await fetchPracticeNote(createdPracticeId);
   }
 
   Future<void> updatePractice(
       PracticeNoteUpdateModel practiceNoteUpdateModel) async {
     await practiceNoteService.updatePracticeNote(practiceNoteUpdateModel);
 
-    moveToPractice(practiceNoteUpdateModel.practiceNoteId);
+    await fetchPracticeNote(practiceNoteUpdateModel.practiceNoteId);
   }
 
   Future<void> deletePractices(List<int> deletePracticeIds) async {
@@ -93,8 +126,8 @@ class ProblemPracticeProvider with ChangeNotifier {
   }
 
   Future<void> fetchPracticeCount(int practiceNoteId) async {
-    PracticeNoteThumbnailModel practiceNote =
-        await findPracticeNote(practiceNoteId);
+    PracticeNoteDetailModel practiceNote =
+        await getPracticeNote(practiceNoteId);
     practiceNote.addPracticeCount();
   }
 }

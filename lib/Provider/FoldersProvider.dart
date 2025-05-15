@@ -13,7 +13,7 @@ class FoldersProvider with ChangeNotifier {
   final ProblemsProvider problemsProvider;
   FolderModel? _currentFolder;
   List<FolderModel> _folders = [];
-  List<ProblemModel> _currentProblems = [];
+  final List<ProblemModel> _currentProblems = [];
 
   final folderService = FolderService();
   final fileUploadService = FileUploadService();
