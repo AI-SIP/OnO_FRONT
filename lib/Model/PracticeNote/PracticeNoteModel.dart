@@ -1,7 +1,5 @@
 import 'package:intl/intl.dart';
 
-import '../Problem/ProblemModel.dart';
-
 class PracticeNoteModel {
   final int practiceId;
   final String practiceTitle;
@@ -9,7 +7,7 @@ class PracticeNoteModel {
   final int practiceSize;
   final DateTime createdAt;
   final DateTime? lastSolvedAt;
-  List<ProblemModel> problems = [];
+  List<int> problemIdList = [];
 
   PracticeNoteModel({
     required this.practiceId,
@@ -18,7 +16,7 @@ class PracticeNoteModel {
     required this.practiceSize,
     required this.createdAt,
     required this.lastSolvedAt,
-    required this.problems,
+    required this.problemIdList,
   });
 
   factory PracticeNoteModel.fromJson(Map<String, dynamic> json) {
@@ -32,10 +30,7 @@ class PracticeNoteModel {
       lastSolvedAt: json['lastSolvedAt'] != null
           ? DateTime.parse(json['lastSolvedAt']).add(const Duration(hours: 9))
           : null,
-      problems: (json['problemResponseDtoList'] as List?)
-              ?.map((e) => ProblemModel.fromJson(e))
-              .toList() ??
-          [], // null 체크
+      problemIdList: json['problemIdList'] as List<int> ?? [],
     );
   }
 

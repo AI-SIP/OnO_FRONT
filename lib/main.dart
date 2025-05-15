@@ -15,6 +15,7 @@ import 'package:provider/provider.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
 import 'Config/firebase_options.dart';
+import 'Provider/ProblemsProvider.dart';
 import 'Provider/UserProvider.dart';
 import 'Screen/Folder/DirectoryScreen.dart';
 import 'Screen/PracticeNote/PracticeThumbnailScreen.dart';
@@ -56,10 +57,12 @@ void main() async {
   runApp(
     MultiProvider(
       providers: [
+        ChangeNotifierProvider(create: (_) => ProblemsProvider()),
         ChangeNotifierProvider(create: (_) => FoldersProvider()),
         ChangeNotifierProvider(create: (_) => ProblemPracticeProvider()),
         ChangeNotifierProvider(
           create: (context) => UserProvider(
+            Provider.of<ProblemsProvider>(context, listen: false),
             Provider.of<FoldersProvider>(context, listen: false),
             Provider.of<ProblemPracticeProvider>(context, listen: false),
           ),

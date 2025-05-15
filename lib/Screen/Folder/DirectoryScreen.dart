@@ -11,6 +11,7 @@ import 'package:ono/Model/Problem/ProblemRegisterModel.dart';
 import 'package:ono/Module/Dialog/SnackBarDialog.dart';
 import 'package:ono/Module/Theme/NoteIconHandler.dart';
 import 'package:ono/Provider/FoldersProvider.dart';
+import 'package:ono/Provider/ProblemsProvider.dart';
 import 'package:provider/provider.dart';
 
 import '../../Model/Problem/ProblemModel.dart';
@@ -31,7 +32,6 @@ class DirectoryScreen extends StatefulWidget {
 }
 
 class _DirectoryScreenState extends State<DirectoryScreen> {
-  String _selectedSortOption = 'newest';
   bool modalShown = false;
   bool _isSelectionMode = false; // 선택 모드 활성화 여부
   final List<int> _selectedFolderIds = []; // 선택된 폴더 ID 리스트
@@ -40,9 +40,6 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   @override
   void initState() {
     super.initState();
-
-    sortProblems(_selectedSortOption);
-
     _isSelectionMode = false; // 선택 모드 활성화 여부
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
@@ -99,14 +96,13 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
               ? _buildLoginPrompt(themeProvider)
               : RefreshIndicator(
                   onRefresh: () async {
-                    sortProblems(_selectedSortOption);
-                    await fetchProblems();
+                    await fetchFoldersAndProblems();
                   },
                   child: Padding(
                     padding: const EdgeInsets.all(20),
                     child: Column(
                       children: [
-                        _buildSortDropdown(themeProvider),
+                        _buildProblemCountSection(themeProvider),
                         const SizedBox(
                           height: 10,
                         ),
@@ -300,9 +296,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   }
 
   // 정렬 옵션을 선택하는 다이얼로그
-  Widget _buildSortDropdown(ThemeHandler themeProvider) {
+  Widget _buildProblemCountSection(ThemeHandler themeProvider) {
     return GestureDetector(
-      onTap: () => _showSortDialog(themeProvider), // 눌렀을 때 정렬 옵션 다이얼로그 표시
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -320,114 +315,9 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
               },
             ),
           ),
-          Row(
-            children: [
-              StandardText(
-                text:
-                    _getSortOptionText(_selectedSortOption), // 선택된 정렬 기준 텍스트 표시
-                fontSize: 14,
-                color: themeProvider.primaryColor,
-              ),
-              Icon(Icons.arrow_drop_down, color: themeProvider.primaryColor),
-            ],
-          ),
         ],
       ),
     );
-  }
-
-  // 정렬 옵션을 선택하는 모달 다이얼로그
-  void _showSortDialog(ThemeHandler themeProvider) {
-    showModalBottomSheet(
-      backgroundColor: Colors.white,
-      context: context,
-      builder: (context) {
-        return SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-                vertical: 20.0, horizontal: 10.0), // 패딩 추가
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.center, // 타이틀을 왼쪽 정렬
-              children: [
-                // 모달 타이틀 추가
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 20.0), // 타이틀 아래 여백 추가
-                  child: StandardText(
-                    text: '정렬 기준', // 타이틀 텍스트
-                    fontSize: 20,
-                    color: themeProvider.primaryColor,
-                  ),
-                ),
-                // 정렬 옵션 리스트
-                ListTile(
-                  title: const StandardText(
-                    text: '이름순',
-                    fontSize: 16,
-                    color: Colors.black,
-                  ),
-                  onTap: () {
-                    setState(() {
-                      _selectedSortOption = 'name';
-                      sortProblems(_selectedSortOption);
-                      FirebaseAnalytics.instance
-                          .logEvent(name: 'sort_option_button_click_name');
-                    });
-                    Navigator.pop(context);
-                  },
-                ),
-                ListTile(
-                  title: const StandardText(
-                    text: '최신순',
-                    fontSize: 16,
-                    color: Colors.black,
-                  ),
-                  onTap: () {
-                    setState(() {
-                      _selectedSortOption = 'newest';
-                      sortProblems(_selectedSortOption);
-                      FirebaseAnalytics.instance
-                          .logEvent(name: 'sort_option_button_click_newest');
-                    });
-                    Navigator.pop(context);
-                  },
-                ),
-                ListTile(
-                  title: const StandardText(
-                    text: '오래된순',
-                    fontSize: 16,
-                    color: Colors.black,
-                  ),
-                  onTap: () {
-                    setState(() {
-                      _selectedSortOption = 'oldest';
-                      sortProblems(_selectedSortOption);
-                      FirebaseAnalytics.instance
-                          .logEvent(name: 'sort_option_button_click_oldest');
-                    });
-                    Navigator.pop(context);
-                  },
-                ),
-                const SizedBox(height: 10),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  String _getSortOptionText(String selectedOption) {
-    switch (selectedOption) {
-      case 'name':
-        return '이름순';
-      case 'newest':
-        return '최신순';
-      case 'oldest':
-        return '오래된순';
-      default:
-        return '정렬 기준';
-    }
   }
 
   Future<void> _showRenameFolderDialog(FoldersProvider foldersProvider) async {
@@ -667,8 +557,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                       if (index < subFolderIds.length) {
                         var subFolderId = subFolderIds[index].folderId;
 
-                        var subFolder =
-                            foldersProvider.getFolderContents(subFolderId);
+                        var subFolder = foldersProvider.getFolder(subFolderId);
                         return _buildFolderTile(
                             subFolder, themeProvider, index);
                       } else {
@@ -1017,6 +906,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   Future<void> _deleteSelectedItems() async {
     final foldersProvider =
         Provider.of<FoldersProvider>(context, listen: false);
+    final problemsProvider =
+        Provider.of<ProblemsProvider>(context, listen: false);
 
     try {
       // 선택된 폴더 삭제
@@ -1026,7 +917,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
       // 선택된 문제 삭제
       if (_selectedProblemIds.isNotEmpty) {
-        await foldersProvider.deleteProblems(_selectedProblemIds);
+        await problemsProvider.deleteProblems(_selectedProblemIds);
       }
 
       setState(() {
@@ -1135,9 +1026,9 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       'target_folder_id': folderId,
     });
 
-    final foldersProvider =
-        Provider.of<FoldersProvider>(context, listen: false);
-    await foldersProvider.updateProblem(ProblemRegisterModel(
+    final problemsProvider =
+        Provider.of<ProblemsProvider>(context, listen: false);
+    await problemsProvider.updateProblem(ProblemRegisterModel(
       problemId: problem.problemId,
       folderId: folderId, // 폴더 ID로 문제를 이동
     ));
@@ -1165,24 +1056,11 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     }
   }
 
-  Future<void> fetchProblems() async {
+  Future<void> fetchFoldersAndProblems() async {
     final foldersProvider =
         Provider.of<FoldersProvider>(context, listen: false);
 
     await foldersProvider.fetchFolderContent(null);
-  }
-
-  void sortProblems(String option) {
-    final foldersProvider =
-        Provider.of<FoldersProvider>(context, listen: false);
-
-    if (option == 'name') {
-      foldersProvider.sortProblemsByName();
-    } else if (option == 'newest') {
-      foldersProvider.sortProblemsByNewest();
-    } else if (option == 'oldest') {
-      foldersProvider.sortProblemsByOldest();
-    }
   }
 
   void navigateToProblemDetail(BuildContext context, int problemId) {
@@ -1194,7 +1072,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       ),
     ).then((value) {
       if (value == true) {
-        fetchProblems();
+        fetchFoldersAndProblems();
       }
     });
   }

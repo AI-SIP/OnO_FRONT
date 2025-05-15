@@ -12,6 +12,7 @@ import '../../Module/Theme/ThemeHandler.dart';
 import '../../Module/Util/FolderNavigationButtons.dart';
 import '../../Module/Util/FolderPickerDialog.dart';
 import '../../Provider/FoldersProvider.dart';
+import '../../Provider/ProblemsProvider.dart';
 import '../PracticeNote/PracticeNavigationButtons.dart';
 import '../ProblemShare/AnswerShareScreen.dart';
 import '../ProblemShare/ProblemShareScreen.dart';
@@ -274,8 +275,8 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                           .logEvent(name: 'problem_change_path_button_click');
                       Navigator.pop(context);
 
-                      final foldersProvider =
-                          Provider.of<FoldersProvider>(context, listen: false);
+                      final problemsProvider =
+                          Provider.of<ProblemsProvider>(context, listen: false);
 
                       final int? selectedFolderId = await showDialog<int?>(
                         context: context,
@@ -283,7 +284,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                       );
 
                       if (selectedFolderId != null) {
-                        await foldersProvider
+                        await problemsProvider
                             .updateProblem(ProblemRegisterModel(
                           problemId: problemModel.problemId,
                           folderId: selectedFolderId,
@@ -349,7 +350,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                 Navigator.pop(context);
                 FirebaseAnalytics.instance.logEvent(name: 'problem_delete');
 
-                await Provider.of<FoldersProvider>(context, listen: false)
+                await Provider.of<ProblemsProvider>(context, listen: false)
                     .deleteProblems([problemId]);
                 await Provider.of<ProblemPracticeProvider>(context,
                         listen: false)
@@ -406,7 +407,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
 
   Future<ProblemModel?> fetchProblemDetails(
       BuildContext context, int? problemId) async {
-    return Provider.of<FoldersProvider>(context, listen: false)
-        .getProblemDetails(problemId);
+    return Provider.of<ProblemsProvider>(context, listen: false)
+        .getProblem(problemId!);
   }
 }

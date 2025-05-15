@@ -19,10 +19,12 @@ import '../Module/Text/StandardText.dart';
 import '../Service/Api/HttpService.dart';
 import '../Service/SocialLogin//AppleAuthService.dart';
 import '../Service/SocialLogin//GoogleAuthService.dart';
+import 'ProblemsProvider.dart';
 import 'TokenProvider.dart';
 
 class UserProvider with ChangeNotifier {
   final storage = const FlutterSecureStorage();
+  final ProblemsProvider problemsProvider;
   final FoldersProvider foldersProvider;
   final ProblemPracticeProvider practiceProvider;
   final TokenProvider tokenProvider = TokenProvider();
@@ -34,7 +36,8 @@ class UserProvider with ChangeNotifier {
   final KakaoAuthService kakaoAuthService = KakaoAuthService();
   UserInfoModel? userInfoModel;
 
-  UserProvider(this.foldersProvider, this.practiceProvider);
+  UserProvider(
+      this.problemsProvider, this.foldersProvider, this.practiceProvider);
 
   LoginStatus _loginStatus = LoginStatus.waiting;
   bool _isFirstLogin = true;
@@ -154,6 +157,7 @@ class UserProvider with ChangeNotifier {
 
   Future<void> fetchAllData() async {
     await fetchUserInfo();
+    await problemsProvider.fetchAllProblems();
     await foldersProvider.fetchAllFolderContents();
     await practiceProvider.fetchAllPracticeContents();
 

@@ -40,19 +40,27 @@ class _FolderNavigationButtonsState extends State<FolderNavigationButtons> {
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeHandler>(context);
-    final problemIds = widget.foldersProvider.getProblemIds();
+    final problemList = widget.foldersProvider.currentProblems;
     double screenHeight = MediaQuery.of(context).size.height;
 
-    if (problemIds.isEmpty) {
+    if (problemList.isEmpty) {
       return const Center();
     }
 
-    int currentIndex = problemIds.indexOf(widget.currentId);
-    int previousProblemId =
-        currentIndex > 0 ? problemIds[currentIndex - 1] : problemIds.last;
-    int nextProblemId = currentIndex < problemIds.length - 1
-        ? problemIds[currentIndex + 1]
-        : problemIds.first;
+    int currentIndex = -1;
+    for (int index = 0; index < problemList.length; index++) {
+      if (problemList[index].problemId == widget.currentId) {
+        currentIndex = index;
+        break;
+      }
+    }
+
+    int previousProblemId = currentIndex > 0
+        ? problemList[currentIndex - 1].problemId
+        : problemList.last.problemId;
+    int nextProblemId = currentIndex < problemList.length - 1
+        ? problemList[currentIndex + 1].problemId
+        : problemList.first.problemId;
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,

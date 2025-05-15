@@ -5,6 +5,7 @@ import 'package:ono/Model/PracticeNote/PracticeNoteModel.dart';
 import 'package:ono/Model/PracticeNote/PracticeNoteRegisterModel.dart';
 import 'package:ono/Model/PracticeNote/PracticeNoteThumbnailModel.dart';
 import 'package:ono/Model/PracticeNote/PracticeNoteUpdateModel.dart';
+import 'package:ono/Provider/ProblemsProvider.dart';
 
 import '../Model/Problem/ProblemModel.dart';
 import '../Service/Api/HttpService.dart';
@@ -16,6 +17,7 @@ class ProblemPracticeProvider with ChangeNotifier {
   List<PracticeNoteThumbnailModel> practiceThumbnails = [];
   List<ProblemModel> currentProblems = [];
   final TokenProvider tokenProvider = TokenProvider();
+  final ProblemsProvider problemsProvider = ProblemsProvider();
   final HttpService httpService = HttpService();
   final PracticeNoteService practiceNoteService = PracticeNoteService();
 
@@ -43,7 +45,12 @@ class ProblemPracticeProvider with ChangeNotifier {
     final targetPractice =
         await practiceNoteService.getPracticeNoteById(practiceId);
 
-    currentProblems = targetPractice.problems;
+    currentProblems.clear();
+    for (var problemId in targetPractice.problemIdList) {
+      ProblemModel problemModel = await problemsProvider.getProblem(problemId);
+      currentProblems.add(problemModel);
+    }
+
     currentPracticeNote = targetPractice;
 
     notifyListeners();

@@ -14,6 +14,7 @@ import '../../Module/Image/ImagePickerHandler.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Module/Util/FolderPickerWidget.dart';
 import '../../Provider/FoldersProvider.dart';
+import '../../Provider/ProblemsProvider.dart';
 import '../../Provider/ScreenIndexProvider.dart';
 import '../../Provider/UserProvider.dart';
 import '../../Service/Api/FileUpload/FileUploadService.dart';
@@ -220,13 +221,13 @@ class _ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
       }
 
       if (widget.isEditMode) {
-        await Provider.of<FoldersProvider>(context, listen: false)
+        await Provider.of<ProblemsProvider>(context, listen: false)
             .updateProblem(problemRegisterModel);
 
         _resetAll();
         Navigator.of(context).pop(true);
       } else {
-        await Provider.of<FoldersProvider>(context, listen: false)
+        await Provider.of<ProblemsProvider>(context, listen: false)
             .submitProblem(problemRegisterModel, context);
 
         _resetAll();

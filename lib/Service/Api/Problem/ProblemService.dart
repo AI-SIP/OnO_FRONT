@@ -37,13 +37,12 @@ class ProblemService {
     ) as int;
   }
 
-  Future<void> registerProblem(
-      ProblemRegisterModel problemRegisterModel) async {
-    await httpService.sendRequest(
+  Future<int> registerProblem(ProblemRegisterModel problemRegisterModel) async {
+    return await httpService.sendRequest(
       method: 'POST',
       url: baseUrl,
       body: problemRegisterModel.toJson(),
-    );
+    ) as int;
   }
 
   Future<void> registerProblemImageData(

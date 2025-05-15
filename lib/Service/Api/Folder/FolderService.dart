@@ -9,7 +9,7 @@ class FolderService {
   final HttpService httpService = HttpService();
   final baseUrl = "${AppConfig.baseUrl}/api/folders";
 
-  Future<FolderModel> getFolderById(int folderId) async {
+  Future<FolderModel> fetchFolder(int folderId) async {
     final data = await httpService.sendRequest(
       method: 'GET',
       url: '$baseUrl/$folderId',

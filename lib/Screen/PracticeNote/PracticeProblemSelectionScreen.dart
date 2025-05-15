@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:ono/Model/PracticeNote/PracticeNoteModel.dart';
+import 'package:ono/Provider/PracticeNoteProvider.dart';
 import 'package:ono/Screen/PracticeNote/PracticeTitleWriteScreen.dart';
 import 'package:provider/provider.dart';
 
@@ -38,12 +39,23 @@ class _PracticeProblemSelectionScreenState
     _fetchFolders();
 
     if (widget.practiceModel != null) {
-      selectedProblems = List.from(widget.practiceModel!.problems);
-      _originalProblemIds =
-          widget.practiceModel!.problems.map((p) => p.problemId).toList();
+      _fetchProblems();
+      _originalProblemIds = widget.practiceModel!.problemIdList;
     } else {
       _originalProblemIds = [];
     }
+  }
+
+  Future<void> _fetchProblems() async {
+    final practiceNoteProvider =
+        Provider.of<ProblemPracticeProvider>(context, listen: false);
+
+    await practiceNoteProvider.moveToPractice(widget.practiceModel!.practiceId);
+    List<ProblemModel> problemModelList = practiceNoteProvider.currentProblems;
+
+    setState(() {
+      selectedProblems = problemModelList;
+    });
   }
 
   Future<void> _fetchFolders() async {
