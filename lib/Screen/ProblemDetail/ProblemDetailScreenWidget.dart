@@ -261,7 +261,7 @@ class ProblemDetailScreenWidget {
               ],
             ),
             UnderlinedText(
-              text: '복습 횟수: ${problemModel.repeats?.length ?? 0}',
+              text: '복습 횟수: ${problemModel.solveImageDataList?.length ?? 0}',
               fontSize: 20,
               color: Colors.black,
             ),
@@ -272,9 +272,12 @@ class ProblemDetailScreenWidget {
         // 복습 날짜와 이미지 리스트
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: problemModel.repeats?.asMap().entries.map((entry) {
+          children: problemModel.solveImageDataList
+                  ?.asMap()
+                  .entries
+                  .map((entry) {
                 int index = entry.key;
-                var repeat = entry.value;
+                var solveImageModel = entry.value;
 
                 return Padding(
                   padding: const EdgeInsets.symmetric(vertical: 8.0),
@@ -284,41 +287,40 @@ class ProblemDetailScreenWidget {
                       // 복습 날짜
                       UnderlinedText(
                         text:
-                            '${index + 1}. 복습 날짜 : ${DateFormat('yyyy년 MM월 dd일').format(repeat.createdAt)}',
+                            '${index + 1}. 복습 날짜 : ${DateFormat('yyyy년 MM월 dd일').format(solveImageModel.createdAt)}',
                         fontSize: 18,
                         color: Colors.black,
                       ),
 
                       const SizedBox(height: 10.0),
 
-                      // 복습 이미지
-                      if (repeat.solveImageUrl != null)
-                        GestureDetector(
-                          onTap: () {
-                            FirebaseAnalytics.instance.logEvent(
-                                name: 'image_full_screen_solve_image');
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => FullScreenImage(
-                                    imagePath: repeat.solveImageUrl),
+                      GestureDetector(
+                        onTap: () {
+                          FirebaseAnalytics.instance
+                              .logEvent(name: 'image_full_screen_solve_image');
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => FullScreenImage(
+                                imagePath: solveImageModel.imageUrl,
                               ),
-                            );
-                          },
-                          child: Container(
-                            width: mediaQuery.size.width,
-                            height: mediaQuery.size.height * 0.5, // 고정된 높이로 변경
-                            decoration: BoxDecoration(
-                              color:
-                                  themeProvider.primaryColor.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(10),
                             ),
-                            child: DisplayImage(
-                              imagePath: repeat.solveImageUrl,
-                              fit: BoxFit.contain,
-                            ),
+                          );
+                        },
+                        child: Container(
+                          width: mediaQuery.size.width,
+                          height: mediaQuery.size.height * 0.5, // 고정된 높이로 변경
+                          decoration: BoxDecoration(
+                            color: themeProvider.primaryColor.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: DisplayImage(
+                            imagePath: solveImageModel.imageUrl,
+                            fit: BoxFit.contain,
                           ),
                         ),
+                      ),
+
                       const SizedBox(height: 10.0),
                     ],
                   ),

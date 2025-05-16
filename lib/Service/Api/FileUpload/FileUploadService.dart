@@ -13,13 +13,13 @@ class FileUploadService {
 
     files.add(await http.MultipartFile.fromPath('image', file.path));
 
-    final result = httpService.sendRequest(
+    final result = await httpService.sendRequest(
         method: 'POST',
-        url: '$baseUrl',
+        url: '$baseUrl/image',
         isMultipart: true,
-        files: files) as dynamic;
+        files: files) as String;
 
-    return result['imageUrl'];
+    return result;
   }
 
   Future<List<String>> uploadMultipleImageFiles(List<XFile>? files) async {

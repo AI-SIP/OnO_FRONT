@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
-import 'package:ono/Provider/FoldersProvider.dart';
 import 'package:ono/Screen/PracticeNote/PracticeCompletionScreen.dart';
 import 'package:ono/Screen/ProblemDetail/ProblemDetailScreen.dart';
 import 'package:provider/provider.dart';
@@ -53,7 +52,7 @@ class _PracticeNavigationButtonsState extends State<PracticeNavigationButtons> {
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
             buildPreviousButton(themeProvider, screenHeight),
-            buildReviewButton(themeProvider, screenHeight),
+            buildSolveButton(themeProvider, screenHeight),
             buildNextOrCompleteButton(themeProvider, screenHeight),
           ],
         ),
@@ -91,10 +90,9 @@ class _PracticeNavigationButtonsState extends State<PracticeNavigationButtons> {
     );
   }
 
-  TextButton buildReviewButton(
-      ThemeHandler themeProvider, double screenHeight) {
+  TextButton buildSolveButton(ThemeHandler themeProvider, double screenHeight) {
     return TextButton(
-      onPressed: isReviewed ? null : () => showReviewDialog(context),
+      onPressed: isReviewed ? null : () => problemSolveDialog(context),
       style: ElevatedButton.styleFrom(
         padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
         backgroundColor: Colors.white,
@@ -222,10 +220,9 @@ class _PracticeNavigationButtonsState extends State<PracticeNavigationButtons> {
     );
   }
 
-  void showReviewDialog(BuildContext context) {
+  void problemSolveDialog(BuildContext context) {
     FirebaseAnalytics.instance.logEvent(name: 'problem_repeat_button_click');
 
-    final folderProvider = Provider.of<FoldersProvider>(context, listen: false);
     final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
     bool isLoading = false;
 
@@ -312,12 +309,6 @@ class _PracticeNavigationButtonsState extends State<PracticeNavigationButtons> {
                           setState(() {
                             isLoading = true;
                           });
-
-                          /*
-                          await folderProvider.addRepeatCount(
-                              widget.currentProblemId, selectedImage);
-
-                           */
 
                           await widget.practiceProvider.moveToPractice(widget
                               .practiceProvider

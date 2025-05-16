@@ -194,15 +194,15 @@ class _ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
       final imageDataList = [
         for (var imageUrl in problemImageUrlList)
           ProblemImageDataRegisterModel(
+            problemId: widget.problemModel!.problemId,
             imageUrl: imageUrl,
             problemImageType: ProblemImageType.PROBLEM_IMAGE,
-            createdAt: now,
           ),
         for (var imageUrl in answerImageUrlList)
           ProblemImageDataRegisterModel(
+            problemId: widget.problemModel!.problemId,
             imageUrl: imageUrl,
             problemImageType: ProblemImageType.ANSWER_IMAGE,
-            createdAt: now,
           ),
       ];
 

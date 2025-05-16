@@ -1,19 +1,19 @@
 import '../Common/ProblemImageDataType.dart';
 
 class ProblemImageDataRegisterModel {
+  final int problemId;
   final String imageUrl;
   final ProblemImageType problemImageType;
-  final DateTime createdAt;
 
   ProblemImageDataRegisterModel({
+    required this.problemId,
     required this.imageUrl,
     required this.problemImageType,
-    required this.createdAt,
   });
 
   Map<String, dynamic> toJson() => {
+        'problemId': problemId,
         'imageUrl': imageUrl,
         'problemImageType': problemImageType.name,
-        'createdAt': createdAt.toIso8601String(),
       };
 }
