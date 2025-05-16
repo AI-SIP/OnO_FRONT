@@ -114,6 +114,10 @@ class ProblemsProvider with ChangeNotifier {
       await problemService.updateProblemInfo(problemData);
     }
 
+    if (problemData.folderId != null) {
+      await problemService.updateProblemPath(problemData);
+    }
+
     await fetchProblem(problemData.problemId!);
   }
 

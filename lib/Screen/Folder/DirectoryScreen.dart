@@ -1035,6 +1035,12 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       folderId: folderId, // 폴더 ID로 문제를 이동
     ));
 
+    final foldersProvider =
+        Provider.of<FoldersProvider>(context, listen: false);
+    await foldersProvider
+        .fetchFolderContent(foldersProvider.currentFolder!.folderId);
+    await foldersProvider.fetchFolderContent(folderId);
+
     if (mounted) {
       SnackBarDialog.showSnackBar(
         context: context,
