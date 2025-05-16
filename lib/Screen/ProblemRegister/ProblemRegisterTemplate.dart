@@ -56,7 +56,8 @@ class _ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
     } else {
       final folderProvider =
           Provider.of<FoldersProvider>(context, listen: false);
-      _selectedFolderId = folderProvider.currentFolder?.folderId ?? 1;
+      _selectedFolderId =
+          problemModel?.folderId ?? folderProvider.currentFolder?.folderId;
     }
     _titleCtrl.text = problemModel?.reference ?? '';
     _memoCtrl.text = problemModel?.memo ?? '';
@@ -223,6 +224,11 @@ class _ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
       if (widget.isEditMode) {
         await Provider.of<ProblemsProvider>(context, listen: false)
             .updateProblem(problemRegisterModel);
+
+        if (problemRegisterModel.folderId != null) {
+          await Provider.of<FoldersProvider>(context, listen: false)
+              .fetchFolderContent(problemRegisterModel.folderId);
+        }
 
         await Provider.of<FoldersProvider>(context, listen: false)
             .fetchFolderContent(_selectedFolderId);

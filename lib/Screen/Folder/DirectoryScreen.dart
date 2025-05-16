@@ -353,10 +353,14 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     );
 
     if (selectedFolderId != null) {
+      int parentFolderId =
+          foldersProvider.currentFolder!.parentFolder!.folderId;
       await foldersProvider.updateFolder(
           foldersProvider.currentFolder!.folderName,
           foldersProvider.currentFolder!.folderId,
           selectedFolderId); // 부모 폴더 변경
+
+      await foldersProvider.fetchFolderContent(parentFolderId);
     }
   }
 
@@ -633,7 +637,11 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
           child: DragTarget<ProblemModel>(
             onAcceptWithDetails: (details) async {
               // 문제를 드롭하면 폴더로 이동
-              await _moveProblemToFolder(details.data, folder.folderId);
+              ProblemRegisterModel problemRegisterModel = ProblemRegisterModel(
+                problemId: details.data.problemId,
+                folderId: folder.folderId,
+              );
+              await _moveProblemToFolder(problemRegisterModel);
             },
             builder: (context, candidateData, rejectedData) {
               return DragTarget<FolderModel>(
@@ -759,7 +767,10 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
           child: DragTarget<FolderModel>(
             onAcceptWithDetails: (details) async {
               // 문제를 드롭하면 해당 폴더로 이동
-              await _moveProblemToFolder(problem, details.data.folderId);
+              ProblemRegisterModel problemRegisterModel = ProblemRegisterModel(
+                  problemId: problem.problemId,
+                  folderId: details.data.folderId);
+              await _moveProblemToFolder(problemRegisterModel);
             },
             builder: (context, candidateData, rejectedData) {
               return _problemTileContent(problem, themeProvider);
@@ -1017,29 +1028,27 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     }
   }
 
-  Future<void> _moveProblemToFolder(ProblemModel problem, int? folderId) async {
-    if (folderId == null) {
+  Future<void> _moveProblemToFolder(
+      ProblemRegisterModel problemRegisterModel) async {
+    if (problemRegisterModel.folderId == null) {
       log('Problem ID or folderId is null. Cannot move the problem.');
       return; // 문제 ID 또는 폴더 ID가 null이면 실행하지 않음
     }
 
     FirebaseAnalytics.instance.logEvent(name: 'problem_path_edit', parameters: {
-      'problem_id': problem.problemId!,
-      'target_folder_id': folderId,
+      'problem_id': problemRegisterModel.problemId!,
+      'target_folder_id': problemRegisterModel.folderId!,
     });
 
     final problemsProvider =
         Provider.of<ProblemsProvider>(context, listen: false);
-    await problemsProvider.updateProblem(ProblemRegisterModel(
-      problemId: problem.problemId,
-      folderId: folderId, // 폴더 ID로 문제를 이동
-    ));
+    await problemsProvider.updateProblem(problemRegisterModel);
 
     final foldersProvider =
         Provider.of<FoldersProvider>(context, listen: false);
     await foldersProvider
         .fetchFolderContent(foldersProvider.currentFolder!.folderId);
-    await foldersProvider.fetchFolderContent(folderId);
+    await foldersProvider.fetchFolderContent(problemRegisterModel.folderId);
 
     if (mounted) {
       SnackBarDialog.showSnackBar(
