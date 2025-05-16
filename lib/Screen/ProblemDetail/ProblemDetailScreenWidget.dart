@@ -1,6 +1,8 @@
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:ono/Provider/ProblemsProvider.dart';
+import 'package:provider/provider.dart';
 
 import '../../Model/Problem/ProblemModel.dart';
 import '../../Module/Image/DisplayImage.dart';
@@ -244,7 +246,6 @@ class ProblemDetailScreenWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // '복습 기록' 제목과 복습 횟수 표시
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -306,6 +307,48 @@ class ProblemDetailScreenWidget {
                               ),
                             ),
                           );
+                        },
+                        onLongPress: () async {
+                          final problemsProvider =
+                              Provider.of<ProblemsProvider>(context,
+                                  listen: false);
+                          final shouldDelete = await showDialog<bool>(
+                            context: context,
+                            builder: (ctx) => AlertDialog(
+                              title: const StandardText(text: '삭제 확인'),
+                              content: const StandardText(
+                                  text: '이 복습 이미지를 정말 삭제하시겠습니까?'),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.of(ctx).pop(false),
+                                  child: const StandardText(text: '취소'),
+                                ),
+                                TextButton(
+                                  onPressed: () => Navigator.of(ctx).pop(true),
+                                  child: const StandardText(
+                                    text: '삭제',
+                                    color: Colors.red,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                          if (shouldDelete == true) {
+                            try {
+                              await problemsProvider.deleteProblemImageData(
+                                solveImageModel.imageUrl,
+                              );
+
+                              await problemsProvider
+                                  .fetchProblem(problemModel.problemId);
+                            } catch (e) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                    content:
+                                        StandardText(text: '삭제 중 오류가 발생했습니다.')),
+                              );
+                            }
+                          }
                         },
                         child: Container(
                           width: mediaQuery.size.width,

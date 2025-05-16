@@ -13,7 +13,7 @@ class StandardText extends StatelessWidget {
   const StandardText({
     super.key,
     required this.text,
-    this.color = Colors.green,
+    this.color = Colors.black,
     this.fontSize = 16.0,
     this.fontWeight = FontWeight.bold,
     this.fontFamily = 'PretendardBold',

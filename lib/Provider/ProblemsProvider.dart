@@ -143,6 +143,10 @@ class ProblemsProvider with ChangeNotifier {
     await fetchAllProblems();
   }
 
+  Future<void> deleteProblemImageData(String imageUrl) async {
+    await problemService.deleteProblemImageData(imageUrl);
+  }
+
   Future<String> uploadImage(XFile image) async {
     return await fileUploadService.uploadImageFile(image);
   }
