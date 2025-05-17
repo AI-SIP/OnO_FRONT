@@ -12,8 +12,6 @@ import '../../Module/Util/FolderNavigationButtons.dart';
 import '../../Provider/FoldersProvider.dart';
 import '../../Provider/ProblemsProvider.dart';
 import '../PracticeNote/PracticeNavigationButtons.dart';
-import '../ProblemShare/AnswerShareScreen.dart';
-import '../ProblemShare/ProblemShareScreen.dart';
 import 'ProblemDetailTemplate.dart';
 
 class ProblemDetailScreen extends StatefulWidget {
@@ -185,6 +183,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                     color: themeProvider.primaryColor,
                   ),
                 ),
+                /*
                 Padding(
                   padding: const EdgeInsets.only(bottom: 10.0), // 텍스트 간격 조정
                   child: ListTile(
@@ -231,6 +230,8 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                     },
                   ),
                 ),
+
+                 */
                 Padding(
                   padding: const EdgeInsets.only(bottom: 10.0), // 텍스트 간격 조정
                   child: ListTile(
