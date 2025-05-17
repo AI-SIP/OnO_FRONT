@@ -317,12 +317,16 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
 
                 ProblemsProvider problemsProvider =
                     Provider.of<ProblemsProvider>(context, listen: false);
-                await problemsProvider.deleteProblems([problemId]);
 
                 ProblemModel problemModel =
                     problemsProvider.getProblem(problemId);
+
+                int? parentFolderId = problemModel.folderId;
+
+                await problemsProvider.deleteProblems([problemId]);
+
                 await Provider.of<FoldersProvider>(context, listen: false)
-                    .fetchFolderContent(problemModel.folderId);
+                    .fetchFolderContent(parentFolderId);
                 await Provider.of<ProblemPracticeProvider>(context,
                         listen: false)
                     .fetchAllPracticeContents();
