@@ -231,7 +231,7 @@ class _ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
         }
 
         await Provider.of<FoldersProvider>(context, listen: false)
-            .fetchFolderContent(_selectedFolderId);
+            .fetchFolderContent(widget.problemModel!.folderId);
 
         _resetAll();
         Navigator.of(context).pop(true);
