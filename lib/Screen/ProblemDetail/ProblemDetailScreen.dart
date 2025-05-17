@@ -6,11 +6,9 @@ import 'package:ono/Screen/ProblemRegister/ProblemRegisterScreen.dart';
 import 'package:provider/provider.dart';
 
 import '../../Model/Problem/ProblemModel.dart';
-import '../../Model/Problem/ProblemRegisterModel.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Module/Util/FolderNavigationButtons.dart';
-import '../../Module/Util/FolderPickerDialog.dart';
 import '../../Provider/FoldersProvider.dart';
 import '../../Provider/ProblemsProvider.dart';
 import '../PracticeNote/PracticeNavigationButtons.dart';
@@ -258,38 +256,6 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                           .then((_) {
                         _setProblemModel();
                       });
-                    },
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 10.0), // 텍스트 간격 조정
-                  child: ListTile(
-                    leading: const Icon(Icons.folder_open, color: Colors.black),
-                    title: const StandardText(
-                      text: '오답노트 위치 변경하기',
-                      fontSize: 16,
-                      color: Colors.black,
-                    ),
-                    onTap: () async {
-                      FirebaseAnalytics.instance
-                          .logEvent(name: 'problem_change_path_button_click');
-                      Navigator.pop(context);
-
-                      final problemsProvider =
-                          Provider.of<ProblemsProvider>(context, listen: false);
-
-                      final int? selectedFolderId = await showDialog<int?>(
-                        context: context,
-                        builder: (context) => const FolderPickerDialog(),
-                      );
-
-                      if (selectedFolderId != null) {
-                        await problemsProvider
-                            .updateProblem(ProblemRegisterModel(
-                          problemId: problemModel.problemId,
-                          folderId: selectedFolderId,
-                        ));
-                      }
                     },
                   ),
                 ),
