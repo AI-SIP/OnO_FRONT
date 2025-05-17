@@ -122,13 +122,19 @@ class FoldersProvider with ChangeNotifier {
   }
 
   Future<void> updateFolder(
-      String? newName, int? folderId, int? parentId) async {
+      String newName, int? folderId, int? parentId) async {
     FolderRegisterModel folderRegisterModel = FolderRegisterModel(
-        folderName: newName!, parentFolderId: parentId!, folderId: folderId);
+      folderId: folderId,
+      folderName: newName,
+      parentFolderId: parentId,
+    );
 
     await folderService.updateFolderInfo(folderRegisterModel);
 
-    await fetchFolderContent(parentId);
+    if (parentId != null) {
+      await fetchFolderContent(parentId);
+    }
+
     await fetchFolderContent(folderId);
     await fetchFolderContent(currentFolder!.folderId);
   }
