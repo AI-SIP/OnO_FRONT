@@ -122,7 +122,7 @@ class _FolderNavigationButtonsState extends State<FolderNavigationButtons> {
                     ),
                     const SizedBox(width: 10), // 아이콘과 텍스트 간 간격
                     StandardText(
-                      text: '복습 인증', // 복습 완료 텍스트
+                      text: '문제 복습', // 복습 완료 텍스트
                       fontSize: 15,
                       color: themeProvider.primaryColor,
                     ),
@@ -331,7 +331,7 @@ class _FolderNavigationButtonsState extends State<FolderNavigationButtons> {
                           ),
                         )
                       : StandardText(
-                          text: '복습 인증',
+                          text: '문제 복습',
                           fontSize: 14,
                           color: themeProvider.primaryColor,
                         ),

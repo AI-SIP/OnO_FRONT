@@ -120,7 +120,7 @@ class _PracticeNavigationButtonsState extends State<PracticeNavigationButtons> {
                 ),
                 const SizedBox(width: 10),
                 StandardText(
-                  text: '복습 인증',
+                  text: '문제 복습',
                   fontSize: 14,
                   color: themeProvider.primaryColor,
                 ),
@@ -333,7 +333,7 @@ class _PracticeNavigationButtonsState extends State<PracticeNavigationButtons> {
                           color: themeProvider.primaryColor,
                         )
                       : StandardText(
-                          text: '복습 인증',
+                          text: '문제 복습',
                           fontSize: 14,
                           color: themeProvider.primaryColor,
                         ),

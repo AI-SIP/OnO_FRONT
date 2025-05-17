@@ -39,7 +39,7 @@ Widget buildMemoSection(String? memo, Color iconColor) => Padding(
         Row(children: [
           Icon(Icons.edit, color: iconColor),
           const SizedBox(width: 8),
-          HandWriteText(text: '한 줄 메모', fontSize: 20, color: iconColor),
+          HandWriteText(text: '메모', fontSize: 20, color: iconColor),
         ]),
         const SizedBox(height: 8),
         UnderlinedText(
