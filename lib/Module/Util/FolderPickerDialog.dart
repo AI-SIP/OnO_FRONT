@@ -56,12 +56,8 @@ class _FolderPickerDialogState extends State<FolderPickerDialog> {
           .map((folder) => folder.folderId)
           .toSet(); // 모든 폴더를 기본적으로 확장
 
-      if (_selectedFolderId != null) {
-        // 폴더 ID가 선택되어 있다면 폴더 이름을 불러와 업데이트
-        setState(() {
-          _selectedFolderId = _selectedFolderId; // 업데이트 시 폴더 이름 반영
-        });
-      }
+      _selectedFolderId ??=
+          _cachedFolders.isNotEmpty ? _cachedFolders.first.folderId : null;
     } catch (e) {
       log('Failed to load folders: $e');
     } finally {
@@ -118,7 +114,7 @@ class _FolderPickerDialogState extends State<FolderPickerDialog> {
       actions: <Widget>[
         TextButton(
           onPressed: () {
-            Navigator.pop(context, null); // 취소 시 아무 값도 넘기지 않음
+            Navigator.pop(context, widget.initialFolderId);
           },
           child: const StandardText(
             text: '취소',
