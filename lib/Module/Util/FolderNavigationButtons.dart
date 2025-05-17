@@ -3,9 +3,13 @@ import 'dart:io';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:ono/Model/Common/ProblemImageDataType.dart';
+import 'package:ono/Model/Problem/ProblemImageDataRegisterModel.dart';
 import 'package:ono/Module/Dialog/LoadingDialog.dart';
 import 'package:ono/Provider/FoldersProvider.dart';
+import 'package:ono/Provider/ProblemsProvider.dart';
 import 'package:ono/Screen/ProblemDetail/ProblemDetailScreen.dart';
+import 'package:ono/Service/Api/FileUpload/FileUploadService.dart';
 import 'package:provider/provider.dart';
 
 import '../Dialog/SnackBarDialog.dart';
@@ -33,26 +37,34 @@ class FolderNavigationButtons extends StatefulWidget {
 }
 
 class _FolderNavigationButtonsState extends State<FolderNavigationButtons> {
-  bool isReviewed = false;
+  bool isSolved = false;
   final ImagePickerHandler _imagePickerHandler = ImagePickerHandler();
   XFile? selectedImage;
 
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeHandler>(context);
-    final problemIds = widget.foldersProvider.getProblemIds();
+    final problemList = widget.foldersProvider.currentProblems;
     double screenHeight = MediaQuery.of(context).size.height;
 
-    if (problemIds.isEmpty) {
+    if (problemList.isEmpty) {
       return const Center();
     }
 
-    int currentIndex = problemIds.indexOf(widget.currentId);
-    int previousProblemId =
-        currentIndex > 0 ? problemIds[currentIndex - 1] : problemIds.last;
-    int nextProblemId = currentIndex < problemIds.length - 1
-        ? problemIds[currentIndex + 1]
-        : problemIds.first;
+    int currentIndex = -1;
+    for (int index = 0; index < problemList.length; index++) {
+      if (problemList[index].problemId == widget.currentId) {
+        currentIndex = index;
+        break;
+      }
+    }
+
+    int previousProblemId = currentIndex > 0
+        ? problemList[currentIndex - 1].problemId
+        : problemList.last.problemId;
+    int nextProblemId = currentIndex < problemList.length - 1
+        ? problemList[currentIndex + 1].problemId
+        : problemList.first.problemId;
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -81,7 +93,8 @@ class _FolderNavigationButtonsState extends State<FolderNavigationButtons> {
 
         // 복습 완료 버튼
         TextButton(
-          onPressed: () => showReviewDialog(context),
+          onPressed: () =>
+              showSolveDialog(context, problemList[currentIndex].problemId),
           style: ElevatedButton.styleFrom(
             padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
             backgroundColor: Colors.white,
@@ -93,7 +106,7 @@ class _FolderNavigationButtonsState extends State<FolderNavigationButtons> {
               borderRadius: BorderRadius.circular(15.0),
             ),
           ),
-          child: isReviewed
+          child: isSolved
               ? Icon(
                   Icons.check, // 복습 완료 시 체크 아이콘만 표시
                   color: themeProvider.primaryColor,
@@ -109,7 +122,7 @@ class _FolderNavigationButtonsState extends State<FolderNavigationButtons> {
                     ),
                     const SizedBox(width: 10), // 아이콘과 텍스트 간 간격
                     StandardText(
-                      text: '복습 인증', // 복습 완료 텍스트
+                      text: '문제 복습', // 복습 완료 텍스트
                       fontSize: 15,
                       color: themeProvider.primaryColor,
                     ),
@@ -174,8 +187,8 @@ class _FolderNavigationButtonsState extends State<FolderNavigationButtons> {
     );
   }
 
-  void showReviewDialog(BuildContext context) {
-    FirebaseAnalytics.instance.logEvent(name: 'problem_repeat_button_click');
+  void showSolveDialog(BuildContext context, int problemId) {
+    FirebaseAnalytics.instance.logEvent(name: 'problem_solve_button_click');
 
     final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
     bool isLoading = false; // 로딩 상태 변수 외부로 이동
@@ -270,18 +283,30 @@ class _FolderNavigationButtonsState extends State<FolderNavigationButtons> {
 
                           LoadingDialog.show(context, '오답 복습 중...');
 
-                          /*
-                          await widget.foldersProvider
-                              .addRepeatCount(widget.currentId, selectedImage);
+                          FileUploadService fileUploadService =
+                              FileUploadService();
+                          String imageUrl = await fileUploadService
+                              .uploadImageFile(selectedImage!);
 
-                          FirebaseAnalytics.instance.logEvent(
-                            name: 'problem_repeat',
+                          final problemImageDataRegisterModel =
+                              ProblemImageDataRegisterModel(
+                            problemId: problemId,
+                            imageUrl: imageUrl,
+                            problemImageType: ProblemImageType.SOLVE_IMAGE,
                           );
 
-                           */
+                          final problemsProvider =
+                              Provider.of<ProblemsProvider>(context,
+                                  listen: false);
+                          await problemsProvider.registerProblemImageData(
+                              problemImageDataRegisterModel);
+
+                          FirebaseAnalytics.instance.logEvent(
+                            name: 'problem_solve',
+                          );
 
                           setState(() {
-                            isReviewed = true;
+                            isSolved = true;
                             isLoading = false;
                           });
 
@@ -306,7 +331,7 @@ class _FolderNavigationButtonsState extends State<FolderNavigationButtons> {
                           ),
                         )
                       : StandardText(
-                          text: '복습 인증',
+                          text: '문제 복습',
                           fontSize: 14,
                           color: themeProvider.primaryColor,
                         ),

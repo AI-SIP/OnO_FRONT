@@ -11,17 +11,17 @@ import 'package:ono/Model/Problem/ProblemRegisterModel.dart';
 import 'package:ono/Module/Dialog/SnackBarDialog.dart';
 import 'package:ono/Module/Theme/NoteIconHandler.dart';
 import 'package:ono/Provider/FoldersProvider.dart';
+import 'package:ono/Provider/ProblemsProvider.dart';
 import 'package:provider/provider.dart';
 
 import '../../Model/Problem/ProblemModel.dart';
 import '../../Model/Problem/ProblemThumbnailModel.dart';
-import '../../Model/Problem/TemplateType.dart';
 import '../../Module/Image/DisplayImage.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
+import '../../Module/Util/FolderPickerDialog.dart';
 import '../../Provider/UserProvider.dart';
 import '../ProblemDetail/ProblemDetailScreen.dart';
-import '../ProblemRegister/widgets/FolderPickerDialog.dart';
 import 'UserGuideScreen.dart';
 
 class DirectoryScreen extends StatefulWidget {
@@ -32,7 +32,6 @@ class DirectoryScreen extends StatefulWidget {
 }
 
 class _DirectoryScreenState extends State<DirectoryScreen> {
-  String _selectedSortOption = 'newest';
   bool modalShown = false;
   bool _isSelectionMode = false; // 선택 모드 활성화 여부
   final List<int> _selectedFolderIds = []; // 선택된 폴더 ID 리스트
@@ -41,9 +40,6 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   @override
   void initState() {
     super.initState();
-
-    sortProblems(_selectedSortOption);
-
     _isSelectionMode = false; // 선택 모드 활성화 여부
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
@@ -100,14 +96,13 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
               ? _buildLoginPrompt(themeProvider)
               : RefreshIndicator(
                   onRefresh: () async {
-                    sortProblems(_selectedSortOption);
-                    await fetchProblems();
+                    await fetchFoldersAndProblems();
                   },
                   child: Padding(
                     padding: const EdgeInsets.all(20),
                     child: Column(
                       children: [
-                        _buildSortDropdown(themeProvider),
+                        _buildProblemCountSection(themeProvider),
                         const SizedBox(
                           height: 10,
                         ),
@@ -301,9 +296,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   }
 
   // 정렬 옵션을 선택하는 다이얼로그
-  Widget _buildSortDropdown(ThemeHandler themeProvider) {
+  Widget _buildProblemCountSection(ThemeHandler themeProvider) {
     return GestureDetector(
-      onTap: () => _showSortDialog(themeProvider), // 눌렀을 때 정렬 옵션 다이얼로그 표시
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -321,114 +315,9 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
               },
             ),
           ),
-          Row(
-            children: [
-              StandardText(
-                text:
-                    _getSortOptionText(_selectedSortOption), // 선택된 정렬 기준 텍스트 표시
-                fontSize: 14,
-                color: themeProvider.primaryColor,
-              ),
-              Icon(Icons.arrow_drop_down, color: themeProvider.primaryColor),
-            ],
-          ),
         ],
       ),
     );
-  }
-
-  // 정렬 옵션을 선택하는 모달 다이얼로그
-  void _showSortDialog(ThemeHandler themeProvider) {
-    showModalBottomSheet(
-      backgroundColor: Colors.white,
-      context: context,
-      builder: (context) {
-        return SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-                vertical: 20.0, horizontal: 10.0), // 패딩 추가
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.center, // 타이틀을 왼쪽 정렬
-              children: [
-                // 모달 타이틀 추가
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 20.0), // 타이틀 아래 여백 추가
-                  child: StandardText(
-                    text: '정렬 기준', // 타이틀 텍스트
-                    fontSize: 20,
-                    color: themeProvider.primaryColor,
-                  ),
-                ),
-                // 정렬 옵션 리스트
-                ListTile(
-                  title: const StandardText(
-                    text: '이름순',
-                    fontSize: 16,
-                    color: Colors.black,
-                  ),
-                  onTap: () {
-                    setState(() {
-                      _selectedSortOption = 'name';
-                      sortProblems(_selectedSortOption);
-                      FirebaseAnalytics.instance
-                          .logEvent(name: 'sort_option_button_click_name');
-                    });
-                    Navigator.pop(context);
-                  },
-                ),
-                ListTile(
-                  title: const StandardText(
-                    text: '최신순',
-                    fontSize: 16,
-                    color: Colors.black,
-                  ),
-                  onTap: () {
-                    setState(() {
-                      _selectedSortOption = 'newest';
-                      sortProblems(_selectedSortOption);
-                      FirebaseAnalytics.instance
-                          .logEvent(name: 'sort_option_button_click_newest');
-                    });
-                    Navigator.pop(context);
-                  },
-                ),
-                ListTile(
-                  title: const StandardText(
-                    text: '오래된순',
-                    fontSize: 16,
-                    color: Colors.black,
-                  ),
-                  onTap: () {
-                    setState(() {
-                      _selectedSortOption = 'oldest';
-                      sortProblems(_selectedSortOption);
-                      FirebaseAnalytics.instance
-                          .logEvent(name: 'sort_option_button_click_oldest');
-                    });
-                    Navigator.pop(context);
-                  },
-                ),
-                const SizedBox(height: 10),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  String _getSortOptionText(String selectedOption) {
-    switch (selectedOption) {
-      case 'name':
-        return '이름순';
-      case 'newest':
-        return '최신순';
-      case 'oldest':
-        return '오래된순';
-      default:
-        return '정렬 기준';
-    }
   }
 
   Future<void> _showRenameFolderDialog(FoldersProvider foldersProvider) async {
@@ -464,10 +353,14 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     );
 
     if (selectedFolderId != null) {
+      int parentFolderId =
+          foldersProvider.currentFolder!.parentFolder!.folderId;
       await foldersProvider.updateFolder(
           foldersProvider.currentFolder!.folderName,
           foldersProvider.currentFolder!.folderId,
           selectedFolderId); // 부모 폴더 변경
+
+      await foldersProvider.fetchFolderContent(parentFolderId);
     }
   }
 
@@ -668,8 +561,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                       if (index < subFolderIds.length) {
                         var subFolderId = subFolderIds[index].folderId;
 
-                        var subFolder =
-                            foldersProvider.getFolderContents(subFolderId);
+                        var subFolder = foldersProvider.getFolder(subFolderId);
                         return _buildFolderTile(
                             subFolder, themeProvider, index);
                       } else {
@@ -711,7 +603,6 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
               }
             });
           } else {
-            // 일반 모드에서는 폴더로 이동
             Navigator.push(
               context,
               MaterialPageRoute(builder: (context) {
@@ -746,7 +637,11 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
           child: DragTarget<ProblemModel>(
             onAcceptWithDetails: (details) async {
               // 문제를 드롭하면 폴더로 이동
-              await _moveProblemToFolder(details.data, folder.folderId);
+              ProblemRegisterModel problemRegisterModel = ProblemRegisterModel(
+                problemId: details.data.problemId,
+                folderId: folder.folderId,
+              );
+              await _moveProblemToFolder(problemRegisterModel);
             },
             builder: (context, candidateData, rejectedData) {
               return DragTarget<FolderModel>(
@@ -793,7 +688,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
               borderRadius: BorderRadius.circular(8.0),
             ),
             child: isSelected
-                ? Icon(Icons.check, color: themeProvider.primaryColor)
+                ? const Icon(Icons.check, color: Colors.red)
                 : SvgPicture.asset(
                     NoteIconHandler.getNoteIcon(index),
                     width: 30,
@@ -872,7 +767,10 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
           child: DragTarget<FolderModel>(
             onAcceptWithDetails: (details) async {
               // 문제를 드롭하면 해당 폴더로 이동
-              await _moveProblemToFolder(problem, details.data.folderId);
+              ProblemRegisterModel problemRegisterModel = ProblemRegisterModel(
+                  problemId: problem.problemId,
+                  folderId: details.data.folderId);
+              await _moveProblemToFolder(problemRegisterModel);
             },
             builder: (context, candidateData, rejectedData) {
               return _problemTileContent(problem, themeProvider);
@@ -1000,7 +898,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
               onPressed: () {
                 if (_selectedFolderIds.isNotEmpty ||
                     _selectedProblemIds.isNotEmpty) {
-                  _deleteSelectedItems();
+                  _confirmDelete();
                 }
               },
               child: const StandardText(
@@ -1018,6 +916,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   Future<void> _deleteSelectedItems() async {
     final foldersProvider =
         Provider.of<FoldersProvider>(context, listen: false);
+    final problemsProvider =
+        Provider.of<ProblemsProvider>(context, listen: false);
 
     try {
       // 선택된 폴더 삭제
@@ -1027,7 +927,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
       // 선택된 문제 삭제
       if (_selectedProblemIds.isNotEmpty) {
-        await foldersProvider.deleteProblems(_selectedProblemIds);
+        await problemsProvider.deleteProblems(_selectedProblemIds);
       }
 
       setState(() {
@@ -1042,6 +942,9 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         message: '선택된 항목이 삭제되었습니다!',
         backgroundColor: Theme.of(context).primaryColor,
       );
+
+      await foldersProvider
+          .fetchFolderContent(foldersProvider.currentFolder!.folderId);
     } catch (e) {
       // 에러 처리
       log('Error deleting items: $e');
@@ -1053,17 +956,50 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     }
   }
 
-  String formatDateTime(DateTime dateTime) {
-    return DateFormat('yyyy/MM/dd HH:mm').format(dateTime);
+  void _confirmDelete() {
+    final theme = Provider.of<ThemeHandler>(context, listen: false);
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Colors.white,
+        title: const StandardText(
+          text: '삭제 확인',
+          fontSize: 18,
+          color: Colors.black,
+        ),
+        content: const StandardText(
+          text: '선택한 항목을 정말 삭제하시겠습니까?',
+          fontSize: 16,
+          color: Colors.black,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(), // 취소
+            child: const StandardText(
+              text: '취소',
+              fontSize: 14,
+              color: Colors.black,
+            ),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(ctx).pop(); // 다이얼로그 닫고
+              _deleteSelectedItems(); // 실제 삭제 실행
+            },
+            child: StandardText(
+              text: '확인',
+              fontSize: 14,
+              color: theme.primaryColor,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
-  // 템플릿 타입에 따른 아이콘 설정 (SVG 파일로 교체)
-  Widget _getTemplateIcon(TemplateType templateType) {
-    return SvgPicture.asset(
-      templateType.templateThumbnailImage,
-      width: 20,
-      height: 20,
-    );
+  String formatDateTime(DateTime dateTime) {
+    return DateFormat('yyyy/MM/dd HH:mm').format(dateTime);
   }
 
   Future<void> _moveFolderToNewParent(
@@ -1092,23 +1028,27 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     }
   }
 
-  Future<void> _moveProblemToFolder(ProblemModel problem, int? folderId) async {
-    if (folderId == null) {
+  Future<void> _moveProblemToFolder(
+      ProblemRegisterModel problemRegisterModel) async {
+    if (problemRegisterModel.folderId == null) {
       log('Problem ID or folderId is null. Cannot move the problem.');
       return; // 문제 ID 또는 폴더 ID가 null이면 실행하지 않음
     }
 
     FirebaseAnalytics.instance.logEvent(name: 'problem_path_edit', parameters: {
-      'problem_id': problem.problemId!,
-      'target_folder_id': folderId,
+      'problem_id': problemRegisterModel.problemId!,
+      'target_folder_id': problemRegisterModel.folderId!,
     });
+
+    final problemsProvider =
+        Provider.of<ProblemsProvider>(context, listen: false);
+    await problemsProvider.updateProblem(problemRegisterModel);
 
     final foldersProvider =
         Provider.of<FoldersProvider>(context, listen: false);
-    await foldersProvider.updateProblem(ProblemRegisterModel(
-      problemId: problem.problemId,
-      folderId: folderId, // 폴더 ID로 문제를 이동
-    ));
+    await foldersProvider
+        .fetchFolderContent(foldersProvider.currentFolder!.folderId);
+    await foldersProvider.fetchFolderContent(problemRegisterModel.folderId);
 
     if (mounted) {
       SnackBarDialog.showSnackBar(
@@ -1133,24 +1073,11 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     }
   }
 
-  Future<void> fetchProblems() async {
+  Future<void> fetchFoldersAndProblems() async {
     final foldersProvider =
         Provider.of<FoldersProvider>(context, listen: false);
 
     await foldersProvider.fetchFolderContent(null);
-  }
-
-  void sortProblems(String option) {
-    final foldersProvider =
-        Provider.of<FoldersProvider>(context, listen: false);
-
-    if (option == 'name') {
-      foldersProvider.sortProblemsByName();
-    } else if (option == 'newest') {
-      foldersProvider.sortProblemsByNewest();
-    } else if (option == 'oldest') {
-      foldersProvider.sortProblemsByOldest();
-    }
   }
 
   void navigateToProblemDetail(BuildContext context, int problemId) {
@@ -1162,7 +1089,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       ),
     ).then((value) {
       if (value == true) {
-        fetchProblems();
+        fetchFoldersAndProblems();
       }
     });
   }

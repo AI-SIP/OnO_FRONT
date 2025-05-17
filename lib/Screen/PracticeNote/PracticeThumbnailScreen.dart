@@ -5,7 +5,7 @@ import 'package:ono/Module/Dialog/LoadingDialog.dart';
 import 'package:ono/Module/Dialog/SnackBarDialog.dart';
 import 'package:provider/provider.dart';
 
-import '../../Model/PracticeNote/PracticeNoteModel.dart';
+import '../../Model/PracticeNote/PracticeNoteDetailModel.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/PracticeNoteProvider.dart';
@@ -278,28 +278,19 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
             TextButton(
               onPressed: () async {
                 Navigator.pop(context);
-
-                final provider = Provider.of<ProblemPracticeProvider>(context,
-                    listen: false);
-                bool isDelete =
-                    await provider.deletePractices(deletePracticeIds);
-
-                if (isDelete) {
-                  SnackBarDialog.showSnackBar(
-                      context: context,
-                      message: '복습 리스트가 삭제되었습니다!',
-                      backgroundColor: themeProvider.primaryColor);
-                } else {
-                  SnackBarDialog.showSnackBar(
-                      context: context,
-                      message: '삭제 과정에서 문제가 발생했습니다!',
-                      backgroundColor: Colors.red);
-                }
-
                 setState(() {
                   _isSelectionMode = false;
                   _selectedPracticeIds.clear();
                 });
+
+                final provider = Provider.of<ProblemPracticeProvider>(context,
+                    listen: false);
+                await provider.deletePractices(deletePracticeIds);
+
+                SnackBarDialog.showSnackBar(
+                    context: context,
+                    message: '복습 리스트가 삭제되었습니다!',
+                    backgroundColor: themeProvider.primaryColor);
               },
               child: const StandardText(
                 text: '삭제',
@@ -367,7 +358,8 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
     );
   }
 
-  Widget _buildPracticeListView(List<ProblemPracticeModel> practiceThumbnails,
+  Widget _buildPracticeListView(
+      List<PracticeNoteDetailModel> practiceThumbnails,
       ThemeHandler themeProvider) {
     return ListView.builder(
       padding: const EdgeInsets.symmetric(vertical: 20),
@@ -380,7 +372,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
   }
 
   Widget _buildPracticeItem(
-      ProblemPracticeModel practice, ThemeHandler themeProvider) {
+      PracticeNoteDetailModel practice, ThemeHandler themeProvider) {
     final isSelected = _selectedPracticeIds.contains(practice.practiceId);
 
     return GestureDetector(
@@ -413,19 +405,19 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
     );
   }
 
-  void _navigateToPracticeDetail(ProblemPracticeModel practice) async {
+  void _navigateToPracticeDetail(PracticeNoteDetailModel practice) async {
     final practiceProvider =
         Provider.of<ProblemPracticeProvider>(context, listen: false);
     LoadingDialog.show(context, '복습 리스트 로딩 중...');
 
     await practiceProvider.moveToPractice(practice.practiceId);
-
     LoadingDialog.hide(context);
 
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => PracticeDetailScreen(practice: practice),
+        builder: (context) => PracticeDetailScreen(
+            practice: practiceProvider.currentPracticeNote!),
       ),
     );
   }
@@ -469,7 +461,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
   }
 
   Widget _buildPracticeInfo(
-      ProblemPracticeModel practice, ThemeHandler themeProvider) {
+      PracticeNoteDetailModel practice, ThemeHandler themeProvider) {
     return Expanded(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -484,7 +476,6 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
           const SizedBox(height: 8),
           Row(
             children: [
-              _buildTag('${practice.practiceSize} 문제', themeProvider),
               const SizedBox(width: 8),
               practice.practiceCount >= 3
                   ? _buildTag('복습 완료', themeProvider, highlight: true)

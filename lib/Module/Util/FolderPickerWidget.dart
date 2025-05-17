@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../../Module/Text/StandardText.dart';
 import '../../../Module/Theme/ThemeHandler.dart';
-import 'FolderPickerDialog.dart';
+import '../../../Module/Util/FolderPickerDialog.dart';
 
 class FolderPickerWidget extends StatelessWidget {
   final int? selectedId;

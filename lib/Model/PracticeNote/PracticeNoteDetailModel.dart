@@ -1,29 +1,30 @@
 import 'package:intl/intl.dart';
 
-import '../Problem/ProblemModel.dart';
-
-class ProblemPracticeModel {
+class PracticeNoteDetailModel {
   final int practiceId;
   final String practiceTitle;
-  final int practiceCount;
+  int practiceCount;
   final int practiceSize;
   final DateTime createdAt;
   final DateTime? lastSolvedAt;
-  List<ProblemModel> problems = [];
+  List<int> problemIdList = [];
 
-  ProblemPracticeModel({
+  PracticeNoteDetailModel({
     required this.practiceId,
     required this.practiceTitle,
     required this.practiceCount,
     required this.practiceSize,
     required this.createdAt,
     required this.lastSolvedAt,
-    required this.problems,
+    required this.problemIdList,
   });
 
-  factory ProblemPracticeModel.fromJson(Map<String, dynamic> json) {
-    return ProblemPracticeModel(
-      practiceId: json['practiceId'],
+  factory PracticeNoteDetailModel.fromJson(Map<String, dynamic> json) {
+    final problemIdDynamic = json['problemIdList'] as List<dynamic>? ?? [];
+    final problemIdList = problemIdDynamic.map((e) => e as int).toList();
+
+    return PracticeNoteDetailModel(
+      practiceId: json['practiceNoteId'],
       practiceTitle: json['practiceTitle'] ?? '제목 없음',
       practiceCount: json['practiceCount'] ?? 0,
       practiceSize: json['practiceSize'] ?? 0,
@@ -32,10 +33,7 @@ class ProblemPracticeModel {
       lastSolvedAt: json['lastSolvedAt'] != null
           ? DateTime.parse(json['lastSolvedAt']).add(const Duration(hours: 9))
           : null,
-      problems: (json['problems'] as List?)
-              ?.map((e) => ProblemModel.fromJson(e))
-              .toList() ??
-          [], // null 체크
+      problemIdList: problemIdList,
     );
   }
 
@@ -43,5 +41,9 @@ class ProblemPracticeModel {
   String? _formatDateTime(DateTime? dateTime) {
     if (dateTime == null) return null;
     return DateFormat('yyyy-MM-dd').format(dateTime);
+  }
+
+  void addPracticeCount() {
+    practiceCount += 1;
   }
 }

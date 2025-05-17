@@ -1,7 +1,7 @@
 class FolderRegisterModel {
-  final String folderName;
+  final String? folderName;
   final int? folderId;
-  final int parentFolderId;
+  final int? parentFolderId;
 
   FolderRegisterModel({
     required this.folderName,

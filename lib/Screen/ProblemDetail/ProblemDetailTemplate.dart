@@ -10,8 +10,7 @@ class ProblemDetailTemplate extends StatelessWidget {
   final ProblemDetailScreenWidget problemDetailScreenWidget =
       ProblemDetailScreenWidget();
 
-  ProblemDetailTemplate({required this.problemModel, Key? key})
-      : super(key: key);
+  ProblemDetailTemplate({required this.problemModel, super.key});
 
   @override
   Widget build(BuildContext context) {

@@ -92,7 +92,19 @@ class HttpService {
           response = await http
               .delete(uri, headers: mergedHeaders)
               .timeout(const Duration(seconds: 30));
-          break;
+          if (body != null) {
+            response = await http
+                .delete(
+                  uri,
+                  headers: mergedHeaders,
+                  body: json.encode(body),
+                )
+                .timeout(const Duration(seconds: 30));
+          } else {
+            response = await http
+                .delete(uri, headers: mergedHeaders)
+                .timeout(const Duration(seconds: 30));
+          }
 
         default:
           throw Exception('Unsupported HTTP method: $method');

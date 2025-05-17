@@ -12,6 +12,7 @@ class ImageGallerySection extends StatefulWidget {
   final ThemeHandler themeProvider;
 
   const ImageGallerySection({
+    super.key,
     required this.imageUrls,
     required this.label,
     required this.color,
@@ -51,7 +52,7 @@ class _ImageGallerySectionState extends State<ImageGallerySection> {
         const SizedBox(height: 8),
         // PageView
         SizedBox(
-          height: width * 0.75, // 가로 넓이에 비례한 높이
+          height: width * 0.75,
           child: PageView.builder(
             controller: _controller,
             itemCount: widget.imageUrls.length,

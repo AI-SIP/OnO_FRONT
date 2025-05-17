@@ -1,11 +1,6 @@
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:ono/Module/Text/StandardText.dart';
-import 'package:ono/Screen/ProblemRegister/widgets/ActionButtons.dart';
-import 'package:ono/Screen/ProblemRegister/widgets/DatePickerWidget.dart';
-import 'package:ono/Screen/ProblemRegister/widgets/FolderPickerWidget.dart';
-import 'package:ono/Screen/ProblemRegister/widgets/ImageGridWidget.dart';
-import 'package:ono/Screen/ProblemRegister/widgets/LabledTextField.dart';
 import 'package:provider/provider.dart';
 
 import '../../Model/Common/LoginStatus.dart';
@@ -17,10 +12,16 @@ import '../../Module/Dialog/LoadingDialog.dart';
 import '../../Module/Dialog/SnackBarDialog.dart';
 import '../../Module/Image/ImagePickerHandler.dart';
 import '../../Module/Theme/ThemeHandler.dart';
+import '../../Module/Util/FolderPickerWidget.dart';
 import '../../Provider/FoldersProvider.dart';
+import '../../Provider/ProblemsProvider.dart';
 import '../../Provider/ScreenIndexProvider.dart';
 import '../../Provider/UserProvider.dart';
 import '../../Service/Api/FileUpload/FileUploadService.dart';
+import 'Widget/ActionButtons.dart';
+import 'Widget/DatePickerWidget.dart';
+import 'Widget/ImageGridWidget.dart';
+import 'Widget/LabledTextField.dart';
 
 class ProblemRegisterTemplate extends StatefulWidget {
   final ProblemModel? problemModel;
@@ -55,7 +56,8 @@ class _ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
     } else {
       final folderProvider =
           Provider.of<FoldersProvider>(context, listen: false);
-      _selectedFolderId = folderProvider.currentFolder?.folderId ?? 1;
+      _selectedFolderId =
+          problemModel?.folderId ?? folderProvider.currentFolder?.folderId;
     }
     _titleCtrl.text = problemModel?.reference ?? '';
     _memoCtrl.text = problemModel?.memo ?? '';
@@ -192,15 +194,15 @@ class _ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
       final imageDataList = [
         for (var imageUrl in problemImageUrlList)
           ProblemImageDataRegisterModel(
+            problemId: widget.problemModel!.problemId,
             imageUrl: imageUrl,
             problemImageType: ProblemImageType.PROBLEM_IMAGE,
-            createdAt: now,
           ),
         for (var imageUrl in answerImageUrlList)
           ProblemImageDataRegisterModel(
+            problemId: widget.problemModel!.problemId,
             imageUrl: imageUrl,
             problemImageType: ProblemImageType.ANSWER_IMAGE,
-            createdAt: now,
           ),
       ];
 
@@ -220,14 +222,25 @@ class _ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
       }
 
       if (widget.isEditMode) {
-        await Provider.of<FoldersProvider>(context, listen: false)
+        await Provider.of<ProblemsProvider>(context, listen: false)
             .updateProblem(problemRegisterModel);
+
+        if (problemRegisterModel.folderId != null) {
+          await Provider.of<FoldersProvider>(context, listen: false)
+              .fetchFolderContent(problemRegisterModel.folderId);
+        }
+
+        await Provider.of<FoldersProvider>(context, listen: false)
+            .fetchFolderContent(widget.problemModel!.folderId);
 
         _resetAll();
         Navigator.of(context).pop(true);
       } else {
+        await Provider.of<ProblemsProvider>(context, listen: false)
+            .registerProblem(problemRegisterModel, context);
+
         await Provider.of<FoldersProvider>(context, listen: false)
-            .submitProblem(problemRegisterModel, context);
+            .fetchFolderContent(_selectedFolderId);
 
         _resetAll();
 

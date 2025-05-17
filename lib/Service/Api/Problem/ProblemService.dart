@@ -1,7 +1,6 @@
 import 'package:ono/Model/Problem/ProblemImageDataRegisterModel.dart';
 import 'package:ono/Model/Problem/ProblemModel.dart';
 import 'package:ono/Model/Problem/ProblemRegisterModel.dart';
-import 'package:ono/Model/Problem/ProblemRepeatRegisterModel.dart';
 
 import '../../../Config/AppConfig.dart';
 import '../HttpService.dart';
@@ -37,13 +36,12 @@ class ProblemService {
     ) as int;
   }
 
-  Future<void> registerProblem(
-      ProblemRegisterModel problemRegisterModel) async {
-    await httpService.sendRequest(
+  Future<int> registerProblem(ProblemRegisterModel problemRegisterModel) async {
+    return await httpService.sendRequest(
       method: 'POST',
       url: baseUrl,
       body: problemRegisterModel.toJson(),
-    );
+    ) as int;
   }
 
   Future<void> registerProblemImageData(
@@ -52,15 +50,6 @@ class ProblemService {
       method: 'POST',
       url: '$baseUrl/imageData',
       body: problemImageDataRegisterModel.toJson(),
-    );
-  }
-
-  Future<void> repeatProblem(
-      ProblemRepeatRegisterModel problemRepeatRegisterModel) async {
-    await httpService.sendRequest(
-      method: 'POST',
-      url: '$baseUrl/repeat',
-      body: problemRepeatRegisterModel.toJson(),
     );
   }
 
@@ -95,7 +84,7 @@ class ProblemService {
     await httpService.sendRequest(
       method: 'DELETE',
       url: baseUrl,
-      body: {'problemIdList': problemIdList},
+      body: {'deleteProblemIdList': problemIdList},
     );
   }
 

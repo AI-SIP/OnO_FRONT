@@ -6,15 +6,12 @@ import 'package:ono/Screen/ProblemRegister/ProblemRegisterScreen.dart';
 import 'package:provider/provider.dart';
 
 import '../../Model/Problem/ProblemModel.dart';
-import '../../Model/Problem/ProblemRegisterModel.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Module/Util/FolderNavigationButtons.dart';
 import '../../Provider/FoldersProvider.dart';
+import '../../Provider/ProblemsProvider.dart';
 import '../PracticeNote/PracticeNavigationButtons.dart';
-import '../ProblemRegister/widgets/FolderPickerDialog.dart';
-import '../ProblemShare/AnswerShareScreen.dart';
-import '../ProblemShare/ProblemShareScreen.dart';
 import 'ProblemDetailTemplate.dart';
 
 class ProblemDetailScreen extends StatefulWidget {
@@ -186,6 +183,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                     color: themeProvider.primaryColor,
                   ),
                 ),
+                /*
                 Padding(
                   padding: const EdgeInsets.only(bottom: 10.0), // 텍스트 간격 조정
                   child: ListTile(
@@ -232,6 +230,8 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                     },
                   ),
                 ),
+
+                 */
                 Padding(
                   padding: const EdgeInsets.only(bottom: 10.0), // 텍스트 간격 조정
                   child: ListTile(
@@ -257,38 +257,6 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                           .then((_) {
                         _setProblemModel();
                       });
-                    },
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 10.0), // 텍스트 간격 조정
-                  child: ListTile(
-                    leading: const Icon(Icons.folder_open, color: Colors.black),
-                    title: const StandardText(
-                      text: '오답노트 위치 변경하기',
-                      fontSize: 16,
-                      color: Colors.black,
-                    ),
-                    onTap: () async {
-                      FirebaseAnalytics.instance
-                          .logEvent(name: 'problem_change_path_button_click');
-                      Navigator.pop(context);
-
-                      final foldersProvider =
-                          Provider.of<FoldersProvider>(context, listen: false);
-
-                      final int? selectedFolderId = await showDialog<int?>(
-                        context: context,
-                        builder: (context) => const FolderPickerDialog(),
-                      );
-
-                      if (selectedFolderId != null) {
-                        await foldersProvider
-                            .updateProblem(ProblemRegisterModel(
-                          problemId: problemModel.problemId,
-                          folderId: selectedFolderId,
-                        ));
-                      }
                     },
                   ),
                 ),
@@ -321,8 +289,6 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
 
   Future<void> _showDeleteProblemDialog(
       int problemId, ThemeHandler themeProvider) async {
-    final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
-
     return showDialog(
       context: context,
       builder: (context) {
@@ -349,8 +315,18 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                 Navigator.pop(context);
                 FirebaseAnalytics.instance.logEvent(name: 'problem_delete');
 
+                ProblemsProvider problemsProvider =
+                    Provider.of<ProblemsProvider>(context, listen: false);
+
+                ProblemModel problemModel =
+                    problemsProvider.getProblem(problemId);
+
+                int? parentFolderId = problemModel.folderId;
+
+                await problemsProvider.deleteProblems([problemId]);
+
                 await Provider.of<FoldersProvider>(context, listen: false)
-                    .deleteProblems([problemId]);
+                    .fetchFolderContent(parentFolderId);
                 await Provider.of<ProblemPracticeProvider>(context,
                         listen: false)
                     .fetchAllPracticeContents();
@@ -406,7 +382,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
 
   Future<ProblemModel?> fetchProblemDetails(
       BuildContext context, int? problemId) async {
-    return Provider.of<FoldersProvider>(context, listen: false)
-        .getProblemDetails(problemId);
+    return Provider.of<ProblemsProvider>(context, listen: false)
+        .getProblem(problemId!);
   }
 }

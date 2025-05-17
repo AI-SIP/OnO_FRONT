@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:ono/Model/PracticeNote/PracticeNoteModel.dart';
+import 'package:ono/Model/PracticeNote/PracticeNoteDetailModel.dart';
+import 'package:ono/Provider/PracticeNoteProvider.dart';
 import 'package:ono/Screen/PracticeNote/PracticeTitleWriteScreen.dart';
 import 'package:provider/provider.dart';
 
 import '../../Model/Folder/FolderModel.dart';
 import '../../Model/PracticeNote/PracticeNoteRegisterModel.dart';
+import '../../Model/PracticeNote/PracticeNoteUpdateModel.dart';
 import '../../Model/Problem/ProblemModel.dart';
 import '../../Model/Problem/TemplateType.dart';
 import '../../Module/Image/DisplayImage.dart';
@@ -15,10 +17,9 @@ import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/FoldersProvider.dart';
 
 class PracticeProblemSelectionScreen extends StatefulWidget {
-  final ProblemPracticeModel? practiceModel;
+  final PracticeNoteDetailModel? practiceModel;
 
-  const PracticeProblemSelectionScreen({Key? key, this.practiceModel})
-      : super(key: key);
+  const PracticeProblemSelectionScreen({super.key, this.practiceModel});
 
   @override
   _PracticeProblemSelectionScreenState createState() =>
@@ -30,6 +31,7 @@ class _PracticeProblemSelectionScreenState
   int? selectedFolderId;
   List<ProblemModel> selectedProblems = [];
   List<FolderModel> allFolders = [];
+  late final List<int> _originalProblemIds;
 
   @override
   void initState() {
@@ -37,8 +39,23 @@ class _PracticeProblemSelectionScreenState
     _fetchFolders();
 
     if (widget.practiceModel != null) {
-      selectedProblems = widget.practiceModel!.problems;
+      _fetchProblems();
+      _originalProblemIds = widget.practiceModel!.problemIdList;
+    } else {
+      _originalProblemIds = [];
     }
+  }
+
+  Future<void> _fetchProblems() async {
+    final practiceNoteProvider =
+        Provider.of<ProblemPracticeProvider>(context, listen: false);
+
+    await practiceNoteProvider.moveToPractice(widget.practiceModel!.practiceId);
+    List<ProblemModel> problemModelList = practiceNoteProvider.currentProblems;
+
+    setState(() {
+      selectedProblems = problemModelList;
+    });
   }
 
   Future<void> _fetchFolders() async {
@@ -293,30 +310,51 @@ class _PracticeProblemSelectionScreenState
       child: ElevatedButton(
         onPressed: selectedProblems.isNotEmpty
             ? () {
-                ProblemPracticeRegisterModel practiceRegisterModel;
-                List<int> selectedProblemIds = selectedProblems
-                    .map((problem) => problem.problemId) // problemId만 추출
+                final newIds =
+                    selectedProblems.map((p) => p.problemId).toList();
+
+                // 추가된 문제: newIds 에는 있지만 원본에는 없는 것
+                final addList = newIds
+                    .where((id) => !_originalProblemIds.contains(id))
+                    .toList();
+                // 삭제된 문제: 원본에는 있고 newIds에는 없는 것
+                final removeList = _originalProblemIds
+                    .where((id) => !newIds.contains(id))
                     .toList();
 
                 if (widget.practiceModel != null) {
-                  practiceRegisterModel = ProblemPracticeRegisterModel(
-                      practiceId: widget.practiceModel!.practiceId,
-                      practiceTitle: widget.practiceModel!.practiceTitle,
-                      registerProblemIds: selectedProblemIds);
-                } else {
-                  practiceRegisterModel = ProblemPracticeRegisterModel(
-                      practiceTitle: "",
-                      registerProblemIds: selectedProblemIds);
-                }
-
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => PracticeTitleWriteScreen(
-                      practiceRegisterModel: practiceRegisterModel,
+                  // 수정 모드
+                  final updateModel = PracticeNoteUpdateModel(
+                    practiceNoteId: widget.practiceModel!.practiceId,
+                    practiceTitle: widget.practiceModel!.practiceTitle,
+                    addProblemIdList: addList,
+                    removeProblemIdList: removeList,
+                  );
+                  // 다음 화면으로 updateModel 넘기기
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => PracticeTitleWriteScreen(
+                        practiceNoteUpdateModel: updateModel,
+                      ),
                     ),
-                  ),
-                );
+                  );
+                } else {
+                  // 신규 등록 모드 → 기존대로 RegisterModel
+                  final registerModel = PracticeNoteRegisterModel(
+                    practiceId: null,
+                    practiceTitle: "",
+                    registerProblemIdList: newIds,
+                  );
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => PracticeTitleWriteScreen(
+                        practiceRegisterModel: registerModel,
+                      ),
+                    ),
+                  );
+                }
               }
             : () => _showSelectProblemDialog(context),
         style: ElevatedButton.styleFrom(

@@ -1,12 +1,11 @@
 // FolderModel.dart
-import '../Problem/ProblemModel.dart';
 import 'FolderThumbnailModel.dart';
 
 class FolderModel {
   final int folderId;
   final String folderName;
   final FolderThumbnailModel? parentFolder;
-  final List<ProblemModel> problems;
+  final List<int> problemIdList;
   final List<FolderThumbnailModel> subFolderList;
   final DateTime? createdAt;
   final DateTime? updateAt;
@@ -15,25 +14,20 @@ class FolderModel {
     required this.folderId,
     required this.folderName,
     this.parentFolder,
-    required this.problems,
+    required this.problemIdList,
     required this.subFolderList,
     this.createdAt,
     this.updateAt,
   });
 
   factory FolderModel.fromJson(dynamic json) {
-    // parentFolder: null or Map
     final parentJson = json['parentFolder'] as Map<String, dynamic>?;
     final parent =
         parentJson != null ? FolderThumbnailModel.fromJson(parentJson) : null;
 
-    // problemList → problems
-    final problemList = json['problemList'] as List<dynamic>? ?? [];
-    final problems = problemList
-        .map((e) => ProblemModel.fromJson(e as Map<String, dynamic>))
-        .toList();
+    final problemIdDynamic = json['problemIdList'] as List<dynamic>? ?? [];
+    final problemIdList = problemIdDynamic.map((e) => e as int).toList();
 
-    // subFolderList: List<Map> → List<FolderThumbnailModel>
     final subListJson = json['subFolderList'] as List<dynamic>? ?? [];
     final subFolderList = subListJson
         .cast<Map<String, dynamic>>()
@@ -48,7 +42,7 @@ class FolderModel {
       folderId: json['folderId'] as int,
       folderName: json['folderName'] as String,
       parentFolder: parent,
-      problems: problems,
+      problemIdList: problemIdList,
       subFolderList: subFolderList,
       createdAt: created != null ? DateTime.parse(created) : null,
       updateAt: updated != null ? DateTime.parse(updated) : null,

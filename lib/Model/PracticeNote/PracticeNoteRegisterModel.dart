@@ -1,12 +1,12 @@
-class ProblemPracticeRegisterModel {
+class PracticeNoteRegisterModel {
   final int? practiceId;
   String practiceTitle;
-  final List<int> registerProblemIds;
+  final List<int> registerProblemIdList;
 
-  ProblemPracticeRegisterModel({
+  PracticeNoteRegisterModel({
     this.practiceId,
     required this.practiceTitle,
-    required this.registerProblemIds,
+    required this.registerProblemIdList,
   });
 
   void setPracticeTitle(String newTitle) {
@@ -17,7 +17,7 @@ class ProblemPracticeRegisterModel {
     return {
       'practiceId': practiceId,
       'practiceTitle': practiceTitle,
-      'registerProblemIds': registerProblemIds,
+      'problemIdList': registerProblemIdList,
     };
   }
 }

@@ -1,5 +1,3 @@
-import 'package:ono/Model/Problem/ProblemRepeatModel.dart';
-
 import '../Common/ProblemImageDataType.dart';
 import 'ProblemImageDataModel.dart';
 
@@ -14,7 +12,7 @@ class ProblemModel {
 
   final List<ProblemImageDataModel>? problemImageDataList;
   final List<ProblemImageDataModel>? answerImageDataList;
-  final List<ProblemRepeatModel>? repeats;
+  final List<ProblemImageDataModel>? solveImageDataList;
 
   ProblemModel({
     this.problemId = -1,
@@ -26,7 +24,7 @@ class ProblemModel {
     this.updateAt,
     this.problemImageDataList,
     this.answerImageDataList,
-    this.repeats,
+    this.solveImageDataList,
   });
 
   factory ProblemModel.fromJson(Map<String, dynamic> json) {
@@ -38,12 +36,15 @@ class ProblemModel {
 
     final problemImages = <ProblemImageDataModel>[];
     final answerImages = <ProblemImageDataModel>[];
+    final solveImages = <ProblemImageDataModel>[];
 
     for (var img in rawImageList) {
       if (img.problemImageType == ProblemImageType.PROBLEM_IMAGE) {
         problemImages.add(img);
       } else if (img.problemImageType == ProblemImageType.ANSWER_IMAGE) {
         answerImages.add(img);
+      } else if (img.problemImageType == ProblemImageType.SOLVE_IMAGE) {
+        solveImages.add(img);
       }
     }
     return ProblemModel(
@@ -62,9 +63,7 @@ class ProblemModel {
           : null,
       problemImageDataList: problemImages,
       answerImageDataList: answerImages,
-      repeats: (json['repeats'] as List<dynamic>?)
-          ?.map((e) => ProblemRepeatModel.fromJson(e as Map<String, dynamic>))
-          .toList(),
+      solveImageDataList: solveImages,
     );
   }
 
