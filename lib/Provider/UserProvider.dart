@@ -166,22 +166,22 @@ class UserProvider with ChangeNotifier {
 
   Future<void> fetchUserInfo() async {
     userInfoModel = await userService.fetchUserInfo();
+    notifyListeners();
   }
 
   Future<void> updateUser({
-    String email = '',
-    String name = '',
-    String identifier = '',
-    String userType = '',
+    String? email,
+    String? name,
+    String? identifier,
   }) async {
     final UserRegisterModel updateUserRegisterModel = UserRegisterModel(
       email: email,
       name: name,
       identifier: identifier,
-      platform: '',
+      platform: null,
     );
 
-    userService.updateUserProfile(updateUserRegisterModel);
+    await userService.updateUserProfile(updateUserRegisterModel);
     await fetchUserInfo();
   }
 

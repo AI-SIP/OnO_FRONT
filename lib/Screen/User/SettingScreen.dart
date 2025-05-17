@@ -389,15 +389,14 @@ class _SettingScreenState extends State<SettingScreen> {
               onPressed: () async {
                 String newName = nameController.text;
                 if (newName.isNotEmpty) {
-                  // 이름 업데이트 요청, 나머지 필드는 null로 보냄
-                  await userProvider.updateUser(
+                  Navigator.pop(context);
+                  await Provider.of<UserProvider>(context, listen: false)
+                      .updateUser(
                     name: newName,
-                    email: '',
-                    identifier: '',
-                    userType: '',
+                    email: null,
+                    identifier: null,
                   );
                 }
-                Navigator.pop(context);
               },
               child: StandardText(
                 text: '수정',
