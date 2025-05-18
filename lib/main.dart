@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -7,81 +10,96 @@ import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart';
 import 'package:ono/Module/Text/StandardText.dart';
 import 'package:ono/Module/Theme/ThemeHandler.dart';
 import 'package:ono/Provider/FoldersProvider.dart';
-import 'package:ono/Provider/PracticeNoteProvider.dart';
 import 'package:ono/Provider/ScreenIndexProvider.dart';
 import 'package:ono/Screen/ProblemRegister/ProblemRegisterScreen.dart';
 import 'package:ono/Screen/User/SplashScreen.dart';
 import 'package:provider/provider.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
+import 'Config/AppConfig.dart';
 import 'Config/firebase_options.dart';
+import 'Provider/PracticeNoteProvider.dart';
 import 'Provider/ProblemsProvider.dart';
 import 'Provider/UserProvider.dart';
 import 'Screen/Folder/DirectoryScreen.dart';
 import 'Screen/PracticeNote/PracticeThumbnailScreen.dart';
 import 'Screen/User/SettingScreen.dart';
+import 'Util/SendDiscordAlert.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await dotenv.load(fileName: ".env");
+  runZonedGuarded<Future<void>>(() async {
+    WidgetsFlutterBinding.ensureInitialized();
+    await dotenv.load(fileName: ".env");
+    await AppConfig.load();
 
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
-
-  KakaoSdk.init(nativeAppKey: '7fd2fa49895af63319fd6b11e084d0d5');
-
-  await SentryFlutter.init(
-    (options) {
-      options.dsn =
-          'https://ef02bb2a25f04c4141b3edb8c51ff128@o4507978249273344.ingest.us.sentry.io/4507978250911744';
-      options.tracesSampleRate = 1.0;
-      options.profilesSampleRate = 1.0;
-    },
-  );
-
-  // 1) Flutter 프레임워크 예외 (동기 빌드 에러 등) 잡기
-  FlutterError.onError = (FlutterErrorDetails details) {
-    // 콘솔에도 출력
-    FlutterError.dumpErrorToConsole(details);
-
-    print(details);
-
-    // Sentry에 보고
-    Sentry.captureException(
-      details.exception,
-      stackTrace: details.stack,
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
     );
-  };
 
-  runApp(
-    MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => ProblemsProvider()),
-        ChangeNotifierProvider(
-            create: (context) => FoldersProvider(
-                  problemsProvider:
-                      Provider.of<ProblemsProvider>(context, listen: false),
-                )),
-        ChangeNotifierProvider(
-            create: (context) => ProblemPracticeProvider(
-                  problemsProvider:
-                      Provider.of<ProblemsProvider>(context, listen: false),
-                )),
-        ChangeNotifierProvider(
-          create: (context) => UserProvider(
-            Provider.of<ProblemsProvider>(context, listen: false),
-            Provider.of<FoldersProvider>(context, listen: false),
-            Provider.of<ProblemPracticeProvider>(context, listen: false),
+    KakaoSdk.init(nativeAppKey: dotenv.env['KAKAO_NATIVE_APP_KEY']!);
+
+    await SentryFlutter.init(
+      (options) {
+        options.dsn = dotenv.env['SENTRY_DSN']!;
+        options.tracesSampleRate = 1.0;
+        options.profilesSampleRate = 1.0;
+      },
+    );
+    // FlutterError 처리기 설정
+    FlutterError.onError = (details) async {
+      FlutterError.dumpErrorToConsole(details);
+      final webhookUrl = kReleaseMode
+          ? dotenv.env['DISCORD_WEBHOOK_PROD_URL']!
+          : dotenv.env['DISCORD_WEBHOOK_LOCAL_URL']!;
+      Sentry.captureException(details.exception, stackTrace: details.stack);
+      await sendDiscordAlert(
+        message: details.exceptionAsString(),
+        stack: details.stack,
+        webhookUrl: webhookUrl,
+      );
+    };
+
+    // **여기서부터 MultiProvider 전체가 Zone 안으로 들어갑니다**
+    runApp(
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider(create: (_) => ProblemsProvider()),
+          ChangeNotifierProvider(
+              create: (context) => FoldersProvider(
+                    problemsProvider:
+                        Provider.of<ProblemsProvider>(context, listen: false),
+                  )),
+          ChangeNotifierProvider(
+              create: (context) => ProblemPracticeProvider(
+                    problemsProvider:
+                        Provider.of<ProblemsProvider>(context, listen: false),
+                  )),
+          ChangeNotifierProvider(
+            create: (context) => UserProvider(
+              Provider.of<ProblemsProvider>(context, listen: false),
+              Provider.of<FoldersProvider>(context, listen: false),
+              Provider.of<ProblemPracticeProvider>(context, listen: false),
+            ),
           ),
-        ),
-        ChangeNotifierProvider(
-            create: (context) => ThemeHandler()..loadColors()),
-        ChangeNotifierProvider(create: (_) => ScreenIndexProvider()),
-      ],
-      child: const MyApp(),
-    ),
-  );
+          ChangeNotifierProvider(
+              create: (context) => ThemeHandler()..loadColors()),
+          ChangeNotifierProvider(create: (_) => ScreenIndexProvider()),
+        ],
+        child: const MyApp(),
+      ),
+    );
+  }, (error, stack) async {
+    // Zone 밖 비동기 예외 처리
+    final webhookUrl = kReleaseMode
+        ? dotenv.env['DISCORD_WEBHOOK_PROD_URL']!
+        : dotenv.env['DISCORD_WEBHOOK_LOCAL_URL']!;
+    Sentry.captureException(error, stackTrace: stack);
+    await sendDiscordAlert(
+      message: error.toString(),
+      stack: stack,
+      webhookUrl: webhookUrl,
+    );
+  });
 }
 
 class MyApp extends StatelessWidget {

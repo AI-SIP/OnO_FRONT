@@ -277,49 +277,51 @@ class _FolderNavigationButtonsState extends State<FolderNavigationButtons> {
                   onPressed: isLoading
                       ? null
                       : () async {
-                          setState(() {
-                            isLoading = true;
-                          });
+                          if (selectedImage != null) {
+                            setState(() {
+                              isLoading = true;
+                            });
 
-                          LoadingDialog.show(context, '오답 복습 중...');
+                            LoadingDialog.show(context, '오답 복습 중...');
 
-                          FileUploadService fileUploadService =
-                              FileUploadService();
-                          String imageUrl = await fileUploadService
-                              .uploadImageFile(selectedImage!);
+                            FileUploadService fileUploadService =
+                                FileUploadService();
+                            String imageUrl = await fileUploadService
+                                .uploadImageFile(selectedImage!);
 
-                          final problemImageDataRegisterModel =
-                              ProblemImageDataRegisterModel(
-                            problemId: problemId,
-                            imageUrl: imageUrl,
-                            problemImageType: ProblemImageType.SOLVE_IMAGE,
-                          );
+                            final problemImageDataRegisterModel =
+                                ProblemImageDataRegisterModel(
+                              problemId: problemId,
+                              imageUrl: imageUrl,
+                              problemImageType: ProblemImageType.SOLVE_IMAGE,
+                            );
 
-                          final problemsProvider =
-                              Provider.of<ProblemsProvider>(context,
-                                  listen: false);
-                          await problemsProvider.registerProblemImageData(
-                              problemImageDataRegisterModel);
+                            final problemsProvider =
+                                Provider.of<ProblemsProvider>(context,
+                                    listen: false);
+                            await problemsProvider.registerProblemImageData(
+                                problemImageDataRegisterModel);
 
-                          FirebaseAnalytics.instance.logEvent(
-                            name: 'problem_solve',
-                          );
+                            FirebaseAnalytics.instance.logEvent(
+                              name: 'problem_solve',
+                            );
 
-                          setState(() {
-                            isSolved = true;
-                            isLoading = false;
-                          });
+                            setState(() {
+                              isSolved = true;
+                              isLoading = false;
+                            });
 
-                          LoadingDialog.hide(context);
-                          Navigator.of(context).pop();
+                            LoadingDialog.hide(context);
+                            Navigator.of(context).pop();
 
-                          SnackBarDialog.showSnackBar(
-                            context: context,
-                            message: '복습이 완료되었습니다!',
-                            backgroundColor: themeProvider.primaryColor,
-                          );
+                            SnackBarDialog.showSnackBar(
+                              context: context,
+                              message: '복습이 완료되었습니다!',
+                              backgroundColor: themeProvider.primaryColor,
+                            );
 
-                          widget.onRefresh();
+                            widget.onRefresh();
+                          }
                         },
                   child: isLoading
                       ? SizedBox(
