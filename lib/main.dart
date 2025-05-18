@@ -1,5 +1,9 @@
+import 'dart:async';
+import 'dart:developer';
+
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -20,6 +24,7 @@ import 'Provider/UserProvider.dart';
 import 'Screen/Folder/DirectoryScreen.dart';
 import 'Screen/PracticeNote/PracticeThumbnailScreen.dart';
 import 'Screen/User/SettingScreen.dart';
+import 'Util/SendDiscordAlert.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -29,29 +34,46 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  KakaoSdk.init(nativeAppKey: '7fd2fa49895af63319fd6b11e084d0d5');
+  KakaoSdk.init(nativeAppKey: dotenv.env['KAKAO_NATIVE_APP_KEY']!);
 
   await SentryFlutter.init(
     (options) {
-      options.dsn =
-          'https://ef02bb2a25f04c4141b3edb8c51ff128@o4507978249273344.ingest.us.sentry.io/4507978250911744';
+      options.dsn = dotenv.env['SENTRY_DSN']!;
       options.tracesSampleRate = 1.0;
       options.profilesSampleRate = 1.0;
     },
   );
 
-  // 1) Flutter 프레임워크 예외 (동기 빌드 에러 등) 잡기
   FlutterError.onError = (FlutterErrorDetails details) {
-    // 콘솔에도 출력
     FlutterError.dumpErrorToConsole(details);
+    log(details as String);
 
-    print(details);
+    final webhookUrl = kReleaseMode
+        ? dotenv.env['DISCORD_WEBHOOK_PROD_URL']!
+        : dotenv.env['DISCORD_WEBHOOK_LOCAL_URL']!;
 
     // Sentry에 보고
     Sentry.captureException(
       details.exception,
       stackTrace: details.stack,
     );
+
+    // Discord에 예외 알림
+    sendDiscordAlert(
+      message: details.exceptionAsString(),
+      stack: details.stack,
+      webhookUrl: webhookUrl,
+    );
+
+    runZonedGuarded(() {
+      runApp(const MyApp());
+    }, (error, stack) {
+      sendDiscordAlert(
+        message: error.toString(),
+        stack: stack,
+        webhookUrl: webhookUrl,
+      );
+    });
   };
 
   runApp(
