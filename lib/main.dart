@@ -16,6 +16,7 @@ import 'package:ono/Screen/User/SplashScreen.dart';
 import 'package:provider/provider.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
+import 'Config/AppConfig.dart';
 import 'Config/firebase_options.dart';
 import 'Provider/PracticeNoteProvider.dart';
 import 'Provider/ProblemsProvider.dart';
@@ -29,6 +30,7 @@ void main() async {
   runZonedGuarded<Future<void>>(() async {
     WidgetsFlutterBinding.ensureInitialized();
     await dotenv.load(fileName: ".env");
+    await AppConfig.load();
 
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
