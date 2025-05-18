@@ -306,26 +306,28 @@ class _PracticeNavigationButtonsState extends State<PracticeNavigationButtons> {
                   onPressed: isLoading
                       ? null
                       : () async {
-                          setState(() {
-                            isLoading = true;
-                          });
+                          if (selectedImage != null) {
+                            setState(() {
+                              isLoading = true;
+                            });
 
-                          await widget.practiceProvider.moveToPractice(widget
-                              .practiceProvider
-                              .currentPracticeNote!
-                              .practiceId);
+                            await widget.practiceProvider.moveToPractice(widget
+                                .practiceProvider
+                                .currentPracticeNote!
+                                .practiceId);
 
-                          FirebaseAnalytics.instance.logEvent(
-                            name: 'problem_repeat',
-                          );
+                            FirebaseAnalytics.instance.logEvent(
+                              name: 'problem_repeat',
+                            );
 
-                          setState(() {
-                            isReviewed = true;
-                            isLoading = false;
-                          });
+                            setState(() {
+                              isReviewed = true;
+                              isLoading = false;
+                            });
 
-                          Navigator.of(context).pop();
-                          widget.onRefresh();
+                            Navigator.of(context).pop();
+                            widget.onRefresh();
+                          }
                         },
                   child: isLoading
                       ? CircularProgressIndicator(
