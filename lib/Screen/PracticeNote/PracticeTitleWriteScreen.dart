@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:ono/Model/PracticeNote/PracticeNoteUpdateModel.dart';
@@ -286,54 +287,140 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
   }
 
   Widget _buildNotificationSection(ThemeHandler theme, double screenHeight) {
-    return Column(
-      children: [
-        SwitchListTile(
-          title: StandardText(
-            text: '복습 주기 알림 사용',
-            fontSize: 16,
-            color: theme.primaryColor,
-          ),
-          value: _notifyEnabled,
-          onChanged: (v) => setState(() => _notifyEnabled = v),
-        ),
-        if (_notifyEnabled) ...[
-          SizedBox(height: screenHeight * 0.02),
-          _buildNumberInput(
-            label: '알림 주기(일)',
-            value: _intervalDays,
-            onChanged: (v) => setState(() => _intervalDays = v),
-            themeProvider: theme,
-          ),
-          SizedBox(height: screenHeight * 0.02),
-          ListTile(
-            title: const StandardText(
-              text: '알림 시각',
-              fontSize: 16,
-              color: Colors.black,
-            ),
-            trailing: StandardText(
-              text: _notifyTime.format(context),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8.0), // 좌우 여백
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // 2) 스위치 색깔 변경: activeColor
+          SwitchListTile(
+            title: StandardText(
+              text: '복습 주기 알림 사용',
               fontSize: 16,
               color: theme.primaryColor,
             ),
-            onTap: () async {
-              final t = await showTimePicker(
-                context: context,
-                initialTime: _notifyTime,
-              );
-              if (t != null) setState(() => _notifyTime = t);
-            },
+            value: _notifyEnabled,
+            activeColor: theme.primaryColor, // 토글 색
+            onChanged: (v) => setState(() => _notifyEnabled = v),
           ),
-          SizedBox(height: screenHeight * 0.02),
-          _buildNumberInput(
-            label: '알림 횟수',
-            value: _notifyCount,
-            onChanged: (v) => setState(() => _notifyCount = v),
-            themeProvider: theme,
-          ),
+
+          if (_notifyEnabled) ...[
+            SizedBox(height: screenHeight * 0.02),
+
+            // 3) 숫자 입력도 동일한 패딩 Row로
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4.0),
+              child: _buildNumberInput(
+                label: '알림 주기(일)',
+                value: _intervalDays,
+                onChanged: (v) => setState(() => _intervalDays = v),
+                themeProvider: theme,
+              ),
+            ),
+
+            SizedBox(height: screenHeight * 0.02),
+
+            // 4) 시간 선택: BottomSheet + CupertinoDatePicker
+            GestureDetector(
+              onTap: () => _showTimePickerBottomSheet(context),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const StandardText(
+                      text: '알림 시각',
+                      fontSize: 16,
+                      color: Colors.black,
+                    ),
+                    StandardText(
+                      text: _notifyTime.format(context),
+                      fontSize: 16,
+                      color: theme.primaryColor,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            SizedBox(height: screenHeight * 0.02),
+
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4.0),
+              child: _buildNumberInput(
+                label: '알림 횟수',
+                value: _notifyCount,
+                onChanged: (v) => setState(() => _notifyCount = v),
+                themeProvider: theme,
+              ),
+            ),
+          ],
         ],
-      ],
+      ),
+    );
+  }
+
+  void _showTimePickerBottomSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white, // 바텀시트 배경을 흰색으로
+      shape: const RoundedRectangleBorder(
+        // 모서리를 살짝 둥글게
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (_) {
+        return Container(
+          height: 250,
+          padding: const EdgeInsets.all(16),
+          decoration: const BoxDecoration(
+            color: Colors.white, // 내부도 확실히 흰색
+            borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+          ),
+          child: Column(
+            children: [
+              const StandardText(
+                text: '알림 시각 선택',
+                color: Colors.black,
+                fontSize: 18,
+              ),
+              const SizedBox(
+                height: 20,
+              ),
+              Expanded(
+                child: CupertinoDatePicker(
+                  mode: CupertinoDatePickerMode.time,
+                  initialDateTime: DateTime(
+                    0,
+                    0,
+                    0,
+                    _notifyTime.hour,
+                    _notifyTime.minute,
+                  ),
+                  use24hFormat: false,
+                  onDateTimeChanged: (dt) {
+                    setState(() {
+                      _notifyTime = TimeOfDay(
+                        hour: dt.hour,
+                        minute: dt.minute,
+                      );
+                    });
+                  },
+                ),
+              ),
+              const SizedBox(
+                height: 20,
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const StandardText(
+                  text: '확인',
+                  color: Colors.black,
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
