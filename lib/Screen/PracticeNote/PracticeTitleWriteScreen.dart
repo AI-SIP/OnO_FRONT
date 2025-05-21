@@ -9,20 +9,47 @@ import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/PracticeNoteProvider.dart';
 
-class PracticeTitleWriteScreen extends StatelessWidget {
+class PracticeTitleWriteScreen extends StatefulWidget {
   final PracticeNoteRegisterModel? practiceRegisterModel;
   final PracticeNoteUpdateModel? practiceNoteUpdateModel;
-  final TextEditingController _titleController;
 
-  PracticeTitleWriteScreen(
-      {super.key, this.practiceRegisterModel, this.practiceNoteUpdateModel})
-      : _titleController = TextEditingController(
-          text: practiceNoteUpdateModel != null
-              ? practiceNoteUpdateModel.practiceTitle
-              : practiceRegisterModel?.practiceTitle ?? '',
-        );
+  const PracticeTitleWriteScreen({
+    super.key,
+    this.practiceRegisterModel,
+    this.practiceNoteUpdateModel,
+  });
 
-  void _submitPractice(BuildContext context, ThemeHandler themeProvider) async {
+  @override
+  _PracticeTitleWriteScreenState createState() =>
+      _PracticeTitleWriteScreenState();
+}
+
+class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
+  late TextEditingController _titleController;
+  bool _notifyEnabled = false;
+  int _intervalDays = 1;
+  TimeOfDay _notifyTime = TimeOfDay(hour: 9, minute: 0);
+  int _notifyCount = 3;
+
+  @override
+  void initState() {
+    super.initState();
+    _titleController = TextEditingController(
+      text: widget.practiceNoteUpdateModel != null
+          ? widget.practiceNoteUpdateModel!.practiceTitle
+          : widget.practiceRegisterModel?.practiceTitle ?? '',
+    );
+    // 초기 설정: 만약 모델에 알림 설정이 이미 있으면, 여기에 반영하세요.
+  }
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submitPractice(
+      BuildContext context, ThemeHandler themeProvider) async {
     if (_titleController.text.isEmpty) {
       _showTitleRequiredDialog(context);
     } else {
@@ -33,18 +60,19 @@ class PracticeTitleWriteScreen extends StatelessWidget {
       Navigator.pop(context);
 
       try {
-        if (practiceNoteUpdateModel != null) {
-          practiceNoteUpdateModel!.setPracticeTitle(_titleController.text);
+        if (widget.practiceNoteUpdateModel != null) {
+          widget.practiceNoteUpdateModel!
+              .setPracticeTitle(_titleController.text);
           await problemPracticeProvider
-              .updatePractice(practiceNoteUpdateModel!);
+              .updatePractice(widget.practiceNoteUpdateModel!);
 
           Navigator.pop(context);
           _showSnackBar(context, themeProvider, '복습 리스트가 수정되었습니다.',
               themeProvider.primaryColor);
         } else {
-          practiceRegisterModel!.setPracticeTitle(_titleController.text);
+          widget.practiceRegisterModel!.setPracticeTitle(_titleController.text);
           await problemPracticeProvider
-              .registerPractice(practiceRegisterModel!);
+              .registerPractice(widget.practiceRegisterModel!);
 
           _showSnackBar(context, themeProvider, '복습 리스트가 생성되었습니다.',
               themeProvider.primaryColor);
@@ -115,7 +143,9 @@ class PracticeTitleWriteScreen extends StatelessWidget {
   AppBar _buildAppBar(ThemeHandler themeProvider) {
     return AppBar(
       title: StandardText(
-        text: practiceNoteUpdateModel == null ? "복습 리스트 만들기" : "복습 리스트 수정하기",
+        text: widget.practiceNoteUpdateModel == null
+            ? "복습 리스트 만들기"
+            : "복습 리스트 수정하기",
         fontSize: 20,
         color: themeProvider.primaryColor,
       ),
@@ -135,6 +165,8 @@ class PracticeTitleWriteScreen extends StatelessWidget {
           SizedBox(height: screenHeight * 0.03),
           _buildTextField(standardTextStyle, themeProvider),
           SizedBox(height: screenHeight * 0.03),
+          _buildNotificationSection(themeProvider, screenHeight),
+          SizedBox(height: screenHeight * 0.03),
           _buildInfoContainer(screenHeight, themeProvider),
         ],
       ),
@@ -143,7 +175,7 @@ class PracticeTitleWriteScreen extends StatelessWidget {
 
   Widget _buildTitleText() {
     return StandardText(
-      text: practiceNoteUpdateModel == null
+      text: widget.practiceNoteUpdateModel == null
           ? "복습 리스트의 이름을 입력해주세요"
           : "수정할 이름을 입력해주세요",
       fontSize: 18,
@@ -197,6 +229,7 @@ class PracticeTitleWriteScreen extends StatelessWidget {
         children: [
           _buildInfoHeader(themeProvider),
           SizedBox(height: screenHeight * 0.02),
+          SizedBox(height: screenHeight * 0.02),
           _buildInfoText(),
         ],
       ),
@@ -241,12 +274,97 @@ class PracticeTitleWriteScreen extends StatelessWidget {
             padding: const EdgeInsets.symmetric(vertical: 10),
           ),
           child: StandardText(
-            text: practiceRegisterModel == null ? "복습 리스트 수정하기" : "복습 리스트 만들기",
+            text: widget.practiceRegisterModel == null
+                ? "복습 리스트 수정하기"
+                : "복습 리스트 만들기",
             fontSize: 18,
             color: Colors.white,
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildNotificationSection(ThemeHandler theme, double screenHeight) {
+    return Column(
+      children: [
+        SwitchListTile(
+          title: StandardText(
+            text: '복습 주기 알림 사용',
+            fontSize: 16,
+            color: theme.primaryColor,
+          ),
+          value: _notifyEnabled,
+          onChanged: (v) => setState(() => _notifyEnabled = v),
+        ),
+        if (_notifyEnabled) ...[
+          SizedBox(height: screenHeight * 0.02),
+          _buildNumberInput(
+            label: '알림 주기(일)',
+            value: _intervalDays,
+            onChanged: (v) => setState(() => _intervalDays = v),
+            themeProvider: theme,
+          ),
+          SizedBox(height: screenHeight * 0.02),
+          ListTile(
+            title: const StandardText(
+              text: '알림 시각',
+              fontSize: 16,
+              color: Colors.black,
+            ),
+            trailing: StandardText(
+              text: _notifyTime.format(context),
+              fontSize: 16,
+              color: theme.primaryColor,
+            ),
+            onTap: () async {
+              final t = await showTimePicker(
+                context: context,
+                initialTime: _notifyTime,
+              );
+              if (t != null) setState(() => _notifyTime = t);
+            },
+          ),
+          SizedBox(height: screenHeight * 0.02),
+          _buildNumberInput(
+            label: '알림 횟수',
+            value: _notifyCount,
+            onChanged: (v) => setState(() => _notifyCount = v),
+            themeProvider: theme,
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildNumberInput({
+    required String label,
+    required int value,
+    required ValueChanged<int> onChanged,
+    required ThemeHandler themeProvider,
+  }) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        StandardText(text: label, fontSize: 16, color: Colors.black),
+        Row(
+          children: [
+            IconButton(
+              icon: Icon(Icons.remove, color: themeProvider.primaryColor),
+              onPressed: value > 1 ? () => onChanged(value - 1) : null,
+            ),
+            StandardText(
+              text: '$value',
+              fontSize: 16,
+              color: themeProvider.primaryColor,
+            ),
+            IconButton(
+              icon: Icon(Icons.add, color: themeProvider.primaryColor),
+              onPressed: () => onChanged(value + 1),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }
