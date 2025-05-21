@@ -205,7 +205,8 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
           borderRadius: BorderRadius.circular(10),
           borderSide: BorderSide(color: themeProvider.primaryColor, width: 2.0),
         ),
-        fillColor: themeProvider.primaryColor.withOpacity(0.1),
+        fillColor: Colors.white,
+        //fillColor: themeProvider.primaryColor.withOpacity(0.1),
         filled: true,
         hintText: "ex) 9월 모의 전과목 모의고사 오답 복습",
         hintStyle: standardTextStyle.copyWith(
@@ -288,28 +289,48 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
 
   Widget _buildNotificationSection(ThemeHandler theme, double screenHeight) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8.0), // 좌우 여백
+      margin: const EdgeInsets.symmetric(vertical: 12.0),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border.all(color: theme.primaryColor, width: 2.0),
+        borderRadius: BorderRadius.circular(10),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 2) 스위치 색깔 변경: activeColor
-          SwitchListTile(
-            title: StandardText(
-              text: '복습 주기 알림 사용',
-              fontSize: 16,
-              color: theme.primaryColor,
+          // 공통 좌우 패딩
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 10, 8, 10),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                StandardText(
+                  text: '복습 주기 알림 사용',
+                  fontSize: 16,
+                  color: theme.primaryColor,
+                ),
+                // 스위치 크기 줄이기
+                Transform.scale(
+                  scale: 0.8, // 80% 크기로 축소
+                  child: Switch(
+                    value: _notifyEnabled,
+                    activeColor: theme.darkPrimaryColor,
+                    inactiveTrackColor: Colors.grey.shade300,
+                    inactiveThumbColor: Colors.grey,
+                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    onChanged: (v) => setState(() => _notifyEnabled = v),
+                  ),
+                ),
+              ],
             ),
-            value: _notifyEnabled,
-            activeColor: theme.primaryColor, // 토글 색
-            onChanged: (v) => setState(() => _notifyEnabled = v),
           ),
 
           if (_notifyEnabled) ...[
             SizedBox(height: screenHeight * 0.02),
 
-            // 3) 숫자 입력도 동일한 패딩 Row로
+            // 알림 주기
             Padding(
-              padding: const EdgeInsets.symmetric(vertical: 4.0),
+              padding: const EdgeInsets.fromLTRB(16.0, 0, 0, 0),
               child: _buildNumberInput(
                 label: '알림 주기(일)',
                 value: _intervalDays,
@@ -320,23 +341,20 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
 
             SizedBox(height: screenHeight * 0.02),
 
-            // 4) 시간 선택: BottomSheet + CupertinoDatePicker
-            GestureDetector(
-              onTap: () => _showTimePickerBottomSheet(context),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4.0),
+            // 알림 시각
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: GestureDetector(
+                onTap: () => _showTimePickerBottomSheet(context),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const StandardText(
-                      text: '알림 시각',
-                      fontSize: 16,
-                      color: Colors.black,
-                    ),
+                    StandardText(
+                        text: '알림 시각', fontSize: 16, color: theme.primaryColor),
                     StandardText(
                       text: _notifyTime.format(context),
                       fontSize: 16,
-                      color: theme.primaryColor,
+                      color: Colors.black,
                     ),
                   ],
                 ),
@@ -345,8 +363,9 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
 
             SizedBox(height: screenHeight * 0.02),
 
+            // 알림 횟수
             Padding(
-              padding: const EdgeInsets.symmetric(vertical: 4.0),
+              padding: const EdgeInsets.fromLTRB(16.0, 0, 0, 0),
               child: _buildNumberInput(
                 label: '알림 횟수',
                 value: _notifyCount,
@@ -354,6 +373,8 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
                 themeProvider: theme,
               ),
             ),
+
+            SizedBox(height: screenHeight * 0.02),
           ],
         ],
       ),
@@ -430,28 +451,35 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
     required ValueChanged<int> onChanged,
     required ThemeHandler themeProvider,
   }) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        StandardText(text: label, fontSize: 16, color: Colors.black),
-        Row(
-          children: [
-            IconButton(
-              icon: Icon(Icons.remove, color: themeProvider.primaryColor),
-              onPressed: value > 1 ? () => onChanged(value - 1) : null,
-            ),
-            StandardText(
-              text: '$value',
-              fontSize: 16,
-              color: themeProvider.primaryColor,
-            ),
-            IconButton(
-              icon: Icon(Icons.add, color: themeProvider.primaryColor),
-              onPressed: () => onChanged(value + 1),
-            ),
-          ],
-        ),
-      ],
+    return SizedBox(
+      width: double.infinity, // 폭을 최대한으로 늘립니다.
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween, // 양 끝 정렬
+        children: [
+          StandardText(
+            text: label,
+            fontSize: 16,
+            color: themeProvider.primaryColor,
+          ),
+          Row(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.remove, color: Colors.black),
+                onPressed: value > 1 ? () => onChanged(value - 1) : null,
+              ),
+              StandardText(
+                text: '$value',
+                fontSize: 16,
+                color: Colors.black,
+              ),
+              IconButton(
+                icon: const Icon(Icons.add, color: Colors.black),
+                onPressed: () => onChanged(value + 1),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }
