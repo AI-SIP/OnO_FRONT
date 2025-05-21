@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:ono/Model/PracticeNote/PracticeNoteDetailModel.dart';
 import 'package:ono/Model/PracticeNote/PracticeNoteUpdateModel.dart';
 import 'package:ono/Model/PracticeNote/PracticeNotificationModel.dart';
 import 'package:provider/provider.dart';
@@ -14,11 +15,13 @@ import '../../Provider/PracticeNoteProvider.dart';
 class PracticeTitleWriteScreen extends StatefulWidget {
   final PracticeNoteRegisterModel? practiceRegisterModel;
   final PracticeNoteUpdateModel? practiceNoteUpdateModel;
+  final PracticeNoteDetailModel? practiceNoteDetailModel;
 
   const PracticeTitleWriteScreen({
     super.key,
     this.practiceRegisterModel,
     this.practiceNoteUpdateModel,
+    this.practiceNoteDetailModel,
   });
 
   @override
@@ -41,7 +44,20 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
           ? widget.practiceNoteUpdateModel!.practiceTitle
           : widget.practiceRegisterModel?.practiceTitle ?? '',
     );
-    // 초기 설정: 만약 모델에 알림 설정이 이미 있으면, 여기에 반영하세요.
+
+    if (widget.practiceNoteDetailModel != null &&
+        widget.practiceNoteDetailModel!.practiceNotificationModel != null) {
+      _notifyEnabled = true;
+      _intervalDays = widget
+          .practiceNoteDetailModel!.practiceNotificationModel!.intervalDays!;
+      final hour =
+          widget.practiceNoteDetailModel!.practiceNotificationModel!.hour!;
+      final minute =
+          widget.practiceNoteDetailModel!.practiceNotificationModel!.minute!;
+      _notifyTime = TimeOfDay(hour: hour, minute: minute);
+      _notifyCount = widget
+          .practiceNoteDetailModel!.practiceNotificationModel!.notifyCount!;
+    }
   }
 
   @override
@@ -65,6 +81,20 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
         if (widget.practiceNoteUpdateModel != null) {
           widget.practiceNoteUpdateModel!
               .setPracticeTitle(_titleController.text);
+
+          if (_notifyEnabled) {
+            PracticeNotificationModel practiceNotificationModel =
+                PracticeNotificationModel(
+              intervalDays: _intervalDays,
+              hour: _notifyTime.hour,
+              minute: _notifyTime.minute,
+              notifyCount: _notifyCount,
+            );
+
+            widget.practiceNoteUpdateModel!
+                .setPracticeNotificationModel(practiceNotificationModel);
+          }
+
           await problemPracticeProvider
               .updatePractice(widget.practiceNoteUpdateModel!);
 
