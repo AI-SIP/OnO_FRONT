@@ -45,7 +45,7 @@ class UserService {
   }
 
   Future<void> deleteAccount() async {
-    return await httpService.sendRequest(
+    await httpService.sendRequest(
       method: 'DELETE',
       url: '${AppConfig.baseUrl}/api/users',
     );

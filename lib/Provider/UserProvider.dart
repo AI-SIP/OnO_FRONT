@@ -75,10 +75,14 @@ class UserProvider with ChangeNotifier {
       LoadingDialog.show(context, '로그인 중 입니다...');
       final response = await userService.signInWithGuest();
 
-      print('user signIn success, response: ${response}');
+      saveUserLoginInfo("GUEST");
       bool isRegister = await saveUserToken(response: response);
 
+      await fetchAllData();
       LoadingDialog.hide(context);
+
+      _loginStatus = LoginStatus.login;
+      notifyListeners();
 
       if (!isRegister) {
         log('register failed!, response: ${response.toString()}');
