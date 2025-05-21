@@ -20,7 +20,7 @@ class PracticeNotificationModel {
     };
   }
 
-  PracticeNotificationModel fromJson(Map<String, dynamic> json) {
+  factory PracticeNotificationModel.fromJson(Map<String, dynamic> json) {
     return PracticeNotificationModel(
       intervalDays: json['intervalDays'] ?? 7,
       hour: json['hour'] ?? 18,

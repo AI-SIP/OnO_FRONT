@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:ono/Model/PracticeNote/PracticeNoteUpdateModel.dart';
+import 'package:ono/Model/PracticeNote/PracticeNotificationModel.dart';
 import 'package:provider/provider.dart';
 
 import '../../Model/PracticeNote/PracticeNoteRegisterModel.dart';
@@ -72,6 +73,19 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
               themeProvider.primaryColor);
         } else {
           widget.practiceRegisterModel!.setPracticeTitle(_titleController.text);
+
+          if (_notifyEnabled) {
+            PracticeNotificationModel practiceNotificationModel =
+                PracticeNotificationModel(
+              intervalDays: _intervalDays,
+              hour: _notifyTime.hour,
+              minute: _notifyTime.minute,
+              notifyCount: _notifyCount,
+            );
+
+            widget.practiceRegisterModel!
+                .setPracticeNotificationModel(practiceNotificationModel);
+          }
           await problemPracticeProvider
               .registerPractice(widget.practiceRegisterModel!);
 
@@ -79,7 +93,7 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
               themeProvider.primaryColor);
         }
       } catch (error) {
-        _showSnackBar(context, themeProvider, '복습 리스트가 실패했습니다.', Colors.red);
+        _showSnackBar(context, themeProvider, '복습 리스트 생성에 실패했습니다.', Colors.red);
       }
     }
   }
