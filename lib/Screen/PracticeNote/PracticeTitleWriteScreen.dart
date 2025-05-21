@@ -28,8 +28,8 @@ class PracticeTitleWriteScreen extends StatefulWidget {
 class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
   late TextEditingController _titleController;
   bool _notifyEnabled = false;
-  int _intervalDays = 1;
-  TimeOfDay _notifyTime = TimeOfDay(hour: 9, minute: 0);
+  int _intervalDays = 7;
+  TimeOfDay _notifyTime = const TimeOfDay(hour: 18, minute: 0);
   int _notifyCount = 3;
 
   @override
