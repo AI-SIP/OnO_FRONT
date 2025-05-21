@@ -67,7 +67,7 @@ class _UserGuideScreenState extends State<UserGuideScreen> {
                 _buildUserGuidePage(
                   imagePath: 'assets/GuideScreen/GuideScreen4.svg',
                   title: '오답 복습',
-                  description: '작성한 오답노트로 복습 리스트를 만들어\n필요한 문제만 빠르게 복습하세요.',
+                  description: '작성한 오답노트로 복습 노트를 만들어\n필요한 문제만 빠르게 복습하세요.',
                 ),
                 _buildUserGuidePage(
                   imagePath: 'assets/GuideScreen/GuideScreen5.svg',

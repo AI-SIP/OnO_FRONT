@@ -69,7 +69,7 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
               .updatePractice(widget.practiceNoteUpdateModel!);
 
           Navigator.pop(context);
-          _showSnackBar(context, themeProvider, '복습 리스트가 수정되었습니다.',
+          _showSnackBar(context, themeProvider, '복습 노트가 수정되었습니다.',
               themeProvider.primaryColor);
         } else {
           widget.practiceRegisterModel!.setPracticeTitle(_titleController.text);
@@ -89,11 +89,11 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
           await problemPracticeProvider
               .registerPractice(widget.practiceRegisterModel!);
 
-          _showSnackBar(context, themeProvider, '복습 리스트가 생성되었습니다.',
+          _showSnackBar(context, themeProvider, '복습 노트가 생성되었습니다.',
               themeProvider.primaryColor);
         }
       } catch (error) {
-        _showSnackBar(context, themeProvider, '복습 리스트 생성에 실패했습니다.', Colors.red);
+        _showSnackBar(context, themeProvider, '복습 노트 생성에 실패했습니다.', Colors.red);
       }
     }
   }
@@ -158,9 +158,8 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
   AppBar _buildAppBar(ThemeHandler themeProvider) {
     return AppBar(
       title: StandardText(
-        text: widget.practiceNoteUpdateModel == null
-            ? "복습 리스트 만들기"
-            : "복습 리스트 수정하기",
+        text:
+            widget.practiceNoteUpdateModel == null ? "복습 노트 만들기" : "복습 노트 수정하기",
         fontSize: 20,
         color: themeProvider.primaryColor,
       ),
@@ -191,7 +190,7 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
   Widget _buildTitleText() {
     return StandardText(
       text: widget.practiceNoteUpdateModel == null
-          ? "복습 리스트의 이름을 입력해주세요"
+          ? "복습 노트의 이름을 입력해주세요"
           : "수정할 이름을 입력해주세요",
       fontSize: 18,
       color: Colors.black,
@@ -291,8 +290,8 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
           ),
           child: StandardText(
             text: widget.practiceRegisterModel == null
-                ? "복습 리스트 수정하기"
-                : "복습 리스트 만들기",
+                ? "복습 노트 수정하기"
+                : "복습 노트 만들기",
             fontSize: 18,
             color: Colors.white,
           ),

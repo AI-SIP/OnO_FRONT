@@ -89,7 +89,7 @@ class PracticeDetailScreen extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.only(bottom: 20.0), // 타이틀 아래 여백 추가
                   child: StandardText(
-                    text: '복습 리스트 편집하기', // 타이틀 텍스트
+                    text: '복습 노트 편집하기', // 타이틀 텍스트
                     fontSize: 20,
                     color: themeProvider.primaryColor,
                   ),
@@ -99,7 +99,7 @@ class PracticeDetailScreen extends StatelessWidget {
                   child: ListTile(
                     leading: const Icon(Icons.edit, color: Colors.black),
                     title: const StandardText(
-                      text: '문제 목록 편집하기',
+                      text: '복습 노트 편집하기',
                       fontSize: 16,
                       color: Colors.black,
                     ),
@@ -123,7 +123,7 @@ class PracticeDetailScreen extends StatelessWidget {
                     leading:
                         const Icon(Icons.delete_forever, color: Colors.red),
                     title: const StandardText(
-                      text: '복습 리스트 삭제하기',
+                      text: '복습 노트 삭제하기',
                       fontSize: 16,
                       color: Colors.red,
                     ),
@@ -318,7 +318,7 @@ class PracticeDetailScreen extends StatelessWidget {
     } else {
       SnackBarDialog.showSnackBar(
         context: context,
-        message: '복습 리스트가 비어있습니다!',
+        message: '복습 노트가 비어있습니다!',
         backgroundColor: Colors.red,
       );
     }
@@ -333,12 +333,12 @@ class PracticeDetailScreen extends StatelessWidget {
         return AlertDialog(
           backgroundColor: Colors.white,
           title: const StandardText(
-            text: '복습 리스트 삭제',
+            text: '복습 노트 삭제',
             fontSize: 18,
             color: Colors.black,
           ),
           content: const StandardText(
-            text: '정말로 이 복습 리스트를 삭제하시겠습니까?',
+            text: '정말로 이 복습 노트를 삭제하시겠습니까?',
             fontSize: 16,
             color: Colors.black,
           ),
