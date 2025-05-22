@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -74,9 +76,6 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
       final problemPracticeProvider =
           Provider.of<ProblemPracticeProvider>(context, listen: false);
 
-      Navigator.pop(context);
-      Navigator.pop(context);
-
       try {
         if (widget.practiceNoteUpdateModel != null) {
           widget.practiceNoteUpdateModel!
@@ -98,9 +97,12 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
           await problemPracticeProvider
               .updatePractice(widget.practiceNoteUpdateModel!);
 
-          Navigator.pop(context);
           _showSnackBar(context, themeProvider, '복습 노트가 수정되었습니다.',
               themeProvider.primaryColor);
+
+          Navigator.pop(context);
+          Navigator.pop(context);
+          Navigator.pop(context);
         } else {
           widget.practiceRegisterModel!.setPracticeTitle(_titleController.text);
 
@@ -121,9 +123,14 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
 
           _showSnackBar(context, themeProvider, '복습 노트가 생성되었습니다.',
               themeProvider.primaryColor);
+
+          Navigator.pop(context);
+          Navigator.pop(context);
         }
       } catch (error) {
+        log(error.toString());
         _showSnackBar(context, themeProvider, '복습 노트 생성에 실패했습니다.', Colors.red);
+        throw Exception(error);
       }
     }
   }

@@ -51,8 +51,10 @@ class ProblemPracticeProvider with ChangeNotifier {
         .indexWhere((folder) => practiceNote.practiceId == practiceNoteId);
     if (index != -1) {
       _practices[index] = practiceNote;
-      if (practiceNoteId == currentPracticeNote!.practiceId) {
-        await moveToPractice(practiceNoteId);
+      if(currentPracticeNote != null) {
+        if (practiceNoteId == currentPracticeNote!.practiceId) {
+          await moveToPractice(practiceNoteId);
+        }
       }
     } else {
       _practices.add(practiceNote);
@@ -99,6 +101,7 @@ class ProblemPracticeProvider with ChangeNotifier {
     int createdPracticeId = await practiceNoteService
         .registerPracticeNote(practiceNoteRegisterModel);
 
+    log(createdPracticeId.toString());
     await fetchPracticeNote(createdPracticeId);
   }
 
