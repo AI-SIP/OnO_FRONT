@@ -64,10 +64,18 @@
 	<string>오답노트 등록에 필요한 사진을 직접 첨부하기 위해서는 마이크 접근 권한 허용이 필요합니다.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>오답노트 등록에 필요한 사진을 직접 첨부하기 위해서는 갤러리 접근 권한 허용이 필요합니다.</string>
+	<key>NSUserNotificationUsageDescription</key>
+    <string>복습 알림을 보내기 위해 권한 허용이 필요합니다.</string>
 	<key>NSSupportsOpeningDocumentsInPlace</key>
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>fetch</string>
+		<string>processing</string>
+		<string>remote-notification</string>
+	</array>
 	<key>UIFileSharingEnabled</key>
 	<true/>
 	<key>UILaunchStoryboardName</key>
