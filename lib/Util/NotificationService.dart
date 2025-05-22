@@ -31,12 +31,21 @@ class NotificationService {
   }
 
   Future<void> _requestPermission() async {
-    final settings = await _messaging.requestPermission(
+    await _messaging.setForegroundNotificationPresentationOptions(
       alert: true,
       badge: true,
       sound: true,
     );
-    log('FCM permission: ${settings.authorizationStatus}');
+
+    await _messaging.requestPermission(
+      alert: true,
+      announcement: false,
+      badge: true,
+      carPlay: false,
+      criticalAlert: false,
+      provisional: false,
+      sound: true,
+    );
   }
 
   void _configureMessageHandlers() {
@@ -57,10 +66,12 @@ class NotificationService {
   }
 
   Future<void> sendTokenToServer() async {
+    final APNSToken = await _messaging.getAPNSToken();
     final token = await _messaging.getToken();
     if (token == null) return;
 
-    log('FCM token sending start');
+    log('APNS token sending start, token: ${APNSToken}');
+    log('FCM token sending start, token: ${token}');
     await httpService.sendRequest(
       method: 'POST',
       url: '${AppConfig.baseUrl}/api/fcm/token',
