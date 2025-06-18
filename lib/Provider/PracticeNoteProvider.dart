@@ -51,7 +51,7 @@ class ProblemPracticeProvider with ChangeNotifier {
         .indexWhere((folder) => practiceNote.practiceId == practiceNoteId);
     if (index != -1) {
       _practices[index] = practiceNote;
-      if(currentPracticeNote != null) {
+      if (currentPracticeNote != null) {
         if (practiceNoteId == currentPracticeNote!.practiceId) {
           await moveToPractice(practiceNoteId);
         }
@@ -77,7 +77,7 @@ class ProblemPracticeProvider with ChangeNotifier {
       log('practiceNotification interval days: ${practice.practiceNotificationModel?.intervalDays}');
       log('practiceNotification hour: ${practice.practiceNotificationModel?.hour}');
       log('practiceNotification minute: ${practice.practiceNotificationModel?.minute}');
-      log('practiceNotification notifyCount: ${practice.practiceNotificationModel?.notifyCount}');
+      log('practiceNotification notifyCount: ${practice.practiceNotificationModel?.weekDays}');
       log('-----------------------------------------');
     }
     notifyListeners();

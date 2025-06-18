@@ -278,14 +278,15 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
             TextButton(
               onPressed: () async {
                 Navigator.pop(context);
-                setState(() {
-                  _isSelectionMode = false;
-                  _selectedPracticeIds.clear();
-                });
 
                 final provider = Provider.of<ProblemPracticeProvider>(context,
                     listen: false);
                 await provider.deletePractices(deletePracticeIds);
+
+                setState(() {
+                  _isSelectionMode = false;
+                  _selectedPracticeIds.clear();
+                });
 
                 SnackBarDialog.showSnackBar(
                     context: context,
