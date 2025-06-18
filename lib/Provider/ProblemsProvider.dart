@@ -106,7 +106,10 @@ class ProblemsProvider with ChangeNotifier {
   ) async {
     await problemService
         .registerProblemImageData(problemImageDataRegisterModel);
-    await fetchProblem(problemImageDataRegisterModel.problemId);
+
+    if (problemImageDataRegisterModel.problemId != null) {
+      await fetchProblem(problemImageDataRegisterModel.problemId!);
+    }
 
     log('register problem id: ${problemImageDataRegisterModel.problemId} complete');
     notifyListeners();

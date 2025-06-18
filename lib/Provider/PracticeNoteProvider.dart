@@ -77,7 +77,8 @@ class ProblemPracticeProvider with ChangeNotifier {
       log('practiceNotification interval days: ${practice.practiceNotificationModel?.intervalDays}');
       log('practiceNotification hour: ${practice.practiceNotificationModel?.hour}');
       log('practiceNotification minute: ${practice.practiceNotificationModel?.minute}');
-      log('practiceNotification notifyCount: ${practice.practiceNotificationModel?.weekDays}');
+      log('practiceNotification repeatType: ${practice.practiceNotificationModel?.repeatType}');
+      log('practiceNotification weekDays: ${practice.practiceNotificationModel?.weekDays}');
       log('-----------------------------------------');
     }
     notifyListeners();

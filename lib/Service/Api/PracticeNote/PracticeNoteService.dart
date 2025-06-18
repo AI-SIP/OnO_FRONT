@@ -43,12 +43,6 @@ class PracticeNoteService {
 
   Future<int> registerPracticeNote(
       PracticeNoteRegisterModel practiceNoteRegisterModel) async {
-    /*
-    await httpService.sendRequest(
-        method: "POST", url: "${AppConfig.baseUrl}/api/fcm/send");
-
-     */
-
     return await httpService.sendRequest(
       method: 'POST',
       url: baseUrl,
