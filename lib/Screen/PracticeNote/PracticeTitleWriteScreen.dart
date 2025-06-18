@@ -424,7 +424,10 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
                     final day = index + 1; // 1 = 월 ~ 7 = 일
                     final dayText = ['월', '화', '수', '목', '금', '토', '일'][index];
                     return FilterChip(
-                      label: Text(dayText),
+                      label: StandardText(
+                        text: dayText,
+                        fontSize: 13,
+                      ),
                       selected: _selectedWeekdays.contains(day),
                       onSelected: (bool selected) {
                         setState(() {
