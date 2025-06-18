@@ -1,14 +1,18 @@
+import 'package:ono/Model/PracticeNote/RepeatType.dart';
+
 class PracticeNotificationModel {
   final int? intervalDays;
   final int? hour;
   final int? minute;
-  final int? notifyCount;
+  final RepeatType? repeatType;
+  final List<int>? weekDays;
 
   PracticeNotificationModel({
     this.intervalDays,
     this.hour,
     this.minute,
-    this.notifyCount,
+    this.repeatType,
+    this.weekDays,
   });
 
   Map<String, dynamic> toJson() {
@@ -16,7 +20,8 @@ class PracticeNotificationModel {
       'intervalDays': intervalDays,
       'hour': hour,
       'minute': minute,
-      'notifyCount': notifyCount,
+      'repeatType': repeatType?.name,
+      'weekDays': weekDays,
     };
   }
 
@@ -25,7 +30,14 @@ class PracticeNotificationModel {
       intervalDays: json['intervalDays'] ?? 7,
       hour: json['hour'] ?? 18,
       minute: json['minute'] ?? 0,
-      notifyCount: json['notifyCount'] ?? 3,
+      repeatType: json['repeatType'] is String
+          ? RepeatType.values.firstWhere(
+              (e) => e.name == json['repeatType'],
+              orElse: () => RepeatType.daily,
+            )
+          : RepeatType.daily,
+      weekDays:
+          (json['weekDays'] as List<dynamic>?)?.map((e) => e as int).toList(),
     );
   }
 }

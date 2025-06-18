@@ -9,6 +9,7 @@ import 'package:ono/Model/PracticeNote/PracticeNotificationModel.dart';
 import 'package:provider/provider.dart';
 
 import '../../Model/PracticeNote/PracticeNoteRegisterModel.dart';
+import '../../Model/PracticeNote/RepeatType.dart';
 import '../../Module/Dialog/SnackBarDialog.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
@@ -36,7 +37,8 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
   bool _notifyEnabled = false;
   int _intervalDays = 7;
   TimeOfDay _notifyTime = const TimeOfDay(hour: 18, minute: 0);
-  int _notifyCount = 3;
+  RepeatType _repeatType = RepeatType.daily;
+  Set<int> _selectedWeekdays = {};
 
   @override
   void initState() {
@@ -56,9 +58,13 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
           widget.practiceNoteDetailModel!.practiceNotificationModel!.hour!;
       final minute =
           widget.practiceNoteDetailModel!.practiceNotificationModel!.minute!;
+      _repeatType = widget
+          .practiceNoteDetailModel!.practiceNotificationModel!.repeatType!;
+      _selectedWeekdays = widget
+          .practiceNoteDetailModel!.practiceNotificationModel!.weekDays!
+          .toSet();
+
       _notifyTime = TimeOfDay(hour: hour, minute: minute);
-      _notifyCount = widget
-          .practiceNoteDetailModel!.practiceNotificationModel!.notifyCount!;
     }
   }
 
@@ -87,7 +93,10 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
               intervalDays: _intervalDays,
               hour: _notifyTime.hour,
               minute: _notifyTime.minute,
-              notifyCount: _notifyCount,
+              repeatType: _repeatType,
+              weekDays: _repeatType == RepeatType.weekly
+                  ? _selectedWeekdays.toList()
+                  : null,
             );
 
             widget.practiceNoteUpdateModel!
@@ -112,7 +121,10 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
               intervalDays: _intervalDays,
               hour: _notifyTime.hour,
               minute: _notifyTime.minute,
-              notifyCount: _notifyCount,
+              repeatType: _repeatType,
+              weekDays: _repeatType == RepeatType.weekly
+                  ? _selectedWeekdays.toList()
+                  : null,
             );
 
             widget.practiceRegisterModel!
@@ -378,16 +390,53 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
           if (_notifyEnabled) ...[
             SizedBox(height: screenHeight * 0.02),
 
-            // 알림 주기
             Padding(
-              padding: const EdgeInsets.fromLTRB(16.0, 0, 0, 0),
-              child: _buildNumberInput(
-                label: '알림 주기(일)',
-                value: _intervalDays,
-                onChanged: (v) => setState(() => _intervalDays = v),
-                themeProvider: theme,
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Row(
+                children: [
+                  ChoiceChip(
+                    label: StandardText(text: "매일"),
+                    selected: _repeatType == RepeatType.daily,
+                    onSelected: (_) =>
+                        setState(() => _repeatType = RepeatType.daily),
+                  ),
+                  const SizedBox(width: 10),
+                  ChoiceChip(
+                    label: StandardText(text: "매주"),
+                    selected: _repeatType == RepeatType.weekly,
+                    onSelected: (_) =>
+                        setState(() => _repeatType = RepeatType.weekly),
+                  ),
+                ],
               ),
             ),
+
+            SizedBox(height: screenHeight * 0.02),
+            // 요일 선택 (매주인 경우만)
+            if (_repeatType == RepeatType.weekly)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: Wrap(
+                  spacing: 6,
+                  children: List.generate(7, (index) {
+                    final day = index + 1; // 1 = 월 ~ 7 = 일
+                    final dayText = ['월', '화', '수', '목', '금', '토', '일'][index];
+                    return FilterChip(
+                      label: Text(dayText),
+                      selected: _selectedWeekdays.contains(day),
+                      onSelected: (bool selected) {
+                        setState(() {
+                          if (selected) {
+                            _selectedWeekdays.add(day);
+                          } else {
+                            _selectedWeekdays.remove(day);
+                          }
+                        });
+                      },
+                    );
+                  }),
+                ),
+              ),
 
             SizedBox(height: screenHeight * 0.02),
 
@@ -408,19 +457,6 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
                     ),
                   ],
                 ),
-              ),
-            ),
-
-            SizedBox(height: screenHeight * 0.02),
-
-            // 알림 횟수
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16.0, 0, 0, 0),
-              child: _buildNumberInput(
-                label: '알림 횟수',
-                value: _notifyCount,
-                onChanged: (v) => setState(() => _notifyCount = v),
-                themeProvider: theme,
               ),
             ),
 

@@ -1,0 +1,1 @@
+enum RepeatType { daily, weekly }
