@@ -13,6 +13,7 @@ import 'package:ono/Provider/PracticeNoteProvider.dart';
 import 'package:ono/Service/Api/Problem/ProblemService.dart';
 import 'package:ono/Service/Api/User/UserService.dart';
 import 'package:ono/Service/SocialLogin//KakaoAuthService.dart';
+import 'package:ono/Util/NotificationService.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
 import '../Module/Text/StandardText.dart';
@@ -55,6 +56,7 @@ class UserProvider with ChangeNotifier {
       saveUserLoginInfo(userRegisterModel?.platform);
       bool isRegister = await saveUserToken(response: response);
 
+      await NotificationService.instance.sendTokenToServer();
       await fetchAllData();
       LoadingDialog.hide(context);
 
@@ -75,10 +77,14 @@ class UserProvider with ChangeNotifier {
       LoadingDialog.show(context, '로그인 중 입니다...');
       final response = await userService.signInWithGuest();
 
-      print('user signIn success, response: ${response}');
+      saveUserLoginInfo("GUEST");
       bool isRegister = await saveUserToken(response: response);
 
+      await fetchAllData();
       LoadingDialog.hide(context);
+
+      _loginStatus = LoginStatus.login;
+      notifyListeners();
 
       if (!isRegister) {
         log('register failed!, response: ${response.toString()}');
@@ -199,6 +205,7 @@ class UserProvider with ChangeNotifier {
       }
     } catch (error) {
       _loginStatus = LoginStatus.logout;
+      notifyListeners();
       throw Exception("자동 로그인 실패, error: ${error.toString()}");
     } finally {
       notifyListeners();

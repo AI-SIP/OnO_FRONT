@@ -1,7 +1,9 @@
 import 'dart:async';
+import 'dart:developer';
 
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -24,7 +26,14 @@ import 'Provider/UserProvider.dart';
 import 'Screen/Folder/DirectoryScreen.dart';
 import 'Screen/PracticeNote/PracticeThumbnailScreen.dart';
 import 'Screen/User/SettingScreen.dart';
+import 'Util/NotificationService.dart';
 import 'Util/SendDiscordAlert.dart';
+
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  // 앱 종료 상태에서도 이곳이 호출됩니다
+  log('🔔 백그라운드 메시지 받음: ${message.messageId}');
+  // (선택) flutter_local_notifications 등으로 로컬 알림 표시
+}
 
 void main() async {
   runZonedGuarded<Future<void>>(() async {
@@ -35,6 +44,8 @@ void main() async {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
+    await NotificationService.instance.init();
+    FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
     KakaoSdk.init(nativeAppKey: dotenv.env['KAKAO_NATIVE_APP_KEY']!);
 
@@ -59,7 +70,6 @@ void main() async {
       );
     };
 
-    // **여기서부터 MultiProvider 전체가 Zone 안으로 들어갑니다**
     runApp(
       MultiProvider(
         providers: [

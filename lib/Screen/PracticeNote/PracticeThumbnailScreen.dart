@@ -26,7 +26,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
   @override
   void initState() {
     super.initState();
-    //_fetchAllPracticeContents();
+    _fetchAllPracticeContents();
   }
 
   Future<void> _fetchAllPracticeContents() async {
@@ -121,7 +121,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
                 Padding(
                   padding: const EdgeInsets.only(bottom: 20.0), // 타이틀 아래 여백 추가
                   child: StandardText(
-                    text: '복습 리스트 편집하기', // 타이틀 텍스트
+                    text: '복습 노트 편집하기', // 타이틀 텍스트
                     fontSize: 20,
                     color: themeProvider.primaryColor,
                   ),
@@ -131,7 +131,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
                   child: ListTile(
                     leading: const Icon(Icons.add, color: Colors.black),
                     title: const StandardText(
-                      text: '복습 리스트 생성하기',
+                      text: '복습 노트 생성하기',
                       fontSize: 16,
                       color: Colors.black,
                     ),
@@ -154,7 +154,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
                     leading:
                         const Icon(Icons.delete_forever, color: Colors.red),
                     title: const StandardText(
-                      text: '복습 리스트 삭제하기',
+                      text: '복습 노트 삭제하기',
                       fontSize: 16,
                       color: Colors.red,
                     ),
@@ -255,12 +255,12 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
         return AlertDialog(
           backgroundColor: Colors.white,
           title: const StandardText(
-            text: '복습 리스트 삭제',
+            text: '복습 노트 삭제',
             fontSize: 18,
             color: Colors.black,
           ),
           content: const StandardText(
-            text: '정말로 이 복습 리스트를 삭제하시겠습니까?',
+            text: '정말로 이 복습 노트를 삭제하시겠습니까?',
             fontSize: 16,
             color: Colors.black,
           ),
@@ -278,19 +278,23 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
             TextButton(
               onPressed: () async {
                 Navigator.pop(context);
-                setState(() {
-                  _isSelectionMode = false;
-                  _selectedPracticeIds.clear();
-                });
 
                 final provider = Provider.of<ProblemPracticeProvider>(context,
                     listen: false);
                 await provider.deletePractices(deletePracticeIds);
 
-                SnackBarDialog.showSnackBar(
+                setState(() {
+                  _isSelectionMode = false;
+                  _selectedPracticeIds.clear();
+                });
+
+                Future.delayed(Duration.zero, () {
+                  SnackBarDialog.showSnackBar(
                     context: context,
-                    message: '복습 리스트가 삭제되었습니다!',
-                    backgroundColor: themeProvider.primaryColor);
+                    message: '복습 노트가 삭제되었습니다!',
+                    backgroundColor: themeProvider.primaryColor,
+                  );
+                });
               },
               child: const StandardText(
                 text: '삭제',
@@ -321,7 +325,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
           ),
           const SizedBox(height: 40),
           const StandardText(
-            text: '작성한 오답노트로 복습 리스트를\n 생성해 시험을 준비하세요!',
+            text: '작성한 오답노트로 복습 노트를\n 생성해 시험을 준비하세요!',
             fontSize: 16,
             color: Colors.black,
             textAlign: TextAlign.center,
@@ -329,7 +333,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
           const SizedBox(height: 30),
           ElevatedButton(
             onPressed: () {
-              // 복습 리스트 추가 화면으로 이동
+              // 복습 노트 추가 화면으로 이동
               Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -348,7 +352,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
               ),
             ),
             child: const StandardText(
-              text: '복습 리스트 추가하기',
+              text: '복습 노트 추가하기',
               fontSize: 16,
               color: Colors.white,
             ),
@@ -408,7 +412,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
   void _navigateToPracticeDetail(PracticeNoteDetailModel practice) async {
     final practiceProvider =
         Provider.of<ProblemPracticeProvider>(context, listen: false);
-    LoadingDialog.show(context, '복습 리스트 로딩 중...');
+    LoadingDialog.show(context, '복습 노트 로딩 중...');
 
     await practiceProvider.moveToPractice(practice.practiceId);
     LoadingDialog.hide(context);

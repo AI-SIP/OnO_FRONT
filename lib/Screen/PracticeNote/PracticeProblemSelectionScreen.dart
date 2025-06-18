@@ -36,31 +36,27 @@ class _PracticeProblemSelectionScreenState
   @override
   void initState() {
     super.initState();
-    _fetchFolders();
-
-    if (widget.practiceModel != null) {
-      _fetchProblems();
-      _originalProblemIds = widget.practiceModel!.problemIdList;
-    } else {
-      _originalProblemIds = [];
-    }
-  }
-
-  Future<void> _fetchProblems() async {
-    final practiceNoteProvider =
-        Provider.of<ProblemPracticeProvider>(context, listen: false);
-
-    await practiceNoteProvider.moveToPractice(widget.practiceModel!.practiceId);
-    List<ProblemModel> problemModelList = practiceNoteProvider.currentProblems;
-
-    setState(() {
-      selectedProblems = problemModelList;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _fetchFolders();
+      if (widget.practiceModel != null) {
+        _originalProblemIds = widget.practiceModel!.problemIdList;
+        _fetchProblems();
+      } else {
+        _originalProblemIds = [];
+      }
     });
   }
 
+  Future<void> _fetchProblems() async {
+    final practiceNoteProvider = context.read<ProblemPracticeProvider>();
+
+    await practiceNoteProvider.moveToPractice(widget.practiceModel!.practiceId);
+    final problemModelList = practiceNoteProvider.currentProblems;
+    setState(() => selectedProblems = problemModelList);
+  }
+
   Future<void> _fetchFolders() async {
-    final foldersProvider =
-        Provider.of<FoldersProvider>(context, listen: false);
+    final foldersProvider = context.read<FoldersProvider>();
 
     List<FolderModel> folders = foldersProvider.folders;
 
@@ -336,6 +332,7 @@ class _PracticeProblemSelectionScreenState
                     MaterialPageRoute(
                       builder: (context) => PracticeTitleWriteScreen(
                         practiceNoteUpdateModel: updateModel,
+                        practiceNoteDetailModel: widget.practiceModel!,
                       ),
                     ),
                   );

@@ -1,9 +1,10 @@
+import 'dart:developer';
+
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:ono/Module/Text/StandardText.dart';
 import 'package:provider/provider.dart';
 
-import '../../Model/Common/LoginStatus.dart';
 import '../../Model/Common/ProblemImageDataType.dart';
 import '../../Model/Problem/ProblemImageDataRegisterModel.dart';
 import '../../Model/Problem/ProblemModel.dart';
@@ -16,7 +17,6 @@ import '../../Module/Util/FolderPickerWidget.dart';
 import '../../Provider/FoldersProvider.dart';
 import '../../Provider/ProblemsProvider.dart';
 import '../../Provider/ScreenIndexProvider.dart';
-import '../../Provider/UserProvider.dart';
 import '../../Service/Api/FileUpload/FileUploadService.dart';
 import 'Widget/ActionButtons.dart';
 import 'Widget/DatePickerWidget.dart';
@@ -74,85 +74,92 @@ class _ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
   Widget build(BuildContext context) {
     final isWide = MediaQuery.of(context).size.width >= 600;
 
-    return SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          DatePickerWidget(
-            selectedDate: _selectedDate,
-            onDateChanged: (d) => setState(() => _selectedDate = d),
-          ),
-          const SizedBox(height: 30),
-          FolderPickerWidget(
-            selectedId: _selectedFolderId,
-            onPicked: (id) => setState(() => _selectedFolderId = id),
-          ),
-          const SizedBox(height: 30),
-          LabeledTextField(
-            label: '제목',
-            hintText: '오답노트의 제목을 작성해주세요!',
-            icon: Icons.info,
-            controller: _titleCtrl,
-          ),
-          const SizedBox(height: 30),
-          LabeledTextField(
-            label: '메모',
-            controller: _memoCtrl,
-            icon: Icons.edit,
-            hintText: '기록하고 싶은 내용을 간단하게 작성해주세요!',
-            maxLines: 3,
-          ),
-          const SizedBox(height: 30),
-          if (isWide)
-            Row(
-              children: [
-                Expanded(
-                  child: ImageGridWidget(
-                    label: '문제 이미지',
-                    files: _problemImages,
-                    onAdd: _pickProblemImage,
-                    onRemove: (i) => setState(() => _problemImages.removeAt(i)),
-                  ),
+    return GestureDetector(
+        behavior: HitTestBehavior.translucent,
+        onTap: () => FocusScope.of(context).unfocus(),
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              DatePickerWidget(
+                selectedDate: _selectedDate,
+                onDateChanged: (d) => setState(() => _selectedDate = d),
+              ),
+              const SizedBox(height: 30),
+              FolderPickerWidget(
+                selectedId: _selectedFolderId,
+                onPicked: (id) => setState(() => _selectedFolderId = id),
+              ),
+              const SizedBox(height: 30),
+              LabeledTextField(
+                label: '제목',
+                hintText: '오답노트의 제목을 작성해주세요!',
+                icon: Icons.info,
+                controller: _titleCtrl,
+              ),
+              const SizedBox(height: 30),
+              LabeledTextField(
+                label: '메모',
+                controller: _memoCtrl,
+                icon: Icons.edit,
+                hintText: '기록하고 싶은 내용을 간단하게 작성해주세요!',
+                maxLines: 3,
+              ),
+              const SizedBox(height: 30),
+              if (isWide)
+                Row(
+                  children: [
+                    Expanded(
+                      child: ImageGridWidget(
+                        label: '문제 이미지',
+                        files: _problemImages,
+                        onAdd: _pickProblemImage,
+                        onRemove: (i) =>
+                            setState(() => _problemImages.removeAt(i)),
+                      ),
+                    ),
+                    const SizedBox(width: 30),
+                    Expanded(
+                      child: ImageGridWidget(
+                        label: '해설 이미지',
+                        files: _answerImages,
+                        onAdd: _pickAnswerImage,
+                        onRemove: (i) =>
+                            setState(() => _answerImages.removeAt(i)),
+                      ),
+                    ),
+                  ],
+                )
+              else
+                Column(
+                  children: [
+                    ImageGridWidget(
+                      label: '문제 이미지',
+                      files: _problemImages,
+                      onAdd: _pickProblemImage,
+                      onRemove: (i) =>
+                          setState(() => _problemImages.removeAt(i)),
+                    ),
+                    const SizedBox(height: 30),
+                    ImageGridWidget(
+                      label: '해설 이미지',
+                      files: _answerImages,
+                      onAdd: _pickAnswerImage,
+                      onRemove: (i) =>
+                          setState(() => _answerImages.removeAt(i)),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 30),
-                Expanded(
-                  child: ImageGridWidget(
-                    label: '해설 이미지',
-                    files: _answerImages,
-                    onAdd: _pickAnswerImage,
-                    onRemove: (i) => setState(() => _answerImages.removeAt(i)),
-                  ),
-                ),
-              ],
-            )
-          else
-            Column(
-              children: [
-                ImageGridWidget(
-                  label: '문제 이미지',
-                  files: _problemImages,
-                  onAdd: _pickProblemImage,
-                  onRemove: (i) => setState(() => _problemImages.removeAt(i)),
-                ),
-                const SizedBox(height: 30),
-                ImageGridWidget(
-                  label: '해설 이미지',
-                  files: _answerImages,
-                  onAdd: _pickAnswerImage,
-                  onRemove: (i) => setState(() => _answerImages.removeAt(i)),
-                ),
-              ],
-            ),
-          const SizedBox(height: 30),
-          ActionButtons(
-            isEdit: widget.isEditMode,
-            onCancel: _resetAll,
-            onSubmit: _submit,
+              const SizedBox(height: 30),
+              ActionButtons(
+                isEdit: widget.isEditMode,
+                onCancel: _resetAll,
+                onSubmit: _submit,
+              ),
+              const SizedBox(height: 10),
+            ],
           ),
-          const SizedBox(height: 10),
-        ],
-      ),
-    );
+        ));
   }
 
   Future<void> _pickProblemImage() async {
@@ -190,21 +197,25 @@ class _ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
           await service.uploadMultipleImageFiles(_problemImages);
       final answerImageUrlList =
           await service.uploadMultipleImageFiles(_answerImages);
-      final now = DateTime.now();
-      final imageDataList = [
-        for (var imageUrl in problemImageUrlList)
-          ProblemImageDataRegisterModel(
-            problemId: widget.problemModel!.problemId,
-            imageUrl: imageUrl,
-            problemImageType: ProblemImageType.PROBLEM_IMAGE,
-          ),
-        for (var imageUrl in answerImageUrlList)
-          ProblemImageDataRegisterModel(
-            problemId: widget.problemModel!.problemId,
-            imageUrl: imageUrl,
-            problemImageType: ProblemImageType.ANSWER_IMAGE,
-          ),
-      ];
+
+      final List<ProblemImageDataRegisterModel> imageDataList = [];
+      for (var imageUrl in problemImageUrlList) {
+        final problemImageDataRegisterModel = ProblemImageDataRegisterModel(
+          problemId: widget.problemModel?.problemId,
+          imageUrl: imageUrl,
+          problemImageType: ProblemImageType.PROBLEM_IMAGE,
+        );
+        imageDataList.add(problemImageDataRegisterModel);
+      }
+
+      for (var imageUrl in answerImageUrlList) {
+        final answerImageDataRegisterModel = ProblemImageDataRegisterModel(
+          problemId: widget.problemModel?.problemId,
+          imageUrl: imageUrl,
+          problemImageType: ProblemImageType.ANSWER_IMAGE,
+        );
+        imageDataList.add(answerImageDataRegisterModel);
+      }
 
       final problemRegisterModel = ProblemRegisterModel(
         problemId: widget.problemModel?.problemId,
@@ -214,12 +225,6 @@ class _ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
         folderId: _selectedFolderId,
         imageDataDtoList: imageDataList,
       );
-
-      final authService = Provider.of<UserProvider>(context, listen: false);
-      if (authService.isLoggedIn == LoginStatus.logout) {
-        _showLoginRequiredDialog(context);
-        return;
-      }
 
       if (widget.isEditMode) {
         await Provider.of<ProblemsProvider>(context, listen: false)
@@ -249,8 +254,10 @@ class _ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
       }
 
       showSuccessDialog(context);
-    } catch (_) {
-      //…
+    } catch (e, stackTrace) {
+      log('오답노트 등록 실패: $e');
+      log(stackTrace.toString());
+      throw Exception(e);
     } finally {
       LoadingDialog.hide(context);
     }

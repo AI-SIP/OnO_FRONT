@@ -48,11 +48,13 @@ class ProblemPracticeProvider with ChangeNotifier {
         await practiceNoteService.getPracticeNoteById(practiceNoteId!);
 
     final index = _practices
-        .indexWhere((folder) => practiceNote.practiceId == practiceNoteId);
+        .indexWhere((practice) => practice.practiceId == practiceNoteId);
     if (index != -1) {
       _practices[index] = practiceNote;
-      if (practiceNoteId == currentPracticeNote!.practiceId) {
-        await moveToPractice(practiceNoteId);
+      if (currentPracticeNote != null) {
+        if (practiceNoteId == currentPracticeNote!.practiceId) {
+          await moveToPractice(practiceNoteId);
+        }
       }
     } else {
       _practices.add(practiceNote);
@@ -72,6 +74,11 @@ class ProblemPracticeProvider with ChangeNotifier {
       log('practice Name: ${practice.practiceTitle}');
       log('lastSolved at: ${practice.lastSolvedAt}');
       log('practiceCount: ${practice.practiceCount}');
+      log('practiceNotification interval days: ${practice.practiceNotificationModel?.intervalDays}');
+      log('practiceNotification hour: ${practice.practiceNotificationModel?.hour}');
+      log('practiceNotification minute: ${practice.practiceNotificationModel?.minute}');
+      log('practiceNotification repeatType: ${practice.practiceNotificationModel?.repeatType}');
+      log('practiceNotification weekDays: ${practice.practiceNotificationModel?.weekDays}');
       log('-----------------------------------------');
     }
     notifyListeners();
