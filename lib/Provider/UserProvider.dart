@@ -205,6 +205,7 @@ class UserProvider with ChangeNotifier {
       }
     } catch (error) {
       _loginStatus = LoginStatus.logout;
+      notifyListeners();
       throw Exception("자동 로그인 실패, error: ${error.toString()}");
     } finally {
       notifyListeners();
