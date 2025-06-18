@@ -34,7 +34,7 @@ class FileUploadService {
         files: multipartFiles,
       );
 
-      return List<String>.from(data as List);
+      return List<String>.from(data);
     } else {
       return [];
     }

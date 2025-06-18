@@ -58,13 +58,15 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
           widget.practiceNoteDetailModel!.practiceNotificationModel!.hour!;
       final minute =
           widget.practiceNoteDetailModel!.practiceNotificationModel!.minute!;
-      _repeatType = widget
-          .practiceNoteDetailModel!.practiceNotificationModel!.repeatType!;
-      _selectedWeekdays = widget
-          .practiceNoteDetailModel!.practiceNotificationModel!.weekDays!
-          .toSet();
-
       _notifyTime = TimeOfDay(hour: hour, minute: minute);
+
+      _repeatType = widget
+              .practiceNoteDetailModel!.practiceNotificationModel!.repeatType ??
+          RepeatType.daily;
+      _selectedWeekdays = widget
+              .practiceNoteDetailModel!.practiceNotificationModel!.weekDays
+              ?.toSet() ??
+          Set();
     }
   }
 

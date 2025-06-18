@@ -1,7 +1,7 @@
 import '../Common/ProblemImageDataType.dart';
 
 class ProblemImageDataRegisterModel {
-  final int problemId;
+  final int? problemId;
   final String imageUrl;
   final ProblemImageType problemImageType;
 
