@@ -288,10 +288,13 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
                   _selectedPracticeIds.clear();
                 });
 
-                SnackBarDialog.showSnackBar(
+                Future.delayed(Duration.zero, () {
+                  SnackBarDialog.showSnackBar(
                     context: context,
                     message: '복습 노트가 삭제되었습니다!',
-                    backgroundColor: themeProvider.primaryColor);
+                    backgroundColor: themeProvider.primaryColor,
+                  );
+                });
               },
               child: const StandardText(
                 text: '삭제',
