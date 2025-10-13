@@ -26,7 +26,6 @@ class ProblemsProvider with ChangeNotifier {
       final mid = (low + high) >> 1;
       final midId = _problems[mid].problemId;
       if (midId == problemId) {
-        log('find problemId: $problemId');
         return _problems[mid];
       } else if (midId < problemId) {
         low = mid + 1;
