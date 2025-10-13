@@ -353,14 +353,21 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     );
 
     if (selectedFolderId != null) {
-      int parentFolderId =
-          foldersProvider.currentFolder!.parentFolder!.folderId;
+      // 먼저 네비게이션 스택 초기화
+      if (mounted) {
+        Navigator.of(context).popUntil((route) => route.isFirst);
+      }
+
+      // 폴더 업데이트 및 루트로 이동
       await foldersProvider.updateFolder(
           foldersProvider.currentFolder!.folderName,
           foldersProvider.currentFolder!.folderId,
           selectedFolderId); // 부모 폴더 변경
 
-      await foldersProvider.fetchFolderContent(parentFolderId);
+      // 업데이트가 완전히 끝난 후 루트로 이동
+      if (mounted) {
+        await foldersProvider.moveToRootFolder();
+      }
     }
   }
 
