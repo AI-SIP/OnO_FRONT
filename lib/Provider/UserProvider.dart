@@ -203,10 +203,12 @@ class UserProvider with ChangeNotifier {
         _isFirstLogin = false;
         _loginStatus = LoginStatus.login;
       }
-    } catch (error) {
+    } catch (error, stackTrace) {
+      // 자동 로그인 실패 시 로그아웃 상태로 변경
+      log('자동 로그인 실패: $error');
+      await Sentry.captureException(error, stackTrace: stackTrace);
       _loginStatus = LoginStatus.logout;
-      notifyListeners();
-      throw Exception("자동 로그인 실패, error: ${error.toString()}");
+      await resetUserInfo();
     } finally {
       notifyListeners();
     }
