@@ -52,8 +52,8 @@ void main() async {
     await SentryFlutter.init(
       (options) {
         options.dsn = dotenv.env['SENTRY_DSN']!;
+        options.profilesSampleRate = 0.0;
         options.tracesSampleRate = 1.0;
-        options.profilesSampleRate = 1.0;
       },
     );
     // FlutterError 처리기 설정
