@@ -12,6 +12,7 @@ import 'package:ono/Screen/ProblemDetail/ProblemDetailScreen.dart';
 import 'package:ono/Service/Api/FileUpload/FileUploadService.dart';
 import 'package:provider/provider.dart';
 
+import '../../Exception/ApiException.dart';
 import '../Dialog/SnackBarDialog.dart';
 import '../Image/ImagePickerHandler.dart';
 import '../Text/StandardText.dart';
@@ -284,43 +285,98 @@ class _FolderNavigationButtonsState extends State<FolderNavigationButtons> {
 
                             LoadingDialog.show(context, '오답 복습 중...');
 
-                            FileUploadService fileUploadService =
-                                FileUploadService();
-                            String imageUrl = await fileUploadService
-                                .uploadImageFile(selectedImage!);
+                            try {
+                              FileUploadService fileUploadService =
+                                  FileUploadService();
+                              String imageUrl = await fileUploadService
+                                  .uploadImageFile(selectedImage!);
 
-                            final problemImageDataRegisterModel =
-                                ProblemImageDataRegisterModel(
-                              problemId: problemId,
-                              imageUrl: imageUrl,
-                              problemImageType: ProblemImageType.SOLVE_IMAGE,
-                            );
+                              final problemImageDataRegisterModel =
+                                  ProblemImageDataRegisterModel(
+                                problemId: problemId,
+                                imageUrl: imageUrl,
+                                problemImageType: ProblemImageType.SOLVE_IMAGE,
+                              );
 
-                            final problemsProvider =
-                                Provider.of<ProblemsProvider>(context,
-                                    listen: false);
-                            await problemsProvider.registerProblemImageData(
-                                problemImageDataRegisterModel);
+                              final problemsProvider =
+                                  Provider.of<ProblemsProvider>(context,
+                                      listen: false);
+                              await problemsProvider.registerProblemImageData(
+                                  problemImageDataRegisterModel);
 
-                            FirebaseAnalytics.instance.logEvent(
-                              name: 'problem_solve',
-                            );
+                              FirebaseAnalytics.instance.logEvent(
+                                name: 'problem_solve',
+                              );
 
-                            setState(() {
-                              isSolved = true;
-                              isLoading = false;
-                            });
+                              setState(() {
+                                isSolved = true;
+                                isLoading = false;
+                              });
 
-                            LoadingDialog.hide(context);
-                            Navigator.of(context).pop();
+                              LoadingDialog.hide(context);
+                              Navigator.of(context).pop();
 
-                            SnackBarDialog.showSnackBar(
-                              context: context,
-                              message: '복습이 완료되었습니다!',
-                              backgroundColor: themeProvider.primaryColor,
-                            );
+                              SnackBarDialog.showSnackBar(
+                                context: context,
+                                message: '복습이 완료되었습니다!',
+                                backgroundColor: themeProvider.primaryColor,
+                              );
 
-                            widget.onRefresh();
+                              widget.onRefresh();
+                            } on BadRequestException catch (e) {
+                              // 서버 에러 (예: 이미 오늘 복습 완료)
+                              setState(() {
+                                isLoading = false;
+                              });
+
+                              LoadingDialog.hide(context);
+                              Navigator.of(context).pop();
+
+                              SnackBarDialog.showSnackBar(
+                                context: context,
+                                message: e.getUserMessage(),
+                                backgroundColor: Colors.red,
+                              );
+                            } on NetworkException catch (e) {
+                              // 네트워크 에러
+                              setState(() {
+                                isLoading = false;
+                              });
+
+                              LoadingDialog.hide(context);
+
+                              SnackBarDialog.showSnackBar(
+                                context: context,
+                                message: e.getUserMessage(),
+                                backgroundColor: Colors.orange,
+                              );
+                            } on TimeoutException catch (e) {
+                              // 타임아웃 에러
+                              setState(() {
+                                isLoading = false;
+                              });
+
+                              LoadingDialog.hide(context);
+
+                              SnackBarDialog.showSnackBar(
+                                context: context,
+                                message: e.getUserMessage(),
+                                backgroundColor: Colors.orange,
+                              );
+                            } catch (e) {
+                              // 기타 에러
+                              setState(() {
+                                isLoading = false;
+                              });
+
+                              LoadingDialog.hide(context);
+
+                              SnackBarDialog.showSnackBar(
+                                context: context,
+                                message: '알 수 없는 오류가 발생했습니다.',
+                                backgroundColor: Colors.red,
+                              );
+                            }
                           }
                         },
                   child: isLoading
