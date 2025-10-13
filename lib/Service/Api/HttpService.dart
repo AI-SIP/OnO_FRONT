@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:http/http.dart' as http;
 
+import '../../Exception/ApiException.dart';
 import '../../Provider/TokenProvider.dart';
 
 class HttpService {
@@ -25,7 +27,7 @@ class HttpService {
       accessToken = await tokenProvider.getAccessToken();
 
       if (accessToken == null) {
-        throw Exception('Access token is not available');
+        throw UnauthorizedException(message: '인증 토큰을 찾을 수 없습니다. 다시 로그인해주세요.');
       }
     }
 
@@ -107,10 +109,27 @@ class HttpService {
           }
 
         default:
-          throw Exception('Unsupported HTTP method: $method');
+          throw ApiException(message: '지원하지 않는 HTTP 메서드입니다: $method');
       }
+    } on SocketException {
+      throw NetworkException();
+    } on TimeoutException {
+      throw TimeoutException();
+    } on FormatException catch (e) {
+      throw ParseException(message: 'JSON 파싱 실패: ${e.message}');
     } catch (error) {
-      throw Exception('An error occurred: $error');
+      // 이미 우리가 정의한 커스텀 예외라면 그대로 던짐
+      if (error is ApiException ||
+          error is NetworkException ||
+          error is TimeoutException ||
+          error is UnauthorizedException ||
+          error is ServerException ||
+          error is BadRequestException ||
+          error is ParseException) {
+        rethrow;
+      }
+      // 알 수 없는 에러는 일반적인 ApiException으로 래핑
+      throw ApiException(message: '알 수 없는 오류가 발생했습니다: $error');
     }
 
     final status = response.statusCode;
@@ -122,8 +141,9 @@ class HttpService {
         : (rawErrorCode is String ? int.tryParse(rawErrorCode) : null);
 
     if (status < 200 || status >= 300) {
-      final message =
-          decodedBody['message'] as String? ?? response.reasonPhrase;
+      final message = decodedBody['message'] as String? ??
+          response.reasonPhrase ??
+          '알 수 없는 오류';
 
       // 토큰 만료(가정: errorCode == 1005) 이고, 아직 재시도 전이라면
       if (requiredToken && !retry && errorCode == 1005) {
@@ -141,7 +161,42 @@ class HttpService {
         );
       }
 
-      throw Exception('HTTP $status: $message (code=$errorCode)');
+      // errorCode 기반으로 예외 타입 결정 (서버가 모든 에러를 400으로 통일)
+      // errorCode가 있으면 우선적으로 errorCode로 판단
+      if (errorCode != null) {
+        // 인증 관련 에러 코드 (예: 1004, 1005)
+        if (errorCode >= 1000 && errorCode < 2000) {
+          throw UnauthorizedException(message: message);
+        }
+        // 기타 비즈니스 로직 에러는 BadRequestException으로 처리
+        throw BadRequestException(
+          statusCode: status,
+          errorCode: errorCode,
+          message: message,
+        );
+      }
+
+      // errorCode가 없을 경우 상태 코드로 판단
+      if (status == 401) {
+        throw UnauthorizedException(message: message);
+      } else if (status >= 400 && status < 500) {
+        throw BadRequestException(
+          statusCode: status,
+          errorCode: errorCode,
+          message: message,
+        );
+      } else if (status >= 500) {
+        throw ServerException(
+          statusCode: status,
+          message: message,
+        );
+      } else {
+        throw ApiException(
+          statusCode: status,
+          errorCode: errorCode,
+          message: message,
+        );
+      }
     }
 
     // 5. Parse JSON and extract data
