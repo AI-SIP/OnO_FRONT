@@ -65,6 +65,11 @@ class _SettingScreenState extends State<SettingScreen> {
                         themeProvider: themeProvider,
                       ),
                       const Divider(),
+                      _buildExperienceTile(
+                        userInfo: userProvider.userInfoModel,
+                        themeProvider: themeProvider,
+                      ),
+                      const Divider(),
                       _buildSettingItemWithColor(
                         title: '테마 변경',
                         subtitle: '앱의 테마를 변경하세요.',
@@ -236,6 +241,110 @@ class _SettingScreenState extends State<SettingScreen> {
         fontSize: 18,
         color: Colors.black,
       ),
+    );
+  }
+
+  // 경험치 및 레벨 정보 타일
+  Widget _buildExperienceTile({
+    required userInfo,
+    required ThemeHandler themeProvider,
+  }) {
+    double screenHeight = MediaQuery.of(context).size.height;
+
+    if (userInfo == null) {
+      return const SizedBox.shrink();
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: EdgeInsets.symmetric(vertical: screenHeight * 0.01),
+          child: StandardText(
+            text: '활동 레벨',
+            fontSize: 18,
+            color: themeProvider.primaryColor,
+          ),
+        ),
+        _buildExperienceRow(
+          '출석',
+          userInfo.attendanceLevel,
+          userInfo.attendancePoint,
+          Colors.pink[300]!,
+          screenHeight,
+        ),
+        SizedBox(height: screenHeight * 0.01),
+        _buildExperienceRow(
+          '오답노트 작성',
+          userInfo.noteWriteLevel,
+          userInfo.noteWritePoint,
+          Colors.purple[300]!,
+          screenHeight,
+        ),
+        SizedBox(height: screenHeight * 0.01),
+        _buildExperienceRow(
+          '오답노트 복습',
+          userInfo.problemPracticeLevel,
+          userInfo.problemPracticePoint,
+          Colors.green[400]!,
+          screenHeight,
+        ),
+        SizedBox(height: screenHeight * 0.01),
+        _buildExperienceRow(
+          '복습노트 복습',
+          userInfo.notePracticeLevel,
+          userInfo.notePracticePoint,
+          Colors.blue[300]!,
+          screenHeight,
+        ),
+      ],
+    );
+  }
+
+  // 각 경험치 항목 행
+  Widget _buildExperienceRow(
+    String category,
+    int level,
+    int point,
+    Color color,
+    double screenHeight,
+  ) {
+    // 다음 레벨까지 필요한 경험치 (예: 100포인트마다 1레벨)
+    int requiredPoint = level * 100;
+    double progress = requiredPoint > 0 ? point / requiredPoint : 0;
+
+    return Row(
+      children: [
+        SizedBox(
+          width: 100,
+          child: StandardText(
+            text: category,
+            fontSize: 14,
+            color: Colors.black,
+          ),
+        ),
+        SizedBox(width: screenHeight * 0.01),
+        StandardText(
+          text: 'Lv.$level',
+          fontSize: 14,
+          color: color,
+        ),
+        SizedBox(width: screenHeight * 0.01),
+        Expanded(
+          child: LinearProgressIndicator(
+            value: progress.clamp(0.0, 1.0),
+            backgroundColor: Colors.grey[300],
+            valueColor: AlwaysStoppedAnimation<Color>(color),
+            minHeight: 8,
+          ),
+        ),
+        SizedBox(width: screenHeight * 0.01),
+        StandardText(
+          text: '$point/$requiredPoint',
+          fontSize: 12,
+          color: Colors.grey[600]!,
+        ),
+      ],
     );
   }
 
