@@ -32,7 +32,6 @@ class FoldersProvider with ChangeNotifier {
       final mid = (low + high) >> 1;
       final midId = _folders[mid].folderId;
       if (midId == folderId) {
-        log('find problemId: $folderId');
         return _folders[mid];
       } else if (midId < folderId) {
         low = mid + 1;
@@ -116,7 +115,6 @@ class FoldersProvider with ChangeNotifier {
 
     await fetchFolderContent(createdFolderId);
     await fetchFolderContent(_currentFolder!.folderId);
-    _currentFolder = await getFolder(_currentFolder!.folderId);
 
     notifyListeners();
   }

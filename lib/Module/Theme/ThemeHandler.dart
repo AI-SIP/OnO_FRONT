@@ -12,10 +12,10 @@ class ThemeHandler with ChangeNotifier {
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
 
   ThemeHandler()
-      : _primaryColor = Colors.lightGreen,
-        _lightPrimaryColor = lightenColor(Colors.lightGreen),
-        _darkPrimaryColor = darkenColor(Colors.lightGreen),
-        _desaturateColor = desaturatenColor(Colors.lightGreen) {
+      : _primaryColor = Colors.pink[200]!,
+        _lightPrimaryColor = lightenColor(Colors.pink[200]!),
+        _darkPrimaryColor = darkenColor(Colors.pink[200]!),
+        _desaturateColor = desaturatenColor(Colors.pink[200]!) {
     loadColors(); // 생성자에서 색상을 불러오는 메서드 호출
   }
 
@@ -43,13 +43,13 @@ class ThemeHandler with ChangeNotifier {
 
   // 저장된 색상을 로드하는 메서드
   Future<void> loadColors() async {
-    _primaryColor = await loadColor('primaryColor', Colors.lightGreen);
+    _primaryColor = await loadColor('primaryColor', Colors.pink[200]!);
     _lightPrimaryColor =
-        await loadColor('lightPrimaryColor', lightenColor(Colors.lightGreen));
+        await loadColor('lightPrimaryColor', lightenColor(Colors.pink[200]!));
     _darkPrimaryColor =
-        await loadColor('darkPrimaryColor', darkenColor(Colors.lightGreen));
+        await loadColor('darkPrimaryColor', darkenColor(Colors.pink[200]!));
     _desaturateColor =
-        await loadColor('desaturateColor', desaturatenColor(Colors.lightGreen));
+        await loadColor('desaturateColor', desaturatenColor(Colors.pink[200]!));
     notifyListeners();
   }
 

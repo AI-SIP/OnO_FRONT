@@ -49,6 +49,9 @@ class _SettingScreenState extends State<SettingScreen> {
           : Column(
               children: [
                 Expanded(
+                    child: RefreshIndicator(
+                  onRefresh: _refreshData,
+                  color: themeProvider.primaryColor,
                   child: ListView(
                     padding:
                         EdgeInsets.symmetric(horizontal: screenHeight * 0.03),
@@ -62,6 +65,11 @@ class _SettingScreenState extends State<SettingScreen> {
                       const Divider(),
                       _buildProblemCountTile(
                         problemCount: problemsProvider.problemCount,
+                        themeProvider: themeProvider,
+                      ),
+                      const Divider(),
+                      _buildExperienceTile(
+                        userInfo: userProvider.userInfoModel,
                         themeProvider: themeProvider,
                       ),
                       const Divider(),
@@ -108,7 +116,7 @@ class _SettingScreenState extends State<SettingScreen> {
                       ),
                     ],
                   ),
-                ),
+                )),
                 Padding(
                   padding: EdgeInsets.symmetric(vertical: screenHeight * 0.01),
                   child: Row(
@@ -236,6 +244,110 @@ class _SettingScreenState extends State<SettingScreen> {
         fontSize: 18,
         color: Colors.black,
       ),
+    );
+  }
+
+  // 경험치 및 레벨 정보 타일
+  Widget _buildExperienceTile({
+    required userInfo,
+    required ThemeHandler themeProvider,
+  }) {
+    double screenHeight = MediaQuery.of(context).size.height;
+
+    if (userInfo == null) {
+      return const SizedBox.shrink();
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: EdgeInsets.symmetric(vertical: screenHeight * 0.01),
+          child: StandardText(
+            text: '활동 레벨',
+            fontSize: 18,
+            color: themeProvider.primaryColor,
+          ),
+        ),
+        _buildExperienceRow(
+          '출석',
+          userInfo.attendanceLevel,
+          userInfo.attendancePoint,
+          Colors.pink[300]!,
+          screenHeight,
+        ),
+        SizedBox(height: screenHeight * 0.01),
+        _buildExperienceRow(
+          '오답노트 작성',
+          userInfo.noteWriteLevel,
+          userInfo.noteWritePoint,
+          Colors.purple[300]!,
+          screenHeight,
+        ),
+        SizedBox(height: screenHeight * 0.01),
+        _buildExperienceRow(
+          '오답노트 복습',
+          userInfo.problemPracticeLevel,
+          userInfo.problemPracticePoint,
+          Colors.green[400]!,
+          screenHeight,
+        ),
+        SizedBox(height: screenHeight * 0.01),
+        _buildExperienceRow(
+          '복습노트 복습',
+          userInfo.notePracticeLevel,
+          userInfo.notePracticePoint,
+          Colors.blue[300]!,
+          screenHeight,
+        ),
+      ],
+    );
+  }
+
+  // 각 경험치 항목 행
+  Widget _buildExperienceRow(
+    String category,
+    int level,
+    int point,
+    Color color,
+    double screenHeight,
+  ) {
+    // 다음 레벨까지 필요한 경험치 (예: 100포인트마다 1레벨)
+    int requiredPoint = level * 100;
+    double progress = requiredPoint > 0 ? point / requiredPoint : 0;
+
+    return Row(
+      children: [
+        SizedBox(
+          width: 100,
+          child: StandardText(
+            text: category,
+            fontSize: 14,
+            color: Colors.black,
+          ),
+        ),
+        SizedBox(width: screenHeight * 0.01),
+        StandardText(
+          text: 'Lv.$level',
+          fontSize: 14,
+          color: color,
+        ),
+        SizedBox(width: screenHeight * 0.01),
+        Expanded(
+          child: LinearProgressIndicator(
+            value: progress.clamp(0.0, 1.0),
+            backgroundColor: Colors.grey[300],
+            valueColor: AlwaysStoppedAnimation<Color>(color),
+            minHeight: 8,
+          ),
+        ),
+        SizedBox(width: screenHeight * 0.01),
+        StandardText(
+          text: '$point/$requiredPoint',
+          fontSize: 12,
+          color: Colors.grey[600]!,
+        ),
+      ],
     );
   }
 
@@ -408,6 +520,24 @@ class _SettingScreenState extends State<SettingScreen> {
         );
       },
     );
+  }
+
+  Future<void> _refreshData() async {
+    // 1. 필요한 Provider를 listen: false로 가져옵니다.
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final problemsProvider =
+        Provider.of<ProblemsProvider>(context, listen: false);
+
+    // 2. 각 Provider의 데이터를 새로고침하는 메서드를 호출합니다.
+    // (UserProvider와 ProblemsProvider에 해당 메서드가 있다고 가정합니다.
+    // 만약 없다면, 해당 Provider에 데이터를 다시 불러오는 로직을 추가해야 합니다.)
+    await Future.wait([
+      userProvider.fetchUserInfo(), // 사용자 정보를 다시 불러오는 비동기 함수
+      //problemsProvider.getUserProblemCount(), // 문제 개수를 다시 불러오는 비동기 함수
+      // 필요하다면 다른 데이터 로딩 함수 추가
+    ]);
+
+    // 새로고침 완료 (Future.wait이 완료될 때까지 기다립니다.)
   }
 
   void showConfirmationDialog(BuildContext context, String title,

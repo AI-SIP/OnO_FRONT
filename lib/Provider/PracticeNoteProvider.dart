@@ -30,7 +30,6 @@ class ProblemPracticeProvider with ChangeNotifier {
       final mid = (low + high) >> 1;
       final midId = _practices[mid].practiceId;
       if (midId == practiceNoteId) {
-        log('find problemId: $practiceNoteId');
         return _practices[mid];
       } else if (midId < practiceNoteId) {
         low = mid + 1;
