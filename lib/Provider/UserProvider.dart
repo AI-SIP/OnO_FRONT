@@ -226,6 +226,7 @@ class UserProvider with ChangeNotifier {
       deleteAccount();
     }
 
+    await userService.logoutAccount();
     await resetUserInfo();
   }
 

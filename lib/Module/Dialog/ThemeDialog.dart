@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../Provider/UserProvider.dart';
 import '../Text/StandardText.dart';
 import '../Theme/ThemeHandler.dart';
+import '../Theme/ThemeLockManager.dart';
 
 class ThemeDialog extends StatefulWidget {
   @override
@@ -12,10 +14,13 @@ class ThemeDialog extends StatefulWidget {
 class _ThemeDialogState extends State<ThemeDialog> {
   Color? _selectedColor;
   String? _selectedColorName;
+  int? _selectedIndex;
 
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeHandler>(context);
+    final userProvider = Provider.of<UserProvider>(context);
+    final userInfo = userProvider.userInfoModel;
 
     return AlertDialog(
       backgroundColor: Colors.white,
@@ -31,38 +36,23 @@ class _ThemeDialogState extends State<ThemeDialog> {
           children: [
             const SizedBox(height: 20), // Add vertical spacing
             SizedBox(
-              height: 450, // Adjusted for smaller circles
-              width: 280, // Adjusted for smaller circles
-              child: GridView.count(
-                crossAxisCount: 4, // Number of columns
-                crossAxisSpacing: 8.0, // Adjusted spacing
-                mainAxisSpacing: 8.0, // Adjusted spacing
-                children: [
-                  _buildColorCircle(Colors.pink[200]!, '연핑크'),
-                  _buildColorCircle(Colors.pink[400]!, '진핑크'),
-                  _buildColorCircle(Colors.purple[300]!, '라일락'),
-                  _buildColorCircle(Colors.purple[700]!, '보라색'),
-                  _buildColorCircle(Colors.red[500]!, '빨간색'),
-                  _buildColorCircle(Colors.yellow[900]!, '황금색'),
-                  _buildColorCircle(Colors.orange[300]!, '오렌지색'),
-                  _buildColorCircle(Colors.yellow[600]!, '노란색'),
-                  _buildColorCircle(Colors.lightGreen, '라이트그린'),
-                  _buildColorCircle(Colors.green[500]!, '초록색'),
-                  _buildColorCircle(Colors.green[700]!, '다크그린'),
-                  _buildColorCircle(Colors.green[900]!, '딥그린'),
-                  _buildColorCircle(Colors.cyan, '시안'),
-                  _buildColorCircle(Colors.blue[700]!, '블루'),
-                  _buildColorCircle(Colors.indigo, '인디고'),
-                  _buildColorCircle(Colors.indigo[900]!, '딥인디고'),
-                  _buildColorCircle(const Color(0xFFC8B68A), '베이지'),
-                  _buildColorCircle(const Color(0xFF7A6748), '브론즈'),
-                  _buildColorCircle(Colors.brown[500]!, '브라운'),
-                  _buildColorCircle(Colors.brown[800]!, '다크브라운'),
-                  _buildColorCircle(Colors.grey[400]!, '라이트그레이'),
-                  _buildColorCircle(Colors.grey[600]!, '그레이'),
-                  _buildColorCircle(Colors.grey[800]!, '다크그레이'),
-                  _buildColorCircle(Colors.black, '블랙'),
-                ],
+              height: 550, // 크기 증가
+              width: 350, // 크기 증가
+              child: GridView.builder(
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 4, // Number of columns
+                  crossAxisSpacing: 12.0, // 간격 증가
+                  mainAxisSpacing: 12.0, // 간격 증가
+                ),
+                itemCount: 24,
+                itemBuilder: (context, index) {
+                  final color = ThemeLockManager.getThemeColor(index);
+                  final colorName = ThemeLockManager.getThemeName(index);
+                  final isUnlocked =
+                      ThemeLockManager.isThemeUnlocked(index, userInfo);
+
+                  return _buildColorCircle(color, colorName, index, isUnlocked);
+                },
               ),
             ),
           ],
@@ -83,7 +73,6 @@ class _ThemeDialogState extends State<ThemeDialog> {
           onPressed: () {
             if (_selectedColor != null) {
               // Change the PrimaryColor to the selected color
-              final darkerColor = _darken(_selectedColor!, 0.1);
               themeProvider.changePrimaryColor(
                   _selectedColor!, _selectedColorName!);
 
@@ -100,26 +89,95 @@ class _ThemeDialogState extends State<ThemeDialog> {
     );
   }
 
-  Color _darken(Color color, [double amount = .1]) {
-    final hsl = HSLColor.fromColor(color);
-    final hslDark = hsl.withLightness((hsl.lightness - amount).clamp(0.0, 1.0));
-    return hslDark.toColor();
-  }
+  Widget _buildColorCircle(
+      Color color, String colorName, int index, bool isUnlocked) {
+    final isSelected = _selectedIndex == index;
 
-  Widget _buildColorCircle(Color color, String colorName) {
     return GestureDetector(
       onTap: () {
-        setState(() {
-          _selectedColor = color;
-          _selectedColorName = colorName; // 선택한 색상의 이름을 설정
-        });
+        if (isUnlocked) {
+          setState(() {
+            _selectedColor = color;
+            _selectedColorName = colorName;
+            _selectedIndex = index;
+          });
+        } else {
+          // 잠긴 테마를 클릭했을 때 필요 조건 표시
+          final userProvider =
+              Provider.of<UserProvider>(context, listen: false);
+          final userInfo = userProvider.userInfoModel;
+          final message =
+              ThemeLockManager.getRequiredLevelMessage(index, userInfo);
+          final themeProvider =
+              Provider.of<ThemeHandler>(context, listen: false);
+
+          showDialog(
+            context: context,
+            builder: (BuildContext dialogContext) {
+              return AlertDialog(
+                backgroundColor: Colors.white,
+                title: Row(
+                  children: [
+                    Icon(Icons.lock, color: color, size: 24),
+                    const SizedBox(width: 8),
+                    const StandardText(
+                      text: '잠금된 테마',
+                      fontSize: 18,
+                      color: Colors.black,
+                    ),
+                  ],
+                ),
+                content: StandardText(
+                  text: message,
+                  fontSize: 16,
+                  color: Colors.black,
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(dialogContext).pop(),
+                    child: StandardText(
+                      text: '확인',
+                      fontSize: 16,
+                      color: themeProvider.primaryColor,
+                    ),
+                  ),
+                ],
+              );
+            },
+          );
+        }
       },
-      child: CircleAvatar(
-        backgroundColor: color,
-        radius: 16, // Reduced radius for smaller circles
-        child: _selectedColor == color
-            ? const Icon(Icons.check, color: Colors.white, size: 16)
-            : null,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          // 잠금 상태일 때 반투명 처리 (투명도 0.65로 증가하여 더 잘 보이게)
+          Opacity(
+            opacity: isUnlocked ? 1.0 : 0.65,
+            child: CircleAvatar(
+              backgroundColor: color,
+              radius: 28, // 크기 증가 (16 → 28)
+              child: isSelected
+                  ? const Icon(Icons.check,
+                      color: Colors.white, size: 24) // 아이콘 크기도 증가
+                  : null,
+            ),
+          ),
+          // 잠금 아이콘 (어두운 배경과 함께)
+          if (!isUnlocked)
+            Container(
+              width: 56, // 원 크기에 맞춰 증가
+              height: 56,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.black.withOpacity(0.35), // 투명도 약간 증가
+              ),
+              child: const Icon(
+                Icons.lock,
+                color: Colors.white,
+                size: 24, // 자물쇠 아이콘 크기 증가
+              ),
+            ),
+        ],
       ),
     );
   }

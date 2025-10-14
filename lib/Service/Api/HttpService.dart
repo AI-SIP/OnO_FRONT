@@ -145,8 +145,9 @@ class HttpService {
           response.reasonPhrase ??
           '알 수 없는 오류';
 
-      // 토큰 만료(가정: errorCode == 1005) 이고, 아직 재시도 전이라면
-      if (requiredToken && !retry && errorCode == 1005) {
+      // 토큰 만료 시 재시도 (status 401 또는 errorCode 1005)
+      // requiredToken이 true이고, 아직 재시도하지 않았다면 토큰 갱신 후 재시도
+      if (requiredToken && !retry && (status == 401 || errorCode == 1005)) {
         await tokenProvider.refreshAccessToken();
         return sendRequest(
           method: method,

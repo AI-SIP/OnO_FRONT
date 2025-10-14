@@ -11,6 +11,7 @@ import '../../Module/Image/ImagePickerHandler.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/PracticeNoteProvider.dart';
+import '../../Provider/UserProvider.dart';
 
 class PracticeNavigationButtons extends StatefulWidget {
   final BuildContext context;
@@ -319,6 +320,11 @@ class _PracticeNavigationButtonsState extends State<PracticeNavigationButtons> {
                             FirebaseAnalytics.instance.logEvent(
                               name: 'problem_repeat',
                             );
+
+                            // 복습노트 복습 시 유저 정보 갱신 (경험치 업데이트)
+                            await Provider.of<UserProvider>(context,
+                                    listen: false)
+                                .fetchUserInfo();
 
                             setState(() {
                               isReviewed = true;

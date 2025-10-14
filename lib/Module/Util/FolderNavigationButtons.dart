@@ -8,6 +8,7 @@ import 'package:ono/Model/Problem/ProblemImageDataRegisterModel.dart';
 import 'package:ono/Module/Dialog/LoadingDialog.dart';
 import 'package:ono/Provider/FoldersProvider.dart';
 import 'package:ono/Provider/ProblemsProvider.dart';
+import 'package:ono/Provider/UserProvider.dart';
 import 'package:ono/Screen/ProblemDetail/ProblemDetailScreen.dart';
 import 'package:ono/Service/Api/FileUpload/FileUploadService.dart';
 import 'package:provider/provider.dart';
@@ -307,6 +308,11 @@ class _FolderNavigationButtonsState extends State<FolderNavigationButtons> {
                               FirebaseAnalytics.instance.logEvent(
                                 name: 'problem_solve',
                               );
+
+                              // 오답노트 복습 시 유저 정보 갱신 (경험치 업데이트)
+                              await Provider.of<UserProvider>(context,
+                                      listen: false)
+                                  .fetchUserInfo();
 
                               setState(() {
                                 isSolved = true;

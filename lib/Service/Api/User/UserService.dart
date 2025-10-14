@@ -44,6 +44,13 @@ class UserService {
     );
   }
 
+  Future<void> logoutAccount() async {
+    await httpService.sendRequest(
+      method: 'POST',
+      url: '${AppConfig.baseUrl}/api/auth/logout',
+    );
+  }
+
   Future<void> deleteAccount() async {
     await httpService.sendRequest(
       method: 'DELETE',
