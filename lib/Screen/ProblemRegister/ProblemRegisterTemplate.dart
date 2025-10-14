@@ -17,6 +17,7 @@ import '../../Module/Util/FolderPickerWidget.dart';
 import '../../Provider/FoldersProvider.dart';
 import '../../Provider/ProblemsProvider.dart';
 import '../../Provider/ScreenIndexProvider.dart';
+import '../../Provider/UserProvider.dart';
 import '../../Service/Api/FileUpload/FileUploadService.dart';
 import 'Widget/ActionButtons.dart';
 import 'Widget/DatePickerWidget.dart';
@@ -246,6 +247,10 @@ class _ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
 
         await Provider.of<FoldersProvider>(context, listen: false)
             .fetchFolderContent(_selectedFolderId);
+
+        // 오답노트 작성 시 유저 정보 갱신 (경험치 업데이트)
+        await Provider.of<UserProvider>(context, listen: false)
+            .fetchUserInfo();
 
         _resetAll();
 
