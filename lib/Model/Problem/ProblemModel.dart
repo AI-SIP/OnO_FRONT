@@ -1,5 +1,6 @@
 import '../Common/ProblemImageDataType.dart';
 import 'ProblemImageDataModel.dart';
+import 'ProblemAnalysisModel.dart';
 
 class ProblemModel {
   final int problemId;
@@ -14,6 +15,8 @@ class ProblemModel {
   final List<ProblemImageDataModel>? answerImageDataList;
   final List<ProblemImageDataModel>? solveImageDataList;
 
+  final ProblemAnalysisModel? analysis;
+
   ProblemModel({
     this.problemId = -1,
     this.folderId,
@@ -25,6 +28,7 @@ class ProblemModel {
     this.problemImageDataList,
     this.answerImageDataList,
     this.solveImageDataList,
+    this.analysis,
   });
 
   factory ProblemModel.fromJson(Map<String, dynamic> json) {
@@ -64,6 +68,25 @@ class ProblemModel {
       problemImageDataList: problemImages,
       answerImageDataList: answerImages,
       solveImageDataList: solveImages,
+      analysis: json['analysis'] != null
+          ? ProblemAnalysisModel.fromJson(json['analysis'] as Map<String, dynamic>)
+          : null,
+    );
+  }
+
+  ProblemModel updateAnalysis(ProblemAnalysisModel analysis) {
+    return ProblemModel(
+      problemId: problemId,
+      folderId: folderId,
+      memo: memo,
+      reference: reference,
+      solvedAt: solvedAt,
+      createdAt: createdAt,
+      updateAt: updateAt,
+      problemImageDataList: problemImageDataList,
+      answerImageDataList: answerImageDataList,
+      solveImageDataList: solveImageDataList,
+      analysis: analysis,
     );
   }
 
