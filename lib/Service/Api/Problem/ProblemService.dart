@@ -1,6 +1,7 @@
 import 'package:ono/Model/Problem/ProblemImageDataRegisterModel.dart';
 import 'package:ono/Model/Problem/ProblemModel.dart';
 import 'package:ono/Model/Problem/ProblemRegisterModel.dart';
+import 'package:ono/Model/Problem/ProblemAnalysisModel.dart';
 
 import '../../../Config/AppConfig.dart';
 import '../HttpService.dart';
@@ -103,5 +104,14 @@ class ProblemService {
         'imageUrl': imageUrl,
       },
     );
+  }
+
+  Future<ProblemAnalysisModel> getProblemAnalysis(int problemId) async {
+    final data = await httpService.sendRequest(
+      method: 'GET',
+      url: '$baseUrl/$problemId/analysis',
+    );
+
+    return ProblemAnalysisModel.fromJson(data as Map<String, dynamic>);
   }
 }

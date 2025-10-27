@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:ono/Module/Text/HandWriteText.dart';
@@ -6,6 +8,7 @@ import 'package:ono/Screen/ProblemRegister/ProblemRegisterScreen.dart';
 import 'package:provider/provider.dart';
 
 import '../../Model/Problem/ProblemModel.dart';
+import '../../Model/Problem/ProblemAnalysisStatus.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Module/Util/FolderNavigationButtons.dart';
@@ -57,28 +60,15 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
       body: Column(
         children: [
           Expanded(
-            child: FutureBuilder<ProblemModel?>(
-              future: _problemModelFuture,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return Center(
-                    child: CircularProgressIndicator(
-                      color: themeProvider.primaryColor,
-                    ),
-                  );
-                } else if (snapshot.hasError) {
-                  return Center(
-                    child: HandWriteText(
-                      text: '오답 노트를 불러오는 중 오류가 발생했습니다.',
-                      color: themeProvider.primaryColor,
-                    ),
-                  );
-                } else if (snapshot.hasData && snapshot.data != null) {
-                  return _buildContent(snapshot.data!);
-                } else {
+            child: Consumer<ProblemsProvider>(
+              builder: (context, problemsProvider, child) {
+                try {
+                  final problem = problemsProvider.getProblem(widget.problemId);
+                  return _buildContent(problem);
+                } catch (e) {
                   return Center(
                     child: StandardText(
-                      text: '오답노트가 이동되었습니다!',
+                      text: '오답노트를 찾을 수 없습니다.',
                       color: themeProvider.primaryColor,
                     ),
                   );
@@ -382,7 +372,51 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
 
   Future<ProblemModel?> fetchProblemDetails(
       BuildContext context, int? problemId) async {
-    return Provider.of<ProblemsProvider>(context, listen: false)
-        .getProblem(problemId!);
+    final problemsProvider = Provider.of<ProblemsProvider>(context, listen: false);
+    final problem = problemsProvider.getProblem(problemId!);
+
+    // 문제 정보 로그 출력
+    log('========================================');
+    log('문제 상세 페이지 진입 - Problem ID: ${problem.problemId}');
+    log('제목: ${problem.reference}');
+    log('메모: ${problem.memo}');
+    log('폴더 ID: ${problem.folderId}');
+    log('풀이 날짜: ${problem.solvedAt}');
+    log('생성 날짜: ${problem.createdAt}');
+    log('수정 날짜: ${problem.updateAt}');
+    log('문제 이미지 수: ${problem.problemImageDataList?.length ?? 0}');
+    log('해설 이미지 수: ${problem.answerImageDataList?.length ?? 0}');
+    log('풀이 이미지 수: ${problem.solveImageDataList?.length ?? 0}');
+
+    if (problem.analysis != null) {
+      log('--- 분석 결과 ---');
+      log('분석 ID: ${problem.analysis!.id}');
+      log('분석 상태: ${problem.analysis!.status}');
+      log('과목: ${problem.analysis!.subject}');
+      log('문제 유형: ${problem.analysis!.problemType}');
+      log('핵심 포인트: ${problem.analysis!.keyPoints}');
+      log('풀이: ${problem.analysis!.solution}');
+      log('자주 하는 실수: ${problem.analysis!.commonMistakes}');
+      log('학습 팁: ${problem.analysis!.studyTips}');
+      log('에러 메시지: ${problem.analysis!.errorMessage}');
+    } else {
+      log('분석 결과: 없음');
+    }
+    log('========================================');
+
+    // 문제에 ProblemImage가 있으면 분석 결과 조회
+    if (problem.problemImageDataList != null &&
+        problem.problemImageDataList!.isNotEmpty) {
+      // 분석 결과가 없거나, PROCESSING/NOT_STARTED 상태면 서버에서 조회
+      if (problem.analysis == null ||
+          problem.analysis!.status == ProblemAnalysisStatus.PROCESSING ||
+          problem.analysis!.status == ProblemAnalysisStatus.NOT_STARTED) {
+        log('분석 결과를 서버에서 조회합니다. (현재 상태: ${problem.analysis?.status ?? "null"})');
+        // 분석 결과 조회 후 COMPLETED면 업데이트됨
+        problemsProvider.fetchProblemAnalysis(problemId);
+      }
+    }
+
+    return problem;
   }
 }

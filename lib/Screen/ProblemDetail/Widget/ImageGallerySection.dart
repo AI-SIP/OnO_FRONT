@@ -35,7 +35,9 @@ class _ImageGallerySectionState extends State<ImageGallerySection> {
 
   @override
   Widget build(BuildContext context) {
-    final width = MediaQuery.of(context).size.width;
+    final screenWidth = MediaQuery.of(context).size.width;
+    // 실제 화면 너비의 90%를 이미지로 사용
+    final imageHeight = screenWidth * 0.9;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -50,9 +52,9 @@ class _ImageGallerySectionState extends State<ImageGallerySection> {
           ],
         ),
         const SizedBox(height: 8),
-        // PageView
+        // PageView - 더 큰 이미지
         SizedBox(
-          height: width * 0.75,
+          height: imageHeight,
           child: PageView.builder(
             controller: _controller,
             itemCount: widget.imageUrls.length,

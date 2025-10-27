@@ -9,7 +9,7 @@ Widget buildImageSection(
   if (urls.isEmpty) {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 10),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
           color: theme.primaryColor.withOpacity(0.1),
           borderRadius: BorderRadius.circular(10)),
