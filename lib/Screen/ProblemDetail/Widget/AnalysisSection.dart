@@ -41,24 +41,24 @@ Widget buildAnalysisSection(
         const SizedBox(height: 16),
         if (analysis.subject != null) ...[
           _buildAnalysisItem('과목', analysis.subject!, primaryColor),
-          const SizedBox(height: 12),
+          const SizedBox(height: 15),
         ],
         if (analysis.problemType != null) ...[
           _buildAnalysisItem('문제 유형', analysis.problemType!, primaryColor),
-          const SizedBox(height: 12),
+          const SizedBox(height: 15),
         ],
         if (analysis.keyPoints != null && analysis.keyPoints!.isNotEmpty) ...[
           _buildAnalysisListItem('핵심 포인트', analysis.keyPoints!, primaryColor),
-          const SizedBox(height: 12),
+          const SizedBox(height: 15),
         ],
         if (analysis.solution != null) ...[
           _buildAnalysisItem('풀이', analysis.solution!, primaryColor),
-          const SizedBox(height: 12),
+          const SizedBox(height: 15),
         ],
         if (analysis.commonMistakes != null) ...[
           _buildAnalysisItem(
               '자주 하는 실수', analysis.commonMistakes!, primaryColor),
-          const SizedBox(height: 12),
+          const SizedBox(height: 15),
         ],
         if (analysis.studyTips != null) ...[
           _buildAnalysisItem('학습 팁', analysis.studyTips!, primaryColor),
@@ -114,7 +114,7 @@ Widget _buildAnalysisListItem(
                 Expanded(
                   child: StandardText(
                     text: item,
-                    fontSize: 13,
+                    fontSize: 12,
                     fontWeight: FontWeight.w300, // 더 얇은 글씨
                     color: Colors.black87,
                   ),
