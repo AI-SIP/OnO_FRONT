@@ -7,6 +7,7 @@ import 'Widget/DateRowWidget.dart';
 import 'Widget/ImageSection.dart';
 import 'Widget/LayoutHelpers.dart';
 import 'Widget/RepeatSection.dart';
+import 'Widget/AnalysisSection.dart';
 
 class ProblemDetailScreenWidget {
   Widget buildBackground(ThemeHandler theme) => CustomPaint(
@@ -51,6 +52,8 @@ class ProblemDetailScreenWidget {
                     [],
                 '해설 이미지',
                 theme),
+            verticalSpacer(ctx, .02),
+            buildAnalysisSection(ctx, problem.analysis, theme.primaryColor),
             verticalSpacer(ctx, .03),
             buildRepeatSection(ctx, problem, theme.primaryColor),
             verticalSpacer(ctx, .02),
