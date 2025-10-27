@@ -404,13 +404,17 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
     }
     log('========================================');
 
-    // 문제에 ProblemImage가 있고, 분석 상태가 PROCESSING인 경우에만 분석 결과 조회
+    // 문제에 ProblemImage가 있으면 분석 결과 조회
     if (problem.problemImageDataList != null &&
-        problem.problemImageDataList!.isNotEmpty &&
-        problem.analysis?.status == ProblemAnalysisStatus.PROCESSING) {
-      log('분석 상태가 PROCESSING이므로 분석 결과를 조회합니다.');
-      // 분석 결과 조회 후 COMPLETED면 업데이트됨
-      problemsProvider.fetchProblemAnalysis(problemId);
+        problem.problemImageDataList!.isNotEmpty) {
+      // 분석 결과가 없거나, PROCESSING/NOT_STARTED 상태면 서버에서 조회
+      if (problem.analysis == null ||
+          problem.analysis!.status == ProblemAnalysisStatus.PROCESSING ||
+          problem.analysis!.status == ProblemAnalysisStatus.NOT_STARTED) {
+        log('분석 결과를 서버에서 조회합니다. (현재 상태: ${problem.analysis?.status ?? "null"})');
+        // 분석 결과 조회 후 COMPLETED면 업데이트됨
+        problemsProvider.fetchProblemAnalysis(problemId);
+      }
     }
 
     return problem;
