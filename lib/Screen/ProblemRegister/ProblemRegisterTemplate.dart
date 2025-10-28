@@ -258,7 +258,7 @@ class _ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
 
   /// 오답노트 등록
   Future<void> _registerProblem() async {
-    log('오답노트 등록 시작');
+    log('register problem');
 
     final problemsProvider =
         Provider.of<ProblemsProvider>(context, listen: false);
@@ -290,13 +290,11 @@ class _ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
     Provider.of<ScreenIndexProvider>(context, listen: false)
         .setSelectedIndex(0);
 
-    log('오답노트 등록 완료');
+    log('problem register complete');
   }
 
   /// 오답노트 수정
   Future<void> _updateProblem() async {
-    log('오답노트 수정 시작');
-
     final problemsProvider =
         Provider.of<ProblemsProvider>(context, listen: false);
     final problemId = widget.problemModel!.problemId;
@@ -326,8 +324,6 @@ class _ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
     // 5. 화면 초기화 및 닫기
     _resetAll();
     Navigator.of(context).pop(true);
-
-    log('오답노트 수정 완료');
   }
 
   /// 삭제된 이미지들을 서버에서 삭제

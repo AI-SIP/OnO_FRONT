@@ -79,6 +79,7 @@ class ProblemPracticeProvider with ChangeNotifier {
       currentProblems.add(problemModel);
     }
 
+    log('Moved practice: $practiceId');
     currentPracticeNote = targetPractice;
     notifyListeners();
   }

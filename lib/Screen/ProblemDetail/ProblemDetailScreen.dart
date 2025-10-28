@@ -376,7 +376,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
         Provider.of<ProblemsProvider>(context, listen: false);
     final problem = problemsProvider.getProblem(problemId!);
 
-    log('Problem ID: ${problem.problemId}');
+    log('Moved to problem: ${problem.problemId}');
 
     // 문제에 ProblemImage가 있으면 분석 결과 조회
     if (problem.problemImageDataList != null &&
@@ -385,7 +385,8 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
       if (problem.analysis == null ||
           problem.analysis!.status == ProblemAnalysisStatus.PROCESSING ||
           problem.analysis!.status == ProblemAnalysisStatus.NOT_STARTED) {
-        log('분석 결과를 서버에서 조회합니다. (현재 상태: ${problem.analysis?.status ?? "null"})');
+        log('fetch analysis result)');
+
         // 분석 결과 조회 후 COMPLETED면 업데이트됨
         problemsProvider.fetchProblemAnalysis(problemId);
       }

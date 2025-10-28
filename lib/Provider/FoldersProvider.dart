@@ -87,19 +87,7 @@ class FoldersProvider with ChangeNotifier {
 
   Future<void> fetchAllFolderContents() async {
     _folders = await folderService.getAllFolderDetails();
-    log('fetch all folder contents');
-
-    for (var folder in _folders) {
-      log('-----------------------------------------');
-      log('Folder ID: ${folder.folderId}');
-      log('Folder Name: ${folder.folderName}');
-      log('Parent Folder Id: ${folder.parentFolder?.folderId ?? "No Parent"}');
-      log('Number of Problems: ${folder.problemIdList.length}');
-      log('Length of Subfolders: ${folder.subFolderList.length}');
-      log('Created At: ${folder.createdAt}');
-      log('Updated At: ${folder.updateAt}');
-      log('-----------------------------------------');
-    }
+    log('fetch folders complete');
 
     await moveToRootFolder();
   }
