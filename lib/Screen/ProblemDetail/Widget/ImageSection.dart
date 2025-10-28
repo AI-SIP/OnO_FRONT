@@ -14,7 +14,8 @@ Widget buildImageSection(
           color: theme.primaryColor.withOpacity(0.1),
           borderRadius: BorderRadius.circular(10)),
       child: Center(
-          child: StandardText(text: '이미지가 없습니다.', color: theme.primaryColor)),
+          child:
+              StandardText(text: '${label}가 없습니다.', color: theme.primaryColor)),
     );
   }
   return ImageGallerySection(
