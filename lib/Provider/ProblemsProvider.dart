@@ -58,6 +58,7 @@ class ProblemsProvider with ChangeNotifier {
       _problems.add(fetchedProblem);
     }
 
+    log('problem: $problemId fetch complete');
     notifyListeners();
   }
 
