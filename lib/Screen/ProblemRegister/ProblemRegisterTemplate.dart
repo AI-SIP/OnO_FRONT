@@ -46,6 +46,9 @@ class _ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
   final _memoCtrl = TextEditingController();
   final List<XFile> _problemImages = [];
   final List<XFile> _answerImages = [];
+  final List<String> _existingProblemImageUrls = [];
+  final List<String> _existingAnswerImageUrls = [];
+  final List<String> _deletedImageUrls = []; // 삭제할 이미지 URL 추적
 
   @override
   void initState() {
@@ -54,6 +57,13 @@ class _ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
     _selectedDate = problemModel?.solvedAt ?? DateTime.now();
     if (widget.isEditMode) {
       _selectedFolderId = problemModel?.folderId;
+      // 기존 이미지 URL 로드
+      _existingProblemImageUrls.addAll(
+        problemModel?.problemImageDataList?.map((img) => img.imageUrl).toList() ?? [],
+      );
+      _existingAnswerImageUrls.addAll(
+        problemModel?.answerImageDataList?.map((img) => img.imageUrl).toList() ?? [],
+      );
     } else {
       final folderProvider =
           Provider.of<FoldersProvider>(context, listen: false);
@@ -114,9 +124,16 @@ class _ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
                       child: ImageGridWidget(
                         label: '문제 이미지',
                         files: _problemImages,
+                        existingImageUrls: _existingProblemImageUrls,
                         onAdd: _pickProblemImage,
                         onRemove: (i) =>
                             setState(() => _problemImages.removeAt(i)),
+                        onRemoveExisting: (i) {
+                          setState(() {
+                            final removedUrl = _existingProblemImageUrls.removeAt(i);
+                            _deletedImageUrls.add(removedUrl);
+                          });
+                        },
                       ),
                     ),
                     const SizedBox(width: 30),
@@ -124,9 +141,16 @@ class _ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
                       child: ImageGridWidget(
                         label: '해설 이미지',
                         files: _answerImages,
+                        existingImageUrls: _existingAnswerImageUrls,
                         onAdd: _pickAnswerImage,
                         onRemove: (i) =>
                             setState(() => _answerImages.removeAt(i)),
+                        onRemoveExisting: (i) {
+                          setState(() {
+                            final removedUrl = _existingAnswerImageUrls.removeAt(i);
+                            _deletedImageUrls.add(removedUrl);
+                          });
+                        },
                       ),
                     ),
                   ],
@@ -137,17 +161,31 @@ class _ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
                     ImageGridWidget(
                       label: '문제 이미지',
                       files: _problemImages,
+                      existingImageUrls: _existingProblemImageUrls,
                       onAdd: _pickProblemImage,
                       onRemove: (i) =>
                           setState(() => _problemImages.removeAt(i)),
+                      onRemoveExisting: (i) {
+                        setState(() {
+                          final removedUrl = _existingProblemImageUrls.removeAt(i);
+                          _deletedImageUrls.add(removedUrl);
+                        });
+                      },
                     ),
                     const SizedBox(height: 30),
                     ImageGridWidget(
                       label: '해설 이미지',
                       files: _answerImages,
+                      existingImageUrls: _existingAnswerImageUrls,
                       onAdd: _pickAnswerImage,
                       onRemove: (i) =>
                           setState(() => _answerImages.removeAt(i)),
+                      onRemoveExisting: (i) {
+                        setState(() {
+                          final removedUrl = _existingAnswerImageUrls.removeAt(i);
+                          _deletedImageUrls.add(removedUrl);
+                        });
+                      },
                     ),
                   ],
                 ),
@@ -191,46 +229,62 @@ class _ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
   }
 
   Future<void> _submit() async {
-    LoadingDialog.show(context, '오답노트 작성 중...');
+    LoadingDialog.show(context, widget.isEditMode ? '오답노트 수정 중...' : '오답노트 작성 중...');
     try {
       final service = FileUploadService();
-      final problemImageUrlList =
-          await service.uploadMultipleImageFiles(_problemImages);
-      final answerImageUrlList =
-          await service.uploadMultipleImageFiles(_answerImages);
-
-      final List<ProblemImageDataRegisterModel> imageDataList = [];
-      for (var imageUrl in problemImageUrlList) {
-        final problemImageDataRegisterModel = ProblemImageDataRegisterModel(
-          problemId: widget.problemModel?.problemId,
-          imageUrl: imageUrl,
-          problemImageType: ProblemImageType.PROBLEM_IMAGE,
-        );
-        imageDataList.add(problemImageDataRegisterModel);
-      }
-
-      for (var imageUrl in answerImageUrlList) {
-        final answerImageDataRegisterModel = ProblemImageDataRegisterModel(
-          problemId: widget.problemModel?.problemId,
-          imageUrl: imageUrl,
-          problemImageType: ProblemImageType.ANSWER_IMAGE,
-        );
-        imageDataList.add(answerImageDataRegisterModel);
-      }
-
-      final problemRegisterModel = ProblemRegisterModel(
-        problemId: widget.problemModel?.problemId,
-        memo: _memoCtrl.text,
-        reference: _titleCtrl.text,
-        solvedAt: _selectedDate,
-        folderId: _selectedFolderId,
-        imageDataDtoList: imageDataList,
-      );
+      final problemsProvider = Provider.of<ProblemsProvider>(context, listen: false);
 
       if (widget.isEditMode) {
-        await Provider.of<ProblemsProvider>(context, listen: false)
-            .updateProblem(problemRegisterModel);
+        // ===== 수정 모드 =====
+        log('오답노트 수정 시작');
 
+        // 1. 삭제할 이미지들 삭제
+        for (var imageUrl in _deletedImageUrls) {
+          log('이미지 삭제: $imageUrl');
+          await problemsProvider.deleteProblemImageData(imageUrl);
+        }
+
+        // 2. 새로 추가할 이미지 업로드 및 등록
+        final problemImageUrlList =
+            await service.uploadMultipleImageFiles(_problemImages);
+        final answerImageUrlList =
+            await service.uploadMultipleImageFiles(_answerImages);
+
+        // 새 문제 이미지 등록
+        for (var imageUrl in problemImageUrlList) {
+          log('문제 이미지 추가: $imageUrl');
+          final problemImageDataRegisterModel = ProblemImageDataRegisterModel(
+            problemId: widget.problemModel!.problemId,
+            imageUrl: imageUrl,
+            problemImageType: ProblemImageType.PROBLEM_IMAGE,
+          );
+          await problemsProvider.registerProblemImageData(problemImageDataRegisterModel);
+        }
+
+        // 새 해설 이미지 등록
+        for (var imageUrl in answerImageUrlList) {
+          log('해설 이미지 추가: $imageUrl');
+          final answerImageDataRegisterModel = ProblemImageDataRegisterModel(
+            problemId: widget.problemModel!.problemId,
+            imageUrl: imageUrl,
+            problemImageType: ProblemImageType.ANSWER_IMAGE,
+          );
+          await problemsProvider.registerProblemImageData(answerImageDataRegisterModel);
+        }
+
+        // 3. 문제 기본 정보 업데이트 (제목, 메모, 날짜, 폴더)
+        final problemRegisterModel = ProblemRegisterModel(
+          problemId: widget.problemModel!.problemId,
+          memo: _memoCtrl.text,
+          reference: _titleCtrl.text,
+          solvedAt: _selectedDate,
+          folderId: _selectedFolderId,
+          imageDataDtoList: [], // 이미지는 별도로 처리했으므로 빈 리스트
+        );
+
+        await problemsProvider.updateProblem(problemRegisterModel);
+
+        // 폴더 컨텐츠 갱신
         if (problemRegisterModel.folderId != null) {
           await Provider.of<FoldersProvider>(context, listen: false)
               .fetchFolderContent(problemRegisterModel.folderId);
@@ -242,8 +296,40 @@ class _ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
         _resetAll();
         Navigator.of(context).pop(true);
       } else {
-        await Provider.of<ProblemsProvider>(context, listen: false)
-            .registerProblem(problemRegisterModel, context);
+        // ===== 등록 모드 =====
+        final problemImageUrlList =
+            await service.uploadMultipleImageFiles(_problemImages);
+        final answerImageUrlList =
+            await service.uploadMultipleImageFiles(_answerImages);
+
+        final List<ProblemImageDataRegisterModel> imageDataList = [];
+
+        for (var imageUrl in problemImageUrlList) {
+          imageDataList.add(ProblemImageDataRegisterModel(
+            problemId: null,
+            imageUrl: imageUrl,
+            problemImageType: ProblemImageType.PROBLEM_IMAGE,
+          ));
+        }
+
+        for (var imageUrl in answerImageUrlList) {
+          imageDataList.add(ProblemImageDataRegisterModel(
+            problemId: null,
+            imageUrl: imageUrl,
+            problemImageType: ProblemImageType.ANSWER_IMAGE,
+          ));
+        }
+
+        final problemRegisterModel = ProblemRegisterModel(
+          problemId: null,
+          memo: _memoCtrl.text,
+          reference: _titleCtrl.text,
+          solvedAt: _selectedDate,
+          folderId: _selectedFolderId,
+          imageDataDtoList: imageDataList,
+        );
+
+        await problemsProvider.registerProblem(problemRegisterModel, context);
 
         await Provider.of<FoldersProvider>(context, listen: false)
             .fetchFolderContent(_selectedFolderId);
@@ -260,7 +346,7 @@ class _ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
 
       showSuccessDialog(context);
     } catch (e, stackTrace) {
-      log('오답노트 등록 실패: $e');
+      log('오답노트 ${widget.isEditMode ? "수정" : "등록"} 실패: $e');
       log(stackTrace.toString());
       throw Exception(e);
     } finally {
