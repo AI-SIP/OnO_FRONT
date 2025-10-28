@@ -44,10 +44,12 @@ Widget buildRepeatSection(
                       builder: (_) =>
                           FullScreenImage(imagePath: solve.imageUrl))),
               onLongPress: () async {
-                final prov = Provider.of<ProblemsProvider>(ctx, listen: false);
+                final problemsProvider =
+                    Provider.of<ProblemsProvider>(ctx, listen: false);
                 final should = await showDialog<bool>(
                     context: ctx,
                     builder: (_) => AlertDialog(
+                          backgroundColor: Colors.white,
                           title: const StandardText(text: '삭제 확인'),
                           content: const StandardText(
                               text: '이 복습 이미지를 정말 삭제하시겠습니까?'),
@@ -62,8 +64,8 @@ Widget buildRepeatSection(
                           ],
                         ));
                 if (should == true) {
-                  await prov.deleteProblemImageData(solve.imageUrl);
-                  await prov.fetchProblem(pid);
+                  await problemsProvider.deleteProblemImageData(solve.imageUrl);
+                  await problemsProvider.fetchProblem(pid);
                 }
               },
               child: Container(
