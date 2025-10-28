@@ -21,7 +21,7 @@ class NotificationService {
     if (Platform.isIOS) {
       final iosInfo = await _deviceInfo.iosInfo;
       if (!iosInfo.isPhysicalDevice) {
-        log('▶️ iOS Simulator detected – skipping FCM init');
+        log('iOS Simulator detected – skipping FCM init');
         return;
       }
     }
@@ -51,13 +51,13 @@ class NotificationService {
   void _configureMessageHandlers() {
     // 포그라운드 메시지
     FirebaseMessaging.onMessage.listen((msg) {
-      log('🛎 Foreground message: ${msg.notification?.title}');
+      log('Foreground message: ${msg.notification?.title}');
       // TODO: 스낵바나 다이얼로그로 표시
     });
 
     // 백그라운드/종료 상태에서 알림 탭 클릭
     FirebaseMessaging.onMessageOpenedApp.listen((msg) {
-      log('🎯 Notification clicked, data: ${msg.data}');
+      log('Notification clicked, data: ${msg.data}');
       // TODO: Navigator.pushNamed(...) 등으로 화면 이동
     });
 
@@ -66,12 +66,9 @@ class NotificationService {
   }
 
   Future<void> sendTokenToServer() async {
-    final APNSToken = await _messaging.getAPNSToken();
     final token = await _messaging.getToken();
     if (token == null) return;
 
-    log('APNS token sending start, token: ${APNSToken}');
-    log('FCM token sending start, token: ${token}');
     await httpService.sendRequest(
       method: 'POST',
       url: '${AppConfig.baseUrl}/api/fcm/token',
@@ -79,12 +76,12 @@ class NotificationService {
         "token": token,
       },
     );
-    log('✅ FCM token sent to server');
+    log('FCM token sent to server');
   }
 }
 
 /// 백그라운드/종료 상태에서 호출
 Future<void> _firebaseBackgroundHandler(RemoteMessage message) async {
-  log('🔔 Background message: ${message.notification?.title}');
+  log('Background message: ${message.notification?.title}');
   // TODO: flutter_local_notifications로 로컬 알림 띄우기
 }

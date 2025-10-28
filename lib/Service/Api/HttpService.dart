@@ -27,7 +27,7 @@ class HttpService {
       accessToken = await tokenProvider.getAccessToken();
 
       if (accessToken == null) {
-        throw UnauthorizedException(message: '인증 토큰을 찾을 수 없습니다. 다시 로그인해주세요.');
+        throw UnauthorizedException(message: 'Cannot find Authorization Token');
       }
     }
 
@@ -109,14 +109,14 @@ class HttpService {
           }
 
         default:
-          throw ApiException(message: '지원하지 않는 HTTP 메서드입니다: $method');
+          throw ApiException(message: 'Not Supported HTTP Method: $method');
       }
     } on SocketException {
       throw NetworkException();
     } on TimeoutException {
       throw TimeoutException();
     } on FormatException catch (e) {
-      throw ParseException(message: 'JSON 파싱 실패: ${e.message}');
+      throw ParseException(message: 'JSON Parsing Failed: ${e.message}');
     } catch (error) {
       // 이미 우리가 정의한 커스텀 예외라면 그대로 던짐
       if (error is ApiException ||
@@ -129,7 +129,7 @@ class HttpService {
         rethrow;
       }
       // 알 수 없는 에러는 일반적인 ApiException으로 래핑
-      throw ApiException(message: '알 수 없는 오류가 발생했습니다: $error');
+      throw ApiException(message: 'Unknown error: $error');
     }
 
     final status = response.statusCode;

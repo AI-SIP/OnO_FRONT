@@ -385,7 +385,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
       if (problem.analysis == null ||
           problem.analysis!.status == ProblemAnalysisStatus.PROCESSING ||
           problem.analysis!.status == ProblemAnalysisStatus.NOT_STARTED) {
-        log('fetch analysis result)');
+        log('fetch analysis result');
 
         // 분석 결과 조회 후 COMPLETED면 업데이트됨
         problemsProvider.fetchProblemAnalysis(problemId);
