@@ -36,12 +36,6 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
     _setProblemModel();
   }
 
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    _setProblemModel();
-  }
-
   void _setProblemModel() {
     setState(() {
       _problemModelFuture = fetchProblemDetails(context, widget.problemId);
