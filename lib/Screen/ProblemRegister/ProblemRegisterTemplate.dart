@@ -2,7 +2,6 @@ import 'dart:developer';
 
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
-import 'package:ono/Module/Text/StandardText.dart';
 import 'package:provider/provider.dart';
 
 import '../../Model/Common/ProblemImageDataType.dart';
@@ -59,10 +58,16 @@ class _ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
       _selectedFolderId = problemModel?.folderId;
       // 기존 이미지 URL 로드
       _existingProblemImageUrls.addAll(
-        problemModel?.problemImageDataList?.map((img) => img.imageUrl).toList() ?? [],
+        problemModel?.problemImageDataList
+                ?.map((img) => img.imageUrl)
+                .toList() ??
+            [],
       );
       _existingAnswerImageUrls.addAll(
-        problemModel?.answerImageDataList?.map((img) => img.imageUrl).toList() ?? [],
+        problemModel?.answerImageDataList
+                ?.map((img) => img.imageUrl)
+                .toList() ??
+            [],
       );
     } else {
       final folderProvider =
@@ -130,7 +135,8 @@ class _ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
                             setState(() => _problemImages.removeAt(i)),
                         onRemoveExisting: (i) {
                           setState(() {
-                            final removedUrl = _existingProblemImageUrls.removeAt(i);
+                            final removedUrl =
+                                _existingProblemImageUrls.removeAt(i);
                             _deletedImageUrls.add(removedUrl);
                           });
                         },
@@ -147,7 +153,8 @@ class _ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
                             setState(() => _answerImages.removeAt(i)),
                         onRemoveExisting: (i) {
                           setState(() {
-                            final removedUrl = _existingAnswerImageUrls.removeAt(i);
+                            final removedUrl =
+                                _existingAnswerImageUrls.removeAt(i);
                             _deletedImageUrls.add(removedUrl);
                           });
                         },
@@ -167,7 +174,8 @@ class _ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
                           setState(() => _problemImages.removeAt(i)),
                       onRemoveExisting: (i) {
                         setState(() {
-                          final removedUrl = _existingProblemImageUrls.removeAt(i);
+                          final removedUrl =
+                              _existingProblemImageUrls.removeAt(i);
                           _deletedImageUrls.add(removedUrl);
                         });
                       },
@@ -182,7 +190,8 @@ class _ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
                           setState(() => _answerImages.removeAt(i)),
                       onRemoveExisting: (i) {
                         setState(() {
-                          final removedUrl = _existingAnswerImageUrls.removeAt(i);
+                          final removedUrl =
+                              _existingAnswerImageUrls.removeAt(i);
                           _deletedImageUrls.add(removedUrl);
                         });
                       },
@@ -229,121 +238,14 @@ class _ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
   }
 
   Future<void> _submit() async {
-    LoadingDialog.show(context, widget.isEditMode ? '오답노트 수정 중...' : '오답노트 작성 중...');
+    LoadingDialog.show(
+        context, widget.isEditMode ? '오답노트 수정 중...' : '오답노트 작성 중...');
     try {
-      final service = FileUploadService();
-      final problemsProvider = Provider.of<ProblemsProvider>(context, listen: false);
-
       if (widget.isEditMode) {
-        // ===== 수정 모드 =====
-        log('오답노트 수정 시작');
-
-        // 1. 삭제할 이미지들 삭제
-        for (var imageUrl in _deletedImageUrls) {
-          log('이미지 삭제: $imageUrl');
-          await problemsProvider.deleteProblemImageData(imageUrl);
-        }
-
-        // 2. 새로 추가할 이미지 업로드 및 등록
-        final problemImageUrlList =
-            await service.uploadMultipleImageFiles(_problemImages);
-        final answerImageUrlList =
-            await service.uploadMultipleImageFiles(_answerImages);
-
-        // 새 문제 이미지 등록
-        for (var imageUrl in problemImageUrlList) {
-          log('문제 이미지 추가: $imageUrl');
-          final problemImageDataRegisterModel = ProblemImageDataRegisterModel(
-            problemId: widget.problemModel!.problemId,
-            imageUrl: imageUrl,
-            problemImageType: ProblemImageType.PROBLEM_IMAGE,
-          );
-          await problemsProvider.registerProblemImageData(problemImageDataRegisterModel);
-        }
-
-        // 새 해설 이미지 등록
-        for (var imageUrl in answerImageUrlList) {
-          log('해설 이미지 추가: $imageUrl');
-          final answerImageDataRegisterModel = ProblemImageDataRegisterModel(
-            problemId: widget.problemModel!.problemId,
-            imageUrl: imageUrl,
-            problemImageType: ProblemImageType.ANSWER_IMAGE,
-          );
-          await problemsProvider.registerProblemImageData(answerImageDataRegisterModel);
-        }
-
-        // 3. 문제 기본 정보 업데이트 (제목, 메모, 날짜, 폴더)
-        final problemRegisterModel = ProblemRegisterModel(
-          problemId: widget.problemModel!.problemId,
-          memo: _memoCtrl.text,
-          reference: _titleCtrl.text,
-          solvedAt: _selectedDate,
-          folderId: _selectedFolderId,
-          imageDataDtoList: [], // 이미지는 별도로 처리했으므로 빈 리스트
-        );
-
-        await problemsProvider.updateProblem(problemRegisterModel);
-
-        // 폴더 컨텐츠 갱신
-        if (problemRegisterModel.folderId != null) {
-          await Provider.of<FoldersProvider>(context, listen: false)
-              .fetchFolderContent(problemRegisterModel.folderId);
-        }
-
-        await Provider.of<FoldersProvider>(context, listen: false)
-            .fetchFolderContent(widget.problemModel!.folderId);
-
-        _resetAll();
-        Navigator.of(context).pop(true);
+        await _updateProblem();
       } else {
-        // ===== 등록 모드 =====
-        final problemImageUrlList =
-            await service.uploadMultipleImageFiles(_problemImages);
-        final answerImageUrlList =
-            await service.uploadMultipleImageFiles(_answerImages);
-
-        final List<ProblemImageDataRegisterModel> imageDataList = [];
-
-        for (var imageUrl in problemImageUrlList) {
-          imageDataList.add(ProblemImageDataRegisterModel(
-            problemId: null,
-            imageUrl: imageUrl,
-            problemImageType: ProblemImageType.PROBLEM_IMAGE,
-          ));
-        }
-
-        for (var imageUrl in answerImageUrlList) {
-          imageDataList.add(ProblemImageDataRegisterModel(
-            problemId: null,
-            imageUrl: imageUrl,
-            problemImageType: ProblemImageType.ANSWER_IMAGE,
-          ));
-        }
-
-        final problemRegisterModel = ProblemRegisterModel(
-          problemId: null,
-          memo: _memoCtrl.text,
-          reference: _titleCtrl.text,
-          solvedAt: _selectedDate,
-          folderId: _selectedFolderId,
-          imageDataDtoList: imageDataList,
-        );
-
-        await problemsProvider.registerProblem(problemRegisterModel, context);
-
-        await Provider.of<FoldersProvider>(context, listen: false)
-            .fetchFolderContent(_selectedFolderId);
-
-        // 오답노트 작성 시 유저 정보 갱신 (경험치 업데이트)
-        await Provider.of<UserProvider>(context, listen: false)
-            .fetchUserInfo();
-
-        _resetAll();
-
-        Provider.of<ScreenIndexProvider>(context, listen: false)
-            .setSelectedIndex(0);
+        await _registerProblem();
       }
-
       showSuccessDialog(context);
     } catch (e, stackTrace) {
       log('오답노트 ${widget.isEditMode ? "수정" : "등록"} 실패: $e');
@@ -354,37 +256,179 @@ class _ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
     }
   }
 
+  /// 오답노트 등록
+  Future<void> _registerProblem() async {
+    log('오답노트 등록 시작');
+
+    final problemsProvider =
+        Provider.of<ProblemsProvider>(context, listen: false);
+
+    // 1. 이미지 업로드
+    final imageDataList = await _uploadAndCreateImageDataList(problemId: null);
+
+    // 2. 문제 등록
+    final problemRegisterModel = ProblemRegisterModel(
+      problemId: null,
+      memo: _memoCtrl.text,
+      reference: _titleCtrl.text,
+      solvedAt: _selectedDate,
+      folderId: _selectedFolderId,
+      imageDataDtoList: imageDataList,
+    );
+
+    await problemsProvider.registerProblem(problemRegisterModel, context);
+
+    // 3. 폴더 갱신
+    await Provider.of<FoldersProvider>(context, listen: false)
+        .fetchFolderContent(_selectedFolderId);
+
+    // 4. 유저 정보 갱신 (경험치 업데이트)
+    await Provider.of<UserProvider>(context, listen: false).fetchUserInfo();
+
+    // 5. 화면 초기화 및 이동
+    _resetAll();
+    Provider.of<ScreenIndexProvider>(context, listen: false)
+        .setSelectedIndex(0);
+
+    log('오답노트 등록 완료');
+  }
+
+  /// 오답노트 수정
+  Future<void> _updateProblem() async {
+    log('오답노트 수정 시작');
+
+    final problemsProvider =
+        Provider.of<ProblemsProvider>(context, listen: false);
+    final problemId = widget.problemModel!.problemId;
+    final originalFolderId = widget.problemModel!.folderId;
+
+    // 1. 삭제할 이미지 삭제
+    await _deleteRemovedImages(problemsProvider);
+
+    // 2. 새 이미지 업로드 및 등록
+    await _uploadAndRegisterNewImages(problemsProvider, problemId);
+
+    // 3. 문제 기본 정보 업데이트
+    final problemRegisterModel = ProblemRegisterModel(
+      problemId: problemId,
+      memo: _memoCtrl.text,
+      reference: _titleCtrl.text,
+      solvedAt: _selectedDate,
+      folderId: _selectedFolderId,
+      imageDataDtoList: [],
+    );
+
+    await problemsProvider.updateProblem(problemRegisterModel);
+
+    // 4. 폴더 갱신 (새 폴더와 기존 폴더 모두)
+    await _refreshFolders(originalFolderId);
+
+    // 5. 화면 초기화 및 닫기
+    _resetAll();
+    Navigator.of(context).pop(true);
+
+    log('오답노트 수정 완료');
+  }
+
+  /// 삭제된 이미지들을 서버에서 삭제
+  Future<void> _deleteRemovedImages(ProblemsProvider problemsProvider) async {
+    for (var imageUrl in _deletedImageUrls) {
+      log('이미지 삭제: $imageUrl');
+      await problemsProvider.deleteProblemImageData(imageUrl);
+    }
+  }
+
+  /// 새로 추가된 이미지들을 업로드하고 서버에 등록
+  Future<void> _uploadAndRegisterNewImages(
+      ProblemsProvider problemsProvider, int problemId) async {
+    final service = FileUploadService();
+
+    // 이미지 업로드
+    final problemImageUrls =
+        await service.uploadMultipleImageFiles(_problemImages);
+    final answerImageUrls =
+        await service.uploadMultipleImageFiles(_answerImages);
+
+    // 문제 이미지 등록
+    for (var imageUrl in problemImageUrls) {
+      log('문제 이미지 추가: $imageUrl');
+      await problemsProvider.registerProblemImageData(
+        ProblemImageDataRegisterModel(
+          problemId: problemId,
+          imageUrl: imageUrl,
+          problemImageType: ProblemImageType.PROBLEM_IMAGE,
+        ),
+      );
+    }
+
+    // 해설 이미지 등록
+    for (var imageUrl in answerImageUrls) {
+      log('해설 이미지 추가: $imageUrl');
+      await problemsProvider.registerProblemImageData(
+        ProblemImageDataRegisterModel(
+          problemId: problemId,
+          imageUrl: imageUrl,
+          problemImageType: ProblemImageType.ANSWER_IMAGE,
+        ),
+      );
+    }
+  }
+
+  /// 이미지 업로드 후 ProblemImageDataRegisterModel 리스트 생성
+  Future<List<ProblemImageDataRegisterModel>> _uploadAndCreateImageDataList({
+    required int? problemId,
+  }) async {
+    final service = FileUploadService();
+    final imageDataList = <ProblemImageDataRegisterModel>[];
+
+    // 이미지 업로드
+    final problemImageUrls =
+        await service.uploadMultipleImageFiles(_problemImages);
+    final answerImageUrls =
+        await service.uploadMultipleImageFiles(_answerImages);
+
+    // 문제 이미지 데이터 생성
+    for (var imageUrl in problemImageUrls) {
+      imageDataList.add(ProblemImageDataRegisterModel(
+        problemId: problemId,
+        imageUrl: imageUrl,
+        problemImageType: ProblemImageType.PROBLEM_IMAGE,
+      ));
+    }
+
+    // 해설 이미지 데이터 생성
+    for (var imageUrl in answerImageUrls) {
+      imageDataList.add(ProblemImageDataRegisterModel(
+        problemId: problemId,
+        imageUrl: imageUrl,
+        problemImageType: ProblemImageType.ANSWER_IMAGE,
+      ));
+    }
+
+    return imageDataList;
+  }
+
+  /// 폴더 컨텐츠 갱신 (수정 시 기존 폴더와 새 폴더 모두 갱신)
+  Future<void> _refreshFolders(int? originalFolderId) async {
+    final foldersProvider =
+        Provider.of<FoldersProvider>(context, listen: false);
+
+    // 새 폴더 갱신
+    if (_selectedFolderId != null) {
+      await foldersProvider.fetchFolderContent(_selectedFolderId);
+    }
+
+    // 기존 폴더가 새 폴더와 다르면 기존 폴더도 갱신
+    if (originalFolderId != null && originalFolderId != _selectedFolderId) {
+      await foldersProvider.fetchFolderContent(originalFolderId);
+    }
+  }
+
   void showSuccessDialog(BuildContext context) {
     final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
     SnackBarDialog.showSnackBar(
         context: context,
         message: "오답노트가 성공적으로 저장되었습니다.",
         backgroundColor: themeProvider.primaryColor);
-  }
-
-  void _showLoginRequiredDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: Colors.white,
-        title: const StandardText(
-          text: '로그인 필요',
-        ),
-        content: const StandardText(
-          text: '오답노트를 작성하려면 로그인 해주세요!',
-        ),
-        actions: <Widget>[
-          TextButton(
-            child: const StandardText(
-              text: '확인',
-              fontSize: 20,
-            ),
-            onPressed: () {
-              Navigator.of(ctx).pop(); // 다이얼로그 닫기
-            },
-          )
-        ],
-      ),
-    );
   }
 }
