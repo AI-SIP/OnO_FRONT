@@ -301,25 +301,32 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
             ),
             TextButton(
               onPressed: () async {
-                Navigator.pop(context);
-                Navigator.pop(context);
                 FirebaseAnalytics.instance.logEvent(name: 'problem_delete');
 
+                // context가 유효할 때 Provider 가져오기
                 ProblemsProvider problemsProvider =
                     Provider.of<ProblemsProvider>(context, listen: false);
+                FoldersProvider foldersProvider =
+                    Provider.of<FoldersProvider>(context, listen: false);
+                ProblemPracticeProvider practiceProvider =
+                    Provider.of<ProblemPracticeProvider>(context, listen: false);
 
                 ProblemModel problemModel =
                     problemsProvider.getProblem(problemId);
 
                 int? parentFolderId = problemModel.folderId;
 
+                // 다이얼로그 닫기
+                Navigator.pop(context);
+                // 상세 화면 닫기 (폴더 화면으로 이동)
+                Navigator.pop(context);
+
+                // 삭제 작업 수행
                 await problemsProvider.deleteProblems([problemId]);
 
-                await Provider.of<FoldersProvider>(context, listen: false)
-                    .fetchFolderContent(parentFolderId);
-                await Provider.of<ProblemPracticeProvider>(context,
-                        listen: false)
-                    .fetchAllPracticeContents();
+                // 폴더 및 복습 노트 갱신
+                await foldersProvider.fetchFolderContent(parentFolderId);
+                await practiceProvider.fetchAllPracticeContents();
               },
               child: const StandardText(
                 text: '삭제',
