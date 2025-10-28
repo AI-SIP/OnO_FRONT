@@ -170,20 +170,45 @@ class ProblemsProvider with ChangeNotifier {
   }
 
   Future<void> updateProblem(ProblemRegisterModel problemData) async {
-    if (problemData.imageDataDtoList != null &&
-        problemData.imageDataDtoList!.isNotEmpty) {
-      await problemService.updateProblemImageData(problemData);
-    }
+    log('========================================');
+    log('오답노트 수정 시작 - Problem ID: ${problemData.problemId}');
+    log('제목: ${problemData.reference}');
+    log('메모: ${problemData.memo}');
+    log('폴더 ID: ${problemData.folderId}');
+    log('이미지 개수: ${problemData.imageDataDtoList?.length ?? 0}');
 
-    if (problemData.memo != null || problemData.reference != null) {
-      await problemService.updateProblemInfo(problemData);
-    }
+    try {
+      if (problemData.imageDataDtoList != null &&
+          problemData.imageDataDtoList!.isNotEmpty) {
+        log('이미지 데이터 업데이트 중...');
+        await problemService.updateProblemImageData(problemData);
+        log('이미지 데이터 업데이트 완료');
+      }
 
-    if (problemData.folderId != null) {
-      await problemService.updateProblemPath(problemData);
-    }
+      if (problemData.memo != null || problemData.reference != null) {
+        log('문제 정보 업데이트 중...');
+        await problemService.updateProblemInfo(problemData);
+        log('문제 정보 업데이트 완료');
+      }
 
-    await fetchProblem(problemData.problemId!);
+      if (problemData.folderId != null) {
+        log('폴더 경로 업데이트 중...');
+        await problemService.updateProblemPath(problemData);
+        log('폴더 경로 업데이트 완료');
+      }
+
+      log('최신 문제 정보 조회 중...');
+      await fetchProblem(problemData.problemId!);
+      log('오답노트 수정 완료');
+      log('========================================');
+    } catch (e, stackTrace) {
+      log('========================================');
+      log('오답노트 수정 실패 - Problem ID: ${problemData.problemId}');
+      log('에러: $e');
+      log('스택트레이스: $stackTrace');
+      log('========================================');
+      rethrow;
+    }
   }
 
   Future<void> updateProblemCount(int amount) async {

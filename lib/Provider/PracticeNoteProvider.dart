@@ -71,6 +71,8 @@ class ProblemPracticeProvider with ChangeNotifier {
       log('fetch all practice contents');
       log('practice ID: ${practice.practiceId}');
       log('practice Name: ${practice.practiceTitle}');
+      log('practiceSize: ${practice.practiceSize}');
+      log('problemIdList length: ${practice.problemIdList.length}');
       log('lastSolved at: ${practice.lastSolvedAt}');
       log('practiceCount: ${practice.practiceCount}');
       log('practiceNotification interval days: ${practice.practiceNotificationModel?.intervalDays}');
@@ -132,8 +134,8 @@ class ProblemPracticeProvider with ChangeNotifier {
   }
 
   Future<void> fetchPracticeCount(int practiceNoteId) async {
-    PracticeNoteDetailModel practiceNote =
-        await getPracticeNote(practiceNoteId);
-    practiceNote.addPracticeCount();
+    // 서버에서 최신 복습 노트 정보 조회
+    await fetchPracticeNote(practiceNoteId);
+    log('복습 카운트 갱신 완료 - Practice ID: $practiceNoteId');
   }
 }

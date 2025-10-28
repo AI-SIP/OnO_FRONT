@@ -423,7 +423,10 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
         builder: (context) => PracticeDetailScreen(
             practice: practiceProvider.currentPracticeNote!),
       ),
-    );
+    ).then((_) {
+      // 복습 상세 화면에서 돌아왔을 때 최신 데이터 다시 조회
+      _fetchAllPracticeContents();
+    });
   }
 
   BoxDecoration _buildBoxDecoration(
