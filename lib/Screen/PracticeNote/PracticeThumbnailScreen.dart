@@ -26,13 +26,6 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
   @override
   void initState() {
     super.initState();
-    _fetchAllPracticeContents();
-  }
-
-  Future<void> _fetchAllPracticeContents() async {
-    final provider =
-        Provider.of<ProblemPracticeProvider>(context, listen: false);
-    await provider.fetchAllPracticeContents();
   }
 
   @override
@@ -546,5 +539,11 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
       return null;
     }
     return DateFormat('yyyy/MM/dd').format(dateTime);
+  }
+
+  Future<void> _fetchAllPracticeContents() async {
+    final provider =
+        Provider.of<ProblemPracticeProvider>(context, listen: false);
+    await provider.fetchAllPracticeContents();
   }
 }
