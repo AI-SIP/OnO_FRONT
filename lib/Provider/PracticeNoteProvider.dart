@@ -66,22 +66,7 @@ class ProblemPracticeProvider with ChangeNotifier {
   Future<void> fetchAllPracticeContents() async {
     _practices = await practiceNoteService.getAllPracticeNoteDetails();
 
-    for (var practice in _practices) {
-      log('-----------------------------------------');
-      log('fetch all practice contents');
-      log('practice ID: ${practice.practiceId}');
-      log('practice Name: ${practice.practiceTitle}');
-      log('practiceSize: ${practice.practiceSize}');
-      log('problemIdList length: ${practice.problemIdList.length}');
-      log('lastSolved at: ${practice.lastSolvedAt}');
-      log('practiceCount: ${practice.practiceCount}');
-      log('practiceNotification interval days: ${practice.practiceNotificationModel?.intervalDays}');
-      log('practiceNotification hour: ${practice.practiceNotificationModel?.hour}');
-      log('practiceNotification minute: ${practice.practiceNotificationModel?.minute}');
-      log('practiceNotification repeatType: ${practice.practiceNotificationModel?.repeatType}');
-      log('practiceNotification weekDays: ${practice.practiceNotificationModel?.weekDays}');
-      log('-----------------------------------------');
-    }
+    log('fetch practice complete');
     notifyListeners();
   }
 
