@@ -21,7 +21,7 @@ import '../../Service/Api/FileUpload/FileUploadService.dart';
 import 'Widget/ActionButtons.dart';
 import 'Widget/DatePickerWidget.dart';
 import 'Widget/ImageGridWidget.dart';
-import 'Widget/LabledTextField.dart';
+import 'Widget/LabeledTextField.dart';
 
 class ProblemRegisterTemplate extends StatefulWidget {
   final ProblemModel? problemModel;
