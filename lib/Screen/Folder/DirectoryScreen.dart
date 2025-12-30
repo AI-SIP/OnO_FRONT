@@ -515,9 +515,11 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
                   if (subFolderIds.isEmpty && currentProblems.isEmpty) {
                     return Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
+                      child: SingleChildScrollView(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
                           SvgPicture.asset(
                             'assets/Icon/GreenNote.svg', // 아이콘 경로
                             width: 100, // 적절한 크기 설정
@@ -559,6 +561,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                           ),
                         ],
                       ),
+                    ),
                     );
                   }
 
