@@ -51,23 +51,33 @@ class UserProvider with ChangeNotifier {
     try {
       LoadingDialog.show(context, '로그인 중 입니다...');
       final userRegisterModel = await socialLogin(context);
+      log('[signInWithMember] userRegisterModel: $userRegisterModel');
+
       final response = await userService.signInWithMember(userRegisterModel);
+      log('[signInWithMember] response received');
 
       saveUserLoginInfo(userRegisterModel?.platform);
       bool isRegister = await saveUserToken(response: response);
+      log('[signInWithMember] isRegister: $isRegister');
 
       await NotificationService.instance.sendTokenToServer();
+      log('[signInWithMember] notification token sent');
+
       await fetchAllData();
+      log('[signInWithMember] all data fetched');
+
       LoadingDialog.hide(context);
 
       _loginStatus = LoginStatus.login;
       notifyListeners();
+      log('[signInWithMember] login status set to login');
 
       if (!isRegister) {
         log('register failed!, response: ${response.toString()}');
         throw Exception('response: ${response.toString()}');
       }
     } catch (error, stackTrace) {
+      log('[signInWithMember] error occurred: $error');
       _handleGeneralError(context, error, stackTrace);
     }
   }
@@ -138,6 +148,9 @@ class UserProvider with ChangeNotifier {
   }
 
   Future<bool> saveUserToken({dynamic? response}) async {
+    log('Server response: $response');
+    log('Response type: ${response.runtimeType}');
+
     if (response == null) {
       _loginStatus = LoginStatus.logout;
       await resetUserInfo();
@@ -147,6 +160,9 @@ class UserProvider with ChangeNotifier {
 
     String? accessToken = response['accessToken'] as String?;
     String? refreshToken = response['refreshToken'] as String?;
+
+    log('accessToken: $accessToken');
+    log('refreshToken: $refreshToken');
 
     if (accessToken == null || refreshToken == null) {
       _loginStatus = LoginStatus.logout;
