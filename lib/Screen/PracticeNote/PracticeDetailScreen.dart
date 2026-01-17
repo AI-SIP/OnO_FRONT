@@ -211,7 +211,10 @@ class PracticeDetailScreen extends StatelessWidget {
   }
 
   Widget _buildProblemItem(ProblemModel problem, ThemeHandler themeProvider) {
-    final imageUrl = null;
+    final imageUrl = problem.problemImageDataList != null &&
+            problem.problemImageDataList!.isNotEmpty
+        ? problem.problemImageDataList!.first.imageUrl
+        : null;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
