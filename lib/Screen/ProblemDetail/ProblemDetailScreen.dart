@@ -1,10 +1,12 @@
+import 'dart:developer';
+
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
-import 'package:ono/Module/Text/HandWriteText.dart';
 import 'package:ono/Provider/PracticeNoteProvider.dart';
 import 'package:ono/Screen/ProblemRegister/ProblemRegisterScreen.dart';
 import 'package:provider/provider.dart';
 
+import '../../Model/Problem/ProblemAnalysisStatus.dart';
 import '../../Model/Problem/ProblemModel.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
@@ -31,13 +33,6 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
   @override
   void initState() {
     super.initState();
-
-    _setProblemModel();
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
     _setProblemModel();
   }
 
@@ -57,28 +52,15 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
       body: Column(
         children: [
           Expanded(
-            child: FutureBuilder<ProblemModel?>(
-              future: _problemModelFuture,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return Center(
-                    child: CircularProgressIndicator(
-                      color: themeProvider.primaryColor,
-                    ),
-                  );
-                } else if (snapshot.hasError) {
-                  return Center(
-                    child: HandWriteText(
-                      text: '오답 노트를 불러오는 중 오류가 발생했습니다.',
-                      color: themeProvider.primaryColor,
-                    ),
-                  );
-                } else if (snapshot.hasData && snapshot.data != null) {
-                  return _buildContent(snapshot.data!);
-                } else {
+            child: Consumer<ProblemsProvider>(
+              builder: (context, problemsProvider, child) {
+                try {
+                  final problem = problemsProvider.getProblem(widget.problemId);
+                  return _buildContent(problem);
+                } catch (e) {
                   return Center(
                     child: StandardText(
-                      text: '오답노트가 이동되었습니다!',
+                      text: '오답노트를 찾을 수 없습니다.',
                       color: themeProvider.primaryColor,
                     ),
                   );
@@ -311,25 +293,33 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
             ),
             TextButton(
               onPressed: () async {
-                Navigator.pop(context);
-                Navigator.pop(context);
                 FirebaseAnalytics.instance.logEvent(name: 'problem_delete');
 
+                // context가 유효할 때 Provider 가져오기
                 ProblemsProvider problemsProvider =
                     Provider.of<ProblemsProvider>(context, listen: false);
+                FoldersProvider foldersProvider =
+                    Provider.of<FoldersProvider>(context, listen: false);
+                ProblemPracticeProvider practiceProvider =
+                    Provider.of<ProblemPracticeProvider>(context,
+                        listen: false);
 
                 ProblemModel problemModel =
                     problemsProvider.getProblem(problemId);
 
                 int? parentFolderId = problemModel.folderId;
 
+                // 다이얼로그 닫기
+                Navigator.pop(context);
+                // 상세 화면 닫기 (폴더 화면으로 이동)
+                Navigator.pop(context);
+
+                // 삭제 작업 수행
                 await problemsProvider.deleteProblems([problemId]);
 
-                await Provider.of<FoldersProvider>(context, listen: false)
-                    .fetchFolderContent(parentFolderId);
-                await Provider.of<ProblemPracticeProvider>(context,
-                        listen: false)
-                    .fetchAllPracticeContents();
+                // 폴더 및 복습 노트 갱신
+                await foldersProvider.fetchFolderContent(parentFolderId);
+                await practiceProvider.fetchAllPracticeContents();
               },
               child: const StandardText(
                 text: '삭제',
@@ -382,7 +372,26 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
 
   Future<ProblemModel?> fetchProblemDetails(
       BuildContext context, int? problemId) async {
-    return Provider.of<ProblemsProvider>(context, listen: false)
-        .getProblem(problemId!);
+    final problemsProvider =
+        Provider.of<ProblemsProvider>(context, listen: false);
+    final problem = problemsProvider.getProblem(problemId!);
+
+    log('Moved to problem: ${problem.problemId}');
+
+    // 문제에 ProblemImage가 있으면 분석 결과 조회
+    if (problem.problemImageDataList != null &&
+        problem.problemImageDataList!.isNotEmpty) {
+      // 분석 결과가 없거나, PROCESSING/NOT_STARTED 상태면 서버에서 조회
+      if (problem.analysis == null ||
+          problem.analysis!.status == ProblemAnalysisStatus.PROCESSING ||
+          problem.analysis!.status == ProblemAnalysisStatus.NOT_STARTED) {
+        log('fetch analysis result');
+
+        // 분석 결과 조회 후 COMPLETED면 업데이트됨
+        problemsProvider.fetchProblemAnalysis(problemId);
+      }
+    }
+
+    return problem;
   }
 }

@@ -199,37 +199,6 @@ class _TemplateSelectionScreenState extends State<TemplateSelectionScreen> {
         ),
       ],
     );
-    /*
-    return SizedBox(
-      height: screenHeight * 0.4, // 이미지와 태그가 차지하는 고정된 공간
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          SvgPicture.asset(
-            templateType.templateDetailImage,
-            height: screenHeight * 0.16,
-            fit: BoxFit.contain,
-          ),
-          SizedBox(height: screenHeight * 0.02),
-          StandardText(
-            text: templateType.displayName,
-            fontSize: 24,
-            color: Colors.black,
-          ),
-          SizedBox(height: screenHeight * 0.02),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              _buildTag('필기 제거', templateType.hasEraseFeature, themeProvider),
-              const SizedBox(width: 20),
-              _buildTag('문제 분석', templateType.hasAnalysisFeature, themeProvider),
-            ],
-          ),
-        ],
-      ),
-    );
-
-     */
   }
 
   Widget _buildHashTags(TemplateType templateType, ThemeHandler themeProvider) {
@@ -375,19 +344,9 @@ class _TemplateSelectionScreenState extends State<TemplateSelectionScreen> {
           LoadingDialog.show(context, '템플릿 불러오는 중...');
           final result = null;
 
-          /*
-          final result =
-              await Provider.of<FoldersProvider>(context, listen: false)
-                  .uploadProblemImage(pickedFile);
-
-           */
-
           if (result != null) {
             final problemModel = ProblemModel(
               problemId: result['problemId'],
-              //imageDataList: [],
-              //problemImageUrl: result['problemImageUrl'],
-              //templateType: templateType,
             );
 
             LoadingDialog.hide(context);

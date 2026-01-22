@@ -26,13 +26,6 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
   @override
   void initState() {
     super.initState();
-    _fetchAllPracticeContents();
-  }
-
-  Future<void> _fetchAllPracticeContents() async {
-    final provider =
-        Provider.of<ProblemPracticeProvider>(context, listen: false);
-    await provider.fetchAllPracticeContents();
   }
 
   @override
@@ -423,7 +416,10 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
         builder: (context) => PracticeDetailScreen(
             practice: practiceProvider.currentPracticeNote!),
       ),
-    );
+    ).then((_) {
+      // 복습 상세 화면에서 돌아왔을 때 최신 데이터 다시 조회
+      _fetchAllPracticeContents();
+    });
   }
 
   BoxDecoration _buildBoxDecoration(
@@ -543,5 +539,11 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
       return null;
     }
     return DateFormat('yyyy/MM/dd').format(dateTime);
+  }
+
+  Future<void> _fetchAllPracticeContents() async {
+    final provider =
+        Provider.of<ProblemPracticeProvider>(context, listen: false);
+    await provider.fetchAllPracticeContents();
   }
 }

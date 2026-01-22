@@ -5,17 +5,18 @@ class PracticeNoteDetailModel {
   final int practiceId;
   final String practiceTitle;
   int practiceCount;
-  final int practiceSize;
   final DateTime createdAt;
   final DateTime? lastSolvedAt;
   final PracticeNotificationModel? practiceNotificationModel;
   List<int> problemIdList = [];
 
+  // practiceSize는 problemIdList의 길이로 계산
+  int get practiceSize => problemIdList.length;
+
   PracticeNoteDetailModel({
     required this.practiceId,
     required this.practiceTitle,
     required this.practiceCount,
-    required this.practiceSize,
     required this.createdAt,
     required this.lastSolvedAt,
     this.practiceNotificationModel,
@@ -33,11 +34,9 @@ class PracticeNoteDetailModel {
       practiceId: json['practiceNoteId'],
       practiceTitle: json['practiceTitle'] ?? '제목 없음',
       practiceCount: json['practiceCount'] ?? 0,
-      practiceSize: json['practiceSize'] ?? 0,
-      createdAt:
-          DateTime.parse(json['createdAt']).add(const Duration(hours: 9)),
+      createdAt: DateTime.parse(json['createdAt']),
       lastSolvedAt: json['lastSolvedAt'] != null
-          ? DateTime.parse(json['lastSolvedAt']).add(const Duration(hours: 9))
+          ? DateTime.parse(json['lastSolvedAt'])
           : null,
       practiceNotificationModel: practiceNotificationModel,
       problemIdList: problemIdList,

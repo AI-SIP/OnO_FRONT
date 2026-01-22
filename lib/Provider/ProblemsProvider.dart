@@ -2,6 +2,7 @@ import 'dart:developer';
 
 import 'package:camera/camera.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:ono/Model/Problem/ProblemAnalysisStatus.dart';
 import 'package:ono/Model/Problem/ProblemImageDataRegisterModel.dart';
 import 'package:ono/Model/Problem/ProblemModel.dart';
 import 'package:ono/Service/Api/Problem/ProblemService.dart';
@@ -21,40 +22,35 @@ class ProblemsProvider with ChangeNotifier {
   final fileUploadService = FileUploadService();
 
   ProblemModel getProblem(int problemId) {
-    int low = 0, high = _problems.length - 1;
-    while (low <= high) {
-      final mid = (low + high) >> 1;
-      final midId = _problems[mid].problemId;
-      if (midId == problemId) {
-        return _problems[mid];
-      } else if (midId < problemId) {
-        low = mid + 1;
-      } else {
-        high = mid - 1;
-      }
+    final index = _findProblemIndex(problemId);
+    if (index != null) {
+      return _problems[index];
     }
 
     log('can\'t find problemId: $problemId');
     throw Exception('Problem with id $problemId not found.');
   }
 
-  Future<void> fetchProblem(int problemId) async {
-    final fetchedProblem = await problemService.getProblem(problemId);
-
+  int? _findProblemIndex(int problemId) {
     int low = 0, high = _problems.length - 1;
-    int? foundIndex;
     while (low <= high) {
       final mid = (low + high) >> 1;
-      final midId = _problems[mid].problemId!;
+      final midId = _problems[mid].problemId;
       if (midId == problemId) {
-        foundIndex = mid;
-        break;
+        return mid;
       } else if (midId < problemId) {
         low = mid + 1;
       } else {
         high = mid - 1;
       }
     }
+    return null;
+  }
+
+  Future<void> fetchProblem(int problemId) async {
+    final fetchedProblem = await problemService.getProblem(problemId);
+
+    final foundIndex = _findProblemIndex(problemId);
 
     if (foundIndex != null) {
       _problems[foundIndex] = fetchedProblem;
@@ -62,6 +58,7 @@ class ProblemsProvider with ChangeNotifier {
       _problems.add(fetchedProblem);
     }
 
+    log('problem: $problemId fetch complete');
     notifyListeners();
   }
 
@@ -69,20 +66,7 @@ class ProblemsProvider with ChangeNotifier {
     _problems = await problemService.getAllProblems();
     _problemCount = await getUserProblemCount();
 
-    for (var problem in _problems) {
-      log('-----------------------------------------');
-      log('problem ID: ${problem.problemId}');
-      log('problem Name: ${problem.reference}');
-      log('problem Memo: : ${problem.memo}');
-      log('problem folderId: ${problem.folderId}');
-      log('Length of problem image data: ${problem.problemImageDataList?.length}');
-      log('Length of answer image data: ${problem.answerImageDataList?.length}');
-      log('Created At: ${problem.createdAt}');
-      log('Updated At: ${problem.updateAt}');
-      log('solved At: ${problem.solvedAt}');
-      log('-----------------------------------------');
-    }
-
+    log('fetch problems complete');
     notifyListeners();
   }
 
@@ -98,6 +82,32 @@ class ProblemsProvider with ChangeNotifier {
 
     log('register problem id: $registerProblemId complete');
     notifyListeners();
+  }
+
+  Future<void> fetchProblemAnalysis(int problemId) async {
+    try {
+      final analysisResult = await problemService.getProblemAnalysis(problemId);
+
+      // 분석이 완료되었으면 ProblemModel 업데이트
+      if (analysisResult.status == ProblemAnalysisStatus.COMPLETED) {
+        final foundIndex = _findProblemIndex(problemId);
+        if (foundIndex != null) {
+          _problems[foundIndex] =
+              _problems[foundIndex].updateAnalysis(analysisResult);
+          notifyListeners();
+          log('ProblemModel 업데이트 완료 - UI가 자동으로 갱신됩니다');
+
+          // 업데이트된 문제 정보 다시 로그 출력
+          final updatedProblem = _problems[foundIndex];
+        }
+      }
+
+      log('문제 분석 결과 조회 완료');
+    } catch (e, stackTrace) {
+      log('문제 분석 결과 조회 실패 - Problem ID: $problemId');
+      log('에러: $e');
+      log('스택트레이스: $stackTrace');
+    }
   }
 
   Future<void> registerProblemImageData(
@@ -119,20 +129,28 @@ class ProblemsProvider with ChangeNotifier {
   }
 
   Future<void> updateProblem(ProblemRegisterModel problemData) async {
-    if (problemData.imageDataDtoList != null &&
-        problemData.imageDataDtoList!.isNotEmpty) {
-      await problemService.updateProblemImageData(problemData);
-    }
+    log('Update problem: ${problemData.problemId}');
+    try {
+      if (problemData.imageDataDtoList != null &&
+          problemData.imageDataDtoList!.isNotEmpty) {
+        await problemService.updateProblemImageData(problemData);
+      }
 
-    if (problemData.memo != null || problemData.reference != null) {
-      await problemService.updateProblemInfo(problemData);
-    }
+      if (problemData.memo != null || problemData.reference != null) {
+        await problemService.updateProblemInfo(problemData);
+      }
 
-    if (problemData.folderId != null) {
-      await problemService.updateProblemPath(problemData);
-    }
+      if (problemData.folderId != null) {
+        await problemService.updateProblemPath(problemData);
+      }
 
-    await fetchProblem(problemData.problemId!);
+      await fetchProblem(problemData.problemId!);
+    } catch (e, stackTrace) {
+      log('오답노트 수정 실패 - Problem ID: ${problemData.problemId}');
+      log('에러: $e');
+      log('스택트레이스: $stackTrace');
+      rethrow;
+    }
   }
 
   Future<void> updateProblemCount(int amount) async {
@@ -141,6 +159,7 @@ class ProblemsProvider with ChangeNotifier {
   }
 
   Future<void> deleteProblems(List<int> deleteProblemIdList) async {
+    log('delete problems: $deleteProblemIdList');
     await problemService.deleteProblems(deleteProblemIdList);
     await fetchAllProblems();
   }

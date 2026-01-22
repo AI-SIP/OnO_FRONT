@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:developer' as developer;
 import 'dart:io';
 
 import 'package:http/http.dart' as http;
@@ -27,7 +28,7 @@ class HttpService {
       accessToken = await tokenProvider.getAccessToken();
 
       if (accessToken == null) {
-        throw UnauthorizedException(message: '인증 토큰을 찾을 수 없습니다. 다시 로그인해주세요.');
+        throw UnauthorizedException(message: 'Cannot find Authorization Token');
       }
     }
 
@@ -109,14 +110,14 @@ class HttpService {
           }
 
         default:
-          throw ApiException(message: '지원하지 않는 HTTP 메서드입니다: $method');
+          throw ApiException(message: 'Not Supported HTTP Method: $method');
       }
     } on SocketException {
       throw NetworkException();
     } on TimeoutException {
       throw TimeoutException();
     } on FormatException catch (e) {
-      throw ParseException(message: 'JSON 파싱 실패: ${e.message}');
+      throw ParseException(message: 'JSON Parsing Failed: ${e.message}');
     } catch (error) {
       // 이미 우리가 정의한 커스텀 예외라면 그대로 던짐
       if (error is ApiException ||
@@ -129,13 +130,50 @@ class HttpService {
         rethrow;
       }
       // 알 수 없는 에러는 일반적인 ApiException으로 래핑
-      throw ApiException(message: '알 수 없는 오류가 발생했습니다: $error');
+      throw ApiException(message: 'Unknown error: $error');
     }
 
     final status = response.statusCode;
-    final decodedBody = jsonDecode(utf8.decode(response.bodyBytes));
 
-    final dynamic rawErrorCode = decodedBody['errorCode'];
+    // 요청 로깅
+    developer.log(
+      '[$method] $uri',
+      name: 'HttpService',
+      error: 'Status: $status',
+    );
+
+    // 빈 응답이거나 응답 본문이 없는 경우 처리 (예: 204 No Content)
+    if (response.body.isEmpty) {
+      if (status >= 200 && status < 300) {
+        return null; // 성공적인 빈 응답
+      } else {
+        throw ApiException(
+          statusCode: status,
+          message: response.reasonPhrase ?? '알 수 없는 오류',
+        );
+      }
+    }
+
+    // JSON 파싱 시도
+    dynamic decodedBody;
+    try {
+      decodedBody = jsonDecode(utf8.decode(response.bodyBytes));
+    } catch (e) {
+      // JSON 파싱 실패 시
+      if (status >= 200 && status < 300) {
+        // 성공 응답인데 JSON이 아니면 원본 텍스트 반환
+        return utf8.decode(response.bodyBytes);
+      } else {
+        // 실패 응답인데 JSON이 아니면 에러 발생
+        throw ParseException(
+          message:
+              'Failed to parse response as JSON: ${utf8.decode(response.bodyBytes)}',
+        );
+      }
+    }
+
+    final dynamic rawErrorCode =
+        decodedBody is Map ? decodedBody['errorCode'] : null;
     final int? errorCode = rawErrorCode is int
         ? rawErrorCode
         : (rawErrorCode is String ? int.tryParse(rawErrorCode) : null);
@@ -200,11 +238,11 @@ class HttpService {
       }
     }
 
-    // 5. Parse JSON and extract data
-    final decoded = jsonDecode(utf8.decode(response.bodyBytes));
-    if (decoded is Map<String, dynamic> && decoded.containsKey('data')) {
-      return decoded['data'];
+    // 5. Extract data from parsed JSON
+    if (decodedBody is Map<String, dynamic> &&
+        decodedBody.containsKey('data')) {
+      return decodedBody['data'];
     }
-    return decoded;
+    return decodedBody;
   }
 }

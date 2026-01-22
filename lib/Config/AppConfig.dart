@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class AppConfig {
@@ -10,9 +9,18 @@ class AppConfig {
 
   static Future<void> load() async {
     await dotenv.load(fileName: ".env");
-    baseUrl = kReleaseMode
-        ? dotenv.env['BASE_URL_PROD']!
-        : dotenv.env['BASE_URL_LOCAL']!;
+
+    // Environment 구분: local, dev, prod
+    const environment = String.fromEnvironment('ENV', defaultValue: 'local');
+
+    if (environment == 'prod') {
+      baseUrl = dotenv.env['BASE_URL_PROD']!;
+    } else if (environment == 'dev') {
+      baseUrl = dotenv.env['BASE_URL_DEV']!;
+    } else {
+      baseUrl = dotenv.env['BASE_URL_LOCAL']!;
+    }
+
     guidePageUrl = dotenv.env['GUIDE_PAGE_URL']!;
     feedbackPageUrl = dotenv.env['FEEDBACK_PAGE_URL']!;
     userInfoProcessRulePageUrl = dotenv.env['USER_RULES_URL']!;

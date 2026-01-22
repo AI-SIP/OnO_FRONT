@@ -19,7 +19,7 @@ class PracticeNoteThumbnails {
       practiceTitle: json['practiceTitle'] ?? '제목 없음',
       practiceCount: json['practiceCount'] ?? 0,
       lastSolvedAt: json['lastSolvedAt'] != null
-          ? DateTime.parse(json['lastSolvedAt']).add(const Duration(hours: 9))
+          ? DateTime.parse(json['lastSolvedAt'])
           : null,
     );
   }

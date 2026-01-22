@@ -7,11 +7,17 @@ import 'package:ono/Screen/PracticeNote/PracticeCompletionScreen.dart';
 import 'package:ono/Screen/ProblemDetail/ProblemDetailScreen.dart';
 import 'package:provider/provider.dart';
 
+import '../../Model/Common/ProblemImageDataType.dart';
+import '../../Model/Problem/ProblemImageDataRegisterModel.dart';
+import '../../Module/Dialog/LoadingDialog.dart';
+import '../../Module/Dialog/SnackBarDialog.dart';
 import '../../Module/Image/ImagePickerHandler.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/PracticeNoteProvider.dart';
+import '../../Provider/ProblemsProvider.dart';
 import '../../Provider/UserProvider.dart';
+import '../../Service/Api/FileUpload/FileUploadService.dart';
 
 class PracticeNavigationButtons extends StatefulWidget {
   final BuildContext context;
@@ -312,27 +318,73 @@ class _PracticeNavigationButtonsState extends State<PracticeNavigationButtons> {
                               isLoading = true;
                             });
 
-                            await widget.practiceProvider.moveToPractice(widget
-                                .practiceProvider
-                                .currentPracticeNote!
-                                .practiceId);
+                            LoadingDialog.show(context, '오답 복습 중...');
 
-                            FirebaseAnalytics.instance.logEvent(
-                              name: 'problem_repeat',
-                            );
+                            try {
+                              FileUploadService fileUploadService =
+                                  FileUploadService();
+                              final imageUrl =
+                                  await fileUploadService.uploadImageFile(
+                                selectedImage!,
+                              );
 
-                            // 복습노트 복습 시 유저 정보 갱신 (경험치 업데이트)
-                            await Provider.of<UserProvider>(context,
-                                    listen: false)
-                                .fetchUserInfo();
+                              final problemImageDataRegisterModel =
+                                  ProblemImageDataRegisterModel(
+                                problemId: widget.currentProblemId,
+                                imageUrl: imageUrl,
+                                problemImageType: ProblemImageType.SOLVE_IMAGE,
+                              );
 
-                            setState(() {
-                              isReviewed = true;
-                              isLoading = false;
-                            });
+                              await Provider.of<ProblemsProvider>(context,
+                                      listen: false)
+                                  .registerProblemImageData(
+                                      problemImageDataRegisterModel);
 
-                            Navigator.of(context).pop();
-                            widget.onRefresh();
+                              // 3. 복습 노트 갱신
+                              await widget.practiceProvider.moveToPractice(
+                                  widget.practiceProvider.currentPracticeNote!
+                                      .practiceId);
+
+                              FirebaseAnalytics.instance.logEvent(
+                                name: 'problem_repeat',
+                              );
+
+                              // 4. 복습노트 복습 시 유저 정보 갱신 (경험치 업데이트)
+                              await Provider.of<UserProvider>(context,
+                                      listen: false)
+                                  .fetchUserInfo();
+
+                              setState(() {
+                                isReviewed = true;
+                                isLoading = false;
+                              });
+
+                              LoadingDialog.hide(context);
+                              Navigator.of(context).pop();
+
+                              SnackBarDialog.showSnackBar(
+                                context: context,
+                                message: '복습이 완료되었습니다!',
+                                backgroundColor: themeProvider.primaryColor,
+                              );
+
+                              widget.onRefresh();
+                            } catch (e) {
+                              setState(() {
+                                isLoading = false;
+                              });
+                              // 에러 처리
+                              Navigator.of(context).pop();
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: StandardText(
+                                    text: '복습 이미지 등록에 실패했습니다: $e',
+                                    color: Colors.white,
+                                  ),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                            }
                           }
                         },
                   child: isLoading

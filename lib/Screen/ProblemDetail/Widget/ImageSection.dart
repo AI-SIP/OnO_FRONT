@@ -9,12 +9,13 @@ Widget buildImageSection(
   if (urls.isEmpty) {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 10),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
           color: theme.primaryColor.withOpacity(0.1),
           borderRadius: BorderRadius.circular(10)),
       child: Center(
-          child: StandardText(text: '이미지가 없습니다.', color: theme.primaryColor)),
+          child:
+              StandardText(text: '${label}가 없습니다.', color: theme.primaryColor)),
     );
   }
   return ImageGallerySection(
