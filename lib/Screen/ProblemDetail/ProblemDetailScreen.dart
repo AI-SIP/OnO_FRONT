@@ -2,13 +2,12 @@ import 'dart:developer';
 
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
-import 'package:ono/Module/Text/HandWriteText.dart';
 import 'package:ono/Provider/PracticeNoteProvider.dart';
 import 'package:ono/Screen/ProblemRegister/ProblemRegisterScreen.dart';
 import 'package:provider/provider.dart';
 
-import '../../Model/Problem/ProblemModel.dart';
 import '../../Model/Problem/ProblemAnalysisStatus.dart';
+import '../../Model/Problem/ProblemModel.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Module/Util/FolderNavigationButtons.dart';
@@ -34,13 +33,6 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
   @override
   void initState() {
     super.initState();
-
-    _setProblemModel();
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
     _setProblemModel();
   }
 
@@ -309,7 +301,8 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                 FoldersProvider foldersProvider =
                     Provider.of<FoldersProvider>(context, listen: false);
                 ProblemPracticeProvider practiceProvider =
-                    Provider.of<ProblemPracticeProvider>(context, listen: false);
+                    Provider.of<ProblemPracticeProvider>(context,
+                        listen: false);
 
                 ProblemModel problemModel =
                     problemsProvider.getProblem(problemId);
@@ -379,37 +372,11 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
 
   Future<ProblemModel?> fetchProblemDetails(
       BuildContext context, int? problemId) async {
-    final problemsProvider = Provider.of<ProblemsProvider>(context, listen: false);
+    final problemsProvider =
+        Provider.of<ProblemsProvider>(context, listen: false);
     final problem = problemsProvider.getProblem(problemId!);
 
-    // 문제 정보 로그 출력
-    log('========================================');
-    log('문제 상세 페이지 진입 - Problem ID: ${problem.problemId}');
-    log('제목: ${problem.reference}');
-    log('메모: ${problem.memo}');
-    log('폴더 ID: ${problem.folderId}');
-    log('풀이 날짜: ${problem.solvedAt}');
-    log('생성 날짜: ${problem.createdAt}');
-    log('수정 날짜: ${problem.updateAt}');
-    log('문제 이미지 수: ${problem.problemImageDataList?.length ?? 0}');
-    log('해설 이미지 수: ${problem.answerImageDataList?.length ?? 0}');
-    log('풀이 이미지 수: ${problem.solveImageDataList?.length ?? 0}');
-
-    if (problem.analysis != null) {
-      log('--- 분석 결과 ---');
-      log('분석 ID: ${problem.analysis!.id}');
-      log('분석 상태: ${problem.analysis!.status}');
-      log('과목: ${problem.analysis!.subject}');
-      log('문제 유형: ${problem.analysis!.problemType}');
-      log('핵심 포인트: ${problem.analysis!.keyPoints}');
-      log('풀이: ${problem.analysis!.solution}');
-      log('자주 하는 실수: ${problem.analysis!.commonMistakes}');
-      log('학습 팁: ${problem.analysis!.studyTips}');
-      log('에러 메시지: ${problem.analysis!.errorMessage}');
-    } else {
-      log('분석 결과: 없음');
-    }
-    log('========================================');
+    log('Moved to problem: ${problem.problemId}');
 
     // 문제에 ProblemImage가 있으면 분석 결과 조회
     if (problem.problemImageDataList != null &&
@@ -418,7 +385,8 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
       if (problem.analysis == null ||
           problem.analysis!.status == ProblemAnalysisStatus.PROCESSING ||
           problem.analysis!.status == ProblemAnalysisStatus.NOT_STARTED) {
-        log('분석 결과를 서버에서 조회합니다. (현재 상태: ${problem.analysis?.status ?? "null"})');
+        log('fetch analysis result');
+
         // 분석 결과 조회 후 COMPLETED면 업데이트됨
         problemsProvider.fetchProblemAnalysis(problemId);
       }

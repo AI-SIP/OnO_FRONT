@@ -515,9 +515,11 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
                   if (subFolderIds.isEmpty && currentProblems.isEmpty) {
                     return Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
+                      child: SingleChildScrollView(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
                           SvgPicture.asset(
                             'assets/Icon/GreenNote.svg', // 아이콘 경로
                             width: 100, // 적절한 크기 설정
@@ -559,6 +561,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                           ),
                         ],
                       ),
+                    ),
                     );
                   }
 
@@ -726,7 +729,10 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   Widget _buildProblemTile(ProblemModel problem, ThemeHandler themeProvider) {
     final isSelected = _selectedProblemIds.contains(problem.problemId);
 
-    final imageUrl = null;
+    final imageUrl = problem.problemImageDataList != null &&
+            problem.problemImageDataList!.isNotEmpty
+        ? problem.problemImageDataList!.first.imageUrl
+        : null;
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0), // 아이템 간 간격 추가
@@ -790,7 +796,10 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
   Widget _problemTileContent(ProblemModel problem, ThemeHandler themeProvider) {
     final isSelected = _selectedProblemIds.contains(problem.problemId);
-    final imageUrl = null;
+    final imageUrl = problem.problemImageDataList != null &&
+            problem.problemImageDataList!.isNotEmpty
+        ? problem.problemImageDataList!.first.imageUrl
+        : null;
 
     return Container(
       padding: const EdgeInsets.all(12.0),

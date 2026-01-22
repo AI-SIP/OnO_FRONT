@@ -34,10 +34,9 @@ class PracticeNoteDetailModel {
       practiceId: json['practiceNoteId'],
       practiceTitle: json['practiceTitle'] ?? '제목 없음',
       practiceCount: json['practiceCount'] ?? 0,
-      createdAt:
-          DateTime.parse(json['createdAt']).add(const Duration(hours: 9)),
+      createdAt: DateTime.parse(json['createdAt']),
       lastSolvedAt: json['lastSolvedAt'] != null
-          ? DateTime.parse(json['lastSolvedAt']).add(const Duration(hours: 9))
+          ? DateTime.parse(json['lastSolvedAt'])
           : null,
       practiceNotificationModel: practiceNotificationModel,
       problemIdList: problemIdList,
