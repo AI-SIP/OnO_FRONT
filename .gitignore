@@ -47,6 +47,11 @@ app.*.map.json
 .env
 BUILD_COMMANDS.md
 
+# Android keystore and certificates
+**/android/**/*.jks
+**/android/**/*.keystore
+*.der
+
 # Created by https://www.toptal.com/developers/gitignore/api/flutter
 # Edit at https://www.toptal.com/developers/gitignore?templates=flutter
 

@@ -36,88 +36,100 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 }
 
 void main() async {
-  runZonedGuarded<Future<void>>(() async {
-    WidgetsFlutterBinding.ensureInitialized();
-    await dotenv.load(fileName: ".env");
-    await AppConfig.load();
+  runZonedGuarded<Future<void>>(
+    () async {
+      WidgetsFlutterBinding.ensureInitialized();
+      await dotenv.load(fileName: ".env");
+      await AppConfig.load();
 
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    );
-    await NotificationService.instance.init();
-    FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+      await Firebase.initializeApp(
+        name: "OnO",
+        options: DefaultFirebaseOptions.currentPlatform,
+      );
+      await NotificationService.instance.init();
+      FirebaseMessaging.onBackgroundMessage(
+        _firebaseMessagingBackgroundHandler,
+      );
 
-    KakaoSdk.init(nativeAppKey: dotenv.env['KAKAO_NATIVE_APP_KEY']!);
+      KakaoSdk.init(nativeAppKey: dotenv.env['KAKAO_NATIVE_APP_KEY']!);
 
-    await SentryFlutter.init(
-      (options) {
+      await SentryFlutter.init((options) {
         options.dsn = dotenv.env['SENTRY_DSN']!;
         options.profilesSampleRate = 0.0;
         options.tracesSampleRate = 1.0;
-      },
-    );
-    // FlutterError 처리기 설정
-    FlutterError.onError = (details) async {
-      FlutterError.dumpErrorToConsole(details);
+      });
+      // FlutterError 처리기 설정
+      FlutterError.onError = (details) async {
+        FlutterError.dumpErrorToConsole(details);
+        final webhookUrl = kReleaseMode
+            ? dotenv.env['DISCORD_WEBHOOK_PROD_URL']!
+            : dotenv.env['DISCORD_WEBHOOK_LOCAL_URL']!;
+        Sentry.captureException(details.exception, stackTrace: details.stack);
+        await sendDiscordAlert(
+          message: details.exceptionAsString(),
+          stack: details.stack,
+          webhookUrl: webhookUrl,
+        );
+      };
+
+      runApp(
+        MultiProvider(
+          providers: [
+            ChangeNotifierProvider(create: (_) => ProblemsProvider()),
+            ChangeNotifierProvider(
+              create: (context) => FoldersProvider(
+                problemsProvider: Provider.of<ProblemsProvider>(
+                  context,
+                  listen: false,
+                ),
+              ),
+            ),
+            ChangeNotifierProvider(
+              create: (context) => ProblemPracticeProvider(
+                problemsProvider: Provider.of<ProblemsProvider>(
+                  context,
+                  listen: false,
+                ),
+              ),
+            ),
+            ChangeNotifierProvider(
+              create: (context) => UserProvider(
+                Provider.of<ProblemsProvider>(context, listen: false),
+                Provider.of<FoldersProvider>(context, listen: false),
+                Provider.of<ProblemPracticeProvider>(context, listen: false),
+              ),
+            ),
+            ChangeNotifierProvider(
+              create: (context) => ThemeHandler()..loadColors(),
+            ),
+            ChangeNotifierProvider(create: (_) => ScreenIndexProvider()),
+          ],
+          child: const MyApp(),
+        ),
+      );
+    },
+    (error, stack) async {
+      // Zone 밖 비동기 예외 처리
       final webhookUrl = kReleaseMode
           ? dotenv.env['DISCORD_WEBHOOK_PROD_URL']!
           : dotenv.env['DISCORD_WEBHOOK_LOCAL_URL']!;
-      Sentry.captureException(details.exception, stackTrace: details.stack);
+      Sentry.captureException(error, stackTrace: stack);
       await sendDiscordAlert(
-        message: details.exceptionAsString(),
-        stack: details.stack,
+        message: error.toString(),
+        stack: stack,
         webhookUrl: webhookUrl,
       );
-    };
-
-    runApp(
-      MultiProvider(
-        providers: [
-          ChangeNotifierProvider(create: (_) => ProblemsProvider()),
-          ChangeNotifierProvider(
-              create: (context) => FoldersProvider(
-                    problemsProvider:
-                        Provider.of<ProblemsProvider>(context, listen: false),
-                  )),
-          ChangeNotifierProvider(
-              create: (context) => ProblemPracticeProvider(
-                    problemsProvider:
-                        Provider.of<ProblemsProvider>(context, listen: false),
-                  )),
-          ChangeNotifierProvider(
-            create: (context) => UserProvider(
-              Provider.of<ProblemsProvider>(context, listen: false),
-              Provider.of<FoldersProvider>(context, listen: false),
-              Provider.of<ProblemPracticeProvider>(context, listen: false),
-            ),
-          ),
-          ChangeNotifierProvider(
-              create: (context) => ThemeHandler()..loadColors()),
-          ChangeNotifierProvider(create: (_) => ScreenIndexProvider()),
-        ],
-        child: const MyApp(),
-      ),
-    );
-  }, (error, stack) async {
-    // Zone 밖 비동기 예외 처리
-    final webhookUrl = kReleaseMode
-        ? dotenv.env['DISCORD_WEBHOOK_PROD_URL']!
-        : dotenv.env['DISCORD_WEBHOOK_LOCAL_URL']!;
-    Sentry.captureException(error, stackTrace: stack);
-    await sendDiscordAlert(
-      message: error.toString(),
-      stack: stack,
-      webhookUrl: webhookUrl,
-    );
-  });
+    },
+  );
 }
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
   static FirebaseAnalytics analytics = FirebaseAnalytics.instance;
-  static FirebaseAnalyticsObserver observer =
-      FirebaseAnalyticsObserver(analytics: analytics);
+  static FirebaseAnalyticsObserver observer = FirebaseAnalyticsObserver(
+    analytics: analytics,
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -192,8 +204,10 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   }
 
   void _onItemTapped(int index) {
-    Provider.of<ScreenIndexProvider>(context, listen: false)
-        .setSelectedIndex(index);
+    Provider.of<ScreenIndexProvider>(
+      context,
+      listen: false,
+    ).setSelectedIndex(index);
   }
 
   @override
@@ -219,8 +233,10 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   }
 
   void _resetAppState() {
-    final foldersProvider =
-        Provider.of<FoldersProvider>(context, listen: false);
+    final foldersProvider = Provider.of<FoldersProvider>(
+      context,
+      listen: false,
+    );
     final userProvider = Provider.of<UserProvider>(context, listen: false);
 
     userProvider.autoLogin();
@@ -268,22 +284,10 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
 
   List<BottomNavigationBarItem> _bottomNavigationItems() {
     return const [
-      BottomNavigationBarItem(
-        icon: Icon(Icons.menu_book),
-        label: '오답 관리',
-      ),
-      BottomNavigationBarItem(
-        icon: Icon(Icons.history),
-        label: '오답 복습',
-      ),
-      BottomNavigationBarItem(
-        icon: Icon(Icons.edit),
-        label: '오답노트 작성',
-      ),
-      BottomNavigationBarItem(
-        icon: Icon(Icons.settings),
-        label: '설정',
-      ),
+      BottomNavigationBarItem(icon: Icon(Icons.menu_book), label: '오답 관리'),
+      BottomNavigationBarItem(icon: Icon(Icons.history), label: '오답 복습'),
+      BottomNavigationBarItem(icon: Icon(Icons.edit), label: '오답노트 작성'),
+      BottomNavigationBarItem(icon: Icon(Icons.settings), label: '설정'),
     ];
   }
 }
