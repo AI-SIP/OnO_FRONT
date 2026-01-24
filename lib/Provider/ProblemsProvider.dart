@@ -1,9 +1,9 @@
 import 'dart:developer';
+import 'dart:io';
 
 import 'package:camera/camera.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:ono/Model/Problem/ProblemAnalysisStatus.dart';
-import 'package:ono/Model/Problem/ProblemImageDataRegisterModel.dart';
 import 'package:ono/Model/Problem/ProblemModel.dart';
 import 'package:ono/Service/Api/Problem/ProblemService.dart';
 
@@ -110,17 +110,20 @@ class ProblemsProvider with ChangeNotifier {
     }
   }
 
-  Future<void> registerProblemImageData(
-    ProblemImageDataRegisterModel problemImageDataRegisterModel,
-  ) async {
-    await problemService
-        .registerProblemImageData(problemImageDataRegisterModel);
+  Future<void> registerProblemImageData({
+    required int problemId,
+    required List<File> problemImages,
+    required List<String> problemImageTypes,
+  }) async {
+    await problemService.registerProblemImageData(
+      problemId: problemId,
+      problemImages: problemImages,
+      problemImageTypes: problemImageTypes,
+    );
 
-    if (problemImageDataRegisterModel.problemId != null) {
-      await fetchProblem(problemImageDataRegisterModel.problemId!);
-    }
+    await fetchProblem(problemId);
 
-    log('register problem id: ${problemImageDataRegisterModel.problemId} complete');
+    log('register problem id: $problemId complete');
     notifyListeners();
   }
 

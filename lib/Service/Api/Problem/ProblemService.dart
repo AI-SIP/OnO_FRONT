@@ -1,7 +1,9 @@
-import 'package:ono/Model/Problem/ProblemImageDataRegisterModel.dart';
+import 'dart:io';
+
+import 'package:http/http.dart' as http;
+import 'package:ono/Model/Problem/ProblemAnalysisModel.dart';
 import 'package:ono/Model/Problem/ProblemModel.dart';
 import 'package:ono/Model/Problem/ProblemRegisterModel.dart';
-import 'package:ono/Model/Problem/ProblemAnalysisModel.dart';
 
 import '../../../Config/AppConfig.dart';
 import '../HttpService.dart';
@@ -45,12 +47,30 @@ class ProblemService {
     ) as int;
   }
 
-  Future<void> registerProblemImageData(
-      ProblemImageDataRegisterModel problemImageDataRegisterModel) async {
+  Future<void> registerProblemImageData({
+    required int problemId,
+    required List<File> problemImages,
+    required List<String> problemImageTypes,
+  }) async {
+    // File 리스트를 MultipartFile 리스트로 변환
+    final List<http.MultipartFile> multipartFiles = [];
+    for (var imageFile in problemImages) {
+      multipartFiles.add(
+        await http.MultipartFile.fromPath(
+          'problemImages', // 서버의 @RequestParam 이름과 동일
+          imageFile.path,
+        ),
+      );
+    }
+
     await httpService.sendRequest(
       method: 'POST',
-      url: '$baseUrl/imageData',
-      body: problemImageDataRegisterModel.toJson(),
+      url: '$baseUrl/$problemId/imageData',
+      isMultipart: true,
+      files: multipartFiles,
+      body: {
+        'problemImageTypes': problemImageTypes,
+      },
     );
   }
 

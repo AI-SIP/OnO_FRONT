@@ -321,24 +321,19 @@ class _PracticeNavigationButtonsState extends State<PracticeNavigationButtons> {
                             LoadingDialog.show(context, '오답 복습 중...');
 
                             try {
-                              FileUploadService fileUploadService =
-                                  FileUploadService();
-                              final imageUrl =
-                                  await fileUploadService.uploadImageFile(
-                                selectedImage!,
-                              );
+                              // 파일을 직접 서버로 전송
+                              final problemsProvider =
+                                  Provider.of<ProblemsProvider>(context,
+                                      listen: false);
 
-                              final problemImageDataRegisterModel =
-                                  ProblemImageDataRegisterModel(
+                              await problemsProvider.problemService.registerProblemImageData(
                                 problemId: widget.currentProblemId,
-                                imageUrl: imageUrl,
-                                problemImageType: ProblemImageType.SOLVE_IMAGE,
+                                problemImages: [File(selectedImage!.path)],
+                                problemImageTypes: ['SOLVE_IMAGE'],
                               );
 
-                              await Provider.of<ProblemsProvider>(context,
-                                      listen: false)
-                                  .registerProblemImageData(
-                                      problemImageDataRegisterModel);
+                              // 문제 정보 갱신
+                              await problemsProvider.fetchProblem(widget.currentProblemId);
 
                               // 3. 복습 노트 갱신
                               await widget.practiceProvider.moveToPractice(

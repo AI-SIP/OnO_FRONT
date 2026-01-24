@@ -1,4 +1,5 @@
 import 'dart:developer';
+import 'dart:io';
 
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
@@ -337,37 +338,33 @@ class _ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
   /// 새로 추가된 이미지들을 업로드하고 서버에 등록
   Future<void> _uploadAndRegisterNewImages(
       ProblemsProvider problemsProvider, int problemId) async {
-    final service = FileUploadService();
-
-    // 이미지 업로드
-    final problemImageUrls =
-        await service.uploadMultipleImageFiles(_problemImages);
-    final answerImageUrls =
-        await service.uploadMultipleImageFiles(_answerImages);
-
-    // 문제 이미지 등록
-    for (var imageUrl in problemImageUrls) {
-      log('문제 이미지 추가: $imageUrl');
-      await problemsProvider.registerProblemImageData(
-        ProblemImageDataRegisterModel(
-          problemId: problemId,
-          imageUrl: imageUrl,
-          problemImageType: ProblemImageType.PROBLEM_IMAGE,
-        ),
-      );
+    // 이미지가 없으면 리턴
+    if (_problemImages.isEmpty && _answerImages.isEmpty) {
+      return;
     }
 
-    // 해설 이미지 등록
-    for (var imageUrl in answerImageUrls) {
-      log('해설 이미지 추가: $imageUrl');
-      await problemsProvider.registerProblemImageData(
-        ProblemImageDataRegisterModel(
-          problemId: problemId,
-          imageUrl: imageUrl,
-          problemImageType: ProblemImageType.ANSWER_IMAGE,
-        ),
-      );
+    // 파일 리스트 생성
+    final List<File> imageFiles = [];
+    final List<String> imageTypes = [];
+
+    // 문제 이미지 추가
+    for (var xFile in _problemImages) {
+      imageFiles.add(File(xFile.path));
+      imageTypes.add('PROBLEM_IMAGE');
     }
+
+    // 해설 이미지 추가
+    for (var xFile in _answerImages) {
+      imageFiles.add(File(xFile.path));
+      imageTypes.add('ANSWER_IMAGE');
+    }
+
+    // 서버로 직접 전송 (multipart)
+    await problemsProvider.registerProblemImageData(
+      problemId: problemId,
+      problemImages: imageFiles,
+      problemImageTypes: imageTypes,
+    );
   }
 
   /// 이미지 업로드 후 ProblemImageDataRegisterModel 리스트 생성
