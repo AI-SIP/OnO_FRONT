@@ -66,10 +66,9 @@ class HttpService {
             if (body != null) {
               body.forEach((key, value) {
                 if (value is List) {
-                  // List인 경우 각 항목을 인덱스와 함께 추가 (Spring에서 List로 받을 수 있도록)
-                  for (var item in value) {
-                    req.fields[key] = item.toString();
-                  }
+                  // List인 경우 쉼표로 구분된 문자열로 변환
+                  // Spring에서 @RequestParam으로 받을 때 자동으로 split됨
+                  req.fields[key] = value.join(',');
                 } else {
                   req.fields[key] = value.toString();
                 }
