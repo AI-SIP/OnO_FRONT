@@ -19,6 +19,7 @@ import '../../Provider/ProblemsProvider.dart';
 import '../../Provider/ScreenIndexProvider.dart';
 import '../../Provider/UserProvider.dart';
 import '../../Service/Api/FileUpload/FileUploadService.dart';
+import '../../Service/Api/Problem/ProblemService.dart';
 import 'Widget/ActionButtons.dart';
 import 'Widget/DatePickerWidget.dart';
 import 'Widget/ImageGridWidget.dart';
@@ -264,34 +265,90 @@ class _ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
     final problemsProvider =
         Provider.of<ProblemsProvider>(context, listen: false);
 
-    // 1. 이미지 업로드
-    final imageDataList = await _uploadAndCreateImageDataList(problemId: null);
-
-    // 2. 문제 등록
+    // 1. 문제 엔티티만 먼저 등록 (이미지 없이)
     final problemRegisterModel = ProblemRegisterModel(
       problemId: null,
       memo: _memoCtrl.text,
       reference: _titleCtrl.text,
       solvedAt: _selectedDate,
       folderId: _selectedFolderId,
-      imageDataDtoList: imageDataList,
+      imageDataDtoList: [], // 빈 리스트로 등록
     );
 
-    await problemsProvider.registerProblem(problemRegisterModel, context);
+    // 서비스에서 직접 problemId 받기
+    final problemService = ProblemService();
+    final registeredProblemId =
+        await problemService.registerProblem(problemRegisterModel);
 
-    // 3. 폴더 갱신
+    // Provider를 통해 문제 조회 및 상태 업데이트
+    await problemsProvider.fetchProblem(registeredProblemId);
+    await problemsProvider.updateProblemCount(1);
+    await problemsProvider.requestReview(context);
+
+    // 2. 폴더 갱신
     await Provider.of<FoldersProvider>(context, listen: false)
         .fetchFolderContent(_selectedFolderId);
 
-    // 4. 유저 정보 갱신 (경험치 업데이트)
+    // 3. 유저 정보 갱신 (경험치 업데이트)
     await Provider.of<UserProvider>(context, listen: false).fetchUserInfo();
 
-    // 5. 화면 초기화 및 이동
-    _resetAll();
+    // 4. 화면 초기화 및 이동
     Provider.of<ScreenIndexProvider>(context, listen: false)
         .setSelectedIndex(0);
 
-    log('problem register complete');
+    log('problem register complete - problemId: $registeredProblemId');
+
+    // 5. 백그라운드에서 이미지 업로드 (비동기)
+    _uploadImagesInBackground(registeredProblemId, problemsProvider);
+
+    _resetAll();
+  }
+
+  /// 백그라운드에서 이미지 업로드
+  void _uploadImagesInBackground(
+      int problemId, ProblemsProvider problemsProvider) {
+    // 이미지가 없으면 리턴
+    if (_problemImages.isEmpty && _answerImages.isEmpty) {
+      log('업로드할 이미지가 없음');
+      return;
+    }
+
+    // 비동기로 이미지 업로드 실행 (await 없이)
+    () async {
+      try {
+        log('백그라운드 이미지 업로드 시작 - problemId: $problemId');
+
+        // 파일 리스트 생성
+        final List<File> imageFiles = [];
+        final List<String> imageTypes = [];
+
+        // 문제 이미지 추가
+        for (var xFile in _problemImages) {
+          imageFiles.add(File(xFile.path));
+          imageTypes.add('PROBLEM_IMAGE');
+        }
+
+        // 해설 이미지 추가
+        for (var xFile in _answerImages) {
+          imageFiles.add(File(xFile.path));
+          imageTypes.add('ANSWER_IMAGE');
+        }
+
+        // 서버로 이미지 전송
+        await problemsProvider.registerProblemImageData(
+          problemId: problemId,
+          problemImages: imageFiles,
+          problemImageTypes: imageTypes,
+        );
+
+        log('백그라운드 이미지 업로드 완료 - problemId: $problemId');
+      } catch (e, stackTrace) {
+        log('백그라운드 이미지 업로드 실패 - problemId: $problemId');
+        log('에러: $e');
+        log('스택트레이스: $stackTrace');
+        // 에러가 발생해도 사용자에게는 영향 없음 (백그라운드 작업)
+      }
+    }();
   }
 
   /// 오답노트 수정
@@ -301,13 +358,10 @@ class _ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
     final problemId = widget.problemModel!.problemId;
     final originalFolderId = widget.problemModel!.folderId;
 
-    // 1. 삭제할 이미지 삭제
+    // 삭제할 이미지 삭제
     await _deleteRemovedImages(problemsProvider);
 
-    // 2. 새 이미지 업로드 및 등록
-    await _uploadAndRegisterNewImages(problemsProvider, problemId);
-
-    // 3. 문제 기본 정보 업데이트
+    // 문제 기본 정보 업데이트
     final problemRegisterModel = ProblemRegisterModel(
       problemId: problemId,
       memo: _memoCtrl.text,
@@ -319,12 +373,14 @@ class _ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
 
     await problemsProvider.updateProblem(problemRegisterModel);
 
-    // 4. 폴더 갱신 (새 폴더와 기존 폴더 모두)
+    // 폴더 갱신 (새 폴더와 기존 폴더 모두)
     await _refreshFolders(originalFolderId);
 
-    // 5. 화면 초기화 및 닫기
-    _resetAll();
+    // 화면 초기화 및 닫기
     Navigator.of(context).pop(true);
+
+    await _uploadAndRegisterNewImages(problemsProvider, problemId);
+    _resetAll();
   }
 
   /// 삭제된 이미지들을 서버에서 삭제
