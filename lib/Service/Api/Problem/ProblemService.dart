@@ -117,7 +117,7 @@ class ProblemService {
   }
 
   Future<void> deleteProblemImageData(String imageUrl) async {
-    httpService.sendRequest(
+    await httpService.sendRequest(
       method: 'DELETE',
       url: '$baseUrl/imageData',
       queryParams: {

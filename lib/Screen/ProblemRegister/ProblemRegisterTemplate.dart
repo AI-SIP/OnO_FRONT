@@ -5,8 +5,6 @@ import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../Model/Common/ProblemImageDataType.dart';
-import '../../Model/Problem/ProblemImageDataRegisterModel.dart';
 import '../../Model/Problem/ProblemModel.dart';
 import '../../Model/Problem/ProblemRegisterModel.dart';
 import '../../Module/Dialog/LoadingDialog.dart';
@@ -18,7 +16,6 @@ import '../../Provider/FoldersProvider.dart';
 import '../../Provider/ProblemsProvider.dart';
 import '../../Provider/ScreenIndexProvider.dart';
 import '../../Provider/UserProvider.dart';
-import '../../Service/Api/FileUpload/FileUploadService.dart';
 import '../../Service/Api/Problem/ProblemService.dart';
 import 'Widget/ActionButtons.dart';
 import 'Widget/DatePickerWidget.dart';
@@ -358,9 +355,6 @@ class _ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
     final problemId = widget.problemModel!.problemId;
     final originalFolderId = widget.problemModel!.folderId;
 
-    // 삭제할 이미지 삭제
-    await _deleteRemovedImages(problemsProvider);
-
     // 문제 기본 정보 업데이트
     final problemRegisterModel = ProblemRegisterModel(
       problemId: problemId,
@@ -376,19 +370,29 @@ class _ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
     // 폴더 갱신 (새 폴더와 기존 폴더 모두)
     await _refreshFolders(originalFolderId);
 
+    // 삭제할 이미지 삭제
+    await _deleteRemovedImages(problemsProvider, problemId);
+    // 새로 추가된 이미지 업데이트
+    await _uploadAndRegisterNewImages(problemsProvider, problemId);
+
+    _resetAll();
     // 화면 초기화 및 닫기
     Navigator.of(context).pop(true);
-
-    await _uploadAndRegisterNewImages(problemsProvider, problemId);
-    _resetAll();
   }
 
   /// 삭제된 이미지들을 서버에서 삭제
-  Future<void> _deleteRemovedImages(ProblemsProvider problemsProvider) async {
+  Future<void> _deleteRemovedImages(
+      ProblemsProvider problemsProvider, int problemId) async {
+    if (_deletedImageUrls.isEmpty) {
+      return;
+    }
+
     for (var imageUrl in _deletedImageUrls) {
       log('이미지 삭제: $imageUrl');
       await problemsProvider.deleteProblemImageData(imageUrl);
     }
+
+    await problemsProvider.fetchProblem(problemId);
   }
 
   /// 새로 추가된 이미지들을 업로드하고 서버에 등록
@@ -421,40 +425,6 @@ class _ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
       problemImages: imageFiles,
       problemImageTypes: imageTypes,
     );
-  }
-
-  /// 이미지 업로드 후 ProblemImageDataRegisterModel 리스트 생성
-  Future<List<ProblemImageDataRegisterModel>> _uploadAndCreateImageDataList({
-    required int? problemId,
-  }) async {
-    final service = FileUploadService();
-    final imageDataList = <ProblemImageDataRegisterModel>[];
-
-    // 이미지 업로드
-    final problemImageUrls =
-        await service.uploadMultipleImageFiles(_problemImages);
-    final answerImageUrls =
-        await service.uploadMultipleImageFiles(_answerImages);
-
-    // 문제 이미지 데이터 생성
-    for (var imageUrl in problemImageUrls) {
-      imageDataList.add(ProblemImageDataRegisterModel(
-        problemId: problemId,
-        imageUrl: imageUrl,
-        problemImageType: ProblemImageType.PROBLEM_IMAGE,
-      ));
-    }
-
-    // 해설 이미지 데이터 생성
-    for (var imageUrl in answerImageUrls) {
-      imageDataList.add(ProblemImageDataRegisterModel(
-        problemId: problemId,
-        imageUrl: imageUrl,
-        problemImageType: ProblemImageType.ANSWER_IMAGE,
-      ));
-    }
-
-    return imageDataList;
   }
 
   /// 폴더 컨텐츠 갱신 (수정 시 기존 폴더와 새 폴더 모두 갱신)
