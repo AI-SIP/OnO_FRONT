@@ -52,8 +52,10 @@ class _SettingScreenState extends State<SettingScreen> {
               onRefresh: _refreshData,
               color: themeProvider.primaryColor,
               child: ListView(
-                padding: EdgeInsets.only(bottom: screenHeight * 0.02),
+                padding: EdgeInsets.only(bottom: screenHeight * 0.01),
                 children: [
+                  SizedBox(height: screenHeight * 0.01),
+
                   // 유저 레벨 카드 (캐릭터 + 이름)
                   UserLevelCard(
                     userInfo: userProvider.userInfoModel,

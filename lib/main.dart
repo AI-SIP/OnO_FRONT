@@ -276,7 +276,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
       ),
       unselectedLabelStyle: standardTextStyle.copyWith(
         color: Colors.grey,
-        fontSize: screenHeight * 0.013,
+        fontSize: screenHeight * 0.012,
       ),
       onTap: _onItemTapped,
     );
@@ -284,10 +284,22 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
 
   List<BottomNavigationBarItem> _bottomNavigationItems() {
     return const [
-      BottomNavigationBarItem(icon: Icon(Icons.menu_book), label: '오답 관리'),
-      BottomNavigationBarItem(icon: Icon(Icons.history), label: '오답 복습'),
-      BottomNavigationBarItem(icon: Icon(Icons.edit), label: '오답노트 작성'),
-      BottomNavigationBarItem(icon: Icon(Icons.settings), label: '설정'),
+      BottomNavigationBarItem(
+          icon: Icon(Icons.menu_book, size: 20), label: '오답 관리'),
+      BottomNavigationBarItem(
+          icon: Icon(Icons.history, size: 20), label: '오답 복습'),
+      BottomNavigationBarItem(
+          icon: Icon(
+            Icons.edit,
+            size: 20,
+          ),
+          label: '오답노트 작성'),
+      BottomNavigationBarItem(
+          icon: Icon(
+            Icons.person,
+            size: 20,
+          ),
+          label: '마이 페이지'),
     ];
   }
 }
