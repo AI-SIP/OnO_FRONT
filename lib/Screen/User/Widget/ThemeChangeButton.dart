@@ -32,8 +32,8 @@ class ThemeChangeButton extends StatelessWidget {
             color: Colors.white,
             borderRadius: BorderRadius.circular(15),
             border: Border.all(
-              color: themeProvider.primaryColor.withOpacity(0.3),
-              width: 1.5,
+              color: Colors.grey[300]!,
+              width: 1,
             ),
           ),
           child: Row(
