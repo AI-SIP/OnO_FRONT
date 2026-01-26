@@ -288,23 +288,19 @@ class _FolderNavigationButtonsState extends State<FolderNavigationButtons> {
                             LoadingDialog.show(context, '오답 복습 중...');
 
                             try {
-                              FileUploadService fileUploadService =
-                                  FileUploadService();
-                              String imageUrl = await fileUploadService
-                                  .uploadImageFile(selectedImage!);
-
-                              final problemImageDataRegisterModel =
-                                  ProblemImageDataRegisterModel(
-                                problemId: problemId,
-                                imageUrl: imageUrl,
-                                problemImageType: ProblemImageType.SOLVE_IMAGE,
-                              );
-
+                              // 파일을 직접 서버로 전송
                               final problemsProvider =
                                   Provider.of<ProblemsProvider>(context,
                                       listen: false);
-                              await problemsProvider.registerProblemImageData(
-                                  problemImageDataRegisterModel);
+
+                              await problemsProvider.problemService.registerProblemImageData(
+                                problemId: problemId,
+                                problemImages: [File(selectedImage!.path)],
+                                problemImageTypes: ['SOLVE_IMAGE'],
+                              );
+
+                              // 문제 정보 갱신
+                              await problemsProvider.fetchProblem(problemId);
 
                               FirebaseAnalytics.instance.logEvent(
                                 name: 'problem_solve',
