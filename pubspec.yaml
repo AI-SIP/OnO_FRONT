@@ -94,6 +94,7 @@ flutter:
     - assets/GuideScreen/
     - assets/Logo/
     - assets/SocialLogin/
+    - assets/FrogCharacter/
     - assets/no_image.png
 
   fonts:
