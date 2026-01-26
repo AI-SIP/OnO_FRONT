@@ -72,7 +72,7 @@ class UserLevelCard extends StatelessWidget {
           // 총 경험치 바
           _buildExpBar(screenHeight, currentLevel, currentPoint, requiredPoint,
               progress),
-          SizedBox(height: screenHeight * 0.02),
+          SizedBox(height: screenHeight * 0.025),
 
           // 개구리 캐릭터
           FrogCharacter(level: currentLevel),

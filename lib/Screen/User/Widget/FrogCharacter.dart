@@ -33,6 +33,15 @@ class _FrogCharacterState extends State<FrogCharacter>
     '멋져요!',
     '계속 이렇게!',
     '최고예요!',
+    '실수는 성공의 밑거름!',
+    '지금 정말 잘하고 있어요!',
+    '어제보다 더 성장했네요!',
+    '개굴! 만점까지 달려볼까요?',
+    '집중하는 모습에 반해버렸어요!',
+    '내가 지켜보고 있어요, 화이팅!',
+    '고생 많았어요. 개굴!',
+    '할 수 있다! 할 수 있다!',
+    '내가 항상 응원하고 있어요.'
   ];
 
   @override
@@ -40,10 +49,10 @@ class _FrogCharacterState extends State<FrogCharacter>
     super.initState();
     _animationController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 200),
+      duration: const Duration(milliseconds: 300),
     );
 
-    _scaleAnimation = Tween<double>(begin: 1.0, end: 1.15).animate(
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 1.2).animate(
       CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
     );
   }
@@ -123,7 +132,7 @@ class _FrogCharacterState extends State<FrogCharacter>
                 duration: const Duration(milliseconds: 300),
                 child: Container(
                   padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(20),
