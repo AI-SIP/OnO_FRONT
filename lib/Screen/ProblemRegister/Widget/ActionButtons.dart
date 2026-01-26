@@ -28,22 +28,26 @@ class ActionButtons extends StatelessWidget {
             onPressed: onCancel,
             style: ElevatedButton.styleFrom(
               padding:
-                  EdgeInsets.symmetric(horizontal: w * .02, vertical: h * .012),
+                  EdgeInsets.symmetric(horizontal: w * .01, vertical: h * .007),
               backgroundColor: Colors.grey,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
             ),
-            child: const StandardText(text: '취소하기', color: Colors.white),
+            child: const StandardText(
+              text: '초기화',
+              color: Colors.white,
+              fontSize: 15,
+            ),
           ),
         ),
-        const SizedBox(width: 25),
+        const SizedBox(width: 30),
         Expanded(
           child: ElevatedButton(
             onPressed: onSubmit,
             style: ElevatedButton.styleFrom(
               padding:
-                  EdgeInsets.symmetric(horizontal: w * .02, vertical: h * .012),
+                  EdgeInsets.symmetric(horizontal: w * .01, vertical: h * .007),
               backgroundColor: theme.primaryColor,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
@@ -52,6 +56,7 @@ class ActionButtons extends StatelessWidget {
             child: StandardText(
               text: isEdit ? '수정 완료' : '문제 등록',
               color: Colors.white,
+              fontSize: 15,
             ),
           ),
         ),
