@@ -59,15 +59,20 @@ class UserLevelCard extends StatelessWidget {
           width: 1,
         ),
       ),
-      child: Column(
+      child: Stack(
+        clipBehavior: Clip.none,
         children: [
-          // 총 경험치 바
-          _buildExpBar(screenHeight, currentLevel, currentPoint, requiredPoint,
-              progress),
-          SizedBox(height: screenHeight * 0.025),
+          Column(
+            children: [
+              // 총 경험치 바
+              _buildExpBar(screenHeight, currentLevel, currentPoint,
+                  requiredPoint, progress),
+              SizedBox(height: screenHeight * 0.025),
 
-          // 개구리 캐릭터
-          FrogCharacter(level: currentLevel),
+              // 개구리 캐릭터
+              FrogCharacter(level: currentLevel),
+            ],
+          ),
         ],
       ),
     );

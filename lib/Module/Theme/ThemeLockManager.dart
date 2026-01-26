@@ -157,7 +157,7 @@ class ThemeLockManager {
       case 1:
         return '오답노트 작성';
       case 2:
-        return '오답노트 복습';
+        return '문제 복습';
       case 3:
         return '복습노트 복습';
       default:

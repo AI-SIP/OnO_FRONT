@@ -52,7 +52,7 @@ class _FrogCharacterState extends State<FrogCharacter>
       duration: const Duration(milliseconds: 300),
     );
 
-    _scaleAnimation = Tween<double>(begin: 1.0, end: 1.2).animate(
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 1.1).animate(
       CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
     );
   }
@@ -130,25 +130,40 @@ class _FrogCharacterState extends State<FrogCharacter>
               child: AnimatedOpacity(
                 opacity: _showMessage ? 1.0 : 0.0,
                 duration: const Duration(milliseconds: 300),
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      constraints: const BoxConstraints(
+                        minWidth: 120,
+                        maxWidth: 220,
                       ),
-                    ],
-                  ),
-                  child: StandardText(
-                    text: _displayMessage!,
-                    fontSize: 12,
-                    color: Colors.black87,
-                  ),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 10),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: StandardText(
+                        text: _displayMessage!,
+                        fontSize: 12,
+                        color: Colors.black87,
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                    // 말풍선 꼬리
+                    CustomPaint(
+                      size: const Size(20, 10),
+                      painter: _SpeechBubbleTailPainter(),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -156,4 +171,33 @@ class _FrogCharacterState extends State<FrogCharacter>
       ),
     );
   }
+}
+
+// 말풍선 꼬리를 그리는 CustomPainter
+class _SpeechBubbleTailPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.fill;
+
+    final path = Path()
+      ..moveTo(size.width / 2, size.height) // 아래 끝점
+      ..lineTo(size.width / 2 - 8, 0) // 왼쪽 상단
+      ..lineTo(size.width / 2 + 8, 0) // 오른쪽 상단
+      ..close();
+
+    // 그림자 효과
+    canvas.drawShadow(
+      path,
+      Colors.black.withOpacity(0.1),
+      2.0,
+      false,
+    );
+
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

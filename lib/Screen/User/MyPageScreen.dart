@@ -52,7 +52,9 @@ class _SettingScreenState extends State<SettingScreen> {
               onRefresh: _refreshData,
               color: themeProvider.primaryColor,
               child: ListView(
-                padding: EdgeInsets.only(bottom: screenHeight * 0.01),
+                clipBehavior: Clip.none,
+                padding: EdgeInsets.only(
+                    bottom: screenHeight * 0.01, top: screenHeight * 0.05),
                 children: [
                   SizedBox(height: screenHeight * 0.01),
 
