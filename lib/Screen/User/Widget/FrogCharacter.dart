@@ -1,5 +1,7 @@
 import 'dart:math';
+
 import 'package:flutter/material.dart';
+
 import '../../../Module/Text/StandardText.dart';
 
 class FrogCharacter extends StatefulWidget {
@@ -61,7 +63,7 @@ class _FrogCharacterState extends State<FrogCharacter>
     if (level >= 5) return 'assets/FrogCharacter/FROG_LEVEL5.png';
     if (level >= 3) return 'assets/FrogCharacter/FROG_LEVEL3.png';
     if (level >= 1) return 'assets/FrogCharacter/FROG_LEVEL1.png';
-    return 'assets/FrogCharacter/FROG_BASIC.png';
+    return 'assets/FrogCharacter/FROG_LEVEL1.png';
   }
 
   void _onCharacterTap() {
@@ -72,8 +74,8 @@ class _FrogCharacterState extends State<FrogCharacter>
 
     // 랜덤 메시지 표시
     setState(() {
-      _displayMessage =
-          _encouragementMessages[Random().nextInt(_encouragementMessages.length)];
+      _displayMessage = _encouragementMessages[
+          Random().nextInt(_encouragementMessages.length)];
       _showMessage = true;
     });
 
@@ -107,15 +109,15 @@ class _FrogCharacterState extends State<FrogCharacter>
             },
             child: Image.asset(
               _getFrogImagePath(widget.level),
-              width: 200,
-              height: 200,
+              width: 180,
+              height: 180,
               fit: BoxFit.contain,
             ),
           ),
           // 격려 메시지
           if (_showMessage && _displayMessage != null)
             Positioned(
-              top: 0,
+              top: -10,
               child: AnimatedOpacity(
                 opacity: _showMessage ? 1.0 : 0.0,
                 duration: const Duration(milliseconds: 300),
@@ -135,7 +137,7 @@ class _FrogCharacterState extends State<FrogCharacter>
                   ),
                   child: StandardText(
                     text: _displayMessage!,
-                    fontSize: 14,
+                    fontSize: 12,
                     color: Colors.black87,
                   ),
                 ),
