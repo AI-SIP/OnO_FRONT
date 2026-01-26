@@ -69,7 +69,7 @@ class _ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
                   ),
                 ],
               ),
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
               child: ActionButtons(
                 isEdit: widget.isEditMode,
                 onCancel: () => _templateKey.currentState?.resetAll(),

@@ -47,7 +47,7 @@ class ThemeChangeButton extends StatelessWidget {
                 child: Icon(
                   Icons.palette,
                   color: themeProvider.primaryColor,
-                  size: 24,
+                  size: 15,
                 ),
               ),
               SizedBox(width: screenHeight * 0.015),
@@ -57,10 +57,10 @@ class ThemeChangeButton extends StatelessWidget {
                   children: [
                     StandardText(
                       text: '테마 변경',
-                      fontSize: 16,
+                      fontSize: 14,
                       color: themeProvider.primaryColor,
                     ),
-                    SizedBox(height: 2),
+                    const SizedBox(height: 1),
                     StandardText(
                       text: '오답노트의 템플릿 색상을 변경하세요',
                       fontSize: 12,

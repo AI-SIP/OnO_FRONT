@@ -74,7 +74,7 @@ class CompactActivityLevels extends StatelessWidget {
           ),
           SizedBox(height: screenHeight * 0.015),
           _buildActivityRow(
-            icon: Icons.check_circle,
+            icon: Icons.waving_hand_rounded,
             category: '출석',
             level: userInfo!.attendanceLevel,
             point: userInfo!.attendancePoint,
@@ -92,8 +92,8 @@ class CompactActivityLevels extends StatelessWidget {
           ),
           SizedBox(height: screenHeight * 0.012),
           _buildActivityRow(
-            icon: Icons.quiz,
-            category: '오답노트 복습',
+            icon: Icons.chrome_reader_mode_outlined,
+            category: '문제 복습',
             level: userInfo!.problemPracticeLevel,
             point: userInfo!.problemPracticePoint,
             color: Colors.green[400]!,
@@ -101,7 +101,7 @@ class CompactActivityLevels extends StatelessWidget {
           ),
           SizedBox(height: screenHeight * 0.012),
           _buildActivityRow(
-            icon: Icons.book,
+            icon: Icons.history,
             category: '복습노트 복습',
             level: userInfo!.notePracticeLevel,
             point: userInfo!.notePracticePoint,

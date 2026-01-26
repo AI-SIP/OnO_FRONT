@@ -27,7 +27,7 @@ class ActionButtons extends StatelessWidget {
         onPressed: onSubmit,
         style: ElevatedButton.styleFrom(
           padding:
-              EdgeInsets.symmetric(horizontal: w * .01, vertical: h * .007),
+              EdgeInsets.symmetric(horizontal: w * .01, vertical: h * .005),
           backgroundColor: theme.primaryColor,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
