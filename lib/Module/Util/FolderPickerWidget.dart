@@ -39,7 +39,7 @@ class FolderPickerWidget extends StatelessWidget {
           },
           style: TextButton.styleFrom(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            backgroundColor: theme.primaryColor.withOpacity(0.1),
+            backgroundColor: Colors.white,
             side: BorderSide(color: theme.primaryColor, width: 1.5),
             shape:
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),

@@ -25,19 +25,23 @@ import 'Widget/LabeledTextField.dart';
 class ProblemRegisterTemplate extends StatefulWidget {
   final ProblemModel? problemModel;
   final bool isEditMode;
+  final VoidCallback? onCancel;
+  final VoidCallback? onSubmit;
 
   const ProblemRegisterTemplate({
     Key? key,
     this.problemModel,
     required this.isEditMode,
+    this.onCancel,
+    this.onSubmit,
   }) : super(key: key);
 
   @override
-  _ProblemRegisterTemplateState createState() =>
-      _ProblemRegisterTemplateState();
+  ProblemRegisterTemplateState createState() =>
+      ProblemRegisterTemplateState();
 }
 
-class _ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
+class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
   late DateTime _selectedDate;
   late int? _selectedFolderId;
   final _titleCtrl = TextEditingController();
@@ -197,13 +201,6 @@ class _ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
                     ),
                   ],
                 ),
-              const SizedBox(height: 30),
-              ActionButtons(
-                isEdit: widget.isEditMode,
-                onCancel: _resetAll,
-                onSubmit: _submit,
-              ),
-              const SizedBox(height: 10),
             ],
           ),
         ));
@@ -227,7 +224,7 @@ class _ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
     });
   }
 
-  void _resetAll() {
+  void resetAll() {
     setState(() {
       _titleCtrl.clear();
       _memoCtrl.clear();
@@ -236,7 +233,7 @@ class _ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
     });
   }
 
-  Future<void> _submit() async {
+  Future<void> submit() async {
     LoadingDialog.show(
         context, widget.isEditMode ? '오답노트 수정 중...' : '오답노트 작성 중...');
     try {
@@ -298,7 +295,7 @@ class _ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
     // 5. 백그라운드에서 이미지 업로드 (비동기)
     _uploadImagesInBackground(registeredProblemId, problemsProvider);
 
-    _resetAll();
+    resetAll();
   }
 
   /// 백그라운드에서 이미지 업로드
@@ -375,7 +372,7 @@ class _ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
     // 새로 추가된 이미지 업데이트
     await _uploadAndRegisterNewImages(problemsProvider, problemId);
 
-    _resetAll();
+    resetAll();
     // 화면 초기화 및 닫기
     Navigator.of(context).pop(true);
   }

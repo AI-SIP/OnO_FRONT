@@ -56,7 +56,7 @@ class LabeledTextField extends StatelessWidget {
               borderSide:
                   BorderSide(color: themeProvider.primaryColor, width: 1.5),
             ),
-            fillColor: themeProvider.primaryColor.withOpacity(0.1),
+            fillColor: Colors.white,
             filled: true,
             hintText: hintText,
             hintStyle: standardTextStyle.copyWith(
