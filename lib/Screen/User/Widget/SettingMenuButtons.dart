@@ -4,7 +4,7 @@ import '../../../Module/Theme/ThemeHandler.dart';
 
 class SettingMenuButtons extends StatelessWidget {
   final ThemeHandler themeProvider;
-  final VoidCallback onThemeChangeTap;
+  final VoidCallback onNameEditTap;
   final VoidCallback onGuideTap;
   final VoidCallback onFeedbackTap;
   final VoidCallback onTermsTap;
@@ -12,7 +12,7 @@ class SettingMenuButtons extends StatelessWidget {
   const SettingMenuButtons({
     super.key,
     required this.themeProvider,
-    required this.onThemeChangeTap,
+    required this.onNameEditTap,
     required this.onGuideTap,
     required this.onFeedbackTap,
     required this.onTermsTap,
@@ -41,10 +41,9 @@ class SettingMenuButtons extends StatelessWidget {
         children: [
           _buildMenuItem(
             context: context,
-            icon: Icons.palette,
-            title: '테마 변경',
-            onTap: onThemeChangeTap,
-            showThemeColor: true,
+            icon: Icons.edit,
+            title: '이름 수정',
+            onTap: onNameEditTap,
           ),
           Divider(height: screenHeight * 0.02, color: Colors.grey[300]),
           _buildMenuItem(
