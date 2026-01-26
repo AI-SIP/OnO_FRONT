@@ -17,30 +17,22 @@ class UserLevelCard extends StatelessWidget {
     required this.userName,
   });
 
-  // 전체 레벨 계산 (4개 활동의 평균)
-  int _calculateOverallLevel() {
+  // 전체 레벨 (서버에서 계산된 값 사용)
+  int _getOverallLevel() {
     if (userInfo == null) return 0;
-    return ((userInfo!.attendanceLevel +
-                userInfo!.noteWriteLevel +
-                userInfo!.problemPracticeLevel +
-                userInfo!.notePracticeLevel) /
-            4)
-        .floor();
+    return userInfo!.totalStudyLevel;
   }
 
-  // 전체 경험치 계산
-  int _calculateOverallPoint() {
+  // 현재 경험치 (서버에서 계산된 값 사용)
+  int _getCurrentPoint() {
     if (userInfo == null) return 0;
-    return userInfo!.attendancePoint +
-        userInfo!.noteWritePoint +
-        userInfo!.problemPracticePoint +
-        userInfo!.notePracticePoint;
+    return userInfo!.totalStudyCurrentPoint;
   }
 
-  // 다음 레벨까지 필요한 경험치
-  int _calculateRequiredPoint() {
-    int level = _calculateOverallLevel();
-    return (level + 1) * 400; // 4개 활동 각각 100포인트씩 = 400포인트
+  // 다음 레벨까지 필요한 경험치 (서버에서 계산된 값 사용)
+  int _getNextLevelThreshold() {
+    if (userInfo == null) return 40;
+    return userInfo!.totalStudyNextLevelThreshold;
   }
 
   @override
@@ -48,9 +40,9 @@ class UserLevelCard extends StatelessWidget {
     double screenHeight = MediaQuery.of(context).size.height;
     double screenWidth = MediaQuery.of(context).size.width;
 
-    int currentLevel = _calculateOverallLevel();
-    int currentPoint = _calculateOverallPoint();
-    int requiredPoint = _calculateRequiredPoint();
+    int currentLevel = _getOverallLevel();
+    int currentPoint = _getCurrentPoint();
+    int requiredPoint = _getNextLevelThreshold();
     double progress = requiredPoint > 0 ? currentPoint / requiredPoint : 0;
 
     return Container(

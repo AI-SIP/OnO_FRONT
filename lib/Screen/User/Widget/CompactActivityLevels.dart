@@ -179,7 +179,8 @@ class CompactActivityLevels extends StatelessWidget {
     required Color color,
     required double screenHeight,
   }) {
-    int requiredPoint = level * 100;
+    // 활동별 경험치 필요량: 10 + (level - 1) * 10
+    int requiredPoint = 10 + (level - 1) * 10;
     double progress = requiredPoint > 0 ? point / requiredPoint : 0;
 
     return Row(

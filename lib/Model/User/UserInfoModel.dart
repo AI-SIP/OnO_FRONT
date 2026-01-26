@@ -15,6 +15,11 @@ class UserInfoModel {
   int notePracticeLevel;
   int notePracticePoint;
 
+  // 총 학습 레벨 관련 필드 (서버에서 계산됨)
+  int totalStudyLevel;
+  int totalStudyCurrentPoint;
+  int totalStudyNextLevelThreshold;
+
   UserInfoModel({
     this.userId = -1,
     this.email = '',
@@ -29,6 +34,9 @@ class UserInfoModel {
     this.problemPracticePoint = 0,
     this.notePracticeLevel = 1,
     this.notePracticePoint = 0,
+    this.totalStudyLevel = 0,
+    this.totalStudyCurrentPoint = 0,
+    this.totalStudyNextLevelThreshold = 40,
   });
 
   factory UserInfoModel.fromJson(dynamic json) {
@@ -50,6 +58,9 @@ class UserInfoModel {
       problemPracticePoint: json['problemPracticePoint'] ?? 0,
       notePracticeLevel: json['notePracticeLevel'] ?? 1,
       notePracticePoint: json['notePracticePoint'] ?? 0,
+      totalStudyLevel: json['totalStudyLevel'] ?? 0,
+      totalStudyCurrentPoint: json['totalStudyCurrentPoint'] ?? 0,
+      totalStudyNextLevelThreshold: json['totalStudyNextLevelThreshold'] ?? 40,
     );
   }
 }
