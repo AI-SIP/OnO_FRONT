@@ -21,46 +21,24 @@ class ActionButtons extends StatelessWidget {
     final theme = Provider.of<ThemeHandler>(context);
     final h = MediaQuery.of(context).size.height;
     final w = MediaQuery.of(context).size.width;
-    return Row(
-      children: [
-        Expanded(
-          child: ElevatedButton(
-            onPressed: onCancel,
-            style: ElevatedButton.styleFrom(
-              padding:
-                  EdgeInsets.symmetric(horizontal: w * .01, vertical: h * .007),
-              backgroundColor: Colors.grey,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-            child: const StandardText(
-              text: '초기화',
-              color: Colors.white,
-              fontSize: 15,
-            ),
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton(
+        onPressed: onSubmit,
+        style: ElevatedButton.styleFrom(
+          padding:
+              EdgeInsets.symmetric(horizontal: w * .01, vertical: h * .007),
+          backgroundColor: theme.primaryColor,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
           ),
         ),
-        const SizedBox(width: 30),
-        Expanded(
-          child: ElevatedButton(
-            onPressed: onSubmit,
-            style: ElevatedButton.styleFrom(
-              padding:
-                  EdgeInsets.symmetric(horizontal: w * .01, vertical: h * .007),
-              backgroundColor: theme.primaryColor,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-            child: StandardText(
-              text: isEdit ? '수정 완료' : '문제 등록',
-              color: Colors.white,
-              fontSize: 15,
-            ),
-          ),
+        child: StandardText(
+          text: isEdit ? '수정 완료' : '작성 완료',
+          color: Colors.white,
+          fontSize: 15,
         ),
-      ],
+      ),
     );
   }
 }
