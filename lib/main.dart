@@ -25,7 +25,7 @@ import 'Provider/ProblemsProvider.dart';
 import 'Provider/UserProvider.dart';
 import 'Screen/Folder/DirectoryScreen.dart';
 import 'Screen/PracticeNote/PracticeThumbnailScreen.dart';
-import 'Screen/User/SettingScreen.dart';
+import 'Screen/User/MyPageScreen.dart';
 import 'Util/NotificationService.dart';
 import 'Util/SendDiscordAlert.dart';
 
