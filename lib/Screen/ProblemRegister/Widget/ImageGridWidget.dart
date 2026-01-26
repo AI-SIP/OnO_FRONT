@@ -55,7 +55,7 @@ class ImageGridWidget extends StatelessWidget {
                     width: 80,
                     height: 80,
                     decoration: BoxDecoration(
-                      color: theme.primaryColor.withOpacity(0.1),
+                      color: Colors.white,
                       border: Border.all(color: theme.primaryColor),
                       borderRadius: BorderRadius.circular(8),
                     ),
