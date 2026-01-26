@@ -285,7 +285,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   List<BottomNavigationBarItem> _bottomNavigationItems() {
     return const [
       BottomNavigationBarItem(
-          icon: Icon(Icons.menu_book, size: 20), label: '오답 관리'),
+          icon: Icon(Icons.menu_book, size: 20), label: '노트 관리'),
       BottomNavigationBarItem(
           icon: Icon(Icons.history, size: 20), label: '오답 복습'),
       BottomNavigationBarItem(
