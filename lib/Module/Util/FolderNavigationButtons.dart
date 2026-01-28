@@ -4,14 +4,11 @@ import 'dart:io';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:ono/Model/Common/ProblemImageDataType.dart';
-import 'package:ono/Model/Problem/ProblemImageDataRegisterModel.dart';
 import 'package:ono/Module/Dialog/LoadingDialog.dart';
 import 'package:ono/Provider/FoldersProvider.dart';
 import 'package:ono/Provider/ProblemsProvider.dart';
 import 'package:ono/Provider/UserProvider.dart';
 import 'package:ono/Screen/ProblemDetail/ProblemDetailScreen.dart';
-import 'package:ono/Service/Api/FileUpload/FileUploadService.dart';
 import 'package:provider/provider.dart';
 
 import '../../Exception/ApiException.dart';
@@ -69,91 +66,58 @@ class _FolderNavigationButtonsState extends State<FolderNavigationButtons> {
         ? problemList[currentIndex + 1].problemId
         : problemList.first.problemId;
 
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: [
-        TextButton(
-          onPressed: () {
-            FirebaseAnalytics.instance.logEvent(
-              name: 'navigate_previous_problem',
-            );
-            navigateToProblem(context, previousProblemId, isNext: false);
-          },
-          style: ElevatedButton.styleFrom(
-            padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
-            backgroundColor: Colors.white,
-            side: BorderSide(
-              color: themeProvider.primaryColor,
-              width: 2.0,
-            ),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(15.0),
-            ),
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: ElevatedButton(
+        onPressed: () =>
+            showSolveDialog(context, problemList[currentIndex].problemId),
+        style: ElevatedButton.styleFrom(
+          padding: EdgeInsets.symmetric(
+            horizontal: MediaQuery.of(context).size.width * 0.01,
+            vertical: screenHeight * 0.015,
           ),
-          child: StandardText(
-              text: '< 이전 문제', fontSize: 14, color: themeProvider.primaryColor),
-        ),
-
-        // 복습 완료 버튼
-        TextButton(
-          onPressed: () =>
-              showSolveDialog(context, problemList[currentIndex].problemId),
-          style: ElevatedButton.styleFrom(
-            padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
-            backgroundColor: Colors.white,
-            side: BorderSide(
-              color: themeProvider.primaryColor,
-              width: 2.0,
-            ),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(15.0),
-            ),
+          backgroundColor: themeProvider.primaryColor,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
           ),
-          child: isSolved
-              ? Icon(
-                  Icons.check, // 복습 완료 시 체크 아이콘만 표시
-                  color: themeProvider.primaryColor,
-                  size: 20,
-                )
-              : Row(
-                  mainAxisSize: MainAxisSize.min, // 터치 아이콘과 텍스트를 한 줄로 표시
-                  children: [
-                    Icon(
-                      Icons.touch_app, // 복습 완료 전 터치 아이콘
-                      color: themeProvider.primaryColor,
-                      size: 15,
-                    ),
-                    const SizedBox(width: 10), // 아이콘과 텍스트 간 간격
-                    StandardText(
-                      text: '문제 복습', // 복습 완료 텍스트
-                      fontSize: 15,
-                      color: themeProvider.primaryColor,
-                    ),
-                  ],
-                ),
         ),
-        TextButton(
-          onPressed: () {
-            FirebaseAnalytics.instance.logEvent(
-              name: 'navigate_next_problem',
-            );
-            navigateToProblem(context, nextProblemId, isNext: true);
-          },
-          style: ElevatedButton.styleFrom(
-            padding: EdgeInsets.symmetric(horizontal: 15, vertical: 5),
-            backgroundColor: Colors.white,
-            side: BorderSide(
-              color: themeProvider.primaryColor,
-              width: 2.0,
-            ),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(15.0),
-            ),
-          ),
-          child: StandardText(
-              text: '다음 문제 >', fontSize: 14, color: themeProvider.primaryColor),
-        ),
-      ],
+        child: isSolved
+            ? const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.check,
+                    color: Colors.white,
+                    size: 20,
+                  ),
+                  SizedBox(width: 8),
+                  StandardText(
+                    text: '복습 완료',
+                    fontSize: 15,
+                    color: Colors.white,
+                  ),
+                ],
+              )
+            : const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.touch_app,
+                    color: Colors.white,
+                    size: 18,
+                  ),
+                  SizedBox(width: 8),
+                  StandardText(
+                    text: '복습 인증',
+                    fontSize: 15,
+                    color: Colors.white,
+                  ),
+                ],
+              ),
+      ),
     );
   }
 
@@ -293,7 +257,8 @@ class _FolderNavigationButtonsState extends State<FolderNavigationButtons> {
                                   Provider.of<ProblemsProvider>(context,
                                       listen: false);
 
-                              await problemsProvider.problemService.registerProblemImageData(
+                              await problemsProvider.problemService
+                                  .registerProblemImageData(
                                 problemId: problemId,
                                 problemImages: [File(selectedImage!.path)],
                                 problemImageTypes: ['SOLVE_IMAGE'],
@@ -393,7 +358,7 @@ class _FolderNavigationButtonsState extends State<FolderNavigationButtons> {
                           ),
                         )
                       : StandardText(
-                          text: '문제 복습',
+                          text: '복습 완료',
                           fontSize: 14,
                           color: themeProvider.primaryColor,
                         ),

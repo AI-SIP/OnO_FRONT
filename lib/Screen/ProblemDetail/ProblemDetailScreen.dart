@@ -10,7 +10,6 @@ import '../../Model/Problem/ProblemAnalysisStatus.dart';
 import '../../Model/Problem/ProblemModel.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
-import '../../Module/Util/FolderNavigationButtons.dart';
 import '../../Provider/FoldersProvider.dart';
 import '../../Provider/ProblemsProvider.dart';
 import '../PracticeNote/PracticeNavigationButtons.dart';
@@ -358,6 +357,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
         ),
       );
     } else {
+      /*
       return Padding(
         padding: EdgeInsets.only(top: topPadding, bottom: bottomPadding),
         child: FolderNavigationButtons(
@@ -366,6 +366,11 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
           currentId: widget.problemId,
           onRefresh: _setProblemModel,
         ),
+      );
+       */
+
+      return const Padding(
+        padding: EdgeInsets.only(top: 0, bottom: 0),
       );
     }
   }
