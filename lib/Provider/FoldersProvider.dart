@@ -24,6 +24,8 @@ class FoldersProvider with ChangeNotifier {
 
   List<FolderModel> get folders => _folders;
 
+  FolderModel? get rootFolder => _folders.isNotEmpty ? _folders[0] : null;
+
   FoldersProvider({required this.problemsProvider});
 
   FolderModel getFolder(int folderId) {
@@ -42,6 +44,33 @@ class FoldersProvider with ChangeNotifier {
 
     log('can\'t find problemId: $folderId');
     throw Exception('Problem with id $folderId not found.');
+  }
+
+  List<ProblemModel> getProblemsByFolder(int? folderId) {
+    FolderModel? folder;
+    if (folderId == null) {
+      folder = rootFolder;
+    } else {
+      try {
+        folder = getFolder(folderId);
+      } catch (e) {
+        log('Error getting folder $folderId: $e');
+        return [];
+      }
+    }
+
+    if (folder == null) return [];
+
+    List<ProblemModel> problems = [];
+    for (var problemId in folder.problemIdList) {
+      try {
+        final problemModel = problemsProvider.getProblem(problemId);
+        problems.add(problemModel);
+      } catch (e) {
+        log('Error getting problem $problemId: $e');
+      }
+    }
+    return problems;
   }
 
   // 상위 폴더로 이동

@@ -25,7 +25,9 @@ import '../ProblemDetail/ProblemDetailScreen.dart';
 import 'UserGuideScreen.dart';
 
 class DirectoryScreen extends StatefulWidget {
-  const DirectoryScreen({super.key});
+  final int? folderId; // 이 화면이 표시할 폴더 ID
+
+  const DirectoryScreen({super.key, this.folderId});
 
   @override
   _DirectoryScreenState createState() => _DirectoryScreenState();
@@ -36,6 +38,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   bool _isSelectionMode = false; // 선택 모드 활성화 여부
   final List<int> _selectedFolderIds = []; // 선택된 폴더 ID 리스트
   final List<int> _selectedProblemIds = []; // 선택된 문제 ID 리스트
+  FolderModel? _currentFolder; // 이 화면의 폴더 데이터
+  List<ProblemModel> _currentProblems = []; // 이 화면의 문제 리스트
 
   @override
   void initState() {
@@ -44,12 +48,31 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final userProvider = Provider.of<UserProvider>(context, listen: false);
-      if (!modalShown && userProvider.isFirstLogin) {
+      final foldersProvider = Provider.of<FoldersProvider>(context, listen: false);
+
+      // 이 화면의 폴더 데이터 로드
+      await _loadFolderData();
+
+      if (!modalShown && userProvider.isFirstLogin && widget.folderId == null) {
         modalShown = true;
         userProvider.changeIsFirstLogin();
         _showUserGuideModal();
       }
     });
+  }
+
+  Future<void> _loadFolderData() async {
+    final foldersProvider = Provider.of<FoldersProvider>(context, listen: false);
+    await foldersProvider.fetchFolderContent(widget.folderId);
+
+    if (mounted) {
+      setState(() {
+        _currentFolder = widget.folderId == null
+            ? foldersProvider.rootFolder
+            : foldersProvider.getFolder(widget.folderId!);
+        _currentProblems = foldersProvider.getProblemsByFolder(widget.folderId);
+      });
+    }
   }
 
   void _showUserGuideModal() async {
@@ -80,15 +103,6 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
     return PopScope(
         canPop: true,
-        onPopInvokedWithResult: (bool didPop, Object? result) async {
-          if (didPop) {
-            if (foldersProvider.currentFolder?.parentFolder?.folderId != null) {
-              foldersProvider.moveToFolder(
-                  foldersProvider.currentFolder?.parentFolder?.folderId);
-            }
-            return;
-          }
-        },
         child: Scaffold(
           backgroundColor: Colors.white,
           appBar: _buildAppBar(themeProvider, foldersProvider), // 상단 AppBar 추가
@@ -123,9 +137,9 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       title: StandardText(
         text: _isSelectionMode
             ? '삭제할 항목 선택'
-            : ((foldersProvider.currentFolder?.parentFolder?.folderId != null &&
-                    foldersProvider.currentFolder?.folderName != null)
-                ? foldersProvider.currentFolder!.folderName
+            : ((_currentFolder?.parentFolder?.folderId != null &&
+                    _currentFolder?.folderName != null)
+                ? _currentFolder!.folderName
                 : '책장'),
         fontSize: 20,
         color: themeProvider.primaryColor,
@@ -180,7 +194,10 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       onFolderNameSubmitted: (folderName) async {
         final foldersProvider =
             Provider.of<FoldersProvider>(context, listen: false);
-        await foldersProvider.createFolder(folderName);
+        await foldersProvider.createFolder(folderName, parentFolderId: _currentFolder?.folderId);
+
+        // 현재 화면 새로고침
+        await _loadFolderData();
       },
     );
   }
@@ -304,15 +321,10 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
           Padding(
             padding:
                 const EdgeInsets.only(top: 10, left: 10, right: 10), // 왼쪽 여백 추가
-            child: Consumer<FoldersProvider>(
-              builder: (context, foldersProvider, child) {
-                int problemCount = foldersProvider.currentProblems.length;
-                return StandardText(
-                  text: '오답노트 수 : $problemCount',
-                  fontSize: 15,
-                  color: themeProvider.primaryColor,
-                );
-              },
+            child: StandardText(
+              text: '오답노트 수 : ${_currentProblems.length}',
+              fontSize: 15,
+              color: themeProvider.primaryColor,
             ),
           ),
         ],
@@ -323,7 +335,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   Future<void> _showRenameFolderDialog(FoldersProvider foldersProvider) async {
     await _showFolderNameDialog(
       dialogTitle: '공책 이름 변경',
-      defaultFolderName: foldersProvider.currentFolder?.folderName ?? '',
+      defaultFolderName: _currentFolder?.folderName ?? '',
       onFolderNameSubmitted: (newName) async {
         await _renameFolder(newName);
       },
@@ -336,13 +348,16 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     final foldersProvider =
         Provider.of<FoldersProvider>(context, listen: false);
     await foldersProvider.updateFolder(
-        newName, foldersProvider.currentFolder!.folderId, null);
+        newName, _currentFolder!.folderId, null);
+
+    // 데이터 다시 로드
+    await _loadFolderData();
   }
 
   // 폴더 이동 다이얼로그 출력
   Future<void> _showMoveFolderDialog(FoldersProvider foldersProvider) async {
     // 루트 폴더인지 확인
-    if (foldersProvider.currentFolder?.parentFolder?.folderId == null) {
+    if (_currentFolder?.parentFolder?.folderId == null) {
       _showCannotMoveRootFolderDialog();
       return;
     }
@@ -360,8 +375,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
       // 폴더 업데이트 및 루트로 이동
       await foldersProvider.updateFolder(
-          foldersProvider.currentFolder!.folderName,
-          foldersProvider.currentFolder!.folderId,
+          _currentFolder!.folderName,
+          _currentFolder!.folderId,
           selectedFolderId); // 부모 폴더 변경
 
       // 업데이트가 완전히 끝난 후 루트로 이동
@@ -507,80 +522,76 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         Expanded(
           child: LayoutBuilder(
             builder: (context, constraints) {
-              return Consumer<FoldersProvider>(
-                builder: (context, foldersProvider, child) {
-                  var subFolderIds =
-                      foldersProvider.currentFolder?.subFolderList ?? [];
-                  var currentProblems = foldersProvider.currentProblems;
+              var subFolderIds = _currentFolder?.subFolderList ?? [];
+              var currentProblems = _currentProblems;
 
-                  if (subFolderIds.isEmpty && currentProblems.isEmpty) {
-                    return Center(
-                      child: SingleChildScrollView(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                          SvgPicture.asset(
-                            'assets/Icon/GreenNote.svg', // 아이콘 경로
-                            width: 100, // 적절한 크기 설정
-                            height: 100,
-                          ),
-                          const SizedBox(height: 40), // 아이콘과 텍스트 사이 간격
-                          const StandardText(
-                            text: '작성한 오답노트를\n공책에 저장해 관리하세요!',
-                            fontSize: 16,
-                            color: Colors.black,
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(
-                            height: 30,
-                          ),
-                          ElevatedButton(
-                            onPressed: () {
-                              // 플로팅 버튼의 공책 생성 로직과 동일하게 동작
-                              FirebaseAnalytics.instance
-                                  .logEvent(name: 'folder_create_button_click');
-                              _showCreateFolderDialog();
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor:
-                                  themeProvider.primaryColor, // primaryColor 적용
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 40,
-                                vertical: 8,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(15),
-                              ),
-                            ),
-                            child: const StandardText(
-                              text: '공책 추가하기',
-                              fontSize: 16,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ],
+              if (subFolderIds.isEmpty && currentProblems.isEmpty) {
+                return Center(
+                  child: SingleChildScrollView(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                      SvgPicture.asset(
+                        'assets/Icon/GreenNote.svg', // 아이콘 경로
+                        width: 100, // 적절한 크기 설정
+                        height: 100,
                       ),
-                    ),
-                    );
+                      const SizedBox(height: 40), // 아이콘과 텍스트 사이 간격
+                      const StandardText(
+                        text: '작성한 오답노트를\n공책에 저장해 관리하세요!',
+                        fontSize: 16,
+                        color: Colors.black,
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(
+                        height: 30,
+                      ),
+                      ElevatedButton(
+                        onPressed: () {
+                          // 플로팅 버튼의 공책 생성 로직과 동일하게 동작
+                          FirebaseAnalytics.instance
+                              .logEvent(name: 'folder_create_button_click');
+                          _showCreateFolderDialog();
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor:
+                              themeProvider.primaryColor, // primaryColor 적용
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 40,
+                            vertical: 8,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(15),
+                          ),
+                        ),
+                        child: const StandardText(
+                          text: '공책 추가하기',
+                          fontSize: 16,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                );
+              }
+
+              final foldersProvider = Provider.of<FoldersProvider>(context, listen: false);
+              return ListView.builder(
+                itemCount: subFolderIds.length + currentProblems.length,
+                itemBuilder: (context, index) {
+                  if (index < subFolderIds.length) {
+                    var subFolderId = subFolderIds[index].folderId;
+
+                    var subFolder = foldersProvider.getFolder(subFolderId);
+                    return _buildFolderTile(
+                        subFolder, themeProvider, index);
+                  } else {
+                    var problem =
+                        currentProblems[index - subFolderIds.length];
+                    return _buildProblemTile(problem, themeProvider);
                   }
-
-                  return ListView.builder(
-                    itemCount: subFolderIds.length + currentProblems.length,
-                    itemBuilder: (context, index) {
-                      if (index < subFolderIds.length) {
-                        var subFolderId = subFolderIds[index].folderId;
-
-                        var subFolder = foldersProvider.getFolder(subFolderId);
-                        return _buildFolderTile(
-                            subFolder, themeProvider, index);
-                      } else {
-                        var problem =
-                            currentProblems[index - subFolderIds.length];
-                        return _buildProblemTile(problem, themeProvider);
-                      }
-                    },
-                  );
                 },
               );
             },
@@ -616,12 +627,9 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
             Navigator.push(
               context,
               MaterialPageRoute(builder: (context) {
-                return const DirectoryScreen();
+                return DirectoryScreen(folderId: folder.folderId);
               }),
             );
-
-            Provider.of<FoldersProvider>(context, listen: false)
-                .moveToFolder(folder.folderId);
           }
         },
         child: LongPressDraggable<FolderModel>(
@@ -959,8 +967,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         backgroundColor: Theme.of(context).primaryColor,
       );
 
-      await foldersProvider
-          .fetchFolderContent(foldersProvider.currentFolder!.folderId);
+      await _loadFolderData();
     } catch (e) {
       // 에러 처리
       log('Error deleting items: $e');
@@ -1035,6 +1042,9 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     await foldersProvider.updateFolder(
         folder.folderName, folder.folderId, newParentFolderId);
 
+    // 현재 화면 새로고침
+    await _loadFolderData();
+
     if (mounted) {
       SnackBarDialog.showSnackBar(
         context: context,
@@ -1060,11 +1070,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         Provider.of<ProblemsProvider>(context, listen: false);
     await problemsProvider.updateProblem(problemRegisterModel);
 
-    final foldersProvider =
-        Provider.of<FoldersProvider>(context, listen: false);
-    await foldersProvider
-        .fetchFolderContent(foldersProvider.currentFolder!.folderId);
-    await foldersProvider.fetchFolderContent(problemRegisterModel.folderId);
+    await _loadFolderData();
 
     if (mounted) {
       SnackBarDialog.showSnackBar(
