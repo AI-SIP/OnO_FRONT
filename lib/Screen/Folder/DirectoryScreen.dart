@@ -1096,10 +1096,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   }
 
   Future<void> fetchFoldersAndProblems() async {
-    final foldersProvider =
-        Provider.of<FoldersProvider>(context, listen: false);
-
-    await foldersProvider.fetchFolderContent(null);
+    await _loadFolderData();
   }
 
   void navigateToProblemDetail(BuildContext context, int problemId) {
