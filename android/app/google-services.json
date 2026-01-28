@@ -30,6 +30,22 @@
           }
         },
         {
+          "client_id": "41920987554-akb91c3v4mh4pociq33vcpeurh43k2im.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.ono.app",
+            "certificate_hash": "411bf39e3e7ab33d52397b53725884e794e15813"
+          }
+        },
+        {
+          "client_id": "41920987554-e7164rt78dqh2htvjek0l2ln2d8ronpv.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.ono.app",
+            "certificate_hash": "8bc5daf6b4f98b0f143e871c56533dccd68a24f9"
+          }
+        },
+        {
           "client_id": "41920987554-5ae15kdhjjfre6q3o8g4p1ht82ttte29.apps.googleusercontent.com",
           "client_type": 3
         }
