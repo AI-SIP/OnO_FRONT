@@ -279,9 +279,17 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
     await problemsProvider.updateProblemCount(1);
     await problemsProvider.requestReview(context);
 
-    // 2. 폴더 갱신
-    await Provider.of<FoldersProvider>(context, listen: false)
-        .fetchFolderContent(_selectedFolderId);
+    // 2. 폴더 갱신 (_selectedFolderId가 null이면 루트 폴더를 갱신)
+    final foldersProvider = Provider.of<FoldersProvider>(context, listen: false);
+    if (_selectedFolderId != null) {
+      await foldersProvider.fetchFolderContent(_selectedFolderId);
+    } else {
+      // 루트 폴더 갱신
+      final rootFolder = foldersProvider.rootFolder;
+      if (rootFolder != null) {
+        await foldersProvider.fetchFolderContent(rootFolder.folderId);
+      }
+    }
 
     // 3. 유저 정보 갱신 (경험치 업데이트)
     await Provider.of<UserProvider>(context, listen: false).fetchUserInfo();
@@ -429,9 +437,15 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
     final foldersProvider =
         Provider.of<FoldersProvider>(context, listen: false);
 
-    // 새 폴더 갱신
+    // 새 폴더 갱신 (_selectedFolderId가 null이면 루트 폴더)
     if (_selectedFolderId != null) {
       await foldersProvider.fetchFolderContent(_selectedFolderId);
+    } else {
+      // 루트 폴더 갱신
+      final rootFolder = foldersProvider.rootFolder;
+      if (rootFolder != null) {
+        await foldersProvider.fetchFolderContent(rootFolder.folderId);
+      }
     }
 
     // 기존 폴더가 새 폴더와 다르면 기존 폴더도 갱신

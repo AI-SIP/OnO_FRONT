@@ -48,7 +48,6 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final userProvider = Provider.of<UserProvider>(context, listen: false);
-      final foldersProvider = Provider.of<FoldersProvider>(context, listen: false);
 
       // 이 화면의 폴더 데이터 로드
       await _loadFolderData();
@@ -59,6 +58,32 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         _showUserGuideModal();
       }
     });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Provider가 변경되면 데이터 다시 로드
+    final foldersProvider = Provider.of<FoldersProvider>(context);
+
+    // Provider의 폴더 데이터가 변경되었는지 확인
+    final updatedFolder = widget.folderId == null
+        ? foldersProvider.rootFolder
+        : (foldersProvider.folders.any((f) => f.folderId == widget.folderId)
+            ? foldersProvider.getFolder(widget.folderId!)
+            : null);
+
+    if (updatedFolder != null && updatedFolder != _currentFolder) {
+      // 폴더 데이터가 변경되었으면 로컬 state 업데이트
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          setState(() {
+            _currentFolder = updatedFolder;
+            _currentProblems = foldersProvider.getProblemsByFolder(widget.folderId);
+          });
+        }
+      });
+    }
   }
 
   Future<void> _loadFolderData() async {
