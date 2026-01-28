@@ -23,11 +23,17 @@ class FolderPickerDialog extends StatefulWidget {
     if (folderId == null || _cachedFolders.isEmpty) return '책장';
 
     // 해당 folderId가 있는지 확인하고, 없으면 기본값 반환
-    final folder = _cachedFolders.firstWhere(
-      (folder) => folder.folderId == folderId,
-    );
+    try {
+      final folder = _cachedFolders.firstWhere(
+        (folder) => folder.folderId == folderId,
+        orElse: () => _cachedFolders.first, // 못 찾으면 루트 폴더 반환
+      );
 
-    return folder.folderId != -1 ? folder.folderName : '책장';
+      return folder.folderId != -1 ? folder.folderName : '책장';
+    } catch (e) {
+      // 폴더를 찾지 못하면 기본값 반환
+      return '책장';
+    }
   }
 
   static List<FolderModel> _cachedFolders = [];
