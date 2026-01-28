@@ -67,7 +67,10 @@ class NotificationService {
 
   Future<void> sendTokenToServer() async {
     final token = await _messaging.getToken();
-    if (token == null) return;
+    if (token == null) {
+      log('⚠️ FCM token is NULL');
+      return;
+    }
 
     await httpService.sendRequest(
       method: 'POST',
@@ -76,7 +79,7 @@ class NotificationService {
         "token": token,
       },
     );
-    log('FCM token sent to server');
+    log('✅ FCM token sent to server');
   }
 }
 

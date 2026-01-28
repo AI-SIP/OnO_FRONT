@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:developer' as developer;
+import 'dart:developer';
 import 'dart:io';
 
 import 'package:http/http.dart' as http;
@@ -59,9 +60,22 @@ class HttpService {
           if (isMultipart && files != null) {
             final req = http.MultipartRequest('POST', uri)
               ..headers.addAll(mergedHeaders)
-              ..fields
-                  .addAll(body?.map((k, v) => MapEntry(k, v.toString())) ?? {})
               ..files.addAll(files);
+
+            // body의 각 항목을 처리
+            if (body != null) {
+              body.forEach((key, value) {
+                if (value is List) {
+                  // List인 경우 쉼표로 구분된 문자열로 변환
+                  // Spring에서 @RequestParam으로 받을 때 자동으로 split됨
+                  req.fields[key] = value.join(',');
+                } else {
+                  req.fields[key] = value.toString();
+                }
+              });
+            }
+
+            log('req: ${req.fields.toString()}.');
             final streamed =
                 await req.send().timeout(const Duration(seconds: 90));
             response = await http.Response.fromStream(streamed);

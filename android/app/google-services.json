@@ -2,17 +2,49 @@
   "project_info": {
     "project_number": "41920987554",
     "project_id": "aisip-ono",
-    "storage_bucket": "aisip-ono.appspot.com"
+    "storage_bucket": "aisip-ono.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:41920987554:android:19aacebda744004f6eb2fb",
+        "mobilesdk_app_id": "1:41920987554:android:7fcf53d09bb028996eb2fb",
         "android_client_info": {
-          "package_name": "com.aisip.OnO"
+          "package_name": "com.ono.app"
         }
       },
       "oauth_client": [
+        {
+          "client_id": "41920987554-53g1ike86ln8g1irqavteb6n3ajhpn2j.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.ono.app",
+            "certificate_hash": "47efa08ef257d4fdc974f927ddf82495f7008255"
+          }
+        },
+        {
+          "client_id": "41920987554-56dufti5h7phl48nstvd3pp24ncj2h6p.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.ono.app",
+            "certificate_hash": "18ca3340d300b0babfc1d74f87d5db2c207cd641"
+          }
+        },
+        {
+          "client_id": "41920987554-akb91c3v4mh4pociq33vcpeurh43k2im.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.ono.app",
+            "certificate_hash": "411bf39e3e7ab33d52397b53725884e794e15813"
+          }
+        },
+        {
+          "client_id": "41920987554-e7164rt78dqh2htvjek0l2ln2d8ronpv.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.ono.app",
+            "certificate_hash": "8bc5daf6b4f98b0f143e871c56533dccd68a24f9"
+          }
+        },
         {
           "client_id": "41920987554-5ae15kdhjjfre6q3o8g4p1ht82ttte29.apps.googleusercontent.com",
           "client_type": 3
@@ -43,6 +75,5 @@
       }
     }
   ],
-  "configuration_version": "1",
-  "installed": [{"client_id":"41920987554-3npfho91l117nk3bnuhu51caff3ip44v.apps.googleusercontent.com","project_id":"aisip-ono","auth_uri":"https://accounts.google.com/o/oauth2/auth","token_uri":"https://oauth2.googleapis.com/token","auth_provider_x509_cert_url":"https://www.googleapis.com/oauth2/v1/certs"}, {"client_id":"41920987554-eiesqqagtkkkkn1j54mapq016uqkr15m.apps.googleusercontent.com","project_id":"aisip-ono","auth_uri":"https://accounts.google.com/o/oauth2/auth","token_uri":"https://oauth2.googleapis.com/token","auth_provider_x509_cert_url":"https://www.googleapis.com/oauth2/v1/certs"}]
+  "configuration_version": "1"
 }

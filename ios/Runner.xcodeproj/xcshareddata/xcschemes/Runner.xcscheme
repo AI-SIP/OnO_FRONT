@@ -90,16 +90,6 @@
       <EnvironmentVariables>
          <EnvironmentVariable
             key = "ENV"
-            value = "local"
-            isEnabled = "YES">
-         </EnvironmentVariable>
-         <EnvironmentVariable
-            key = "ENV"
-            value = "dev"
-            isEnabled = "YES">
-         </EnvironmentVariable>
-         <EnvironmentVariable
-            key = "ENV"
             value = "prod"
             isEnabled = "YES">
          </EnvironmentVariable>
