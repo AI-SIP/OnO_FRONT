@@ -54,10 +54,8 @@ class _SettingScreenState extends State<SettingScreen> {
               child: ListView(
                 clipBehavior: Clip.none,
                 padding: EdgeInsets.only(
-                    bottom: screenHeight * 0.01, top: screenHeight * 0.05),
+                    bottom: screenHeight * 0.01, top: screenHeight * 0.02),
                 children: [
-                  SizedBox(height: screenHeight * 0.01),
-
                   // 유저 레벨 카드 (캐릭터 + 이름)
                   UserLevelCard(
                     userInfo: userProvider.userInfoModel,
