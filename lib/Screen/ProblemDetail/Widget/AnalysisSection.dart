@@ -32,13 +32,6 @@ Widget buildAnalysisSection(
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        StandardText(
-          text: '📊 AI 문제 분석',
-          fontSize: 20,
-          fontWeight: FontWeight.bold,
-          color: primaryColor,
-        ),
-        const SizedBox(height: 16),
         if (analysis.subject != null) ...[
           _buildAnalysisItem('과목', analysis.subject!, primaryColor),
           const SizedBox(height: 15),
