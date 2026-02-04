@@ -42,7 +42,8 @@ class ImagePickerHandler {
     }
   }
 
-  Future<List<XFile>> pickMultipleImagesFromGallery(BuildContext context) async {
+  Future<List<XFile>> pickMultipleImagesFromGallery(
+      BuildContext context) async {
     try {
       final pickedFiles = await _picker.pickMultiImage();
       if (pickedFiles.isNotEmpty) {
@@ -147,28 +148,29 @@ class ImagePickerHandler {
                     },
                   ),
                 ),
-                // 갤러리에서 선택 옵션 (단일) - 주석 처리
-                // Padding(
-                //   padding:
-                //       const EdgeInsets.only(bottom: 10.0), // 리스트 항목 간 간격 추가
-                //   child: ListTile(
-                //     leading:
-                //         const Icon(Icons.photo_library, color: Colors.black),
-                //     title: const StandardText(
-                //       text: '갤러리에서 선택',
-                //       color: Colors.black,
-                //       fontSize: 16,
-                //     ),
-                //     onTap: () async {
-                //       FirebaseAnalytics.instance
-                //           .logEvent(name: 'image_select_gallery');
-                //       Navigator.of(context).pop(); // 모달 닫기
+                if (onMultipleImagesPicked == null)
+                  Padding(
+                    padding:
+                        const EdgeInsets.only(bottom: 10.0), // 리스트 항목 간 간격 추가
+                    child: ListTile(
+                      leading:
+                          const Icon(Icons.photo_library, color: Colors.black),
+                      title: const StandardText(
+                        text: '갤러리에서 선택',
+                        color: Colors.black,
+                        fontSize: 16,
+                      ),
+                      onTap: () async {
+                        FirebaseAnalytics.instance
+                            .logEvent(name: 'image_select_gallery');
+                        Navigator.of(context).pop(); // 모달 닫기
 
-                //       final pickedFile = await pickImageFromGallery(context);
-                //       onImagePicked(pickedFile);
-                //     },
-                //   ),
-                // ),
+                        final pickedFile = await pickImageFromGallery(context);
+                        onImagePicked(pickedFile);
+                      },
+                    ),
+                  ),
+
                 // 갤러리에서 여러 이미지 선택 옵션
                 if (onMultipleImagesPicked != null)
                   Padding(
@@ -187,7 +189,8 @@ class ImagePickerHandler {
                             .logEvent(name: 'image_select_multiple_gallery');
                         Navigator.of(context).pop(); // 모달 닫기
 
-                        final pickedFiles = await pickMultipleImagesFromGallery(context);
+                        final pickedFiles =
+                            await pickMultipleImagesFromGallery(context);
                         if (pickedFiles.isNotEmpty) {
                           onMultipleImagesPicked(pickedFiles);
                         }
