@@ -9,7 +9,7 @@ class GridPainter extends CustomPainter {
   GridPainter(
       {required this.gridColor,
       this.step = 15.0,
-      this.strokeWidth = 0.7,
+      this.strokeWidth = 0.5,
       this.isSpring = false});
 
   @override

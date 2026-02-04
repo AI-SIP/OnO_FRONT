@@ -208,20 +208,32 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
 
   Future<void> _pickProblemImage() async {
     final imagePicker = ImagePickerHandler();
-    imagePicker.showImagePicker(context, (XFile? file) {
-      if (file != null) {
-        setState(() => _problemImages.add(file));
-      }
-    });
+    imagePicker.showImagePicker(
+      context,
+      (XFile? file) {
+        if (file != null) {
+          setState(() => _problemImages.add(file));
+        }
+      },
+      onMultipleImagesPicked: (List<XFile> files) {
+        setState(() => _problemImages.addAll(files));
+      },
+    );
   }
 
   Future<void> _pickAnswerImage() async {
     final imagePicker = ImagePickerHandler();
-    imagePicker.showImagePicker(context, (XFile? file) {
-      if (file != null) {
-        setState(() => _answerImages.add(file));
-      }
-    });
+    imagePicker.showImagePicker(
+      context,
+      (XFile? file) {
+        if (file != null) {
+          setState(() => _answerImages.add(file));
+        }
+      },
+      onMultipleImagesPicked: (List<XFile> files) {
+        setState(() => _answerImages.addAll(files));
+      },
+    );
   }
 
   void resetAll() {

@@ -232,7 +232,10 @@ class _PracticeProblemSelectionScreenState
 
   Widget _problemTileContent(
       ProblemModel problem, ThemeHandler themeProvider, bool isSelected) {
-    final imageUrl = null;
+    final problemImageUrl = problem.problemImageDataList != null &&
+            problem.problemImageDataList!.isNotEmpty
+        ? problem.problemImageDataList!.first.imageUrl
+        : null;
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
@@ -245,7 +248,7 @@ class _PracticeProblemSelectionScreenState
             child: ClipRRect(
               borderRadius: BorderRadius.circular(8.0),
               child: DisplayImage(
-                imagePath: imageUrl,
+                imagePath: problemImageUrl,
                 fit: BoxFit.cover,
               ),
             ),
