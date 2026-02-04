@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:ono/Module/Text/HandWriteText.dart';
 
 import '../../Model/Problem/ProblemModel.dart';
 import '../../Module/Theme/GridPainter.dart';
 import '../../Module/Theme/ThemeHandler.dart';
+import 'Widget/AnalysisSection.dart';
 import 'Widget/DateRowWidget.dart';
 import 'Widget/ImageSection.dart';
 import 'Widget/LayoutHelpers.dart';
 import 'Widget/RepeatSection.dart';
-import 'Widget/AnalysisSection.dart';
 
 class ProblemDetailScreenWidget {
   Widget buildBackground(ThemeHandler theme) => CustomPaint(
@@ -24,8 +25,11 @@ class ProblemDetailScreenWidget {
           children: [
             verticalSpacer(ctx, .03),
             buildDateRow(problem.solvedAt!, theme.primaryColor),
+            /*
             verticalSpacer(ctx, .03),
             buildReferenceRow(problem.reference, theme.primaryColor),
+
+             */
             verticalSpacer(ctx, .03),
             buildImageSection(
                 ctx,
@@ -53,10 +57,17 @@ class ProblemDetailScreenWidget {
                 '해설 이미지',
                 theme),
             verticalSpacer(ctx, .02),
+            Row(children: [
+              Icon(Icons.tips_and_updates, color: theme.primaryColor),
+              const SizedBox(width: 8),
+              HandWriteText(
+                  text: 'AI 분석 결과', fontSize: 20, color: theme.primaryColor),
+            ]),
+            verticalSpacer(ctx, .02),
             buildAnalysisSection(ctx, problem.analysis, theme.primaryColor),
             verticalSpacer(ctx, .03),
             buildRepeatSection(ctx, problem, theme.primaryColor),
-            verticalSpacer(ctx, .02),
+            verticalSpacer(ctx, .03),
           ],
         ),
       );
