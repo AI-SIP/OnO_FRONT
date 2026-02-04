@@ -53,8 +53,11 @@ class _ImageGallerySectionState extends State<ImageGallerySection> {
         ),
         const SizedBox(height: 8),
         // PageView - 더 큰 이미지
-        SizedBox(
+        Container(
           height: imageHeight,
+          decoration: BoxDecoration(
+              color: widget.color.withOpacity(0.05),
+              borderRadius: BorderRadius.circular(10)),
           child: PageView.builder(
             controller: _controller,
             itemCount: widget.imageUrls.length,
