@@ -57,13 +57,7 @@ class ProblemDetailScreenWidget {
                 '해설 이미지',
                 theme),
             verticalSpacer(ctx, .04),
-            Row(children: [
-              Icon(Icons.tips_and_updates, color: theme.primaryColor),
-              const SizedBox(width: 8),
-              HandWriteText(
-                  text: 'AI 분석 결과', fontSize: 20, color: theme.primaryColor),
-            ]),
-            verticalSpacer(ctx, .02),
+
             buildAnalysisSection(ctx, problem.analysis, theme.primaryColor),
             verticalSpacer(ctx, .04),
             buildRepeatSection(ctx, problem, theme.primaryColor),
