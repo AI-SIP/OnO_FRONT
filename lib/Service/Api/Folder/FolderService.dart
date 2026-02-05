@@ -1,3 +1,4 @@
+import 'package:ono/Model/Common/PaginatedResponse.dart';
 import 'package:ono/Model/Folder/FolderModel.dart';
 import 'package:ono/Model/Folder/FolderRegisterModel.dart';
 import 'package:ono/Model/Folder/FolderThumbnailModel.dart';
@@ -79,6 +80,31 @@ class FolderService {
     await httpService.sendRequest(
       method: 'DELETE',
       url: '$baseUrl/all',
+    );
+  }
+
+  // V2 API - Cursor-based pagination for subfolders
+  Future<PaginatedResponse<FolderThumbnailModel>> getSubfoldersV2({
+    required int folderId,
+    int? cursor,
+    int size = 20,
+  }) async {
+    final queryParams = <String, String>{
+      'size': size.toString(),
+    };
+    if (cursor != null) {
+      queryParams['cursor'] = cursor.toString();
+    }
+
+    final data = await httpService.sendRequest(
+      method: 'GET',
+      url: '$baseUrl/$folderId/subfolders/V2',
+      queryParams: queryParams,
+    ) as Map<String, dynamic>;
+
+    return PaginatedResponse.fromJson(
+      data,
+      (json) => FolderThumbnailModel.fromJson(json),
     );
   }
 }
