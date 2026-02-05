@@ -187,8 +187,8 @@ class UserProvider with ChangeNotifier {
     await foldersProvider.fetchRootFolder();
     await foldersProvider.moveToRootFolder();
 
-    // 복습노트는 기존 방식 유지 (혹은 나중에 V2로 변경 가능)
-    await practiceProvider.fetchAllPracticeContents();
+    // 복습노트도 V2 무한 스크롤 방식으로 첫 페이지만 로드
+    await practiceProvider.loadInitialPracticeThumbnails();
 
     notifyListeners();
   }

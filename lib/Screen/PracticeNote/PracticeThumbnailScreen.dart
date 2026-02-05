@@ -6,6 +6,7 @@ import 'package:ono/Module/Dialog/SnackBarDialog.dart';
 import 'package:provider/provider.dart';
 
 import '../../Model/PracticeNote/PracticeNoteDetailModel.dart';
+import '../../Model/PracticeNote/PracticeNoteThumbnailModel.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/PracticeNoteProvider.dart';
@@ -22,10 +23,32 @@ class PracticeThumbnailScreen extends StatefulWidget {
 class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
   bool _isSelectionMode = false;
   final List<int> _selectedPracticeIds = [];
+  late ScrollController _scrollController;
 
   @override
   void initState() {
     super.initState();
+    _scrollController = ScrollController();
+    _scrollController.addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    // 스크롤이 80% 이상 내려가면 다음 페이지 로드
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent * 0.8) {
+      final provider =
+          Provider.of<ProblemPracticeProvider>(context, listen: false);
+      if (provider.hasNext && !provider.isLoading) {
+        provider.loadMorePracticeThumbnails();
+      }
+    }
   }
 
   @override
@@ -37,10 +60,10 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
       backgroundColor: Colors.white,
       body: Consumer<ProblemPracticeProvider>(
         builder: (context, provider, child) {
-          if (provider.practices.isEmpty) {
+          if (provider.practiceThumbnails.isEmpty && !provider.isLoading) {
             return _buildEmptyState(themeProvider);
           } else {
-            return _buildPracticeListView(provider.practices, themeProvider);
+            return _buildPracticeListView(provider, themeProvider);
           }
         },
       ),
@@ -356,20 +379,32 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
   }
 
   Widget _buildPracticeListView(
-      List<PracticeNoteDetailModel> practiceThumbnails,
-      ThemeHandler themeProvider) {
+      ProblemPracticeProvider provider, ThemeHandler themeProvider) {
+    final thumbnails = provider.practiceThumbnails;
+    final isLoadingMore = provider.isLoading;
+    final hasMore = provider.hasNext;
+
     return ListView.builder(
+      controller: _scrollController,
       padding: const EdgeInsets.symmetric(vertical: 20),
-      itemCount: practiceThumbnails.length,
+      itemCount: thumbnails.length + (isLoadingMore || hasMore ? 1 : 0),
       itemBuilder: (context, index) {
-        final practice = practiceThumbnails[index];
+        // 로딩 인디케이터
+        if (index == thumbnails.length) {
+          return const Padding(
+            padding: EdgeInsets.all(16.0),
+            child: Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        final practice = thumbnails[index];
         return _buildPracticeItem(practice, themeProvider);
       },
     );
   }
 
   Widget _buildPracticeItem(
-      PracticeNoteDetailModel practice, ThemeHandler themeProvider) {
+      PracticeNoteThumbnails practice, ThemeHandler themeProvider) {
     final isSelected = _selectedPracticeIds.contains(practice.practiceId);
 
     return GestureDetector(
@@ -381,7 +416,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
                 : _selectedPracticeIds.add(practice.practiceId);
           });
         } else {
-          _navigateToPracticeDetail(practice);
+          _navigateToPracticeDetail(practice.practiceId);
         }
       },
       child: Padding(
@@ -402,12 +437,14 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
     );
   }
 
-  void _navigateToPracticeDetail(PracticeNoteDetailModel practice) async {
+  void _navigateToPracticeDetail(int practiceId) async {
     final practiceProvider =
         Provider.of<ProblemPracticeProvider>(context, listen: false);
     LoadingDialog.show(context, '복습 노트 로딩 중...');
 
-    await practiceProvider.moveToPractice(practice.practiceId);
+    // 상세 정보 조회 및 이동
+    await practiceProvider.fetchPracticeNote(practiceId);
+    await practiceProvider.moveToPractice(practiceId);
     LoadingDialog.hide(context);
 
     Navigator.push(
@@ -418,7 +455,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
       ),
     ).then((_) {
       // 복습 상세 화면에서 돌아왔을 때 최신 데이터 다시 조회
-      _fetchAllPracticeContents();
+      _refreshPracticeThumbnails();
     });
   }
 
@@ -461,7 +498,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
   }
 
   Widget _buildPracticeInfo(
-      PracticeNoteDetailModel practice, ThemeHandler themeProvider) {
+      PracticeNoteThumbnails practice, ThemeHandler themeProvider) {
     return Expanded(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -545,5 +582,11 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
     final provider =
         Provider.of<ProblemPracticeProvider>(context, listen: false);
     await provider.fetchAllPracticeContents();
+  }
+
+  Future<void> _refreshPracticeThumbnails() async {
+    final provider =
+        Provider.of<ProblemPracticeProvider>(context, listen: false);
+    await provider.refreshPracticeThumbnails();
   }
 }

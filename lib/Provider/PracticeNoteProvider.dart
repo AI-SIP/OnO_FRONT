@@ -113,7 +113,8 @@ class ProblemPracticeProvider with ChangeNotifier {
 
   Future<void> deletePractices(List<int> deletePracticeIds) async {
     await practiceNoteService.deletePracticeNotes(deletePracticeIds);
-    await fetchAllPracticeContents();
+    // V2 썸네일 리스트 새로고침
+    await refreshPracticeThumbnails();
   }
 
   Future<void> resetProblems() async {
