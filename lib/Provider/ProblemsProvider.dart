@@ -1,3 +1,4 @@
+import 'dart:collection';
 import 'dart:developer';
 import 'dart:io';
 
@@ -13,8 +14,11 @@ import '../Module/Util/ReviewHandler.dart';
 import '../Service/Api/FileUpload/FileUploadService.dart';
 
 class ProblemsProvider with ChangeNotifier {
-  List<ProblemModel> _problems = [];
-  List<ProblemModel> get problems => _problems;
+  // SplayTreeMap: O(log n) 삽입, O(log n) 조회, 자동 정렬
+  final SplayTreeMap<int, ProblemModel> _problemsMap = SplayTreeMap();
+
+  // 호환성을 위한 getter (정렬된 리스트 반환)
+  List<ProblemModel> get problems => _problemsMap.values.toList();
 
   int _problemCount = 0;
   int get problemCount => _problemCount;
@@ -22,62 +26,36 @@ class ProblemsProvider with ChangeNotifier {
   final problemService = ProblemService();
   final fileUploadService = FileUploadService();
 
+  // O(log n) 조회
   Future<ProblemModel> getProblem(int problemId) async {
-    int? index = _findProblemIndex(problemId);
-    if (index != null) {
-      return _problems[index];
+    if (_problemsMap.containsKey(problemId)) {
+      return _problemsMap[problemId]!;
     } else {
       log('can\'t find problemId: $problemId');
 
       await fetchProblem(problemId);
-      index = _findProblemIndex(problemId);
-
-      return _problems[index!];
+      return _problemsMap[problemId]!;
     }
   }
 
-  int? _findProblemIndex(int problemId) {
-    int low = 0, high = _problems.length - 1;
-    while (low <= high) {
-      final mid = (low + high) >> 1;
-      final midId = _problems[mid].problemId;
-      if (midId == problemId) {
-        return mid;
-      } else if (midId < problemId) {
-        low = mid + 1;
-      } else {
-        high = mid - 1;
-      }
-    }
-    return null;
-  }
-
-  // 정렬을 유지하면서 문제를 추가하는 헬퍼 메서드
-  void _insertProblemSorted(ProblemModel problem) {
-    final existingIndex = _findProblemIndex(problem.problemId);
-    if (existingIndex != null) {
-      // 이미 존재하면 업데이트
-      _problems[existingIndex] = problem;
-    } else {
-      // 없으면 정렬된 위치에 삽입 (problemId 오름차순)
-      int insertIndex = 0;
-      while (insertIndex < _problems.length &&
-          _problems[insertIndex].problemId < problem.problemId) {
-        insertIndex++;
-      }
-      _problems.insert(insertIndex, problem);
-    }
+  // O(log n) 삽입/업데이트 (SplayTreeMap이 자동으로 정렬 유지)
+  void _upsertProblem(ProblemModel problem) {
+    _problemsMap[problem.problemId] = problem;
   }
 
   Future<void> fetchProblem(int problemId) async {
     final fetchedProblem = await problemService.getProblem(problemId);
-    _insertProblemSorted(fetchedProblem);
+    _upsertProblem(fetchedProblem);
     log('problem: $problemId fetch complete');
     notifyListeners();
   }
 
   Future<void> fetchAllProblems() async {
-    _problems = await problemService.getAllProblems();
+    final problemsList = await problemService.getAllProblems();
+    _problemsMap.clear();
+    for (var problem in problemsList) {
+      _problemsMap[problem.problemId] = problem;
+    }
     _problemCount = await getUserProblemCount();
 
     log('fetch problems complete');
@@ -104,15 +82,11 @@ class ProblemsProvider with ChangeNotifier {
 
       // 분석이 완료되었으면 ProblemModel 업데이트
       if (analysisResult.status == ProblemAnalysisStatus.COMPLETED) {
-        final foundIndex = _findProblemIndex(problemId);
-        if (foundIndex != null) {
-          _problems[foundIndex] =
-              _problems[foundIndex].updateAnalysis(analysisResult);
+        if (_problemsMap.containsKey(problemId)) {
+          _problemsMap[problemId] =
+              _problemsMap[problemId]!.updateAnalysis(analysisResult);
           notifyListeners();
           log('ProblemModel 업데이트 완료 - UI가 자동으로 갱신됩니다');
-
-          // 업데이트된 문제 정보 다시 로그 출력
-          final updatedProblem = _problems[foundIndex];
         }
       }
 
@@ -186,7 +160,7 @@ class ProblemsProvider with ChangeNotifier {
   }
 
   void clear() {
-    _problems.clear();
+    _problemsMap.clear();
     notifyListeners();
   }
 
@@ -220,9 +194,9 @@ class ProblemsProvider with ChangeNotifier {
         size: size,
       );
 
-      // 로컬 캐시에 추가 (중복 방지 및 정렬 유지)
+      // O(log n) 삽입으로 로컬 캐시에 추가 (중복 방지 및 자동 정렬)
       for (var problem in response.content) {
-        _insertProblemSorted(problem);
+        _upsertProblem(problem);
       }
 
       log('Loaded ${response.content.length} problems from folder $folderId');

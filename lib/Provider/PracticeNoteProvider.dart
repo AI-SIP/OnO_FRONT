@@ -1,3 +1,4 @@
+import 'dart:collection';
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
@@ -14,7 +15,10 @@ import 'TokenProvider.dart';
 
 class ProblemPracticeProvider with ChangeNotifier {
   PracticeNoteDetailModel? currentPracticeNote;
-  List<PracticeNoteDetailModel> _practices = [];
+
+  // SplayTreeMap: O(log n) 삽입, O(log n) 조회, 자동 정렬
+  final SplayTreeMap<int, PracticeNoteDetailModel> _practicesMap =
+      SplayTreeMap();
 
   // V2 무한 스크롤을 위한 썸네일 리스트
   List<PracticeNoteThumbnails> _practiceThumbnails = [];
@@ -28,61 +32,31 @@ class ProblemPracticeProvider with ChangeNotifier {
   final PracticeNoteService practiceNoteService = PracticeNoteService();
   final ProblemsProvider problemsProvider;
 
-  List<PracticeNoteDetailModel> get practices => _practices;
+  // 호환성을 위한 getter (정렬된 리스트 반환)
+  List<PracticeNoteDetailModel> get practices => _practicesMap.values.toList();
   List<PracticeNoteThumbnails> get practiceThumbnails => _practiceThumbnails;
   bool get hasNext => _hasNext;
   bool get isLoading => _isLoading;
 
   ProblemPracticeProvider({required this.problemsProvider});
 
-  // 동기적으로 캐시에서만 찾기 (내부용)
-  int? _findPracticeNoteIndex(int practiceNoteId) {
-    int low = 0, high = _practices.length - 1;
-    while (low <= high) {
-      final mid = (low + high) >> 1;
-      final midId = _practices[mid].practiceId;
-      if (midId == practiceNoteId) {
-        return mid;
-      } else if (midId < practiceNoteId) {
-        low = mid + 1;
-      } else {
-        high = mid - 1;
-      }
-    }
-    return null;
+  // O(log n) 삽입/업데이트 (SplayTreeMap이 자동으로 정렬 유지)
+  void _upsertPracticeNote(PracticeNoteDetailModel practiceNote) {
+    _practicesMap[practiceNote.practiceId] = practiceNote;
   }
 
-  // 정렬을 유지하면서 복습노트를 추가하는 헬퍼 메서드
-  void _insertPracticeNoteSorted(PracticeNoteDetailModel practiceNote) {
-    final existingIndex = _findPracticeNoteIndex(practiceNote.practiceId);
-    if (existingIndex != null) {
-      // 이미 존재하면 업데이트
-      _practices[existingIndex] = practiceNote;
-    } else {
-      // 없으면 정렬된 위치에 삽입 (practiceId 오름차순)
-      int insertIndex = 0;
-      while (insertIndex < _practices.length &&
-          _practices[insertIndex].practiceId < practiceNote.practiceId) {
-        insertIndex++;
-      }
-      _practices.insert(insertIndex, practiceNote);
-    }
-  }
-
-  // 비동기로 복습노트 가져오기 (캐시에 없으면 서버에서 fetch)
+  // O(log n) 조회
   Future<PracticeNoteDetailModel> getPracticeNote(int practiceNoteId) async {
-    final index = _findPracticeNoteIndex(practiceNoteId);
-    if (index != null) {
-      return _practices[index];
+    if (_practicesMap.containsKey(practiceNoteId)) {
+      return _practicesMap[practiceNoteId]!;
     }
 
     // 캐시에 없으면 서버에서 fetch
     log('Practice note $practiceNoteId not in cache, fetching from server');
     await fetchPracticeNote(practiceNoteId);
 
-    final newIndex = _findPracticeNoteIndex(practiceNoteId);
-    if (newIndex != null) {
-      return _practices[newIndex];
+    if (_practicesMap.containsKey(practiceNoteId)) {
+      return _practicesMap[practiceNoteId]!;
     }
 
     log('Failed to fetch practiceNoteId: $practiceNoteId');
@@ -93,7 +67,7 @@ class ProblemPracticeProvider with ChangeNotifier {
     final practiceNote =
         await practiceNoteService.getPracticeNoteById(practiceNoteId!);
 
-    _insertPracticeNoteSorted(practiceNote);
+    _upsertPracticeNote(practiceNote);
 
     // 현재 복습노트가 업데이트된 것이면 다시 로드
     if (currentPracticeNote != null) {
@@ -107,7 +81,11 @@ class ProblemPracticeProvider with ChangeNotifier {
   }
 
   Future<void> fetchAllPracticeContents() async {
-    _practices = await practiceNoteService.getAllPracticeNoteDetails();
+    final practicesList = await practiceNoteService.getAllPracticeNoteDetails();
+    _practicesMap.clear();
+    for (var practice in practicesList) {
+      _practicesMap[practice.practiceId] = practice;
+    }
 
     log('fetch practice complete');
     notifyListeners();
@@ -172,7 +150,7 @@ class ProblemPracticeProvider with ChangeNotifier {
 
   void clear() {
     currentProblems = [];
-    _practices = [];
+    _practicesMap.clear();
     notifyListeners();
   }
 

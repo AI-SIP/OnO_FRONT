@@ -1,3 +1,4 @@
+import 'dart:collection';
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
@@ -27,7 +28,9 @@ class FolderScrollState {
 class FoldersProvider with ChangeNotifier {
   final ProblemsProvider problemsProvider;
   FolderModel? _currentFolder;
-  List<FolderModel> _folders = [];
+
+  // SplayTreeMap: O(log n) 삽입, O(log n) 조회, 자동 정렬
+  final SplayTreeMap<int, FolderModel> _foldersMap = SplayTreeMap();
 
   // 폴더별 캐시 데이터 (핵심!)
   final Map<int, FolderScrollState> _folderCache = {};
@@ -36,8 +39,12 @@ class FoldersProvider with ChangeNotifier {
   final fileUploadService = FileUploadService();
 
   FolderModel? get currentFolder => _currentFolder;
-  List<FolderModel> get folders => _folders;
-  FolderModel? get rootFolder => _folders.isNotEmpty ? _folders[0] : null;
+
+  // 호환성을 위한 getter (정렬된 리스트 반환)
+  List<FolderModel> get folders => _foldersMap.values.toList();
+
+  FolderModel? get rootFolder =>
+      _foldersMap.isNotEmpty ? _foldersMap.values.first : null;
 
   // 현재 폴더의 하위 폴더와 문제 목록
   List<FolderThumbnailModel> get currentSubfolders {
@@ -73,54 +80,23 @@ class FoldersProvider with ChangeNotifier {
 
   FoldersProvider({required this.problemsProvider});
 
-  // 동기적으로 캐시에서만 찾기 (내부용)
-  int? _findFolderIndex(int folderId) {
-    int low = 0, high = _folders.length - 1;
-    while (low <= high) {
-      final mid = (low + high) >> 1;
-      final midId = _folders[mid].folderId;
-      if (midId == folderId) {
-        return mid;
-      } else if (midId < folderId) {
-        low = mid + 1;
-      } else {
-        high = mid - 1;
-      }
-    }
-    return null;
+  // O(log n) 삽입/업데이트 (SplayTreeMap이 자동으로 정렬 유지)
+  void _upsertFolder(FolderModel folder) {
+    _foldersMap[folder.folderId] = folder;
   }
 
-  // 정렬을 유지하면서 폴더를 추가하는 헬퍼 메서드
-  void _insertFolderSorted(FolderModel folder) {
-    final existingIndex = _findFolderIndex(folder.folderId);
-    if (existingIndex != null) {
-      // 이미 존재하면 업데이트
-      _folders[existingIndex] = folder;
-    } else {
-      // 없으면 정렬된 위치에 삽입 (folderId 오름차순)
-      int insertIndex = 0;
-      while (insertIndex < _folders.length &&
-          _folders[insertIndex].folderId < folder.folderId) {
-        insertIndex++;
-      }
-      _folders.insert(insertIndex, folder);
-    }
-  }
-
-  // 비동기로 폴더 가져오기 (캐시에 없으면 서버에서 fetch)
+  // O(log n) 조회
   Future<FolderModel> getFolder(int folderId) async {
-    final index = _findFolderIndex(folderId);
-    if (index != null) {
-      return _folders[index];
+    if (_foldersMap.containsKey(folderId)) {
+      return _foldersMap[folderId]!;
     }
 
     // 캐시에 없으면 서버에서 fetch
     log('Folder $folderId not in cache, fetching from server');
     await fetchFolderMetadata(folderId);
 
-    final newIndex = _findFolderIndex(folderId);
-    if (newIndex != null) {
-      return _folders[newIndex];
+    if (_foldersMap.containsKey(folderId)) {
+      return _foldersMap[folderId]!;
     }
 
     log('Failed to fetch folderId: $folderId');
@@ -130,7 +106,7 @@ class FoldersProvider with ChangeNotifier {
   // 루트 폴더 fetch (로그인 시 호출)
   Future<void> fetchRootFolder() async {
     final rootFolder = await folderService.getRootFolder();
-    _insertFolderSorted(rootFolder);
+    _upsertFolder(rootFolder);
     log('Root folder fetched: ${rootFolder.folderId}');
     notifyListeners();
   }
@@ -138,7 +114,7 @@ class FoldersProvider with ChangeNotifier {
   // 폴더 메타데이터만 fetch (이름, 부모폴더 등)
   Future<void> fetchFolderMetadata(int folderId) async {
     final folder = await folderService.fetchFolder(folderId);
-    _insertFolderSorted(folder);
+    _upsertFolder(folder);
     log('Folder metadata fetched: $folderId');
     notifyListeners();
   }
@@ -306,10 +282,10 @@ class FoldersProvider with ChangeNotifier {
   Future<void> deleteFolders(List<int> deleteFolderIdList) async {
     await folderService.deleteFolders(deleteFolderIdList);
 
-    // 삭제된 폴더들의 캐시 제거
+    // O(log n) 삭제: 삭제된 폴더들의 캐시 제거
     for (var folderId in deleteFolderIdList) {
       _folderCache.remove(folderId);
-      _folders.removeWhere((f) => f.folderId == folderId);
+      _foldersMap.remove(folderId);
     }
 
     // 현재 폴더 캐시 갱신
@@ -338,7 +314,7 @@ class FoldersProvider with ChangeNotifier {
   // 캐시 전체 초기화 (로그아웃 시 등)
   void clear() {
     _folderCache.clear();
-    _folders.clear();
+    _foldersMap.clear();
     _currentFolder = null;
     notifyListeners();
   }
