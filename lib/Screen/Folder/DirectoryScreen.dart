@@ -73,6 +73,17 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     super.dispose();
   }
 
+  @override
+  void didUpdateWidget(DirectoryScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // folderId가 변경되면 데이터 다시 로드
+    if (oldWidget.folderId != widget.folderId) {
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        await _loadFolderData();
+      });
+    }
+  }
+
   // 스크롤 이벤트 리스너
   void _onScroll() {
     if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent * 0.8) {
@@ -147,10 +158,6 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                     padding: const EdgeInsets.all(20),
                     child: Column(
                       children: [
-                        _buildProblemCountSection(themeProvider, foldersProvider),
-                        const SizedBox(
-                          height: 10,
-                        ),
                         _buildFolderAndProblemGrid(themeProvider),
                       ],
                     ),
@@ -340,26 +347,6 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
           ),
         );
       },
-    );
-  }
-
-  // 정렬 옵션을 선택하는 다이얼로그
-  Widget _buildProblemCountSection(ThemeHandler themeProvider, FoldersProvider foldersProvider) {
-    return GestureDetector(
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Padding(
-            padding:
-                const EdgeInsets.only(top: 10, left: 10, right: 10), // 왼쪽 여백 추가
-            child: StandardText(
-              text: '오답노트 수 : ${foldersProvider.currentProblems.length}',
-              fontSize: 15,
-              color: themeProvider.primaryColor,
-            ),
-          ),
-        ],
-      ),
     );
   }
 
@@ -555,7 +542,16 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
             builder: (context, foldersProvider, child) {
               var currentSubfolders = foldersProvider.currentSubfolders;
               var currentProblems = foldersProvider.currentProblems;
+              final isLoadingMore = foldersProvider.isLoadingSubfolders || foldersProvider.isLoadingProblems;
 
+              // 로딩 중이면 로딩 인디케이터 표시
+              if (currentSubfolders.isEmpty && currentProblems.isEmpty && isLoadingMore) {
+                return const Center(
+                  child: CircularProgressIndicator(),
+                );
+              }
+
+              // 로딩 완료 후에도 데이터가 없으면 빈 화면 표시
               if (currentSubfolders.isEmpty && currentProblems.isEmpty) {
                 return Center(
                   child: SingleChildScrollView(
@@ -609,7 +605,6 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
               }
 
               final totalItems = currentSubfolders.length + currentProblems.length;
-              final isLoadingMore = foldersProvider.isLoadingSubfolders || foldersProvider.isLoadingProblems;
               final hasMore = foldersProvider.subfolderHasNext || foldersProvider.problemHasNext;
 
               return ListView.builder(
@@ -672,7 +667,10 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
               MaterialPageRoute(builder: (context) {
                 return DirectoryScreen(folderId: folder.folderId);
               }),
-            );
+            ).then((_) {
+              // 하위 폴더에서 돌아왔을 때 현재 폴더 데이터 새로고침
+              _loadFolderData();
+            });
           }
         },
         child: LongPressDraggable<FolderThumbnailModel>(
