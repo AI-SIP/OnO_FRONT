@@ -1,7 +1,6 @@
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
-import 'package:ono/Model/Common/PaginatedResponse.dart';
 import 'package:ono/Model/Folder/FolderRegisterModel.dart';
 import 'package:ono/Model/Folder/FolderThumbnailModel.dart';
 import 'package:ono/Provider/ProblemsProvider.dart';
@@ -100,7 +99,8 @@ class FoldersProvider with ChangeNotifier {
     } else {
       // 없으면 정렬된 위치에 삽입 (folderId 오름차순)
       int insertIndex = 0;
-      while (insertIndex < _folders.length && _folders[insertIndex].folderId < folder.folderId) {
+      while (insertIndex < _folders.length &&
+          _folders[insertIndex].folderId < folder.folderId) {
         insertIndex++;
       }
       _folders.insert(insertIndex, folder);
@@ -270,7 +270,8 @@ class FoldersProvider with ChangeNotifier {
       parentFolderId: parentFolderId,
     );
 
-    final createdFolderId = await folderService.registerFolder(folderRegisterModel);
+    final createdFolderId =
+        await folderService.registerFolder(folderRegisterModel);
 
     // 생성된 폴더 메타데이터 fetch
     await fetchFolderMetadata(createdFolderId);
@@ -280,7 +281,8 @@ class FoldersProvider with ChangeNotifier {
   }
 
   // 폴더 수정
-  Future<void> updateFolder(String newName, int? folderId, int? parentId) async {
+  Future<void> updateFolder(
+      String newName, int? folderId, int? parentId) async {
     if (folderId == null) return;
 
     FolderRegisterModel folderRegisterModel = FolderRegisterModel(
@@ -334,7 +336,7 @@ class FoldersProvider with ChangeNotifier {
   }
 
   // 캐시 전체 초기화 (로그아웃 시 등)
-  void clearCache() {
+  void clear() {
     _folderCache.clear();
     _folders.clear();
     _currentFolder = null;

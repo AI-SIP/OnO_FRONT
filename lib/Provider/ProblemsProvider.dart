@@ -61,7 +61,8 @@ class ProblemsProvider with ChangeNotifier {
     } else {
       // 없으면 정렬된 위치에 삽입 (problemId 오름차순)
       int insertIndex = 0;
-      while (insertIndex < _problems.length && _problems[insertIndex].problemId < problem.problemId) {
+      while (insertIndex < _problems.length &&
+          _problems[insertIndex].problemId < problem.problemId) {
         insertIndex++;
       }
       _problems.insert(insertIndex, problem);
@@ -182,6 +183,11 @@ class ProblemsProvider with ChangeNotifier {
 
   Future<void> deleteProblemImageData(String imageUrl) async {
     await problemService.deleteProblemImageData(imageUrl);
+  }
+
+  void clear() {
+    _problems.clear();
+    notifyListeners();
   }
 
   Future<String> uploadImage(XFile image) async {

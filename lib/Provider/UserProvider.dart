@@ -180,14 +180,11 @@ class UserProvider with ChangeNotifier {
   Future<void> fetchAllData() async {
     await fetchUserInfo();
 
-    // 문제 개수만 먼저 조회 (빠른 로딩)
-    await problemsProvider.fetchProblemCount();
-
-    // 루트 폴더 정보만 로드 (하위 폴더/문제는 필요할 때 로드)
+    // 루트 폴더 정보 로드
     await foldersProvider.fetchRootFolder();
     await foldersProvider.moveToRootFolder();
 
-    // 복습노트도 V2 무한 스크롤 방식으로 첫 페이지만 로드
+    // 무한 스크롤 방식으로 첫 페이지만 로드
     await practiceProvider.loadInitialPracticeThumbnails();
 
     notifyListeners();
@@ -280,8 +277,13 @@ class UserProvider with ChangeNotifier {
     _loginStatus = LoginStatus.logout;
     _isFirstLogin = true;
     userInfoModel = null;
-    notifyListeners();
 
-    await storage.deleteAll();
+    await storage.delete(key: "accessToken");
+    await storage.delete(key: "refreshToken");
+    await storage.delete(key: 'loginMethod');
+
+    problemsProvider.clear();
+    foldersProvider.clear();
+    practiceProvider.clear();
   }
 }

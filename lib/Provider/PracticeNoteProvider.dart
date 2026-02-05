@@ -61,7 +61,8 @@ class ProblemPracticeProvider with ChangeNotifier {
     } else {
       // 없으면 정렬된 위치에 삽입 (practiceId 오름차순)
       int insertIndex = 0;
-      while (insertIndex < _practices.length && _practices[insertIndex].practiceId < practiceNote.practiceId) {
+      while (insertIndex < _practices.length &&
+          _practices[insertIndex].practiceId < practiceNote.practiceId) {
         insertIndex++;
       }
       _practices.insert(insertIndex, practiceNote);
@@ -166,6 +167,12 @@ class ProblemPracticeProvider with ChangeNotifier {
 
   Future<void> resetProblems() async {
     currentProblems = [];
+    notifyListeners();
+  }
+
+  void clear() {
+    currentProblems = [];
+    _practices = [];
     notifyListeners();
   }
 
