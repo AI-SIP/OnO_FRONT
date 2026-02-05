@@ -5,7 +5,6 @@ import 'package:ono/Model/PracticeNote/PracticeNoteRegisterModel.dart';
 import 'package:ono/Model/PracticeNote/PracticeNoteUpdateModel.dart';
 import 'package:ono/Provider/ProblemsProvider.dart';
 
-import '../Model/Common/PaginatedResponse.dart';
 import '../Model/PracticeNote/PracticeNoteDetailModel.dart';
 import '../Model/PracticeNote/PracticeNoteThumbnailModel.dart';
 import '../Model/Problem/ProblemModel.dart';
@@ -86,12 +85,29 @@ class ProblemPracticeProvider with ChangeNotifier {
     final targetPractice = getPracticeNote(practiceId);
 
     currentProblems.clear();
+
+    // 복습 노트의 각 문제를 서버에서 조회 (지연 로딩 대응)
     for (var problemId in targetPractice.problemIdList) {
-      ProblemModel problemModel = problemsProvider.getProblem(problemId);
-      currentProblems.add(problemModel);
+      try {
+        // 먼저 로컬 캐시에서 찾아보기
+        ProblemModel? problemModel;
+        try {
+          problemModel = await problemsProvider.getProblem(problemId);
+        } catch (e) {
+          // 로컬 캐시에 없으면 서버에서 조회
+          log('Problem $problemId not in cache, fetching from server');
+          await problemsProvider.fetchProblem(problemId);
+          problemModel = await problemsProvider.getProblem(problemId);
+        }
+        currentProblems.add(problemModel);
+      } catch (e, stackTrace) {
+        log('Error loading problem $problemId: $e');
+        log('Stack trace: $stackTrace');
+        // 문제 로드 실패해도 계속 진행
+      }
     }
 
-    log('Moved to practice: $practiceId');
+    log('Moved to practice: $practiceId, loaded ${currentProblems.length}/${targetPractice.problemIdList.length} problems');
     currentPracticeNote = targetPractice;
     notifyListeners();
   }

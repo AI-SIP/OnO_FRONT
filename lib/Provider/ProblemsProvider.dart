@@ -22,14 +22,18 @@ class ProblemsProvider with ChangeNotifier {
   final problemService = ProblemService();
   final fileUploadService = FileUploadService();
 
-  ProblemModel getProblem(int problemId) {
-    final index = _findProblemIndex(problemId);
+  Future<ProblemModel> getProblem(int problemId) async {
+    int? index = _findProblemIndex(problemId);
     if (index != null) {
       return _problems[index];
-    }
+    } else {
+      log('can\'t find problemId: $problemId');
 
-    log('can\'t find problemId: $problemId');
-    throw Exception('Problem with id $problemId not found.');
+      await fetchProblem(problemId);
+      index = _findProblemIndex(problemId);
+
+      return _problems[index!];
+    }
   }
 
   int? _findProblemIndex(int problemId) {

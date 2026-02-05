@@ -51,12 +51,22 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
       body: Column(
         children: [
           Expanded(
-            child: Consumer<ProblemsProvider>(
-              builder: (context, problemsProvider, child) {
-                try {
-                  final problem = problemsProvider.getProblem(widget.problemId);
-                  return _buildContent(problem);
-                } catch (e) {
+            child: FutureBuilder<ProblemModel>(
+              future: Provider.of<ProblemsProvider>(context, listen: false)
+                  .getProblem(widget.problemId),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                } else if (snapshot.hasError) {
+                  return Center(
+                    child: StandardText(
+                      text: '오답노트를 찾을 수 없습니다.',
+                      color: themeProvider.primaryColor,
+                    ),
+                  );
+                } else if (snapshot.hasData) {
+                  return _buildContent(snapshot.data!);
+                } else {
                   return Center(
                     child: StandardText(
                       text: '오답노트를 찾을 수 없습니다.',
@@ -304,7 +314,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                         listen: false);
 
                 ProblemModel problemModel =
-                    problemsProvider.getProblem(problemId);
+                    await problemsProvider.getProblem(problemId);
 
                 int? parentFolderId = problemModel.folderId;
 
@@ -381,7 +391,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
       BuildContext context, int? problemId) async {
     final problemsProvider =
         Provider.of<ProblemsProvider>(context, listen: false);
-    final problem = problemsProvider.getProblem(problemId!);
+    final problem = await problemsProvider.getProblem(problemId!);
 
     log('Moved to problem: ${problem.problemId}');
 
