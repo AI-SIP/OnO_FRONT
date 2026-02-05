@@ -41,6 +41,18 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   final List<int> _selectedProblemIds = []; // 선택된 문제 ID 리스트
   FolderModel? _currentFolder; // 이 화면의 폴더 데이터
 
+  // 로컬 상태: 이 화면만의 하위 폴더와 문제 리스트
+  List<FolderThumbnailModel> _localSubfolders = [];
+  List<ProblemModel> _localProblems = [];
+
+  // 로컬 무한 스크롤 상태
+  int? _subfolderNextCursor;
+  int? _problemNextCursor;
+  bool _subfolderHasNext = false;
+  bool _problemHasNext = false;
+  bool _isLoadingSubfolders = false;
+  bool _isLoadingProblems = false;
+
   // 무한 스크롤을 위한 ScrollController
   late ScrollController _scrollController;
 
@@ -84,36 +96,133 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     }
   }
 
-  // 스크롤 이벤트 리스너
+  // 스크롤 이벤트 리스너 (로컬 무한 스크롤)
   void _onScroll() {
     if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent * 0.8) {
-      final foldersProvider = Provider.of<FoldersProvider>(context, listen: false);
+      if (_currentFolder == null) return;
 
-      // 80% 스크롤 시 더 로드
-      if (foldersProvider.subfolderHasNext && !foldersProvider.isLoadingSubfolders) {
-        foldersProvider.loadMoreCurrentSubfolders();
+      // 80% 스크롤 시 로컬 데이터 더 로드
+      if (_subfolderHasNext && !_isLoadingSubfolders) {
+        _loadMoreSubfoldersLocal(_currentFolder!.folderId);
       }
-      if (foldersProvider.problemHasNext && !foldersProvider.isLoadingProblems) {
-        foldersProvider.loadMoreCurrentProblems();
+      if (_problemHasNext && !_isLoadingProblems) {
+        _loadMoreProblemsLocal(_currentFolder!.folderId);
       }
     }
   }
 
   Future<void> _loadFolderData() async {
     final foldersProvider = Provider.of<FoldersProvider>(context, listen: false);
+    final problemsProvider = Provider.of<ProblemsProvider>(context, listen: false);
 
-    // 폴더 이동 (캐싱 로직 포함)
+    // 이 화면의 폴더 ID 결정
+    int targetFolderId;
     if (widget.folderId == null) {
-      await foldersProvider.moveToRootFolder();
+      // 루트 폴더
+      if (foldersProvider.rootFolder == null) {
+        await foldersProvider.fetchRootFolder();
+      }
+      targetFolderId = foldersProvider.rootFolder!.folderId;
     } else {
-      await foldersProvider.moveToFolder(widget.folderId!);
+      targetFolderId = widget.folderId!;
     }
 
-    // currentFolder 업데이트
+    // 폴더 메타데이터 가져오기
+    final folder = await foldersProvider.getFolder(targetFolderId);
+
+    // 로컬 상태 초기화
     if (mounted) {
       setState(() {
-        _currentFolder = foldersProvider.currentFolder;
+        _currentFolder = folder;
+        _localSubfolders = [];
+        _localProblems = [];
+        _subfolderNextCursor = null;
+        _problemNextCursor = null;
+        _subfolderHasNext = false;
+        _problemHasNext = false;
       });
+    }
+
+    // 첫 페이지 로드 (하위 폴더와 문제)
+    await Future.wait([
+      _loadMoreSubfoldersLocal(targetFolderId),
+      _loadMoreProblemsLocal(targetFolderId),
+    ]);
+  }
+
+  // 로컬 하위 폴더 로드
+  Future<void> _loadMoreSubfoldersLocal(int folderId) async {
+    if (_isLoadingSubfolders) return;
+    if (!_subfolderHasNext && _subfolderNextCursor != null) return;
+
+    setState(() {
+      _isLoadingSubfolders = true;
+    });
+
+    try {
+      final foldersProvider = Provider.of<FoldersProvider>(context, listen: false);
+      final response = await foldersProvider.folderService.getSubfoldersV2(
+        folderId: folderId,
+        cursor: _subfolderNextCursor,
+        size: 20,
+      );
+
+      if (mounted) {
+        setState(() {
+          _localSubfolders.addAll(response.content);
+          _subfolderNextCursor = response.nextCursor;
+          _subfolderHasNext = response.hasNext;
+        });
+      }
+
+      log('Loaded ${response.content.length} subfolders locally for folder $folderId');
+    } catch (e, stackTrace) {
+      log('Error loading subfolders locally: $e');
+      log(stackTrace.toString());
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoadingSubfolders = false;
+        });
+      }
+    }
+  }
+
+  // 로컬 문제 로드
+  Future<void> _loadMoreProblemsLocal(int folderId) async {
+    if (_isLoadingProblems) return;
+    if (!_problemHasNext && _problemNextCursor != null) return;
+
+    setState(() {
+      _isLoadingProblems = true;
+    });
+
+    try {
+      final problemsProvider = Provider.of<ProblemsProvider>(context, listen: false);
+      final response = await problemsProvider.loadMoreFolderProblemsV2(
+        folderId: folderId,
+        cursor: _problemNextCursor,
+        size: 20,
+      );
+
+      if (mounted) {
+        setState(() {
+          _localProblems.addAll(response.content);
+          _problemNextCursor = response.nextCursor;
+          _problemHasNext = response.hasNext;
+        });
+      }
+
+      log('Loaded ${response.content.length} problems locally for folder $folderId');
+    } catch (e, stackTrace) {
+      log('Error loading problems locally: $e');
+      log(stackTrace.toString());
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoadingProblems = false;
+        });
+      }
     }
   }
 
@@ -538,11 +647,12 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         child: Column(
       children: [
         Expanded(
-          child: Consumer<FoldersProvider>(
-            builder: (context, foldersProvider, child) {
-              var currentSubfolders = foldersProvider.currentSubfolders;
-              var currentProblems = foldersProvider.currentProblems;
-              final isLoadingMore = foldersProvider.isLoadingSubfolders || foldersProvider.isLoadingProblems;
+          child: Builder(
+            builder: (context) {
+              // 로컬 상태 사용 (Provider와 독립적)
+              var currentSubfolders = _localSubfolders;
+              var currentProblems = _localProblems;
+              final isLoadingMore = _isLoadingSubfolders || _isLoadingProblems;
 
               // 로딩 중이면 로딩 인디케이터 표시
               if (currentSubfolders.isEmpty && currentProblems.isEmpty && isLoadingMore) {
@@ -605,7 +715,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
               }
 
               final totalItems = currentSubfolders.length + currentProblems.length;
-              final hasMore = foldersProvider.subfolderHasNext || foldersProvider.problemHasNext;
+              final hasMore = _subfolderHasNext || _problemHasNext;
 
               return ListView.builder(
                 controller: _scrollController,
@@ -1085,10 +1195,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     await foldersProvider.updateFolder(
         folder.folderName, folder.folderId, newParentFolderId);
 
-    // 현재 폴더(원래 폴더)의 캐시도 갱신하여 이동한 폴더가 목록에서 사라지도록 함
-    if (_currentFolder != null) {
-      await foldersProvider.refreshFolder(_currentFolder!.folderId);
-    }
+    // 로컬 데이터 새로고침 (이동한 폴더가 목록에서 사라지도록)
+    await _loadFolderData();
 
     if (mounted) {
       SnackBarDialog.showSnackBar(
@@ -1113,16 +1221,12 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
     final problemsProvider =
         Provider.of<ProblemsProvider>(context, listen: false);
-    final foldersProvider =
-        Provider.of<FoldersProvider>(context, listen: false);
 
     // 문제 업데이트 (서버 + ProblemsProvider 캐시 갱신)
     await problemsProvider.updateProblem(problemRegisterModel);
 
-    // 현재 폴더(원래 폴더)의 캐시도 갱신하여 이동한 문제가 목록에서 사라지도록 함
-    if (_currentFolder != null) {
-      await foldersProvider.refreshFolder(_currentFolder!.folderId);
-    }
+    // 로컬 데이터 새로고침 (이동한 문제가 목록에서 사라지도록)
+    await _loadFolderData();
 
     if (mounted) {
       SnackBarDialog.showSnackBar(
@@ -1148,8 +1252,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   }
 
   Future<void> fetchFoldersAndProblems() async {
-    final foldersProvider = Provider.of<FoldersProvider>(context, listen: false);
-    await foldersProvider.refreshCurrentFolder();
+    // 로컬 데이터 다시 로드
+    await _loadFolderData();
   }
 
   void navigateToProblemDetail(BuildContext context, int problemId) {
