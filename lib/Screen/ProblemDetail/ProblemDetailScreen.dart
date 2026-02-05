@@ -317,7 +317,9 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                 await problemsProvider.deleteProblems([problemId]);
 
                 // 폴더 및 복습 노트 갱신
-                await foldersProvider.fetchFolderContent(parentFolderId);
+                if (parentFolderId != null) {
+                  await foldersProvider.refreshFolder(parentFolderId);
+                }
                 await practiceProvider.fetchAllPracticeContents();
               },
               child: const StandardText(
