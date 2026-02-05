@@ -7,6 +7,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
 import 'package:ono/Model/Common/LoginStatus.dart';
 import 'package:ono/Model/Folder/FolderModel.dart';
+import 'package:ono/Model/Folder/FolderThumbnailModel.dart';
 import 'package:ono/Model/Problem/ProblemRegisterModel.dart';
 import 'package:ono/Module/Dialog/SnackBarDialog.dart';
 import 'package:ono/Module/Theme/NoteIconHandler.dart';
@@ -39,12 +40,18 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   final List<int> _selectedFolderIds = []; // 선택된 폴더 ID 리스트
   final List<int> _selectedProblemIds = []; // 선택된 문제 ID 리스트
   FolderModel? _currentFolder; // 이 화면의 폴더 데이터
-  List<ProblemModel> _currentProblems = []; // 이 화면의 문제 리스트
+
+  // 무한 스크롤을 위한 ScrollController
+  late ScrollController _scrollController;
 
   @override
   void initState() {
     super.initState();
     _isSelectionMode = false; // 선택 모드 활성화 여부
+
+    // ScrollController 초기화
+    _scrollController = ScrollController();
+    _scrollController.addListener(_onScroll);
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final userProvider = Provider.of<UserProvider>(context, listen: false);
@@ -61,41 +68,40 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   }
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    // Provider가 변경되면 데이터 다시 로드
-    final foldersProvider = Provider.of<FoldersProvider>(context);
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
 
-    // Provider의 폴더 데이터가 변경되었는지 확인
-    final updatedFolder = widget.folderId == null
-        ? foldersProvider.rootFolder
-        : (foldersProvider.folders.any((f) => f.folderId == widget.folderId)
-            ? foldersProvider.getFolder(widget.folderId!)
-            : null);
+  // 스크롤 이벤트 리스너
+  void _onScroll() {
+    if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent * 0.8) {
+      final foldersProvider = Provider.of<FoldersProvider>(context, listen: false);
 
-    if (updatedFolder != null && updatedFolder != _currentFolder) {
-      // 폴더 데이터가 변경되었으면 로컬 state 업데이트
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          setState(() {
-            _currentFolder = updatedFolder;
-            _currentProblems = foldersProvider.getProblemsByFolder(widget.folderId);
-          });
-        }
-      });
+      // 80% 스크롤 시 더 로드
+      if (foldersProvider.subfolderHasNext && !foldersProvider.isLoadingSubfolders) {
+        foldersProvider.loadMoreCurrentSubfolders();
+      }
+      if (foldersProvider.problemHasNext && !foldersProvider.isLoadingProblems) {
+        foldersProvider.loadMoreCurrentProblems();
+      }
     }
   }
 
   Future<void> _loadFolderData() async {
     final foldersProvider = Provider.of<FoldersProvider>(context, listen: false);
-    await foldersProvider.fetchFolderContent(widget.folderId);
 
+    // 폴더 이동 (캐싱 로직 포함)
+    if (widget.folderId == null) {
+      await foldersProvider.moveToRootFolder();
+    } else {
+      await foldersProvider.moveToFolder(widget.folderId!);
+    }
+
+    // currentFolder 업데이트
     if (mounted) {
       setState(() {
-        _currentFolder = widget.folderId == null
-            ? foldersProvider.rootFolder
-            : foldersProvider.getFolder(widget.folderId!);
-        _currentProblems = foldersProvider.getProblemsByFolder(widget.folderId);
+        _currentFolder = foldersProvider.currentFolder;
       });
     }
   }
@@ -141,7 +147,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                     padding: const EdgeInsets.all(20),
                     child: Column(
                       children: [
-                        _buildProblemCountSection(themeProvider),
+                        _buildProblemCountSection(themeProvider, foldersProvider),
                         const SizedBox(
                           height: 10,
                         ),
@@ -338,7 +344,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   }
 
   // 정렬 옵션을 선택하는 다이얼로그
-  Widget _buildProblemCountSection(ThemeHandler themeProvider) {
+  Widget _buildProblemCountSection(ThemeHandler themeProvider, FoldersProvider foldersProvider) {
     return GestureDetector(
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -347,7 +353,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
             padding:
                 const EdgeInsets.only(top: 10, left: 10, right: 10), // 왼쪽 여백 추가
             child: StandardText(
-              text: '오답노트 수 : ${_currentProblems.length}',
+              text: '오답노트 수 : ${foldersProvider.currentProblems.length}',
               fontSize: 15,
               color: themeProvider.primaryColor,
             ),
@@ -545,12 +551,12 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         child: Column(
       children: [
         Expanded(
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              var subFolderIds = _currentFolder?.subFolderList ?? [];
-              var currentProblems = _currentProblems;
+          child: Consumer<FoldersProvider>(
+            builder: (context, foldersProvider, child) {
+              var currentSubfolders = foldersProvider.currentSubfolders;
+              var currentProblems = foldersProvider.currentProblems;
 
-              if (subFolderIds.isEmpty && currentProblems.isEmpty) {
+              if (currentSubfolders.isEmpty && currentProblems.isEmpty) {
                 return Center(
                   child: SingleChildScrollView(
                     child: Column(
@@ -602,19 +608,31 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                 );
               }
 
-              final foldersProvider = Provider.of<FoldersProvider>(context, listen: false);
-              return ListView.builder(
-                itemCount: subFolderIds.length + currentProblems.length,
-                itemBuilder: (context, index) {
-                  if (index < subFolderIds.length) {
-                    var subFolderId = subFolderIds[index].folderId;
+              final totalItems = currentSubfolders.length + currentProblems.length;
+              final isLoadingMore = foldersProvider.isLoadingSubfolders || foldersProvider.isLoadingProblems;
+              final hasMore = foldersProvider.subfolderHasNext || foldersProvider.problemHasNext;
 
-                    var subFolder = foldersProvider.getFolder(subFolderId);
+              return ListView.builder(
+                controller: _scrollController,
+                itemCount: totalItems + (isLoadingMore || hasMore ? 1 : 0),
+                itemBuilder: (context, index) {
+                  // 로딩 인디케이터 표시
+                  if (index == totalItems) {
+                    return const Padding(
+                      padding: EdgeInsets.all(16.0),
+                      child: Center(
+                        child: CircularProgressIndicator(),
+                      ),
+                    );
+                  }
+
+                  if (index < currentSubfolders.length) {
+                    var subfolder = currentSubfolders[index];
                     return _buildFolderTile(
-                        subFolder, themeProvider, index);
+                        subfolder, themeProvider, index);
                   } else {
                     var problem =
-                        currentProblems[index - subFolderIds.length];
+                        currentProblems[index - currentSubfolders.length];
                     return _buildProblemTile(problem, themeProvider);
                   }
                 },
@@ -628,7 +646,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   }
 
   Widget _buildFolderTile(
-      FolderModel folder, ThemeHandler themeProvider, int index) {
+      FolderThumbnailModel folder, ThemeHandler themeProvider, int index) {
     final isSelected = _selectedFolderIds.contains(folder.folderId);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0), // 아이템 간 간격 추가
@@ -657,7 +675,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
             );
           }
         },
-        child: LongPressDraggable<FolderModel>(
+        child: LongPressDraggable<FolderThumbnailModel>(
           data: folder,
           feedback: Material(
             child: SizedBox(
@@ -687,7 +705,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
               await _moveProblemToFolder(problemRegisterModel);
             },
             builder: (context, candidateData, rejectedData) {
-              return DragTarget<FolderModel>(
+              return DragTarget<FolderThumbnailModel>(
                 onAcceptWithDetails: (details) async {
                   // 폴더를 드롭하면 자식 폴더로 이동
                   await _moveFolderToNewParent(details.data, folder.folderId);
@@ -704,7 +722,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   }
 
   Widget _folderTileContent(
-      FolderModel folder, ThemeHandler themeProvider, int index) {
+      FolderThumbnailModel folder, ThemeHandler themeProvider, int index) {
     final isSelected = _selectedFolderIds.contains(folder.folderId);
     return Container(
       padding: const EdgeInsets.all(12.0),
@@ -810,7 +828,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
           onDragStarted: () {
             HapticFeedback.lightImpact();
           },
-          child: DragTarget<FolderModel>(
+          child: DragTarget<FolderThumbnailModel>(
             onAcceptWithDetails: (details) async {
               // 문제를 드롭하면 해당 폴더로 이동
               ProblemRegisterModel problemRegisterModel = ProblemRegisterModel(
@@ -1051,7 +1069,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   }
 
   Future<void> _moveFolderToNewParent(
-      FolderModel folder, int? newParentFolderId) async {
+      FolderThumbnailModel folder, int? newParentFolderId) async {
     if (newParentFolderId == null) {
       log('New parent folder ID is null.');
       return;
@@ -1121,7 +1139,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   }
 
   Future<void> fetchFoldersAndProblems() async {
-    await _loadFolderData();
+    final foldersProvider = Provider.of<FoldersProvider>(context, listen: false);
+    await foldersProvider.refreshCurrentFolder();
   }
 
   void navigateToProblemDetail(BuildContext context, int problemId) {
