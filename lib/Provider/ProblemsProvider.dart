@@ -52,17 +52,25 @@ class ProblemsProvider with ChangeNotifier {
     return null;
   }
 
+  // 정렬을 유지하면서 문제를 추가하는 헬퍼 메서드
+  void _insertProblemSorted(ProblemModel problem) {
+    final existingIndex = _findProblemIndex(problem.problemId);
+    if (existingIndex != null) {
+      // 이미 존재하면 업데이트
+      _problems[existingIndex] = problem;
+    } else {
+      // 없으면 정렬된 위치에 삽입 (problemId 오름차순)
+      int insertIndex = 0;
+      while (insertIndex < _problems.length && _problems[insertIndex].problemId < problem.problemId) {
+        insertIndex++;
+      }
+      _problems.insert(insertIndex, problem);
+    }
+  }
+
   Future<void> fetchProblem(int problemId) async {
     final fetchedProblem = await problemService.getProblem(problemId);
-
-    final foundIndex = _findProblemIndex(problemId);
-
-    if (foundIndex != null) {
-      _problems[foundIndex] = fetchedProblem;
-    } else {
-      _problems.add(fetchedProblem);
-    }
-
+    _insertProblemSorted(fetchedProblem);
     log('problem: $problemId fetch complete');
     notifyListeners();
   }
@@ -206,14 +214,9 @@ class ProblemsProvider with ChangeNotifier {
         size: size,
       );
 
-      // 로컬 캐시에 추가 (중복 방지)
+      // 로컬 캐시에 추가 (중복 방지 및 정렬 유지)
       for (var problem in response.content) {
-        final foundIndex = _findProblemIndex(problem.problemId);
-        if (foundIndex != null) {
-          _problems[foundIndex] = problem;
-        } else {
-          _problems.add(problem);
-        }
+        _insertProblemSorted(problem);
       }
 
       log('Loaded ${response.content.length} problems from folder $folderId');

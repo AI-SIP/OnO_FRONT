@@ -35,42 +35,73 @@ class ProblemPracticeProvider with ChangeNotifier {
 
   ProblemPracticeProvider({required this.problemsProvider});
 
-  PracticeNoteDetailModel getPracticeNote(int practiceNoteId) {
+  // 동기적으로 캐시에서만 찾기 (내부용)
+  int? _findPracticeNoteIndex(int practiceNoteId) {
     int low = 0, high = _practices.length - 1;
     while (low <= high) {
       final mid = (low + high) >> 1;
       final midId = _practices[mid].practiceId;
       if (midId == practiceNoteId) {
-        return _practices[mid];
+        return mid;
       } else if (midId < practiceNoteId) {
         low = mid + 1;
       } else {
         high = mid - 1;
       }
     }
+    return null;
+  }
 
-    log('can\'t find problemId: $practiceNoteId');
-    throw Exception('Problem with id $practiceNoteId not found.');
+  // 정렬을 유지하면서 복습노트를 추가하는 헬퍼 메서드
+  void _insertPracticeNoteSorted(PracticeNoteDetailModel practiceNote) {
+    final existingIndex = _findPracticeNoteIndex(practiceNote.practiceId);
+    if (existingIndex != null) {
+      // 이미 존재하면 업데이트
+      _practices[existingIndex] = practiceNote;
+    } else {
+      // 없으면 정렬된 위치에 삽입 (practiceId 오름차순)
+      int insertIndex = 0;
+      while (insertIndex < _practices.length && _practices[insertIndex].practiceId < practiceNote.practiceId) {
+        insertIndex++;
+      }
+      _practices.insert(insertIndex, practiceNote);
+    }
+  }
+
+  // 비동기로 복습노트 가져오기 (캐시에 없으면 서버에서 fetch)
+  Future<PracticeNoteDetailModel> getPracticeNote(int practiceNoteId) async {
+    final index = _findPracticeNoteIndex(practiceNoteId);
+    if (index != null) {
+      return _practices[index];
+    }
+
+    // 캐시에 없으면 서버에서 fetch
+    log('Practice note $practiceNoteId not in cache, fetching from server');
+    await fetchPracticeNote(practiceNoteId);
+
+    final newIndex = _findPracticeNoteIndex(practiceNoteId);
+    if (newIndex != null) {
+      return _practices[newIndex];
+    }
+
+    log('Failed to fetch practiceNoteId: $practiceNoteId');
+    throw Exception('Practice with id $practiceNoteId not found.');
   }
 
   Future<void> fetchPracticeNote(int? practiceNoteId) async {
     final practiceNote =
         await practiceNoteService.getPracticeNoteById(practiceNoteId!);
 
-    final index = _practices
-        .indexWhere((practice) => practice.practiceId == practiceNoteId);
-    if (index != -1) {
-      _practices[index] = practiceNote;
-      if (currentPracticeNote != null) {
-        if (practiceNoteId == currentPracticeNote!.practiceId) {
-          await moveToPractice(practiceNoteId);
-        }
-      }
-    } else {
-      _practices.add(practiceNote);
-    }
-    log('practiceId: ${practiceNoteId} fetch complete');
+    _insertPracticeNoteSorted(practiceNote);
 
+    // 현재 복습노트가 업데이트된 것이면 다시 로드
+    if (currentPracticeNote != null) {
+      if (practiceNoteId == currentPracticeNote!.practiceId) {
+        await moveToPractice(practiceNoteId);
+      }
+    }
+
+    log('practiceId: $practiceNoteId fetch complete');
     notifyListeners();
   }
 
@@ -82,7 +113,7 @@ class ProblemPracticeProvider with ChangeNotifier {
   }
 
   Future<void> moveToPractice(int practiceId) async {
-    final targetPractice = getPracticeNote(practiceId);
+    final targetPractice = await getPracticeNote(practiceId);
 
     currentProblems.clear();
 

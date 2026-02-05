@@ -74,35 +74,63 @@ class FoldersProvider with ChangeNotifier {
 
   FoldersProvider({required this.problemsProvider});
 
-  FolderModel getFolder(int folderId) {
+  // 동기적으로 캐시에서만 찾기 (내부용)
+  int? _findFolderIndex(int folderId) {
     int low = 0, high = _folders.length - 1;
     while (low <= high) {
       final mid = (low + high) >> 1;
       final midId = _folders[mid].folderId;
       if (midId == folderId) {
-        return _folders[mid];
+        return mid;
       } else if (midId < folderId) {
         low = mid + 1;
       } else {
         high = mid - 1;
       }
     }
+    return null;
+  }
 
-    log('can\'t find folderId: $folderId');
+  // 정렬을 유지하면서 폴더를 추가하는 헬퍼 메서드
+  void _insertFolderSorted(FolderModel folder) {
+    final existingIndex = _findFolderIndex(folder.folderId);
+    if (existingIndex != null) {
+      // 이미 존재하면 업데이트
+      _folders[existingIndex] = folder;
+    } else {
+      // 없으면 정렬된 위치에 삽입 (folderId 오름차순)
+      int insertIndex = 0;
+      while (insertIndex < _folders.length && _folders[insertIndex].folderId < folder.folderId) {
+        insertIndex++;
+      }
+      _folders.insert(insertIndex, folder);
+    }
+  }
+
+  // 비동기로 폴더 가져오기 (캐시에 없으면 서버에서 fetch)
+  Future<FolderModel> getFolder(int folderId) async {
+    final index = _findFolderIndex(folderId);
+    if (index != null) {
+      return _folders[index];
+    }
+
+    // 캐시에 없으면 서버에서 fetch
+    log('Folder $folderId not in cache, fetching from server');
+    await fetchFolderMetadata(folderId);
+
+    final newIndex = _findFolderIndex(folderId);
+    if (newIndex != null) {
+      return _folders[newIndex];
+    }
+
+    log('Failed to fetch folderId: $folderId');
     throw Exception('Folder with id $folderId not found.');
   }
 
   // 루트 폴더 fetch (로그인 시 호출)
   Future<void> fetchRootFolder() async {
     final rootFolder = await folderService.getRootFolder();
-
-    final index = _folders.indexWhere((folder) => folder.folderId == rootFolder.folderId);
-    if (index != -1) {
-      _folders[index] = rootFolder;
-    } else {
-      _folders.add(rootFolder);
-    }
-
+    _insertFolderSorted(rootFolder);
     log('Root folder fetched: ${rootFolder.folderId}');
     notifyListeners();
   }
@@ -110,14 +138,7 @@ class FoldersProvider with ChangeNotifier {
   // 폴더 메타데이터만 fetch (이름, 부모폴더 등)
   Future<void> fetchFolderMetadata(int folderId) async {
     final folder = await folderService.fetchFolder(folderId);
-
-    final index = _folders.indexWhere((f) => f.folderId == folderId);
-    if (index != -1) {
-      _folders[index] = folder;
-    } else {
-      _folders.add(folder);
-    }
-
+    _insertFolderSorted(folder);
     log('Folder metadata fetched: $folderId');
     notifyListeners();
   }
@@ -125,14 +146,14 @@ class FoldersProvider with ChangeNotifier {
   // 폴더 이동 (캐싱 로직 포함)
   Future<void> moveToFolder(int folderId) async {
     try {
-      // 1. 폴더 메타데이터 fetch (항상 최신 정보 가져오기)
-      await fetchFolderMetadata(folderId);
-      _currentFolder = getFolder(folderId);
+      // 1. 폴더 메타데이터 fetch (캐시에 없으면 서버에서 가져옴)
+      final folder = await getFolder(folderId);
 
-      // 2. 캐시 확인
+      // 2. 캐시 확인 (먼저 확인해서 불필요한 상태 변경 방지)
       if (_folderCache.containsKey(folderId)) {
         // 캐시에 있으면 저장된 데이터 사용
         log('Using cached data for folder: $folderId');
+        _currentFolder = folder;
         notifyListeners();
         return;
       }
@@ -140,13 +161,15 @@ class FoldersProvider with ChangeNotifier {
       // 3. 캐시에 없으면 새로 생성하고 첫 페이지 로드
       log('Loading first page for folder: $folderId');
       _folderCache[folderId] = FolderScrollState();
+      _currentFolder = folder;
+      notifyListeners(); // UI에 로딩 중임을 알림
 
       await Future.wait([
         loadMoreSubfolders(folderId),
         loadMoreProblems(folderId),
       ]);
 
-      notifyListeners();
+      // loadMoreSubfolders/Problems 내부에서 notifyListeners 호출됨
     } catch (e, stackTrace) {
       log('Error moving to folder: $e');
       log(stackTrace.toString());
@@ -167,7 +190,8 @@ class FoldersProvider with ChangeNotifier {
     final state = _folderCache[folderId];
     if (state == null) return;
     if (state.isLoadingSubfolders) return;
-    if (state.subfolderNextCursor != null && !state.subfolderHasNext) return;
+    // 첫 로드가 아니면서(!subfolderNextCursor == null) hasNext가 false면 return
+    if (!state.subfolderHasNext && state.subfolderNextCursor != null) return;
 
     try {
       state.isLoadingSubfolders = true;
@@ -198,7 +222,8 @@ class FoldersProvider with ChangeNotifier {
     final state = _folderCache[folderId];
     if (state == null) return;
     if (state.isLoadingProblems) return;
-    if (state.problemNextCursor != null && !state.problemHasNext) return;
+    // 첫 로드가 아니면서(!problemNextCursor == null) hasNext가 false면 return
+    if (!state.problemHasNext && state.problemNextCursor != null) return;
 
     try {
       state.isLoadingProblems = true;
