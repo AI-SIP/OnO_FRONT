@@ -1080,11 +1080,15 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
     final foldersProvider =
         Provider.of<FoldersProvider>(context, listen: false);
+
+    // 폴더 업데이트 (서버 + 메타데이터 갱신 + 목적지 폴더 캐시 갱신은 updateFolder에서 처리)
     await foldersProvider.updateFolder(
         folder.folderName, folder.folderId, newParentFolderId);
 
-    // 현재 화면 새로고침
-    await _loadFolderData();
+    // 현재 폴더(원래 폴더)의 캐시도 갱신하여 이동한 폴더가 목록에서 사라지도록 함
+    if (_currentFolder != null) {
+      await foldersProvider.refreshFolder(_currentFolder!.folderId);
+    }
 
     if (mounted) {
       SnackBarDialog.showSnackBar(
@@ -1109,9 +1113,16 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
     final problemsProvider =
         Provider.of<ProblemsProvider>(context, listen: false);
+    final foldersProvider =
+        Provider.of<FoldersProvider>(context, listen: false);
+
+    // 문제 업데이트 (서버 + ProblemsProvider 캐시 갱신)
     await problemsProvider.updateProblem(problemRegisterModel);
 
-    await _loadFolderData();
+    // 현재 폴더(원래 폴더)의 캐시도 갱신하여 이동한 문제가 목록에서 사라지도록 함
+    if (_currentFolder != null) {
+      await foldersProvider.refreshFolder(_currentFolder!.folderId);
+    }
 
     if (mounted) {
       SnackBarDialog.showSnackBar(
