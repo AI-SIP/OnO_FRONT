@@ -179,8 +179,15 @@ class UserProvider with ChangeNotifier {
 
   Future<void> fetchAllData() async {
     await fetchUserInfo();
-    await problemsProvider.fetchAllProblems();
-    await foldersProvider.fetchAllFolderContents();
+
+    // 문제 개수만 먼저 조회 (빠른 로딩)
+    await problemsProvider.fetchProblemCount();
+
+    // 루트 폴더 정보만 로드 (하위 폴더/문제는 필요할 때 로드)
+    await foldersProvider.fetchRootFolder();
+    await foldersProvider.moveToRootFolder();
+
+    // 복습노트는 기존 방식 유지 (혹은 나중에 V2로 변경 가능)
     await practiceProvider.fetchAllPracticeContents();
 
     notifyListeners();
