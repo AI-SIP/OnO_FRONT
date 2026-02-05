@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:camera/camera.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:ono/Model/Common/PaginatedResponse.dart';
 import 'package:ono/Model/Problem/ProblemAnalysisStatus.dart';
 import 'package:ono/Model/Problem/ProblemModel.dart';
 import 'package:ono/Service/Api/Problem/ProblemService.dart';
@@ -179,6 +180,46 @@ class ProblemsProvider with ChangeNotifier {
     final ReviewHandler reviewHandler = ReviewHandler();
     if (_problemCount > 0 && _problemCount % 10 == 0) {
       reviewHandler.requestReview(context);
+    }
+  }
+
+  // 문제 개수만 조회 (로그인 시 사용)
+  Future<void> fetchProblemCount() async {
+    _problemCount = await getUserProblemCount();
+    notifyListeners();
+  }
+
+  // V2 API - 폴더 내 문제 무한 스크롤 조회
+  Future<PaginatedResponse<ProblemModel>> loadMoreFolderProblemsV2({
+    required int folderId,
+    int? cursor,
+    int size = 20,
+  }) async {
+    try {
+      final response = await problemService.getFolderProblemsV2(
+        folderId: folderId,
+        cursor: cursor,
+        size: size,
+      );
+
+      // 로컬 캐시에 추가 (중복 방지)
+      for (var problem in response.content) {
+        final foundIndex = _findProblemIndex(problem.problemId);
+        if (foundIndex != null) {
+          _problems[foundIndex] = problem;
+        } else {
+          _problems.add(problem);
+        }
+      }
+
+      log('Loaded ${response.content.length} problems from folder $folderId');
+      notifyListeners();
+
+      return response;
+    } catch (e, stackTrace) {
+      log('Error loading folder problems V2: $e');
+      log(stackTrace.toString());
+      rethrow;
     }
   }
 }
