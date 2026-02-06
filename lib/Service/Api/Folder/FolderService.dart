@@ -107,4 +107,28 @@ class FolderService {
       (json) => FolderThumbnailModel.fromJson(json),
     );
   }
+
+  // V2 API - Cursor-based pagination for all folder thumbnails
+  Future<PaginatedResponse<FolderThumbnailModel>> getAllFolderThumbnailsV2({
+    int? cursor,
+    int size = 20,
+  }) async {
+    final queryParams = <String, String>{
+      'size': size.toString(),
+    };
+    if (cursor != null) {
+      queryParams['cursor'] = cursor.toString();
+    }
+
+    final data = await httpService.sendRequest(
+      method: 'GET',
+      url: '$baseUrl/thumbnails/V2',
+      queryParams: queryParams,
+    ) as Map<String, dynamic>;
+
+    return PaginatedResponse.fromJson(
+      data,
+      (json) => FolderThumbnailModel.fromJson(json),
+    );
+  }
 }
