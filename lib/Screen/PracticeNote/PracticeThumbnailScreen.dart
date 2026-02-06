@@ -58,14 +58,17 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
     return Scaffold(
       appBar: _buildAppBar(themeProvider),
       backgroundColor: Colors.white,
-      body: Consumer<ProblemPracticeProvider>(
-        builder: (context, provider, child) {
-          if (provider.practiceThumbnails.isEmpty && !provider.isLoading) {
-            return _buildEmptyState(themeProvider);
-          } else {
-            return _buildPracticeListView(provider, themeProvider);
-          }
-        },
+      body: RefreshIndicator(
+        onRefresh: _refreshPracticeThumbnails,
+        child: Consumer<ProblemPracticeProvider>(
+          builder: (context, provider, child) {
+            if (provider.practiceThumbnails.isEmpty && !provider.isLoading) {
+              return _buildEmptyState(themeProvider);
+            } else {
+              return _buildPracticeListView(provider, themeProvider);
+            }
+          },
+        ),
       ),
       bottomNavigationBar: _isSelectionMode
           ? Padding(
@@ -329,51 +332,57 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
   }
 
   Widget _buildEmptyState(ThemeHandler themeProvider) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const SizedBox(height: 40),
-          SvgPicture.asset(
-            'assets/Icon/BigGreenFrog.svg',
-            width: 90,
-            height: 90,
-          ),
-          const SizedBox(height: 40),
-          const StandardText(
-            text: '작성한 오답노트로 복습 노트를\n 생성해 시험을 준비하세요!',
-            fontSize: 16,
-            color: Colors.black,
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 30),
-          ElevatedButton(
-            onPressed: () {
-              // 복습 노트 추가 화면으로 이동
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const PracticeProblemSelectionScreen(),
+    return SingleChildScrollView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      child: SizedBox(
+        height: MediaQuery.of(context).size.height * 0.7,
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const SizedBox(height: 40),
+              SvgPicture.asset(
+                'assets/Icon/BigGreenFrog.svg',
+                width: 90,
+                height: 90,
+              ),
+              const SizedBox(height: 40),
+              const StandardText(
+                text: '작성한 오답노트로 복습 노트를\n 생성해 시험을 준비하세요!',
+                fontSize: 16,
+                color: Colors.black,
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 30),
+              ElevatedButton(
+                onPressed: () {
+                  // 복습 노트 추가 화면으로 이동
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const PracticeProblemSelectionScreen(),
+                    ),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: themeProvider.primaryColor, // primaryColor 적용
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 30,
+                    vertical: 8,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(15),
+                  ),
                 ),
-              );
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: themeProvider.primaryColor, // primaryColor 적용
-              padding: const EdgeInsets.symmetric(
-                horizontal: 30,
-                vertical: 8,
+                child: const StandardText(
+                  text: '복습 노트 추가하기',
+                  fontSize: 16,
+                  color: Colors.white,
+                ),
               ),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(15),
-              ),
-            ),
-            child: const StandardText(
-              text: '복습 노트 추가하기',
-              fontSize: 16,
-              color: Colors.white,
-            ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -386,6 +395,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
 
     return ListView.builder(
       controller: _scrollController,
+      physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.symmetric(vertical: 20),
       itemCount: thumbnails.length + (isLoadingMore || hasMore ? 1 : 0),
       itemBuilder: (context, index) {
