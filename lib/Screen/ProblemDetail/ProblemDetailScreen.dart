@@ -282,7 +282,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
       int problemId, ThemeHandler themeProvider) async {
     return showDialog(
       context: context,
-      builder: (context) {
+      builder: (dialogContext) {
         return AlertDialog(
           backgroundColor: Colors.white,
           title: const StandardText(
@@ -292,7 +292,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.pop(context);
+                Navigator.pop(dialogContext);
               },
               child: const StandardText(
                 text: '취소',
@@ -304,33 +304,25 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
               onPressed: () async {
                 FirebaseAnalytics.instance.logEvent(name: 'problem_delete');
 
-                // context가 유효할 때 Provider 가져오기
-                ProblemsProvider problemsProvider =
+                // context가 유효할 때 Provider와 Navigator 가져오기
+                final problemsProvider =
                     Provider.of<ProblemsProvider>(context, listen: false);
-                FoldersProvider foldersProvider =
-                    Provider.of<FoldersProvider>(context, listen: false);
-                ProblemPracticeProvider practiceProvider =
+                final practiceProvider =
                     Provider.of<ProblemPracticeProvider>(context,
                         listen: false);
-
-                ProblemModel problemModel =
-                    await problemsProvider.getProblem(problemId);
-
-                int? parentFolderId = problemModel.folderId;
+                final navigator = Navigator.of(context);
 
                 // 다이얼로그 닫기
-                Navigator.pop(context);
-                // 상세 화면 닫기 (폴더 화면으로 이동)
-                Navigator.pop(context);
+                Navigator.pop(dialogContext);
 
                 // 삭제 작업 수행
                 await problemsProvider.deleteProblems([problemId]);
-
-                // 폴더 및 복습 노트 갱신
-                if (parentFolderId != null) {
-                  await foldersProvider.refreshFolder(parentFolderId);
-                }
                 await practiceProvider.fetchAllPracticeContents();
+
+                // 상세 화면 닫고 DirectoryScreen에 삭제 완료 알림 (true 반환)
+                if (mounted) {
+                  navigator.pop(true);
+                }
               },
               child: const StandardText(
                 text: '삭제',

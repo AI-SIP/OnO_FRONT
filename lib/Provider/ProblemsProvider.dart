@@ -152,7 +152,17 @@ class ProblemsProvider with ChangeNotifier {
   Future<void> deleteProblems(List<int> deleteProblemIdList) async {
     log('delete problems: $deleteProblemIdList');
     await problemService.deleteProblems(deleteProblemIdList);
-    await fetchAllProblems();
+
+    // 로컬 캐시에서 삭제된 문제 제거
+    for (var problemId in deleteProblemIdList) {
+      _problemsMap.remove(problemId);
+    }
+
+    // 문제 개수 업데이트
+    _problemCount = await getUserProblemCount();
+
+    log('Deleted ${deleteProblemIdList.length} problems from cache');
+    notifyListeners();
   }
 
   Future<void> deleteProblemImageData(String imageUrl) async {

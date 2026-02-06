@@ -288,10 +288,8 @@ class FoldersProvider with ChangeNotifier {
       _foldersMap.remove(folderId);
     }
 
-    // 현재 폴더 캐시 갱신
-    if (_currentFolder != null) {
-      await refreshFolder(_currentFolder!.folderId);
-    }
+    log('Deleted ${deleteFolderIdList.length} folders from cache');
+    notifyListeners();
   }
 
   // 폴더 캐시 강제 갱신 (새로고침)
