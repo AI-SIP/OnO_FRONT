@@ -1051,7 +1051,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  padding: const EdgeInsets.symmetric(vertical: 10)),
+                  padding: const EdgeInsets.symmetric(vertical: 8)),
               onPressed: () {
                 // 선택 모드 취소
                 setState(() {
@@ -1075,7 +1075,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  padding: const EdgeInsets.symmetric(vertical: 10)),
+                  padding: const EdgeInsets.symmetric(vertical: 8)),
               onPressed: () {
                 if (_selectedFolderIds.isNotEmpty ||
                     _selectedProblemIds.isNotEmpty) {

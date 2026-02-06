@@ -193,7 +193,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
 
   Widget _buildBottomActionButtons(ThemeHandler themeProvider) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
       color: Colors.white,
       child: Row(
         children: [
@@ -201,7 +201,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.grey[300],
-                padding: const EdgeInsets.symmetric(vertical: 12),
+                padding: const EdgeInsets.symmetric(vertical: 8),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
@@ -214,17 +214,17 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
               },
               child: const StandardText(
                 text: '취소하기',
-                fontSize: 16,
+                fontSize: 14,
                 color: Colors.black,
               ),
             ),
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: 16),
           Expanded(
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: themeProvider.primaryColor,
-                padding: const EdgeInsets.symmetric(vertical: 12),
+                padding: const EdgeInsets.symmetric(vertical: 8),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
@@ -237,7 +237,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
                 children: [
                   const StandardText(
                     text: '삭제하기',
-                    fontSize: 16,
+                    fontSize: 14,
                     color: Colors.white,
                   ),
                   const SizedBox(width: 8),
