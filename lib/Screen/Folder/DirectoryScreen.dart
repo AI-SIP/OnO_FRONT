@@ -1040,7 +1040,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
   Widget _buildBottomActionButtons(ThemeHandler themeProvider) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
       color: Colors.white,
       child: Row(
         children: [
@@ -1051,7 +1051,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  padding: const EdgeInsets.symmetric(vertical: 12)),
+                  padding: const EdgeInsets.symmetric(vertical: 10)),
               onPressed: () {
                 // 선택 모드 취소
                 setState(() {
@@ -1062,12 +1062,12 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
               },
               child: const StandardText(
                 text: '취소하기',
-                fontSize: 16,
+                fontSize: 14,
                 color: Colors.black,
               ),
             ),
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: 16),
           Expanded(
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
@@ -1075,7 +1075,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  padding: const EdgeInsets.symmetric(vertical: 12)),
+                  padding: const EdgeInsets.symmetric(vertical: 10)),
               onPressed: () {
                 if (_selectedFolderIds.isNotEmpty ||
                     _selectedProblemIds.isNotEmpty) {
@@ -1084,7 +1084,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
               },
               child: const StandardText(
                 text: '삭제하기',
-                fontSize: 16,
+                fontSize: 14,
                 color: Colors.white,
               ),
             ),
