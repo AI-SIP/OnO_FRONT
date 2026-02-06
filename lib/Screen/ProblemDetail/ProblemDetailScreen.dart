@@ -8,9 +8,9 @@ import 'package:provider/provider.dart';
 
 import '../../Model/Problem/ProblemAnalysisStatus.dart';
 import '../../Model/Problem/ProblemModel.dart';
+import '../../Module/Dialog/LoadingDialog.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
-import '../../Provider/FoldersProvider.dart';
 import '../../Provider/ProblemsProvider.dart';
 import '../PracticeNote/PracticeNavigationButtons.dart';
 import 'ProblemDetailTemplate.dart';
@@ -307,21 +307,37 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                 // context가 유효할 때 Provider와 Navigator 가져오기
                 final problemsProvider =
                     Provider.of<ProblemsProvider>(context, listen: false);
-                final practiceProvider =
-                    Provider.of<ProblemPracticeProvider>(context,
-                        listen: false);
+                final practiceProvider = Provider.of<ProblemPracticeProvider>(
+                    context,
+                    listen: false);
                 final navigator = Navigator.of(context);
 
                 // 다이얼로그 닫기
                 Navigator.pop(dialogContext);
 
-                // 삭제 작업 수행
-                await problemsProvider.deleteProblems([problemId]);
-                await practiceProvider.fetchAllPracticeContents();
+                // 로딩 다이얼로그 표시
+                LoadingDialog.show(context, '오답노트 지우는 중...');
 
-                // 상세 화면 닫고 DirectoryScreen에 삭제 완료 알림 (true 반환)
-                if (mounted) {
-                  navigator.pop(true);
+                try {
+                  // 삭제 작업 수행
+                  await problemsProvider.deleteProblems([problemId]);
+                  await practiceProvider.fetchAllPracticeContents();
+
+                  // 로딩 다이얼로그 닫기
+                  if (mounted) {
+                    LoadingDialog.hide(context);
+                  }
+
+                  // 상세 화면 닫고 DirectoryScreen에 삭제 완료 알림 (true 반환)
+                  if (mounted) {
+                    navigator.pop(true);
+                  }
+                } catch (e) {
+                  // 에러 발생 시 로딩 다이얼로그 닫기
+                  if (mounted) {
+                    LoadingDialog.hide(context);
+                  }
+                  log('문제 삭제 실패: $e');
                 }
               },
               child: const StandardText(
