@@ -38,6 +38,10 @@ class FoldersProvider with ChangeNotifier {
   final folderService = FolderService();
   final fileUploadService = FileUploadService();
 
+  // 루트 폴더 새로고침 플래그
+  int _rootFolderRefreshTimestamp = 0;
+  int get rootFolderRefreshTimestamp => _rootFolderRefreshTimestamp;
+
   FolderModel? get currentFolder => _currentFolder;
 
   // 호환성을 위한 getter (정렬된 리스트 반환)
@@ -297,10 +301,18 @@ class FoldersProvider with ChangeNotifier {
     // 캐시 제거
     _folderCache.remove(folderId);
 
+    // 루트 폴더이면 타임스탬프 업데이트
+    if (rootFolder != null && folderId == rootFolder!.folderId) {
+      _rootFolderRefreshTimestamp = DateTime.now().millisecondsSinceEpoch;
+      log('Root folder refresh signaled - timestamp: $_rootFolderRefreshTimestamp');
+    }
+
     // 현재 폴더이면 다시 로드
     if (_currentFolder?.folderId == folderId) {
       await moveToFolder(folderId);
     }
+
+    notifyListeners();
   }
 
   // 현재 폴더 새로고침

@@ -57,6 +57,9 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   // 무한 스크롤을 위한 ScrollController
   late ScrollController _scrollController;
 
+  // 루트 폴더 새로고침 타임스탬프 추적
+  int _lastRootFolderRefreshTimestamp = 0;
+
   @override
   void initState() {
     super.initState();
@@ -257,6 +260,21 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     final authService = Provider.of<UserProvider>(context);
     final themeProvider = Provider.of<ThemeHandler>(context);
     final foldersProvider = Provider.of<FoldersProvider>(context);
+
+    // 루트 폴더 화면이고, 새로고침 타임스탬프가 변경되었으면 데이터 새로고침
+    if (widget.folderId == null &&
+        foldersProvider.rootFolderRefreshTimestamp !=
+            _lastRootFolderRefreshTimestamp &&
+        foldersProvider.rootFolderRefreshTimestamp > 0) {
+      _lastRootFolderRefreshTimestamp =
+          foldersProvider.rootFolderRefreshTimestamp;
+      log('Root folder refresh detected, reloading data...');
+
+      // PostFrameCallback을 사용하여 안전하게 상태 업데이트
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _loadFolderData();
+      });
+    }
 
     return PopScope(
         canPop: true,
