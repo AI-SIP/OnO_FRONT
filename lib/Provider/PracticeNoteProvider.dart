@@ -32,6 +32,10 @@ class ProblemPracticeProvider with ChangeNotifier {
   final PracticeNoteService practiceNoteService = PracticeNoteService();
   final ProblemsProvider problemsProvider;
 
+  // 복습 노트 목록 새로고침 타임스탬프
+  int _practiceRefreshTimestamp = 0;
+  int get practiceRefreshTimestamp => _practiceRefreshTimestamp;
+
   // 호환성을 위한 getter (정렬된 리스트 반환)
   List<PracticeNoteDetailModel> get practices => _practicesMap.values.toList();
   List<PracticeNoteThumbnails> get practiceThumbnails => _practiceThumbnails;
@@ -128,6 +132,11 @@ class ProblemPracticeProvider with ChangeNotifier {
         .registerPracticeNote(practiceNoteRegisterModel);
 
     await fetchPracticeNote(createdPracticeId);
+
+    // 복습 노트 목록 새로고침 신호
+    _practiceRefreshTimestamp = DateTime.now().millisecondsSinceEpoch;
+    log('Practice list refresh signaled - timestamp: $_practiceRefreshTimestamp');
+    notifyListeners();
   }
 
   Future<void> updatePractice(
@@ -135,6 +144,11 @@ class ProblemPracticeProvider with ChangeNotifier {
     await practiceNoteService.updatePracticeNote(practiceNoteUpdateModel);
 
     await fetchPracticeNote(practiceNoteUpdateModel.practiceNoteId);
+
+    // 복습 노트 목록 새로고침 신호
+    _practiceRefreshTimestamp = DateTime.now().millisecondsSinceEpoch;
+    log('Practice list refresh signaled - timestamp: $_practiceRefreshTimestamp');
+    notifyListeners();
   }
 
   Future<void> deletePractices(List<int> deletePracticeIds) async {

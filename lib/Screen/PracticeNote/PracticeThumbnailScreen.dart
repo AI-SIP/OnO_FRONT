@@ -24,6 +24,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
   bool _isSelectionMode = false;
   final List<int> _selectedPracticeIds = [];
   late ScrollController _scrollController;
+  int _lastPracticeRefreshTimestamp = 0;
 
   @override
   void initState() {
@@ -54,6 +55,19 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeHandler>(context);
+    final practiceProvider = Provider.of<ProblemPracticeProvider>(context);
+
+    // 복습 노트 생성/수정 후 타임스탬프가 변경되면 자동 새로고침
+    if (practiceProvider.practiceRefreshTimestamp !=
+            _lastPracticeRefreshTimestamp &&
+        practiceProvider.practiceRefreshTimestamp > 0) {
+      _lastPracticeRefreshTimestamp = practiceProvider.practiceRefreshTimestamp;
+
+      // PostFrameCallback을 사용하여 안전하게 상태 업데이트
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _refreshPracticeThumbnails();
+      });
+    }
 
     return Scaffold(
       appBar: _buildAppBar(themeProvider),
