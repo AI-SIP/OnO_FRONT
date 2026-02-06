@@ -687,52 +687,56 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
               // 로딩 완료 후에도 데이터가 없으면 빈 화면 표시
               if (currentSubfolders.isEmpty && currentProblems.isEmpty) {
-                return Center(
-                  child: SingleChildScrollView(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        SvgPicture.asset(
-                          'assets/Icon/GreenNote.svg', // 아이콘 경로
-                          width: 100, // 적절한 크기 설정
-                          height: 100,
-                        ),
-                        const SizedBox(height: 40), // 아이콘과 텍스트 사이 간격
-                        const StandardText(
-                          text: '작성한 오답노트를\n공책에 저장해 관리하세요!',
-                          fontSize: 16,
-                          color: Colors.black,
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(
-                          height: 30,
-                        ),
-                        ElevatedButton(
-                          onPressed: () {
-                            // 플로팅 버튼의 공책 생성 로직과 동일하게 동작
-                            FirebaseAnalytics.instance
-                                .logEvent(name: 'folder_create_button_click');
-                            _showCreateFolderDialog();
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor:
-                                themeProvider.primaryColor, // primaryColor 적용
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 40,
-                              vertical: 8,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(15),
-                            ),
+                return SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  child: SizedBox(
+                    height: MediaQuery.of(context).size.height * 0.7,
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          SvgPicture.asset(
+                            'assets/Icon/GreenNote.svg', // 아이콘 경로
+                            width: 100, // 적절한 크기 설정
+                            height: 100,
                           ),
-                          child: const StandardText(
-                            text: '공책 추가하기',
+                          const SizedBox(height: 40), // 아이콘과 텍스트 사이 간격
+                          const StandardText(
+                            text: '작성한 오답노트를\n공책에 저장해 관리하세요!',
                             fontSize: 16,
-                            color: Colors.white,
+                            color: Colors.black,
+                            textAlign: TextAlign.center,
                           ),
-                        ),
-                      ],
+                          const SizedBox(
+                            height: 30,
+                          ),
+                          ElevatedButton(
+                            onPressed: () {
+                              // 플로팅 버튼의 공책 생성 로직과 동일하게 동작
+                              FirebaseAnalytics.instance
+                                  .logEvent(name: 'folder_create_button_click');
+                              _showCreateFolderDialog();
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor:
+                                  themeProvider.primaryColor, // primaryColor 적용
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 40,
+                                vertical: 8,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(15),
+                              ),
+                            ),
+                            child: const StandardText(
+                              text: '공책 추가하기',
+                              fontSize: 16,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 );
@@ -744,6 +748,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
               return ListView.builder(
                 controller: _scrollController,
+                physics: const AlwaysScrollableScrollPhysics(),
                 itemCount: totalItems + (isLoadingMore || hasMore ? 1 : 0),
                 itemBuilder: (context, index) {
                   // 로딩 인디케이터 표시
