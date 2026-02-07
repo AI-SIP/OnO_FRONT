@@ -8,9 +8,9 @@ import 'package:provider/provider.dart';
 
 import '../../Model/Problem/ProblemAnalysisStatus.dart';
 import '../../Model/Problem/ProblemModel.dart';
+import '../../Module/Dialog/LoadingDialog.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
-import '../../Provider/FoldersProvider.dart';
 import '../../Provider/ProblemsProvider.dart';
 import '../PracticeNote/PracticeNavigationButtons.dart';
 import 'ProblemDetailTemplate.dart';
@@ -51,12 +51,22 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
       body: Column(
         children: [
           Expanded(
-            child: Consumer<ProblemsProvider>(
-              builder: (context, problemsProvider, child) {
-                try {
-                  final problem = problemsProvider.getProblem(widget.problemId);
-                  return _buildContent(problem);
-                } catch (e) {
+            child: FutureBuilder<ProblemModel>(
+              future: Provider.of<ProblemsProvider>(context, listen: false)
+                  .getProblem(widget.problemId),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                } else if (snapshot.hasError) {
+                  return Center(
+                    child: StandardText(
+                      text: '오답노트를 찾을 수 없습니다.',
+                      color: themeProvider.primaryColor,
+                    ),
+                  );
+                } else if (snapshot.hasData) {
+                  return _buildContent(snapshot.data!);
+                } else {
                   return Center(
                     child: StandardText(
                       text: '오답노트를 찾을 수 없습니다.',
@@ -272,7 +282,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
       int problemId, ThemeHandler themeProvider) async {
     return showDialog(
       context: context,
-      builder: (context) {
+      builder: (dialogContext) {
         return AlertDialog(
           backgroundColor: Colors.white,
           title: const StandardText(
@@ -282,7 +292,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.pop(context);
+                Navigator.pop(dialogContext);
               },
               child: const StandardText(
                 text: '취소',
@@ -294,31 +304,41 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
               onPressed: () async {
                 FirebaseAnalytics.instance.logEvent(name: 'problem_delete');
 
-                // context가 유효할 때 Provider 가져오기
-                ProblemsProvider problemsProvider =
+                // context가 유효할 때 Provider와 Navigator 가져오기
+                final problemsProvider =
                     Provider.of<ProblemsProvider>(context, listen: false);
-                FoldersProvider foldersProvider =
-                    Provider.of<FoldersProvider>(context, listen: false);
-                ProblemPracticeProvider practiceProvider =
-                    Provider.of<ProblemPracticeProvider>(context,
-                        listen: false);
-
-                ProblemModel problemModel =
-                    problemsProvider.getProblem(problemId);
-
-                int? parentFolderId = problemModel.folderId;
+                final practiceProvider = Provider.of<ProblemPracticeProvider>(
+                    context,
+                    listen: false);
+                final navigator = Navigator.of(context);
 
                 // 다이얼로그 닫기
-                Navigator.pop(context);
-                // 상세 화면 닫기 (폴더 화면으로 이동)
-                Navigator.pop(context);
+                Navigator.pop(dialogContext);
 
-                // 삭제 작업 수행
-                await problemsProvider.deleteProblems([problemId]);
+                // 로딩 다이얼로그 표시
+                LoadingDialog.show(context, '오답노트 지우는 중...');
 
-                // 폴더 및 복습 노트 갱신
-                await foldersProvider.fetchFolderContent(parentFolderId);
-                await practiceProvider.fetchAllPracticeContents();
+                try {
+                  // 삭제 작업 수행
+                  await problemsProvider.deleteProblems([problemId]);
+                  await practiceProvider.fetchAllPracticeContents();
+
+                  // 로딩 다이얼로그 닫기
+                  if (mounted) {
+                    LoadingDialog.hide(context);
+                  }
+
+                  // 상세 화면 닫고 DirectoryScreen에 삭제 완료 알림 (true 반환)
+                  if (mounted) {
+                    navigator.pop(true);
+                  }
+                } catch (e) {
+                  // 에러 발생 시 로딩 다이얼로그 닫기
+                  if (mounted) {
+                    LoadingDialog.hide(context);
+                  }
+                  log('문제 삭제 실패: $e');
+                }
               },
               child: const StandardText(
                 text: '삭제',
@@ -379,7 +399,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
       BuildContext context, int? problemId) async {
     final problemsProvider =
         Provider.of<ProblemsProvider>(context, listen: false);
-    final problem = problemsProvider.getProblem(problemId!);
+    final problem = await problemsProvider.getProblem(problemId!);
 
     log('Moved to problem: ${problem.problemId}');
 

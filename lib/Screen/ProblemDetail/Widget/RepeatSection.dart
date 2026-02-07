@@ -72,7 +72,7 @@ Widget buildRepeatSection(
                 width: MediaQuery.of(ctx).size.width,
                 height: MediaQuery.of(ctx).size.height * 0.5,
                 decoration: BoxDecoration(
-                    color: iconColor.withOpacity(0.1),
+                    color: iconColor.withOpacity(0.05),
                     borderRadius: BorderRadius.circular(10)),
                 child: DisplayImage(
                     imagePath: solve.imageUrl, fit: BoxFit.contain),

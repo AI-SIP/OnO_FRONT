@@ -17,7 +17,6 @@ import '../../Provider/ProblemsProvider.dart';
 import '../../Provider/ScreenIndexProvider.dart';
 import '../../Provider/UserProvider.dart';
 import '../../Service/Api/Problem/ProblemService.dart';
-import 'Widget/ActionButtons.dart';
 import 'Widget/DatePickerWidget.dart';
 import 'Widget/ImageGridWidget.dart';
 import 'Widget/LabeledTextField.dart';
@@ -208,20 +207,32 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
 
   Future<void> _pickProblemImage() async {
     final imagePicker = ImagePickerHandler();
-    imagePicker.showImagePicker(context, (XFile? file) {
-      if (file != null) {
-        setState(() => _problemImages.add(file));
-      }
-    });
+    imagePicker.showImagePicker(
+      context,
+      (XFile? file) {
+        if (file != null) {
+          setState(() => _problemImages.add(file));
+        }
+      },
+      onMultipleImagesPicked: (List<XFile> files) {
+        setState(() => _problemImages.addAll(files));
+      },
+    );
   }
 
   Future<void> _pickAnswerImage() async {
     final imagePicker = ImagePickerHandler();
-    imagePicker.showImagePicker(context, (XFile? file) {
-      if (file != null) {
-        setState(() => _answerImages.add(file));
-      }
-    });
+    imagePicker.showImagePicker(
+      context,
+      (XFile? file) {
+        if (file != null) {
+          setState(() => _answerImages.add(file));
+        }
+      },
+      onMultipleImagesPicked: (List<XFile> files) {
+        setState(() => _answerImages.addAll(files));
+      },
+    );
   }
 
   void resetAll() {
@@ -282,12 +293,12 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
     // 2. 폴더 갱신 (_selectedFolderId가 null이면 루트 폴더를 갱신)
     final foldersProvider = Provider.of<FoldersProvider>(context, listen: false);
     if (_selectedFolderId != null) {
-      await foldersProvider.fetchFolderContent(_selectedFolderId);
+      await foldersProvider.refreshFolder(_selectedFolderId!);
     } else {
       // 루트 폴더 갱신
       final rootFolder = foldersProvider.rootFolder;
       if (rootFolder != null) {
-        await foldersProvider.fetchFolderContent(rootFolder.folderId);
+        await foldersProvider.refreshFolder(rootFolder.folderId);
       }
     }
 
@@ -439,18 +450,18 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
 
     // 새 폴더 갱신 (_selectedFolderId가 null이면 루트 폴더)
     if (_selectedFolderId != null) {
-      await foldersProvider.fetchFolderContent(_selectedFolderId);
+      await foldersProvider.refreshFolder(_selectedFolderId!);
     } else {
       // 루트 폴더 갱신
       final rootFolder = foldersProvider.rootFolder;
       if (rootFolder != null) {
-        await foldersProvider.fetchFolderContent(rootFolder.folderId);
+        await foldersProvider.refreshFolder(rootFolder.folderId);
       }
     }
 
     // 기존 폴더가 새 폴더와 다르면 기존 폴더도 갱신
     if (originalFolderId != null && originalFolderId != _selectedFolderId) {
-      await foldersProvider.fetchFolderContent(originalFolderId);
+      await foldersProvider.refreshFolder(originalFolderId);
     }
   }
 

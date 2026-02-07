@@ -1,3 +1,4 @@
+import 'package:ono/Model/Common/PaginatedResponse.dart';
 import 'package:ono/Model/PracticeNote/PracticeNoteDetailModel.dart';
 import 'package:ono/Model/PracticeNote/PracticeNoteThumbnailModel.dart';
 import 'package:ono/Model/PracticeNote/PracticeNoteUpdateModel.dart';
@@ -78,6 +79,30 @@ class PracticeNoteService {
     await httpService.sendRequest(
       method: 'DELETE',
       url: '$baseUrl/all',
+    );
+  }
+
+  // V2 API - Cursor-based pagination for practice note thumbnails
+  Future<PaginatedResponse<PracticeNoteThumbnails>> getPracticeNoteThumbnailsV2({
+    int? cursor,
+    int size = 20,
+  }) async {
+    final queryParams = <String, String>{
+      'size': size.toString(),
+    };
+    if (cursor != null) {
+      queryParams['cursor'] = cursor.toString();
+    }
+
+    final data = await httpService.sendRequest(
+      method: 'GET',
+      url: '$baseUrl/thumbnail/V2',
+      queryParams: queryParams,
+    ) as Map<String, dynamic>;
+
+    return PaginatedResponse.fromJson(
+      data,
+      (json) => PracticeNoteThumbnails.fromJson(json),
     );
   }
 }

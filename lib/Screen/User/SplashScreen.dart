@@ -29,9 +29,9 @@ class _SplashScreenState extends State<SplashScreen> {
     print('login status: ${userProvider.loginStatus}');
     // 2초간 대기 후 상태 체크
 
-    await Future.delayed(const Duration(seconds: 2), () {});
+    await Future.delayed(const Duration(milliseconds: 1500), () {});
     while (userProvider.loginStatus == LoginStatus.waiting) {
-      await Future.delayed(const Duration(seconds: 1));
+      await Future.delayed(const Duration(milliseconds: 500));
     }
 
     // 로그인 상태에 따른 화면 이동

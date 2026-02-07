@@ -42,6 +42,21 @@ class ImagePickerHandler {
     }
   }
 
+  Future<List<XFile>> pickMultipleImagesFromGallery(
+      BuildContext context) async {
+    try {
+      final pickedFiles = await _picker.pickMultiImage();
+      if (pickedFiles.isNotEmpty) {
+        // 여러 이미지를 선택한 경우 자르기 없이 그대로 반환
+        return pickedFiles;
+      }
+      return [];
+    } catch (e) {
+      log("Error picking multiple images from gallery: $e");
+      return [];
+    }
+  }
+
   Future<XFile?> _cropImage(XFile imageFile) async {
     try {
       final croppedFile = await ImageCropper().cropImage(
@@ -88,7 +103,8 @@ class ImagePickerHandler {
     }
   }
 
-  void showImagePicker(BuildContext context, Function(XFile?) onImagePicked) {
+  void showImagePicker(BuildContext context, Function(XFile?) onImagePicked,
+      {Function(List<XFile>)? onMultipleImagesPicked}) {
     showModalBottomSheet(
       backgroundColor: Colors.white,
       context: context,
@@ -132,28 +148,55 @@ class ImagePickerHandler {
                     },
                   ),
                 ),
-                // 갤러리에서 선택 옵션
-                Padding(
-                  padding:
-                      const EdgeInsets.only(bottom: 10.0), // 리스트 항목 간 간격 추가
-                  child: ListTile(
-                    leading:
-                        const Icon(Icons.photo_library, color: Colors.black),
-                    title: const StandardText(
-                      text: '갤러리에서 선택',
-                      color: Colors.black,
-                      fontSize: 16,
-                    ),
-                    onTap: () async {
-                      FirebaseAnalytics.instance
-                          .logEvent(name: 'image_select_gallery');
-                      Navigator.of(context).pop(); // 모달 닫기
+                if (onMultipleImagesPicked == null)
+                  Padding(
+                    padding:
+                        const EdgeInsets.only(bottom: 10.0), // 리스트 항목 간 간격 추가
+                    child: ListTile(
+                      leading:
+                          const Icon(Icons.photo_library, color: Colors.black),
+                      title: const StandardText(
+                        text: '갤러리에서 선택',
+                        color: Colors.black,
+                        fontSize: 16,
+                      ),
+                      onTap: () async {
+                        FirebaseAnalytics.instance
+                            .logEvent(name: 'image_select_gallery');
+                        Navigator.of(context).pop(); // 모달 닫기
 
-                      final pickedFile = await pickImageFromGallery(context);
-                      onImagePicked(pickedFile);
-                    },
+                        final pickedFile = await pickImageFromGallery(context);
+                        onImagePicked(pickedFile);
+                      },
+                    ),
                   ),
-                ),
+
+                // 갤러리에서 여러 이미지 선택 옵션
+                if (onMultipleImagesPicked != null)
+                  Padding(
+                    padding:
+                        const EdgeInsets.only(bottom: 10.0), // 리스트 항목 간 간격 추가
+                    child: ListTile(
+                      leading:
+                          const Icon(Icons.photo_library, color: Colors.black),
+                      title: const StandardText(
+                        text: '갤러리에서 선택',
+                        color: Colors.black,
+                        fontSize: 16,
+                      ),
+                      onTap: () async {
+                        FirebaseAnalytics.instance
+                            .logEvent(name: 'image_select_multiple_gallery');
+                        Navigator.of(context).pop(); // 모달 닫기
+
+                        final pickedFiles =
+                            await pickMultipleImagesFromGallery(context);
+                        if (pickedFiles.isNotEmpty) {
+                          onMultipleImagesPicked(pickedFiles);
+                        }
+                      },
+                    ),
+                  ),
               ],
             ),
           ),
