@@ -36,8 +36,17 @@ class _ImageGallerySectionState extends State<ImageGallerySection> {
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
-    // 실제 화면 너비의 90%를 이미지로 사용
-    final imageHeight = screenWidth * 0.9;
+    final screenHeight = MediaQuery.of(context).size.height;
+
+    // 화면 크기에 따른 이미지 높이 계산
+    double imageHeight;
+    if (screenWidth > 600) {
+      // 태블릿: 화면 높이의 40%로 제한 (최대 500)
+      imageHeight = (screenHeight * 0.6).clamp(300.0, 500.0);
+    } else {
+      // 모바일: 화면 너비의 90%
+      imageHeight = screenWidth * 0.9;
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
