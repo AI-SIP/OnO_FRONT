@@ -473,15 +473,27 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
   }
 
   void _showTimePickerBottomSheet(BuildContext context) {
+    final openTime = DateTime.now();
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.white, // 바텀시트 배경을 흰색으로
+      isDismissible: false,
       shape: const RoundedRectangleBorder(
         // 모서리를 살짝 둥글게
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
       builder: (_) {
-        return Container(
+        return TapRegion(
+          onTapOutside: (_) {
+            // Workaround for iPadOS 26.1 bug: https://github.com/flutter/flutter/issues/177992
+            if (DateTime.now().difference(openTime) < const Duration(milliseconds: 500)) {
+              return;
+            }
+            if (Navigator.canPop(context)) {
+              Navigator.pop(context);
+            }
+          },
+          child: Container(
           height: 250,
           padding: const EdgeInsets.all(16),
           decoration: const BoxDecoration(
@@ -531,6 +543,7 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
               ),
             ],
           ),
+        ),
         );
       },
     );

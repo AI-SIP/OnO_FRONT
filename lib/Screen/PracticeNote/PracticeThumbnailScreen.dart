@@ -140,11 +140,23 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
   void _showBottomSheet() {
     final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
 
+    final openTime = DateTime.now();
     showModalBottomSheet(
       backgroundColor: Colors.white,
       context: context,
+      isDismissible: false,
       builder: (context) {
-        return SingleChildScrollView(
+        return TapRegion(
+          onTapOutside: (_) {
+            // Workaround for iPadOS 26.1 bug: https://github.com/flutter/flutter/issues/177992
+            if (DateTime.now().difference(openTime) < const Duration(milliseconds: 500)) {
+              return;
+            }
+            if (Navigator.canPop(context)) {
+              Navigator.pop(context);
+            }
+          },
+          child: SingleChildScrollView(
           child: Padding(
             padding: const EdgeInsets.symmetric(
                 vertical: 20.0, horizontal: 10.0), // 패딩 추가
@@ -203,6 +215,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
               ],
             ),
           ),
+        ),
         );
       },
     );
