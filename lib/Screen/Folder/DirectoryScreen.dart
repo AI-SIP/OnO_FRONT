@@ -849,10 +849,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
               var currentProblems = _localProblems;
               final isLoadingMore = _isLoadingSubfolders || _isLoadingProblems;
 
-              // 로딩 중이면 로딩 인디케이터 표시
-              if (currentSubfolders.isEmpty &&
-                  currentProblems.isEmpty &&
-                  isLoadingMore) {
+              // 초기 로딩 중이면 로딩 인디케이터 표시
+              if (_isInitialLoading) {
                 return const Center(
                   child: CircularProgressIndicator(),
                 );
