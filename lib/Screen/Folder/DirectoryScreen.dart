@@ -54,6 +54,9 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   bool _isLoadingSubfolders = false;
   bool _isLoadingProblems = false;
 
+  // 초기 로딩 상태 (폴더 진입 시)
+  bool _isInitialLoading = false;
+
   // 무한 스크롤을 위한 ScrollController
   late ScrollController _scrollController;
 
@@ -117,6 +120,13 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   }
 
   Future<void> _loadFolderData() async {
+    // 초기 로딩 상태 시작
+    if (mounted) {
+      setState(() {
+        _isInitialLoading = true;
+      });
+    }
+
     final foldersProvider =
         Provider.of<FoldersProvider>(context, listen: false);
     final problemsProvider =
@@ -134,7 +144,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       targetFolderId = widget.folderId!;
     }
 
-    // 폴더 메타데이터 가져오기
+    // 폴더 메타데이터만 가져오기 (Provider의 currentFolder는 업데이트하지 않음)
     final folder = await foldersProvider.getFolder(targetFolderId);
 
     // 로컬 상태 초기화
@@ -150,17 +160,26 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       });
     }
 
-    // 첫 페이지 로드 (하위 폴더와 문제)
+    // 첫 페이지 로드 (하위 폴더와 문제) - 캐시 우선 사용
     await Future.wait([
       _loadMoreSubfoldersLocal(targetFolderId),
       _loadMoreProblemsLocal(targetFolderId),
     ]);
+
+    // 초기 로딩 완료
+    if (mounted) {
+      setState(() {
+        _isInitialLoading = false;
+      });
+    }
   }
 
-  // 로컬 하위 폴더 로드
+  // 로컬 하위 폴더 로드 (캐시 우선 사용)
   Future<void> _loadMoreSubfoldersLocal(int folderId) async {
     if (_isLoadingSubfolders) return;
     if (!_subfolderHasNext && _subfolderNextCursor != null) return;
+
+    if (!mounted) return;
 
     setState(() {
       _isLoadingSubfolders = true;
@@ -169,11 +188,42 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     try {
       final foldersProvider =
           Provider.of<FoldersProvider>(context, listen: false);
+
+      // 특정 폴더의 캐시된 데이터 직접 접근
+      final cachedSubfolders = foldersProvider.getSubfoldersForFolder(folderId);
+      final cachedHasNext = foldersProvider.getSubfolderHasNextForFolder(folderId);
+
+      // 캐시된 데이터가 있고, 첫 로드인 경우 캐시 사용
+      if (_subfolderNextCursor == null && cachedSubfolders.isNotEmpty) {
+        log('✅ Using cached subfolders for folder $folderId (${cachedSubfolders.length} items)');
+        if (mounted) {
+          setState(() {
+            _localSubfolders.addAll(cachedSubfolders);
+            // Provider의 상태 복사
+            _subfolderNextCursor = cachedSubfolders.isNotEmpty ?
+                cachedSubfolders.last.folderId : null;
+            _subfolderHasNext = cachedHasNext;
+            _isLoadingSubfolders = false; // 캐시 사용 시 여기서 로딩 상태 해제
+          });
+        }
+        return;
+      }
+
+      // 캐시에 없는 경우 서버 요청
+      log('📡 Fetching subfolders from server for folder $folderId');
+
+      // 서버에서 직접 조회
       final response = await foldersProvider.folderService.getSubfoldersV2(
         folderId: folderId,
         cursor: _subfolderNextCursor,
         size: 20,
       );
+
+      // 첫 로드인 경우 Provider 캐시에 저장 (재방문 시 사용)
+      if (_subfolderNextCursor == null) {
+        await _saveSubfoldersToProviderCache(folderId, response.content, response.nextCursor, response.hasNext);
+        log('💾 Saved ${response.content.length} subfolders to cache for folder $folderId');
+      }
 
       if (mounted) {
         setState(() {
@@ -183,7 +233,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         });
       }
 
-      log('Loaded ${response.content.length} subfolders locally for folder $folderId');
+      log('Loaded ${response.content.length} subfolders from server for folder $folderId');
     } catch (e, stackTrace) {
       log('Error loading subfolders locally: $e');
       log(stackTrace.toString());
@@ -196,16 +246,65 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     }
   }
 
-  // 로컬 문제 로드
+  // Provider 캐시에 하위 폴더 저장
+  Future<void> _saveSubfoldersToProviderCache(
+    int folderId,
+    List<FolderThumbnailModel> subfolders,
+    int? nextCursor,
+    bool hasNext,
+  ) async {
+    final foldersProvider = Provider.of<FoldersProvider>(context, listen: false);
+    foldersProvider.saveSubfoldersToCache(folderId, subfolders, nextCursor, hasNext);
+  }
+
+  // Provider 캐시에 문제 저장
+  Future<void> _saveProblemsToProviderCache(
+    int folderId,
+    List<ProblemModel> problems,
+    int? nextCursor,
+    bool hasNext,
+  ) async {
+    final foldersProvider = Provider.of<FoldersProvider>(context, listen: false);
+    foldersProvider.saveProblemsToCache(folderId, problems, nextCursor, hasNext);
+  }
+
+  // 로컬 문제 로드 (캐시 우선 사용)
   Future<void> _loadMoreProblemsLocal(int folderId) async {
     if (_isLoadingProblems) return;
     if (!_problemHasNext && _problemNextCursor != null) return;
+
+    if (!mounted) return;
 
     setState(() {
       _isLoadingProblems = true;
     });
 
     try {
+      final foldersProvider =
+          Provider.of<FoldersProvider>(context, listen: false);
+
+      // 특정 폴더의 캐시된 데이터 직접 접근
+      final cachedProblems = foldersProvider.getProblemsForFolder(folderId);
+      final cachedHasNext = foldersProvider.getProblemHasNextForFolder(folderId);
+
+      // 캐시된 데이터가 있고, 첫 로드인 경우 캐시 사용
+      if (_problemNextCursor == null && cachedProblems.isNotEmpty) {
+        log('✅ Using cached problems for folder $folderId (${cachedProblems.length} items)');
+        if (mounted) {
+          setState(() {
+            _localProblems.addAll(cachedProblems);
+            // Provider의 상태 복사
+            _problemNextCursor = cachedProblems.isNotEmpty ?
+                cachedProblems.last.problemId : null;
+            _problemHasNext = cachedHasNext;
+            _isLoadingProblems = false; // 캐시 사용 시 여기서 로딩 상태 해제
+          });
+        }
+        return;
+      }
+
+      // 캐시에 없는 경우 서버 요청
+      log('📡 Fetching problems from server for folder $folderId');
       final problemsProvider =
           Provider.of<ProblemsProvider>(context, listen: false);
       final response = await problemsProvider.loadMoreFolderProblemsV2(
@@ -213,6 +312,12 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         cursor: _problemNextCursor,
         size: 20,
       );
+
+      // 첫 로드인 경우 Provider 캐시에 저장 (재방문 시 사용)
+      if (_problemNextCursor == null) {
+        await _saveProblemsToProviderCache(folderId, response.content, response.nextCursor, response.hasNext);
+        log('💾 Saved ${response.content.length} problems to cache for folder $folderId');
+      }
 
       if (mounted) {
         setState(() {
@@ -222,7 +327,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         });
       }
 
-      log('Loaded ${response.content.length} problems locally for folder $folderId');
+      log('Loaded ${response.content.length} problems from server for folder $folderId');
     } catch (e, stackTrace) {
       log('Error loading problems locally: $e');
       log(stackTrace.toString());

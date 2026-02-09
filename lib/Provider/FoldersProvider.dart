@@ -82,6 +82,63 @@ class FoldersProvider with ChangeNotifier {
     return _folderCache[_currentFolder!.folderId]?.problemHasNext ?? false;
   }
 
+  // 특정 폴더의 데이터 직접 접근 (화면 독립성을 위한 메서드)
+  List<FolderThumbnailModel> getSubfoldersForFolder(int folderId) {
+    return _folderCache[folderId]?.subfolders ?? [];
+  }
+
+  List<ProblemModel> getProblemsForFolder(int folderId) {
+    return _folderCache[folderId]?.problems ?? [];
+  }
+
+  bool getSubfolderHasNextForFolder(int folderId) {
+    return _folderCache[folderId]?.subfolderHasNext ?? false;
+  }
+
+  bool getProblemHasNextForFolder(int folderId) {
+    return _folderCache[folderId]?.problemHasNext ?? false;
+  }
+
+  // 외부에서 캐시에 데이터 저장 (DirectoryScreen에서 사용)
+  void saveSubfoldersToCache(
+    int folderId,
+    List<FolderThumbnailModel> subfolders,
+    int? nextCursor,
+    bool hasNext,
+  ) {
+    // 캐시가 없으면 생성
+    if (!_folderCache.containsKey(folderId)) {
+      _folderCache[folderId] = FolderScrollState();
+    }
+
+    final state = _folderCache[folderId]!;
+    state.subfolders = List.from(subfolders); // 복사본 저장
+    state.subfolderNextCursor = nextCursor;
+    state.subfolderHasNext = hasNext;
+
+    log('💾 Saved ${subfolders.length} subfolders to cache for folder $folderId');
+  }
+
+  // 외부에서 문제 데이터를 캐시에 저장
+  void saveProblemsToCache(
+    int folderId,
+    List<ProblemModel> problems,
+    int? nextCursor,
+    bool hasNext,
+  ) {
+    // 캐시가 없으면 생성
+    if (!_folderCache.containsKey(folderId)) {
+      _folderCache[folderId] = FolderScrollState();
+    }
+
+    final state = _folderCache[folderId]!;
+    state.problems = List.from(problems); // 복사본 저장
+    state.problemNextCursor = nextCursor;
+    state.problemHasNext = hasNext;
+
+    log('💾 Saved ${problems.length} problems to cache for folder $folderId');
+  }
+
   FoldersProvider({required this.problemsProvider});
 
   // O(log n) 삽입/업데이트 (SplayTreeMap이 자동으로 정렬 유지)
