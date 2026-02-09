@@ -370,14 +370,11 @@ class FoldersProvider with ChangeNotifier {
     // 루트 폴더이면 타임스탬프 업데이트
     if (rootFolder != null && folderId == rootFolder!.folderId) {
       _rootFolderRefreshTimestamp = DateTime.now().millisecondsSinceEpoch;
-      log('Root folder refresh signaled - timestamp: $_rootFolderRefreshTimestamp');
+      log('🔄 Root folder refresh signaled - timestamp: $_rootFolderRefreshTimestamp');
     }
 
-    // 현재 폴더이면 다시 로드
-    if (_currentFolder?.folderId == folderId) {
-      await moveToFolder(folderId);
-    }
-
+    // DirectoryScreen이 독립적으로 데이터를 로드하므로, moveToFolder를 호출하지 않음
+    // 대신 notifyListeners()로 UI에 알림
     notifyListeners();
   }
 

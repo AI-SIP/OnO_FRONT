@@ -425,38 +425,43 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    // 루트 폴더 화면인 경우에만 타임스탬프 감지
+    if (widget.folderId == null) {
+      final foldersProvider = Provider.of<FoldersProvider>(context, listen: false);
+
+      if (foldersProvider.rootFolderRefreshTimestamp != _lastRootFolderRefreshTimestamp &&
+          foldersProvider.rootFolderRefreshTimestamp > 0 &&
+          !_isRefreshing) {
+        _lastRootFolderRefreshTimestamp = foldersProvider.rootFolderRefreshTimestamp;
+        log('🔄 Root folder refresh detected in didChangeDependencies! (timestamp: $_lastRootFolderRefreshTimestamp)');
+
+        _isRefreshing = true;
+
+        // 비동기 작업 실행
+        WidgetsBinding.instance.addPostFrameCallback((_) async {
+          if (mounted) {
+            log('🔄 Starting _loadFolderData...');
+            await _loadFolderData();
+            if (mounted) {
+              setState(() {
+                _isRefreshing = false;
+              });
+            }
+            log('✅ Root folder refresh completed!');
+          }
+        });
+      }
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final authService = Provider.of<UserProvider>(context);
     final themeProvider = Provider.of<ThemeHandler>(context);
     final foldersProvider = Provider.of<FoldersProvider>(context);
-
-    // 루트 폴더 화면이고, 새로고침 타임스탬프가 변경되었으면 데이터 새로고침
-    if (widget.folderId == null &&
-        foldersProvider.rootFolderRefreshTimestamp !=
-            _lastRootFolderRefreshTimestamp &&
-        foldersProvider.rootFolderRefreshTimestamp > 0 &&
-        !_isRefreshing) {
-      _lastRootFolderRefreshTimestamp =
-          foldersProvider.rootFolderRefreshTimestamp;
-      log('Root folder refresh detected, reloading data... (timestamp: $_lastRootFolderRefreshTimestamp)');
-
-      // 새로고침 플래그 설정 (중복 실행 방지)
-      setState(() {
-        _isRefreshing = true;
-      });
-
-      // 캐시가 삭제된 상태이므로 즉시 다시 로드 (PostFrameCallback 사용)
-      WidgetsBinding.instance.addPostFrameCallback((_) async {
-        if (mounted) {
-          await _loadFolderData();
-          if (mounted) {
-            setState(() {
-              _isRefreshing = false;
-            });
-          }
-        }
-      });
-    }
 
     return PopScope(
         canPop: true,
