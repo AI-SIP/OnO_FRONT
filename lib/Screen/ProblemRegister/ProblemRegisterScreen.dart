@@ -39,45 +39,37 @@ class _ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
           fontSize: 20,
         ),
       ),
-      body: Stack(
-        children: [
-          SingleChildScrollView(
-            padding: const EdgeInsets.only(
-              left: 20,
-              right: 20,
-              top: 20,
-              bottom: 100, // Space for fixed buttons
+      body: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+        child: ProblemRegisterTemplate(
+          key: _templateKey,
+          problemModel: widget.problemModel,
+          isEditMode: widget.isEditMode,
+        ),
+      ),
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.2),
+              blurRadius: 10,
+              offset: const Offset(0, -2),
             ),
-            child: ProblemRegisterTemplate(
-              key: _templateKey,
-              problemModel: widget.problemModel,
-              isEditMode: widget.isEditMode,
-            ),
-          ),
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.withOpacity(0.2),
-                    blurRadius: 10,
-                    offset: const Offset(0, -2),
-                  ),
-                ],
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-              child: ActionButtons(
-                isEdit: widget.isEditMode,
-                onCancel: () => _templateKey.currentState?.resetAll(),
-                onSubmit: () => _templateKey.currentState?.submit(),
-              ),
-            ),
-          ),
-        ],
+          ],
+        ),
+        padding: EdgeInsets.only(
+          left: 20,
+          right: 20,
+          top: 12,
+          bottom: MediaQuery.of(context).padding.bottom + 12,
+        ),
+        child: ActionButtons(
+          isEdit: widget.isEditMode,
+          onCancel: () => _templateKey.currentState?.resetAll(),
+          onSubmit: () => _templateKey.currentState?.submit(),
+        ),
       ),
     );
   }
