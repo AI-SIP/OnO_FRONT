@@ -82,6 +82,72 @@ class FoldersProvider with ChangeNotifier {
     return _folderCache[_currentFolder!.folderId]?.problemHasNext ?? false;
   }
 
+  // 특정 폴더의 데이터 직접 접근 (화면 독립성을 위한 메서드)
+  List<FolderThumbnailModel> getSubfoldersForFolder(int folderId) {
+    return _folderCache[folderId]?.subfolders ?? [];
+  }
+
+  List<ProblemModel> getProblemsForFolder(int folderId) {
+    return _folderCache[folderId]?.problems ?? [];
+  }
+
+  bool getSubfolderHasNextForFolder(int folderId) {
+    return _folderCache[folderId]?.subfolderHasNext ?? false;
+  }
+
+  bool getProblemHasNextForFolder(int folderId) {
+    return _folderCache[folderId]?.problemHasNext ?? false;
+  }
+
+  // 캐시 존재 여부 확인 (빈 리스트도 유효한 캐시)
+  bool hasSubfolderCache(int folderId) {
+    return _folderCache.containsKey(folderId);
+  }
+
+  bool hasProblemCache(int folderId) {
+    return _folderCache.containsKey(folderId);
+  }
+
+  // 외부에서 캐시에 데이터 저장 (DirectoryScreen에서 사용)
+  void saveSubfoldersToCache(
+    int folderId,
+    List<FolderThumbnailModel> subfolders,
+    int? nextCursor,
+    bool hasNext,
+  ) {
+    // 캐시가 없으면 생성
+    if (!_folderCache.containsKey(folderId)) {
+      _folderCache[folderId] = FolderScrollState();
+    }
+
+    final state = _folderCache[folderId]!;
+    state.subfolders = List.from(subfolders); // 복사본 저장
+    state.subfolderNextCursor = nextCursor;
+    state.subfolderHasNext = hasNext;
+
+    log('💾 Saved ${subfolders.length} subfolders to cache for folder $folderId');
+  }
+
+  // 외부에서 문제 데이터를 캐시에 저장
+  void saveProblemsToCache(
+    int folderId,
+    List<ProblemModel> problems,
+    int? nextCursor,
+    bool hasNext,
+  ) {
+    // 캐시가 없으면 생성
+    if (!_folderCache.containsKey(folderId)) {
+      _folderCache[folderId] = FolderScrollState();
+    }
+
+    final state = _folderCache[folderId]!;
+    state.problems = List.from(problems); // 복사본 저장
+    state.problemNextCursor = nextCursor;
+    state.problemHasNext = hasNext;
+
+    log('💾 Saved ${problems.length} problems to cache for folder $folderId');
+  }
+
   FoldersProvider({required this.problemsProvider});
 
   // O(log n) 삽입/업데이트 (SplayTreeMap이 자동으로 정렬 유지)
@@ -304,14 +370,11 @@ class FoldersProvider with ChangeNotifier {
     // 루트 폴더이면 타임스탬프 업데이트
     if (rootFolder != null && folderId == rootFolder!.folderId) {
       _rootFolderRefreshTimestamp = DateTime.now().millisecondsSinceEpoch;
-      log('Root folder refresh signaled - timestamp: $_rootFolderRefreshTimestamp');
+      log('🔄 Root folder refresh signaled - timestamp: $_rootFolderRefreshTimestamp');
     }
 
-    // 현재 폴더이면 다시 로드
-    if (_currentFolder?.folderId == folderId) {
-      await moveToFolder(folderId);
-    }
-
+    // DirectoryScreen이 독립적으로 데이터를 로드하므로, moveToFolder를 호출하지 않음
+    // 대신 notifyListeners()로 UI에 알림
     notifyListeners();
   }
 
