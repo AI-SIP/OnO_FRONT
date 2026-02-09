@@ -91,6 +91,7 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
   @override
   Widget build(BuildContext context) {
     final isWide = MediaQuery.of(context).size.width >= 600;
+    final spacing = isWide ? 50.0 : 30.0; // 태블릿: 50px, 모바일: 30px
 
     return GestureDetector(
         behavior: HitTestBehavior.translucent,
@@ -103,19 +104,19 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
                 selectedDate: _selectedDate,
                 onDateChanged: (d) => setState(() => _selectedDate = d),
               ),
-              const SizedBox(height: 30),
+              SizedBox(height: spacing),
               FolderPickerWidget(
                 selectedId: _selectedFolderId,
                 onPicked: (id) => setState(() => _selectedFolderId = id),
               ),
-              const SizedBox(height: 30),
+              SizedBox(height: spacing),
               LabeledTextField(
                 label: '제목',
                 hintText: '오답노트의 제목을 작성해주세요!',
                 icon: Icons.info,
                 controller: _titleCtrl,
               ),
-              const SizedBox(height: 30),
+              SizedBox(height: spacing),
               LabeledTextField(
                 label: '메모',
                 controller: _memoCtrl,
@@ -123,7 +124,7 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
                 hintText: '기록하고 싶은 내용을 간단하게 작성해주세요!',
                 maxLines: 3,
               ),
-              const SizedBox(height: 30),
+              SizedBox(height: spacing),
               if (isWide)
                 Row(
                   children: [
