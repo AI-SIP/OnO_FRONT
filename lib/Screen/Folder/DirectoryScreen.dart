@@ -628,9 +628,9 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                 focusedBorder: const OutlineInputBorder(
                   borderSide: BorderSide(color: Colors.black, width: 1.5),
                 ),
-                contentPadding: EdgeInsets.symmetric(
-                    vertical: screenHeight * 0.02,
-                    horizontal: screenWidth * 0.03),
+                contentPadding: const EdgeInsets.symmetric(
+                    vertical: 12,
+                    horizontal: 16),
               ),
             ),
           ),
