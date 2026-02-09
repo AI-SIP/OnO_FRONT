@@ -163,15 +163,6 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       });
     }
 
-    // 캐시 존재 여부 확인
-    final hasCache = foldersProvider.hasSubfolderCache(targetFolderId) ||
-        foldersProvider.hasProblemCache(targetFolderId);
-
-    // 캐시가 없으면 로딩 다이얼로그 표시
-    if (!hasCache && mounted) {
-      LoadingDialog.show(context, '공책 불러오는 중...');
-    }
-
     try {
       // 첫 페이지 로드 (하위 폴더와 문제) - 캐시 우선 사용
       await Future.wait([
@@ -179,11 +170,6 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         _loadMoreProblemsLocal(targetFolderId),
       ]);
     } finally {
-      // 로딩 다이얼로그 숨기기 (캐시가 없었던 경우에만)
-      if (!hasCache && mounted) {
-        LoadingDialog.hide(context);
-      }
-
       // 초기 로딩 완료
       if (mounted) {
         setState(() {
