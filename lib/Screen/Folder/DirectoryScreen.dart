@@ -160,17 +160,33 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       });
     }
 
-    // 첫 페이지 로드 (하위 폴더와 문제) - 캐시 우선 사용
-    await Future.wait([
-      _loadMoreSubfoldersLocal(targetFolderId),
-      _loadMoreProblemsLocal(targetFolderId),
-    ]);
+    // 캐시 존재 여부 확인
+    final hasCache = foldersProvider.hasSubfolderCache(targetFolderId) ||
+        foldersProvider.hasProblemCache(targetFolderId);
 
-    // 초기 로딩 완료
-    if (mounted) {
-      setState(() {
-        _isInitialLoading = false;
-      });
+    // 캐시가 없으면 로딩 다이얼로그 표시
+    if (!hasCache && mounted) {
+      LoadingDialog.show(context, '공책 불러오는 중...');
+    }
+
+    try {
+      // 첫 페이지 로드 (하위 폴더와 문제) - 캐시 우선 사용
+      await Future.wait([
+        _loadMoreSubfoldersLocal(targetFolderId),
+        _loadMoreProblemsLocal(targetFolderId),
+      ]);
+    } finally {
+      // 로딩 다이얼로그 숨기기 (캐시가 없었던 경우에만)
+      if (!hasCache && mounted) {
+        LoadingDialog.hide(context);
+      }
+
+      // 초기 로딩 완료
+      if (mounted) {
+        setState(() {
+          _isInitialLoading = false;
+        });
+      }
     }
   }
 
@@ -194,16 +210,19 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
       // 캐시가 존재하고, 첫 로드인 경우 캐시 사용
       if (_subfolderNextCursor == null && hasCachedData) {
-        final cachedSubfolders = foldersProvider.getSubfoldersForFolder(folderId);
-        final cachedHasNext = foldersProvider.getSubfolderHasNextForFolder(folderId);
+        final cachedSubfolders =
+            foldersProvider.getSubfoldersForFolder(folderId);
+        final cachedHasNext =
+            foldersProvider.getSubfolderHasNextForFolder(folderId);
 
         log('✅ Using cached subfolders for folder $folderId (${cachedSubfolders.length} items)');
         if (mounted) {
           setState(() {
             _localSubfolders.addAll(cachedSubfolders);
             // Provider의 상태 복사
-            _subfolderNextCursor = cachedSubfolders.isNotEmpty ?
-                cachedSubfolders.last.folderId : null;
+            _subfolderNextCursor = cachedSubfolders.isNotEmpty
+                ? cachedSubfolders.last.folderId
+                : null;
             _subfolderHasNext = cachedHasNext;
             _isLoadingSubfolders = false; // 캐시 사용 시 여기서 로딩 상태 해제
           });
@@ -232,11 +251,10 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
       // Provider 캐시에 누적 저장 (모든 페이지를 누적해서 저장)
       await _appendSubfoldersToProviderCache(
-        folderId,
-        _localSubfolders,  // 누적된 전체 데이터 저장
-        response.nextCursor,
-        response.hasNext
-      );
+          folderId,
+          _localSubfolders, // 누적된 전체 데이터 저장
+          response.nextCursor,
+          response.hasNext);
       log('💾 Saved total ${_localSubfolders.length} subfolders to cache for folder $folderId');
 
       log('Loaded ${response.content.length} subfolders from server for folder $folderId');
@@ -259,8 +277,10 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     int? nextCursor,
     bool hasNext,
   ) async {
-    final foldersProvider = Provider.of<FoldersProvider>(context, listen: false);
-    foldersProvider.saveSubfoldersToCache(folderId, subfolders, nextCursor, hasNext);
+    final foldersProvider =
+        Provider.of<FoldersProvider>(context, listen: false);
+    foldersProvider.saveSubfoldersToCache(
+        folderId, subfolders, nextCursor, hasNext);
   }
 
   // Provider 캐시에 하위 폴더 누적 저장 (모든 페이지용)
@@ -270,8 +290,10 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     int? nextCursor,
     bool hasNext,
   ) async {
-    final foldersProvider = Provider.of<FoldersProvider>(context, listen: false);
-    foldersProvider.saveSubfoldersToCache(folderId, allSubfolders, nextCursor, hasNext);
+    final foldersProvider =
+        Provider.of<FoldersProvider>(context, listen: false);
+    foldersProvider.saveSubfoldersToCache(
+        folderId, allSubfolders, nextCursor, hasNext);
   }
 
   // Provider 캐시에 문제 저장 (첫 페이지용)
@@ -281,8 +303,10 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     int? nextCursor,
     bool hasNext,
   ) async {
-    final foldersProvider = Provider.of<FoldersProvider>(context, listen: false);
-    foldersProvider.saveProblemsToCache(folderId, problems, nextCursor, hasNext);
+    final foldersProvider =
+        Provider.of<FoldersProvider>(context, listen: false);
+    foldersProvider.saveProblemsToCache(
+        folderId, problems, nextCursor, hasNext);
   }
 
   // Provider 캐시에 문제 누적 저장 (모든 페이지용)
@@ -292,8 +316,10 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     int? nextCursor,
     bool hasNext,
   ) async {
-    final foldersProvider = Provider.of<FoldersProvider>(context, listen: false);
-    foldersProvider.saveProblemsToCache(folderId, allProblems, nextCursor, hasNext);
+    final foldersProvider =
+        Provider.of<FoldersProvider>(context, listen: false);
+    foldersProvider.saveProblemsToCache(
+        folderId, allProblems, nextCursor, hasNext);
   }
 
   // 로컬 문제 로드 (캐시 우선 사용)
@@ -317,15 +343,17 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       // 캐시가 존재하고, 첫 로드인 경우 캐시 사용
       if (_problemNextCursor == null && hasCachedData) {
         final cachedProblems = foldersProvider.getProblemsForFolder(folderId);
-        final cachedHasNext = foldersProvider.getProblemHasNextForFolder(folderId);
+        final cachedHasNext =
+            foldersProvider.getProblemHasNextForFolder(folderId);
 
         log('✅ Using cached problems for folder $folderId (${cachedProblems.length} items)');
         if (mounted) {
           setState(() {
             _localProblems.addAll(cachedProblems);
             // Provider의 상태 복사
-            _problemNextCursor = cachedProblems.isNotEmpty ?
-                cachedProblems.last.problemId : null;
+            _problemNextCursor = cachedProblems.isNotEmpty
+                ? cachedProblems.last.problemId
+                : null;
             _problemHasNext = cachedHasNext;
             _isLoadingProblems = false; // 캐시 사용 시 여기서 로딩 상태 해제
           });
@@ -354,11 +382,10 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
       // Provider 캐시에 누적 저장 (모든 페이지를 누적해서 저장)
       await _appendProblemsToProviderCache(
-        folderId,
-        _localProblems,  // 누적된 전체 데이터 저장
-        response.nextCursor,
-        response.hasNext
-      );
+          folderId,
+          _localProblems, // 누적된 전체 데이터 저장
+          response.nextCursor,
+          response.hasNext);
       log('💾 Saved total ${_localProblems.length} problems to cache for folder $folderId');
 
       log('Loaded ${response.content.length} problems from server for folder $folderId');
