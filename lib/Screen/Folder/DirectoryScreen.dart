@@ -1416,11 +1416,19 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     final foldersProvider =
         Provider.of<FoldersProvider>(context, listen: false);
 
-    // 폴더 업데이트 (서버 + 메타데이터 갱신 + 목적지 폴더 캐시 갱신은 updateFolder에서 처리)
+    // 폴더 업데이트 (서버 + 메타데이터 갱신)
     await foldersProvider.updateFolder(
         folder.folderName, folder.folderId, newParentFolderId);
 
-    // 로컬 데이터 새로고침 (이동한 폴더가 목록에서 사라지도록)
+    // 출발지 폴더 캐시 갱신 (이동한 폴더가 목록에서 사라지도록)
+    if (_currentFolder != null) {
+      await foldersProvider.refreshFolder(_currentFolder!.folderId);
+    }
+
+    // 목적지 폴더 캐시 갱신 (옮긴 폴더가 목적지에 나타나도록)
+    await foldersProvider.refreshFolder(newParentFolderId);
+
+    // 로컬 데이터 새로고침
     await _loadFolderData();
 
     if (mounted) {
@@ -1446,11 +1454,21 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
     final problemsProvider =
         Provider.of<ProblemsProvider>(context, listen: false);
+    final foldersProvider =
+        Provider.of<FoldersProvider>(context, listen: false);
 
     // 문제 업데이트 (서버 + ProblemsProvider 캐시 갱신)
     await problemsProvider.updateProblem(problemRegisterModel);
 
-    // 로컬 데이터 새로고침 (이동한 문제가 목록에서 사라지도록)
+    // 출발지 폴더 캐시 갱신 (이동한 문제가 목록에서 사라지도록)
+    if (_currentFolder != null) {
+      await foldersProvider.refreshFolder(_currentFolder!.folderId);
+    }
+
+    // 목적지 폴더 캐시 갱신 (옮긴 문제가 목적지에 나타나도록)
+    await foldersProvider.refreshFolder(problemRegisterModel.folderId!);
+
+    // 로컬 데이터 새로고침
     await _loadFolderData();
 
     if (mounted) {
