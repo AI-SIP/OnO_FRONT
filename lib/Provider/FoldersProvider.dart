@@ -99,6 +99,15 @@ class FoldersProvider with ChangeNotifier {
     return _folderCache[folderId]?.problemHasNext ?? false;
   }
 
+  // 캐시 존재 여부 확인 (빈 리스트도 유효한 캐시)
+  bool hasSubfolderCache(int folderId) {
+    return _folderCache.containsKey(folderId);
+  }
+
+  bool hasProblemCache(int folderId) {
+    return _folderCache.containsKey(folderId);
+  }
+
   // 외부에서 캐시에 데이터 저장 (DirectoryScreen에서 사용)
   void saveSubfoldersToCache(
     int folderId,
