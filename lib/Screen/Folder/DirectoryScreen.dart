@@ -393,19 +393,32 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   void _showUserGuideModal() async {
     FirebaseAnalytics.instance.logEvent(name: 'show_user_guide_modal');
 
+    final openTime = DateTime.now();
     await showModalBottomSheet(
       context: context,
       isScrollControlled: true, // 스크롤 가능 모달 설정
       backgroundColor: Colors.transparent, // 투명 배경
+      isDismissible: false,
       builder: (BuildContext context) {
-        return FractionallySizedBox(
-          heightFactor: 0.6, // 화면 높이의 50% 차지
-          child: UserGuideScreen(
-            onFinish: () {
-              Navigator.of(context).pop(); // 모달 닫기
+        return TapRegion(
+            onTapOutside: (_) {
+              // Workaround for iPadOS 26.1 bug: https://github.com/flutter/flutter/issues/177992
+              if (DateTime.now().difference(openTime) <
+                  const Duration(milliseconds: 500)) {
+                return;
+              }
+              if (Navigator.canPop(context)) {
+                Navigator.pop(context);
+              }
             },
-          ),
-        );
+            child: FractionallySizedBox(
+              heightFactor: 0.6, // 화면 높이의 50% 차지
+              child: UserGuideScreen(
+                onFinish: () {
+                  Navigator.of(context).pop(); // 모달 닫기
+                },
+              ),
+            ));
       },
     );
   }
@@ -552,104 +565,120 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     FirebaseAnalytics.instance
         .logEvent(name: 'directory_Screen_action_dialog_click');
 
+    final openTime = DateTime.now();
     showModalBottomSheet(
       backgroundColor: Colors.white,
       context: context,
+      isDismissible: false,
       builder: (context) {
-        return SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-                vertical: 20.0, horizontal: 10.0), // 패딩 추가
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 20.0), // 타이틀 아래 여백 추가
-                  child: StandardText(
-                    text: '공책 편집하기', // 타이틀 텍스트
-                    fontSize: 20,
-                    color: themeProvider.primaryColor,
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 10.0),
-                  child: ListTile(
-                    leading: const Icon(Icons.add, color: Colors.black),
-                    title: const StandardText(
-                      text: '공책 추가하기',
-                      fontSize: 16,
-                      color: Colors.black,
+        return TapRegion(
+          onTapOutside: (_) {
+            // Workaround for iPadOS 26.1 bug: https://github.com/flutter/flutter/issues/177992
+            if (DateTime.now().difference(openTime) <
+                const Duration(milliseconds: 500)) {
+              return;
+            }
+            if (Navigator.canPop(context)) {
+              Navigator.pop(context);
+            }
+          },
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                  vertical: 20.0, horizontal: 10.0), // 패딩 추가
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Padding(
+                    padding:
+                        const EdgeInsets.only(bottom: 20.0), // 타이틀 아래 여백 추가
+                    child: StandardText(
+                      text: '공책 편집하기', // 타이틀 텍스트
+                      fontSize: 20,
+                      color: themeProvider.primaryColor,
                     ),
-                    onTap: () {
-                      Navigator.pop(context);
-                      FirebaseAnalytics.instance.logEvent(
-                          name: 'directory_create_folder_button_click');
-                      _showCreateFolderDialog();
-                    },
                   ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 10.0), // 텍스트 간격 조정
-                  child: ListTile(
-                    leading: const Icon(Icons.edit, color: Colors.black),
-                    title: const StandardText(
-                      text: '공책 이름 수정하기',
-                      fontSize: 16,
-                      color: Colors.black,
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 10.0),
+                    child: ListTile(
+                      leading: const Icon(Icons.add, color: Colors.black),
+                      title: const StandardText(
+                        text: '공책 추가하기',
+                        fontSize: 16,
+                        color: Colors.black,
+                      ),
+                      onTap: () {
+                        Navigator.pop(context);
+                        FirebaseAnalytics.instance.logEvent(
+                            name: 'directory_create_folder_button_click');
+                        _showCreateFolderDialog();
+                      },
                     ),
-                    onTap: () {
-                      Navigator.pop(context);
-
-                      FirebaseAnalytics.instance
-                          .logEvent(name: 'directory_rename_button_click');
-
-                      _showRenameFolderDialog(foldersProvider);
-                    },
                   ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 10.0), // 텍스트 간격 조정
-                  child: ListTile(
-                    leading: const Icon(Icons.folder_open, color: Colors.black),
-                    title: const StandardText(
-                      text: '공책 위치 변경하기',
-                      fontSize: 16,
-                      color: Colors.black,
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 10.0), // 텍스트 간격 조정
+                    child: ListTile(
+                      leading: const Icon(Icons.edit, color: Colors.black),
+                      title: const StandardText(
+                        text: '공책 이름 수정하기',
+                        fontSize: 16,
+                        color: Colors.black,
+                      ),
+                      onTap: () {
+                        Navigator.pop(context);
+
+                        FirebaseAnalytics.instance
+                            .logEvent(name: 'directory_rename_button_click');
+
+                        _showRenameFolderDialog(foldersProvider);
+                      },
                     ),
-                    onTap: () {
-                      Navigator.pop(context);
-
-                      FirebaseAnalytics.instance
-                          .logEvent(name: 'directory_path_change_button_click');
-
-                      _showMoveFolderDialog(foldersProvider);
-                    },
                   ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 10.0), // 텍스트 간격 조정
-                  child: ListTile(
-                    leading:
-                        const Icon(Icons.delete_forever, color: Colors.red),
-                    title: const StandardText(
-                      text: '공책 편집하기',
-                      fontSize: 16,
-                      color: Colors.red,
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 10.0), // 텍스트 간격 조정
+                    child: ListTile(
+                      leading:
+                          const Icon(Icons.folder_open, color: Colors.black),
+                      title: const StandardText(
+                        text: '공책 위치 변경하기',
+                        fontSize: 16,
+                        color: Colors.black,
+                      ),
+                      onTap: () {
+                        Navigator.pop(context);
+
+                        FirebaseAnalytics.instance.logEvent(
+                            name: 'directory_path_change_button_click');
+
+                        _showMoveFolderDialog(foldersProvider);
+                      },
                     ),
-                    onTap: () {
-                      Navigator.pop(context);
-
-                      // 편집 모드 활성화
-                      setState(() {
-                        _isSelectionMode = true;
-                      });
-
-                      FirebaseAnalytics.instance
-                          .logEvent(name: 'directory_enable_edit_mode');
-                    },
                   ),
-                ),
-              ],
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 10.0), // 텍스트 간격 조정
+                    child: ListTile(
+                      leading:
+                          const Icon(Icons.delete_forever, color: Colors.red),
+                      title: const StandardText(
+                        text: '공책 편집하기',
+                        fontSize: 16,
+                        color: Colors.red,
+                      ),
+                      onTap: () {
+                        Navigator.pop(context);
+
+                        // 편집 모드 활성화
+                        setState(() {
+                          _isSelectionMode = true;
+                        });
+
+                        FirebaseAnalytics.instance
+                            .logEvent(name: 'directory_enable_edit_mode');
+                      },
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         );
@@ -801,9 +830,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                 focusedBorder: const OutlineInputBorder(
                   borderSide: BorderSide(color: Colors.black, width: 1.5),
                 ),
-                contentPadding: EdgeInsets.symmetric(
-                    vertical: screenHeight * 0.02,
-                    horizontal: screenWidth * 0.03),
+                contentPadding:
+                    const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
               ),
             ),
           ),
