@@ -355,6 +355,21 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
         );
 
         log('백그라운드 이미지 업로드 완료 - problemId: $problemId');
+
+        // 이미지 업로드 완료 후 폴더 캐시 새로고침 (썸네일 업데이트)
+        if (mounted) {
+          final foldersProvider = Provider.of<FoldersProvider>(context, listen: false);
+          if (_selectedFolderId != null) {
+            await foldersProvider.refreshFolder(_selectedFolderId!);
+          } else {
+            // 루트 폴더 갱신 (타임스탬프 업데이트됨)
+            final rootFolder = foldersProvider.rootFolder;
+            if (rootFolder != null) {
+              await foldersProvider.refreshFolder(rootFolder.folderId);
+            }
+          }
+          log('폴더 캐시 새로고침 완료 - 썸네일 업데이트됨');
+        }
       } catch (e, stackTrace) {
         log('백그라운드 이미지 업로드 실패 - problemId: $problemId');
         log('에러: $e');
