@@ -290,22 +290,22 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
     await problemsProvider.updateProblemCount(1);
     await problemsProvider.requestReview(context);
 
-    // 2. 폴더 갱신 (_selectedFolderId가 null이면 루트 폴더를 갱신)
+    // 2. 유저 정보 갱신 (경험치 업데이트)
+    await Provider.of<UserProvider>(context, listen: false).fetchUserInfo();
+
+    // 3. 폴더 갱신 (화면 전환 전에 먼저 캐시 삭제 및 타임스탬프 업데이트)
     final foldersProvider = Provider.of<FoldersProvider>(context, listen: false);
     if (_selectedFolderId != null) {
       await foldersProvider.refreshFolder(_selectedFolderId!);
     } else {
-      // 루트 폴더 갱신
+      // 루트 폴더 갱신 (타임스탬프 업데이트됨)
       final rootFolder = foldersProvider.rootFolder;
       if (rootFolder != null) {
         await foldersProvider.refreshFolder(rootFolder.folderId);
       }
     }
 
-    // 3. 유저 정보 갱신 (경험치 업데이트)
-    await Provider.of<UserProvider>(context, listen: false).fetchUserInfo();
-
-    // 4. 화면 초기화 및 이동
+    // 4. 화면 초기화 및 이동 (이제 DirectoryScreen이 mount되면서 변경된 타임스탬프를 감지)
     Provider.of<ScreenIndexProvider>(context, listen: false)
         .setSelectedIndex(0);
 

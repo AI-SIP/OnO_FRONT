@@ -63,6 +63,9 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   // 루트 폴더 새로고침 타임스탬프 추적
   int _lastRootFolderRefreshTimestamp = 0;
 
+  // 새로고침 중복 실행 방지
+  bool _isRefreshing = false;
+
   @override
   void initState() {
     super.initState();
@@ -431,14 +434,27 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     if (widget.folderId == null &&
         foldersProvider.rootFolderRefreshTimestamp !=
             _lastRootFolderRefreshTimestamp &&
-        foldersProvider.rootFolderRefreshTimestamp > 0) {
+        foldersProvider.rootFolderRefreshTimestamp > 0 &&
+        !_isRefreshing) {
       _lastRootFolderRefreshTimestamp =
           foldersProvider.rootFolderRefreshTimestamp;
-      log('Root folder refresh detected, reloading data...');
+      log('Root folder refresh detected, reloading data... (timestamp: $_lastRootFolderRefreshTimestamp)');
 
-      // PostFrameCallback을 사용하여 안전하게 상태 업데이트
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _loadFolderData();
+      // 새로고침 플래그 설정 (중복 실행 방지)
+      setState(() {
+        _isRefreshing = true;
+      });
+
+      // 캐시가 삭제된 상태이므로 즉시 다시 로드 (PostFrameCallback 사용)
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        if (mounted) {
+          await _loadFolderData();
+          if (mounted) {
+            setState(() {
+              _isRefreshing = false;
+            });
+          }
+        }
       });
     }
 
@@ -1284,6 +1300,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   }
 
   Future<void> _deleteSelectedItems() async {
+    if (_currentFolder == null) return;
+
     final foldersProvider =
         Provider.of<FoldersProvider>(context, listen: false);
     final problemsProvider =
@@ -1302,6 +1320,9 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       if (_selectedProblemIds.isNotEmpty) {
         await problemsProvider.deleteProblems(_selectedProblemIds);
       }
+
+      // 캐시 삭제 후 새로고침 (삭제된 항목이 화면에서 사라지도록)
+      await foldersProvider.refreshFolder(_currentFolder!.folderId);
 
       // 로딩 다이얼로그 닫기
       if (mounted) {
@@ -1323,6 +1344,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         );
       }
 
+      // 데이터 다시 로드
       await _loadFolderData();
     } catch (e) {
       // 로딩 다이얼로그 닫기
@@ -1464,6 +1486,15 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   }
 
   Future<void> fetchFoldersAndProblems() async {
+    // Pull-to-refresh: 캐시 무시하고 강제 새로고침
+    if (_currentFolder == null) return;
+
+    final foldersProvider =
+        Provider.of<FoldersProvider>(context, listen: false);
+
+    // 현재 폴더의 캐시 삭제
+    await foldersProvider.refreshFolder(_currentFolder!.folderId);
+
     // 로컬 데이터 다시 로드
     await _loadFolderData();
   }
@@ -1472,12 +1503,17 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        //builder: (context) => ProblemDetailScreen(problemId: problemId),
         builder: (context) => ProblemDetailScreen(problemId: problemId),
       ),
-    ).then((value) {
-      if (value == true) {
-        fetchFoldersAndProblems();
+    ).then((value) async {
+      // 문제 삭제 또는 수정 시 화면 새로고침
+      if (value == true && _currentFolder != null) {
+        final foldersProvider =
+            Provider.of<FoldersProvider>(context, listen: false);
+
+        // 캐시 삭제 후 새로고침
+        await foldersProvider.refreshFolder(_currentFolder!.folderId);
+        await _loadFolderData();
       }
     });
   }
