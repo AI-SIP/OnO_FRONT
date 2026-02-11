@@ -100,8 +100,10 @@ class PracticeCompletionScreen extends StatelessWidget {
         child: ElevatedButton(
           onPressed: () async {
             await practiceProvider.addPracticeCount(practiceId);
-            Navigator.of(context).pop();
-            Navigator.of(context).pop();
+            // 2번 pop: PracticeCompletionScreen -> PracticeDetailScreen -> PracticeThumbnailScreen
+            // 두 번째 pop에서 true를 반환하여 썸네일 업데이트 신호 전달
+            Navigator.of(context).pop(); // PracticeCompletionScreen 닫기
+            Navigator.of(context).pop(true); // PracticeDetailScreen 닫으면서 true 반환
             SnackBarDialog.showSnackBar(
               context: context,
               message: '복습을 완료했습니다!',
