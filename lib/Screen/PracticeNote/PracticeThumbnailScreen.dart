@@ -484,16 +484,19 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
     await practiceProvider.moveToPractice(practiceId);
     LoadingDialog.hide(context);
 
-    Navigator.push(
+    final result = await Navigator.push<bool>(
       context,
       MaterialPageRoute(
         builder: (context) => PracticeDetailScreen(
             practice: practiceProvider.currentPracticeNote!),
       ),
-    ).then((_) {
-      // 복습 상세 화면에서 돌아왔을 때 최신 데이터 다시 조회
-      _refreshPracticeThumbnails();
-    });
+    );
+
+    // 복습을 완료한 경우(result == true)에만 해당 썸네일 업데이트
+    if (result == true) {
+      await practiceProvider.updateSinglePracticeThumbnail(practiceId);
+    }
+    // 그 외의 경우(조회만 한 경우)는 캐시 유지
   }
 
   BoxDecoration _buildBoxDecoration(
