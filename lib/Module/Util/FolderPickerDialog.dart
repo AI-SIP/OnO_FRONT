@@ -257,22 +257,28 @@ class _FolderPickerDialogState extends State<FolderPickerDialog> {
           leading: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // 확장/축소 버튼
-              node.isLoading
-                  ? const SizedBox(
-                      width: 24,
-                      height: 24,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : IconButton(
-                      icon: Icon(
-                        node.isExpanded
-                            ? Icons.expand_more
-                            : Icons.chevron_right,
+              // 확장/축소 버튼 (항상 같은 크기 유지)
+              SizedBox(
+                width: 48, // IconButton의 기본 크기
+                height: 48,
+                child: node.isLoading
+                    ? const Center(
+                        child: SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      )
+                    : IconButton(
+                        icon: Icon(
+                          node.isExpanded
+                              ? Icons.expand_more
+                              : Icons.chevron_right,
+                        ),
+                        color: themeProvider.primaryColor,
+                        onPressed: () => _toggleFolder(node),
                       ),
-                      color: themeProvider.primaryColor,
-                      onPressed: () => _toggleFolder(node),
-                    ),
+              ),
               // 폴더 아이콘
               SvgPicture.asset(
                 NoteIconHandler.getNoteIcon(level),
