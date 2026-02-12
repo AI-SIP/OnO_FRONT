@@ -35,53 +35,123 @@ class _FolderPickerWidgetState extends State<FolderPickerWidget> {
 
     // 폴더 데이터가 로드될 때까지 기다림
     if (foldersProvider.folders.isEmpty) {
-      return Row(
-        children: [
-          Icon(Icons.menu_book_outlined, color: theme.primaryColor),
-          const SizedBox(width: 6),
-          StandardText(text: '공책 선택', fontSize: 16, color: theme.primaryColor),
-          const Spacer(),
-          const SizedBox(
-            width: 20,
-            height: 20,
-            child: CircularProgressIndicator(strokeWidth: 2),
-          ),
-        ],
+      return Container(
+        padding: const EdgeInsets.all(16.0),
+        decoration: BoxDecoration(
+          color: Colors.grey[50],
+          borderRadius: BorderRadius.circular(12.0),
+          border: Border.all(color: Colors.grey[200]!, width: 1),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8.0),
+              decoration: BoxDecoration(
+                color: theme.primaryColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8.0),
+              ),
+              child: Icon(
+                Icons.menu_book_outlined,
+                color: theme.primaryColor,
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: 12),
+            const Expanded(
+              child: StandardText(
+                text: '공책 선택',
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+                color: Colors.black87,
+              ),
+            ),
+            SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: theme.primaryColor,
+              ),
+            ),
+          ],
+        ),
       );
     }
 
     final name = FolderPickerDialog.getFolderNameByFolderId(widget.selectedId);
-    return Row(
-      children: [
-        Icon(Icons.menu_book_outlined, color: theme.primaryColor),
-        const SizedBox(width: 6),
-        StandardText(text: '공책 선택', fontSize: 16, color: theme.primaryColor),
-        const Spacer(),
-        TextButton(
-          onPressed: () async {
-            final id = await FolderPickerWidget.showPicker(context, widget.selectedId);
-            widget.onPicked(id);
-          },
-          style: TextButton.styleFrom(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            backgroundColor: Colors.white,
-            side: BorderSide(color: theme.primaryColor, width: 1.5),
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+    return Container(
+      padding: const EdgeInsets.all(16.0),
+      decoration: BoxDecoration(
+        color: Colors.grey[50],
+        borderRadius: BorderRadius.circular(12.0),
+        border: Border.all(color: Colors.grey[200]!, width: 1),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8.0),
+            decoration: BoxDecoration(
+              color: theme.primaryColor.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8.0),
+            ),
+            child: Icon(
+              Icons.menu_book_outlined,
+              color: theme.primaryColor,
+              size: 20,
+            ),
           ),
-          child: Row(
-            children: [
-              Icon(Icons.folder_open, color: theme.primaryColor),
-              const SizedBox(width: 8),
-              StandardText(
-                text: name ?? '책장',
-                fontSize: 14,
-                color: theme.primaryColor,
+          const SizedBox(width: 12),
+          const Expanded(
+            child: StandardText(
+              text: '공책 선택',
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+              color: Colors.black87,
+            ),
+          ),
+          GestureDetector(
+            onTap: () async {
+              final id =
+                  await FolderPickerWidget.showPicker(context, widget.selectedId);
+              widget.onPicked(id);
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.grey[300]!, width: 1),
               ),
-            ],
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.folder_open,
+                    color: theme.primaryColor,
+                    size: 18,
+                  ),
+                  const SizedBox(width: 8),
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 100),
+                    child: StandardText(
+                      text: name ?? '책장',
+                      fontSize: 14,
+                      color: Colors.black87,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  Icon(
+                    Icons.arrow_drop_down,
+                    color: Colors.grey[600],
+                    size: 20,
+                  ),
+                ],
+              ),
+            ),
           ),
-        )
-      ],
+        ],
+      ),
     );
   }
 }

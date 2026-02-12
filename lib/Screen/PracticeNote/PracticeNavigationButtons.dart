@@ -1,23 +1,13 @@
-import 'dart:io';
-
-import 'package:camera/camera.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:ono/Screen/PracticeNote/PracticeCompletionScreen.dart';
+import 'package:ono/Screen/PracticeNote/ProblemReviewCompletionScreen.dart';
 import 'package:ono/Screen/ProblemDetail/ProblemDetailScreen.dart';
 import 'package:provider/provider.dart';
 
-import '../../Model/Common/ProblemImageDataType.dart';
-import '../../Model/Problem/ProblemImageDataRegisterModel.dart';
-import '../../Module/Dialog/LoadingDialog.dart';
-import '../../Module/Dialog/SnackBarDialog.dart';
-import '../../Module/Image/ImagePickerHandler.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/PracticeNoteProvider.dart';
-import '../../Provider/ProblemsProvider.dart';
-import '../../Provider/UserProvider.dart';
-import '../../Service/Api/FileUpload/FileUploadService.dart';
 
 class PracticeNavigationButtons extends StatefulWidget {
   final BuildContext context;
@@ -40,8 +30,6 @@ class PracticeNavigationButtons extends StatefulWidget {
 
 class _PracticeNavigationButtonsState extends State<PracticeNavigationButtons> {
   bool isReviewed = false;
-  final ImagePickerHandler _imagePickerHandler = ImagePickerHandler();
-  XFile? selectedImage;
 
   @override
   Widget build(BuildContext context) {
@@ -227,178 +215,26 @@ class _PracticeNavigationButtonsState extends State<PracticeNavigationButtons> {
     );
   }
 
-  void problemSolveDialog(BuildContext context) {
+  void problemSolveDialog(BuildContext context) async {
     FirebaseAnalytics.instance.logEvent(name: 'problem_repeat_button_click');
 
-    final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
-    bool isLoading = false;
-
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return AlertDialog(
-              backgroundColor: Colors.white,
-              insetPadding:
-                  const EdgeInsets.symmetric(horizontal: 30, vertical: 30),
-              contentPadding: const EdgeInsets.all(15),
-              titlePadding: const EdgeInsets.only(left: 20, top: 20, right: 20),
-              title: const StandardText(
-                text: '복습을 완료했나요?',
-                fontSize: 18,
-                color: Colors.black,
-              ),
-              content: Container(
-                height: MediaQuery.of(context).size.height * 0.5,
-                width: MediaQuery.of(context).size.width * 0.8,
-                padding: const EdgeInsets.all(15),
-                child: GestureDetector(
-                  onTap: () {
-                    _imagePickerHandler.showImagePicker(context,
-                        (pickedFile) async {
-                      if (pickedFile != null) {
-                        setState(() {
-                          selectedImage = pickedFile;
-                        });
-                      }
-                    });
-                  },
-                  child: Container(
-                    width: double.maxFinite,
-                    margin: const EdgeInsets.symmetric(
-                        horizontal: 10, vertical: 10),
-                    decoration: BoxDecoration(
-                      color: themeProvider.primaryColor.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: selectedImage == null
-                        ? Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.photo_library,
-                                size: 60,
-                                color: themeProvider.primaryColor,
-                              ),
-                              const SizedBox(height: 8),
-                              StandardText(
-                                text: '풀이 이미지를 등록하세요',
-                                color: themeProvider.primaryColor,
-                              ),
-                            ],
-                          )
-                        : ClipRRect(
-                            borderRadius: BorderRadius.circular(10),
-                            child: Image.file(
-                              File(selectedImage!.path),
-                              fit: BoxFit.cover,
-                              width: double.infinity,
-                              height: double.infinity,
-                            ),
-                          ),
-                  ),
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: const StandardText(
-                    text: '취소',
-                    fontSize: 14,
-                    color: Colors.black,
-                  ),
-                ),
-                TextButton(
-                  onPressed: isLoading
-                      ? null
-                      : () async {
-                          if (selectedImage != null) {
-                            setState(() {
-                              isLoading = true;
-                            });
-
-                            LoadingDialog.show(context, '오답 복습 중...');
-
-                            try {
-                              // 파일을 직접 서버로 전송
-                              final problemsProvider =
-                                  Provider.of<ProblemsProvider>(context,
-                                      listen: false);
-
-                              await problemsProvider.problemService.registerProblemImageData(
-                                problemId: widget.currentProblemId,
-                                problemImages: [File(selectedImage!.path)],
-                                problemImageTypes: ['SOLVE_IMAGE'],
-                              );
-
-                              // 문제 정보 갱신
-                              await problemsProvider.fetchProblem(widget.currentProblemId);
-
-                              // 3. 복습 노트 갱신
-                              await widget.practiceProvider.moveToPractice(
-                                  widget.practiceProvider.currentPracticeNote!
-                                      .practiceId);
-
-                              FirebaseAnalytics.instance.logEvent(
-                                name: 'problem_repeat',
-                              );
-
-                              // 4. 복습노트 복습 시 유저 정보 갱신 (경험치 업데이트)
-                              await Provider.of<UserProvider>(context,
-                                      listen: false)
-                                  .fetchUserInfo();
-
-                              setState(() {
-                                isReviewed = true;
-                                isLoading = false;
-                              });
-
-                              LoadingDialog.hide(context);
-                              Navigator.of(context).pop();
-
-                              SnackBarDialog.showSnackBar(
-                                context: context,
-                                message: '복습이 완료되었습니다!',
-                                backgroundColor: themeProvider.primaryColor,
-                              );
-
-                              widget.onRefresh();
-                            } catch (e) {
-                              setState(() {
-                                isLoading = false;
-                              });
-                              // 에러 처리
-                              Navigator.of(context).pop();
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: StandardText(
-                                    text: '복습 이미지 등록에 실패했습니다: $e',
-                                    color: Colors.white,
-                                  ),
-                                  backgroundColor: Colors.red,
-                                ),
-                              );
-                            }
-                          }
-                        },
-                  child: isLoading
-                      ? CircularProgressIndicator(
-                          strokeWidth: 2.0,
-                          color: themeProvider.primaryColor,
-                        )
-                      : StandardText(
-                          text: '문제 복습',
-                          fontSize: 14,
-                          color: themeProvider.primaryColor,
-                        ),
-                ),
-              ],
-            );
-          },
-        );
-      },
+    // 전체 화면으로 이동
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ProblemReviewCompletionScreen(
+          problemId: widget.currentProblemId,
+          onRefresh: widget.onRefresh,
+        ),
+      ),
     );
+
+    // 복습 완료 시 isReviewed 상태 업데이트
+    if (result == true) {
+      setState(() {
+        isReviewed = true;
+      });
+    }
   }
 
   ButtonStyle _buildButtonStyle(ThemeHandler themeProvider, double screenHeight,
