@@ -15,6 +15,9 @@ Widget buildAnalysisSection(
 
   // 분석 상태에 따라 다른 UI 표시
   switch (analysis.status) {
+    case ProblemAnalysisStatus.NO_IMAGE:
+      // 이미지가 없는 경우 AI 분석 섹션 숨김
+      return const SizedBox.shrink();
     case ProblemAnalysisStatus.NOT_STARTED:
       // NOT_STARTED 상태도 PROCESSING으로 표시 (서버에서 분석 시작 전)
       return _buildProcessingState(context, primaryColor);
@@ -65,15 +68,15 @@ Widget _buildProcessingState(BuildContext context, Color primaryColor) {
               ),
             ),
             const SizedBox(height: 20),
-            StandardText(
+            const StandardText(
               text: 'AI가 문제를 분석하고 있어요',
               fontSize: 16,
               fontWeight: FontWeight.bold,
               color: Colors.black87,
             ),
             const SizedBox(height: 8),
-            StandardText(
-              text: '잠시만 기다려주세요 (약 30초 소요)',
+            const StandardText(
+              text: '잠시만 기다려주세요',
               fontSize: 13,
               color: Colors.black54,
             ),
@@ -144,7 +147,6 @@ Widget _buildFailedState(
 
 Widget _buildCompletedState(
     BuildContext context, ProblemAnalysisModel analysis, Color primaryColor) {
-
   return Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [

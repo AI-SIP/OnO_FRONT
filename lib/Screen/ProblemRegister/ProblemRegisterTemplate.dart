@@ -36,8 +36,7 @@ class ProblemRegisterTemplate extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  ProblemRegisterTemplateState createState() =>
-      ProblemRegisterTemplateState();
+  ProblemRegisterTemplateState createState() => ProblemRegisterTemplateState();
 }
 
 class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
@@ -295,7 +294,8 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
     await Provider.of<UserProvider>(context, listen: false).fetchUserInfo();
 
     // 3. 폴더 갱신 (화면 전환 전에 먼저 캐시 삭제 및 타임스탬프 업데이트)
-    final foldersProvider = Provider.of<FoldersProvider>(context, listen: false);
+    final foldersProvider =
+        Provider.of<FoldersProvider>(context, listen: false);
     if (_selectedFolderId != null) {
       await foldersProvider.refreshFolder(_selectedFolderId!);
     } else {
@@ -321,16 +321,18 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
   /// 백그라운드에서 이미지 업로드
   void _uploadImagesInBackground(
       int problemId, ProblemsProvider problemsProvider) {
-    // 이미지가 없으면 리턴
-    if (_problemImages.isEmpty && _answerImages.isEmpty) {
-      log('업로드할 이미지가 없음');
-      return;
-    }
-
     // 비동기로 이미지 업로드 실행 (await 없이)
     () async {
       try {
         log('백그라운드 이미지 업로드 시작 - problemId: $problemId');
+
+        // 이미지가 없으면 리턴
+        if (_problemImages.isEmpty && _answerImages.isEmpty) {
+          await problemsProvider.updateProblemAnalysisStatus(
+              problemId: problemId);
+          log('업로드할 이미지가 없음');
+          return;
+        }
 
         // 파일 리스트 생성
         final List<File> imageFiles = [];
@@ -359,7 +361,8 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
 
         // 이미지 업로드 완료 후 폴더 캐시 새로고침 (썸네일 업데이트)
         if (mounted) {
-          final foldersProvider = Provider.of<FoldersProvider>(context, listen: false);
+          final foldersProvider =
+              Provider.of<FoldersProvider>(context, listen: false);
           if (_selectedFolderId != null) {
             await foldersProvider.refreshFolder(_selectedFolderId!);
           } else {

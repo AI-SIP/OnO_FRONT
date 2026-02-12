@@ -561,6 +561,9 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
       } else if (problem.analysis!.status == ProblemAnalysisStatus.COMPLETED) {
         log('✅ Analysis already completed - no polling needed');
         _stopAnalysisPolling();
+      } else if (problem.analysis!.status == ProblemAnalysisStatus.NO_IMAGE) {
+        log('📷 No image for analysis - polling not needed');
+        _stopAnalysisPolling();
       }
     }
 
