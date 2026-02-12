@@ -75,6 +75,13 @@ class ProblemService {
     );
   }
 
+  Future<void> updateProblemAnalysisStatus({required int problemId}) async {
+    await httpService.sendRequest(
+      method: 'PATCH',
+      url: '$baseUrl/$problemId/no-image',
+    );
+  }
+
   Future<void> updateProblemInfo(
       ProblemRegisterModel problemRegisterModel) async {
     await httpService.sendRequest(

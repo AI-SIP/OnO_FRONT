@@ -2,7 +2,8 @@ enum ProblemAnalysisStatus {
   NOT_STARTED,
   PROCESSING,
   COMPLETED,
-  FAILED;
+  FAILED,
+  NO_IMAGE;
 
   static ProblemAnalysisStatus? fromString(String? status) {
     if (status == null) return null;
@@ -16,6 +17,8 @@ enum ProblemAnalysisStatus {
         return ProblemAnalysisStatus.COMPLETED;
       case 'FAILED':
         return ProblemAnalysisStatus.FAILED;
+      case 'NO_IMAGE':
+        return ProblemAnalysisStatus.NO_IMAGE;
       default:
         return null;
     }

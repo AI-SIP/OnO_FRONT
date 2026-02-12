@@ -144,6 +144,10 @@ class ProblemsProvider with ChangeNotifier {
     }
   }
 
+  Future<void> updateProblemAnalysisStatus({required int problemId}) async {
+    await problemService.updateProblemAnalysisStatus(problemId: problemId);
+  }
+
   Future<void> updateProblemCount(int amount) async {
     _problemCount += amount;
     notifyListeners();

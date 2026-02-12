@@ -5,12 +5,26 @@ import '../../Model/Problem/ProblemModel.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import 'ProblemDetailScreenWidget.dart';
 
-class ProblemDetailTemplate extends StatelessWidget {
+class ProblemDetailTemplate extends StatefulWidget {
   final ProblemModel problemModel;
+  final bool isExpanded;
+  final Function(bool) onExpansionChanged;
+
+  const ProblemDetailTemplate({
+    required this.problemModel,
+    required this.isExpanded,
+    required this.onExpansionChanged,
+    super.key,
+  });
+
+  @override
+  State<ProblemDetailTemplate> createState() => _ProblemDetailTemplateState();
+}
+
+class _ProblemDetailTemplateState extends State<ProblemDetailTemplate> {
   final ProblemDetailScreenWidget problemDetailScreenWidget =
       ProblemDetailScreenWidget();
-
-  ProblemDetailTemplate({required this.problemModel, super.key});
+  final ExpansionTileController _expansionTileController = ExpansionTileController();
 
   @override
   Widget build(BuildContext context) {
@@ -33,7 +47,7 @@ class ProblemDetailTemplate extends StatelessWidget {
                         flex: 1,
                         child: problemDetailScreenWidget.buildCommonDetailView(
                           context,
-                          problemModel,
+                          widget.problemModel,
                           themeProvider,
                         ),
                       ),
@@ -42,7 +56,8 @@ class ProblemDetailTemplate extends StatelessWidget {
                       Flexible(
                         flex: 1,
                         child: problemDetailScreenWidget.buildExpansionTile(
-                            context, problemModel, themeProvider),
+                            context, widget.problemModel, themeProvider,
+                            _expansionTileController, widget.isExpanded, widget.onExpansionChanged),
                       ),
                     ],
                   )
@@ -52,10 +67,11 @@ class ProblemDetailTemplate extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         problemDetailScreenWidget.buildCommonDetailView(
-                            context, problemModel, themeProvider),
+                            context, widget.problemModel, themeProvider),
                         const SizedBox(height: 30.0),
                         problemDetailScreenWidget.buildExpansionTile(
-                            context, problemModel, themeProvider),
+                            context, widget.problemModel, themeProvider,
+                            _expansionTileController, widget.isExpanded, widget.onExpansionChanged),
                       ],
                     ),
                   ),
@@ -64,4 +80,5 @@ class ProblemDetailTemplate extends StatelessWidget {
       ],
     );
   }
+
 }
