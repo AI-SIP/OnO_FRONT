@@ -523,7 +523,9 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
       height: 50,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(10),
-        color: isSelected ? themeProvider.primaryColor : Colors.grey[200],
+        color: isSelected
+            ? themeProvider.primaryColor
+            : themeProvider.primaryColor.withOpacity(0.1),
       ),
       child: Center(
         child: isSelected
@@ -580,13 +582,13 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
       decoration: BoxDecoration(
         color: highlight
             ? themeProvider.primaryColor
-            : themeProvider.primaryColor.withOpacity(0.5),
+            : themeProvider.primaryColor.withOpacity(0.15),
         borderRadius: BorderRadius.circular(5),
       ),
       child: StandardText(
         text: text,
         fontSize: 12,
-        color: Colors.white,
+        color: highlight ? Colors.white : themeProvider.primaryColor,
       ),
     );
   }
