@@ -42,9 +42,17 @@ class ProblemDetailScreenWidget {
       );
 
   Widget buildExpansionTile(
-          BuildContext ctx, ProblemModel problem, ThemeHandler theme) =>
+          BuildContext ctx,
+          ProblemModel problem,
+          ThemeHandler theme,
+          ExpansionTileController controller,
+          bool isExpanded,
+          Function(bool) onExpansionChanged) =>
       SingleChildScrollView(
         child: ExpansionTile(
+          controller: controller,
+          initiallyExpanded: isExpanded,
+          onExpansionChanged: onExpansionChanged,
           title: tileTitle('정답 확인', Colors.black),
           children: [
             verticalSpacer(ctx, .03),

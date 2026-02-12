@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:developer';
 
 import 'package:firebase_analytics/firebase_analytics.dart';
@@ -28,6 +29,9 @@ class ProblemDetailScreen extends StatefulWidget {
 
 class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
   Future<ProblemModel?>? _problemModelFuture;
+  Timer? _analysisPollingTimer;
+  int _pollingCount = 0;
+  bool _isExpansionTileExpanded = false; // ExpansionTile 상태 관리
 
   @override
   void initState() {
@@ -35,10 +39,99 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
     _setProblemModel();
   }
 
+  @override
+  void dispose() {
+    _stopAnalysisPolling();
+    super.dispose();
+  }
+
+  void _onExpansionChanged(bool expanded) {
+    setState(() {
+      _isExpansionTileExpanded = expanded;
+    });
+  }
+
   void _setProblemModel() {
     setState(() {
       _problemModelFuture = fetchProblemDetails(context, widget.problemId);
     });
+  }
+
+  void _startAnalysisPolling(int problemId) {
+    // 기존 타이머가 있으면 취소
+    _stopAnalysisPolling();
+    _pollingCount = 0;
+
+    log('🔄 Started analysis polling for problem $problemId');
+
+    _pollAnalysisStatus(problemId);
+  }
+
+  void _pollAnalysisStatus(int problemId) {
+    if (!mounted) return;
+
+    _pollingCount++;
+
+    // Smart Polling 간격 설정
+    Duration nextInterval;
+    if (_pollingCount <= 3) {
+      // 처음 9초: 3초마다 (빠른 응답)
+      nextInterval = const Duration(seconds: 3);
+    } else if (_pollingCount <= 9) {
+      // 9-45초: 5초마다
+      nextInterval = const Duration(seconds: 5);
+    } else if (_pollingCount <= 15) {
+      // 45-105초: 10초마다
+      nextInterval = const Duration(seconds: 10);
+    } else {
+      // 105초(1분 45초) 이상: 폴링 중지
+      log('⏱️ Analysis polling timeout - stopped after ${_pollingCount} attempts');
+      _stopAnalysisPolling();
+      return;
+    }
+
+    _analysisPollingTimer = Timer(nextInterval, () async {
+      if (!mounted) {
+        _stopAnalysisPolling();
+        return;
+      }
+
+      final problemsProvider = Provider.of<ProblemsProvider>(context, listen: false);
+
+      try {
+        log('🔍 Polling analysis status (attempt $_pollingCount)...');
+
+        // 서버에서 최신 분석 상태 조회
+        await problemsProvider.fetchProblemAnalysis(problemId);
+
+        // 현재 문제 상태 확인
+        final problem = await problemsProvider.getProblem(problemId);
+
+        // 분석이 완료되거나 실패하면 폴링 중지
+        if (problem.analysis?.status == ProblemAnalysisStatus.COMPLETED) {
+          log('✅ Analysis completed - polling stopped');
+          _stopAnalysisPolling();
+          return;
+        } else if (problem.analysis?.status == ProblemAnalysisStatus.FAILED) {
+          log('❌ Analysis failed - polling stopped');
+          _stopAnalysisPolling();
+          return;
+        }
+
+        // 여전히 진행 중이면 다음 폴링 예약
+        _pollAnalysisStatus(problemId);
+      } catch (e) {
+        log('⚠️ Error during analysis polling: $e');
+        // 에러 발생해도 계속 시도
+        _pollAnalysisStatus(problemId);
+      }
+    });
+  }
+
+  void _stopAnalysisPolling() {
+    _analysisPollingTimer?.cancel();
+    _analysisPollingTimer = null;
+    _pollingCount = 0;
   }
 
   @override
@@ -51,29 +144,59 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
       body: Column(
         children: [
           Expanded(
-            child: FutureBuilder<ProblemModel>(
-              future: Provider.of<ProblemsProvider>(context, listen: false)
-                  .getProblem(widget.problemId),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                } else if (snapshot.hasError) {
-                  return Center(
-                    child: StandardText(
-                      text: '오답노트를 찾을 수 없습니다.',
-                      color: themeProvider.primaryColor,
-                    ),
+            child: Selector<ProblemsProvider, ProblemModel?>(
+              selector: (context, provider) {
+                try {
+                  // 동기적으로 캐시된 문제 데이터만 반환
+                  return provider.problems.firstWhere(
+                    (p) => p.problemId == widget.problemId,
                   );
-                } else if (snapshot.hasData) {
-                  return _buildContent(snapshot.data!);
-                } else {
-                  return Center(
-                    child: StandardText(
-                      text: '오답노트를 찾을 수 없습니다.',
-                      color: themeProvider.primaryColor,
-                    ),
+                } catch (e) {
+                  return null;
+                }
+              },
+              shouldRebuild: (previous, next) {
+                // 문제 객체가 실제로 변경되었을 때만 rebuild
+                if (previous == null && next == null) return false;
+                if (previous == null || next == null) return true;
+
+                // 분석 상태가 변경되었을 때만 rebuild
+                return previous.analysis?.status != next.analysis?.status ||
+                    previous.analysis?.subject != next.analysis?.subject ||
+                    previous.analysis?.problemType != next.analysis?.problemType;
+              },
+              builder: (context, problemModel, child) {
+                if (problemModel == null) {
+                  // 초기 로딩 시에만 Future로 가져오기
+                  return FutureBuilder<ProblemModel>(
+                    future: Provider.of<ProblemsProvider>(context, listen: false)
+                        .getProblem(widget.problemId),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const Center(child: CircularProgressIndicator());
+                      } else if (snapshot.hasError) {
+                        return Center(
+                          child: StandardText(
+                            text: '오답노트를 찾을 수 없습니다.',
+                            color: themeProvider.primaryColor,
+                          ),
+                        );
+                      } else if (snapshot.hasData) {
+                        return _buildContent(snapshot.data!);
+                      } else {
+                        return Center(
+                          child: StandardText(
+                            text: '오답노트를 찾을 수 없습니다.',
+                            color: themeProvider.primaryColor,
+                          ),
+                        );
+                      }
+                    },
                   );
                 }
+
+                // 이미 로드된 경우 바로 렌더링
+                return _buildContent(problemModel);
               },
             ),
           ),
@@ -366,7 +489,12 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
   }
 
   Widget _buildContent(ProblemModel problemModel) {
-    return ProblemDetailTemplate(problemModel: problemModel);
+    return ProblemDetailTemplate(
+      key: ValueKey(problemModel.problemId), // 같은 문제면 위젯 재사용
+      problemModel: problemModel,
+      isExpanded: _isExpansionTileExpanded,
+      onExpansionChanged: _onExpansionChanged,
+    );
   }
 
   // 네비게이션 버튼 구성 함수
@@ -423,10 +551,16 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
       if (problem.analysis == null ||
           problem.analysis!.status == ProblemAnalysisStatus.PROCESSING ||
           problem.analysis!.status == ProblemAnalysisStatus.NOT_STARTED) {
-        log('fetch analysis result');
+        log('📊 Analysis is not completed - starting polling');
 
-        // 분석 결과 조회 후 COMPLETED면 업데이트됨
+        // 분석 결과 조회 (await 하지 않고 백그라운드에서 실행)
         problemsProvider.fetchProblemAnalysis(problemId);
+
+        // Smart Polling 시작
+        _startAnalysisPolling(problemId);
+      } else if (problem.analysis!.status == ProblemAnalysisStatus.COMPLETED) {
+        log('✅ Analysis already completed - no polling needed');
+        _stopAnalysisPolling();
       }
     }
 
