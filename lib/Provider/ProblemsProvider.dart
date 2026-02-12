@@ -1,8 +1,10 @@
+import 'dart:collection';
 import 'dart:developer';
 import 'dart:io';
 
 import 'package:camera/camera.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:ono/Model/Common/PaginatedResponse.dart';
 import 'package:ono/Model/Problem/ProblemAnalysisStatus.dart';
 import 'package:ono/Model/Problem/ProblemModel.dart';
 import 'package:ono/Service/Api/Problem/ProblemService.dart';
@@ -12,8 +14,11 @@ import '../Module/Util/ReviewHandler.dart';
 import '../Service/Api/FileUpload/FileUploadService.dart';
 
 class ProblemsProvider with ChangeNotifier {
-  List<ProblemModel> _problems = [];
-  List<ProblemModel> get problems => _problems;
+  // SplayTreeMap: O(log n) 삽입, O(log n) 조회, 자동 정렬
+  final SplayTreeMap<int, ProblemModel> _problemsMap = SplayTreeMap();
+
+  // 호환성을 위한 getter (정렬된 리스트 반환)
+  List<ProblemModel> get problems => _problemsMap.values.toList();
 
   int _problemCount = 0;
   int get problemCount => _problemCount;
@@ -21,49 +26,36 @@ class ProblemsProvider with ChangeNotifier {
   final problemService = ProblemService();
   final fileUploadService = FileUploadService();
 
-  ProblemModel getProblem(int problemId) {
-    final index = _findProblemIndex(problemId);
-    if (index != null) {
-      return _problems[index];
-    }
+  // O(log n) 조회
+  Future<ProblemModel> getProblem(int problemId) async {
+    if (_problemsMap.containsKey(problemId)) {
+      return _problemsMap[problemId]!;
+    } else {
+      log('can\'t find problemId: $problemId');
 
-    log('can\'t find problemId: $problemId');
-    throw Exception('Problem with id $problemId not found.');
+      await fetchProblem(problemId);
+      return _problemsMap[problemId]!;
+    }
   }
 
-  int? _findProblemIndex(int problemId) {
-    int low = 0, high = _problems.length - 1;
-    while (low <= high) {
-      final mid = (low + high) >> 1;
-      final midId = _problems[mid].problemId;
-      if (midId == problemId) {
-        return mid;
-      } else if (midId < problemId) {
-        low = mid + 1;
-      } else {
-        high = mid - 1;
-      }
-    }
-    return null;
+  // O(log n) 삽입/업데이트 (SplayTreeMap이 자동으로 정렬 유지)
+  void _upsertProblem(ProblemModel problem) {
+    _problemsMap[problem.problemId] = problem;
   }
 
   Future<void> fetchProblem(int problemId) async {
     final fetchedProblem = await problemService.getProblem(problemId);
-
-    final foundIndex = _findProblemIndex(problemId);
-
-    if (foundIndex != null) {
-      _problems[foundIndex] = fetchedProblem;
-    } else {
-      _problems.add(fetchedProblem);
-    }
-
+    _upsertProblem(fetchedProblem);
     log('problem: $problemId fetch complete');
     notifyListeners();
   }
 
   Future<void> fetchAllProblems() async {
-    _problems = await problemService.getAllProblems();
+    final problemsList = await problemService.getAllProblems();
+    _problemsMap.clear();
+    for (var problem in problemsList) {
+      _problemsMap[problem.problemId] = problem;
+    }
     _problemCount = await getUserProblemCount();
 
     log('fetch problems complete');
@@ -90,15 +82,11 @@ class ProblemsProvider with ChangeNotifier {
 
       // 분석이 완료되었으면 ProblemModel 업데이트
       if (analysisResult.status == ProblemAnalysisStatus.COMPLETED) {
-        final foundIndex = _findProblemIndex(problemId);
-        if (foundIndex != null) {
-          _problems[foundIndex] =
-              _problems[foundIndex].updateAnalysis(analysisResult);
+        if (_problemsMap.containsKey(problemId)) {
+          _problemsMap[problemId] =
+              _problemsMap[problemId]!.updateAnalysis(analysisResult);
           notifyListeners();
           log('ProblemModel 업데이트 완료 - UI가 자동으로 갱신됩니다');
-
-          // 업데이트된 문제 정보 다시 로그 출력
-          final updatedProblem = _problems[foundIndex];
         }
       }
 
@@ -164,11 +152,26 @@ class ProblemsProvider with ChangeNotifier {
   Future<void> deleteProblems(List<int> deleteProblemIdList) async {
     log('delete problems: $deleteProblemIdList');
     await problemService.deleteProblems(deleteProblemIdList);
-    await fetchAllProblems();
+
+    // 로컬 캐시에서 삭제된 문제 제거
+    for (var problemId in deleteProblemIdList) {
+      _problemsMap.remove(problemId);
+    }
+
+    // 문제 개수 업데이트
+    _problemCount = await getUserProblemCount();
+
+    log('Deleted ${deleteProblemIdList.length} problems from cache');
+    notifyListeners();
   }
 
   Future<void> deleteProblemImageData(String imageUrl) async {
     await problemService.deleteProblemImageData(imageUrl);
+  }
+
+  void clear() {
+    _problemsMap.clear();
+    notifyListeners();
   }
 
   Future<String> uploadImage(XFile image) async {
@@ -179,6 +182,41 @@ class ProblemsProvider with ChangeNotifier {
     final ReviewHandler reviewHandler = ReviewHandler();
     if (_problemCount > 0 && _problemCount % 10 == 0) {
       reviewHandler.requestReview(context);
+    }
+  }
+
+  // 문제 개수만 조회 (로그인 시 사용)
+  Future<void> fetchProblemCount() async {
+    _problemCount = await getUserProblemCount();
+    notifyListeners();
+  }
+
+  // V2 API - 폴더 내 문제 무한 스크롤 조회
+  Future<PaginatedResponse<ProblemModel>> loadMoreFolderProblemsV2({
+    required int folderId,
+    int? cursor,
+    int size = 20,
+  }) async {
+    try {
+      final response = await problemService.getFolderProblemsV2(
+        folderId: folderId,
+        cursor: cursor,
+        size: size,
+      );
+
+      // O(log n) 삽입으로 로컬 캐시에 추가 (중복 방지 및 자동 정렬)
+      for (var problem in response.content) {
+        _upsertProblem(problem);
+      }
+
+      log('Loaded ${response.content.length} problems from folder $folderId');
+      notifyListeners();
+
+      return response;
+    } catch (e, stackTrace) {
+      log('Error loading folder problems V2: $e');
+      log(stackTrace.toString());
+      rethrow;
     }
   }
 }

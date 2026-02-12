@@ -6,6 +6,7 @@ import 'package:ono/Module/Dialog/SnackBarDialog.dart';
 import 'package:provider/provider.dart';
 
 import '../../Model/PracticeNote/PracticeNoteDetailModel.dart';
+import '../../Model/PracticeNote/PracticeNoteThumbnailModel.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/PracticeNoteProvider.dart';
@@ -22,27 +23,66 @@ class PracticeThumbnailScreen extends StatefulWidget {
 class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
   bool _isSelectionMode = false;
   final List<int> _selectedPracticeIds = [];
+  late ScrollController _scrollController;
+  int _lastPracticeRefreshTimestamp = 0;
 
   @override
   void initState() {
     super.initState();
+    _scrollController = ScrollController();
+    _scrollController.addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    // 스크롤이 80% 이상 내려가면 다음 페이지 로드
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent * 0.8) {
+      final provider =
+          Provider.of<ProblemPracticeProvider>(context, listen: false);
+      if (provider.hasNext && !provider.isLoading) {
+        provider.loadMorePracticeThumbnails();
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeHandler>(context);
+    final practiceProvider = Provider.of<ProblemPracticeProvider>(context);
+
+    // 복습 노트 생성/수정 후 타임스탬프가 변경되면 자동 새로고침
+    if (practiceProvider.practiceRefreshTimestamp !=
+            _lastPracticeRefreshTimestamp &&
+        practiceProvider.practiceRefreshTimestamp > 0) {
+      _lastPracticeRefreshTimestamp = practiceProvider.practiceRefreshTimestamp;
+
+      // PostFrameCallback을 사용하여 안전하게 상태 업데이트
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _refreshPracticeThumbnails();
+      });
+    }
 
     return Scaffold(
       appBar: _buildAppBar(themeProvider),
       backgroundColor: Colors.white,
-      body: Consumer<ProblemPracticeProvider>(
-        builder: (context, provider, child) {
-          if (provider.practices.isEmpty) {
-            return _buildEmptyState(themeProvider);
-          } else {
-            return _buildPracticeListView(provider.practices, themeProvider);
-          }
-        },
+      body: RefreshIndicator(
+        onRefresh: _refreshPracticeThumbnails,
+        child: Consumer<ProblemPracticeProvider>(
+          builder: (context, provider, child) {
+            if (provider.practiceThumbnails.isEmpty && !provider.isLoading) {
+              return _buildEmptyState(themeProvider);
+            } else {
+              return _buildPracticeListView(provider, themeProvider);
+            }
+          },
+        ),
       ),
       bottomNavigationBar: _isSelectionMode
           ? Padding(
@@ -100,11 +140,23 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
   void _showBottomSheet() {
     final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
 
+    final openTime = DateTime.now();
     showModalBottomSheet(
       backgroundColor: Colors.white,
       context: context,
+      isDismissible: false,
       builder: (context) {
-        return SingleChildScrollView(
+        return TapRegion(
+          onTapOutside: (_) {
+            // Workaround for iPadOS 26.1 bug: https://github.com/flutter/flutter/issues/177992
+            if (DateTime.now().difference(openTime) < const Duration(milliseconds: 500)) {
+              return;
+            }
+            if (Navigator.canPop(context)) {
+              Navigator.pop(context);
+            }
+          },
+          child: SingleChildScrollView(
           child: Padding(
             padding: const EdgeInsets.symmetric(
                 vertical: 20.0, horizontal: 10.0), // 패딩 추가
@@ -163,6 +215,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
               ],
             ),
           ),
+        ),
         );
       },
     );
@@ -170,7 +223,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
 
   Widget _buildBottomActionButtons(ThemeHandler themeProvider) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
       color: Colors.white,
       child: Row(
         children: [
@@ -178,7 +231,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.grey[300],
-                padding: const EdgeInsets.symmetric(vertical: 12),
+                padding: const EdgeInsets.symmetric(vertical: 8),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
@@ -191,17 +244,17 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
               },
               child: const StandardText(
                 text: '취소하기',
-                fontSize: 16,
+                fontSize: 14,
                 color: Colors.black,
               ),
             ),
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: 16),
           Expanded(
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: themeProvider.primaryColor,
-                padding: const EdgeInsets.symmetric(vertical: 12),
+                padding: const EdgeInsets.symmetric(vertical: 8),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
@@ -214,7 +267,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
                 children: [
                   const StandardText(
                     text: '삭제하기',
-                    fontSize: 16,
+                    fontSize: 14,
                     color: Colors.white,
                   ),
                   const SizedBox(width: 8),
@@ -306,70 +359,89 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
   }
 
   Widget _buildEmptyState(ThemeHandler themeProvider) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const SizedBox(height: 40),
-          SvgPicture.asset(
-            'assets/Icon/BigGreenFrog.svg',
-            width: 90,
-            height: 90,
-          ),
-          const SizedBox(height: 40),
-          const StandardText(
-            text: '작성한 오답노트로 복습 노트를\n 생성해 시험을 준비하세요!',
-            fontSize: 16,
-            color: Colors.black,
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 30),
-          ElevatedButton(
-            onPressed: () {
-              // 복습 노트 추가 화면으로 이동
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const PracticeProblemSelectionScreen(),
+    return SingleChildScrollView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      child: SizedBox(
+        height: MediaQuery.of(context).size.height * 0.7,
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const SizedBox(height: 40),
+              SvgPicture.asset(
+                'assets/Icon/BigGreenFrog.svg',
+                width: 90,
+                height: 90,
+              ),
+              const SizedBox(height: 40),
+              const StandardText(
+                text: '작성한 오답노트로 복습 노트를\n 생성해 시험을 준비하세요!',
+                fontSize: 16,
+                color: Colors.black,
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 30),
+              ElevatedButton(
+                onPressed: () {
+                  // 복습 노트 추가 화면으로 이동
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const PracticeProblemSelectionScreen(),
+                    ),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: themeProvider.primaryColor, // primaryColor 적용
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 30,
+                    vertical: 8,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(15),
+                  ),
                 ),
-              );
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: themeProvider.primaryColor, // primaryColor 적용
-              padding: const EdgeInsets.symmetric(
-                horizontal: 30,
-                vertical: 8,
+                child: const StandardText(
+                  text: '복습 노트 추가하기',
+                  fontSize: 16,
+                  color: Colors.white,
+                ),
               ),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(15),
-              ),
-            ),
-            child: const StandardText(
-              text: '복습 노트 추가하기',
-              fontSize: 16,
-              color: Colors.white,
-            ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
 
   Widget _buildPracticeListView(
-      List<PracticeNoteDetailModel> practiceThumbnails,
-      ThemeHandler themeProvider) {
+      ProblemPracticeProvider provider, ThemeHandler themeProvider) {
+    final thumbnails = provider.practiceThumbnails;
+    final isLoadingMore = provider.isLoading;
+    final hasMore = provider.hasNext;
+
     return ListView.builder(
+      controller: _scrollController,
+      physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.symmetric(vertical: 20),
-      itemCount: practiceThumbnails.length,
+      itemCount: thumbnails.length + (isLoadingMore || hasMore ? 1 : 0),
       itemBuilder: (context, index) {
-        final practice = practiceThumbnails[index];
+        // 로딩 인디케이터
+        if (index == thumbnails.length) {
+          return const Padding(
+            padding: EdgeInsets.all(16.0),
+            child: Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        final practice = thumbnails[index];
         return _buildPracticeItem(practice, themeProvider);
       },
     );
   }
 
   Widget _buildPracticeItem(
-      PracticeNoteDetailModel practice, ThemeHandler themeProvider) {
+      PracticeNoteThumbnails practice, ThemeHandler themeProvider) {
     final isSelected = _selectedPracticeIds.contains(practice.practiceId);
 
     return GestureDetector(
@@ -381,7 +453,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
                 : _selectedPracticeIds.add(practice.practiceId);
           });
         } else {
-          _navigateToPracticeDetail(practice);
+          _navigateToPracticeDetail(practice.practiceId);
         }
       },
       child: Padding(
@@ -402,24 +474,29 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
     );
   }
 
-  void _navigateToPracticeDetail(PracticeNoteDetailModel practice) async {
+  void _navigateToPracticeDetail(int practiceId) async {
     final practiceProvider =
         Provider.of<ProblemPracticeProvider>(context, listen: false);
     LoadingDialog.show(context, '복습 노트 로딩 중...');
 
-    await practiceProvider.moveToPractice(practice.practiceId);
+    // 상세 정보 조회 및 이동
+    await practiceProvider.fetchPracticeNote(practiceId);
+    await practiceProvider.moveToPractice(practiceId);
     LoadingDialog.hide(context);
 
-    Navigator.push(
+    final result = await Navigator.push<bool>(
       context,
       MaterialPageRoute(
         builder: (context) => PracticeDetailScreen(
             practice: practiceProvider.currentPracticeNote!),
       ),
-    ).then((_) {
-      // 복습 상세 화면에서 돌아왔을 때 최신 데이터 다시 조회
-      _fetchAllPracticeContents();
-    });
+    );
+
+    // 복습을 완료한 경우(result == true)에만 해당 썸네일 업데이트
+    if (result == true) {
+      await practiceProvider.updateSinglePracticeThumbnail(practiceId);
+    }
+    // 그 외의 경우(조회만 한 경우)는 캐시 유지
   }
 
   BoxDecoration _buildBoxDecoration(
@@ -461,7 +538,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
   }
 
   Widget _buildPracticeInfo(
-      PracticeNoteDetailModel practice, ThemeHandler themeProvider) {
+      PracticeNoteThumbnails practice, ThemeHandler themeProvider) {
     return Expanded(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -545,5 +622,11 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
     final provider =
         Provider.of<ProblemPracticeProvider>(context, listen: false);
     await provider.fetchAllPracticeContents();
+  }
+
+  Future<void> _refreshPracticeThumbnails() async {
+    final provider =
+        Provider.of<ProblemPracticeProvider>(context, listen: false);
+    await provider.refreshPracticeThumbnails();
   }
 }

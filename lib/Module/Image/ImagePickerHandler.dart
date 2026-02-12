@@ -105,13 +105,25 @@ class ImagePickerHandler {
 
   void showImagePicker(BuildContext context, Function(XFile?) onImagePicked,
       {Function(List<XFile>)? onMultipleImagesPicked}) {
+    final openTime = DateTime.now();
     showModalBottomSheet(
       backgroundColor: Colors.white,
       context: context,
+      isDismissible: false,
       builder: (BuildContext context) {
         final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
 
-        return SingleChildScrollView(
+        return TapRegion(
+          onTapOutside: (_) {
+            // Workaround for iPadOS 26.1 bug: https://github.com/flutter/flutter/issues/177992
+            if (DateTime.now().difference(openTime) < const Duration(milliseconds: 500)) {
+              return;
+            }
+            if (Navigator.canPop(context)) {
+              Navigator.pop(context);
+            }
+          },
+          child: SingleChildScrollView(
           child: Padding(
             padding: const EdgeInsets.symmetric(
                 vertical: 20.0, horizontal: 10.0), // 기존 모달과 동일한 여백 적용
@@ -199,6 +211,7 @@ class ImagePickerHandler {
                   ),
               ],
             ),
+          ),
           ),
         );
       },

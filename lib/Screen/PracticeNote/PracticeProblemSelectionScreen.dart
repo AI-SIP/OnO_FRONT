@@ -5,7 +5,7 @@ import 'package:ono/Provider/PracticeNoteProvider.dart';
 import 'package:ono/Screen/PracticeNote/PracticeTitleWriteScreen.dart';
 import 'package:provider/provider.dart';
 
-import '../../Model/Folder/FolderModel.dart';
+import '../../Model/Folder/FolderThumbnailModel.dart';
 import '../../Model/PracticeNote/PracticeNoteRegisterModel.dart';
 import '../../Model/PracticeNote/PracticeNoteUpdateModel.dart';
 import '../../Model/Problem/ProblemModel.dart';
@@ -15,6 +15,7 @@ import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/NoteIconHandler.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/FoldersProvider.dart';
+import '../../Provider/ProblemsProvider.dart';
 
 class PracticeProblemSelectionScreen extends StatefulWidget {
   final PracticeNoteDetailModel? practiceModel;
@@ -30,14 +31,33 @@ class _PracticeProblemSelectionScreenState
     extends State<PracticeProblemSelectionScreen> {
   int? selectedFolderId;
   List<ProblemModel> selectedProblems = [];
-  List<FolderModel> allFolders = [];
+  List<FolderThumbnailModel> allFolders = [];
   late final List<int> _originalProblemIds;
+
+  // 폴더 페이징 상태
+  int? _folderCursor;
+  bool _folderHasNext = false;
+  bool _isLoadingFolders = false;
+
+  // 문제 페이징 상태
+  List<ProblemModel> _currentFolderProblems = [];
+  int? _problemCursor;
+  bool _problemHasNext = false;
+  bool _isLoadingProblems = false;
+
+  late ScrollController _folderScrollController;
+  late ScrollController _problemScrollController;
 
   @override
   void initState() {
     super.initState();
+    _folderScrollController = ScrollController();
+    _problemScrollController = ScrollController();
+    _folderScrollController.addListener(_onFolderScroll);
+    _problemScrollController.addListener(_onProblemScroll);
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _fetchFolders();
+      _loadInitialFolders();
       if (widget.practiceModel != null) {
         _originalProblemIds = widget.practiceModel!.problemIdList;
         _fetchProblems();
@@ -45,6 +65,33 @@ class _PracticeProblemSelectionScreenState
         _originalProblemIds = [];
       }
     });
+  }
+
+  @override
+  void dispose() {
+    _folderScrollController.removeListener(_onFolderScroll);
+    _problemScrollController.removeListener(_onProblemScroll);
+    _folderScrollController.dispose();
+    _problemScrollController.dispose();
+    super.dispose();
+  }
+
+  void _onFolderScroll() {
+    if (_folderScrollController.position.pixels >=
+        _folderScrollController.position.maxScrollExtent * 0.8) {
+      if (_folderHasNext && !_isLoadingFolders) {
+        _loadMoreFolders();
+      }
+    }
+  }
+
+  void _onProblemScroll() {
+    if (_problemScrollController.position.pixels >=
+        _problemScrollController.position.maxScrollExtent * 0.8) {
+      if (_problemHasNext && !_isLoadingProblems) {
+        _loadMoreProblems();
+      }
+    }
   }
 
   Future<void> _fetchProblems() async {
@@ -55,15 +102,126 @@ class _PracticeProblemSelectionScreenState
     setState(() => selectedProblems = problemModelList);
   }
 
-  Future<void> _fetchFolders() async {
-    final foldersProvider = context.read<FoldersProvider>();
+  Future<void> _loadInitialFolders() async {
+    setState(() {
+      _isLoadingFolders = true;
+    });
 
-    List<FolderModel> folders = foldersProvider.folders;
+    try {
+      final foldersProvider = context.read<FoldersProvider>();
+      final response =
+          await foldersProvider.folderService.getAllFolderThumbnailsV2(
+        cursor: null,
+        size: 20,
+      );
+
+      setState(() {
+        allFolders = response.content;
+        _folderCursor = response.nextCursor;
+        _folderHasNext = response.hasNext;
+
+        // 첫 번째 폴더를 선택하고 해당 폴더의 문제 로드
+        if (allFolders.isNotEmpty) {
+          selectedFolderId = allFolders[0].folderId;
+          _loadInitialProblems(allFolders[0].folderId);
+        }
+      });
+    } catch (e) {
+      print('Error loading folders: $e');
+    } finally {
+      setState(() {
+        _isLoadingFolders = false;
+      });
+    }
+  }
+
+  Future<void> _loadMoreFolders() async {
+    if (_isLoadingFolders || !_folderHasNext) return;
 
     setState(() {
-      allFolders = folders;
-      selectedFolderId = allFolders[0].folderId;
+      _isLoadingFolders = true;
     });
+
+    try {
+      final foldersProvider = context.read<FoldersProvider>();
+      final response =
+          await foldersProvider.folderService.getAllFolderThumbnailsV2(
+        cursor: _folderCursor,
+        size: 20,
+      );
+
+      setState(() {
+        allFolders.addAll(response.content);
+        _folderCursor = response.nextCursor;
+        _folderHasNext = response.hasNext;
+      });
+    } catch (e) {
+      print('Error loading more folders: $e');
+    } finally {
+      setState(() {
+        _isLoadingFolders = false;
+      });
+    }
+  }
+
+  Future<void> _loadInitialProblems(int folderId) async {
+    setState(() {
+      _isLoadingProblems = true;
+      _currentFolderProblems = [];
+      _problemCursor = null;
+      _problemHasNext = false;
+    });
+
+    try {
+      final problemsProvider = context.read<ProblemsProvider>();
+      final response = await problemsProvider.loadMoreFolderProblemsV2(
+        folderId: folderId,
+        cursor: null,
+        size: 20,
+      );
+
+      setState(() {
+        _currentFolderProblems = response.content;
+        _problemCursor = response.nextCursor;
+        _problemHasNext = response.hasNext;
+      });
+    } catch (e) {
+      print('Error loading problems: $e');
+    } finally {
+      setState(() {
+        _isLoadingProblems = false;
+      });
+    }
+  }
+
+  Future<void> _loadMoreProblems() async {
+    if (_isLoadingProblems || !_problemHasNext || selectedFolderId == null)
+      return;
+
+    setState(() {
+      _isLoadingProblems = true;
+    });
+
+    try {
+      final problemsProvider = context.read<ProblemsProvider>();
+      final response = await problemsProvider.loadMoreFolderProblemsV2(
+        folderId: selectedFolderId!,
+        cursor: _problemCursor,
+        size: 20,
+      );
+
+      setState(() {
+        _currentFolderProblems.addAll(response.content);
+        _problemCursor = response.nextCursor;
+        _problemHasNext = response.hasNext;
+      });
+    } catch (e) {
+      print('Error loading more problems: $e');
+    } finally {
+      setState(() {
+        _isLoadingProblems = false;
+      });
+    }
   }
 
   @override
@@ -115,17 +273,33 @@ class _PracticeProblemSelectionScreenState
       child: SizedBox(
         height: 120,
         child: ListView.builder(
+          controller: _folderScrollController,
           scrollDirection: Axis.horizontal,
-          itemCount: allFolders.length,
+          itemCount:
+              allFolders.length + (_folderHasNext || _isLoadingFolders ? 1 : 0),
           itemBuilder: (context, index) {
+            // 로딩 인디케이터
+            if (index == allFolders.length) {
+              return const Padding(
+                padding: EdgeInsets.all(16.0),
+                child: Center(
+                  child: SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                ),
+              );
+            }
+
             final folder = allFolders[index];
             return GestureDetector(
               onTap: () async {
                 setState(() {
                   selectedFolderId = folder.folderId;
                 });
-                await Provider.of<FoldersProvider>(context, listen: false)
-                    .moveToFolder(folder.folderId);
+                // 선택한 폴더의 문제들을 불러옵니다
+                await _loadInitialProblems(folder.folderId);
               },
               child: Padding(
                 padding: EdgeInsets.only(right: screenWidth * 0.04),
@@ -138,7 +312,8 @@ class _PracticeProblemSelectionScreenState
     );
   }
 
-  Widget _buildFolderThumbnail(FolderModel folder, ThemeHandler themeProvider) {
+  Widget _buildFolderThumbnail(
+      FolderThumbnailModel folder, ThemeHandler themeProvider) {
     bool isSelected = selectedFolderId == folder.folderId; // 선택된 폴더인지 확인
 
     return Opacity(
@@ -170,36 +345,47 @@ class _PracticeProblemSelectionScreenState
   }
 
   Widget _buildProblemList(BuildContext context, ThemeHandler themeProvider) {
-    final foldersProvider = Provider.of<FoldersProvider>(context);
-
     return Expanded(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 30),
-        child: foldersProvider.currentProblems.isNotEmpty
-            ? ListView.builder(
-                itemCount: foldersProvider.currentProblems.length,
-                itemBuilder: (context, index) {
-                  final problem = foldersProvider.currentProblems[index];
-                  final isSelected = selectedProblems.any((selectedProblem) =>
-                      selectedProblem.problemId == problem.problemId);
+        child: _isLoadingProblems && _currentFolderProblems.isEmpty
+            ? const Center(child: CircularProgressIndicator())
+            : _currentFolderProblems.isNotEmpty
+                ? ListView.builder(
+                    controller: _problemScrollController,
+                    itemCount: _currentFolderProblems.length +
+                        (_problemHasNext || _isLoadingProblems ? 1 : 0),
+                    itemBuilder: (context, index) {
+                      // 로딩 인디케이터
+                      if (index == _currentFolderProblems.length) {
+                        return const Padding(
+                          padding: EdgeInsets.all(16.0),
+                          child: Center(child: CircularProgressIndicator()),
+                        );
+                      }
 
-                  return GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        if (isSelected) {
-                          selectedProblems.removeWhere(
-                              (p) => p.problemId == problem.problemId);
-                        } else {
-                          selectedProblems.add(problem);
-                        }
-                      });
+                      final problem = _currentFolderProblems[index];
+                      final isSelected = selectedProblems.any(
+                          (selectedProblem) =>
+                              selectedProblem.problemId == problem.problemId);
+
+                      return GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            if (isSelected) {
+                              selectedProblems.removeWhere(
+                                  (p) => p.problemId == problem.problemId);
+                            } else {
+                              selectedProblems.add(problem);
+                            }
+                          });
+                        },
+                        child: _problemTileContent(
+                            problem, themeProvider, isSelected),
+                      );
                     },
-                    child:
-                        _problemTileContent(problem, themeProvider, isSelected),
-                  );
-                },
-              )
-            : _buildEmptyProblemMessage(),
+                  )
+                : _buildEmptyProblemMessage(),
       ),
     );
   }

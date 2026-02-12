@@ -179,9 +179,13 @@ class UserProvider with ChangeNotifier {
 
   Future<void> fetchAllData() async {
     await fetchUserInfo();
-    await problemsProvider.fetchAllProblems();
-    await foldersProvider.fetchAllFolderContents();
-    await practiceProvider.fetchAllPracticeContents();
+
+    // 루트 폴더 정보 로드
+    await foldersProvider.fetchRootFolder();
+    await foldersProvider.moveToRootFolder();
+
+    // 무한 스크롤 방식으로 첫 페이지만 로드
+    await practiceProvider.loadInitialPracticeThumbnails();
 
     notifyListeners();
   }
@@ -273,8 +277,13 @@ class UserProvider with ChangeNotifier {
     _loginStatus = LoginStatus.logout;
     _isFirstLogin = true;
     userInfoModel = null;
-    notifyListeners();
 
-    await storage.deleteAll();
+    await storage.delete(key: "accessToken");
+    await storage.delete(key: "refreshToken");
+    await storage.delete(key: 'loginMethod');
+
+    problemsProvider.clear();
+    foldersProvider.clear();
+    practiceProvider.clear();
   }
 }

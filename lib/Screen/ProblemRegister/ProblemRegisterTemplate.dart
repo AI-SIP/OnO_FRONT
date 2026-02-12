@@ -17,7 +17,6 @@ import '../../Provider/ProblemsProvider.dart';
 import '../../Provider/ScreenIndexProvider.dart';
 import '../../Provider/UserProvider.dart';
 import '../../Service/Api/Problem/ProblemService.dart';
-import 'Widget/ActionButtons.dart';
 import 'Widget/DatePickerWidget.dart';
 import 'Widget/ImageGridWidget.dart';
 import 'Widget/LabeledTextField.dart';
@@ -92,6 +91,7 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
   @override
   Widget build(BuildContext context) {
     final isWide = MediaQuery.of(context).size.width >= 600;
+    final spacing = isWide ? 50.0 : 30.0; // 태블릿: 50px, 모바일: 30px
 
     return GestureDetector(
         behavior: HitTestBehavior.translucent,
@@ -104,19 +104,19 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
                 selectedDate: _selectedDate,
                 onDateChanged: (d) => setState(() => _selectedDate = d),
               ),
-              const SizedBox(height: 30),
+              SizedBox(height: spacing),
               FolderPickerWidget(
                 selectedId: _selectedFolderId,
                 onPicked: (id) => setState(() => _selectedFolderId = id),
               ),
-              const SizedBox(height: 30),
+              SizedBox(height: spacing),
               LabeledTextField(
                 label: '제목',
                 hintText: '오답노트의 제목을 작성해주세요!',
                 icon: Icons.info,
                 controller: _titleCtrl,
               ),
-              const SizedBox(height: 30),
+              SizedBox(height: spacing),
               LabeledTextField(
                 label: '메모',
                 controller: _memoCtrl,
@@ -124,7 +124,7 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
                 hintText: '기록하고 싶은 내용을 간단하게 작성해주세요!',
                 maxLines: 3,
               ),
-              const SizedBox(height: 30),
+              SizedBox(height: spacing),
               if (isWide)
                 Row(
                   children: [
@@ -291,22 +291,22 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
     await problemsProvider.updateProblemCount(1);
     await problemsProvider.requestReview(context);
 
-    // 2. 폴더 갱신 (_selectedFolderId가 null이면 루트 폴더를 갱신)
+    // 2. 유저 정보 갱신 (경험치 업데이트)
+    await Provider.of<UserProvider>(context, listen: false).fetchUserInfo();
+
+    // 3. 폴더 갱신 (화면 전환 전에 먼저 캐시 삭제 및 타임스탬프 업데이트)
     final foldersProvider = Provider.of<FoldersProvider>(context, listen: false);
     if (_selectedFolderId != null) {
-      await foldersProvider.fetchFolderContent(_selectedFolderId);
+      await foldersProvider.refreshFolder(_selectedFolderId!);
     } else {
-      // 루트 폴더 갱신
+      // 루트 폴더 갱신 (타임스탬프 업데이트됨)
       final rootFolder = foldersProvider.rootFolder;
       if (rootFolder != null) {
-        await foldersProvider.fetchFolderContent(rootFolder.folderId);
+        await foldersProvider.refreshFolder(rootFolder.folderId);
       }
     }
 
-    // 3. 유저 정보 갱신 (경험치 업데이트)
-    await Provider.of<UserProvider>(context, listen: false).fetchUserInfo();
-
-    // 4. 화면 초기화 및 이동
+    // 4. 화면 초기화 및 이동 (이제 DirectoryScreen이 mount되면서 변경된 타임스탬프를 감지)
     Provider.of<ScreenIndexProvider>(context, listen: false)
         .setSelectedIndex(0);
 
@@ -356,6 +356,21 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
         );
 
         log('백그라운드 이미지 업로드 완료 - problemId: $problemId');
+
+        // 이미지 업로드 완료 후 폴더 캐시 새로고침 (썸네일 업데이트)
+        if (mounted) {
+          final foldersProvider = Provider.of<FoldersProvider>(context, listen: false);
+          if (_selectedFolderId != null) {
+            await foldersProvider.refreshFolder(_selectedFolderId!);
+          } else {
+            // 루트 폴더 갱신 (타임스탬프 업데이트됨)
+            final rootFolder = foldersProvider.rootFolder;
+            if (rootFolder != null) {
+              await foldersProvider.refreshFolder(rootFolder.folderId);
+            }
+          }
+          log('폴더 캐시 새로고침 완료 - 썸네일 업데이트됨');
+        }
       } catch (e, stackTrace) {
         log('백그라운드 이미지 업로드 실패 - problemId: $problemId');
         log('에러: $e');
@@ -451,18 +466,18 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
 
     // 새 폴더 갱신 (_selectedFolderId가 null이면 루트 폴더)
     if (_selectedFolderId != null) {
-      await foldersProvider.fetchFolderContent(_selectedFolderId);
+      await foldersProvider.refreshFolder(_selectedFolderId!);
     } else {
       // 루트 폴더 갱신
       final rootFolder = foldersProvider.rootFolder;
       if (rootFolder != null) {
-        await foldersProvider.fetchFolderContent(rootFolder.folderId);
+        await foldersProvider.refreshFolder(rootFolder.folderId);
       }
     }
 
     // 기존 폴더가 새 폴더와 다르면 기존 폴더도 갱신
     if (originalFolderId != null && originalFolderId != _selectedFolderId) {
-      await foldersProvider.fetchFolderContent(originalFolderId);
+      await foldersProvider.refreshFolder(originalFolderId);
     }
   }
 

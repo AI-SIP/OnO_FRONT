@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:http/http.dart' as http;
+import 'package:ono/Model/Common/PaginatedResponse.dart';
 import 'package:ono/Model/Problem/ProblemAnalysisModel.dart';
 import 'package:ono/Model/Problem/ProblemModel.dart';
 import 'package:ono/Model/Problem/ProblemRegisterModel.dart';
@@ -133,5 +134,30 @@ class ProblemService {
     );
 
     return ProblemAnalysisModel.fromJson(data as Map<String, dynamic>);
+  }
+
+  // V2 API - Cursor-based pagination for folder problems
+  Future<PaginatedResponse<ProblemModel>> getFolderProblemsV2({
+    required int folderId,
+    int? cursor,
+    int size = 20,
+  }) async {
+    final queryParams = <String, String>{
+      'size': size.toString(),
+    };
+    if (cursor != null) {
+      queryParams['cursor'] = cursor.toString();
+    }
+
+    final data = await httpService.sendRequest(
+      method: 'GET',
+      url: '$baseUrl/folder/$folderId/V2',
+      queryParams: queryParams,
+    ) as Map<String, dynamic>;
+
+    return PaginatedResponse.fromJson(
+      data,
+      (json) => ProblemModel.fromJson(json),
+    );
   }
 }
