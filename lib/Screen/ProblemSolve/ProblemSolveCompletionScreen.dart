@@ -11,7 +11,7 @@ import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/PracticeNoteProvider.dart';
 import '../../Provider/ProblemsProvider.dart';
 import '../../Provider/UserProvider.dart';
-import 'ProblemReviewCompletionTemplate.dart';
+import 'ProblemSolveCompletionTemplate.dart';
 
 class ProblemReviewCompletionScreen extends StatefulWidget {
   final int problemId;
@@ -124,7 +124,8 @@ class _ProblemReviewCompletionScreenState
     }
 
     // 최소 1개 이상의 풀이 이미지가 필요
-    final List<File> solutionImages = reviewData['solutionImages'] as List<File>;
+    final List<File> solutionImages =
+        reviewData['solutionImages'] as List<File>;
     if (solutionImages.isEmpty) {
       SnackBarDialog.showSnackBar(
         context: context,
@@ -163,7 +164,8 @@ class _ProblemReviewCompletionScreenState
       LoadingDialog.hide(context);
 
       if (mounted) {
-        Navigator.of(context).pop(true); // ProblemReviewCompletionScreen 닫으면서 true 반환
+        Navigator.of(context)
+            .pop(true); // ProblemReviewCompletionScreen 닫으면서 true 반환
 
         SnackBarDialog.showSnackBar(
           context: context,

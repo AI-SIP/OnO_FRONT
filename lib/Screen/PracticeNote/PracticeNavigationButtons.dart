@@ -1,8 +1,8 @@
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:ono/Screen/PracticeNote/PracticeCompletionScreen.dart';
-import 'package:ono/Screen/PracticeNote/ProblemReviewCompletionScreen.dart';
 import 'package:ono/Screen/ProblemDetail/ProblemDetailScreen.dart';
+import 'package:ono/Screen/ProblemSolve/ProblemSolveCompletionScreen.dart';
 import 'package:provider/provider.dart';
 
 import '../../Module/Text/StandardText.dart';
