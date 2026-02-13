@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:ono/Module/Text/StandardLightText.dart';
 import 'package:provider/provider.dart';
 
 import '../../../Model/Problem/AnswerStatus.dart';
@@ -55,7 +56,8 @@ Widget buildRepeatSectionV2(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.menu_book_outlined, size: 64, color: Colors.grey[300]),
+                Icon(Icons.menu_book_outlined,
+                    size: 64, color: Colors.grey[300]),
                 const SizedBox(height: 16),
                 StandardText(
                   text: '아직 복습 기록이 없습니다.',
@@ -167,30 +169,26 @@ class _ProblemSolveCardState extends State<_ProblemSolveCard> {
             // 헤더
             InkWell(
               onTap: () => setState(() => _isExpanded = !_isExpanded),
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(16.0)),
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(16.0)),
               child: Container(
                 padding: const EdgeInsets.all(16.0),
                 decoration: BoxDecoration(
                   color: statusColor.withOpacity(0.08),
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(14.0)),
+                  borderRadius:
+                      const BorderRadius.vertical(top: Radius.circular(14.0)),
                 ),
                 child: Row(
                   children: [
-                    // 인덱스 뱃지
+                    // 상태 아이콘 + 뱃지
                     Container(
-                      width: 36,
-                      height: 36,
+                      padding: const EdgeInsets.all(8.0),
                       decoration: BoxDecoration(
-                        color: statusColor.withOpacity(0.2),
-                        shape: BoxShape.circle,
+                        color: statusColor.withOpacity(0.15),
+                        borderRadius: BorderRadius.circular(8.0),
                       ),
-                      child: Center(
-                        child: HandWriteText(
-                          text: '${widget.index}',
-                          fontSize: 18,
-                          color: statusColor,
-                        ),
-                      ),
+                      child:
+                          Icon(_getStatusIcon(), color: statusColor, size: 22),
                     ),
                     const SizedBox(width: 12),
 
@@ -201,22 +199,42 @@ class _ProblemSolveCardState extends State<_ProblemSolveCard> {
                         children: [
                           Row(
                             children: [
-                              Icon(_getStatusIcon(), color: statusColor, size: 20),
-                              const SizedBox(width: 6),
                               StandardText(
-                                text: widget.solve.answerStatus.displayName,
+                                text: '${widget.index}회차',
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
-                                color: statusColor,
+                                color: Colors.black87,
+                              ),
+                              const SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 8, vertical: 3),
+                                decoration: BoxDecoration(
+                                  color: statusColor.withOpacity(0.15),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: StandardText(
+                                  text: widget.solve.answerStatus.displayName,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  color: statusColor,
+                                ),
                               ),
                             ],
                           ),
-                          const SizedBox(height: 4),
-                          StandardText(
-                            text: DateFormat('yyyy년 MM월 dd일 HH:mm')
-                                .format(widget.solve.practicedAt),
-                            fontSize: 13,
-                            color: Colors.grey[600]!,
+                          const SizedBox(height: 6),
+                          Row(
+                            children: [
+                              Icon(Icons.calendar_today,
+                                  size: 14, color: Colors.grey[500]),
+                              const SizedBox(width: 4),
+                              StandardText(
+                                text: DateFormat('yyyy년 MM월 dd일 HH:mm')
+                                    .format(widget.solve.practicedAt),
+                                fontSize: 13,
+                                color: Colors.grey[600]!,
+                              ),
+                            ],
                           ),
                         ],
                       ),
@@ -225,7 +243,7 @@ class _ProblemSolveCardState extends State<_ProblemSolveCard> {
                     // 확장 아이콘
                     Icon(
                       _isExpanded ? Icons.expand_less : Icons.expand_more,
-                      color: themeProvider.primaryColor,
+                      color: statusColor,
                     ),
                   ],
                 ),
@@ -254,68 +272,88 @@ class _ProblemSolveCardState extends State<_ProblemSolveCard> {
               '${(widget.solve.timeSpentSeconds! / 60).ceil()}분',
               themeProvider.primaryColor,
             ),
-          if (widget.solve.timeSpentSeconds != null) const SizedBox(height: 12),
+          if (widget.solve.timeSpentSeconds != null) ...[
+            const SizedBox(height: 20),
+            Divider(color: Colors.grey[300], thickness: 1),
+            const SizedBox(height: 20),
+          ],
 
           // 개선사항
           if (widget.solve.improvements.isNotEmpty) ...[
             Row(
               children: [
-                Icon(Icons.trending_up, color: themeProvider.primaryColor, size: 18),
+                Container(
+                  padding: const EdgeInsets.all(6.0),
+                  decoration: BoxDecoration(
+                    color: themeProvider.primaryColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(6.0),
+                  ),
+                  child: Icon(Icons.trending_up,
+                      color: themeProvider.primaryColor, size: 18),
+                ),
                 const SizedBox(width: 8),
-                StandardText(
+                const StandardText(
                   text: '개선된 점',
                   fontSize: 15,
-                  fontWeight: FontWeight.bold,
-                  color: themeProvider.primaryColor,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.black87,
                 ),
               ],
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 12),
             ...widget.solve.improvements.map((improvement) {
               return Padding(
-                padding: const EdgeInsets.only(left: 26.0, bottom: 6.0),
+                padding: const EdgeInsets.only(bottom: 8.0),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Container(
-                      margin: const EdgeInsets.only(top: 6),
-                      width: 6,
-                      height: 6,
-                      decoration: BoxDecoration(
-                        color: themeProvider.primaryColor,
-                        shape: BoxShape.circle,
-                      ),
+                    Icon(
+                      Icons.check_circle,
+                      color: themeProvider.primaryColor,
+                      size: 20,
                     ),
                     const SizedBox(width: 8),
                     Expanded(
-                      child: StandardText(
+                      child: StandardLightText(
                         text: improvement.description,
                         fontSize: 14,
                         color: Colors.black87,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
                   ],
                 ),
               );
             }).toList(),
-            const SizedBox(height: 12),
+            const SizedBox(height: 20),
+            Divider(color: Colors.grey[300], thickness: 1),
+            const SizedBox(height: 20),
           ],
 
           // 회고
-          if (widget.solve.reflection != null && widget.solve.reflection!.isNotEmpty) ...[
+          if (widget.solve.reflection != null &&
+              widget.solve.reflection!.isNotEmpty) ...[
             Row(
               children: [
-                Icon(Icons.edit_note, color: themeProvider.primaryColor, size: 18),
+                Container(
+                  padding: const EdgeInsets.all(6.0),
+                  decoration: BoxDecoration(
+                    color: themeProvider.primaryColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(6.0),
+                  ),
+                  child: Icon(Icons.edit_note,
+                      color: themeProvider.primaryColor, size: 18),
+                ),
                 const SizedBox(width: 8),
                 StandardText(
                   text: '복습 메모',
                   fontSize: 15,
-                  fontWeight: FontWeight.bold,
-                  color: themeProvider.primaryColor,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.black87,
                 ),
               ],
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 12),
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(12.0),
@@ -330,20 +368,30 @@ class _ProblemSolveCardState extends State<_ProblemSolveCard> {
                 color: Colors.black87,
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 20),
+            Divider(color: Colors.grey[300], thickness: 1),
+            const SizedBox(height: 20),
           ],
 
           // 풀이 이미지
           if (widget.solve.imageUrls.isNotEmpty) ...[
             Row(
               children: [
-                Icon(Icons.image_outlined, color: themeProvider.primaryColor, size: 18),
+                Container(
+                  padding: const EdgeInsets.all(6.0),
+                  decoration: BoxDecoration(
+                    color: themeProvider.primaryColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(6.0),
+                  ),
+                  child: Icon(Icons.image_outlined,
+                      color: themeProvider.primaryColor, size: 18),
+                ),
                 const SizedBox(width: 8),
                 StandardText(
                   text: '풀이 이미지',
                   fontSize: 15,
-                  fontWeight: FontWeight.bold,
-                  color: themeProvider.primaryColor,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.black87,
                 ),
               ],
             ),
