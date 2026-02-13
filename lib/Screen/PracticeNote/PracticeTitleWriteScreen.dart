@@ -36,13 +36,18 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
   late TextEditingController _titleController;
   bool _notifyEnabled = false;
   int _intervalDays = 7;
-  TimeOfDay _notifyTime = const TimeOfDay(hour: 18, minute: 0);
+  late TimeOfDay _notifyTime;
   RepeatType _repeatType = RepeatType.daily;
   Set<int> _selectedWeekdays = {};
 
   @override
   void initState() {
     super.initState();
+
+    // 현재 시각으로 초기화
+    final now = DateTime.now();
+    _notifyTime = TimeOfDay(hour: now.hour, minute: now.minute);
+
     _titleController = TextEditingController(
       text: widget.practiceNoteUpdateModel != null
           ? widget.practiceNoteUpdateModel!.practiceTitle
@@ -150,22 +155,76 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
   }
 
   void _showTitleRequiredDialog(BuildContext context) {
+    final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
+
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
+        return Dialog(
           backgroundColor: Colors.white,
-          title:
-              const StandardText(text: "경고", fontSize: 18, color: Colors.black),
-          content: const StandardText(
-              text: "제목을 입력해 주세요!", fontSize: 16, color: Colors.black),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const StandardText(
-                  text: "확인", fontSize: 14, color: Colors.red),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // 헤더
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.orange.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(
+                        Icons.warning_rounded,
+                        color: Colors.orange,
+                        size: 20,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    const StandardText(
+                      text: '경고',
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black87,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                // 내용
+                const StandardText(
+                  text: '제목을 입력해 주세요!',
+                  fontSize: 15,
+                  color: Colors.black87,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
+                // 액션 버튼
+                SizedBox(
+                  width: double.infinity,
+                  child: TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                      backgroundColor: themeProvider.primaryColor,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: const StandardText(
+                      text: '확인',
+                      fontSize: 15,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         );
       },
     );
@@ -250,35 +309,70 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
 
   Widget _buildTextField(
       TextStyle standardTextStyle, ThemeHandler themeProvider) {
-    return TextField(
-      controller: _titleController,
-      style: standardTextStyle.copyWith(
-        color: themeProvider.primaryColor,
-        fontSize: 16,
-      ),
-      decoration: InputDecoration(
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide(color: themeProvider.primaryColor, width: 2.0),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(6.0),
+              decoration: BoxDecoration(
+                color: themeProvider.primaryColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(6.0),
+              ),
+              child: Icon(
+                Icons.edit_note,
+                color: themeProvider.primaryColor,
+                size: 18,
+              ),
+            ),
+            const SizedBox(width: 8),
+            const StandardText(
+              text: '복습 노트 제목',
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+              color: Colors.black87,
+            ),
+          ],
         ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide(color: themeProvider.primaryColor, width: 2.0),
+        const SizedBox(height: 12),
+        TextField(
+          controller: _titleController,
+          style: standardTextStyle.copyWith(
+            color: Colors.black87,
+            fontSize: 15,
+          ),
+          decoration: InputDecoration(
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.grey[300]!, width: 1),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.grey[300]!, width: 1),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(
+                color: themeProvider.primaryColor.withOpacity(0.5),
+                width: 2,
+              ),
+            ),
+            fillColor: Colors.grey[50],
+            filled: true,
+            hintText: "ex) 9월 모의 전과목 모의고사 오답 복습",
+            hintStyle: standardTextStyle.copyWith(
+              color: Colors.grey[400],
+              fontSize: 14,
+            ),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 16,
+            ),
+          ),
+          maxLines: 2,
         ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide(color: themeProvider.primaryColor, width: 2.0),
-        ),
-        fillColor: Colors.white,
-        //fillColor: themeProvider.primaryColor.withOpacity(0.1),
-        filled: true,
-        hintText: "ex) 9월 모의 전과목 모의고사 오답 복습",
-        hintStyle: standardTextStyle.copyWith(
-          color: themeProvider.desaturateColor,
-          fontSize: 15,
-        ),
-      ),
-      maxLines: 2,
+      ],
     );
   }
 
@@ -352,136 +446,251 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
   }
 
   Widget _buildNotificationSection(ThemeHandler theme, double screenHeight) {
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 12.0),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border.all(color: theme.primaryColor, width: 2.0),
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // 공통 좌우 패딩
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 10, 8, 10),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                StandardText(
-                  text: '복습 주기 알림 사용',
-                  fontSize: 16,
-                  color: theme.primaryColor,
-                ),
-                // 스위치 크기 줄이기
-                Transform.scale(
-                  scale: 0.8, // 80% 크기로 축소
-                  child: Switch(
-                    value: _notifyEnabled,
-                    activeColor: theme.darkPrimaryColor,
-                    inactiveTrackColor: Colors.grey.shade300,
-                    inactiveThumbColor: Colors.grey,
-                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    onChanged: (v) => setState(() => _notifyEnabled = v),
-                  ),
-                ),
-              ],
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(6.0),
+              decoration: BoxDecoration(
+                color: theme.primaryColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(6.0),
+              ),
+              child: Icon(
+                Icons.notifications_active,
+                color: theme.primaryColor,
+                size: 18,
+              ),
             ),
+            const SizedBox(width: 8),
+            const StandardText(
+              text: '복습 주기 알림',
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+              color: Colors.black87,
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.grey[50],
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.grey[200]!, width: 1),
           ),
-
-          if (_notifyEnabled) ...[
-            SizedBox(height: screenHeight * 0.02),
-
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Row(
-                children: [
-                  ChoiceChip(
-                    label: StandardText(text: "매일"),
-                    selected: _repeatType == RepeatType.daily,
-                    onSelected: (_) =>
-                        setState(() => _repeatType = RepeatType.daily),
-                  ),
-                  const SizedBox(width: 10),
-                  ChoiceChip(
-                    label: StandardText(text: "매주"),
-                    selected: _repeatType == RepeatType.weekly,
-                    onSelected: (_) =>
-                        setState(() => _repeatType = RepeatType.weekly),
-                  ),
-                ],
-              ),
-            ),
-
-            SizedBox(height: screenHeight * 0.02),
-            // 요일 선택 (매주인 경우만)
-            if (_repeatType == RepeatType.weekly)
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: Wrap(
-                  spacing: 6,
-                  children: List.generate(7, (index) {
-                    final day = index + 1; // 1 = 월 ~ 7 = 일
-                    final dayText = ['월', '화', '수', '목', '금', '토', '일'][index];
-                    return FilterChip(
-                      label: StandardText(
-                        text: dayText,
-                        fontSize: 13,
-                      ),
-                      selected: _selectedWeekdays.contains(day),
-                      onSelected: (bool selected) {
-                        setState(() {
-                          if (selected) {
-                            _selectedWeekdays.add(day);
-                          } else {
-                            _selectedWeekdays.remove(day);
-                          }
-                        });
-                      },
-                    );
-                  }),
-                ),
-              ),
-
-            SizedBox(height: screenHeight * 0.02),
-
-            // 알림 시각
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: GestureDetector(
-                onTap: () => _showTimePickerBottomSheet(context),
+                padding: const EdgeInsets.fromLTRB(16, 12, 12, 12),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    StandardText(
-                        text: '알림 시각', fontSize: 16, color: theme.primaryColor),
-                    StandardText(
-                      text: _notifyTime.format(context),
-                      fontSize: 16,
-                      color: Colors.black,
+                    const StandardText(
+                      text: '알림 사용',
+                      fontSize: 15,
+                      color: Colors.black87,
+                    ),
+                    Transform.scale(
+                      scale: 0.8,
+                      child: Switch(
+                        value: _notifyEnabled,
+                        activeColor: theme.primaryColor,
+                        inactiveTrackColor: Colors.grey.shade300,
+                        inactiveThumbColor: Colors.grey,
+                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        onChanged: (v) => setState(() => _notifyEnabled = v),
+                      ),
                     ),
                   ],
                 ),
               ),
-            ),
 
-            SizedBox(height: screenHeight * 0.02),
-          ],
-        ],
+              if (_notifyEnabled) ...[
+                const Divider(height: 1),
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const StandardText(
+                        text: '반복 주기',
+                        fontSize: 14,
+                        color: Colors.black54,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildChoiceButton(
+                              label: "매일",
+                              isSelected: _repeatType == RepeatType.daily,
+                              onTap: () => setState(() => _repeatType = RepeatType.daily),
+                              theme: theme,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: _buildChoiceButton(
+                              label: "매주",
+                              isSelected: _repeatType == RepeatType.weekly,
+                              onTap: () => setState(() => _repeatType = RepeatType.weekly),
+                              theme: theme,
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      if (_repeatType == RepeatType.weekly) ...[
+                        const SizedBox(height: 16),
+                        const StandardText(
+                          text: '요일 선택',
+                          fontSize: 14,
+                          color: Colors.black54,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        const SizedBox(height: 12),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: List.generate(7, (index) {
+                            final day = index + 1;
+                            final dayText = ['월', '화', '수', '목', '금', '토', '일'][index];
+                            final isSelected = _selectedWeekdays.contains(day);
+                            return InkWell(
+                              onTap: () {
+                                setState(() {
+                                  if (isSelected) {
+                                    _selectedWeekdays.remove(day);
+                                  } else {
+                                    _selectedWeekdays.add(day);
+                                  }
+                                });
+                              },
+                              borderRadius: BorderRadius.circular(20),
+                              child: Container(
+                                width: 40,
+                                height: 40,
+                                decoration: BoxDecoration(
+                                  color: isSelected
+                                      ? theme.primaryColor.withOpacity(0.1)
+                                      : Colors.white,
+                                  borderRadius: BorderRadius.circular(20),
+                                  border: Border.all(
+                                    color: isSelected
+                                        ? theme.primaryColor
+                                        : Colors.grey[300]!,
+                                    width: isSelected ? 2 : 1,
+                                  ),
+                                ),
+                                alignment: Alignment.center,
+                                child: StandardText(
+                                  text: dayText,
+                                  fontSize: 13,
+                                  color: isSelected ? theme.primaryColor : Colors.black54,
+                                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                                ),
+                              ),
+                            );
+                          }),
+                        ),
+                      ],
+
+                      const SizedBox(height: 16),
+                      const StandardText(
+                        text: '알림 시각',
+                        fontSize: 14,
+                        color: Colors.black54,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      const SizedBox(height: 12),
+                      InkWell(
+                        onTap: () => _showTimePickerBottomSheet(context),
+                        borderRadius: BorderRadius.circular(8),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: Colors.grey[300]!, width: 1),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Row(
+                                children: [
+                                  Icon(
+                                    Icons.access_time,
+                                    color: theme.primaryColor,
+                                    size: 18,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  StandardText(
+                                    text: _notifyTime.format(context),
+                                    fontSize: 15,
+                                    color: Colors.black87,
+                                  ),
+                                ],
+                              ),
+                              Icon(
+                                Icons.arrow_drop_down,
+                                color: Colors.grey[600],
+                                size: 20,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildChoiceButton({
+    required String label,
+    required bool isSelected,
+    required VoidCallback onTap,
+    required ThemeHandler theme,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        decoration: BoxDecoration(
+          color: isSelected ? theme.primaryColor.withOpacity(0.1) : Colors.white,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: isSelected ? theme.primaryColor : Colors.grey[300]!,
+            width: isSelected ? 2 : 1,
+          ),
+        ),
+        alignment: Alignment.center,
+        child: StandardText(
+          text: label,
+          fontSize: 14,
+          color: isSelected ? theme.primaryColor : Colors.black54,
+          fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+        ),
       ),
     );
   }
 
   void _showTimePickerBottomSheet(BuildContext context) {
+    final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
     final openTime = DateTime.now();
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.white, // 바텀시트 배경을 흰색으로
+      backgroundColor: Colors.transparent,
       isDismissible: false,
-      shape: const RoundedRectangleBorder(
-        // 모서리를 살짝 둥글게
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
       builder: (_) {
         return TapRegion(
           onTapOutside: (_) {
@@ -494,56 +703,101 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
             }
           },
           child: Container(
-          height: 250,
-          padding: const EdgeInsets.all(16),
-          decoration: const BoxDecoration(
-            color: Colors.white, // 내부도 확실히 흰색
-            borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-          ),
-          child: Column(
-            children: [
-              const StandardText(
-                text: '알림 시각 선택',
-                color: Colors.black,
-                fontSize: 18,
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(20),
+                topRight: Radius.circular(20),
               ),
-              const SizedBox(
-                height: 20,
-              ),
-              Expanded(
-                child: CupertinoDatePicker(
-                  mode: CupertinoDatePickerMode.time,
-                  initialDateTime: DateTime(
-                    0,
-                    0,
-                    0,
-                    _notifyTime.hour,
-                    _notifyTime.minute,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Handle bar
+                Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.only(top: 12, bottom: 20),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[300],
+                    borderRadius: BorderRadius.circular(2),
                   ),
-                  use24hFormat: false,
-                  onDateTimeChanged: (dt) {
-                    setState(() {
-                      _notifyTime = TimeOfDay(
-                        hour: dt.hour,
-                        minute: dt.minute,
-                      );
-                    });
-                  },
                 ),
-              ),
-              const SizedBox(
-                height: 20,
-              ),
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const StandardText(
-                  text: '확인',
-                  color: Colors.black,
+                // Title with icon
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: themeProvider.primaryColor.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Icon(
+                          Icons.access_time,
+                          color: themeProvider.primaryColor,
+                          size: 20,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      const StandardText(
+                        text: '알림 시각 선택',
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black87,
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+                const SizedBox(height: 20),
+                SizedBox(
+                  height: 200,
+                  child: CupertinoDatePicker(
+                    mode: CupertinoDatePickerMode.time,
+                    initialDateTime: DateTime(
+                      0,
+                      0,
+                      0,
+                      _notifyTime.hour,
+                      _notifyTime.minute,
+                    ),
+                    use24hFormat: false,
+                    onDateTimeChanged: (dt) {
+                      setState(() {
+                        _notifyTime = TimeOfDay(
+                          hour: dt.hour,
+                          minute: dt.minute,
+                        );
+                      });
+                    },
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        backgroundColor: themeProvider.primaryColor,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: const StandardText(
+                        text: '확인',
+                        fontSize: 16,
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
         );
       },
     );
