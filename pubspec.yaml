@@ -107,6 +107,9 @@ flutter:
     - family: PretendardThin
       fonts:
         - asset: assets/fonts/Pretendard-Thin.otf
+    - family: PretendardLight
+      fonts:
+        - asset: assets/fonts/Pretendard-Light.otf
 
 
 
