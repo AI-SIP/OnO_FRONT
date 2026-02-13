@@ -169,81 +169,142 @@ class _SettingScreenState extends State<SettingScreen> {
     final TextEditingController nameController =
         TextEditingController(text: currentName);
     final standardTextStyle = const StandardText(text: '').getTextStyle();
-    double screenHeight = MediaQuery.of(context).size.height;
-    double screenWidth = MediaQuery.of(context).size.width;
 
     showDialog(
       context: context,
       builder: (context) {
-        return AlertDialog(
+        return Dialog(
           backgroundColor: Colors.white,
-          title: const StandardText(
-            text: '이름 수정',
-            fontSize: 18,
-            color: Colors.black,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
           ),
-          content: Padding(
-            padding: EdgeInsets.symmetric(
-              horizontal: screenWidth * 0.001,
-            ),
-            child: TextField(
-              controller: nameController,
-              style:
-                  standardTextStyle.copyWith(color: Colors.black, fontSize: 16),
-              decoration: InputDecoration(
-                hintText: '수정할 이름을 입력하세요',
-                hintStyle: standardTextStyle.copyWith(
-                    color: ThemeHandler.desaturatenColor(Colors.black),
-                    fontSize: 14),
-                border: OutlineInputBorder(
-                  borderSide: const BorderSide(color: Colors.black, width: 1.5),
-                  borderRadius: BorderRadius.circular(8.0),
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // 헤더
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: themeProvider.primaryColor.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(
+                        Icons.person,
+                        color: themeProvider.primaryColor,
+                        size: 20,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    const StandardText(
+                      text: '이름 수정',
+                      fontSize: 20,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black87,
+                    ),
+                  ],
                 ),
-                enabledBorder: OutlineInputBorder(
-                  borderSide: const BorderSide(color: Colors.black, width: 1.5),
-                  borderRadius: BorderRadius.circular(8.0),
+                const SizedBox(height: 24),
+                // 입력 필드
+                TextField(
+                  controller: nameController,
+                  autofocus: true,
+                  style: standardTextStyle.copyWith(
+                    color: Colors.black87,
+                    fontSize: 15,
+                  ),
+                  decoration: InputDecoration(
+                    hintText: '수정할 이름을 입력하세요',
+                    hintStyle: standardTextStyle.copyWith(
+                      color: Colors.grey[400],
+                      fontSize: 14,
+                    ),
+                    fillColor: Colors.grey[50],
+                    filled: true,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide:
+                          BorderSide(color: Colors.grey[300]!, width: 1),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide:
+                          BorderSide(color: Colors.grey[300]!, width: 1),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(
+                        color: themeProvider.primaryColor.withOpacity(0.5),
+                        width: 2,
+                      ),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      vertical: 16,
+                      horizontal: 16,
+                    ),
+                  ),
                 ),
-                focusedBorder: OutlineInputBorder(
-                  borderSide: const BorderSide(color: Colors.black, width: 2.0),
-                  borderRadius: BorderRadius.circular(8.0),
+                const SizedBox(height: 24),
+                // 액션 버튼
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 8),
+                        backgroundColor: Colors.grey[100],
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: const StandardText(
+                        text: '취소',
+                        fontSize: 14,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    TextButton(
+                      onPressed: () async {
+                        String newName = nameController.text;
+                        if (newName.isNotEmpty) {
+                          Navigator.pop(context);
+                          await Provider.of<UserProvider>(context,
+                                  listen: false)
+                              .updateUser(
+                            name: newName,
+                            email: null,
+                            identifier: null,
+                          );
+                        }
+                      },
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 8),
+                        backgroundColor: themeProvider.primaryColor,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: const StandardText(
+                        text: '수정',
+                        fontSize: 14,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
                 ),
-                contentPadding: EdgeInsets.symmetric(
-                    vertical: screenHeight * 0.02,
-                    horizontal: screenWidth * 0.03),
-              ),
+              ],
             ),
           ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: const StandardText(
-                text: '취소',
-                fontSize: 14,
-                color: Colors.black,
-              ),
-            ),
-            TextButton(
-              onPressed: () async {
-                String newName = nameController.text;
-                if (newName.isNotEmpty) {
-                  Navigator.pop(context);
-                  await Provider.of<UserProvider>(context, listen: false)
-                      .updateUser(
-                    name: newName,
-                    email: null,
-                    identifier: null,
-                  );
-                }
-              },
-              child: StandardText(
-                text: '수정',
-                fontSize: 14,
-                color: themeProvider.primaryColor,
-              ),
-            ),
-          ],
         );
       },
     );
@@ -260,39 +321,101 @@ class _SettingScreenState extends State<SettingScreen> {
   void showConfirmationDialog(BuildContext context, String title,
       String message, VoidCallback onConfirm) {
     final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
-    double screenHeight = MediaQuery.of(context).size.height;
 
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
+        return Dialog(
           backgroundColor: Colors.white,
-          title: StandardText(text: title, fontSize: 18, color: Colors.black),
-          content: SizedBox(
-            child:
-                StandardText(text: message, fontSize: 15, color: Colors.black),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
           ),
-          actions: [
-            TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-                child: const StandardText(
-                  text: '취소',
-                  fontSize: 16,
-                  color: Colors.black,
-                )),
-            TextButton(
-                onPressed: () async {
-                  Navigator.of(context).pop();
-                  onConfirm();
-                },
-                child: const StandardText(
-                  text: '확인',
-                  fontSize: 16,
-                  color: Colors.red,
-                )),
-          ],
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // 헤더
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.orange.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(
+                        Icons.warning_amber_rounded,
+                        color: Colors.orange,
+                        size: 20,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    StandardText(
+                      text: title,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black87,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                // 내용
+                StandardText(
+                  text: message,
+                  fontSize: 15,
+                  color: Colors.black87,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
+                // 액션 버튼
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextButton(
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                        },
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          backgroundColor: Colors.grey[100],
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: const StandardText(
+                          text: '취소',
+                          fontSize: 14,
+                          color: Colors.black87,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: TextButton(
+                        onPressed: () async {
+                          Navigator.of(context).pop();
+                          onConfirm();
+                        },
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          backgroundColor: Colors.red,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: const StandardText(
+                          text: '확인',
+                          fontSize: 14,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
         );
       },
     );

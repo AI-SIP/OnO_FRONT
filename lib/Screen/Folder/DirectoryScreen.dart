@@ -567,7 +567,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
     final openTime = DateTime.now();
     showModalBottomSheet(
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.transparent,
       context: context,
       isDismissible: false,
       builder: (context) {
@@ -582,31 +582,61 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
               Navigator.pop(context);
             }
           },
-          child: SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(
-                  vertical: 20.0, horizontal: 10.0), // 패딩 추가
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Padding(
-                    padding:
-                        const EdgeInsets.only(bottom: 20.0), // 타이틀 아래 여백 추가
-                    child: StandardText(
-                      text: '공책 편집하기', // 타이틀 텍스트
-                      fontSize: 20,
-                      color: themeProvider.primaryColor,
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 10.0),
-                    child: ListTile(
-                      leading: const Icon(Icons.add, color: Colors.black),
-                      title: const StandardText(
-                        text: '공책 추가하기',
-                        fontSize: 16,
-                        color: Colors.black,
+          child: Container(
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(20),
+                topRight: Radius.circular(20),
+              ),
+            ),
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                    vertical: 24.0, horizontal: 20.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // 상단 핸들바
+                    Container(
+                      width: 40,
+                      height: 4,
+                      margin: const EdgeInsets.only(bottom: 20),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[300],
+                        borderRadius: BorderRadius.circular(2),
                       ),
+                    ),
+                    // 타이틀
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: themeProvider.primaryColor.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Icon(
+                            Icons.edit_note,
+                            color: themeProvider.primaryColor,
+                            size: 22,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        StandardText(
+                          text: '공책 편집하기',
+                          fontSize: 20,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black87,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    // 메뉴 아이템들
+                    _buildActionItem(
+                      icon: Icons.add_circle_outline,
+                      iconColor: themeProvider.primaryColor,
+                      title: '공책 추가하기',
                       onTap: () {
                         Navigator.pop(context);
                         FirebaseAnalytics.instance.logEvent(
@@ -614,75 +644,103 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                         _showCreateFolderDialog();
                       },
                     ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 10.0), // 텍스트 간격 조정
-                    child: ListTile(
-                      leading: const Icon(Icons.edit, color: Colors.black),
-                      title: const StandardText(
-                        text: '공책 이름 수정하기',
-                        fontSize: 16,
-                        color: Colors.black,
-                      ),
+                    const SizedBox(height: 8),
+                    _buildActionItem(
+                      icon: Icons.drive_file_rename_outline,
+                      iconColor: themeProvider.primaryColor,
+                      title: '공책 이름 수정하기',
                       onTap: () {
                         Navigator.pop(context);
-
                         FirebaseAnalytics.instance
                             .logEvent(name: 'directory_rename_button_click');
-
                         _showRenameFolderDialog(foldersProvider);
                       },
                     ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 10.0), // 텍스트 간격 조정
-                    child: ListTile(
-                      leading:
-                          const Icon(Icons.folder_open, color: Colors.black),
-                      title: const StandardText(
-                        text: '공책 위치 변경하기',
-                        fontSize: 16,
-                        color: Colors.black,
-                      ),
+                    const SizedBox(height: 8),
+                    _buildActionItem(
+                      icon: Icons.drive_file_move_outline,
+                      iconColor: themeProvider.primaryColor,
+                      title: '공책 위치 변경하기',
                       onTap: () {
                         Navigator.pop(context);
-
                         FirebaseAnalytics.instance.logEvent(
                             name: 'directory_path_change_button_click');
-
                         _showMoveFolderDialog(foldersProvider);
                       },
                     ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 10.0), // 텍스트 간격 조정
-                    child: ListTile(
-                      leading:
-                          const Icon(Icons.delete_forever, color: Colors.red),
-                      title: const StandardText(
-                        text: '공책 편집하기',
-                        fontSize: 16,
-                        color: Colors.red,
-                      ),
+                    const SizedBox(height: 8),
+                    _buildActionItem(
+                      icon: Icons.delete_outline,
+                      iconColor: Colors.red,
+                      title: '공책 편집하기',
+                      titleColor: Colors.red,
                       onTap: () {
                         Navigator.pop(context);
-
-                        // 편집 모드 활성화
                         setState(() {
                           _isSelectionMode = true;
                         });
-
                         FirebaseAnalytics.instance
                             .logEvent(name: 'directory_enable_edit_mode');
                       },
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 8),
+                  ],
+                ),
               ),
             ),
           ),
         );
       },
+    );
+  }
+
+  Widget _buildActionItem({
+    required IconData icon,
+    required Color iconColor,
+    required String title,
+    Color? titleColor,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: Colors.grey[50],
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey[200]!, width: 1),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: iconColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Icon(
+                icon,
+                color: iconColor,
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: StandardText(
+                text: title,
+                fontSize: 16,
+                color: titleColor ?? Colors.black87,
+              ),
+            ),
+            Icon(
+              Icons.arrow_forward_ios,
+              size: 14,
+              color: Colors.grey[400],
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -744,30 +802,73 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     await showDialog(
       context: context,
       builder: (context) {
-        return AlertDialog(
+        return Dialog(
           backgroundColor: Colors.white,
-          title: const StandardText(
-            text: '공책 위치 변경 불가',
-            fontSize: 18,
-            color: Colors.black,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
           ),
-          content: const StandardText(
-            text: '책장의 위치를 변경할 수 없습니다.',
-            fontSize: 16,
-            color: Colors.black,
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: StandardText(
-                text: '확인',
-                fontSize: 14,
-                color: themeProvider.primaryColor,
-              ),
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // 헤더
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.orange.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(
+                        Icons.warning,
+                        color: Colors.orange,
+                        size: 20,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    const StandardText(
+                      text: '공책 위치 변경 불가',
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black87,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                // 내용
+                const StandardText(
+                  text: '책장의 위치를 변경할 수 없습니다.',
+                  fontSize: 15,
+                  color: Colors.black87,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
+                // 버튼
+                SizedBox(
+                  width: double.infinity,
+                  child: TextButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      backgroundColor: themeProvider.primaryColor,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: const StandardText(
+                      text: '확인',
+                      fontSize: 14,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         );
       },
     );
@@ -792,74 +893,131 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         TextEditingController(text: defaultFolderName);
     final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
     final standardTextStyle = const StandardText(text: '').getTextStyle();
-    double screenHeight = MediaQuery.of(context).size.height;
-    double screenWidth = MediaQuery.of(context).size.width;
 
     await showDialog(
       context: context,
       builder: (context) {
-        return AlertDialog(
+        return Dialog(
           backgroundColor: Colors.white,
-          title: StandardText(
-            text: dialogTitle,
-            fontSize: 18,
-            color: Colors.black,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
           ),
-          content: Padding(
-            padding: EdgeInsets.symmetric(
-              horizontal: screenWidth * 0.001, // 좌우 여백 추가
-            ),
-            child: TextField(
-              controller: folderNameController,
-              style: standardTextStyle.copyWith(
-                color: Colors.black,
-                fontSize: 16,
-              ),
-              decoration: InputDecoration(
-                hintText: '공책 이름을 입력하세요',
-                hintStyle: standardTextStyle.copyWith(
-                  color: ThemeHandler.desaturatenColor(Colors.black),
-                  fontSize: 14,
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // 헤더
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: themeProvider.primaryColor.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(
+                        Icons.edit,
+                        color: themeProvider.primaryColor,
+                        size: 20,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    StandardText(
+                      text: dialogTitle,
+                      fontSize: 20,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black87,
+                    ),
+                  ],
                 ),
-                border: const OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.black),
+                const SizedBox(height: 24),
+                // 입력 필드
+                TextField(
+                  controller: folderNameController,
+                  autofocus: true,
+                  style: standardTextStyle.copyWith(
+                    color: Colors.black87,
+                    fontSize: 15,
+                  ),
+                  decoration: InputDecoration(
+                    hintText: '공책 이름을 입력하세요',
+                    hintStyle: standardTextStyle.copyWith(
+                      color: Colors.grey[400],
+                      fontSize: 14,
+                    ),
+                    fillColor: Colors.grey[50],
+                    filled: true,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: Colors.grey[300]!, width: 1),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: Colors.grey[300]!, width: 1),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(
+                        color: themeProvider.primaryColor.withOpacity(0.5),
+                        width: 2,
+                      ),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      vertical: 16,
+                      horizontal: 16,
+                    ),
+                  ),
                 ),
-                enabledBorder: const OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.black, width: 1.5),
+                const SizedBox(height: 24),
+                // 액션 버튼
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        backgroundColor: Colors.grey[100],
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: const StandardText(
+                        text: '취소',
+                        fontSize: 14,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    TextButton(
+                      onPressed: () async {
+                        if (folderNameController.text.isNotEmpty) {
+                          onFolderNameSubmitted(folderNameController.text);
+                          Navigator.pop(context);
+                        }
+                      },
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        backgroundColor: themeProvider.primaryColor,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: const StandardText(
+                        text: '확인',
+                        fontSize: 14,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
                 ),
-                focusedBorder: const OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.black, width: 1.5),
-                ),
-                contentPadding:
-                    const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-              ),
+              ],
             ),
           ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: const StandardText(
-                text: '취소',
-                fontSize: 14,
-                color: Colors.black,
-              ),
-            ),
-            TextButton(
-              onPressed: () async {
-                if (folderNameController.text.isNotEmpty) {
-                  onFolderNameSubmitted(folderNameController.text);
-                  Navigator.pop(context);
-                }
-              },
-              child: StandardText(
-                text: '확인',
-                fontSize: 14,
-                color: themeProvider.primaryColor,
-              ),
-            ),
-          ],
         );
       },
     );
@@ -1386,39 +1544,95 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
     showDialog(
       context: context,
-      builder: (dialogContext) => AlertDialog(
+      builder: (dialogContext) => Dialog(
         backgroundColor: Colors.white,
-        title: const StandardText(
-          text: '삭제 확인',
-          fontSize: 18,
-          color: Colors.black,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
         ),
-        content: const StandardText(
-          text: '선택한 항목을 정말 삭제하시겠습니까?',
-          fontSize: 16,
-          color: Colors.black,
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // 헤더
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.red.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(
+                      Icons.delete_forever,
+                      color: Colors.red,
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  const StandardText(
+                    text: '삭제 확인',
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black87,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              // 내용
+              const StandardText(
+                text: '선택한 항목을 정말 삭제하시겠습니까?',
+                fontSize: 15,
+                color: Colors.black87,
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              // 액션 버튼
+              Row(
+                children: [
+                  Expanded(
+                    child: TextButton(
+                      onPressed: () => Navigator.of(dialogContext).pop(),
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        backgroundColor: Colors.grey[100],
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: const StandardText(
+                        text: '취소',
+                        fontSize: 14,
+                        color: Colors.black87,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: TextButton(
+                      onPressed: () {
+                        Navigator.of(dialogContext).pop();
+                        _deleteSelectedItems();
+                      },
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        backgroundColor: Colors.red,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: const StandardText(
+                        text: '삭제',
+                        fontSize: 14,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(), // 취소
-            child: const StandardText(
-              text: '취소',
-              fontSize: 14,
-              color: Colors.black,
-            ),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.of(dialogContext).pop(); // 다이얼로그 닫고
-              _deleteSelectedItems(); // 실제 삭제 실행
-            },
-            child: StandardText(
-              text: '확인',
-              fontSize: 14,
-              color: theme.primaryColor,
-            ),
-          ),
-        ],
       ),
     );
   }

@@ -77,7 +77,7 @@ class PracticeDetailScreen extends StatelessWidget {
 
     final openTime = DateTime.now();
     showModalBottomSheet(
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.transparent,
       context: context,
       isDismissible: false,
       builder: (context) {
@@ -91,66 +91,137 @@ class PracticeDetailScreen extends StatelessWidget {
               Navigator.pop(context);
             }
           },
-          child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-                vertical: 20.0, horizontal: 10.0), // 패딩 추가
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 20.0), // 타이틀 아래 여백 추가
-                  child: StandardText(
-                    text: '복습 노트 편집하기', // 타이틀 텍스트
-                    fontSize: 20,
-                    color: themeProvider.primaryColor,
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 10.0), // 텍스트 간격 조정
-                  child: ListTile(
-                    leading: const Icon(Icons.edit, color: Colors.black),
-                    title: const StandardText(
-                      text: '복습 노트 편집하기',
-                      fontSize: 16,
-                      color: Colors.black,
+          child: Container(
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(20),
+                topRight: Radius.circular(20),
+              ),
+            ),
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                    vertical: 24.0, horizontal: 20.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Handle bar
+                    Container(
+                      width: 40,
+                      height: 4,
+                      margin: const EdgeInsets.only(bottom: 20),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[300],
+                        borderRadius: BorderRadius.circular(2),
+                      ),
                     ),
-                    onTap: () {
-                      Navigator.pop(context); // BottomSheet 닫기
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => PracticeProblemSelectionScreen(
-                            practiceModel:
-                                practice, // ProblemPracticeModel 전체 전달
+                    // Title with icon
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: themeProvider.primaryColor.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Icon(
+                            Icons.edit_note,
+                            color: themeProvider.primaryColor,
+                            size: 22,
                           ),
                         ),
-                      );
-                    },
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 10.0), // 텍스트 간격 조정
-                  child: ListTile(
-                    leading:
-                        const Icon(Icons.delete_forever, color: Colors.red),
-                    title: const StandardText(
-                      text: '복습 노트 삭제하기',
-                      fontSize: 16,
-                      color: Colors.red,
+                        const SizedBox(width: 12),
+                        const StandardText(
+                          text: '복습 노트 편집하기',
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black87,
+                        ),
+                      ],
                     ),
-                    onTap: () {
-                      Navigator.pop(context); // BottomSheet 닫기
-                      _showDeletePracticeDialog(context);
-                    },
-                  ),
+                    const SizedBox(height: 24),
+                    // Menu items
+                    _buildActionItem(
+                      icon: Icons.edit,
+                      iconColor: themeProvider.primaryColor,
+                      title: '복습 노트 편집하기',
+                      onTap: () {
+                        Navigator.pop(context);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => PracticeProblemSelectionScreen(
+                              practiceModel: practice,
+                            ),
+                          ),
+                        );
+                      },
+                      themeProvider: themeProvider,
+                    ),
+                    const SizedBox(height: 12),
+                    _buildActionItem(
+                      icon: Icons.delete_forever,
+                      iconColor: Colors.red,
+                      title: '복습 노트 삭제하기',
+                      titleColor: Colors.red,
+                      onTap: () {
+                        Navigator.pop(context);
+                        _showDeletePracticeDialog(context);
+                      },
+                      themeProvider: themeProvider,
+                    ),
+                    const SizedBox(height: 4),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
-        ),
         );
       },
+    );
+  }
+
+  Widget _buildActionItem({
+    required IconData icon,
+    required Color iconColor,
+    required String title,
+    Color? titleColor,
+    required VoidCallback onTap,
+    required ThemeHandler themeProvider,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: Colors.grey[50],
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey[200]!, width: 1),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: iconColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Icon(icon, color: iconColor, size: 20),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: StandardText(
+                text: title,
+                fontSize: 16,
+                color: titleColor ?? Colors.black87,
+              ),
+            ),
+            Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey[400]),
+          ],
+        ),
+      ),
     );
   }
 
@@ -346,48 +417,104 @@ class PracticeDetailScreen extends StatelessWidget {
     return showDialog(
       context: context,
       builder: (context) {
-        return AlertDialog(
+        return Dialog(
           backgroundColor: Colors.white,
-          title: const StandardText(
-            text: '복습 노트 삭제',
-            fontSize: 18,
-            color: Colors.black,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
           ),
-          content: const StandardText(
-            text: '정말로 이 복습 노트를 삭제하시겠습니까?',
-            fontSize: 16,
-            color: Colors.black,
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: const StandardText(
-                text: '취소',
-                fontSize: 14,
-                color: Colors.black,
-              ),
-            ),
-            TextButton(
-              onPressed: () async {
-                Navigator.pop(context);
-                if (Navigator.canPop(context)) {
-                  Navigator.pop(context);
-                }
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // 헤더
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.red.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(
+                        Icons.delete_forever,
+                        color: Colors.red,
+                        size: 20,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    const StandardText(
+                      text: '복습 노트 삭제',
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black87,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                // 내용
+                const StandardText(
+                  text: '정말로 이 복습 노트를 삭제하시겠습니까?',
+                  fontSize: 15,
+                  color: Colors.black87,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
+                // 액션 버튼
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextButton(
+                        onPressed: () {
+                          Navigator.pop(context);
+                        },
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                          backgroundColor: Colors.grey[100],
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: const StandardText(
+                          text: '취소',
+                          fontSize: 15,
+                          color: Colors.black87,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: TextButton(
+                        onPressed: () async {
+                          Navigator.pop(context);
+                          if (Navigator.canPop(context)) {
+                            Navigator.pop(context);
+                          }
 
-                final provider = Provider.of<ProblemPracticeProvider>(context,
-                    listen: false);
-                List<int> deletePracticeIds = [practice.practiceId];
-                await provider.deletePractices(deletePracticeIds);
-              },
-              child: const StandardText(
-                text: '삭제',
-                fontSize: 14,
-                color: Colors.red,
-              ),
+                          final provider = Provider.of<ProblemPracticeProvider>(context,
+                              listen: false);
+                          List<int> deletePracticeIds = [practice.practiceId];
+                          await provider.deletePractices(deletePracticeIds);
+                        },
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                          backgroundColor: Colors.red,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: const StandardText(
+                          text: '삭제',
+                          fontSize: 15,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
-          ],
+          ),
         );
       },
     );
