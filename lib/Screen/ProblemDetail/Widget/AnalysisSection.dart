@@ -150,12 +150,12 @@ Widget _buildCompletedState(
   return Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      Row(children: [
-        Icon(Icons.tips_and_updates, color: primaryColor),
-        const SizedBox(width: 8),
-        HandWriteText(text: 'AI 분석 결과', fontSize: 20, color: primaryColor),
-      ]),
-      verticalSpacer(context, .02),
+      // Row(children: [
+      //   Icon(Icons.tips_and_updates, color: primaryColor),
+      //   const SizedBox(width: 8),
+      //   HandWriteText(text: 'AI 분석 결과', fontSize: 20, color: primaryColor),
+      // ]),
+      // verticalSpacer(context, .02),
       Container(
         width: double.infinity,
         padding: const EdgeInsets.all(16.0),

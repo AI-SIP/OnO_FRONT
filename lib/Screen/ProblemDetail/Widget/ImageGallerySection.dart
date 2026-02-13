@@ -51,16 +51,6 @@ class _ImageGallerySectionState extends State<ImageGallerySection> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // 라벨
-        Row(
-          children: [
-            Icon(Icons.camera_alt, color: widget.color),
-            const SizedBox(width: 8),
-            HandWriteText(
-                text: widget.label, fontSize: 20, color: widget.color),
-          ],
-        ),
-        const SizedBox(height: 8),
         // PageView - 더 큰 이미지
         Container(
           height: imageHeight,

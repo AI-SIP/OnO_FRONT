@@ -3,7 +3,8 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../Model/Problem/ProblemModel.dart';
-import '../../Module/Text/HandWriteText.dart';
+import '../../Module/Text/StandardText.dart';
+import '../../Module/Text/UnderlinedText.dart';
 import '../../Module/Theme/GridPainter.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import 'Widget/AnalysisSection.dart';
@@ -68,7 +69,8 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
               color: Colors.white,
             ),
             child: CustomPaint(
-              painter: GridPainter(gridColor: themeProvider.primaryColor, isSpring: true),
+              painter: GridPainter(
+                  gridColor: themeProvider.primaryColor, isSpring: true),
               child: TabBarView(
                 controller: _tabController,
                 children: [
@@ -86,7 +88,7 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
 
   Widget _buildNoteHeader(ThemeHandler themeProvider) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
+      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.9),
         boxShadow: [
@@ -97,60 +99,50 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
           ),
         ],
       ),
-      child: Column(
-        children: [
-          // 문제 정보 (날짜)
-          Row(
-            children: [
-              Icon(Icons.calendar_today_outlined,
-                  color: themeProvider.primaryColor, size: 18),
-              const SizedBox(width: 8),
-              HandWriteText(
-                text: DateFormat('yyyy년 M월 d일').format(widget.problemModel.solvedAt!),
-                fontSize: 16,
-                color: Colors.black87,
-              ),
-            ],
+      child: TabBar(
+        controller: _tabController,
+        labelColor: themeProvider.primaryColor,
+        unselectedLabelColor: Colors.grey[600],
+        indicator: BoxDecoration(
+          color: themeProvider.primaryColor.withOpacity(0.15),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        indicatorSize: TabBarIndicatorSize.tab,
+        dividerColor: Colors.transparent,
+        labelPadding: const EdgeInsets.symmetric(horizontal: 8),
+        tabs: [
+          Tab(
+            child: StandardText(
+              text: '문제',
+              fontSize: 16,
+              fontWeight:
+                  _currentTabIndex == 0 ? FontWeight.bold : FontWeight.normal,
+              color: _currentTabIndex == 0
+                  ? themeProvider.primaryColor
+                  : Colors.grey[600]!,
+            ),
           ),
-          const SizedBox(height: 16),
-
-          // 탭 바 (손글씨 스타일)
-          TabBar(
-            controller: _tabController,
-            labelColor: themeProvider.primaryColor,
-            unselectedLabelColor: Colors.grey[600],
-            indicatorColor: themeProvider.primaryColor,
-            indicatorWeight: 3,
-            labelPadding: const EdgeInsets.symmetric(horizontal: 8),
-            tabs: [
-              Tab(
-                child: HandWriteText(
-                  text: '문제',
-                  fontSize: 18,
-                  color: _currentTabIndex == 0
-                      ? themeProvider.primaryColor
-                      : Colors.grey[600]!,
-                ),
-              ),
-              Tab(
-                child: HandWriteText(
-                  text: '정답',
-                  fontSize: 18,
-                  color: _currentTabIndex == 1
-                      ? themeProvider.primaryColor
-                      : Colors.grey[600]!,
-                ),
-              ),
-              Tab(
-                child: HandWriteText(
-                  text: '복습 기록',
-                  fontSize: 18,
-                  color: _currentTabIndex == 2
-                      ? themeProvider.primaryColor
-                      : Colors.grey[600]!,
-                ),
-              ),
-            ],
+          Tab(
+            child: StandardText(
+              text: '정답',
+              fontSize: 16,
+              fontWeight:
+                  _currentTabIndex == 1 ? FontWeight.bold : FontWeight.normal,
+              color: _currentTabIndex == 1
+                  ? themeProvider.primaryColor
+                  : Colors.grey[600]!,
+            ),
+          ),
+          Tab(
+            child: StandardText(
+              text: '복습 기록',
+              fontSize: 16,
+              fontWeight:
+                  _currentTabIndex == 2 ? FontWeight.bold : FontWeight.normal,
+              color: _currentTabIndex == 2
+                  ? themeProvider.primaryColor
+                  : Colors.grey[600]!,
+            ),
           ),
         ],
       ),
@@ -159,6 +151,7 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
 
   Widget _buildProblemTab(ThemeHandler themeProvider, bool isWide) {
     return SingleChildScrollView(
+      physics: const AlwaysScrollableScrollPhysics(),
       padding: EdgeInsets.symmetric(
         horizontal: isWide ? 60.0 : 35.0,
         vertical: 24.0,
@@ -166,10 +159,52 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // 푼 날짜
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(6.0),
+                    decoration: BoxDecoration(
+                      color: themeProvider.primaryColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(6.0),
+                    ),
+                    child: Icon(
+                      Icons.calendar_today_outlined,
+                      color: themeProvider.primaryColor,
+                      size: 18,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  StandardText(
+                    text: '푼 날짜',
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.black87,
+                  ),
+                ],
+              ),
+              UnderlinedText(
+                text: DateFormat('yyyy년 M월 d일')
+                    .format(widget.problemModel.solvedAt!),
+                fontSize: 14,
+              ),
+            ],
+          ),
+          const SizedBox(height: 30),
+
+          // 문제 이미지
+          _buildSectionTitle('문제 이미지', Icons.image_outlined, themeProvider),
+          const SizedBox(height: 12),
           buildImageSection(
             context,
-            widget.problemModel.problemImageDataList?.map((m) => m.imageUrl).toList() ?? [],
-            '문제 이미지',
+            widget.problemModel.problemImageDataList
+                    ?.map((m) => m.imageUrl)
+                    .toList() ??
+                [],
+            '',
             themeProvider,
           ),
           const SizedBox(height: 24),
@@ -188,62 +223,66 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // 메모
-          if (widget.problemModel.memo != null && widget.problemModel.memo!.isNotEmpty)
-            _buildMemoCard(themeProvider),
-          if (widget.problemModel.memo != null && widget.problemModel.memo!.isNotEmpty)
+          if (widget.problemModel.memo != null &&
+              widget.problemModel.memo!.isNotEmpty) ...[
+            _buildSectionTitle('메모', Icons.edit, themeProvider),
+            const SizedBox(height: 12),
+            UnderlinedText(
+              text: widget.problemModel.memo!,
+              fontSize: 16,
+            ),
             const SizedBox(height: 24),
+          ],
 
           // 해설 이미지
+          _buildSectionTitle('해설 이미지', Icons.image_outlined, themeProvider),
+          const SizedBox(height: 12),
           buildImageSection(
             context,
-            widget.problemModel.answerImageDataList?.map((m) => m.imageUrl).toList() ?? [],
-            '해설 이미지',
+            widget.problemModel.answerImageDataList
+                    ?.map((m) => m.imageUrl)
+                    .toList() ??
+                [],
+            '',
             themeProvider,
           ),
           const SizedBox(height: 24),
 
           // AI 분석 결과
-          buildAnalysisSection(context, widget.problemModel.analysis, themeProvider.primaryColor),
+          _buildSectionTitle('AI 분석 결과', Icons.auto_awesome, themeProvider),
+          const SizedBox(height: 12),
+          buildAnalysisSection(context, widget.problemModel.analysis,
+              themeProvider.primaryColor),
           const SizedBox(height: 24),
         ],
       ),
     );
   }
 
-  Widget _buildMemoCard(ThemeHandler themeProvider) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20.0),
-      decoration: BoxDecoration(
-        color: themeProvider.primaryColor.withOpacity(0.05),
-        borderRadius: BorderRadius.circular(16.0),
-        border: Border.all(
-          color: themeProvider.primaryColor.withOpacity(0.2),
-          width: 2,
+  Widget _buildSectionTitle(
+      String title, IconData icon, ThemeHandler themeProvider) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(6.0),
+          decoration: BoxDecoration(
+            color: themeProvider.primaryColor.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(6.0),
+          ),
+          child: Icon(
+            icon,
+            color: themeProvider.primaryColor,
+            size: 18,
+          ),
         ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(Icons.edit_note, color: themeProvider.primaryColor, size: 22),
-              const SizedBox(width: 8),
-              HandWriteText(
-                text: '나의 메모',
-                fontSize: 18,
-                color: themeProvider.primaryColor,
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          HandWriteText(
-            text: widget.problemModel.memo!,
-            fontSize: 16,
-            color: Colors.black87,
-          ),
-        ],
-      ),
+        const SizedBox(width: 8),
+        StandardText(
+          text: title,
+          fontSize: 16,
+          fontWeight: FontWeight.w500,
+          color: Colors.black87,
+        ),
+      ],
     );
   }
 
