@@ -12,21 +12,21 @@ import '../../Module/Theme/ThemeHandler.dart';
 import '../ProblemRegister/Widget/ImageGridWidget.dart';
 import '../ProblemRegister/Widget/LabeledTextField.dart';
 
-class ProblemReviewCompletionTemplate extends StatefulWidget {
+class ProblemSolveRegisterTemplate extends StatefulWidget {
   final int problemId;
 
-  const ProblemReviewCompletionTemplate({
+  const ProblemSolveRegisterTemplate({
     Key? key,
     required this.problemId,
   }) : super(key: key);
 
   @override
-  ProblemReviewCompletionTemplateState createState() =>
-      ProblemReviewCompletionTemplateState();
+  ProblemSolveRegisterTemplateState createState() =>
+      ProblemSolveRegisterTemplateState();
 }
 
-class ProblemReviewCompletionTemplateState
-    extends State<ProblemReviewCompletionTemplate> {
+class ProblemSolveRegisterTemplateState
+    extends State<ProblemSolveRegisterTemplate> {
   final _memoCtrl = TextEditingController();
   final List<XFile> _solutionImages = [];
   AnswerStatus _answerStatus = AnswerStatus.CORRECT; // 정답 상태 (기본값: 정답)
@@ -168,7 +168,8 @@ class ProblemReviewCompletionTemplateState
                 icon: Icons.check_circle,
                 color: Colors.green,
                 isSelected: _answerStatus == AnswerStatus.CORRECT,
-                onTap: () => setState(() => _answerStatus = AnswerStatus.CORRECT),
+                onTap: () =>
+                    setState(() => _answerStatus = AnswerStatus.CORRECT),
               ),
             ),
             const SizedBox(width: 8),
@@ -178,7 +179,8 @@ class ProblemReviewCompletionTemplateState
                 icon: Icons.check_circle_outline,
                 color: Colors.orange,
                 isSelected: _answerStatus == AnswerStatus.PARTIAL,
-                onTap: () => setState(() => _answerStatus = AnswerStatus.PARTIAL),
+                onTap: () =>
+                    setState(() => _answerStatus = AnswerStatus.PARTIAL),
               ),
             ),
             const SizedBox(width: 8),
@@ -352,7 +354,8 @@ class ProblemReviewCompletionTemplateState
           children: [
             Expanded(
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 16.0, vertical: 12.0),
                 decoration: BoxDecoration(
                   color: Colors.grey[50],
                   borderRadius: BorderRadius.circular(12.0),
@@ -362,9 +365,13 @@ class ProblemReviewCompletionTemplateState
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     StandardText(
-                      text: _timeSpentMinutes > 0 ? '$_timeSpentMinutes분' : '시간을 입력하세요',
+                      text: _timeSpentMinutes > 0
+                          ? '$_timeSpentMinutes분'
+                          : '시간을 입력하세요',
                       fontSize: 16,
-                      color: _timeSpentMinutes > 0 ? Colors.black87 : Colors.grey[400]!,
+                      color: _timeSpentMinutes > 0
+                          ? Colors.black87
+                          : Colors.grey[400]!,
                     ),
                     Row(
                       children: [

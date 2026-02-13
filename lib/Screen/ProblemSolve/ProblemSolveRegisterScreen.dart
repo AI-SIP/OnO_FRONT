@@ -15,27 +15,27 @@ import '../../Provider/PracticeNoteProvider.dart';
 import '../../Provider/ProblemsProvider.dart';
 import '../../Provider/UserProvider.dart';
 import '../../Service/Api/Problem/ProblemSolveService.dart';
-import 'ProblemSolveCompletionTemplate.dart';
+import 'ProblemSolveRegisterTemplate.dart';
 
-class ProblemReviewCompletionScreen extends StatefulWidget {
+class ProblemSolveRegisterScreen extends StatefulWidget {
   final int problemId;
   final VoidCallback onRefresh;
 
-  const ProblemReviewCompletionScreen({
+  const ProblemSolveRegisterScreen({
     super.key,
     required this.problemId,
     required this.onRefresh,
   });
 
   @override
-  State<ProblemReviewCompletionScreen> createState() =>
-      _ProblemReviewCompletionScreenState();
+  State<ProblemSolveRegisterScreen> createState() =>
+      _ProblemSolveRegisterScreenState();
 }
 
-class _ProblemReviewCompletionScreenState
-    extends State<ProblemReviewCompletionScreen> {
-  final GlobalKey<ProblemReviewCompletionTemplateState> _templateKey =
-      GlobalKey<ProblemReviewCompletionTemplateState>();
+class _ProblemSolveRegisterScreenState
+    extends State<ProblemSolveRegisterScreen> {
+  final GlobalKey<ProblemSolveRegisterTemplateState> _templateKey =
+      GlobalKey<ProblemSolveRegisterTemplateState>();
 
   @override
   Widget build(BuildContext context) {
@@ -47,7 +47,7 @@ class _ProblemReviewCompletionScreenState
       body: Column(
         children: [
           Expanded(
-            child: ProblemReviewCompletionTemplate(
+            child: ProblemSolveRegisterTemplate(
               key: _templateKey,
               problemId: widget.problemId,
             ),
@@ -128,17 +128,8 @@ class _ProblemReviewCompletionScreenState
       return;
     }
 
-    // 최소 1개 이상의 풀이 이미지가 필요
     final List<File> solutionImages =
         reviewData['solutionImages'] as List<File>;
-    if (solutionImages.isEmpty) {
-      SnackBarDialog.showSnackBar(
-        context: context,
-        message: '최소 1개의 풀이 이미지를 등록해주세요.',
-        backgroundColor: Colors.orange,
-      );
-      return;
-    }
 
     LoadingDialog.show(context, '복습 기록 저장 중...');
 
@@ -158,11 +149,13 @@ class _ProblemReviewCompletionScreenState
       final practiceRecordId =
           await problemSolveService.createProblemSolve(registerDto);
 
-      // 2. 복습 기록 이미지 업로드
-      await problemSolveService.uploadProblemSolveImages(
-        problemSolveId: practiceRecordId,
-        images: solutionImages,
-      );
+      // 2. 복습 기록 이미지 업로드 (이미지가 있을 때만)
+      if (solutionImages.isNotEmpty) {
+        await problemSolveService.uploadProblemSolveImages(
+          problemSolveId: practiceRecordId,
+          images: solutionImages,
+        );
+      }
 
       // 3. 문제 정보 갱신
       await problemsProvider.fetchProblem(widget.problemId);

@@ -8,13 +8,15 @@ import '../../../Model/Problem/AnswerStatus.dart';
 import '../../../Model/Problem/ImprovementType.dart';
 import '../../../Model/Problem/ProblemModel.dart';
 import '../../../Model/Problem/ProblemSolveModel.dart';
+import '../../../Module/Dialog/LoadingDialog.dart';
+import '../../../Module/Dialog/SnackBarDialog.dart';
 import '../../../Module/Image/DisplayImage.dart';
 import '../../../Module/Image/FullScreenImage.dart';
 import '../../../Module/Text/HandWriteText.dart';
 import '../../../Module/Text/StandardText.dart';
 import '../../../Module/Theme/ThemeHandler.dart';
 import '../../../Service/Api/Problem/ProblemSolveService.dart';
-import '../../ProblemSolve/ProblemSolveCompletionScreen.dart';
+import '../../ProblemSolve/ProblemSolveRegisterScreen.dart';
 
 class RepeatSectionV2 extends StatefulWidget {
   final ProblemModel problem;
@@ -60,6 +62,19 @@ class _RepeatSectionV2State extends State<RepeatSectionV2>
       _problemSolvesFuture = problemSolveService
           .getProblemSolvesByProblemId(widget.problem.problemId);
     });
+  }
+
+  // 복습 기록 새로고침 (비동기 - 완료될 때까지 대기)
+  Future<void> refreshAsync() async {
+    final newFuture = problemSolveService
+        .getProblemSolvesByProblemId(widget.problem.problemId);
+
+    setState(() {
+      _problemSolvesFuture = newFuture;
+    });
+
+    // 새로운 데이터 로딩 완료까지 대기
+    await newFuture;
   }
 
   @override
@@ -139,6 +154,7 @@ class _RepeatSectionV2State extends State<RepeatSectionV2>
               iconColor: widget.iconColor,
               isExpanded: _expandedStates[solve.problemSolveId] ?? false,
               onToggle: (value) => _toggleExpanded(solve.problemSolveId, value),
+              onRefreshAsync: refreshAsync,
             );
           },
         );
@@ -189,7 +205,7 @@ class _RepeatSectionV2WrapperState extends State<RepeatSectionV2Wrapper> {
             left: widget.isWide ? 60 : 25,
             right: widget.isWide ? 60 : 25,
             top: 10,
-            bottom: 5,
+            bottom: 10,
           ),
           decoration: BoxDecoration(
             color: Colors.white,
@@ -208,7 +224,7 @@ class _RepeatSectionV2WrapperState extends State<RepeatSectionV2Wrapper> {
                 final result = await Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => ProblemReviewCompletionScreen(
+                    builder: (context) => ProblemSolveRegisterScreen(
                       problemId: widget.problem.problemId,
                       onRefresh: () {},
                     ),
@@ -256,6 +272,7 @@ class _ProblemSolveCard extends StatelessWidget {
   final Color iconColor;
   final bool isExpanded;
   final Function(bool) onToggle;
+  final Future<void> Function() onRefreshAsync;
 
   const _ProblemSolveCard({
     required this.solve,
@@ -263,6 +280,7 @@ class _ProblemSolveCard extends StatelessWidget {
     required this.iconColor,
     required this.isExpanded,
     required this.onToggle,
+    required this.onRefreshAsync,
   });
 
   Color _getStatusColor() {
@@ -552,7 +570,7 @@ class _ProblemSolveCard extends StatelessWidget {
                       color: themeProvider.primaryColor, size: 18),
                 ),
                 const SizedBox(width: 8),
-                StandardText(
+                const StandardText(
                   text: '풀이 이미지',
                   fontSize: 15,
                   fontWeight: FontWeight.w500,
@@ -636,10 +654,7 @@ class _ProblemSolveCard extends StatelessWidget {
                 child: TextButton(
                   onPressed: () {
                     Navigator.pop(context);
-                    // TODO: 수정 기능 구현
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('수정 기능은 준비 중입니다.')),
-                    );
+                    _handleEdit(context, themeProvider);
                   },
                   style: TextButton.styleFrom(
                     padding: const EdgeInsets.symmetric(
@@ -799,10 +814,7 @@ class _ProblemSolveCard extends StatelessWidget {
                     child: TextButton(
                       onPressed: () {
                         Navigator.pop(context);
-                        // TODO: 삭제 기능 구현
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('삭제 기능은 준비 중입니다.')),
-                        );
+                        _handleDelete(context, themeProvider);
                       },
                       style: TextButton.styleFrom(
                         padding: const EdgeInsets.symmetric(
@@ -826,6 +838,50 @@ class _ProblemSolveCard extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  // 수정 핸들러
+  void _handleEdit(BuildContext context, ThemeHandler themeProvider) {
+    SnackBarDialog.showSnackBar(
+      context: context,
+      message: '수정 기능은 준비 중입니다.',
+      backgroundColor: themeProvider.primaryColor,
+    );
+  }
+
+  // 삭제 핸들러
+  Future<void> _handleDelete(
+      BuildContext context, ThemeHandler themeProvider) async {
+    LoadingDialog.show(context, '복습 기록 삭제 중...');
+
+    try {
+      final problemSolveService = ProblemSolveService();
+      final solveId = solve.problemSolveId; // 삭제할 ID를 미리 저장
+
+      await problemSolveService.deleteProblemSolve(solveId);
+
+      if (context.mounted) {
+        // 먼저 새로고침
+        onRefreshAsync();
+
+        LoadingDialog.hide(context);
+
+        SnackBarDialog.showSnackBar(
+          context: context,
+          message: '복습 기록이 삭제되었습니다.',
+          backgroundColor: themeProvider.primaryColor,
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        LoadingDialog.hide(context);
+        SnackBarDialog.showSnackBar(
+          context: context,
+          message: '복습 기록 삭제에 실패했습니다: $e',
+          backgroundColor: Colors.red,
+        );
+      }
+    }
   }
 }
 
