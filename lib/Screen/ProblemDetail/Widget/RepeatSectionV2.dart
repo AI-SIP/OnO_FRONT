@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
 import 'package:ono/Module/Text/StandardLightText.dart';
+import 'package:ono/Module/Text/UnderlinedText.dart';
 import 'package:provider/provider.dart';
 
 import '../../../Model/Problem/AnswerStatus.dart';
@@ -12,7 +13,6 @@ import '../../../Module/Dialog/LoadingDialog.dart';
 import '../../../Module/Dialog/SnackBarDialog.dart';
 import '../../../Module/Image/DisplayImage.dart';
 import '../../../Module/Image/FullScreenImage.dart';
-import '../../../Module/Text/HandWriteText.dart';
 import '../../../Module/Text/StandardText.dart';
 import '../../../Module/Theme/ThemeHandler.dart';
 import '../../../Service/Api/Problem/ProblemSolveService.dart';
@@ -541,13 +541,13 @@ class _ProblemSolveCard extends StatelessWidget {
               width: double.infinity,
               padding: const EdgeInsets.all(12.0),
               decoration: BoxDecoration(
-                color: Colors.grey[50],
+                color: Colors.white,
                 borderRadius: BorderRadius.circular(8.0),
                 border: Border.all(color: Colors.grey[300]!, width: 1),
               ),
-              child: HandWriteText(
+              child: UnderlinedText(
                 text: solve.reflection!,
-                fontSize: 14,
+                fontSize: 16,
                 color: Colors.black87,
               ),
             ),
@@ -649,39 +649,39 @@ class _ProblemSolveCard extends StatelessWidget {
               ),
               const SizedBox(height: 24),
               // 수정 버튼
-              SizedBox(
-                width: double.infinity,
-                child: TextButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                    _handleEdit(context, themeProvider);
-                  },
-                  style: TextButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 12),
-                    backgroundColor:
-                        themeProvider.primaryColor.withOpacity(0.1),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.edit,
-                          color: themeProvider.primaryColor, size: 20),
-                      const SizedBox(width: 8),
-                      StandardText(
-                        text: '수정',
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
-                        color: themeProvider.primaryColor,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
+              // SizedBox(
+              //   width: double.infinity,
+              //   child: TextButton(
+              //     onPressed: () {
+              //       Navigator.pop(context);
+              //       _handleEdit(context, themeProvider);
+              //     },
+              //     style: TextButton.styleFrom(
+              //       padding: const EdgeInsets.symmetric(
+              //           horizontal: 16, vertical: 12),
+              //       backgroundColor:
+              //           themeProvider.primaryColor.withOpacity(0.1),
+              //       shape: RoundedRectangleBorder(
+              //         borderRadius: BorderRadius.circular(8),
+              //       ),
+              //     ),
+              //     child: Row(
+              //       mainAxisAlignment: MainAxisAlignment.center,
+              //       children: [
+              //         Icon(Icons.edit,
+              //             color: themeProvider.primaryColor, size: 20),
+              //         const SizedBox(width: 8),
+              //         StandardText(
+              //           text: '수정',
+              //           fontSize: 15,
+              //           fontWeight: FontWeight.bold,
+              //           color: themeProvider.primaryColor,
+              //         ),
+              //       ],
+              //     ),
+              //   ),
+              // ),
+              // const SizedBox(height: 12),
               // 삭제 버튼
               SizedBox(
                 width: double.infinity,

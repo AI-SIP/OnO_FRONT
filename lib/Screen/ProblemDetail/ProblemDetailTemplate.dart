@@ -204,7 +204,7 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
                     ?.map((m) => m.imageUrl)
                     .toList() ??
                 [],
-            '',
+            '문제 이미지',
             themeProvider,
           ),
           const SizedBox(height: 24),
@@ -243,7 +243,7 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
                     ?.map((m) => m.imageUrl)
                     .toList() ??
                 [],
-            '',
+            '해설 이미지',
             themeProvider,
           ),
           const SizedBox(height: 24),

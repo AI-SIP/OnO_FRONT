@@ -10,6 +10,7 @@ import '../../Model/Problem/ProblemRegisterModel.dart';
 import '../../Module/Dialog/LoadingDialog.dart';
 import '../../Module/Dialog/SnackBarDialog.dart';
 import '../../Module/Image/ImagePickerHandler.dart';
+import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Module/Util/FolderPickerWidget.dart';
 import '../../Provider/FoldersProvider.dart';
@@ -245,6 +246,12 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
   }
 
   Future<void> submit() async {
+    // 제목 필수 입력 검증
+    if (_titleCtrl.text.trim().isEmpty) {
+      _showTitleRequiredDialog(context);
+      return;
+    }
+
     LoadingDialog.show(
         context, widget.isEditMode ? '오답노트 수정 중...' : '오답노트 작성 중...');
     try {
@@ -261,6 +268,83 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
     } finally {
       LoadingDialog.hide(context);
     }
+  }
+
+  void _showTitleRequiredDialog(BuildContext context) {
+    final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // 헤더
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.orange.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(
+                        Icons.warning_rounded,
+                        color: Colors.orange,
+                        size: 20,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    const StandardText(
+                      text: '경고',
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black87,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                // 내용
+                const StandardText(
+                  text: '제목을 입력해 주세요!',
+                  fontSize: 15,
+                  color: Colors.black87,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
+                // 액션 버튼
+                SizedBox(
+                  width: double.infinity,
+                  child: TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    style: TextButton.styleFrom(
+                      padding:
+                          const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                      backgroundColor: themeProvider.primaryColor,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: const StandardText(
+                      text: '확인',
+                      fontSize: 15,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   /// 오답노트 등록
