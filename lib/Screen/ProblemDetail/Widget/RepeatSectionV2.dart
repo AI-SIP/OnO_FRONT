@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
 import 'package:ono/Module/Text/StandardLightText.dart';
 import 'package:provider/provider.dart';
@@ -99,8 +100,15 @@ class _RepeatSectionV2State extends State<RepeatSectionV2>
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.menu_book_outlined,
-                      size: 64, color: Colors.grey[300]),
+                  SvgPicture.asset(
+                    'assets/Icon/Pencil.svg',
+                    width: 64,
+                    height: 64,
+                    colorFilter: ColorFilter.mode(
+                      Colors.grey[300]!,
+                      BlendMode.srcIn,
+                    ),
+                  ),
                   const SizedBox(height: 16),
                   StandardText(
                     text: '아직 복습 기록이 없습니다.',
@@ -386,6 +394,18 @@ class _ProblemSolveCard extends StatelessWidget {
                       ),
                     ),
 
+                    // 메뉴 버튼
+                    IconButton(
+                      icon: Icon(
+                        Icons.more_vert,
+                        color: statusColor,
+                        size: 20,
+                      ),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                      onPressed: () => _showOptionsDialog(context, themeProvider),
+                    ),
+                    const SizedBox(width: 8),
                     // 확장 아이콘
                     Icon(
                       isExpanded ? Icons.expand_less : Icons.expand_more,
@@ -543,39 +563,11 @@ class _ProblemSolveCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 12),
-            ...solve.imageUrls.asMap().entries.map((entry) {
-              final imageUrl = entry.value;
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 12.0),
-                child: GestureDetector(
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => FullScreenImage(imagePath: imageUrl),
-                    ),
-                  ),
-                  child: Container(
-                    width: double.infinity,
-                    height: MediaQuery.of(context).size.height * 0.3,
-                    decoration: BoxDecoration(
-                      color: statusColor.withOpacity(0.05),
-                      borderRadius: BorderRadius.circular(12.0),
-                      border: Border.all(
-                        color: statusColor.withOpacity(0.2),
-                        width: 2,
-                      ),
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(10.0),
-                      child: DisplayImage(
-                        imagePath: imageUrl,
-                        fit: BoxFit.contain,
-                      ),
-                    ),
-                  ),
-                ),
-              );
-            }).toList(),
+            _ImageSlider(
+              imageUrls: solve.imageUrls,
+              statusColor: statusColor,
+              primaryColor: themeProvider.primaryColor,
+            ),
           ],
         ],
       ),
@@ -598,6 +590,331 @@ class _ProblemSolveCard extends StatelessWidget {
           fontSize: 14,
           color: Colors.black87,
         ),
+      ],
+    );
+  }
+
+  void _showOptionsDialog(BuildContext context, ThemeHandler themeProvider) {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // 헤더
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: themeProvider.primaryColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(
+                      Icons.settings,
+                      color: themeProvider.primaryColor,
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  const StandardText(
+                    text: '복습 기록 관리',
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black87,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+              // 수정 버튼
+              SizedBox(
+                width: double.infinity,
+                child: TextButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    // TODO: 수정 기능 구현
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('수정 기능은 준비 중입니다.')),
+                    );
+                  },
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 12),
+                    backgroundColor: themeProvider.primaryColor.withOpacity(0.1),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.edit, color: themeProvider.primaryColor, size: 20),
+                      const SizedBox(width: 8),
+                      StandardText(
+                        text: '수정',
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                        color: themeProvider.primaryColor,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              // 삭제 버튼
+              SizedBox(
+                width: double.infinity,
+                child: TextButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    _showDeleteConfirmDialog(context, themeProvider);
+                  },
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 12),
+                    backgroundColor: Colors.red.withOpacity(0.1),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.delete, color: Colors.red, size: 20),
+                      SizedBox(width: 8),
+                      StandardText(
+                        text: '삭제',
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.red,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              // 취소 버튼
+              SizedBox(
+                width: double.infinity,
+                child: TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 12),
+                    backgroundColor: Colors.grey[100],
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: const StandardText(
+                    text: '취소',
+                    fontSize: 15,
+                    color: Colors.black87,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showDeleteConfirmDialog(BuildContext context, ThemeHandler themeProvider) {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // 헤더
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.red.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(
+                      Icons.delete_forever,
+                      color: Colors.red,
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  const StandardText(
+                    text: '삭제 확인',
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black87,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              // 내용
+              const StandardText(
+                text: '이 복습 기록을 정말 삭제하시겠습니까?',
+                fontSize: 15,
+                color: Colors.black87,
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              // 액션 버튼
+              Row(
+                children: [
+                  Expanded(
+                    child: TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 12),
+                        backgroundColor: Colors.grey[100],
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: const StandardText(
+                        text: '취소',
+                        fontSize: 14,
+                        color: Colors.black87,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: TextButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                        // TODO: 삭제 기능 구현
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('삭제 기능은 준비 중입니다.')),
+                        );
+                      },
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 12),
+                        backgroundColor: Colors.red,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: const StandardText(
+                        text: '삭제',
+                        fontSize: 14,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// 이미지 슬라이더 위젯
+class _ImageSlider extends StatefulWidget {
+  final List<String> imageUrls;
+  final Color statusColor;
+  final Color primaryColor;
+
+  const _ImageSlider({
+    required this.imageUrls,
+    required this.statusColor,
+    required this.primaryColor,
+  });
+
+  @override
+  State<_ImageSlider> createState() => _ImageSliderState();
+}
+
+class _ImageSliderState extends State<_ImageSlider> {
+  final PageController _controller = PageController();
+  int _current = 0;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final screenHeight = MediaQuery.of(context).size.height;
+
+    return Column(
+      children: [
+        // PageView - 이미지 슬라이더
+        Container(
+          height: screenHeight * 0.3,
+          decoration: BoxDecoration(
+            color: widget.statusColor.withOpacity(0.05),
+            borderRadius: BorderRadius.circular(12.0),
+            border: Border.all(
+              color: widget.statusColor.withOpacity(0.2),
+              width: 2,
+            ),
+          ),
+          child: PageView.builder(
+            controller: _controller,
+            itemCount: widget.imageUrls.length,
+            onPageChanged: (i) => setState(() => _current = i),
+            itemBuilder: (context, i) {
+              return GestureDetector(
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => FullScreenImage(imagePath: widget.imageUrls[i]),
+                  ),
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(10.0),
+                  child: DisplayImage(
+                    imagePath: widget.imageUrls[i],
+                    fit: BoxFit.contain,
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+        if (widget.imageUrls.length > 1) ...[
+          const SizedBox(height: 12),
+          // 도트 인디케이터
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: List.generate(widget.imageUrls.length, (i) {
+              return AnimatedContainer(
+                duration: const Duration(milliseconds: 300),
+                margin: const EdgeInsets.symmetric(horizontal: 4),
+                width: _current == i ? 12 : 8,
+                height: _current == i ? 12 : 8,
+                decoration: BoxDecoration(
+                  color: _current == i
+                      ? widget.primaryColor
+                      : widget.primaryColor.withOpacity(0.4),
+                  shape: BoxShape.circle,
+                ),
+              );
+            }),
+          ),
+        ],
       ],
     );
   }
