@@ -102,12 +102,8 @@ class _RepeatSectionV2State extends State<RepeatSectionV2>
                 children: [
                   SvgPicture.asset(
                     'assets/Icon/Pencil.svg',
-                    width: 64,
-                    height: 64,
-                    colorFilter: ColorFilter.mode(
-                      Colors.grey[300]!,
-                      BlendMode.srcIn,
-                    ),
+                    width: 80,
+                    height: 80,
                   ),
                   const SizedBox(height: 16),
                   StandardText(
@@ -168,7 +164,8 @@ class RepeatSectionV2Wrapper extends StatefulWidget {
 }
 
 class _RepeatSectionV2WrapperState extends State<RepeatSectionV2Wrapper> {
-  final GlobalKey<_RepeatSectionV2State> _repeatSectionKey = GlobalKey<_RepeatSectionV2State>();
+  final GlobalKey<_RepeatSectionV2State> _repeatSectionKey =
+      GlobalKey<_RepeatSectionV2State>();
 
   @override
   Widget build(BuildContext context) {
@@ -326,7 +323,7 @@ class _ProblemSolveCard extends StatelessWidget {
               borderRadius:
                   const BorderRadius.vertical(top: Radius.circular(16.0)),
               child: Container(
-                padding: const EdgeInsets.all(16.0),
+                padding: const EdgeInsets.fromLTRB(16.0, 16.0, 8.0, 16.0),
                 decoration: BoxDecoration(
                   color: statusColor.withOpacity(0.08),
                   borderRadius:
@@ -394,6 +391,12 @@ class _ProblemSolveCard extends StatelessWidget {
                       ),
                     ),
 
+                    // 확장 아이콘
+                    Icon(
+                      isExpanded ? Icons.expand_less : Icons.expand_more,
+                      color: statusColor,
+                    ),
+                    const SizedBox(width: 8),
                     // 메뉴 버튼
                     IconButton(
                       icon: Icon(
@@ -403,13 +406,8 @@ class _ProblemSolveCard extends StatelessWidget {
                       ),
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(),
-                      onPressed: () => _showOptionsDialog(context, themeProvider),
-                    ),
-                    const SizedBox(width: 8),
-                    // 확장 아이콘
-                    Icon(
-                      isExpanded ? Icons.expand_less : Icons.expand_more,
-                      color: statusColor,
+                      onPressed: () =>
+                          _showOptionsDialog(context, themeProvider),
                     ),
                   ],
                 ),
@@ -646,7 +644,8 @@ class _ProblemSolveCard extends StatelessWidget {
                   style: TextButton.styleFrom(
                     padding: const EdgeInsets.symmetric(
                         horizontal: 16, vertical: 12),
-                    backgroundColor: themeProvider.primaryColor.withOpacity(0.1),
+                    backgroundColor:
+                        themeProvider.primaryColor.withOpacity(0.1),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
@@ -654,7 +653,8 @@ class _ProblemSolveCard extends StatelessWidget {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.edit, color: themeProvider.primaryColor, size: 20),
+                      Icon(Icons.edit,
+                          color: themeProvider.primaryColor, size: 20),
                       const SizedBox(width: 8),
                       StandardText(
                         text: '수정',
@@ -726,7 +726,8 @@ class _ProblemSolveCard extends StatelessWidget {
     );
   }
 
-  void _showDeleteConfirmDialog(BuildContext context, ThemeHandler themeProvider) {
+  void _showDeleteConfirmDialog(
+      BuildContext context, ThemeHandler themeProvider) {
     showDialog(
       context: context,
       builder: (context) => Dialog(
@@ -880,7 +881,8 @@ class _ImageSliderState extends State<_ImageSlider> {
                 onTap: () => Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) => FullScreenImage(imagePath: widget.imageUrls[i]),
+                    builder: (_) =>
+                        FullScreenImage(imagePath: widget.imageUrls[i]),
                   ),
                 ),
                 child: ClipRRect(
