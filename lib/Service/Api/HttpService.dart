@@ -106,9 +106,6 @@ class HttpService {
           break;
 
         case 'DELETE':
-          response = await http
-              .delete(uri, headers: mergedHeaders)
-              .timeout(const Duration(seconds: 30));
           if (body != null) {
             response = await http
                 .delete(
@@ -122,6 +119,7 @@ class HttpService {
                 .delete(uri, headers: mergedHeaders)
                 .timeout(const Duration(seconds: 30));
           }
+          break;
 
         default:
           throw ApiException(message: 'Not Supported HTTP Method: $method');
