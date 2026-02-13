@@ -22,70 +22,131 @@ class _ThemeDialogState extends State<ThemeDialog> {
     final userProvider = Provider.of<UserProvider>(context);
     final userInfo = userProvider.userInfoModel;
 
-    return AlertDialog(
+    return Dialog(
       backgroundColor: Colors.white,
-      title: const StandardText(
-        text: '테마 색상 선택',
-        fontSize: 20,
-        color: Colors.black,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
       ),
-      content: SingleChildScrollView(
+      child: Container(
+        constraints: const BoxConstraints(maxWidth: 420),
         child: Column(
-          mainAxisSize:
-              MainAxisSize.min, // Ensures the dialog fits content size
+          mainAxisSize: MainAxisSize.min,
           children: [
-            const SizedBox(height: 20), // Add vertical spacing
-            SizedBox(
-              height: 550, // 크기 증가
-              width: 350, // 크기 증가
-              child: GridView.builder(
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 4, // Number of columns
-                  crossAxisSpacing: 12.0, // 간격 증가
-                  mainAxisSpacing: 12.0, // 간격 증가
+            // 헤더
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: themeProvider.primaryColor.withOpacity(0.05),
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(16),
+                  topRight: Radius.circular(16),
                 ),
-                itemCount: 24,
-                itemBuilder: (context, index) {
-                  final color = ThemeLockManager.getThemeColor(index);
-                  final colorName = ThemeLockManager.getThemeName(index);
-                  final isUnlocked =
-                      ThemeLockManager.isThemeUnlocked(index, userInfo);
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: themeProvider.primaryColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(
+                      Icons.palette,
+                      color: themeProvider.primaryColor,
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  const StandardText(
+                    text: '테마 색상 선택',
+                    fontSize: 20,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black87,
+                  ),
+                ],
+              ),
+            ),
+            // 컨텐츠
+            Padding(
+              padding: const EdgeInsets.all(24),
+              child: SizedBox(
+                height: 480,
+                width: 350,
+                child: GridView.builder(
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 4,
+                    crossAxisSpacing: 16.0,
+                    mainAxisSpacing: 16.0,
+                  ),
+                  itemCount: 24,
+                  itemBuilder: (context, index) {
+                    final color = ThemeLockManager.getThemeColor(index);
+                    final colorName = ThemeLockManager.getThemeName(index);
+                    final isUnlocked =
+                        ThemeLockManager.isThemeUnlocked(index, userInfo);
 
-                  return _buildColorCircle(color, colorName, index, isUnlocked);
-                },
+                    return _buildColorCircle(color, colorName, index, isUnlocked);
+                  },
+                ),
+              ),
+            ),
+            // 액션 버튼
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.grey[50],
+                border: Border(
+                  top: BorderSide(color: Colors.grey[200]!, width: 1),
+                ),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      backgroundColor: Colors.grey[100],
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: const StandardText(
+                      text: '취소',
+                      fontSize: 14,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  TextButton(
+                    onPressed: () {
+                      if (_selectedColor != null) {
+                        themeProvider.changePrimaryColor(
+                            _selectedColor!, _selectedColorName!);
+                        Navigator.of(context).pop();
+                      }
+                    },
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      backgroundColor: themeProvider.primaryColor,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: const StandardText(
+                      text: '확인',
+                      fontSize: 14,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
         ),
       ),
-      actions: [
-        TextButton(
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
-          child: const StandardText(
-            text: '취소',
-            fontSize: 16,
-            color: Colors.black,
-          ),
-        ),
-        TextButton(
-          onPressed: () {
-            if (_selectedColor != null) {
-              // Change the PrimaryColor to the selected color
-              themeProvider.changePrimaryColor(
-                  _selectedColor!, _selectedColorName!);
-
-              Navigator.of(context).pop();
-            }
-          },
-          child: StandardText(
-            text: '확인',
-            fontSize: 16,
-            color: themeProvider.primaryColor,
-          ),
-        ),
-      ],
     );
   }
 
@@ -114,34 +175,71 @@ class _ThemeDialogState extends State<ThemeDialog> {
           showDialog(
             context: context,
             builder: (BuildContext dialogContext) {
-              return AlertDialog(
+              return Dialog(
                 backgroundColor: Colors.white,
-                title: Row(
-                  children: [
-                    Icon(Icons.lock, color: color, size: 24),
-                    const SizedBox(width: 8),
-                    const StandardText(
-                      text: '잠금된 테마',
-                      fontSize: 18,
-                      color: Colors.black,
-                    ),
-                  ],
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
                 ),
-                content: StandardText(
-                  text: message,
-                  fontSize: 16,
-                  color: Colors.black,
-                ),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.of(dialogContext).pop(),
-                    child: StandardText(
-                      text: '확인',
-                      fontSize: 16,
-                      color: themeProvider.primaryColor,
-                    ),
+                child: Container(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // 헤더
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: color.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Icon(
+                              Icons.lock,
+                              color: color,
+                              size: 20,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          const StandardText(
+                            text: '잠금된 테마',
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black87,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+                      // 내용
+                      StandardText(
+                        text: message,
+                        fontSize: 15,
+                        color: Colors.black87,
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 24),
+                      // 버튼
+                      SizedBox(
+                        width: double.infinity,
+                        child: TextButton(
+                          onPressed: () => Navigator.of(dialogContext).pop(),
+                          style: TextButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            backgroundColor: themeProvider.primaryColor,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          child: const StandardText(
+                            text: '확인',
+                            fontSize: 15,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ],
+                ),
               );
             },
           );

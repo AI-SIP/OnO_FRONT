@@ -29,19 +29,53 @@ class ImageGridWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Provider.of<ThemeHandler>(context);
+    final totalImages = existingImageUrls.length + files.length;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
-            Icon(Icons.image, color: theme.primaryColor),
-            const SizedBox(width: 6),
-            StandardText(text: label, color: theme.primaryColor),
+            Container(
+              padding: const EdgeInsets.all(6.0),
+              decoration: BoxDecoration(
+                color: theme.primaryColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(6.0),
+              ),
+              child: Icon(
+                Icons.image,
+                color: theme.primaryColor,
+                size: 18,
+              ),
+            ),
+            const SizedBox(width: 8),
+            StandardText(
+              text: label,
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+              color: Colors.black87,
+            ),
+            const SizedBox(width: 8),
+            if (totalImages > 0)
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: theme.primaryColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: StandardText(
+                  text: '$totalImages',
+                  fontSize: 12,
+                  color: theme.primaryColor,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
           ],
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 12),
         SizedBox(
-          height: 80,
+          height: 100,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             itemCount: existingImageUrls.length + files.length + 1,
@@ -52,14 +86,40 @@ class ImageGridWidget extends StatelessWidget {
                 return GestureDetector(
                   onTap: onAdd,
                   child: Container(
-                    width: 80,
-                    height: 80,
+                    width: 100,
+                    height: 100,
                     decoration: BoxDecoration(
-                      color: Colors.white,
-                      border: Border.all(color: theme.primaryColor),
-                      borderRadius: BorderRadius.circular(8),
+                      color: Colors.grey[50],
+                      border: Border.all(
+                        color: Colors.grey[300]!,
+                        width: 2,
+                        style: BorderStyle.solid,
+                      ),
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    child: Icon(Icons.add, color: theme.primaryColor),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            color: theme.primaryColor.withOpacity(0.1),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            Icons.add_photo_alternate,
+                            color: theme.primaryColor,
+                            size: 20,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        StandardText(
+                          text: '추가',
+                          fontSize: 12,
+                          color: Colors.grey[600]!,
+                        ),
+                      ],
+                    ),
                   ),
                 );
               }
@@ -69,26 +129,46 @@ class ImageGridWidget extends StatelessWidget {
                 final imageUrl = existingImageUrls[idx - 1];
                 return Stack(
                   children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: SizedBox(
-                        width: 80,
-                        height: 80,
-                        child: DisplayImage(
-                          imagePath: imageUrl,
-                          fit: BoxFit.cover,
+                    Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: SizedBox(
+                          width: 100,
+                          height: 100,
+                          child: DisplayImage(
+                            imagePath: imageUrl,
+                            fit: BoxFit.cover,
+                          ),
                         ),
                       ),
                     ),
                     Positioned(
-                      top: 4,
-                      right: 4,
+                      top: 6,
+                      right: 6,
                       child: GestureDetector(
                         onTap: () => onRemoveExisting?.call(idx - 1),
                         child: Container(
-                          decoration: const BoxDecoration(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
                             color: Colors.red,
                             shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.2),
+                                blurRadius: 4,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
                           ),
                           child: const Icon(
                             Icons.close,
@@ -107,24 +187,44 @@ class ImageGridWidget extends StatelessWidget {
               final file = files[fileIdx];
               return Stack(
                 children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: Image.file(
-                      File(file.path),
-                      width: 80,
-                      height: 80,
-                      fit: BoxFit.cover,
+                  Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Image.file(
+                        File(file.path),
+                        width: 100,
+                        height: 100,
+                        fit: BoxFit.cover,
+                      ),
                     ),
                   ),
                   Positioned(
-                    top: 4,
-                    right: 4,
+                    top: 6,
+                    right: 6,
                     child: GestureDetector(
                       onTap: () => onRemove(fileIdx),
                       child: Container(
-                        decoration: const BoxDecoration(
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
                           color: Colors.red,
                           shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.2),
+                              blurRadius: 4,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
                         ),
                         child: const Icon(
                           Icons.close,

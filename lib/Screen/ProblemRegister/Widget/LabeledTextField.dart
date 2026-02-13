@@ -24,44 +24,66 @@ class LabeledTextField extends StatelessWidget {
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeHandler>(context);
     final standardTextStyle = const StandardText(text: '').getTextStyle();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
-            Icon(icon ?? Icons.label, color: themeProvider.primaryColor),
-            const SizedBox(width: 6),
+            Container(
+              padding: const EdgeInsets.all(6.0),
+              decoration: BoxDecoration(
+                color: themeProvider.primaryColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(6.0),
+              ),
+              child: Icon(
+                icon ?? Icons.label,
+                color: themeProvider.primaryColor,
+                size: 18,
+              ),
+            ),
+            const SizedBox(width: 8),
             StandardText(
-                text: label, fontSize: 16, color: themeProvider.primaryColor),
+              text: label,
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+              color: Colors.black87,
+            ),
           ],
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 12),
         TextField(
           controller: controller,
           style: standardTextStyle.copyWith(
-              color: themeProvider.primaryColor, fontSize: 16),
+            color: Colors.black87,
+            fontSize: 15,
+          ),
           decoration: InputDecoration(
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide:
-                  BorderSide(color: themeProvider.primaryColor, width: 1.5),
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.grey[300]!, width: 1),
             ),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide:
-                  BorderSide(color: themeProvider.primaryColor, width: 1.5),
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.grey[300]!, width: 1),
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide:
-                  BorderSide(color: themeProvider.primaryColor, width: 1.5),
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(
+                color: themeProvider.primaryColor.withOpacity(0.5),
+                width: 2,
+              ),
             ),
-            fillColor: Colors.white,
+            fillColor: Colors.grey[50],
             filled: true,
             hintText: hintText,
             hintStyle: standardTextStyle.copyWith(
-              color: themeProvider.desaturateColor,
-              fontSize: 12,
+              color: Colors.grey[400],
+              fontSize: 14,
+            ),
+            contentPadding: EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: maxLines > 1 ? 16 : 14,
             ),
           ),
           maxLines: maxLines,
