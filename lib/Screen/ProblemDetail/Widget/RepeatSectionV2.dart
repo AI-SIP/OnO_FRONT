@@ -13,6 +13,7 @@ import '../../../Module/Text/HandWriteText.dart';
 import '../../../Module/Text/StandardText.dart';
 import '../../../Module/Theme/ThemeHandler.dart';
 import '../../../Service/Api/Problem/ProblemSolveService.dart';
+import '../../ProblemSolve/ProblemSolveCompletionScreen.dart';
 
 class RepeatSectionV2 extends StatefulWidget {
   final ProblemModel problem;
@@ -30,7 +31,8 @@ class RepeatSectionV2 extends StatefulWidget {
   State<RepeatSectionV2> createState() => _RepeatSectionV2State();
 }
 
-class _RepeatSectionV2State extends State<RepeatSectionV2> with AutomaticKeepAliveClientMixin {
+class _RepeatSectionV2State extends State<RepeatSectionV2>
+    with AutomaticKeepAliveClientMixin {
   final problemSolveService = ProblemSolveService();
   late Future<List<ProblemSolveModel>> _problemSolvesFuture;
   final Map<int, bool> _expandedStates = {}; // 각 카드의 펼침 상태 관리
@@ -38,7 +40,8 @@ class _RepeatSectionV2State extends State<RepeatSectionV2> with AutomaticKeepAli
   @override
   void initState() {
     super.initState();
-    _problemSolvesFuture = problemSolveService.getProblemSolvesByProblemId(widget.problem.problemId);
+    _problemSolvesFuture = problemSolveService
+        .getProblemSolvesByProblemId(widget.problem.problemId);
   }
 
   @override
@@ -115,7 +118,8 @@ class _RepeatSectionV2State extends State<RepeatSectionV2> with AutomaticKeepAli
           ),
           itemCount: problemSolves.length,
           itemBuilder: (context, index) {
-            final solve = problemSolves[problemSolves.length - 1 - index]; // 최신순
+            final solve =
+                problemSolves[problemSolves.length - 1 - index]; // 최신순
             final displayIndex = problemSolves.length - index;
             return _ProblemSolveCard(
               solve: solve,
@@ -137,10 +141,64 @@ Widget buildRepeatSectionV2(
   Color iconColor,
   bool isWide,
 ) {
-  return RepeatSectionV2(
-    problem: problem,
-    iconColor: iconColor,
-    isWide: isWide,
+  final themeProvider = Provider.of<ThemeHandler>(ctx, listen: false);
+
+  return Column(
+    children: [
+      // 복습 기록 리스트 영역
+      Expanded(
+        child: RepeatSectionV2(
+          problem: problem,
+          iconColor: iconColor,
+          isWide: isWide,
+        ),
+      ),
+      // 버튼 영역
+      Container(
+        width: double.infinity,
+        padding: EdgeInsets.only(
+          left: isWide ? 60 : 25,
+          right: isWide ? 60 : 25,
+          top: 10,
+          bottom: 20,
+        ),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 8,
+              offset: const Offset(0, -2),
+            ),
+          ],
+        ),
+        child: SizedBox(
+          height: 48,
+          child: FloatingActionButton.extended(
+            onPressed: () async {
+              await Navigator.push(
+                ctx,
+                MaterialPageRoute(
+                  builder: (context) => ProblemReviewCompletionScreen(
+                    problemId: problem.problemId,
+                    onRefresh: () {},
+                  ),
+                ),
+              );
+            },
+            backgroundColor: themeProvider.primaryColor,
+            icon: const Icon(Icons.edit, color: Colors.white, size: 20),
+            label: const StandardText(
+              text: '문제 복습하기',
+              color: Colors.white,
+              fontSize: 15,
+              fontWeight: FontWeight.bold,
+            ),
+            elevation: 4,
+          ),
+        ),
+      ),
+    ],
   );
 }
 
@@ -296,14 +354,16 @@ class _ProblemSolveCard extends StatelessWidget {
             ),
 
             // 상세 내용
-            if (isExpanded) _buildExpandedContent(context, themeProvider, statusColor),
+            if (isExpanded)
+              _buildExpandedContent(context, themeProvider, statusColor),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildExpandedContent(BuildContext context, ThemeHandler themeProvider, Color statusColor) {
+  Widget _buildExpandedContent(
+      BuildContext context, ThemeHandler themeProvider, Color statusColor) {
     return Container(
       padding: const EdgeInsets.all(16.0),
       child: Column(
@@ -376,8 +436,7 @@ class _ProblemSolveCard extends StatelessWidget {
           ],
 
           // 회고
-          if (solve.reflection != null &&
-              solve.reflection!.isNotEmpty) ...[
+          if (solve.reflection != null && solve.reflection!.isNotEmpty) ...[
             Row(
               children: [
                 Container(
@@ -390,7 +449,7 @@ class _ProblemSolveCard extends StatelessWidget {
                       color: themeProvider.primaryColor, size: 18),
                 ),
                 const SizedBox(width: 8),
-                StandardText(
+                const StandardText(
                   text: '복습 메모',
                   fontSize: 15,
                   fontWeight: FontWeight.w500,
