@@ -189,7 +189,7 @@ class _RepeatSectionV2WrapperState extends State<RepeatSectionV2Wrapper> {
             left: widget.isWide ? 60 : 25,
             right: widget.isWide ? 60 : 25,
             top: 10,
-            bottom: 20,
+            bottom: 5,
           ),
           decoration: BoxDecoration(
             color: Colors.white,
