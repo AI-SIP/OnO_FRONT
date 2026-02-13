@@ -8,7 +8,6 @@ import '../../Module/Theme/ThemeHandler.dart';
 import 'Widget/AnalysisSection.dart';
 import 'Widget/DateRowWidget.dart';
 import 'Widget/ImageSection.dart';
-import 'Widget/LayoutHelpers.dart';
 import 'Widget/RepeatSectionV2.dart';
 
 class ProblemDetailTemplateV2 extends StatefulWidget {
@@ -59,7 +58,8 @@ class _ProblemDetailTemplateV2State extends State<ProblemDetailTemplateV2>
         // 배경 (노트 격자 무늬 + 스프링)
         CustomPaint(
           size: Size.infinite,
-          painter: GridPainter(gridColor: themeProvider.primaryColor, isSpring: true),
+          painter: GridPainter(
+              gridColor: themeProvider.primaryColor, isSpring: true),
         ),
 
         Column(
@@ -108,7 +108,8 @@ class _ProblemDetailTemplateV2State extends State<ProblemDetailTemplateV2>
                   Icon(Icons.calendar_today_outlined,
                       color: themeProvider.primaryColor, size: 18),
                   const SizedBox(width: 8),
-                  buildDateRow(widget.problemModel.solvedAt!, themeProvider.primaryColor),
+                  buildDateRow(widget.problemModel.solvedAt!,
+                      themeProvider.primaryColor),
                 ],
               ),
             ],
@@ -169,7 +170,10 @@ class _ProblemDetailTemplateV2State extends State<ProblemDetailTemplateV2>
         children: [
           buildImageSection(
             context,
-            widget.problemModel.problemImageDataList?.map((m) => m.imageUrl).toList() ?? [],
+            widget.problemModel.problemImageDataList
+                    ?.map((m) => m.imageUrl)
+                    .toList() ??
+                [],
             '문제 이미지',
             themeProvider,
           ),
@@ -189,22 +193,28 @@ class _ProblemDetailTemplateV2State extends State<ProblemDetailTemplateV2>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // 메모
-          if (widget.problemModel.memo != null && widget.problemModel.memo!.isNotEmpty)
+          if (widget.problemModel.memo != null &&
+              widget.problemModel.memo!.isNotEmpty)
             _buildMemoCard(themeProvider),
-          if (widget.problemModel.memo != null && widget.problemModel.memo!.isNotEmpty)
+          if (widget.problemModel.memo != null &&
+              widget.problemModel.memo!.isNotEmpty)
             const SizedBox(height: 24),
 
           // 해설 이미지
           buildImageSection(
             context,
-            widget.problemModel.answerImageDataList?.map((m) => m.imageUrl).toList() ?? [],
+            widget.problemModel.answerImageDataList
+                    ?.map((m) => m.imageUrl)
+                    .toList() ??
+                [],
             '해설 이미지',
             themeProvider,
           ),
           const SizedBox(height: 24),
 
           // AI 분석 결과
-          buildAnalysisSection(context, widget.problemModel.analysis, themeProvider.primaryColor),
+          buildAnalysisSection(context, widget.problemModel.analysis,
+              themeProvider.primaryColor),
           const SizedBox(height: 24),
         ],
       ),
@@ -228,11 +238,12 @@ class _ProblemDetailTemplateV2State extends State<ProblemDetailTemplateV2>
         children: [
           Row(
             children: [
-              Icon(Icons.edit_note, color: themeProvider.primaryColor, size: 22),
+              Icon(Icons.edit_note,
+                  color: themeProvider.primaryColor, size: 22),
               const SizedBox(width: 8),
               HandWriteText(
                 text: '나의 메모',
-                fontSize: 18,
+                fontSize: 16,
                 color: themeProvider.primaryColor,
               ),
             ],

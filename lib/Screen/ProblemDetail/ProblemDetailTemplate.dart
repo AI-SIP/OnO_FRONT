@@ -189,7 +189,7 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
               UnderlinedText(
                 text: DateFormat('yyyy년 M월 d일')
                     .format(widget.problemModel.solvedAt!),
-                fontSize: 14,
+                fontSize: 15,
               ),
             ],
           ),
@@ -229,7 +229,7 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
             const SizedBox(height: 12),
             UnderlinedText(
               text: widget.problemModel.memo!,
-              fontSize: 16,
+              fontSize: 18,
             ),
             const SizedBox(height: 24),
           ],
