@@ -53,6 +53,14 @@ class _RepeatSectionV2State extends State<RepeatSectionV2>
     });
   }
 
+  // 복습 기록 새로고침
+  void refresh() {
+    setState(() {
+      _problemSolvesFuture = problemSolveService
+          .getProblemSolvesByProblemId(widget.problem.problemId);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     super.build(context); // AutomaticKeepAliveClientMixin 필수
@@ -120,7 +128,7 @@ class _RepeatSectionV2State extends State<RepeatSectionV2>
           itemBuilder: (context, index) {
             final solve =
                 problemSolves[problemSolves.length - 1 - index]; // 최신순
-            final displayIndex = problemSolves.length - index;
+            final displayIndex = index + 1; // 최신 기록이 1회차
             return _ProblemSolveCard(
               solve: solve,
               index: displayIndex,
@@ -135,70 +143,105 @@ class _RepeatSectionV2State extends State<RepeatSectionV2>
   }
 }
 
+class RepeatSectionV2Wrapper extends StatefulWidget {
+  final ProblemModel problem;
+  final Color iconColor;
+  final bool isWide;
+
+  const RepeatSectionV2Wrapper({
+    super.key,
+    required this.problem,
+    required this.iconColor,
+    required this.isWide,
+  });
+
+  @override
+  State<RepeatSectionV2Wrapper> createState() => _RepeatSectionV2WrapperState();
+}
+
+class _RepeatSectionV2WrapperState extends State<RepeatSectionV2Wrapper> {
+  final GlobalKey<_RepeatSectionV2State> _repeatSectionKey = GlobalKey<_RepeatSectionV2State>();
+
+  @override
+  Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
+
+    return Column(
+      children: [
+        // 복습 기록 리스트 영역
+        Expanded(
+          child: RepeatSectionV2(
+            key: _repeatSectionKey,
+            problem: widget.problem,
+            iconColor: widget.iconColor,
+            isWide: widget.isWide,
+          ),
+        ),
+        // 버튼 영역
+        Container(
+          width: double.infinity,
+          padding: EdgeInsets.only(
+            left: widget.isWide ? 60 : 25,
+            right: widget.isWide ? 60 : 25,
+            top: 10,
+            bottom: 20,
+          ),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 8,
+                offset: const Offset(0, -2),
+              ),
+            ],
+          ),
+          child: SizedBox(
+            height: 48,
+            child: FloatingActionButton.extended(
+              onPressed: () async {
+                final result = await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ProblemReviewCompletionScreen(
+                      problemId: widget.problem.problemId,
+                      onRefresh: () {},
+                    ),
+                  ),
+                );
+
+                // 복습 등록 완료 후 새로고침
+                if (result == true && mounted) {
+                  _repeatSectionKey.currentState?.refresh();
+                }
+              },
+              backgroundColor: themeProvider.primaryColor,
+              icon: const Icon(Icons.edit, color: Colors.white, size: 20),
+              label: const StandardText(
+                text: '문제 복습하기',
+                color: Colors.white,
+                fontSize: 15,
+                fontWeight: FontWeight.bold,
+              ),
+              elevation: 4,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 Widget buildRepeatSectionV2(
   BuildContext ctx,
   ProblemModel problem,
   Color iconColor,
   bool isWide,
 ) {
-  final themeProvider = Provider.of<ThemeHandler>(ctx, listen: false);
-
-  return Column(
-    children: [
-      // 복습 기록 리스트 영역
-      Expanded(
-        child: RepeatSectionV2(
-          problem: problem,
-          iconColor: iconColor,
-          isWide: isWide,
-        ),
-      ),
-      // 버튼 영역
-      Container(
-        width: double.infinity,
-        padding: EdgeInsets.only(
-          left: isWide ? 60 : 25,
-          right: isWide ? 60 : 25,
-          top: 10,
-          bottom: 20,
-        ),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 8,
-              offset: const Offset(0, -2),
-            ),
-          ],
-        ),
-        child: SizedBox(
-          height: 48,
-          child: FloatingActionButton.extended(
-            onPressed: () async {
-              await Navigator.push(
-                ctx,
-                MaterialPageRoute(
-                  builder: (context) => ProblemReviewCompletionScreen(
-                    problemId: problem.problemId,
-                    onRefresh: () {},
-                  ),
-                ),
-              );
-            },
-            backgroundColor: themeProvider.primaryColor,
-            icon: const Icon(Icons.edit, color: Colors.white, size: 20),
-            label: const StandardText(
-              text: '문제 복습하기',
-              color: Colors.white,
-              fontSize: 15,
-              fontWeight: FontWeight.bold,
-            ),
-            elevation: 4,
-          ),
-        ),
-      ),
-    ],
+  return RepeatSectionV2Wrapper(
+    problem: problem,
+    iconColor: iconColor,
+    isWide: isWide,
   );
 }
 
