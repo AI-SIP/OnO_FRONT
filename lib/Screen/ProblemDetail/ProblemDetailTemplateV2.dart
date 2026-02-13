@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../Model/Problem/ProblemModel.dart';
@@ -7,26 +6,25 @@ import '../../Module/Text/HandWriteText.dart';
 import '../../Module/Theme/GridPainter.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import 'Widget/AnalysisSection.dart';
+import 'Widget/DateRowWidget.dart';
 import 'Widget/ImageSection.dart';
+import 'Widget/LayoutHelpers.dart';
 import 'Widget/RepeatSectionV2.dart';
 
-class ProblemDetailTemplate extends StatefulWidget {
+class ProblemDetailTemplateV2 extends StatefulWidget {
   final ProblemModel problemModel;
-  final bool isExpanded;
-  final Function(bool) onExpansionChanged;
 
-  const ProblemDetailTemplate({
+  const ProblemDetailTemplateV2({
     required this.problemModel,
-    required this.isExpanded,
-    required this.onExpansionChanged,
     super.key,
   });
 
   @override
-  State<ProblemDetailTemplate> createState() => _ProblemDetailTemplateState();
+  State<ProblemDetailTemplateV2> createState() =>
+      _ProblemDetailTemplateV2State();
 }
 
-class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
+class _ProblemDetailTemplateV2State extends State<ProblemDetailTemplateV2>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   int _currentTabIndex = 0;
@@ -56,19 +54,21 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
     final screenWidth = MediaQuery.of(context).size.width;
     final isWide = screenWidth >= 600;
 
-    return Column(
+    return Stack(
       children: [
-        // 노트 헤더 (손글씨 탭 바)
-        _buildNoteHeader(themeProvider),
+        // 배경 (노트 격자 무늬 + 스프링)
+        CustomPaint(
+          size: Size.infinite,
+          painter: GridPainter(gridColor: themeProvider.primaryColor, isSpring: true),
+        ),
 
-        // 탭 내용
-        Expanded(
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-            ),
-            child: CustomPaint(
-              painter: GridPainter(gridColor: themeProvider.primaryColor, isSpring: true),
+        Column(
+          children: [
+            // 노트 헤더 (손글씨 탭 바)
+            _buildNoteHeader(themeProvider),
+
+            // 탭 내용
+            Expanded(
               child: TabBarView(
                 controller: _tabController,
                 children: [
@@ -78,7 +78,7 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
                 ],
               ),
             ),
-          ),
+          ],
         ),
       ],
     );
@@ -101,14 +101,15 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
         children: [
           // 문제 정보 (날짜)
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Icon(Icons.calendar_today_outlined,
-                  color: themeProvider.primaryColor, size: 18),
-              const SizedBox(width: 8),
-              HandWriteText(
-                text: DateFormat('yyyy년 M월 d일').format(widget.problemModel.solvedAt!),
-                fontSize: 16,
-                color: Colors.black87,
+              Row(
+                children: [
+                  Icon(Icons.calendar_today_outlined,
+                      color: themeProvider.primaryColor, size: 18),
+                  const SizedBox(width: 8),
+                  buildDateRow(widget.problemModel.solvedAt!, themeProvider.primaryColor),
+                ],
               ),
             ],
           ),
