@@ -14,108 +14,153 @@ import '../../../Module/Text/StandardText.dart';
 import '../../../Module/Theme/ThemeHandler.dart';
 import '../../../Service/Api/Problem/ProblemSolveService.dart';
 
+class RepeatSectionV2 extends StatefulWidget {
+  final ProblemModel problem;
+  final Color iconColor;
+  final bool isWide;
+
+  const RepeatSectionV2({
+    super.key,
+    required this.problem,
+    required this.iconColor,
+    required this.isWide,
+  });
+
+  @override
+  State<RepeatSectionV2> createState() => _RepeatSectionV2State();
+}
+
+class _RepeatSectionV2State extends State<RepeatSectionV2> with AutomaticKeepAliveClientMixin {
+  final problemSolveService = ProblemSolveService();
+  late Future<List<ProblemSolveModel>> _problemSolvesFuture;
+  final Map<int, bool> _expandedStates = {}; // 각 카드의 펼침 상태 관리
+
+  @override
+  void initState() {
+    super.initState();
+    _problemSolvesFuture = problemSolveService.getProblemSolvesByProblemId(widget.problem.problemId);
+  }
+
+  @override
+  bool get wantKeepAlive => true; // 탭 전환 시에도 상태 유지
+
+  void _toggleExpanded(int solveId, bool newValue) {
+    setState(() {
+      _expandedStates[solveId] = newValue;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    super.build(context); // AutomaticKeepAliveClientMixin 필수
+
+    return FutureBuilder<List<ProblemSolveModel>>(
+      future: _problemSolvesFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(
+            child: Padding(
+              padding: EdgeInsets.all(40.0),
+              child: CircularProgressIndicator(),
+            ),
+          );
+        }
+
+        if (snapshot.hasError) {
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(40.0),
+              child: StandardText(
+                text: '복습 기록을 불러올 수 없습니다.',
+                fontSize: 16,
+                color: Colors.grey[600]!,
+              ),
+            ),
+          );
+        }
+
+        final problemSolves = snapshot.data ?? [];
+
+        if (problemSolves.isEmpty) {
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(40.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.menu_book_outlined,
+                      size: 64, color: Colors.grey[300]),
+                  const SizedBox(height: 16),
+                  StandardText(
+                    text: '아직 복습 기록이 없습니다.',
+                    fontSize: 16,
+                    color: Colors.grey[600]!,
+                  ),
+                  const SizedBox(height: 8),
+                  StandardText(
+                    text: '문제를 복습하고 기록을 남겨보세요!',
+                    fontSize: 14,
+                    color: Colors.grey[500]!,
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+
+        return ListView.builder(
+          padding: EdgeInsets.symmetric(
+            horizontal: widget.isWide ? 60.0 : 20.0,
+            vertical: 20.0,
+          ),
+          itemCount: problemSolves.length,
+          itemBuilder: (context, index) {
+            final solve = problemSolves[problemSolves.length - 1 - index]; // 최신순
+            final displayIndex = problemSolves.length - index;
+            return _ProblemSolveCard(
+              solve: solve,
+              index: displayIndex,
+              iconColor: widget.iconColor,
+              isExpanded: _expandedStates[solve.problemSolveId] ?? false,
+              onToggle: (value) => _toggleExpanded(solve.problemSolveId, value),
+            );
+          },
+        );
+      },
+    );
+  }
+}
+
 Widget buildRepeatSectionV2(
   BuildContext ctx,
   ProblemModel problem,
   Color iconColor,
   bool isWide,
 ) {
-  final problemSolveService = ProblemSolveService();
-
-  return FutureBuilder<List<ProblemSolveModel>>(
-    future: problemSolveService.getProblemSolvesByProblemId(problem.problemId),
-    builder: (context, snapshot) {
-      if (snapshot.connectionState == ConnectionState.waiting) {
-        return const Center(
-          child: Padding(
-            padding: EdgeInsets.all(40.0),
-            child: CircularProgressIndicator(),
-          ),
-        );
-      }
-
-      if (snapshot.hasError) {
-        return Center(
-          child: Padding(
-            padding: const EdgeInsets.all(40.0),
-            child: StandardText(
-              text: '복습 기록을 불러올 수 없습니다.',
-              fontSize: 16,
-              color: Colors.grey[600]!,
-            ),
-          ),
-        );
-      }
-
-      final problemSolves = snapshot.data ?? [];
-
-      if (problemSolves.isEmpty) {
-        return Center(
-          child: Padding(
-            padding: const EdgeInsets.all(40.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.menu_book_outlined,
-                    size: 64, color: Colors.grey[300]),
-                const SizedBox(height: 16),
-                StandardText(
-                  text: '아직 복습 기록이 없습니다.',
-                  fontSize: 16,
-                  color: Colors.grey[600]!,
-                ),
-                const SizedBox(height: 8),
-                StandardText(
-                  text: '문제를 복습하고 기록을 남겨보세요!',
-                  fontSize: 14,
-                  color: Colors.grey[500]!,
-                ),
-              ],
-            ),
-          ),
-        );
-      }
-
-      return ListView.builder(
-        padding: EdgeInsets.symmetric(
-          horizontal: isWide ? 60.0 : 20.0,
-          vertical: 20.0,
-        ),
-        itemCount: problemSolves.length,
-        itemBuilder: (context, index) {
-          final solve = problemSolves[problemSolves.length - 1 - index]; // 최신순
-          final displayIndex = problemSolves.length - index;
-          return _ProblemSolveCard(
-            solve: solve,
-            index: displayIndex,
-            iconColor: iconColor,
-          );
-        },
-      );
-    },
+  return RepeatSectionV2(
+    problem: problem,
+    iconColor: iconColor,
+    isWide: isWide,
   );
 }
 
-class _ProblemSolveCard extends StatefulWidget {
+class _ProblemSolveCard extends StatelessWidget {
   final ProblemSolveModel solve;
   final int index;
   final Color iconColor;
+  final bool isExpanded;
+  final Function(bool) onToggle;
 
   const _ProblemSolveCard({
     required this.solve,
     required this.index,
     required this.iconColor,
+    required this.isExpanded,
+    required this.onToggle,
   });
 
-  @override
-  State<_ProblemSolveCard> createState() => _ProblemSolveCardState();
-}
-
-class _ProblemSolveCardState extends State<_ProblemSolveCard> {
-  bool _isExpanded = false;
-
   Color _getStatusColor() {
-    switch (widget.solve.answerStatus) {
+    switch (solve.answerStatus) {
       case AnswerStatus.CORRECT:
         return Colors.green;
       case AnswerStatus.PARTIAL:
@@ -128,7 +173,7 @@ class _ProblemSolveCardState extends State<_ProblemSolveCard> {
   }
 
   IconData _getStatusIcon() {
-    switch (widget.solve.answerStatus) {
+    switch (solve.answerStatus) {
       case AnswerStatus.CORRECT:
         return Icons.check_circle;
       case AnswerStatus.PARTIAL:
@@ -168,7 +213,7 @@ class _ProblemSolveCardState extends State<_ProblemSolveCard> {
           children: [
             // 헤더
             InkWell(
-              onTap: () => setState(() => _isExpanded = !_isExpanded),
+              onTap: () => onToggle(!isExpanded),
               borderRadius:
                   const BorderRadius.vertical(top: Radius.circular(16.0)),
               child: Container(
@@ -200,7 +245,7 @@ class _ProblemSolveCardState extends State<_ProblemSolveCard> {
                           Row(
                             children: [
                               StandardText(
-                                text: '${widget.index}회차',
+                                text: '$index회차',
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
                                 color: Colors.black87,
@@ -214,7 +259,7 @@ class _ProblemSolveCardState extends State<_ProblemSolveCard> {
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: StandardText(
-                                  text: widget.solve.answerStatus.displayName,
+                                  text: solve.answerStatus.displayName,
                                   fontSize: 12,
                                   fontWeight: FontWeight.bold,
                                   color: statusColor,
@@ -230,7 +275,7 @@ class _ProblemSolveCardState extends State<_ProblemSolveCard> {
                               const SizedBox(width: 4),
                               StandardText(
                                 text: DateFormat('yyyy년 MM월 dd일 HH:mm')
-                                    .format(widget.solve.practicedAt),
+                                    .format(solve.practicedAt),
                                 fontSize: 13,
                                 color: Colors.grey[600]!,
                               ),
@@ -242,7 +287,7 @@ class _ProblemSolveCardState extends State<_ProblemSolveCard> {
 
                     // 확장 아이콘
                     Icon(
-                      _isExpanded ? Icons.expand_less : Icons.expand_more,
+                      isExpanded ? Icons.expand_less : Icons.expand_more,
                       color: statusColor,
                     ),
                   ],
@@ -251,35 +296,35 @@ class _ProblemSolveCardState extends State<_ProblemSolveCard> {
             ),
 
             // 상세 내용
-            if (_isExpanded) _buildExpandedContent(themeProvider, statusColor),
+            if (isExpanded) _buildExpandedContent(context, themeProvider, statusColor),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildExpandedContent(ThemeHandler themeProvider, Color statusColor) {
+  Widget _buildExpandedContent(BuildContext context, ThemeHandler themeProvider, Color statusColor) {
     return Container(
       padding: const EdgeInsets.all(16.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // 소요 시간
-          if (widget.solve.timeSpentSeconds != null)
+          if (solve.timeSpentSeconds != null)
             _buildInfoRow(
               Icons.timer_outlined,
               '소요 시간',
-              '${(widget.solve.timeSpentSeconds! / 60).ceil()}분',
+              '${(solve.timeSpentSeconds! / 60).ceil()}분',
               themeProvider.primaryColor,
             ),
-          if (widget.solve.timeSpentSeconds != null) ...[
+          if (solve.timeSpentSeconds != null) ...[
             const SizedBox(height: 20),
             Divider(color: Colors.grey[300], thickness: 1),
             const SizedBox(height: 20),
           ],
 
           // 개선사항
-          if (widget.solve.improvements.isNotEmpty) ...[
+          if (solve.improvements.isNotEmpty) ...[
             Row(
               children: [
                 Container(
@@ -301,7 +346,7 @@ class _ProblemSolveCardState extends State<_ProblemSolveCard> {
               ],
             ),
             const SizedBox(height: 12),
-            ...widget.solve.improvements.map((improvement) {
+            ...solve.improvements.map((improvement) {
               return Padding(
                 padding: const EdgeInsets.only(bottom: 8.0),
                 child: Row(
@@ -331,8 +376,8 @@ class _ProblemSolveCardState extends State<_ProblemSolveCard> {
           ],
 
           // 회고
-          if (widget.solve.reflection != null &&
-              widget.solve.reflection!.isNotEmpty) ...[
+          if (solve.reflection != null &&
+              solve.reflection!.isNotEmpty) ...[
             Row(
               children: [
                 Container(
@@ -363,7 +408,7 @@ class _ProblemSolveCardState extends State<_ProblemSolveCard> {
                 border: Border.all(color: Colors.grey[300]!, width: 1),
               ),
               child: HandWriteText(
-                text: widget.solve.reflection!,
+                text: solve.reflection!,
                 fontSize: 14,
                 color: Colors.black87,
               ),
@@ -374,7 +419,7 @@ class _ProblemSolveCardState extends State<_ProblemSolveCard> {
           ],
 
           // 풀이 이미지
-          if (widget.solve.imageUrls.isNotEmpty) ...[
+          if (solve.imageUrls.isNotEmpty) ...[
             Row(
               children: [
                 Container(
@@ -396,7 +441,7 @@ class _ProblemSolveCardState extends State<_ProblemSolveCard> {
               ],
             ),
             const SizedBox(height: 12),
-            ...widget.solve.imageUrls.asMap().entries.map((entry) {
+            ...solve.imageUrls.asMap().entries.map((entry) {
               final imageUrl = entry.value;
               return Padding(
                 padding: const EdgeInsets.only(bottom: 12.0),
