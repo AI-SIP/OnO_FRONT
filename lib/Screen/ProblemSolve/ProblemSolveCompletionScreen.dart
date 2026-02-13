@@ -2,15 +2,19 @@ import 'dart:io';
 
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
+import 'package:ono/Model/Problem/ImprovementType.dart';
 import 'package:ono/Module/Dialog/LoadingDialog.dart';
 import 'package:ono/Module/Dialog/SnackBarDialog.dart';
 import 'package:provider/provider.dart';
 
+import '../../Model/Problem/AnswerStatus.dart';
+import '../../Model/Problem/ProblemSolveRegisterDto.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/PracticeNoteProvider.dart';
 import '../../Provider/ProblemsProvider.dart';
 import '../../Provider/UserProvider.dart';
+import '../../Service/Api/Problem/ProblemSolveService.dart';
 import 'ProblemSolveCompletionTemplate.dart';
 
 class ProblemReviewCompletionScreen extends StatefulWidget {
@@ -115,6 +119,7 @@ class _ProblemReviewCompletionScreenState
         Provider.of<ProblemsProvider>(context, listen: false);
     final practiceProvider =
         Provider.of<ProblemPracticeProvider>(context, listen: false);
+    final problemSolveService = ProblemSolveService();
 
     // 템플릿에서 데이터 가져오기
     final reviewData = _templateKey.currentState?.getReviewData();
@@ -138,27 +143,40 @@ class _ProblemReviewCompletionScreenState
     LoadingDialog.show(context, '복습 기록 저장 중...');
 
     try {
-      // TODO: API 연동 시 여기에 복습 데이터 전송 로직 추가
-      // await problemsProvider.submitProblemReview(reviewData);
-
-      // 현재는 기존 로직 실행: 풀이 이미지만 등록
-      await problemsProvider.problemService.registerProblemImageData(
-        problemId: widget.problemId,
-        problemImages: solutionImages,
-        problemImageTypes: List.filled(solutionImages.length, 'SOLVE_IMAGE'),
+      // 1. 복습 기록 생성 (ProblemSolve API)
+      final registerDto = ProblemSolveRegisterDto(
+        problemId: reviewData['problemId'] as int,
+        practicedAt: DateTime.now(),
+        answerStatus: reviewData['answerStatus'] as AnswerStatus,
+        reflection: reviewData['reflection'] as String?,
+        improvements: reviewData['improvements'] as List<ImprovementType>,
+        timeSpentSeconds: (reviewData['timeSpentMinutes'] as int?) != null
+            ? (reviewData['timeSpentMinutes'] as int) * 60
+            : null,
       );
 
-      // 문제 정보 갱신
+      final practiceRecordId =
+          await problemSolveService.createProblemSolve(registerDto);
+
+      // 2. 복습 기록 이미지 업로드
+      await problemSolveService.uploadProblemSolveImages(
+        problemSolveId: practiceRecordId,
+        images: solutionImages,
+      );
+
+      // 3. 문제 정보 갱신
       await problemsProvider.fetchProblem(widget.problemId);
 
-      // 복습 노트 갱신
-      await practiceProvider.moveToPractice(
-        practiceProvider.currentPracticeNote!.practiceId,
-      );
+      // 4. 복습 노트 갱신
+      if (practiceProvider.currentPracticeNote != null) {
+        await practiceProvider.moveToPractice(
+          practiceProvider.currentPracticeNote!.practiceId,
+        );
+      }
 
       FirebaseAnalytics.instance.logEvent(name: 'problem_repeat');
 
-      // 유저 정보 갱신 (경험치 업데이트)
+      // 5. 유저 정보 갱신 (경험치 업데이트)
       await Provider.of<UserProvider>(context, listen: false).fetchUserInfo();
 
       LoadingDialog.hide(context);

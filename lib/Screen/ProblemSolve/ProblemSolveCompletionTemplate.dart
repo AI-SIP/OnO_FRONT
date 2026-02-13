@@ -4,6 +4,8 @@ import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../Model/Problem/AnswerStatus.dart';
+import '../../Model/Problem/ImprovementType.dart';
 import '../../Module/Image/ImagePickerHandler.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
@@ -27,14 +29,15 @@ class ProblemReviewCompletionTemplateState
     extends State<ProblemReviewCompletionTemplate> {
   final _memoCtrl = TextEditingController();
   final List<XFile> _solutionImages = [];
-  bool _isCorrect = true; // 정답 여부 (기본값: 맞음)
+  AnswerStatus _answerStatus = AnswerStatus.CORRECT; // 정답 상태 (기본값: 정답)
+  int _timeSpentMinutes = 0; // 소요 시간 (분)
 
-  // 개선 체크리스트
-  final Map<String, bool> _improvements = {
-    '이전 실수를 반복하지 않았어요': false,
-    '새로운 풀이법을 찾았어요': false,
-    '개념을 더 명확히 이해했어요': false,
-    '풀이 시간이 단축됐어요': false,
+  // 개선 체크리스트 (ImprovementType enum 사용)
+  final Map<ImprovementType, bool> _improvements = {
+    ImprovementType.NO_REPEAT_MISTAKE: false,
+    ImprovementType.FOUND_NEW_SOLUTION: false,
+    ImprovementType.BETTER_UNDERSTANDING: false,
+    ImprovementType.FASTER_SOLVING: false,
   };
 
   @override
@@ -65,6 +68,10 @@ class ProblemReviewCompletionTemplateState
 
             // 정답 여부 선택
             _buildAnswerStatusSection(themeProvider),
+            SizedBox(height: spacing),
+
+            // 소요 시간 입력
+            _buildTimeSpentSection(themeProvider),
             SizedBox(height: spacing),
 
             // 개선된 점 체크리스트
@@ -157,21 +164,31 @@ class ProblemReviewCompletionTemplateState
           children: [
             Expanded(
               child: _buildAnswerOption(
-                label: '맞았어요',
+                label: '정답',
                 icon: Icons.check_circle,
                 color: Colors.green,
-                isSelected: _isCorrect,
-                onTap: () => setState(() => _isCorrect = true),
+                isSelected: _answerStatus == AnswerStatus.CORRECT,
+                onTap: () => setState(() => _answerStatus = AnswerStatus.CORRECT),
               ),
             ),
-            const SizedBox(width: 16),
+            const SizedBox(width: 8),
             Expanded(
               child: _buildAnswerOption(
-                label: '틀렸어요',
+                label: '부분 정답',
+                icon: Icons.check_circle_outline,
+                color: Colors.orange,
+                isSelected: _answerStatus == AnswerStatus.PARTIAL,
+                onTap: () => setState(() => _answerStatus = AnswerStatus.PARTIAL),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: _buildAnswerOption(
+                label: '오답',
                 icon: Icons.cancel,
                 color: Colors.red,
-                isSelected: !_isCorrect,
-                onTap: () => setState(() => _isCorrect = false),
+                isSelected: _answerStatus == AnswerStatus.WRONG,
+                onTap: () => setState(() => _answerStatus = AnswerStatus.WRONG),
               ),
             ),
           ],
@@ -190,7 +207,7 @@ class ProblemReviewCompletionTemplateState
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 12.0),
+        padding: const EdgeInsets.symmetric(vertical: 14.0, horizontal: 8.0),
         decoration: BoxDecoration(
           color: isSelected ? color.withOpacity(0.1) : Colors.grey[100],
           border: Border.all(
@@ -199,7 +216,7 @@ class ProblemReviewCompletionTemplateState
           ),
           borderRadius: BorderRadius.circular(12.0),
         ),
-        child: Row(
+        child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
@@ -207,10 +224,10 @@ class ProblemReviewCompletionTemplateState
               color: isSelected ? color : Colors.grey[400],
               size: 24,
             ),
-            const SizedBox(width: 8),
+            const SizedBox(height: 4),
             StandardText(
               text: label,
-              fontSize: 16,
+              fontSize: 13,
               fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
               color: isSelected ? color : Colors.grey[600]!,
             ),
@@ -263,7 +280,7 @@ class ProblemReviewCompletionTemplateState
   }
 
   Widget _buildCheckboxItem({
-    required String label,
+    required ImprovementType label,
     required bool value,
     required Function(bool?) onChanged,
     required ThemeHandler themeProvider,
@@ -302,7 +319,7 @@ class ProblemReviewCompletionTemplateState
             const SizedBox(width: 12),
             Expanded(
               child: StandardText(
-                text: label,
+                text: label.description,
                 fontSize: 15,
                 color: value ? Colors.black87 : Colors.black54,
                 fontWeight: value ? FontWeight.w500 : FontWeight.normal,
@@ -311,6 +328,71 @@ class ProblemReviewCompletionTemplateState
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildTimeSpentSection(ThemeHandler themeProvider) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(Icons.timer_outlined, color: themeProvider.primaryColor),
+            const SizedBox(width: 8),
+            const StandardText(
+              text: '소요 시간 (선택사항)',
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.black,
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                decoration: BoxDecoration(
+                  color: Colors.grey[50],
+                  borderRadius: BorderRadius.circular(12.0),
+                  border: Border.all(color: Colors.grey[300]!, width: 1),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    StandardText(
+                      text: _timeSpentMinutes > 0 ? '$_timeSpentMinutes분' : '시간을 입력하세요',
+                      fontSize: 16,
+                      color: _timeSpentMinutes > 0 ? Colors.black87 : Colors.grey[400]!,
+                    ),
+                    Row(
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.remove_circle_outline),
+                          color: themeProvider.primaryColor,
+                          onPressed: () {
+                            if (_timeSpentMinutes > 0) {
+                              setState(() => _timeSpentMinutes -= 5);
+                            }
+                          },
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.add_circle_outline),
+                          color: themeProvider.primaryColor,
+                          onPressed: () {
+                            setState(() => _timeSpentMinutes += 5);
+                          },
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 
@@ -333,13 +415,14 @@ class ProblemReviewCompletionTemplateState
   Map<String, dynamic> getReviewData() {
     return {
       'problemId': widget.problemId,
-      'isCorrect': _isCorrect,
-      'memo': _memoCtrl.text,
+      'answerStatus': _answerStatus,
+      'reflection': _memoCtrl.text.isNotEmpty ? _memoCtrl.text : null,
       'solutionImages': _solutionImages.map((f) => File(f.path)).toList(),
       'improvements': _improvements.entries
           .where((entry) => entry.value)
           .map((entry) => entry.key)
           .toList(),
+      'timeSpentMinutes': _timeSpentMinutes > 0 ? _timeSpentMinutes : null,
     };
   }
 
@@ -347,7 +430,8 @@ class ProblemReviewCompletionTemplateState
     setState(() {
       _memoCtrl.clear();
       _solutionImages.clear();
-      _isCorrect = true;
+      _answerStatus = AnswerStatus.CORRECT;
+      _timeSpentMinutes = 0;
       _improvements.updateAll((key, value) => false);
     });
   }
