@@ -150,6 +150,9 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
   }
 
   Widget _buildProblemTab(ThemeHandler themeProvider, bool isWide) {
+    final problemImageCount =
+        widget.problemModel.problemImageDataList?.length ?? 0;
+
     return SingleChildScrollView(
       physics: const AlwaysScrollableScrollPhysics(),
       padding: EdgeInsets.symmetric(
@@ -159,57 +162,172 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 푼 날짜
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(6.0),
-                    decoration: BoxDecoration(
-                      color: themeProvider.primaryColor.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(6.0),
-                    ),
-                    child: Icon(
-                      Icons.calendar_today_outlined,
-                      color: themeProvider.primaryColor,
-                      size: 18,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  StandardText(
-                    text: '푼 날짜',
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.black87,
-                  ),
-                ],
-              ),
-              UnderlinedText(
-                text: DateFormat('yyyy년 M월 d일')
-                    .format(widget.problemModel.solvedAt!),
-                fontSize: 15,
-              ),
-            ],
-          ),
+          _buildProblemMetaCard(themeProvider),
           const SizedBox(height: 30),
 
           // 문제 이미지
-          _buildSectionTitle('문제 이미지', Icons.image_outlined, themeProvider),
-          const SizedBox(height: 12),
-          buildImageSection(
-            context,
-            widget.problemModel.problemImageDataList
-                    ?.map((m) => m.imageUrl)
-                    .toList() ??
-                [],
+          _buildProblemSectionHeaderCard(
             '문제 이미지',
+            Icons.image_outlined,
             themeProvider,
+            trailing: _buildCountChip(problemImageCount, themeProvider),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 16),
+          _buildProblemImagePanel(
+            themeProvider,
+            child: buildImageSection(
+              context,
+              widget.problemModel.problemImageDataList
+                      ?.map((m) => m.imageUrl)
+                      .toList() ??
+                  [],
+              '문제 이미지',
+              themeProvider,
+            ),
+          ),
+          const SizedBox(height: 34),
         ],
       ),
+    );
+  }
+
+  Widget _buildProblemMetaCard(ThemeHandler themeProvider) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14.0),
+        border: Border.all(
+          color: themeProvider.primaryColor.withOpacity(0.18),
+          width: 1.2,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8.0),
+            decoration: BoxDecoration(
+              color: themeProvider.primaryColor.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(10.0),
+            ),
+            child: Icon(
+              Icons.calendar_today_outlined,
+              color: themeProvider.primaryColor,
+              size: 18,
+            ),
+          ),
+          const SizedBox(width: 10),
+          const StandardText(
+            text: '푼 날짜',
+            fontSize: 15,
+            fontWeight: FontWeight.w600,
+            color: Colors.black87,
+          ),
+          const Spacer(),
+          UnderlinedText(
+            text:
+                DateFormat('yyyy년 M월 d일').format(widget.problemModel.solvedAt!),
+            fontSize: 15,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCountChip(int count, ThemeHandler themeProvider) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: themeProvider.primaryColor.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: StandardText(
+        text: '$count장',
+        fontSize: 12,
+        fontWeight: FontWeight.w600,
+        color: themeProvider.primaryColor,
+      ),
+    );
+  }
+
+  Widget _buildProblemSectionHeaderCard(
+      String title, IconData icon, ThemeHandler themeProvider,
+      {Widget? trailing}) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14.0),
+        border: Border.all(
+          color: themeProvider.primaryColor.withOpacity(0.18),
+          width: 1.2,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8.0),
+            decoration: BoxDecoration(
+              color: themeProvider.primaryColor.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(10.0),
+            ),
+            child: Icon(
+              icon,
+              color: themeProvider.primaryColor,
+              size: 18,
+            ),
+          ),
+          const SizedBox(width: 10),
+          StandardText(
+            text: title,
+            fontSize: 15,
+            fontWeight: FontWeight.w600,
+            color: Colors.black87,
+          ),
+          const Spacer(),
+          if (trailing != null) trailing,
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProblemImagePanel(ThemeHandler themeProvider,
+      {required Widget child}) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14.0),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14.0),
+        border: Border.all(
+          color: themeProvider.primaryColor.withOpacity(0.14),
+          width: 1.1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: child,
     );
   }
 
@@ -305,27 +423,40 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
   }
 
   Widget _buildSectionTitle(
-      String title, IconData icon, ThemeHandler themeProvider) {
-    return Row(
+      String title, IconData icon, ThemeHandler themeProvider,
+      {Widget? trailing}) {
+    return Column(
       children: [
-        Container(
-          padding: const EdgeInsets.all(6.0),
-          decoration: BoxDecoration(
-            color: themeProvider.primaryColor.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(6.0),
-          ),
-          child: Icon(
-            icon,
-            color: themeProvider.primaryColor,
-            size: 18,
-          ),
+        Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(6.0),
+              decoration: BoxDecoration(
+                color: themeProvider.primaryColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(6.0),
+              ),
+              child: Icon(
+                icon,
+                color: themeProvider.primaryColor,
+                size: 18,
+              ),
+            ),
+            const SizedBox(width: 8),
+            StandardText(
+              text: title,
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+              color: Colors.black87,
+            ),
+            const Spacer(),
+            if (trailing != null) trailing,
+          ],
         ),
-        const SizedBox(width: 8),
-        StandardText(
-          text: title,
-          fontSize: 16,
-          fontWeight: FontWeight.w500,
-          color: Colors.black87,
+        const SizedBox(height: 8),
+        Divider(
+          color: themeProvider.primaryColor.withOpacity(0.2),
+          thickness: 1,
+          height: 1,
         ),
       ],
     );
