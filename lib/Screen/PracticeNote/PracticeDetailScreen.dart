@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
@@ -37,7 +38,8 @@ class PracticeDetailScreen extends StatelessWidget {
           Expanded(
               child:
                   _buildProblemList(context, practiceProvider, themeProvider)),
-          _buildNextButton(context, themeProvider, practiceProvider),
+          if (practiceProvider.currentProblems.isNotEmpty)
+            _buildNextButton(context, themeProvider, practiceProvider),
         ],
       ),
     );
@@ -84,7 +86,8 @@ class PracticeDetailScreen extends StatelessWidget {
         return TapRegion(
           onTapOutside: (_) {
             // Workaround for iPadOS 26.1 bug: https://github.com/flutter/flutter/issues/177992
-            if (DateTime.now().difference(openTime) < const Duration(milliseconds: 500)) {
+            if (DateTime.now().difference(openTime) <
+                const Duration(milliseconds: 500)) {
               return;
             }
             if (Navigator.canPop(context)) {
@@ -151,7 +154,8 @@ class PracticeDetailScreen extends StatelessWidget {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => PracticeProblemSelectionScreen(
+                            builder: (context) =>
+                                PracticeProblemSelectionScreen(
                               practiceModel: practice,
                             ),
                           ),
@@ -277,13 +281,7 @@ class PracticeDetailScreen extends StatelessWidget {
     final problems = provider.currentProblems;
 
     if (problems.isEmpty) {
-      return Center(
-        child: StandardText(
-          text: '복습할 오답노트가 없습니다.',
-          fontSize: 16,
-          color: themeProvider.primaryColor,
-        ),
-      );
+      return _buildEmptyProblemState(context, themeProvider);
     }
 
     return ListView.builder(
@@ -322,6 +320,60 @@ class PracticeDetailScreen extends StatelessWidget {
             _buildImageThumbnail(imageUrl),
             const SizedBox(width: 16),
             _buildProblemDetails(problem),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyProblemState(
+      BuildContext context, ThemeHandler themeProvider) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 28.0),
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SvgPicture.asset(
+              'assets/Icon/BigGreenFrog.svg',
+              width: 110,
+              height: 110,
+            ),
+            const SizedBox(height: 16),
+            const StandardText(
+              text: '복습노트가 비어있습니다.\n오답노트를 추가해 편리한 복습을 해보세요!',
+              fontSize: 16,
+              color: Colors.black87,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 30),
+            SizedBox(
+              width: 190,
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => PracticeProblemSelectionScreen(
+                        practiceModel: practice,
+                      ),
+                    ),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: themeProvider.primaryColor,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: const StandardText(
+                  text: '오답노트 추가하기',
+                  fontSize: 14,
+                  color: Colors.white,
+                ),
+              ),
+            ),
           ],
         ),
       ),
@@ -469,7 +521,8 @@ class PracticeDetailScreen extends StatelessWidget {
                           Navigator.pop(context);
                         },
                         style: TextButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 10),
                           backgroundColor: Colors.grey[100],
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8),
@@ -491,13 +544,15 @@ class PracticeDetailScreen extends StatelessWidget {
                             Navigator.pop(context);
                           }
 
-                          final provider = Provider.of<ProblemPracticeProvider>(context,
+                          final provider = Provider.of<ProblemPracticeProvider>(
+                              context,
                               listen: false);
                           List<int> deletePracticeIds = [practice.practiceId];
                           await provider.deletePractices(deletePracticeIds);
                         },
                         style: TextButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 10),
                           backgroundColor: Colors.red,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8),
