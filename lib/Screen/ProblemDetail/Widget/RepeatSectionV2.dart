@@ -630,6 +630,21 @@ class _ProblemSolveCard extends StatelessWidget {
                   fontWeight: FontWeight.w500,
                   color: Colors.black87,
                 ),
+                const Spacer(),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: themeProvider.primaryColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: StandardText(
+                    text: '${solve.imageUrls.length}장',
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: themeProvider.primaryColor,
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 12),

@@ -332,6 +332,9 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
   }
 
   Widget _buildSolutionTab(ThemeHandler themeProvider, bool isWide) {
+    final answerImageCount =
+        widget.problemModel.answerImageDataList?.length ?? 0;
+
     // 공통 패딩
     final contentPadding = EdgeInsets.symmetric(
       horizontal: isWide ? 60.0 : 35.0,
@@ -368,16 +371,24 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
         ],
 
         // 해설 이미지
-        _buildSectionTitle('해설 이미지', Icons.image_outlined, themeProvider),
-        const SizedBox(height: 12),
-        buildImageSection(
-          context,
-          widget.problemModel.answerImageDataList
-                  ?.map((m) => m.imageUrl)
-                  .toList() ??
-              [],
+        _buildSectionTitle(
           '해설 이미지',
+          Icons.image_outlined,
           themeProvider,
+          trailing: _buildCountChip(answerImageCount, themeProvider),
+        ),
+        const SizedBox(height: 12),
+        _buildProblemImagePanel(
+          themeProvider,
+          child: buildImageSection(
+            context,
+            widget.problemModel.answerImageDataList
+                    ?.map((m) => m.imageUrl)
+                    .toList() ??
+                [],
+            '해설 이미지',
+            themeProvider,
+          ),
         ),
       ],
     );
