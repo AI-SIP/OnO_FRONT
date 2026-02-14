@@ -252,6 +252,14 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
       return;
     }
 
+    // 문제 이미지 필수 입력 검증 (신규 등록 시에만)
+    if (!widget.isEditMode &&
+        _problemImages.isEmpty &&
+        _existingProblemImageUrls.isEmpty) {
+      _showProblemImageRequiredDialog(context);
+      return;
+    }
+
     LoadingDialog.show(
         context, widget.isEditMode ? '오답노트 수정 중...' : '오답노트 작성 중...');
     try {
@@ -314,6 +322,83 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
                 // 내용
                 const StandardText(
                   text: '제목을 입력해 주세요!',
+                  fontSize: 15,
+                  color: Colors.black87,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
+                // 액션 버튼
+                SizedBox(
+                  width: double.infinity,
+                  child: TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    style: TextButton.styleFrom(
+                      padding:
+                          const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                      backgroundColor: themeProvider.primaryColor,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: const StandardText(
+                      text: '확인',
+                      fontSize: 15,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _showProblemImageRequiredDialog(BuildContext context) {
+    final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // 헤더
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.orange.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(
+                        Icons.warning_rounded,
+                        color: Colors.orange,
+                        size: 20,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    const StandardText(
+                      text: '경고',
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black87,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                // 내용
+                const StandardText(
+                  text: '문제 이미지를 추가해 주세요!',
                   fontSize: 15,
                   color: Colors.black87,
                   textAlign: TextAlign.center,
