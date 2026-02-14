@@ -96,7 +96,8 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
         return;
       }
 
-      final problemsProvider = Provider.of<ProblemsProvider>(context, listen: false);
+      final problemsProvider =
+          Provider.of<ProblemsProvider>(context, listen: false);
 
       try {
         log('🔍 Polling analysis status (attempt $_pollingCount)...');
@@ -185,14 +186,16 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                 // 분석 상태가 변경되었을 때만 rebuild
                 return previous.analysis?.status != next.analysis?.status ||
                     previous.analysis?.subject != next.analysis?.subject ||
-                    previous.analysis?.problemType != next.analysis?.problemType;
+                    previous.analysis?.problemType !=
+                        next.analysis?.problemType;
               },
               builder: (context, problemModel, child) {
                 if (problemModel == null) {
                   // 초기 로딩 시에만 Future로 가져오기
                   return FutureBuilder<ProblemModel>(
-                    future: Provider.of<ProblemsProvider>(context, listen: false)
-                        .getProblem(widget.problemId),
+                    future:
+                        Provider.of<ProblemsProvider>(context, listen: false)
+                            .getProblem(widget.problemId),
                     builder: (context, snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting) {
                         return const Center(child: CircularProgressIndicator());
@@ -309,7 +312,8 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
         return TapRegion(
           onTapOutside: (_) {
             // Workaround for iPadOS 26.1 bug: https://github.com/flutter/flutter/issues/177992
-            if (DateTime.now().difference(openTime) < const Duration(milliseconds: 500)) {
+            if (DateTime.now().difference(openTime) <
+                const Duration(milliseconds: 500)) {
               return;
             }
             if (Navigator.canPop(context)) {
@@ -538,14 +542,16 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                     Expanded(
                       child: TextButton(
                         onPressed: () async {
-                          FirebaseAnalytics.instance.logEvent(name: 'problem_delete');
+                          FirebaseAnalytics.instance
+                              .logEvent(name: 'problem_delete');
 
                           // context가 유효할 때 Provider와 Navigator 가져오기
                           final problemsProvider =
-                              Provider.of<ProblemsProvider>(context, listen: false);
-                          final practiceProvider = Provider.of<ProblemPracticeProvider>(
-                              context,
-                              listen: false);
+                              Provider.of<ProblemsProvider>(context,
+                                  listen: false);
+                          final practiceProvider =
+                              Provider.of<ProblemPracticeProvider>(context,
+                                  listen: false);
                           final navigator = Navigator.of(context);
 
                           // 다이얼로그 닫기
@@ -557,7 +563,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                           try {
                             // 삭제 작업 수행
                             await problemsProvider.deleteProblems([problemId]);
-                            await practiceProvider.fetchAllPracticeContents();
+                            //await practiceProvider.fetchAllPracticeContents();
 
                             // 로딩 다이얼로그 닫기
                             if (mounted) {

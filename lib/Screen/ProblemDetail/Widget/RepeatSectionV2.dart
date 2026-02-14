@@ -121,16 +121,16 @@ class _RepeatSectionV2State extends State<RepeatSectionV2>
                     height: 80,
                   ),
                   const SizedBox(height: 16),
-                  StandardText(
+                  const StandardText(
                     text: '아직 복습 기록이 없습니다.',
                     fontSize: 16,
-                    color: Colors.grey[600]!,
+                    color: Colors.black,
                   ),
                   const SizedBox(height: 8),
-                  StandardText(
+                  const StandardText(
                     text: '문제를 복습하고 기록을 남겨보세요!',
                     fontSize: 14,
-                    color: Colors.grey[500]!,
+                    color: Colors.black,
                   ),
                 ],
               ),

@@ -11,7 +11,7 @@ Widget buildAnalysisSection(
     BuildContext context, ProblemAnalysisModel? analysis, Color primaryColor) {
   // analysis가 null이면 숨김 (문제 이미지가 없는 경우)
   if (analysis == null) {
-    return const SizedBox.shrink();
+    return _buildNoImageState(context, primaryColor);
   }
 
   // 분석 상태에 따라 다른 UI 표시

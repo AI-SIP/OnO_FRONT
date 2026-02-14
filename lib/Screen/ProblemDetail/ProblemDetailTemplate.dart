@@ -231,7 +231,7 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
               text: widget.problemModel.memo!,
               fontSize: 18,
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 25),
           ],
 
           // 해설 이미지
