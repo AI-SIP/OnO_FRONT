@@ -28,6 +28,24 @@ class FolderPickerWidget extends StatefulWidget {
 }
 
 class _FolderPickerWidgetState extends State<FolderPickerWidget> {
+  String _resolveSelectedFolderName(FoldersProvider foldersProvider) {
+    final selectedId = widget.selectedId;
+    if (selectedId == null) return '책장';
+
+    final currentFolder = foldersProvider.currentFolder;
+    if (currentFolder != null && currentFolder.folderId == selectedId) {
+      return currentFolder.folderName;
+    }
+
+    for (final folder in foldersProvider.folders) {
+      if (folder.folderId == selectedId) {
+        return folder.folderName;
+      }
+    }
+
+    return FolderPickerDialog.getFolderNameByFolderId(selectedId) ?? '책장';
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Provider.of<ThemeHandler>(context);
@@ -80,7 +98,7 @@ class _FolderPickerWidgetState extends State<FolderPickerWidget> {
       );
     }
 
-    final name = FolderPickerDialog.getFolderNameByFolderId(widget.selectedId);
+    final name = _resolveSelectedFolderName(foldersProvider);
     return Container(
       padding: const EdgeInsets.all(16.0),
       decoration: BoxDecoration(
@@ -133,7 +151,7 @@ class _FolderPickerWidgetState extends State<FolderPickerWidget> {
                       child: Align(
                         alignment: Alignment.centerRight,
                         child: StandardText(
-                          text: name ?? '책장',
+                          text: name,
                           fontSize: 14,
                           color: Colors.black87,
                           overflow: TextOverflow.ellipsis,

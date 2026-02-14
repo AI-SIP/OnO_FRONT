@@ -41,11 +41,11 @@ class FolderPickerDialog extends StatefulWidget {
 
   // folderId로 folderName을 찾아 반환하는 함수
   static String? getFolderNameByFolderId(int? folderId) {
-    if (folderId == null) return '책장';
+    if (folderId == null) return null;
     if (_cachedFolderNames.containsKey(folderId)) {
       return _cachedFolderNames[folderId];
     }
-    return '책장';
+    return null;
   }
 
   static Map<int, String> _cachedFolderNames = {};
