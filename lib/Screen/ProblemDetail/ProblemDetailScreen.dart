@@ -32,6 +32,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
   Timer? _analysisPollingTimer;
   int _pollingCount = 0;
   bool _isExpansionTileExpanded = false; // ExpansionTile 상태 관리
+  bool _isProblemDeleted = false; // 문제 삭제 여부 플래그
 
   @override
   void initState() {
@@ -190,6 +191,9 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                         next.analysis?.problemType;
               },
               builder: (context, problemModel, child) {
+                if (_isProblemDeleted) {
+                  return Expanded(child: Container()); // Problem has been deleted, so show nothing or a message
+                }
                 if (problemModel == null) {
                   // 초기 로딩 시에만 Future로 가져오기
                   return FutureBuilder<ProblemModel>(
@@ -560,21 +564,23 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                           // 로딩 다이얼로그 표시
                           LoadingDialog.show(context, '오답노트 지우는 중...');
 
-                          try {
-                            // 삭제 작업 수행
-                            await problemsProvider.deleteProblems([problemId]);
-                            //await practiceProvider.fetchAllPracticeContents();
-
-                            // 로딩 다이얼로그 닫기
-                            if (mounted) {
-                              LoadingDialog.hide(context);
-                            }
-
-                            // 상세 화면 닫고 DirectoryScreen에 삭제 완료 알림 (true 반환)
-                            if (mounted) {
-                              navigator.pop(true);
-                            }
-                          } catch (e) {
+                                                      try {
+                                                        // 삭제 작업 수행
+                                                        await problemsProvider.deleteProblems([problemId]);
+                                                        //await practiceProvider.fetchAllPracticeContents();
+                          
+                                                        if (mounted) {
+                                                          setState(() {
+                                                            _isProblemDeleted = true; // Set the flag
+                                                          });
+                                                          // 로딩 다이얼로그 닫기
+                                                          LoadingDialog.hide(context);
+                                                        }
+                          
+                                                        // 상세 화면 닫고 DirectoryScreen에 삭제 완료 알림 (true 반환)
+                                                        if (mounted) {
+                                                          navigator.pop(true);
+                                                        }                          } catch (e) {
                             // 에러 발생 시 로딩 다이얼로그 닫기
                             if (mounted) {
                               LoadingDialog.hide(context);
