@@ -175,7 +175,7 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
     final activeColor = themeProvider.primaryColor;
     final inactiveColor = Colors.grey[600]!;
     final iconSize = isWide ? 16.0 : 14.0;
-    final textSize = isWide ? 16.0 : 14.0;
+    final textSize = isWide ? 16.0 : 14.5;
     final gap = isWide ? 6.0 : 4.0;
 
     return Row(
