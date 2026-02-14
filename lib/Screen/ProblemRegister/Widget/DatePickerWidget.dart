@@ -18,6 +18,8 @@ class DatePickerWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Provider.of<ThemeHandler>(context);
+    final screenWidth = MediaQuery.of(context).size.width;
+    final selectorWidth = screenWidth >= 600 ? 210.0 : 170.0;
 
     return Container(
       padding: const EdgeInsets.all(16.0),
@@ -49,42 +51,53 @@ class DatePickerWidget extends StatelessWidget {
               color: Colors.black87,
             ),
           ),
-          GestureDetector(
-            onTap: () async {
-              FirebaseAnalytics.instance.logEvent(name: 'date_select');
-              final d = await showModalBottomSheet<DateTime>(
-                context: context,
-                builder: (_) => DatePickerHandler(
-                  initialDate: selectedDate,
-                  onDateSelected: (d) => Navigator.pop(context, d),
+          SizedBox(
+            width: selectorWidth,
+            child: GestureDetector(
+              onTap: () async {
+                FirebaseAnalytics.instance.logEvent(name: 'date_select');
+                final d = await showModalBottomSheet<DateTime>(
+                  context: context,
+                  builder: (_) => DatePickerHandler(
+                    initialDate: selectedDate,
+                    onDateSelected: (d) => Navigator.pop(context, d),
+                  ),
+                );
+                if (d != null) onDateChanged(d);
+              },
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.grey[300]!, width: 1),
                 ),
-              );
-              if (d != null) onDateChanged(d);
-            },
-            child: Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.grey[300]!, width: 1),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  StandardText(
-                    text:
-                        '${selectedDate.year}년 ${selectedDate.month}월 ${selectedDate.day}일',
-                    fontSize: 14,
-                    color: Colors.black87,
-                  ),
-                  const SizedBox(width: 4),
-                  Icon(
-                    Icons.arrow_drop_down,
-                    color: Colors.grey[600],
-                    size: 20,
-                  ),
-                ],
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Align(
+                        alignment: Alignment.centerRight,
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerRight,
+                          child: StandardText(
+                            text:
+                                '${selectedDate.year}년 ${selectedDate.month}월 ${selectedDate.day}일',
+                            fontSize: 14,
+                            color: Colors.black87,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Icon(
+                      Icons.arrow_drop_down,
+                      color: Colors.grey[600],
+                      size: 20,
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
