@@ -17,8 +17,8 @@ Widget buildAnalysisSection(
   // 분석 상태에 따라 다른 UI 표시
   switch (analysis.status) {
     case ProblemAnalysisStatus.NO_IMAGE:
-      // 이미지가 없는 경우 AI 분석 섹션 숨김
-      return const SizedBox.shrink();
+      // 이미지가 없는 경우 안내 메시지 표시
+      return _buildNoImageState(context, primaryColor);
     case ProblemAnalysisStatus.NOT_STARTED:
       // NOT_STARTED 상태도 PROCESSING으로 표시 (서버에서 분석 시작 전)
       return _buildProcessingState(context, primaryColor);
@@ -31,6 +31,48 @@ Widget buildAnalysisSection(
     default:
       return const SizedBox.shrink();
   }
+}
+
+Widget _buildNoImageState(BuildContext context, Color primaryColor) {
+  return Container(
+    width: double.infinity,
+    padding: const EdgeInsets.all(24.0),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(12.0),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.grey.withOpacity(0.1),
+          blurRadius: 8,
+          offset: const Offset(0, 2),
+        ),
+      ],
+    ),
+    child: Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(
+          Icons.image_not_supported_outlined,
+          color: Colors.grey[400],
+          size: 48,
+        ),
+        const SizedBox(height: 16),
+        const StandardText(
+          text: '이미지가 없어 분석하지 못했어요',
+          fontSize: 15,
+          fontWeight: FontWeight.bold,
+          color: Colors.black87,
+        ),
+        const SizedBox(height: 8),
+        StandardText(
+          text: '문제 이미지를 추가하면 AI가 자동으로 분석해드려요',
+          fontSize: 13,
+          color: Colors.black54,
+          textAlign: TextAlign.center,
+        ),
+      ],
+    ),
+  );
 }
 
 Widget _buildProcessingState(BuildContext context, Color primaryColor) {

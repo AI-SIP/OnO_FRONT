@@ -457,7 +457,7 @@ class _ProblemSolveCard extends StatelessWidget {
               themeProvider.primaryColor,
             ),
           if (solve.timeSpentSeconds != null) ...[
-            const SizedBox(height: 20),
+            const SizedBox(height: 10),
             Divider(color: Colors.grey[300], thickness: 1),
             const SizedBox(height: 20),
           ],
