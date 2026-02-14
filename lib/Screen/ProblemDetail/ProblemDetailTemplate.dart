@@ -235,7 +235,7 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
           UnderlinedText(
             text:
                 DateFormat('yyyy년 M월 d일').format(widget.problemModel.solvedAt!),
-            fontSize: 15,
+            fontSize: 16,
           ),
         ],
       ),
@@ -357,9 +357,12 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
             widget.problemModel.memo!.isNotEmpty) ...[
           _buildSectionTitle('메모', Icons.edit, themeProvider),
           const SizedBox(height: 12),
-          UnderlinedText(
-            text: widget.problemModel.memo!,
-            fontSize: 18,
+          Padding(
+            padding: const EdgeInsets.only(left: 14.0),
+            child: UnderlinedText(
+              text: widget.problemModel.memo!,
+              fontSize: 18,
+            ),
           ),
           const SizedBox(height: 25),
         ],
@@ -425,40 +428,49 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
   Widget _buildSectionTitle(
       String title, IconData icon, ThemeHandler themeProvider,
       {Widget? trailing}) {
-    return Column(
-      children: [
-        Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(6.0),
-              decoration: BoxDecoration(
-                color: themeProvider.primaryColor.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(6.0),
-              ),
-              child: Icon(
-                icon,
-                color: themeProvider.primaryColor,
-                size: 18,
-              ),
-            ),
-            const SizedBox(width: 8),
-            StandardText(
-              text: title,
-              fontSize: 16,
-              fontWeight: FontWeight.w500,
-              color: Colors.black87,
-            ),
-            const Spacer(),
-            if (trailing != null) trailing,
-          ],
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 12.0),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12.0),
+        border: Border.all(
+          color: themeProvider.primaryColor.withOpacity(0.14),
+          width: 1,
         ),
-        const SizedBox(height: 8),
-        Divider(
-          color: themeProvider.primaryColor.withOpacity(0.2),
-          thickness: 1,
-          height: 1,
-        ),
-      ],
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.02),
+            blurRadius: 6,
+            offset: const Offset(0, 1),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(6.0),
+            decoration: BoxDecoration(
+              color: themeProvider.primaryColor.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(6.0),
+            ),
+            child: Icon(
+              icon,
+              color: themeProvider.primaryColor,
+              size: 18,
+            ),
+          ),
+          const SizedBox(width: 8),
+          StandardText(
+            text: title,
+            fontSize: 16,
+            fontWeight: FontWeight.w500,
+            color: Colors.black87,
+          ),
+          const Spacer(),
+          if (trailing != null) trailing,
+        ],
+      ),
     );
   }
 
