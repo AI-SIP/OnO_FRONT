@@ -39,6 +39,7 @@ class _RepeatSectionV2State extends State<RepeatSectionV2>
   final problemSolveService = ProblemSolveService();
   late Future<List<ProblemSolveModel>> _problemSolvesFuture;
   final Map<int, bool> _expandedStates = {}; // 각 카드의 펼침 상태 관리
+  int? _selectedSolveId; // 태블릿 상세 패널에 표시할 항목
 
   @override
   void initState() {
@@ -138,15 +139,25 @@ class _RepeatSectionV2State extends State<RepeatSectionV2>
           );
         }
 
+        final latestFirst =
+            List<ProblemSolveModel>.from(problemSolves.reversed);
+        if (_selectedSolveId == null ||
+            !latestFirst.any((s) => s.problemSolveId == _selectedSolveId)) {
+          _selectedSolveId = latestFirst.first.problemSolveId;
+        }
+
+        if (widget.isWide) {
+          return _buildTabletMasterDetail(context, latestFirst);
+        }
+
         return ListView.builder(
-          padding: EdgeInsets.symmetric(
-            horizontal: widget.isWide ? 60.0 : 20.0,
+          padding: const EdgeInsets.symmetric(
+            horizontal: 20.0,
             vertical: 20.0,
           ),
-          itemCount: problemSolves.length,
+          itemCount: latestFirst.length,
           itemBuilder: (context, index) {
-            final solve =
-                problemSolves[problemSolves.length - 1 - index]; // 최신순
+            final solve = latestFirst[index];
             final displayIndex = index + 1; // 최신 기록이 1회차
             return _ProblemSolveCard(
               solve: solve,
@@ -159,6 +170,72 @@ class _RepeatSectionV2State extends State<RepeatSectionV2>
           },
         );
       },
+    );
+  }
+
+  Widget _buildTabletMasterDetail(
+      BuildContext context, List<ProblemSolveModel> latestFirst) {
+    final selectedIndex = latestFirst
+        .indexWhere((solve) => solve.problemSolveId == _selectedSolveId);
+    final safeSelectedIndex = selectedIndex >= 0 ? selectedIndex : 0;
+    final selectedSolve = latestFirst[safeSelectedIndex];
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 60.0, vertical: 20.0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            flex: 1,
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16.0),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: ListView.separated(
+                padding: const EdgeInsets.all(12.0),
+                itemCount: latestFirst.length,
+                separatorBuilder: (_, __) => const SizedBox(height: 10),
+                itemBuilder: (context, index) {
+                  final solve = latestFirst[index];
+                  return _TabletSolveListItem(
+                    solve: solve,
+                    index: index + 1,
+                    isSelected: solve.problemSolveId == _selectedSolveId,
+                    onTap: () {
+                      setState(() {
+                        _selectedSolveId = solve.problemSolveId;
+                      });
+                    },
+                  );
+                },
+              ),
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            flex: 2,
+            child: SingleChildScrollView(
+              child: _ProblemSolveCard(
+                solve: selectedSolve,
+                index: safeSelectedIndex + 1,
+                iconColor: widget.iconColor,
+                isExpanded: true,
+                onToggle: (_) {},
+                onRefreshAsync: refreshAsync,
+                showExpandIcon: false,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -273,6 +350,7 @@ class _ProblemSolveCard extends StatelessWidget {
   final bool isExpanded;
   final Function(bool) onToggle;
   final Future<void> Function() onRefreshAsync;
+  final bool showExpandIcon;
 
   const _ProblemSolveCard({
     required this.solve,
@@ -281,38 +359,13 @@ class _ProblemSolveCard extends StatelessWidget {
     required this.isExpanded,
     required this.onToggle,
     required this.onRefreshAsync,
+    this.showExpandIcon = true,
   });
-
-  Color _getStatusColor() {
-    switch (solve.answerStatus) {
-      case AnswerStatus.CORRECT:
-        return Colors.green;
-      case AnswerStatus.PARTIAL:
-        return Colors.orange;
-      case AnswerStatus.WRONG:
-        return Colors.red;
-      case AnswerStatus.UNKNOWN:
-        return Colors.grey;
-    }
-  }
-
-  IconData _getStatusIcon() {
-    switch (solve.answerStatus) {
-      case AnswerStatus.CORRECT:
-        return Icons.check_circle;
-      case AnswerStatus.PARTIAL:
-        return Icons.check_circle_outline;
-      case AnswerStatus.WRONG:
-        return Icons.cancel;
-      case AnswerStatus.UNKNOWN:
-        return Icons.help_outline;
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeHandler>(context);
-    final statusColor = _getStatusColor();
+    final statusColor = _getStatusColor(solve.answerStatus);
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 16.0),
@@ -356,8 +409,8 @@ class _ProblemSolveCard extends StatelessWidget {
                         color: statusColor.withOpacity(0.15),
                         borderRadius: BorderRadius.circular(8.0),
                       ),
-                      child:
-                          Icon(_getStatusIcon(), color: statusColor, size: 22),
+                      child: Icon(_getStatusIcon(solve.answerStatus),
+                          color: statusColor, size: 22),
                     ),
                     const SizedBox(width: 12),
 
@@ -410,11 +463,12 @@ class _ProblemSolveCard extends StatelessWidget {
                     ),
 
                     // 확장 아이콘
-                    Icon(
-                      isExpanded ? Icons.expand_less : Icons.expand_more,
-                      color: statusColor,
-                    ),
-                    const SizedBox(width: 8),
+                    if (showExpandIcon)
+                      Icon(
+                        isExpanded ? Icons.expand_less : Icons.expand_more,
+                        color: statusColor,
+                      ),
+                    if (showExpandIcon) const SizedBox(width: 8),
                     // 메뉴 버튼
                     IconButton(
                       icon: Icon(
@@ -882,6 +936,120 @@ class _ProblemSolveCard extends StatelessWidget {
         );
       }
     }
+  }
+}
+
+class _TabletSolveListItem extends StatelessWidget {
+  final ProblemSolveModel solve;
+  final int index;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _TabletSolveListItem({
+    required this.solve,
+    required this.index,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final statusColor = _getStatusColor(solve.answerStatus);
+    final borderColor =
+        isSelected ? statusColor.withOpacity(0.7) : Colors.grey[300]!;
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12.0),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.all(12.0),
+        decoration: BoxDecoration(
+          color: isSelected ? statusColor.withOpacity(0.08) : Colors.white,
+          borderRadius: BorderRadius.circular(12.0),
+          border: Border.all(color: borderColor, width: isSelected ? 2 : 1),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8.0),
+              decoration: BoxDecoration(
+                color: statusColor.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(8.0),
+              ),
+              child: Icon(_getStatusIcon(solve.answerStatus),
+                  color: statusColor, size: 18),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      StandardText(
+                        text: '$index회차',
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                      ),
+                      const SizedBox(width: 6),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: statusColor.withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: StandardText(
+                          text: solve.answerStatus.displayName,
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          color: statusColor,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  StandardText(
+                    text: DateFormat('yyyy/MM/dd HH:mm')
+                        .format(solve.practicedAt),
+                    fontSize: 12,
+                    color: Colors.grey[600]!,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+Color _getStatusColor(AnswerStatus status) {
+  switch (status) {
+    case AnswerStatus.CORRECT:
+      return Colors.green;
+    case AnswerStatus.PARTIAL:
+      return Colors.orange;
+    case AnswerStatus.WRONG:
+      return Colors.red;
+    case AnswerStatus.UNKNOWN:
+      return Colors.grey;
+  }
+}
+
+IconData _getStatusIcon(AnswerStatus status) {
+  switch (status) {
+    case AnswerStatus.CORRECT:
+      return Icons.check_circle;
+    case AnswerStatus.PARTIAL:
+      return Icons.check_circle_outline;
+    case AnswerStatus.WRONG:
+      return Icons.cancel;
+    case AnswerStatus.UNKNOWN:
+      return Icons.help_outline;
   }
 }
 
