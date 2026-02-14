@@ -88,7 +88,7 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
 
   Widget _buildNoteHeader(ThemeHandler themeProvider) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
+      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 5.0),
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.9),
         boxShadow: [

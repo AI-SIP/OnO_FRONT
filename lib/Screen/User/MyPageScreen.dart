@@ -40,7 +40,7 @@ class _SettingScreenState extends State<SettingScreen> {
         centerTitle: true,
         title: StandardText(
           text: '${userProvider.userInfoModel?.name ?? '이름 없음'}님의 오답노트',
-          fontSize: 20,
+          fontSize: 18,
           color: themeProvider.primaryColor,
         ),
         backgroundColor: Colors.white,
@@ -377,7 +377,8 @@ class _SettingScreenState extends State<SettingScreen> {
                           Navigator.of(context).pop();
                         },
                         style: TextButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 8),
                           backgroundColor: Colors.grey[100],
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8),
@@ -398,7 +399,8 @@ class _SettingScreenState extends State<SettingScreen> {
                           onConfirm();
                         },
                         style: TextButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 8),
                           backgroundColor: Colors.red,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8),

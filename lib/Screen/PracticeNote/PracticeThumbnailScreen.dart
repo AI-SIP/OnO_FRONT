@@ -5,7 +5,6 @@ import 'package:ono/Module/Dialog/LoadingDialog.dart';
 import 'package:ono/Module/Dialog/SnackBarDialog.dart';
 import 'package:provider/provider.dart';
 
-import '../../Model/PracticeNote/PracticeNoteDetailModel.dart';
 import '../../Model/PracticeNote/PracticeNoteThumbnailModel.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
@@ -100,7 +99,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
       backgroundColor: Colors.white,
       title: StandardText(
         text: _isSelectionMode ? '삭제할 항목 선택' : '오답 복습',
-        fontSize: 20,
+        fontSize: 18,
         color: themeProvider.primaryColor,
       ),
       actions: [
@@ -149,7 +148,8 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
         return TapRegion(
           onTapOutside: (_) {
             // Workaround for iPadOS 26.1 bug: https://github.com/flutter/flutter/issues/177992
-            if (DateTime.now().difference(openTime) < const Duration(milliseconds: 500)) {
+            if (DateTime.now().difference(openTime) <
+                const Duration(milliseconds: 500)) {
               return;
             }
             if (Navigator.canPop(context)) {
@@ -418,7 +418,8 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
                           Navigator.pop(context);
                         },
                         style: TextButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 10),
                           backgroundColor: Colors.grey[100],
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8),
@@ -456,7 +457,8 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
                           });
                         },
                         style: TextButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 10),
                           backgroundColor: Colors.red,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8),
@@ -512,12 +514,14 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => const PracticeProblemSelectionScreen(),
+                      builder: (context) =>
+                          const PracticeProblemSelectionScreen(),
                     ),
                   );
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: themeProvider.primaryColor, // primaryColor 적용
+                  backgroundColor:
+                      themeProvider.primaryColor, // primaryColor 적용
                   padding: const EdgeInsets.symmetric(
                     horizontal: 30,
                     vertical: 8,
