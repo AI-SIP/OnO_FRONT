@@ -32,6 +32,8 @@ class _FolderPickerWidgetState extends State<FolderPickerWidget> {
   Widget build(BuildContext context) {
     final theme = Provider.of<ThemeHandler>(context);
     final foldersProvider = Provider.of<FoldersProvider>(context);
+    final screenWidth = MediaQuery.of(context).size.width;
+    final selectorWidth = screenWidth >= 600 ? 210.0 : 170.0;
 
     // 폴더 데이터가 로드될 때까지 기다림
     if (foldersProvider.folders.isEmpty) {
@@ -109,44 +111,44 @@ class _FolderPickerWidgetState extends State<FolderPickerWidget> {
               color: Colors.black87,
             ),
           ),
-          GestureDetector(
-            onTap: () async {
-              final id =
-                  await FolderPickerWidget.showPicker(context, widget.selectedId);
-              widget.onPicked(id);
-            },
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.grey[300]!, width: 1),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.folder_open,
-                    color: theme.primaryColor,
-                    size: 18,
-                  ),
-                  const SizedBox(width: 8),
-                  ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 100),
-                    child: StandardText(
-                      text: name ?? '책장',
-                      fontSize: 14,
-                      color: Colors.black87,
-                      overflow: TextOverflow.ellipsis,
+          SizedBox(
+            width: selectorWidth,
+            child: GestureDetector(
+              onTap: () async {
+                final id = await FolderPickerWidget.showPicker(
+                    context, widget.selectedId);
+                widget.onPicked(id);
+              },
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.grey[300]!, width: 1),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Align(
+                        alignment: Alignment.centerRight,
+                        child: StandardText(
+                          text: name ?? '책장',
+                          fontSize: 14,
+                          color: Colors.black87,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.right,
+                        ),
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 4),
-                  Icon(
-                    Icons.arrow_drop_down,
-                    color: Colors.grey[600],
-                    size: 20,
-                  ),
-                ],
+                    const SizedBox(width: 4),
+                    Icon(
+                      Icons.arrow_drop_down,
+                      color: Colors.grey[600],
+                      size: 20,
+                    ),
+                  ],
+                ),
               ),
             ),
           ),

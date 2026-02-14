@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:ono/Module/Text/HandWriteText.dart';
-
 import '../../../Module/Image/DisplayImage.dart';
 import '../../../Module/Image/FullScreenImage.dart';
 import '../../../Module/Theme/ThemeHandler.dart';
@@ -82,6 +80,51 @@ class _ImageGallerySectionState extends State<ImageGallerySection> {
           ),
         ),
         const SizedBox(height: 8),
+        if (widget.imageUrls.length > 1) ...[
+          SizedBox(
+            height: screenWidth > 600 ? 74 : 64,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: widget.imageUrls.length,
+              separatorBuilder: (_, __) => const SizedBox(width: 8),
+              itemBuilder: (context, i) {
+                final isSelected = _current == i;
+                return GestureDetector(
+                  onTap: () {
+                    _controller.animateToPage(
+                      i,
+                      duration: const Duration(milliseconds: 220),
+                      curve: Curves.easeOut,
+                    );
+                  },
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 180),
+                    width: screenWidth > 600 ? 88 : 76,
+                    padding: const EdgeInsets.all(2),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: isSelected
+                            ? widget.themeProvider.primaryColor
+                            : widget.themeProvider.primaryColor
+                                .withOpacity(0.2),
+                        width: isSelected ? 2 : 1,
+                      ),
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: DisplayImage(
+                        imagePath: widget.imageUrls[i],
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+          const SizedBox(height: 8),
+        ],
         // 도트 인디케이터
         Row(
           mainAxisAlignment: MainAxisAlignment.center,

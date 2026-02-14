@@ -170,6 +170,9 @@ class MyApp extends StatelessWidget {
       colorScheme: ColorScheme.fromSeed(seedColor: themeHandler.primaryColor),
       primaryColor: themeHandler.primaryColor,
       useMaterial3: true,
+      dialogTheme: const DialogThemeData(
+        constraints: BoxConstraints(maxWidth: 420),
+      ),
     );
   }
 }

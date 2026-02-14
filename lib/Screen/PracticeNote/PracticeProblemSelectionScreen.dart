@@ -267,6 +267,8 @@ class _PracticeProblemSelectionScreenState
 
   Widget _buildFolderList(BuildContext context, ThemeHandler themeProvider) {
     double screenWidth = MediaQuery.of(context).size.width;
+    final isWide = screenWidth >= 600;
+    final folderGap = isWide ? 18.0 : 12.0;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 10.0),
@@ -302,7 +304,7 @@ class _PracticeProblemSelectionScreenState
                 await _loadInitialProblems(folder.folderId);
               },
               child: Padding(
-                padding: EdgeInsets.only(right: screenWidth * 0.04),
+                padding: EdgeInsets.only(right: folderGap),
                 child: _buildFolderThumbnail(folder, themeProvider),
               ),
             );
@@ -315,6 +317,9 @@ class _PracticeProblemSelectionScreenState
   Widget _buildFolderThumbnail(
       FolderThumbnailModel folder, ThemeHandler themeProvider) {
     bool isSelected = selectedFolderId == folder.folderId; // 선택된 폴더인지 확인
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isWide = screenWidth >= 600;
+    final folderNameWidth = isWide ? 120.0 : screenWidth * 0.2;
 
     return Opacity(
       opacity: isSelected ? 1.0 : 0.5, // 선택된 폴더가 아니라면 흐리게 표시
@@ -327,7 +332,7 @@ class _PracticeProblemSelectionScreenState
           ),
           const SizedBox(height: 8),
           SizedBox(
-            width: MediaQuery.of(context).size.width * 0.2,
+            width: folderNameWidth,
             child: StandardText(
               text: folder.folderName.length > 10
                   ? '${folder.folderName.substring(0, 10)}..'
