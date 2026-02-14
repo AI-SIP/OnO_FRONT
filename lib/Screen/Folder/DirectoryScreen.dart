@@ -565,6 +565,35 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     );
   }
 
+  Future<void> _navigateToProblemRegisterInCurrentFolder() async {
+    FirebaseAnalytics.instance
+        .logEvent(name: 'directory_create_problem_note_click');
+
+    if (_currentFolder == null) return;
+
+    final foldersProvider = Provider.of<FoldersProvider>(context, listen: false);
+
+    // 작성 화면의 기본 공책을 현재 공책으로 고정
+    await foldersProvider.moveToFolder(_currentFolder!.folderId);
+
+    final result = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ProblemRegisterScreen(
+          problemModel: null,
+          isEditMode: false,
+          initialFolderId: _currentFolder?.folderId,
+        ),
+      ),
+    );
+
+    // 작성 완료 후 현재 공책 화면으로 복귀 시 즉시 반영
+    if (!mounted || result != true || _currentFolder == null) return;
+
+    await foldersProvider.refreshFolder(_currentFolder!.folderId);
+    await _loadFolderData();
+  }
+
   void _showActionDialog(
       FoldersProvider foldersProvider, ThemeHandler themeProvider) {
     FirebaseAnalytics.instance
@@ -647,6 +676,16 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                         FirebaseAnalytics.instance.logEvent(
                             name: 'directory_create_folder_button_click');
                         _showCreateFolderDialog();
+                      },
+                    ),
+                    const SizedBox(height: 8),
+                    _buildActionItem(
+                      icon: Icons.note_add_outlined,
+                      iconColor: themeProvider.primaryColor,
+                      title: '오답노트 작성하기',
+                      onTap: () async {
+                        Navigator.pop(context);
+                        await _navigateToProblemRegisterInCurrentFolder();
                       },
                     ),
                     const SizedBox(height: 8),
@@ -1100,36 +1139,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                             onPressed: () async {
                               FirebaseAnalytics.instance.logEvent(
                                   name: 'directory_empty_create_problem_click');
-
-                              final foldersProvider =
-                                  Provider.of<FoldersProvider>(context,
-                                      listen: false);
-
-                              // ProblemRegisterTemplate가 currentFolder를 기본 공책으로 사용하므로
-                              // 현재 화면의 폴더를 명시적으로 동기화해 중첩 폴더에서도 올바르게 연결.
-                              if (_currentFolder != null) {
-                                await foldersProvider
-                                    .moveToFolder(_currentFolder!.folderId);
-                              }
-
-                              final result = await Navigator.push<bool>(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => ProblemRegisterScreen(
-                                    problemModel: null,
-                                    isEditMode: false,
-                                    initialFolderId: _currentFolder?.folderId,
-                                  ),
-                                ),
-                              );
-
-                              if (result == true &&
-                                  mounted &&
-                                  _currentFolder != null) {
-                                await foldersProvider
-                                    .refreshFolder(_currentFolder!.folderId);
-                                await _loadFolderData();
-                              }
+                              await _navigateToProblemRegisterInCurrentFolder();
                             },
                             style: ElevatedButton.styleFrom(
                               backgroundColor:
