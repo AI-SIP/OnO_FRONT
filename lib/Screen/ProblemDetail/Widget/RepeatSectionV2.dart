@@ -664,10 +664,11 @@ class _ProblemSolveCard extends StatelessWidget {
     );
   }
 
-  void _showOptionsDialog(BuildContext context, ThemeHandler themeProvider) {
+  void _showOptionsDialog(
+      BuildContext parentContext, ThemeHandler themeProvider) {
     showDialog(
-      context: context,
-      builder: (context) => Dialog(
+      context: parentContext,
+      builder: (dialogContext) => Dialog(
         backgroundColor: Colors.white,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
@@ -741,8 +742,8 @@ class _ProblemSolveCard extends StatelessWidget {
                 width: double.infinity,
                 child: TextButton(
                   onPressed: () {
-                    Navigator.pop(context);
-                    _showDeleteConfirmDialog(context, themeProvider);
+                    Navigator.pop(dialogContext);
+                    _showDeleteConfirmDialog(parentContext, themeProvider);
                   },
                   style: TextButton.styleFrom(
                     padding: const EdgeInsets.symmetric(
@@ -772,7 +773,7 @@ class _ProblemSolveCard extends StatelessWidget {
               SizedBox(
                 width: double.infinity,
                 child: TextButton(
-                  onPressed: () => Navigator.pop(context),
+                  onPressed: () => Navigator.pop(dialogContext),
                   style: TextButton.styleFrom(
                     padding: const EdgeInsets.symmetric(
                         horizontal: 16, vertical: 12),
@@ -796,10 +797,10 @@ class _ProblemSolveCard extends StatelessWidget {
   }
 
   void _showDeleteConfirmDialog(
-      BuildContext context, ThemeHandler themeProvider) {
+      BuildContext parentContext, ThemeHandler themeProvider) {
     showDialog(
-      context: context,
-      builder: (context) => Dialog(
+      context: parentContext,
+      builder: (dialogContext) => Dialog(
         backgroundColor: Colors.white,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
@@ -847,7 +848,7 @@ class _ProblemSolveCard extends StatelessWidget {
                 children: [
                   Expanded(
                     child: TextButton(
-                      onPressed: () => Navigator.pop(context),
+                      onPressed: () => Navigator.pop(dialogContext),
                       style: TextButton.styleFrom(
                         padding: const EdgeInsets.symmetric(
                             horizontal: 12, vertical: 12),
@@ -867,8 +868,8 @@ class _ProblemSolveCard extends StatelessWidget {
                   Expanded(
                     child: TextButton(
                       onPressed: () {
-                        Navigator.pop(context);
-                        _handleDelete(context, themeProvider);
+                        Navigator.pop(dialogContext);
+                        _handleDelete(parentContext, themeProvider);
                       },
                       style: TextButton.styleFrom(
                         padding: const EdgeInsets.symmetric(
@@ -906,6 +907,7 @@ class _ProblemSolveCard extends StatelessWidget {
   // 삭제 핸들러
   Future<void> _handleDelete(
       BuildContext context, ThemeHandler themeProvider) async {
+    final rootNavigator = Navigator.of(context, rootNavigator: true);
     LoadingDialog.show(context, '복습 기록 삭제 중...');
 
     try {
@@ -914,12 +916,14 @@ class _ProblemSolveCard extends StatelessWidget {
 
       await problemSolveService.deleteProblemSolve(solveId);
 
+      // 먼저 새로고침 후 로딩 닫기
+      await onRefreshAsync();
+
+      if (rootNavigator.canPop()) {
+        rootNavigator.pop();
+      }
+
       if (context.mounted) {
-        // 먼저 새로고침
-        onRefreshAsync();
-
-        LoadingDialog.hide(context);
-
         SnackBarDialog.showSnackBar(
           context: context,
           message: '복습 기록이 삭제되었습니다.',
@@ -927,8 +931,10 @@ class _ProblemSolveCard extends StatelessWidget {
         );
       }
     } catch (e) {
+      if (rootNavigator.canPop()) {
+        rootNavigator.pop();
+      }
       if (context.mounted) {
-        LoadingDialog.hide(context);
         SnackBarDialog.showSnackBar(
           context: context,
           message: '복습 기록 삭제에 실패했습니다: $e',
