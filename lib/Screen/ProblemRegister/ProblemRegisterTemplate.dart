@@ -263,16 +263,17 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
       return;
     }
 
+    final canPopBeforeSubmit = Navigator.of(context).canPop();
     LoadingDialog.show(
         context, widget.isEditMode ? '오답노트 수정 중...' : '오답노트 작성 중...');
     bool shouldPop = false;
     try {
       if (widget.isEditMode) {
         await _updateProblem();
-        shouldPop = true;
+        shouldPop = canPopBeforeSubmit;
       } else {
         await _registerProblem();
-        shouldPop = Navigator.of(context).canPop();
+        shouldPop = canPopBeforeSubmit;
       }
     } catch (e, stackTrace) {
       log('오답노트 ${widget.isEditMode ? "수정" : "등록"} 실패: $e');
