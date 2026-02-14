@@ -282,17 +282,10 @@ class _RepeatSectionV2WrapperState extends State<RepeatSectionV2Wrapper> {
             left: widget.isWide ? 60 : 30,
             right: widget.isWide ? 60 : 30,
             top: 10,
-            bottom: 10,
+            bottom: 16,
           ),
           decoration: BoxDecoration(
             color: Colors.white,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.1),
-                blurRadius: 8,
-                offset: const Offset(0, -2),
-              ),
-            ],
           ),
           child: SizedBox(
             height: 48,
@@ -321,7 +314,7 @@ class _RepeatSectionV2WrapperState extends State<RepeatSectionV2Wrapper> {
                 fontSize: 15,
                 fontWeight: FontWeight.bold,
               ),
-              elevation: 4,
+              elevation: 0,
             ),
           ),
         ),

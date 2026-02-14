@@ -231,7 +231,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
               },
             ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 2),
           _buildNavigationButtons(context, widget.isPractice),
         ],
       ),
@@ -630,7 +630,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
     double screenHeight = MediaQuery.of(context).size.height;
 
     // 화면 높이에 따라 패딩 값을 동적으로 설정
-    double topPadding = screenHeight * 0.01;
+    double topPadding = 0;
     double bottomPadding = screenHeight * 0.03;
 
     if (isPractice) {
