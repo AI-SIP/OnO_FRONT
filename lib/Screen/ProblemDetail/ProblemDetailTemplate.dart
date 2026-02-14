@@ -214,49 +214,94 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
   }
 
   Widget _buildSolutionTab(ThemeHandler themeProvider, bool isWide) {
-    return SingleChildScrollView(
-      padding: EdgeInsets.symmetric(
-        horizontal: isWide ? 60.0 : 35.0,
-        vertical: 24.0,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // 메모
-          if (widget.problemModel.memo != null &&
-              widget.problemModel.memo!.isNotEmpty) ...[
-            _buildSectionTitle('메모', Icons.edit, themeProvider),
-            const SizedBox(height: 12),
-            UnderlinedText(
-              text: widget.problemModel.memo!,
-              fontSize: 18,
-            ),
-            const SizedBox(height: 25),
-          ],
-
-          // 해설 이미지
-          _buildSectionTitle('해설 이미지', Icons.image_outlined, themeProvider),
-          const SizedBox(height: 12),
-          buildImageSection(
-            context,
-            widget.problemModel.answerImageDataList
-                    ?.map((m) => m.imageUrl)
-                    .toList() ??
-                [],
-            '해설 이미지',
-            themeProvider,
-          ),
-          const SizedBox(height: 24),
-
-          // AI 분석 결과
-          _buildSectionTitle('AI 분석 결과', Icons.auto_awesome, themeProvider),
-          const SizedBox(height: 12),
-          buildAnalysisSection(context, widget.problemModel.analysis,
-              themeProvider.primaryColor),
-          const SizedBox(height: 24),
-        ],
-      ),
+    // 공통 패딩
+    final contentPadding = EdgeInsets.symmetric(
+      horizontal: isWide ? 60.0 : 35.0,
+      vertical: 24.0,
     );
+
+    // AI 분석 결과 위젯
+    final aiAnalysisWidget = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionTitle('AI 분석 결과', Icons.auto_awesome, themeProvider),
+        const SizedBox(height: 12),
+        buildAnalysisSection(
+            context, widget.problemModel.analysis, themeProvider.primaryColor),
+      ],
+    );
+
+    // 메모 및 해설 이미지 위젯
+    final memoAndImageWidget = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (widget.problemModel.memo != null &&
+            widget.problemModel.memo!.isNotEmpty) ...[
+          _buildSectionTitle('메모', Icons.edit, themeProvider),
+          const SizedBox(height: 12),
+          UnderlinedText(
+            text: widget.problemModel.memo!,
+            fontSize: 18,
+          ),
+          const SizedBox(height: 25),
+        ],
+
+        // 해설 이미지
+        _buildSectionTitle('해설 이미지', Icons.image_outlined, themeProvider),
+        const SizedBox(height: 12),
+        buildImageSection(
+          context,
+          widget.problemModel.answerImageDataList
+                  ?.map((m) => m.imageUrl)
+                  .toList() ??
+              [],
+          '해설 이미지',
+          themeProvider,
+        ),
+      ],
+    );
+
+    if (isWide) {
+      // 태블릿 가로 (2열) 레이아웃
+      return SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: contentPadding,
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              flex: 1,
+              child: Padding(
+                padding: const EdgeInsets.only(right: 20.0), // 오른쪽 여백
+                child: memoAndImageWidget,
+              ),
+            ),
+            Expanded(
+              flex: 1,
+              child: Padding(
+                padding: const EdgeInsets.only(left: 20.0), // 왼쪽 여백
+                child: aiAnalysisWidget,
+              ),
+            ),
+          ],
+        ),
+      );
+    } else {
+      // 휴대폰 또는 태블릿 세로 (1열) 레이아웃
+      return SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: contentPadding,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            memoAndImageWidget,
+            const SizedBox(height: 24), // 두 섹션 사이 간격
+            aiAnalysisWidget,
+            const SizedBox(height: 24), // 마지막 섹션 하단 간격
+          ],
+        ),
+      );
+    }
   }
 
   Widget _buildSectionTitle(
