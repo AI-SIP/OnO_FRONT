@@ -90,6 +90,21 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
             )
           : null,
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+      floatingActionButton: _isSelectionMode
+          ? null
+          : FloatingActionButton.extended(
+              heroTag: 'practice_create_fab',
+              onPressed: _navigateToPracticeCreate,
+              backgroundColor: themeProvider.primaryColor,
+              elevation: 2,
+              icon: const Icon(Icons.add, color: Colors.white),
+              label: const StandardText(
+                text: '복습노트 추가',
+                fontSize: 15,
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
     );
   }
 
@@ -107,21 +122,6 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
           padding: const EdgeInsets.only(right: 16.0), // 우측에 여백 추가
           child: Row(
             children: [
-              FloatingActionButton(
-                heroTag: 'create_problem_practice',
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) =>
-                          const PracticeProblemSelectionScreen(),
-                    ),
-                  );
-                },
-                backgroundColor: Colors.transparent,
-                elevation: 0,
-                child: SvgPicture.asset("assets/Icon/addPractice.svg"),
-              ),
               IconButton(
                 icon: Icon(
                   Icons.more_vert,
@@ -211,15 +211,9 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
                       icon: Icons.add,
                       iconColor: themeProvider.primaryColor,
                       title: '복습 노트 생성하기',
-                      onTap: () {
+                      onTap: () async {
                         Navigator.pop(context);
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                const PracticeProblemSelectionScreen(),
-                          ),
-                        );
+                        await _navigateToPracticeCreate();
                       },
                     ),
                     const SizedBox(height: 12),
@@ -509,16 +503,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
               ),
               const SizedBox(height: 30),
               ElevatedButton(
-                onPressed: () {
-                  // 복습 노트 추가 화면으로 이동
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) =>
-                          const PracticeProblemSelectionScreen(),
-                    ),
-                  );
-                },
+                onPressed: _navigateToPracticeCreate,
                 style: ElevatedButton.styleFrom(
                   backgroundColor:
                       themeProvider.primaryColor, // primaryColor 적용
@@ -759,5 +744,16 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
     final provider =
         Provider.of<ProblemPracticeProvider>(context, listen: false);
     await provider.refreshPracticeThumbnails();
+  }
+
+  Future<void> _navigateToPracticeCreate() async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const PracticeProblemSelectionScreen(),
+      ),
+    );
+    if (!mounted) return;
+    await _refreshPracticeThumbnails();
   }
 }
