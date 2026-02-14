@@ -37,12 +37,12 @@ Widget _buildProcessingState(BuildContext context, Color primaryColor) {
   return Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      Row(children: [
-        Icon(Icons.auto_awesome, color: primaryColor),
-        const SizedBox(width: 8),
-        HandWriteText(text: 'AI 분석 중', fontSize: 20, color: primaryColor),
-      ]),
-      verticalSpacer(context, .02),
+      // Row(children: [
+      //   Icon(Icons.auto_awesome, color: primaryColor),
+      //   const SizedBox(width: 8),
+      //   HandWriteText(text: 'AI 분석 중', fontSize: 20, color: primaryColor),
+      // ]),
+      // verticalSpacer(context, .02),
       Container(
         width: double.infinity,
         padding: const EdgeInsets.all(24.0),
