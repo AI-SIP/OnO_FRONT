@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:ono/Module/Text/HandWriteText.dart';
 
 import '../../Model/Problem/ProblemModel.dart';
 import '../../Module/Theme/GridPainter.dart';
@@ -65,7 +64,6 @@ class ProblemDetailScreenWidget {
                 '해설 이미지',
                 theme),
             verticalSpacer(ctx, .04),
-
             buildAnalysisSection(ctx, problem.analysis, theme.primaryColor),
             verticalSpacer(ctx, .04),
             buildRepeatSection(ctx, problem, theme.primaryColor),

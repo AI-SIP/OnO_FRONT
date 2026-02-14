@@ -1095,10 +1095,10 @@ class _ImageSliderState extends State<_ImageSlider> {
         Container(
           height: screenHeight * 0.3,
           decoration: BoxDecoration(
-            color: widget.statusColor.withOpacity(0.05),
+            color: widget.primaryColor.withOpacity(0.05),
             borderRadius: BorderRadius.circular(12.0),
             border: Border.all(
-              color: widget.statusColor.withOpacity(0.2),
+              color: widget.primaryColor.withOpacity(0.2),
               width: 2,
             ),
           ),
