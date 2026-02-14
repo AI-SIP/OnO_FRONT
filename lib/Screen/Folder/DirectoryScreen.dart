@@ -24,6 +24,7 @@ import '../../Module/Theme/ThemeHandler.dart';
 import '../../Module/Util/FolderPickerDialog.dart';
 import '../../Provider/UserProvider.dart';
 import '../ProblemDetail/ProblemDetailScreen.dart';
+import '../ProblemRegister/ProblemRegisterScreen.dart';
 import 'UserGuideScreen.dart';
 
 class DirectoryScreen extends StatefulWidget {
@@ -1096,11 +1097,39 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                             height: 30,
                           ),
                           ElevatedButton(
-                            onPressed: () {
-                              // 플로팅 버튼의 공책 생성 로직과 동일하게 동작
-                              FirebaseAnalytics.instance
-                                  .logEvent(name: 'folder_create_button_click');
-                              _showCreateFolderDialog();
+                            onPressed: () async {
+                              FirebaseAnalytics.instance.logEvent(
+                                  name: 'directory_empty_create_problem_click');
+
+                              final foldersProvider =
+                                  Provider.of<FoldersProvider>(context,
+                                      listen: false);
+
+                              // ProblemRegisterTemplate가 currentFolder를 기본 공책으로 사용하므로
+                              // 현재 화면의 폴더를 명시적으로 동기화해 중첩 폴더에서도 올바르게 연결.
+                              if (_currentFolder != null) {
+                                await foldersProvider
+                                    .moveToFolder(_currentFolder!.folderId);
+                              }
+
+                              final result = await Navigator.push<bool>(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => ProblemRegisterScreen(
+                                    problemModel: null,
+                                    isEditMode: false,
+                                    initialFolderId: _currentFolder?.folderId,
+                                  ),
+                                ),
+                              );
+
+                              if (result == true &&
+                                  mounted &&
+                                  _currentFolder != null) {
+                                await foldersProvider
+                                    .refreshFolder(_currentFolder!.folderId);
+                                await _loadFolderData();
+                              }
                             },
                             style: ElevatedButton.styleFrom(
                               backgroundColor:
@@ -1114,7 +1143,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                               ),
                             ),
                             child: const StandardText(
-                              text: '공책 추가하기',
+                              text: '오답노트 작성하기',
                               fontSize: 16,
                               color: Colors.white,
                             ),

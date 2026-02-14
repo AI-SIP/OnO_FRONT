@@ -10,11 +10,13 @@ import '../../Module/Theme/ThemeHandler.dart';
 class ProblemRegisterScreen extends StatefulWidget {
   final ProblemModel? problemModel;
   final bool isEditMode;
+  final int? initialFolderId;
 
   const ProblemRegisterScreen({
     super.key,
     required this.problemModel,
     required this.isEditMode,
+    this.initialFolderId,
   });
 
   @override
@@ -46,6 +48,7 @@ class _ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
           key: _templateKey,
           problemModel: widget.problemModel,
           isEditMode: widget.isEditMode,
+          initialFolderId: widget.initialFolderId,
         ),
       ),
       bottomNavigationBar: Container(
