@@ -36,6 +36,7 @@ class DirectoryScreen extends StatefulWidget {
 }
 
 class _DirectoryScreenState extends State<DirectoryScreen> {
+  static const double _dialogMaxWidth = 420;
   bool modalShown = false;
   bool _isSelectionMode = false; // 선택 모드 활성화 여부
   final List<int> _selectedFolderIds = []; // 선택된 폴더 ID 리스트
@@ -805,72 +806,74 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     await showDialog(
       context: context,
       builder: (context) {
-        return Dialog(
-          backgroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Container(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // 헤더
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Colors.orange.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
+        return _buildPhoneWidthDialog(
+          Dialog(
+            backgroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Container(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // 헤더
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.orange.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Icon(
+                          Icons.warning,
+                          color: Colors.orange,
+                          size: 20,
+                        ),
                       ),
-                      child: const Icon(
-                        Icons.warning,
-                        color: Colors.orange,
-                        size: 20,
+                      const SizedBox(width: 12),
+                      const StandardText(
+                        text: '공책 위치 변경 불가',
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black87,
                       ),
-                    ),
-                    const SizedBox(width: 12),
-                    const StandardText(
-                      text: '공책 위치 변경 불가',
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black87,
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                // 내용
-                const StandardText(
-                  text: '책장의 위치를 변경할 수 없습니다.',
-                  fontSize: 15,
-                  color: Colors.black87,
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 24),
-                // 버튼
-                SizedBox(
-                  width: double.infinity,
-                  child: TextButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
-                    style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 8),
-                      backgroundColor: themeProvider.primaryColor,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  // 내용
+                  const StandardText(
+                    text: '책장의 위치를 변경할 수 없습니다.',
+                    fontSize: 15,
+                    color: Colors.black87,
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 24),
+                  // 버튼
+                  SizedBox(
+                    width: double.infinity,
+                    child: TextButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 8),
+                        backgroundColor: themeProvider.primaryColor,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
                       ),
-                    ),
-                    child: const StandardText(
-                      text: '확인',
-                      fontSize: 14,
-                      color: Colors.white,
+                      child: const StandardText(
+                        text: '확인',
+                        fontSize: 14,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         );
@@ -914,129 +917,131 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
               Navigator.pop(dialogContext);
             }
           },
-          child: Dialog(
-            backgroundColor: Colors.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Container(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // 헤더
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: themeProvider.primaryColor.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Icon(
-                          Icons.edit,
-                          color: themeProvider.primaryColor,
-                          size: 20,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      StandardText(
-                        text: dialogTitle,
-                        fontSize: 20,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.black87,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-                  // 입력 필드
-                  TextField(
-                    controller: folderNameController,
-                    autofocus: true,
-                    style: standardTextStyle.copyWith(
-                      color: Colors.black87,
-                      fontSize: 15,
-                    ),
-                    decoration: InputDecoration(
-                      hintText: '공책 이름을 입력하세요',
-                      hintStyle: standardTextStyle.copyWith(
-                        color: Colors.grey[400],
-                        fontSize: 14,
-                      ),
-                      fillColor: Colors.grey[50],
-                      filled: true,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide:
-                            BorderSide(color: Colors.grey[300]!, width: 1),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide:
-                            BorderSide(color: Colors.grey[300]!, width: 1),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(
-                          color: themeProvider.primaryColor.withOpacity(0.5),
-                          width: 2,
-                        ),
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        vertical: 16,
-                        horizontal: 16,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  // 액션 버튼
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      TextButton(
-                        onPressed: () {
-                          Navigator.pop(dialogContext);
-                        },
-                        style: TextButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 8),
-                          backgroundColor: Colors.grey[100],
-                          shape: RoundedRectangleBorder(
+          child: _buildPhoneWidthDialog(
+            Dialog(
+              backgroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Container(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // 헤더
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: themeProvider.primaryColor.withOpacity(0.1),
                             borderRadius: BorderRadius.circular(8),
                           ),
+                          child: Icon(
+                            Icons.edit,
+                            color: themeProvider.primaryColor,
+                            size: 20,
+                          ),
                         ),
-                        child: const StandardText(
-                          text: '취소',
-                          fontSize: 14,
+                        const SizedBox(width: 12),
+                        StandardText(
+                          text: dialogTitle,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w600,
                           color: Colors.black87,
                         ),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+                    // 입력 필드
+                    TextField(
+                      controller: folderNameController,
+                      autofocus: true,
+                      style: standardTextStyle.copyWith(
+                        color: Colors.black87,
+                        fontSize: 15,
                       ),
-                      const SizedBox(width: 8),
-                      TextButton(
-                        onPressed: () async {
-                          if (folderNameController.text.isNotEmpty) {
-                            onFolderNameSubmitted(folderNameController.text);
-                            Navigator.pop(dialogContext);
-                          }
-                        },
-                        style: TextButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 8),
-                          backgroundColor: themeProvider.primaryColor,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
+                      decoration: InputDecoration(
+                        hintText: '공책 이름을 입력하세요',
+                        hintStyle: standardTextStyle.copyWith(
+                          color: Colors.grey[400],
+                          fontSize: 14,
+                        ),
+                        fillColor: Colors.grey[50],
+                        filled: true,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide:
+                              BorderSide(color: Colors.grey[300]!, width: 1),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide:
+                              BorderSide(color: Colors.grey[300]!, width: 1),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(
+                            color: themeProvider.primaryColor.withOpacity(0.5),
+                            width: 2,
                           ),
                         ),
-                        child: const StandardText(
-                          text: '확인',
-                          fontSize: 14,
-                          color: Colors.white,
+                        contentPadding: const EdgeInsets.symmetric(
+                          vertical: 16,
+                          horizontal: 16,
                         ),
                       ),
-                    ],
-                  ),
-                ],
+                    ),
+                    const SizedBox(height: 24),
+                    // 액션 버튼
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        TextButton(
+                          onPressed: () {
+                            Navigator.pop(dialogContext);
+                          },
+                          style: TextButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 8),
+                            backgroundColor: Colors.grey[100],
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          child: const StandardText(
+                            text: '취소',
+                            fontSize: 14,
+                            color: Colors.black87,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        TextButton(
+                          onPressed: () async {
+                            if (folderNameController.text.isNotEmpty) {
+                              onFolderNameSubmitted(folderNameController.text);
+                              Navigator.pop(dialogContext);
+                            }
+                          },
+                          style: TextButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 8),
+                            backgroundColor: themeProvider.primaryColor,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          child: const StandardText(
+                            text: '확인',
+                            fontSize: 14,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -1566,97 +1571,108 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
     showDialog(
       context: context,
-      builder: (dialogContext) => Dialog(
-        backgroundColor: Colors.white,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Container(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // 헤더
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: Colors.red.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(8),
+      builder: (dialogContext) => _buildPhoneWidthDialog(
+        Dialog(
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // 헤더
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.red.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(
+                        Icons.delete_forever,
+                        color: Colors.red,
+                        size: 20,
+                      ),
                     ),
-                    child: const Icon(
-                      Icons.delete_forever,
-                      color: Colors.red,
-                      size: 20,
+                    const SizedBox(width: 12),
+                    const StandardText(
+                      text: '삭제 확인',
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black87,
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  const StandardText(
-                    text: '삭제 확인',
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black87,
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
-              // 내용
-              const StandardText(
-                text: '선택한 항목을 정말 삭제하시겠습니까?',
-                fontSize: 15,
-                color: Colors.black87,
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 24),
-              // 액션 버튼
-              Row(
-                children: [
-                  Expanded(
-                    child: TextButton(
-                      onPressed: () => Navigator.of(dialogContext).pop(),
-                      style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 8),
-                        backgroundColor: Colors.grey[100],
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                // 내용
+                const StandardText(
+                  text: '선택한 항목을 정말 삭제하시겠습니까?',
+                  fontSize: 15,
+                  color: Colors.black87,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
+                // 액션 버튼
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextButton(
+                        onPressed: () => Navigator.of(dialogContext).pop(),
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 8),
+                          backgroundColor: Colors.grey[100],
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: const StandardText(
+                          text: '취소',
+                          fontSize: 14,
+                          color: Colors.black87,
                         ),
                       ),
-                      child: const StandardText(
-                        text: '취소',
-                        fontSize: 14,
-                        color: Colors.black87,
-                      ),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: TextButton(
-                      onPressed: () {
-                        Navigator.of(dialogContext).pop();
-                        _deleteSelectedItems();
-                      },
-                      style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 8),
-                        backgroundColor: Colors.red,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: TextButton(
+                        onPressed: () {
+                          Navigator.of(dialogContext).pop();
+                          _deleteSelectedItems();
+                        },
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 8),
+                          backgroundColor: Colors.red,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: const StandardText(
+                          text: '삭제',
+                          fontSize: 14,
+                          color: Colors.white,
                         ),
                       ),
-                      child: const StandardText(
-                        text: '삭제',
-                        fontSize: 14,
-                        color: Colors.white,
-                      ),
                     ),
-                  ),
-                ],
-              ),
-            ],
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildPhoneWidthDialog(Widget child) {
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: _dialogMaxWidth),
+        child: child,
       ),
     );
   }
