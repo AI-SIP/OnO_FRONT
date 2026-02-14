@@ -116,9 +116,9 @@ class _RepeatSectionV2State extends State<RepeatSectionV2>
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   SvgPicture.asset(
-                    'assets/Icon/Pencil.svg',
-                    width: 80,
-                    height: 80,
+                    'assets/Icon/PencilDetail.svg',
+                    width: 100,
+                    height: 100,
                   ),
                   const SizedBox(height: 16),
                   const StandardText(
