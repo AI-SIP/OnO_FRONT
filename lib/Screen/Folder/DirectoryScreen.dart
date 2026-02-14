@@ -67,6 +67,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
   // 새로고침 중복 실행 방지
   bool _isRefreshing = false;
+  bool _isQuickCreateOpen = false;
 
   @override
   void initState() {
@@ -487,6 +488,11 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                     ),
                   ),
                 ),
+          floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+          floatingActionButton:
+              (authService.isLoggedIn == LoginStatus.login && !_isSelectionMode)
+                  ? _buildQuickCreateFab(themeProvider)
+                  : null,
         ));
   }
 
@@ -507,19 +513,6 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         color: themeProvider.primaryColor,
       ),
       actions: [
-        FloatingActionButton(
-          heroTag: 'create_folder',
-          onPressed: () {
-            FirebaseAnalytics.instance
-                .logEvent(name: 'folder_create_button_click');
-            _showCreateFolderDialog(); // 기존에 상단에서 호출하던 폴더 생성 로직
-          },
-          backgroundColor: Colors.transparent,
-          elevation: 0, // 그림자 제거
-          child: SvgPicture.asset(
-            "assets/Icon/addNote.svg",
-          ),
-        ),
         Padding(
           padding: const EdgeInsets.only(right: 16.0), // 우측에 여백 추가
           child: Row(
@@ -533,6 +526,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                   if (_isSelectionMode) {
                     setState(() {
                       _isSelectionMode = false;
+                      _isQuickCreateOpen = false;
                       _selectedFolderIds.clear();
                       _selectedProblemIds.clear();
                     });
@@ -545,6 +539,157 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildQuickCreateFab(ThemeHandler themeProvider) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        AnimatedSwitcher(
+          duration: const Duration(milliseconds: 180),
+          child: _isQuickCreateOpen
+              ? Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      _buildQuickCreateAction(
+                        label: '공책 추가',
+                        icon: Icons.create_new_folder_outlined,
+                        themeProvider: themeProvider,
+                        onTap: () async {
+                          setState(() => _isQuickCreateOpen = false);
+                          FirebaseAnalytics.instance
+                              .logEvent(name: 'folder_create_button_click');
+                          await _showCreateFolderDialog();
+                        },
+                      ),
+                      const SizedBox(height: 10),
+                      _buildQuickCreateAction(
+                        label: '오답노트 작성',
+                        icon: Icons.note_add_outlined,
+                        themeProvider: themeProvider,
+                        onTap: () async {
+                          setState(() => _isQuickCreateOpen = false);
+                          await _navigateToProblemRegisterInCurrentFolder();
+                        },
+                      ),
+                    ],
+                  ),
+                )
+              : const SizedBox.shrink(),
+        ),
+        AnimatedSwitcher(
+          duration: const Duration(milliseconds: 220),
+          switchInCurve: Curves.easeOutCubic,
+          switchOutCurve: Curves.easeInCubic,
+          layoutBuilder: (currentChild, previousChildren) {
+            return Stack(
+              alignment: Alignment.centerRight,
+              children: <Widget>[
+                ...previousChildren,
+                if (currentChild != null) currentChild,
+              ],
+            );
+          },
+          transitionBuilder: (child, animation) {
+            final slide = Tween<Offset>(
+              begin: const Offset(0.08, 0),
+              end: Offset.zero,
+            ).animate(animation);
+            return FadeTransition(
+              opacity: animation,
+              child: SlideTransition(position: slide, child: child),
+            );
+          },
+          child: _isQuickCreateOpen
+              ? FloatingActionButton(
+                  key: const ValueKey('quick_fab_open'),
+                  heroTag: 'directory_quick_create_fab_open',
+                  onPressed: () {
+                    setState(() {
+                      _isQuickCreateOpen = false;
+                    });
+                  },
+                  elevation: 2,
+                  backgroundColor: Colors.grey[700],
+                  child: const Icon(
+                    Icons.close,
+                    color: Colors.white,
+                  ),
+                )
+              : FloatingActionButton.extended(
+                  key: const ValueKey('quick_fab_closed'),
+                  heroTag: 'directory_quick_create_fab_closed',
+                  onPressed: () {
+                    setState(() {
+                      _isQuickCreateOpen = true;
+                    });
+                  },
+                  elevation: 2,
+                  backgroundColor: themeProvider.primaryColor,
+                  icon: const Icon(
+                    Icons.add,
+                    color: Colors.white,
+                  ),
+                  label: const StandardText(
+                    text: '추가',
+                    fontSize: 15,
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildQuickCreateAction({
+    required String label,
+    required IconData icon,
+    required ThemeHandler themeProvider,
+    required Future<void> Function() onTap,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.grey[200]!, width: 1),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x1A000000),
+                blurRadius: 10,
+                offset: Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                icon,
+                size: 18,
+                color: themeProvider.primaryColor,
+              ),
+              const SizedBox(width: 8),
+              StandardText(
+                text: label,
+                fontSize: 14,
+                color: Colors.black87,
+                fontWeight: FontWeight.w600,
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
@@ -571,7 +716,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
     if (_currentFolder == null) return;
 
-    final foldersProvider = Provider.of<FoldersProvider>(context, listen: false);
+    final foldersProvider =
+        Provider.of<FoldersProvider>(context, listen: false);
 
     // 작성 화면의 기본 공책을 현재 공책으로 고정
     await foldersProvider.moveToFolder(_currentFolder!.folderId);
