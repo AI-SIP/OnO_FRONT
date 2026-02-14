@@ -32,6 +32,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
   Timer? _analysisPollingTimer;
   int _pollingCount = 0;
   bool _isExpansionTileExpanded = false; // ExpansionTile 상태 관리
+  bool _isProblemDeleted = false; // 문제 삭제 여부 플래그
 
   @override
   void initState() {
@@ -96,7 +97,8 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
         return;
       }
 
-      final problemsProvider = Provider.of<ProblemsProvider>(context, listen: false);
+      final problemsProvider =
+          Provider.of<ProblemsProvider>(context, listen: false);
 
       try {
         log('🔍 Polling analysis status (attempt $_pollingCount)...');
@@ -107,14 +109,36 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
         // 현재 문제 상태 확인
         final problem = await problemsProvider.getProblem(problemId);
 
-        // 분석이 완료되거나 실패하면 폴링 중지
+        // 분석이 완료되거나 실패하거나 이미지가 없으면 폴링 중지
         if (problem.analysis?.status == ProblemAnalysisStatus.COMPLETED) {
           log('✅ Analysis completed - polling stopped');
           _stopAnalysisPolling();
+          // UI 강제 업데이트
+          if (mounted) {
+            setState(() {
+              _problemModelFuture = Future.value(problem);
+            });
+          }
           return;
         } else if (problem.analysis?.status == ProblemAnalysisStatus.FAILED) {
           log('❌ Analysis failed - polling stopped');
           _stopAnalysisPolling();
+          // UI 강제 업데이트
+          if (mounted) {
+            setState(() {
+              _problemModelFuture = Future.value(problem);
+            });
+          }
+          return;
+        } else if (problem.analysis?.status == ProblemAnalysisStatus.NO_IMAGE) {
+          log('📷 No image detected during polling - polling stopped');
+          _stopAnalysisPolling();
+          // UI 강제 업데이트 (중요: NO_IMAGE 상태를 화면에 반영)
+          if (mounted) {
+            setState(() {
+              _problemModelFuture = Future.value(problem);
+            });
+          }
           return;
         }
 
@@ -163,14 +187,21 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                 // 분석 상태가 변경되었을 때만 rebuild
                 return previous.analysis?.status != next.analysis?.status ||
                     previous.analysis?.subject != next.analysis?.subject ||
-                    previous.analysis?.problemType != next.analysis?.problemType;
+                    previous.analysis?.problemType !=
+                        next.analysis?.problemType;
               },
               builder: (context, problemModel, child) {
+                if (_isProblemDeleted) {
+                  return Expanded(
+                      child:
+                          Container()); // Problem has been deleted, so show nothing or a message
+                }
                 if (problemModel == null) {
                   // 초기 로딩 시에만 Future로 가져오기
                   return FutureBuilder<ProblemModel>(
-                    future: Provider.of<ProblemsProvider>(context, listen: false)
-                        .getProblem(widget.problemId),
+                    future:
+                        Provider.of<ProblemsProvider>(context, listen: false)
+                            .getProblem(widget.problemId),
                     builder: (context, snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting) {
                         return const Center(child: CircularProgressIndicator());
@@ -239,7 +270,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
           return StandardText(
             text:
                 (reference == null || reference.isEmpty) ? '제목 없음' : reference,
-            fontSize: 20,
+            fontSize: 18,
             color: themeProvider.primaryColor,
           );
         } else {
@@ -287,7 +318,8 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
         return TapRegion(
           onTapOutside: (_) {
             // Workaround for iPadOS 26.1 bug: https://github.com/flutter/flutter/issues/177992
-            if (DateTime.now().difference(openTime) < const Duration(milliseconds: 500)) {
+            if (DateTime.now().difference(openTime) <
+                const Duration(milliseconds: 500)) {
               return;
             }
             if (Navigator.canPop(context)) {
@@ -516,14 +548,16 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                     Expanded(
                       child: TextButton(
                         onPressed: () async {
-                          FirebaseAnalytics.instance.logEvent(name: 'problem_delete');
+                          FirebaseAnalytics.instance
+                              .logEvent(name: 'problem_delete');
 
                           // context가 유효할 때 Provider와 Navigator 가져오기
                           final problemsProvider =
-                              Provider.of<ProblemsProvider>(context, listen: false);
-                          final practiceProvider = Provider.of<ProblemPracticeProvider>(
-                              context,
-                              listen: false);
+                              Provider.of<ProblemsProvider>(context,
+                                  listen: false);
+                          final practiceProvider =
+                              Provider.of<ProblemPracticeProvider>(context,
+                                  listen: false);
                           final navigator = Navigator.of(context);
 
                           // 다이얼로그 닫기
@@ -535,10 +569,13 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                           try {
                             // 삭제 작업 수행
                             await problemsProvider.deleteProblems([problemId]);
-                            await practiceProvider.fetchAllPracticeContents();
+                            //await practiceProvider.fetchAllPracticeContents();
 
-                            // 로딩 다이얼로그 닫기
                             if (mounted) {
+                              setState(() {
+                                _isProblemDeleted = true; // Set the flag
+                              });
+                              // 로딩 다이얼로그 닫기
                               LoadingDialog.hide(context);
                             }
 
@@ -634,27 +671,38 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
 
     log('Moved to problem: ${problem.problemId}');
 
-    // 문제에 ProblemImage가 있으면 분석 결과 조회
-    if (problem.problemImageDataList != null &&
-        problem.problemImageDataList!.isNotEmpty) {
-      // 분석 결과가 없거나, PROCESSING/NOT_STARTED 상태면 서버에서 조회
-      if (problem.analysis == null ||
-          problem.analysis!.status == ProblemAnalysisStatus.PROCESSING ||
-          problem.analysis!.status == ProblemAnalysisStatus.NOT_STARTED) {
-        log('📊 Analysis is not completed - starting polling');
+    // 분석 객체가 없으면 폴링하지 않음
+    if (problem.analysis == null) {
+      log('⚠️ No analysis object - polling not needed');
+      _stopAnalysisPolling();
+      return problem;
+    }
 
-        // 분석 결과 조회 (await 하지 않고 백그라운드에서 실행)
-        problemsProvider.fetchProblemAnalysis(problemId);
+    // 분석 상태에 따라 폴링 결정
+    final analysisStatus = problem.analysis!.status;
 
-        // Smart Polling 시작
-        _startAnalysisPolling(problemId);
-      } else if (problem.analysis!.status == ProblemAnalysisStatus.COMPLETED) {
-        log('✅ Analysis already completed - no polling needed');
-        _stopAnalysisPolling();
-      } else if (problem.analysis!.status == ProblemAnalysisStatus.NO_IMAGE) {
-        log('📷 No image for analysis - polling not needed');
-        _stopAnalysisPolling();
-      }
+    if (analysisStatus == ProblemAnalysisStatus.NO_IMAGE) {
+      // 이미지 없음 - 폴링 중지
+      log('📷 No image for analysis - polling not needed');
+      _stopAnalysisPolling();
+    } else if (analysisStatus == ProblemAnalysisStatus.COMPLETED) {
+      // 분석 완료 - 폴링 중지
+      log('✅ Analysis already completed - no polling needed');
+      _stopAnalysisPolling();
+    } else if (analysisStatus == ProblemAnalysisStatus.FAILED) {
+      // 분석 실패 - 폴링 중지
+      log('❌ Analysis failed - polling not needed');
+      _stopAnalysisPolling();
+    } else if (analysisStatus == ProblemAnalysisStatus.PROCESSING ||
+        analysisStatus == ProblemAnalysisStatus.NOT_STARTED) {
+      // 분석 진행 중 또는 시작 전 - 폴링 시작
+      log('📊 Analysis in progress (status: $analysisStatus) - starting polling');
+
+      // 분석 결과 조회 (await 하지 않고 백그라운드에서 실행)
+      problemsProvider.fetchProblemAnalysis(problemId);
+
+      // Smart Polling 시작
+      _startAnalysisPolling(problemId);
     }
 
     return problem;

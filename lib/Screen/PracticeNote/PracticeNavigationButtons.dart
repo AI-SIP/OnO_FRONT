@@ -1,8 +1,8 @@
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:ono/Screen/PracticeNote/PracticeCompletionScreen.dart';
-import 'package:ono/Screen/PracticeNote/ProblemReviewCompletionScreen.dart';
 import 'package:ono/Screen/ProblemDetail/ProblemDetailScreen.dart';
+import 'package:ono/Screen/ProblemSolve/ProblemSolveRegisterScreen.dart';
 import 'package:provider/provider.dart';
 
 import '../../Module/Text/StandardText.dart';
@@ -36,21 +36,12 @@ class _PracticeNavigationButtonsState extends State<PracticeNavigationButtons> {
     final themeProvider = Provider.of<ThemeHandler>(context);
     final screenHeight = MediaQuery.of(context).size.height;
 
-    return Column(
-      mainAxisSize: MainAxisSize.min,
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
-        // Progress Text가 상단에 단독으로 표시되도록 설정
+        buildPreviousButton(themeProvider, screenHeight),
         buildProgressText(themeProvider),
-        const SizedBox(height: 8), // 간격 추가
-        // 아래에 버튼들이 나란히 배치
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            buildPreviousButton(themeProvider, screenHeight),
-            buildSolveButton(themeProvider, screenHeight),
-            buildNextOrCompleteButton(themeProvider, screenHeight),
-          ],
-        ),
+        buildNextOrCompleteButton(themeProvider, screenHeight),
       ],
     );
   }
@@ -222,7 +213,7 @@ class _PracticeNavigationButtonsState extends State<PracticeNavigationButtons> {
     final result = await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => ProblemReviewCompletionScreen(
+        builder: (context) => ProblemSolveRegisterScreen(
           problemId: widget.currentProblemId,
           onRefresh: widget.onRefresh,
         ),

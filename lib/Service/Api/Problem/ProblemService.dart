@@ -1,3 +1,4 @@
+import 'dart:developer';
 import 'dart:io';
 
 import 'package:http/http.dart' as http;
@@ -14,6 +15,7 @@ class ProblemService {
   final baseUrl = "${AppConfig.baseUrl}/api/problems";
 
   Future<ProblemModel> getProblem(int? problemId) async {
+    log('find problem id : $problemId');
     final data = await httpService.sendRequest(
       method: 'GET',
       url: '$baseUrl/$problemId',

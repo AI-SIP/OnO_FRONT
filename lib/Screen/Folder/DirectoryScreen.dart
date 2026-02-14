@@ -429,12 +429,15 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
     // 루트 폴더 화면인 경우에만 타임스탬프 감지
     if (widget.folderId == null) {
-      final foldersProvider = Provider.of<FoldersProvider>(context, listen: false);
+      final foldersProvider =
+          Provider.of<FoldersProvider>(context, listen: false);
 
-      if (foldersProvider.rootFolderRefreshTimestamp != _lastRootFolderRefreshTimestamp &&
+      if (foldersProvider.rootFolderRefreshTimestamp !=
+              _lastRootFolderRefreshTimestamp &&
           foldersProvider.rootFolderRefreshTimestamp > 0 &&
           !_isRefreshing) {
-        _lastRootFolderRefreshTimestamp = foldersProvider.rootFolderRefreshTimestamp;
+        _lastRootFolderRefreshTimestamp =
+            foldersProvider.rootFolderRefreshTimestamp;
         log('🔄 Root folder refresh detected in didChangeDependencies! (timestamp: $_lastRootFolderRefreshTimestamp)');
 
         _isRefreshing = true;
@@ -498,7 +501,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                     _currentFolder?.folderName != null)
                 ? _currentFolder!.folderName
                 : '책장'),
-        fontSize: 20,
+        fontSize: 18,
         color: themeProvider.primaryColor,
       ),
       actions: [
@@ -853,7 +856,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                       Navigator.pop(context);
                     },
                     style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 8),
                       backgroundColor: themeProvider.primaryColor,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
@@ -951,11 +955,13 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                     filled: true,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.grey[300]!, width: 1),
+                      borderSide:
+                          BorderSide(color: Colors.grey[300]!, width: 1),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.grey[300]!, width: 1),
+                      borderSide:
+                          BorderSide(color: Colors.grey[300]!, width: 1),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -980,7 +986,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                         Navigator.pop(context);
                       },
                       style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 8),
                         backgroundColor: Colors.grey[100],
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
@@ -1001,7 +1008,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                         }
                       },
                       style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 8),
                         backgroundColor: themeProvider.primaryColor,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
@@ -1594,7 +1602,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                     child: TextButton(
                       onPressed: () => Navigator.of(dialogContext).pop(),
                       style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 8),
                         backgroundColor: Colors.grey[100],
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
@@ -1615,7 +1624,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                         _deleteSelectedItems();
                       },
                       style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 8),
                         backgroundColor: Colors.red,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),

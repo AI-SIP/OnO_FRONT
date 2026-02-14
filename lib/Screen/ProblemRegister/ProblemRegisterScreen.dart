@@ -36,7 +36,7 @@ class _ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
         title: StandardText(
           text: widget.isEditMode ? '오답노트 수정' : '오답노트 작성',
           color: theme.primaryColor,
-          fontSize: 20,
+          fontSize: 18,
         ),
       ),
       body: SingleChildScrollView(
