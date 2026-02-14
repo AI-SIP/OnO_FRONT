@@ -60,7 +60,7 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
     return Column(
       children: [
         // 노트 헤더 (손글씨 탭 바)
-        _buildNoteHeader(themeProvider),
+        _buildNoteHeader(themeProvider, isWide),
 
         // 탭 내용
         Expanded(
@@ -86,77 +86,126 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
     );
   }
 
-  Widget _buildNoteHeader(ThemeHandler themeProvider) {
+  Widget _buildNoteHeader(ThemeHandler themeProvider, bool isWide) {
+    final horizontalPadding = isWide ? 60.0 : 30.0;
+
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 5.0),
+      padding:
+          EdgeInsets.fromLTRB(horizontalPadding, 10.0, horizontalPadding, 8.0),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.9),
+        color: Colors.white.withOpacity(0.94),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 4,
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 8,
             offset: const Offset(0, 2),
           ),
         ],
       ),
-      child: TabBar(
-        controller: _tabController,
-        labelColor: themeProvider.primaryColor,
-        unselectedLabelColor: Colors.grey[600],
-        indicator: BoxDecoration(
-          color: themeProvider.primaryColor.withOpacity(0.15),
-          borderRadius: BorderRadius.circular(20),
+      child: Container(
+        padding: const EdgeInsets.all(5),
+        decoration: BoxDecoration(
+          color: Colors.grey[100],
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.grey[200]!, width: 1),
         ),
-        indicatorSize: TabBarIndicatorSize.tab,
-        dividerColor: Colors.transparent,
-        labelPadding: const EdgeInsets.symmetric(horizontal: 8),
-        tabs: [
-          Tab(
-            child: StandardText(
-              text: '문제',
-              fontSize: 16,
-              fontWeight:
-                  _currentTabIndex == 0 ? FontWeight.bold : FontWeight.normal,
-              color: _currentTabIndex == 0
-                  ? themeProvider.primaryColor
-                  : Colors.grey[600]!,
+        child: TabBar(
+          controller: _tabController,
+          labelColor: themeProvider.primaryColor,
+          unselectedLabelColor: Colors.grey[600],
+          indicator: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: themeProvider.primaryColor.withOpacity(0.22),
+              width: 1,
             ),
+            boxShadow: [
+              BoxShadow(
+                color: themeProvider.primaryColor.withOpacity(0.1),
+                blurRadius: 6,
+                offset: const Offset(0, 2),
+              ),
+            ],
           ),
-          Tab(
-            child: StandardText(
-              text: '정답',
-              fontSize: 16,
-              fontWeight:
-                  _currentTabIndex == 1 ? FontWeight.bold : FontWeight.normal,
-              color: _currentTabIndex == 1
-                  ? themeProvider.primaryColor
-                  : Colors.grey[600]!,
+          indicatorSize: TabBarIndicatorSize.tab,
+          dividerColor: Colors.transparent,
+          labelPadding: const EdgeInsets.symmetric(horizontal: 4),
+          tabs: [
+            Tab(
+              child: _buildHeaderTab(
+                title: '문제',
+                icon: Icons.help_outline,
+                isActive: _currentTabIndex == 0,
+                isWide: isWide,
+                themeProvider: themeProvider,
+              ),
             ),
-          ),
-          Tab(
-            child: StandardText(
-              text: '복습 기록',
-              fontSize: 16,
-              fontWeight:
-                  _currentTabIndex == 2 ? FontWeight.bold : FontWeight.normal,
-              color: _currentTabIndex == 2
-                  ? themeProvider.primaryColor
-                  : Colors.grey[600]!,
+            Tab(
+              child: _buildHeaderTab(
+                title: '정답',
+                icon: Icons.task_alt,
+                isActive: _currentTabIndex == 1,
+                isWide: isWide,
+                themeProvider: themeProvider,
+              ),
             ),
-          ),
-        ],
+            Tab(
+              child: _buildHeaderTab(
+                title: '복습 기록',
+                icon: Icons.history_edu,
+                isActive: _currentTabIndex == 2,
+                isWide: isWide,
+                themeProvider: themeProvider,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
+  Widget _buildHeaderTab({
+    required String title,
+    required IconData icon,
+    required bool isActive,
+    required bool isWide,
+    required ThemeHandler themeProvider,
+  }) {
+    final activeColor = themeProvider.primaryColor;
+    final inactiveColor = Colors.grey[600]!;
+    final iconSize = isWide ? 16.0 : 14.0;
+    final textSize = isWide ? 16.0 : 14.0;
+    final gap = isWide ? 6.0 : 4.0;
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(
+          icon,
+          size: iconSize,
+          color: isActive ? activeColor : inactiveColor,
+        ),
+        SizedBox(width: gap),
+        StandardText(
+          text: title,
+          fontSize: textSize,
+          fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
+          color: isActive ? activeColor : inactiveColor,
+        ),
+      ],
+    );
+  }
+
   Widget _buildProblemTab(ThemeHandler themeProvider, bool isWide) {
+    final horizontalPadding = isWide ? 60.0 : 30.0;
     final problemImageCount =
         widget.problemModel.problemImageDataList?.length ?? 0;
 
     return SingleChildScrollView(
       physics: const AlwaysScrollableScrollPhysics(),
       padding: EdgeInsets.symmetric(
-        horizontal: isWide ? 60.0 : 35.0,
+        horizontal: horizontalPadding,
         vertical: 24.0,
       ),
       child: Column(
@@ -332,12 +381,13 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
   }
 
   Widget _buildSolutionTab(ThemeHandler themeProvider, bool isWide) {
+    final horizontalPadding = isWide ? 60.0 : 30.0;
     final answerImageCount =
         widget.problemModel.answerImageDataList?.length ?? 0;
 
     // 공통 패딩
     final contentPadding = EdgeInsets.symmetric(
-      horizontal: isWide ? 60.0 : 35.0,
+      horizontal: horizontalPadding,
       vertical: 24.0,
     );
 

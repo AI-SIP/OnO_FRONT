@@ -152,7 +152,7 @@ class _RepeatSectionV2State extends State<RepeatSectionV2>
 
         return ListView.builder(
           padding: const EdgeInsets.symmetric(
-            horizontal: 20.0,
+            horizontal: 30.0,
             vertical: 20.0,
           ),
           itemCount: latestFirst.length,
@@ -279,8 +279,8 @@ class _RepeatSectionV2WrapperState extends State<RepeatSectionV2Wrapper> {
         Container(
           width: double.infinity,
           padding: EdgeInsets.only(
-            left: widget.isWide ? 60 : 25,
-            right: widget.isWide ? 60 : 25,
+            left: widget.isWide ? 60 : 30,
+            right: widget.isWide ? 60 : 30,
             top: 10,
             bottom: 10,
           ),
