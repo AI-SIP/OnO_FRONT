@@ -8,9 +8,26 @@ import 'package:http/http.dart' as http;
 
 import '../../Exception/ApiException.dart';
 import '../../Provider/TokenProvider.dart';
+import '../../Util/AppSnackBar.dart';
 
 class HttpService {
   final TokenProvider tokenProvider = TokenProvider();
+
+  String _getErrorMessage(Object error) {
+    if (error is UnauthorizedException) return error.getUserMessage();
+    if (error is NetworkException) return error.getUserMessage();
+    if (error is TimeoutException) return error.getUserMessage();
+    if (error is ServerException) return error.getUserMessage();
+    if (error is BadRequestException) return error.getUserMessage();
+    if (error is ParseException) return error.getUserMessage();
+    if (error is ApiException) return error.getUserMessage();
+    return '알 수 없는 오류가 발생했습니다.';
+  }
+
+  Never _throwWithSnackBar(Exception error) {
+    AppSnackBar.showError(_getErrorMessage(error));
+    throw error;
+  }
 
   Future<dynamic> sendRequest({
     required String method,
@@ -29,7 +46,9 @@ class HttpService {
       accessToken = await tokenProvider.getAccessToken();
 
       if (accessToken == null) {
-        throw UnauthorizedException(message: 'Cannot find Authorization Token');
+        _throwWithSnackBar(
+          UnauthorizedException(message: 'Cannot find Authorization Token'),
+        );
       }
     }
 
@@ -122,14 +141,18 @@ class HttpService {
           break;
 
         default:
-          throw ApiException(message: 'Not Supported HTTP Method: $method');
+          _throwWithSnackBar(
+            ApiException(message: 'Not Supported HTTP Method: $method'),
+          );
       }
     } on SocketException {
-      throw NetworkException();
+      _throwWithSnackBar(NetworkException());
     } on TimeoutException {
-      throw TimeoutException();
+      _throwWithSnackBar(TimeoutException());
     } on FormatException catch (e) {
-      throw ParseException(message: 'JSON Parsing Failed: ${e.message}');
+      _throwWithSnackBar(
+        ParseException(message: 'JSON Parsing Failed: ${e.message}'),
+      );
     } catch (error) {
       // 이미 우리가 정의한 커스텀 예외라면 그대로 던짐
       if (error is ApiException ||
@@ -142,7 +165,7 @@ class HttpService {
         rethrow;
       }
       // 알 수 없는 에러는 일반적인 ApiException으로 래핑
-      throw ApiException(message: 'Unknown error: $error');
+      _throwWithSnackBar(ApiException(message: 'Unknown error: $error'));
     }
 
     final status = response.statusCode;
@@ -159,9 +182,11 @@ class HttpService {
       if (status >= 200 && status < 300) {
         return null; // 성공적인 빈 응답
       } else {
-        throw ApiException(
-          statusCode: status,
-          message: response.reasonPhrase ?? '알 수 없는 오류',
+        _throwWithSnackBar(
+          ApiException(
+            statusCode: status,
+            message: response.reasonPhrase ?? '알 수 없는 오류',
+          ),
         );
       }
     }
@@ -177,9 +202,11 @@ class HttpService {
         return utf8.decode(response.bodyBytes);
       } else {
         // 실패 응답인데 JSON이 아니면 에러 발생
-        throw ParseException(
-          message:
-              'Failed to parse response as JSON: ${utf8.decode(response.bodyBytes)}',
+        _throwWithSnackBar(
+          ParseException(
+            message:
+                'Failed to parse response as JSON: ${utf8.decode(response.bodyBytes)}',
+          ),
         );
       }
     }
@@ -217,35 +244,43 @@ class HttpService {
       if (errorCode != null) {
         // 인증 관련 에러 코드 (예: 1004, 1005)
         if (errorCode >= 1000 && errorCode < 2000) {
-          throw UnauthorizedException(message: message);
+          _throwWithSnackBar(UnauthorizedException(message: message));
         }
         // 기타 비즈니스 로직 에러는 BadRequestException으로 처리
-        throw BadRequestException(
-          statusCode: status,
-          errorCode: errorCode,
-          message: message,
+        _throwWithSnackBar(
+          BadRequestException(
+            statusCode: status,
+            errorCode: errorCode,
+            message: message,
+          ),
         );
       }
 
       // errorCode가 없을 경우 상태 코드로 판단
       if (status == 401) {
-        throw UnauthorizedException(message: message);
+        _throwWithSnackBar(UnauthorizedException(message: message));
       } else if (status >= 400 && status < 500) {
-        throw BadRequestException(
-          statusCode: status,
-          errorCode: errorCode,
-          message: message,
+        _throwWithSnackBar(
+          BadRequestException(
+            statusCode: status,
+            errorCode: errorCode,
+            message: message,
+          ),
         );
       } else if (status >= 500) {
-        throw ServerException(
-          statusCode: status,
-          message: message,
+        _throwWithSnackBar(
+          ServerException(
+            statusCode: status,
+            message: message,
+          ),
         );
       } else {
-        throw ApiException(
-          statusCode: status,
-          errorCode: errorCode,
-          message: message,
+        _throwWithSnackBar(
+          ApiException(
+            statusCode: status,
+            errorCode: errorCode,
+            message: message,
+          ),
         );
       }
     }
