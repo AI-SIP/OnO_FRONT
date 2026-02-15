@@ -1677,7 +1677,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
           Expanded(
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
-                  backgroundColor: themeProvider.primaryColor,
+                  backgroundColor: Colors.red,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),

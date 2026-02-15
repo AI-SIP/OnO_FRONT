@@ -315,7 +315,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
           Expanded(
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: themeProvider.primaryColor,
+                backgroundColor: Colors.red,
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
@@ -342,7 +342,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
                     child: StandardText(
                       text: '${_selectedPracticeIds.length}',
                       fontSize: 12,
-                      color: themeProvider.primaryColor,
+                      color: Colors.red,
                     ),
                   ),
                 ],
