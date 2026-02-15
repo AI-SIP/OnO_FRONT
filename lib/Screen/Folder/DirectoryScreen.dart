@@ -969,19 +969,33 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     );
 
     if (selectedFolderId != null) {
-      // 먼저 네비게이션 스택 초기화
-      if (mounted) {
-        Navigator.of(context).popUntil((route) => route.isFirst);
-      }
+      final oldParentFolderId = _currentFolder?.parentFolder?.folderId;
+      final currentFolderId = _currentFolder!.folderId;
 
-      // 폴더 업데이트 및 루트로 이동
-      await foldersProvider.updateFolder(_currentFolder!.folderName,
-          _currentFolder!.folderId, selectedFolderId); // 부모 폴더 변경
+      // 부모 폴더 변경
+      await foldersProvider.updateFolder(
+        _currentFolder!.folderName,
+        currentFolderId,
+        selectedFolderId,
+      );
 
-      // 업데이트가 완전히 끝난 후 루트로 이동
-      if (mounted) {
-        await foldersProvider.moveToRootFolder();
+      // 기존 부모/새 부모/현재 폴더 캐시를 모두 무효화해 즉시 반영
+      if (oldParentFolderId != null) {
+        await foldersProvider.refreshFolder(oldParentFolderId);
       }
+      await foldersProvider.refreshFolder(selectedFolderId);
+      await foldersProvider.refreshFolder(currentFolderId);
+
+      if (!mounted) return;
+
+      // 현재 화면 데이터 다시 로드
+      await _loadFolderData();
+
+      SnackBarDialog.showSnackBar(
+        context: context,
+        message: '공책 위치가 변경되었습니다.',
+        backgroundColor: Theme.of(context).primaryColor,
+      );
     }
   }
 
