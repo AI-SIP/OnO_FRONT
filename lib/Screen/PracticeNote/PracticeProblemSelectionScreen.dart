@@ -258,7 +258,7 @@ class _PracticeProblemSelectionScreenState
       centerTitle: true,
       title: StandardText(
         text: '복습할 문제 선택',
-        fontSize: 20,
+        fontSize: 18,
         color: themeProvider.primaryColor,
       ),
       backgroundColor: Colors.white,

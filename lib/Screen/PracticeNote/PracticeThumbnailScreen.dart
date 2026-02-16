@@ -92,17 +92,21 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       floatingActionButton: _isSelectionMode
           ? null
-          : FloatingActionButton.extended(
-              heroTag: 'practice_create_fab',
-              onPressed: _navigateToPracticeCreate,
-              backgroundColor: themeProvider.primaryColor,
-              elevation: 2,
-              icon: const Icon(Icons.add, color: Colors.white),
-              label: const StandardText(
-                text: '복습노트 추가',
-                fontSize: 15,
-                color: Colors.white,
-                fontWeight: FontWeight.w600,
+          : SizedBox(
+              height: 50,
+              child: FloatingActionButton.extended(
+                heroTag: 'practice_create_fab',
+                onPressed: _navigateToPracticeCreate,
+                backgroundColor: themeProvider.primaryColor,
+                elevation: 2,
+                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                icon: const Icon(Icons.add, color: Colors.white),
+                label: const StandardText(
+                  text: '복습노트 추가',
+                  fontSize: 15,
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
     );

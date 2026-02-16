@@ -620,25 +620,29 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                     color: Colors.white,
                   ),
                 )
-              : FloatingActionButton.extended(
-                  key: const ValueKey('quick_fab_closed'),
-                  heroTag: 'directory_quick_create_fab_closed',
-                  onPressed: () {
-                    setState(() {
-                      _isQuickCreateOpen = true;
-                    });
-                  },
-                  elevation: 2,
-                  backgroundColor: themeProvider.primaryColor,
-                  icon: const Icon(
-                    Icons.add,
-                    color: Colors.white,
-                  ),
-                  label: const StandardText(
-                    text: '추가',
-                    fontSize: 15,
-                    color: Colors.white,
-                    fontWeight: FontWeight.w600,
+              : SizedBox(
+                  height: 50,
+                  child: FloatingActionButton.extended(
+                    key: const ValueKey('quick_fab_closed'),
+                    heroTag: 'directory_quick_create_fab_closed',
+                    onPressed: () {
+                      setState(() {
+                        _isQuickCreateOpen = true;
+                      });
+                    },
+                    elevation: 2,
+                    backgroundColor: themeProvider.primaryColor,
+                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    icon: const Icon(
+                      Icons.add,
+                      color: Colors.white,
+                    ),
+                    label: const StandardText(
+                      text: '추가',
+                      fontSize: 15,
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
         ),
