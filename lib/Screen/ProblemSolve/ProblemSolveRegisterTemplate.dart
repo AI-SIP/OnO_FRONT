@@ -10,7 +10,6 @@ import '../../Module/Image/ImagePickerHandler.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../ProblemRegister/Widget/ImageGridWidget.dart';
-import '../ProblemRegister/Widget/LabeledTextField.dart';
 
 class ProblemSolveRegisterTemplate extends StatefulWidget {
   final int problemId;
@@ -90,13 +89,7 @@ class ProblemSolveRegisterTemplateState
             SizedBox(height: spacing),
 
             // 복습 메모
-            LabeledTextField(
-              label: '복습 메모',
-              controller: _memoCtrl,
-              icon: Icons.edit,
-              hintText: '이번 복습에서 느낀 점을 자유롭게 작성해주세요!',
-              maxLines: 5,
-            ),
+            _buildReflectionSection(themeProvider),
             SizedBox(height: spacing),
           ],
         ),
@@ -398,6 +391,63 @@ class ProblemSolveRegisterTemplateState
               ),
             ),
           ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildReflectionSection(ThemeHandler themeProvider) {
+    final standardTextStyle = const StandardText(text: '').getTextStyle();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(Icons.edit, color: themeProvider.primaryColor),
+            const SizedBox(width: 8),
+            const StandardText(
+              text: '복습 메모',
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.black,
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        TextField(
+          controller: _memoCtrl,
+          maxLines: 5,
+          style: standardTextStyle.copyWith(
+            color: Colors.black87,
+            fontSize: 15,
+          ),
+          decoration: InputDecoration(
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.grey[300]!, width: 1),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.grey[300]!, width: 1),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(
+                color: themeProvider.primaryColor.withOpacity(0.5),
+                width: 2,
+              ),
+            ),
+            fillColor: Colors.white,
+            filled: true,
+            hintText: '이번 복습에서 느낀 점을 자유롭게 작성해주세요!',
+            hintStyle: standardTextStyle.copyWith(
+              color: Colors.grey[400],
+              fontSize: 14,
+            ),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          ),
         ),
       ],
     );
