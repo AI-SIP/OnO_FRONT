@@ -6,6 +6,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
 import 'package:ono/Model/User/UserRegisterModel.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
+import '../../Util/AppSnackBar.dart';
 
 class GoogleAuthService {
   final GoogleSignIn _googleSignIn = GoogleSignIn();
@@ -55,6 +56,7 @@ class GoogleAuthService {
       }
     } catch (error, stackTrace) {
       log('Google sign-out error: $error');
+      AppSnackBar.showError('구글 계정 연동 해제에 실패했습니다.');
       await Sentry.captureException(
         error,
         stackTrace: stackTrace,

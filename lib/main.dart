@@ -27,6 +27,7 @@ import 'Screen/Folder/DirectoryScreen.dart';
 import 'Screen/PracticeNote/PracticeThumbnailScreen.dart';
 import 'Screen/User/MyPageScreen.dart';
 import 'Util/NotificationService.dart';
+import 'Util/AppSnackBar.dart';
 import 'Util/SendDiscordAlert.dart';
 
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -136,6 +137,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'OnO',
       theme: _buildThemeData(context),
+      scaffoldMessengerKey: AppSnackBar.messengerKey,
       navigatorObservers: <NavigatorObserver>[observer],
       home: SplashScreen(),
       debugShowCheckedModeBanner: false,

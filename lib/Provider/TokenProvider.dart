@@ -5,6 +5,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 
 import '../Config/AppConfig.dart';
+import '../Exception/ApiException.dart';
 
 class TokenProvider {
   final storage = const FlutterSecureStorage();
@@ -39,7 +40,7 @@ class TokenProvider {
     String? refreshToken = await storage.read(key: 'refreshToken');
     if (refreshToken == null) {
       log('No refresh token available.');
-      throw Exception('No Refresh Token Exist');
+      throw UnauthorizedException(message: '로그인이 필요합니다. 다시 로그인해주세요.');
     }
 
     final response = await http
@@ -61,21 +62,27 @@ class TokenProvider {
       }
 
       await deleteToken();
-      throw Exception('HTTP ${response.statusCode}: $errorMessage');
+      if (response.statusCode == 401) {
+        throw UnauthorizedException(message: errorMessage);
+      }
+      throw ApiException(
+        statusCode: response.statusCode,
+        message: errorMessage,
+      );
     }
 
-    final body = jsonDecode(response.body) as Map<String, dynamic>;
+    final body = jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
     final data = body['data'] as Map<String, dynamic>?;
 
     if (data == null) {
-      throw Exception('Malformed refresh response: missing data field.');
+      throw ParseException(message: '토큰 갱신 응답 형식이 올바르지 않습니다.');
     }
 
     final newAccessToken = data['accessToken'] as String?;
     final newRefreshToken = data['refreshToken'] as String?;
 
     if (newAccessToken == null || newRefreshToken == null) {
-      throw Exception('Malformed refresh response: missing tokens.');
+      throw ParseException(message: '토큰 갱신 응답에 필수 토큰이 없습니다.');
     }
 
     await setAccessToken(newAccessToken);

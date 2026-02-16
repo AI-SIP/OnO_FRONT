@@ -10,6 +10,7 @@ import 'package:jose/jose.dart';
 import 'package:ono/Model/User/UserRegisterModel.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
+import '../../Util/AppSnackBar.dart';
 
 class AppleAuthService {
   final storage = const FlutterSecureStorage();
@@ -93,6 +94,7 @@ class AppleAuthService {
       );
     } on Exception catch (e, stackTrace) {
       log('사용자 계정 삭제 중 오류 발생: $e');
+      AppSnackBar.showError('애플 계정 연동 해제에 실패했습니다.');
       await Sentry.captureException(
         e,
         stackTrace: stackTrace,

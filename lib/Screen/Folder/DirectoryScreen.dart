@@ -24,6 +24,7 @@ import '../../Module/Theme/ThemeHandler.dart';
 import '../../Module/Util/FolderPickerDialog.dart';
 import '../../Provider/UserProvider.dart';
 import '../ProblemDetail/ProblemDetailScreen.dart';
+import '../ProblemRegister/ProblemRegisterScreen.dart';
 import 'UserGuideScreen.dart';
 
 class DirectoryScreen extends StatefulWidget {
@@ -66,6 +67,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
   // 새로고침 중복 실행 방지
   bool _isRefreshing = false;
+  bool _isQuickCreateOpen = false;
 
   @override
   void initState() {
@@ -486,6 +488,11 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                     ),
                   ),
                 ),
+          floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+          floatingActionButton:
+              (authService.isLoggedIn == LoginStatus.login && !_isSelectionMode)
+                  ? _buildQuickCreateFab(themeProvider)
+                  : null,
         ));
   }
 
@@ -506,19 +513,6 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         color: themeProvider.primaryColor,
       ),
       actions: [
-        FloatingActionButton(
-          heroTag: 'create_folder',
-          onPressed: () {
-            FirebaseAnalytics.instance
-                .logEvent(name: 'folder_create_button_click');
-            _showCreateFolderDialog(); // 기존에 상단에서 호출하던 폴더 생성 로직
-          },
-          backgroundColor: Colors.transparent,
-          elevation: 0, // 그림자 제거
-          child: SvgPicture.asset(
-            "assets/Icon/addNote.svg",
-          ),
-        ),
         Padding(
           padding: const EdgeInsets.only(right: 16.0), // 우측에 여백 추가
           child: Row(
@@ -532,6 +526,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                   if (_isSelectionMode) {
                     setState(() {
                       _isSelectionMode = false;
+                      _isQuickCreateOpen = false;
                       _selectedFolderIds.clear();
                       _selectedProblemIds.clear();
                     });
@@ -544,6 +539,161 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildQuickCreateFab(ThemeHandler themeProvider) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        AnimatedSwitcher(
+          duration: const Duration(milliseconds: 180),
+          child: _isQuickCreateOpen
+              ? Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      _buildQuickCreateAction(
+                        label: '공책 추가',
+                        icon: Icons.create_new_folder_outlined,
+                        themeProvider: themeProvider,
+                        onTap: () async {
+                          setState(() => _isQuickCreateOpen = false);
+                          FirebaseAnalytics.instance
+                              .logEvent(name: 'folder_create_button_click');
+                          await _showCreateFolderDialog();
+                        },
+                      ),
+                      const SizedBox(height: 10),
+                      _buildQuickCreateAction(
+                        label: '오답노트 작성',
+                        icon: Icons.note_add_outlined,
+                        themeProvider: themeProvider,
+                        onTap: () async {
+                          setState(() => _isQuickCreateOpen = false);
+                          await _navigateToProblemRegisterInCurrentFolder();
+                        },
+                      ),
+                    ],
+                  ),
+                )
+              : const SizedBox.shrink(),
+        ),
+        AnimatedSwitcher(
+          duration: const Duration(milliseconds: 220),
+          switchInCurve: Curves.easeOutCubic,
+          switchOutCurve: Curves.easeInCubic,
+          layoutBuilder: (currentChild, previousChildren) {
+            return Stack(
+              alignment: Alignment.centerRight,
+              children: <Widget>[
+                ...previousChildren,
+                if (currentChild != null) currentChild,
+              ],
+            );
+          },
+          transitionBuilder: (child, animation) {
+            final slide = Tween<Offset>(
+              begin: const Offset(0.08, 0),
+              end: Offset.zero,
+            ).animate(animation);
+            return FadeTransition(
+              opacity: animation,
+              child: SlideTransition(position: slide, child: child),
+            );
+          },
+          child: _isQuickCreateOpen
+              ? FloatingActionButton(
+                  key: const ValueKey('quick_fab_open'),
+                  heroTag: 'directory_quick_create_fab_open',
+                  onPressed: () {
+                    setState(() {
+                      _isQuickCreateOpen = false;
+                    });
+                  },
+                  elevation: 2,
+                  backgroundColor: Colors.grey[700],
+                  child: const Icon(
+                    Icons.close,
+                    color: Colors.white,
+                  ),
+                )
+              : SizedBox(
+                  height: 50,
+                  child: FloatingActionButton.extended(
+                    key: const ValueKey('quick_fab_closed'),
+                    heroTag: 'directory_quick_create_fab_closed',
+                    onPressed: () {
+                      setState(() {
+                        _isQuickCreateOpen = true;
+                      });
+                    },
+                    elevation: 2,
+                    backgroundColor: themeProvider.primaryColor,
+                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    icon: const Icon(
+                      Icons.add,
+                      color: Colors.white,
+                    ),
+                    label: const StandardText(
+                      text: '추가',
+                      fontSize: 15,
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildQuickCreateAction({
+    required String label,
+    required IconData icon,
+    required ThemeHandler themeProvider,
+    required Future<void> Function() onTap,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.grey[200]!, width: 1),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x1A000000),
+                blurRadius: 10,
+                offset: Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                icon,
+                size: 18,
+                color: themeProvider.primaryColor,
+              ),
+              const SizedBox(width: 8),
+              StandardText(
+                text: label,
+                fontSize: 14,
+                color: Colors.black87,
+                fontWeight: FontWeight.w600,
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
@@ -562,6 +712,36 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         await _loadFolderData();
       },
     );
+  }
+
+  Future<void> _navigateToProblemRegisterInCurrentFolder() async {
+    FirebaseAnalytics.instance
+        .logEvent(name: 'directory_create_problem_note_click');
+
+    if (_currentFolder == null) return;
+
+    final foldersProvider =
+        Provider.of<FoldersProvider>(context, listen: false);
+
+    // 작성 화면의 기본 공책을 현재 공책으로 고정
+    await foldersProvider.moveToFolder(_currentFolder!.folderId);
+
+    final result = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ProblemRegisterScreen(
+          problemModel: null,
+          isEditMode: false,
+          initialFolderId: _currentFolder?.folderId,
+        ),
+      ),
+    );
+
+    // 작성 완료 후 현재 공책 화면으로 복귀 시 즉시 반영
+    if (!mounted || result != true || _currentFolder == null) return;
+
+    await foldersProvider.refreshFolder(_currentFolder!.folderId);
+    await _loadFolderData();
   }
 
   void _showActionDialog(
@@ -646,6 +826,16 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                         FirebaseAnalytics.instance.logEvent(
                             name: 'directory_create_folder_button_click');
                         _showCreateFolderDialog();
+                      },
+                    ),
+                    const SizedBox(height: 8),
+                    _buildActionItem(
+                      icon: Icons.note_add_outlined,
+                      iconColor: themeProvider.primaryColor,
+                      title: '오답노트 작성하기',
+                      onTap: () async {
+                        Navigator.pop(context);
+                        await _navigateToProblemRegisterInCurrentFolder();
                       },
                     ),
                     const SizedBox(height: 8),
@@ -783,19 +973,33 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     );
 
     if (selectedFolderId != null) {
-      // 먼저 네비게이션 스택 초기화
-      if (mounted) {
-        Navigator.of(context).popUntil((route) => route.isFirst);
-      }
+      final oldParentFolderId = _currentFolder?.parentFolder?.folderId;
+      final currentFolderId = _currentFolder!.folderId;
 
-      // 폴더 업데이트 및 루트로 이동
-      await foldersProvider.updateFolder(_currentFolder!.folderName,
-          _currentFolder!.folderId, selectedFolderId); // 부모 폴더 변경
+      // 부모 폴더 변경
+      await foldersProvider.updateFolder(
+        _currentFolder!.folderName,
+        currentFolderId,
+        selectedFolderId,
+      );
 
-      // 업데이트가 완전히 끝난 후 루트로 이동
-      if (mounted) {
-        await foldersProvider.moveToRootFolder();
+      // 기존 부모/새 부모/현재 폴더 캐시를 모두 무효화해 즉시 반영
+      if (oldParentFolderId != null) {
+        await foldersProvider.refreshFolder(oldParentFolderId);
       }
+      await foldersProvider.refreshFolder(selectedFolderId);
+      await foldersProvider.refreshFolder(currentFolderId);
+
+      if (!mounted) return;
+
+      // 현재 화면 데이터 다시 로드
+      await _loadFolderData();
+
+      SnackBarDialog.showSnackBar(
+        context: context,
+        message: '공책 위치가 변경되었습니다.',
+        backgroundColor: Theme.of(context).primaryColor,
+      );
     }
   }
 
@@ -1096,11 +1300,10 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                             height: 30,
                           ),
                           ElevatedButton(
-                            onPressed: () {
-                              // 플로팅 버튼의 공책 생성 로직과 동일하게 동작
-                              FirebaseAnalytics.instance
-                                  .logEvent(name: 'folder_create_button_click');
-                              _showCreateFolderDialog();
+                            onPressed: () async {
+                              FirebaseAnalytics.instance.logEvent(
+                                  name: 'directory_empty_create_problem_click');
+                              await _navigateToProblemRegisterInCurrentFolder();
                             },
                             style: ElevatedButton.styleFrom(
                               backgroundColor:
@@ -1114,7 +1317,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                               ),
                             ),
                             child: const StandardText(
-                              text: '공책 추가하기',
+                              text: '오답노트 작성하기',
                               fontSize: 16,
                               color: Colors.white,
                             ),
@@ -1446,6 +1649,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   }
 
   Widget _buildBottomActionButtons(ThemeHandler themeProvider) {
+    final selectedCount = _selectedFolderIds.length + _selectedProblemIds.length;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
       color: Colors.white,
@@ -1478,21 +1682,34 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
           Expanded(
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
-                  backgroundColor: themeProvider.primaryColor,
+                  backgroundColor: Colors.red,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
                   padding: const EdgeInsets.symmetric(vertical: 8)),
-              onPressed: () {
-                if (_selectedFolderIds.isNotEmpty ||
-                    _selectedProblemIds.isNotEmpty) {
-                  _confirmDelete();
-                }
-              },
-              child: const StandardText(
-                text: '삭제하기',
-                fontSize: 14,
-                color: Colors.white,
+              onPressed: selectedCount > 0 ? _confirmDelete : () {},
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const StandardText(
+                    text: '삭제하기',
+                    fontSize: 14,
+                    color: Colors.white,
+                  ),
+                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                    ),
+                    child: StandardText(
+                      text: '$selectedCount',
+                      fontSize: 12,
+                      color: Colors.red,
+                    ),
+                  ),
+                ],
               ),
             ),
           ),

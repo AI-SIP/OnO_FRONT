@@ -209,7 +209,8 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
                   child: TextButton(
                     onPressed: () => Navigator.pop(context),
                     style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 10),
                       backgroundColor: themeProvider.primaryColor,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
@@ -270,7 +271,7 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
       title: StandardText(
         text:
             widget.practiceNoteUpdateModel == null ? "복습 노트 만들기" : "복습 노트 수정하기",
-        fontSize: 20,
+        fontSize: 18,
         color: themeProvider.primaryColor,
       ),
       backgroundColor: Colors.white,
@@ -285,8 +286,6 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          _buildTitleText(),
-          SizedBox(height: screenHeight * 0.03),
           _buildTextField(standardTextStyle, themeProvider),
           SizedBox(height: screenHeight * 0.03),
           _buildNotificationSection(themeProvider, screenHeight),
@@ -506,7 +505,6 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
                   ],
                 ),
               ),
-
               if (_notifyEnabled) ...[
                 const Divider(height: 1),
                 Padding(
@@ -527,7 +525,8 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
                             child: _buildChoiceButton(
                               label: "매일",
                               isSelected: _repeatType == RepeatType.daily,
-                              onTap: () => setState(() => _repeatType = RepeatType.daily),
+                              onTap: () => setState(
+                                  () => _repeatType = RepeatType.daily),
                               theme: theme,
                             ),
                           ),
@@ -536,13 +535,13 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
                             child: _buildChoiceButton(
                               label: "매주",
                               isSelected: _repeatType == RepeatType.weekly,
-                              onTap: () => setState(() => _repeatType = RepeatType.weekly),
+                              onTap: () => setState(
+                                  () => _repeatType = RepeatType.weekly),
                               theme: theme,
                             ),
                           ),
                         ],
                       ),
-
                       if (_repeatType == RepeatType.weekly) ...[
                         const SizedBox(height: 16),
                         const StandardText(
@@ -557,7 +556,8 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
                           runSpacing: 8,
                           children: List.generate(7, (index) {
                             final day = index + 1;
-                            final dayText = ['월', '화', '수', '목', '금', '토', '일'][index];
+                            final dayText =
+                                ['월', '화', '수', '목', '금', '토', '일'][index];
                             final isSelected = _selectedWeekdays.contains(day);
                             return InkWell(
                               onTap: () {
@@ -589,15 +589,18 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
                                 child: StandardText(
                                   text: dayText,
                                   fontSize: 13,
-                                  color: isSelected ? theme.primaryColor : Colors.black54,
-                                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                                  color: isSelected
+                                      ? theme.primaryColor
+                                      : Colors.black54,
+                                  fontWeight: isSelected
+                                      ? FontWeight.w600
+                                      : FontWeight.normal,
                                 ),
                               ),
                             );
                           }),
                         ),
                       ],
-
                       const SizedBox(height: 16),
                       const StandardText(
                         text: '알림 시각',
@@ -610,11 +613,13 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
                         onTap: () => _showTimePickerBottomSheet(context),
                         borderRadius: BorderRadius.circular(8),
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 12),
                           decoration: BoxDecoration(
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: Colors.grey[300]!, width: 1),
+                            border:
+                                Border.all(color: Colors.grey[300]!, width: 1),
                           ),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -666,7 +671,8 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 10),
         decoration: BoxDecoration(
-          color: isSelected ? theme.primaryColor.withOpacity(0.1) : Colors.white,
+          color:
+              isSelected ? theme.primaryColor.withOpacity(0.1) : Colors.white,
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
             color: isSelected ? theme.primaryColor : Colors.grey[300]!,
@@ -695,7 +701,8 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
         return TapRegion(
           onTapOutside: (_) {
             // Workaround for iPadOS 26.1 bug: https://github.com/flutter/flutter/issues/177992
-            if (DateTime.now().difference(openTime) < const Duration(milliseconds: 500)) {
+            if (DateTime.now().difference(openTime) <
+                const Duration(milliseconds: 500)) {
               return;
             }
             if (Navigator.canPop(context)) {

@@ -258,7 +258,7 @@ class _PracticeProblemSelectionScreenState
       centerTitle: true,
       title: StandardText(
         text: '복습할 문제 선택',
-        fontSize: 20,
+        fontSize: 18,
         color: themeProvider.primaryColor,
       ),
       backgroundColor: Colors.white,
@@ -588,33 +588,76 @@ class _PracticeProblemSelectionScreenState
   }
 
   void _showSelectProblemDialog(BuildContext context) {
+    final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
+
     showDialog(
       context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
+      builder: (BuildContext dialogContext) {
+        return Dialog(
           backgroundColor: Colors.white,
-          title: const StandardText(
-            text: "경고",
-            fontSize: 18,
-            color: Colors.black,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
           ),
-          content: const StandardText(
-            text: "하나 이상의 문제를 선택해주세요!",
-            fontSize: 15,
-            color: Colors.black,
-          ),
-          actions: <Widget>[
-            TextButton(
-              child: const StandardText(
-                text: "확인",
-                fontSize: 14,
-                color: Colors.red,
-              ),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.orange.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(
+                        Icons.warning_amber_rounded,
+                        color: Colors.orange,
+                        size: 20,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    const StandardText(
+                      text: '문제 선택 필요',
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black87,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                const StandardText(
+                  text: '하나 이상의 문제를 선택해주세요!',
+                  fontSize: 15,
+                  color: Colors.black87,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  child: TextButton(
+                    onPressed: () {
+                      Navigator.of(dialogContext).pop();
+                    },
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 10),
+                      backgroundColor: themeProvider.primaryColor,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: const StandardText(
+                      text: '확인',
+                      fontSize: 14,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         );
       },
     );
