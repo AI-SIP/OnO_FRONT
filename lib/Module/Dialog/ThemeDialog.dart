@@ -284,22 +284,20 @@ class _ThemeDialogState extends State<ThemeDialog> {
                       ),
                       const SizedBox(height: 24),
                       // 버튼
-                      SizedBox(
-                        width: double.infinity,
-                        child: TextButton(
-                          onPressed: () => Navigator.of(dialogContext).pop(),
-                          style: TextButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            backgroundColor: themeProvider.primaryColor,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
+                      TextButton(
+                        onPressed: () => Navigator.of(dialogContext).pop(),
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 20, vertical: 10),
+                          backgroundColor: themeProvider.primaryColor,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
                           ),
-                          child: const StandardText(
-                            text: '확인',
-                            fontSize: 15,
-                            color: Colors.white,
-                          ),
+                        ),
+                        child: const StandardText(
+                          text: '확인',
+                          fontSize: 14,
+                          color: Colors.white,
                         ),
                       ),
                     ],
