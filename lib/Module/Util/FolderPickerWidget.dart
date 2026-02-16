@@ -138,8 +138,7 @@ class _FolderPickerWidgetState extends State<FolderPickerWidget> {
                 widget.onPicked(id);
               },
               child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                padding: const EdgeInsets.fromLTRB(22, 10, 12, 10),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(8),
@@ -147,6 +146,12 @@ class _FolderPickerWidgetState extends State<FolderPickerWidget> {
                 ),
                 child: Row(
                   children: [
+                    Icon(
+                      Icons.folder,
+                      color: theme.primaryColor,
+                      size: 18,
+                    ),
+                    const SizedBox(width: 8),
                     Expanded(
                       child: Align(
                         alignment: Alignment.centerRight,
