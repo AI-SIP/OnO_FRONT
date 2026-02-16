@@ -116,7 +116,7 @@ class ProblemSolveRegisterTemplateState
           Icon(
             Icons.check_circle_outline,
             color: themeProvider.primaryColor,
-            size: 40,
+            size: 32,
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -125,7 +125,7 @@ class ProblemSolveRegisterTemplateState
               children: [
                 StandardText(
                   text: '문제 복습 완료!',
-                  fontSize: 22,
+                  fontSize: 16,
                   fontWeight: FontWeight.bold,
                   color: themeProvider.primaryColor,
                 ),

@@ -62,7 +62,7 @@ class _ProblemSolveRegisterScreenState
     return AppBar(
       title: StandardText(
         text: '복습 완료',
-        fontSize: 20,
+        fontSize: 18,
         color: themeProvider.primaryColor,
       ),
       backgroundColor: Colors.white,
@@ -104,7 +104,7 @@ class _ProblemSolveRegisterScreenState
           ),
           child: const StandardText(
             text: "문제 복습 완료",
-            fontSize: 18,
+            fontSize: 16,
             fontWeight: FontWeight.bold,
             color: Colors.white,
           ),

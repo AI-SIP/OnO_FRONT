@@ -51,7 +51,7 @@ class PracticeDetailScreen extends StatelessWidget {
       elevation: 0,
       title: StandardText(
         text: practice.practiceTitle,
-        fontSize: 20,
+        fontSize: 18,
         color: themeProvider.primaryColor,
       ),
       centerTitle: true,
