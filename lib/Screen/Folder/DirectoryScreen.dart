@@ -1649,6 +1649,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   }
 
   Widget _buildBottomActionButtons(ThemeHandler themeProvider) {
+    final selectedCount = _selectedFolderIds.length + _selectedProblemIds.length;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
       color: Colors.white,
@@ -1686,16 +1687,29 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                     borderRadius: BorderRadius.circular(8),
                   ),
                   padding: const EdgeInsets.symmetric(vertical: 8)),
-              onPressed: () {
-                if (_selectedFolderIds.isNotEmpty ||
-                    _selectedProblemIds.isNotEmpty) {
-                  _confirmDelete();
-                }
-              },
-              child: const StandardText(
-                text: '삭제하기',
-                fontSize: 14,
-                color: Colors.white,
+              onPressed: selectedCount > 0 ? _confirmDelete : () {},
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const StandardText(
+                    text: '삭제하기',
+                    fontSize: 14,
+                    color: Colors.white,
+                  ),
+                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                    ),
+                    child: StandardText(
+                      text: '$selectedCount',
+                      fontSize: 12,
+                      color: Colors.red,
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
