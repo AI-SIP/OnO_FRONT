@@ -15,6 +15,11 @@ class ImageGridWidget extends StatelessWidget {
   final VoidCallback onAdd;
   final ValueChanged<int> onRemove;
   final ValueChanged<int>? onRemoveExisting; // 기존 이미지 삭제 콜백
+  final double titleFontSize;
+  final FontWeight titleFontWeight;
+  final EdgeInsetsGeometry titleIconPadding;
+  final double titleIconSize;
+  final double titleIconBorderRadius;
 
   const ImageGridWidget({
     Key? key,
@@ -24,6 +29,11 @@ class ImageGridWidget extends StatelessWidget {
     required this.onAdd,
     required this.onRemove,
     this.onRemoveExisting,
+    this.titleFontSize = 16,
+    this.titleFontWeight = FontWeight.w500,
+    this.titleIconPadding = const EdgeInsets.all(6.0),
+    this.titleIconSize = 18,
+    this.titleIconBorderRadius = 6.0,
   }) : super(key: key);
 
   @override
@@ -37,22 +47,22 @@ class ImageGridWidget extends StatelessWidget {
         Row(
           children: [
             Container(
-              padding: const EdgeInsets.all(6.0),
+              padding: titleIconPadding,
               decoration: BoxDecoration(
                 color: theme.primaryColor.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(6.0),
+                borderRadius: BorderRadius.circular(titleIconBorderRadius),
               ),
               child: Icon(
                 Icons.image,
                 color: theme.primaryColor,
-                size: 18,
+                size: titleIconSize,
               ),
             ),
             const SizedBox(width: 8),
             StandardText(
               text: label,
-              fontSize: 16,
-              fontWeight: FontWeight.w500,
+              fontSize: titleFontSize,
+              fontWeight: titleFontWeight,
               color: Colors.black87,
             ),
             const SizedBox(width: 8),

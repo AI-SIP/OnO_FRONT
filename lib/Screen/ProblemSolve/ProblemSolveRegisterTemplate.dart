@@ -85,6 +85,11 @@ class ProblemSolveRegisterTemplateState
               onAdd: _pickSolutionImage,
               onRemove: (i) => setState(() => _solutionImages.removeAt(i)),
               onRemoveExisting: (i) {},
+              titleFontSize: 18,
+              titleFontWeight: FontWeight.bold,
+              titleIconPadding: const EdgeInsets.all(8),
+              titleIconSize: 20,
+              titleIconBorderRadius: 8,
             ),
             SizedBox(height: spacing),
 
@@ -140,17 +145,10 @@ class ProblemSolveRegisterTemplateState
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            Icon(Icons.check_circle_outline, color: themeProvider.primaryColor),
-            const SizedBox(width: 8),
-            const StandardText(
-              text: '이번 복습 결과',
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Colors.black,
-            ),
-          ],
+        _buildSectionTitle(
+          icon: Icons.check_circle_outline,
+          title: '이번 복습 결과',
+          themeProvider: themeProvider,
         ),
         const SizedBox(height: 12),
         Row(
@@ -236,17 +234,10 @@ class ProblemSolveRegisterTemplateState
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            Icon(Icons.trending_up, color: themeProvider.primaryColor),
-            const SizedBox(width: 8),
-            const StandardText(
-              text: '개선된 점',
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Colors.black,
-            ),
-          ],
+        _buildSectionTitle(
+          icon: Icons.trending_up,
+          title: '개선된 점',
+          themeProvider: themeProvider,
         ),
         const SizedBox(height: 4),
         const StandardText(
@@ -315,7 +306,7 @@ class ProblemSolveRegisterTemplateState
             Expanded(
               child: StandardText(
                 text: label.description,
-                fontSize: 15,
+                fontSize: 14,
                 color: value ? Colors.black87 : Colors.black54,
                 fontWeight: value ? FontWeight.w500 : FontWeight.normal,
               ),
@@ -330,17 +321,10 @@ class ProblemSolveRegisterTemplateState
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            Icon(Icons.timer_outlined, color: themeProvider.primaryColor),
-            const SizedBox(width: 8),
-            const StandardText(
-              text: '소요 시간 (선택사항)',
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Colors.black,
-            ),
-          ],
+        _buildSectionTitle(
+          icon: Icons.timer_outlined,
+          title: '소요 시간 (선택사항)',
+          themeProvider: themeProvider,
         ),
         const SizedBox(height: 12),
         Row(
@@ -361,7 +345,7 @@ class ProblemSolveRegisterTemplateState
                       text: _timeSpentMinutes > 0
                           ? '$_timeSpentMinutes분'
                           : '시간을 입력하세요',
-                      fontSize: 16,
+                      fontSize: 14,
                       color: _timeSpentMinutes > 0
                           ? Colors.black87
                           : Colors.grey[400]!,
@@ -402,17 +386,10 @@ class ProblemSolveRegisterTemplateState
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            Icon(Icons.edit, color: themeProvider.primaryColor),
-            const SizedBox(width: 8),
-            const StandardText(
-              text: '복습 메모',
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Colors.black,
-            ),
-          ],
+        _buildSectionTitle(
+          icon: Icons.edit,
+          title: '복습 메모',
+          themeProvider: themeProvider,
         ),
         const SizedBox(height: 12),
         TextField(
@@ -448,6 +425,36 @@ class ProblemSolveRegisterTemplateState
             contentPadding:
                 const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
           ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSectionTitle({
+    required IconData icon,
+    required String title,
+    required ThemeHandler themeProvider,
+  }) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: themeProvider.primaryColor.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(
+            icon,
+            color: themeProvider.primaryColor,
+            size: 20,
+          ),
+        ),
+        const SizedBox(width: 8),
+        StandardText(
+          text: title,
+          fontSize: 18,
+          fontWeight: FontWeight.bold,
+          color: Colors.black,
         ),
       ],
     );
