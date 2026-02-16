@@ -29,7 +29,7 @@ class ProblemSolveRegisterTemplateState
   final _memoCtrl = TextEditingController();
   final List<XFile> _solutionImages = [];
   AnswerStatus _answerStatus = AnswerStatus.CORRECT; // 정답 상태 (기본값: 정답)
-  int _timeSpentMinutes = 0; // 소요 시간 (분)
+  int _timeSpentMinutes = 10; // 소요 시간 (분)
 
   // 개선 체크리스트 (ImprovementType enum 사용)
   final Map<ImprovementType, bool> _improvements = {
@@ -323,7 +323,7 @@ class ProblemSolveRegisterTemplateState
       children: [
         _buildSectionTitle(
           icon: Icons.timer_outlined,
-          title: '소요 시간 (선택사항)',
+          title: '소요 시간',
           themeProvider: themeProvider,
         ),
         const SizedBox(height: 12),
@@ -341,14 +341,20 @@ class ProblemSolveRegisterTemplateState
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    StandardText(
-                      text: _timeSpentMinutes > 0
-                          ? '$_timeSpentMinutes분'
-                          : '시간을 입력하세요',
-                      fontSize: 14,
-                      color: _timeSpentMinutes > 0
-                          ? Colors.black87
-                          : Colors.grey[400]!,
+                    GestureDetector(
+                      onTap: _showTimeInputDialog,
+                      child: Container(
+                        color: Colors.transparent,
+                        child: StandardText(
+                          text: _timeSpentMinutes > 0
+                              ? '$_timeSpentMinutes분'
+                              : '시간을 입력하세요',
+                          fontSize: 14,
+                          color: _timeSpentMinutes > 0
+                              ? Colors.black87
+                              : Colors.grey[400]!,
+                        ),
+                      ),
                     ),
                     Row(
                       children: [
@@ -430,6 +436,149 @@ class ProblemSolveRegisterTemplateState
     );
   }
 
+  Future<void> _showTimeInputDialog() async {
+    final controller = TextEditingController(
+      text: _timeSpentMinutes > 0 ? _timeSpentMinutes.toString() : '',
+    );
+    final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
+    final standardTextStyle = const StandardText(text: '').getTextStyle();
+
+    await showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return Dialog(
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: themeProvider.primaryColor.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(
+                        Icons.timer_outlined,
+                        color: themeProvider.primaryColor,
+                        size: 20,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    const StandardText(
+                      text: '소요 시간 입력',
+                      fontSize: 20,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black87,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                const StandardText(
+                  text: '분 단위로 자유롭게 입력할 수 있어요',
+                  fontSize: 14,
+                  color: Colors.black54,
+                ),
+                const SizedBox(height: 18),
+                TextField(
+                  controller: controller,
+                  autofocus: true,
+                  keyboardType: TextInputType.number,
+                  style: standardTextStyle.copyWith(
+                    color: Colors.black87,
+                    fontSize: 15,
+                  ),
+                  decoration: InputDecoration(
+                    hintText: '예: 17',
+                    suffixText: '분',
+                    hintStyle: standardTextStyle.copyWith(
+                      color: Colors.grey[400],
+                      fontSize: 14,
+                    ),
+                    fillColor: Colors.grey[50],
+                    filled: true,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: Colors.grey[300]!, width: 1),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: Colors.grey[300]!, width: 1),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(
+                        color: themeProvider.primaryColor.withOpacity(0.5),
+                        width: 2,
+                      ),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 14,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextButton(
+                        onPressed: () => Navigator.of(dialogContext).pop(),
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          backgroundColor: Colors.grey[100],
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: const StandardText(
+                          text: '취소',
+                          fontSize: 15,
+                          color: Colors.black87,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: TextButton(
+                        onPressed: () {
+                          final parsed = int.tryParse(controller.text.trim());
+                          if (parsed != null && parsed >= 0) {
+                            setState(() => _timeSpentMinutes = parsed);
+                          }
+                          Navigator.of(dialogContext).pop();
+                        },
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          backgroundColor: themeProvider.primaryColor,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: const StandardText(
+                          text: '확인',
+                          fontSize: 15,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   Widget _buildSectionTitle({
     required IconData icon,
     required String title,
@@ -495,7 +644,7 @@ class ProblemSolveRegisterTemplateState
       _memoCtrl.clear();
       _solutionImages.clear();
       _answerStatus = AnswerStatus.CORRECT;
-      _timeSpentMinutes = 0;
+      _timeSpentMinutes = 10;
       _improvements.updateAll((key, value) => false);
     });
   }
