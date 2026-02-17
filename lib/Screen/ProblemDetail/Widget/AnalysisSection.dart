@@ -283,7 +283,7 @@ Widget _buildAnalysisSection(
           const SizedBox(width: 8),
           StandardText(
             text: label,
-            fontSize: 15,
+            fontSize: 14,
             fontWeight: FontWeight.w500,
             color: Colors.black87,
           ),
@@ -318,7 +318,7 @@ Widget _buildAnalysisListSection(
           const SizedBox(width: 8),
           StandardText(
             text: label,
-            fontSize: 15,
+            fontSize: 14,
             fontWeight: FontWeight.w500,
             color: Colors.black87,
           ),

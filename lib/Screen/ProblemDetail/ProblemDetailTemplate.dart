@@ -186,8 +186,8 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
     final activeColor = themeProvider.primaryColor;
     final inactiveColor = Colors.grey[600]!;
     final iconSize = isWide ? 16.0 : 14.0;
-    final textSize = isWide ? 16.0 : 14.5;
-    final gap = isWide ? 6.0 : 5.0;
+    final textSize = isWide ? 15.0 : 14.0;
+    final gap = isWide ? 6.0 : 6.0;
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -287,7 +287,7 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
           const SizedBox(width: 10),
           const StandardText(
             text: '푼 날짜',
-            fontSize: 15,
+            fontSize: 14,
             fontWeight: FontWeight.w600,
             color: Colors.black87,
           ),
@@ -356,7 +356,7 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
           const SizedBox(width: 10),
           StandardText(
             text: title,
-            fontSize: 15,
+            fontSize: 14,
             fontWeight: FontWeight.w600,
             color: Colors.black87,
           ),
@@ -535,7 +535,7 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
           const SizedBox(width: 8),
           StandardText(
             text: title,
-            fontSize: 16,
+            fontSize: 14,
             fontWeight: FontWeight.w500,
             color: Colors.black87,
           ),
