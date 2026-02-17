@@ -51,7 +51,7 @@ class PracticeDetailScreen extends StatelessWidget {
       elevation: 0,
       title: StandardText(
         text: practice.practiceTitle,
-        fontSize: 20,
+        fontSize: 18,
         color: themeProvider.primaryColor,
       ),
       centerTitle: true,
@@ -427,7 +427,7 @@ class PracticeDetailScreen extends StatelessWidget {
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
           backgroundColor: themeProvider.primaryColor,
-          padding: const EdgeInsets.symmetric(vertical: 15),
+          padding: const EdgeInsets.symmetric(vertical: 12),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(15),
           ),

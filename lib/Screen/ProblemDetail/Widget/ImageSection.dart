@@ -14,8 +14,10 @@ Widget buildImageSection(
           color: theme.primaryColor.withOpacity(0.1),
           borderRadius: BorderRadius.circular(10)),
       child: Center(
-          child:
-              StandardText(text: '${label}가 없습니다.', color: theme.primaryColor)),
+          child: StandardText(
+              text: '$label가 없습니다.',
+              fontSize: 14,
+              color: theme.primaryColor.withOpacity(0.5))),
     );
   }
   return ImageGallerySection(

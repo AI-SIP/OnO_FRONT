@@ -562,7 +562,7 @@ class _PracticeProblemSelectionScreenState
               child: Center(
                 child: StandardText(
                   text: "다음",
-                  fontSize: 18,
+                  fontSize: 16,
                   color: Colors.white,
                 ),
               ),

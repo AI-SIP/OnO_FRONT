@@ -10,7 +10,6 @@ import '../../Module/Image/ImagePickerHandler.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../ProblemRegister/Widget/ImageGridWidget.dart';
-import '../ProblemRegister/Widget/LabeledTextField.dart';
 
 class ProblemSolveRegisterTemplate extends StatefulWidget {
   final int problemId;
@@ -30,7 +29,7 @@ class ProblemSolveRegisterTemplateState
   final _memoCtrl = TextEditingController();
   final List<XFile> _solutionImages = [];
   AnswerStatus _answerStatus = AnswerStatus.CORRECT; // 정답 상태 (기본값: 정답)
-  int _timeSpentMinutes = 0; // 소요 시간 (분)
+  int _timeSpentMinutes = 10; // 소요 시간 (분)
 
   // 개선 체크리스트 (ImprovementType enum 사용)
   final Map<ImprovementType, bool> _improvements = {
@@ -86,17 +85,16 @@ class ProblemSolveRegisterTemplateState
               onAdd: _pickSolutionImage,
               onRemove: (i) => setState(() => _solutionImages.removeAt(i)),
               onRemoveExisting: (i) {},
+              titleFontSize: 18,
+              titleFontWeight: FontWeight.bold,
+              titleIconPadding: const EdgeInsets.all(8),
+              titleIconSize: 20,
+              titleIconBorderRadius: 8,
             ),
             SizedBox(height: spacing),
 
             // 복습 메모
-            LabeledTextField(
-              label: '복습 메모',
-              controller: _memoCtrl,
-              icon: Icons.edit,
-              hintText: '이번 복습에서 느낀 점을 자유롭게 작성해주세요!',
-              maxLines: 5,
-            ),
+            _buildReflectionSection(themeProvider),
             SizedBox(height: spacing),
           ],
         ),
@@ -116,7 +114,7 @@ class ProblemSolveRegisterTemplateState
           Icon(
             Icons.check_circle_outline,
             color: themeProvider.primaryColor,
-            size: 40,
+            size: 32,
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -125,7 +123,7 @@ class ProblemSolveRegisterTemplateState
               children: [
                 StandardText(
                   text: '문제 복습 완료!',
-                  fontSize: 22,
+                  fontSize: 16,
                   fontWeight: FontWeight.bold,
                   color: themeProvider.primaryColor,
                 ),
@@ -147,17 +145,10 @@ class ProblemSolveRegisterTemplateState
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            Icon(Icons.check_circle_outline, color: themeProvider.primaryColor),
-            const SizedBox(width: 8),
-            const StandardText(
-              text: '이번 복습 결과',
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Colors.black,
-            ),
-          ],
+        _buildSectionTitle(
+          icon: Icons.check_circle_outline,
+          title: '이번 복습 결과',
+          themeProvider: themeProvider,
         ),
         const SizedBox(height: 12),
         Row(
@@ -243,17 +234,10 @@ class ProblemSolveRegisterTemplateState
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            Icon(Icons.trending_up, color: themeProvider.primaryColor),
-            const SizedBox(width: 8),
-            const StandardText(
-              text: '개선된 점',
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Colors.black,
-            ),
-          ],
+        _buildSectionTitle(
+          icon: Icons.trending_up,
+          title: '개선된 점',
+          themeProvider: themeProvider,
         ),
         const SizedBox(height: 4),
         const StandardText(
@@ -322,7 +306,7 @@ class ProblemSolveRegisterTemplateState
             Expanded(
               child: StandardText(
                 text: label.description,
-                fontSize: 15,
+                fontSize: 14,
                 color: value ? Colors.black87 : Colors.black54,
                 fontWeight: value ? FontWeight.w500 : FontWeight.normal,
               ),
@@ -337,17 +321,10 @@ class ProblemSolveRegisterTemplateState
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            Icon(Icons.timer_outlined, color: themeProvider.primaryColor),
-            const SizedBox(width: 8),
-            const StandardText(
-              text: '소요 시간 (선택사항)',
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Colors.black,
-            ),
-          ],
+        _buildSectionTitle(
+          icon: Icons.timer_outlined,
+          title: '소요 시간',
+          themeProvider: themeProvider,
         ),
         const SizedBox(height: 12),
         Row(
@@ -364,14 +341,20 @@ class ProblemSolveRegisterTemplateState
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    StandardText(
-                      text: _timeSpentMinutes > 0
-                          ? '$_timeSpentMinutes분'
-                          : '시간을 입력하세요',
-                      fontSize: 16,
-                      color: _timeSpentMinutes > 0
-                          ? Colors.black87
-                          : Colors.grey[400]!,
+                    GestureDetector(
+                      onTap: _showTimeInputDialog,
+                      child: Container(
+                        color: Colors.transparent,
+                        child: StandardText(
+                          text: _timeSpentMinutes > 0
+                              ? '$_timeSpentMinutes분'
+                              : '시간을 입력하세요',
+                          fontSize: 14,
+                          color: _timeSpentMinutes > 0
+                              ? Colors.black87
+                              : Colors.grey[400]!,
+                        ),
+                      ),
                     ),
                     Row(
                       children: [
@@ -398,6 +381,229 @@ class ProblemSolveRegisterTemplateState
               ),
             ),
           ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildReflectionSection(ThemeHandler themeProvider) {
+    final standardTextStyle = const StandardText(text: '').getTextStyle();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionTitle(
+          icon: Icons.edit,
+          title: '복습 메모',
+          themeProvider: themeProvider,
+        ),
+        const SizedBox(height: 12),
+        TextField(
+          controller: _memoCtrl,
+          maxLines: 5,
+          style: standardTextStyle.copyWith(
+            color: Colors.black87,
+            fontSize: 15,
+          ),
+          decoration: InputDecoration(
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.grey[300]!, width: 1),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.grey[300]!, width: 1),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(
+                color: themeProvider.primaryColor.withOpacity(0.5),
+                width: 2,
+              ),
+            ),
+            fillColor: Colors.white,
+            filled: true,
+            hintText: '이번 복습에서 느낀 점을 자유롭게 작성해주세요!',
+            hintStyle: standardTextStyle.copyWith(
+              color: Colors.grey[400],
+              fontSize: 14,
+            ),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _showTimeInputDialog() async {
+    final controller = TextEditingController(
+      text: _timeSpentMinutes > 0 ? _timeSpentMinutes.toString() : '',
+    );
+    final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
+    final standardTextStyle = const StandardText(text: '').getTextStyle();
+
+    await showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return Dialog(
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: themeProvider.primaryColor.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(
+                        Icons.timer_outlined,
+                        color: themeProvider.primaryColor,
+                        size: 20,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    const StandardText(
+                      text: '소요 시간 입력',
+                      fontSize: 20,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black87,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                const StandardText(
+                  text: '분 단위로 자유롭게 입력할 수 있어요',
+                  fontSize: 14,
+                  color: Colors.black54,
+                ),
+                const SizedBox(height: 18),
+                TextField(
+                  controller: controller,
+                  autofocus: true,
+                  keyboardType: TextInputType.number,
+                  style: standardTextStyle.copyWith(
+                    color: Colors.black87,
+                    fontSize: 15,
+                  ),
+                  decoration: InputDecoration(
+                    hintText: '예: 17',
+                    suffixText: '분',
+                    hintStyle: standardTextStyle.copyWith(
+                      color: Colors.grey[400],
+                      fontSize: 14,
+                    ),
+                    fillColor: Colors.grey[50],
+                    filled: true,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: Colors.grey[300]!, width: 1),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: Colors.grey[300]!, width: 1),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(
+                        color: themeProvider.primaryColor.withOpacity(0.5),
+                        width: 2,
+                      ),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 14,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextButton(
+                        onPressed: () => Navigator.of(dialogContext).pop(),
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          backgroundColor: Colors.grey[100],
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: const StandardText(
+                          text: '취소',
+                          fontSize: 15,
+                          color: Colors.black87,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: TextButton(
+                        onPressed: () {
+                          final parsed = int.tryParse(controller.text.trim());
+                          if (parsed != null && parsed >= 0) {
+                            setState(() => _timeSpentMinutes = parsed);
+                          }
+                          Navigator.of(dialogContext).pop();
+                        },
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          backgroundColor: themeProvider.primaryColor,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: const StandardText(
+                          text: '확인',
+                          fontSize: 15,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildSectionTitle({
+    required IconData icon,
+    required String title,
+    required ThemeHandler themeProvider,
+  }) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: themeProvider.primaryColor.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(
+            icon,
+            color: themeProvider.primaryColor,
+            size: 20,
+          ),
+        ),
+        const SizedBox(width: 8),
+        StandardText(
+          text: title,
+          fontSize: 18,
+          fontWeight: FontWeight.bold,
+          color: Colors.black,
         ),
       ],
     );
@@ -438,7 +644,7 @@ class ProblemSolveRegisterTemplateState
       _memoCtrl.clear();
       _solutionImages.clear();
       _answerStatus = AnswerStatus.CORRECT;
-      _timeSpentMinutes = 0;
+      _timeSpentMinutes = 10;
       _improvements.updateAll((key, value) => false);
     });
   }

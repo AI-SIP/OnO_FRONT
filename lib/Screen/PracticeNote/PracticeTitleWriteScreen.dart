@@ -436,7 +436,7 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
             text: widget.practiceRegisterModel == null
                 ? "복습 노트 수정하기"
                 : "복습 노트 만들기",
-            fontSize: 18,
+            fontSize: 16,
             color: Colors.white,
           ),
         ),
