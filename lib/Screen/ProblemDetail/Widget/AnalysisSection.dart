@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:ono/Module/Text/HandWriteText.dart';
-import 'package:ono/Screen/ProblemDetail/Widget/LayoutHelpers.dart';
 
 import '../../../Model/Problem/ProblemAnalysisModel.dart';
 import '../../../Model/Problem/ProblemAnalysisStatus.dart';
@@ -135,12 +133,6 @@ Widget _buildFailedState(
   return Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      Row(children: [
-        Icon(Icons.error_outline, color: Colors.red),
-        const SizedBox(width: 8),
-        HandWriteText(text: 'AI 분석 실패', fontSize: 20, color: Colors.red),
-      ]),
-      verticalSpacer(context, .02),
       Container(
         width: double.infinity,
         padding: const EdgeInsets.all(20.0),
@@ -160,7 +152,7 @@ Widget _buildFailedState(
           children: [
             Icon(Icons.warning_amber_rounded, color: Colors.red, size: 48),
             const SizedBox(height: 16),
-            StandardText(
+            const StandardText(
               text: '분석 중 오류가 발생했어요',
               fontSize: 15,
               fontWeight: FontWeight.bold,
@@ -175,12 +167,6 @@ Widget _buildFailedState(
                 textAlign: TextAlign.center,
               ),
             ],
-            const SizedBox(height: 16),
-            StandardText(
-              text: '잠시 후 다시 시도해주세요',
-              fontSize: 13,
-              color: Colors.black54,
-            ),
           ],
         ),
       ),
