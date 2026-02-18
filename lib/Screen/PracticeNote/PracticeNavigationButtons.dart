@@ -59,7 +59,7 @@ class _PracticeNavigationButtonsState extends State<PracticeNavigationButtons> {
           _buildButtonStyle(themeProvider, screenHeight, isCompletion: false),
       child: StandardText(
         text: '< 이전 문제',
-        fontSize: 14,
+        fontSize: 13,
         color: themeProvider.primaryColor,
       ),
     );
@@ -128,7 +128,7 @@ class _PracticeNavigationButtonsState extends State<PracticeNavigationButtons> {
           isCompletion: nextProblemId == -1),
       child: StandardText(
         text: nextProblemId != -1 ? '다음 문제 >' : '복습 마치기',
-        fontSize: 14,
+        fontSize: 13,
         color: nextProblemId != -1 ? themeProvider.primaryColor : Colors.white,
       ),
     );

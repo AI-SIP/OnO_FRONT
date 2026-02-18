@@ -85,18 +85,10 @@ class _CameraScreenState extends State<CameraScreen> {
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeHandler>(context);
+    final safeBottom = MediaQuery.of(context).padding.bottom;
 
     return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        centerTitle: true,
-        backgroundColor: Colors.white,
-        title: StandardText(
-          text: '이미지를 촬영해주세요!',
-          color: themeProvider.primaryColor,
-          fontSize: 16,
-        ),
-      ),
+      backgroundColor: Colors.black,
       body: Stack(
         children: [
           FutureBuilder<void>(
@@ -118,46 +110,117 @@ class _CameraScreenState extends State<CameraScreen> {
               }
             },
           ),
-          Align(
-            alignment: Alignment.bottomCenter,
+
+          // 상단 안내 영역
+          SafeArea(
+            bottom: false,
             child: Padding(
-              padding: const EdgeInsets.only(
-                  bottom: 50.0), // Increase bottom padding
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.only(left: 20.0),
-                    child: TextButton(
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                      },
-                      style: TextButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 20, vertical: 10),
+                  InkWell(
+                    onTap: () => Navigator.of(context).pop(),
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.88),
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                      child: const StandardText(
-                        text: '취소',
-                        color: Colors.black,
-                        fontSize: 14,
+                      child: const Icon(
+                        Icons.close_rounded,
+                        color: Colors.black87,
+                        size: 22,
                       ),
                     ),
                   ),
-                  FloatingActionButton(
-                    onPressed: () async {
-                      try {
-                        await _initializeControllerFuture;
-                        final image = await _controller.takePicture();
-                        Navigator.of(context).pop(image);
-                      } catch (e) {
-                        log(e.toString());
-                      }
-                    },
-                    child: const Icon(Icons.camera_alt),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Container(
+                      padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            Colors.white.withValues(alpha: 0.93),
+                            themeProvider.primaryColor.withValues(alpha: 0.12),
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.camera_alt_rounded,
+                            color: themeProvider.primaryColor,
+                            size: 18,
+                          ),
+                          const SizedBox(width: 8),
+                          const Expanded(
+                            child: StandardText(
+                              text: '이미지를 촬영해주세요!',
+                              color: Colors.black87,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-                  const SizedBox(width: 80),
                 ],
+              ),
+            ),
+          ),
+
+          // 하단 중앙 촬영 버튼
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: safeBottom + 24,
+            child: Center(
+              child: InkWell(
+                onTap: () async {
+                  try {
+                    await _initializeControllerFuture;
+                    final image = await _controller.takePicture();
+                    if (!context.mounted) return;
+                    Navigator.pop(context, image);
+                  } catch (e) {
+                    log(e.toString());
+                  }
+                },
+                borderRadius: BorderRadius.circular(42),
+                child: Container(
+                  width: 76,
+                  height: 76,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.95),
+                      width: 3,
+                    ),
+                    color: Colors.black.withValues(alpha: 0.25),
+                  ),
+                  child: Center(
+                    child: Container(
+                      width: 58,
+                      height: 58,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: themeProvider.primaryColor,
+                      ),
+                      child: const Icon(
+                        Icons.camera_alt_rounded,
+                        color: Colors.white,
+                        size: 30,
+                      ),
+                    ),
+                  ),
+                ),
               ),
             ),
           ),

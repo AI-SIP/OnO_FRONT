@@ -150,46 +150,153 @@ class LoginScreen extends StatelessWidget {
   }
 
   void _showGuestLoginDialog(BuildContext context) {
+    final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
+
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
+      builder: (ctx) => Dialog(
         backgroundColor: Colors.white,
-        title: const StandardText(
-          text: '게스트 로그인 할 경우',
-          fontSize: 18,
-          color: Colors.black,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
         ),
-        content: const SizedBox(
-          child: StandardText(
-            text: '기기 간 오답노트 연동이 불가능하며,\n로그아웃 시 모든 정보가 삭제됩니다.',
-            fontSize: 16,
-            color: Colors.black,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 420),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.fromLTRB(20, 18, 20, 16),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Colors.red.withValues(alpha: 0.14),
+                      themeProvider.primaryColor.withValues(alpha: 0.06),
+                    ],
+                  ),
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(20),
+                    topRight: Radius.circular(20),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 34,
+                      height: 34,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.9),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(
+                        Icons.warning_amber_rounded,
+                        color: Colors.redAccent,
+                        size: 21,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    const Expanded(
+                      child: StandardText(
+                        text: '게스트 로그인 안내',
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black87,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 18, 20, 14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: StandardText(
+                        text: '• 기기 간 오답노트 연동이 불가능해요.',
+                        fontSize: 14,
+                        color: Colors.grey[800]!,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: StandardText(
+                        text: '• 로그아웃 시 모든 정보가 삭제돼요.',
+                        fontSize: 14,
+                        color: Colors.grey[800]!,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+                decoration: BoxDecoration(
+                  color: Colors.grey[50],
+                  border: Border(
+                    top: BorderSide(color: Colors.grey[200]!, width: 1),
+                  ),
+                  borderRadius: const BorderRadius.only(
+                    bottomLeft: Radius.circular(20),
+                    bottomRight: Radius.circular(20),
+                  ),
+                ),
+                child: Row(
+                  children: <Widget>[
+                    Expanded(
+                      child: TextButton(
+                        onPressed: () {
+                          Navigator.of(ctx).pop();
+                        },
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 11),
+                          backgroundColor: Colors.grey[100],
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        child: const StandardText(
+                          text: '취소',
+                          fontSize: 14,
+                          color: Colors.black87,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: TextButton(
+                        onPressed: () {
+                          Navigator.of(ctx).pop();
+                          Provider.of<UserProvider>(context, listen: false)
+                              .signInWithGuest(context);
+                        },
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 11),
+                          backgroundColor: Colors.redAccent,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        child: const StandardText(
+                          text: '확인',
+                          fontSize: 14,
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
         ),
-        actions: <Widget>[
-          TextButton(
-            child: const StandardText(
-              text: '취소',
-              fontSize: 14,
-              color: Colors.black,
-            ),
-            onPressed: () {
-              Navigator.of(ctx).pop();
-            },
-          ),
-          TextButton(
-            child: const StandardText(
-              text: '확인',
-              fontSize: 14,
-              color: Colors.red,
-            ),
-            onPressed: () {
-              Navigator.of(ctx).pop();
-              Provider.of<UserProvider>(context, listen: false)
-                  .signInWithGuest(context);
-            },
-          ),
-        ],
       ),
     );
   }

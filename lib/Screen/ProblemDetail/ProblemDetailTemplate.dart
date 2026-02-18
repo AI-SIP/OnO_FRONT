@@ -88,10 +88,18 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
 
   Widget _buildNoteHeader(ThemeHandler themeProvider, bool isWide) {
     final horizontalPadding = isWide ? 60.0 : 30.0;
+    final headerTopPadding = isWide ? 10.0 : 6.0;
+    final headerBottomPadding = isWide ? 8.0 : 6.0;
+    final tabContainerPadding = isWide ? 5.0 : 4.0;
+    final tabHeight = isWide ? 46.0 : 40.0;
 
     return Container(
-      padding:
-          EdgeInsets.fromLTRB(horizontalPadding, 10.0, horizontalPadding, 8.0),
+      padding: EdgeInsets.fromLTRB(
+        horizontalPadding,
+        headerTopPadding,
+        horizontalPadding,
+        headerBottomPadding,
+      ),
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.94),
         boxShadow: [
@@ -103,7 +111,7 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
         ],
       ),
       child: Container(
-        padding: const EdgeInsets.all(5),
+        padding: EdgeInsets.all(tabContainerPadding),
         decoration: BoxDecoration(
           color: Colors.grey[100],
           borderRadius: BorderRadius.circular(16),
@@ -133,6 +141,7 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
           labelPadding: const EdgeInsets.symmetric(horizontal: 4),
           tabs: [
             Tab(
+              height: tabHeight,
               child: _buildHeaderTab(
                 title: '문제',
                 icon: Icons.help_outline,
@@ -142,6 +151,7 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
               ),
             ),
             Tab(
+              height: tabHeight,
               child: _buildHeaderTab(
                 title: '정답',
                 icon: Icons.task_alt,
@@ -151,6 +161,7 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
               ),
             ),
             Tab(
+              height: tabHeight,
               child: _buildHeaderTab(
                 title: '복습 기록',
                 icon: Icons.history_edu,
@@ -175,8 +186,8 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
     final activeColor = themeProvider.primaryColor;
     final inactiveColor = Colors.grey[600]!;
     final iconSize = isWide ? 16.0 : 14.0;
-    final textSize = isWide ? 16.0 : 14.5;
-    final gap = isWide ? 6.0 : 4.0;
+    final textSize = isWide ? 15.0 : 14.0;
+    final gap = isWide ? 6.0 : 6.0;
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -276,7 +287,7 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
           const SizedBox(width: 10),
           const StandardText(
             text: '푼 날짜',
-            fontSize: 15,
+            fontSize: 14,
             fontWeight: FontWeight.w600,
             color: Colors.black87,
           ),
@@ -345,7 +356,7 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
           const SizedBox(width: 10),
           StandardText(
             text: title,
-            fontSize: 15,
+            fontSize: 14,
             fontWeight: FontWeight.w600,
             color: Colors.black87,
           ),
@@ -524,7 +535,7 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
           const SizedBox(width: 8),
           StandardText(
             text: title,
-            fontSize: 16,
+            fontSize: 14,
             fontWeight: FontWeight.w500,
             color: Colors.black87,
           ),
