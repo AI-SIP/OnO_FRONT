@@ -673,7 +673,6 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
           const SizedBox(height: 8),
           Row(
             children: [
-              const SizedBox(width: 8),
               practice.practiceCount >= 3
                   ? _buildTag('복습 완료', themeProvider, highlight: true)
                   : _buildTag('${practice.practiceCount}회 복습', themeProvider),
