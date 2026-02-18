@@ -10,6 +10,7 @@ import '../../Model/Problem/ProblemRegisterModel.dart';
 import '../../Module/Dialog/LoadingDialog.dart';
 import '../../Module/Dialog/SnackBarDialog.dart';
 import '../../Module/Image/ImagePickerHandler.dart';
+import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Module/Util/FolderPickerWidget.dart';
 import '../../Provider/FoldersProvider.dart';
@@ -24,6 +25,7 @@ import 'Widget/LabeledTextField.dart';
 class ProblemRegisterTemplate extends StatefulWidget {
   final ProblemModel? problemModel;
   final bool isEditMode;
+  final int? initialFolderId;
   final VoidCallback? onCancel;
   final VoidCallback? onSubmit;
 
@@ -31,6 +33,7 @@ class ProblemRegisterTemplate extends StatefulWidget {
     Key? key,
     this.problemModel,
     required this.isEditMode,
+    this.initialFolderId,
     this.onCancel,
     this.onSubmit,
   }) : super(key: key);
@@ -73,8 +76,9 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
     } else {
       final folderProvider =
           Provider.of<FoldersProvider>(context, listen: false);
-      _selectedFolderId =
-          problemModel?.folderId ?? folderProvider.currentFolder?.folderId;
+      _selectedFolderId = widget.initialFolderId ??
+          problemModel?.folderId ??
+          folderProvider.currentFolder?.folderId;
     }
     _titleCtrl.text = problemModel?.reference ?? '';
     _memoCtrl.text = problemModel?.memo ?? '';
@@ -245,15 +249,32 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
   }
 
   Future<void> submit() async {
+    // 제목 필수 입력 검증
+    if (_titleCtrl.text.trim().isEmpty) {
+      _showTitleRequiredDialog(context);
+      return;
+    }
+
+    // 문제 이미지 필수 입력 검증 (신규 등록 시에만)
+    if (!widget.isEditMode &&
+        _problemImages.isEmpty &&
+        _existingProblemImageUrls.isEmpty) {
+      _showProblemImageRequiredDialog(context);
+      return;
+    }
+
+    final canPopBeforeSubmit = Navigator.of(context).canPop();
     LoadingDialog.show(
         context, widget.isEditMode ? '오답노트 수정 중...' : '오답노트 작성 중...');
+    bool shouldPop = false;
     try {
       if (widget.isEditMode) {
         await _updateProblem();
+        shouldPop = canPopBeforeSubmit;
       } else {
         await _registerProblem();
+        shouldPop = canPopBeforeSubmit;
       }
-      showSuccessDialog(context);
     } catch (e, stackTrace) {
       log('오답노트 ${widget.isEditMode ? "수정" : "등록"} 실패: $e');
       log(stackTrace.toString());
@@ -261,6 +282,171 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
     } finally {
       LoadingDialog.hide(context);
     }
+
+    if (!mounted) return;
+
+    showSuccessDialog(context);
+
+    if (shouldPop) {
+      Navigator.of(context).pop(true);
+      return;
+    }
+
+    Provider.of<ScreenIndexProvider>(context, listen: false).setSelectedIndex(0);
+  }
+
+  void _showTitleRequiredDialog(BuildContext context) {
+    final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // 헤더
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.orange.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(
+                        Icons.warning_rounded,
+                        color: Colors.orange,
+                        size: 20,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    const StandardText(
+                      text: '경고',
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black87,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                // 내용
+                const StandardText(
+                  text: '제목을 입력해 주세요!',
+                  fontSize: 15,
+                  color: Colors.black87,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
+                // 액션 버튼
+                SizedBox(
+                  width: double.infinity,
+                  child: TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 10),
+                      backgroundColor: themeProvider.primaryColor,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: const StandardText(
+                      text: '확인',
+                      fontSize: 15,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _showProblemImageRequiredDialog(BuildContext context) {
+    final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // 헤더
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.orange.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(
+                        Icons.warning_rounded,
+                        color: Colors.orange,
+                        size: 20,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    const StandardText(
+                      text: '경고',
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black87,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                // 내용
+                const StandardText(
+                  text: '문제 이미지를 추가해 주세요!',
+                  fontSize: 15,
+                  color: Colors.black87,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
+                // 액션 버튼
+                SizedBox(
+                  width: double.infinity,
+                  child: TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 10),
+                      backgroundColor: themeProvider.primaryColor,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: const StandardText(
+                      text: '확인',
+                      fontSize: 15,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   /// 오답노트 등록
@@ -306,34 +492,24 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
       }
     }
 
-    // 4. 화면 초기화 및 이동 (이제 DirectoryScreen이 mount되면서 변경된 타임스탬프를 감지)
-    Provider.of<ScreenIndexProvider>(context, listen: false)
-        .setSelectedIndex(0);
-
     log('problem register complete - problemId: $registeredProblemId');
 
-    // 5. 백그라운드에서 이미지 업로드 (비동기)
-    _uploadImagesInBackground(registeredProblemId, problemsProvider);
+    // 4. 이미지 업로드 완료까지 대기 (복귀 직후 목록에 바로 반영되도록)
+    await _uploadImagesAfterRegister(registeredProblemId, problemsProvider);
 
     resetAll();
   }
 
-  /// 백그라운드에서 이미지 업로드
-  void _uploadImagesInBackground(
-      int problemId, ProblemsProvider problemsProvider) {
-    // 비동기로 이미지 업로드 실행 (await 없이)
-    () async {
-      try {
-        log('백그라운드 이미지 업로드 시작 - problemId: $problemId');
+  /// 등록 직후 이미지 업로드 및 폴더 캐시 갱신
+  Future<void> _uploadImagesAfterRegister(
+      int problemId, ProblemsProvider problemsProvider) async {
+    try {
+      log('이미지 업로드 시작 - problemId: $problemId');
 
-        // 이미지가 없으면 리턴
-        if (_problemImages.isEmpty && _answerImages.isEmpty) {
-          await problemsProvider.updateProblemAnalysisStatus(
-              problemId: problemId);
-          log('업로드할 이미지가 없음');
-          return;
-        }
-
+      // 이미지가 없으면 분석 상태만 갱신
+      if (_problemImages.isEmpty && _answerImages.isEmpty) {
+        await problemsProvider.updateProblemAnalysisStatus(problemId: problemId);
+      } else {
         // 파일 리스트 생성
         final List<File> imageFiles = [];
         final List<String> imageTypes = [];
@@ -356,31 +532,26 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
           problemImages: imageFiles,
           problemImageTypes: imageTypes,
         );
-
-        log('백그라운드 이미지 업로드 완료 - problemId: $problemId');
-
-        // 이미지 업로드 완료 후 폴더 캐시 새로고침 (썸네일 업데이트)
-        if (mounted) {
-          final foldersProvider =
-              Provider.of<FoldersProvider>(context, listen: false);
-          if (_selectedFolderId != null) {
-            await foldersProvider.refreshFolder(_selectedFolderId!);
-          } else {
-            // 루트 폴더 갱신 (타임스탬프 업데이트됨)
-            final rootFolder = foldersProvider.rootFolder;
-            if (rootFolder != null) {
-              await foldersProvider.refreshFolder(rootFolder.folderId);
-            }
-          }
-          log('폴더 캐시 새로고침 완료 - 썸네일 업데이트됨');
-        }
-      } catch (e, stackTrace) {
-        log('백그라운드 이미지 업로드 실패 - problemId: $problemId');
-        log('에러: $e');
-        log('스택트레이스: $stackTrace');
-        // 에러가 발생해도 사용자에게는 영향 없음 (백그라운드 작업)
       }
-    }();
+
+      // 이미지 업로드/분석상태 갱신 완료 후 폴더 캐시 새로고침
+      if (!mounted) return;
+      final foldersProvider = Provider.of<FoldersProvider>(context, listen: false);
+      if (_selectedFolderId != null) {
+        await foldersProvider.refreshFolder(_selectedFolderId!);
+      } else {
+        final rootFolder = foldersProvider.rootFolder;
+        if (rootFolder != null) {
+          await foldersProvider.refreshFolder(rootFolder.folderId);
+        }
+      }
+      log('이미지 업로드 및 폴더 캐시 갱신 완료 - problemId: $problemId');
+    } catch (e, stackTrace) {
+      log('이미지 업로드 실패 - problemId: $problemId');
+      log('에러: $e');
+      log('스택트레이스: $stackTrace');
+      // 등록 자체는 완료되었으므로 여기서는 throw 하지 않음
+    }
   }
 
   /// 오답노트 수정
@@ -411,8 +582,6 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
     await _uploadAndRegisterNewImages(problemsProvider, problemId);
 
     resetAll();
-    // 화면 초기화 및 닫기
-    Navigator.of(context).pop(true);
   }
 
   /// 삭제된 이미지들을 서버에서 삭제

@@ -2,8 +2,6 @@ import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:ono/Model/Folder/FolderModel.dart';
-import 'package:ono/Model/Folder/FolderThumbnailModel.dart';
 import 'package:ono/Module/Theme/NoteIconHandler.dart';
 import 'package:provider/provider.dart';
 
@@ -41,11 +39,11 @@ class FolderPickerDialog extends StatefulWidget {
 
   // folderId로 folderName을 찾아 반환하는 함수
   static String? getFolderNameByFolderId(int? folderId) {
-    if (folderId == null) return '책장';
+    if (folderId == null) return null;
     if (_cachedFolderNames.containsKey(folderId)) {
       return _cachedFolderNames[folderId];
     }
-    return '책장';
+    return null;
   }
 
   static Map<int, String> _cachedFolderNames = {};
@@ -169,75 +167,170 @@ class _FolderPickerDialogState extends State<FolderPickerDialog> {
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeHandler>(context);
+    final selectedFolderName =
+        FolderPickerDialog.getFolderNameByFolderId(_selectedFolderId) ?? '선택 안 됨';
 
-    return AlertDialog(
+    return Dialog(
       backgroundColor: Colors.white,
-      insetPadding: const EdgeInsets.symmetric(horizontal: 30, vertical: 30),
-      contentPadding: const EdgeInsets.all(0),
-      titlePadding: const EdgeInsets.only(left: 30, top: 20, right: 20),
-      title: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          const StandardText(
-            text: '공책 선택',
-            fontSize: 20,
-            color: Colors.black,
-          ),
-          IconButton(
-            icon: SvgPicture.asset(
-              "assets/Icon/addNote.svg",
-              width: 30,
-              height: 30,
-            ),
-            onPressed: () async {
-              await _showFolderNameDialog(
-                dialogTitle: '공책 생성',
-                defaultFolderName: '',
-                onFolderNameSubmitted: (folderName) async {
-                  if (_rootNode != null) {
-                    await _createFolder(folderName, _rootNode!.folderId);
-                  }
-                },
-              );
-            },
-          ),
-        ],
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
       ),
-      content: SizedBox(
-        width: double.maxFinite,
-        child: _isLoading || _rootNode == null
-            ? const Center(child: CircularProgressIndicator())
-            : ListView(
-                padding: const EdgeInsets.only(top: 10, right: 10),
-                children: _buildFolderTreeList(_rootNode!, themeProvider),
+      insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+      child: Container(
+        constraints: const BoxConstraints(maxHeight: 640, maxWidth: 460),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.fromLTRB(24, 22, 16, 16),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    themeProvider.primaryColor.withOpacity(0.14),
+                    themeProvider.primaryColor.withOpacity(0.04),
+                  ],
+                ),
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(20),
+                  topRight: Radius.circular(20),
+                ),
               ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.75),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Icon(
+                          Icons.folder_open,
+                          color: themeProvider.primaryColor,
+                          size: 20,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const StandardText(
+                            text: '공책 선택',
+                            fontSize: 20,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black87,
+                          ),
+                          const SizedBox(height: 3),
+                          SizedBox(
+                            width: 190,
+                            child: StandardText(
+                              text: '현재 선택: $selectedFolderName',
+                              fontSize: 12,
+                              color: Colors.black54,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  IconButton(
+                    icon: SvgPicture.asset(
+                      "assets/Icon/addNote.svg",
+                      width: 28,
+                      height: 28,
+                    ),
+                    onPressed: () async {
+                      await _showFolderNameDialog(
+                        dialogTitle: '공책 생성',
+                        defaultFolderName: '',
+                        onFolderNameSubmitted: (folderName) async {
+                          if (_rootNode != null) {
+                            await _createFolder(folderName, _rootNode!.folderId);
+                          }
+                        },
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ),
+            Flexible(
+              child: _isLoading || _rootNode == null
+                  ? Center(
+                      child: CircularProgressIndicator(
+                        color: themeProvider.primaryColor,
+                      ),
+                    )
+                  : ListView(
+                      padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+                      children: _buildFolderTreeList(_rootNode!, themeProvider),
+                    ),
+            ),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+              decoration: BoxDecoration(
+                color: Colors.grey[50],
+                border: Border(
+                  top: BorderSide(color: Colors.grey[200]!, width: 1),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextButton(
+                      onPressed: () {
+                        Navigator.pop(context, widget.initialFolderId);
+                      },
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        backgroundColor: Colors.grey[100],
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: const StandardText(
+                        text: '취소',
+                        fontSize: 15,
+                        color: Colors.black87,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: TextButton(
+                      onPressed: () {
+                        if (_selectedFolderId != null) {
+                          Navigator.pop(context, _selectedFolderId);
+                        } else {
+                          Navigator.pop(context, null);
+                        }
+                      },
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        backgroundColor: themeProvider.primaryColor,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: const StandardText(
+                        text: '선택하기',
+                        fontSize: 15,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
-      actions: <Widget>[
-        TextButton(
-          onPressed: () {
-            Navigator.pop(context, widget.initialFolderId);
-          },
-          child: const StandardText(
-            text: '취소',
-            fontSize: 16,
-            color: Colors.black,
-          ),
-        ),
-        TextButton(
-          onPressed: () {
-            if (_selectedFolderId != null) {
-              Navigator.pop(context, _selectedFolderId);
-            } else {
-              Navigator.pop(context, null);
-            }
-          },
-          child: StandardText(
-            text: '확인',
-            fontSize: 16,
-            color: themeProvider.primaryColor,
-          ),
-        ),
-      ],
     );
   }
 
@@ -252,15 +345,26 @@ class _FolderPickerDialogState extends State<FolderPickerDialog> {
     // 현재 노드 위젯
     widgets.add(
       Padding(
-        padding: EdgeInsets.only(left: level * 20.0),
-        child: ListTile(
-          leading: Row(
+        padding: EdgeInsets.fromLTRB(level * 18.0, 4, 0, 4),
+        child: Container(
+          decoration: BoxDecoration(
+            color: isSelected
+                ? themeProvider.primaryColor.withOpacity(0.12)
+                : Colors.transparent,
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: ListTile(
+            dense: true,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+            leading: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               // 확장/축소 버튼 (항상 같은 크기 유지)
               SizedBox(
-                width: 48, // IconButton의 기본 크기
-                height: 48,
+                width: 40,
+                height: 40,
                 child: node.isLoading
                     ? const Center(
                         child: SizedBox(
@@ -276,6 +380,7 @@ class _FolderPickerDialogState extends State<FolderPickerDialog> {
                               : Icons.chevron_right,
                         ),
                         color: themeProvider.primaryColor,
+                        splashRadius: 20,
                         onPressed: () => _toggleFolder(node),
                       ),
               ),
@@ -286,21 +391,23 @@ class _FolderPickerDialogState extends State<FolderPickerDialog> {
                 height: 30,
               ),
             ],
+            ),
+            title: StandardText(
+              text: node.folderName,
+              fontSize: 15,
+              color: Colors.black87,
+              overflow: TextOverflow.ellipsis,
+            ),
+            trailing: isSelected
+                ? Icon(Icons.check_circle, color: themeProvider.primaryColor, size: 20)
+                : null,
+            selected: isSelected,
+            onTap: () {
+              setState(() {
+                _selectedFolderId = node.folderId;
+              });
+            },
           ),
-          title: StandardText(
-            text: node.folderName,
-            fontSize: 16,
-            color: themeProvider.primaryColor,
-          ),
-          trailing: isSelected
-              ? Icon(Icons.check, color: themeProvider.primaryColor)
-              : null,
-          selected: isSelected,
-          onTap: () {
-            setState(() {
-              _selectedFolderId = node.folderId;
-            });
-          },
         ),
       ),
     );
@@ -317,9 +424,10 @@ class _FolderPickerDialogState extends State<FolderPickerDialog> {
       if (node.hasMoreChildren && !node.isLoading) {
         widgets.add(
           Padding(
-            padding: EdgeInsets.only(left: (level + 1) * 20.0),
+            padding: EdgeInsets.only(left: (level + 1) * 18.0),
             child: ListTile(
-              leading: const Icon(Icons.more_horiz),
+              dense: true,
+              leading: Icon(Icons.more_horiz, color: themeProvider.primaryColor),
               title: StandardText(
                 text: '더 보기',
                 fontSize: 14,
@@ -348,66 +456,127 @@ class _FolderPickerDialogState extends State<FolderPickerDialog> {
     await showDialog(
       context: context,
       builder: (context) {
-        return AlertDialog(
+        return Dialog(
           backgroundColor: Colors.white,
-          title: StandardText(
-            text: dialogTitle,
-            fontSize: 18,
-            color: Colors.black,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
           ),
-          content: SizedBox(
-            width: MediaQuery.of(context).size.width * 0.8,
-            child: TextField(
-              controller: folderNameController,
-              style: standardTextStyle.copyWith(
-                color: Colors.black,
-                fontSize: 16,
-              ),
-              decoration: InputDecoration(
-                hintText: '공책 이름을 입력하세요',
-                hintStyle: standardTextStyle.copyWith(
-                  color: ThemeHandler.desaturatenColor(Colors.black),
-                  fontSize: 14,
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // 헤더
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: themeProvider.primaryColor.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(
+                        Icons.create_new_folder,
+                        color: themeProvider.primaryColor,
+                        size: 20,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    StandardText(
+                      text: dialogTitle,
+                      fontSize: 20,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black87,
+                    ),
+                  ],
                 ),
-                border: const OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.black),
+                const SizedBox(height: 24),
+                // 입력 필드
+                TextField(
+                  controller: folderNameController,
+                  autofocus: true,
+                  style: standardTextStyle.copyWith(
+                    color: Colors.black87,
+                    fontSize: 15,
+                  ),
+                  decoration: InputDecoration(
+                    hintText: '공책 이름을 입력하세요',
+                    hintStyle: standardTextStyle.copyWith(
+                      color: Colors.grey[400],
+                      fontSize: 14,
+                    ),
+                    fillColor: Colors.grey[50],
+                    filled: true,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: Colors.grey[300]!, width: 1),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: Colors.grey[300]!, width: 1),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(
+                        color: themeProvider.primaryColor.withOpacity(0.5),
+                        width: 2,
+                      ),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      vertical: 16,
+                      horizontal: 16,
+                    ),
+                  ),
                 ),
-                enabledBorder: const OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.black, width: 1.5),
+                const SizedBox(height: 24),
+                // 액션 버튼
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                        backgroundColor: Colors.grey[100],
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: const StandardText(
+                        text: '취소',
+                        fontSize: 15,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    TextButton(
+                      onPressed: () async {
+                        if (folderNameController.text.isNotEmpty) {
+                          onFolderNameSubmitted(folderNameController.text);
+                          Navigator.pop(context);
+                        }
+                      },
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                        backgroundColor: themeProvider.primaryColor,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: const StandardText(
+                        text: '확인',
+                        fontSize: 15,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
                 ),
-                focusedBorder: const OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.black, width: 1.5),
-                ),
-                contentPadding: const EdgeInsets.symmetric(
-                    vertical: 20.0, horizontal: 12.0),
-              ),
+              ],
             ),
           ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: const StandardText(
-                text: '취소',
-                fontSize: 14,
-                color: Colors.black,
-              ),
-            ),
-            TextButton(
-              onPressed: () async {
-                if (folderNameController.text.isNotEmpty) {
-                  onFolderNameSubmitted(folderNameController.text);
-                  Navigator.pop(context);
-                }
-              },
-              child: StandardText(
-                text: '확인',
-                fontSize: 14,
-                color: themeProvider.primaryColor,
-              ),
-            ),
-          ],
         );
       },
     );

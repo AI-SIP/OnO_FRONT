@@ -80,14 +80,12 @@ class ProblemsProvider with ChangeNotifier {
     try {
       final analysisResult = await problemService.getProblemAnalysis(problemId);
 
-      // 분석이 완료되었으면 ProblemModel 업데이트
-      if (analysisResult.status == ProblemAnalysisStatus.COMPLETED) {
-        if (_problemsMap.containsKey(problemId)) {
-          _problemsMap[problemId] =
-              _problemsMap[problemId]!.updateAnalysis(analysisResult);
-          notifyListeners();
-          log('ProblemModel 업데이트 완료 - UI가 자동으로 갱신됩니다');
-        }
+      // 분석 결과를 ProblemModel에 업데이트 (모든 상태에 대해)
+      if (_problemsMap.containsKey(problemId)) {
+        _problemsMap[problemId] =
+            _problemsMap[problemId]!.updateAnalysis(analysisResult);
+        notifyListeners();
+        log('ProblemModel 업데이트 완료 (status: ${analysisResult.status}) - UI가 자동으로 갱신됩니다');
       }
 
       log('문제 분석 결과 조회 완료');

@@ -32,6 +32,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
   Timer? _analysisPollingTimer;
   int _pollingCount = 0;
   bool _isExpansionTileExpanded = false; // ExpansionTile 상태 관리
+  bool _isProblemDeleted = false; // 문제 삭제 여부 플래그
 
   @override
   void initState() {
@@ -96,7 +97,8 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
         return;
       }
 
-      final problemsProvider = Provider.of<ProblemsProvider>(context, listen: false);
+      final problemsProvider =
+          Provider.of<ProblemsProvider>(context, listen: false);
 
       try {
         log('🔍 Polling analysis status (attempt $_pollingCount)...');
@@ -107,14 +109,36 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
         // 현재 문제 상태 확인
         final problem = await problemsProvider.getProblem(problemId);
 
-        // 분석이 완료되거나 실패하면 폴링 중지
+        // 분석이 완료되거나 실패하거나 이미지가 없으면 폴링 중지
         if (problem.analysis?.status == ProblemAnalysisStatus.COMPLETED) {
           log('✅ Analysis completed - polling stopped');
           _stopAnalysisPolling();
+          // UI 강제 업데이트
+          if (mounted) {
+            setState(() {
+              _problemModelFuture = Future.value(problem);
+            });
+          }
           return;
         } else if (problem.analysis?.status == ProblemAnalysisStatus.FAILED) {
           log('❌ Analysis failed - polling stopped');
           _stopAnalysisPolling();
+          // UI 강제 업데이트
+          if (mounted) {
+            setState(() {
+              _problemModelFuture = Future.value(problem);
+            });
+          }
+          return;
+        } else if (problem.analysis?.status == ProblemAnalysisStatus.NO_IMAGE) {
+          log('📷 No image detected during polling - polling stopped');
+          _stopAnalysisPolling();
+          // UI 강제 업데이트 (중요: NO_IMAGE 상태를 화면에 반영)
+          if (mounted) {
+            setState(() {
+              _problemModelFuture = Future.value(problem);
+            });
+          }
           return;
         }
 
@@ -163,14 +187,21 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                 // 분석 상태가 변경되었을 때만 rebuild
                 return previous.analysis?.status != next.analysis?.status ||
                     previous.analysis?.subject != next.analysis?.subject ||
-                    previous.analysis?.problemType != next.analysis?.problemType;
+                    previous.analysis?.problemType !=
+                        next.analysis?.problemType;
               },
               builder: (context, problemModel, child) {
+                if (_isProblemDeleted) {
+                  return Expanded(
+                      child:
+                          Container()); // Problem has been deleted, so show nothing or a message
+                }
                 if (problemModel == null) {
                   // 초기 로딩 시에만 Future로 가져오기
                   return FutureBuilder<ProblemModel>(
-                    future: Provider.of<ProblemsProvider>(context, listen: false)
-                        .getProblem(widget.problemId),
+                    future:
+                        Provider.of<ProblemsProvider>(context, listen: false)
+                            .getProblem(widget.problemId),
                     builder: (context, snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting) {
                         return const Center(child: CircularProgressIndicator());
@@ -200,7 +231,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
               },
             ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 2),
           _buildNavigationButtons(context, widget.isPractice),
         ],
       ),
@@ -239,7 +270,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
           return StandardText(
             text:
                 (reference == null || reference.isEmpty) ? '제목 없음' : reference,
-            fontSize: 20,
+            fontSize: 18,
             color: themeProvider.primaryColor,
           );
         } else {
@@ -280,137 +311,166 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
 
     final openTime = DateTime.now();
     showModalBottomSheet(
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.transparent,
       context: context,
       isDismissible: false,
       builder: (context) {
         return TapRegion(
           onTapOutside: (_) {
             // Workaround for iPadOS 26.1 bug: https://github.com/flutter/flutter/issues/177992
-            if (DateTime.now().difference(openTime) < const Duration(milliseconds: 500)) {
+            if (DateTime.now().difference(openTime) <
+                const Duration(milliseconds: 500)) {
               return;
             }
             if (Navigator.canPop(context)) {
               Navigator.pop(context);
             }
           },
-          child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-                vertical: 20.0, horizontal: 10.0), // 패딩 추가
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 20.0), // 타이틀 아래 여백 추가
-                  child: StandardText(
-                    text: '오답노트 편집하기', // 타이틀 텍스트
-                    fontSize: 20,
-                    color: themeProvider.primaryColor,
-                  ),
-                ),
-                /*
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 10.0), // 텍스트 간격 조정
-                  child: ListTile(
-                    leading: const Icon(Icons.share, color: Colors.black),
-                    title: const StandardText(
-                      text: '오답노트 문제 공유하기',
-                      fontSize: 16,
-                      color: Colors.black,
+          child: Container(
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(20),
+                topRight: Radius.circular(20),
+              ),
+            ),
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                    vertical: 24.0, horizontal: 20.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // 상단 핸들바
+                    Container(
+                      width: 40,
+                      height: 4,
+                      margin: const EdgeInsets.only(bottom: 20),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[300],
+                        borderRadius: BorderRadius.circular(2),
+                      ),
                     ),
-                    onTap: () async {
-                      FirebaseAnalytics.instance
-                          .logEvent(name: 'problem_share_button_click');
-                      await Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) =>
-                              ProblemShareScreen(problem: problemModel),
-                        ),
-                      );
-                      Navigator.pop(context);
-                    },
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 10.0), // 텍스트 간격 조정
-                  child: ListTile(
-                    leading: const Icon(Icons.share, color: Colors.black),
-                    title: const StandardText(
-                      text: '오답노트 해설 공유하기',
-                      fontSize: 16,
-                      color: Colors.black,
-                    ),
-                    onTap: () async {
-                      FirebaseAnalytics.instance
-                          .logEvent(name: 'answer_share_button_click');
-                      await Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) =>
-                              AnswerShareScreen(problem: problemModel),
-                        ),
-                      );
-                      Navigator.pop(context);
-                    },
-                  ),
-                ),
-
-                 */
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 10.0), // 텍스트 간격 조정
-                  child: ListTile(
-                    leading: const Icon(Icons.edit, color: Colors.black),
-                    title: const StandardText(
-                      text: '오답노트 수정하기',
-                      fontSize: 16,
-                      color: Colors.black,
-                    ),
-                    onTap: () {
-                      FirebaseAnalytics.instance
-                          .logEvent(name: 'problem_edit_button_click');
-                      Navigator.pop(context);
-                      Navigator.of(context)
-                          .push(
-                        MaterialPageRoute(
-                          builder: (context) => ProblemRegisterScreen(
-                            problemModel: problemModel,
-                            isEditMode: true,
+                    // 타이틀
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: themeProvider.primaryColor.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Icon(
+                            Icons.edit_note,
+                            color: themeProvider.primaryColor,
+                            size: 22,
                           ),
                         ),
-                      )
-                          .then((_) {
-                        _setProblemModel();
-                      });
-                    },
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 10.0), // 텍스트 간격 조정
-                  child: ListTile(
-                    leading:
-                        const Icon(Icons.delete_forever, color: Colors.red),
-                    title: const StandardText(
-                      text: '현재 오답노트 삭제하기',
-                      fontSize: 16,
-                      color: Colors.red,
+                        const SizedBox(width: 12),
+                        StandardText(
+                          text: '오답노트 편집하기',
+                          fontSize: 20,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black87,
+                        ),
+                      ],
                     ),
-                    onTap: () {
-                      FirebaseAnalytics.instance
-                          .logEvent(name: 'problem_delete_button_click');
-                      Navigator.pop(context);
-                      _showDeleteProblemDialog(
-                          problemModel.problemId, themeProvider);
-                    },
-                  ),
+                    const SizedBox(height: 24),
+                    // 메뉴 아이템들
+                    _buildActionItem(
+                      icon: Icons.edit_outlined,
+                      iconColor: themeProvider.primaryColor,
+                      title: '오답노트 수정하기',
+                      onTap: () {
+                        FirebaseAnalytics.instance
+                            .logEvent(name: 'problem_edit_button_click');
+                        Navigator.pop(context);
+                        Navigator.of(context)
+                            .push(
+                          MaterialPageRoute(
+                            builder: (context) => ProblemRegisterScreen(
+                              problemModel: problemModel,
+                              isEditMode: true,
+                            ),
+                          ),
+                        )
+                            .then((_) {
+                          _setProblemModel();
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                    _buildActionItem(
+                      icon: Icons.delete_outline,
+                      iconColor: Colors.red,
+                      title: '현재 오답노트 삭제하기',
+                      titleColor: Colors.red,
+                      onTap: () {
+                        FirebaseAnalytics.instance
+                            .logEvent(name: 'problem_delete_button_click');
+                        Navigator.pop(context);
+                        _showDeleteProblemDialog(
+                            problemModel.problemId, themeProvider);
+                      },
+                    ),
+                    const SizedBox(height: 4),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
-        ),
         );
       },
+    );
+  }
+
+  Widget _buildActionItem({
+    required IconData icon,
+    required Color iconColor,
+    required String title,
+    Color? titleColor,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: Colors.grey[50],
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey[200]!, width: 1),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: iconColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Icon(
+                icon,
+                color: iconColor,
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: StandardText(
+                text: title,
+                fontSize: 16,
+                color: titleColor ?? Colors.black87,
+              ),
+            ),
+            Icon(
+              Icons.arrow_forward_ios,
+              size: 14,
+              color: Colors.grey[400],
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -419,70 +479,137 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
     return showDialog(
       context: context,
       builder: (dialogContext) {
-        return AlertDialog(
+        return Dialog(
           backgroundColor: Colors.white,
-          title: const StandardText(
-              text: '오답노트 삭제', fontSize: 18, color: Colors.black),
-          content: const StandardText(
-              text: '정말로 이 오답노트를 삭제하시겠습니까?', fontSize: 16, color: Colors.black),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(dialogContext);
-              },
-              child: const StandardText(
-                text: '취소',
-                fontSize: 14,
-                color: Colors.black,
-              ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // 헤더
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.red.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(
+                        Icons.delete_forever,
+                        color: Colors.red,
+                        size: 20,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    const StandardText(
+                      text: '오답노트 삭제',
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black87,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                // 내용
+                const StandardText(
+                  text: '정말로 이 오답노트를 삭제하시겠습니까?',
+                  fontSize: 15,
+                  color: Colors.black87,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
+                // 액션 버튼
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextButton(
+                        onPressed: () {
+                          Navigator.pop(dialogContext);
+                        },
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          backgroundColor: Colors.grey[100],
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: const StandardText(
+                          text: '취소',
+                          fontSize: 15,
+                          color: Colors.black87,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: TextButton(
+                        onPressed: () async {
+                          FirebaseAnalytics.instance
+                              .logEvent(name: 'problem_delete');
+
+                          // context가 유효할 때 Provider와 Navigator 가져오기
+                          final problemsProvider =
+                              Provider.of<ProblemsProvider>(context,
+                                  listen: false);
+                          final practiceProvider =
+                              Provider.of<ProblemPracticeProvider>(context,
+                                  listen: false);
+                          final navigator = Navigator.of(context);
+
+                          // 다이얼로그 닫기
+                          Navigator.pop(dialogContext);
+
+                          // 로딩 다이얼로그 표시
+                          LoadingDialog.show(context, '오답노트 지우는 중...');
+
+                          try {
+                            // 삭제 작업 수행
+                            await problemsProvider.deleteProblems([problemId]);
+                            //await practiceProvider.fetchAllPracticeContents();
+
+                            if (mounted) {
+                              setState(() {
+                                _isProblemDeleted = true; // Set the flag
+                              });
+                              // 로딩 다이얼로그 닫기
+                              LoadingDialog.hide(context);
+                            }
+
+                            // 상세 화면 닫고 DirectoryScreen에 삭제 완료 알림 (true 반환)
+                            if (mounted) {
+                              navigator.pop(true);
+                            }
+                          } catch (e) {
+                            // 에러 발생 시 로딩 다이얼로그 닫기
+                            if (mounted) {
+                              LoadingDialog.hide(context);
+                            }
+                            log('문제 삭제 실패: $e');
+                          }
+                        },
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          backgroundColor: Colors.red,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: const StandardText(
+                          text: '삭제',
+                          fontSize: 15,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
-            TextButton(
-              onPressed: () async {
-                FirebaseAnalytics.instance.logEvent(name: 'problem_delete');
-
-                // context가 유효할 때 Provider와 Navigator 가져오기
-                final problemsProvider =
-                    Provider.of<ProblemsProvider>(context, listen: false);
-                final practiceProvider = Provider.of<ProblemPracticeProvider>(
-                    context,
-                    listen: false);
-                final navigator = Navigator.of(context);
-
-                // 다이얼로그 닫기
-                Navigator.pop(dialogContext);
-
-                // 로딩 다이얼로그 표시
-                LoadingDialog.show(context, '오답노트 지우는 중...');
-
-                try {
-                  // 삭제 작업 수행
-                  await problemsProvider.deleteProblems([problemId]);
-                  await practiceProvider.fetchAllPracticeContents();
-
-                  // 로딩 다이얼로그 닫기
-                  if (mounted) {
-                    LoadingDialog.hide(context);
-                  }
-
-                  // 상세 화면 닫고 DirectoryScreen에 삭제 완료 알림 (true 반환)
-                  if (mounted) {
-                    navigator.pop(true);
-                  }
-                } catch (e) {
-                  // 에러 발생 시 로딩 다이얼로그 닫기
-                  if (mounted) {
-                    LoadingDialog.hide(context);
-                  }
-                  log('문제 삭제 실패: $e');
-                }
-              },
-              child: const StandardText(
-                text: '삭제',
-                fontSize: 14,
-                color: Colors.red,
-              ),
-            ),
-          ],
+          ),
         );
       },
     );
@@ -503,7 +630,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
     double screenHeight = MediaQuery.of(context).size.height;
 
     // 화면 높이에 따라 패딩 값을 동적으로 설정
-    double topPadding = screenHeight * 0.01;
+    double topPadding = 0;
     double bottomPadding = screenHeight * 0.03;
 
     if (isPractice) {
@@ -544,27 +671,38 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
 
     log('Moved to problem: ${problem.problemId}');
 
-    // 문제에 ProblemImage가 있으면 분석 결과 조회
-    if (problem.problemImageDataList != null &&
-        problem.problemImageDataList!.isNotEmpty) {
-      // 분석 결과가 없거나, PROCESSING/NOT_STARTED 상태면 서버에서 조회
-      if (problem.analysis == null ||
-          problem.analysis!.status == ProblemAnalysisStatus.PROCESSING ||
-          problem.analysis!.status == ProblemAnalysisStatus.NOT_STARTED) {
-        log('📊 Analysis is not completed - starting polling');
+    // 분석 객체가 없으면 폴링하지 않음
+    if (problem.analysis == null) {
+      log('⚠️ No analysis object - polling not needed');
+      _stopAnalysisPolling();
+      return problem;
+    }
 
-        // 분석 결과 조회 (await 하지 않고 백그라운드에서 실행)
-        problemsProvider.fetchProblemAnalysis(problemId);
+    // 분석 상태에 따라 폴링 결정
+    final analysisStatus = problem.analysis!.status;
 
-        // Smart Polling 시작
-        _startAnalysisPolling(problemId);
-      } else if (problem.analysis!.status == ProblemAnalysisStatus.COMPLETED) {
-        log('✅ Analysis already completed - no polling needed');
-        _stopAnalysisPolling();
-      } else if (problem.analysis!.status == ProblemAnalysisStatus.NO_IMAGE) {
-        log('📷 No image for analysis - polling not needed');
-        _stopAnalysisPolling();
-      }
+    if (analysisStatus == ProblemAnalysisStatus.NO_IMAGE) {
+      // 이미지 없음 - 폴링 중지
+      log('📷 No image for analysis - polling not needed');
+      _stopAnalysisPolling();
+    } else if (analysisStatus == ProblemAnalysisStatus.COMPLETED) {
+      // 분석 완료 - 폴링 중지
+      log('✅ Analysis already completed - no polling needed');
+      _stopAnalysisPolling();
+    } else if (analysisStatus == ProblemAnalysisStatus.FAILED) {
+      // 분석 실패 - 폴링 중지
+      log('❌ Analysis failed - polling not needed');
+      _stopAnalysisPolling();
+    } else if (analysisStatus == ProblemAnalysisStatus.PROCESSING ||
+        analysisStatus == ProblemAnalysisStatus.NOT_STARTED) {
+      // 분석 진행 중 또는 시작 전 - 폴링 시작
+      log('📊 Analysis in progress (status: $analysisStatus) - starting polling');
+
+      // 분석 결과 조회 (await 하지 않고 백그라운드에서 실행)
+      problemsProvider.fetchProblemAnalysis(problemId);
+
+      // Smart Polling 시작
+      _startAnalysisPolling(problemId);
     }
 
     return problem;

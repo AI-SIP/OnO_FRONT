@@ -8,6 +8,7 @@ import '../../../Module/Image/FullScreenImage.dart';
 import '../../../Module/Text/HandWriteText.dart';
 import '../../../Module/Text/StandardText.dart';
 import '../../../Module/Text/UnderlinedText.dart';
+import '../../../Module/Theme/ThemeHandler.dart';
 import '../../../Provider/ProblemsProvider.dart';
 
 Widget buildRepeatSection(
@@ -46,22 +47,98 @@ Widget buildRepeatSection(
               onLongPress: () async {
                 final problemsProvider =
                     Provider.of<ProblemsProvider>(ctx, listen: false);
+                final themeProvider =
+                    Provider.of<ThemeHandler>(ctx, listen: false);
                 final should = await showDialog<bool>(
                     context: ctx,
-                    builder: (_) => AlertDialog(
+                    builder: (_) => Dialog(
                           backgroundColor: Colors.white,
-                          title: const StandardText(text: '삭제 확인'),
-                          content: const StandardText(
-                              text: '이 복습 이미지를 정말 삭제하시겠습니까?'),
-                          actions: [
-                            TextButton(
-                                onPressed: () => Navigator.pop(ctx, false),
-                                child: const StandardText(text: '취소')),
-                            TextButton(
-                                onPressed: () => Navigator.pop(ctx, true),
-                                child: const StandardText(
-                                    text: '삭제', color: Colors.red)),
-                          ],
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Container(
+                            padding: const EdgeInsets.all(24),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                // 헤더
+                                Row(
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.all(8),
+                                      decoration: BoxDecoration(
+                                        color: Colors.red.withOpacity(0.1),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: const Icon(
+                                        Icons.delete_forever,
+                                        color: Colors.red,
+                                        size: 20,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    const StandardText(
+                                      text: '삭제 확인',
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.black87,
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 20),
+                                // 내용
+                                const StandardText(
+                                  text: '이 복습 이미지를 정말 삭제하시겠습니까?',
+                                  fontSize: 15,
+                                  color: Colors.black87,
+                                  textAlign: TextAlign.center,
+                                ),
+                                const SizedBox(height: 24),
+                                // 액션 버튼
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: TextButton(
+                                        onPressed: () => Navigator.pop(ctx, false),
+                                        style: TextButton.styleFrom(
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 12, vertical: 8),
+                                          backgroundColor: Colors.grey[100],
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(8),
+                                          ),
+                                        ),
+                                        child: const StandardText(
+                                          text: '취소',
+                                          fontSize: 14,
+                                          color: Colors.black87,
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: TextButton(
+                                        onPressed: () => Navigator.pop(ctx, true),
+                                        style: TextButton.styleFrom(
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 12, vertical: 8),
+                                          backgroundColor: Colors.red,
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(8),
+                                          ),
+                                        ),
+                                        child: const StandardText(
+                                          text: '삭제',
+                                          fontSize: 14,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
                         ));
                 if (should == true) {
                   await problemsProvider.deleteProblemImageData(solve.imageUrl);

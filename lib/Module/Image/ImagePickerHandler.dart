@@ -107,7 +107,7 @@ class ImagePickerHandler {
       {Function(List<XFile>)? onMultipleImagesPicked}) {
     final openTime = DateTime.now();
     showModalBottomSheet(
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.transparent,
       context: context,
       isDismissible: false,
       builder: (BuildContext context) {
@@ -123,98 +123,144 @@ class ImagePickerHandler {
               Navigator.pop(context);
             }
           },
-          child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-                vertical: 20.0, horizontal: 10.0), // 기존 모달과 동일한 여백 적용
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // 타이틀 부분
-                Padding(
-                  padding:
-                      const EdgeInsets.only(bottom: 20.0), // 타이틀과 리스트 간 간격 추가
-                  child: StandardText(
-                    text: '이미지 업로드 방식을 선택해주세요',
-                    color: themeProvider.primaryColor,
-                    fontSize: 18,
-                  ),
-                ),
-                // 카메라로 촬영 옵션
-                Padding(
-                  padding:
-                      const EdgeInsets.only(bottom: 10.0), // 리스트 항목 간 간격 추가
-                  child: ListTile(
-                    leading: const Icon(Icons.camera_alt, color: Colors.black),
-                    title: const StandardText(
-                      text: '카메라로 촬영',
-                      color: Colors.black,
-                      fontSize: 16,
-                    ),
-                    onTap: () async {
-                      FirebaseAnalytics.instance
-                          .logEvent(name: 'image_select_camera');
-                      Navigator.of(context).pop(); // 모달 닫기
-                      final pickedFile = await pickImageFromCamera(context);
-                      onImagePicked(pickedFile);
-                    },
-                  ),
-                ),
-                if (onMultipleImagesPicked == null)
-                  Padding(
-                    padding:
-                        const EdgeInsets.only(bottom: 10.0), // 리스트 항목 간 간격 추가
-                    child: ListTile(
-                      leading:
-                          const Icon(Icons.photo_library, color: Colors.black),
-                      title: const StandardText(
-                        text: '갤러리에서 선택',
-                        color: Colors.black,
-                        fontSize: 16,
+          child: Container(
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(20),
+                topRight: Radius.circular(20),
+              ),
+            ),
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                    vertical: 24.0, horizontal: 20.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Handle bar
+                    Container(
+                      width: 40,
+                      height: 4,
+                      margin: const EdgeInsets.only(bottom: 20),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[300],
+                        borderRadius: BorderRadius.circular(2),
                       ),
+                    ),
+                    // Title with icon
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: themeProvider.primaryColor.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Icon(
+                            Icons.add_photo_alternate,
+                            color: themeProvider.primaryColor,
+                            size: 22,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        const StandardText(
+                          text: '이미지 업로드',
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black87,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    // Menu items
+                    _buildActionItem(
+                      icon: Icons.camera_alt,
+                      iconColor: themeProvider.primaryColor,
+                      title: '카메라로 촬영',
                       onTap: () async {
                         FirebaseAnalytics.instance
-                            .logEvent(name: 'image_select_gallery');
-                        Navigator.of(context).pop(); // 모달 닫기
-
-                        final pickedFile = await pickImageFromGallery(context);
+                            .logEvent(name: 'image_select_camera');
+                        Navigator.of(context).pop();
+                        final pickedFile = await pickImageFromCamera(context);
                         onImagePicked(pickedFile);
                       },
+                      themeProvider: themeProvider,
                     ),
-                  ),
-
-                // 갤러리에서 여러 이미지 선택 옵션
-                if (onMultipleImagesPicked != null)
-                  Padding(
-                    padding:
-                        const EdgeInsets.only(bottom: 10.0), // 리스트 항목 간 간격 추가
-                    child: ListTile(
-                      leading:
-                          const Icon(Icons.photo_library, color: Colors.black),
-                      title: const StandardText(
-                        text: '갤러리에서 선택',
-                        color: Colors.black,
-                        fontSize: 16,
-                      ),
+                    const SizedBox(height: 12),
+                    _buildActionItem(
+                      icon: Icons.photo_library,
+                      iconColor: themeProvider.primaryColor,
+                      title: '갤러리에서 선택',
                       onTap: () async {
-                        FirebaseAnalytics.instance
-                            .logEvent(name: 'image_select_multiple_gallery');
-                        Navigator.of(context).pop(); // 모달 닫기
+                        FirebaseAnalytics.instance.logEvent(
+                            name: onMultipleImagesPicked != null
+                                ? 'image_select_multiple_gallery'
+                                : 'image_select_gallery');
+                        Navigator.of(context).pop();
 
-                        final pickedFiles =
-                            await pickMultipleImagesFromGallery(context);
-                        if (pickedFiles.isNotEmpty) {
-                          onMultipleImagesPicked(pickedFiles);
+                        if (onMultipleImagesPicked != null) {
+                          final pickedFiles =
+                              await pickMultipleImagesFromGallery(context);
+                          if (pickedFiles.isNotEmpty) {
+                            onMultipleImagesPicked(pickedFiles);
+                          }
+                        } else {
+                          final pickedFile = await pickImageFromGallery(context);
+                          onImagePicked(pickedFile);
                         }
                       },
+                      themeProvider: themeProvider,
                     ),
-                  ),
-              ],
+                  ],
+                ),
+              ),
             ),
-          ),
           ),
         );
       },
+    );
+  }
+
+  Widget _buildActionItem({
+    required IconData icon,
+    required Color iconColor,
+    required String title,
+    required VoidCallback onTap,
+    required ThemeHandler themeProvider,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: Colors.grey[50],
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey[200]!, width: 1),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: iconColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Icon(icon, color: iconColor, size: 20),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: StandardText(
+                text: title,
+                fontSize: 16,
+                color: Colors.black87,
+              ),
+            ),
+            Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey[400]),
+          ],
+        ),
+      ),
     );
   }
 }

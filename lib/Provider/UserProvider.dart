@@ -12,14 +12,14 @@ import 'package:ono/Provider/FoldersProvider.dart';
 import 'package:ono/Provider/PracticeNoteProvider.dart';
 import 'package:ono/Service/Api/Problem/ProblemService.dart';
 import 'package:ono/Service/Api/User/UserService.dart';
-import 'package:ono/Service/SocialLogin//KakaoAuthService.dart';
+import 'package:ono/Service/SocialLogin/KakaoAuthService.dart';
 import 'package:ono/Util/NotificationService.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
 import '../Module/Text/StandardText.dart';
 import '../Service/Api/HttpService.dart';
-import '../Service/SocialLogin//AppleAuthService.dart';
-import '../Service/SocialLogin//GoogleAuthService.dart';
+import '../Service/SocialLogin/AppleAuthService.dart';
+import '../Service/SocialLogin/GoogleAuthService.dart';
 import 'ProblemsProvider.dart';
 import 'TokenProvider.dart';
 
