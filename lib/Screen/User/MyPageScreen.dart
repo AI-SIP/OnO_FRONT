@@ -74,6 +74,10 @@ class _SettingScreenState extends State<SettingScreen> {
 
                   SizedBox(height: screenHeight * 0.01),
 
+                  _buildReviewReportButton(themeProvider),
+
+                  SizedBox(height: screenHeight * 0.01),
+
                   // 테마 변경 (독립)
                   ThemeChangeButton(
                     themeProvider: themeProvider,
@@ -92,13 +96,6 @@ class _SettingScreenState extends State<SettingScreen> {
                   // 설정 메뉴 버튼들 (이름 수정 포함)
                   SettingMenuButtons(
                     themeProvider: themeProvider,
-                    onReviewReportTap: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (context) => const ReviewReportScreen(),
-                        ),
-                      );
-                    },
                     onNameEditTap: () {
                       FirebaseAnalytics.instance
                           .logEvent(name: 'username_edit_button_click');
@@ -166,6 +163,94 @@ class _SettingScreenState extends State<SettingScreen> {
         text: '로그인을 통해 설정을 변경해보세요!',
         fontSize: screenHeight * 0.016,
         color: themeProvider.primaryColor,
+      ),
+    );
+  }
+
+  Widget _buildReviewReportButton(ThemeHandler themeProvider) {
+    final screenHeight = MediaQuery.of(context).size.height;
+    final screenWidth = MediaQuery.of(context).size.width;
+
+    return Container(
+      margin: EdgeInsets.symmetric(
+        horizontal: screenWidth * 0.04,
+        vertical: screenHeight * 0.005,
+      ),
+      child: InkWell(
+        onTap: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => const ReviewReportScreen(),
+            ),
+          );
+        },
+        borderRadius: BorderRadius.circular(15),
+        child: Container(
+          padding: EdgeInsets.all(screenHeight * 0.018),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(15),
+            border: Border.all(
+              color: Colors.grey[300]!,
+              width: 1,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: themeProvider.primaryColor.withValues(alpha: 0.1),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: themeProvider.primaryColor.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  Icons.auto_graph,
+                  color: themeProvider.primaryColor,
+                  size: 16,
+                ),
+              ),
+              SizedBox(width: screenHeight * 0.015),
+              Expanded(
+                child: Row(
+                  children: [
+                    const StandardText(
+                      text: '복습 리포트',
+                      fontSize: 14,
+                      color: Colors.black87,
+                    ),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 7, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: Colors.red[400],
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const StandardText(
+                        text: 'NEW!',
+                        fontSize: 10,
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.chevron_right,
+                size: 20,
+                color: Colors.grey[400],
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
