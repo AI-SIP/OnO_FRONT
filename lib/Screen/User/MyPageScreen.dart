@@ -12,6 +12,7 @@ import '../../Provider/UserProvider.dart';
 import 'LoginScreen.dart';
 import 'Widget/AccountActionButtons.dart';
 import 'Widget/CompactActivityLevels.dart';
+import 'Widget/ReviewReportScreen.dart';
 import 'Widget/SettingMenuButtons.dart';
 import 'Widget/ThemeChangeButton.dart';
 import 'Widget/UserLevelCard.dart';
@@ -91,6 +92,13 @@ class _SettingScreenState extends State<SettingScreen> {
                   // 설정 메뉴 버튼들 (이름 수정 포함)
                   SettingMenuButtons(
                     themeProvider: themeProvider,
+                    onReviewReportTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => const ReviewReportScreen(),
+                        ),
+                      );
+                    },
                     onNameEditTap: () {
                       FirebaseAnalytics.instance
                           .logEvent(name: 'username_edit_button_click');

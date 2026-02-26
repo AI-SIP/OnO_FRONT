@@ -4,6 +4,7 @@ import '../../../Module/Theme/ThemeHandler.dart';
 
 class SettingMenuButtons extends StatelessWidget {
   final ThemeHandler themeProvider;
+  final VoidCallback onReviewReportTap;
   final VoidCallback onNameEditTap;
   final VoidCallback onGuideTap;
   final VoidCallback onFeedbackTap;
@@ -12,6 +13,7 @@ class SettingMenuButtons extends StatelessWidget {
   const SettingMenuButtons({
     super.key,
     required this.themeProvider,
+    required this.onReviewReportTap,
     required this.onNameEditTap,
     required this.onGuideTap,
     required this.onFeedbackTap,
@@ -39,6 +41,13 @@ class SettingMenuButtons extends StatelessWidget {
       ),
       child: Column(
         children: [
+          _buildMenuItem(
+            context: context,
+            icon: Icons.auto_graph,
+            title: '복습 리포트',
+            onTap: onReviewReportTap,
+          ),
+          Divider(height: screenHeight * 0.02, color: Colors.grey[300]),
           _buildMenuItem(
             context: context,
             icon: Icons.edit,
