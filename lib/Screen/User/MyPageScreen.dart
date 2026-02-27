@@ -221,7 +221,7 @@ class _SettingScreenState extends State<SettingScreen> {
                 child: Row(
                   children: [
                     const StandardText(
-                      text: '복습 리포트',
+                      text: '학습 리포트',
                       fontSize: 14,
                       color: Colors.black87,
                     ),

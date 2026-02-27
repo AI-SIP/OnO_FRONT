@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:ono/Model/LearningReport/LearningReportResponseModel.dart';
 import 'package:ono/Module/Text/StandardText.dart';
 import 'package:ono/Module/Theme/ThemeHandler.dart';
+import 'package:ono/Provider/UserProvider.dart';
 import 'package:ono/Service/Api/LearningReport/LearningReportService.dart';
 import 'package:provider/provider.dart';
 
@@ -56,6 +57,8 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeHandler>(context);
+    final userProvider = Provider.of<UserProvider>(context);
+    final userName = userProvider.userInfoModel?.name ?? '사용자';
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -63,7 +66,7 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
         centerTitle: true,
         backgroundColor: Colors.white,
         title: StandardText(
-          text: '복습 리포트',
+          text: '$userName님의 학습 리포트',
           fontSize: 18,
           color: themeProvider.primaryColor,
         ),
@@ -150,40 +153,36 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
     final comparison = _getCurrentComparison();
     final viewData = _ReportViewData.fromPeriod(periodReport);
 
-    return RefreshIndicator(
-      onRefresh: _fetchReport,
-      color: themeProvider.primaryColor,
-      child: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 18, 16, 30),
-        children: [
-          _buildSummaryCard(themeProvider, viewData, comparison),
-          const SizedBox(height: 26),
-          _buildPeriodSelector(themeProvider),
-          const SizedBox(height: 30),
-          _buildSectionTitle(themeProvider, '핵심 지표', Icons.auto_graph),
-          const SizedBox(height: 14),
-          _buildStatsGrid(themeProvider, viewData),
-          const SizedBox(height: 20),
-          _buildSectionTitle(
-            themeProvider,
-            '복습 추이',
-            Icons.stacked_bar_chart_rounded,
-          ),
-          const SizedBox(height: 14),
-          _buildTrendCard(themeProvider, viewData),
-          const SizedBox(height: 40),
-          _buildSectionTitle(
-            themeProvider,
-            '집중 복습 추천',
-            Icons.edit_note_rounded,
-          ),
-          const SizedBox(height: 14),
-          _buildWeakTopicCard(themeProvider, viewData),
-          const SizedBox(height: 14),
-          _buildActionCard(themeProvider),
-          const SizedBox(height: 18),
-        ],
-      ),
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 18, 16, 30),
+      children: [
+        _buildSummaryCard(themeProvider, viewData, comparison),
+        const SizedBox(height: 26),
+        _buildPeriodSelector(themeProvider),
+        const SizedBox(height: 30),
+        _buildSectionTitle(themeProvider, '핵심 지표', Icons.auto_graph),
+        const SizedBox(height: 14),
+        _buildStatsGrid(themeProvider, viewData),
+        const SizedBox(height: 20),
+        _buildSectionTitle(
+          themeProvider,
+          '복습 추이',
+          Icons.stacked_bar_chart_rounded,
+        ),
+        const SizedBox(height: 14),
+        _buildTrendCard(themeProvider, viewData),
+        const SizedBox(height: 40),
+        _buildSectionTitle(
+          themeProvider,
+          '집중 복습 추천',
+          Icons.edit_note_rounded,
+        ),
+        const SizedBox(height: 14),
+        _buildWeakTopicCard(themeProvider, viewData),
+        const SizedBox(height: 14),
+        _buildActionCard(themeProvider),
+        const SizedBox(height: 18),
+      ],
     );
   }
 
@@ -327,7 +326,7 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
     if (word.isEmpty) return word;
     final lastCode = word.runes.last;
     if (lastCode < 0xAC00 || lastCode > 0xD7A3) {
-      return '${word}가';
+      return '$word가';
     }
     final hasBatchim = ((lastCode - 0xAC00) % 28) != 0;
     return '$word${hasBatchim ? '이' : '가'}';
@@ -535,9 +534,9 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
         border: Border.all(color: Colors.grey[300]!, width: 1),
       ),
       child: SizedBox(
-        height: 120,
+        height: 134,
         child: Row(
-          crossAxisAlignment: CrossAxisAlignment.end,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: List.generate(data.trendBars.length, (index) {
             final isPeak = data.trendBars[index] ==
                 data.trendBars.reduce((a, b) => a > b ? a : b);
@@ -545,40 +544,98 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  AnimatedContainer(
-                    duration: const Duration(milliseconds: 220),
-                    curve: Curves.easeOut,
-                    height: 86 * data.trendBars[index],
-                    width: 16,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(8),
-                      gradient: LinearGradient(
-                        begin: Alignment.bottomCenter,
-                        end: Alignment.topCenter,
-                        colors: [
-                          themeProvider.primaryColor,
-                          themeProvider.lightPrimaryColor,
-                        ],
-                      ),
-                      boxShadow: isPeak
-                          ? [
-                              BoxShadow(
-                                color: themeProvider.primaryColor
-                                    .withValues(alpha: 0.35),
-                                blurRadius: 8,
-                                offset: const Offset(0, 2),
+                  Expanded(
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        const labelHeight = 14.0;
+                        const gap = 4.0;
+                        const minBarHeight = 4.0;
+                        final usableBarHeight =
+                            (constraints.maxHeight - labelHeight - gap)
+                                .clamp(0.0, constraints.maxHeight);
+
+                        final rawBarHeight =
+                            usableBarHeight * data.trendBars[index];
+                        final barHeight = rawBarHeight < minBarHeight
+                            ? minBarHeight
+                            : (rawBarHeight > usableBarHeight
+                                ? usableBarHeight
+                                : rawBarHeight);
+
+                        final numberBottom = barHeight + gap;
+
+                        return Stack(
+                          children: [
+                            Align(
+                              alignment: Alignment.bottomCenter,
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 220),
+                                curve: Curves.easeOut,
+                                width: 16,
+                                height: barHeight,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(8),
+                                  gradient: LinearGradient(
+                                    begin: Alignment.bottomCenter,
+                                    end: Alignment.topCenter,
+                                    colors: [
+                                      themeProvider.primaryColor,
+                                      themeProvider.lightPrimaryColor,
+                                    ],
+                                  ),
+                                  boxShadow: isPeak
+                                      ? [
+                                          BoxShadow(
+                                            color: themeProvider.primaryColor
+                                                .withValues(alpha: 0.35),
+                                            blurRadius: 8,
+                                            offset: const Offset(0, 2),
+                                          ),
+                                        ]
+                                      : null,
+                                ),
                               ),
-                            ]
-                          : null,
+                            ),
+                            Positioned(
+                              left: 0,
+                              right: 0,
+                              bottom: numberBottom,
+                              child: Center(
+                                child: SizedBox(
+                                  height: labelHeight,
+                                  child: FittedBox(
+                                    fit: BoxFit.scaleDown,
+                                    child: StandardText(
+                                      text: data.trendCounts[index].toString(),
+                                      fontSize: 12,
+                                      color: Colors.black87,
+                                      fontWeight: FontWeight.w700,
+                                      fontFamily: 'PretendardBold',
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        );
+                      },
                     ),
                   ),
                   const SizedBox(height: 8),
-                  StandardText(
-                    text: data.trendLabels[index],
-                    fontSize: 11,
-                    color: Colors.grey[700]!,
-                    fontWeight: FontWeight.w700,
-                    fontFamily: 'PretendardBold',
+                  SizedBox(
+                    height: 16,
+                    child: Center(
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: StandardText(
+                          text: data.trendLabels[index],
+                          fontSize: 11,
+                          color: Colors.grey[700]!,
+                          fontWeight: FontWeight.w700,
+                          fontFamily: 'PretendardBold',
+                        ),
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -711,6 +768,7 @@ class _ReportViewData {
   final int consecutiveLearningDays;
   final double averageStudyTimeMinutes;
   final List<double> trendBars;
+  final List<int> trendCounts;
   final List<String> trendLabels;
   final List<LearningWeakArea> weakAreas;
 
@@ -722,6 +780,7 @@ class _ReportViewData {
     required this.consecutiveLearningDays,
     required this.averageStudyTimeMinutes,
     required this.trendBars,
+    required this.trendCounts,
     required this.trendLabels,
     required this.weakAreas,
   });
@@ -737,6 +796,7 @@ class _ReportViewData {
     final bars = report.trend
         .map((e) => e.reviewCount == 0 ? 0.06 : e.reviewCount / maxReview)
         .toList();
+    final counts = report.trend.map((e) => e.reviewCount).toList();
 
     final labels = report.trend
         .map((e) => _formatTrendLabel(e.label, report.periodLabel))
@@ -750,6 +810,7 @@ class _ReportViewData {
       consecutiveLearningDays: report.consecutiveLearningDays,
       averageStudyTimeMinutes: report.averageStudyTimeMinutes,
       trendBars: bars,
+      trendCounts: counts,
       trendLabels: labels,
       weakAreas: report.weakAreas,
     );
@@ -766,7 +827,7 @@ class _ReportViewData {
     }
 
     if (end.isNotEmpty) {
-      return '누적 ~ $end 리포트';
+      return '누적 리포트';
     }
 
     return '학습 리포트';
