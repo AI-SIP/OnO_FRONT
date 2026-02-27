@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:intl/intl.dart';
+import 'package:ono/Model/LearningReport/LearningReportResponseModel.dart';
 import 'package:ono/Module/Text/StandardText.dart';
 import 'package:ono/Module/Theme/ThemeHandler.dart';
+import 'package:ono/Service/Api/LearningReport/LearningReportService.dart';
 import 'package:provider/provider.dart';
 
 enum ReportPeriod { weekly, monthly, total }
@@ -13,51 +17,45 @@ class ReviewReportScreen extends StatefulWidget {
 }
 
 class _ReviewReportScreenState extends State<ReviewReportScreen> {
-  ReportPeriod _selectedPeriod = ReportPeriod.weekly;
+  final LearningReportService _reportService = LearningReportService();
 
-  final Map<ReportPeriod, _ReportData> _mockData = {
-    ReportPeriod.weekly: const _ReportData(
-      badge: 'WEEKLY',
-      title: '2월 4주차 복습 리포트',
-      subtitle: '지난주 대비 복습 빈도 +12%, 정답률 +5%',
-      solvedCount: '18',
-      accuracy: '74%',
-      streak: '5',
-      avgDuration: '23분',
-      bars: [0.32, 0.58, 0.46, 0.68, 0.82, 0.64, 0.51],
-      labels: ['월', '화', '수', '목', '금', '토', '일'],
-      weakTopics: ['미적분 - 함수 극한', '확률과 통계 - 조건부확률', '기하 - 벡터 연산'],
-    ),
-    ReportPeriod.monthly: const _ReportData(
-      badge: 'MONTHLY',
-      title: '2월 월간 복습 리포트',
-      subtitle: '월 목표 달성률 83%, 루틴 안정화 단계',
-      solvedCount: '76',
-      accuracy: '71%',
-      streak: '12',
-      avgDuration: '27분',
-      bars: [0.48, 0.52, 0.63, 0.78],
-      labels: ['1주', '2주', '3주', '4주'],
-      weakTopics: ['수열 - 귀납적 추론', '기하 - 공간도형', '함수 - 역함수/합성함수'],
-    ),
-    ReportPeriod.total: const _ReportData(
-      badge: 'TOTAL',
-      title: '누적 학습 리포트',
-      subtitle: '누적 기준 복습 유지율이 꾸준히 상승 중',
-      solvedCount: '241',
-      accuracy: '69%',
-      streak: '19',
-      avgDuration: '29분',
-      bars: [0.35, 0.42, 0.5, 0.57, 0.64, 0.71],
-      labels: ['1개월', '2개월', '3개월', '4개월', '5개월', '6개월+'],
-      weakTopics: ['미적분 - 도함수 활용', '확률 - 독립시행', '기하 - 벡터의 내적'],
-    ),
-  };
+  ReportPeriod _selectedPeriod = ReportPeriod.weekly;
+  LearningReportResponseModel? _report;
+  bool _isLoading = true;
+  String? _errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchReport();
+  }
+
+  Future<void> _fetchReport({DateTime? baseDate}) async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final response =
+          await _reportService.getLearningReport(baseDate: baseDate);
+      if (!mounted) return;
+      setState(() {
+        _report = response;
+        _isLoading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _errorMessage = '학습 리포트를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.';
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeHandler>(context);
-    final data = _mockData[_selectedPeriod]!;
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -70,16 +68,101 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
           color: themeProvider.primaryColor,
         ),
       ),
-      body: ListView(
+      body: _buildBody(themeProvider),
+    );
+  }
+
+  Widget _buildBody(ThemeHandler themeProvider) {
+    if (_isLoading) {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SvgPicture.asset(
+              'assets/Icon/GlassDetail.svg',
+              width: 120,
+              height: 120,
+            ),
+            const SizedBox(height: 12),
+            const StandardText(
+              text: '리포트 분석 중...',
+              fontSize: 17,
+              color: Colors.black87,
+              fontWeight: FontWeight.w700,
+              fontFamily: 'PretendardBold',
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              width: 22,
+              height: 22,
+              child: CircularProgressIndicator(
+                strokeWidth: 2.5,
+                color: themeProvider.primaryColor,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (_errorMessage != null) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              StandardText(
+                text: _errorMessage!,
+                fontSize: 14,
+                color: Colors.black87,
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 12),
+              ElevatedButton(
+                onPressed: _fetchReport,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: themeProvider.primaryColor,
+                ),
+                child: const StandardText(
+                  text: '다시 시도',
+                  fontSize: 13,
+                  color: Colors.white,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (_report == null) {
+      return const Center(
+        child: StandardText(
+          text: '표시할 리포트가 없습니다.',
+          fontSize: 14,
+          color: Colors.black87,
+        ),
+      );
+    }
+
+    final periodReport = _getCurrentPeriodReport();
+    final comparison = _getCurrentComparison();
+    final viewData = _ReportViewData.fromPeriod(periodReport);
+
+    return RefreshIndicator(
+      onRefresh: _fetchReport,
+      color: themeProvider.primaryColor,
+      child: ListView(
         padding: const EdgeInsets.fromLTRB(16, 18, 16, 30),
         children: [
-          _buildSummaryCard(themeProvider, data),
+          _buildSummaryCard(themeProvider, viewData, comparison),
           const SizedBox(height: 26),
           _buildPeriodSelector(themeProvider),
           const SizedBox(height: 30),
           _buildSectionTitle(themeProvider, '핵심 지표', Icons.auto_graph),
           const SizedBox(height: 14),
-          _buildStatsGrid(themeProvider, data),
+          _buildStatsGrid(themeProvider, viewData),
           const SizedBox(height: 20),
           _buildSectionTitle(
             themeProvider,
@@ -87,7 +170,7 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
             Icons.stacked_bar_chart_rounded,
           ),
           const SizedBox(height: 14),
-          _buildTrendCard(themeProvider, data),
+          _buildTrendCard(themeProvider, viewData),
           const SizedBox(height: 40),
           _buildSectionTitle(
             themeProvider,
@@ -95,14 +178,42 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
             Icons.edit_note_rounded,
           ),
           const SizedBox(height: 14),
-          _buildWeakTopicCard(themeProvider, data),
+          _buildWeakTopicCard(themeProvider, viewData),
+          const SizedBox(height: 14),
+          _buildActionCard(themeProvider),
           const SizedBox(height: 18),
         ],
       ),
     );
   }
 
-  Widget _buildSummaryCard(ThemeHandler themeProvider, _ReportData data) {
+  LearningPeriodReport _getCurrentPeriodReport() {
+    switch (_selectedPeriod) {
+      case ReportPeriod.weekly:
+        return _report!.weekly;
+      case ReportPeriod.monthly:
+        return _report!.monthly;
+      case ReportPeriod.total:
+        return _report!.total;
+    }
+  }
+
+  LearningReportComparison? _getCurrentComparison() {
+    switch (_selectedPeriod) {
+      case ReportPeriod.weekly:
+        return _report!.weeklyComparison;
+      case ReportPeriod.monthly:
+        return _report!.monthlyComparison;
+      case ReportPeriod.total:
+        return null;
+    }
+  }
+
+  Widget _buildSummaryCard(
+    ThemeHandler themeProvider,
+    _ReportViewData data,
+    LearningReportComparison? comparison,
+  ) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -151,14 +262,14 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
           const SizedBox(height: 10),
           StandardText(
             text: data.title,
-            fontSize: 19,
+            fontSize: 18,
             color: Colors.black87,
             fontWeight: FontWeight.w800,
             fontFamily: 'PretendardBold',
           ),
           const SizedBox(height: 6),
           StandardText(
-            text: data.subtitle,
+            text: _buildSummarySubtitle(comparison),
             fontSize: 13,
             color: Colors.black87,
             fontWeight: FontWeight.w600,
@@ -167,6 +278,64 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
         ],
       ),
     );
+  }
+
+  String _buildSummarySubtitle(LearningReportComparison? comparison) {
+    if (comparison == null) {
+      if (_report!.recommendations.nextWeekGoal.isNotEmpty) {
+        return _report!.recommendations.nextWeekGoal;
+      }
+      return _report!.recommendations.strengths.isNotEmpty
+          ? _report!.recommendations.strengths.first
+          : '학습 리포트를 확인해 주세요.';
+    }
+
+    final reviewText =
+        _buildChangeSentence('복습 횟수', comparison.reviewCountChangeRate);
+    final accuracyText =
+        _buildChangeSentence('정답률', comparison.averageAccuracyChangeRate);
+    final tone = _buildComparisonTone(
+      comparison.reviewCountChangeRate,
+      comparison.averageAccuracyChangeRate,
+    );
+    return '이전 기간보다 $reviewText, $accuracyText. $tone';
+  }
+
+  String _buildChangeSentence(String subject, double value) {
+    final subjectWithParticle = _withSubjectParticle(subject);
+    final rate = _formatPercent(value.abs());
+    if (value > 0) {
+      return '$subjectWithParticle $rate% 상승했어요';
+    }
+    if (value < 0) {
+      return '$subjectWithParticle $rate% 하락했어요';
+    }
+    return '$subjectWithParticle 변화가 없어요';
+  }
+
+  String _buildComparisonTone(double reviewRate, double accuracyRate) {
+    if (reviewRate >= 0 && accuracyRate >= 0) {
+      return '학습 흐름이 좋아지고 있어요.';
+    }
+    if (reviewRate < 0 && accuracyRate < 0) {
+      return '복습 리듬을 다시 잡아보면 좋아요.';
+    }
+    return '현재 추이를 유지하면서 약한 부분을 보완해보세요.';
+  }
+
+  String _withSubjectParticle(String word) {
+    if (word.isEmpty) return word;
+    final lastCode = word.runes.last;
+    if (lastCode < 0xAC00 || lastCode > 0xD7A3) {
+      return '${word}가';
+    }
+    final hasBatchim = ((lastCode - 0xAC00) % 28) != 0;
+    return '$word${hasBatchim ? '이' : '가'}';
+  }
+
+  String _formatPercent(double value) {
+    final fixed = value.toStringAsFixed(1);
+    return fixed.endsWith('.0') ? fixed.substring(0, fixed.length - 2) : fixed;
   }
 
   Widget _buildPeriodSelector(ThemeHandler themeProvider) {
@@ -256,23 +425,52 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
     );
   }
 
-  Widget _buildStatsGrid(ThemeHandler themeProvider, _ReportData data) {
-    return GridView.count(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      crossAxisCount: 2,
-      crossAxisSpacing: 10,
-      mainAxisSpacing: 10,
-      childAspectRatio: 1.48,
+  Widget _buildStatsGrid(ThemeHandler themeProvider, _ReportViewData data) {
+    return Column(
       children: [
-        _buildStatCard(
-            themeProvider, '복습 횟수', '${data.solvedCount}회', Icons.repeat),
-        _buildStatCard(
-            themeProvider, '평균 정답률', data.accuracy, Icons.check_circle_outline),
-        _buildStatCard(themeProvider, '연속 학습일', '${data.streak}일',
-            Icons.local_fire_department_outlined),
-        _buildStatCard(
-            themeProvider, '평균 학습 시간', data.avgDuration, Icons.schedule),
+        Row(
+          children: [
+            Expanded(
+              child: _buildStatCard(
+                themeProvider,
+                '복습 횟수',
+                '${data.reviewCount}회',
+                Icons.repeat,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _buildStatCard(
+                themeProvider,
+                '평균 정답률',
+                '${data.averageAccuracy.toStringAsFixed(1)}%',
+                Icons.check_circle_outline,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            Expanded(
+              child: _buildStatCard(
+                themeProvider,
+                '연속 학습일',
+                '${data.consecutiveLearningDays}일',
+                Icons.local_fire_department_outlined,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _buildStatCard(
+                themeProvider,
+                '평균 학습 시간',
+                '${data.averageStudyTimeMinutes.toStringAsFixed(1)}분',
+                Icons.schedule,
+              ),
+            ),
+          ],
+        ),
       ],
     );
   }
@@ -284,6 +482,7 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
     IconData icon,
   ) {
     return Container(
+      height: 106,
       padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -309,6 +508,8 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
                 color: Colors.black87,
                 fontWeight: FontWeight.w700,
                 fontFamily: 'PretendardBold',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
               Icon(icon, size: 16, color: themeProvider.primaryColor),
             ],
@@ -325,7 +526,7 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
     );
   }
 
-  Widget _buildTrendCard(ThemeHandler themeProvider, _ReportData data) {
+  Widget _buildTrendCard(ThemeHandler themeProvider, _ReportViewData data) {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
@@ -337,9 +538,9 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
         height: 120,
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.end,
-          children: List.generate(data.bars.length, (index) {
-            final isPeak =
-                data.bars[index] == data.bars.reduce((a, b) => a > b ? a : b);
+          children: List.generate(data.trendBars.length, (index) {
+            final isPeak = data.trendBars[index] ==
+                data.trendBars.reduce((a, b) => a > b ? a : b);
             return Expanded(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.end,
@@ -347,7 +548,7 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
                   AnimatedContainer(
                     duration: const Duration(milliseconds: 220),
                     curve: Curves.easeOut,
-                    height: 86 * data.bars[index],
+                    height: 86 * data.trendBars[index],
                     width: 16,
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(8),
@@ -373,7 +574,7 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
                   ),
                   const SizedBox(height: 8),
                   StandardText(
-                    text: data.labels[index],
+                    text: data.trendLabels[index],
                     fontSize: 11,
                     color: Colors.grey[700]!,
                     fontWeight: FontWeight.w700,
@@ -388,7 +589,13 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
     );
   }
 
-  Widget _buildWeakTopicCard(ThemeHandler themeProvider, _ReportData data) {
+  Widget _buildWeakTopicCard(ThemeHandler themeProvider, _ReportViewData data) {
+    final items = data.weakAreas.isEmpty
+        ? ['현재 취약 영역 데이터가 없습니다.']
+        : data.weakAreas
+            .map((e) => '${e.topic} (오답 ${e.wrongCount}회)')
+            .toList();
+
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
@@ -398,7 +605,7 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: data.weakTopics
+        children: items
             .map(
               (topic) => Container(
                 margin: const EdgeInsets.only(bottom: 8),
@@ -436,30 +643,159 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
       ),
     );
   }
+
+  Widget _buildActionCard(ThemeHandler themeProvider) {
+    final actions = _report!.recommendations.actions;
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.grey[300]!, width: 1),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            children: [
+              StandardText(
+                text: '학습 가이드',
+                fontSize: 15,
+                color: Colors.black87,
+                fontWeight: FontWeight.w700,
+                fontFamily: 'PretendardBold',
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          ...actions.map(
+            (action) => Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(top: 5),
+                    child: Icon(
+                      Icons.check_circle,
+                      size: 14,
+                      color: themeProvider.primaryColor,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: StandardText(
+                      text: action,
+                      fontSize: 12,
+                      color: Colors.black87,
+                      fontWeight: FontWeight.w600,
+                      fontFamily: 'PretendardLight',
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
-class _ReportData {
+class _ReportViewData {
   final String badge;
   final String title;
-  final String subtitle;
-  final String solvedCount;
-  final String accuracy;
-  final String streak;
-  final String avgDuration;
-  final List<double> bars;
-  final List<String> labels;
-  final List<String> weakTopics;
+  final int reviewCount;
+  final double averageAccuracy;
+  final int consecutiveLearningDays;
+  final double averageStudyTimeMinutes;
+  final List<double> trendBars;
+  final List<String> trendLabels;
+  final List<LearningWeakArea> weakAreas;
 
-  const _ReportData({
+  const _ReportViewData({
     required this.badge,
     required this.title,
-    required this.subtitle,
-    required this.solvedCount,
-    required this.accuracy,
-    required this.streak,
-    required this.avgDuration,
-    required this.bars,
-    required this.labels,
-    required this.weakTopics,
+    required this.reviewCount,
+    required this.averageAccuracy,
+    required this.consecutiveLearningDays,
+    required this.averageStudyTimeMinutes,
+    required this.trendBars,
+    required this.trendLabels,
+    required this.weakAreas,
   });
+
+  factory _ReportViewData.fromPeriod(LearningPeriodReport report) {
+    final maxReview = report.trend.isEmpty
+        ? 1
+        : report.trend
+            .map((e) => e.reviewCount)
+            .reduce((a, b) => a > b ? a : b)
+            .clamp(1, 1 << 30);
+
+    final bars = report.trend
+        .map((e) => e.reviewCount == 0 ? 0.06 : e.reviewCount / maxReview)
+        .toList();
+
+    final labels = report.trend
+        .map((e) => _formatTrendLabel(e.label, report.periodLabel))
+        .toList();
+
+    return _ReportViewData(
+      badge: report.periodLabel,
+      title: _buildTitle(report),
+      reviewCount: report.reviewCount,
+      averageAccuracy: report.averageAccuracy,
+      consecutiveLearningDays: report.consecutiveLearningDays,
+      averageStudyTimeMinutes: report.averageStudyTimeMinutes,
+      trendBars: bars,
+      trendLabels: labels,
+      weakAreas: report.weakAreas,
+    );
+  }
+
+  static String _buildTitle(LearningPeriodReport report) {
+    final end = report.endDate != null
+        ? DateFormat('yyyy.MM.dd').format(report.endDate!)
+        : '';
+
+    if (report.startDate != null) {
+      final start = DateFormat('yyyy.MM.dd').format(report.startDate!);
+      return '$start ~ $end 리포트';
+    }
+
+    if (end.isNotEmpty) {
+      return '누적 ~ $end 리포트';
+    }
+
+    return '학습 리포트';
+  }
+
+  static String _formatTrendLabel(String raw, String periodLabel) {
+    // 월간은 서버가 '1주차/2주차' 같은 표시용 라벨을 내려주므로 그대로 사용
+    if (periodLabel == 'MONTHLY') {
+      return raw;
+    }
+
+    final parsed = DateTime.tryParse(raw);
+    if (parsed != null) {
+      // 일 단위 데이터
+      if (raw.length == 10) {
+        return '${parsed.month}/${parsed.day}';
+      }
+      return DateFormat('M월').format(parsed);
+    }
+
+    // yyyy-MM 형태 처리
+    final ym = RegExp(r'^\\d{4}-\\d{2}$');
+    if (ym.hasMatch(raw)) {
+      final month = int.tryParse(raw.split('-')[1]);
+      if (month != null) {
+        return '$month월';
+      }
+    }
+
+    return raw;
+  }
 }
