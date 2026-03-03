@@ -41,6 +41,8 @@
 
 | Date | Updates | Content |
 | --- | --- | --- |
+| 2026/2/17 | V3.2.0 업데이트 | - 복습 기록 기능 도입 <br> - 대규모 디자인 개선 |
+| 2026/1/29 | V3.1.0 업데이트 | - 캐릭터 성장 기능 도입 |
 | 2026/1/22 | V3.0.0 업데이트 | - 레벨 제도 도입 <br> - 복습노트 알림 기능 도입 <br> - 오답노트 이미지 등록 편의성 개선|
 | 2026/1/22 | **✨ 서비스 재개 ✨** | **OnO가 새롭게 개선되어 돌아왔어요!**|
 | 2024/12/4 | **‼️ 서비스 중지 ‼️** | **개선된 OnO로 돌아오기 위해 잠시 서비스를 중단합니다!**|
@@ -82,81 +84,23 @@
 <br>
 
 ---
-# 💯 OnO와 함께하는 오답노트 작성 비법 A to Z
-<br>
-
-## 📝 핵심 기능 1. 소셜로그인으로 빠른 회원가입
-회원가입의 불편함을 없애고, 소셜로그인을 통해 간편하게 가입하며 이후 앱 실행 시에는 자동 로그인됩니다. <br>
-
-로그인 후에 뜨는 팝업으로 사용법을 빠르게 익혀보세요! <br>
-<br>
-
-## 📝 핵심 기능 2. 오답노트 작성 
-- 하단 ‘오답노트 작성’ 탭에 이동해주세요!
-
-**오답노트 작성 방법**
-```
-1. 문제 이미지를 등록해주세요.
-2. 이미지에서 원하는 부분만 잘라주세요.
-3. 상단 4개의 항목을 입력해주세요.
-      - 푼 날짜 → 문제를 푼 날짜
-      - 공책 → 문제를 저장하고 싶은 폴더 위치
-      - 제목 → 오답노트의 제목
-      - 메모 → 문제를 풀면서 꼭 기록하고 싶은 사항들
-4. 마지막으로 내가 푼 문제의 해설 이미지를 등록하면 끝!!
-      - 해설 이미지 등록(선택)
-```
-<br>
-
-## 📝 핵심 기능 3. 등록된 오답 관리
-### **오답 관리**
-      - ‘**오답 관리**’ 탭에 이동해주세요!
-      - 우측 가장 아래 버튼을 눌러 공책을 생성할 수 있습니다!
-      - 공책 별로 오답노트를 분류해서 저장하세요!
-      - 내가 저장한 문제를 찾아서 들어가면 복습을 시작할 수 있습니다!
-
-<br>
-
-## 📝 핵심 기능 4. 나만의 복습 리스트를 사용해 복습 *(New!)*
-### **복습 리스트 생성**
-    - 하단 ‘오답 복습’ 탭에 이동해주세요!
-    - 우측 하단의 아이콘을 누르면 다음과 같이 내가 작성한 문제들을 확인할 수 있어요!!
-    - 복습 하고 싶은 문제들을 모두 체크해주세요!        
-    - 복습할 문제들을 모두 선택했다면, 하단의 ‘다음’ 버튼을 클릭!
-    - 생성할 리스트의 이름을 설정해주세요!        
-    - 하단의 ‘복습 리스트 만들기’ 버튼을 누르면 복습 리스트가 생성됩니다~
-
-### **복습 리스트로 복습하기**
-    - 다음과 같이 여러 복습 리스트 중, 내가 복습할 리스트를 ‘👉클릭’ 해주세요!
-    - 복습할 리스트를 클릭하면 다음과 같이 리스트의 상세 정보를 확인할 수 있어요!
-    - 하단의 ‘복습하기’ 버튼을 눌러 복습을 시작하세요!    
-    - 기존 복습하기와 동일하게 푼 날짜와 문제 이미지를 통해 복습을 할 수 있어요!
-    - 복습을 마쳤다면, 정답 확인 버튼을 눌러 메모와 분석 결과, 해설 이미지를 보면서 문제를 맞게 풀었는지 확인하세요!
-    - 문제 복습을 마쳤다면, 하단의 ‘복습 인증’ 버튼을 눌러 내가 푼 풀이를 등록하세요!        
-    - 문제 하단에 ‘복습 기록’ 항목을 통해 나의 풀이 기록을 확인할 수 있어요! 나날이 발전하는 나의 풀이 변화 과정을 지켜보세요!     
-    - 다음 문제에 대해서도 동일한 과정으로 복습을 진행해주세요!
-    - 마지막 문제까지 모두 복습을 마쳤다면, 하단의 ‘복습 마치기’ 버튼을 눌러주세요!    
-    - 복습을 성공적으로 끝마쳤습니다!!
-
-<br>
+# 💯 OnO의 핵심 기능 A to Z
 <br>
 
 |기능|화면1|화면2|화면3|화면4|
 |---|---|---|---|---|
-|소셜로그인|![image](https://github.com/user-attachments/assets/2df8005f-6691-4ffa-96e2-bf441034013e)|![image](https://github.com/user-attachments/assets/b3168626-7b20-4cc1-b722-6df73c99e677)|
-|오답작성|<img width="220" alt="image" src="https://github.com/user-attachments/assets/c96e9e3c-082d-4e75-84e4-c57e593ee2ca"/>|
-|오답관리|![image](https://github.com/user-attachments/assets/b012937e-b598-4982-9ad0-c0d9c8ca5b67)|![image](https://github.com/user-attachments/assets/eef18a4c-4685-4ffc-8ed1-35c03dabe271)|
-|오답 복습|<img width="220" alt="image" src="https://github.com/user-attachments/assets/4ae0788d-4c85-4c51-ba3d-2f71f870988a" />|<img width="220" alt="image" src="https://github.com/user-attachments/assets/fad3ff20-2699-4f40-90cd-a1807cdf6e48" />|<img width="220" alt="image" src="https://github.com/user-attachments/assets/2c68f74d-04a7-4630-83bc-d88bce20affd" />|<img width="220" alt="image" src="https://github.com/user-attachments/assets/1a6ce269-e040-4106-8a54-269c21bebbf2" />|
-|복습리스트 생성|![image](https://github.com/user-attachments/assets/62ee1f8a-b944-4ef5-81c3-9f49770d1399)|![image](https://github.com/user-attachments/assets/2f65e445-4116-4b29-8cd0-61987a3f631a)|<img width="220" alt="image" src="https://github.com/user-attachments/assets/be51edd9-c706-41b3-96cd-6c8a9065c2c7" />|
-|복습리스트 실행|![image](https://github.com/user-attachments/assets/118c3cf2-c137-4da5-9492-60dfe393345b)|![image](https://github.com/user-attachments/assets/408c7e4a-9743-4dcf-91a9-3a204e619e28)|![image](https://github.com/user-attachments/assets/ae39099e-cc90-4cfc-bf00-912ca0abfaf4)|![image](https://github.com/user-attachments/assets/05166b86-159f-4464-ab09-5854c433b3d4)|
-
+|소셜 로그인|<img width="220" alt="image" src="https://github.com/user-attachments/assets/7cfc0061-d8cc-422f-ae43-fa40353698bb" />|<img width="220" alt="image" src="https://github.com/user-attachments/assets/24b0ee35-6a61-4ffc-a236-c973aa52368e" />|
+|오답노트 작성|<img width="220" alt="image" src="https://github.com/user-attachments/assets/656f26bf-8f05-47b7-aa5c-cd4826d8320c" />| <img width="220" alt="image" src="https://github.com/user-attachments/assets/a09c9d02-f004-421c-b14e-32b8a5c76dc2" />|<img width="220" alt="image" src="https://github.com/user-attachments/assets/c283b17b-a9b4-4b05-97e4-32a610296292" />|
+|복습노트 생성|<img width="220" alt="image" src="https://github.com/user-attachments/assets/7f20c547-c812-4524-b26e-55636c6f46ca" />|<img width="220" alt="image" src="https://github.com/user-attachments/assets/cc9f3985-d2cb-43be-96a5-d52ae73201c5" />|<img width="220" alt="image" src="https://github.com/user-attachments/assets/471dcfac-4df3-48fc-8702-da70d576f7e1" />|
+|복습노트 실행|<img width="220" alt="image" src="https://github.com/user-attachments/assets/1ac3827a-8b49-4836-8c39-26eb476f9bd9" />|<img width="220" alt="image" src="https://github.com/user-attachments/assets/4e0614dd-f5a8-4722-83dd-7bdd6438dac0" />|<img width="220" alt="image" src="https://github.com/user-attachments/assets/53434407-b1b0-4e32-bba8-374e6b98bcf9" />|<img width="220" alt="image" src="https://github.com/user-attachments/assets/4cb0c88e-01c8-437a-a85c-d6c57055b072" />|
+|오답 복습|<img width="220" alt="image" src="https://github.com/user-attachments/assets/b0038427-1e8f-461e-a1a8-ab0ed39d6ad2" />|<img width="220" alt="image" src="https://github.com/user-attachments/assets/2aea42ae-cac7-46ec-ad1f-bf5fad153437" />|<img width="220" alt="image" src="https://github.com/user-attachments/assets/8d9f244d-ceb9-4880-8966-4bce5ed07a08" />|<img width="220" alt="image" src="https://github.com/user-attachments/assets/4c8e7cff-3171-408b-a9a1-df32e508a64b" />|
 <br>
 
 # 😮 기타 기능
 
 |기능|설명|화면1|화면2|
 |---|---|---|---|
-|레벨 & 테마 변경 기능|- OnO는 색상 변경을 통해 다양한 테마를 사용할 수 있습니다! <br> - 오답노트를 작성해 레벨을 달성하고, 24개의 다양한 테마를 잠금 해제해보세요!|<img width = "220" src = "https://github.com/user-attachments/assets/eab469fe-1dad-4e25-ae60-a92fc0879422"/>|<img width = "220" src = "https://github.com/user-attachments/assets/160ace4c-875e-434f-9366-1c8a70b1dcf2"/>|
+|캐릭터 육성 & 테마 변경 기능|- 열심히 복습을 하고, 나만의 캐릭터를 성장시켜요! <br> - 레벨이 오르면 다양한 색상 테마를 사용할 수 있습니다! <br> - 오답노트를 작성해 레벨을 달성하고, 24개의 다양한 테마를 잠금 해제해보세요!|<img width = "220" src ="https://github.com/user-attachments/assets/29624628-4db9-4a8b-b85b-7cc24839d806"/>|<img width="220" alt="image" src="https://github.com/user-attachments/assets/7627d060-c34d-4ff6-8066-29384ff62d47" />|
 
 <br>
 

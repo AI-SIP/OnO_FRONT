@@ -41,7 +41,7 @@ class FileUploadService {
   }
 
   Future<void> deleteImage(String imageUrl) async {
-    httpService.sendRequest(
+    await httpService.sendRequest(
       method: 'DELETE',
       url: '$baseUrl/image',
       queryParams: {'imageUrl': imageUrl},
