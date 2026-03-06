@@ -36,6 +36,8 @@ class LearningPeriodReport {
   final String periodLabel;
   final DateTime? startDate;
   final DateTime? endDate;
+  final int noteWriteCount;
+  final int notePracticeCount;
   final int reviewCount;
   final double averageAccuracy;
   final int consecutiveLearningDays;
@@ -47,6 +49,8 @@ class LearningPeriodReport {
     required this.periodLabel,
     required this.startDate,
     required this.endDate,
+    required this.noteWriteCount,
+    required this.notePracticeCount,
     required this.reviewCount,
     required this.averageAccuracy,
     required this.consecutiveLearningDays,
@@ -60,6 +64,8 @@ class LearningPeriodReport {
       periodLabel: (json['periodLabel'] ?? '').toString(),
       startDate: _parseDate(json['startDate']),
       endDate: _parseDate(json['endDate']),
+      noteWriteCount: ((json['noteWriteCount'] ?? 0) as num).toInt(),
+      notePracticeCount: ((json['notePracticeCount'] ?? 0) as num).toInt(),
       reviewCount: ((json['reviewCount'] ?? 0) as num).toInt(),
       averageAccuracy: ((json['averageAccuracy'] ?? 0) as num).toDouble(),
       consecutiveLearningDays:

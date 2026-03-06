@@ -22,7 +22,7 @@ class ThemeLockManager {
     Colors.red[500]!, // 5. 빨간색
     Colors.yellow[900]!, // 6. 황금색
     Colors.orange[300]!, // 7. 오렌지색
-    Colors.yellow[600]!, // 8. 노란색
+    Colors.yellow[700]!, // 8. 노란색
 
     // 3행 (레벨 6)
     Colors.lightGreen, // 9. 라이트그린
@@ -56,7 +56,7 @@ class ThemeLockManager {
     '라일락',
     '보라색',
     '빨간색',
-    '황금색',
+    '주황색',
     '오렌지색',
     '노란색',
     '라이트그린',
