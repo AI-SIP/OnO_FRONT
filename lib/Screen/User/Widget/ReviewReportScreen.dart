@@ -166,7 +166,7 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
         const SizedBox(height: 20),
         _buildSectionTitle(
           themeProvider,
-          '복습 추이',
+          '복습 횟수 추이',
           Icons.stacked_bar_chart_rounded,
         ),
         const SizedBox(height: 14),
