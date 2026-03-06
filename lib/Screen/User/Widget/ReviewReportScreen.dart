@@ -182,6 +182,25 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
         const SizedBox(height: 14),
         _buildActionCard(themeProvider),
         const SizedBox(height: 18),
+        const Padding(
+          padding: EdgeInsets.only(left: 4),
+          child: Row(
+            children: [
+              Icon(
+                Icons.info_outline_rounded,
+                size: 14,
+                color: Colors.grey,
+              ),
+              SizedBox(width: 6),
+              StandardText(
+                text: '학습 리포트는 매일 자정 갱신됩니다.',
+                fontSize: 12,
+                color: Colors.grey,
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 8),
       ],
     );
   }

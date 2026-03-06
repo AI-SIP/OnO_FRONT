@@ -309,7 +309,7 @@ class _RepeatSectionV2WrapperState extends State<RepeatSectionV2Wrapper> {
               backgroundColor: themeProvider.primaryColor,
               icon: const Icon(Icons.edit, color: Colors.white, size: 20),
               label: const StandardText(
-                text: '문제 복습하기',
+                text: '문제 복습인증',
                 color: Colors.white,
                 fontSize: 15,
                 fontWeight: FontWeight.bold,
