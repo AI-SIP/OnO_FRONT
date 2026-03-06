@@ -451,7 +451,29 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
             Expanded(
               child: _buildStatCard(
                 themeProvider,
-                '복습 횟수',
+                '작성한 오답 노트',
+                '${data.noteWriteCount}개',
+                Icons.edit_note_rounded,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _buildStatCard(
+                themeProvider,
+                '복습노트 열람',
+                '${data.notePracticeCount}회',
+                Icons.menu_book_rounded,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            Expanded(
+              child: _buildStatCard(
+                themeProvider,
+                '오답노트 복습',
                 '${data.reviewCount}회',
                 Icons.repeat,
               ),
@@ -782,6 +804,8 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
 class _ReportViewData {
   final String badge;
   final String title;
+  final int noteWriteCount;
+  final int notePracticeCount;
   final int reviewCount;
   final double averageAccuracy;
   final int consecutiveLearningDays;
@@ -794,6 +818,8 @@ class _ReportViewData {
   const _ReportViewData({
     required this.badge,
     required this.title,
+    required this.noteWriteCount,
+    required this.notePracticeCount,
     required this.reviewCount,
     required this.averageAccuracy,
     required this.consecutiveLearningDays,
@@ -824,6 +850,8 @@ class _ReportViewData {
     return _ReportViewData(
       badge: report.periodLabel,
       title: _buildTitle(report),
+      noteWriteCount: report.noteWriteCount,
+      notePracticeCount: report.notePracticeCount,
       reviewCount: report.reviewCount,
       averageAccuracy: report.averageAccuracy,
       consecutiveLearningDays: report.consecutiveLearningDays,
