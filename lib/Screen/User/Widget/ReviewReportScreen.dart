@@ -522,8 +522,8 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
     IconData icon,
   ) {
     return Container(
-      height: 106,
-      padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+      height: 98,
+      padding: const EdgeInsets.fromLTRB(12, 14, 12, 10),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
