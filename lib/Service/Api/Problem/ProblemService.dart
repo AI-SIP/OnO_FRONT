@@ -50,6 +50,38 @@ class ProblemService {
     ) as int;
   }
 
+  Future<int> registerProblemV2({
+    int? problemId,
+    String? memo,
+    String? reference,
+    int? folderId,
+    DateTime? solvedAt,
+    required List<String> problemImageUrls,
+    required List<String> answerImageUrls,
+  }) async {
+    return await httpService.sendRequest(
+      method: 'POST',
+      url: '$baseUrl/v2',
+      body: {
+        'problemId': problemId,
+        'memo': memo,
+        'reference': reference,
+        'folderId': folderId,
+        'solvedAt':
+            solvedAt?.subtract(const Duration(hours: 9)).toIso8601String(),
+        'problemImageUrls': problemImageUrls,
+        'answerImageUrls': answerImageUrls,
+      },
+    ) as int;
+  }
+
+  Future<void> requestProblemAnalysis(int problemId) async {
+    await httpService.sendRequest(
+      method: 'POST',
+      url: '$baseUrl/$problemId/analysis',
+    );
+  }
+
   Future<void> registerProblemImageData({
     required int problemId,
     required List<File> problemImages,

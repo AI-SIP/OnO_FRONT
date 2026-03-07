@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:developer';
 import 'dart:io';
 
@@ -17,6 +18,7 @@ import '../../Provider/FoldersProvider.dart';
 import '../../Provider/ProblemsProvider.dart';
 import '../../Provider/ScreenIndexProvider.dart';
 import '../../Provider/UserProvider.dart';
+import '../../Service/Api/FileUpload/FileUploadService.dart';
 import '../../Service/Api/Problem/ProblemService.dart';
 import 'Widget/DatePickerWidget.dart';
 import 'Widget/ImageGridWidget.dart';
@@ -52,6 +54,9 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
   final List<String> _existingProblemImageUrls = [];
   final List<String> _existingAnswerImageUrls = [];
   final List<String> _deletedImageUrls = []; // 삭제할 이미지 URL 추적
+  final FileUploadService _fileUploadService = FileUploadService();
+  final Map<String, Future<void>> _uploadTasks = {};
+  final Set<String> _canceledUploadLocalPaths = {};
 
   @override
   void initState() {
@@ -137,14 +142,17 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
                         files: _problemImages,
                         existingImageUrls: _existingProblemImageUrls,
                         onAdd: _pickProblemImage,
-                        onRemove: (i) =>
-                            setState(() => _problemImages.removeAt(i)),
+                        onRemove: widget.isEditMode
+                            ? (i) => setState(() => _problemImages.removeAt(i))
+                            : _removePendingProblemImage,
                         onRemoveExisting: (i) {
-                          setState(() {
-                            final removedUrl =
-                                _existingProblemImageUrls.removeAt(i);
-                            _deletedImageUrls.add(removedUrl);
-                          });
+                          widget.isEditMode
+                              ? setState(() {
+                                  final removedUrl =
+                                      _existingProblemImageUrls.removeAt(i);
+                                  _deletedImageUrls.add(removedUrl);
+                                })
+                              : _removeUploadedProblemImage(i);
                         },
                       ),
                     ),
@@ -155,14 +163,17 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
                         files: _answerImages,
                         existingImageUrls: _existingAnswerImageUrls,
                         onAdd: _pickAnswerImage,
-                        onRemove: (i) =>
-                            setState(() => _answerImages.removeAt(i)),
+                        onRemove: widget.isEditMode
+                            ? (i) => setState(() => _answerImages.removeAt(i))
+                            : _removePendingAnswerImage,
                         onRemoveExisting: (i) {
-                          setState(() {
-                            final removedUrl =
-                                _existingAnswerImageUrls.removeAt(i);
-                            _deletedImageUrls.add(removedUrl);
-                          });
+                          widget.isEditMode
+                              ? setState(() {
+                                  final removedUrl =
+                                      _existingAnswerImageUrls.removeAt(i);
+                                  _deletedImageUrls.add(removedUrl);
+                                })
+                              : _removeUploadedAnswerImage(i);
                         },
                       ),
                     ),
@@ -176,14 +187,17 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
                       files: _problemImages,
                       existingImageUrls: _existingProblemImageUrls,
                       onAdd: _pickProblemImage,
-                      onRemove: (i) =>
-                          setState(() => _problemImages.removeAt(i)),
+                      onRemove: widget.isEditMode
+                          ? (i) => setState(() => _problemImages.removeAt(i))
+                          : _removePendingProblemImage,
                       onRemoveExisting: (i) {
-                        setState(() {
-                          final removedUrl =
-                              _existingProblemImageUrls.removeAt(i);
-                          _deletedImageUrls.add(removedUrl);
-                        });
+                        widget.isEditMode
+                            ? setState(() {
+                                final removedUrl =
+                                    _existingProblemImageUrls.removeAt(i);
+                                _deletedImageUrls.add(removedUrl);
+                              })
+                            : _removeUploadedProblemImage(i);
                       },
                     ),
                     const SizedBox(height: 30),
@@ -192,14 +206,17 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
                       files: _answerImages,
                       existingImageUrls: _existingAnswerImageUrls,
                       onAdd: _pickAnswerImage,
-                      onRemove: (i) =>
-                          setState(() => _answerImages.removeAt(i)),
+                      onRemove: widget.isEditMode
+                          ? (i) => setState(() => _answerImages.removeAt(i))
+                          : _removePendingAnswerImage,
                       onRemoveExisting: (i) {
-                        setState(() {
-                          final removedUrl =
-                              _existingAnswerImageUrls.removeAt(i);
-                          _deletedImageUrls.add(removedUrl);
-                        });
+                        widget.isEditMode
+                            ? setState(() {
+                                final removedUrl =
+                                    _existingAnswerImageUrls.removeAt(i);
+                                _deletedImageUrls.add(removedUrl);
+                              })
+                            : _removeUploadedAnswerImage(i);
                       },
                     ),
                   ],
@@ -215,11 +232,21 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
       context,
       (XFile? file) {
         if (file != null) {
-          setState(() => _problemImages.add(file));
+          if (widget.isEditMode) {
+            setState(() => _problemImages.add(file));
+          } else {
+            _uploadImageImmediately(file, isProblemImage: true);
+          }
         }
       },
       onMultipleImagesPicked: (List<XFile> files) {
-        setState(() => _problemImages.addAll(files));
+        if (widget.isEditMode) {
+          setState(() => _problemImages.addAll(files));
+        } else {
+          for (final file in files) {
+            _uploadImageImmediately(file, isProblemImage: true);
+          }
+        }
       },
     );
   }
@@ -230,21 +257,144 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
       context,
       (XFile? file) {
         if (file != null) {
-          setState(() => _answerImages.add(file));
+          if (widget.isEditMode) {
+            setState(() => _answerImages.add(file));
+          } else {
+            _uploadImageImmediately(file, isProblemImage: false);
+          }
         }
       },
       onMultipleImagesPicked: (List<XFile> files) {
-        setState(() => _answerImages.addAll(files));
+        if (widget.isEditMode) {
+          setState(() => _answerImages.addAll(files));
+        } else {
+          for (final file in files) {
+            _uploadImageImmediately(file, isProblemImage: false);
+          }
+        }
       },
     );
   }
 
+  void _removePendingProblemImage(int index) {
+    if (index < 0 || index >= _problemImages.length) return;
+    final removed = _problemImages.removeAt(index);
+    _canceledUploadLocalPaths.add(removed.path);
+    setState(() {});
+  }
+
+  void _removePendingAnswerImage(int index) {
+    if (index < 0 || index >= _answerImages.length) return;
+    final removed = _answerImages.removeAt(index);
+    _canceledUploadLocalPaths.add(removed.path);
+    setState(() {});
+  }
+
+  Future<void> _removeUploadedProblemImage(int index) async {
+    if (index < 0 || index >= _existingProblemImageUrls.length) return;
+    final removedUrl = _existingProblemImageUrls.removeAt(index);
+    setState(() {});
+    await _deleteUploadedImage(removedUrl);
+  }
+
+  Future<void> _removeUploadedAnswerImage(int index) async {
+    if (index < 0 || index >= _existingAnswerImageUrls.length) return;
+    final removedUrl = _existingAnswerImageUrls.removeAt(index);
+    setState(() {});
+    await _deleteUploadedImage(removedUrl);
+  }
+
+  Future<void> _deleteUploadedImage(String imageUrl) async {
+    try {
+      await _fileUploadService.deleteImage(imageUrl);
+    } catch (e) {
+      if (!mounted) return;
+      SnackBarDialog.showSnackBar(
+        context: context,
+        message: '이미지 삭제에 실패했습니다.',
+        backgroundColor: Colors.red,
+      );
+    }
+  }
+
+  void _uploadImageImmediately(XFile file, {required bool isProblemImage}) {
+    setState(() {
+      if (isProblemImage) {
+        _problemImages.add(file);
+      } else {
+        _answerImages.add(file);
+      }
+    });
+
+    final task = _uploadSingleImage(file, isProblemImage: isProblemImage);
+    _uploadTasks[file.path] = task;
+  }
+
+  Future<void> _uploadSingleImage(
+    XFile file, {
+    required bool isProblemImage,
+  }) async {
+    try {
+      final imageUrl = await _fileUploadService.uploadImageFile(file);
+
+      if (_canceledUploadLocalPaths.contains(file.path)) {
+        await _deleteUploadedImage(imageUrl);
+        return;
+      }
+
+      if (!mounted) return;
+      setState(() {
+        if (isProblemImage) {
+          _problemImages.removeWhere((f) => f.path == file.path);
+          _existingProblemImageUrls.add(imageUrl);
+        } else {
+          _answerImages.removeWhere((f) => f.path == file.path);
+          _existingAnswerImageUrls.add(imageUrl);
+        }
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        if (isProblemImage) {
+          _problemImages.removeWhere((f) => f.path == file.path);
+        } else {
+          _answerImages.removeWhere((f) => f.path == file.path);
+        }
+      });
+      SnackBarDialog.showSnackBar(
+        context: context,
+        message: '이미지 업로드에 실패했습니다.',
+        backgroundColor: Colors.red,
+      );
+    } finally {
+      _canceledUploadLocalPaths.remove(file.path);
+      _uploadTasks.remove(file.path);
+      if (mounted) {
+        setState(() {});
+      }
+    }
+  }
+
+  Future<void> _waitForPendingUploads() async {
+    if (_uploadTasks.isEmpty) return;
+    await Future.wait(_uploadTasks.values.toList());
+  }
+
   void resetAll() {
     setState(() {
+      for (final file in _problemImages) {
+        _canceledUploadLocalPaths.add(file.path);
+      }
+      for (final file in _answerImages) {
+        _canceledUploadLocalPaths.add(file.path);
+      }
       _titleCtrl.clear();
       _memoCtrl.clear();
       _problemImages.clear();
       _answerImages.clear();
+      _existingProblemImageUrls.clear();
+      _existingAnswerImageUrls.clear();
+      _deletedImageUrls.clear();
     });
   }
 
@@ -261,6 +411,14 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
         _existingProblemImageUrls.isEmpty) {
       _showProblemImageRequiredDialog(context);
       return;
+    }
+
+    if (!widget.isEditMode) {
+      await _waitForPendingUploads();
+      if (_existingProblemImageUrls.isEmpty) {
+        _showProblemImageRequiredDialog(context);
+        return;
+      }
     }
 
     final canPopBeforeSubmit = Navigator.of(context).canPop();
@@ -292,7 +450,8 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
       return;
     }
 
-    Provider.of<ScreenIndexProvider>(context, listen: false).setSelectedIndex(0);
+    Provider.of<ScreenIndexProvider>(context, listen: false)
+        .setSelectedIndex(0);
   }
 
   void _showTitleRequiredDialog(BuildContext context) {
@@ -455,21 +614,19 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
 
     final problemsProvider =
         Provider.of<ProblemsProvider>(context, listen: false);
-
-    // 1. 문제 엔티티만 먼저 등록 (이미지 없이)
-    final problemRegisterModel = ProblemRegisterModel(
+    final problemService = ProblemService();
+    final registeredProblemId = await problemService.registerProblemV2(
       problemId: null,
       memo: _memoCtrl.text,
       reference: _titleCtrl.text,
       solvedAt: _selectedDate,
       folderId: _selectedFolderId,
-      imageDataDtoList: [], // 빈 리스트로 등록
+      problemImageUrls: _existingProblemImageUrls,
+      answerImageUrls: _existingAnswerImageUrls,
     );
 
-    // 서비스에서 직접 problemId 받기
-    final problemService = ProblemService();
-    final registeredProblemId =
-        await problemService.registerProblem(problemRegisterModel);
+    // 등록 후 분석 요청 비동기 실행
+    await problemService.requestProblemAnalysis(registeredProblemId);
 
     // Provider를 통해 문제 조회 및 상태 업데이트
     await problemsProvider.fetchProblem(registeredProblemId);
@@ -494,64 +651,7 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
 
     log('problem register complete - problemId: $registeredProblemId');
 
-    // 4. 이미지 업로드 완료까지 대기 (복귀 직후 목록에 바로 반영되도록)
-    await _uploadImagesAfterRegister(registeredProblemId, problemsProvider);
-
     resetAll();
-  }
-
-  /// 등록 직후 이미지 업로드 및 폴더 캐시 갱신
-  Future<void> _uploadImagesAfterRegister(
-      int problemId, ProblemsProvider problemsProvider) async {
-    try {
-      log('이미지 업로드 시작 - problemId: $problemId');
-
-      // 이미지가 없으면 분석 상태만 갱신
-      if (_problemImages.isEmpty && _answerImages.isEmpty) {
-        await problemsProvider.updateProblemAnalysisStatus(problemId: problemId);
-      } else {
-        // 파일 리스트 생성
-        final List<File> imageFiles = [];
-        final List<String> imageTypes = [];
-
-        // 문제 이미지 추가
-        for (var xFile in _problemImages) {
-          imageFiles.add(File(xFile.path));
-          imageTypes.add('PROBLEM_IMAGE');
-        }
-
-        // 해설 이미지 추가
-        for (var xFile in _answerImages) {
-          imageFiles.add(File(xFile.path));
-          imageTypes.add('ANSWER_IMAGE');
-        }
-
-        // 서버로 이미지 전송
-        await problemsProvider.registerProblemImageData(
-          problemId: problemId,
-          problemImages: imageFiles,
-          problemImageTypes: imageTypes,
-        );
-      }
-
-      // 이미지 업로드/분석상태 갱신 완료 후 폴더 캐시 새로고침
-      if (!mounted) return;
-      final foldersProvider = Provider.of<FoldersProvider>(context, listen: false);
-      if (_selectedFolderId != null) {
-        await foldersProvider.refreshFolder(_selectedFolderId!);
-      } else {
-        final rootFolder = foldersProvider.rootFolder;
-        if (rootFolder != null) {
-          await foldersProvider.refreshFolder(rootFolder.folderId);
-        }
-      }
-      log('이미지 업로드 및 폴더 캐시 갱신 완료 - problemId: $problemId');
-    } catch (e, stackTrace) {
-      log('이미지 업로드 실패 - problemId: $problemId');
-      log('에러: $e');
-      log('스택트레이스: $stackTrace');
-      // 등록 자체는 완료되었으므로 여기서는 throw 하지 않음
-    }
   }
 
   /// 오답노트 수정
