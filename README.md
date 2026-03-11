@@ -1,7 +1,7 @@
 <br>
 
 # 💫 손쉽게 작성하는 나만의 AI 오답노트, OnO를 소개합니다!
-![image](https://github.com/user-attachments/assets/440ba50d-7e49-44ba-ad80-53787d395d64)
+<img width="750" alt="image" src="https://github.com/user-attachments/assets/b06cbe1d-d161-4b65-8d06-89e415e13b88" />
 
 #### 이전에 본 문제를 틀린 경험, 있으신가요?
 #### 무작정 진도만 달리는 것이 올바를까요?
@@ -41,6 +41,7 @@
 
 | Date | Updates | Content |
 | --- | --- | --- |
+| 2026/3/7 | V3.3.0 업데이트 | - 학습 리포트 기능 도입 |
 | 2026/2/17 | V3.2.0 업데이트 | - 복습 기록 기능 도입 <br> - 대규모 디자인 개선 |
 | 2026/1/29 | V3.1.0 업데이트 | - 캐릭터 성장 기능 도입 |
 | 2026/1/22 | V3.0.0 업데이트 | - 레벨 제도 도입 <br> - 복습노트 알림 기능 도입 <br> - 오답노트 이미지 등록 편의성 개선|
@@ -74,7 +75,8 @@
 
 | **기기 유형** | **스토어 바로가기 링크** |
 | --- | --- |
-| IOS | https://apps.apple.com/kr/app/오노-ono-손쉬운-나만의-오답노트/id6602886624 |
+| iOS | https://apps.apple.com/kr/app/오노-ono-손쉬운-나만의-오답노트/id6602886624 |
+| Android | https://play.google.com/store/apps/details?id=com.ono.app&pcampaignid=web_share |
 
 
 ### 3. 이메일 작성
@@ -94,6 +96,8 @@
 |복습노트 생성|<img width="220" alt="image" src="https://github.com/user-attachments/assets/7f20c547-c812-4524-b26e-55636c6f46ca" />|<img width="220" alt="image" src="https://github.com/user-attachments/assets/cc9f3985-d2cb-43be-96a5-d52ae73201c5" />|<img width="220" alt="image" src="https://github.com/user-attachments/assets/471dcfac-4df3-48fc-8702-da70d576f7e1" />|
 |복습노트 실행|<img width="220" alt="image" src="https://github.com/user-attachments/assets/1ac3827a-8b49-4836-8c39-26eb476f9bd9" />|<img width="220" alt="image" src="https://github.com/user-attachments/assets/4e0614dd-f5a8-4722-83dd-7bdd6438dac0" />|<img width="220" alt="image" src="https://github.com/user-attachments/assets/53434407-b1b0-4e32-bba8-374e6b98bcf9" />|<img width="220" alt="image" src="https://github.com/user-attachments/assets/4cb0c88e-01c8-437a-a85c-d6c57055b072" />|
 |오답 복습|<img width="220" alt="image" src="https://github.com/user-attachments/assets/b0038427-1e8f-461e-a1a8-ab0ed39d6ad2" />|<img width="220" alt="image" src="https://github.com/user-attachments/assets/2aea42ae-cac7-46ec-ad1f-bf5fad153437" />|<img width="220" alt="image" src="https://github.com/user-attachments/assets/8d9f244d-ceb9-4880-8966-4bce5ed07a08" />|<img width="220" alt="image" src="https://github.com/user-attachments/assets/4c8e7cff-3171-408b-a9a1-df32e508a64b" />|
+|학습 리포트|<img width="220" alt="image" src="https://github.com/user-attachments/assets/8b338b12-a68f-452d-8fb5-4bedb9e49333" />|<img width="220" alt="image" src="https://github.com/user-attachments/assets/fde9e21c-83a9-4264-b1b6-a84b03c7285d" />|
+
 <br>
 
 # 😮 기타 기능
@@ -105,7 +109,6 @@
 <br>
 
 # 🎉 출시 예정 기능
-- 오답 통계 기능 : 교과과정에 기반해서 나의 오답 현황을 한눈에 리포트로 제공해줍니다.
 - 채점 기능: 정답과 비교하여 채점되며, 힌트 열람 시에는 틀린 것으로 채점됩니다.
 
 ---
