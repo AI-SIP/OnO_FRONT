@@ -16,6 +16,7 @@ import 'package:ono/Service/SocialLogin/KakaoAuthService.dart';
 import 'package:ono/Util/NotificationService.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
+import '../Exception/ApiException.dart';
 import '../Module/Text/StandardText.dart';
 import '../Service/Api/HttpService.dart';
 import '../Service/SocialLogin/AppleAuthService.dart';
@@ -212,25 +213,56 @@ class UserProvider with ChangeNotifier {
   }
 
   Future<void> autoLogin() async {
-    try {
-      String? refreshToken = await tokenProvider.getRefreshToken();
+    String? refreshToken = await tokenProvider.getRefreshToken();
 
-      if (refreshToken == null) {
-        _loginStatus = LoginStatus.logout;
-      } else {
-        await tokenProvider.refreshAccessToken();
+    if (refreshToken == null) {
+      _loginStatus = LoginStatus.logout;
+      notifyListeners();
+      return;
+    }
+
+    try {
+      await tokenProvider.refreshAccessToken();
+      _isFirstLogin = false;
+      _loginStatus = LoginStatus.login;
+
+      try {
         await fetchAllData();
-        _isFirstLogin = false;
-        _loginStatus = LoginStatus.login;
+      } catch (error, stackTrace) {
+        // 데이터 로딩 실패만으로 세션을 끊지 않음
+        log('자동 로그인 후 데이터 로딩 실패: $error');
+        await Sentry.captureException(error, stackTrace: stackTrace);
       }
-    } catch (error, stackTrace) {
-      // 자동 로그인 실패 시 로그아웃 상태로 변경
-      log('자동 로그인 실패: $error');
+    } on UnauthorizedException catch (error, stackTrace) {
+      log('자동 로그인 실패(인증 만료): $error');
       await Sentry.captureException(error, stackTrace: stackTrace);
       _loginStatus = LoginStatus.logout;
       await resetUserInfo();
+    } catch (error, stackTrace) {
+      // 일시적인 네트워크 오류 등은 로그인 상태 유지
+      log('자동 로그인 일시 실패: $error');
+      await Sentry.captureException(error, stackTrace: stackTrace);
+      _isFirstLogin = false;
+      _loginStatus = LoginStatus.login;
     } finally {
       notifyListeners();
+    }
+  }
+
+  Future<void> maintainSessionOnResume() async {
+    final refreshToken = await tokenProvider.getRefreshToken();
+    if (refreshToken == null) return;
+
+    try {
+      await tokenProvider.refreshAccessTokenIfNeeded();
+    } on UnauthorizedException catch (error, stackTrace) {
+      // 사용자 명시 로그아웃 전까지는 앱 복귀 시 자동 로그아웃하지 않음
+      log('앱 복귀 중 인증 만료(상태 유지): $error');
+      await Sentry.captureException(error, stackTrace: stackTrace);
+    } catch (error, stackTrace) {
+      // 복귀 순간 네트워크 이슈로는 세션을 끊지 않음
+      log('앱 복귀 중 세션 갱신 일시 실패: $error');
+      await Sentry.captureException(error, stackTrace: stackTrace);
     }
   }
 

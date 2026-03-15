@@ -7,7 +7,6 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart';
 import 'package:ono/Module/Text/StandardText.dart';
 import 'package:ono/Module/Theme/ThemeHandler.dart';
@@ -187,7 +186,6 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
-  final secureStorage = const FlutterSecureStorage();
   static const List<Widget> _widgetOptions = <Widget>[
     DirectoryScreen(),
     PracticeThumbnailScreen(),
@@ -217,36 +215,10 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) async {
-    if (state == AppLifecycleState.paused) {
-      // 앱이 백그라운드로 전환될 때 시간 저장
-      await secureStorage.write(
-        key: 'lastPaused',
-        value: DateTime.now().millisecondsSinceEpoch.toString(),
-      );
-    } else if (state == AppLifecycleState.resumed) {
-      // 앱이 포그라운드로 전환될 때 시간 비교
-      String? lastPaused = await secureStorage.read(key: 'lastPaused');
-      if (lastPaused != null) {
-        final difference =
-            DateTime.now().millisecondsSinceEpoch - int.parse(lastPaused);
-        final minutes = difference / 1000 / 60;
-        if (minutes > 1) {
-          _resetAppState();
-        }
-      }
+    if (state == AppLifecycleState.resumed) {
+      final userProvider = Provider.of<UserProvider>(context, listen: false);
+      await userProvider.maintainSessionOnResume();
     }
-  }
-
-  void _resetAppState() {
-    final foldersProvider = Provider.of<FoldersProvider>(
-      context,
-      listen: false,
-    );
-    final userProvider = Provider.of<UserProvider>(context, listen: false);
-
-    userProvider.autoLogin();
-    //userProvider.fetchAllData();
-    //foldersProvider.fetchAllFolderContents();
   }
 
   @override
