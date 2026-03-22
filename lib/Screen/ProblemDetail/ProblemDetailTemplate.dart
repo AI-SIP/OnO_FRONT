@@ -270,33 +270,63 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
           ),
         ],
       ),
-      child: Row(
+      child: Column(
         children: [
-          Container(
-            padding: const EdgeInsets.all(8.0),
-            decoration: BoxDecoration(
-              color: themeProvider.primaryColor.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(10.0),
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8.0),
+                decoration: BoxDecoration(
+                  color: themeProvider.primaryColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(10.0),
+                ),
+                child: Icon(
+                  Icons.calendar_today_outlined,
+                  color: themeProvider.primaryColor,
+                  size: 18,
+                ),
+              ),
+              const SizedBox(width: 10),
+              const StandardText(
+                text: '푼 날짜',
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: Colors.black87,
+              ),
+              const Spacer(),
+              UnderlinedText(
+                text: DateFormat('yyyy년 M월 d일')
+                    .format(widget.problemModel.solvedAt!),
+                fontSize: 16,
+              ),
+            ],
+          ),
+          if (widget.problemModel.tags.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                children: widget.problemModel.tags.map((tag) {
+                  return Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: themeProvider.primaryColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: StandardText(
+                      text: '#${tag.name}',
+                      fontSize: 12,
+                      color: themeProvider.primaryColor,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  );
+                }).toList(),
+              ),
             ),
-            child: Icon(
-              Icons.calendar_today_outlined,
-              color: themeProvider.primaryColor,
-              size: 18,
-            ),
-          ),
-          const SizedBox(width: 10),
-          const StandardText(
-            text: '푼 날짜',
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: Colors.black87,
-          ),
-          const Spacer(),
-          UnderlinedText(
-            text:
-                DateFormat('yyyy년 M월 d일').format(widget.problemModel.solvedAt!),
-            fontSize: 16,
-          ),
+          ],
         ],
       ),
     );

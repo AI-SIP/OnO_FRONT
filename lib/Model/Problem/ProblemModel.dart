@@ -1,4 +1,5 @@
 import '../Common/ProblemImageDataType.dart';
+import '../Tag/TagModel.dart';
 import 'ProblemImageDataModel.dart';
 import 'ProblemAnalysisModel.dart';
 
@@ -16,6 +17,8 @@ class ProblemModel {
   final List<ProblemImageDataModel>? solveImageDataList;
 
   final ProblemAnalysisModel? analysis;
+  final List<int> tagIdList;
+  final List<TagModel> tags;
 
   ProblemModel({
     this.problemId = -1,
@@ -29,6 +32,8 @@ class ProblemModel {
     this.answerImageDataList,
     this.solveImageDataList,
     this.analysis,
+    this.tagIdList = const [],
+    this.tags = const [],
   });
 
   factory ProblemModel.fromJson(Map<String, dynamic> json) {
@@ -51,6 +56,15 @@ class ProblemModel {
         solveImages.add(img);
       }
     }
+
+    final tagIds =
+        (json['tagIdList'] as List<dynamic>?)?.map((e) => e as int).toList() ??
+            [];
+    final tags = (json['tags'] as List<dynamic>?)
+            ?.map((e) => TagModel.fromJson(e as Map<String, dynamic>))
+            .toList() ??
+        [];
+
     return ProblemModel(
       problemId: json['problemId'] as int,
       folderId: json['folderId'] as int,
@@ -69,8 +83,11 @@ class ProblemModel {
       answerImageDataList: answerImages,
       solveImageDataList: solveImages,
       analysis: json['analysis'] != null
-          ? ProblemAnalysisModel.fromJson(json['analysis'] as Map<String, dynamic>)
+          ? ProblemAnalysisModel.fromJson(
+              json['analysis'] as Map<String, dynamic>)
           : null,
+      tagIdList: tagIds,
+      tags: tags,
     );
   }
 
@@ -87,6 +104,8 @@ class ProblemModel {
       answerImageDataList: answerImageDataList,
       solveImageDataList: solveImageDataList,
       analysis: analysis,
+      tagIdList: tagIdList,
+      tags: tags,
     );
   }
 

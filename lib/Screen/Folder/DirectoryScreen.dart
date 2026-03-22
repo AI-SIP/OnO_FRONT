@@ -1640,6 +1640,28 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                   fontSize: 12,
                   color: Colors.grey,
                 ),
+                if (problem.tags.isNotEmpty) ...[
+                  const SizedBox(height: 6),
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 6,
+                    children: problem.tags.map((tag) {
+                      return Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: themeProvider.primaryColor.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                        child: StandardText(
+                          text: '#${tag.name}',
+                          fontSize: 11,
+                          color: themeProvider.primaryColor,
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ],
               ],
             ),
           ),
@@ -1649,7 +1671,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   }
 
   Widget _buildBottomActionButtons(ThemeHandler themeProvider) {
-    final selectedCount = _selectedFolderIds.length + _selectedProblemIds.length;
+    final selectedCount =
+        _selectedFolderIds.length + _selectedProblemIds.length;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
       color: Colors.white,
