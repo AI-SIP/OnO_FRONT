@@ -249,4 +249,32 @@ class ProblemsProvider with ChangeNotifier {
       rethrow;
     }
   }
+
+  // V2 API - 제목 기반 문제 무한 스크롤 조회
+  Future<PaginatedResponse<ProblemModel>> loadMoreTitleProblemsV2({
+    required String query,
+    int? cursor,
+    int size = 20,
+  }) async {
+    try {
+      final response = await problemService.getTitleProblemsV2(
+        query: query,
+        cursor: cursor,
+        size: size,
+      );
+
+      for (var problem in response.content) {
+        _upsertProblem(problem);
+      }
+
+      log('Loaded ${response.content.length} problems from title query: $query');
+      notifyListeners();
+
+      return response;
+    } catch (e, stackTrace) {
+      log('Error loading title problems V2: $e');
+      log(stackTrace.toString());
+      rethrow;
+    }
+  }
 }

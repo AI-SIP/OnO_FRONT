@@ -228,4 +228,30 @@ class ProblemService {
       (json) => ProblemModel.fromJson(json),
     );
   }
+
+  // V2 API - Cursor-based pagination for title(query) problems
+  Future<PaginatedResponse<ProblemModel>> getTitleProblemsV2({
+    required String query,
+    int? cursor,
+    int size = 20,
+  }) async {
+    final queryParams = <String, String>{
+      'query': query,
+      'size': size.toString(),
+    };
+    if (cursor != null) {
+      queryParams['cursor'] = cursor.toString();
+    }
+
+    final data = await httpService.sendRequest(
+      method: 'GET',
+      url: '$baseUrl/title/V2',
+      queryParams: queryParams,
+    ) as Map<String, dynamic>;
+
+    return PaginatedResponse.fromJson(
+      data,
+      (json) => ProblemModel.fromJson(json),
+    );
+  }
 }
