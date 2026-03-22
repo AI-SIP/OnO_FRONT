@@ -1,8 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:ono/Model/PracticeNote/PracticeNoteDetailModel.dart';
+import 'package:ono/Model/Tag/TagModel.dart';
 import 'package:ono/Provider/PracticeNoteProvider.dart';
 import 'package:ono/Screen/PracticeNote/PracticeTitleWriteScreen.dart';
+import 'package:ono/Service/Api/Tag/TagService.dart';
 import 'package:provider/provider.dart';
 
 import '../../Model/Folder/FolderThumbnailModel.dart';
@@ -16,7 +20,8 @@ import '../../Module/Theme/NoteIconHandler.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/FoldersProvider.dart';
 import '../../Provider/ProblemsProvider.dart';
-import '../ProblemSearch/TagProblemSearchScreen.dart';
+
+enum _PracticeSearchMode { folder, tag, title }
 
 class PracticeProblemSelectionScreen extends StatefulWidget {
   final PracticeNoteDetailModel? practiceModel;
@@ -30,10 +35,20 @@ class PracticeProblemSelectionScreen extends StatefulWidget {
 
 class _PracticeProblemSelectionScreenState
     extends State<PracticeProblemSelectionScreen> {
+  _PracticeSearchMode _searchMode = _PracticeSearchMode.folder;
+
   int? selectedFolderId;
   List<ProblemModel> selectedProblems = [];
   List<FolderThumbnailModel> allFolders = [];
   late final List<int> _originalProblemIds;
+
+  final TagService _tagService = TagService();
+  final TextEditingController _titleQueryController = TextEditingController();
+  Timer? _titleDebounce;
+  List<TagModel> _tags = [];
+  int? _selectedTagId;
+  bool _isLoadingTags = false;
+  String _titleQuery = '';
 
   // 폴더 페이징 상태
   int? _folderCursor;
@@ -56,9 +71,11 @@ class _PracticeProblemSelectionScreenState
     _problemScrollController = ScrollController();
     _folderScrollController.addListener(_onFolderScroll);
     _problemScrollController.addListener(_onProblemScroll);
+    _titleQueryController.addListener(_onTitleQueryChanged);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadInitialFolders();
+      _loadTags();
       if (widget.practiceModel != null) {
         _originalProblemIds = widget.practiceModel!.problemIdList;
         _fetchProblems();
@@ -72,6 +89,9 @@ class _PracticeProblemSelectionScreenState
   void dispose() {
     _folderScrollController.removeListener(_onFolderScroll);
     _problemScrollController.removeListener(_onProblemScroll);
+    _titleQueryController.removeListener(_onTitleQueryChanged);
+    _titleDebounce?.cancel();
+    _titleQueryController.dispose();
     _folderScrollController.dispose();
     _problemScrollController.dispose();
     super.dispose();
@@ -93,6 +113,16 @@ class _PracticeProblemSelectionScreenState
         _loadMoreProblems();
       }
     }
+  }
+
+  void _onTitleQueryChanged() {
+    if (_searchMode != _PracticeSearchMode.title) return;
+    _titleDebounce?.cancel();
+    _titleDebounce = Timer(const Duration(milliseconds: 300), () {
+      final query = _titleQueryController.text.trim();
+      if (query == _titleQuery) return;
+      _searchTitleProblems(query, isInitial: true);
+    });
   }
 
   Future<void> _fetchProblems() async {
@@ -165,6 +195,57 @@ class _PracticeProblemSelectionScreenState
     }
   }
 
+  Future<void> _loadTags() async {
+    setState(() => _isLoadingTags = true);
+    try {
+      final fetched = await _tagService.getMyTags();
+      fetched.sort((a, b) => a.name.compareTo(b.name));
+      if (!mounted) return;
+      setState(() {
+        _tags = fetched;
+        if (_tags.isNotEmpty) {
+          _selectedTagId = _tags.first.tagId;
+        }
+      });
+    } finally {
+      if (mounted) {
+        setState(() => _isLoadingTags = false);
+      }
+    }
+  }
+
+  Future<void> _switchSearchMode(_PracticeSearchMode mode) async {
+    if (_searchMode == mode) return;
+
+    setState(() {
+      _searchMode = mode;
+      _currentFolderProblems = [];
+      _problemCursor = null;
+      _problemHasNext = false;
+      _isLoadingProblems = false;
+    });
+
+    if (mode == _PracticeSearchMode.folder) {
+      if (selectedFolderId != null) {
+        await _loadInitialProblems(selectedFolderId!);
+      }
+      return;
+    }
+
+    if (mode == _PracticeSearchMode.tag) {
+      if (_selectedTagId != null) {
+        await _loadTagProblems(_selectedTagId!, isInitial: true);
+      }
+      return;
+    }
+
+    final query = _titleQueryController.text.trim();
+    _titleQuery = query;
+    if (query.isNotEmpty) {
+      await _searchTitleProblems(query, isInitial: true);
+    }
+  }
+
   Future<void> _loadInitialProblems(int folderId) async {
     setState(() {
       _isLoadingProblems = true;
@@ -195,34 +276,152 @@ class _PracticeProblemSelectionScreenState
     }
   }
 
-  Future<void> _loadMoreProblems() async {
-    if (_isLoadingProblems || !_problemHasNext || selectedFolderId == null)
-      return;
+  Future<void> _loadTagProblems(int tagId, {required bool isInitial}) async {
+    if (_isLoadingProblems) return;
 
-    setState(() {
-      _isLoadingProblems = true;
-    });
+    if (isInitial) {
+      setState(() {
+        _selectedTagId = tagId;
+        _isLoadingProblems = true;
+        _currentFolderProblems = [];
+        _problemCursor = null;
+        _problemHasNext = false;
+      });
+    } else {
+      if (!_problemHasNext) return;
+      setState(() {
+        _isLoadingProblems = true;
+      });
+    }
 
     try {
       final problemsProvider = context.read<ProblemsProvider>();
-      final response = await problemsProvider.loadMoreFolderProblemsV2(
-        folderId: selectedFolderId!,
-        cursor: _problemCursor,
+      final response = await problemsProvider.loadMoreTagProblemsV2(
+        tagId: tagId,
+        cursor: isInitial ? null : _problemCursor,
         size: 20,
       );
 
+      if (!mounted) return;
       setState(() {
-        _currentFolderProblems.addAll(response.content);
+        if (isInitial) {
+          _currentFolderProblems = response.content;
+        } else {
+          _currentFolderProblems.addAll(response.content);
+        }
         _problemCursor = response.nextCursor;
         _problemHasNext = response.hasNext;
       });
     } catch (e) {
-      print('Error loading more problems: $e');
+      print('Error loading tag problems: $e');
     } finally {
+      if (mounted) {
+        setState(() {
+          _isLoadingProblems = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _searchTitleProblems(String query,
+      {required bool isInitial}) async {
+    if (_isLoadingProblems) return;
+
+    final trimmed = query.trim();
+    _titleQuery = trimmed;
+
+    if (trimmed.isEmpty) {
       setState(() {
+        _currentFolderProblems = [];
+        _problemCursor = null;
+        _problemHasNext = false;
         _isLoadingProblems = false;
       });
+      return;
     }
+
+    if (isInitial) {
+      setState(() {
+        _isLoadingProblems = true;
+        _currentFolderProblems = [];
+        _problemCursor = null;
+        _problemHasNext = false;
+      });
+    } else {
+      if (!_problemHasNext) return;
+      setState(() {
+        _isLoadingProblems = true;
+      });
+    }
+
+    try {
+      final problemsProvider = context.read<ProblemsProvider>();
+      final response = await problemsProvider.loadMoreTitleProblemsV2(
+        query: trimmed,
+        cursor: isInitial ? null : _problemCursor,
+        size: 20,
+      );
+
+      if (!mounted) return;
+      setState(() {
+        if (isInitial) {
+          _currentFolderProblems = response.content;
+        } else {
+          _currentFolderProblems.addAll(response.content);
+        }
+        _problemCursor = response.nextCursor;
+        _problemHasNext = response.hasNext;
+      });
+    } catch (e) {
+      print('Error loading title problems: $e');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoadingProblems = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _loadMoreProblems() async {
+    if (_isLoadingProblems || !_problemHasNext) return;
+
+    if (_searchMode == _PracticeSearchMode.folder) {
+      if (selectedFolderId == null) return;
+      setState(() {
+        _isLoadingProblems = true;
+      });
+
+      try {
+        final problemsProvider = context.read<ProblemsProvider>();
+        final response = await problemsProvider.loadMoreFolderProblemsV2(
+          folderId: selectedFolderId!,
+          cursor: _problemCursor,
+          size: 20,
+        );
+
+        setState(() {
+          _currentFolderProblems.addAll(response.content);
+          _problemCursor = response.nextCursor;
+          _problemHasNext = response.hasNext;
+        });
+      } catch (e) {
+        print('Error loading more folder problems: $e');
+      } finally {
+        setState(() {
+          _isLoadingProblems = false;
+        });
+      }
+      return;
+    }
+
+    if (_searchMode == _PracticeSearchMode.tag) {
+      if (_selectedTagId == null) return;
+      await _loadTagProblems(_selectedTagId!, isInitial: false);
+      return;
+    }
+
+    await _searchTitleProblems(_titleQuery, isInitial: false);
   }
 
   @override
@@ -244,9 +443,16 @@ class _PracticeProblemSelectionScreenState
           backgroundColor: Colors.white,
           body: Column(
             children: [
-              SizedBox(height: screenHeight * 0.035),
-              _buildFolderList(context, themeProvider),
-              const SizedBox(height: 20),
+              SizedBox(height: screenHeight * 0.012),
+              _buildSearchModeSelector(themeProvider),
+              const SizedBox(height: 28),
+              if (_searchMode == _PracticeSearchMode.folder)
+                _buildFolderList(context, themeProvider)
+              else if (_searchMode == _PracticeSearchMode.tag)
+                _buildTagFilterBar(themeProvider)
+              else
+                _buildTitleSearchBar(themeProvider),
+              const SizedBox(height: 26),
               _buildProblemList(context, themeProvider),
               _buildSubmitButton(context, themeProvider),
             ],
@@ -263,30 +469,205 @@ class _PracticeProblemSelectionScreenState
         color: themeProvider.primaryColor,
       ),
       backgroundColor: Colors.white,
-      actions: [
-        IconButton(
-          icon: Icon(Icons.search, color: themeProvider.primaryColor),
-          onPressed: _openTagSearch,
-        ),
-      ],
     );
   }
 
-  Future<void> _openTagSearch() async {
-    final searchedSelection = await Navigator.push<List<ProblemModel>>(
-      context,
-      MaterialPageRoute(
-        builder: (_) => TagProblemSearchScreen(
-          selectable: true,
-          initialSelectedProblems: List<ProblemModel>.from(selectedProblems),
+  Widget _buildSearchModeSelector(ThemeHandler themeProvider) {
+    Widget modeChip({
+      required _PracticeSearchMode mode,
+      required String label,
+    }) {
+      final selected = _searchMode == mode;
+      return Expanded(
+        child: InkWell(
+          onTap: () => _switchSearchMode(mode),
+          borderRadius: BorderRadius.circular(10),
+          child: Container(
+            height: 40,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: selected
+                  ? themeProvider.primaryColor.withOpacity(0.08)
+                  : Colors.grey[50],
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color:
+                    selected ? themeProvider.primaryColor : Colors.grey[300]!,
+                width: 1,
+              ),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  _modeIcon(mode),
+                  size: 15,
+                  color: selected
+                      ? themeProvider.primaryColor
+                      : Colors.grey[600]!,
+                ),
+                const SizedBox(width: 5),
+                StandardText(
+                  text: label,
+                  fontSize: 12,
+                  color:
+                      selected ? themeProvider.primaryColor : Colors.grey[700]!,
+                  fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Container(
+        padding: const EdgeInsets.all(6),
+        decoration: BoxDecoration(
+          color: Colors.grey[100],
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey[200]!, width: 1),
+        ),
+        child: Row(
+          children: [
+            modeChip(mode: _PracticeSearchMode.folder, label: '폴더로 검색'),
+            const SizedBox(width: 6),
+            modeChip(mode: _PracticeSearchMode.tag, label: '태그로 검색'),
+            const SizedBox(width: 6),
+            modeChip(mode: _PracticeSearchMode.title, label: '제목으로 검색'),
+          ],
         ),
       ),
     );
+  }
 
-    if (searchedSelection == null || !mounted) return;
-    setState(() {
-      selectedProblems = searchedSelection;
-    });
+  IconData _modeIcon(_PracticeSearchMode mode) {
+    switch (mode) {
+      case _PracticeSearchMode.folder:
+        return Icons.folder_outlined;
+      case _PracticeSearchMode.tag:
+        return Icons.sell_outlined;
+      case _PracticeSearchMode.title:
+        return Icons.title_outlined;
+    }
+  }
+
+  Widget _buildTagFilterBar(ThemeHandler themeProvider) {
+    if (_isLoadingTags) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 16),
+        child: CircularProgressIndicator(),
+      );
+    }
+
+    if (_tags.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          decoration: BoxDecoration(
+            color: Colors.grey[50],
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: Colors.grey[300]!, width: 1),
+          ),
+          child: StandardText(
+            text: '생성된 태그가 없습니다.',
+            fontSize: 13,
+            color: Colors.grey[600]!,
+          ),
+        ),
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: _tags.map((tag) {
+            final selected = _selectedTagId == tag.tagId;
+            return Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: InkWell(
+                onTap: () => _loadTagProblems(tag.tagId, isInitial: true),
+                borderRadius: BorderRadius.circular(8),
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: selected
+                        ? themeProvider.primaryColor.withOpacity(0.08)
+                        : Colors.white,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: selected
+                          ? themeProvider.primaryColor
+                          : Colors.grey[300]!,
+                      width: 1,
+                    ),
+                  ),
+                  child: StandardText(
+                    text: '#${tag.name}',
+                    fontSize: 12,
+                    color: selected
+                        ? themeProvider.primaryColor
+                        : Colors.grey[700]!,
+                    fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+                  ),
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTitleSearchBar(ThemeHandler themeProvider) {
+    final baseTextStyle = const StandardText(text: '').getTextStyle();
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: TextField(
+        controller: _titleQueryController,
+        textInputAction: TextInputAction.search,
+        onSubmitted: (value) => _searchTitleProblems(value, isInitial: true),
+        style: baseTextStyle.copyWith(
+          fontSize: 14,
+          color: Colors.black87,
+          fontWeight: FontWeight.w500,
+        ),
+        decoration: InputDecoration(
+          hintText: '제목으로 검색 (예: 수특)',
+          hintStyle: baseTextStyle.copyWith(
+            color: Colors.grey[500],
+            fontSize: 13,
+          ),
+          prefixIcon: Icon(Icons.search, color: Colors.grey[500]),
+          filled: true,
+          fillColor: Colors.white,
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide: BorderSide(color: Colors.grey[300]!, width: 1),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide: BorderSide(color: Colors.grey[300]!, width: 1),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide: BorderSide(
+              color: themeProvider.primaryColor.withOpacity(0.5),
+              width: 1.5,
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   Widget _buildFolderList(BuildContext context, ThemeHandler themeProvider) {
@@ -420,26 +801,43 @@ class _PracticeProblemSelectionScreenState
   }
 
   Widget _buildEmptyProblemMessage() {
-    return SingleChildScrollView(
-      child: Align(
-        alignment: Alignment.center,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            SizedBox(height: MediaQuery.of(context).size.height * 0.15),
-            SvgPicture.asset(
-              'assets/Icon/PencilDetail.svg',
-              width: 100,
-              height: 100,
+    final message = _searchMode == _PracticeSearchMode.title
+        ? (_titleQuery.isEmpty ? '검색어를 입력해주세요.' : '검색 결과가 없습니다.')
+        : '작성한 오답노트가 없습니다!';
+
+    if (_searchMode == _PracticeSearchMode.title && _titleQuery.isEmpty) {
+      return Center(
+        child: StandardText(
+          text: message,
+          color: Colors.grey[600]!,
+          fontSize: 15,
+        ),
+      );
+    }
+
+    return LayoutBuilder(
+      builder: (context, constraints) => SingleChildScrollView(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(minHeight: constraints.maxHeight),
+          child: Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                SvgPicture.asset(
+                  'assets/Icon/PencilDetail.svg',
+                  width: 100,
+                  height: 100,
+                ),
+                const SizedBox(height: 16),
+                StandardText(
+                  text: message,
+                  color: Colors.black,
+                  fontSize: 16,
+                ),
+              ],
             ),
-            const SizedBox(height: 16),
-            const StandardText(
-              text: "작성한 오답노트가 없습니다!",
-              color: Colors.black,
-              fontSize: 16,
-            ),
-          ],
+          ),
         ),
       ),
     );
