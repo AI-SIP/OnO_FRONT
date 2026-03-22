@@ -428,19 +428,10 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
 
     if (result == null || !mounted) return;
 
-    final selectedFromResult = result.selectedTagIds.toSet();
-    if (selectedFromResult.length > 5) {
-      SnackBarDialog.showSnackBar(
-        context: context,
-        message: '태그는 최대 5개까지 선택할 수 있습니다.',
-        backgroundColor: Colors.orange,
-      );
-    }
-
     setState(() {
       _selectedTagIds
         ..clear()
-        ..addAll(selectedFromResult.take(5));
+        ..addAll(result.selectedTagIds);
       _availableTags
         ..clear()
         ..addAll(result.availableTags);
@@ -469,7 +460,7 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(
-                  Icons.sell_outlined,
+                  Icons.local_offer,
                   color: themeProvider.primaryColor,
                   size: 20,
                 ),
@@ -481,6 +472,12 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
                 fontWeight: FontWeight.w500,
                 color: Colors.black87,
               ),
+              const SizedBox(width: 8),
+              StandardText(
+                text: '${_selectedTagIds.length}/5',
+                fontSize: 13,
+                color: Colors.grey[600]!,
+              ),
               const Spacer(),
               ElevatedButton(
                 onPressed: _isLoadingTags ? null : _openTagSelectionScreen,
@@ -491,8 +488,8 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
                     borderRadius: BorderRadius.circular(10),
                   ),
                   padding:
-                      const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
-                  minimumSize: const Size(0, 36),
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+                  minimumSize: const Size(0, 40),
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   visualDensity: VisualDensity.compact,
                 ),
@@ -508,7 +505,7 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
                     : const StandardText(
                         text: '태그 추가',
                         color: Colors.white,
-                        fontSize: 12,
+                        fontSize: 13,
                       ),
               ),
             ],
@@ -526,7 +523,7 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
                 ? StandardText(
                     text: '선택된 태그가 없습니다.',
                     fontSize: 13,
-                    color: Colors.grey[600]!,
+                    color: Colors.grey[400]!,
                   )
                 : Wrap(
                     spacing: 8,
