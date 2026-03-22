@@ -10,6 +10,7 @@ import '../../Module/Theme/ThemeHandler.dart';
 import 'Widget/AnalysisSection.dart';
 import 'Widget/ImageSection.dart';
 import 'Widget/RepeatSectionV2.dart';
+import '../ProblemSolve/ProblemSolveRegisterScreen.dart';
 
 class ProblemDetailTemplate extends StatefulWidget {
   final ProblemModel problemModel;
@@ -31,6 +32,7 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   int _currentTabIndex = 0;
+  int _reviewRefreshSignal = 0;
 
   @override
   void initState() {
@@ -213,44 +215,51 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
     final problemImageCount =
         widget.problemModel.problemImageDataList?.length ?? 0;
 
-    return SingleChildScrollView(
-      physics: const AlwaysScrollableScrollPhysics(),
-      padding: EdgeInsets.symmetric(
-        horizontal: horizontalPadding,
-        vertical: 24.0,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildProblemMetaCard(themeProvider),
-          const SizedBox(height: 30),
+    return Column(
+      children: [
+        Expanded(
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: EdgeInsets.symmetric(
+              horizontal: horizontalPadding,
+              vertical: 24.0,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildProblemMetaCard(themeProvider),
+                const SizedBox(height: 30),
 
-          // 문제 이미지
-          _buildSectionCard(
-            themeProvider,
-            title: '문제 이미지',
-            icon: Icons.image_outlined,
-            trailing: _buildCountChip(problemImageCount, themeProvider),
-            child: buildImageSection(
-              context,
-              widget.problemModel.problemImageDataList
-                      ?.map((m) => m.imageUrl)
-                      .toList() ??
-                  [],
-              '문제 이미지',
-              themeProvider,
+                // 문제 이미지
+                _buildSectionCard(
+                  themeProvider,
+                  title: '문제 이미지',
+                  icon: Icons.image_outlined,
+                  trailing: _buildCountChip(problemImageCount, themeProvider),
+                  child: buildImageSection(
+                    context,
+                    widget.problemModel.problemImageDataList
+                            ?.map((m) => m.imageUrl)
+                            .toList() ??
+                        [],
+                    '문제 이미지',
+                    themeProvider,
+                  ),
+                ),
+                const SizedBox(height: 12),
+              ],
             ),
           ),
-          const SizedBox(height: 30),
-        ],
-      ),
+        ),
+        _buildBottomReviewCta(themeProvider, isWide),
+      ],
     );
   }
 
   Widget _buildProblemMetaCard(ThemeHandler themeProvider) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14.0),
@@ -271,7 +280,7 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(8.0),
+                padding: const EdgeInsets.all(6.0),
                 decoration: BoxDecoration(
                   color: themeProvider.primaryColor.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(10.0),
@@ -298,6 +307,50 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
             ],
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildBottomReviewCta(ThemeHandler themeProvider, bool isWide) {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.only(
+        left: isWide ? 60 : 30,
+        right: isWide ? 60 : 30,
+        top: 8,
+        bottom: 12,
+      ),
+      color: Colors.white,
+      child: SizedBox(
+        height: 48,
+        child: FloatingActionButton.extended(
+          onPressed: () async {
+            final result = await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ProblemSolveRegisterScreen(
+                  problemId: widget.problemModel.problemId,
+                  onRefresh: () {},
+                ),
+              ),
+            );
+
+            if (result == true && mounted) {
+              setState(() {
+                _reviewRefreshSignal++;
+              });
+            }
+          },
+          backgroundColor: themeProvider.primaryColor,
+          icon: const Icon(Icons.edit, color: Colors.white, size: 20),
+          label: const StandardText(
+            text: '문제 복습인증',
+            color: Colors.white,
+            fontSize: 15,
+            fontWeight: FontWeight.bold,
+          ),
+          elevation: 0,
+        ),
       ),
     );
   }
@@ -641,6 +694,7 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
       widget.problemModel,
       themeProvider.primaryColor,
       isWide,
+      refreshSignal: _reviewRefreshSignal,
     );
   }
 }
