@@ -444,14 +444,7 @@ class _PracticeProblemSelectionScreenState
           body: Column(
             children: [
               SizedBox(height: screenHeight * 0.012),
-              _buildSearchModeSelector(themeProvider),
-              const SizedBox(height: 28),
-              if (_searchMode == _PracticeSearchMode.folder)
-                _buildFolderList(context, themeProvider)
-              else if (_searchMode == _PracticeSearchMode.tag)
-                _buildTagFilterBar(themeProvider)
-              else
-                _buildTitleSearchBar(themeProvider),
+              _buildSearchControlPanel(context, themeProvider),
               const SizedBox(height: 26),
               _buildProblemList(context, themeProvider),
               _buildSubmitButton(context, themeProvider),
@@ -464,11 +457,30 @@ class _PracticeProblemSelectionScreenState
     return AppBar(
       centerTitle: true,
       title: StandardText(
-        text: '복습할 문제 선택',
+        text: '추가할 오답노트 선택',
         fontSize: 18,
         color: themeProvider.primaryColor,
       ),
       backgroundColor: Colors.white,
+    );
+  }
+
+  Widget _buildSearchControlPanel(
+      BuildContext context, ThemeHandler themeProvider) {
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: _buildSearchModeSelector(themeProvider),
+        ),
+        const SizedBox(height: 24),
+        if (_searchMode == _PracticeSearchMode.folder)
+          _buildFolderList(context, themeProvider)
+        else if (_searchMode == _PracticeSearchMode.tag)
+          _buildTagFilterBar(themeProvider)
+        else
+          _buildTitleSearchBar(themeProvider),
+      ],
     );
   }
 
@@ -502,9 +514,8 @@ class _PracticeProblemSelectionScreenState
                 Icon(
                   _modeIcon(mode),
                   size: 15,
-                  color: selected
-                      ? themeProvider.primaryColor
-                      : Colors.grey[600]!,
+                  color:
+                      selected ? themeProvider.primaryColor : Colors.grey[600]!,
                 ),
                 const SizedBox(width: 5),
                 StandardText(
@@ -521,24 +532,21 @@ class _PracticeProblemSelectionScreenState
       );
     }
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Container(
-        padding: const EdgeInsets.all(6),
-        decoration: BoxDecoration(
-          color: Colors.grey[100],
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey[200]!, width: 1),
-        ),
-        child: Row(
-          children: [
-            modeChip(mode: _PracticeSearchMode.folder, label: '폴더로 검색'),
-            const SizedBox(width: 6),
-            modeChip(mode: _PracticeSearchMode.tag, label: '태그로 검색'),
-            const SizedBox(width: 6),
-            modeChip(mode: _PracticeSearchMode.title, label: '제목으로 검색'),
-          ],
-        ),
+    return Container(
+      padding: const EdgeInsets.all(6),
+      decoration: BoxDecoration(
+        color: Colors.grey[100],
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey[200]!, width: 1),
+      ),
+      child: Row(
+        children: [
+          modeChip(mode: _PracticeSearchMode.folder, label: '폴더'),
+          const SizedBox(width: 6),
+          modeChip(mode: _PracticeSearchMode.tag, label: '태그'),
+          const SizedBox(width: 6),
+          modeChip(mode: _PracticeSearchMode.title, label: '제목'),
+        ],
       ),
     );
   }
