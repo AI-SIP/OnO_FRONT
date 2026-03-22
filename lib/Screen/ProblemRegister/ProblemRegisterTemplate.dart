@@ -127,23 +127,6 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
                 onPicked: (id) => setState(() => _selectedFolderId = id),
               ),
               SizedBox(height: spacing),
-              LabeledTextField(
-                label: '제목',
-                hintText: '오답노트의 제목을 작성해주세요!',
-                icon: Icons.info,
-                controller: _titleCtrl,
-              ),
-              SizedBox(height: spacing),
-              _buildTagSection(context),
-              SizedBox(height: spacing),
-              LabeledTextField(
-                label: '메모',
-                controller: _memoCtrl,
-                icon: Icons.edit,
-                hintText: '기록하고 싶은 내용을 간단하게 작성해주세요!',
-                maxLines: 3,
-              ),
-              SizedBox(height: spacing),
               if (isWide)
                 Row(
                   children: [
@@ -232,6 +215,23 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
                     ),
                   ],
                 ),
+              SizedBox(height: spacing),
+              LabeledTextField(
+                label: '제목',
+                hintText: '오답노트의 제목을 작성해주세요!',
+                icon: Icons.info,
+                controller: _titleCtrl,
+              ),
+              SizedBox(height: spacing),
+              _buildTagSection(context),
+              SizedBox(height: spacing),
+              LabeledTextField(
+                label: '메모',
+                controller: _memoCtrl,
+                icon: Icons.edit,
+                hintText: '기록하고 싶은 내용을 간단하게 작성해주세요!',
+                maxLines: 3,
+              ),
             ],
           ),
         ));
