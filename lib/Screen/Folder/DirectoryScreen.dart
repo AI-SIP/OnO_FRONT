@@ -1596,8 +1596,15 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
           SizedBox(
             width: 50,
             height: 70,
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(8.0),
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8.0),
+                border: Border.all(
+                  color: Colors.grey[300]!,
+                  width: 0.8,
+                ),
+              ),
+              clipBehavior: Clip.antiAlias,
               child: isSelected
                   ? Icon(Icons.check, color: themeProvider.primaryColor)
                   : DisplayImage(
@@ -1632,16 +1639,9 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 4),
-                StandardText(
-                  text: problem.createdAt != null
-                      ? '작성 일시: ${formatDateTime(problem.createdAt!)}'
-                      : '작성 일시: 정보 없음',
-                  fontSize: 12,
-                  color: Colors.grey,
-                ),
+                const SizedBox(height: 2),
                 if (problem.tags.isNotEmpty) ...[
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 4),
                   Wrap(
                     spacing: 6,
                     runSpacing: 6,
@@ -1650,8 +1650,12 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 8, vertical: 3),
                         decoration: BoxDecoration(
-                          color: themeProvider.primaryColor.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(999),
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: themeProvider.primaryColor,
+                            width: 1,
+                          ),
                         ),
                         child: StandardText(
                           text: '#${tag.name}',
