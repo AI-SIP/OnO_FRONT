@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 
 import '../../Model/Problem/ProblemModel.dart';
@@ -454,16 +455,18 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
     }
 
     if (_problems.isEmpty) {
-      final emptyText = _mode == _SearchMode.tag
-          ? '해당 태그의 문제가 없습니다.'
-          : (_currentQuery.isEmpty ? '검색어를 입력해주세요.' : '검색 결과가 없습니다.');
-      return Center(
-        child: StandardText(
-          text: emptyText,
-          fontSize: 15,
-          color: Colors.grey[600]!,
-        ),
-      );
+      if (_mode == _SearchMode.title && _currentQuery.isEmpty) {
+        return const Center(
+          child: StandardText(
+            text: '검색어를 입력해주세요.',
+            fontSize: 15,
+            color: Colors.black,
+          ),
+        );
+      }
+      final emptyText =
+          _mode == _SearchMode.tag ? '해당 태그의 오답노트가 없습니다.' : '검색 결과가 없습니다.';
+      return _buildEmptyState(emptyText);
     }
 
     return ListView.builder(
@@ -481,6 +484,35 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
         final problem = _problems[index];
         return _buildProblemTile(problem, themeProvider);
       },
+    );
+  }
+
+  Widget _buildEmptyState(String message) {
+    return LayoutBuilder(
+      builder: (context, constraints) => SingleChildScrollView(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(minHeight: constraints.maxHeight),
+          child: Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                SvgPicture.asset(
+                  'assets/Icon/PencilDetail.svg',
+                  width: 100,
+                  height: 100,
+                ),
+                const SizedBox(height: 16),
+                StandardText(
+                  text: message,
+                  color: Colors.black,
+                  fontSize: 16,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 
