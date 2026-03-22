@@ -25,6 +25,7 @@ import '../../Module/Util/FolderPickerDialog.dart';
 import '../../Provider/UserProvider.dart';
 import '../ProblemDetail/ProblemDetailScreen.dart';
 import '../ProblemRegister/ProblemRegisterScreen.dart';
+import '../ProblemSearch/TagProblemSearchScreen.dart';
 import 'UserGuideScreen.dart';
 
 class DirectoryScreen extends StatefulWidget {
@@ -517,6 +518,21 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
           padding: const EdgeInsets.only(right: 16.0), // 우측에 여백 추가
           child: Row(
             children: [
+              if (!_isSelectionMode)
+                IconButton(
+                  icon: Icon(
+                    Icons.search,
+                    color: themeProvider.primaryColor,
+                  ),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const TagProblemSearchScreen(),
+                      ),
+                    );
+                  },
+                ),
               IconButton(
                 icon: Icon(
                   _isSelectionMode ? Icons.close : Icons.more_vert,

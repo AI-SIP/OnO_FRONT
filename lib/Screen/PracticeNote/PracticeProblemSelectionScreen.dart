@@ -16,6 +16,7 @@ import '../../Module/Theme/NoteIconHandler.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/FoldersProvider.dart';
 import '../../Provider/ProblemsProvider.dart';
+import '../ProblemSearch/TagProblemSearchScreen.dart';
 
 class PracticeProblemSelectionScreen extends StatefulWidget {
   final PracticeNoteDetailModel? practiceModel;
@@ -262,7 +263,30 @@ class _PracticeProblemSelectionScreenState
         color: themeProvider.primaryColor,
       ),
       backgroundColor: Colors.white,
+      actions: [
+        IconButton(
+          icon: Icon(Icons.search, color: themeProvider.primaryColor),
+          onPressed: _openTagSearch,
+        ),
+      ],
     );
+  }
+
+  Future<void> _openTagSearch() async {
+    final searchedSelection = await Navigator.push<List<ProblemModel>>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => TagProblemSearchScreen(
+          selectable: true,
+          initialSelectedProblems: List<ProblemModel>.from(selectedProblems),
+        ),
+      ),
+    );
+
+    if (searchedSelection == null || !mounted) return;
+    setState(() {
+      selectedProblems = searchedSelection;
+    });
   }
 
   Widget _buildFolderList(BuildContext context, ThemeHandler themeProvider) {
