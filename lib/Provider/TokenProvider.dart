@@ -11,6 +11,16 @@ import '../Exception/ApiException.dart';
 class TokenProvider {
   final storage = const FlutterSecureStorage();
   static Future<void>? _refreshInFlight;
+  static Future<void> Function()? _onAuthFailure;
+
+  static void registerAuthFailureHandler(Future<void> Function() handler) {
+    _onAuthFailure = handler;
+  }
+
+  Future<void> _notifyAuthFailure() async {
+    if (_onAuthFailure == null) return;
+    await _onAuthFailure!();
+  }
 
   Future<void> setAccessToken(String accessToken) async {
     await storage.write(key: 'accessToken', value: accessToken);
@@ -32,6 +42,9 @@ class TokenProvider {
         await refreshAccessToken();
         return await storage.read(key: 'accessToken') ?? accessToken;
       } catch (e) {
+        if (e is UnauthorizedException) {
+          rethrow;
+        }
         log('Pre-refresh failed, fallback to existing access token: $e');
         return accessToken;
       }
@@ -80,6 +93,7 @@ class TokenProvider {
     String? refreshToken = await storage.read(key: 'refreshToken');
     if (refreshToken == null) {
       log('No refresh token available.');
+      await _notifyAuthFailure();
       throw UnauthorizedException(message: '로그인이 필요합니다. 다시 로그인해주세요.');
     }
 
@@ -101,6 +115,7 @@ class TokenProvider {
       }
       if (response.statusCode == 401) {
         await deleteToken();
+        await _notifyAuthFailure();
         throw UnauthorizedException(message: errorMessage);
       }
       throw ApiException(

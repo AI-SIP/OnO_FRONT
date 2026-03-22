@@ -39,7 +39,9 @@ class UserProvider with ChangeNotifier {
   UserInfoModel? userInfoModel;
 
   UserProvider(
-      this.problemsProvider, this.foldersProvider, this.practiceProvider);
+      this.problemsProvider, this.foldersProvider, this.practiceProvider) {
+    TokenProvider.registerAuthFailureHandler(_handleAuthFailure);
+  }
 
   LoginStatus _loginStatus = LoginStatus.waiting;
   bool _isFirstLogin = true;
@@ -148,7 +150,7 @@ class UserProvider with ChangeNotifier {
     FirebaseAnalytics.instance.logLogin(loginMethod: loginMethod);
   }
 
-  Future<bool> saveUserToken({dynamic? response}) async {
+  Future<bool> saveUserToken({dynamic response}) async {
     log('Server response: $response');
     log('Response type: ${response.runtimeType}');
 
@@ -236,8 +238,7 @@ class UserProvider with ChangeNotifier {
     } on UnauthorizedException catch (error, stackTrace) {
       log('자동 로그인 실패(인증 만료): $error');
       await Sentry.captureException(error, stackTrace: stackTrace);
-      _loginStatus = LoginStatus.logout;
-      await resetUserInfo();
+      await _handleAuthFailure();
     } catch (error, stackTrace) {
       // 일시적인 네트워크 오류 등은 로그인 상태 유지
       log('자동 로그인 일시 실패: $error');
@@ -256,9 +257,9 @@ class UserProvider with ChangeNotifier {
     try {
       await tokenProvider.refreshAccessTokenIfNeeded();
     } on UnauthorizedException catch (error, stackTrace) {
-      // 사용자 명시 로그아웃 전까지는 앱 복귀 시 자동 로그아웃하지 않음
-      log('앱 복귀 중 인증 만료(상태 유지): $error');
+      log('앱 복귀 중 인증 만료: $error');
       await Sentry.captureException(error, stackTrace: stackTrace);
+      await _handleAuthFailure();
     } catch (error, stackTrace) {
       // 복귀 순간 네트워크 이슈로는 세션을 끊지 않음
       log('앱 복귀 중 세션 갱신 일시 실패: $error');
@@ -317,5 +318,11 @@ class UserProvider with ChangeNotifier {
     problemsProvider.clear();
     foldersProvider.clear();
     practiceProvider.clear();
+    notifyListeners();
+  }
+
+  Future<void> _handleAuthFailure() async {
+    if (_loginStatus == LoginStatus.logout) return;
+    await resetUserInfo();
   }
 }

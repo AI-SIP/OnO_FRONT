@@ -22,10 +22,10 @@ import '../../Provider/UserProvider.dart';
 import '../../Service/Api/FileUpload/FileUploadService.dart';
 import '../../Service/Api/Problem/ProblemService.dart';
 import '../../Service/Api/Tag/TagService.dart';
+import 'TagSelectionScreen.dart';
 import 'Widget/DatePickerWidget.dart';
 import 'Widget/ImageGridWidget.dart';
 import 'Widget/LabeledTextField.dart';
-import 'Widget/TagSelectorWidget.dart';
 
 class ProblemRegisterTemplate extends StatefulWidget {
   final ProblemModel? problemModel;
@@ -134,20 +134,14 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
                 controller: _titleCtrl,
               ),
               SizedBox(height: spacing),
+              _buildTagSection(context),
+              SizedBox(height: spacing),
               LabeledTextField(
                 label: '메모',
                 controller: _memoCtrl,
                 icon: Icons.edit,
                 hintText: '기록하고 싶은 내용을 간단하게 작성해주세요!',
                 maxLines: 3,
-              ),
-              SizedBox(height: spacing),
-              TagSelectorWidget(
-                availableTags: _availableTags,
-                selectedTagIds: _selectedTagIds,
-                isLoading: _isLoadingTags,
-                onToggleTag: _toggleTagSelection,
-                onCreateTag: _createTag,
               ),
               SizedBox(height: spacing),
               if (isWide)
@@ -422,44 +416,146 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
     }
   }
 
-  void _toggleTagSelection(int tagId) {
-    if (_selectedTagIds.contains(tagId)) {
-      setState(() => _selectedTagIds.remove(tagId));
-      return;
-    }
+  Future<void> _openTagSelectionScreen() async {
+    final result = await Navigator.of(context).push<TagSelectionResult>(
+      MaterialPageRoute(
+        builder: (_) => TagSelectionScreen(
+          initialTags: List<TagModel>.from(_availableTags),
+          initialSelectedTagIds: Set<int>.from(_selectedTagIds),
+        ),
+      ),
+    );
 
-    if (_selectedTagIds.length >= 5) {
+    if (result == null || !mounted) return;
+
+    final selectedFromResult = result.selectedTagIds.toSet();
+    if (selectedFromResult.length > 5) {
       SnackBarDialog.showSnackBar(
         context: context,
         message: '태그는 최대 5개까지 선택할 수 있습니다.',
         backgroundColor: Colors.orange,
       );
-      return;
     }
 
-    setState(() => _selectedTagIds.add(tagId));
+    setState(() {
+      _selectedTagIds
+        ..clear()
+        ..addAll(selectedFromResult.take(5));
+      _availableTags
+        ..clear()
+        ..addAll(result.availableTags);
+    });
   }
 
-  Future<void> _createTag(String rawName) async {
-    try {
-      final created = await _tagService.createTag(rawName);
+  Widget _buildTagSection(BuildContext context) {
+    final themeProvider = Provider.of<ThemeHandler>(context);
 
-      final index =
-          _availableTags.indexWhere((tag) => tag.tagId == created.tagId);
-      if (index == -1) {
-        _availableTags.add(created);
-      } else {
-        _availableTags[index] = created;
-      }
-      _availableTags.sort((a, b) => a.name.compareTo(b.name));
-
-      _toggleTagSelection(created.tagId);
-      if (mounted) {
-        setState(() {});
-      }
-    } catch (e) {
-      log('태그 생성 실패: $e');
-    }
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.grey[50],
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey[200]!, width: 1),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: themeProvider.primaryColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  Icons.sell_outlined,
+                  color: themeProvider.primaryColor,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 12),
+              const StandardText(
+                text: '태그',
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+                color: Colors.black87,
+              ),
+              const Spacer(),
+              ElevatedButton(
+                onPressed: _isLoadingTags ? null : _openTagSelectionScreen,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: themeProvider.primaryColor,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
+                  minimumSize: const Size(0, 36),
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  visualDensity: VisualDensity.compact,
+                ),
+                child: _isLoadingTags
+                    ? const SizedBox(
+                        width: 13,
+                        height: 13,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : const StandardText(
+                        text: '태그 추가',
+                        color: Colors.white,
+                        fontSize: 12,
+                      ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: Colors.grey[300]!, width: 1),
+            ),
+            child: _selectedTagIds.isEmpty
+                ? StandardText(
+                    text: '선택된 태그가 없습니다.',
+                    fontSize: 13,
+                    color: Colors.grey[600]!,
+                  )
+                : Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: _availableTags
+                        .where((tag) => _selectedTagIds.contains(tag.tagId))
+                        .map((tag) => Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 10, vertical: 5),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(
+                                  color: themeProvider.primaryColor,
+                                  width: 1,
+                                ),
+                              ),
+                              child: StandardText(
+                                text: '#${tag.name}',
+                                fontSize: 12,
+                                color: themeProvider.primaryColor,
+                              ),
+                            ))
+                        .toList(),
+                  ),
+          ),
+        ],
+      ),
+    );
   }
 
   void resetAll() {
