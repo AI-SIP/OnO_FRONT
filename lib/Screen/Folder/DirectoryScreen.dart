@@ -1640,32 +1640,50 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                   ],
                 ),
                 const SizedBox(height: 2),
-                if (problem.tags.isNotEmpty) ...[
-                  const SizedBox(height: 4),
-                  Wrap(
-                    spacing: 6,
-                    runSpacing: 6,
-                    children: problem.tags.map((tag) {
-                      return Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 3),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(
-                            color: themeProvider.primaryColor,
-                            width: 1,
+                const SizedBox(height: 4),
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  children: problem.tags.isNotEmpty
+                      ? problem.tags.map((tag) {
+                          return Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: themeProvider.primaryColor,
+                                width: 1,
+                              ),
+                            ),
+                            child: StandardText(
+                              text: '#${tag.name}',
+                              fontSize: 11,
+                              color: themeProvider.primaryColor,
+                            ),
+                          );
+                        }).toList()
+                      : [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: Colors.grey[300]!,
+                                width: 1,
+                              ),
+                            ),
+                            child: StandardText(
+                              text: '태그 없음',
+                              fontSize: 11,
+                              color: Colors.grey[400]!,
+                            ),
                           ),
-                        ),
-                        child: StandardText(
-                          text: '#${tag.name}',
-                          fontSize: 11,
-                          color: themeProvider.primaryColor,
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                ],
+                        ],
+                ),
               ],
             ),
           ),
