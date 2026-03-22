@@ -99,6 +99,457 @@ class _TagSelectionScreenState extends State<TagSelectionScreen> {
     }
   }
 
+  void _showActionDialog() {
+    final openTime = DateTime.now();
+    showModalBottomSheet(
+      backgroundColor: Colors.transparent,
+      context: context,
+      isDismissible: false,
+      builder: (context) {
+        return TapRegion(
+          onTapOutside: (_) {
+            if (DateTime.now().difference(openTime) <
+                const Duration(milliseconds: 500)) {
+              return;
+            }
+            if (Navigator.canPop(context)) {
+              Navigator.pop(context);
+            }
+          },
+          child: Container(
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(20),
+                topRight: Radius.circular(20),
+              ),
+            ),
+            child: Padding(
+              padding:
+                  const EdgeInsets.symmetric(vertical: 24.0, horizontal: 20.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 40,
+                    height: 4,
+                    margin: const EdgeInsets.only(bottom: 20),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.red.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Icon(
+                          Icons.delete_outline,
+                          color: Colors.red,
+                          size: 22,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      const StandardText(
+                        text: '태그 관리',
+                        fontSize: 20,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black87,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  _buildActionItem(
+                    icon: Icons.sell_outlined,
+                    iconColor: Colors.red,
+                    title: '태그 삭제',
+                    titleColor: Colors.red,
+                    onTap: () {
+                      Navigator.pop(context);
+                      _showDeleteTagSheet();
+                    },
+                  ),
+                  const SizedBox(height: 8),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildActionItem({
+    required IconData icon,
+    required Color iconColor,
+    required String title,
+    Color? titleColor,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: Colors.grey[50],
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey[200]!, width: 1),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: iconColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Icon(
+                icon,
+                color: iconColor,
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: StandardText(
+                text: title,
+                fontSize: 16,
+                color: titleColor ?? Colors.black87,
+              ),
+            ),
+            Icon(
+              Icons.arrow_forward_ios,
+              size: 14,
+              color: Colors.grey[400],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showDeleteTagSheet() {
+    final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
+    final selectedDeleteTagIds = <int>{};
+    bool isDeleting = false;
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (sheetContext) {
+        return StatefulBuilder(
+          builder: (context, setSheetState) {
+            return Container(
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(20),
+                  topRight: Radius.circular(20),
+                ),
+              ),
+              child: SafeArea(
+                top: false,
+                child: Padding(
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 40,
+                        height: 4,
+                        margin: const EdgeInsets.only(bottom: 16),
+                        decoration: BoxDecoration(
+                          color: Colors.grey[300],
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.red.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Icon(
+                              Icons.delete_outline,
+                              color: Colors.red,
+                              size: 20,
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          const StandardText(
+                            text: '삭제할 태그를 선택하세요',
+                            fontSize: 17,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black87,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 14),
+                      SizedBox(
+                        height: MediaQuery.of(context).size.height * 0.5,
+                        child: _tags.isEmpty
+                            ? const Center(
+                                child: StandardText(text: '삭제할 태그가 없습니다.'),
+                              )
+                            : ListView.builder(
+                                itemCount: _tags.length,
+                                itemBuilder: (context, index) {
+                                  final tag = _tags[index];
+                                  final isSelectedForDelete =
+                                      selectedDeleteTagIds.contains(tag.tagId);
+
+                                  return InkWell(
+                                    onTap: isDeleting
+                                        ? null
+                                        : () {
+                                            setSheetState(() {
+                                              if (isSelectedForDelete) {
+                                                selectedDeleteTagIds
+                                                    .remove(tag.tagId);
+                                              } else {
+                                                selectedDeleteTagIds
+                                                    .add(tag.tagId);
+                                              }
+                                            });
+                                          },
+                                    child: AnimatedContainer(
+                                      duration:
+                                          const Duration(milliseconds: 150),
+                                      margin: const EdgeInsets.symmetric(
+                                          vertical: 4),
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 12, vertical: 12),
+                                      decoration: BoxDecoration(
+                                        color: isSelectedForDelete
+                                            ? Colors.red.withOpacity(0.08)
+                                            : Colors.white,
+                                        borderRadius: BorderRadius.circular(10),
+                                        border: Border.all(
+                                          color: isSelectedForDelete
+                                              ? Colors.red
+                                              : Colors.grey[300]!,
+                                          width: isSelectedForDelete ? 1.4 : 1,
+                                        ),
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          Container(
+                                            width: 24,
+                                            height: 24,
+                                            decoration: BoxDecoration(
+                                              color: isSelectedForDelete
+                                                  ? Colors.red.withOpacity(0.12)
+                                                  : Colors.grey[100],
+                                              borderRadius:
+                                                  BorderRadius.circular(6),
+                                            ),
+                                            child: Center(
+                                              child: StandardText(
+                                                text: '#',
+                                                fontSize: 13,
+                                                color: isSelectedForDelete
+                                                    ? Colors.red
+                                                    : Colors.grey[600]!,
+                                              ),
+                                            ),
+                                          ),
+                                          const SizedBox(width: 10),
+                                          Expanded(
+                                            child: StandardText(
+                                              text: tag.name,
+                                              fontSize: 14,
+                                              color: isSelectedForDelete
+                                                  ? Colors.red
+                                                  : Colors.black87,
+                                              fontWeight: isSelectedForDelete
+                                                  ? FontWeight.w600
+                                                  : FontWeight.w500,
+                                            ),
+                                          ),
+                                          Icon(
+                                            isSelectedForDelete
+                                                ? Icons.check_circle
+                                                : Icons.circle_outlined,
+                                            color: isSelectedForDelete
+                                                ? Colors.red
+                                                : Colors.grey[400],
+                                            size: 20,
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                      ),
+                      const SizedBox(height: 8),
+                      SizedBox(
+                        width: double.infinity,
+                        child: TextButton(
+                          onPressed: isDeleting
+                              ? null
+                              : () async {
+                                  if (selectedDeleteTagIds.isEmpty) {
+                                    return;
+                                  }
+                                  final confirmed =
+                                      await _showBulkDeleteConfirmDialog(
+                                    selectedDeleteTagIds.length,
+                                  );
+                                  if (!confirmed) return;
+
+                                  setSheetState(() => isDeleting = true);
+                                  await _tagService.deleteTags(
+                                    selectedDeleteTagIds.toList(),
+                                  );
+                                  if (!mounted) return;
+                                  setState(() {
+                                    _tags.removeWhere((tag) =>
+                                        selectedDeleteTagIds
+                                            .contains(tag.tagId));
+                                    _selectedTagIds.removeWhere((id) =>
+                                        selectedDeleteTagIds.contains(id));
+                                  });
+                                  if (!sheetContext.mounted) return;
+                                  Navigator.pop(sheetContext);
+                                },
+                          style: TextButton.styleFrom(
+                            backgroundColor: Colors.red,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                          ),
+                          child: isDeleting
+                              ? const SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white,
+                                  ),
+                                )
+                              : const StandardText(
+                                  text: '삭제',
+                                  color: Colors.white,
+                                  fontSize: 14,
+                                ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Future<bool> _showBulkDeleteConfirmDialog(int count) async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.red.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(
+                        Icons.delete_outline,
+                        color: Colors.red,
+                        size: 20,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    const StandardText(
+                      text: '태그 삭제',
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black87,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 18),
+                StandardText(
+                  text: '선택한 태그 $count개를 삭제할까요?',
+                  fontSize: 15,
+                  color: Colors.black87,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 20),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextButton(
+                        onPressed: () => Navigator.pop(context, false),
+                        style: TextButton.styleFrom(
+                          backgroundColor: Colors.grey[200],
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                        ),
+                        child: const StandardText(
+                          text: '취소',
+                          fontSize: 14,
+                          color: Colors.black87,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: TextButton(
+                        onPressed: () => Navigator.pop(context, true),
+                        style: TextButton.styleFrom(
+                          backgroundColor: Colors.red,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                        ),
+                        child: const StandardText(
+                          text: '삭제',
+                          fontSize: 14,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+    return result ?? false;
+  }
+
   void _toggleTag(int tagId, bool isSelected) {
     if (isSelected) {
       _selectedTagIds.add(tagId);
@@ -211,6 +662,15 @@ class _TagSelectionScreenState extends State<TagSelectionScreen> {
         ),
         backgroundColor: Colors.white,
         centerTitle: true,
+        actions: [
+          IconButton(
+            onPressed: _showActionDialog,
+            icon: Icon(
+              Icons.more_vert,
+              color: themeProvider.primaryColor,
+            ),
+          ),
+        ],
       ),
       body: Column(
         children: [

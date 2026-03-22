@@ -33,4 +33,12 @@ class TagService {
       url: '$_baseUrl/$tagId',
     );
   }
+
+  Future<void> deleteTags(List<int> deleteTagIdList) async {
+    await _httpService.sendRequest(
+      method: 'DELETE',
+      url: _baseUrl,
+      body: {'deleteTagIdList': deleteTagIdList},
+    );
+  }
 }
