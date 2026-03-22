@@ -203,4 +203,29 @@ class ProblemService {
       (json) => ProblemModel.fromJson(json),
     );
   }
+
+  // V2 API - Cursor-based pagination for tag problems
+  Future<PaginatedResponse<ProblemModel>> getTagProblemsV2({
+    required int tagId,
+    int? cursor,
+    int size = 20,
+  }) async {
+    final queryParams = <String, String>{
+      'size': size.toString(),
+    };
+    if (cursor != null) {
+      queryParams['cursor'] = cursor.toString();
+    }
+
+    final data = await httpService.sendRequest(
+      method: 'GET',
+      url: '$baseUrl/tag/$tagId/V2',
+      queryParams: queryParams,
+    ) as Map<String, dynamic>;
+
+    return PaginatedResponse.fromJson(
+      data,
+      (json) => ProblemModel.fromJson(json),
+    );
+  }
 }

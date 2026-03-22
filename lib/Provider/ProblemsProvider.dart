@@ -221,4 +221,32 @@ class ProblemsProvider with ChangeNotifier {
       rethrow;
     }
   }
+
+  // V2 API - 태그 기반 문제 무한 스크롤 조회
+  Future<PaginatedResponse<ProblemModel>> loadMoreTagProblemsV2({
+    required int tagId,
+    int? cursor,
+    int size = 20,
+  }) async {
+    try {
+      final response = await problemService.getTagProblemsV2(
+        tagId: tagId,
+        cursor: cursor,
+        size: size,
+      );
+
+      for (var problem in response.content) {
+        _upsertProblem(problem);
+      }
+
+      log('Loaded ${response.content.length} problems from tag $tagId');
+      notifyListeners();
+
+      return response;
+    } catch (e, stackTrace) {
+      log('Error loading tag problems V2: $e');
+      log(stackTrace.toString());
+      rethrow;
+    }
+  }
 }
