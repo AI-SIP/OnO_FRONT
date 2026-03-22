@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -9,6 +11,8 @@ import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/ProblemsProvider.dart';
 import '../../Service/Api/Tag/TagService.dart';
 import '../ProblemDetail/ProblemDetailScreen.dart';
+
+enum _SearchMode { tag, title }
 
 class TagProblemSearchScreen extends StatefulWidget {
   final bool selectable;
@@ -27,15 +31,21 @@ class TagProblemSearchScreen extends StatefulWidget {
 class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
   final TagService _tagService = TagService();
   final ScrollController _scrollController = ScrollController();
+  final TextEditingController _queryController = TextEditingController();
+
+  _SearchMode _mode = _SearchMode.tag;
 
   List<TagModel> _tags = [];
   int? _selectedTagId;
+  bool _isLoadingTags = false;
 
   List<ProblemModel> _problems = [];
   int? _cursor;
   bool _hasNext = false;
-  bool _isLoadingTags = false;
   bool _isLoadingProblems = false;
+
+  String _currentQuery = '';
+  Timer? _debounce;
 
   final List<ProblemModel> _selectedProblems = [];
 
@@ -44,13 +54,17 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
     super.initState();
     _selectedProblems.addAll(widget.initialSelectedProblems);
     _scrollController.addListener(_onScroll);
-    _loadTags();
+    _queryController.addListener(_onQueryChanged);
+    _loadTagsAndFirstTagProblems();
   }
 
   @override
   void dispose() {
+    _debounce?.cancel();
     _scrollController.removeListener(_onScroll);
+    _queryController.removeListener(_onQueryChanged);
     _scrollController.dispose();
+    _queryController.dispose();
     super.dispose();
   }
 
@@ -61,20 +75,32 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
     }
   }
 
-  Future<void> _loadTags() async {
+  void _onQueryChanged() {
+    if (_mode != _SearchMode.title) return;
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 300), () {
+      final trimmed = _queryController.text.trim();
+      if (trimmed == _currentQuery) return;
+      _searchByTitle(trimmed, isInitial: true);
+    });
+  }
+
+  Future<void> _loadTagsAndFirstTagProblems() async {
     setState(() => _isLoadingTags = true);
     try {
       final tags = await _tagService.getMyTags();
       tags.sort((a, b) => a.name.compareTo(b.name));
       if (!mounted) return;
+
       setState(() {
         _tags = tags;
         if (_tags.isNotEmpty) {
           _selectedTagId = _tags.first.tagId;
         }
       });
-      if (_selectedTagId != null) {
-        await _loadInitialProblems(_selectedTagId!);
+
+      if (_selectedTagId != null && _mode == _SearchMode.tag) {
+        await _loadTagProblems(_selectedTagId!, isInitial: true);
       }
     } finally {
       if (mounted) {
@@ -83,25 +109,110 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
     }
   }
 
-  Future<void> _loadInitialProblems(int tagId) async {
+  Future<void> _switchMode(_SearchMode mode) async {
+    if (_mode == mode) return;
     setState(() {
-      _selectedTagId = tagId;
+      _mode = mode;
       _problems = [];
       _cursor = null;
       _hasNext = false;
-      _isLoadingProblems = true;
+      _isLoadingProblems = false;
     });
+
+    if (_mode == _SearchMode.tag && _selectedTagId != null) {
+      await _loadTagProblems(_selectedTagId!, isInitial: true);
+      return;
+    }
+
+    final trimmed = _queryController.text.trim();
+    _currentQuery = trimmed;
+    if (trimmed.isNotEmpty) {
+      await _searchByTitle(trimmed, isInitial: true);
+    }
+  }
+
+  Future<void> _loadTagProblems(int tagId, {required bool isInitial}) async {
+    if (_isLoadingProblems) return;
+
+    if (isInitial) {
+      setState(() {
+        _selectedTagId = tagId;
+        _problems = [];
+        _cursor = null;
+        _hasNext = false;
+        _isLoadingProblems = true;
+      });
+    } else {
+      if (!_hasNext) return;
+      setState(() => _isLoadingProblems = true);
+    }
 
     try {
       final problemsProvider = context.read<ProblemsProvider>();
       final response = await problemsProvider.loadMoreTagProblemsV2(
         tagId: tagId,
-        cursor: null,
+        cursor: isInitial ? null : _cursor,
         size: 20,
       );
       if (!mounted) return;
       setState(() {
-        _problems = response.content;
+        if (isInitial) {
+          _problems = response.content;
+        } else {
+          _problems.addAll(response.content);
+        }
+        _cursor = response.nextCursor;
+        _hasNext = response.hasNext;
+      });
+    } finally {
+      if (mounted) {
+        setState(() => _isLoadingProblems = false);
+      }
+    }
+  }
+
+  Future<void> _searchByTitle(String query, {required bool isInitial}) async {
+    if (_isLoadingProblems) return;
+
+    final trimmed = query.trim();
+    _currentQuery = trimmed;
+
+    if (trimmed.isEmpty) {
+      setState(() {
+        _problems = [];
+        _cursor = null;
+        _hasNext = false;
+        _isLoadingProblems = false;
+      });
+      return;
+    }
+
+    if (isInitial) {
+      setState(() {
+        _problems = [];
+        _cursor = null;
+        _hasNext = false;
+        _isLoadingProblems = true;
+      });
+    } else {
+      if (!_hasNext) return;
+      setState(() => _isLoadingProblems = true);
+    }
+
+    try {
+      final problemsProvider = context.read<ProblemsProvider>();
+      final response = await problemsProvider.loadMoreTitleProblemsV2(
+        query: trimmed,
+        cursor: isInitial ? null : _cursor,
+        size: 20,
+      );
+      if (!mounted) return;
+      setState(() {
+        if (isInitial) {
+          _problems = response.content;
+        } else {
+          _problems.addAll(response.content);
+        }
         _cursor = response.nextCursor;
         _hasNext = response.hasNext;
       });
@@ -113,26 +224,15 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
   }
 
   Future<void> _loadMoreProblems() async {
-    if (_isLoadingProblems || !_hasNext || _selectedTagId == null) return;
+    if (_isLoadingProblems || !_hasNext) return;
 
-    setState(() => _isLoadingProblems = true);
-    try {
-      final problemsProvider = context.read<ProblemsProvider>();
-      final response = await problemsProvider.loadMoreTagProblemsV2(
-        tagId: _selectedTagId!,
-        cursor: _cursor,
-        size: 20,
-      );
-      if (!mounted) return;
-      setState(() {
-        _problems.addAll(response.content);
-        _cursor = response.nextCursor;
-        _hasNext = response.hasNext;
-      });
-    } finally {
-      if (mounted) {
-        setState(() => _isLoadingProblems = false);
-      }
+    if (_mode == _SearchMode.tag && _selectedTagId != null) {
+      await _loadTagProblems(_selectedTagId!, isInitial: false);
+      return;
+    }
+
+    if (_mode == _SearchMode.title && _currentQuery.isNotEmpty) {
+      await _searchByTitle(_currentQuery, isInitial: false);
     }
   }
 
@@ -155,6 +255,7 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
   @override
   Widget build(BuildContext context) {
     final themeProvider = context.watch<ThemeHandler>();
+    final baseTextStyle = const StandardText(text: '').getTextStyle();
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -162,19 +263,114 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
         centerTitle: true,
         backgroundColor: Colors.white,
         title: StandardText(
-          text: '태그로 문제 검색',
+          text: '오답노트 검색',
           fontSize: 18,
           color: themeProvider.primaryColor,
         ),
       ),
       body: Column(
         children: [
-          _buildTagFilterBar(themeProvider),
+          _buildModeSelector(themeProvider),
+          if (_mode == _SearchMode.tag)
+            _buildTagFilterBar(themeProvider)
+          else
+            _buildTitleSearchBar(themeProvider, baseTextStyle),
           Expanded(
             child: _buildProblemList(themeProvider),
           ),
           if (widget.selectable) _buildBottomConfirmButton(themeProvider),
         ],
+      ),
+    );
+  }
+
+  Widget _buildModeSelector(ThemeHandler themeProvider) {
+    Widget modeChip({
+      required _SearchMode mode,
+      required String label,
+    }) {
+      final selected = _mode == mode;
+      return Expanded(
+        child: InkWell(
+          onTap: () => _switchMode(mode),
+          borderRadius: BorderRadius.circular(10),
+          child: Container(
+            height: 38,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: selected
+                  ? themeProvider.primaryColor.withOpacity(0.08)
+                  : Colors.white,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color:
+                    selected ? themeProvider.primaryColor : Colors.grey[300]!,
+                width: 1,
+              ),
+            ),
+            child: StandardText(
+              text: label,
+              fontSize: 13,
+              color: selected ? themeProvider.primaryColor : Colors.grey[700]!,
+              fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
+      child: Row(
+        children: [
+          modeChip(mode: _SearchMode.tag, label: '태그로 검색'),
+          const SizedBox(width: 8),
+          modeChip(mode: _SearchMode.title, label: '제목으로 검색'),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTitleSearchBar(
+      ThemeHandler themeProvider, TextStyle baseTextStyle) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 4, 20, 10),
+      child: TextField(
+        controller: _queryController,
+        textInputAction: TextInputAction.search,
+        onSubmitted: (value) => _searchByTitle(value.trim(), isInitial: true),
+        style: baseTextStyle.copyWith(
+          fontSize: 14,
+          color: Colors.black87,
+          fontWeight: FontWeight.w500,
+        ),
+        decoration: InputDecoration(
+          hintText: '제목으로 검색 (예: 수특)',
+          hintStyle: baseTextStyle.copyWith(
+            color: Colors.grey[500],
+            fontSize: 13,
+          ),
+          prefixIcon: Icon(Icons.search, color: Colors.grey[500]),
+          filled: true,
+          fillColor: Colors.white,
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide: BorderSide(color: Colors.grey[300]!, width: 1),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide: BorderSide(color: Colors.grey[300]!, width: 1),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide: BorderSide(
+              color: themeProvider.primaryColor.withOpacity(0.5),
+              width: 1.5,
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -189,7 +385,7 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
 
     if (_tags.isEmpty) {
       return Padding(
-        padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+        padding: const EdgeInsets.fromLTRB(20, 10, 20, 8),
         child: Container(
           width: double.infinity,
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -209,7 +405,7 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 10),
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 10),
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         child: Row(
@@ -218,7 +414,7 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
             return Padding(
               padding: const EdgeInsets.only(right: 8),
               child: InkWell(
-                onTap: () => _loadInitialProblems(tag.tagId),
+                onTap: () => _loadTagProblems(tag.tagId, isInitial: true),
                 borderRadius: BorderRadius.circular(8),
                 child: Container(
                   padding:
@@ -258,9 +454,12 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
     }
 
     if (_problems.isEmpty) {
+      final emptyText = _mode == _SearchMode.tag
+          ? '해당 태그의 문제가 없습니다.'
+          : (_currentQuery.isEmpty ? '검색어를 입력해주세요.' : '검색 결과가 없습니다.');
       return Center(
         child: StandardText(
-          text: '해당 태그의 문제가 없습니다.',
+          text: emptyText,
           fontSize: 15,
           color: Colors.grey[600]!,
         ),
@@ -336,12 +535,10 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
                     ),
                   ),
                   clipBehavior: Clip.antiAlias,
-                  child: widget.selectable && isSelected
-                      ? Icon(Icons.check, color: themeProvider.primaryColor)
-                      : DisplayImage(
-                          imagePath: problemImageUrl,
-                          fit: BoxFit.cover,
-                        ),
+                  child: DisplayImage(
+                    imagePath: problemImageUrl,
+                    fit: BoxFit.cover,
+                  ),
                 ),
               ),
               const SizedBox(width: 16),
@@ -424,53 +621,48 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
   }
 
   Widget _buildBottomConfirmButton(ThemeHandler themeProvider) {
-    return SafeArea(
-      top: false,
-      child: Container(
-        padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
-        color: Colors.white,
-        child: SizedBox(
-          width: double.infinity,
-          height: 48,
-          child: ElevatedButton(
-            onPressed: () {
-              Navigator.pop(
-                  context, List<ProblemModel>.from(_selectedProblems));
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: themeProvider.primaryColor,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
+    return Container(
+      padding: const EdgeInsets.all(16.0),
+      margin: const EdgeInsets.only(bottom: 16.0),
+      width: MediaQuery.of(context).size.width * 0.7,
+      child: ElevatedButton(
+        onPressed: () {
+          Navigator.pop(context, List<ProblemModel>.from(_selectedProblems));
+        },
+        style: ElevatedButton.styleFrom(
+          backgroundColor: themeProvider.primaryColor,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15),
+          ),
+          padding: const EdgeInsets.all(10),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Expanded(
+              child: Center(
+                child: StandardText(
+                  text: '선택 완료',
+                  fontSize: 16,
+                  color: Colors.white,
+                ),
               ),
             ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const StandardText(
-                  text: '선택 완료',
-                  color: Colors.white,
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                ),
-                const SizedBox(width: 8),
-                Container(
-                  width: 22,
-                  height: 22,
-                  alignment: Alignment.center,
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                  ),
-                  child: StandardText(
-                    text: _selectedProblems.length.toString(),
-                    color: themeProvider.primaryColor,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ],
+            Container(
+              width: 24,
+              height: 24,
+              alignment: Alignment.center,
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+              ),
+              child: StandardText(
+                text: _selectedProblems.length.toString(),
+                fontSize: 12,
+                color: themeProvider.primaryColor,
+              ),
             ),
-          ),
+          ],
         ),
       ),
     );
