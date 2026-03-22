@@ -523,12 +523,32 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
       child: buildAnalysisSection(
           context, widget.problemModel.analysis, themeProvider.primaryColor),
     );
+    final hasTags = widget.problemModel.tags.isNotEmpty;
+    final hasMemo =
+        widget.problemModel.memo != null && widget.problemModel.memo!.isNotEmpty;
 
     // 메모 및 해설 이미지 위젯
     final memoAndImageWidget = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (widget.problemModel.tags.isNotEmpty) ...[
+        // 해설 이미지
+        _buildSectionCard(
+          themeProvider,
+          title: '해설 이미지',
+          icon: Icons.image_outlined,
+          trailing: _buildCountChip(answerImageCount, themeProvider),
+          child: buildImageSection(
+            context,
+            widget.problemModel.answerImageDataList
+                    ?.map((m) => m.imageUrl)
+                    .toList() ??
+                [],
+            '해설 이미지',
+            themeProvider,
+          ),
+        ),
+        if (hasTags || hasMemo) const SizedBox(height: 24),
+        if (hasTags) ...[
           _buildSectionCard(
             themeProvider,
             title: '태그',
@@ -558,10 +578,9 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
               }).toList(),
             ),
           ),
-          const SizedBox(height: 24),
+          if (hasMemo) const SizedBox(height: 24),
         ],
-        if (widget.problemModel.memo != null &&
-            widget.problemModel.memo!.isNotEmpty) ...[
+        if (hasMemo) ...[
           _buildSectionCard(
             themeProvider,
             title: '메모',
@@ -574,25 +593,7 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
               ),
             ),
           ),
-          const SizedBox(height: 25),
         ],
-
-        // 해설 이미지
-        _buildSectionCard(
-          themeProvider,
-          title: '해설 이미지',
-          icon: Icons.image_outlined,
-          trailing: _buildCountChip(answerImageCount, themeProvider),
-          child: buildImageSection(
-            context,
-            widget.problemModel.answerImageDataList
-                    ?.map((m) => m.imageUrl)
-                    .toList() ??
-                [],
-            '해설 이미지',
-            themeProvider,
-          ),
-        ),
       ],
     );
 
