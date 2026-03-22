@@ -58,6 +58,7 @@ class ProblemService {
     DateTime? solvedAt,
     required List<String> problemImageUrls,
     required List<String> answerImageUrls,
+    List<int>? tagIds,
   }) async {
     return await httpService.sendRequest(
       method: 'POST',
@@ -71,6 +72,7 @@ class ProblemService {
             solvedAt?.subtract(const Duration(hours: 9)).toIso8601String(),
         'problemImageUrls': problemImageUrls,
         'answerImageUrls': answerImageUrls,
+        'tagIds': tagIds,
       },
     ) as int;
   }

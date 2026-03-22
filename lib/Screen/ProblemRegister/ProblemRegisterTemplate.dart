@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 
 import '../../Model/Problem/ProblemModel.dart';
 import '../../Model/Problem/ProblemRegisterModel.dart';
+import '../../Model/Tag/TagModel.dart';
 import '../../Module/Dialog/LoadingDialog.dart';
 import '../../Module/Dialog/SnackBarDialog.dart';
 import '../../Module/Image/ImagePickerHandler.dart';
@@ -20,9 +21,11 @@ import '../../Provider/ScreenIndexProvider.dart';
 import '../../Provider/UserProvider.dart';
 import '../../Service/Api/FileUpload/FileUploadService.dart';
 import '../../Service/Api/Problem/ProblemService.dart';
+import '../../Service/Api/Tag/TagService.dart';
 import 'Widget/DatePickerWidget.dart';
 import 'Widget/ImageGridWidget.dart';
 import 'Widget/LabeledTextField.dart';
+import 'Widget/TagSelectorWidget.dart';
 
 class ProblemRegisterTemplate extends StatefulWidget {
   final ProblemModel? problemModel;
@@ -55,8 +58,12 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
   final List<String> _existingAnswerImageUrls = [];
   final List<String> _deletedImageUrls = []; // 삭제할 이미지 URL 추적
   final FileUploadService _fileUploadService = FileUploadService();
+  final TagService _tagService = TagService();
   final Map<String, Future<void>> _uploadTasks = {};
   final Set<String> _canceledUploadLocalPaths = {};
+  final List<TagModel> _availableTags = [];
+  final Set<int> _selectedTagIds = {};
+  bool _isLoadingTags = false;
 
   @override
   void initState() {
@@ -87,6 +94,8 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
     }
     _titleCtrl.text = problemModel?.reference ?? '';
     _memoCtrl.text = problemModel?.memo ?? '';
+    _selectedTagIds.addAll(problemModel?.tagIdList ?? []);
+    _loadMyTags();
   }
 
   @override
@@ -131,6 +140,14 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
                 icon: Icons.edit,
                 hintText: '기록하고 싶은 내용을 간단하게 작성해주세요!',
                 maxLines: 3,
+              ),
+              SizedBox(height: spacing),
+              TagSelectorWidget(
+                availableTags: _availableTags,
+                selectedTagIds: _selectedTagIds,
+                isLoading: _isLoadingTags,
+                onToggleTag: _toggleTagSelection,
+                onCreateTag: _createTag,
               ),
               SizedBox(height: spacing),
               if (isWide)
@@ -380,6 +397,71 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
     await Future.wait(_uploadTasks.values.toList());
   }
 
+  Future<void> _loadMyTags() async {
+    setState(() => _isLoadingTags = true);
+    try {
+      final fetched = await _tagService.getMyTags();
+      _availableTags
+        ..clear()
+        ..addAll(fetched);
+
+      final detailTags = widget.problemModel?.tags ?? const <TagModel>[];
+      final existingIds = _availableTags.map((e) => e.tagId).toSet();
+      for (final tag in detailTags) {
+        if (!existingIds.contains(tag.tagId)) {
+          _availableTags.add(tag);
+        }
+      }
+      _availableTags.sort((a, b) => a.name.compareTo(b.name));
+    } catch (e) {
+      log('태그 목록 조회 실패: $e');
+    } finally {
+      if (mounted) {
+        setState(() => _isLoadingTags = false);
+      }
+    }
+  }
+
+  void _toggleTagSelection(int tagId) {
+    if (_selectedTagIds.contains(tagId)) {
+      setState(() => _selectedTagIds.remove(tagId));
+      return;
+    }
+
+    if (_selectedTagIds.length >= 5) {
+      SnackBarDialog.showSnackBar(
+        context: context,
+        message: '태그는 최대 5개까지 선택할 수 있습니다.',
+        backgroundColor: Colors.orange,
+      );
+      return;
+    }
+
+    setState(() => _selectedTagIds.add(tagId));
+  }
+
+  Future<void> _createTag(String rawName) async {
+    try {
+      final created = await _tagService.createTag(rawName);
+
+      final index =
+          _availableTags.indexWhere((tag) => tag.tagId == created.tagId);
+      if (index == -1) {
+        _availableTags.add(created);
+      } else {
+        _availableTags[index] = created;
+      }
+      _availableTags.sort((a, b) => a.name.compareTo(b.name));
+
+      _toggleTagSelection(created.tagId);
+      if (mounted) {
+        setState(() {});
+      }
+    } catch (e) {
+      log('태그 생성 실패: $e');
+    }
+  }
+
   void resetAll() {
     setState(() {
       for (final file in _problemImages) {
@@ -395,6 +477,7 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
       _existingProblemImageUrls.clear();
       _existingAnswerImageUrls.clear();
       _deletedImageUrls.clear();
+      _selectedTagIds.clear();
     });
   }
 
@@ -623,6 +706,7 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
       folderId: _selectedFolderId,
       problemImageUrls: _existingProblemImageUrls,
       answerImageUrls: _existingAnswerImageUrls,
+      tagIds: _selectedTagIds.toList(),
     );
 
     // 등록 후 분석 요청 비동기 실행
@@ -669,6 +753,7 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
       solvedAt: _selectedDate,
       folderId: _selectedFolderId,
       imageDataDtoList: [],
+      tagIds: _selectedTagIds.toList(),
     );
 
     await problemsProvider.updateProblem(problemRegisterModel);
