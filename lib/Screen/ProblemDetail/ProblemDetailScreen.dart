@@ -231,7 +231,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
               },
             ),
           ),
-          const SizedBox(height: 2),
+          const SizedBox(height: 0),
           _buildNavigationButtons(context, widget.isPractice),
         ],
       ),

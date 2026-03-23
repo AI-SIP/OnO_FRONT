@@ -7,10 +7,10 @@ import '../../Module/Text/StandardText.dart';
 import '../../Module/Text/UnderlinedText.dart';
 import '../../Module/Theme/GridPainter.dart';
 import '../../Module/Theme/ThemeHandler.dart';
+import '../ProblemSolve/ProblemSolveRegisterScreen.dart';
 import 'Widget/AnalysisSection.dart';
 import 'Widget/ImageSection.dart';
 import 'Widget/RepeatSectionV2.dart';
-import '../ProblemSolve/ProblemSolveRegisterScreen.dart';
 
 class ProblemDetailTemplate extends StatefulWidget {
   final ProblemModel problemModel;
@@ -314,15 +314,10 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
   Widget _buildBottomReviewCta(ThemeHandler themeProvider, bool isWide) {
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.only(
-        left: isWide ? 60 : 30,
-        right: isWide ? 60 : 30,
-        top: 8,
-        bottom: 12,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
       color: Colors.white,
       child: SizedBox(
-        height: 48,
+        height: 50,
         child: FloatingActionButton.extended(
           onPressed: () async {
             final result = await Navigator.push(
@@ -344,7 +339,7 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
           backgroundColor: themeProvider.primaryColor,
           icon: const Icon(Icons.edit, color: Colors.white, size: 20),
           label: const StandardText(
-            text: '문제 복습인증',
+            text: '문제 복습 인증',
             color: Colors.white,
             fontSize: 15,
             fontWeight: FontWeight.bold,
@@ -524,8 +519,8 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
           context, widget.problemModel.analysis, themeProvider.primaryColor),
     );
     final hasTags = widget.problemModel.tags.isNotEmpty;
-    final hasMemo =
-        widget.problemModel.memo != null && widget.problemModel.memo!.isNotEmpty;
+    final hasMemo = widget.problemModel.memo != null &&
+        widget.problemModel.memo!.isNotEmpty;
 
     // 메모 및 해설 이미지 위젯
     final memoAndImageWidget = Column(

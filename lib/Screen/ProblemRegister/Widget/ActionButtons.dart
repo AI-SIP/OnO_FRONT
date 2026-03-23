@@ -19,24 +19,23 @@ class ActionButtons extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Provider.of<ThemeHandler>(context);
-    final h = MediaQuery.of(context).size.height;
-    final w = MediaQuery.of(context).size.width;
     return SizedBox(
       width: double.infinity,
+      height: 50,
       child: ElevatedButton(
         onPressed: onSubmit,
         style: ElevatedButton.styleFrom(
-          padding:
-              EdgeInsets.symmetric(horizontal: w * .01, vertical: h * .005),
           backgroundColor: theme.primaryColor,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(16),
           ),
+          elevation: 0,
         ),
         child: StandardText(
           text: isEdit ? '수정 완료' : '작성 완료',
           color: Colors.white,
-          fontSize: 15,
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
         ),
       ),
     );

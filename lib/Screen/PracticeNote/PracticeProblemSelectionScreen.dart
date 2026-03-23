@@ -929,10 +929,12 @@ class _PracticeProblemSelectionScreenState
 
   Widget _buildSubmitButton(BuildContext context, ThemeHandler themeProvider) {
     return Container(
-      padding: const EdgeInsets.all(16.0),
-      margin: const EdgeInsets.only(bottom: 16.0),
-      width: MediaQuery.of(context).size.width * 0.7,
-      child: ElevatedButton(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
+      child: SizedBox(
+        width: double.infinity,
+        height: 50,
+        child: ElevatedButton(
         onPressed: selectedProblems.isNotEmpty
             ? () {
                 final newIds =
@@ -986,9 +988,9 @@ class _PracticeProblemSelectionScreenState
         style: ElevatedButton.styleFrom(
           backgroundColor: themeProvider.primaryColor,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(15),
+            borderRadius: BorderRadius.circular(16),
           ),
-          padding: const EdgeInsets.all(10),
+          elevation: 0,
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -998,6 +1000,7 @@ class _PracticeProblemSelectionScreenState
                 child: StandardText(
                   text: "다음",
                   fontSize: 16,
+                  fontWeight: FontWeight.bold,
                   color: Colors.white,
                 ),
               ),
@@ -1017,6 +1020,7 @@ class _PracticeProblemSelectionScreenState
               ),
             ),
           ],
+        ),
         ),
       ),
     );

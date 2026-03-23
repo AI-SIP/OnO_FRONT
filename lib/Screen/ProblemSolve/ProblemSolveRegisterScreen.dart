@@ -73,7 +73,7 @@ class _ProblemSolveRegisterScreenState
 
   Widget _buildSubmitButton(BuildContext context, ThemeHandler themeProvider) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
+      padding: const EdgeInsets.fromLTRB(24.0, 12.0, 24.0, 20.0),
       decoration: BoxDecoration(
         color: Colors.white,
         boxShadow: [
@@ -86,7 +86,7 @@ class _ProblemSolveRegisterScreenState
       ),
       child: SizedBox(
         width: double.infinity,
-        height: 56,
+        height: 50,
         child: ElevatedButton(
           onPressed: () => _handleSubmit(context, themeProvider),
           style: ElevatedButton.styleFrom(
