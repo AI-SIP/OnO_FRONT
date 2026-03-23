@@ -20,6 +20,7 @@ class ImageGridWidget extends StatelessWidget {
   final EdgeInsetsGeometry titleIconPadding;
   final double titleIconSize;
   final double titleIconBorderRadius;
+  final bool showHeader;
 
   const ImageGridWidget({
     Key? key,
@@ -34,6 +35,7 @@ class ImageGridWidget extends StatelessWidget {
     this.titleIconPadding = const EdgeInsets.all(6.0),
     this.titleIconSize = 18,
     this.titleIconBorderRadius = 6.0,
+    this.showHeader = true,
   }) : super(key: key);
 
   @override
@@ -44,46 +46,48 @@ class ImageGridWidget extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            Container(
-              padding: titleIconPadding,
-              decoration: BoxDecoration(
-                color: theme.primaryColor.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(titleIconBorderRadius),
-              ),
-              child: Icon(
-                Icons.image,
-                color: theme.primaryColor,
-                size: titleIconSize,
-              ),
-            ),
-            const SizedBox(width: 12),
-            StandardText(
-              text: label,
-              fontSize: titleFontSize,
-              fontWeight: titleFontWeight,
-              color: Colors.black87,
-            ),
-            const SizedBox(width: 8),
-            if (totalImages > 0)
+        if (showHeader) ...[
+          Row(
+            children: [
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                padding: titleIconPadding,
                 decoration: BoxDecoration(
                   color: theme.primaryColor.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(titleIconBorderRadius),
                 ),
-                child: StandardText(
-                  text: '$totalImages',
-                  fontSize: 12,
+                child: Icon(
+                  Icons.image,
                   color: theme.primaryColor,
-                  fontWeight: FontWeight.bold,
+                  size: titleIconSize,
                 ),
               ),
-          ],
-        ),
-        const SizedBox(height: 12),
+              const SizedBox(width: 12),
+              StandardText(
+                text: label,
+                fontSize: titleFontSize,
+                fontWeight: titleFontWeight,
+                color: Colors.black87,
+              ),
+              const SizedBox(width: 8),
+              if (totalImages > 0)
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: theme.primaryColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: StandardText(
+                    text: '$totalImages',
+                    fontSize: 12,
+                    color: theme.primaryColor,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 12),
+        ],
         SizedBox(
           height: 100,
           child: ListView.separated(

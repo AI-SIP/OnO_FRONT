@@ -55,7 +55,7 @@ class ProblemSolveRegisterTemplateState
       behavior: HitTestBehavior.translucent,
       onTap: () => FocusScope.of(context).unfocus(),
       child: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 35.0),
+        padding: const EdgeInsets.symmetric(horizontal: 24.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -74,19 +74,7 @@ class ProblemSolveRegisterTemplateState
             SizedBox(height: spacing),
 
             // 풀이 이미지 업로드
-            ImageGridWidget(
-              label: '풀이 이미지',
-              files: _solutionImages,
-              existingImageUrls: const [],
-              onAdd: _pickSolutionImage,
-              onRemove: (i) => setState(() => _solutionImages.removeAt(i)),
-              onRemoveExisting: (i) {},
-              titleFontSize: 18,
-              titleFontWeight: FontWeight.bold,
-              titleIconPadding: const EdgeInsets.all(8),
-              titleIconSize: 20,
-              titleIconBorderRadius: 8,
-            ),
+            _buildImageSection(themeProvider),
             SizedBox(height: spacing),
 
             // 개선된 점 체크리스트
@@ -141,52 +129,80 @@ class ProblemSolveRegisterTemplateState
     );
   }
 
+  Widget _buildImageSection(ThemeHandler themeProvider) {
+    return _buildSectionBox(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildSectionTitle(
+            icon: Icons.image,
+            title: '풀이 이미지',
+            themeProvider: themeProvider,
+          ),
+          const SizedBox(height: 12),
+          ImageGridWidget(
+            label: '풀이 이미지',
+            files: _solutionImages,
+            existingImageUrls: const [],
+            onAdd: _pickSolutionImage,
+            onRemove: (i) => setState(() => _solutionImages.removeAt(i)),
+            onRemoveExisting: (i) {},
+            showHeader: false,
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildAnswerStatusSection(ThemeHandler themeProvider) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildSectionTitle(
-          icon: Icons.check_circle_outline,
-          title: '이번 복습 결과',
-          themeProvider: themeProvider,
-        ),
-        const SizedBox(height: 12),
-        Row(
-          children: [
-            Expanded(
-              child: _buildAnswerOption(
-                label: '정답',
-                icon: Icons.check_circle,
-                color: Colors.green,
-                isSelected: _answerStatus == AnswerStatus.CORRECT,
-                onTap: () =>
-                    setState(() => _answerStatus = AnswerStatus.CORRECT),
+    return _buildSectionBox(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildSectionTitle(
+            icon: Icons.check_circle_outline,
+            title: '이번 복습 결과',
+            themeProvider: themeProvider,
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _buildAnswerOption(
+                  label: '정답',
+                  icon: Icons.check_circle,
+                  color: Colors.green,
+                  isSelected: _answerStatus == AnswerStatus.CORRECT,
+                  onTap: () =>
+                      setState(() => _answerStatus = AnswerStatus.CORRECT),
+                ),
               ),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: _buildAnswerOption(
-                label: '부분 정답',
-                icon: Icons.check_circle_outline,
-                color: Colors.orange,
-                isSelected: _answerStatus == AnswerStatus.PARTIAL,
-                onTap: () =>
-                    setState(() => _answerStatus = AnswerStatus.PARTIAL),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _buildAnswerOption(
+                  label: '부분 정답',
+                  icon: Icons.check_circle_outline,
+                  color: Colors.orange,
+                  isSelected: _answerStatus == AnswerStatus.PARTIAL,
+                  onTap: () =>
+                      setState(() => _answerStatus = AnswerStatus.PARTIAL),
+                ),
               ),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: _buildAnswerOption(
-                label: '오답',
-                icon: Icons.cancel,
-                color: Colors.red,
-                isSelected: _answerStatus == AnswerStatus.WRONG,
-                onTap: () => setState(() => _answerStatus = AnswerStatus.WRONG),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _buildAnswerOption(
+                  label: '오답',
+                  icon: Icons.cancel,
+                  color: Colors.red,
+                  isSelected: _answerStatus == AnswerStatus.WRONG,
+                  onTap: () =>
+                      setState(() => _answerStatus = AnswerStatus.WRONG),
+                ),
               ),
-            ),
-          ],
-        ),
-      ],
+            ],
+          ),
+        ],
+      ),
     );
   }
 
@@ -202,10 +218,10 @@ class ProblemSolveRegisterTemplateState
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 14.0, horizontal: 8.0),
         decoration: BoxDecoration(
-          color: isSelected ? color.withOpacity(0.1) : Colors.grey[100],
+          color: isSelected ? color.withOpacity(0.1) : Colors.white,
           border: Border.all(
             color: isSelected ? color : Colors.grey[300]!,
-            width: 2,
+            width: 1,
           ),
           borderRadius: BorderRadius.circular(12.0),
         ),
@@ -231,37 +247,41 @@ class ProblemSolveRegisterTemplateState
   }
 
   Widget _buildImprovementSection(ThemeHandler themeProvider) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildSectionTitle(
-          icon: Icons.trending_up,
-          title: '개선된 점',
-          themeProvider: themeProvider,
-        ),
-        const SizedBox(height: 4),
-        const StandardText(
-          text: '해당되는 항목을 선택해주세요 (선택사항)',
-          fontSize: 13,
-          color: Colors.black54,
-        ),
-        const SizedBox(height: 12),
-        ..._improvements.entries.map((entry) {
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 8.0),
-            child: _buildCheckboxItem(
-              label: entry.key,
-              value: entry.value,
-              onChanged: (value) {
-                setState(() {
-                  _improvements[entry.key] = value ?? false;
-                });
-              },
-              themeProvider: themeProvider,
-            ),
-          );
-        }).toList(),
-      ],
+    return _buildSectionBox(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildSectionTitle(
+            icon: Icons.trending_up,
+            title: '개선된 점',
+            themeProvider: themeProvider,
+          ),
+          const SizedBox(height: 4),
+          const StandardText(
+            text: '해당되는 항목을 선택해주세요 (선택사항)',
+            fontSize: 13,
+            color: Colors.black54,
+          ),
+          const SizedBox(height: 12),
+          Column(
+            children: _improvements.entries.map((entry) {
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 8.0),
+                child: _buildCheckboxItem(
+                  label: entry.key,
+                  value: entry.value,
+                  onChanged: (value) {
+                    setState(() {
+                      _improvements[entry.key] = value ?? false;
+                    });
+                  },
+                  themeProvider: themeProvider,
+                ),
+              );
+            }).toList(),
+          ),
+        ],
+      ),
     );
   }
 
@@ -277,9 +297,7 @@ class ProblemSolveRegisterTemplateState
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 10.0),
         decoration: BoxDecoration(
-          color: value
-              ? themeProvider.primaryColor.withOpacity(0.05)
-              : Colors.transparent,
+          color: Colors.white,
           borderRadius: BorderRadius.circular(8.0),
           border: Border.all(
             color: value
@@ -318,121 +336,119 @@ class ProblemSolveRegisterTemplateState
   }
 
   Widget _buildTimeSpentSection(ThemeHandler themeProvider) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildSectionTitle(
-          icon: Icons.timer_outlined,
-          title: '소요 시간',
-          themeProvider: themeProvider,
-        ),
-        const SizedBox(height: 12),
-        Row(
-          children: [
-            Expanded(
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 16.0, vertical: 12.0),
-                decoration: BoxDecoration(
-                  color: Colors.grey[50],
-                  borderRadius: BorderRadius.circular(12.0),
-                  border: Border.all(color: Colors.grey[300]!, width: 1),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    GestureDetector(
-                      onTap: _showTimeInputDialog,
-                      child: Container(
-                        color: Colors.transparent,
-                        child: StandardText(
-                          text: _timeSpentMinutes > 0
-                              ? '$_timeSpentMinutes분'
-                              : '시간을 입력하세요',
-                          fontSize: 14,
-                          color: _timeSpentMinutes > 0
-                              ? Colors.black87
-                              : Colors.grey[400]!,
-                        ),
-                      ),
+    return _buildSectionBox(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildSectionTitle(
+            icon: Icons.timer_outlined,
+            title: '소요 시간',
+            themeProvider: themeProvider,
+          ),
+          const SizedBox(height: 12),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: Colors.grey[300]!, width: 1),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                GestureDetector(
+                  onTap: _showTimeInputDialog,
+                  child: Container(
+                    color: Colors.transparent,
+                    child: StandardText(
+                      text: _timeSpentMinutes > 0
+                          ? '$_timeSpentMinutes분'
+                          : '시간을 입력하세요',
+                      fontSize: 14,
+                      color: _timeSpentMinutes > 0
+                          ? Colors.black87
+                          : Colors.grey[400]!,
                     ),
-                    Row(
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.remove_circle_outline),
-                          color: themeProvider.primaryColor,
-                          onPressed: () {
-                            if (_timeSpentMinutes > 0) {
-                              setState(() => _timeSpentMinutes -= 5);
-                            }
-                          },
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.add_circle_outline),
-                          color: themeProvider.primaryColor,
-                          onPressed: () {
-                            setState(() => _timeSpentMinutes += 5);
-                          },
-                        ),
-                      ],
+                  ),
+                ),
+                Row(
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.remove_circle_outline),
+                      color: themeProvider.primaryColor,
+                      onPressed: () {
+                        if (_timeSpentMinutes > 0) {
+                          setState(() => _timeSpentMinutes -= 5);
+                        }
+                      },
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.add_circle_outline),
+                      color: themeProvider.primaryColor,
+                      onPressed: () {
+                        setState(() => _timeSpentMinutes += 5);
+                      },
                     ),
                   ],
                 ),
-              ),
+              ],
             ),
-          ],
-        ),
-      ],
+          ),
+        ],
+      ),
     );
   }
 
   Widget _buildReflectionSection(ThemeHandler themeProvider) {
     final standardTextStyle = const StandardText(text: '').getTextStyle();
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildSectionTitle(
-          icon: Icons.edit,
-          title: '복습 메모',
-          themeProvider: themeProvider,
-        ),
-        const SizedBox(height: 12),
-        TextField(
-          controller: _memoCtrl,
-          maxLines: 5,
-          style: standardTextStyle.copyWith(
-            color: Colors.black87,
-            fontSize: 15,
+    return _buildSectionBox(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildSectionTitle(
+            icon: Icons.edit,
+            title: '복습 메모',
+            themeProvider: themeProvider,
           ),
-          decoration: InputDecoration(
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: Colors.grey[300]!, width: 1),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _memoCtrl,
+            maxLines: 5,
+            style: standardTextStyle.copyWith(
+              color: Colors.black87,
+              fontSize: 15,
             ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: Colors.grey[300]!, width: 1),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(
-                color: themeProvider.primaryColor.withOpacity(0.5),
-                width: 2,
+            decoration: InputDecoration(
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.grey[300]!, width: 1),
               ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.grey[300]!, width: 1),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(
+                  color: themeProvider.primaryColor.withOpacity(0.5),
+                  width: 1,
+                ),
+              ),
+              fillColor: Colors.white,
+              filled: true,
+              hintText: '이번 복습에서 느낀 점을 자유롭게 작성해주세요!',
+              hintStyle: standardTextStyle.copyWith(
+                color: Colors.grey[400],
+                fontSize: 14,
+              ),
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
             ),
-            fillColor: Colors.white,
-            filled: true,
-            hintText: '이번 복습에서 느낀 점을 자유롭게 작성해주세요!',
-            hintStyle: standardTextStyle.copyWith(
-              color: Colors.grey[400],
-              fontSize: 14,
-            ),
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -506,11 +522,13 @@ class ProblemSolveRegisterTemplateState
                     filled: true,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.grey[300]!, width: 1),
+                      borderSide:
+                          BorderSide(color: Colors.grey[300]!, width: 1),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.grey[300]!, width: 1),
+                      borderSide:
+                          BorderSide(color: Colors.grey[300]!, width: 1),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -601,11 +619,23 @@ class ProblemSolveRegisterTemplateState
         const SizedBox(width: 8),
         StandardText(
           text: title,
-          fontSize: 18,
-          fontWeight: FontWeight.bold,
-          color: Colors.black,
+          fontSize: 16,
+          fontWeight: FontWeight.w500,
+          color: Colors.black87,
         ),
       ],
+    );
+  }
+
+  Widget _buildSectionBox({required Widget child}) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.grey[50],
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey[200]!, width: 1),
+      ),
+      child: child,
     );
   }
 
