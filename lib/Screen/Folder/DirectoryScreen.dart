@@ -17,6 +17,7 @@ import 'package:provider/provider.dart';
 
 import '../../Model/Problem/ProblemModel.dart';
 import '../../Model/Problem/ProblemThumbnailModel.dart';
+import '../../Exception/ApiException.dart';
 import '../../Module/Dialog/LoadingDialog.dart';
 import '../../Module/Image/DisplayImage.dart';
 import '../../Module/Text/StandardText.dart';
@@ -134,45 +135,66 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       });
     }
 
-    final foldersProvider =
-        Provider.of<FoldersProvider>(context, listen: false);
-    final problemsProvider =
-        Provider.of<ProblemsProvider>(context, listen: false);
-
-    // 이 화면의 폴더 ID 결정
-    int targetFolderId;
-    if (widget.folderId == null) {
-      // 루트 폴더
-      if (foldersProvider.rootFolder == null) {
-        await foldersProvider.fetchRootFolder();
-      }
-      targetFolderId = foldersProvider.rootFolder!.folderId;
-    } else {
-      targetFolderId = widget.folderId!;
-    }
-
-    // 폴더 메타데이터만 가져오기 (Provider의 currentFolder는 업데이트하지 않음)
-    final folder = await foldersProvider.getFolder(targetFolderId);
-
-    // 로컬 상태 초기화
-    if (mounted) {
-      setState(() {
-        _currentFolder = folder;
-        _localSubfolders = [];
-        _localProblems = [];
-        _subfolderNextCursor = null;
-        _problemNextCursor = null;
-        _subfolderHasNext = false;
-        _problemHasNext = false;
-      });
-    }
-
     try {
+      final foldersProvider =
+          Provider.of<FoldersProvider>(context, listen: false);
+
+      // 이 화면의 폴더 ID 결정
+      int targetFolderId;
+      if (widget.folderId == null) {
+        // 루트 폴더
+        if (foldersProvider.rootFolder == null) {
+          await foldersProvider.fetchRootFolder();
+        }
+        targetFolderId = foldersProvider.rootFolder!.folderId;
+      } else {
+        targetFolderId = widget.folderId!;
+      }
+
+      // 폴더 메타데이터만 가져오기 (Provider의 currentFolder는 업데이트하지 않음)
+      final folder = await foldersProvider.getFolder(targetFolderId);
+
+      // 로컬 상태 초기화
+      if (mounted) {
+        setState(() {
+          _currentFolder = folder;
+          _localSubfolders = [];
+          _localProblems = [];
+          _subfolderNextCursor = null;
+          _problemNextCursor = null;
+          _subfolderHasNext = false;
+          _problemHasNext = false;
+        });
+      }
+
       // 첫 페이지 로드 (하위 폴더와 문제) - 캐시 우선 사용
       await Future.wait([
         _loadMoreSubfoldersLocal(targetFolderId),
         _loadMoreProblemsLocal(targetFolderId),
       ]);
+    } on UnauthorizedException catch (e) {
+      log('Directory auth failure: $e');
+      if (mounted) {
+        await Provider.of<UserProvider>(context, listen: false).resetUserInfo();
+      }
+    } on ApiException catch (e) {
+      log('Directory API failure: $e');
+      if (mounted) {
+        SnackBarDialog.showSnackBar(
+          context: context,
+          message: e.getUserMessage(),
+          backgroundColor: Colors.redAccent,
+        );
+      }
+    } catch (e) {
+      log('Directory load failure: $e');
+      if (mounted) {
+        SnackBarDialog.showSnackBar(
+          context: context,
+          message: '서버 응답이 올바르지 않아 데이터를 불러오지 못했습니다.',
+          backgroundColor: Colors.redAccent,
+        );
+      }
     } finally {
       // 초기 로딩 완료
       if (mounted) {

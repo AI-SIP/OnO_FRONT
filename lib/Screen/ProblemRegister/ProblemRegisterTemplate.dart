@@ -705,10 +705,13 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
                         const SizedBox(height: 8),
                         if (_recommendedTags.isEmpty &&
                             !_isLoadingRecommendations)
-                          StandardText(
-                            text: '최근 사용 태그가 없습니다.',
-                            fontSize: 13,
-                            color: Colors.grey[400]!,
+                          Padding(
+                            padding: const EdgeInsets.only(left: 4),
+                            child: StandardText(
+                              text: '최근 사용 태그가 없습니다.',
+                              fontSize: 13,
+                              color: Colors.grey[400]!,
+                            ),
                           )
                         else
                           Wrap(

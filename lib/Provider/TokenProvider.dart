@@ -107,19 +107,34 @@ class TokenProvider {
 
     if (response.statusCode < 200 || response.statusCode >= 300) {
       String errorMessage;
+      int? errorCode;
       try {
         final errJson = jsonDecode(utf8.decode(response.bodyBytes));
+        if (errJson is Map<String, dynamic>) {
+          final rawErrorCode = errJson['errorCode'];
+          if (rawErrorCode is int) {
+            errorCode = rawErrorCode;
+          } else if (rawErrorCode is String) {
+            errorCode = int.tryParse(rawErrorCode);
+          }
+        }
         errorMessage = errJson['message'] as String? ?? 'Unknown error';
       } catch (_) {
         errorMessage = response.reasonPhrase ?? 'Unknown error';
       }
-      if (response.statusCode == 401) {
+      final isRefreshTokenInvalid = _isRefreshTokenInvalidResponse(
+        statusCode: response.statusCode,
+        errorCode: errorCode,
+        message: errorMessage,
+      );
+      if (response.statusCode == 401 || isRefreshTokenInvalid) {
         await deleteToken();
         await _notifyAuthFailure();
         throw UnauthorizedException(message: errorMessage);
       }
       throw ApiException(
         statusCode: response.statusCode,
+        errorCode: errorCode,
         message: errorMessage,
       );
     }
@@ -142,6 +157,19 @@ class TokenProvider {
     await setAccessToken(newAccessToken);
     await setRefreshToken(newRefreshToken);
     log('Access token refreshed.');
+  }
+
+  bool _isRefreshTokenInvalidResponse({
+    required int statusCode,
+    required int? errorCode,
+    required String message,
+  }) {
+    final normalizedMessage = message.toLowerCase();
+    final isRefreshTokenMessage = normalizedMessage.contains('리프레시 토큰') ||
+        normalizedMessage.contains('refresh token');
+    // 서버 구현에 따라 400 + 리프레시 토큰 메시지로 내려오는 케이스를 인증 만료로 처리
+    return (statusCode == 400 || statusCode == 403) &&
+        (isRefreshTokenMessage || errorCode == 1005);
   }
 
   bool _isTokenExpiringSoon(String token, Duration threshold) {

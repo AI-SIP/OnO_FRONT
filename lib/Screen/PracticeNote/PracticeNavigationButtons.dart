@@ -37,7 +37,7 @@ class _PracticeNavigationButtonsState extends State<PracticeNavigationButtons> {
     final screenHeight = MediaQuery.of(context).size.height;
 
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         buildPreviousButton(themeProvider, screenHeight),
         buildProgressText(themeProvider),

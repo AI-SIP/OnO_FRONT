@@ -95,34 +95,42 @@ class FullScreenImage extends StatelessWidget {
           ),
         ],
       ),
-      body: Center(
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            return InteractiveViewer(
-              panEnabled: true,
-              minScale: 1.0,
-              maxScale: 3.0,
-              child: SizedBox(
-                width: constraints.maxWidth,
-                height: constraints.maxHeight,
-                child: imagePath == null || imagePath!.isEmpty
-                    ? SvgPicture.asset(
-                        defaultImagePath,
-                        fit: BoxFit.contain,
-                      )
-                    : CachedNetworkImage(
-                        imageUrl: imagePath!,
-                        placeholder: (context, url) =>
-                            const CircularProgressIndicator(),
-                        errorWidget: (context, url, error) => SvgPicture.asset(
-                          defaultImagePath,
-                          fit: BoxFit.contain,
-                        ),
-                        fit: BoxFit.contain,
-                      ),
-              ),
-            );
-          },
+      body: SafeArea(
+        bottom: true,
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: Center(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                return InteractiveViewer(
+                  panEnabled: true,
+                  minScale: 1.0,
+                  maxScale: 3.0,
+                  child: SizedBox(
+                    width: constraints.maxWidth,
+                    height: constraints.maxHeight,
+                    child: imagePath == null || imagePath!.isEmpty
+                        ? SvgPicture.asset(
+                            defaultImagePath,
+                            fit: BoxFit.contain,
+                          )
+                        : CachedNetworkImage(
+                            imageUrl: imagePath!,
+                            placeholder: (context, url) =>
+                                const CircularProgressIndicator(),
+                            errorWidget: (context, url, error) =>
+                                SvgPicture.asset(
+                              defaultImagePath,
+                              fit: BoxFit.contain,
+                            ),
+                            fit: BoxFit.contain,
+                          ),
+                  ),
+                );
+              },
+            ),
+          ),
         ),
       ),
     );

@@ -61,7 +61,7 @@ class _ProblemSolveRegisterScreenState
   AppBar _buildAppBar(ThemeHandler themeProvider) {
     return AppBar(
       title: StandardText(
-        text: '복습 완료',
+        text: '문제 복습 인증',
         fontSize: 18,
         color: themeProvider.primaryColor,
       ),
@@ -72,14 +72,8 @@ class _ProblemSolveRegisterScreenState
   }
 
   Widget _buildSubmitButton(BuildContext context, ThemeHandler themeProvider) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isWide = screenWidth >= 600;
-
     return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: isWide ? screenWidth * 0.2 : 35.0,
-        vertical: 20.0,
-      ),
+      padding: const EdgeInsets.fromLTRB(24.0, 12.0, 24.0, 20.0),
       decoration: BoxDecoration(
         color: Colors.white,
         boxShadow: [
@@ -92,7 +86,7 @@ class _ProblemSolveRegisterScreenState
       ),
       child: SizedBox(
         width: double.infinity,
-        height: 56,
+        height: 50,
         child: ElevatedButton(
           onPressed: () => _handleSubmit(context, themeProvider),
           style: ElevatedButton.styleFrom(

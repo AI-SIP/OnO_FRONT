@@ -421,22 +421,26 @@ class PracticeDetailScreen extends StatelessWidget {
   Widget _buildNextButton(BuildContext context, ThemeHandler themeProvider,
       ProblemPracticeProvider practiceProvider) {
     return Container(
-      padding: const EdgeInsets.all(16.0),
-      margin: const EdgeInsets.only(bottom: 16.0),
-      width: MediaQuery.of(context).size.width * 0.8,
-      child: ElevatedButton(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: themeProvider.primaryColor,
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(15),
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
+      child: SizedBox(
+        width: double.infinity,
+        height: 50,
+        child: ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: themeProvider.primaryColor,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            elevation: 0,
           ),
-        ),
-        onPressed: () => _onNextButtonPressed(context, practiceProvider),
-        child: const StandardText(
-          text: '복습하기',
-          fontSize: 16,
-          color: Colors.white,
+          onPressed: () => _onNextButtonPressed(context, practiceProvider),
+          child: const StandardText(
+            text: '복습하기',
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
         ),
       ),
     );

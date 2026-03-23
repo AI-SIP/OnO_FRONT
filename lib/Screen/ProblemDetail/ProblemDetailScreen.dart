@@ -231,7 +231,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
               },
             ),
           ),
-          const SizedBox(height: 2),
+          const SizedBox(height: 0),
           _buildNavigationButtons(context, widget.isPractice),
         ],
       ),
@@ -378,7 +378,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                     const SizedBox(height: 24),
                     // 메뉴 아이템들
                     _buildActionItem(
-                      icon: Icons.edit_outlined,
+                      icon: Icons.edit,
                       iconColor: themeProvider.primaryColor,
                       title: '오답노트 수정하기',
                       onTap: () {
@@ -401,7 +401,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                     ),
                     const SizedBox(height: 12),
                     _buildActionItem(
-                      icon: Icons.delete_outline,
+                      icon: Icons.delete,
                       iconColor: Colors.red,
                       title: '현재 오답노트 삭제하기',
                       titleColor: Colors.red,
@@ -628,6 +628,9 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
   Widget _buildNavigationButtons(BuildContext context, bool isPractice) {
     // 기기의 높이 정보를 가져옴
     double screenHeight = MediaQuery.of(context).size.height;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isWide = screenWidth >= 600;
+    final horizontalPadding = isWide ? 60.0 : 30.0;
 
     // 화면 높이에 따라 패딩 값을 동적으로 설정
     double topPadding = 0;
@@ -635,7 +638,12 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
 
     if (isPractice) {
       return Padding(
-        padding: EdgeInsets.only(top: topPadding, bottom: bottomPadding),
+        padding: EdgeInsets.only(
+          left: horizontalPadding,
+          right: horizontalPadding,
+          top: topPadding,
+          bottom: bottomPadding,
+        ),
         child: PracticeNavigationButtons(
           context: context,
           practiceProvider:

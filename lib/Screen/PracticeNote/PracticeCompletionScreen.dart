@@ -93,10 +93,11 @@ class PracticeCompletionScreen extends StatelessWidget {
   Widget buildConfirmationButton(BuildContext context,
       ThemeHandler themeProvider, ProblemPracticeProvider practiceProvider) {
     return Container(
-      padding: const EdgeInsets.all(16.0),
-      margin: const EdgeInsets.only(bottom: 16.0),
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
       child: SizedBox(
-        width: MediaQuery.of(context).size.width * 0.7,
+        width: double.infinity,
+        height: 50,
         child: ElevatedButton(
           onPressed: () async {
             await practiceProvider.addPracticeCount(practiceId);
@@ -112,15 +113,16 @@ class PracticeCompletionScreen extends StatelessWidget {
             );
           },
           style: ElevatedButton.styleFrom(
-            minimumSize: const Size.fromHeight(50),
             backgroundColor: themeProvider.primaryColor,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(15),
+              borderRadius: BorderRadius.circular(16),
             ),
+            elevation: 0,
           ),
           child: const StandardText(
             text: "확인",
-            fontSize: 18,
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
             color: Colors.white,
           ),
         ),

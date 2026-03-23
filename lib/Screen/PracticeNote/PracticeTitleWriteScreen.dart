@@ -419,24 +419,26 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
 
   Widget _buildSubmitButton(BuildContext context, ThemeHandler themeProvider) {
     return Container(
-      padding: const EdgeInsets.all(16.0),
-      margin: const EdgeInsets.only(bottom: 16.0),
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
       child: SizedBox(
-        width: MediaQuery.of(context).size.width * 0.6,
+        width: double.infinity,
+        height: 50,
         child: ElevatedButton(
           onPressed: () => _submitPractice(context, themeProvider),
           style: ElevatedButton.styleFrom(
             backgroundColor: themeProvider.primaryColor,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(15),
+              borderRadius: BorderRadius.circular(16),
             ),
-            padding: const EdgeInsets.symmetric(vertical: 10),
+            elevation: 0,
           ),
           child: StandardText(
             text: widget.practiceRegisterModel == null
                 ? "복습 노트 수정하기"
                 : "복습 노트 만들기",
             fontSize: 16,
+            fontWeight: FontWeight.bold,
             color: Colors.white,
           ),
         ),

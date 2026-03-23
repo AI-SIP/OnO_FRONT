@@ -11,6 +11,7 @@ class UserService {
       method: 'POST',
       url: '${AppConfig.baseUrl}/api/auth/signup/guest',
       requiredToken: false,
+      showErrorSnackBar: false,
     );
   }
 
@@ -24,6 +25,7 @@ class UserService {
       url: '${AppConfig.baseUrl}/api/auth/signup/member',
       body: userRegisterModel.toJson(),
       requiredToken: false,
+      showErrorSnackBar: false,
     );
   }
 
