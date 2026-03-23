@@ -445,7 +445,9 @@ class _PracticeProblemSelectionScreenState
             children: [
               SizedBox(height: screenHeight * 0.012),
               _buildSearchControlPanel(context, themeProvider),
-              const SizedBox(height: 26),
+              SizedBox(
+                height: _searchMode == _PracticeSearchMode.folder ? 16 : 26,
+              ),
               _buildProblemList(context, themeProvider),
               _buildSubmitButton(context, themeProvider),
             ],
