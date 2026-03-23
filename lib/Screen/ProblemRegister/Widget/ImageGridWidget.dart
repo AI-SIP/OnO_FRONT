@@ -102,7 +102,7 @@ class ImageGridWidget extends StatelessWidget {
                       color: Colors.white,
                       border: Border.all(
                         color: Colors.grey[300]!,
-                        width: 2,
+                        width: 1,
                         style: BorderStyle.solid,
                       ),
                       borderRadius: BorderRadius.circular(12),
