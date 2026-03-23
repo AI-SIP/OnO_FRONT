@@ -592,43 +592,46 @@ class _PracticeProblemSelectionScreenState
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(
-          children: _tags.map((tag) {
-            final selected = _selectedTagId == tag.tagId;
-            return Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: InkWell(
-                onTap: () => _loadTagProblems(tag.tagId, isInitial: true),
-                borderRadius: BorderRadius.circular(8),
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: selected
-                        ? themeProvider.primaryColor.withOpacity(0.08)
-                        : Colors.white,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: _tags.map((tag) {
+              final selected = _selectedTagId == tag.tagId;
+              return Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: InkWell(
+                  onTap: () => _loadTagProblems(tag.tagId, isInitial: true),
+                  borderRadius: BorderRadius.circular(8),
+                  child: Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: selected
+                          ? themeProvider.primaryColor.withOpacity(0.08)
+                          : Colors.white,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: selected
+                            ? themeProvider.primaryColor
+                            : Colors.grey[300]!,
+                        width: 1,
+                      ),
+                    ),
+                    child: StandardText(
+                      text: '#${tag.name}',
+                      fontSize: 12,
                       color: selected
                           ? themeProvider.primaryColor
-                          : Colors.grey[300]!,
-                      width: 1,
+                          : Colors.grey[700]!,
+                      fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
                     ),
                   ),
-                  child: StandardText(
-                    text: '#${tag.name}',
-                    fontSize: 12,
-                    color: selected
-                        ? themeProvider.primaryColor
-                        : Colors.grey[700]!,
-                    fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
-                  ),
                 ),
-              ),
-            );
-          }).toList(),
+              );
+            }).toList(),
+          ),
         ),
       ),
     );
