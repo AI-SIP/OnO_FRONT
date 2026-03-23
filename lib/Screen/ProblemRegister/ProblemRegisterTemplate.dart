@@ -684,6 +684,7 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
                       children: [
                         Row(
                           children: [
+                            const SizedBox(width: 4),
                             StandardText(
                               text: '최근 사용 태그',
                               fontSize: 14,
