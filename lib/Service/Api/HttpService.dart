@@ -24,8 +24,10 @@ class HttpService {
     return '알 수 없는 오류가 발생했습니다.';
   }
 
-  Never _throwWithSnackBar(Exception error) {
-    AppSnackBar.showError(_getErrorMessage(error));
+  Never _throwWithSnackBar(Exception error, {bool showErrorSnackBar = true}) {
+    if (showErrorSnackBar) {
+      AppSnackBar.showError(_getErrorMessage(error));
+    }
     throw error;
   }
 
@@ -39,6 +41,7 @@ class HttpService {
     List<http.MultipartFile>? files,
     bool requiredToken = true,
     bool retry = false,
+    bool showErrorSnackBar = true,
   }) async {
     String? accessToken;
 
@@ -48,6 +51,7 @@ class HttpService {
       if (accessToken == null) {
         _throwWithSnackBar(
           UnauthorizedException(message: 'Cannot find Authorization Token'),
+          showErrorSnackBar: showErrorSnackBar,
         );
       }
     }
@@ -143,15 +147,23 @@ class HttpService {
         default:
           _throwWithSnackBar(
             ApiException(message: 'Not Supported HTTP Method: $method'),
+            showErrorSnackBar: showErrorSnackBar,
           );
       }
     } on SocketException {
-      _throwWithSnackBar(NetworkException());
+      _throwWithSnackBar(
+        NetworkException(),
+        showErrorSnackBar: showErrorSnackBar,
+      );
     } on TimeoutException {
-      _throwWithSnackBar(TimeoutException());
+      _throwWithSnackBar(
+        TimeoutException(),
+        showErrorSnackBar: showErrorSnackBar,
+      );
     } on FormatException catch (e) {
       _throwWithSnackBar(
         ParseException(message: 'JSON Parsing Failed: ${e.message}'),
+        showErrorSnackBar: showErrorSnackBar,
       );
     } catch (error) {
       // 이미 우리가 정의한 커스텀 예외라면 그대로 던짐
@@ -165,7 +177,10 @@ class HttpService {
         rethrow;
       }
       // 알 수 없는 에러는 일반적인 ApiException으로 래핑
-      _throwWithSnackBar(ApiException(message: 'Unknown error: $error'));
+      _throwWithSnackBar(
+        ApiException(message: 'Unknown error: $error'),
+        showErrorSnackBar: showErrorSnackBar,
+      );
     }
 
     final status = response.statusCode;
@@ -187,6 +202,7 @@ class HttpService {
             statusCode: status,
             message: response.reasonPhrase ?? '알 수 없는 오류',
           ),
+          showErrorSnackBar: showErrorSnackBar,
         );
       }
     }
@@ -207,6 +223,7 @@ class HttpService {
             message:
                 'Failed to parse response as JSON: ${utf8.decode(response.bodyBytes)}',
           ),
+          showErrorSnackBar: showErrorSnackBar,
         );
       }
     }
@@ -236,6 +253,7 @@ class HttpService {
           files: files,
           requiredToken: requiredToken,
           retry: true,
+          showErrorSnackBar: showErrorSnackBar,
         );
       }
 
@@ -244,7 +262,10 @@ class HttpService {
       if (errorCode != null) {
         // 인증 관련 에러 코드 (예: 1004, 1005)
         if (errorCode >= 1000 && errorCode < 2000) {
-          _throwWithSnackBar(UnauthorizedException(message: message));
+          _throwWithSnackBar(
+            UnauthorizedException(message: message),
+            showErrorSnackBar: showErrorSnackBar,
+          );
         }
         // 기타 비즈니스 로직 에러는 BadRequestException으로 처리
         _throwWithSnackBar(
@@ -253,12 +274,16 @@ class HttpService {
             errorCode: errorCode,
             message: message,
           ),
+          showErrorSnackBar: showErrorSnackBar,
         );
       }
 
       // errorCode가 없을 경우 상태 코드로 판단
       if (status == 401) {
-        _throwWithSnackBar(UnauthorizedException(message: message));
+        _throwWithSnackBar(
+          UnauthorizedException(message: message),
+          showErrorSnackBar: showErrorSnackBar,
+        );
       } else if (status >= 400 && status < 500) {
         _throwWithSnackBar(
           BadRequestException(
@@ -266,6 +291,7 @@ class HttpService {
             errorCode: errorCode,
             message: message,
           ),
+          showErrorSnackBar: showErrorSnackBar,
         );
       } else if (status >= 500) {
         _throwWithSnackBar(
@@ -273,6 +299,7 @@ class HttpService {
             statusCode: status,
             message: message,
           ),
+          showErrorSnackBar: showErrorSnackBar,
         );
       } else {
         _throwWithSnackBar(
@@ -281,6 +308,7 @@ class HttpService {
             errorCode: errorCode,
             message: message,
           ),
+          showErrorSnackBar: showErrorSnackBar,
         );
       }
     }

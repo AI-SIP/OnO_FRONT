@@ -2,7 +2,9 @@ import 'dart:core';
 import 'dart:developer';
 
 import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:ono/Model/Common/LoginStatus.dart';
 import 'package:ono/Model/User/UserInfoModel.dart';
@@ -21,6 +23,7 @@ import '../Module/Text/StandardText.dart';
 import '../Service/Api/HttpService.dart';
 import '../Service/SocialLogin/AppleAuthService.dart';
 import '../Service/SocialLogin/GoogleAuthService.dart';
+import '../Util/SendDiscordAlert.dart';
 import 'ProblemsProvider.dart';
 import 'TokenProvider.dart';
 
@@ -125,18 +128,55 @@ class UserProvider with ChangeNotifier {
       BuildContext context, Object error, StackTrace stackTrace) async {
     await resetUserInfo();
     await Sentry.captureException(error, stackTrace: stackTrace);
+    await _sendLoginFailureAlert(error, stackTrace);
 
     LoadingDialog.hide(context);
 
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
+      SnackBar(
         content: StandardText(
-          text: '로그인 과정에서 오류가 발생했습니다.',
+          text: _mapLoginErrorMessage(error),
           color: Colors.white,
           fontSize: 14,
         ),
         backgroundColor: Colors.red,
       ),
+    );
+  }
+
+  String _mapLoginErrorMessage(Object error) {
+    if (error is UnauthorizedException) {
+      return '로그인 정보가 만료되었어요. 다시 시도해주세요.';
+    }
+    if (error is NetworkException || error is TimeoutException) {
+      return '네트워크가 불안정해 로그인에 실패했어요. 잠시 후 다시 시도해주세요.';
+    }
+    if (error is ServerException) {
+      return '서버 상태가 불안정해요. 잠시 후 다시 시도해주세요.';
+    }
+    if (error is BadRequestException) {
+      return '로그인 요청을 처리하지 못했어요. 다시 시도해주세요.';
+    }
+    if (error is ApiException) {
+      return '로그인 처리 중 문제가 발생했어요. 다시 시도해주세요.';
+    }
+    return '로그인 과정에서 오류가 발생했습니다. 다시 시도해주세요.';
+  }
+
+  Future<void> _sendLoginFailureAlert(
+      Object error, StackTrace stackTrace) async {
+    final prodUrl = dotenv.env['DISCORD_WEBHOOK_PROD_URL'];
+    final localUrl = dotenv.env['DISCORD_WEBHOOK_LOCAL_URL'];
+    final webhookUrl = kReleaseMode ? prodUrl : localUrl;
+    if (webhookUrl == null || webhookUrl.isEmpty) {
+      log('Discord webhook URL is not configured.');
+      return;
+    }
+
+    await sendDiscordAlert(
+      message: '[LoginError] ${error.toString()}',
+      stack: stackTrace,
+      webhookUrl: webhookUrl,
     );
   }
 
