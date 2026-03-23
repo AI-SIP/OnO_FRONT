@@ -408,7 +408,7 @@ class _ProblemSolveCard extends StatelessWidget {
                           const SizedBox(height: 6),
                           Row(
                             children: [
-                              Icon(Icons.calendar_today,
+                              Icon(Icons.calendar_month,
                                   size: 14, color: Colors.grey[500]),
                               const SizedBox(width: 4),
                               StandardText(
@@ -466,7 +466,7 @@ class _ProblemSolveCard extends StatelessWidget {
           // 소요 시간
           if (solve.timeSpentSeconds != null)
             _buildInfoRow(
-              Icons.timer_outlined,
+              Icons.timer,
               '소요 시간',
               '${(solve.timeSpentSeconds! / 60).ceil()}분',
               themeProvider.primaryColor,
@@ -581,7 +581,7 @@ class _ProblemSolveCard extends StatelessWidget {
                     color: themeProvider.primaryColor.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(6.0),
                   ),
-                  child: Icon(Icons.image_outlined,
+                  child: Icon(Icons.image,
                       color: themeProvider.primaryColor, size: 18),
                 ),
                 const SizedBox(width: 8),
@@ -1027,11 +1027,11 @@ IconData _getStatusIcon(AnswerStatus status) {
     case AnswerStatus.CORRECT:
       return Icons.check_circle;
     case AnswerStatus.PARTIAL:
-      return Icons.check_circle_outline;
+      return Icons.radio_button_checked;
     case AnswerStatus.WRONG:
       return Icons.cancel;
     case AnswerStatus.UNKNOWN:
-      return Icons.help_outline;
+      return Icons.help;
   }
 }
 

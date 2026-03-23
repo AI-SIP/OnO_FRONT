@@ -7,7 +7,7 @@ import '../../../Module/Text/UnderlinedText.dart';
 Widget buildDateRow(DateTime dt, Color iconColor) {
   final date = DateFormat('yyyy년 M월 d일').format(dt);
   return Row(children: [
-    Icon(Icons.calendar_today, color: iconColor),
+    Icon(Icons.calendar_month, color: iconColor),
     const SizedBox(width: 8),
     HandWriteText(text: '푼 날짜', fontSize: 20, color: iconColor),
     const Spacer(),

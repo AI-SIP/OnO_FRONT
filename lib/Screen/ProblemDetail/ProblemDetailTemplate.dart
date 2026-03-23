@@ -146,7 +146,7 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
               height: tabHeight,
               child: _buildHeaderTab(
                 title: '문제',
-                icon: Icons.help_outline,
+                icon: Icons.help,
                 isActive: _currentTabIndex == 0,
                 isWide: isWide,
                 themeProvider: themeProvider,
@@ -234,7 +234,7 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
                 _buildSectionCard(
                   themeProvider,
                   title: '문제 이미지',
-                  icon: Icons.image_outlined,
+                  icon: Icons.image,
                   trailing: _buildCountChip(problemImageCount, themeProvider),
                   child: buildImageSection(
                     context,
@@ -286,7 +286,7 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
                   borderRadius: BorderRadius.circular(10.0),
                 ),
                 child: Icon(
-                  Icons.calendar_today_outlined,
+                  Icons.calendar_month,
                   color: themeProvider.primaryColor,
                   size: 18,
                 ),
@@ -530,7 +530,7 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
         _buildSectionCard(
           themeProvider,
           title: '해설 이미지',
-          icon: Icons.image_outlined,
+          icon: Icons.image,
           trailing: _buildCountChip(answerImageCount, themeProvider),
           child: buildImageSection(
             context,

@@ -378,7 +378,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                     const SizedBox(height: 24),
                     // 메뉴 아이템들
                     _buildActionItem(
-                      icon: Icons.edit_outlined,
+                      icon: Icons.edit,
                       iconColor: themeProvider.primaryColor,
                       title: '오답노트 수정하기',
                       onTap: () {
@@ -401,7 +401,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                     ),
                     const SizedBox(height: 12),
                     _buildActionItem(
-                      icon: Icons.delete_outline,
+                      icon: Icons.delete,
                       iconColor: Colors.red,
                       title: '현재 오답노트 삭제하기',
                       titleColor: Colors.red,
