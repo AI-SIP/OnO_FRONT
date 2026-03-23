@@ -73,10 +73,6 @@ class ProblemSolveRegisterTemplateState
             _buildTimeSpentSection(themeProvider),
             SizedBox(height: spacing),
 
-            // 개선된 점 체크리스트
-            _buildImprovementSection(themeProvider),
-            SizedBox(height: spacing),
-
             // 풀이 이미지 업로드
             ImageGridWidget(
               label: '풀이 이미지',
@@ -91,6 +87,10 @@ class ProblemSolveRegisterTemplateState
               titleIconSize: 20,
               titleIconBorderRadius: 8,
             ),
+            SizedBox(height: spacing),
+
+            // 개선된 점 체크리스트
+            _buildImprovementSection(themeProvider),
             SizedBox(height: spacing),
 
             // 복습 메모
