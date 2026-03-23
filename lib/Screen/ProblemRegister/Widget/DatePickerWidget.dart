@@ -37,7 +37,7 @@ class DatePickerWidget extends StatelessWidget {
               borderRadius: BorderRadius.circular(8.0),
             ),
             child: Icon(
-              Icons.calendar_today,
+              Icons.calendar_month,
               color: theme.primaryColor,
               size: 20,
             ),
