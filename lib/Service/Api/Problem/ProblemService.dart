@@ -58,6 +58,7 @@ class ProblemService {
     DateTime? solvedAt,
     required List<String> problemImageUrls,
     required List<String> answerImageUrls,
+    List<int>? tagIds,
   }) async {
     return await httpService.sendRequest(
       method: 'POST',
@@ -71,6 +72,7 @@ class ProblemService {
             solvedAt?.subtract(const Duration(hours: 9)).toIso8601String(),
         'problemImageUrls': problemImageUrls,
         'answerImageUrls': answerImageUrls,
+        'tagIds': tagIds,
       },
     ) as int;
   }
@@ -193,6 +195,57 @@ class ProblemService {
     final data = await httpService.sendRequest(
       method: 'GET',
       url: '$baseUrl/folder/$folderId/V2',
+      queryParams: queryParams,
+    ) as Map<String, dynamic>;
+
+    return PaginatedResponse.fromJson(
+      data,
+      (json) => ProblemModel.fromJson(json),
+    );
+  }
+
+  // V2 API - Cursor-based pagination for tag problems
+  Future<PaginatedResponse<ProblemModel>> getTagProblemsV2({
+    required int tagId,
+    int? cursor,
+    int size = 20,
+  }) async {
+    final queryParams = <String, String>{
+      'size': size.toString(),
+    };
+    if (cursor != null) {
+      queryParams['cursor'] = cursor.toString();
+    }
+
+    final data = await httpService.sendRequest(
+      method: 'GET',
+      url: '$baseUrl/tag/$tagId/V2',
+      queryParams: queryParams,
+    ) as Map<String, dynamic>;
+
+    return PaginatedResponse.fromJson(
+      data,
+      (json) => ProblemModel.fromJson(json),
+    );
+  }
+
+  // V2 API - Cursor-based pagination for title(query) problems
+  Future<PaginatedResponse<ProblemModel>> getTitleProblemsV2({
+    required String query,
+    int? cursor,
+    int size = 20,
+  }) async {
+    final queryParams = <String, String>{
+      'query': query,
+      'size': size.toString(),
+    };
+    if (cursor != null) {
+      queryParams['cursor'] = cursor.toString();
+    }
+
+    final data = await httpService.sendRequest(
+      method: 'GET',
+      url: '$baseUrl/title/V2',
       queryParams: queryParams,
     ) as Map<String, dynamic>;
 

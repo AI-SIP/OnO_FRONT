@@ -34,7 +34,11 @@ class _SettingScreenState extends State<SettingScreen> {
   Widget build(BuildContext context) {
     final userProvider = Provider.of<UserProvider>(context);
     final themeProvider = Provider.of<ThemeHandler>(context);
-    double screenHeight = MediaQuery.of(context).size.height;
+    final mediaQuery = MediaQuery.of(context);
+    final screenHeight = mediaQuery.size.height;
+    final screenWidth = mediaQuery.size.width;
+    final isTabletLandscape =
+        mediaQuery.size.shortestSide >= 600 && screenWidth > screenHeight;
 
     return Scaffold(
       appBar: AppBar(
@@ -57,20 +61,51 @@ class _SettingScreenState extends State<SettingScreen> {
                 padding: EdgeInsets.only(
                     bottom: screenHeight * 0.01, top: screenHeight * 0.02),
                 children: [
-                  // 유저 레벨 카드 (캐릭터 + 이름)
-                  UserLevelCard(
-                    userInfo: userProvider.userInfoModel,
-                    themeProvider: themeProvider,
-                    userName: userProvider.userInfoModel?.name ?? '이름 없음',
-                  ),
+                  if (isTabletLandscape)
+                    Padding(
+                      padding:
+                          EdgeInsets.symmetric(horizontal: screenWidth * 0.04),
+                      child: IntrinsicHeight(
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Expanded(
+                              child: UserLevelCard(
+                                userInfo: userProvider.userInfoModel,
+                                themeProvider: themeProvider,
+                                userName:
+                                    userProvider.userInfoModel?.name ?? '이름 없음',
+                                horizontalMarginFactor: 0,
+                              ),
+                            ),
+                            SizedBox(width: screenWidth * 0.02),
+                            Expanded(
+                              child: CompactActivityLevels(
+                                userInfo: userProvider.userInfoModel,
+                                themeProvider: themeProvider,
+                                horizontalMarginFactor: 0,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    )
+                  else ...[
+                    // 유저 레벨 카드 (캐릭터 + 이름)
+                    UserLevelCard(
+                      userInfo: userProvider.userInfoModel,
+                      themeProvider: themeProvider,
+                      userName: userProvider.userInfoModel?.name ?? '이름 없음',
+                    ),
 
-                  SizedBox(height: screenHeight * 0.01),
+                    SizedBox(height: screenHeight * 0.01),
 
-                  // 총 경험치 바 + 활동 레벨 (통합)
-                  CompactActivityLevels(
-                    userInfo: userProvider.userInfoModel,
-                    themeProvider: themeProvider,
-                  ),
+                    // 총 경험치 바 + 활동 레벨 (통합)
+                    CompactActivityLevels(
+                      userInfo: userProvider.userInfoModel,
+                      themeProvider: themeProvider,
+                    ),
+                  ],
 
                   SizedBox(height: screenHeight * 0.01),
 

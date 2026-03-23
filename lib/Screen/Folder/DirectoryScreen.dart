@@ -25,6 +25,7 @@ import '../../Module/Util/FolderPickerDialog.dart';
 import '../../Provider/UserProvider.dart';
 import '../ProblemDetail/ProblemDetailScreen.dart';
 import '../ProblemRegister/ProblemRegisterScreen.dart';
+import '../ProblemSearch/TagProblemSearchScreen.dart';
 import 'UserGuideScreen.dart';
 
 class DirectoryScreen extends StatefulWidget {
@@ -517,6 +518,21 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
           padding: const EdgeInsets.only(right: 16.0), // 우측에 여백 추가
           child: Row(
             children: [
+              if (!_isSelectionMode)
+                IconButton(
+                  icon: Icon(
+                    Icons.search,
+                    color: themeProvider.primaryColor,
+                  ),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const TagProblemSearchScreen(),
+                      ),
+                    );
+                  },
+                ),
               IconButton(
                 icon: Icon(
                   _isSelectionMode ? Icons.close : Icons.more_vert,
@@ -1596,8 +1612,15 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
           SizedBox(
             width: 50,
             height: 70,
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(8.0),
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8.0),
+                border: Border.all(
+                  color: Colors.grey[300]!,
+                  width: 0.8,
+                ),
+              ),
+              clipBehavior: Clip.antiAlias,
               child: isSelected
                   ? Icon(Icons.check, color: themeProvider.primaryColor)
                   : DisplayImage(
@@ -1632,13 +1655,50 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                     ),
                   ],
                 ),
+                const SizedBox(height: 2),
                 const SizedBox(height: 4),
-                StandardText(
-                  text: problem.createdAt != null
-                      ? '작성 일시: ${formatDateTime(problem.createdAt!)}'
-                      : '작성 일시: 정보 없음',
-                  fontSize: 12,
-                  color: Colors.grey,
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  children: problem.tags.isNotEmpty
+                      ? problem.tags.map((tag) {
+                          return Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: themeProvider.primaryColor,
+                                width: 1,
+                              ),
+                            ),
+                            child: StandardText(
+                              text: '#${tag.name}',
+                              fontSize: 11,
+                              color: themeProvider.primaryColor,
+                            ),
+                          );
+                        }).toList()
+                      : [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: Colors.grey[300]!,
+                                width: 1,
+                              ),
+                            ),
+                            child: StandardText(
+                              text: '태그 없음',
+                              fontSize: 11,
+                              color: Colors.grey[400]!,
+                            ),
+                          ),
+                        ],
                 ),
               ],
             ),
@@ -1649,7 +1709,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   }
 
   Widget _buildBottomActionButtons(ThemeHandler themeProvider) {
-    final selectedCount = _selectedFolderIds.length + _selectedProblemIds.length;
+    final selectedCount =
+        _selectedFolderIds.length + _selectedProblemIds.length;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
       color: Colors.white,

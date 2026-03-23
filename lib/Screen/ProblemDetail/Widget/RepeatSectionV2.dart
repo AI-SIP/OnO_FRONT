@@ -16,18 +16,19 @@ import '../../../Module/Image/FullScreenImage.dart';
 import '../../../Module/Text/StandardText.dart';
 import '../../../Module/Theme/ThemeHandler.dart';
 import '../../../Service/Api/Problem/ProblemSolveService.dart';
-import '../../ProblemSolve/ProblemSolveRegisterScreen.dart';
 
 class RepeatSectionV2 extends StatefulWidget {
   final ProblemModel problem;
   final Color iconColor;
   final bool isWide;
+  final int refreshSignal;
 
   const RepeatSectionV2({
     super.key,
     required this.problem,
     required this.iconColor,
     required this.isWide,
+    this.refreshSignal = 0,
   });
 
   @override
@@ -50,6 +51,14 @@ class _RepeatSectionV2State extends State<RepeatSectionV2>
 
   @override
   bool get wantKeepAlive => true; // 탭 전환 시에도 상태 유지
+
+  @override
+  void didUpdateWidget(covariant RepeatSectionV2 oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.refreshSignal != widget.refreshSignal) {
+      refresh();
+    }
+  }
 
   void _toggleExpanded(int solveId, bool newValue) {
     setState(() {
@@ -110,30 +119,40 @@ class _RepeatSectionV2State extends State<RepeatSectionV2>
         final problemSolves = snapshot.data ?? [];
 
         if (problemSolves.isEmpty) {
-          return Center(
-            child: Padding(
-              padding: const EdgeInsets.all(40.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  SvgPicture.asset(
-                    'assets/Icon/PencilDetail.svg',
-                    width: 100,
-                    height: 100,
+          return LayoutBuilder(
+            builder: (context, constraints) => SingleChildScrollView(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                child: Center(
+                  child: Transform.translate(
+                    offset: const Offset(0, -28),
+                    child: Padding(
+                      padding: const EdgeInsets.all(40.0),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          SvgPicture.asset(
+                            'assets/Icon/PencilDetail.svg',
+                            width: 100,
+                            height: 100,
+                          ),
+                          const SizedBox(height: 16),
+                          const StandardText(
+                            text: '아직 복습 기록이 없습니다.',
+                            fontSize: 16,
+                            color: Colors.black,
+                          ),
+                          const SizedBox(height: 8),
+                          const StandardText(
+                            text: '문제를 복습하고 기록을 남겨보세요!',
+                            fontSize: 14,
+                            color: Colors.black,
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-                  const SizedBox(height: 16),
-                  const StandardText(
-                    text: '아직 복습 기록이 없습니다.',
-                    fontSize: 16,
-                    color: Colors.black,
-                  ),
-                  const SizedBox(height: 8),
-                  const StandardText(
-                    text: '문제를 복습하고 기록을 남겨보세요!',
-                    fontSize: 14,
-                    color: Colors.black,
-                  ),
-                ],
+                ),
               ),
             ),
           );
@@ -244,12 +263,14 @@ class RepeatSectionV2Wrapper extends StatefulWidget {
   final ProblemModel problem;
   final Color iconColor;
   final bool isWide;
+  final int refreshSignal;
 
   const RepeatSectionV2Wrapper({
     super.key,
     required this.problem,
     required this.iconColor,
     required this.isWide,
+    this.refreshSignal = 0,
   });
 
   @override
@@ -257,68 +278,13 @@ class RepeatSectionV2Wrapper extends StatefulWidget {
 }
 
 class _RepeatSectionV2WrapperState extends State<RepeatSectionV2Wrapper> {
-  final GlobalKey<_RepeatSectionV2State> _repeatSectionKey =
-      GlobalKey<_RepeatSectionV2State>();
-
   @override
   Widget build(BuildContext context) {
-    final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
-
-    return Column(
-      children: [
-        // 복습 기록 리스트 영역
-        Expanded(
-          child: RepeatSectionV2(
-            key: _repeatSectionKey,
-            problem: widget.problem,
-            iconColor: widget.iconColor,
-            isWide: widget.isWide,
-          ),
-        ),
-        // 버튼 영역
-        Container(
-          width: double.infinity,
-          padding: EdgeInsets.only(
-            left: widget.isWide ? 60 : 30,
-            right: widget.isWide ? 60 : 30,
-            top: 10,
-            bottom: 16,
-          ),
-          decoration: BoxDecoration(
-            color: Colors.white,
-          ),
-          child: SizedBox(
-            height: 48,
-            child: FloatingActionButton.extended(
-              onPressed: () async {
-                final result = await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => ProblemSolveRegisterScreen(
-                      problemId: widget.problem.problemId,
-                      onRefresh: () {},
-                    ),
-                  ),
-                );
-
-                // 복습 등록 완료 후 새로고침
-                if (result == true && mounted) {
-                  _repeatSectionKey.currentState?.refresh();
-                }
-              },
-              backgroundColor: themeProvider.primaryColor,
-              icon: const Icon(Icons.edit, color: Colors.white, size: 20),
-              label: const StandardText(
-                text: '문제 복습인증',
-                color: Colors.white,
-                fontSize: 15,
-                fontWeight: FontWeight.bold,
-              ),
-              elevation: 0,
-            ),
-          ),
-        ),
-      ],
+    return RepeatSectionV2(
+      problem: widget.problem,
+      iconColor: widget.iconColor,
+      isWide: widget.isWide,
+      refreshSignal: widget.refreshSignal,
     );
   }
 }
@@ -327,12 +293,14 @@ Widget buildRepeatSectionV2(
   BuildContext ctx,
   ProblemModel problem,
   Color iconColor,
-  bool isWide,
-) {
+  bool isWide, {
+  int refreshSignal = 0,
+}) {
   return RepeatSectionV2Wrapper(
     problem: problem,
     iconColor: iconColor,
     isWide: isWide,
+    refreshSignal: refreshSignal,
   );
 }
 

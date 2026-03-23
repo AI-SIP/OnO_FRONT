@@ -58,7 +58,7 @@ class ImageGridWidget extends StatelessWidget {
                 size: titleIconSize,
               ),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: 12),
             StandardText(
               text: label,
               fontSize: titleFontSize,
@@ -99,7 +99,7 @@ class ImageGridWidget extends StatelessWidget {
                     width: 100,
                     height: 100,
                     decoration: BoxDecoration(
-                      color: Colors.grey[50],
+                      color: Colors.white,
                       border: Border.all(
                         color: Colors.grey[300]!,
                         width: 2,
@@ -141,15 +141,14 @@ class ImageGridWidget extends StatelessWidget {
                   children: [
                     Container(
                       decoration: BoxDecoration(
+                        color: Colors.white,
                         borderRadius: BorderRadius.circular(12),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
-                            blurRadius: 4,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
+                        border: Border.all(
+                          color: Colors.grey[300]!,
+                          width: 1.2,
+                        ),
                       ),
+                      clipBehavior: Clip.antiAlias,
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(12),
                         child: SizedBox(
@@ -172,13 +171,6 @@ class ImageGridWidget extends StatelessWidget {
                           decoration: BoxDecoration(
                             color: Colors.red,
                             shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.2),
-                                blurRadius: 4,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
                           ),
                           child: const Icon(
                             Icons.close,
@@ -199,15 +191,14 @@ class ImageGridWidget extends StatelessWidget {
                 children: [
                   Container(
                     decoration: BoxDecoration(
+                      color: Colors.white,
                       borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
-                          blurRadius: 4,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
+                      border: Border.all(
+                        color: Colors.grey[300]!,
+                        width: 1.2,
+                      ),
                     ),
+                    clipBehavior: Clip.antiAlias,
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(12),
                       child: Image.file(
@@ -228,13 +219,6 @@ class ImageGridWidget extends StatelessWidget {
                         decoration: BoxDecoration(
                           color: Colors.red,
                           shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.2),
-                              blurRadius: 4,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
                         ),
                         child: const Icon(
                           Icons.close,

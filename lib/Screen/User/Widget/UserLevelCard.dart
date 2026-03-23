@@ -9,12 +9,14 @@ class UserLevelCard extends StatelessWidget {
   final UserInfoModel? userInfo;
   final ThemeHandler themeProvider;
   final String userName;
+  final double horizontalMarginFactor;
 
   const UserLevelCard({
     super.key,
     required this.userInfo,
     required this.themeProvider,
     required this.userName,
+    this.horizontalMarginFactor = 0.04,
   });
 
   // 전체 레벨 (서버에서 계산된 값 사용)
@@ -47,7 +49,7 @@ class UserLevelCard extends StatelessWidget {
 
     return Container(
       margin: EdgeInsets.symmetric(
-        horizontal: screenWidth * 0.04,
+        horizontal: screenWidth * horizontalMarginFactor,
         vertical: screenHeight * 0.01,
       ),
       padding: EdgeInsets.all(screenHeight * 0.02),
