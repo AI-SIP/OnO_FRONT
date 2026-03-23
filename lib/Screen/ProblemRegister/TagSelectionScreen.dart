@@ -86,7 +86,6 @@ class _TagSelectionScreenState extends State<TagSelectionScreen> {
         _tags[index] = created;
       }
       _tags.sort((a, b) => a.name.compareTo(b.name));
-      _selectedTagIds.add(created.tagId);
 
       _tagNameCtrl.clear();
       if (mounted) {
