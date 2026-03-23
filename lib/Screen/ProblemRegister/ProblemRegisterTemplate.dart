@@ -62,8 +62,10 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
   final Map<String, Future<void>> _uploadTasks = {};
   final Set<String> _canceledUploadLocalPaths = {};
   final List<TagModel> _availableTags = [];
+  final List<TagModel> _recommendedTags = [];
   final Set<int> _selectedTagIds = {};
   bool _isLoadingTags = false;
+  bool _isLoadingRecommendations = false;
 
   @override
   void initState() {
@@ -96,6 +98,7 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
     _memoCtrl.text = problemModel?.memo ?? '';
     _selectedTagIds.addAll(problemModel?.tagIdList ?? []);
     _loadMyTags();
+    _loadRecommendedTags(imageUrls: _existingProblemImageUrls);
   }
 
   @override
@@ -339,6 +342,7 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
     final removedUrl = _existingProblemImageUrls.removeAt(index);
     setState(() {});
     await _deleteUploadedImage(removedUrl);
+    await _loadRecommendedTags(imageUrls: _existingProblemImageUrls);
   }
 
   Future<void> _removeUploadedAnswerImage(int index) async {
@@ -396,6 +400,9 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
           _existingAnswerImageUrls.add(imageUrl);
         }
       });
+      if (isProblemImage) {
+        await _loadRecommendedTags(imageUrls: _existingProblemImageUrls);
+      }
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -447,6 +454,61 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
         setState(() => _isLoadingTags = false);
       }
     }
+  }
+
+  void _mergeIntoAvailableTags(List<TagModel> tags) {
+    final existingIds = _availableTags.map((e) => e.tagId).toSet();
+    for (final tag in tags) {
+      if (!existingIds.contains(tag.tagId)) {
+        _availableTags.add(tag);
+        existingIds.add(tag.tagId);
+      }
+    }
+    _availableTags.sort((a, b) => a.name.compareTo(b.name));
+  }
+
+  Future<void> _loadRecommendedTags({List<String>? imageUrls}) async {
+    if (!mounted) return;
+    setState(() => _isLoadingRecommendations = true);
+    try {
+      final recommended = await _tagService.recommendTags(imageUrls: imageUrls);
+      if (!mounted) return;
+      setState(() {
+        _recommendedTags
+          ..clear()
+          ..addAll(recommended);
+        _mergeIntoAvailableTags(recommended);
+      });
+    } catch (e) {
+      log('태그 추천 조회 실패: $e');
+    } finally {
+      if (mounted) {
+        setState(() => _isLoadingRecommendations = false);
+      }
+    }
+  }
+
+  void _applyRecommendedTag(TagModel tag) {
+    if (_selectedTagIds.contains(tag.tagId)) return;
+    if (_selectedTagIds.length >= 5) {
+      SnackBarDialog.showSnackBar(
+        context: context,
+        message: '태그는 최대 5개까지만 선택할 수 있어요.',
+        backgroundColor: Colors.orange,
+      );
+      return;
+    }
+    setState(() {
+      _selectedTagIds.add(tag.tagId);
+      _mergeIntoAvailableTags([tag]);
+    });
+  }
+
+  void _removeSelectedTag(int tagId) {
+    if (!_selectedTagIds.contains(tagId)) return;
+    setState(() {
+      _selectedTagIds.remove(tagId);
+    });
   }
 
   Future<void> _openTagSelectionScreen() async {
@@ -563,24 +625,148 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
                     runSpacing: 8,
                     children: _availableTags
                         .where((tag) => _selectedTagIds.contains(tag.tagId))
-                        .map((tag) => Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 10, vertical: 5),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(8),
-                                border: Border.all(
-                                  color: themeProvider.primaryColor,
-                                  width: 1,
+                        .map((tag) => Stack(
+                              clipBehavior: Clip.none,
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 10, vertical: 5),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(
+                                      color: themeProvider.primaryColor,
+                                      width: 1,
+                                    ),
+                                  ),
+                                  child: StandardText(
+                                    text: '#${tag.name}',
+                                    fontSize: 12,
+                                    color: themeProvider.primaryColor,
+                                  ),
                                 ),
-                              ),
-                              child: StandardText(
-                                text: '#${tag.name}',
-                                fontSize: 12,
-                                color: themeProvider.primaryColor,
-                              ),
+                                Positioned(
+                                  top: -5,
+                                  right: -5,
+                                  child: GestureDetector(
+                                    onTap: () => _removeSelectedTag(tag.tagId),
+                                    child: Container(
+                                      width: 15,
+                                      height: 15,
+                                      decoration: const BoxDecoration(
+                                        color: Colors.red,
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: const Icon(
+                                        Icons.remove,
+                                        size: 10,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ))
                         .toList(),
+                  ),
+          ),
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 220),
+            switchInCurve: Curves.easeOutCubic,
+            switchOutCurve: Curves.easeInCubic,
+            child: _existingProblemImageUrls.isEmpty
+                ? const SizedBox.shrink()
+                : Padding(
+                    key: const ValueKey('recommended_tags'),
+                    padding: const EdgeInsets.only(top: 16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            StandardText(
+                              text: '최근 사용 태그',
+                              fontSize: 14,
+                              color: Colors.grey[700]!,
+                            ),
+                            const Spacer(),
+                            if (_isLoadingRecommendations)
+                              SizedBox(
+                                width: 14,
+                                height: 14,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: themeProvider.primaryColor,
+                                ),
+                              ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        if (_recommendedTags.isEmpty &&
+                            !_isLoadingRecommendations)
+                          StandardText(
+                            text: '최근 사용 태그가 없습니다.',
+                            fontSize: 13,
+                            color: Colors.grey[400]!,
+                          )
+                        else
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: _recommendedTags.map((tag) {
+                              final isSelected =
+                                  _selectedTagIds.contains(tag.tagId);
+                              return Material(
+                                color: Colors.transparent,
+                                child: InkWell(
+                                  onTap: () => _applyRecommendedTag(tag),
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 11, vertical: 6),
+                                    decoration: BoxDecoration(
+                                      color: isSelected
+                                          ? themeProvider.primaryColor
+                                          : Colors.white,
+                                      borderRadius: BorderRadius.circular(8),
+                                      border: Border.all(
+                                        color: isSelected
+                                            ? themeProvider.primaryColor
+                                            : themeProvider.primaryColor
+                                                .withOpacity(0.35),
+                                        width: isSelected ? 1.4 : 1,
+                                      ),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        if (isSelected) ...[
+                                          Icon(
+                                            Icons.check,
+                                            size: 12,
+                                            color: Colors.white,
+                                          ),
+                                          const SizedBox(width: 4),
+                                        ],
+                                        StandardText(
+                                          text: '#${tag.name}',
+                                          fontSize: 12,
+                                          color: isSelected
+                                              ? Colors.white
+                                              : themeProvider.primaryColor,
+                                          fontWeight: isSelected
+                                              ? FontWeight.w600
+                                              : FontWeight.w500,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              );
+                            }).toList(),
+                          )
+                      ],
+                    ),
                   ),
           ),
         ],
@@ -604,6 +790,7 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
       _existingAnswerImageUrls.clear();
       _deletedImageUrls.clear();
       _selectedTagIds.clear();
+      _recommendedTags.clear();
     });
   }
 

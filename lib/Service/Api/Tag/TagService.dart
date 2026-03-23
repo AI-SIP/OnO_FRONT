@@ -41,4 +41,19 @@ class TagService {
       body: {'deleteTagIdList': deleteTagIdList},
     );
   }
+
+  Future<List<TagModel>> recommendTags({List<String>? imageUrls}) async {
+    final dynamic data = await _httpService.sendRequest(
+      method: 'POST',
+      url: '$_baseUrl/recommend',
+      body: imageUrls == null ? {} : {'imageUrls': imageUrls},
+    );
+
+    if (data is List<dynamic>) {
+      return data
+          .map((e) => TagModel.fromJson(e as Map<String, dynamic>))
+          .toList();
+    }
+    return [];
+  }
 }
