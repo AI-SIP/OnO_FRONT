@@ -493,22 +493,25 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
         child: ConstrainedBox(
           constraints: BoxConstraints(minHeight: constraints.maxHeight),
           child: Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                SvgPicture.asset(
-                  'assets/Icon/PencilDetail.svg',
-                  width: 100,
-                  height: 100,
-                ),
-                const SizedBox(height: 16),
-                StandardText(
-                  text: message,
-                  color: Colors.black,
-                  fontSize: 16,
-                ),
-              ],
+            child: Transform.translate(
+              offset: const Offset(0, -28),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  SvgPicture.asset(
+                    'assets/Icon/PencilDetail.svg',
+                    width: 100,
+                    height: 100,
+                  ),
+                  const SizedBox(height: 16),
+                  StandardText(
+                    text: message,
+                    color: Colors.black,
+                    fontSize: 16,
+                  ),
+                ],
+              ),
             ),
           ),
         ),

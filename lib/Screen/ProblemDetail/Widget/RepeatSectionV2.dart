@@ -119,30 +119,40 @@ class _RepeatSectionV2State extends State<RepeatSectionV2>
         final problemSolves = snapshot.data ?? [];
 
         if (problemSolves.isEmpty) {
-          return Center(
-            child: Padding(
-              padding: const EdgeInsets.all(40.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  SvgPicture.asset(
-                    'assets/Icon/PencilDetail.svg',
-                    width: 100,
-                    height: 100,
+          return LayoutBuilder(
+            builder: (context, constraints) => SingleChildScrollView(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                child: Center(
+                  child: Transform.translate(
+                    offset: const Offset(0, -28),
+                    child: Padding(
+                      padding: const EdgeInsets.all(40.0),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          SvgPicture.asset(
+                            'assets/Icon/PencilDetail.svg',
+                            width: 100,
+                            height: 100,
+                          ),
+                          const SizedBox(height: 16),
+                          const StandardText(
+                            text: '아직 복습 기록이 없습니다.',
+                            fontSize: 16,
+                            color: Colors.black,
+                          ),
+                          const SizedBox(height: 8),
+                          const StandardText(
+                            text: '문제를 복습하고 기록을 남겨보세요!',
+                            fontSize: 14,
+                            color: Colors.black,
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-                  const SizedBox(height: 16),
-                  const StandardText(
-                    text: '아직 복습 기록이 없습니다.',
-                    fontSize: 16,
-                    color: Colors.black,
-                  ),
-                  const SizedBox(height: 8),
-                  const StandardText(
-                    text: '문제를 복습하고 기록을 남겨보세요!',
-                    fontSize: 14,
-                    color: Colors.black,
-                  ),
-                ],
+                ),
               ),
             ),
           );
