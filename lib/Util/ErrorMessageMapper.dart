@@ -31,6 +31,7 @@ class ErrorMessageMapper {
   static String sanitizeRawMessage(
     String? raw, {
     String fallback = ErrorMessages.unknown,
+    bool allowRawMessage = false,
   }) {
     final message = (raw ?? '').trim();
     if (message.isEmpty) return fallback;
@@ -42,7 +43,7 @@ class ErrorMessageMapper {
     if (_looksLikeServer(lower)) return ErrorMessages.server;
     if (_looksLikeInternalRaw(lower)) return fallback;
 
-    return message;
+    return allowRawMessage ? message : fallback;
   }
 
   static bool _looksLikeTimeout(String lower) {

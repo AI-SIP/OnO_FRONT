@@ -6,22 +6,62 @@ import 'dart:io';
 
 import 'package:http/http.dart' as http;
 
+import '../../Constants/ErrorMessages.dart';
 import '../../Exception/ApiException.dart';
 import '../../Provider/TokenProvider.dart';
 import '../../Util/AppSnackBar.dart';
+import '../../Util/ErrorMessageMapper.dart';
 
 class HttpService {
   final TokenProvider tokenProvider = TokenProvider();
 
   String _getErrorMessage(Object error) {
-    if (error is UnauthorizedException) return error.getUserMessage();
-    if (error is NetworkException) return error.getUserMessage();
-    if (error is TimeoutException) return error.getUserMessage();
-    if (error is ServerException) return error.getUserMessage();
-    if (error is BadRequestException) return error.getUserMessage();
-    if (error is ParseException) return error.getUserMessage();
-    if (error is ApiException) return error.getUserMessage();
-    return '알 수 없는 오류가 발생했습니다.';
+    if (error is UnauthorizedException) {
+      return ErrorMessageMapper.sanitizeRawMessage(
+        error.getUserMessage(),
+        fallback: ErrorMessages.authRequired,
+      );
+    }
+    if (error is NetworkException) {
+      return ErrorMessageMapper.sanitizeRawMessage(
+        error.getUserMessage(),
+        fallback: ErrorMessages.network,
+      );
+    }
+    if (error is TimeoutException) {
+      return ErrorMessageMapper.sanitizeRawMessage(
+        error.getUserMessage(),
+        fallback: ErrorMessages.timeout,
+      );
+    }
+    if (error is ServerException) {
+      return ErrorMessageMapper.sanitizeRawMessage(
+        error.getUserMessage(),
+        fallback: ErrorMessages.server,
+      );
+    }
+    if (error is BadRequestException) {
+      return ErrorMessageMapper.byErrorCode(
+        errorCode: error.errorCode,
+        fallback: ErrorMessageMapper.sanitizeRawMessage(
+          error.getUserMessage(),
+          fallback: ErrorMessages.badRequest,
+        ),
+      );
+    }
+    if (error is ParseException) {
+      return ErrorMessageMapper.sanitizeRawMessage(
+        error.getUserMessage(),
+        fallback: ErrorMessages.parse,
+      );
+    }
+    if (error is ApiException) {
+      return ErrorMessageMapper.byErrorCode(
+        errorCode: error.errorCode,
+        fallback: ErrorMessageMapper.sanitizeRawMessage(error.getUserMessage()),
+      );
+    }
+    return ErrorMessages.unknown;
   }
 
   Never _throwWithSnackBar(Exception error, {bool showErrorSnackBar = true}) {
@@ -103,11 +143,13 @@ class HttpService {
                 await req.send().timeout(const Duration(seconds: 90));
             response = await http.Response.fromStream(streamed);
           } else {
-            response = await http.post(
-              uri,
-              headers: mergedHeaders,
-              body: json.encode(body),
-            );
+            response = await http
+                .post(
+                  uri,
+                  headers: mergedHeaders,
+                  body: json.encode(body),
+                )
+                .timeout(const Duration(seconds: 30));
           }
           break;
 
@@ -160,9 +202,9 @@ class HttpService {
         TimeoutException(),
         showErrorSnackBar: showErrorSnackBar,
       );
-    } on FormatException catch (e) {
+    } on FormatException {
       _throwWithSnackBar(
-        ParseException(message: 'JSON Parsing Failed: ${e.message}'),
+        ParseException(message: ErrorMessages.parse),
         showErrorSnackBar: showErrorSnackBar,
       );
     } catch (error) {
@@ -178,7 +220,7 @@ class HttpService {
       }
       // 알 수 없는 에러는 일반적인 ApiException으로 래핑
       _throwWithSnackBar(
-        ApiException(message: 'Unknown error: $error'),
+        ApiException(message: ErrorMessages.unknown),
         showErrorSnackBar: showErrorSnackBar,
       );
     }
@@ -220,8 +262,7 @@ class HttpService {
         // 실패 응답인데 JSON이 아니면 에러 발생
         _throwWithSnackBar(
           ParseException(
-            message:
-                'Failed to parse response as JSON: ${utf8.decode(response.bodyBytes)}',
+            message: ErrorMessages.responseParse,
           ),
           showErrorSnackBar: showErrorSnackBar,
         );
@@ -235,9 +276,14 @@ class HttpService {
         : (rawErrorCode is String ? int.tryParse(rawErrorCode) : null);
 
     if (status < 200 || status >= 300) {
-      final message = decodedBody['message'] as String? ??
-          response.reasonPhrase ??
-          '알 수 없는 오류';
+      final serverMessage = decodedBody is Map
+          ? decodedBody['message'] as String?
+          : response.reasonPhrase;
+      final message = _safeResponseMessage(
+        status: status,
+        errorCode: errorCode,
+        rawMessage: serverMessage,
+      );
 
       // 토큰 만료 시 재시도 (status 401 또는 errorCode 1005)
       // requiredToken이 true이고, 아직 재시도하지 않았다면 토큰 갱신 후 재시도
@@ -319,5 +365,37 @@ class HttpService {
       return decodedBody['data'];
     }
     return decodedBody;
+  }
+
+  String _safeResponseMessage({
+    required int status,
+    required int? errorCode,
+    required String? rawMessage,
+  }) {
+    final statusFallback = _fallbackByStatus(status);
+    if (errorCode != null) {
+      return ErrorMessageMapper.byErrorCode(
+        errorCode: errorCode,
+        fallback: statusFallback,
+      );
+    }
+
+    return ErrorMessageMapper.sanitizeRawMessage(
+      rawMessage,
+      fallback: statusFallback,
+    );
+  }
+
+  String _fallbackByStatus(int status) {
+    if (status == 401 || status == 403) {
+      return ErrorMessages.authRequired;
+    }
+    if (status >= 400 && status < 500) {
+      return ErrorMessages.badRequest;
+    }
+    if (status >= 500) {
+      return ErrorMessages.server;
+    }
+    return ErrorMessages.unknown;
   }
 }
