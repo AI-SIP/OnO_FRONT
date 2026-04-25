@@ -46,7 +46,7 @@ app.*.map.json
 
 .env
 BUILD_COMMANDS.md
-AGENTS.local.md
+AGENTS.md
 *.orig
 *.rej
 
