@@ -46,6 +46,9 @@ app.*.map.json
 
 .env
 BUILD_COMMANDS.md
+AGENTS.local.md
+*.orig
+*.rej
 
 # Android keystore and certificates
 **/android/**/*.jks
