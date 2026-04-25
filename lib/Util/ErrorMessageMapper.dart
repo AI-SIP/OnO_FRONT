@@ -1,48 +1,45 @@
+import '../Constants/ErrorMessages.dart';
+
 class ErrorMessageMapper {
-  static const String _unknownError = '일시적인 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
-  static const String _networkError = '네트워크 연결이 원활하지 않습니다. 인터넷 상태를 확인해주세요.';
-  static const String _timeoutError = '요청 시간이 초과되었습니다. 잠시 후 다시 시도해주세요.';
-  static const String _authError = '로그인이 필요합니다. 다시 로그인해주세요.';
-  static const String _serverError = '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
   static String byErrorCode({required int? errorCode, String? fallback}) {
     switch (errorCode) {
       case 1001:
-        return '요청 형식이 올바르지 않습니다.';
+        return ErrorMessages.requestInvalid;
       case 1002:
-        return '필수 항목이 누락되었습니다.';
+        return ErrorMessages.requiredFieldMissing;
       case 1003:
-        return '요청한 데이터를 찾을 수 없습니다.';
+        return ErrorMessages.notFound;
       case 1004:
-        return '권한이 없습니다.';
+        return ErrorMessages.forbidden;
       case 1005:
-        return '세션이 만료되었습니다. 다시 로그인해주세요.';
+        return ErrorMessages.sessionExpired;
       case 9001:
-        return '태그 이름을 입력해주세요.';
+        return ErrorMessages.tagNameEmpty;
       case 9002:
-        return '태그 이름은 30자 이하여야 합니다.';
+        return ErrorMessages.tagNameTooLong;
       case 9003:
-        return '유효하지 않은 태그입니다.';
+        return ErrorMessages.tagNotFound;
       case 9004:
-        return '해당 태그에 접근할 수 없습니다.';
+        return ErrorMessages.tagUserUnmatched;
       case 9005:
-        return '문제당 태그는 최대 5개까지 설정할 수 있습니다.';
+        return ErrorMessages.tagLimitExceeded;
       default:
-        return fallback ?? _unknownError;
+        return fallback ?? ErrorMessages.unknown;
     }
   }
 
   static String sanitizeRawMessage(
     String? raw, {
-    String fallback = _unknownError,
+    String fallback = ErrorMessages.unknown,
   }) {
     final message = (raw ?? '').trim();
     if (message.isEmpty) return fallback;
 
     final lower = message.toLowerCase();
-    if (_looksLikeTimeout(lower)) return _timeoutError;
-    if (_looksLikeNetwork(lower)) return _networkError;
-    if (_looksLikeAuth(lower)) return _authError;
-    if (_looksLikeServer(lower)) return _serverError;
+    if (_looksLikeTimeout(lower)) return ErrorMessages.timeout;
+    if (_looksLikeNetwork(lower)) return ErrorMessages.network;
+    if (_looksLikeAuth(lower)) return ErrorMessages.authRequired;
+    if (_looksLikeServer(lower)) return ErrorMessages.server;
     if (_looksLikeInternalRaw(lower)) return fallback;
 
     return message;
