@@ -51,6 +51,14 @@ class LoadingDialog {
     }
 
     final navigator = Navigator.of(context, rootNavigator: true);
+    hideFromNavigator(navigator);
+  }
+
+  static void hideFromNavigator(NavigatorState navigator) {
+    if (!_isShowing || !navigator.mounted) {
+      return;
+    }
+
     _isShowing = false;
 
     if (navigator.canPop()) {

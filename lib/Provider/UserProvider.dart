@@ -15,7 +15,6 @@ import 'package:ono/Service/Api/User/UserService.dart';
 import 'package:ono/Service/SocialLogin/KakaoAuthService.dart';
 import 'package:ono/Util/AppErrorReporter.dart';
 import 'package:ono/Util/NotificationService.dart';
-import 'package:sentry_flutter/sentry_flutter.dart';
 
 import '../Exception/ApiException.dart';
 import '../Module/Text/StandardText.dart';
@@ -92,7 +91,7 @@ class UserProvider with ChangeNotifier {
         );
         return;
       }
-      await _handleGeneralError(context, error, stackTrace);
+      await _handleGeneralError(context, error, stackTrace, source: 'login');
     }
   }
 
@@ -127,7 +126,12 @@ class UserProvider with ChangeNotifier {
         );
         return;
       }
-      await _handleGeneralError(context, error, stackTrace);
+      await _handleGeneralError(
+        context,
+        error,
+        stackTrace,
+        source: 'guest_login',
+      );
     }
   }
 
@@ -147,13 +151,14 @@ class UserProvider with ChangeNotifier {
   Future<void> _handleGeneralError(
     BuildContext context,
     Object error,
-    StackTrace stackTrace,
-  ) async {
+    StackTrace stackTrace, {
+    String source = 'login',
+  }) async {
     await resetUserInfo();
     await AppErrorReporter.report(
       error,
       stackTrace,
-      source: 'login',
+      source: source,
       severity: AppErrorSeverity.error,
     );
 
@@ -193,6 +198,7 @@ class UserProvider with ChangeNotifier {
     }
     return '로그인 과정에서 오류가 발생했습니다. 다시 시도해주세요.';
   }
+
   void changeIsFirstLogin() {
     _isFirstLogin = false;
     notifyListeners();
@@ -204,7 +210,6 @@ class UserProvider with ChangeNotifier {
   }
 
   Future<bool> saveUserToken({dynamic response}) async {
-    log('Server response: $response');
     log('Response type: ${response.runtimeType}');
 
     if (response == null) {
@@ -216,9 +221,6 @@ class UserProvider with ChangeNotifier {
 
     String? accessToken = response['accessToken'] as String?;
     String? refreshToken = response['refreshToken'] as String?;
-
-    log('accessToken: $accessToken');
-    log('refreshToken: $refreshToken');
 
     if (accessToken == null || refreshToken == null) {
       _loginStatus = LoginStatus.logout;
@@ -286,16 +288,31 @@ class UserProvider with ChangeNotifier {
       } catch (error, stackTrace) {
         // 데이터 로딩 실패만으로 세션을 끊지 않음
         log('자동 로그인 후 데이터 로딩 실패: $error');
-        await Sentry.captureException(error, stackTrace: stackTrace);
+        await AppErrorReporter.report(
+          error,
+          stackTrace,
+          source: 'auto_login_fetch_data',
+          severity: AppErrorSeverity.warning,
+        );
       }
     } on UnauthorizedException catch (error, stackTrace) {
       log('자동 로그인 실패(인증 만료): $error');
-      await Sentry.captureException(error, stackTrace: stackTrace);
+      await AppErrorReporter.report(
+        error,
+        stackTrace,
+        source: 'auto_login_unauthorized',
+        severity: AppErrorSeverity.warning,
+      );
       await _handleAuthFailure();
     } catch (error, stackTrace) {
       // 일시적인 네트워크 오류 등은 로그인 상태 유지
       log('자동 로그인 일시 실패: $error');
-      await Sentry.captureException(error, stackTrace: stackTrace);
+      await AppErrorReporter.report(
+        error,
+        stackTrace,
+        source: 'auto_login_refresh',
+        severity: AppErrorSeverity.warning,
+      );
       _isFirstLogin = false;
       _loginStatus = LoginStatus.login;
     } finally {
@@ -311,12 +328,22 @@ class UserProvider with ChangeNotifier {
       await tokenProvider.refreshAccessTokenIfNeeded();
     } on UnauthorizedException catch (error, stackTrace) {
       log('앱 복귀 중 인증 만료: $error');
-      await Sentry.captureException(error, stackTrace: stackTrace);
+      await AppErrorReporter.report(
+        error,
+        stackTrace,
+        source: 'session_resume_unauthorized',
+        severity: AppErrorSeverity.warning,
+      );
       await _handleAuthFailure();
     } catch (error, stackTrace) {
       // 복귀 순간 네트워크 이슈로는 세션을 끊지 않음
       log('앱 복귀 중 세션 갱신 일시 실패: $error');
-      await Sentry.captureException(error, stackTrace: stackTrace);
+      await AppErrorReporter.report(
+        error,
+        stackTrace,
+        source: 'session_resume_refresh',
+        severity: AppErrorSeverity.warning,
+      );
     }
   }
 
