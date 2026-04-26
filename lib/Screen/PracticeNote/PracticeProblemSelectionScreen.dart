@@ -20,6 +20,8 @@ import '../../Module/Theme/NoteIconHandler.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/FoldersProvider.dart';
 import '../../Provider/ProblemsProvider.dart';
+import '../../Util/AppErrorReporter.dart';
+import '../../Util/AppSnackBar.dart';
 
 enum _PracticeSearchMode { folder, tag, title }
 
@@ -157,12 +159,19 @@ class _PracticeProblemSelectionScreenState
           _loadInitialProblems(allFolders[0].folderId);
         }
       });
-    } catch (e) {
-      print('Error loading folders: $e');
+    } catch (e, stackTrace) {
+      await _reportAndShowLoadError(
+        e,
+        stackTrace,
+        source: 'practice_selection_load_folders',
+        message: '폴더 목록을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.',
+      );
     } finally {
-      setState(() {
-        _isLoadingFolders = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoadingFolders = false;
+        });
+      }
     }
   }
 
@@ -186,12 +195,19 @@ class _PracticeProblemSelectionScreenState
         _folderCursor = response.nextCursor;
         _folderHasNext = response.hasNext;
       });
-    } catch (e) {
-      print('Error loading more folders: $e');
+    } catch (e, stackTrace) {
+      await _reportAndShowLoadError(
+        e,
+        stackTrace,
+        source: 'practice_selection_load_more_folders',
+        message: '폴더 목록을 더 불러오지 못했습니다. 잠시 후 다시 시도해주세요.',
+      );
     } finally {
-      setState(() {
-        _isLoadingFolders = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoadingFolders = false;
+        });
+      }
     }
   }
 
@@ -207,6 +223,13 @@ class _PracticeProblemSelectionScreenState
           _selectedTagId = _tags.first.tagId;
         }
       });
+    } catch (e, stackTrace) {
+      await _reportAndShowLoadError(
+        e,
+        stackTrace,
+        source: 'practice_selection_load_tags',
+        message: '태그 목록을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.',
+      );
     } finally {
       if (mounted) {
         setState(() => _isLoadingTags = false);
@@ -267,12 +290,19 @@ class _PracticeProblemSelectionScreenState
         _problemCursor = response.nextCursor;
         _problemHasNext = response.hasNext;
       });
-    } catch (e) {
-      print('Error loading problems: $e');
+    } catch (e, stackTrace) {
+      await _reportAndShowLoadError(
+        e,
+        stackTrace,
+        source: 'practice_selection_load_folder_problems',
+        message: '문제 목록을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.',
+      );
     } finally {
-      setState(() {
-        _isLoadingProblems = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoadingProblems = false;
+        });
+      }
     }
   }
 
@@ -312,8 +342,13 @@ class _PracticeProblemSelectionScreenState
         _problemCursor = response.nextCursor;
         _problemHasNext = response.hasNext;
       });
-    } catch (e) {
-      print('Error loading tag problems: $e');
+    } catch (e, stackTrace) {
+      await _reportAndShowLoadError(
+        e,
+        stackTrace,
+        source: 'practice_selection_load_tag_problems',
+        message: '태그 문제를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.',
+      );
     } finally {
       if (mounted) {
         setState(() {
@@ -372,8 +407,13 @@ class _PracticeProblemSelectionScreenState
         _problemCursor = response.nextCursor;
         _problemHasNext = response.hasNext;
       });
-    } catch (e) {
-      print('Error loading title problems: $e');
+    } catch (e, stackTrace) {
+      await _reportAndShowLoadError(
+        e,
+        stackTrace,
+        source: 'practice_selection_search_title_problems',
+        message: '검색 결과를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.',
+      );
     } finally {
       if (mounted) {
         setState(() {
@@ -405,12 +445,19 @@ class _PracticeProblemSelectionScreenState
           _problemCursor = response.nextCursor;
           _problemHasNext = response.hasNext;
         });
-      } catch (e) {
-        print('Error loading more folder problems: $e');
+      } catch (e, stackTrace) {
+        await _reportAndShowLoadError(
+          e,
+          stackTrace,
+          source: 'practice_selection_load_more_folder_problems',
+          message: '문제 목록을 더 불러오지 못했습니다. 잠시 후 다시 시도해주세요.',
+        );
       } finally {
-        setState(() {
-          _isLoadingProblems = false;
-        });
+        if (mounted) {
+          setState(() {
+            _isLoadingProblems = false;
+          });
+        }
       }
       return;
     }
@@ -422,6 +469,24 @@ class _PracticeProblemSelectionScreenState
     }
 
     await _searchTitleProblems(_titleQuery, isInitial: false);
+  }
+
+  Future<void> _reportAndShowLoadError(
+    Object error,
+    StackTrace stackTrace, {
+    required String source,
+    required String message,
+  }) async {
+    await AppErrorReporter.report(
+      error,
+      stackTrace,
+      source: source,
+      severity: AppErrorSeverity.error,
+    );
+
+    if (mounted) {
+      AppSnackBar.showError(message);
+    }
   }
 
   @override

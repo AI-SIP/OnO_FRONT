@@ -24,6 +24,7 @@ import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Module/Util/FolderPickerDialog.dart';
 import '../../Provider/UserProvider.dart';
+import '../../Util/AppErrorReporter.dart';
 import '../ProblemDetail/ProblemDetailScreen.dart';
 import '../ProblemRegister/ProblemRegisterScreen.dart';
 import '../ProblemSearch/TagProblemSearchScreen.dart';
@@ -276,6 +277,19 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     } catch (e, stackTrace) {
       log('Error loading subfolders locally: $e');
       log(stackTrace.toString());
+      await AppErrorReporter.report(
+        e,
+        stackTrace,
+        source: 'directory_load_subfolders',
+        severity: AppErrorSeverity.error,
+      );
+      if (mounted) {
+        SnackBarDialog.showSnackBar(
+          context: context,
+          message: '폴더 목록을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.',
+          backgroundColor: Colors.redAccent,
+        );
+      }
     } finally {
       if (mounted) {
         setState(() {
@@ -407,6 +421,19 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     } catch (e, stackTrace) {
       log('Error loading problems locally: $e');
       log(stackTrace.toString());
+      await AppErrorReporter.report(
+        e,
+        stackTrace,
+        source: 'directory_load_problems',
+        severity: AppErrorSeverity.error,
+      );
+      if (mounted) {
+        SnackBarDialog.showSnackBar(
+          context: context,
+          message: '문제 목록을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.',
+          backgroundColor: Colors.redAccent,
+        );
+      }
     } finally {
       if (mounted) {
         setState(() {

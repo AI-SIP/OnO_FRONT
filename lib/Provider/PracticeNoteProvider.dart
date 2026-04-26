@@ -11,6 +11,7 @@ import '../Model/PracticeNote/PracticeNoteThumbnailModel.dart';
 import '../Model/Problem/ProblemModel.dart';
 import '../Service/Api/HttpService.dart';
 import '../Service/Api/PracticeNote/PracticeNoteService.dart';
+import '../Util/AppErrorReporter.dart';
 import 'TokenProvider.dart';
 
 class ProblemPracticeProvider with ChangeNotifier {
@@ -119,6 +120,12 @@ class ProblemPracticeProvider with ChangeNotifier {
       } catch (e, stackTrace) {
         log('Error loading problem $problemId: $e');
         log('Stack trace: $stackTrace');
+        await AppErrorReporter.report(
+          e,
+          stackTrace,
+          source: 'practice_note_problem_partial_load',
+          severity: AppErrorSeverity.warning,
+        );
         // 문제 로드 실패해도 계속 진행
       }
     }
@@ -303,6 +310,12 @@ class ProblemPracticeProvider with ChangeNotifier {
     } catch (e, stackTrace) {
       log('Error updating single practice thumbnail: $e');
       log('Stack trace: $stackTrace');
+      await AppErrorReporter.report(
+        e,
+        stackTrace,
+        source: 'practice_thumbnail_update',
+        severity: AppErrorSeverity.warning,
+      );
     }
   }
 
