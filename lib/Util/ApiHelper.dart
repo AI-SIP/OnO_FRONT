@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../Exception/ApiException.dart';
+import 'AppErrorReporter.dart';
 
 /// API 호출을 위한 공통 헬퍼 클래스
 /// 모든 API 호출에서 일관된 에러 처리와 사용자 피드백을 제공합니다.
@@ -26,6 +27,9 @@ class ApiHelper {
     String? successMessage,
     bool showErrorSnackBar = true,
     void Function(dynamic error)? onError,
+    String source = 'api_helper',
+    AppErrorSeverity severity = AppErrorSeverity.error,
+    bool sendToDiscord = true,
   }) async {
     try {
       final result = await apiCall();
@@ -42,85 +46,17 @@ class ApiHelper {
       }
 
       return result;
-    } on UnauthorizedException catch (e) {
-      if (showErrorSnackBar && context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.getUserMessage()),
-            backgroundColor: Colors.red,
-            duration: const Duration(seconds: 3),
-          ),
-        );
-        // 필요하다면 로그인 화면으로 이동
-        // Navigator.pushReplacementNamed(context, '/login');
-      }
-      onError?.call(e);
-    } on NetworkException catch (e) {
-      if (showErrorSnackBar && context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.getUserMessage()),
-            backgroundColor: Colors.orange,
-            duration: const Duration(seconds: 3),
-          ),
-        );
-      }
-      onError?.call(e);
-    } on TimeoutException catch (e) {
-      if (showErrorSnackBar && context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.getUserMessage()),
-            backgroundColor: Colors.orange,
-            duration: const Duration(seconds: 3),
-          ),
-        );
-      }
-      onError?.call(e);
-    } on ServerException catch (e) {
-      if (showErrorSnackBar && context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.getUserMessage()),
-            backgroundColor: Colors.red,
-            duration: const Duration(seconds: 3),
-          ),
-        );
-      }
-      onError?.call(e);
-    } on BadRequestException catch (e) {
-      if (showErrorSnackBar && context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.getUserMessage()),
-            backgroundColor: Colors.orange,
-            duration: const Duration(seconds: 3),
-          ),
-        );
-      }
-      onError?.call(e);
-    } on ApiException catch (e) {
-      if (showErrorSnackBar && context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.getUserMessage()),
-            backgroundColor: Colors.red,
-            duration: const Duration(seconds: 3),
-          ),
-        );
-      }
-      onError?.call(e);
-    } catch (e) {
-      // 예상하지 못한 에러
-      if (showErrorSnackBar && context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('알 수 없는 오류가 발생했습니다.'),
-            backgroundColor: Colors.red,
-            duration: Duration(seconds: 3),
-          ),
-        );
-      }
+    } catch (e, stackTrace) {
+      final messenger = context.mounted ? ScaffoldMessenger.of(context) : null;
+      await _handleError(
+        messenger,
+        e,
+        stackTrace,
+        showErrorSnackBar: showErrorSnackBar,
+        source: source,
+        severity: severity,
+        sendToDiscord: sendToDiscord,
+      );
       onError?.call(e);
     }
 
@@ -156,6 +92,9 @@ class ApiHelper {
     Future<T> Function() apiCall, {
     String? successMessage,
     bool showErrorSnackBar = true,
+    String source = 'api_helper',
+    AppErrorSeverity severity = AppErrorSeverity.error,
+    bool sendToDiscord = true,
   }) async {
     try {
       final result = await apiCall();
@@ -172,36 +111,17 @@ class ApiHelper {
       }
 
       return result;
-    } catch (e) {
-      // 에러 메시지 표시
-      if (showErrorSnackBar && context.mounted) {
-        String message = '알 수 없는 오류가 발생했습니다.';
-        Color backgroundColor = Colors.red;
-
-        if (e is UnauthorizedException ||
-            e is NetworkException ||
-            e is TimeoutException ||
-            e is ServerException ||
-            e is BadRequestException ||
-            e is ApiException) {
-          message = (e as dynamic).getUserMessage();
-          if (e is NetworkException || e is TimeoutException) {
-            backgroundColor = Colors.orange;
-          } else if (e is BadRequestException) {
-            backgroundColor = Colors.orange;
-          }
-        }
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(message),
-            backgroundColor: backgroundColor,
-            duration: const Duration(seconds: 3),
-          ),
-        );
-      }
-
-      // 에러를 다시 던짐
+    } catch (e, stackTrace) {
+      final messenger = context.mounted ? ScaffoldMessenger.of(context) : null;
+      await _handleError(
+        messenger,
+        e,
+        stackTrace,
+        showErrorSnackBar: showErrorSnackBar,
+        source: source,
+        severity: severity,
+        sendToDiscord: sendToDiscord,
+      );
       rethrow;
     }
   }
@@ -227,6 +147,9 @@ class ApiHelper {
     Future<T> Function() apiCall, {
     String? successMessage,
     String loadingMessage = '처리 중...',
+    String source = 'api_helper',
+    AppErrorSeverity severity = AppErrorSeverity.error,
+    bool sendToDiscord = true,
   }) async {
     // 로딩 다이얼로그 표시
     showDialog(
@@ -257,6 +180,9 @@ class ApiHelper {
         context,
         apiCall,
         successMessage: successMessage,
+        source: source,
+        severity: severity,
+        sendToDiscord: sendToDiscord,
       );
 
       // 로딩 다이얼로그 닫기
@@ -273,4 +199,63 @@ class ApiHelper {
       rethrow;
     }
   }
+
+  static Future<void> _handleError(
+    ScaffoldMessengerState? messenger,
+    Object error,
+    StackTrace stackTrace, {
+    required bool showErrorSnackBar,
+    required String source,
+    required AppErrorSeverity severity,
+    required bool sendToDiscord,
+  }) async {
+    await AppErrorReporter.report(
+      error,
+      stackTrace,
+      source: source,
+      severity: severity,
+      sendToDiscord: sendToDiscord,
+    );
+
+    if (showErrorSnackBar && messenger != null) {
+      final presentation = _errorPresentation(error);
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(presentation.message),
+          backgroundColor: presentation.backgroundColor,
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    }
+  }
+
+  static _ErrorPresentation _errorPresentation(Object error) {
+    if (error is NetworkException) {
+      return _ErrorPresentation(error.getUserMessage(), Colors.orange);
+    }
+    if (error is TimeoutException) {
+      return _ErrorPresentation(error.getUserMessage(), Colors.orange);
+    }
+    if (error is BadRequestException) {
+      return _ErrorPresentation(error.getUserMessage(), Colors.orange);
+    }
+    if (error is UnauthorizedException) {
+      return _ErrorPresentation(error.getUserMessage(), Colors.red);
+    }
+    if (error is ServerException) {
+      return _ErrorPresentation(error.getUserMessage(), Colors.red);
+    }
+    if (error is ApiException) {
+      return _ErrorPresentation(error.getUserMessage(), Colors.red);
+    }
+
+    return const _ErrorPresentation('알 수 없는 오류가 발생했습니다.', Colors.red);
+  }
+}
+
+class _ErrorPresentation {
+  final String message;
+  final Color backgroundColor;
+
+  const _ErrorPresentation(this.message, this.backgroundColor);
 }
