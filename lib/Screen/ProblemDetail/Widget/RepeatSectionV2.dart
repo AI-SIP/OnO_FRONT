@@ -913,7 +913,7 @@ class _ProblemSolveCard extends StatelessWidget {
       if (context.mounted) {
         SnackBarDialog.showSnackBar(
           context: context,
-          message: '복습 기록 삭제에 실패했습니다: $e',
+          message: '복습 기록 삭제에 실패했습니다. 잠시 후 다시 시도해주세요.',
           backgroundColor: Colors.red,
         );
       }

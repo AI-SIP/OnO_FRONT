@@ -7,6 +7,7 @@ import 'package:ono/Model/Folder/FolderThumbnailModel.dart';
 import 'package:ono/Provider/ProblemsProvider.dart';
 import 'package:ono/Service/Api/FileUpload/FileUploadService.dart';
 import 'package:ono/Service/Api/Folder/FolderService.dart';
+import 'package:ono/Util/AppErrorReporter.dart';
 
 import '../Model/Folder/FolderModel.dart';
 import '../Model/Problem/ProblemModel.dart';
@@ -257,6 +258,13 @@ class FoldersProvider with ChangeNotifier {
     } catch (e, stackTrace) {
       log('Error loading subfolders: $e');
       log(stackTrace.toString());
+      await AppErrorReporter.report(
+        e,
+        stackTrace,
+        source: 'folders_load_subfolders',
+        severity: AppErrorSeverity.error,
+      );
+      rethrow;
     } finally {
       state.isLoadingSubfolders = false;
       notifyListeners();
@@ -289,6 +297,13 @@ class FoldersProvider with ChangeNotifier {
     } catch (e, stackTrace) {
       log('Error loading problems: $e');
       log(stackTrace.toString());
+      await AppErrorReporter.report(
+        e,
+        stackTrace,
+        source: 'folders_load_problems',
+        severity: AppErrorSeverity.error,
+      );
+      rethrow;
     } finally {
       state.isLoadingProblems = false;
       notifyListeners();

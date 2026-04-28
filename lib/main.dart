@@ -1,10 +1,10 @@
 import 'dart:async';
 import 'dart:developer';
+import 'dart:ui';
 
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart';
@@ -25,101 +25,114 @@ import 'Provider/UserProvider.dart';
 import 'Screen/Folder/DirectoryScreen.dart';
 import 'Screen/PracticeNote/PracticeThumbnailScreen.dart';
 import 'Screen/User/MyPageScreen.dart';
+import 'Util/AppErrorReporter.dart';
 import 'Util/NotificationService.dart';
 import 'Util/AppSnackBar.dart';
-import 'Util/SendDiscordAlert.dart';
-
-Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  // 앱 종료 상태에서도 이곳이 호출됩니다
-  log('🔔 백그라운드 메시지 받음: ${message.messageId}');
-  // (선택) flutter_local_notifications 등으로 로컬 알림 표시
-}
 
 void main() async {
-  runZonedGuarded<Future<void>>(
-    () async {
-      WidgetsFlutterBinding.ensureInitialized();
-      await dotenv.load(fileName: ".env");
-      await AppConfig.load();
+  WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load(fileName: '.env');
 
-      await Firebase.initializeApp(
-        name: "OnO",
-        options: DefaultFirebaseOptions.currentPlatform,
-      );
-      await NotificationService.instance.init();
-      FirebaseMessaging.onBackgroundMessage(
-        _firebaseMessagingBackgroundHandler,
-      );
-
-      KakaoSdk.init(nativeAppKey: dotenv.env['KAKAO_NATIVE_APP_KEY']!);
-
-      await SentryFlutter.init((options) {
-        options.dsn = dotenv.env['SENTRY_DSN']!;
-        options.profilesSampleRate = 0.0;
-        options.tracesSampleRate = 1.0;
-      });
-      // FlutterError 처리기 설정
-      FlutterError.onError = (details) async {
-        FlutterError.dumpErrorToConsole(details);
-        final webhookUrl = kReleaseMode
-            ? dotenv.env['DISCORD_WEBHOOK_PROD_URL']!
-            : dotenv.env['DISCORD_WEBHOOK_LOCAL_URL']!;
-        Sentry.captureException(details.exception, stackTrace: details.stack);
-        await sendDiscordAlert(
-          message: details.exceptionAsString(),
-          stack: details.stack,
-          webhookUrl: webhookUrl,
+  await SentryFlutter.init(
+    (options) {
+      options.dsn = dotenv.env['SENTRY_DSN'] ?? '';
+      options.profilesSampleRate = 0.0;
+      options.tracesSampleRate = 1.0;
+    },
+    appRunner: () {
+      FlutterError.onError = (details) {
+        FlutterError.presentError(details);
+        unawaited(
+          AppErrorReporter.report(
+            details.exception,
+            details.stack ?? StackTrace.current,
+            source: 'flutter_error',
+            severity: AppErrorSeverity.fatal,
+          ),
         );
       };
 
-      runApp(
-        MultiProvider(
-          providers: [
-            ChangeNotifierProvider(create: (_) => ProblemsProvider()),
-            ChangeNotifierProvider(
-              create: (context) => FoldersProvider(
-                problemsProvider: Provider.of<ProblemsProvider>(
-                  context,
-                  listen: false,
-                ),
-              ),
+      PlatformDispatcher.instance.onError = (error, stackTrace) {
+        unawaited(
+          AppErrorReporter.report(
+            error,
+            stackTrace,
+            source: 'platform_dispatcher',
+            severity: AppErrorSeverity.fatal,
+          ),
+        );
+        return true;
+      };
+
+      runZonedGuarded<Future<void>>(
+        _bootstrapApp,
+        (error, stackTrace) async {
+          await AppErrorReporter.report(
+            error,
+            stackTrace,
+            source: 'zoned_guarded',
+            severity: AppErrorSeverity.fatal,
+          );
+        },
+      );
+    },
+  );
+}
+
+Future<void> _bootstrapApp() async {
+  await AppConfig.load();
+
+  if (Firebase.apps.where((app) => app.name == 'OnO').isEmpty) {
+    await Firebase.initializeApp(
+      name: 'OnO',
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+  }
+
+  await NotificationService.instance.init();
+  FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+
+  final kakaoNativeAppKey = dotenv.env['KAKAO_NATIVE_APP_KEY']?.trim();
+  if (kakaoNativeAppKey == null || kakaoNativeAppKey.isEmpty) {
+    log('KAKAO_NATIVE_APP_KEY is not configured.');
+  } else {
+    KakaoSdk.init(nativeAppKey: kakaoNativeAppKey);
+  }
+
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => ProblemsProvider()),
+        ChangeNotifierProvider(
+          create: (context) => FoldersProvider(
+            problemsProvider: Provider.of<ProblemsProvider>(
+              context,
+              listen: false,
             ),
-            ChangeNotifierProvider(
-              create: (context) => ProblemPracticeProvider(
-                problemsProvider: Provider.of<ProblemsProvider>(
-                  context,
-                  listen: false,
-                ),
-              ),
-            ),
-            ChangeNotifierProvider(
-              create: (context) => UserProvider(
-                Provider.of<ProblemsProvider>(context, listen: false),
-                Provider.of<FoldersProvider>(context, listen: false),
-                Provider.of<ProblemPracticeProvider>(context, listen: false),
-              ),
-            ),
-            ChangeNotifierProvider(
-              create: (context) => ThemeHandler()..loadColors(),
-            ),
-            ChangeNotifierProvider(create: (_) => ScreenIndexProvider()),
-          ],
-          child: const MyApp(),
+          ),
         ),
-      );
-    },
-    (error, stack) async {
-      // Zone 밖 비동기 예외 처리
-      final webhookUrl = kReleaseMode
-          ? dotenv.env['DISCORD_WEBHOOK_PROD_URL']!
-          : dotenv.env['DISCORD_WEBHOOK_LOCAL_URL']!;
-      Sentry.captureException(error, stackTrace: stack);
-      await sendDiscordAlert(
-        message: error.toString(),
-        stack: stack,
-        webhookUrl: webhookUrl,
-      );
-    },
+        ChangeNotifierProvider(
+          create: (context) => ProblemPracticeProvider(
+            problemsProvider: Provider.of<ProblemsProvider>(
+              context,
+              listen: false,
+            ),
+          ),
+        ),
+        ChangeNotifierProvider(
+          create: (context) => UserProvider(
+            Provider.of<ProblemsProvider>(context, listen: false),
+            Provider.of<FoldersProvider>(context, listen: false),
+            Provider.of<ProblemPracticeProvider>(context, listen: false),
+          ),
+        ),
+        ChangeNotifierProvider(
+          create: (context) => ThemeHandler()..loadColors(),
+        ),
+        ChangeNotifierProvider(create: (_) => ScreenIndexProvider()),
+      ],
+      child: const MyApp(),
+    ),
   );
 }
 

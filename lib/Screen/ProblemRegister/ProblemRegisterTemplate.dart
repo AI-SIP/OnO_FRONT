@@ -22,6 +22,7 @@ import '../../Provider/UserProvider.dart';
 import '../../Service/Api/FileUpload/FileUploadService.dart';
 import '../../Service/Api/Problem/ProblemService.dart';
 import '../../Service/Api/Tag/TagService.dart';
+import '../../Util/AppErrorReporter.dart';
 import 'TagSelectionScreen.dart';
 import 'Widget/DatePickerWidget.dart';
 import 'Widget/ImageGridWidget.dart';
@@ -815,6 +816,7 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
 
     if (!widget.isEditMode) {
       await _waitForPendingUploads();
+      if (!mounted) return;
       if (_existingProblemImageUrls.isEmpty) {
         _showProblemImageRequiredDialog(context);
         return;
@@ -825,6 +827,7 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
     LoadingDialog.show(
         context, widget.isEditMode ? '오답노트 수정 중...' : '오답노트 작성 중...');
     bool shouldPop = false;
+    bool loadingHidden = false;
     try {
       if (widget.isEditMode) {
         await _updateProblem();
@@ -836,9 +839,30 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
     } catch (e, stackTrace) {
       log('오답노트 ${widget.isEditMode ? "수정" : "등록"} 실패: $e');
       log(stackTrace.toString());
-      throw Exception(e);
+      if (mounted) {
+        LoadingDialog.hide(context);
+        loadingHidden = true;
+        SnackBarDialog.showSnackBar(
+          context: context,
+          message: widget.isEditMode
+              ? '오답노트 수정에 실패했습니다. 잠시 후 다시 시도해주세요.'
+              : '오답노트 등록에 실패했습니다. 잠시 후 다시 시도해주세요.',
+          backgroundColor: Colors.red,
+        );
+      }
+      unawaited(
+        AppErrorReporter.report(
+          e,
+          stackTrace,
+          source: widget.isEditMode ? 'problem_update' : 'problem_register',
+          severity: AppErrorSeverity.error,
+        ),
+      );
+      return;
     } finally {
-      LoadingDialog.hide(context);
+      if (mounted && !loadingHidden) {
+        LoadingDialog.hide(context);
+      }
     }
 
     if (!mounted) return;
@@ -1014,6 +1038,9 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
 
     final problemsProvider =
         Provider.of<ProblemsProvider>(context, listen: false);
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final foldersProvider =
+        Provider.of<FoldersProvider>(context, listen: false);
     final problemService = ProblemService();
     final registeredProblemId = await problemService.registerProblemV2(
       problemId: null,
@@ -1032,14 +1059,15 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
     // Provider를 통해 문제 조회 및 상태 업데이트
     await problemsProvider.fetchProblem(registeredProblemId);
     await problemsProvider.updateProblemCount(1);
+    if (!context.mounted) return;
+    // requestReview may show a fallback dialog, so keep the mounted guard above.
+    // ignore: use_build_context_synchronously
     await problemsProvider.requestReview(context);
 
     // 2. 유저 정보 갱신 (경험치 업데이트)
-    await Provider.of<UserProvider>(context, listen: false).fetchUserInfo();
+    await userProvider.fetchUserInfo();
 
     // 3. 폴더 갱신 (화면 전환 전에 먼저 캐시 삭제 및 타임스탬프 업데이트)
-    final foldersProvider =
-        Provider.of<FoldersProvider>(context, listen: false);
     if (_selectedFolderId != null) {
       await foldersProvider.refreshFolder(_selectedFolderId!);
     } else {

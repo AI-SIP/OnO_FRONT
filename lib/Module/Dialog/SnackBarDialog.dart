@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../Text/StandardText.dart';
+import '../../Util/ErrorMessageMapper.dart';
 
 class SnackBarDialog {
   static void showSnackBar({
@@ -8,11 +9,12 @@ class SnackBarDialog {
     required String message,
     required Color backgroundColor,
   }) {
+    final safeMessage = ErrorMessageMapper.sanitizeRawMessage(message);
     if (ScaffoldMessenger.maybeOf(context) != null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: StandardText(
-            text: message,
+            text: safeMessage,
             fontSize: 14,
             color: Colors.white,
           ),

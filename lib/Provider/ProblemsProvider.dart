@@ -12,6 +12,7 @@ import 'package:ono/Service/Api/Problem/ProblemService.dart';
 import '../Model/Problem/ProblemRegisterModel.dart';
 import '../Module/Util/ReviewHandler.dart';
 import '../Service/Api/FileUpload/FileUploadService.dart';
+import '../Util/AppErrorReporter.dart';
 
 class ProblemsProvider with ChangeNotifier {
   // SplayTreeMap: O(log n) 삽입, O(log n) 조회, 자동 정렬
@@ -93,6 +94,12 @@ class ProblemsProvider with ChangeNotifier {
       log('문제 분석 결과 조회 실패 - Problem ID: $problemId');
       log('에러: $e');
       log('스택트레이스: $stackTrace');
+      await AppErrorReporter.report(
+        e,
+        stackTrace,
+        source: 'problem_analysis_fetch',
+        severity: AppErrorSeverity.warning,
+      );
     }
   }
 

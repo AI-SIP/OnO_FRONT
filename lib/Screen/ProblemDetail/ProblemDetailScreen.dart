@@ -5,6 +5,7 @@ import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:ono/Provider/PracticeNoteProvider.dart';
 import 'package:ono/Screen/ProblemRegister/ProblemRegisterScreen.dart';
+import 'package:ono/Util/AppErrorReporter.dart';
 import 'package:provider/provider.dart';
 
 import '../../Model/Problem/ProblemAnalysisStatus.dart';
@@ -31,6 +32,8 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
   Future<ProblemModel?>? _problemModelFuture;
   Timer? _analysisPollingTimer;
   int _pollingCount = 0;
+  int _analysisPollingFailureCount = 0;
+  static const int _maxAnalysisPollingFailures = 3;
   bool _isExpansionTileExpanded = false; // ExpansionTile 상태 관리
   bool _isProblemDeleted = false; // 문제 삭제 여부 플래그
 
@@ -62,6 +65,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
     // 기존 타이머가 있으면 취소
     _stopAnalysisPolling();
     _pollingCount = 0;
+    _analysisPollingFailureCount = 0;
 
     log('🔄 Started analysis polling for problem $problemId');
 
@@ -105,6 +109,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
 
         // 서버에서 최신 분석 상태 조회
         await problemsProvider.fetchProblemAnalysis(problemId);
+        _analysisPollingFailureCount = 0;
 
         // 현재 문제 상태 확인
         final problem = await problemsProvider.getProblem(problemId);
@@ -144,9 +149,23 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
 
         // 여전히 진행 중이면 다음 폴링 예약
         _pollAnalysisStatus(problemId);
-      } catch (e) {
+      } catch (e, stackTrace) {
+        _analysisPollingFailureCount++;
         log('⚠️ Error during analysis polling: $e');
-        // 에러 발생해도 계속 시도
+        await AppErrorReporter.report(
+          e,
+          stackTrace,
+          source: 'problem_analysis_polling',
+          severity: AppErrorSeverity.warning,
+          sendToDiscord:
+              _analysisPollingFailureCount >= _maxAnalysisPollingFailures,
+        );
+        if (_analysisPollingFailureCount >= _maxAnalysisPollingFailures) {
+          log('⏱️ Analysis polling stopped after repeated failures');
+          _stopAnalysisPolling();
+          return;
+        }
+
         _pollAnalysisStatus(problemId);
       }
     });
@@ -156,6 +175,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
     _analysisPollingTimer?.cancel();
     _analysisPollingTimer = null;
     _pollingCount = 0;
+    _analysisPollingFailureCount = 0;
   }
 
   @override

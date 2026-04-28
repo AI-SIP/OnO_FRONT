@@ -4,7 +4,14 @@ import 'package:flutter_svg/svg.dart';
 import '../Text/HandWriteText.dart';
 
 class LoadingDialog {
+  static bool _isShowing = false;
+
   static void show(BuildContext context, String message) {
+    if (_isShowing || !context.mounted) {
+      return;
+    }
+
+    _isShowing = true;
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -35,10 +42,27 @@ class LoadingDialog {
           ),
         );
       },
-    );
+    ).whenComplete(() => _isShowing = false);
   }
 
   static void hide(BuildContext context) {
-    Navigator.of(context, rootNavigator: true).pop();
+    if (!_isShowing || !context.mounted) {
+      return;
+    }
+
+    final navigator = Navigator.of(context, rootNavigator: true);
+    hideFromNavigator(navigator);
+  }
+
+  static void hideFromNavigator(NavigatorState navigator) {
+    if (!_isShowing || !navigator.mounted) {
+      return;
+    }
+
+    _isShowing = false;
+
+    if (navigator.canPop()) {
+      navigator.pop();
+    }
   }
 }

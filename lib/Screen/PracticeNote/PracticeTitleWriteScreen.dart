@@ -14,6 +14,7 @@ import '../../Module/Dialog/SnackBarDialog.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/PracticeNoteProvider.dart';
+import '../../Util/AppErrorReporter.dart';
 
 class PracticeTitleWriteScreen extends StatefulWidget {
   final PracticeNoteRegisterModel? practiceRegisterModel;
@@ -113,6 +114,7 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
           await problemPracticeProvider
               .updatePractice(widget.practiceNoteUpdateModel!);
 
+          if (!context.mounted) return;
           _showSnackBar(context, themeProvider, '복습 노트가 수정되었습니다.',
               themeProvider.primaryColor);
 
@@ -140,16 +142,32 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
           await problemPracticeProvider
               .registerPractice(widget.practiceRegisterModel!);
 
+          if (!context.mounted) return;
           _showSnackBar(context, themeProvider, '복습 노트가 생성되었습니다.',
               themeProvider.primaryColor);
 
           Navigator.pop(context);
           Navigator.pop(context);
         }
-      } catch (error) {
+      } catch (error, stackTrace) {
         log(error.toString());
-        _showSnackBar(context, themeProvider, '복습 노트 생성에 실패했습니다.', Colors.red);
-        throw Exception(error);
+        final isUpdate = widget.practiceNoteUpdateModel != null;
+        await AppErrorReporter.report(
+          error,
+          stackTrace,
+          source: isUpdate ? 'practice_note_update' : 'practice_note_create',
+          severity: AppErrorSeverity.error,
+        );
+        if (context.mounted) {
+          _showSnackBar(
+            context,
+            themeProvider,
+            isUpdate
+                ? '복습 노트 수정에 실패했습니다. 잠시 후 다시 시도해주세요.'
+                : '복습 노트 생성에 실패했습니다. 잠시 후 다시 시도해주세요.',
+            Colors.red,
+          );
+        }
       }
     }
   }
