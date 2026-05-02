@@ -7,7 +7,7 @@ import '../../Module/Text/StandardText.dart';
 import '../../Module/Text/UnderlinedText.dart';
 import '../../Module/Theme/GridPainter.dart';
 import '../../Module/Theme/ThemeHandler.dart';
-import '../ProblemSolve/ProblemSolveRegisterScreen.dart';
+import '../ProblemSolve/ProblemSolveEntry.dart';
 import 'Widget/AnalysisSection.dart';
 import 'Widget/ImageSection.dart';
 import 'Widget/RepeatSectionV2.dart';
@@ -312,6 +312,10 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
   }
 
   Widget _buildBottomReviewCta(ThemeHandler themeProvider, bool isWide) {
+    final problemImages = widget.problemModel.problemImageDataList ?? [];
+    final problemImageUrl =
+        problemImages.isNotEmpty ? problemImages.first.imageUrl : null;
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
@@ -320,14 +324,12 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
         height: 50,
         child: FloatingActionButton.extended(
           onPressed: () async {
-            final result = await Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => ProblemSolveRegisterScreen(
-                  problemId: widget.problemModel.problemId,
-                  onRefresh: () {},
-                ),
-              ),
+            final result = await ProblemSolveEntry.open(
+              context: context,
+              problemId: widget.problemModel.problemId,
+              problemImageUrl: problemImageUrl,
+              onRefresh: () {},
+              themeProvider: themeProvider,
             );
 
             if (result == true && mounted) {
@@ -337,9 +339,9 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
             }
           },
           backgroundColor: themeProvider.primaryColor,
-          icon: const Icon(Icons.edit, color: Colors.white, size: 20),
+          icon: const Icon(Icons.replay, color: Colors.white, size: 20),
           label: const StandardText(
-            text: '문제 복습 인증',
+            text: '다시 풀기',
             color: Colors.white,
             fontSize: 15,
             fontWeight: FontWeight.bold,
