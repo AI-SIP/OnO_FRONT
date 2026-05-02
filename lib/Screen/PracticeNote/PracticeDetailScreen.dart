@@ -434,7 +434,8 @@ class PracticeDetailScreen extends StatelessWidget {
             ),
             elevation: 0,
           ),
-          onPressed: () => _onNextButtonPressed(context, practiceProvider),
+          onPressed: () => _showPracticeStartModeSheet(
+              context, themeProvider, practiceProvider),
           child: const StandardText(
             text: '복습하기',
             fontSize: 16,
@@ -447,8 +448,15 @@ class PracticeDetailScreen extends StatelessWidget {
   }
 
   void _onNextButtonPressed(
-      BuildContext context, ProblemPracticeProvider practiceProvider) {
+      BuildContext context, ProblemPracticeProvider practiceProvider,
+      {required bool shuffle}) {
     if (practiceProvider.currentProblems.isNotEmpty) {
+      if (shuffle) {
+        practiceProvider.shuffleCurrentProblems();
+      } else {
+        practiceProvider.useRegisteredProblemOrder();
+      }
+
       Navigator.push(
         context,
         MaterialPageRoute(
@@ -467,9 +475,121 @@ class PracticeDetailScreen extends StatelessWidget {
     }
   }
 
-  Future<void> _showDeletePracticeDialog(BuildContext context) async {
-    final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
+  void _showPracticeStartModeSheet(BuildContext context,
+      ThemeHandler themeProvider, ProblemPracticeProvider practiceProvider) {
+    if (practiceProvider.currentProblems.isEmpty) {
+      SnackBarDialog.showSnackBar(
+        context: context,
+        message: '복습 세트가 비어있습니다!',
+        backgroundColor: Colors.red,
+      );
+      return;
+    }
 
+    final openTime = DateTime.now();
+    showModalBottomSheet(
+      backgroundColor: Colors.transparent,
+      context: context,
+      isDismissible: false,
+      builder: (sheetContext) {
+        return TapRegion(
+          onTapOutside: (_) {
+            if (DateTime.now().difference(openTime) <
+                const Duration(milliseconds: 500)) {
+              return;
+            }
+            if (Navigator.canPop(sheetContext)) {
+              Navigator.pop(sheetContext);
+            }
+          },
+          child: Container(
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(20),
+                topRight: Radius.circular(20),
+              ),
+            ),
+            child: Padding(
+              padding:
+                  const EdgeInsets.symmetric(vertical: 24.0, horizontal: 20.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 40,
+                    height: 4,
+                    margin: const EdgeInsets.only(bottom: 20),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color:
+                              themeProvider.primaryColor.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Icon(
+                          Icons.play_arrow,
+                          color: themeProvider.primaryColor,
+                          size: 22,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      const StandardText(
+                        text: '복습 방식 선택',
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black87,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                  _buildActionItem(
+                    icon: Icons.format_list_numbered,
+                    iconColor: themeProvider.primaryColor,
+                    title: '등록한 순서로 복습하기',
+                    onTap: () {
+                      Navigator.pop(sheetContext);
+                      _onNextButtonPressed(
+                        context,
+                        practiceProvider,
+                        shuffle: false,
+                      );
+                    },
+                    themeProvider: themeProvider,
+                  ),
+                  const SizedBox(height: 12),
+                  _buildActionItem(
+                    icon: Icons.shuffle,
+                    iconColor: themeProvider.primaryColor,
+                    title: '셔플 모드로 복습하기',
+                    onTap: () {
+                      Navigator.pop(sheetContext);
+                      _onNextButtonPressed(
+                        context,
+                        practiceProvider,
+                        shuffle: true,
+                      );
+                    },
+                    themeProvider: themeProvider,
+                  ),
+                  const SizedBox(height: 4),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _showDeletePracticeDialog(BuildContext context) async {
     return showDialog(
       context: context,
       builder: (context) {

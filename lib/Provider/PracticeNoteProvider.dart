@@ -172,6 +172,26 @@ class ProblemPracticeProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  void useRegisteredProblemOrder() {
+    final practiceNote = currentPracticeNote;
+    if (practiceNote == null) return;
+
+    final problemById = {
+      for (final problem in currentProblems) problem.problemId: problem,
+    };
+
+    currentProblems = practiceNote.problemIdList
+        .map((problemId) => problemById[problemId])
+        .whereType<ProblemModel>()
+        .toList();
+    notifyListeners();
+  }
+
+  void shuffleCurrentProblems() {
+    currentProblems.shuffle();
+    notifyListeners();
+  }
+
   Future<void> resetProblems() async {
     currentProblems = [];
     notifyListeners();
