@@ -115,7 +115,7 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
               .updatePractice(widget.practiceNoteUpdateModel!);
 
           if (!context.mounted) return;
-          _showSnackBar(context, themeProvider, '복습 노트가 수정되었습니다.',
+          _showSnackBar(context, themeProvider, '복습 세트가 수정되었습니다.',
               themeProvider.primaryColor);
 
           Navigator.pop(context);
@@ -143,7 +143,7 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
               .registerPractice(widget.practiceRegisterModel!);
 
           if (!context.mounted) return;
-          _showSnackBar(context, themeProvider, '복습 노트가 생성되었습니다.',
+          _showSnackBar(context, themeProvider, '복습 세트가 생성되었습니다.',
               themeProvider.primaryColor);
 
           Navigator.pop(context);
@@ -163,8 +163,8 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
             context,
             themeProvider,
             isUpdate
-                ? '복습 노트 수정에 실패했습니다. 잠시 후 다시 시도해주세요.'
-                : '복습 노트 생성에 실패했습니다. 잠시 후 다시 시도해주세요.',
+                ? '복습 세트 수정에 실패했습니다. 잠시 후 다시 시도해주세요.'
+                : '복습 세트 생성에 실패했습니다. 잠시 후 다시 시도해주세요.',
             Colors.red,
           );
         }
@@ -288,7 +288,7 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
     return AppBar(
       title: StandardText(
         text:
-            widget.practiceNoteUpdateModel == null ? "복습 노트 만들기" : "복습 노트 수정하기",
+            widget.practiceNoteUpdateModel == null ? "복습 세트 만들기" : "복습 세트 수정하기",
         fontSize: 18,
         color: themeProvider.primaryColor,
       ),
@@ -317,7 +317,7 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
   Widget _buildTitleText() {
     return StandardText(
       text: widget.practiceNoteUpdateModel == null
-          ? "복습 노트의 이름을 입력해주세요"
+          ? "복습 세트의 이름을 입력해주세요"
           : "수정할 이름을 입력해주세요",
       fontSize: 18,
       color: Colors.black,
@@ -345,7 +345,7 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
             ),
             const SizedBox(width: 8),
             const StandardText(
-              text: '복습 노트 제목',
+              text: '복습 세트 제목',
               fontSize: 16,
               fontWeight: FontWeight.w500,
               color: Colors.black87,
@@ -453,8 +453,8 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
           ),
           child: StandardText(
             text: widget.practiceRegisterModel == null
-                ? "복습 노트 수정하기"
-                : "복습 노트 만들기",
+                ? "복습 세트 수정하기"
+                : "복습 세트 만들기",
             fontSize: 16,
             fontWeight: FontWeight.bold,
             color: Colors.white,

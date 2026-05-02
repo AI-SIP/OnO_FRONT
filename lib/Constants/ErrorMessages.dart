@@ -42,7 +42,7 @@ class ErrorMessages {
   static const String rootFolderNotExist = '루트 폴더가 존재하지 않습니다.';
   static const String rootFolderCannotRemove = '루트 폴더는 삭제할 수 없습니다.';
 
-  static const String practiceNoteNotFound = '복습 노트를 찾을 수 없습니다.';
+  static const String practiceNoteNotFound = '복습 세트를 찾을 수 없습니다.';
 
   static const String missionTypeNotFound = '잘못된 미션 종류입니다.';
   static const String missionUserNotFound = '해당하는 유저가 존재하지 않습니다.';

@@ -154,7 +154,7 @@ class _ProblemSolveRegisterScreenState
       // 3. 문제 정보 갱신
       await problemsProvider.fetchProblem(widget.problemId);
 
-      // 4. 복습 노트 갱신
+      // 4. 복습 세트 갱신
       if (practiceProvider.currentPracticeNote != null) {
         await practiceProvider.moveToPractice(
           practiceProvider.currentPracticeNote!.practiceId,

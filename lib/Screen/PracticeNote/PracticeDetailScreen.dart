@@ -136,7 +136,7 @@ class PracticeDetailScreen extends StatelessWidget {
                         ),
                         const SizedBox(width: 12),
                         const StandardText(
-                          text: '복습 노트 편집하기',
+                          text: '복습 세트 편집하기',
                           fontSize: 18,
                           fontWeight: FontWeight.w600,
                           color: Colors.black87,
@@ -148,7 +148,7 @@ class PracticeDetailScreen extends StatelessWidget {
                     _buildActionItem(
                       icon: Icons.edit,
                       iconColor: themeProvider.primaryColor,
-                      title: '복습 노트 편집하기',
+                      title: '복습 세트 편집하기',
                       onTap: () {
                         Navigator.pop(context);
                         Navigator.push(
@@ -167,7 +167,7 @@ class PracticeDetailScreen extends StatelessWidget {
                     _buildActionItem(
                       icon: Icons.delete_forever,
                       iconColor: Colors.red,
-                      title: '복습 노트 삭제하기',
+                      title: '복습 세트 삭제하기',
                       titleColor: Colors.red,
                       onTap: () {
                         Navigator.pop(context);
@@ -341,7 +341,7 @@ class PracticeDetailScreen extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             const StandardText(
-              text: '복습노트가 비어있습니다.\n오답노트를 추가해 편리한 복습을 해보세요!',
+              text: '복습 세트가 비어있습니다.\n오답노트를 추가해 편리한 복습을 해보세요!',
               fontSize: 16,
               color: Colors.black87,
               textAlign: TextAlign.center,
@@ -461,7 +461,7 @@ class PracticeDetailScreen extends StatelessWidget {
     } else {
       SnackBarDialog.showSnackBar(
         context: context,
-        message: '복습 노트가 비어있습니다!',
+        message: '복습 세트가 비어있습니다!',
         backgroundColor: Colors.red,
       );
     }
@@ -500,7 +500,7 @@ class PracticeDetailScreen extends StatelessWidget {
                     ),
                     const SizedBox(width: 12),
                     const StandardText(
-                      text: '복습 노트 삭제',
+                      text: '복습 세트 삭제',
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
                       color: Colors.black87,
@@ -510,7 +510,7 @@ class PracticeDetailScreen extends StatelessWidget {
                 const SizedBox(height: 20),
                 // 내용
                 const StandardText(
-                  text: '정말로 이 복습 노트를 삭제하시겠습니까?',
+                  text: '정말로 이 복습 세트를 삭제하시겠습니까?',
                   fontSize: 15,
                   color: Colors.black87,
                   textAlign: TextAlign.center,

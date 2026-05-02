@@ -34,7 +34,7 @@ class ProblemPracticeProvider with ChangeNotifier {
   final PracticeNoteService practiceNoteService = PracticeNoteService();
   final ProblemsProvider problemsProvider;
 
-  // 복습 노트 목록 새로고침 타임스탬프
+  // 복습 세트 목록 새로고침 타임스탬프
   int _practiceRefreshTimestamp = 0;
   int get practiceRefreshTimestamp => _practiceRefreshTimestamp;
 
@@ -76,7 +76,7 @@ class ProblemPracticeProvider with ChangeNotifier {
 
     _upsertPracticeNote(practiceNote);
 
-    // 현재 복습노트가 업데이트된 것이면 다시 로드
+    // 현재 복습 세트가 업데이트된 것이면 다시 로드
     if (currentPracticeNote != null) {
       if (practiceNoteId == currentPracticeNote!.practiceId) {
         await moveToPractice(practiceNoteId);
@@ -103,7 +103,7 @@ class ProblemPracticeProvider with ChangeNotifier {
 
     currentProblems.clear();
 
-    // 복습 노트의 각 문제를 서버에서 조회 (지연 로딩 대응)
+    // 복습 세트의 각 문제를 서버에서 조회 (지연 로딩 대응)
     for (var problemId in targetPractice.problemIdList) {
       try {
         // 먼저 로컬 캐시에서 찾아보기
@@ -142,7 +142,7 @@ class ProblemPracticeProvider with ChangeNotifier {
 
     await fetchPracticeNote(createdPracticeId);
 
-    // 복습 노트 목록 새로고침 신호
+    // 복습 세트 목록 새로고침 신호
     _practiceRefreshTimestamp = DateTime.now().millisecondsSinceEpoch;
     log('Practice list refresh signaled - timestamp: $_practiceRefreshTimestamp');
     notifyListeners();
@@ -154,7 +154,7 @@ class ProblemPracticeProvider with ChangeNotifier {
 
     await fetchPracticeNote(practiceNoteUpdateModel.practiceNoteId);
 
-    // 복습 노트 목록 새로고침 신호
+    // 복습 세트 목록 새로고침 신호
     _practiceRefreshTimestamp = DateTime.now().millisecondsSinceEpoch;
     log('Practice list refresh signaled - timestamp: $_practiceRefreshTimestamp');
     notifyListeners();
@@ -197,14 +197,14 @@ class ProblemPracticeProvider with ChangeNotifier {
   }
 
   Future<void> fetchPracticeCount(int practiceNoteId) async {
-    // 서버에서 최신 복습 노트 정보 조회
+    // 서버에서 최신 복습 세트 정보 조회
     await fetchPracticeNote(practiceNoteId);
     log('복습 카운트 갱신 완료 - Practice ID: $practiceNoteId');
   }
 
   // ==================== V2 무한 스크롤 메서드들 ====================
 
-  /// 첫 페이지 복습 노트 썸네일 로드 (캐시 우선 사용)
+  /// 첫 페이지 복습 세트 썸네일 로드 (캐시 우선 사용)
   Future<void> loadInitialPracticeThumbnails(
       {int size = 20, bool forceRefresh = false}) async {
     // 캐시가 있고 강제 새로고침이 아니면 캐시 사용
@@ -243,7 +243,7 @@ class ProblemPracticeProvider with ChangeNotifier {
     }
   }
 
-  /// 다음 페이지 복습 노트 썸네일 로드 (무한 스크롤)
+  /// 다음 페이지 복습 세트 썸네일 로드 (무한 스크롤)
   Future<void> loadMorePracticeThumbnails({int size = 20}) async {
     if (_isLoading) return;
     if (!_hasNext || _nextCursor == null) return;
@@ -273,12 +273,12 @@ class ProblemPracticeProvider with ChangeNotifier {
     }
   }
 
-  /// 복습 노트 목록 새로고침 (캐시 무시)
+  /// 복습 세트 목록 새로고침 (캐시 무시)
   Future<void> refreshPracticeThumbnails() async {
     await loadInitialPracticeThumbnails(forceRefresh: true);
   }
 
-  /// 특정 복습 노트만 썸네일 캐시에서 업데이트
+  /// 특정 복습 세트만 썸네일 캐시에서 업데이트
   Future<void> updateSinglePracticeThumbnail(int practiceId) async {
     try {
       log('🔄 Updating single practice thumbnail: $practiceId');
