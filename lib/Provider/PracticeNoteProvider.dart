@@ -70,9 +70,14 @@ class ProblemPracticeProvider with ChangeNotifier {
     throw Exception('Practice with id $practiceNoteId not found.');
   }
 
-  Future<void> fetchPracticeNote(int? practiceNoteId) async {
-    final practiceNote =
-        await practiceNoteService.getPracticeNoteById(practiceNoteId!);
+  Future<void> fetchPracticeNote(
+    int? practiceNoteId, {
+    bool showErrorSnackBar = true,
+  }) async {
+    final practiceNote = await practiceNoteService.getPracticeNoteById(
+      practiceNoteId!,
+      showErrorSnackBar: showErrorSnackBar,
+    );
 
     _upsertPracticeNote(practiceNote);
 
@@ -140,7 +145,13 @@ class ProblemPracticeProvider with ChangeNotifier {
     int createdPracticeId = await practiceNoteService
         .registerPracticeNote(practiceNoteRegisterModel);
 
-    await fetchPracticeNote(createdPracticeId);
+    await _runPostMutationRefresh(
+      () => fetchPracticeNote(
+        createdPracticeId,
+        showErrorSnackBar: false,
+      ),
+      source: 'practice_register_refresh',
+    );
 
     // 복습 세트 목록 새로고침 신호
     _practiceRefreshTimestamp = DateTime.now().millisecondsSinceEpoch;
@@ -151,7 +162,7 @@ class ProblemPracticeProvider with ChangeNotifier {
   Future<void> updatePractice(
     PracticeNoteUpdateModel practiceNoteUpdateModel, {
     bool refreshAfterUpdate = true,
-    bool showErrorSnackBar = true,
+    bool showErrorSnackBar = false,
   }) async {
     await practiceNoteService.updatePracticeNote(
       practiceNoteUpdateModel,
@@ -159,7 +170,13 @@ class ProblemPracticeProvider with ChangeNotifier {
     );
 
     if (refreshAfterUpdate) {
-      await fetchPracticeNote(practiceNoteUpdateModel.practiceNoteId);
+      await _runPostMutationRefresh(
+        () => fetchPracticeNote(
+          practiceNoteUpdateModel.practiceNoteId,
+          showErrorSnackBar: false,
+        ),
+        source: 'practice_update_refresh',
+      );
     } else {
       _applyPracticeUpdateToCache(practiceNoteUpdateModel);
     }
@@ -183,6 +200,23 @@ class ProblemPracticeProvider with ChangeNotifier {
     practiceNote.problemIdList.removeWhere(
       (problemId) => updateModel.removeProblemIdList.contains(problemId),
     );
+  }
+
+  Future<void> _runPostMutationRefresh(
+    Future<void> Function() refresh, {
+    required String source,
+  }) async {
+    try {
+      await refresh();
+    } catch (e, stackTrace) {
+      log('Post-mutation refresh failed ($source): $e');
+      await AppErrorReporter.report(
+        e,
+        stackTrace,
+        source: source,
+        severity: AppErrorSeverity.warning,
+      );
+    }
   }
 
   Future<void> deletePractices(List<int> deletePracticeIds) async {

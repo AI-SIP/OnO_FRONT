@@ -29,10 +29,11 @@ class UserService {
     );
   }
 
-  Future<UserInfoModel> fetchUserInfo() async {
+  Future<UserInfoModel> fetchUserInfo({bool showErrorSnackBar = true}) async {
     final data = await httpService.sendRequest(
       method: 'GET',
       url: '${AppConfig.baseUrl}/api/users',
+      showErrorSnackBar: showErrorSnackBar,
     );
 
     return UserInfoModel.fromJson(data);

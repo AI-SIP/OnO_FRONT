@@ -14,11 +14,15 @@ class ProblemService {
   final HttpService httpService = HttpService();
   final baseUrl = "${AppConfig.baseUrl}/api/problems";
 
-  Future<ProblemModel> getProblem(int? problemId) async {
+  Future<ProblemModel> getProblem(
+    int? problemId, {
+    bool showErrorSnackBar = true,
+  }) async {
     log('find problem id : $problemId');
     final data = await httpService.sendRequest(
       method: 'GET',
       url: '$baseUrl/$problemId',
+      showErrorSnackBar: showErrorSnackBar,
     );
 
     return ProblemModel.fromJson(data as Map<String, dynamic>);
@@ -35,10 +39,11 @@ class ProblemService {
         .toList();
   }
 
-  Future<int> getProblemCount() async {
+  Future<int> getProblemCount({bool showErrorSnackBar = true}) async {
     return await httpService.sendRequest(
       method: 'GET',
       url: '$baseUrl/problemCount',
+      showErrorSnackBar: showErrorSnackBar,
     ) as int;
   }
 
@@ -77,10 +82,14 @@ class ProblemService {
     ) as int;
   }
 
-  Future<void> requestProblemAnalysis(int problemId) async {
+  Future<void> requestProblemAnalysis(
+    int problemId, {
+    bool showErrorSnackBar = true,
+  }) async {
     await httpService.sendRequest(
       method: 'POST',
       url: '$baseUrl/$problemId/analysis',
+      showErrorSnackBar: showErrorSnackBar,
     );
   }
 

@@ -248,8 +248,10 @@ class UserProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> fetchUserInfo() async {
-    userInfoModel = await userService.fetchUserInfo();
+  Future<void> fetchUserInfo({bool showErrorSnackBar = true}) async {
+    userInfoModel = await userService.fetchUserInfo(
+      showErrorSnackBar: showErrorSnackBar,
+    );
     notifyListeners();
   }
 
@@ -266,7 +268,10 @@ class UserProvider with ChangeNotifier {
     );
 
     await userService.updateUserProfile(updateUserRegisterModel);
-    await fetchUserInfo();
+    await _runPostMutationRefresh(
+      () => fetchUserInfo(showErrorSnackBar: false),
+      source: 'user_update_info_refresh',
+    );
   }
 
   Future<void> autoLogin() async {
@@ -399,6 +404,23 @@ class UserProvider with ChangeNotifier {
     foldersProvider.clear();
     practiceProvider.clear();
     notifyListeners();
+  }
+
+  Future<void> _runPostMutationRefresh(
+    Future<void> Function() refresh, {
+    required String source,
+  }) async {
+    try {
+      await refresh();
+    } catch (e, stackTrace) {
+      log('Post-mutation refresh failed ($source): $e');
+      await AppErrorReporter.report(
+        e,
+        stackTrace,
+        source: source,
+        severity: AppErrorSeverity.warning,
+      );
+    }
   }
 
   Future<void> _handleAuthFailure() async {

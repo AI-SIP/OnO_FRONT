@@ -11,10 +11,14 @@ class PracticeNoteService {
   final HttpService httpService = HttpService();
   final baseUrl = "${AppConfig.baseUrl}/api/practiceNotes";
 
-  Future<PracticeNoteDetailModel> getPracticeNoteById(int practiceId) async {
+  Future<PracticeNoteDetailModel> getPracticeNoteById(
+    int practiceId, {
+    bool showErrorSnackBar = true,
+  }) async {
     final data = await httpService.sendRequest(
       method: 'GET',
       url: '$baseUrl/$practiceId',
+      showErrorSnackBar: showErrorSnackBar,
     );
 
     return PracticeNoteDetailModel.fromJson(data);
@@ -60,7 +64,7 @@ class PracticeNoteService {
 
   Future<void> updatePracticeNote(
     PracticeNoteUpdateModel practiceNoteUpdateModel, {
-    bool showErrorSnackBar = true,
+    bool showErrorSnackBar = false,
   }) async {
     await httpService.sendRequest(
       method: 'PATCH',

@@ -1053,19 +1053,37 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
       tagIds: _selectedTagIds.toList(),
     );
 
-    // 등록 후 분석 요청 비동기 실행
-    await problemService.requestProblemAnalysis(registeredProblemId);
+    // 등록 후 분석/캐시 갱신은 후처리이므로 실패해도 등록 성공을 막지 않습니다.
+    await _runPostSaveTask(
+      () => problemService.requestProblemAnalysis(
+        registeredProblemId,
+        showErrorSnackBar: false,
+      ),
+      source: 'problem_register_analysis_request',
+    );
 
     // Provider를 통해 문제 조회 및 상태 업데이트
-    await problemsProvider.fetchProblem(registeredProblemId);
+    await _runPostSaveTask(
+      () => problemsProvider.fetchProblem(
+        registeredProblemId,
+        showErrorSnackBar: false,
+      ),
+      source: 'problem_register_detail_refresh',
+    );
     await problemsProvider.updateProblemCount(1);
     if (!context.mounted) return;
     // requestReview may show a fallback dialog, so keep the mounted guard above.
     // ignore: use_build_context_synchronously
-    await problemsProvider.requestReview(context);
+    await _runPostSaveTask(
+      () => problemsProvider.requestReview(context),
+      source: 'problem_register_review_request',
+    );
 
     // 2. 유저 정보 갱신 (경험치 업데이트)
-    await userProvider.fetchUserInfo();
+    await _runPostSaveTask(
+      () => userProvider.fetchUserInfo(showErrorSnackBar: false),
+      source: 'problem_register_user_refresh',
+    );
 
     // 3. 폴더 갱신 (화면 전환 전에 먼저 캐시 삭제 및 타임스탬프 업데이트)
     if (_selectedFolderId != null) {
@@ -1180,6 +1198,25 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
     // 기존 폴더가 새 폴더와 다르면 기존 폴더도 갱신
     if (originalFolderId != null && originalFolderId != _selectedFolderId) {
       await foldersProvider.refreshFolder(originalFolderId);
+    }
+  }
+
+  Future<void> _runPostSaveTask(
+    Future<void> Function() task, {
+    required String source,
+  }) async {
+    try {
+      await task();
+    } catch (e, stackTrace) {
+      log('Post-save task failed ($source): $e');
+      unawaited(
+        AppErrorReporter.report(
+          e,
+          stackTrace,
+          source: source,
+          severity: AppErrorSeverity.warning,
+        ),
+      );
     }
   }
 
