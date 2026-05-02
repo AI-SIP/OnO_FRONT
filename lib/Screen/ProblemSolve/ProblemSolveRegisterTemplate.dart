@@ -13,10 +13,14 @@ import '../ProblemRegister/Widget/ImageGridWidget.dart';
 
 class ProblemSolveRegisterTemplate extends StatefulWidget {
   final int problemId;
+  final List<File> initialSolutionImages;
+  final int? initialTimeSpentSeconds;
 
   const ProblemSolveRegisterTemplate({
     Key? key,
     required this.problemId,
+    this.initialSolutionImages = const [],
+    this.initialTimeSpentSeconds,
   }) : super(key: key);
 
   @override
@@ -29,7 +33,7 @@ class ProblemSolveRegisterTemplateState
   final _memoCtrl = TextEditingController();
   final List<XFile> _solutionImages = [];
   AnswerStatus _answerStatus = AnswerStatus.CORRECT; // 정답 상태 (기본값: 정답)
-  int _timeSpentMinutes = 10; // 소요 시간 (분)
+  int _timeSpentSeconds = 10 * 60; // 소요 시간 (초)
 
   // 개선 체크리스트 (ImprovementType enum 사용)
   final Map<ImprovementType, bool> _improvements = {
@@ -38,6 +42,15 @@ class ProblemSolveRegisterTemplateState
     ImprovementType.BETTER_UNDERSTANDING: false,
     ImprovementType.FASTER_SOLVING: false,
   };
+
+  @override
+  void initState() {
+    super.initState();
+    _solutionImages.addAll(
+      widget.initialSolutionImages.map((file) => XFile(file.path)),
+    );
+    _timeSpentSeconds = widget.initialTimeSpentSeconds ?? _timeSpentSeconds;
+  }
 
   @override
   void dispose() {
@@ -362,11 +375,11 @@ class ProblemSolveRegisterTemplateState
                   child: Container(
                     color: Colors.transparent,
                     child: StandardText(
-                      text: _timeSpentMinutes > 0
-                          ? '$_timeSpentMinutes분'
+                      text: _timeSpentSeconds > 0
+                          ? _formatTimeSpent(_timeSpentSeconds)
                           : '시간을 입력하세요',
                       fontSize: 14,
-                      color: _timeSpentMinutes > 0
+                      color: _timeSpentSeconds > 0
                           ? Colors.black87
                           : Colors.grey[400]!,
                     ),
@@ -378,8 +391,13 @@ class ProblemSolveRegisterTemplateState
                       icon: const Icon(Icons.remove_circle_outline),
                       color: themeProvider.primaryColor,
                       onPressed: () {
-                        if (_timeSpentMinutes > 0) {
-                          setState(() => _timeSpentMinutes -= 5);
+                        if (_timeSpentSeconds > 0) {
+                          setState(() {
+                            _timeSpentSeconds = _timeSpentSeconds - 300;
+                            if (_timeSpentSeconds < 0) {
+                              _timeSpentSeconds = 0;
+                            }
+                          });
                         }
                       },
                     ),
@@ -387,7 +405,7 @@ class ProblemSolveRegisterTemplateState
                       icon: const Icon(Icons.add_circle_outline),
                       color: themeProvider.primaryColor,
                       onPressed: () {
-                        setState(() => _timeSpentMinutes += 5);
+                        setState(() => _timeSpentSeconds += 300);
                       },
                     ),
                   ],
@@ -454,7 +472,7 @@ class ProblemSolveRegisterTemplateState
 
   Future<void> _showTimeInputDialog() async {
     final controller = TextEditingController(
-      text: _timeSpentMinutes > 0 ? _timeSpentMinutes.toString() : '',
+      text: _timeSpentSeconds > 0 ? (_timeSpentSeconds ~/ 60).toString() : '',
     );
     final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
     final standardTextStyle = const StandardText(text: '').getTextStyle();
@@ -569,7 +587,7 @@ class ProblemSolveRegisterTemplateState
                         onPressed: () {
                           final parsed = int.tryParse(controller.text.trim());
                           if (parsed != null && parsed >= 0) {
-                            setState(() => _timeSpentMinutes = parsed);
+                            setState(() => _timeSpentSeconds = parsed * 60);
                           }
                           Navigator.of(dialogContext).pop();
                         },
@@ -665,7 +683,7 @@ class ProblemSolveRegisterTemplateState
           .where((entry) => entry.value)
           .map((entry) => entry.key)
           .toList(),
-      'timeSpentMinutes': _timeSpentMinutes > 0 ? _timeSpentMinutes : null,
+      'timeSpentSeconds': _timeSpentSeconds > 0 ? _timeSpentSeconds : null,
     };
   }
 
@@ -674,8 +692,19 @@ class ProblemSolveRegisterTemplateState
       _memoCtrl.clear();
       _solutionImages.clear();
       _answerStatus = AnswerStatus.CORRECT;
-      _timeSpentMinutes = 10;
+      _timeSpentSeconds = 10 * 60;
       _improvements.updateAll((key, value) => false);
     });
+  }
+
+  String _formatTimeSpent(int totalSeconds) {
+    final minutes = totalSeconds ~/ 60;
+    final seconds = totalSeconds % 60;
+
+    if (seconds == 0) {
+      return '$minutes분';
+    }
+
+    return '$minutes분 ${seconds.toString().padLeft(2, '0')}초';
   }
 }

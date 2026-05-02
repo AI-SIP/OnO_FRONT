@@ -20,11 +20,15 @@ import 'ProblemSolveRegisterTemplate.dart';
 class ProblemSolveRegisterScreen extends StatefulWidget {
   final int problemId;
   final VoidCallback onRefresh;
+  final List<File> initialSolutionImages;
+  final int? initialTimeSpentSeconds;
 
   const ProblemSolveRegisterScreen({
     super.key,
     required this.problemId,
     required this.onRefresh,
+    this.initialSolutionImages = const [],
+    this.initialTimeSpentSeconds,
   });
 
   @override
@@ -50,6 +54,8 @@ class _ProblemSolveRegisterScreenState
             child: ProblemSolveRegisterTemplate(
               key: _templateKey,
               problemId: widget.problemId,
+              initialSolutionImages: widget.initialSolutionImages,
+              initialTimeSpentSeconds: widget.initialTimeSpentSeconds,
             ),
           ),
           _buildSubmitButton(context, themeProvider),
@@ -135,9 +141,7 @@ class _ProblemSolveRegisterScreenState
         answerStatus: reviewData['answerStatus'] as AnswerStatus,
         reflection: reviewData['reflection'] as String?,
         improvements: reviewData['improvements'] as List<ImprovementType>,
-        timeSpentSeconds: (reviewData['timeSpentMinutes'] as int?) != null
-            ? (reviewData['timeSpentMinutes'] as int) * 60
-            : null,
+        timeSpentSeconds: reviewData['timeSpentSeconds'] as int?,
       );
 
       final practiceRecordId =
