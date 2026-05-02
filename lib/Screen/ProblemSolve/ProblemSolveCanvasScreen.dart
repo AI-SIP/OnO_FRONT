@@ -4,6 +4,7 @@ import 'dart:math' as math;
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:path_provider/path_provider.dart';
@@ -50,10 +51,12 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
   bool _isSubmitting = false;
   bool _isImageReady = false;
   Size _canvasSize = Size.zero;
+  Size? _imageNaturalSize;
   Color _penColor = Colors.black87;
   double _penWidth = 4.0;
   double _eraserWidth = 18.0;
   _CanvasTool _selectedTool = _CanvasTool.pen;
+  _CanvasTool _previousTool = _CanvasTool.pen;
 
   static const List<Color> _paletteColors = [
     Colors.black87,
@@ -74,6 +77,22 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
   void initState() {
     super.initState();
     _startTimer();
+    _loadImageNaturalSize();
+  }
+
+  void _loadImageNaturalSize() {
+    final stream = NetworkImage(widget.problemImageUrl)
+        .resolve(ImageConfiguration.empty);
+    stream.addListener(ImageStreamListener((info, _) {
+      if (mounted) {
+        setState(() {
+          _imageNaturalSize = Size(
+            info.image.width.toDouble(),
+            info.image.height.toDouble(),
+          );
+        });
+      }
+    }));
   }
 
   void _startTimer() {
@@ -90,6 +109,41 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
     _timer?.cancel();
     _transformationController.dispose();
     super.dispose();
+  }
+
+  // Computes the actual displayed rect of the image within the canvas
+  // (accounting for BoxFit.contain letterboxing/pillarboxing).
+  Rect _computeImageRect(Size canvasSize) {
+    final imgSize = _imageNaturalSize;
+    if (imgSize == null || canvasSize == Size.zero) {
+      return Rect.fromLTWH(0, 0, canvasSize.width, canvasSize.height);
+    }
+    final imageRatio = imgSize.width / imgSize.height;
+    final canvasRatio = canvasSize.width / canvasSize.height;
+
+    double imageW, imageH;
+    if (canvasRatio > imageRatio) {
+      imageH = canvasSize.height;
+      imageW = imageH * imageRatio;
+    } else {
+      imageW = canvasSize.width;
+      imageH = imageW / imageRatio;
+    }
+
+    return Rect.fromLTWH(
+      (canvasSize.width - imageW) / 2,
+      (canvasSize.height - imageH) / 2,
+      imageW,
+      imageH,
+    );
+  }
+
+  // Converts a canvas-space point to image-normalized [0,1] coordinates.
+  Offset _toNormalized(Offset canvasPoint, Rect imageRect) {
+    return Offset(
+      (canvasPoint.dx - imageRect.left) / imageRect.width,
+      (canvasPoint.dy - imageRect.top) / imageRect.height,
+    );
   }
 
   @override
@@ -143,6 +197,7 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
                       }
                     });
                   }
+                  final imageRect = _computeImageRect(newSize);
                   return InteractiveViewer(
                     transformationController: _transformationController,
                     minScale: 1,
@@ -151,10 +206,17 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
                     scaleEnabled: true,
                     boundaryMargin: const EdgeInsets.all(80),
                     child: Listener(
-                      onPointerDown: (event) =>
-                          _handlePointerDown(event.localPosition),
+                      onPointerDown: (event) {
+                        // Apple Pencil 2 flat-side tap / S Pen side button
+                        if (event.kind == PointerDeviceKind.stylus &&
+                            event.buttons & kSecondaryStylusButton != 0) {
+                          setState(() => _toggleToLastTool());
+                          return;
+                        }
+                        _handlePointerDown(event.localPosition, imageRect);
+                      },
                       onPointerMove: (event) =>
-                          _handlePointerMove(event.localPosition),
+                          _handlePointerMove(event.localPosition, imageRect),
                       onPointerUp: (_) => _handlePointerEnd(),
                       onPointerCancel: (_) => _handlePointerEnd(),
                       child: RepaintBoundary(
@@ -204,7 +266,10 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
                                   constraints.maxWidth,
                                   constraints.maxHeight,
                                 ),
-                                painter: _DrawingPainter(strokes: _strokes),
+                                painter: _DrawingPainter(
+                                  strokes: _strokes,
+                                  imageRect: imageRect,
+                                ),
                               ),
                             ],
                           ),
@@ -252,7 +317,7 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
                         isSelected: _selectedTool == _CanvasTool.move,
                         themeProvider: themeProvider,
                         onTap: () =>
-                            setState(() => _selectedTool = _CanvasTool.move),
+                            setState(() => _setTool(_CanvasTool.move)),
                       ),
                       const SizedBox(width: 8),
                       _buildToolModeButton(
@@ -261,7 +326,7 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
                         isSelected: _selectedTool == _CanvasTool.pen,
                         themeProvider: themeProvider,
                         onTap: () =>
-                            setState(() => _selectedTool = _CanvasTool.pen),
+                            setState(() => _setTool(_CanvasTool.pen)),
                       ),
                       const SizedBox(width: 8),
                       _buildToolModeButton(
@@ -270,7 +335,7 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
                         isSelected: _selectedTool == _CanvasTool.pixelEraser,
                         themeProvider: themeProvider,
                         onTap: () => setState(
-                          () => _selectedTool = _CanvasTool.pixelEraser,
+                          () => _setTool(_CanvasTool.pixelEraser),
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -280,7 +345,7 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
                         isSelected: _selectedTool == _CanvasTool.strokeEraser,
                         themeProvider: themeProvider,
                         onTap: () => setState(
-                          () => _selectedTool = _CanvasTool.strokeEraser,
+                          () => _setTool(_CanvasTool.strokeEraser),
                         ),
                       ),
                     ],
@@ -322,12 +387,12 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
                   ),
                   child: Slider(
                     value: _currentStrokeWidth,
-                    min: 2,
-                    max: _isEraserTool ? 48 : 18,
-                    divisions: _isEraserTool ? 46 : 16,
+                    min: _isEraserTool ? 2.0 : 0.5,
+                    max: _isEraserTool ? 48.0 : 18.0,
+                    divisions: _isEraserTool ? 46 : 35,
                     activeColor: themeProvider.primaryColor,
                     inactiveColor: Colors.grey[200],
-                    label: _currentStrokeWidth.round().toString(),
+                    label: _widthLabel(_currentStrokeWidth),
                     onChanged: _selectedTool == _CanvasTool.move
                         ? null
                         : (value) => setState(() {
@@ -343,7 +408,7 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
               SizedBox(
                 width: 34,
                 child: StandardText(
-                  text: _currentStrokeWidth.round().toString(),
+                  text: _widthLabel(_currentStrokeWidth),
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
                   color: themeProvider.primaryColor,
@@ -406,7 +471,7 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
     return InkWell(
       onTap: () => setState(() {
         _penColor = color;
-        _selectedTool = _CanvasTool.pen;
+        _setTool(_CanvasTool.pen);
       }),
       borderRadius: BorderRadius.circular(19),
       child: Container(
@@ -467,13 +532,27 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
       _selectedTool == _CanvasTool.pixelEraser ||
       _selectedTool == _CanvasTool.strokeEraser;
 
-  double get _currentStrokeWidth => _selectedTool == _CanvasTool.move
-      ? (_isEraserTool ? _eraserWidth : _penWidth)
-      : _isEraserTool
-          ? _eraserWidth
-          : _penWidth;
+  double get _currentStrokeWidth =>
+      _isEraserTool ? _eraserWidth : _penWidth;
 
-  void _handlePointerDown(Offset point) {
+  String _widthLabel(double width) {
+    return width < 1 ? width.toStringAsFixed(1) : width.round().toString();
+  }
+
+  void _setTool(_CanvasTool tool) {
+    if (tool != _selectedTool) {
+      _previousTool = _selectedTool;
+      _selectedTool = tool;
+    }
+  }
+
+  void _toggleToLastTool() {
+    final temp = _previousTool;
+    _previousTool = _selectedTool;
+    _selectedTool = temp;
+  }
+
+  void _handlePointerDown(Offset point, Rect imageRect) {
     _activePointers++;
 
     if (_selectedTool == _CanvasTool.move) return;
@@ -482,23 +561,27 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
       return;
     }
 
+    final normalized = _toNormalized(point, imageRect);
+
     if (_selectedTool == _CanvasTool.strokeEraser) {
-      _eraseStrokeAt(point);
+      _eraseStrokeAt(normalized, imageRect);
       return;
     }
 
-    _startStroke(point);
+    _startStroke(normalized);
   }
 
-  void _handlePointerMove(Offset point) {
+  void _handlePointerMove(Offset point, Rect imageRect) {
     if (_selectedTool == _CanvasTool.move || _activePointers > 1) return;
 
+    final normalized = _toNormalized(point, imageRect);
+
     if (_selectedTool == _CanvasTool.strokeEraser) {
-      _eraseStrokeAt(point);
+      _eraseStrokeAt(normalized, imageRect);
       return;
     }
 
-    _appendStroke(point);
+    _appendStroke(normalized);
   }
 
   void _handlePointerEnd() {
@@ -506,10 +589,10 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
     _finishStroke();
   }
 
-  void _startStroke(Offset point) {
+  void _startStroke(Offset normalizedPoint) {
     setState(() {
       _currentStroke = _DrawStroke(
-        points: [point],
+        points: [normalizedPoint],
         color: _penColor,
         width: _currentStrokeWidth,
         isEraser: _selectedTool == _CanvasTool.pixelEraser,
@@ -518,11 +601,11 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
     });
   }
 
-  void _appendStroke(Offset point) {
+  void _appendStroke(Offset normalizedPoint) {
     if (_currentStroke == null) return;
 
     setState(() {
-      _currentStroke!.points.add(point);
+      _currentStroke!.points.add(normalizedPoint);
     });
   }
 
@@ -530,13 +613,21 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
     _currentStroke = null;
   }
 
-  void _eraseStrokeAt(Offset point) {
-    final eraseRadius = math.max(14.0, _eraserWidth + 8);
+  // normalizedPoint and stroke points are both in image-normalized [0,1] space.
+  // eraseRadius is passed in canvas pixels and converted to normalized units for comparison.
+  void _eraseStrokeAt(Offset normalizedPoint, Rect imageRect) {
+    final eraseRadiusCanvas = math.max(14.0, _eraserWidth + 8);
+    // Use the shorter image dimension to convert radius to normalized space.
+    final imageShortSide = math.min(imageRect.width, imageRect.height);
+    final eraseRadiusNorm = eraseRadiusCanvas / imageShortSide;
 
     setState(() {
       _strokes.removeWhere((stroke) {
         if (stroke.isEraser) return false;
-        return _isPointNearStroke(point, stroke, eraseRadius);
+        // stroke.width is in canvas pixels; convert to normalized for comparison.
+        final strokeWidthNorm = stroke.width / imageShortSide;
+        return _isPointNearStroke(
+            normalizedPoint, stroke, eraseRadiusNorm + strokeWidthNorm / 2);
       });
     });
   }
@@ -544,13 +635,12 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
   bool _isPointNearStroke(
     Offset point,
     _DrawStroke stroke,
-    double eraseRadius,
+    double radius,
   ) {
     if (stroke.points.isEmpty) return false;
 
     if (stroke.points.length == 1) {
-      return (point - stroke.points.first).distance <=
-          eraseRadius + stroke.width / 2;
+      return (point - stroke.points.first).distance <= radius;
     }
 
     for (var i = 0; i < stroke.points.length - 1; i++) {
@@ -559,9 +649,7 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
         stroke.points[i],
         stroke.points[i + 1],
       );
-      if (distance <= eraseRadius + stroke.width / 2) {
-        return true;
-      }
+      if (distance <= radius) return true;
     }
 
     return false;
@@ -603,19 +691,11 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
     _transformationController.value = Matrix4.identity();
   }
 
+  // Points are stored in image-normalized coordinates, so no re-scaling needed
+  // on orientation change — just update canvas size and reset zoom.
   void _onCanvasSizeChanged(Size newSize) {
     if (newSize == _canvasSize || newSize == Size.zero) return;
-    if (_canvasSize != Size.zero && _strokes.isNotEmpty) {
-      final scaleX = newSize.width / _canvasSize.width;
-      final scaleY = newSize.height / _canvasSize.height;
-      for (final stroke in _strokes) {
-        for (var i = 0; i < stroke.points.length; i++) {
-          stroke.points[i] = Offset(
-            stroke.points[i].dx * scaleX,
-            stroke.points[i].dy * scaleY,
-          );
-        }
-      }
+    if (_canvasSize != Size.zero) {
       _resetZoom();
     }
     _canvasSize = newSize;
@@ -705,9 +785,9 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
 }
 
 class _DrawStroke {
-  final List<Offset> points;
+  final List<Offset> points; // image-normalized [0,1] coordinates
   final Color color;
-  final double width;
+  final double width; // canvas pixels at time of drawing
   final bool isEraser;
 
   _DrawStroke({
@@ -720,8 +800,16 @@ class _DrawStroke {
 
 class _DrawingPainter extends CustomPainter {
   final List<_DrawStroke> strokes;
+  final Rect imageRect;
 
-  _DrawingPainter({required this.strokes});
+  _DrawingPainter({required this.strokes, required this.imageRect});
+
+  Offset _denormalize(Offset normalized) {
+    return Offset(
+      imageRect.left + normalized.dx * imageRect.width,
+      imageRect.top + normalized.dy * imageRect.height,
+    );
+  }
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -729,6 +817,8 @@ class _DrawingPainter extends CustomPainter {
 
     for (final stroke in strokes) {
       if (stroke.points.isEmpty) continue;
+
+      final pts = stroke.points.map(_denormalize).toList();
 
       final paint = Paint()
         ..color = stroke.color
@@ -738,19 +828,17 @@ class _DrawingPainter extends CustomPainter {
         ..style = PaintingStyle.stroke
         ..blendMode = stroke.isEraser ? BlendMode.clear : BlendMode.srcOver;
 
-      final path = Path()
-        ..moveTo(stroke.points.first.dx, stroke.points.first.dy);
-      for (final point in stroke.points.skip(1)) {
-        path.lineTo(point.dx, point.dy);
-      }
-
-      if (stroke.points.length == 1) {
+      if (pts.length == 1) {
         final dotPaint = Paint()
           ..color = stroke.color
           ..style = PaintingStyle.fill
           ..blendMode = stroke.isEraser ? BlendMode.clear : BlendMode.srcOver;
-        canvas.drawCircle(stroke.points.first, stroke.width / 2, dotPaint);
+        canvas.drawCircle(pts.first, stroke.width / 2, dotPaint);
       } else {
+        final path = Path()..moveTo(pts.first.dx, pts.first.dy);
+        for (final point in pts.skip(1)) {
+          path.lineTo(point.dx, point.dy);
+        }
         canvas.drawPath(path, paint);
       }
     }
