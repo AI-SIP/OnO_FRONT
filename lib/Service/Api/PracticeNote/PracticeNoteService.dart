@@ -11,10 +11,14 @@ class PracticeNoteService {
   final HttpService httpService = HttpService();
   final baseUrl = "${AppConfig.baseUrl}/api/practiceNotes";
 
-  Future<PracticeNoteDetailModel> getPracticeNoteById(int practiceId) async {
+  Future<PracticeNoteDetailModel> getPracticeNoteById(
+    int practiceId, {
+    bool showErrorSnackBar = true,
+  }) async {
     final data = await httpService.sendRequest(
       method: 'GET',
       url: '$baseUrl/$practiceId',
+      showErrorSnackBar: showErrorSnackBar,
     );
 
     return PracticeNoteDetailModel.fromJson(data);
@@ -59,11 +63,14 @@ class PracticeNoteService {
   }
 
   Future<void> updatePracticeNote(
-      PracticeNoteUpdateModel practiceNoteUpdateModel) async {
+    PracticeNoteUpdateModel practiceNoteUpdateModel, {
+    bool showErrorSnackBar = false,
+  }) async {
     await httpService.sendRequest(
       method: 'PATCH',
       url: '$baseUrl',
       body: practiceNoteUpdateModel.toJson(),
+      showErrorSnackBar: showErrorSnackBar,
     );
   }
 
@@ -83,7 +90,8 @@ class PracticeNoteService {
   }
 
   // V2 API - Cursor-based pagination for practice note thumbnails
-  Future<PaginatedResponse<PracticeNoteThumbnails>> getPracticeNoteThumbnailsV2({
+  Future<PaginatedResponse<PracticeNoteThumbnails>>
+      getPracticeNoteThumbnailsV2({
     int? cursor,
     int size = 20,
   }) async {

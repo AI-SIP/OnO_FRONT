@@ -130,7 +130,10 @@ class TokenProvider {
       if (response.statusCode == 401 || isRefreshTokenInvalid) {
         await deleteToken();
         await _notifyAuthFailure();
-        throw UnauthorizedException(message: errorMessage);
+        throw UnauthorizedException(
+          errorCode: errorCode,
+          message: errorMessage,
+        );
       }
       throw ApiException(
         statusCode: response.statusCode,
@@ -166,10 +169,16 @@ class TokenProvider {
   }) {
     final normalizedMessage = message.toLowerCase();
     final isRefreshTokenMessage = normalizedMessage.contains('리프레시 토큰') ||
+        normalizedMessage.contains('리프레시토큰') ||
         normalizedMessage.contains('refresh token');
     // 서버 구현에 따라 400 + 리프레시 토큰 메시지로 내려오는 케이스를 인증 만료로 처리
     return (statusCode == 400 || statusCode == 403) &&
-        (isRefreshTokenMessage || errorCode == 1005);
+        (isRefreshTokenMessage ||
+            errorCode == 1001 ||
+            errorCode == 1002 ||
+            errorCode == 1003 ||
+            errorCode == 1004 ||
+            errorCode == 1006);
   }
 
   bool _isTokenExpiringSoon(String token, Duration threshold) {

@@ -43,7 +43,7 @@
 | --- | --- | --- |
 | 2026/2/17 | V3.2.0 업데이트 | - 복습 기록 기능 도입 <br> - 대규모 디자인 개선 |
 | 2026/1/29 | V3.1.0 업데이트 | - 캐릭터 성장 기능 도입 |
-| 2026/1/22 | V3.0.0 업데이트 | - 레벨 제도 도입 <br> - 복습노트 알림 기능 도입 <br> - 오답노트 이미지 등록 편의성 개선|
+| 2026/1/22 | V3.0.0 업데이트 | - 레벨 제도 도입 <br> - 복습 세트 알림 기능 도입 <br> - 오답노트 이미지 등록 편의성 개선|
 | 2026/1/22 | **✨ 서비스 재개 ✨** | **OnO가 새롭게 개선되어 돌아왔어요!**|
 | 2024/12/4 | **‼️ 서비스 중지 ‼️** | **개선된 OnO로 돌아오기 위해 잠시 서비스를 중단합니다!**|
 | 2024/11/7 | V2.4.0 업데이트 | - 복습 리스트 기능 도입 ✨ |
@@ -91,8 +91,8 @@
 |---|---|---|---|---|
 |소셜 로그인|<img width="220" alt="image" src="https://github.com/user-attachments/assets/7cfc0061-d8cc-422f-ae43-fa40353698bb" />|<img width="220" alt="image" src="https://github.com/user-attachments/assets/24b0ee35-6a61-4ffc-a236-c973aa52368e" />|
 |오답노트 작성|<img width="220" alt="image" src="https://github.com/user-attachments/assets/656f26bf-8f05-47b7-aa5c-cd4826d8320c" />| <img width="220" alt="image" src="https://github.com/user-attachments/assets/a09c9d02-f004-421c-b14e-32b8a5c76dc2" />|<img width="220" alt="image" src="https://github.com/user-attachments/assets/c283b17b-a9b4-4b05-97e4-32a610296292" />|
-|복습노트 생성|<img width="220" alt="image" src="https://github.com/user-attachments/assets/7f20c547-c812-4524-b26e-55636c6f46ca" />|<img width="220" alt="image" src="https://github.com/user-attachments/assets/cc9f3985-d2cb-43be-96a5-d52ae73201c5" />|<img width="220" alt="image" src="https://github.com/user-attachments/assets/471dcfac-4df3-48fc-8702-da70d576f7e1" />|
-|복습노트 실행|<img width="220" alt="image" src="https://github.com/user-attachments/assets/1ac3827a-8b49-4836-8c39-26eb476f9bd9" />|<img width="220" alt="image" src="https://github.com/user-attachments/assets/4e0614dd-f5a8-4722-83dd-7bdd6438dac0" />|<img width="220" alt="image" src="https://github.com/user-attachments/assets/53434407-b1b0-4e32-bba8-374e6b98bcf9" />|<img width="220" alt="image" src="https://github.com/user-attachments/assets/4cb0c88e-01c8-437a-a85c-d6c57055b072" />|
+|복습 세트 생성|<img width="220" alt="image" src="https://github.com/user-attachments/assets/7f20c547-c812-4524-b26e-55636c6f46ca" />|<img width="220" alt="image" src="https://github.com/user-attachments/assets/cc9f3985-d2cb-43be-96a5-d52ae73201c5" />|<img width="220" alt="image" src="https://github.com/user-attachments/assets/471dcfac-4df3-48fc-8702-da70d576f7e1" />|
+|복습 세트 실행|<img width="220" alt="image" src="https://github.com/user-attachments/assets/1ac3827a-8b49-4836-8c39-26eb476f9bd9" />|<img width="220" alt="image" src="https://github.com/user-attachments/assets/4e0614dd-f5a8-4722-83dd-7bdd6438dac0" />|<img width="220" alt="image" src="https://github.com/user-attachments/assets/53434407-b1b0-4e32-bba8-374e6b98bcf9" />|<img width="220" alt="image" src="https://github.com/user-attachments/assets/4cb0c88e-01c8-437a-a85c-d6c57055b072" />|
 |오답 복습|<img width="220" alt="image" src="https://github.com/user-attachments/assets/b0038427-1e8f-461e-a1a8-ab0ed39d6ad2" />|<img width="220" alt="image" src="https://github.com/user-attachments/assets/2aea42ae-cac7-46ec-ad1f-bf5fad153437" />|<img width="220" alt="image" src="https://github.com/user-attachments/assets/8d9f244d-ceb9-4880-8966-4bce5ed07a08" />|<img width="220" alt="image" src="https://github.com/user-attachments/assets/4c8e7cff-3171-408b-a9a1-df32e508a64b" />|
 <br>
 

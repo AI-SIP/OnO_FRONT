@@ -3,6 +3,8 @@ import 'dart:developer';
 
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
+import 'package:ono/Model/PracticeNote/PracticeNoteUpdateModel.dart';
+import 'package:ono/Module/Dialog/SnackBarDialog.dart';
 import 'package:ono/Provider/PracticeNoteProvider.dart';
 import 'package:ono/Screen/ProblemRegister/ProblemRegisterScreen.dart';
 import 'package:ono/Util/AppErrorReporter.dart';
@@ -387,7 +389,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                           ),
                         ),
                         const SizedBox(width: 12),
-                        StandardText(
+                        const StandardText(
                           text: '오답노트 편집하기',
                           fontSize: 20,
                           fontWeight: FontWeight.w600,
@@ -417,6 +419,19 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                             .then((_) {
                           _setProblemModel();
                         });
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                    _buildActionItem(
+                      icon: Icons.playlist_add,
+                      iconColor: themeProvider.primaryColor,
+                      title: '복습 세트에 추가하기',
+                      onTap: () {
+                        FirebaseAnalytics.instance.logEvent(
+                            name: 'problem_add_to_practice_set_button_click');
+                        Navigator.pop(context);
+                        _showPracticeSetSelectionSheet(
+                            problemModel, themeProvider);
                       },
                     ),
                     const SizedBox(height: 12),
@@ -492,6 +507,325 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _showPracticeSetSelectionSheet(
+      ProblemModel problemModel, ThemeHandler themeProvider) async {
+    final practiceProvider =
+        Provider.of<ProblemPracticeProvider>(context, listen: false);
+
+    LoadingDialog.show(context, '복습 세트 목록 불러오는 중...');
+
+    try {
+      await practiceProvider.fetchAllPracticeContents();
+    } catch (e) {
+      if (!mounted) return;
+      LoadingDialog.hide(context);
+      SnackBarDialog.showSnackBar(
+        context: context,
+        message: '복습 세트 목록을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.',
+        backgroundColor: Colors.red,
+      );
+      return;
+    }
+
+    if (!mounted) return;
+    LoadingDialog.hide(context);
+
+    final selectedPracticeIds = <int>{};
+    final openTime = DateTime.now();
+
+    showModalBottomSheet(
+      backgroundColor: Colors.transparent,
+      context: context,
+      isScrollControlled: true,
+      builder: (sheetContext) {
+        return StatefulBuilder(
+          builder: (context, setSheetState) {
+            final practices = practiceProvider.practices;
+
+            return TapRegion(
+              onTapOutside: (_) {
+                if (DateTime.now().difference(openTime) <
+                    const Duration(milliseconds: 500)) {
+                  return;
+                }
+                if (Navigator.canPop(sheetContext)) {
+                  Navigator.pop(sheetContext);
+                }
+              },
+              child: Container(
+                constraints: BoxConstraints(
+                  maxHeight: MediaQuery.of(context).size.height * 0.78,
+                ),
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(20),
+                    topRight: Radius.circular(20),
+                  ),
+                ),
+                child: Padding(
+                  padding: EdgeInsets.only(
+                    left: 20,
+                    right: 20,
+                    top: 24,
+                    bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 40,
+                        height: 4,
+                        margin: const EdgeInsets.only(bottom: 20),
+                        decoration: BoxDecoration(
+                          color: Colors.grey[300],
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: themeProvider.primaryColor
+                                  .withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Icon(
+                              Icons.playlist_add,
+                              color: themeProvider.primaryColor,
+                              size: 22,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          const Expanded(
+                            child: StandardText(
+                              text: '복습 세트에 추가하기',
+                              fontSize: 20,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.black87,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+                      if (practices.isEmpty)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 32),
+                          child: Column(
+                            children: [
+                              Icon(
+                                Icons.playlist_add_check,
+                                size: 44,
+                                color: Colors.grey[350],
+                              ),
+                              const SizedBox(height: 12),
+                              const StandardText(
+                                text: '아직 복습 세트가 없습니다.',
+                                fontSize: 16,
+                                color: Colors.black87,
+                              ),
+                            ],
+                          ),
+                        )
+                      else
+                        Flexible(
+                          child: ListView.separated(
+                            shrinkWrap: true,
+                            itemCount: practices.length,
+                            separatorBuilder: (_, __) =>
+                                const SizedBox(height: 10),
+                            itemBuilder: (context, index) {
+                              final practice = practices[index];
+                              final alreadyAdded = practice.problemIdList
+                                  .contains(problemModel.problemId);
+                              final selected = selectedPracticeIds
+                                  .contains(practice.practiceId);
+
+                              return InkWell(
+                                onTap: alreadyAdded
+                                    ? null
+                                    : () {
+                                        setSheetState(() {
+                                          if (selected) {
+                                            selectedPracticeIds
+                                                .remove(practice.practiceId);
+                                          } else {
+                                            selectedPracticeIds
+                                                .add(practice.practiceId);
+                                          }
+                                        });
+                                      },
+                                borderRadius: BorderRadius.circular(12),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 14, vertical: 12),
+                                  decoration: BoxDecoration(
+                                    color: alreadyAdded
+                                        ? Colors.grey[100]
+                                        : Colors.grey[50],
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(
+                                      color: selected
+                                          ? themeProvider.primaryColor
+                                          : Colors.grey[200]!,
+                                      width: selected ? 1.5 : 1,
+                                    ),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        alreadyAdded
+                                            ? Icons.check_circle
+                                            : selected
+                                                ? Icons.check_circle
+                                                : Icons.radio_button_unchecked,
+                                        color: alreadyAdded
+                                            ? Colors.grey
+                                            : selected
+                                                ? themeProvider.primaryColor
+                                                : Colors.grey[400],
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            StandardText(
+                                              text: practice.practiceTitle,
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.w500,
+                                              color: alreadyAdded
+                                                  ? Colors.grey
+                                                  : Colors.black87,
+                                            ),
+                                            const SizedBox(height: 4),
+                                            StandardText(
+                                              text: alreadyAdded
+                                                  ? '이미 추가된 문제입니다'
+                                                  : '문제 ${practice.practiceSize}개',
+                                              fontSize: 13,
+                                              color: Colors.grey[600]!,
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      const SizedBox(height: 18),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: TextButton(
+                              onPressed: () => Navigator.pop(sheetContext),
+                              style: TextButton.styleFrom(
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 13),
+                                backgroundColor: Colors.grey[100],
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                              ),
+                              child: const StandardText(
+                                text: '취소',
+                                fontSize: 15,
+                                color: Colors.black87,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: TextButton(
+                              onPressed: selectedPracticeIds.isEmpty
+                                  ? null
+                                  : () {
+                                      final targetPracticeIds =
+                                          selectedPracticeIds.toList();
+                                      Navigator.pop(sheetContext);
+                                      _addProblemToPracticeSets(
+                                        problemModel.problemId,
+                                        targetPracticeIds,
+                                        themeProvider,
+                                      );
+                                    },
+                              style: TextButton.styleFrom(
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 13),
+                                backgroundColor: selectedPracticeIds.isEmpty
+                                    ? Colors.grey[300]
+                                    : themeProvider.primaryColor,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                              ),
+                              child: const StandardText(
+                                text: '추가',
+                                fontSize: 15,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Future<void> _addProblemToPracticeSets(
+      int problemId, List<int> practiceIds, ThemeHandler themeProvider) async {
+    final practiceProvider =
+        Provider.of<ProblemPracticeProvider>(context, listen: false);
+
+    LoadingDialog.show(context, '복습 세트에 추가 중...');
+
+    try {
+      for (final practiceId in practiceIds) {
+        final updateModel = PracticeNoteUpdateModel(
+          practiceNoteId: practiceId,
+          addProblemIdList: [problemId],
+          removeProblemIdList: const [],
+        );
+        await practiceProvider.updatePractice(
+          updateModel,
+          refreshAfterUpdate: false,
+          showErrorSnackBar: false,
+        );
+      }
+
+      if (!mounted) return;
+      LoadingDialog.hide(context);
+      SnackBarDialog.showSnackBar(
+        context: context,
+        message: practiceIds.length == 1
+            ? '복습 세트에 추가되었습니다.'
+            : '${practiceIds.length}개의 복습 세트에 추가되었습니다.',
+        backgroundColor: themeProvider.primaryColor,
+      );
+    } catch (e) {
+      if (!mounted) return;
+      LoadingDialog.hide(context);
+      SnackBarDialog.showSnackBar(
+        context: context,
+        message: '복습 세트에 추가하지 못했습니다. 잠시 후 다시 시도해주세요.',
+        backgroundColor: Colors.red,
+      );
+      log('복습 세트 문제 추가 실패: $e');
+    }
   }
 
   Future<void> _showDeleteProblemDialog(
@@ -574,9 +908,6 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                           // context가 유효할 때 Provider와 Navigator 가져오기
                           final problemsProvider =
                               Provider.of<ProblemsProvider>(context,
-                                  listen: false);
-                          final practiceProvider =
-                              Provider.of<ProblemPracticeProvider>(context,
                                   listen: false);
                           final navigator = Navigator.of(context);
 

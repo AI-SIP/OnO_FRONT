@@ -104,7 +104,7 @@ class CompactActivityLevels extends StatelessWidget {
           SizedBox(height: screenHeight * 0.017),
           _buildActivityRow(
             icon: Icons.history,
-            category: '복습노트 복습',
+            category: '복습 세트 복습',
             level: userInfo!.notePracticeLevel,
             point: userInfo!.notePracticePoint,
             color: Colors.blue[300]!,

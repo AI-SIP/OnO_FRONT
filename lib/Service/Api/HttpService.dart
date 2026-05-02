@@ -17,10 +17,7 @@ class HttpService {
 
   String _getErrorMessage(Object error) {
     if (error is UnauthorizedException) {
-      return ErrorMessageMapper.sanitizeRawMessage(
-        error.getUserMessage(),
-        fallback: ErrorMessages.authRequired,
-      );
+      return error.getUserMessage();
     }
     if (error is NetworkException) {
       return ErrorMessageMapper.sanitizeRawMessage(
@@ -285,9 +282,11 @@ class HttpService {
         rawMessage: serverMessage,
       );
 
-      // 토큰 만료 시 재시도 (status 401 또는 errorCode 1005)
+      // 토큰 만료 시 재시도 (ACCESS_TOKEN_EXPIRED 또는 코드 없는 401)
       // requiredToken이 true이고, 아직 재시도하지 않았다면 토큰 갱신 후 재시도
-      if (requiredToken && !retry && (status == 401 || errorCode == 1005)) {
+      final shouldRefreshToken =
+          errorCode == 1005 || (errorCode == null && status == 401);
+      if (requiredToken && !retry && shouldRefreshToken) {
         await tokenProvider.refreshAccessToken();
         return sendRequest(
           method: method,
@@ -306,10 +305,13 @@ class HttpService {
       // errorCode 기반으로 예외 타입 결정 (서버가 모든 에러를 400으로 통일)
       // errorCode가 있으면 우선적으로 errorCode로 판단
       if (errorCode != null) {
-        // 인증 관련 에러 코드 (예: 1004, 1005)
+        // 인증 관련 에러 코드
         if (errorCode >= 1000 && errorCode < 2000) {
           _throwWithSnackBar(
-            UnauthorizedException(message: message),
+            UnauthorizedException(
+              errorCode: errorCode,
+              message: message,
+            ),
             showErrorSnackBar: showErrorSnackBar,
           );
         }
@@ -327,7 +329,10 @@ class HttpService {
       // errorCode가 없을 경우 상태 코드로 판단
       if (status == 401) {
         _throwWithSnackBar(
-          UnauthorizedException(message: message),
+          UnauthorizedException(
+            errorCode: errorCode,
+            message: message,
+          ),
           showErrorSnackBar: showErrorSnackBar,
         );
       } else if (status >= 400 && status < 500) {

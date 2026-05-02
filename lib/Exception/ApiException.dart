@@ -60,15 +60,24 @@ class TimeoutException implements Exception {
 
 /// 인증 관련 예외
 class UnauthorizedException implements Exception {
+  final int? errorCode;
   final String message;
 
-  UnauthorizedException({this.message = ErrorMessages.authRequired});
+  UnauthorizedException({
+    this.errorCode,
+    this.message = ErrorMessages.authRequired,
+  });
 
   @override
-  String toString() => 'UnauthorizedException: $message';
+  String toString() => 'UnauthorizedException(errorCode: $errorCode): $message';
 
-  String getUserMessage() => ErrorMessageMapper.sanitizeRawMessage(message,
-      fallback: ErrorMessages.authRequired);
+  String getUserMessage() => ErrorMessageMapper.byErrorCode(
+        errorCode: errorCode,
+        fallback: ErrorMessageMapper.sanitizeRawMessage(
+          message,
+          fallback: ErrorMessages.authRequired,
+        ),
+      );
 }
 
 /// 서버 내부 오류 예외
