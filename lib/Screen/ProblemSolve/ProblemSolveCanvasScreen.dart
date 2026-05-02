@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
@@ -29,17 +30,28 @@ class ProblemSolveCanvasScreen extends StatefulWidget {
       _ProblemSolveCanvasScreenState();
 }
 
+enum _CanvasTool {
+  pen,
+  pixelEraser,
+  strokeEraser,
+  move,
+}
+
 class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
   final GlobalKey _captureKey = GlobalKey();
+  final TransformationController _transformationController =
+      TransformationController();
   final List<_DrawStroke> _strokes = [];
   _DrawStroke? _currentStroke;
   Timer? _timer;
+  int _activePointers = 0;
   int _elapsedSeconds = 0;
   bool _isSubmitting = false;
   bool _isImageReady = false;
   Color _penColor = Colors.black87;
   double _penWidth = 4.0;
-  bool _isEraserMode = false;
+  double _eraserWidth = 18.0;
+  _CanvasTool _selectedTool = _CanvasTool.pen;
 
   static const List<Color> _paletteColors = [
     Colors.black87,
@@ -74,6 +86,7 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
   @override
   void dispose() {
     _timer?.cancel();
+    _transformationController.dispose();
     super.dispose();
   }
 
@@ -95,6 +108,12 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
         ),
         actions: [
           IconButton(
+            tooltip: '확대 초기화',
+            onPressed: _resetZoom,
+            icon: Icon(Icons.center_focus_strong,
+                color: themeProvider.primaryColor),
+          ),
+          IconButton(
             tooltip: '되돌리기',
             onPressed: _strokes.isEmpty ? null : _undoLastStroke,
             icon: Icon(Icons.undo, color: themeProvider.primaryColor),
@@ -111,67 +130,78 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
           Expanded(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-              child: RepaintBoundary(
-                key: _captureKey,
-                child: Container(
-                  color: Colors.white,
-                  child: LayoutBuilder(
-                    builder: (context, constraints) {
-                      return GestureDetector(
-                        onPanStart: (details) =>
-                            _startStroke(details.localPosition),
-                        onPanUpdate: (details) =>
-                            _appendStroke(details.localPosition),
-                        onPanEnd: (_) => _finishStroke(),
-                        child: Stack(
-                          fit: StackFit.expand,
-                          children: [
-                            Image.network(
-                              widget.problemImageUrl,
-                              fit: BoxFit.contain,
-                              frameBuilder: (
-                                context,
-                                child,
-                                frame,
-                                wasSynchronouslyLoaded,
-                              ) {
-                                if (wasSynchronouslyLoaded || frame != null) {
-                                  _markImageReady();
-                                }
-                                return child;
-                              },
-                              loadingBuilder:
-                                  (context, child, loadingProgress) {
-                                if (loadingProgress == null) return child;
-                                return Center(
-                                  child: CircularProgressIndicator(
-                                    color: themeProvider.primaryColor,
-                                  ),
-                                );
-                              },
-                              errorBuilder: (context, error, stackTrace) {
-                                return Center(
-                                  child: StandardText(
-                                    text: '문제 이미지를 불러오지 못했습니다.',
-                                    fontSize: 14,
-                                    color: themeProvider.primaryColor,
-                                  ),
-                                );
-                              },
-                            ),
-                            CustomPaint(
-                              size: Size(
-                                constraints.maxWidth,
-                                constraints.maxHeight,
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  return InteractiveViewer(
+                    transformationController: _transformationController,
+                    minScale: 1,
+                    maxScale: 4,
+                    panEnabled: _selectedTool == _CanvasTool.move,
+                    scaleEnabled: true,
+                    boundaryMargin: const EdgeInsets.all(80),
+                    child: Listener(
+                      onPointerDown: (event) =>
+                          _handlePointerDown(event.localPosition),
+                      onPointerMove: (event) =>
+                          _handlePointerMove(event.localPosition),
+                      onPointerUp: (_) => _handlePointerEnd(),
+                      onPointerCancel: (_) => _handlePointerEnd(),
+                      child: RepaintBoundary(
+                        key: _captureKey,
+                        child: Container(
+                          width: constraints.maxWidth,
+                          height: constraints.maxHeight,
+                          color: Colors.white,
+                          child: Stack(
+                            fit: StackFit.expand,
+                            children: [
+                              Image.network(
+                                widget.problemImageUrl,
+                                fit: BoxFit.contain,
+                                frameBuilder: (
+                                  context,
+                                  child,
+                                  frame,
+                                  wasSynchronouslyLoaded,
+                                ) {
+                                  if (wasSynchronouslyLoaded || frame != null) {
+                                    _markImageReady();
+                                  }
+                                  return child;
+                                },
+                                loadingBuilder:
+                                    (context, child, loadingProgress) {
+                                  if (loadingProgress == null) return child;
+                                  return Center(
+                                    child: CircularProgressIndicator(
+                                      color: themeProvider.primaryColor,
+                                    ),
+                                  );
+                                },
+                                errorBuilder: (context, error, stackTrace) {
+                                  return Center(
+                                    child: StandardText(
+                                      text: '문제 이미지를 불러오지 못했습니다.',
+                                      fontSize: 14,
+                                      color: themeProvider.primaryColor,
+                                    ),
+                                  );
+                                },
                               ),
-                              painter: _DrawingPainter(strokes: _strokes),
-                            ),
-                          ],
+                              CustomPaint(
+                                size: Size(
+                                  constraints.maxWidth,
+                                  constraints.maxHeight,
+                                ),
+                                painter: _DrawingPainter(strokes: _strokes),
+                              ),
+                            ],
+                          ),
                         ),
-                      );
-                    },
-                  ),
-                ),
+                      ),
+                    ),
+                  );
+                },
               ),
             ),
           ),
@@ -200,23 +230,52 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
         children: [
           Row(
             children: [
-              _buildToolModeButton(
-                icon: Icons.edit,
-                label: '펜',
-                isSelected: !_isEraserMode,
-                themeProvider: themeProvider,
-                onTap: () => setState(() => _isEraserMode = false),
+              Expanded(
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      _buildToolModeButton(
+                        icon: Icons.open_with,
+                        label: '이동',
+                        isSelected: _selectedTool == _CanvasTool.move,
+                        themeProvider: themeProvider,
+                        onTap: () =>
+                            setState(() => _selectedTool = _CanvasTool.move),
+                      ),
+                      const SizedBox(width: 8),
+                      _buildToolModeButton(
+                        icon: Icons.edit,
+                        label: '펜',
+                        isSelected: _selectedTool == _CanvasTool.pen,
+                        themeProvider: themeProvider,
+                        onTap: () =>
+                            setState(() => _selectedTool = _CanvasTool.pen),
+                      ),
+                      const SizedBox(width: 8),
+                      _buildToolModeButton(
+                        icon: Icons.cleaning_services_outlined,
+                        label: '부분 지우개',
+                        isSelected: _selectedTool == _CanvasTool.pixelEraser,
+                        themeProvider: themeProvider,
+                        onTap: () => setState(
+                          () => _selectedTool = _CanvasTool.pixelEraser,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      _buildToolModeButton(
+                        icon: Icons.auto_fix_off,
+                        label: '획 지우개',
+                        isSelected: _selectedTool == _CanvasTool.strokeEraser,
+                        themeProvider: themeProvider,
+                        onTap: () => setState(
+                          () => _selectedTool = _CanvasTool.strokeEraser,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
-              const SizedBox(width: 8),
-              _buildToolModeButton(
-                icon: Icons.cleaning_services_outlined,
-                label: '지우개',
-                isSelected: _isEraserMode,
-                themeProvider: themeProvider,
-                onTap: () => setState(() => _isEraserMode = true),
-              ),
-              const Spacer(),
-              _buildStrokePreview(themeProvider),
             ],
           ),
           const SizedBox(height: 12),
@@ -251,21 +310,29 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
                         const RoundSliderOverlayShape(overlayRadius: 18),
                   ),
                   child: Slider(
-                    value: _penWidth,
+                    value: _currentStrokeWidth,
                     min: 2,
-                    max: 18,
-                    divisions: 16,
+                    max: _isEraserTool ? 48 : 18,
+                    divisions: _isEraserTool ? 46 : 16,
                     activeColor: themeProvider.primaryColor,
                     inactiveColor: Colors.grey[200],
-                    label: _penWidth.round().toString(),
-                    onChanged: (value) => setState(() => _penWidth = value),
+                    label: _currentStrokeWidth.round().toString(),
+                    onChanged: _selectedTool == _CanvasTool.move
+                        ? null
+                        : (value) => setState(() {
+                              if (_isEraserTool) {
+                                _eraserWidth = value;
+                              } else {
+                                _penWidth = value;
+                              }
+                            }),
                   ),
                 ),
               ),
               SizedBox(
                 width: 34,
                 child: StandardText(
-                  text: _penWidth.round().toString(),
+                  text: _currentStrokeWidth.round().toString(),
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
                   color: themeProvider.primaryColor,
@@ -323,12 +390,12 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
   }
 
   Widget _buildColorButton(Color color) {
-    final isSelected = !_isEraserMode && _penColor == color;
+    final isSelected = _selectedTool == _CanvasTool.pen && _penColor == color;
 
     return InkWell(
       onTap: () => setState(() {
         _penColor = color;
-        _isEraserMode = false;
+        _selectedTool = _CanvasTool.pen;
       }),
       borderRadius: BorderRadius.circular(19),
       child: Container(
@@ -346,33 +413,6 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
           decoration: BoxDecoration(
             color: color,
             shape: BoxShape.circle,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStrokePreview(ThemeHandler themeProvider) {
-    final previewColor = _isEraserMode ? Colors.white : _penColor;
-
-    return Container(
-      width: 52,
-      height: 38,
-      decoration: BoxDecoration(
-        color: _isEraserMode ? Colors.grey[100] : previewColor.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Colors.grey[300]!, width: 1),
-      ),
-      child: Center(
-        child: Container(
-          width: _penWidth.clamp(2, 18),
-          height: _penWidth.clamp(2, 18),
-          decoration: BoxDecoration(
-            color: previewColor,
-            shape: BoxShape.circle,
-            border: _isEraserMode
-                ? Border.all(color: themeProvider.primaryColor, width: 1)
-                : null,
           ),
         ),
       ),
@@ -412,13 +452,56 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
     );
   }
 
+  bool get _isEraserTool =>
+      _selectedTool == _CanvasTool.pixelEraser ||
+      _selectedTool == _CanvasTool.strokeEraser;
+
+  double get _currentStrokeWidth => _selectedTool == _CanvasTool.move
+      ? (_isEraserTool ? _eraserWidth : _penWidth)
+      : _isEraserTool
+          ? _eraserWidth
+          : _penWidth;
+
+  void _handlePointerDown(Offset point) {
+    _activePointers++;
+
+    if (_selectedTool == _CanvasTool.move) return;
+    if (_activePointers > 1) {
+      _finishStroke();
+      return;
+    }
+
+    if (_selectedTool == _CanvasTool.strokeEraser) {
+      _eraseStrokeAt(point);
+      return;
+    }
+
+    _startStroke(point);
+  }
+
+  void _handlePointerMove(Offset point) {
+    if (_selectedTool == _CanvasTool.move || _activePointers > 1) return;
+
+    if (_selectedTool == _CanvasTool.strokeEraser) {
+      _eraseStrokeAt(point);
+      return;
+    }
+
+    _appendStroke(point);
+  }
+
+  void _handlePointerEnd() {
+    _activePointers = math.max(0, _activePointers - 1);
+    _finishStroke();
+  }
+
   void _startStroke(Offset point) {
     setState(() {
       _currentStroke = _DrawStroke(
         points: [point],
         color: _penColor,
-        width: _penWidth,
-        isEraser: _isEraserMode,
+        width: _currentStrokeWidth,
+        isEraser: _selectedTool == _CanvasTool.pixelEraser,
       );
       _strokes.add(_currentStroke!);
     });
@@ -436,6 +519,63 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
     _currentStroke = null;
   }
 
+  void _eraseStrokeAt(Offset point) {
+    final eraseRadius = math.max(14.0, _eraserWidth + 8);
+
+    setState(() {
+      _strokes.removeWhere((stroke) {
+        if (stroke.isEraser) return false;
+        return _isPointNearStroke(point, stroke, eraseRadius);
+      });
+    });
+  }
+
+  bool _isPointNearStroke(
+    Offset point,
+    _DrawStroke stroke,
+    double eraseRadius,
+  ) {
+    if (stroke.points.isEmpty) return false;
+
+    if (stroke.points.length == 1) {
+      return (point - stroke.points.first).distance <=
+          eraseRadius + stroke.width / 2;
+    }
+
+    for (var i = 0; i < stroke.points.length - 1; i++) {
+      final distance = _distanceToSegment(
+        point,
+        stroke.points[i],
+        stroke.points[i + 1],
+      );
+      if (distance <= eraseRadius + stroke.width / 2) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  double _distanceToSegment(Offset point, Offset start, Offset end) {
+    final segment = end - start;
+    final lengthSquared = segment.dx * segment.dx + segment.dy * segment.dy;
+
+    if (lengthSquared == 0) {
+      return (point - start).distance;
+    }
+
+    final t = (((point.dx - start.dx) * segment.dx +
+                (point.dy - start.dy) * segment.dy) /
+            lengthSquared)
+        .clamp(0.0, 1.0);
+    final projection = Offset(
+      start.dx + segment.dx * t,
+      start.dy + segment.dy * t,
+    );
+
+    return (point - projection).distance;
+  }
+
   void _undoLastStroke() {
     setState(() {
       if (_strokes.isNotEmpty) {
@@ -446,6 +586,10 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
 
   void _clearStrokes() {
     setState(_strokes.clear);
+  }
+
+  void _resetZoom() {
+    _transformationController.value = Matrix4.identity();
   }
 
   void _markImageReady() {
