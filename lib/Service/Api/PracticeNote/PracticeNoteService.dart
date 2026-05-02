@@ -59,11 +59,14 @@ class PracticeNoteService {
   }
 
   Future<void> updatePracticeNote(
-      PracticeNoteUpdateModel practiceNoteUpdateModel) async {
+    PracticeNoteUpdateModel practiceNoteUpdateModel, {
+    bool showErrorSnackBar = true,
+  }) async {
     await httpService.sendRequest(
       method: 'PATCH',
       url: '$baseUrl',
       body: practiceNoteUpdateModel.toJson(),
+      showErrorSnackBar: showErrorSnackBar,
     );
   }
 
@@ -83,7 +86,8 @@ class PracticeNoteService {
   }
 
   // V2 API - Cursor-based pagination for practice note thumbnails
-  Future<PaginatedResponse<PracticeNoteThumbnails>> getPracticeNoteThumbnailsV2({
+  Future<PaginatedResponse<PracticeNoteThumbnails>>
+      getPracticeNoteThumbnailsV2({
     int? cursor,
     int size = 20,
   }) async {

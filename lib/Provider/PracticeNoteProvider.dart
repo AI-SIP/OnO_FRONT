@@ -149,15 +149,40 @@ class ProblemPracticeProvider with ChangeNotifier {
   }
 
   Future<void> updatePractice(
-      PracticeNoteUpdateModel practiceNoteUpdateModel) async {
-    await practiceNoteService.updatePracticeNote(practiceNoteUpdateModel);
+    PracticeNoteUpdateModel practiceNoteUpdateModel, {
+    bool refreshAfterUpdate = true,
+    bool showErrorSnackBar = true,
+  }) async {
+    await practiceNoteService.updatePracticeNote(
+      practiceNoteUpdateModel,
+      showErrorSnackBar: showErrorSnackBar,
+    );
 
-    await fetchPracticeNote(practiceNoteUpdateModel.practiceNoteId);
+    if (refreshAfterUpdate) {
+      await fetchPracticeNote(practiceNoteUpdateModel.practiceNoteId);
+    } else {
+      _applyPracticeUpdateToCache(practiceNoteUpdateModel);
+    }
 
     // 복습 세트 목록 새로고침 신호
     _practiceRefreshTimestamp = DateTime.now().millisecondsSinceEpoch;
     log('Practice list refresh signaled - timestamp: $_practiceRefreshTimestamp');
     notifyListeners();
+  }
+
+  void _applyPracticeUpdateToCache(PracticeNoteUpdateModel updateModel) {
+    final practiceNote = _practicesMap[updateModel.practiceNoteId];
+    if (practiceNote == null) return;
+
+    for (final problemId in updateModel.addProblemIdList) {
+      if (!practiceNote.problemIdList.contains(problemId)) {
+        practiceNote.problemIdList.add(problemId);
+      }
+    }
+
+    practiceNote.problemIdList.removeWhere(
+      (problemId) => updateModel.removeProblemIdList.contains(problemId),
+    );
   }
 
   Future<void> deletePractices(List<int> deletePracticeIds) async {

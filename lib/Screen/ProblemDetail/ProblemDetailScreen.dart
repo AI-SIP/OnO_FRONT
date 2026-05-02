@@ -800,7 +800,11 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
           addProblemIdList: [problemId],
           removeProblemIdList: const [],
         );
-        await practiceProvider.updatePractice(updateModel);
+        await practiceProvider.updatePractice(
+          updateModel,
+          refreshAfterUpdate: false,
+          showErrorSnackBar: false,
+        );
       }
 
       if (!mounted) return;
