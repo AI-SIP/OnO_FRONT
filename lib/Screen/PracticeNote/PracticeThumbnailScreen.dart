@@ -500,7 +500,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
               ),
               const SizedBox(height: 40),
               const StandardText(
-                text: '작성한 오답노트로 복습 세트를\n 생성해 시험을 준비하세요!',
+                text: '복습 세트에 오답노트를 담아\n 편리하게 시험을 준비하세요!',
                 fontSize: 16,
                 color: Colors.black,
                 textAlign: TextAlign.center,
