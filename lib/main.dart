@@ -29,17 +29,12 @@ import 'Util/AppErrorReporter.dart';
 import 'Util/NotificationService.dart';
 import 'Util/AppSnackBar.dart';
 
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await dotenv.load(fileName: '.env');
+Future<void> main() async {
+  await runZonedGuarded<Future<void>>(
+    () async {
+      WidgetsFlutterBinding.ensureInitialized();
+      await dotenv.load(fileName: '.env');
 
-  await SentryFlutter.init(
-    (options) {
-      options.dsn = dotenv.env['SENTRY_DSN'] ?? '';
-      options.profilesSampleRate = 0.0;
-      options.tracesSampleRate = 1.0;
-    },
-    appRunner: () {
       FlutterError.onError = (details) {
         FlutterError.presentError(details);
         unawaited(
@@ -64,16 +59,21 @@ void main() async {
         return true;
       };
 
-      runZonedGuarded<Future<void>>(
-        _bootstrapApp,
-        (error, stackTrace) async {
-          await AppErrorReporter.report(
-            error,
-            stackTrace,
-            source: 'zoned_guarded',
-            severity: AppErrorSeverity.fatal,
-          );
+      await SentryFlutter.init(
+        (options) {
+          options.dsn = dotenv.env['SENTRY_DSN'] ?? '';
+          options.profilesSampleRate = 0.0;
+          options.tracesSampleRate = 1.0;
         },
+        appRunner: _bootstrapApp,
+      );
+    },
+    (error, stackTrace) async {
+      await AppErrorReporter.report(
+        error,
+        stackTrace,
+        source: 'zoned_guarded',
+        severity: AppErrorSeverity.fatal,
       );
     },
   );
