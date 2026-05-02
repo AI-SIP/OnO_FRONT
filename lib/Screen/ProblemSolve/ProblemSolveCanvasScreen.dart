@@ -7,6 +7,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 
@@ -58,6 +59,8 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
   _CanvasTool _selectedTool = _CanvasTool.pen;
   _CanvasTool _previousTool = _CanvasTool.pen;
 
+  static const _pencilChannel = MethodChannel('com.aisip.ono/pencil_events');
+
   static const List<Color> _paletteColors = [
     Colors.black87,
     Color(0xFFEF4444),
@@ -78,6 +81,16 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
     super.initState();
     _startTimer();
     _loadImageNaturalSize();
+    _subscribeToPencilEvents();
+  }
+
+  void _subscribeToPencilEvents() {
+    if (!Platform.isIOS) return;
+    _pencilChannel.setMethodCallHandler((call) async {
+      if (call.method == 'doubleTap' && mounted) {
+        setState(() => _toggleToLastTool());
+      }
+    });
   }
 
   void _loadImageNaturalSize() {
@@ -106,6 +119,7 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
 
   @override
   void dispose() {
+    if (Platform.isIOS) _pencilChannel.setMethodCallHandler(null);
     _timer?.cancel();
     _transformationController.dispose();
     super.dispose();
