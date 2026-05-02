@@ -190,10 +190,11 @@ class _PracticeNavigationButtonsState extends State<PracticeNavigationButtons> {
   void _showCompletionScreen() {
     final practiceId = widget.practiceProvider.currentPracticeNote!.practiceId;
     final totalProblems = widget.practiceProvider.currentProblems.length;
-    final practiceRound = widget.practiceProvider.practices
-            .firstWhere((practice) => practice.practiceId == practiceId)
-            .practiceCount ??
-        0;
+    final matchingPractices = widget.practiceProvider.practices
+        .where((practice) => practice.practiceId == practiceId);
+    final practiceRound = matchingPractices.isNotEmpty
+        ? (matchingPractices.first.practiceCount ?? 0)
+        : 0;
 
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(

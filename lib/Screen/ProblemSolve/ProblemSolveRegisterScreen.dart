@@ -119,6 +119,7 @@ class _ProblemSolveRegisterScreenState
         Provider.of<ProblemsProvider>(context, listen: false);
     final practiceProvider =
         Provider.of<ProblemPracticeProvider>(context, listen: false);
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
     final problemSolveService = ProblemSolveService();
 
     // 템플릿에서 데이터 가져오기
@@ -168,7 +169,7 @@ class _ProblemSolveRegisterScreenState
       FirebaseAnalytics.instance.logEvent(name: 'problem_repeat');
 
       // 5. 유저 정보 갱신 (경험치 업데이트)
-      await Provider.of<UserProvider>(context, listen: false).fetchUserInfo();
+      await userProvider.fetchUserInfo();
 
       LoadingDialog.hide(context);
 

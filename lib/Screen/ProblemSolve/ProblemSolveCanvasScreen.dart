@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
+import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
@@ -48,6 +49,7 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
   int _elapsedSeconds = 0;
   bool _isSubmitting = false;
   bool _isImageReady = false;
+  Size _canvasSize = Size.zero;
   Color _penColor = Colors.black87;
   double _penWidth = 4.0;
   double _eraserWidth = 18.0;
@@ -132,6 +134,15 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
               child: LayoutBuilder(
                 builder: (context, constraints) {
+                  final newSize =
+                      Size(constraints.maxWidth, constraints.maxHeight);
+                  if (newSize != _canvasSize) {
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      if (mounted) {
+                        setState(() => _onCanvasSizeChanged(newSize));
+                      }
+                    });
+                  }
                   return InteractiveViewer(
                     transformationController: _transformationController,
                     minScale: 1,
@@ -592,6 +603,24 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
     _transformationController.value = Matrix4.identity();
   }
 
+  void _onCanvasSizeChanged(Size newSize) {
+    if (newSize == _canvasSize || newSize == Size.zero) return;
+    if (_canvasSize != Size.zero && _strokes.isNotEmpty) {
+      final scaleX = newSize.width / _canvasSize.width;
+      final scaleY = newSize.height / _canvasSize.height;
+      for (final stroke in _strokes) {
+        for (var i = 0; i < stroke.points.length; i++) {
+          stroke.points[i] = Offset(
+            stroke.points[i].dx * scaleX,
+            stroke.points[i].dy * scaleY,
+          );
+        }
+      }
+      _resetZoom();
+    }
+    _canvasSize = newSize;
+  }
+
   void _markImageReady() {
     if (_isImageReady) return;
 
@@ -609,6 +638,7 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
 
     try {
       await WidgetsBinding.instance.endOfFrame;
+      if (!mounted) return;
 
       final boundary = _captureKey.currentContext?.findRenderObject()
           as RenderRepaintBoundary?;
@@ -617,7 +647,12 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
       }
 
       final image = await boundary.toImage(pixelRatio: 2);
-      final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+      ByteData? byteData;
+      try {
+        byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+      } finally {
+        image.dispose();
+      }
       if (byteData == null) {
         throw StateError('failed to create image data');
       }
