@@ -2,7 +2,7 @@ import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:ono/Screen/PracticeNote/PracticeCompletionScreen.dart';
 import 'package:ono/Screen/ProblemDetail/ProblemDetailScreen.dart';
-import 'package:ono/Screen/ProblemSolve/ProblemSolveRegisterScreen.dart';
+import 'package:ono/Screen/ProblemSolve/ProblemSolveEntry.dart';
 import 'package:provider/provider.dart';
 
 import '../../Module/Text/StandardText.dart';
@@ -209,15 +209,24 @@ class _PracticeNavigationButtonsState extends State<PracticeNavigationButtons> {
   void problemSolveDialog(BuildContext context) async {
     FirebaseAnalytics.instance.logEvent(name: 'problem_repeat_button_click');
 
-    // 전체 화면으로 이동
-    final result = await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => ProblemSolveRegisterScreen(
-          problemId: widget.currentProblemId,
-          onRefresh: widget.onRefresh,
-        ),
-      ),
+    final currentProblemIndex =
+        widget.practiceProvider.currentProblems.indexWhere(
+      (problem) => problem.problemId == widget.currentProblemId,
+    );
+    final currentProblem = currentProblemIndex >= 0
+        ? widget.practiceProvider.currentProblems[currentProblemIndex]
+        : null;
+    final problemImages = currentProblem?.problemImageDataList ?? [];
+    final problemImageUrl =
+        problemImages.isNotEmpty ? problemImages.first.imageUrl : null;
+    final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
+
+    final result = await ProblemSolveEntry.open(
+      context: context,
+      problemId: widget.currentProblemId,
+      problemImageUrl: problemImageUrl,
+      onRefresh: widget.onRefresh,
+      themeProvider: themeProvider,
     );
 
     // 복습 완료 시 isReviewed 상태 업데이트
