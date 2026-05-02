@@ -58,6 +58,7 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
   double _eraserWidth = 18.0;
   _CanvasTool _selectedTool = _CanvasTool.pen;
   _CanvasTool _previousTool = _CanvasTool.pen;
+  Offset? _cursorPosition; // canvas-space position for eraser cursor overlay
 
   static const _pencilChannel = MethodChannel('com.aisip.ono/pencil_events');
 
@@ -231,9 +232,17 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
                       },
                       onPointerMove: (event) =>
                           _handlePointerMove(event.localPosition, imageRect),
+                      onPointerHover: (event) {
+                        if (_isEraserTool) {
+                          setState(() =>
+                              _cursorPosition = event.localPosition);
+                        }
+                      },
                       onPointerUp: (_) => _handlePointerEnd(),
                       onPointerCancel: (_) => _handlePointerEnd(),
-                      child: RepaintBoundary(
+                      child: Stack(
+                        children: [
+                          RepaintBoundary(
                         key: _captureKey,
                         child: Container(
                           width: constraints.maxWidth,
@@ -288,6 +297,22 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
                             ],
                           ),
                         ),
+                      ),
+                          // Eraser cursor overlay — outside RepaintBoundary so
+                          // it does not appear in the captured screenshot.
+                          if (_isEraserTool && _cursorPosition != null)
+                            Positioned.fill(
+                              child: IgnorePointer(
+                                child: CustomPaint(
+                                  painter: _EraserCursorPainter(
+                                    position: _cursorPosition!,
+                                    radius: math.max(
+                                        14.0, _eraserWidth + 8),
+                                  ),
+                                ),
+                              ),
+                            ),
+                        ],
                       ),
                     ),
                   );
@@ -558,6 +583,7 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
       _previousTool = _selectedTool;
       _selectedTool = tool;
     }
+    _cursorPosition = null;
   }
 
   void _toggleToLastTool() {
@@ -575,6 +601,8 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
       return;
     }
 
+    if (_isEraserTool) _cursorPosition = point;
+
     final normalized = _toNormalized(point, imageRect);
 
     if (_selectedTool == _CanvasTool.strokeEraser) {
@@ -588,6 +616,8 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
   void _handlePointerMove(Offset point, Rect imageRect) {
     if (_selectedTool == _CanvasTool.move || _activePointers > 1) return;
 
+    if (_isEraserTool) _cursorPosition = point;
+
     final normalized = _toNormalized(point, imageRect);
 
     if (_selectedTool == _CanvasTool.strokeEraser) {
@@ -600,6 +630,7 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
 
   void _handlePointerEnd() {
     _activePointers = math.max(0, _activePointers - 1);
+    setState(() => _cursorPosition = null);
     _finishStroke();
   }
 
@@ -827,6 +858,15 @@ class _DrawingPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    // Image boundary indicator
+    canvas.drawRect(
+      imageRect,
+      Paint()
+        ..color = const Color(0xFFCBD5E1)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.5,
+    );
+
     canvas.saveLayer(Offset.zero & size, Paint());
 
     for (final stroke in strokes) {
@@ -863,5 +903,42 @@ class _DrawingPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant _DrawingPainter oldDelegate) {
     return true;
+  }
+}
+
+class _EraserCursorPainter extends CustomPainter {
+  final Offset position;
+  final double radius;
+
+  _EraserCursorPainter({required this.position, required this.radius});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final circlePaint = Paint()
+      ..color = const Color(0xFF64748B)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.5;
+    canvas.drawCircle(position, radius, circlePaint);
+
+    // Crosshair at center for precise positioning
+    final crossPaint = Paint()
+      ..color = const Color(0xFF64748B)
+      ..strokeWidth = 1.0;
+    const crossSize = 4.0;
+    canvas.drawLine(
+      Offset(position.dx - crossSize, position.dy),
+      Offset(position.dx + crossSize, position.dy),
+      crossPaint,
+    );
+    canvas.drawLine(
+      Offset(position.dx, position.dy - crossSize),
+      Offset(position.dx, position.dy + crossSize),
+      crossPaint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _EraserCursorPainter oldDelegate) {
+    return position != oldDelegate.position || radius != oldDelegate.radius;
   }
 }
