@@ -468,7 +468,7 @@ class _ProblemSolveCard extends StatelessWidget {
             _buildInfoRow(
               Icons.timer,
               '소요 시간',
-              '${(solve.timeSpentSeconds! / 60).ceil()}분',
+              _formatTimeSpent(solve.timeSpentSeconds!),
               themeProvider.primaryColor,
             ),
           if (solve.timeSpentSeconds != null) ...[
@@ -918,6 +918,13 @@ class _ProblemSolveCard extends StatelessWidget {
         );
       }
     }
+  }
+
+  String _formatTimeSpent(int totalSeconds) {
+    final minutes = totalSeconds ~/ 60;
+    final seconds = totalSeconds % 60;
+    if (seconds == 0) return '$minutes분';
+    return '$minutes분 ${seconds.toString().padLeft(2, '0')}초';
   }
 }
 

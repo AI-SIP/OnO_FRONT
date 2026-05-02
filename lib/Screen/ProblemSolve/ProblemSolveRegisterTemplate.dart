@@ -406,14 +406,13 @@ class ProblemSolveRegisterTemplateState
           const SizedBox(height: 12),
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            padding: const EdgeInsets.fromLTRB(12, 10, 8, 10),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(10),
               border: Border.all(color: Colors.grey[300]!, width: 1),
             ),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 GestureDetector(
                   onTap: _showTimeInputDialog,
@@ -422,7 +421,7 @@ class ProblemSolveRegisterTemplateState
                     child: StandardText(
                       text: _timeSpentSeconds > 0
                           ? _formatTimeSpent(_timeSpentSeconds)
-                          : '시간을 입력하세요',
+                          : '직접 입력',
                       fontSize: 14,
                       color: _timeSpentSeconds > 0
                           ? Colors.black87
@@ -430,35 +429,53 @@ class ProblemSolveRegisterTemplateState
                     ),
                   ),
                 ),
-                Row(
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.remove_circle_outline),
-                      color: themeProvider.primaryColor,
-                      onPressed: () {
-                        if (_timeSpentSeconds > 0) {
-                          setState(() {
-                            _timeSpentSeconds = _timeSpentSeconds - 300;
-                            if (_timeSpentSeconds < 0) {
-                              _timeSpentSeconds = 0;
-                            }
-                          });
-                        }
-                      },
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.add_circle_outline),
-                      color: themeProvider.primaryColor,
-                      onPressed: () {
-                        setState(() => _timeSpentSeconds += 300);
-                      },
-                    ),
-                  ],
-                ),
+                const Spacer(),
+                _buildAdjustChip('-1분', themeProvider, () {
+                  setState(() {
+                    _timeSpentSeconds -= 60;
+                    if (_timeSpentSeconds < 0) _timeSpentSeconds = 0;
+                  });
+                }),
+                const SizedBox(width: 4),
+                _buildAdjustChip('+1분', themeProvider,
+                    () => setState(() => _timeSpentSeconds += 60)),
+                const SizedBox(width: 8),
+                _buildAdjustChip('-10초', themeProvider, () {
+                  setState(() {
+                    _timeSpentSeconds -= 10;
+                    if (_timeSpentSeconds < 0) _timeSpentSeconds = 0;
+                  });
+                }),
+                const SizedBox(width: 4),
+                _buildAdjustChip('+10초', themeProvider,
+                    () => setState(() => _timeSpentSeconds += 10)),
               ],
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildAdjustChip(
+      String label, ThemeHandler themeProvider, VoidCallback onTap) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(6),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 5),
+        decoration: BoxDecoration(
+          color: themeProvider.primaryColor.withOpacity(0.08),
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(
+              color: themeProvider.primaryColor.withOpacity(0.25), width: 1),
+        ),
+        child: StandardText(
+          text: label,
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          color: themeProvider.primaryColor,
+        ),
       ),
     );
   }
@@ -524,10 +541,32 @@ class ProblemSolveRegisterTemplateState
     );
   }
 
+  int? _parseTimeInput(String input) {
+    final trimmed = input.trim();
+    if (trimmed.contains(':')) {
+      final parts = trimmed.split(':');
+      if (parts.length == 2) {
+        final m = int.tryParse(parts[0].trim());
+        final s = int.tryParse(parts[1].trim());
+        if (m != null && s != null && s >= 0 && s < 60) {
+          return m * 60 + s;
+        }
+      }
+      return null;
+    }
+    final m = int.tryParse(trimmed);
+    return (m != null && m >= 0) ? m * 60 : null;
+  }
+
   Future<void> _showTimeInputDialog() async {
-    final controller = TextEditingController(
-      text: _timeSpentSeconds > 0 ? (_timeSpentSeconds ~/ 60).toString() : '',
-    );
+    final minutes = _timeSpentSeconds ~/ 60;
+    final seconds = _timeSpentSeconds % 60;
+    final initialText = _timeSpentSeconds > 0
+        ? (seconds > 0
+            ? '$minutes:${seconds.toString().padLeft(2, '0')}'
+            : '$minutes')
+        : '';
+    final controller = TextEditingController(text: initialText);
     final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
     final standardTextStyle = const StandardText(text: '').getTextStyle();
 
@@ -570,7 +609,7 @@ class ProblemSolveRegisterTemplateState
                 ),
                 const SizedBox(height: 8),
                 const StandardText(
-                  text: '분 단위로 자유롭게 입력할 수 있어요',
+                  text: '분:초(예: 3:47) 또는 분(예: 17) 형식으로 입력하세요',
                   fontSize: 14,
                   color: Colors.black54,
                 ),
@@ -584,8 +623,7 @@ class ProblemSolveRegisterTemplateState
                     fontSize: 15,
                   ),
                   decoration: InputDecoration(
-                    hintText: '예: 17',
-                    suffixText: '분',
+                    hintText: '예: 3:47 또는 17',
                     hintStyle: standardTextStyle.copyWith(
                       color: Colors.grey[400],
                       fontSize: 14,
@@ -639,9 +677,10 @@ class ProblemSolveRegisterTemplateState
                     Expanded(
                       child: TextButton(
                         onPressed: () {
-                          final parsed = int.tryParse(controller.text.trim());
-                          if (parsed != null && parsed >= 0) {
-                            setState(() => _timeSpentSeconds = parsed * 60);
+                          final parsed =
+                              _parseTimeInput(controller.text);
+                          if (parsed != null) {
+                            setState(() => _timeSpentSeconds = parsed);
                           }
                           Navigator.of(dialogContext).pop();
                         },
