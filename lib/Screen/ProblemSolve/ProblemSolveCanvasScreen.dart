@@ -882,9 +882,9 @@ class _DrawingPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    // Image boundary indicator
+    // Drawable area boundary indicator
     canvas.drawRect(
-      imageRect,
+      Offset.zero & size,
       Paint()
         ..color = const Color(0xFFCBD5E1)
         ..style = PaintingStyle.stroke
