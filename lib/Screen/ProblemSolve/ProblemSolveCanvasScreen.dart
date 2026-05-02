@@ -222,20 +222,33 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
                     boundaryMargin: const EdgeInsets.all(80),
                     child: Listener(
                       onPointerDown: (event) {
-                        // Apple Pencil 2 flat-side tap / S Pen side button
+                        // Apple Pencil 2 flat-side tap / S Pen secondary button
                         if (event.kind == PointerDeviceKind.stylus &&
                             event.buttons & kSecondaryStylusButton != 0) {
                           setState(() => _toggleToLastTool());
                           return;
                         }
-                        _handlePointerDown(event.localPosition, imageRect);
+                        // S Pen primary barrel button held → force stroke erase
+                        final forceErase =
+                            event.kind == PointerDeviceKind.stylus &&
+                                event.buttons & kPrimaryStylusButton != 0;
+                        _handlePointerDown(event.localPosition, imageRect,
+                            forceErase: forceErase);
                       },
-                      onPointerMove: (event) =>
-                          _handlePointerMove(event.localPosition, imageRect),
+                      onPointerMove: (event) {
+                        final forceErase =
+                            event.kind == PointerDeviceKind.stylus &&
+                                event.buttons & kPrimaryStylusButton != 0;
+                        _handlePointerMove(event.localPosition, imageRect,
+                            forceErase: forceErase);
+                      },
                       onPointerHover: (event) {
-                        if (_isEraserTool) {
-                          setState(() =>
-                              _cursorPosition = event.localPosition);
+                        final forceErase =
+                            event.kind == PointerDeviceKind.stylus &&
+                                event.buttons & kPrimaryStylusButton != 0;
+                        if (_isEraserTool || forceErase) {
+                          setState(
+                              () => _cursorPosition = event.localPosition);
                         }
                       },
                       onPointerUp: (_) => _handlePointerEnd(),
@@ -306,8 +319,7 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
                                 child: CustomPaint(
                                   painter: _EraserCursorPainter(
                                     position: _cursorPosition!,
-                                    radius: math.max(
-                                        14.0, _eraserWidth + 8),
+                                    radius: math.max(7.0, _eraserWidth / 2),
                                   ),
                                 ),
                               ),
@@ -592,7 +604,8 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
     _selectedTool = temp;
   }
 
-  void _handlePointerDown(Offset point, Rect imageRect) {
+  void _handlePointerDown(Offset point, Rect imageRect,
+      {bool forceErase = false}) {
     _activePointers++;
 
     if (_selectedTool == _CanvasTool.move) return;
@@ -601,11 +614,11 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
       return;
     }
 
-    if (_isEraserTool) _cursorPosition = point;
+    if (_isEraserTool || forceErase) _cursorPosition = point;
 
     final normalized = _toNormalized(point, imageRect);
 
-    if (_selectedTool == _CanvasTool.strokeEraser) {
+    if (forceErase || _selectedTool == _CanvasTool.strokeEraser) {
       _eraseStrokeAt(normalized, imageRect);
       return;
     }
@@ -613,14 +626,15 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
     _startStroke(normalized);
   }
 
-  void _handlePointerMove(Offset point, Rect imageRect) {
+  void _handlePointerMove(Offset point, Rect imageRect,
+      {bool forceErase = false}) {
     if (_selectedTool == _CanvasTool.move || _activePointers > 1) return;
 
-    if (_isEraserTool) _cursorPosition = point;
+    if (_isEraserTool || forceErase) _cursorPosition = point;
 
     final normalized = _toNormalized(point, imageRect);
 
-    if (_selectedTool == _CanvasTool.strokeEraser) {
+    if (forceErase || _selectedTool == _CanvasTool.strokeEraser) {
       _eraseStrokeAt(normalized, imageRect);
       return;
     }
@@ -658,43 +672,53 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
     _currentStroke = null;
   }
 
-  // normalizedPoint and stroke points are both in image-normalized [0,1] space.
-  // eraseRadius is passed in canvas pixels and converted to normalized units for comparison.
+  // Erase any stroke whose canvas-space path comes within eraseRadius of the
+  // given normalizedPoint. All comparisons happen in canvas-pixel space so the
+  // cursor circle (same radius) matches exactly what gets erased.
   void _eraseStrokeAt(Offset normalizedPoint, Rect imageRect) {
-    final eraseRadiusCanvas = math.max(14.0, _eraserWidth + 8);
-    // Use the shorter image dimension to convert radius to normalized space.
-    final imageShortSide = math.min(imageRect.width, imageRect.height);
-    final eraseRadiusNorm = eraseRadiusCanvas / imageShortSide;
+    final eraseRadius = math.max(7.0, _eraserWidth / 2);
+    final canvasPoint = Offset(
+      imageRect.left + normalizedPoint.dx * imageRect.width,
+      imageRect.top + normalizedPoint.dy * imageRect.height,
+    );
 
     setState(() {
       _strokes.removeWhere((stroke) {
         if (stroke.isEraser) return false;
-        // stroke.width is in canvas pixels; convert to normalized for comparison.
-        final strokeWidthNorm = stroke.width / imageShortSide;
-        return _isPointNearStroke(
-            normalizedPoint, stroke, eraseRadiusNorm + strokeWidthNorm / 2);
+        return _isPointNearStrokeCanvas(
+            canvasPoint, stroke, eraseRadius, imageRect);
       });
     });
   }
 
-  bool _isPointNearStroke(
-    Offset point,
+  bool _isPointNearStrokeCanvas(
+    Offset canvasPoint,
     _DrawStroke stroke,
-    double radius,
+    double eraseRadius,
+    Rect imageRect,
   ) {
     if (stroke.points.isEmpty) return false;
 
+    Offset denorm(Offset p) => Offset(
+          imageRect.left + p.dx * imageRect.width,
+          imageRect.top + p.dy * imageRect.height,
+        );
+
+    // Include stroke's own half-width so erasing feels natural at edges.
+    final totalRadius = eraseRadius + stroke.width / 2;
+
     if (stroke.points.length == 1) {
-      return (point - stroke.points.first).distance <= radius;
+      return (canvasPoint - denorm(stroke.points.first)).distance <=
+          totalRadius;
     }
 
     for (var i = 0; i < stroke.points.length - 1; i++) {
       final distance = _distanceToSegment(
-        point,
-        stroke.points[i],
-        stroke.points[i + 1],
+        canvasPoint,
+        denorm(stroke.points[i]),
+        denorm(stroke.points[i + 1]),
       );
-      if (distance <= radius) return true;
+      if (distance <= totalRadius) return true;
     }
 
     return false;
