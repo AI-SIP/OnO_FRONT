@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -9,6 +10,7 @@ import '../../Model/Problem/ImprovementType.dart';
 import '../../Module/Image/ImagePickerHandler.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
+import '../../Provider/ProblemsProvider.dart';
 import '../ProblemRegister/Widget/ImageGridWidget.dart';
 
 class ProblemSolveRegisterTemplate extends StatefulWidget {
@@ -34,6 +36,7 @@ class ProblemSolveRegisterTemplateState
   final List<XFile> _solutionImages = [];
   AnswerStatus _answerStatus = AnswerStatus.CORRECT; // 정답 상태 (기본값: 정답)
   int _timeSpentSeconds = 10 * 60; // 소요 시간 (초)
+  List<String> _answerImageUrls = [];
 
   // 개선 체크리스트 (ImprovementType enum 사용)
   final Map<ImprovementType, bool> _improvements = {
@@ -50,6 +53,23 @@ class ProblemSolveRegisterTemplateState
       widget.initialSolutionImages.map((file) => XFile(file.path)),
     );
     _timeSpentSeconds = widget.initialTimeSpentSeconds ?? _timeSpentSeconds;
+    WidgetsBinding.instance.addPostFrameCallback((_) => _loadAnswerImages());
+  }
+
+  Future<void> _loadAnswerImages() async {
+    if (!mounted) return;
+    final provider = Provider.of<ProblemsProvider>(context, listen: false);
+    try {
+      final problem = await provider.getProblem(widget.problemId);
+      if (mounted) {
+        setState(() {
+          _answerImageUrls = problem.answerImageDataList
+                  ?.map((img) => img.imageUrl)
+                  .toList() ??
+              [];
+        });
+      }
+    } catch (_) {}
   }
 
   @override
@@ -172,10 +192,35 @@ class ProblemSolveRegisterTemplateState
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildSectionTitle(
-            icon: Icons.check_circle_outline,
-            title: '이번 복습 결과',
-            themeProvider: themeProvider,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _buildSectionTitle(
+                icon: Icons.check_circle_outline,
+                title: '이번 복습 결과',
+                themeProvider: themeProvider,
+              ),
+              if (_answerImageUrls.isNotEmpty)
+                TextButton.icon(
+                  onPressed: () => _showAnswerImages(context),
+                  icon: Icon(
+                    Icons.visibility_outlined,
+                    size: 15,
+                    color: themeProvider.primaryColor,
+                  ),
+                  label: StandardText(
+                    text: '정답 보기',
+                    fontSize: 13,
+                    color: themeProvider.primaryColor,
+                  ),
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 8, vertical: 4),
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                ),
+            ],
           ),
           const SizedBox(height: 12),
           Row(
@@ -470,6 +515,15 @@ class ProblemSolveRegisterTemplateState
     );
   }
 
+  void _showAnswerImages(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => _AnswerImagesScreen(imageUrls: _answerImageUrls),
+      ),
+    );
+  }
+
   Future<void> _showTimeInputDialog() async {
     final controller = TextEditingController(
       text: _timeSpentSeconds > 0 ? (_timeSpentSeconds ~/ 60).toString() : '',
@@ -706,5 +760,80 @@ class ProblemSolveRegisterTemplateState
     }
 
     return '$minutes분 ${seconds.toString().padLeft(2, '0')}초';
+  }
+}
+
+class _AnswerImagesScreen extends StatefulWidget {
+  final List<String> imageUrls;
+
+  const _AnswerImagesScreen({required this.imageUrls});
+
+  @override
+  State<_AnswerImagesScreen> createState() => _AnswerImagesScreenState();
+}
+
+class _AnswerImagesScreenState extends State<_AnswerImagesScreen> {
+  final PageController _pageController = PageController();
+  int _currentPage = 0;
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final hasMultiple = widget.imageUrls.length > 1;
+
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Text(
+          hasMultiple
+              ? '정답 이미지 ${_currentPage + 1} / ${widget.imageUrls.length}'
+              : '정답 이미지',
+          style: const TextStyle(color: Colors.white, fontSize: 16),
+        ),
+        centerTitle: true,
+      ),
+      body: PageView.builder(
+        controller: _pageController,
+        onPageChanged: (page) => setState(() => _currentPage = page),
+        itemCount: widget.imageUrls.length,
+        itemBuilder: (context, index) {
+          return InteractiveViewer(
+            minScale: 1.0,
+            maxScale: 4.0,
+            child: Center(
+              child: CachedNetworkImage(
+                imageUrl: widget.imageUrls[index],
+                fit: BoxFit.contain,
+                placeholder: (_, __) => const Center(
+                  child: CircularProgressIndicator(color: Colors.white54),
+                ),
+                errorWidget: (_, __, ___) => const Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.broken_image, color: Colors.white54, size: 64),
+                    SizedBox(height: 12),
+                    Text(
+                      '이미지를 불러오지 못했습니다.',
+                      style: TextStyle(color: Colors.white54, fontSize: 14),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
   }
 }
