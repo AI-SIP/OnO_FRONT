@@ -4,15 +4,57 @@ class ErrorMessageMapper {
   static String byErrorCode({required int? errorCode, String? fallback}) {
     switch (errorCode) {
       case 1001:
-        return ErrorMessages.requestInvalid;
+        return ErrorMessages.invalidRefreshToken;
       case 1002:
-        return ErrorMessages.requiredFieldMissing;
+        return ErrorMessages.refreshTokenNotFound;
       case 1003:
-        return ErrorMessages.notFound;
+        return ErrorMessages.invalidAuthority;
       case 1004:
-        return ErrorMessages.forbidden;
+        return ErrorMessages.refreshTokenNotEqual;
       case 1005:
-        return ErrorMessages.sessionExpired;
+        return ErrorMessages.accessTokenExpired;
+      case 1006:
+        return ErrorMessages.refreshTokenExpired;
+      case 1007:
+        return ErrorMessages.authenticationFailed;
+      case 1008:
+        return ErrorMessages.accessDenied;
+      case 1009:
+        return ErrorMessages.invalidAccessToken;
+      case 2001:
+        return ErrorMessages.fileUploadFailed;
+      case 3001:
+        return ErrorMessages.userNotFound;
+      case 4001:
+        return ErrorMessages.problemNotFound;
+      case 4002:
+        return ErrorMessages.problemUserUnmatched;
+      case 4003:
+        return ErrorMessages.problemSolveImageAlreadyRegistered;
+      case 4004:
+        return ErrorMessages.problemAnalysisNotFound;
+      case 4021:
+        return ErrorMessages.problemSolveNotFound;
+      case 4022:
+        return ErrorMessages.problemSolveUserUnmatched;
+      case 5001:
+        return ErrorMessages.folderNotFound;
+      case 5002:
+        return ErrorMessages.folderUserUnmatched;
+      case 5003:
+        return ErrorMessages.rootFolderNotExist;
+      case 5004:
+        return ErrorMessages.rootFolderCannotRemove;
+      case 6001:
+        return ErrorMessages.practiceNoteNotFound;
+      case 7001:
+        return ErrorMessages.missionTypeNotFound;
+      case 7002:
+        return ErrorMessages.missionUserNotFound;
+      case 8001:
+        return ErrorMessages.fcmTokenNotFound;
+      case 8002:
+        return ErrorMessages.fcmSendFailed;
       case 9001:
         return ErrorMessages.tagNameEmpty;
       case 9002:
@@ -65,6 +107,7 @@ class ErrorMessageMapper {
     return lower.contains('unauthorizedexception') ||
         lower.contains('authorization token') ||
         lower.contains('refresh token') ||
+        lower.contains('리프레시토큰') ||
         lower.contains('로그인이 필요') ||
         lower.contains('세션이 만료');
   }
