@@ -47,6 +47,14 @@ class UserService {
     );
   }
 
+  Future<void> updateNotificationSettings(bool enabled) async {
+    await httpService.sendRequest(
+      method: 'PATCH',
+      url: '${AppConfig.baseUrl}/api/users/notification-settings',
+      body: {'notificationEnabled': enabled},
+    );
+  }
+
   Future<void> logoutAccount() async {
     await httpService.sendRequest(
       method: 'POST',

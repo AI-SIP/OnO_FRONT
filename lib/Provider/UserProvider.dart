@@ -255,6 +255,26 @@ class UserProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> updateNotificationSettings(bool enabled) async {
+    if (userInfoModel == null) return;
+    final previous = userInfoModel!.notificationEnabled;
+    userInfoModel!.notificationEnabled = enabled;
+    notifyListeners();
+    try {
+      await userService.updateNotificationSettings(enabled);
+    } catch (e, stackTrace) {
+      userInfoModel!.notificationEnabled = previous;
+      notifyListeners();
+      await AppErrorReporter.report(
+        e,
+        stackTrace,
+        source: 'notification_settings_update',
+        severity: AppErrorSeverity.warning,
+      );
+      rethrow;
+    }
+  }
+
   Future<void> updateUser({
     String? email,
     String? name,
