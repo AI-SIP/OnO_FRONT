@@ -753,7 +753,7 @@ class _PracticeProblemSelectionScreenState
     final folderGap = isWide ? 18.0 : 12.0;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 10.0),
+      padding: const EdgeInsets.symmetric(horizontal: 20.0),
       child: SizedBox(
         height: 120,
         child: ListView.builder(
@@ -834,7 +834,7 @@ class _PracticeProblemSelectionScreenState
   Widget _buildProblemList(BuildContext context, ThemeHandler themeProvider) {
     return Expanded(
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 30),
+        padding: const EdgeInsets.symmetric(horizontal: 16),
         child: _isLoadingProblems && _currentFolderProblems.isEmpty
             ? const Center(child: CircularProgressIndicator())
             : _currentFolderProblems.isNotEmpty
