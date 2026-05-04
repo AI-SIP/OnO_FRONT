@@ -643,6 +643,22 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                                   .contains(problemModel.problemId);
                               final selected = selectedPracticeIds
                                   .contains(practice.practiceId);
+                              final itemColor = alreadyAdded
+                                  ? Colors.green.shade600
+                                  : selected
+                                      ? themeProvider.primaryColor
+                                      : Colors.grey.shade500;
+                              final itemBackgroundColor = alreadyAdded
+                                  ? Colors.green.withValues(alpha: 0.08)
+                                  : selected
+                                      ? themeProvider.primaryColor
+                                          .withValues(alpha: 0.08)
+                                      : Colors.white;
+                              final itemBorderColor = alreadyAdded
+                                  ? Colors.green.withValues(alpha: 0.28)
+                                  : selected
+                                      ? themeProvider.primaryColor
+                                      : Colors.grey.shade200;
 
                               return InkWell(
                                 onTap: alreadyAdded
@@ -663,30 +679,33 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                                   padding: const EdgeInsets.symmetric(
                                       horizontal: 14, vertical: 12),
                                   decoration: BoxDecoration(
-                                    color: alreadyAdded
-                                        ? Colors.grey[100]
-                                        : Colors.grey[50],
+                                    color: itemBackgroundColor,
                                     borderRadius: BorderRadius.circular(12),
                                     border: Border.all(
-                                      color: selected
-                                          ? themeProvider.primaryColor
-                                          : Colors.grey[200]!,
-                                      width: selected ? 1.5 : 1,
+                                      color: itemBorderColor,
+                                      width: selected || alreadyAdded ? 1.5 : 1,
                                     ),
                                   ),
                                   child: Row(
                                     children: [
-                                      Icon(
-                                        alreadyAdded
-                                            ? Icons.check_circle
-                                            : selected
-                                                ? Icons.check_circle
-                                                : Icons.radio_button_unchecked,
-                                        color: alreadyAdded
-                                            ? Colors.grey
-                                            : selected
-                                                ? themeProvider.primaryColor
-                                                : Colors.grey[400],
+                                      Container(
+                                        width: 34,
+                                        height: 34,
+                                        decoration: BoxDecoration(
+                                          color:
+                                              itemColor.withValues(alpha: 0.12),
+                                          borderRadius:
+                                              BorderRadius.circular(10),
+                                        ),
+                                        child: Icon(
+                                          alreadyAdded
+                                              ? Icons.playlist_add_check
+                                              : selected
+                                                  ? Icons.check
+                                                  : Icons.add,
+                                          color: itemColor,
+                                          size: 20,
+                                        ),
                                       ),
                                       const SizedBox(width: 12),
                                       Expanded(
@@ -698,17 +717,20 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                                               text: practice.practiceTitle,
                                               fontSize: 16,
                                               fontWeight: FontWeight.w500,
-                                              color: alreadyAdded
-                                                  ? Colors.grey
-                                                  : Colors.black87,
+                                              color: Colors.black87,
                                             ),
                                             const SizedBox(height: 4),
                                             StandardText(
                                               text: alreadyAdded
-                                                  ? '이미 추가된 문제입니다'
+                                                  ? '이미 세트에 포함했습니다.'
                                                   : '문제 ${practice.practiceSize}개',
                                               fontSize: 13,
-                                              color: Colors.grey[600]!,
+                                              color: alreadyAdded
+                                                  ? Colors.green.shade700
+                                                  : selected
+                                                      ? themeProvider
+                                                          .primaryColor
+                                                      : Colors.grey[600]!,
                                             ),
                                           ],
                                         ),
