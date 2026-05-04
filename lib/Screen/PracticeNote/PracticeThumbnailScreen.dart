@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
 import 'package:ono/Module/Dialog/LoadingDialog.dart';
-import 'package:ono/Module/Dialog/SnackBarDialog.dart';
 import 'package:provider/provider.dart';
 
 import '../../Model/PracticeNote/PracticeNoteThumbnailModel.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/PracticeNoteProvider.dart';
+import '../../Util/AppSnackBar.dart';
 import 'PracticeDetailScreen.dart';
 import 'PracticeProblemSelectionScreen.dart';
 
@@ -446,13 +446,17 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
                             _selectedPracticeIds.clear();
                           });
 
-                          Future.delayed(Duration.zero, () {
-                            SnackBarDialog.showSnackBar(
-                              context: context,
-                              message: '복습 세트가 삭제되었습니다!',
+                          AppSnackBar.messengerKey.currentState?.showSnackBar(
+                            SnackBar(
+                              content: const StandardText(
+                                text: '복습 세트가 삭제되었습니다!',
+                                fontSize: 14,
+                                color: Colors.white,
+                              ),
                               backgroundColor: themeProvider.primaryColor,
-                            );
-                          });
+                              duration: const Duration(seconds: 2),
+                            ),
+                          );
                         },
                         style: TextButton.styleFrom(
                           padding: const EdgeInsets.symmetric(
