@@ -6,6 +6,7 @@ import 'package:ono/Model/Common/PaginatedResponse.dart';
 import 'package:ono/Model/Problem/ProblemAnalysisModel.dart';
 import 'package:ono/Model/Problem/ProblemModel.dart';
 import 'package:ono/Model/Problem/ProblemRegisterModel.dart';
+import 'package:ono/Model/Problem/ReviewDueProblemModel.dart';
 
 import '../../../Config/AppConfig.dart';
 import '../HttpService.dart';
@@ -262,5 +263,13 @@ class ProblemService {
       data,
       (json) => ProblemModel.fromJson(json),
     );
+  }
+
+  Future<ReviewDueResponse> getReviewDueProblems() async {
+    final data = await httpService.sendRequest(
+      method: 'GET',
+      url: '${AppConfig.baseUrl}/api/problems/review-due',
+    );
+    return ReviewDueResponse.fromJson(data as Map<String, dynamic>);
   }
 }

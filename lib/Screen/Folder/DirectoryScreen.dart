@@ -23,11 +23,13 @@ import '../../Module/Image/DisplayImage.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Module/Util/FolderPickerDialog.dart';
+import '../../Provider/ReviewDueProvider.dart';
 import '../../Provider/UserProvider.dart';
 import '../../Util/AppErrorReporter.dart';
 import '../ProblemDetail/ProblemDetailScreen.dart';
 import '../ProblemRegister/ProblemRegisterScreen.dart';
 import '../ProblemSearch/TagProblemSearchScreen.dart';
+import '../ReviewDue/ReviewDueScreen.dart';
 import 'UserGuideScreen.dart';
 
 class DirectoryScreen extends StatefulWidget {
@@ -86,6 +88,10 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
       // 이 화면의 폴더 데이터 로드
       await _loadFolderData();
+
+      if (widget.folderId == null) {
+        Provider.of<ReviewDueProvider>(context, listen: false).fetchReviewDue();
+      }
 
       if (!modalShown && userProvider.isFirstLogin && widget.folderId == null) {
         modalShown = true;
@@ -517,6 +523,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     final authService = Provider.of<UserProvider>(context);
     final themeProvider = Provider.of<ThemeHandler>(context);
     final foldersProvider = Provider.of<FoldersProvider>(context);
+    final reviewDueProvider = Provider.of<ReviewDueProvider>(context);
 
     return PopScope(
         canPop: true,
@@ -533,6 +540,10 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                     padding: const EdgeInsets.all(20),
                     child: Column(
                       children: [
+                        if (widget.folderId == null &&
+                            reviewDueProvider.dueCount > 0)
+                          _buildReviewDueBadge(
+                              context, reviewDueProvider, themeProvider),
                         _buildFolderAndProblemGrid(themeProvider),
                       ],
                     ),
@@ -2132,5 +2143,99 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         await _loadFolderData();
       }
     });
+  }
+
+  Widget _buildReviewDueBadge(
+    BuildContext context,
+    ReviewDueProvider reviewDueProvider,
+    ThemeHandler themeProvider,
+  ) {
+    final data = reviewDueProvider.data;
+    final overdueCount = data?.overdueCount ?? 0;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: InkWell(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const ReviewDueScreen()),
+          );
+        },
+        borderRadius: BorderRadius.circular(15),
+        child: Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(15),
+            border: Border.all(color: Colors.grey[300]!, width: 1),
+            boxShadow: [
+              BoxShadow(
+                color: themeProvider.primaryColor.withValues(alpha: 0.1),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: themeProvider.primaryColor.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  Icons.auto_stories_outlined,
+                  color: themeProvider.primaryColor,
+                  size: 16,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const StandardText(
+                          text: '추천 복습 문제',
+                          fontSize: 14,
+                          color: Colors.black87,
+                        ),
+                        const SizedBox(width: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 7, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: themeProvider.primaryColor,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: StandardText(
+                            text: '${reviewDueProvider.dueCount}개',
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
+                    if (overdueCount > 0) ...[
+                      const SizedBox(height: 2),
+                      StandardText(
+                        text: '이 중 ${overdueCount}개는 밀린 문제예요',
+                        fontSize: 11,
+                        color: Colors.orange.shade600,
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              Icon(Icons.chevron_right, size: 20, color: Colors.grey[400]),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
