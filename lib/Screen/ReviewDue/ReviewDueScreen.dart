@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:ono/Model/Problem/ReviewDueProblemModel.dart';
-import 'package:ono/Module/Image/DisplayImage.dart';
+import 'package:ono/Model/Problem/ProblemModel.dart';
+import 'package:ono/Module/Problem/ProblemThumbnailCard.dart';
 import 'package:ono/Module/Text/StandardText.dart';
 import 'package:ono/Module/Theme/ThemeHandler.dart';
 import 'package:ono/Provider/ReviewDueProvider.dart';
@@ -17,7 +18,7 @@ class ReviewDueScreen extends StatefulWidget {
 
 class _ReviewDueScreenState extends State<ReviewDueScreen> {
   final ProblemService _problemService = ProblemService();
-  Map<int, String?> _thumbnailUrls = {};
+  Map<int, ProblemModel> _problemDetails = {};
 
   @override
   void initState() {
@@ -28,12 +29,12 @@ class _ReviewDueScreenState extends State<ReviewDueScreen> {
         await provider.fetchReviewDue();
       }
       if (provider.data != null) {
-        await _loadThumbnails(provider.data!.problems);
+        await _loadProblemDetails(provider.data!.problems);
       }
     });
   }
 
-  Future<void> _loadThumbnails(List<ReviewDueProblemModel> problems) async {
+  Future<void> _loadProblemDetails(List<ReviewDueProblemModel> problems) async {
     if (problems.isEmpty) return;
     final entries = await Future.wait(
       problems.map((p) async {
@@ -42,18 +43,16 @@ class _ReviewDueScreenState extends State<ReviewDueScreen> {
             p.problemId,
             showErrorSnackBar: false,
           );
-          final url = model.problemImageDataList?.isNotEmpty == true
-              ? model.problemImageDataList!.first.imageUrl
-              : null;
-          return MapEntry(p.problemId, url);
+          return MapEntry(p.problemId, model);
         } catch (_) {
-          return MapEntry(p.problemId, null);
+          return null;
         }
       }),
     );
     if (!mounted) return;
     setState(() {
-      _thumbnailUrls = Map.fromEntries(entries);
+      _problemDetails =
+          Map.fromEntries(entries.whereType<MapEntry<int, ProblemModel>>());
     });
   }
 
@@ -61,7 +60,7 @@ class _ReviewDueScreenState extends State<ReviewDueScreen> {
     final provider = Provider.of<ReviewDueProvider>(context, listen: false);
     await provider.fetchReviewDue();
     if (provider.data != null) {
-      await _loadThumbnails(provider.data!.problems);
+      await _loadProblemDetails(provider.data!.problems);
     }
   }
 
@@ -123,7 +122,7 @@ class _ReviewDueScreenState extends State<ReviewDueScreen> {
               children: [
                 Row(
                   children: [
-                    StandardText(
+                    const StandardText(
                       text: '추천 복습 문제 ',
                       fontSize: 14,
                       color: Colors.black87,
@@ -167,17 +166,17 @@ class _ReviewDueScreenState extends State<ReviewDueScreen> {
     ReviewDueProblemModel problem,
     ThemeHandler themeProvider,
   ) {
-    final isMastered = problem.consecutiveCorrectCount >= 3;
-    final isOverdue = problem.nextReviewAt != null &&
-        problem.nextReviewAt!.isBefore(
-          DateTime.now().subtract(const Duration(days: 1)),
-        );
-    final imageUrl = _thumbnailUrls[problem.problemId];
-    final title = problem.reference?.isNotEmpty == true
-        ? problem.reference!
-        : problem.memo?.isNotEmpty == true
-            ? problem.memo!
-            : '제목 없음';
+    final detail = _problemDetails[problem.problemId];
+    final imageUrl = detail?.problemImageDataList?.isNotEmpty == true
+        ? detail!.problemImageDataList!.first.imageUrl
+        : null;
+    final title = detail?.reference?.isNotEmpty == true
+        ? detail!.reference!
+        : problem.reference?.isNotEmpty == true
+            ? problem.reference!
+            : problem.memo?.isNotEmpty == true
+                ? problem.memo!
+                : '제목 없음';
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
@@ -186,118 +185,20 @@ class _ReviewDueScreenState extends State<ReviewDueScreen> {
           await Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (_) =>
-                  ProblemDetailScreen(problemId: problem.problemId),
+              builder: (_) => ProblemDetailScreen(problemId: problem.problemId),
             ),
           );
           if (!mounted) return;
           _refresh();
         },
-        child: Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.grey.withValues(alpha: 0.2),
-                spreadRadius: 1,
-                blurRadius: 5,
-                offset: const Offset(0, 3),
-              ),
-            ],
-          ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              // 썸네일
-              Container(
-                width: 50,
-                height: 70,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.grey[300]!, width: 0.8),
-                ),
-                clipBehavior: Clip.antiAlias,
-                child: DisplayImage(
-                  imagePath: imageUrl,
-                  fit: BoxFit.cover,
-                ),
-              ),
-              const SizedBox(width: 14),
-              // 텍스트 영역
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    StandardText(
-                      text: title,
-                      fontSize: 16,
-                      color: Colors.black,
-                    ),
-                    if (problem.memo?.isNotEmpty == true &&
-                        problem.reference?.isNotEmpty == true) ...[
-                      const SizedBox(height: 2),
-                      StandardText(
-                        text: problem.memo!,
-                        fontSize: 12,
-                        color: Colors.grey[500]!,
-                      ),
-                    ],
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        _buildProgressDots(
-                            problem.consecutiveCorrectCount, themeProvider),
-                        const SizedBox(width: 8),
-                        if (isMastered)
-                          _buildChip('마스터드', Colors.amber.shade700),
-                        if (isOverdue && !isMastered)
-                          _buildChip('밀린 문제', Colors.orange.shade600),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              Icon(Icons.chevron_right, size: 20, color: Colors.grey[400]),
-            ],
-          ),
+        child: ProblemThumbnailCard(
+          title: title,
+          imageUrl: imageUrl,
+          tags: detail?.tags ?? const [],
+          solveCount: detail?.solveCount ?? problem.consecutiveCorrectCount,
+          lastSolvedAt: detail?.lastSolvedAt,
+          themeProvider: themeProvider,
         ),
-      ),
-    );
-  }
-
-  Widget _buildProgressDots(int count, ThemeHandler themeProvider) {
-    return Row(
-      children: List.generate(3, (i) {
-        final filled = i < count;
-        return Container(
-          width: 18,
-          height: 4,
-          margin: const EdgeInsets.only(right: 3),
-          decoration: BoxDecoration(
-            color: filled
-                ? themeProvider.primaryColor
-                : Colors.grey.shade200,
-            borderRadius: BorderRadius.circular(2),
-          ),
-        );
-      }),
-    );
-  }
-
-  Widget _buildChip(String text, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(6),
-      ),
-      child: StandardText(
-        text: text,
-        fontSize: 10,
-        fontWeight: FontWeight.w700,
-        color: color,
       ),
     );
   }

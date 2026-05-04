@@ -13,8 +13,7 @@ import '../../Model/Folder/FolderThumbnailModel.dart';
 import '../../Model/PracticeNote/PracticeNoteRegisterModel.dart';
 import '../../Model/PracticeNote/PracticeNoteUpdateModel.dart';
 import '../../Model/Problem/ProblemModel.dart';
-import '../../Model/Problem/TemplateType.dart';
-import '../../Module/Image/DisplayImage.dart';
+import '../../Module/Problem/ProblemThumbnailCard.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/NoteIconHandler.dart';
 import '../../Module/Theme/ThemeHandler.dart';
@@ -927,68 +926,23 @@ class _PracticeProblemSelectionScreenState
             problem.problemImageDataList!.isNotEmpty
         ? problem.problemImageDataList!.first.imageUrl
         : null;
+    final title =
+        problem.reference?.isNotEmpty == true ? problem.reference! : '제목 없음';
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          SizedBox(
-            width: 50,
-            height: 70,
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(8.0),
-              child: DisplayImage(
-                imagePath: problemImageUrl,
-                fit: BoxFit.cover,
-              ),
-            ),
-          ),
-          const SizedBox(width: 20),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    //_getTemplateIcon(problem.templateType!),
-                    //const SizedBox(width: 8),
-                    Flexible(
-                      child: StandardText(
-                        text: problem.reference?.isNotEmpty == true
-                            ? problem.reference!
-                            : '제목 없음',
-                        color: themeProvider.primaryColor,
-                        fontSize: 18,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                StandardText(
-                  text: problem.createdAt != null
-                      ? '작성 일시: ${formatDateTime(problem.createdAt!)}'
-                      : '작성 일시: 정보 없음',
-                  fontSize: 12,
-                  color: themeProvider.desaturateColor,
-                ),
-              ],
-            ),
-          ),
-          isSelected
-              ? Icon(Icons.check_circle,
-                  color: themeProvider.primaryColor, size: 25)
-              : const Icon(Icons.circle_outlined, color: Colors.grey),
-        ],
+      child: ProblemThumbnailCard(
+        title: title,
+        imageUrl: problemImageUrl,
+        tags: problem.tags,
+        solveCount: problem.solveCount,
+        lastSolvedAt: problem.lastSolvedAt,
+        themeProvider: themeProvider,
+        trailing: isSelected
+            ? Icon(Icons.check_circle,
+                color: themeProvider.primaryColor, size: 25)
+            : const Icon(Icons.circle_outlined, color: Colors.grey),
       ),
-    );
-  }
-
-  Widget _getTemplateIcon(TemplateType templateType) {
-    return SvgPicture.asset(
-      templateType.templateThumbnailImage,
-      width: 20,
-      height: 20,
     );
   }
 
@@ -1000,92 +954,92 @@ class _PracticeProblemSelectionScreenState
         width: double.infinity,
         height: 50,
         child: ElevatedButton(
-        onPressed: selectedProblems.isNotEmpty
-            ? () {
-                final newIds =
-                    selectedProblems.map((p) => p.problemId).toList();
+          onPressed: selectedProblems.isNotEmpty
+              ? () {
+                  final newIds =
+                      selectedProblems.map((p) => p.problemId).toList();
 
-                // 추가된 문제: newIds 에는 있지만 원본에는 없는 것
-                final addList = newIds
-                    .where((id) => !_originalProblemIds.contains(id))
-                    .toList();
-                // 삭제된 문제: 원본에는 있고 newIds에는 없는 것
-                final removeList = _originalProblemIds
-                    .where((id) => !newIds.contains(id))
-                    .toList();
+                  // 추가된 문제: newIds 에는 있지만 원본에는 없는 것
+                  final addList = newIds
+                      .where((id) => !_originalProblemIds.contains(id))
+                      .toList();
+                  // 삭제된 문제: 원본에는 있고 newIds에는 없는 것
+                  final removeList = _originalProblemIds
+                      .where((id) => !newIds.contains(id))
+                      .toList();
 
-                if (widget.practiceModel != null) {
-                  // 수정 모드
-                  final updateModel = PracticeNoteUpdateModel(
-                    practiceNoteId: widget.practiceModel!.practiceId,
-                    practiceTitle: widget.practiceModel!.practiceTitle,
-                    addProblemIdList: addList,
-                    removeProblemIdList: removeList,
-                  );
-                  // 다음 화면으로 updateModel 넘기기
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => PracticeTitleWriteScreen(
-                        practiceNoteUpdateModel: updateModel,
-                        practiceNoteDetailModel: widget.practiceModel!,
+                  if (widget.practiceModel != null) {
+                    // 수정 모드
+                    final updateModel = PracticeNoteUpdateModel(
+                      practiceNoteId: widget.practiceModel!.practiceId,
+                      practiceTitle: widget.practiceModel!.practiceTitle,
+                      addProblemIdList: addList,
+                      removeProblemIdList: removeList,
+                    );
+                    // 다음 화면으로 updateModel 넘기기
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => PracticeTitleWriteScreen(
+                          practiceNoteUpdateModel: updateModel,
+                          practiceNoteDetailModel: widget.practiceModel!,
+                        ),
                       ),
-                    ),
-                  );
-                } else {
-                  // 신규 등록 모드 → 기존대로 RegisterModel
-                  final registerModel = PracticeNoteRegisterModel(
-                    practiceId: null,
-                    practiceTitle: "",
-                    registerProblemIdList: newIds,
-                  );
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => PracticeTitleWriteScreen(
-                        practiceRegisterModel: registerModel,
+                    );
+                  } else {
+                    // 신규 등록 모드 → 기존대로 RegisterModel
+                    final registerModel = PracticeNoteRegisterModel(
+                      practiceId: null,
+                      practiceTitle: "",
+                      registerProblemIdList: newIds,
+                    );
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => PracticeTitleWriteScreen(
+                          practiceRegisterModel: registerModel,
+                        ),
                       ),
-                    ),
-                  );
+                    );
+                  }
                 }
-              }
-            : () => _showSelectProblemDialog(context),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: themeProvider.primaryColor,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+              : () => _showSelectProblemDialog(context),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: themeProvider.primaryColor,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            elevation: 0,
           ),
-          elevation: 0,
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Expanded(
-              child: Center(
-                child: StandardText(
-                  text: "다음",
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Expanded(
+                child: Center(
+                  child: StandardText(
+                    text: "다음",
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
                 ),
               ),
-            ),
-            Container(
-              width: 24,
-              height: 24,
-              alignment: Alignment.center,
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                shape: BoxShape.circle,
+              Container(
+                width: 24,
+                height: 24,
+                alignment: Alignment.center,
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                ),
+                child: StandardText(
+                  text: selectedProblems.length.toString(),
+                  fontSize: 12,
+                  color: themeProvider.primaryColor,
+                ),
               ),
-              child: StandardText(
-                text: selectedProblems.length.toString(),
-                fontSize: 12,
-                color: themeProvider.primaryColor,
-              ),
-            ),
-          ],
-        ),
+            ],
+          ),
         ),
       ),
     );

@@ -6,7 +6,7 @@ import 'package:provider/provider.dart';
 import '../../Model/PracticeNote/PracticeNoteDetailModel.dart';
 import '../../Model/Problem/ProblemModel.dart';
 import '../../Module/Dialog/SnackBarDialog.dart';
-import '../../Module/Image/DisplayImage.dart';
+import '../../Module/Problem/ProblemThumbnailCard.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/PracticeNoteProvider.dart';
@@ -297,31 +297,18 @@ class PracticeDetailScreen extends StatelessWidget {
             problem.problemImageDataList!.isNotEmpty
         ? problem.problemImageDataList!.first.imageUrl
         : null;
+    final title =
+        problem.reference?.isNotEmpty == true ? problem.reference! : '제목 없음';
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.grey.withOpacity(0.2),
-              spreadRadius: 1,
-              blurRadius: 5,
-              offset: const Offset(0, 3),
-            ),
-          ],
-        ),
-        padding: const EdgeInsets.all(12),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            _buildImageThumbnail(imageUrl),
-            const SizedBox(width: 16),
-            _buildProblemDetails(problem),
-          ],
-        ),
+      child: ProblemThumbnailCard(
+        title: title,
+        imageUrl: imageUrl,
+        tags: problem.tags,
+        solveCount: problem.solveCount,
+        lastSolvedAt: problem.lastSolvedAt,
+        themeProvider: themeProvider,
       ),
     );
   }
@@ -376,44 +363,6 @@ class PracticeDetailScreen extends StatelessWidget {
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildImageThumbnail(String? imageUrl) {
-    return SizedBox(
-      width: 50,
-      height: 70,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(8.0),
-        child: DisplayImage(
-          imagePath: imageUrl,
-          fit: BoxFit.cover,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildProblemDetails(ProblemModel problem) {
-    return Expanded(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          StandardText(
-            text: (problem.reference != null && problem.reference!.isNotEmpty)
-                ? problem.reference!
-                : '제목 없음',
-            fontSize: 16,
-            color: Colors.black,
-          ),
-          const SizedBox(height: 4),
-          StandardText(
-            text:
-                '작성 일시: ${problem.createdAt != null ? formatDateTime(problem.createdAt!) : '정보 없음'}',
-            fontSize: 12,
-            color: Colors.grey,
-          ),
-        ],
       ),
     );
   }

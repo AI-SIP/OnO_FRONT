@@ -6,7 +6,7 @@ import 'package:provider/provider.dart';
 
 import '../../Model/Problem/ProblemModel.dart';
 import '../../Model/Tag/TagModel.dart';
-import '../../Module/Image/DisplayImage.dart';
+import '../../Module/Problem/ProblemThumbnailCard.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/ProblemsProvider.dart';
@@ -525,6 +525,8 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
         ? problem.problemImageDataList!.first.imageUrl
         : null;
     final isSelected = _isSelected(problem);
+    final title =
+        problem.reference?.isNotEmpty == true ? problem.reference! : '제목 없음';
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
@@ -541,115 +543,22 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
             ),
           );
         },
-        child: Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.grey.withOpacity(0.2),
-                spreadRadius: 1,
-                blurRadius: 5,
-                offset: const Offset(0, 3),
-              ),
-            ],
-          ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              SizedBox(
-                width: 50,
-                height: 70,
-                child: Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: Colors.grey[300]!,
-                      width: 0.8,
-                    ),
-                  ),
-                  clipBehavior: Clip.antiAlias,
-                  child: DisplayImage(
-                    imagePath: problemImageUrl,
-                    fit: BoxFit.cover,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    StandardText(
-                      text: (problem.reference != null &&
-                              problem.reference!.isNotEmpty)
-                          ? problem.reference!
-                          : '제목 없음',
-                      color: Colors.black,
-                      fontSize: 17,
-                    ),
-                    const SizedBox(height: 6),
-                    Wrap(
-                      spacing: 6,
-                      runSpacing: 6,
-                      children: problem.tags.isNotEmpty
-                          ? problem.tags.map((tag) {
-                              return Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 3,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(
-                                    color: themeProvider.primaryColor,
-                                    width: 1,
-                                  ),
-                                ),
-                                child: StandardText(
-                                  text: '#${tag.name}',
-                                  fontSize: 11,
-                                  color: themeProvider.primaryColor,
-                                ),
-                              );
-                            }).toList()
-                          : [
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 3,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(
-                                    color: Colors.grey[300]!,
-                                    width: 1,
-                                  ),
-                                ),
-                                child: StandardText(
-                                  text: '태그 없음',
-                                  fontSize: 11,
-                                  color: Colors.grey[400]!,
-                                ),
-                              ),
-                            ],
-                    ),
-                  ],
-                ),
-              ),
-              if (widget.selectable)
-                Icon(
+        child: ProblemThumbnailCard(
+          title: title,
+          imageUrl: problemImageUrl,
+          tags: problem.tags,
+          solveCount: problem.solveCount,
+          lastSolvedAt: problem.lastSolvedAt,
+          themeProvider: themeProvider,
+          trailing: widget.selectable
+              ? Icon(
                   isSelected ? Icons.check_circle : Icons.circle_outlined,
                   color: isSelected
                       ? themeProvider.primaryColor
                       : Colors.grey[400],
                   size: 22,
-                ),
-            ],
-          ),
+                )
+              : null,
         ),
       ),
     );
