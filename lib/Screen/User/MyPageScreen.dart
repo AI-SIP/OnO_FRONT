@@ -146,6 +146,26 @@ class _SettingScreenState extends State<SettingScreen> {
                     onTermsTap: () {
                       UrlLauncher.launchUserTemPageURL();
                     },
+                    notificationEnabled:
+                        userProvider.userInfoModel?.notificationEnabled ?? true,
+                    onNotificationChanged: (value) async {
+                      try {
+                        await Provider.of<UserProvider>(context, listen: false)
+                            .updateNotificationSettings(value);
+                      } catch (_) {
+                        if (!context.mounted) return;
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: StandardText(
+                              text: '알림 설정 변경에 실패했습니다. 다시 시도해주세요.',
+                              fontSize: 14,
+                              color: Colors.white,
+                            ),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                      }
+                    },
                   ),
 
                   // 로그아웃/회원탈퇴 (흐릿한 텍스트)

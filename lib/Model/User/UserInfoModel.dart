@@ -20,6 +20,8 @@ class UserInfoModel {
   int totalStudyCurrentPoint;
   int totalStudyNextLevelThreshold;
 
+  bool notificationEnabled;
+
   UserInfoModel({
     this.userId = -1,
     this.email = '',
@@ -37,6 +39,7 @@ class UserInfoModel {
     this.totalStudyLevel = 0,
     this.totalStudyCurrentPoint = 0,
     this.totalStudyNextLevelThreshold = 40,
+    this.notificationEnabled = true,
   });
 
   factory UserInfoModel.fromJson(dynamic json) {
@@ -61,6 +64,7 @@ class UserInfoModel {
       totalStudyLevel: json['totalStudyLevel'] ?? 0,
       totalStudyCurrentPoint: json['totalStudyCurrentPoint'] ?? 0,
       totalStudyNextLevelThreshold: json['totalStudyNextLevelThreshold'] ?? 40,
+      notificationEnabled: json['notificationEnabled'] ?? true,
     );
   }
 }

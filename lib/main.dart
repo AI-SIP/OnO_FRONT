@@ -21,13 +21,15 @@ import 'Config/AppConfig.dart';
 import 'Config/firebase_options.dart';
 import 'Provider/PracticeNoteProvider.dart';
 import 'Provider/ProblemsProvider.dart';
+import 'Provider/ReviewDueProvider.dart';
 import 'Provider/UserProvider.dart';
 import 'Screen/Folder/DirectoryScreen.dart';
 import 'Screen/PracticeNote/PracticeThumbnailScreen.dart';
 import 'Screen/User/MyPageScreen.dart';
 import 'Util/AppErrorReporter.dart';
-import 'Util/NotificationService.dart';
+import 'Util/AppNavigator.dart';
 import 'Util/AppSnackBar.dart';
+import 'Util/NotificationService.dart';
 
 Future<void> main() async {
   await runZonedGuarded<Future<void>>(
@@ -130,6 +132,7 @@ Future<void> _bootstrapApp() async {
           create: (context) => ThemeHandler()..loadColors(),
         ),
         ChangeNotifierProvider(create: (_) => ScreenIndexProvider()),
+        ChangeNotifierProvider(create: (_) => ReviewDueProvider()),
       ],
       child: const MyApp(),
     ),
@@ -150,6 +153,7 @@ class MyApp extends StatelessWidget {
       title: 'OnO',
       theme: _buildThemeData(context),
       scaffoldMessengerKey: AppSnackBar.messengerKey,
+      navigatorKey: AppNavigator.navigatorKey,
       navigatorObservers: <NavigatorObserver>[observer],
       home: SplashScreen(),
       debugShowCheckedModeBanner: false,

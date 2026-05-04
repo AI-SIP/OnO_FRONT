@@ -4,11 +4,14 @@ import 'dart:io';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/material.dart';
 import 'package:ono/Config/AppConfig.dart';
 
 import '../Config/firebase_options.dart';
+import '../Screen/ReviewDue/ReviewDueScreen.dart';
 import '../Service/Api/HttpService.dart';
 import 'AppErrorReporter.dart';
+import 'AppNavigator.dart';
 
 class NotificationService {
   NotificationService._();
@@ -56,13 +59,22 @@ class NotificationService {
     // 포그라운드 메시지
     FirebaseMessaging.onMessage.listen((msg) {
       log('Foreground message: ${msg.notification?.title}');
-      // TODO: 스낵바나 다이얼로그로 표시
     });
 
-    // 백그라운드/종료 상태에서 알림 탭 클릭
+    // 백그라운드 상태에서 알림 탭
     FirebaseMessaging.onMessageOpenedApp.listen((msg) {
-      log('Notification clicked, data: ${msg.data}');
-      // TODO: Navigator.pushNamed(...) 등으로 화면 이동
+      log('Notification tapped (background), data: ${msg.data}');
+      _handleNotificationNavigation(msg.data);
+    });
+
+    // 종료 상태에서 알림 탭으로 앱 실행
+    FirebaseMessaging.instance.getInitialMessage().then((msg) {
+      if (msg != null) {
+        log('Notification tapped (terminated), data: ${msg.data}');
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _handleNotificationNavigation(msg.data);
+        });
+      }
     });
 
     if (!_tokenRefreshListenerConfigured) {
@@ -79,6 +91,20 @@ class NotificationService {
           );
         }
       });
+    }
+  }
+
+  void _handleNotificationNavigation(Map<String, dynamic> data) {
+    final type = data['type'] as String?;
+    final navigator = AppNavigator.navigatorKey.currentState;
+    if (navigator == null) return;
+
+    if (type == 'review_due') {
+      navigator.push(
+        MaterialPageRoute(builder: (_) => const ReviewDueScreen()),
+      );
+    } else if (type == 'reengagement' || type == 'reengagement_monthly') {
+      navigator.popUntil((route) => route.isFirst);
     }
   }
 

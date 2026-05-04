@@ -8,6 +8,8 @@ class SettingMenuButtons extends StatelessWidget {
   final VoidCallback onGuideTap;
   final VoidCallback onFeedbackTap;
   final VoidCallback onTermsTap;
+  final bool notificationEnabled;
+  final ValueChanged<bool> onNotificationChanged;
 
   const SettingMenuButtons({
     super.key,
@@ -16,6 +18,8 @@ class SettingMenuButtons extends StatelessWidget {
     required this.onGuideTap,
     required this.onFeedbackTap,
     required this.onTermsTap,
+    required this.notificationEnabled,
+    required this.onNotificationChanged,
   });
 
   @override
@@ -39,6 +43,14 @@ class SettingMenuButtons extends StatelessWidget {
       ),
       child: Column(
         children: [
+          _buildToggleItem(
+            context: context,
+            icon: Icons.notifications_outlined,
+            title: '복습 알림',
+            value: notificationEnabled,
+            onChanged: onNotificationChanged,
+          ),
+          Divider(height: screenHeight * 0.02, color: Colors.grey[300]),
           _buildMenuItem(
             context: context,
             icon: Icons.edit,
@@ -65,6 +77,48 @@ class SettingMenuButtons extends StatelessWidget {
             icon: Icons.description_outlined,
             title: 'OnO 이용약관',
             onTap: onTermsTap,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildToggleItem({
+    required BuildContext context,
+    required IconData icon,
+    required String title,
+    required bool value,
+    required ValueChanged<bool> onChanged,
+  }) {
+    double screenHeight = MediaQuery.of(context).size.height;
+
+    return Padding(
+      padding: EdgeInsets.symmetric(
+        vertical: screenHeight * 0.002,
+        horizontal: screenHeight * 0.01,
+      ),
+      child: Row(
+        children: [
+          Icon(icon, size: 20, color: themeProvider.primaryColor),
+          SizedBox(width: screenHeight * 0.015),
+          Expanded(
+            child: StandardText(
+              text: title,
+              fontSize: 14,
+              color: Colors.black87,
+            ),
+          ),
+          Transform.scale(
+            scale: 0.8,
+            child: Switch(
+              value: value,
+              activeThumbColor: themeProvider.primaryColor,
+              activeTrackColor: themeProvider.primaryColor.withValues(alpha: 0.5),
+              inactiveTrackColor: Colors.grey.shade300,
+              inactiveThumbColor: Colors.grey,
+              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              onChanged: onChanged,
+            ),
           ),
         ],
       ),
