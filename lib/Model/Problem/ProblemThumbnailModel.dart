@@ -5,12 +5,16 @@ class ProblemThumbnailModel {
   final String? reference;
   final String? problemImageUrl;
   final DateTime? createdAt;
+  final DateTime? lastSolvedAt;
+  final int solveCount;
 
   ProblemThumbnailModel(
       {required this.problemId,
       required this.reference,
       required this.problemImageUrl,
-      required this.createdAt});
+      required this.createdAt,
+      this.lastSolvedAt,
+      this.solveCount = 0});
 
   factory ProblemThumbnailModel.fromJson(Map<String, dynamic> json) {
     return ProblemThumbnailModel(
@@ -18,6 +22,10 @@ class ProblemThumbnailModel {
       reference: json['reference'],
       problemImageUrl: json['problemImageUrl'],
       createdAt: json['createdAt'],
+      lastSolvedAt: json['lastSolvedAt'] != null
+          ? DateTime.parse(json['lastSolvedAt'] as String)
+          : null,
+      solveCount: (json['solveCount'] as num?)?.toInt() ?? 0,
     );
   }
 
@@ -29,6 +37,8 @@ class ProblemThumbnailModel {
           ? problemModel.problemImageDataList![0].imageUrl
           : null,
       createdAt: problemModel.createdAt,
+      lastSolvedAt: problemModel.lastSolvedAt,
+      solveCount: problemModel.solveCount,
     );
   }
 }

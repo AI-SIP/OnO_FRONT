@@ -1689,34 +1689,27 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                     ),
             ),
           ),
-          const SizedBox(width: 20),
+          const SizedBox(width: 16),
           Expanded(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SizedBox(height: 4),
-                Row(
-                  children: [
-                    /*
-                    _getTemplateIcon(problem.templateType!),
-                    const SizedBox(width: 8),
+                /*
+                _getTemplateIcon(problem.templateType!),
+                const SizedBox(width: 8),
 
-                     */
-                    Flexible(
-                      child: StandardText(
-                        text: (problem.reference != null &&
-                                problem.reference!.isNotEmpty)
-                            ? problem.reference!
-                            : '제목 없음',
-                        color: Colors.black,
-                        fontSize: 18,
-                      ),
-                    ),
-                  ],
+                 */
+                StandardText(
+                  text: (problem.reference != null &&
+                          problem.reference!.isNotEmpty)
+                      ? problem.reference!
+                      : '제목 없음',
+                  color: Colors.black,
+                  fontSize: 16,
                 ),
-                const SizedBox(height: 2),
-                const SizedBox(height: 4),
+                const SizedBox(height: 8),
                 Wrap(
                   spacing: 6,
                   runSpacing: 6,
@@ -1735,7 +1728,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                             ),
                             child: StandardText(
                               text: '#${tag.name}',
-                              fontSize: 11,
+                              fontSize: 10,
                               color: themeProvider.primaryColor,
                             ),
                           );
@@ -1754,7 +1747,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                             ),
                             child: StandardText(
                               text: '태그 없음',
-                              fontSize: 11,
+                              fontSize: 10,
                               color: Colors.grey[400]!,
                             ),
                           ),
@@ -1763,7 +1756,90 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
               ],
             ),
           ),
+          const SizedBox(width: 12),
+          _buildProblemSolveMeta(
+            problem.solveCount,
+            problem.lastSolvedAt,
+            themeProvider,
+          ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildProblemSolveMeta(
+    int solveCount,
+    DateTime? lastSolvedAt,
+    ThemeHandler themeProvider,
+  ) {
+    final cappedSolveCount = solveCount.clamp(0, 3);
+    final lastSolvedDateText =
+        lastSolvedAt != null ? DateFormat('M/d').format(lastSolvedAt) : null;
+
+    return Semantics(
+      label: lastSolvedDateText == null
+          ? '풀이 진행 $cappedSolveCount/3'
+          : '최근 복습 $lastSolvedDateText, 풀이 진행 $cappedSolveCount/3',
+      child: SizedBox(
+        width: 64,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade50,
+                borderRadius: BorderRadius.circular(7),
+                border: Border.all(color: Colors.grey.shade200),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(3, (index) {
+                  final filled = index < cappedSolveCount;
+                  return Container(
+                    width: 12,
+                    height: 4,
+                    margin: EdgeInsets.only(right: index == 2 ? 0 : 3),
+                    decoration: BoxDecoration(
+                      color: filled
+                          ? themeProvider.primaryColor
+                          : Colors.grey.shade300,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  );
+                }),
+              ),
+            ),
+            if (lastSolvedDateText != null) ...[
+              const SizedBox(height: 6),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                decoration: BoxDecoration(
+                  color: themeProvider.primaryColor.withValues(alpha: 0.07),
+                  borderRadius: BorderRadius.circular(7),
+                ),
+                child: Column(
+                  children: [
+                    StandardText(
+                      text: '최근 복습',
+                      fontSize: 10,
+                      color: themeProvider.primaryColor,
+                    ),
+                    const SizedBox(height: 1),
+                    StandardText(
+                      text: lastSolvedDateText,
+                      fontSize: 10,
+                      color: themeProvider.primaryColor,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }

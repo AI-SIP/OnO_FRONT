@@ -9,8 +9,10 @@ class ProblemModel {
   final String? memo;
   final String? reference;
   final DateTime? solvedAt;
+  final DateTime? lastSolvedAt;
   final DateTime? createdAt;
   final DateTime? updateAt;
+  final int solveCount;
 
   final List<ProblemImageDataModel>? problemImageDataList;
   final List<ProblemImageDataModel>? answerImageDataList;
@@ -26,8 +28,10 @@ class ProblemModel {
     this.memo,
     this.reference,
     this.solvedAt,
+    this.lastSolvedAt,
     this.createdAt,
     this.updateAt,
+    this.solveCount = 0,
     this.problemImageDataList,
     this.answerImageDataList,
     this.solveImageDataList,
@@ -73,12 +77,16 @@ class ProblemModel {
       solvedAt: json['solvedAt'] != null
           ? DateTime.parse(json['solvedAt'] as String)
           : null,
+      lastSolvedAt: json['lastSolvedAt'] != null
+          ? DateTime.parse(json['lastSolvedAt'] as String)
+          : null,
       createdAt: json['createdAt'] != null
           ? DateTime.parse(json['createdAt'] as String)
           : null,
       updateAt: json['updatedAt'] != null
           ? DateTime.parse(json['updatedAt'] as String)
           : null,
+      solveCount: (json['solveCount'] as num?)?.toInt() ?? 0,
       problemImageDataList: problemImages,
       answerImageDataList: answerImages,
       solveImageDataList: solveImages,
@@ -98,8 +106,10 @@ class ProblemModel {
       memo: memo,
       reference: reference,
       solvedAt: solvedAt,
+      lastSolvedAt: lastSolvedAt,
       createdAt: createdAt,
       updateAt: updateAt,
+      solveCount: solveCount,
       problemImageDataList: problemImageDataList,
       answerImageDataList: answerImageDataList,
       solveImageDataList: solveImageDataList,
