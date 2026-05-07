@@ -17,14 +17,20 @@ import 'package:provider/provider.dart';
 
 import '../../Model/Problem/ProblemModel.dart';
 import '../../Model/Problem/ProblemThumbnailModel.dart';
+import '../../Exception/ApiException.dart';
 import '../../Module/Dialog/LoadingDialog.dart';
 import '../../Module/Image/DisplayImage.dart';
+import '../../Module/Problem/ProblemThumbnailCard.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Module/Util/FolderPickerDialog.dart';
+import '../../Provider/ReviewDueProvider.dart';
 import '../../Provider/UserProvider.dart';
+import '../../Util/AppErrorReporter.dart';
 import '../ProblemDetail/ProblemDetailScreen.dart';
 import '../ProblemRegister/ProblemRegisterScreen.dart';
+import '../ProblemSearch/TagProblemSearchScreen.dart';
+import '../ReviewDue/ReviewDueScreen.dart';
 import 'UserGuideScreen.dart';
 
 class DirectoryScreen extends StatefulWidget {
@@ -84,6 +90,10 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       // 이 화면의 폴더 데이터 로드
       await _loadFolderData();
 
+      if (widget.folderId == null) {
+        Provider.of<ReviewDueProvider>(context, listen: false).fetchReviewDue();
+      }
+
       if (!modalShown && userProvider.isFirstLogin && widget.folderId == null) {
         modalShown = true;
         userProvider.changeIsFirstLogin();
@@ -133,45 +143,66 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       });
     }
 
-    final foldersProvider =
-        Provider.of<FoldersProvider>(context, listen: false);
-    final problemsProvider =
-        Provider.of<ProblemsProvider>(context, listen: false);
-
-    // 이 화면의 폴더 ID 결정
-    int targetFolderId;
-    if (widget.folderId == null) {
-      // 루트 폴더
-      if (foldersProvider.rootFolder == null) {
-        await foldersProvider.fetchRootFolder();
-      }
-      targetFolderId = foldersProvider.rootFolder!.folderId;
-    } else {
-      targetFolderId = widget.folderId!;
-    }
-
-    // 폴더 메타데이터만 가져오기 (Provider의 currentFolder는 업데이트하지 않음)
-    final folder = await foldersProvider.getFolder(targetFolderId);
-
-    // 로컬 상태 초기화
-    if (mounted) {
-      setState(() {
-        _currentFolder = folder;
-        _localSubfolders = [];
-        _localProblems = [];
-        _subfolderNextCursor = null;
-        _problemNextCursor = null;
-        _subfolderHasNext = false;
-        _problemHasNext = false;
-      });
-    }
-
     try {
+      final foldersProvider =
+          Provider.of<FoldersProvider>(context, listen: false);
+
+      // 이 화면의 폴더 ID 결정
+      int targetFolderId;
+      if (widget.folderId == null) {
+        // 루트 폴더
+        if (foldersProvider.rootFolder == null) {
+          await foldersProvider.fetchRootFolder();
+        }
+        targetFolderId = foldersProvider.rootFolder!.folderId;
+      } else {
+        targetFolderId = widget.folderId!;
+      }
+
+      // 폴더 메타데이터만 가져오기 (Provider의 currentFolder는 업데이트하지 않음)
+      final folder = await foldersProvider.getFolder(targetFolderId);
+
+      // 로컬 상태 초기화
+      if (mounted) {
+        setState(() {
+          _currentFolder = folder;
+          _localSubfolders = [];
+          _localProblems = [];
+          _subfolderNextCursor = null;
+          _problemNextCursor = null;
+          _subfolderHasNext = false;
+          _problemHasNext = false;
+        });
+      }
+
       // 첫 페이지 로드 (하위 폴더와 문제) - 캐시 우선 사용
       await Future.wait([
         _loadMoreSubfoldersLocal(targetFolderId),
         _loadMoreProblemsLocal(targetFolderId),
       ]);
+    } on UnauthorizedException catch (e) {
+      log('Directory auth failure: $e');
+      if (mounted) {
+        await Provider.of<UserProvider>(context, listen: false).resetUserInfo();
+      }
+    } on ApiException catch (e) {
+      log('Directory API failure: $e');
+      if (mounted) {
+        SnackBarDialog.showSnackBar(
+          context: context,
+          message: e.getUserMessage(),
+          backgroundColor: Colors.redAccent,
+        );
+      }
+    } catch (e) {
+      log('Directory load failure: $e');
+      if (mounted) {
+        SnackBarDialog.showSnackBar(
+          context: context,
+          message: '서버 응답이 올바르지 않아 데이터를 불러오지 못했습니다.',
+          backgroundColor: Colors.redAccent,
+        );
+      }
     } finally {
       // 초기 로딩 완료
       if (mounted) {
@@ -253,6 +284,19 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     } catch (e, stackTrace) {
       log('Error loading subfolders locally: $e');
       log(stackTrace.toString());
+      await AppErrorReporter.report(
+        e,
+        stackTrace,
+        source: 'directory_load_subfolders',
+        severity: AppErrorSeverity.error,
+      );
+      if (mounted) {
+        SnackBarDialog.showSnackBar(
+          context: context,
+          message: '폴더 목록을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.',
+          backgroundColor: Colors.redAccent,
+        );
+      }
     } finally {
       if (mounted) {
         setState(() {
@@ -384,6 +428,19 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     } catch (e, stackTrace) {
       log('Error loading problems locally: $e');
       log(stackTrace.toString());
+      await AppErrorReporter.report(
+        e,
+        stackTrace,
+        source: 'directory_load_problems',
+        severity: AppErrorSeverity.error,
+      );
+      if (mounted) {
+        SnackBarDialog.showSnackBar(
+          context: context,
+          message: '문제 목록을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.',
+          backgroundColor: Colors.redAccent,
+        );
+      }
     } finally {
       if (mounted) {
         setState(() {
@@ -467,6 +524,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     final authService = Provider.of<UserProvider>(context);
     final themeProvider = Provider.of<ThemeHandler>(context);
     final foldersProvider = Provider.of<FoldersProvider>(context);
+    final reviewDueProvider = Provider.of<ReviewDueProvider>(context);
 
     return PopScope(
         canPop: true,
@@ -483,6 +541,10 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                     padding: const EdgeInsets.all(20),
                     child: Column(
                       children: [
+                        if (widget.folderId == null &&
+                            reviewDueProvider.dueCount > 0)
+                          _buildReviewDueBadge(
+                              context, reviewDueProvider, themeProvider),
                         _buildFolderAndProblemGrid(themeProvider),
                       ],
                     ),
@@ -517,6 +579,21 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
           padding: const EdgeInsets.only(right: 16.0), // 우측에 여백 추가
           child: Row(
             children: [
+              if (!_isSelectionMode)
+                IconButton(
+                  icon: Icon(
+                    Icons.search,
+                    color: themeProvider.primaryColor,
+                  ),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const TagProblemSearchScreen(),
+                      ),
+                    );
+                  },
+                ),
               IconButton(
                 icon: Icon(
                   _isSelectionMode ? Icons.close : Icons.more_vert,
@@ -1575,81 +1652,23 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
             problem.problemImageDataList!.isNotEmpty
         ? problem.problemImageDataList!.first.imageUrl
         : null;
+    final title =
+        problem.reference?.isNotEmpty == true ? problem.reference! : '제목 없음';
 
-    return Container(
-      padding: const EdgeInsets.all(12.0),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.2),
-            spreadRadius: 1,
-            blurRadius: 5,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          SizedBox(
-            width: 50,
-            height: 70,
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(8.0),
-              child: isSelected
-                  ? Icon(Icons.check, color: themeProvider.primaryColor)
-                  : DisplayImage(
-                      imagePath: imageUrl,
-                      fit: BoxFit.cover,
-                    ),
-            ),
-          ),
-          const SizedBox(width: 20),
-          Expanded(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    /*
-                    _getTemplateIcon(problem.templateType!),
-                    const SizedBox(width: 8),
-
-                     */
-                    Flexible(
-                      child: StandardText(
-                        text: (problem.reference != null &&
-                                problem.reference!.isNotEmpty)
-                            ? problem.reference!
-                            : '제목 없음',
-                        color: Colors.black,
-                        fontSize: 18,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                StandardText(
-                  text: problem.createdAt != null
-                      ? '작성 일시: ${formatDateTime(problem.createdAt!)}'
-                      : '작성 일시: 정보 없음',
-                  fontSize: 12,
-                  color: Colors.grey,
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
+    return ProblemThumbnailCard(
+      title: title,
+      imageUrl: imageUrl,
+      tags: problem.tags,
+      solveCount: problem.solveCount,
+      lastSolvedAt: problem.lastSolvedAt,
+      themeProvider: themeProvider,
+      isSelected: isSelected,
     );
   }
 
   Widget _buildBottomActionButtons(ThemeHandler themeProvider) {
-    final selectedCount = _selectedFolderIds.length + _selectedProblemIds.length;
+    final selectedCount =
+        _selectedFolderIds.length + _selectedProblemIds.length;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
       color: Colors.white,
@@ -2022,5 +2041,99 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         await _loadFolderData();
       }
     });
+  }
+
+  Widget _buildReviewDueBadge(
+    BuildContext context,
+    ReviewDueProvider reviewDueProvider,
+    ThemeHandler themeProvider,
+  ) {
+    final data = reviewDueProvider.data;
+    final overdueCount = data?.overdueCount ?? 0;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: InkWell(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const ReviewDueScreen()),
+          );
+        },
+        borderRadius: BorderRadius.circular(15),
+        child: Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(15),
+            border: Border.all(color: Colors.grey[300]!, width: 1),
+            boxShadow: [
+              BoxShadow(
+                color: themeProvider.primaryColor.withValues(alpha: 0.1),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: themeProvider.primaryColor.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  Icons.auto_stories_outlined,
+                  color: themeProvider.primaryColor,
+                  size: 16,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const StandardText(
+                          text: '추천 복습 문제',
+                          fontSize: 14,
+                          color: Colors.black87,
+                        ),
+                        const SizedBox(width: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 7, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: themeProvider.primaryColor,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: StandardText(
+                            text: '${reviewDueProvider.dueCount}개',
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
+                    if (overdueCount > 0) ...[
+                      const SizedBox(height: 2),
+                      StandardText(
+                        text: '이 중 ${overdueCount}개는 밀린 문제예요',
+                        fontSize: 11,
+                        color: Colors.orange.shade600,
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              Icon(Icons.chevron_right, size: 20, color: Colors.grey[400]),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }

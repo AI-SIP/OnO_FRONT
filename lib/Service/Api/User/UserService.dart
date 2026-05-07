@@ -11,6 +11,7 @@ class UserService {
       method: 'POST',
       url: '${AppConfig.baseUrl}/api/auth/signup/guest',
       requiredToken: false,
+      showErrorSnackBar: false,
     );
   }
 
@@ -24,13 +25,15 @@ class UserService {
       url: '${AppConfig.baseUrl}/api/auth/signup/member',
       body: userRegisterModel.toJson(),
       requiredToken: false,
+      showErrorSnackBar: false,
     );
   }
 
-  Future<UserInfoModel> fetchUserInfo() async {
+  Future<UserInfoModel> fetchUserInfo({bool showErrorSnackBar = true}) async {
     final data = await httpService.sendRequest(
       method: 'GET',
       url: '${AppConfig.baseUrl}/api/users',
+      showErrorSnackBar: showErrorSnackBar,
     );
 
     return UserInfoModel.fromJson(data);
@@ -41,6 +44,14 @@ class UserService {
       method: 'PATCH',
       url: '${AppConfig.baseUrl}/api/users',
       body: userRegisterModel?.toJson(),
+    );
+  }
+
+  Future<void> updateNotificationSettings(bool enabled) async {
+    await httpService.sendRequest(
+      method: 'PATCH',
+      url: '${AppConfig.baseUrl}/api/users/notification-settings',
+      body: {'notificationEnabled': enabled},
     );
   }
 

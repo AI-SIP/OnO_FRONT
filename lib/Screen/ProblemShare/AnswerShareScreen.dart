@@ -16,6 +16,8 @@ import '../../Module/Text/StandardText.dart';
 import '../../Module/Text/UnderlinedText.dart';
 import '../../Module/Theme/GridPainter.dart';
 import '../../Module/Theme/ThemeHandler.dart';
+import '../../Util/AppErrorReporter.dart';
+import '../../Util/AppSnackBar.dart';
 
 class AnswerShareScreen extends StatefulWidget {
   final ProblemModel problem;
@@ -256,12 +258,13 @@ class _AnswerShareScreenState extends State<AnswerShareScreen> {
 
       await Future.delayed(const Duration(milliseconds: 30));
 
+      if (!mounted) return;
+      final pixelRatio = MediaQuery.of(context).devicePixelRatio;
       RenderRepaintBoundary boundary = widget._globalKey.currentContext!
           .findRenderObject() as RenderRepaintBoundary;
 
       // 이미지를 캡처합니다.
-      ui.Image image = await boundary.toImage(
-          pixelRatio: MediaQuery.of(context).devicePixelRatio);
+      ui.Image image = await boundary.toImage(pixelRatio: pixelRatio);
 
       // 불투명한 배경을 가진 새로운 캔버스를 생성합니다.
       final paint = Paint();
@@ -288,12 +291,13 @@ class _AnswerShareScreenState extends State<AnswerShareScreen> {
 
       final XFile xFile = XFile(file.path);
 
+      if (!mounted) return;
       final RenderBox box = context.findRenderObject() as RenderBox;
       final rect = box.localToGlobal(Offset.zero) & box.size;
       final size = MediaQuery.of(context).size;
 
       if (rect.size.width > 0 && rect.size.height > 0) {
-        Share.shareXFiles(
+        await Share.shareXFiles(
           [xFile],
           text: '내 오답노트야! 어때?\n\nOnO 다운로드: https://ono-app.com/home',
           sharePositionOrigin: Rect.fromPoints(
@@ -303,17 +307,28 @@ class _AnswerShareScreenState extends State<AnswerShareScreen> {
         );
       } else {
         log('Invalid box size, defaulting to basic share...');
-        Share.shareXFiles(
+        await Share.shareXFiles(
           [xFile],
           text: '내 오답노트야! 어때?\n\nOnO 다운로드: https://ono-app.com/home',
         );
       }
 
       // 공유 후 화면을 닫습니다.
-      Navigator.pop(context);
+      if (mounted) {
+        Navigator.pop(context);
+      }
     } catch (e, stackTrace) {
       log('이미지 공유 실패: $e');
       log('스택 트레이스: $stackTrace');
+      await AppErrorReporter.report(
+        e,
+        stackTrace,
+        source: 'answer_share_image',
+        severity: AppErrorSeverity.error,
+      );
+      if (mounted) {
+        AppSnackBar.showError('이미지를 공유하지 못했습니다. 잠시 후 다시 시도해주세요.');
+      }
     }
   }
 }

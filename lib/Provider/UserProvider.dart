@@ -13,9 +13,10 @@ import 'package:ono/Provider/PracticeNoteProvider.dart';
 import 'package:ono/Service/Api/Problem/ProblemService.dart';
 import 'package:ono/Service/Api/User/UserService.dart';
 import 'package:ono/Service/SocialLogin/KakaoAuthService.dart';
+import 'package:ono/Util/AppErrorReporter.dart';
 import 'package:ono/Util/NotificationService.dart';
-import 'package:sentry_flutter/sentry_flutter.dart';
 
+import '../Exception/ApiException.dart';
 import '../Module/Text/StandardText.dart';
 import '../Service/Api/HttpService.dart';
 import '../Service/SocialLogin/AppleAuthService.dart';
@@ -38,7 +39,9 @@ class UserProvider with ChangeNotifier {
   UserInfoModel? userInfoModel;
 
   UserProvider(
-      this.problemsProvider, this.foldersProvider, this.practiceProvider);
+      this.problemsProvider, this.foldersProvider, this.practiceProvider) {
+    TokenProvider.registerAuthFailureHandler(_handleAuthFailure);
+  }
 
   LoginStatus _loginStatus = LoginStatus.waiting;
   bool _isFirstLogin = true;
@@ -56,7 +59,7 @@ class UserProvider with ChangeNotifier {
       final response = await userService.signInWithMember(userRegisterModel);
       log('[signInWithMember] response received');
 
-      saveUserLoginInfo(userRegisterModel?.platform);
+      await saveUserLoginInfo(userRegisterModel?.platform);
       bool isRegister = await saveUserToken(response: response);
       log('[signInWithMember] isRegister: $isRegister');
 
@@ -66,11 +69,12 @@ class UserProvider with ChangeNotifier {
       await fetchAllData();
       log('[signInWithMember] all data fetched');
 
-      LoadingDialog.hide(context);
-
       _loginStatus = LoginStatus.login;
       notifyListeners();
       log('[signInWithMember] login status set to login');
+
+      if (!context.mounted) return;
+      LoadingDialog.hide(context);
 
       if (!isRegister) {
         log('register failed!, response: ${response.toString()}');
@@ -78,7 +82,16 @@ class UserProvider with ChangeNotifier {
       }
     } catch (error, stackTrace) {
       log('[signInWithMember] error occurred: $error');
-      _handleGeneralError(context, error, stackTrace);
+      if (!context.mounted) {
+        await AppErrorReporter.report(
+          error,
+          stackTrace,
+          source: 'login',
+          severity: AppErrorSeverity.error,
+        );
+        return;
+      }
+      await _handleGeneralError(context, error, stackTrace, source: 'login');
     }
   }
 
@@ -87,21 +100,38 @@ class UserProvider with ChangeNotifier {
       LoadingDialog.show(context, '로그인 중 입니다...');
       final response = await userService.signInWithGuest();
 
-      saveUserLoginInfo("GUEST");
+      await saveUserLoginInfo('GUEST');
       bool isRegister = await saveUserToken(response: response);
 
+      await NotificationService.instance.sendTokenToServer();
       await fetchAllData();
-      LoadingDialog.hide(context);
 
       _loginStatus = LoginStatus.login;
       notifyListeners();
+
+      if (!context.mounted) return;
+      LoadingDialog.hide(context);
 
       if (!isRegister) {
         log('register failed!, response: ${response.toString()}');
         throw Exception('response: ${response.toString()}');
       }
     } catch (error, stackTrace) {
-      _handleGeneralError(context, error, stackTrace);
+      if (!context.mounted) {
+        await AppErrorReporter.report(
+          error,
+          stackTrace,
+          source: 'guest_login',
+          severity: AppErrorSeverity.error,
+        );
+        return;
+      }
+      await _handleGeneralError(
+        context,
+        error,
+        stackTrace,
+        source: 'guest_login',
+      );
     }
   }
 
@@ -118,23 +148,55 @@ class UserProvider with ChangeNotifier {
   }
 
   // 일반 오류 처리 메서드
-  void _handleGeneralError(
-      BuildContext context, Object error, StackTrace stackTrace) async {
+  Future<void> _handleGeneralError(
+    BuildContext context,
+    Object error,
+    StackTrace stackTrace, {
+    String source = 'login',
+  }) async {
     await resetUserInfo();
-    await Sentry.captureException(error, stackTrace: stackTrace);
+    await AppErrorReporter.report(
+      error,
+      stackTrace,
+      source: source,
+      severity: AppErrorSeverity.error,
+    );
+
+    if (!context.mounted) {
+      return;
+    }
 
     LoadingDialog.hide(context);
 
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
+      SnackBar(
         content: StandardText(
-          text: '로그인 과정에서 오류가 발생했습니다.',
+          text: _mapLoginErrorMessage(error),
           color: Colors.white,
           fontSize: 14,
         ),
         backgroundColor: Colors.red,
       ),
     );
+  }
+
+  String _mapLoginErrorMessage(Object error) {
+    if (error is UnauthorizedException) {
+      return '로그인 정보가 만료되었어요. 다시 시도해주세요.';
+    }
+    if (error is NetworkException || error is TimeoutException) {
+      return '네트워크가 불안정해 로그인에 실패했어요. 잠시 후 다시 시도해주세요.';
+    }
+    if (error is ServerException) {
+      return '서버 상태가 불안정해요. 잠시 후 다시 시도해주세요.';
+    }
+    if (error is BadRequestException) {
+      return '로그인 요청을 처리하지 못했어요. 다시 시도해주세요.';
+    }
+    if (error is ApiException) {
+      return '로그인 처리 중 문제가 발생했어요. 다시 시도해주세요.';
+    }
+    return '로그인 과정에서 오류가 발생했습니다. 다시 시도해주세요.';
   }
 
   void changeIsFirstLogin() {
@@ -147,8 +209,7 @@ class UserProvider with ChangeNotifier {
     FirebaseAnalytics.instance.logLogin(loginMethod: loginMethod);
   }
 
-  Future<bool> saveUserToken({dynamic? response}) async {
-    log('Server response: $response');
+  Future<bool> saveUserToken({dynamic response}) async {
     log('Response type: ${response.runtimeType}');
 
     if (response == null) {
@@ -160,9 +221,6 @@ class UserProvider with ChangeNotifier {
 
     String? accessToken = response['accessToken'] as String?;
     String? refreshToken = response['refreshToken'] as String?;
-
-    log('accessToken: $accessToken');
-    log('refreshToken: $refreshToken');
 
     if (accessToken == null || refreshToken == null) {
       _loginStatus = LoginStatus.logout;
@@ -190,9 +248,31 @@ class UserProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> fetchUserInfo() async {
-    userInfoModel = await userService.fetchUserInfo();
+  Future<void> fetchUserInfo({bool showErrorSnackBar = true}) async {
+    userInfoModel = await userService.fetchUserInfo(
+      showErrorSnackBar: showErrorSnackBar,
+    );
     notifyListeners();
+  }
+
+  Future<void> updateNotificationSettings(bool enabled) async {
+    if (userInfoModel == null) return;
+    final previous = userInfoModel!.notificationEnabled;
+    userInfoModel!.notificationEnabled = enabled;
+    notifyListeners();
+    try {
+      await userService.updateNotificationSettings(enabled);
+    } catch (e, stackTrace) {
+      userInfoModel!.notificationEnabled = previous;
+      notifyListeners();
+      await AppErrorReporter.report(
+        e,
+        stackTrace,
+        source: 'notification_settings_update',
+        severity: AppErrorSeverity.warning,
+      );
+      rethrow;
+    }
   }
 
   Future<void> updateUser({
@@ -208,42 +288,100 @@ class UserProvider with ChangeNotifier {
     );
 
     await userService.updateUserProfile(updateUserRegisterModel);
-    await fetchUserInfo();
+    await _runPostMutationRefresh(
+      () => fetchUserInfo(showErrorSnackBar: false),
+      source: 'user_update_info_refresh',
+    );
   }
 
   Future<void> autoLogin() async {
-    try {
-      String? refreshToken = await tokenProvider.getRefreshToken();
+    String? refreshToken = await tokenProvider.getRefreshToken();
 
-      if (refreshToken == null) {
-        _loginStatus = LoginStatus.logout;
-      } else {
-        await tokenProvider.refreshAccessToken();
-        await fetchAllData();
-        _isFirstLogin = false;
-        _loginStatus = LoginStatus.login;
-      }
-    } catch (error, stackTrace) {
-      // 자동 로그인 실패 시 로그아웃 상태로 변경
-      log('자동 로그인 실패: $error');
-      await Sentry.captureException(error, stackTrace: stackTrace);
+    if (refreshToken == null) {
       _loginStatus = LoginStatus.logout;
-      await resetUserInfo();
+      notifyListeners();
+      return;
+    }
+
+    try {
+      await tokenProvider.refreshAccessToken();
+      _isFirstLogin = false;
+      _loginStatus = LoginStatus.login;
+
+      try {
+        await fetchAllData();
+      } catch (error, stackTrace) {
+        // 데이터 로딩 실패만으로 세션을 끊지 않음
+        log('자동 로그인 후 데이터 로딩 실패: $error');
+        await AppErrorReporter.report(
+          error,
+          stackTrace,
+          source: 'auto_login_fetch_data',
+          severity: AppErrorSeverity.warning,
+        );
+      }
+    } on UnauthorizedException catch (error, stackTrace) {
+      log('자동 로그인 실패(인증 만료): $error');
+      await AppErrorReporter.report(
+        error,
+        stackTrace,
+        source: 'auto_login_unauthorized',
+        severity: AppErrorSeverity.warning,
+      );
+      await _handleAuthFailure();
+    } catch (error, stackTrace) {
+      // 일시적인 네트워크 오류 등은 로그인 상태 유지
+      log('자동 로그인 일시 실패: $error');
+      await AppErrorReporter.report(
+        error,
+        stackTrace,
+        source: 'auto_login_refresh',
+        severity: AppErrorSeverity.warning,
+      );
+      _isFirstLogin = false;
+      _loginStatus = LoginStatus.login;
     } finally {
       notifyListeners();
+    }
+  }
+
+  Future<void> maintainSessionOnResume() async {
+    final refreshToken = await tokenProvider.getRefreshToken();
+    if (refreshToken == null) return;
+
+    try {
+      await tokenProvider.refreshAccessTokenIfNeeded();
+    } on UnauthorizedException catch (error, stackTrace) {
+      log('앱 복귀 중 인증 만료: $error');
+      await AppErrorReporter.report(
+        error,
+        stackTrace,
+        source: 'session_resume_unauthorized',
+        severity: AppErrorSeverity.warning,
+      );
+      await _handleAuthFailure();
+    } catch (error, stackTrace) {
+      // 복귀 순간 네트워크 이슈로는 세션을 끊지 않음
+      log('앱 복귀 중 세션 갱신 일시 실패: $error');
+      await AppErrorReporter.report(
+        error,
+        stackTrace,
+        source: 'session_resume_refresh',
+        severity: AppErrorSeverity.warning,
+      );
     }
   }
 
   Future<void> signOut() async {
     String? loginMethod = await storage.read(key: 'loginMethod');
     if (loginMethod == 'google') {
-      googleAuthService.logoutGoogleSignIn();
+      await googleAuthService.logoutGoogleSignIn();
     } else if (loginMethod == 'apple') {
       // apple 은 별도의 로그아웃 로직이 없습니다.
     } else if (loginMethod == 'kakao') {
       await kakaoAuthService.logoutKakaoSignIn();
     } else if (loginMethod == 'guest') {
-      deleteAccount();
+      await deleteAccount();
     }
 
     await userService.logoutAccount();
@@ -265,7 +403,7 @@ class UserProvider with ChangeNotifier {
     } else if (loginMethod == 'guest') {
     } else {}
 
-    userService.deleteAccount();
+    await userService.deleteAccount();
     await resetUserInfo();
 
     await FirebaseAnalytics.instance.logEvent(
@@ -285,5 +423,28 @@ class UserProvider with ChangeNotifier {
     problemsProvider.clear();
     foldersProvider.clear();
     practiceProvider.clear();
+    notifyListeners();
+  }
+
+  Future<void> _runPostMutationRefresh(
+    Future<void> Function() refresh, {
+    required String source,
+  }) async {
+    try {
+      await refresh();
+    } catch (e, stackTrace) {
+      log('Post-mutation refresh failed ($source): $e');
+      await AppErrorReporter.report(
+        e,
+        stackTrace,
+        source: source,
+        severity: AppErrorSeverity.warning,
+      );
+    }
+  }
+
+  Future<void> _handleAuthFailure() async {
+    if (_loginStatus == LoginStatus.logout) return;
+    await resetUserInfo();
   }
 }

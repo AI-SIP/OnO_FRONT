@@ -20,11 +20,15 @@ import 'ProblemSolveRegisterTemplate.dart';
 class ProblemSolveRegisterScreen extends StatefulWidget {
   final int problemId;
   final VoidCallback onRefresh;
+  final List<File> initialSolutionImages;
+  final int? initialTimeSpentSeconds;
 
   const ProblemSolveRegisterScreen({
     super.key,
     required this.problemId,
     required this.onRefresh,
+    this.initialSolutionImages = const [],
+    this.initialTimeSpentSeconds,
   });
 
   @override
@@ -50,6 +54,8 @@ class _ProblemSolveRegisterScreenState
             child: ProblemSolveRegisterTemplate(
               key: _templateKey,
               problemId: widget.problemId,
+              initialSolutionImages: widget.initialSolutionImages,
+              initialTimeSpentSeconds: widget.initialTimeSpentSeconds,
             ),
           ),
           _buildSubmitButton(context, themeProvider),
@@ -61,7 +67,7 @@ class _ProblemSolveRegisterScreenState
   AppBar _buildAppBar(ThemeHandler themeProvider) {
     return AppBar(
       title: StandardText(
-        text: '복습 완료',
+        text: '문제 복습 인증',
         fontSize: 18,
         color: themeProvider.primaryColor,
       ),
@@ -72,14 +78,8 @@ class _ProblemSolveRegisterScreenState
   }
 
   Widget _buildSubmitButton(BuildContext context, ThemeHandler themeProvider) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isWide = screenWidth >= 600;
-
     return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: isWide ? screenWidth * 0.2 : 35.0,
-        vertical: 20.0,
-      ),
+      padding: const EdgeInsets.fromLTRB(24.0, 12.0, 24.0, 20.0),
       decoration: BoxDecoration(
         color: Colors.white,
         boxShadow: [
@@ -92,7 +92,7 @@ class _ProblemSolveRegisterScreenState
       ),
       child: SizedBox(
         width: double.infinity,
-        height: 56,
+        height: 50,
         child: ElevatedButton(
           onPressed: () => _handleSubmit(context, themeProvider),
           style: ElevatedButton.styleFrom(
@@ -119,6 +119,7 @@ class _ProblemSolveRegisterScreenState
         Provider.of<ProblemsProvider>(context, listen: false);
     final practiceProvider =
         Provider.of<ProblemPracticeProvider>(context, listen: false);
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
     final problemSolveService = ProblemSolveService();
 
     // 템플릿에서 데이터 가져오기
@@ -141,9 +142,7 @@ class _ProblemSolveRegisterScreenState
         answerStatus: reviewData['answerStatus'] as AnswerStatus,
         reflection: reviewData['reflection'] as String?,
         improvements: reviewData['improvements'] as List<ImprovementType>,
-        timeSpentSeconds: (reviewData['timeSpentMinutes'] as int?) != null
-            ? (reviewData['timeSpentMinutes'] as int) * 60
-            : null,
+        timeSpentSeconds: reviewData['timeSpentSeconds'] as int?,
       );
 
       final practiceRecordId =
@@ -160,7 +159,7 @@ class _ProblemSolveRegisterScreenState
       // 3. 문제 정보 갱신
       await problemsProvider.fetchProblem(widget.problemId);
 
-      // 4. 복습 노트 갱신
+      // 4. 복습 세트 갱신
       if (practiceProvider.currentPracticeNote != null) {
         await practiceProvider.moveToPractice(
           practiceProvider.currentPracticeNote!.practiceId,
@@ -170,7 +169,7 @@ class _ProblemSolveRegisterScreenState
       FirebaseAnalytics.instance.logEvent(name: 'problem_repeat');
 
       // 5. 유저 정보 갱신 (경험치 업데이트)
-      await Provider.of<UserProvider>(context, listen: false).fetchUserInfo();
+      await userProvider.fetchUserInfo();
 
       LoadingDialog.hide(context);
 
@@ -192,7 +191,7 @@ class _ProblemSolveRegisterScreenState
         LoadingDialog.hide(context);
         SnackBarDialog.showSnackBar(
           context: context,
-          message: '복습 기록 저장에 실패했습니다: $e',
+          message: '복습 기록 저장에 실패했습니다. 잠시 후 다시 시도해주세요.',
           backgroundColor: Colors.red,
         );
       }

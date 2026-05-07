@@ -7,6 +7,7 @@ import 'package:ono/Model/Folder/FolderThumbnailModel.dart';
 import 'package:ono/Provider/ProblemsProvider.dart';
 import 'package:ono/Service/Api/FileUpload/FileUploadService.dart';
 import 'package:ono/Service/Api/Folder/FolderService.dart';
+import 'package:ono/Util/AppErrorReporter.dart';
 
 import '../Model/Folder/FolderModel.dart';
 import '../Model/Problem/ProblemModel.dart';
@@ -182,8 +183,14 @@ class FoldersProvider with ChangeNotifier {
   }
 
   // 폴더 메타데이터만 fetch (이름, 부모폴더 등)
-  Future<void> fetchFolderMetadata(int folderId) async {
-    final folder = await folderService.fetchFolder(folderId);
+  Future<void> fetchFolderMetadata(
+    int folderId, {
+    bool showErrorSnackBar = true,
+  }) async {
+    final folder = await folderService.fetchFolder(
+      folderId,
+      showErrorSnackBar: showErrorSnackBar,
+    );
     _upsertFolder(folder);
     log('Folder metadata fetched: $folderId');
     notifyListeners();
@@ -257,6 +264,13 @@ class FoldersProvider with ChangeNotifier {
     } catch (e, stackTrace) {
       log('Error loading subfolders: $e');
       log(stackTrace.toString());
+      await AppErrorReporter.report(
+        e,
+        stackTrace,
+        source: 'folders_load_subfolders',
+        severity: AppErrorSeverity.error,
+      );
+      rethrow;
     } finally {
       state.isLoadingSubfolders = false;
       notifyListeners();
@@ -289,6 +303,13 @@ class FoldersProvider with ChangeNotifier {
     } catch (e, stackTrace) {
       log('Error loading problems: $e');
       log(stackTrace.toString());
+      await AppErrorReporter.report(
+        e,
+        stackTrace,
+        source: 'folders_load_problems',
+        severity: AppErrorSeverity.error,
+      );
+      rethrow;
     } finally {
       state.isLoadingProblems = false;
       notifyListeners();
@@ -320,7 +341,13 @@ class FoldersProvider with ChangeNotifier {
         await folderService.registerFolder(folderRegisterModel);
 
     // 생성된 폴더 메타데이터 fetch
-    await fetchFolderMetadata(createdFolderId);
+    await _runPostMutationRefresh(
+      () => fetchFolderMetadata(
+        createdFolderId,
+        showErrorSnackBar: false,
+      ),
+      source: 'folder_create_metadata_refresh',
+    );
 
     // 부모 폴더의 캐시 갱신 (하위 폴더 목록 다시 로드)
     await refreshFolder(parentFolderId);
@@ -340,7 +367,13 @@ class FoldersProvider with ChangeNotifier {
     await folderService.updateFolderInfo(folderRegisterModel);
 
     // 메타데이터 갱신
-    await fetchFolderMetadata(folderId);
+    await _runPostMutationRefresh(
+      () => fetchFolderMetadata(
+        folderId,
+        showErrorSnackBar: false,
+      ),
+      source: 'folder_update_metadata_refresh',
+    );
 
     // 부모 폴더 캐시 갱신
     if (parentId != null) {
@@ -382,6 +415,23 @@ class FoldersProvider with ChangeNotifier {
   Future<void> refreshCurrentFolder() async {
     if (_currentFolder == null) return;
     await refreshFolder(_currentFolder!.folderId);
+  }
+
+  Future<void> _runPostMutationRefresh(
+    Future<void> Function() refresh, {
+    required String source,
+  }) async {
+    try {
+      await refresh();
+    } catch (e, stackTrace) {
+      log('Post-mutation refresh failed ($source): $e');
+      await AppErrorReporter.report(
+        e,
+        stackTrace,
+        source: source,
+        severity: AppErrorSeverity.warning,
+      );
+    }
   }
 
   // 캐시 전체 초기화 (로그아웃 시 등)

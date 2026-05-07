@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:developer';
 import 'dart:io';
 
@@ -9,6 +10,7 @@ import 'package:ono/Provider/FoldersProvider.dart';
 import 'package:ono/Provider/ProblemsProvider.dart';
 import 'package:ono/Provider/UserProvider.dart';
 import 'package:ono/Screen/ProblemDetail/ProblemDetailScreen.dart';
+import 'package:ono/Util/AppErrorReporter.dart';
 import 'package:provider/provider.dart';
 
 import '../../Exception/ApiException.dart';
@@ -41,6 +43,23 @@ class _FolderNavigationButtonsState extends State<FolderNavigationButtons> {
   final ImagePickerHandler _imagePickerHandler = ImagePickerHandler();
   XFile? selectedImage;
 
+  void _reportSolveError(
+    Object error,
+    StackTrace stackTrace, {
+    AppErrorSeverity severity = AppErrorSeverity.error,
+    bool sendToDiscord = true,
+  }) {
+    unawaited(
+      AppErrorReporter.report(
+        error,
+        stackTrace,
+        source: 'problem_solve',
+        severity: severity,
+        sendToDiscord: sendToDiscord,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeHandler>(context);
@@ -59,12 +78,9 @@ class _FolderNavigationButtonsState extends State<FolderNavigationButtons> {
       }
     }
 
-    int previousProblemId = currentIndex > 0
-        ? problemList[currentIndex - 1].problemId
-        : problemList.last.problemId;
-    int nextProblemId = currentIndex < problemList.length - 1
-        ? problemList[currentIndex + 1].problemId
-        : problemList.first.problemId;
+    if (currentIndex == -1) {
+      return const Center();
+    }
 
     return Container(
       width: double.infinity,
@@ -299,56 +315,81 @@ class _FolderNavigationButtonsState extends State<FolderNavigationButtons> {
                                         isLoading = true;
                                       });
 
+                                      final rootNavigator = Navigator.of(
+                                        context,
+                                        rootNavigator: true,
+                                      );
+                                      bool loadingHidden = false;
                                       LoadingDialog.show(context, '오답 복습 중...');
+                                      final solveImage =
+                                          File(selectedImage!.path);
 
                                       try {
                                         // 파일을 직접 서버로 전송
                                         final problemsProvider =
-                                            Provider.of<ProblemsProvider>(context,
+                                            Provider.of<ProblemsProvider>(
+                                                context,
+                                                listen: false);
+                                        final userProvider =
+                                            Provider.of<UserProvider>(context,
                                                 listen: false);
 
                                         await problemsProvider.problemService
                                             .registerProblemImageData(
                                           problemId: problemId,
-                                          problemImages: [File(selectedImage!.path)],
+                                          problemImages: [solveImage],
                                           problemImageTypes: ['SOLVE_IMAGE'],
                                         );
 
                                         // 문제 정보 갱신
-                                        await problemsProvider.fetchProblem(problemId);
+                                        await problemsProvider
+                                            .fetchProblem(problemId);
 
                                         FirebaseAnalytics.instance.logEvent(
                                           name: 'problem_solve',
                                         );
 
                                         // 오답노트 복습 시 유저 정보 갱신 (경험치 업데이트)
-                                        await Provider.of<UserProvider>(context,
-                                                listen: false)
-                                            .fetchUserInfo();
+                                        await userProvider.fetchUserInfo();
 
+                                        if (!context.mounted) return;
                                         setState(() {
                                           isSolved = true;
                                           isLoading = false;
                                         });
 
-                                        log("problemId: ${problemId} solve");
-                                        LoadingDialog.hide(context);
+                                        log("problemId: $problemId solve");
+                                        LoadingDialog.hideFromNavigator(
+                                          rootNavigator,
+                                        );
+                                        loadingHidden = true;
                                         Navigator.of(context).pop();
 
                                         SnackBarDialog.showSnackBar(
                                           context: context,
                                           message: '복습이 완료되었습니다!',
-                                          backgroundColor: themeProvider.primaryColor,
+                                          backgroundColor:
+                                              themeProvider.primaryColor,
                                         );
 
                                         widget.onRefresh();
-                                      } on BadRequestException catch (e) {
+                                      } on BadRequestException catch (e, stackTrace) {
+                                        _reportSolveError(
+                                          e,
+                                          stackTrace,
+                                          severity: AppErrorSeverity.warning,
+                                          sendToDiscord: false,
+                                        );
+                                        if (!context.mounted) return;
                                         // 서버 에러 (예: 이미 오늘 복습 완료)
                                         setState(() {
                                           isLoading = false;
                                         });
 
-                                        LoadingDialog.hide(context);
+                                        LoadingDialog.hideFromNavigator(
+                                          rootNavigator,
+                                        );
+                                        loadingHidden = true;
                                         Navigator.of(context).pop();
 
                                         SnackBarDialog.showSnackBar(
@@ -356,45 +397,76 @@ class _FolderNavigationButtonsState extends State<FolderNavigationButtons> {
                                           message: e.getUserMessage(),
                                           backgroundColor: Colors.red,
                                         );
-                                      } on NetworkException catch (e) {
+                                      } on NetworkException catch (e, stackTrace) {
+                                        _reportSolveError(
+                                          e,
+                                          stackTrace,
+                                          severity: AppErrorSeverity.warning,
+                                          sendToDiscord: false,
+                                        );
+                                        if (!context.mounted) return;
                                         // 네트워크 에러
                                         setState(() {
                                           isLoading = false;
                                         });
 
-                                        LoadingDialog.hide(context);
+                                        LoadingDialog.hideFromNavigator(
+                                          rootNavigator,
+                                        );
+                                        loadingHidden = true;
 
                                         SnackBarDialog.showSnackBar(
                                           context: context,
                                           message: e.getUserMessage(),
                                           backgroundColor: Colors.orange,
                                         );
-                                      } on TimeoutException catch (e) {
+                                      } on TimeoutException catch (e, stackTrace) {
+                                        _reportSolveError(
+                                          e,
+                                          stackTrace,
+                                          severity: AppErrorSeverity.warning,
+                                          sendToDiscord: false,
+                                        );
+                                        if (!context.mounted) return;
                                         // 타임아웃 에러
                                         setState(() {
                                           isLoading = false;
                                         });
 
-                                        LoadingDialog.hide(context);
+                                        LoadingDialog.hideFromNavigator(
+                                          rootNavigator,
+                                        );
+                                        loadingHidden = true;
 
                                         SnackBarDialog.showSnackBar(
                                           context: context,
                                           message: e.getUserMessage(),
                                           backgroundColor: Colors.orange,
                                         );
-                                      } catch (e) {
+                                      } catch (e, stackTrace) {
+                                        _reportSolveError(e, stackTrace);
+                                        if (!context.mounted) return;
                                         // 기타 에러
                                         setState(() {
                                           isLoading = false;
                                         });
 
-                                        LoadingDialog.hide(context);
+                                        LoadingDialog.hideFromNavigator(
+                                          rootNavigator,
+                                        );
+                                        loadingHidden = true;
 
                                         SnackBarDialog.showSnackBar(
                                           context: context,
                                           message: '알 수 없는 오류가 발생했습니다.',
                                           backgroundColor: Colors.red,
                                         );
+                                      } finally {
+                                        if (!loadingHidden) {
+                                          LoadingDialog.hideFromNavigator(
+                                            rootNavigator,
+                                          );
+                                        }
                                       }
                                     }
                                   },

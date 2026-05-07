@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
 import 'package:ono/Module/Dialog/LoadingDialog.dart';
-import 'package:ono/Module/Dialog/SnackBarDialog.dart';
 import 'package:provider/provider.dart';
 
 import '../../Model/PracticeNote/PracticeNoteThumbnailModel.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/PracticeNoteProvider.dart';
+import '../../Util/AppSnackBar.dart';
 import 'PracticeDetailScreen.dart';
 import 'PracticeProblemSelectionScreen.dart';
 
@@ -56,7 +56,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
     final themeProvider = Provider.of<ThemeHandler>(context);
     final practiceProvider = Provider.of<ProblemPracticeProvider>(context);
 
-    // 복습 노트 생성/수정 후 타임스탬프가 변경되면 자동 새로고침
+    // 복습 세트 생성/수정 후 타임스탬프가 변경되면 자동 새로고침
     if (practiceProvider.practiceRefreshTimestamp !=
             _lastPracticeRefreshTimestamp &&
         practiceProvider.practiceRefreshTimestamp > 0) {
@@ -102,7 +102,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
                 materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 icon: const Icon(Icons.add, color: Colors.white),
                 label: const StandardText(
-                  text: '복습노트 추가',
+                  text: '복습 세트 추가',
                   fontSize: 15,
                   color: Colors.white,
                   fontWeight: FontWeight.w600,
@@ -202,7 +202,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
                         ),
                         const SizedBox(width: 12),
                         StandardText(
-                          text: '복습 노트 편집하기',
+                          text: '복습 세트 편집하기',
                           fontSize: 18,
                           fontWeight: FontWeight.w600,
                           color: Colors.black87,
@@ -214,7 +214,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
                     _buildActionItem(
                       icon: Icons.add,
                       iconColor: themeProvider.primaryColor,
-                      title: '복습 노트 생성하기',
+                      title: '복습 세트 생성하기',
                       onTap: () async {
                         Navigator.pop(context);
                         await _navigateToPracticeCreate();
@@ -224,7 +224,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
                     _buildActionItem(
                       icon: Icons.delete_forever,
                       iconColor: Colors.red,
-                      title: '복습 노트 삭제하기',
+                      title: '복습 세트 삭제하기',
                       titleColor: Colors.red,
                       onTap: () {
                         Navigator.pop(context);
@@ -391,7 +391,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
                     ),
                     const SizedBox(width: 12),
                     const StandardText(
-                      text: '복습 노트 삭제',
+                      text: '복습 세트 삭제',
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
                       color: Colors.black87,
@@ -401,7 +401,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
                 const SizedBox(height: 20),
                 // 내용
                 const StandardText(
-                  text: '정말로 이 복습 노트를 삭제하시겠습니까?',
+                  text: '정말로 이 복습 세트를 삭제하시겠습니까?',
                   fontSize: 15,
                   color: Colors.black87,
                   textAlign: TextAlign.center,
@@ -446,13 +446,17 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
                             _selectedPracticeIds.clear();
                           });
 
-                          Future.delayed(Duration.zero, () {
-                            SnackBarDialog.showSnackBar(
-                              context: context,
-                              message: '복습 노트가 삭제되었습니다!',
+                          AppSnackBar.messengerKey.currentState?.showSnackBar(
+                            SnackBar(
+                              content: const StandardText(
+                                text: '복습 세트가 삭제되었습니다!',
+                                fontSize: 14,
+                                color: Colors.white,
+                              ),
                               backgroundColor: themeProvider.primaryColor,
-                            );
-                          });
+                              duration: const Duration(seconds: 2),
+                            ),
+                          );
                         },
                         style: TextButton.styleFrom(
                           padding: const EdgeInsets.symmetric(
@@ -500,7 +504,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
               ),
               const SizedBox(height: 40),
               const StandardText(
-                text: '작성한 오답노트로 복습 노트를\n 생성해 시험을 준비하세요!',
+                text: '복습 세트에 오답노트를 담아\n 편리하게 시험을 준비하세요!',
                 fontSize: 16,
                 color: Colors.black,
                 textAlign: TextAlign.center,
@@ -520,7 +524,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
                   ),
                 ),
                 child: const StandardText(
-                  text: '복습 노트 추가하기',
+                  text: '복습 세트 추가하기',
                   fontSize: 16,
                   color: Colors.white,
                 ),
@@ -595,7 +599,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
   void _navigateToPracticeDetail(int practiceId) async {
     final practiceProvider =
         Provider.of<ProblemPracticeProvider>(context, listen: false);
-    LoadingDialog.show(context, '복습 노트 로딩 중...');
+    LoadingDialog.show(context, '복습 세트 로딩 중...');
 
     // 상세 정보 조회 및 이동
     await practiceProvider.fetchPracticeNote(practiceId);

@@ -344,6 +344,10 @@ class _TemplateSelectionScreenState extends State<TemplateSelectionScreen> {
           LoadingDialog.show(context, '템플릿 불러오는 중...');
           final result = null;
 
+          if (!context.mounted) {
+            return;
+          }
+
           if (result != null) {
             final problemModel = ProblemModel(
               problemId: result['problemId'],
@@ -361,6 +365,7 @@ class _TemplateSelectionScreenState extends State<TemplateSelectionScreen> {
               },
             );
           } else {
+            LoadingDialog.hide(context);
             SnackBarDialog.showSnackBar(
               context: context,
               message: "문제 이미지 업로드에 실패했습니다. 다시 시도해주세요.",

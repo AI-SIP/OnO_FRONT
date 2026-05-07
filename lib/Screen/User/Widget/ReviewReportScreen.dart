@@ -460,7 +460,7 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
             Expanded(
               child: _buildStatCard(
                 themeProvider,
-                '복습노트 열람',
+                '복습 세트 열람',
                 '${data.notePracticeCount}회',
                 Icons.menu_book_rounded,
               ),

@@ -1,21 +1,28 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:ono/Model/PracticeNote/PracticeNoteDetailModel.dart';
+import 'package:ono/Model/Tag/TagModel.dart';
 import 'package:ono/Provider/PracticeNoteProvider.dart';
 import 'package:ono/Screen/PracticeNote/PracticeTitleWriteScreen.dart';
+import 'package:ono/Service/Api/Tag/TagService.dart';
 import 'package:provider/provider.dart';
 
 import '../../Model/Folder/FolderThumbnailModel.dart';
 import '../../Model/PracticeNote/PracticeNoteRegisterModel.dart';
 import '../../Model/PracticeNote/PracticeNoteUpdateModel.dart';
 import '../../Model/Problem/ProblemModel.dart';
-import '../../Model/Problem/TemplateType.dart';
-import '../../Module/Image/DisplayImage.dart';
+import '../../Module/Problem/ProblemThumbnailCard.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/NoteIconHandler.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/FoldersProvider.dart';
 import '../../Provider/ProblemsProvider.dart';
+import '../../Util/AppErrorReporter.dart';
+import '../../Util/AppSnackBar.dart';
+
+enum _PracticeSearchMode { folder, tag, title }
 
 class PracticeProblemSelectionScreen extends StatefulWidget {
   final PracticeNoteDetailModel? practiceModel;
@@ -29,10 +36,20 @@ class PracticeProblemSelectionScreen extends StatefulWidget {
 
 class _PracticeProblemSelectionScreenState
     extends State<PracticeProblemSelectionScreen> {
+  _PracticeSearchMode _searchMode = _PracticeSearchMode.folder;
+
   int? selectedFolderId;
   List<ProblemModel> selectedProblems = [];
   List<FolderThumbnailModel> allFolders = [];
   late final List<int> _originalProblemIds;
+
+  final TagService _tagService = TagService();
+  final TextEditingController _titleQueryController = TextEditingController();
+  Timer? _titleDebounce;
+  List<TagModel> _tags = [];
+  int? _selectedTagId;
+  bool _isLoadingTags = false;
+  String _titleQuery = '';
 
   // 폴더 페이징 상태
   int? _folderCursor;
@@ -55,9 +72,11 @@ class _PracticeProblemSelectionScreenState
     _problemScrollController = ScrollController();
     _folderScrollController.addListener(_onFolderScroll);
     _problemScrollController.addListener(_onProblemScroll);
+    _titleQueryController.addListener(_onTitleQueryChanged);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadInitialFolders();
+      _loadTags();
       if (widget.practiceModel != null) {
         _originalProblemIds = widget.practiceModel!.problemIdList;
         _fetchProblems();
@@ -71,6 +90,9 @@ class _PracticeProblemSelectionScreenState
   void dispose() {
     _folderScrollController.removeListener(_onFolderScroll);
     _problemScrollController.removeListener(_onProblemScroll);
+    _titleQueryController.removeListener(_onTitleQueryChanged);
+    _titleDebounce?.cancel();
+    _titleQueryController.dispose();
     _folderScrollController.dispose();
     _problemScrollController.dispose();
     super.dispose();
@@ -92,6 +114,16 @@ class _PracticeProblemSelectionScreenState
         _loadMoreProblems();
       }
     }
+  }
+
+  void _onTitleQueryChanged() {
+    if (_searchMode != _PracticeSearchMode.title) return;
+    _titleDebounce?.cancel();
+    _titleDebounce = Timer(const Duration(milliseconds: 300), () {
+      final query = _titleQueryController.text.trim();
+      if (query == _titleQuery) return;
+      _searchTitleProblems(query, isInitial: true);
+    });
   }
 
   Future<void> _fetchProblems() async {
@@ -126,12 +158,19 @@ class _PracticeProblemSelectionScreenState
           _loadInitialProblems(allFolders[0].folderId);
         }
       });
-    } catch (e) {
-      print('Error loading folders: $e');
+    } catch (e, stackTrace) {
+      await _reportAndShowLoadError(
+        e,
+        stackTrace,
+        source: 'practice_selection_load_folders',
+        message: '폴더 목록을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.',
+      );
     } finally {
-      setState(() {
-        _isLoadingFolders = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoadingFolders = false;
+        });
+      }
     }
   }
 
@@ -155,12 +194,77 @@ class _PracticeProblemSelectionScreenState
         _folderCursor = response.nextCursor;
         _folderHasNext = response.hasNext;
       });
-    } catch (e) {
-      print('Error loading more folders: $e');
+    } catch (e, stackTrace) {
+      await _reportAndShowLoadError(
+        e,
+        stackTrace,
+        source: 'practice_selection_load_more_folders',
+        message: '폴더 목록을 더 불러오지 못했습니다. 잠시 후 다시 시도해주세요.',
+      );
     } finally {
+      if (mounted) {
+        setState(() {
+          _isLoadingFolders = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _loadTags() async {
+    setState(() => _isLoadingTags = true);
+    try {
+      final fetched = await _tagService.getMyTags();
+      fetched.sort((a, b) => a.name.compareTo(b.name));
+      if (!mounted) return;
       setState(() {
-        _isLoadingFolders = false;
+        _tags = fetched;
+        if (_tags.isNotEmpty) {
+          _selectedTagId = _tags.first.tagId;
+        }
       });
+    } catch (e, stackTrace) {
+      await _reportAndShowLoadError(
+        e,
+        stackTrace,
+        source: 'practice_selection_load_tags',
+        message: '태그 목록을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.',
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isLoadingTags = false);
+      }
+    }
+  }
+
+  Future<void> _switchSearchMode(_PracticeSearchMode mode) async {
+    if (_searchMode == mode) return;
+
+    setState(() {
+      _searchMode = mode;
+      _currentFolderProblems = [];
+      _problemCursor = null;
+      _problemHasNext = false;
+      _isLoadingProblems = false;
+    });
+
+    if (mode == _PracticeSearchMode.folder) {
+      if (selectedFolderId != null) {
+        await _loadInitialProblems(selectedFolderId!);
+      }
+      return;
+    }
+
+    if (mode == _PracticeSearchMode.tag) {
+      if (_selectedTagId != null) {
+        await _loadTagProblems(_selectedTagId!, isInitial: true);
+      }
+      return;
+    }
+
+    final query = _titleQueryController.text.trim();
+    _titleQuery = query;
+    if (query.isNotEmpty) {
+      await _searchTitleProblems(query, isInitial: true);
     }
   }
 
@@ -185,42 +289,202 @@ class _PracticeProblemSelectionScreenState
         _problemCursor = response.nextCursor;
         _problemHasNext = response.hasNext;
       });
-    } catch (e) {
-      print('Error loading problems: $e');
+    } catch (e, stackTrace) {
+      await _reportAndShowLoadError(
+        e,
+        stackTrace,
+        source: 'practice_selection_load_folder_problems',
+        message: '문제 목록을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.',
+      );
     } finally {
+      if (mounted) {
+        setState(() {
+          _isLoadingProblems = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _loadTagProblems(int tagId, {required bool isInitial}) async {
+    if (_isLoadingProblems) return;
+
+    if (isInitial) {
       setState(() {
+        _selectedTagId = tagId;
+        _isLoadingProblems = true;
+        _currentFolderProblems = [];
+        _problemCursor = null;
+        _problemHasNext = false;
+      });
+    } else {
+      if (!_problemHasNext) return;
+      setState(() {
+        _isLoadingProblems = true;
+      });
+    }
+
+    try {
+      final problemsProvider = context.read<ProblemsProvider>();
+      final response = await problemsProvider.loadMoreTagProblemsV2(
+        tagId: tagId,
+        cursor: isInitial ? null : _problemCursor,
+        size: 20,
+      );
+
+      if (!mounted) return;
+      setState(() {
+        if (isInitial) {
+          _currentFolderProblems = response.content;
+        } else {
+          _currentFolderProblems.addAll(response.content);
+        }
+        _problemCursor = response.nextCursor;
+        _problemHasNext = response.hasNext;
+      });
+    } catch (e, stackTrace) {
+      await _reportAndShowLoadError(
+        e,
+        stackTrace,
+        source: 'practice_selection_load_tag_problems',
+        message: '태그 문제를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.',
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoadingProblems = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _searchTitleProblems(String query,
+      {required bool isInitial}) async {
+    if (_isLoadingProblems) return;
+
+    final trimmed = query.trim();
+    _titleQuery = trimmed;
+
+    if (trimmed.isEmpty) {
+      setState(() {
+        _currentFolderProblems = [];
+        _problemCursor = null;
+        _problemHasNext = false;
         _isLoadingProblems = false;
       });
+      return;
+    }
+
+    if (isInitial) {
+      setState(() {
+        _isLoadingProblems = true;
+        _currentFolderProblems = [];
+        _problemCursor = null;
+        _problemHasNext = false;
+      });
+    } else {
+      if (!_problemHasNext) return;
+      setState(() {
+        _isLoadingProblems = true;
+      });
+    }
+
+    try {
+      final problemsProvider = context.read<ProblemsProvider>();
+      final response = await problemsProvider.loadMoreTitleProblemsV2(
+        query: trimmed,
+        cursor: isInitial ? null : _problemCursor,
+        size: 20,
+      );
+
+      if (!mounted) return;
+      setState(() {
+        if (isInitial) {
+          _currentFolderProblems = response.content;
+        } else {
+          _currentFolderProblems.addAll(response.content);
+        }
+        _problemCursor = response.nextCursor;
+        _problemHasNext = response.hasNext;
+      });
+    } catch (e, stackTrace) {
+      await _reportAndShowLoadError(
+        e,
+        stackTrace,
+        source: 'practice_selection_search_title_problems',
+        message: '검색 결과를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.',
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoadingProblems = false;
+        });
+      }
     }
   }
 
   Future<void> _loadMoreProblems() async {
-    if (_isLoadingProblems || !_problemHasNext || selectedFolderId == null)
+    if (_isLoadingProblems || !_problemHasNext) return;
+
+    if (_searchMode == _PracticeSearchMode.folder) {
+      if (selectedFolderId == null) return;
+      setState(() {
+        _isLoadingProblems = true;
+      });
+
+      try {
+        final problemsProvider = context.read<ProblemsProvider>();
+        final response = await problemsProvider.loadMoreFolderProblemsV2(
+          folderId: selectedFolderId!,
+          cursor: _problemCursor,
+          size: 20,
+        );
+
+        setState(() {
+          _currentFolderProblems.addAll(response.content);
+          _problemCursor = response.nextCursor;
+          _problemHasNext = response.hasNext;
+        });
+      } catch (e, stackTrace) {
+        await _reportAndShowLoadError(
+          e,
+          stackTrace,
+          source: 'practice_selection_load_more_folder_problems',
+          message: '문제 목록을 더 불러오지 못했습니다. 잠시 후 다시 시도해주세요.',
+        );
+      } finally {
+        if (mounted) {
+          setState(() {
+            _isLoadingProblems = false;
+          });
+        }
+      }
       return;
+    }
 
-    setState(() {
-      _isLoadingProblems = true;
-    });
+    if (_searchMode == _PracticeSearchMode.tag) {
+      if (_selectedTagId == null) return;
+      await _loadTagProblems(_selectedTagId!, isInitial: false);
+      return;
+    }
 
-    try {
-      final problemsProvider = context.read<ProblemsProvider>();
-      final response = await problemsProvider.loadMoreFolderProblemsV2(
-        folderId: selectedFolderId!,
-        cursor: _problemCursor,
-        size: 20,
-      );
+    await _searchTitleProblems(_titleQuery, isInitial: false);
+  }
 
-      setState(() {
-        _currentFolderProblems.addAll(response.content);
-        _problemCursor = response.nextCursor;
-        _problemHasNext = response.hasNext;
-      });
-    } catch (e) {
-      print('Error loading more problems: $e');
-    } finally {
-      setState(() {
-        _isLoadingProblems = false;
-      });
+  Future<void> _reportAndShowLoadError(
+    Object error,
+    StackTrace stackTrace, {
+    required String source,
+    required String message,
+  }) async {
+    await AppErrorReporter.report(
+      error,
+      stackTrace,
+      source: source,
+      severity: AppErrorSeverity.error,
+    );
+
+    if (mounted) {
+      AppSnackBar.showError(message);
     }
   }
 
@@ -243,9 +507,11 @@ class _PracticeProblemSelectionScreenState
           backgroundColor: Colors.white,
           body: Column(
             children: [
-              SizedBox(height: screenHeight * 0.035),
-              _buildFolderList(context, themeProvider),
-              const SizedBox(height: 20),
+              SizedBox(height: screenHeight * 0.012),
+              _buildSearchControlPanel(context, themeProvider),
+              SizedBox(
+                height: _searchMode == _PracticeSearchMode.folder ? 16 : 26,
+              ),
               _buildProblemList(context, themeProvider),
               _buildSubmitButton(context, themeProvider),
             ],
@@ -257,11 +523,227 @@ class _PracticeProblemSelectionScreenState
     return AppBar(
       centerTitle: true,
       title: StandardText(
-        text: '복습할 문제 선택',
+        text: '추가할 오답노트 선택',
         fontSize: 18,
         color: themeProvider.primaryColor,
       ),
       backgroundColor: Colors.white,
+    );
+  }
+
+  Widget _buildSearchControlPanel(
+      BuildContext context, ThemeHandler themeProvider) {
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: _buildSearchModeSelector(themeProvider),
+        ),
+        const SizedBox(height: 24),
+        if (_searchMode == _PracticeSearchMode.folder)
+          _buildFolderList(context, themeProvider)
+        else if (_searchMode == _PracticeSearchMode.tag)
+          _buildTagFilterBar(themeProvider)
+        else
+          _buildTitleSearchBar(themeProvider),
+      ],
+    );
+  }
+
+  Widget _buildSearchModeSelector(ThemeHandler themeProvider) {
+    Widget modeChip({
+      required _PracticeSearchMode mode,
+      required String label,
+    }) {
+      final selected = _searchMode == mode;
+      return Expanded(
+        child: InkWell(
+          onTap: () => _switchSearchMode(mode),
+          borderRadius: BorderRadius.circular(10),
+          child: Container(
+            height: 40,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: selected
+                  ? themeProvider.primaryColor.withOpacity(0.08)
+                  : Colors.grey[50],
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color:
+                    selected ? themeProvider.primaryColor : Colors.grey[300]!,
+                width: 1,
+              ),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  _modeIcon(mode),
+                  size: 15,
+                  color:
+                      selected ? themeProvider.primaryColor : Colors.grey[600]!,
+                ),
+                const SizedBox(width: 5),
+                StandardText(
+                  text: label,
+                  fontSize: 12,
+                  color:
+                      selected ? themeProvider.primaryColor : Colors.grey[700]!,
+                  fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(6),
+      decoration: BoxDecoration(
+        color: Colors.grey[100],
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey[200]!, width: 1),
+      ),
+      child: Row(
+        children: [
+          modeChip(mode: _PracticeSearchMode.folder, label: '폴더'),
+          const SizedBox(width: 6),
+          modeChip(mode: _PracticeSearchMode.tag, label: '태그'),
+          const SizedBox(width: 6),
+          modeChip(mode: _PracticeSearchMode.title, label: '제목'),
+        ],
+      ),
+    );
+  }
+
+  IconData _modeIcon(_PracticeSearchMode mode) {
+    switch (mode) {
+      case _PracticeSearchMode.folder:
+        return Icons.folder_outlined;
+      case _PracticeSearchMode.tag:
+        return Icons.sell_outlined;
+      case _PracticeSearchMode.title:
+        return Icons.title_outlined;
+    }
+  }
+
+  Widget _buildTagFilterBar(ThemeHandler themeProvider) {
+    if (_isLoadingTags) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 16),
+        child: CircularProgressIndicator(),
+      );
+    }
+
+    if (_tags.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          decoration: BoxDecoration(
+            color: Colors.grey[50],
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: Colors.grey[300]!, width: 1),
+          ),
+          child: StandardText(
+            text: '생성된 태그가 없습니다.',
+            fontSize: 13,
+            color: Colors.grey[600]!,
+          ),
+        ),
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: _tags.map((tag) {
+              final selected = _selectedTagId == tag.tagId;
+              return Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: InkWell(
+                  onTap: () => _loadTagProblems(tag.tagId, isInitial: true),
+                  borderRadius: BorderRadius.circular(8),
+                  child: Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: selected
+                          ? themeProvider.primaryColor.withOpacity(0.08)
+                          : Colors.white,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: selected
+                            ? themeProvider.primaryColor
+                            : Colors.grey[300]!,
+                        width: 1,
+                      ),
+                    ),
+                    child: StandardText(
+                      text: '#${tag.name}',
+                      fontSize: 12,
+                      color: selected
+                          ? themeProvider.primaryColor
+                          : Colors.grey[700]!,
+                      fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTitleSearchBar(ThemeHandler themeProvider) {
+    final baseTextStyle = const StandardText(text: '').getTextStyle();
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: TextField(
+        controller: _titleQueryController,
+        textInputAction: TextInputAction.search,
+        onSubmitted: (value) => _searchTitleProblems(value, isInitial: true),
+        style: baseTextStyle.copyWith(
+          fontSize: 14,
+          color: Colors.black87,
+          fontWeight: FontWeight.w500,
+        ),
+        decoration: InputDecoration(
+          hintText: '제목으로 검색 (예: 수특)',
+          hintStyle: baseTextStyle.copyWith(
+            color: Colors.grey[500],
+            fontSize: 13,
+          ),
+          prefixIcon: Icon(Icons.search, color: Colors.grey[500]),
+          filled: true,
+          fillColor: Colors.white,
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide: BorderSide(color: Colors.grey[300]!, width: 1),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide: BorderSide(color: Colors.grey[300]!, width: 1),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide: BorderSide(
+              color: themeProvider.primaryColor.withOpacity(0.5),
+              width: 1.5,
+            ),
+          ),
+        ),
+      ),
     );
   }
 
@@ -271,7 +753,7 @@ class _PracticeProblemSelectionScreenState
     final folderGap = isWide ? 18.0 : 12.0;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 10.0),
+      padding: const EdgeInsets.symmetric(horizontal: 20.0),
       child: SizedBox(
         height: 120,
         child: ListView.builder(
@@ -352,7 +834,7 @@ class _PracticeProblemSelectionScreenState
   Widget _buildProblemList(BuildContext context, ThemeHandler themeProvider) {
     return Expanded(
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 30),
+        padding: const EdgeInsets.symmetric(horizontal: 16),
         child: _isLoadingProblems && _currentFolderProblems.isEmpty
             ? const Center(child: CircularProgressIndicator())
             : _currentFolderProblems.isNotEmpty
@@ -396,26 +878,43 @@ class _PracticeProblemSelectionScreenState
   }
 
   Widget _buildEmptyProblemMessage() {
-    return SingleChildScrollView(
-      child: Align(
-        alignment: Alignment.center,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            SizedBox(height: MediaQuery.of(context).size.height * 0.15),
-            SvgPicture.asset(
-              'assets/Icon/PencilDetail.svg',
-              width: 100,
-              height: 100,
+    final message = _searchMode == _PracticeSearchMode.title
+        ? (_titleQuery.isEmpty ? '검색어를 입력해주세요.' : '검색 결과가 없습니다.')
+        : '작성한 오답노트가 없습니다!';
+
+    if (_searchMode == _PracticeSearchMode.title && _titleQuery.isEmpty) {
+      return Center(
+        child: StandardText(
+          text: message,
+          color: Colors.grey[600]!,
+          fontSize: 15,
+        ),
+      );
+    }
+
+    return LayoutBuilder(
+      builder: (context, constraints) => SingleChildScrollView(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(minHeight: constraints.maxHeight),
+          child: Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                SvgPicture.asset(
+                  'assets/Icon/PencilDetail.svg',
+                  width: 100,
+                  height: 100,
+                ),
+                const SizedBox(height: 16),
+                StandardText(
+                  text: message,
+                  color: Colors.black,
+                  fontSize: 16,
+                ),
+              ],
             ),
-            const SizedBox(height: 16),
-            const StandardText(
-              text: "작성한 오답노트가 없습니다!",
-              color: Colors.black,
-              fontSize: 16,
-            ),
-          ],
+          ),
         ),
       ),
     );
@@ -427,161 +926,120 @@ class _PracticeProblemSelectionScreenState
             problem.problemImageDataList!.isNotEmpty
         ? problem.problemImageDataList!.first.imageUrl
         : null;
+    final title =
+        problem.reference?.isNotEmpty == true ? problem.reference! : '제목 없음';
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          SizedBox(
-            width: 50,
-            height: 70,
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(8.0),
-              child: DisplayImage(
-                imagePath: problemImageUrl,
-                fit: BoxFit.cover,
-              ),
-            ),
-          ),
-          const SizedBox(width: 20),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    //_getTemplateIcon(problem.templateType!),
-                    //const SizedBox(width: 8),
-                    Flexible(
-                      child: StandardText(
-                        text: problem.reference?.isNotEmpty == true
-                            ? problem.reference!
-                            : '제목 없음',
-                        color: themeProvider.primaryColor,
-                        fontSize: 18,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                StandardText(
-                  text: problem.createdAt != null
-                      ? '작성 일시: ${formatDateTime(problem.createdAt!)}'
-                      : '작성 일시: 정보 없음',
-                  fontSize: 12,
-                  color: themeProvider.desaturateColor,
-                ),
-              ],
-            ),
-          ),
-          isSelected
-              ? Icon(Icons.check_circle,
-                  color: themeProvider.primaryColor, size: 25)
-              : const Icon(Icons.circle_outlined, color: Colors.grey),
-        ],
+      child: ProblemThumbnailCard(
+        title: title,
+        imageUrl: problemImageUrl,
+        tags: problem.tags,
+        solveCount: problem.solveCount,
+        lastSolvedAt: problem.lastSolvedAt,
+        themeProvider: themeProvider,
+        trailing: isSelected
+            ? Icon(Icons.check_circle,
+                color: themeProvider.primaryColor, size: 25)
+            : const Icon(Icons.circle_outlined, color: Colors.grey),
       ),
-    );
-  }
-
-  Widget _getTemplateIcon(TemplateType templateType) {
-    return SvgPicture.asset(
-      templateType.templateThumbnailImage,
-      width: 20,
-      height: 20,
     );
   }
 
   Widget _buildSubmitButton(BuildContext context, ThemeHandler themeProvider) {
     return Container(
-      padding: const EdgeInsets.all(16.0),
-      margin: const EdgeInsets.only(bottom: 16.0),
-      width: MediaQuery.of(context).size.width * 0.7,
-      child: ElevatedButton(
-        onPressed: selectedProblems.isNotEmpty
-            ? () {
-                final newIds =
-                    selectedProblems.map((p) => p.problemId).toList();
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
+      child: SizedBox(
+        width: double.infinity,
+        height: 50,
+        child: ElevatedButton(
+          onPressed: selectedProblems.isNotEmpty
+              ? () {
+                  final newIds =
+                      selectedProblems.map((p) => p.problemId).toList();
 
-                // 추가된 문제: newIds 에는 있지만 원본에는 없는 것
-                final addList = newIds
-                    .where((id) => !_originalProblemIds.contains(id))
-                    .toList();
-                // 삭제된 문제: 원본에는 있고 newIds에는 없는 것
-                final removeList = _originalProblemIds
-                    .where((id) => !newIds.contains(id))
-                    .toList();
+                  // 추가된 문제: newIds 에는 있지만 원본에는 없는 것
+                  final addList = newIds
+                      .where((id) => !_originalProblemIds.contains(id))
+                      .toList();
+                  // 삭제된 문제: 원본에는 있고 newIds에는 없는 것
+                  final removeList = _originalProblemIds
+                      .where((id) => !newIds.contains(id))
+                      .toList();
 
-                if (widget.practiceModel != null) {
-                  // 수정 모드
-                  final updateModel = PracticeNoteUpdateModel(
-                    practiceNoteId: widget.practiceModel!.practiceId,
-                    practiceTitle: widget.practiceModel!.practiceTitle,
-                    addProblemIdList: addList,
-                    removeProblemIdList: removeList,
-                  );
-                  // 다음 화면으로 updateModel 넘기기
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => PracticeTitleWriteScreen(
-                        practiceNoteUpdateModel: updateModel,
-                        practiceNoteDetailModel: widget.practiceModel!,
+                  if (widget.practiceModel != null) {
+                    // 수정 모드
+                    final updateModel = PracticeNoteUpdateModel(
+                      practiceNoteId: widget.practiceModel!.practiceId,
+                      practiceTitle: widget.practiceModel!.practiceTitle,
+                      addProblemIdList: addList,
+                      removeProblemIdList: removeList,
+                    );
+                    // 다음 화면으로 updateModel 넘기기
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => PracticeTitleWriteScreen(
+                          practiceNoteUpdateModel: updateModel,
+                          practiceNoteDetailModel: widget.practiceModel!,
+                        ),
                       ),
-                    ),
-                  );
-                } else {
-                  // 신규 등록 모드 → 기존대로 RegisterModel
-                  final registerModel = PracticeNoteRegisterModel(
-                    practiceId: null,
-                    practiceTitle: "",
-                    registerProblemIdList: newIds,
-                  );
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => PracticeTitleWriteScreen(
-                        practiceRegisterModel: registerModel,
+                    );
+                  } else {
+                    // 신규 등록 모드 → 기존대로 RegisterModel
+                    final registerModel = PracticeNoteRegisterModel(
+                      practiceId: null,
+                      practiceTitle: "",
+                      registerProblemIdList: newIds,
+                    );
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => PracticeTitleWriteScreen(
+                          practiceRegisterModel: registerModel,
+                        ),
                       ),
-                    ),
-                  );
+                    );
+                  }
                 }
-              }
-            : () => _showSelectProblemDialog(context),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: themeProvider.primaryColor,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(15),
+              : () => _showSelectProblemDialog(context),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: themeProvider.primaryColor,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            elevation: 0,
           ),
-          padding: const EdgeInsets.all(10),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Expanded(
-              child: Center(
-                child: StandardText(
-                  text: "다음",
-                  fontSize: 16,
-                  color: Colors.white,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Expanded(
+                child: Center(
+                  child: StandardText(
+                    text: "다음",
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
                 ),
               ),
-            ),
-            Container(
-              width: 24,
-              height: 24,
-              alignment: Alignment.center,
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                shape: BoxShape.circle,
+              Container(
+                width: 24,
+                height: 24,
+                alignment: Alignment.center,
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                ),
+                child: StandardText(
+                  text: selectedProblems.length.toString(),
+                  fontSize: 12,
+                  color: themeProvider.primaryColor,
+                ),
               ),
-              child: StandardText(
-                text: selectedProblems.length.toString(),
-                fontSize: 12,
-                color: themeProvider.primaryColor,
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

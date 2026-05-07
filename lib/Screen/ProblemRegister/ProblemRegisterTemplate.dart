@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 
 import '../../Model/Problem/ProblemModel.dart';
 import '../../Model/Problem/ProblemRegisterModel.dart';
+import '../../Model/Tag/TagModel.dart';
 import '../../Module/Dialog/LoadingDialog.dart';
 import '../../Module/Dialog/SnackBarDialog.dart';
 import '../../Module/Image/ImagePickerHandler.dart';
@@ -20,6 +21,9 @@ import '../../Provider/ScreenIndexProvider.dart';
 import '../../Provider/UserProvider.dart';
 import '../../Service/Api/FileUpload/FileUploadService.dart';
 import '../../Service/Api/Problem/ProblemService.dart';
+import '../../Service/Api/Tag/TagService.dart';
+import '../../Util/AppErrorReporter.dart';
+import 'TagSelectionScreen.dart';
 import 'Widget/DatePickerWidget.dart';
 import 'Widget/ImageGridWidget.dart';
 import 'Widget/LabeledTextField.dart';
@@ -55,8 +59,14 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
   final List<String> _existingAnswerImageUrls = [];
   final List<String> _deletedImageUrls = []; // 삭제할 이미지 URL 추적
   final FileUploadService _fileUploadService = FileUploadService();
+  final TagService _tagService = TagService();
   final Map<String, Future<void>> _uploadTasks = {};
   final Set<String> _canceledUploadLocalPaths = {};
+  final List<TagModel> _availableTags = [];
+  final List<TagModel> _recommendedTags = [];
+  final Set<int> _selectedTagIds = {};
+  bool _isLoadingTags = false;
+  bool _isLoadingRecommendations = false;
 
   @override
   void initState() {
@@ -87,6 +97,9 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
     }
     _titleCtrl.text = problemModel?.reference ?? '';
     _memoCtrl.text = problemModel?.memo ?? '';
+    _selectedTagIds.addAll(problemModel?.tagIdList ?? []);
+    _loadMyTags();
+    _loadRecommendedTags(imageUrls: _existingProblemImageUrls);
   }
 
   @override
@@ -118,25 +131,67 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
                 onPicked: (id) => setState(() => _selectedFolderId = id),
               ),
               SizedBox(height: spacing),
-              LabeledTextField(
-                label: '제목',
-                hintText: '오답노트의 제목을 작성해주세요!',
-                icon: Icons.info,
-                controller: _titleCtrl,
-              ),
-              SizedBox(height: spacing),
-              LabeledTextField(
-                label: '메모',
-                controller: _memoCtrl,
-                icon: Icons.edit,
-                hintText: '기록하고 싶은 내용을 간단하게 작성해주세요!',
-                maxLines: 3,
-              ),
-              SizedBox(height: spacing),
               if (isWide)
                 Row(
                   children: [
                     Expanded(
+                      child: _buildImageSectionContainer(
+                        child: ImageGridWidget(
+                          label: '문제 이미지',
+                          files: _problemImages,
+                          existingImageUrls: _existingProblemImageUrls,
+                          onAdd: _pickProblemImage,
+                          onRemove: widget.isEditMode
+                              ? (i) =>
+                                  setState(() => _problemImages.removeAt(i))
+                              : _removePendingProblemImage,
+                          onRemoveExisting: (i) {
+                            widget.isEditMode
+                                ? setState(() {
+                                    final removedUrl =
+                                        _existingProblemImageUrls.removeAt(i);
+                                    _deletedImageUrls.add(removedUrl);
+                                  })
+                                : _removeUploadedProblemImage(i);
+                          },
+                          titleIconPadding: const EdgeInsets.all(8),
+                          titleIconSize: 20,
+                          titleIconBorderRadius: 8,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 30),
+                    Expanded(
+                      child: _buildImageSectionContainer(
+                        child: ImageGridWidget(
+                          label: '해설 이미지',
+                          files: _answerImages,
+                          existingImageUrls: _existingAnswerImageUrls,
+                          onAdd: _pickAnswerImage,
+                          onRemove: widget.isEditMode
+                              ? (i) => setState(() => _answerImages.removeAt(i))
+                              : _removePendingAnswerImage,
+                          onRemoveExisting: (i) {
+                            widget.isEditMode
+                                ? setState(() {
+                                    final removedUrl =
+                                        _existingAnswerImageUrls.removeAt(i);
+                                    _deletedImageUrls.add(removedUrl);
+                                  })
+                                : _removeUploadedAnswerImage(i);
+                          },
+                          titleIconPadding: const EdgeInsets.all(8),
+                          titleIconSize: 20,
+                          titleIconBorderRadius: 8,
+                        ),
+                      ),
+                    ),
+                  ],
+                )
+              else
+                Column(
+                  children: [
+                    _buildImageSectionContainer(
                       child: ImageGridWidget(
                         label: '문제 이미지',
                         files: _problemImages,
@@ -154,10 +209,13 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
                                 })
                               : _removeUploadedProblemImage(i);
                         },
+                        titleIconPadding: const EdgeInsets.all(8),
+                        titleIconSize: 20,
+                        titleIconBorderRadius: 8,
                       ),
                     ),
-                    const SizedBox(width: 30),
-                    Expanded(
+                    const SizedBox(height: 30),
+                    _buildImageSectionContainer(
                       child: ImageGridWidget(
                         label: '해설 이미지',
                         files: _answerImages,
@@ -175,55 +233,45 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
                                 })
                               : _removeUploadedAnswerImage(i);
                         },
+                        titleIconPadding: const EdgeInsets.all(8),
+                        titleIconSize: 20,
+                        titleIconBorderRadius: 8,
                       ),
                     ),
                   ],
-                )
-              else
-                Column(
-                  children: [
-                    ImageGridWidget(
-                      label: '문제 이미지',
-                      files: _problemImages,
-                      existingImageUrls: _existingProblemImageUrls,
-                      onAdd: _pickProblemImage,
-                      onRemove: widget.isEditMode
-                          ? (i) => setState(() => _problemImages.removeAt(i))
-                          : _removePendingProblemImage,
-                      onRemoveExisting: (i) {
-                        widget.isEditMode
-                            ? setState(() {
-                                final removedUrl =
-                                    _existingProblemImageUrls.removeAt(i);
-                                _deletedImageUrls.add(removedUrl);
-                              })
-                            : _removeUploadedProblemImage(i);
-                      },
-                    ),
-                    const SizedBox(height: 30),
-                    ImageGridWidget(
-                      label: '해설 이미지',
-                      files: _answerImages,
-                      existingImageUrls: _existingAnswerImageUrls,
-                      onAdd: _pickAnswerImage,
-                      onRemove: widget.isEditMode
-                          ? (i) => setState(() => _answerImages.removeAt(i))
-                          : _removePendingAnswerImage,
-                      onRemoveExisting: (i) {
-                        widget.isEditMode
-                            ? setState(() {
-                                final removedUrl =
-                                    _existingAnswerImageUrls.removeAt(i);
-                                _deletedImageUrls.add(removedUrl);
-                              })
-                            : _removeUploadedAnswerImage(i);
-                      },
-                    ),
-                  ],
                 ),
+              SizedBox(height: spacing),
+              LabeledTextField(
+                label: '제목',
+                hintText: '오답노트의 제목을 작성해주세요!',
+                icon: Icons.info,
+                controller: _titleCtrl,
+              ),
+              SizedBox(height: spacing),
+              _buildTagSection(context),
+              SizedBox(height: spacing),
+              LabeledTextField(
+                label: '메모',
+                controller: _memoCtrl,
+                icon: Icons.edit,
+                hintText: '기록하고 싶은 내용을 간단하게 작성해주세요!',
+                maxLines: 3,
+              ),
             ],
           ),
         ));
+  }
+
+  Widget _buildImageSectionContainer({required Widget child}) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.grey[50],
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey[200]!, width: 1),
+      ),
+      child: child,
+    );
   }
 
   Future<void> _pickProblemImage() async {
@@ -295,6 +343,7 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
     final removedUrl = _existingProblemImageUrls.removeAt(index);
     setState(() {});
     await _deleteUploadedImage(removedUrl);
+    await _loadRecommendedTags(imageUrls: _existingProblemImageUrls);
   }
 
   Future<void> _removeUploadedAnswerImage(int index) async {
@@ -352,6 +401,9 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
           _existingAnswerImageUrls.add(imageUrl);
         }
       });
+      if (isProblemImage) {
+        await _loadRecommendedTags(imageUrls: _existingProblemImageUrls);
+      }
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -380,6 +432,353 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
     await Future.wait(_uploadTasks.values.toList());
   }
 
+  Future<void> _loadMyTags() async {
+    setState(() => _isLoadingTags = true);
+    try {
+      final fetched = await _tagService.getMyTags();
+      _availableTags
+        ..clear()
+        ..addAll(fetched);
+
+      final detailTags = widget.problemModel?.tags ?? const <TagModel>[];
+      final existingIds = _availableTags.map((e) => e.tagId).toSet();
+      for (final tag in detailTags) {
+        if (!existingIds.contains(tag.tagId)) {
+          _availableTags.add(tag);
+        }
+      }
+      _availableTags.sort((a, b) => a.name.compareTo(b.name));
+    } catch (e) {
+      log('태그 목록 조회 실패: $e');
+    } finally {
+      if (mounted) {
+        setState(() => _isLoadingTags = false);
+      }
+    }
+  }
+
+  void _mergeIntoAvailableTags(List<TagModel> tags) {
+    final existingIds = _availableTags.map((e) => e.tagId).toSet();
+    for (final tag in tags) {
+      if (!existingIds.contains(tag.tagId)) {
+        _availableTags.add(tag);
+        existingIds.add(tag.tagId);
+      }
+    }
+    _availableTags.sort((a, b) => a.name.compareTo(b.name));
+  }
+
+  Future<void> _loadRecommendedTags({List<String>? imageUrls}) async {
+    if (!mounted) return;
+    setState(() => _isLoadingRecommendations = true);
+    try {
+      final recommended = await _tagService.recommendTags(imageUrls: imageUrls);
+      if (!mounted) return;
+      setState(() {
+        _recommendedTags
+          ..clear()
+          ..addAll(recommended);
+        _mergeIntoAvailableTags(recommended);
+      });
+    } catch (e) {
+      log('태그 추천 조회 실패: $e');
+    } finally {
+      if (mounted) {
+        setState(() => _isLoadingRecommendations = false);
+      }
+    }
+  }
+
+  void _applyRecommendedTag(TagModel tag) {
+    if (_selectedTagIds.contains(tag.tagId)) return;
+    if (_selectedTagIds.length >= 5) {
+      SnackBarDialog.showSnackBar(
+        context: context,
+        message: '태그는 최대 5개까지만 선택할 수 있어요.',
+        backgroundColor: Colors.orange,
+      );
+      return;
+    }
+    setState(() {
+      _selectedTagIds.add(tag.tagId);
+      _mergeIntoAvailableTags([tag]);
+    });
+  }
+
+  void _removeSelectedTag(int tagId) {
+    if (!_selectedTagIds.contains(tagId)) return;
+    setState(() {
+      _selectedTagIds.remove(tagId);
+    });
+  }
+
+  Future<void> _openTagSelectionScreen() async {
+    final result = await Navigator.of(context).push<TagSelectionResult>(
+      MaterialPageRoute(
+        builder: (_) => TagSelectionScreen(
+          initialTags: List<TagModel>.from(_availableTags),
+          initialSelectedTagIds: Set<int>.from(_selectedTagIds),
+        ),
+      ),
+    );
+
+    if (result == null || !mounted) return;
+
+    setState(() {
+      _selectedTagIds
+        ..clear()
+        ..addAll(result.selectedTagIds);
+      _availableTags
+        ..clear()
+        ..addAll(result.availableTags);
+    });
+  }
+
+  Widget _buildTagSection(BuildContext context) {
+    final themeProvider = Provider.of<ThemeHandler>(context);
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.grey[50],
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey[200]!, width: 1),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: themeProvider.primaryColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  Icons.local_offer,
+                  color: themeProvider.primaryColor,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 12),
+              const StandardText(
+                text: '태그',
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+                color: Colors.black87,
+              ),
+              const SizedBox(width: 8),
+              StandardText(
+                text: '${_selectedTagIds.length}/5',
+                fontSize: 13,
+                color: Colors.grey[600]!,
+              ),
+              const Spacer(),
+              ElevatedButton(
+                onPressed: _isLoadingTags ? null : _openTagSelectionScreen,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: themeProvider.primaryColor,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+                  minimumSize: const Size(0, 40),
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  visualDensity: VisualDensity.compact,
+                ),
+                child: _isLoadingTags
+                    ? const SizedBox(
+                        width: 13,
+                        height: 13,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : const StandardText(
+                        text: '태그 추가',
+                        color: Colors.white,
+                        fontSize: 13,
+                      ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: Colors.grey[300]!, width: 1),
+            ),
+            child: _selectedTagIds.isEmpty
+                ? StandardText(
+                    text: '선택된 태그가 없습니다.',
+                    fontSize: 13,
+                    color: Colors.grey[400]!,
+                  )
+                : Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: _availableTags
+                        .where((tag) => _selectedTagIds.contains(tag.tagId))
+                        .map((tag) => Stack(
+                              clipBehavior: Clip.none,
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 10, vertical: 5),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(
+                                      color: themeProvider.primaryColor,
+                                      width: 1,
+                                    ),
+                                  ),
+                                  child: StandardText(
+                                    text: '#${tag.name}',
+                                    fontSize: 12,
+                                    color: themeProvider.primaryColor,
+                                  ),
+                                ),
+                                Positioned(
+                                  top: -5,
+                                  right: -5,
+                                  child: GestureDetector(
+                                    onTap: () => _removeSelectedTag(tag.tagId),
+                                    child: Container(
+                                      width: 15,
+                                      height: 15,
+                                      decoration: const BoxDecoration(
+                                        color: Colors.red,
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: const Icon(
+                                        Icons.remove,
+                                        size: 10,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ))
+                        .toList(),
+                  ),
+          ),
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 220),
+            switchInCurve: Curves.easeOutCubic,
+            switchOutCurve: Curves.easeInCubic,
+            child: _existingProblemImageUrls.isEmpty
+                ? const SizedBox.shrink()
+                : Padding(
+                    key: const ValueKey('recommended_tags'),
+                    padding: const EdgeInsets.only(top: 16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            const SizedBox(width: 4),
+                            StandardText(
+                              text: '최근 사용 태그',
+                              fontSize: 14,
+                              color: Colors.grey[700]!,
+                            ),
+                            const Spacer(),
+                            if (_isLoadingRecommendations)
+                              SizedBox(
+                                width: 14,
+                                height: 14,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: themeProvider.primaryColor,
+                                ),
+                              ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        if (_recommendedTags.isEmpty &&
+                            !_isLoadingRecommendations)
+                          Padding(
+                            padding: const EdgeInsets.only(left: 4),
+                            child: StandardText(
+                              text: '최근 사용 태그가 없습니다.',
+                              fontSize: 13,
+                              color: Colors.grey[400]!,
+                            ),
+                          )
+                        else
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: _recommendedTags.map((tag) {
+                              final isSelected =
+                                  _selectedTagIds.contains(tag.tagId);
+                              return Material(
+                                color: Colors.transparent,
+                                child: InkWell(
+                                  onTap: () => _applyRecommendedTag(tag),
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 11, vertical: 6),
+                                    decoration: BoxDecoration(
+                                      color: isSelected
+                                          ? themeProvider.primaryColor
+                                          : Colors.white,
+                                      borderRadius: BorderRadius.circular(8),
+                                      border: Border.all(
+                                        color: isSelected
+                                            ? themeProvider.primaryColor
+                                            : themeProvider.primaryColor
+                                                .withOpacity(0.35),
+                                        width: isSelected ? 1.4 : 1,
+                                      ),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        if (isSelected) ...[
+                                          Icon(
+                                            Icons.check,
+                                            size: 12,
+                                            color: Colors.white,
+                                          ),
+                                          const SizedBox(width: 4),
+                                        ],
+                                        StandardText(
+                                          text: '#${tag.name}',
+                                          fontSize: 12,
+                                          color: isSelected
+                                              ? Colors.white
+                                              : themeProvider.primaryColor,
+                                          fontWeight: isSelected
+                                              ? FontWeight.w600
+                                              : FontWeight.w500,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              );
+                            }).toList(),
+                          )
+                      ],
+                    ),
+                  ),
+          ),
+        ],
+      ),
+    );
+  }
+
   void resetAll() {
     setState(() {
       for (final file in _problemImages) {
@@ -395,6 +794,8 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
       _existingProblemImageUrls.clear();
       _existingAnswerImageUrls.clear();
       _deletedImageUrls.clear();
+      _selectedTagIds.clear();
+      _recommendedTags.clear();
     });
   }
 
@@ -415,6 +816,7 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
 
     if (!widget.isEditMode) {
       await _waitForPendingUploads();
+      if (!mounted) return;
       if (_existingProblemImageUrls.isEmpty) {
         _showProblemImageRequiredDialog(context);
         return;
@@ -425,6 +827,7 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
     LoadingDialog.show(
         context, widget.isEditMode ? '오답노트 수정 중...' : '오답노트 작성 중...');
     bool shouldPop = false;
+    bool loadingHidden = false;
     try {
       if (widget.isEditMode) {
         await _updateProblem();
@@ -436,9 +839,30 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
     } catch (e, stackTrace) {
       log('오답노트 ${widget.isEditMode ? "수정" : "등록"} 실패: $e');
       log(stackTrace.toString());
-      throw Exception(e);
+      if (mounted) {
+        LoadingDialog.hide(context);
+        loadingHidden = true;
+        SnackBarDialog.showSnackBar(
+          context: context,
+          message: widget.isEditMode
+              ? '오답노트 수정에 실패했습니다. 잠시 후 다시 시도해주세요.'
+              : '오답노트 등록에 실패했습니다. 잠시 후 다시 시도해주세요.',
+          backgroundColor: Colors.red,
+        );
+      }
+      unawaited(
+        AppErrorReporter.report(
+          e,
+          stackTrace,
+          source: widget.isEditMode ? 'problem_update' : 'problem_register',
+          severity: AppErrorSeverity.error,
+        ),
+      );
+      return;
     } finally {
-      LoadingDialog.hide(context);
+      if (mounted && !loadingHidden) {
+        LoadingDialog.hide(context);
+      }
     }
 
     if (!mounted) return;
@@ -614,6 +1038,9 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
 
     final problemsProvider =
         Provider.of<ProblemsProvider>(context, listen: false);
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final foldersProvider =
+        Provider.of<FoldersProvider>(context, listen: false);
     final problemService = ProblemService();
     final registeredProblemId = await problemService.registerProblemV2(
       problemId: null,
@@ -623,22 +1050,42 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
       folderId: _selectedFolderId,
       problemImageUrls: _existingProblemImageUrls,
       answerImageUrls: _existingAnswerImageUrls,
+      tagIds: _selectedTagIds.toList(),
     );
 
-    // 등록 후 분석 요청 비동기 실행
-    await problemService.requestProblemAnalysis(registeredProblemId);
+    // 등록 후 분석/캐시 갱신은 후처리이므로 실패해도 등록 성공을 막지 않습니다.
+    await _runPostSaveTask(
+      () => problemService.requestProblemAnalysis(
+        registeredProblemId,
+        showErrorSnackBar: false,
+      ),
+      source: 'problem_register_analysis_request',
+    );
 
     // Provider를 통해 문제 조회 및 상태 업데이트
-    await problemsProvider.fetchProblem(registeredProblemId);
+    await _runPostSaveTask(
+      () => problemsProvider.fetchProblem(
+        registeredProblemId,
+        showErrorSnackBar: false,
+      ),
+      source: 'problem_register_detail_refresh',
+    );
     await problemsProvider.updateProblemCount(1);
-    await problemsProvider.requestReview(context);
+    if (!context.mounted) return;
+    // requestReview may show a fallback dialog, so keep the mounted guard above.
+    // ignore: use_build_context_synchronously
+    await _runPostSaveTask(
+      () => problemsProvider.requestReview(context),
+      source: 'problem_register_review_request',
+    );
 
     // 2. 유저 정보 갱신 (경험치 업데이트)
-    await Provider.of<UserProvider>(context, listen: false).fetchUserInfo();
+    await _runPostSaveTask(
+      () => userProvider.fetchUserInfo(showErrorSnackBar: false),
+      source: 'problem_register_user_refresh',
+    );
 
     // 3. 폴더 갱신 (화면 전환 전에 먼저 캐시 삭제 및 타임스탬프 업데이트)
-    final foldersProvider =
-        Provider.of<FoldersProvider>(context, listen: false);
     if (_selectedFolderId != null) {
       await foldersProvider.refreshFolder(_selectedFolderId!);
     } else {
@@ -669,6 +1116,7 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
       solvedAt: _selectedDate,
       folderId: _selectedFolderId,
       imageDataDtoList: [],
+      tagIds: _selectedTagIds.toList(),
     );
 
     await problemsProvider.updateProblem(problemRegisterModel);
@@ -750,6 +1198,25 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
     // 기존 폴더가 새 폴더와 다르면 기존 폴더도 갱신
     if (originalFolderId != null && originalFolderId != _selectedFolderId) {
       await foldersProvider.refreshFolder(originalFolderId);
+    }
+  }
+
+  Future<void> _runPostSaveTask(
+    Future<void> Function() task, {
+    required String source,
+  }) async {
+    try {
+      await task();
+    } catch (e, stackTrace) {
+      log('Post-save task failed ($source): $e');
+      unawaited(
+        AppErrorReporter.report(
+          e,
+          stackTrace,
+          source: source,
+          severity: AppErrorSeverity.warning,
+        ),
+      );
     }
   }
 

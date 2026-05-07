@@ -7,11 +7,13 @@ import '../../../Module/Theme/ThemeHandler.dart';
 class CompactActivityLevels extends StatelessWidget {
   final UserInfoModel? userInfo;
   final ThemeHandler themeProvider;
+  final double horizontalMarginFactor;
 
   const CompactActivityLevels({
     super.key,
     required this.userInfo,
     required this.themeProvider,
+    this.horizontalMarginFactor = 0.04,
   });
 
   // 전체 레벨 계산 (4개 활동의 평균)
@@ -51,7 +53,7 @@ class CompactActivityLevels extends StatelessWidget {
 
     return Container(
       margin: EdgeInsets.symmetric(
-        horizontal: screenWidth * 0.04,
+        horizontal: screenWidth * horizontalMarginFactor,
         vertical: screenHeight * 0.01,
       ),
       padding: EdgeInsets.all(screenHeight * 0.02),
@@ -72,7 +74,7 @@ class CompactActivityLevels extends StatelessWidget {
             fontSize: 15,
             color: Colors.black87,
           ),
-          SizedBox(height: screenHeight * 0.015),
+          SizedBox(height: screenHeight * 0.02),
           _buildActivityRow(
             icon: Icons.waving_hand_rounded,
             category: '출석',
@@ -81,7 +83,7 @@ class CompactActivityLevels extends StatelessWidget {
             color: Colors.pink[300]!,
             screenHeight: screenHeight,
           ),
-          SizedBox(height: screenHeight * 0.012),
+          SizedBox(height: screenHeight * 0.017),
           _buildActivityRow(
             icon: Icons.edit_note,
             category: '오답노트 작성',
@@ -90,7 +92,7 @@ class CompactActivityLevels extends StatelessWidget {
             color: Colors.purple[300]!,
             screenHeight: screenHeight,
           ),
-          SizedBox(height: screenHeight * 0.012),
+          SizedBox(height: screenHeight * 0.017),
           _buildActivityRow(
             icon: Icons.chrome_reader_mode_outlined,
             category: '문제 복습',
@@ -99,10 +101,10 @@ class CompactActivityLevels extends StatelessWidget {
             color: Colors.green[400]!,
             screenHeight: screenHeight,
           ),
-          SizedBox(height: screenHeight * 0.012),
+          SizedBox(height: screenHeight * 0.017),
           _buildActivityRow(
             icon: Icons.history,
-            category: '복습노트 복습',
+            category: '복습 세트 복습',
             level: userInfo!.notePracticeLevel,
             point: userInfo!.notePracticePoint,
             color: Colors.blue[300]!,

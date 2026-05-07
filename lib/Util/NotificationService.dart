@@ -2,10 +2,16 @@ import 'dart:developer';
 import 'dart:io';
 
 import 'package:device_info_plus/device_info_plus.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/material.dart';
 import 'package:ono/Config/AppConfig.dart';
 
+import '../Config/firebase_options.dart';
+import '../Screen/ReviewDue/ReviewDueScreen.dart';
 import '../Service/Api/HttpService.dart';
+import 'AppErrorReporter.dart';
+import 'AppNavigator.dart';
 
 class NotificationService {
   NotificationService._();
@@ -14,6 +20,7 @@ class NotificationService {
   final HttpService httpService = HttpService();
   final FirebaseMessaging _messaging = FirebaseMessaging.instance;
   final DeviceInfoPlugin _deviceInfo = DeviceInfoPlugin();
+  bool _tokenRefreshListenerConfigured = false;
 
   /// 앱 실행 시 한 번만 호출
   Future<void> init() async {
@@ -52,17 +59,53 @@ class NotificationService {
     // 포그라운드 메시지
     FirebaseMessaging.onMessage.listen((msg) {
       log('Foreground message: ${msg.notification?.title}');
-      // TODO: 스낵바나 다이얼로그로 표시
     });
 
-    // 백그라운드/종료 상태에서 알림 탭 클릭
+    // 백그라운드 상태에서 알림 탭
     FirebaseMessaging.onMessageOpenedApp.listen((msg) {
-      log('Notification clicked, data: ${msg.data}');
-      // TODO: Navigator.pushNamed(...) 등으로 화면 이동
+      log('Notification tapped (background), data: ${msg.data}');
+      _handleNotificationNavigation(msg.data);
     });
 
-    // 앱 종료/백그라운드에서도 메시지를 처리
-    FirebaseMessaging.onBackgroundMessage(_firebaseBackgroundHandler);
+    // 종료 상태에서 알림 탭으로 앱 실행
+    FirebaseMessaging.instance.getInitialMessage().then((msg) {
+      if (msg != null) {
+        log('Notification tapped (terminated), data: ${msg.data}');
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _handleNotificationNavigation(msg.data);
+        });
+      }
+    });
+
+    if (!_tokenRefreshListenerConfigured) {
+      _tokenRefreshListenerConfigured = true;
+      _messaging.onTokenRefresh.listen((token) async {
+        try {
+          await _sendTokenValueToServer(token);
+        } catch (error, stackTrace) {
+          await AppErrorReporter.report(
+            error,
+            stackTrace,
+            source: 'fcm_token_refresh',
+            severity: AppErrorSeverity.warning,
+          );
+        }
+      });
+    }
+  }
+
+  void _handleNotificationNavigation(Map<String, dynamic> data) {
+    final type = data['type'] as String?;
+    final navigator = AppNavigator.navigatorKey.currentState;
+    if (navigator == null) return;
+
+    if (type == 'review_due') {
+      navigator.push(
+        MaterialPageRoute(builder: (_) => const ReviewDueScreen()),
+      );
+    } else if (type == 'reengagement' || type == 'reengagement_monthly') {
+      navigator.popUntil((route) => route.isFirst);
+    }
   }
 
   Future<void> sendTokenToServer() async {
@@ -72,6 +115,10 @@ class NotificationService {
       return;
     }
 
+    await _sendTokenValueToServer(token);
+  }
+
+  Future<void> _sendTokenValueToServer(String token) async {
     await httpService.sendRequest(
       method: 'POST',
       url: '${AppConfig.baseUrl}/api/fcm/token',
@@ -84,7 +131,24 @@ class NotificationService {
 }
 
 /// 백그라운드/종료 상태에서 호출
-Future<void> _firebaseBackgroundHandler(RemoteMessage message) async {
-  log('Background message: ${message.notification?.title}');
-  // TODO: flutter_local_notifications로 로컬 알림 띄우기
+@pragma('vm:entry-point')
+Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  try {
+    if (Firebase.apps.isEmpty) {
+      await Firebase.initializeApp(
+        name: 'OnO',
+        options: DefaultFirebaseOptions.currentPlatform,
+      );
+    }
+
+    log('Background message: ${message.notification?.title}');
+    // TODO: flutter_local_notifications로 로컬 알림 띄우기
+  } catch (error, stackTrace) {
+    await AppErrorReporter.report(
+      error,
+      stackTrace,
+      source: 'fcm_background',
+      severity: AppErrorSeverity.error,
+    );
+  }
 }

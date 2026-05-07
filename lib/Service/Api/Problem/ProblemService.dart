@@ -6,6 +6,7 @@ import 'package:ono/Model/Common/PaginatedResponse.dart';
 import 'package:ono/Model/Problem/ProblemAnalysisModel.dart';
 import 'package:ono/Model/Problem/ProblemModel.dart';
 import 'package:ono/Model/Problem/ProblemRegisterModel.dart';
+import 'package:ono/Model/Problem/ReviewDueProblemModel.dart';
 
 import '../../../Config/AppConfig.dart';
 import '../HttpService.dart';
@@ -14,11 +15,15 @@ class ProblemService {
   final HttpService httpService = HttpService();
   final baseUrl = "${AppConfig.baseUrl}/api/problems";
 
-  Future<ProblemModel> getProblem(int? problemId) async {
+  Future<ProblemModel> getProblem(
+    int? problemId, {
+    bool showErrorSnackBar = true,
+  }) async {
     log('find problem id : $problemId');
     final data = await httpService.sendRequest(
       method: 'GET',
       url: '$baseUrl/$problemId',
+      showErrorSnackBar: showErrorSnackBar,
     );
 
     return ProblemModel.fromJson(data as Map<String, dynamic>);
@@ -35,10 +40,11 @@ class ProblemService {
         .toList();
   }
 
-  Future<int> getProblemCount() async {
+  Future<int> getProblemCount({bool showErrorSnackBar = true}) async {
     return await httpService.sendRequest(
       method: 'GET',
       url: '$baseUrl/problemCount',
+      showErrorSnackBar: showErrorSnackBar,
     ) as int;
   }
 
@@ -58,6 +64,7 @@ class ProblemService {
     DateTime? solvedAt,
     required List<String> problemImageUrls,
     required List<String> answerImageUrls,
+    List<int>? tagIds,
   }) async {
     return await httpService.sendRequest(
       method: 'POST',
@@ -71,14 +78,19 @@ class ProblemService {
             solvedAt?.subtract(const Duration(hours: 9)).toIso8601String(),
         'problemImageUrls': problemImageUrls,
         'answerImageUrls': answerImageUrls,
+        'tagIds': tagIds,
       },
     ) as int;
   }
 
-  Future<void> requestProblemAnalysis(int problemId) async {
+  Future<void> requestProblemAnalysis(
+    int problemId, {
+    bool showErrorSnackBar = true,
+  }) async {
     await httpService.sendRequest(
       method: 'POST',
       url: '$baseUrl/$problemId/analysis',
+      showErrorSnackBar: showErrorSnackBar,
     );
   }
 
@@ -200,5 +212,64 @@ class ProblemService {
       data,
       (json) => ProblemModel.fromJson(json),
     );
+  }
+
+  // V2 API - Cursor-based pagination for tag problems
+  Future<PaginatedResponse<ProblemModel>> getTagProblemsV2({
+    required int tagId,
+    int? cursor,
+    int size = 20,
+  }) async {
+    final queryParams = <String, String>{
+      'size': size.toString(),
+    };
+    if (cursor != null) {
+      queryParams['cursor'] = cursor.toString();
+    }
+
+    final data = await httpService.sendRequest(
+      method: 'GET',
+      url: '$baseUrl/tag/$tagId/V2',
+      queryParams: queryParams,
+    ) as Map<String, dynamic>;
+
+    return PaginatedResponse.fromJson(
+      data,
+      (json) => ProblemModel.fromJson(json),
+    );
+  }
+
+  // V2 API - Cursor-based pagination for title(query) problems
+  Future<PaginatedResponse<ProblemModel>> getTitleProblemsV2({
+    required String query,
+    int? cursor,
+    int size = 20,
+  }) async {
+    final queryParams = <String, String>{
+      'query': query,
+      'size': size.toString(),
+    };
+    if (cursor != null) {
+      queryParams['cursor'] = cursor.toString();
+    }
+
+    final data = await httpService.sendRequest(
+      method: 'GET',
+      url: '$baseUrl/title/V2',
+      queryParams: queryParams,
+    ) as Map<String, dynamic>;
+
+    return PaginatedResponse.fromJson(
+      data,
+      (json) => ProblemModel.fromJson(json),
+    );
+  }
+
+  Future<ReviewDueResponse> getReviewDueProblems() async {
+    final data = await httpService.sendRequest(
+      method: 'GET',
+      url: '${AppConfig.baseUrl}/api/problems/review-due',
+    );
+    return ReviewDueResponse.fromJson(data as Map<String, dynamic>);
   }
 }

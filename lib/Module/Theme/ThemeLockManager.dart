@@ -7,7 +7,7 @@ import '../../Model/User/UserInfoModel.dart';
 /// - 1, 5, 9, 13, 17, 21: 출석 레벨 기반
 /// - 2, 6, 10, 14, 18, 22: 오답노트 작성 레벨 기반
 /// - 3, 7, 11, 15, 19, 23: 오답노트 복습 레벨 기반
-/// - 4, 8, 12, 16, 20, 24: 복습노트 복습 레벨 기반
+/// - 4, 8, 12, 16, 20, 24: 복습 세트 복습 레벨 기반
 /// - 첫 행(1-4번)은 기본적으로 모두 잠금 해제
 class ThemeLockManager {
   // 각 테마의 색상 (원래 ThemeDialog 순서 그대로)
@@ -81,7 +81,7 @@ class ThemeLockManager {
   /// 1, 5, 9, 13, 17, 21 → 0 (출석)
   /// 2, 6, 10, 14, 18, 22 → 1 (노트작성)
   /// 3, 7, 11, 15, 19, 23 → 2 (오답복습)
-  /// 4, 8, 12, 16, 20, 24 → 3 (복습노트)
+  /// 4, 8, 12, 16, 20, 24 → 3 (복습 세트)
   static int getCategoryIndex(int themeIndex) {
     return themeIndex % 4;
   }
@@ -129,7 +129,7 @@ class ThemeLockManager {
       case 2: // 오답노트 복습 레벨 (3, 7, 11, 15, 19, 23)
         userLevel = userInfo.problemPracticeLevel;
         break;
-      case 3: // 복습노트 복습 레벨 (4, 8, 12, 16, 20, 24)
+      case 3: // 복습 세트 복습 레벨 (4, 8, 12, 16, 20, 24)
         userLevel = userInfo.notePracticeLevel;
         break;
       default:
@@ -159,7 +159,7 @@ class ThemeLockManager {
       case 2:
         return '문제 복습';
       case 3:
-        return '복습노트 복습';
+        return '복습 세트 복습';
       default:
         return '';
     }

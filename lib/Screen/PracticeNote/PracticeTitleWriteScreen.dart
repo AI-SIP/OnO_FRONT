@@ -14,6 +14,7 @@ import '../../Module/Dialog/SnackBarDialog.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/PracticeNoteProvider.dart';
+import '../../Util/AppErrorReporter.dart';
 
 class PracticeTitleWriteScreen extends StatefulWidget {
   final PracticeNoteRegisterModel? practiceRegisterModel;
@@ -113,7 +114,8 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
           await problemPracticeProvider
               .updatePractice(widget.practiceNoteUpdateModel!);
 
-          _showSnackBar(context, themeProvider, '복습 노트가 수정되었습니다.',
+          if (!context.mounted) return;
+          _showSnackBar(context, themeProvider, '복습 세트가 수정되었습니다.',
               themeProvider.primaryColor);
 
           Navigator.pop(context);
@@ -140,16 +142,32 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
           await problemPracticeProvider
               .registerPractice(widget.practiceRegisterModel!);
 
-          _showSnackBar(context, themeProvider, '복습 노트가 생성되었습니다.',
+          if (!context.mounted) return;
+          _showSnackBar(context, themeProvider, '복습 세트가 생성되었습니다.',
               themeProvider.primaryColor);
 
           Navigator.pop(context);
           Navigator.pop(context);
         }
-      } catch (error) {
+      } catch (error, stackTrace) {
         log(error.toString());
-        _showSnackBar(context, themeProvider, '복습 노트 생성에 실패했습니다.', Colors.red);
-        throw Exception(error);
+        final isUpdate = widget.practiceNoteUpdateModel != null;
+        await AppErrorReporter.report(
+          error,
+          stackTrace,
+          source: isUpdate ? 'practice_note_update' : 'practice_note_create',
+          severity: AppErrorSeverity.error,
+        );
+        if (context.mounted) {
+          _showSnackBar(
+            context,
+            themeProvider,
+            isUpdate
+                ? '복습 세트 수정에 실패했습니다. 잠시 후 다시 시도해주세요.'
+                : '복습 세트 생성에 실패했습니다. 잠시 후 다시 시도해주세요.',
+            Colors.red,
+          );
+        }
       }
     }
   }
@@ -270,7 +288,7 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
     return AppBar(
       title: StandardText(
         text:
-            widget.practiceNoteUpdateModel == null ? "복습 노트 만들기" : "복습 노트 수정하기",
+            widget.practiceNoteUpdateModel == null ? "복습 세트 만들기" : "복습 세트 수정하기",
         fontSize: 18,
         color: themeProvider.primaryColor,
       ),
@@ -299,7 +317,7 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
   Widget _buildTitleText() {
     return StandardText(
       text: widget.practiceNoteUpdateModel == null
-          ? "복습 노트의 이름을 입력해주세요"
+          ? "복습 세트의 이름을 입력해주세요"
           : "수정할 이름을 입력해주세요",
       fontSize: 18,
       color: Colors.black,
@@ -327,7 +345,7 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
             ),
             const SizedBox(width: 8),
             const StandardText(
-              text: '복습 노트 제목',
+              text: '복습 세트 제목',
               fontSize: 16,
               fontWeight: FontWeight.w500,
               color: Colors.black87,
@@ -419,24 +437,26 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
 
   Widget _buildSubmitButton(BuildContext context, ThemeHandler themeProvider) {
     return Container(
-      padding: const EdgeInsets.all(16.0),
-      margin: const EdgeInsets.only(bottom: 16.0),
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
       child: SizedBox(
-        width: MediaQuery.of(context).size.width * 0.6,
+        width: double.infinity,
+        height: 50,
         child: ElevatedButton(
           onPressed: () => _submitPractice(context, themeProvider),
           style: ElevatedButton.styleFrom(
             backgroundColor: themeProvider.primaryColor,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(15),
+              borderRadius: BorderRadius.circular(16),
             ),
-            padding: const EdgeInsets.symmetric(vertical: 10),
+            elevation: 0,
           ),
           child: StandardText(
             text: widget.practiceRegisterModel == null
-                ? "복습 노트 수정하기"
-                : "복습 노트 만들기",
+                ? "복습 세트 수정하기"
+                : "복습 세트 만들기",
             fontSize: 16,
+            fontWeight: FontWeight.bold,
             color: Colors.white,
           ),
         ),

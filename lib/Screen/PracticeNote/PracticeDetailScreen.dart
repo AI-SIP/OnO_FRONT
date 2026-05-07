@@ -6,7 +6,7 @@ import 'package:provider/provider.dart';
 import '../../Model/PracticeNote/PracticeNoteDetailModel.dart';
 import '../../Model/Problem/ProblemModel.dart';
 import '../../Module/Dialog/SnackBarDialog.dart';
-import '../../Module/Image/DisplayImage.dart';
+import '../../Module/Problem/ProblemThumbnailCard.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/PracticeNoteProvider.dart';
@@ -136,7 +136,7 @@ class PracticeDetailScreen extends StatelessWidget {
                         ),
                         const SizedBox(width: 12),
                         const StandardText(
-                          text: '복습 노트 편집하기',
+                          text: '복습 세트 편집하기',
                           fontSize: 18,
                           fontWeight: FontWeight.w600,
                           color: Colors.black87,
@@ -148,7 +148,7 @@ class PracticeDetailScreen extends StatelessWidget {
                     _buildActionItem(
                       icon: Icons.edit,
                       iconColor: themeProvider.primaryColor,
-                      title: '복습 노트 편집하기',
+                      title: '복습 세트 편집하기',
                       onTap: () {
                         Navigator.pop(context);
                         Navigator.push(
@@ -167,7 +167,7 @@ class PracticeDetailScreen extends StatelessWidget {
                     _buildActionItem(
                       icon: Icons.delete_forever,
                       iconColor: Colors.red,
-                      title: '복습 노트 삭제하기',
+                      title: '복습 세트 삭제하기',
                       titleColor: Colors.red,
                       onTap: () {
                         Navigator.pop(context);
@@ -297,31 +297,18 @@ class PracticeDetailScreen extends StatelessWidget {
             problem.problemImageDataList!.isNotEmpty
         ? problem.problemImageDataList!.first.imageUrl
         : null;
+    final title =
+        problem.reference?.isNotEmpty == true ? problem.reference! : '제목 없음';
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.grey.withOpacity(0.2),
-              spreadRadius: 1,
-              blurRadius: 5,
-              offset: const Offset(0, 3),
-            ),
-          ],
-        ),
-        padding: const EdgeInsets.all(12),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            _buildImageThumbnail(imageUrl),
-            const SizedBox(width: 16),
-            _buildProblemDetails(problem),
-          ],
-        ),
+      child: ProblemThumbnailCard(
+        title: title,
+        imageUrl: imageUrl,
+        tags: problem.tags,
+        solveCount: problem.solveCount,
+        lastSolvedAt: problem.lastSolvedAt,
+        themeProvider: themeProvider,
       ),
     );
   }
@@ -341,7 +328,7 @@ class PracticeDetailScreen extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             const StandardText(
-              text: '복습노트가 비어있습니다.\n오답노트를 추가해 편리한 복습을 해보세요!',
+              text: '복습 세트가 비어있습니다.\n오답노트를 추가해 편리한 복습을 해보세요!',
               fontSize: 16,
               color: Colors.black87,
               textAlign: TextAlign.center,
@@ -380,71 +367,45 @@ class PracticeDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildImageThumbnail(String? imageUrl) {
-    return SizedBox(
-      width: 50,
-      height: 70,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(8.0),
-        child: DisplayImage(
-          imagePath: imageUrl,
-          fit: BoxFit.cover,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildProblemDetails(ProblemModel problem) {
-    return Expanded(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          StandardText(
-            text: (problem.reference != null && problem.reference!.isNotEmpty)
-                ? problem.reference!
-                : '제목 없음',
-            fontSize: 16,
-            color: Colors.black,
-          ),
-          const SizedBox(height: 4),
-          StandardText(
-            text:
-                '작성 일시: ${problem.createdAt != null ? formatDateTime(problem.createdAt!) : '정보 없음'}',
-            fontSize: 12,
-            color: Colors.grey,
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildNextButton(BuildContext context, ThemeHandler themeProvider,
       ProblemPracticeProvider practiceProvider) {
     return Container(
-      padding: const EdgeInsets.all(16.0),
-      margin: const EdgeInsets.only(bottom: 16.0),
-      width: MediaQuery.of(context).size.width * 0.8,
-      child: ElevatedButton(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: themeProvider.primaryColor,
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(15),
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
+      child: SizedBox(
+        width: double.infinity,
+        height: 50,
+        child: ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: themeProvider.primaryColor,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            elevation: 0,
           ),
-        ),
-        onPressed: () => _onNextButtonPressed(context, practiceProvider),
-        child: const StandardText(
-          text: '복습하기',
-          fontSize: 16,
-          color: Colors.white,
+          onPressed: () => _showPracticeStartModeSheet(
+              context, themeProvider, practiceProvider),
+          child: const StandardText(
+            text: '복습하기',
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
         ),
       ),
     );
   }
 
   void _onNextButtonPressed(
-      BuildContext context, ProblemPracticeProvider practiceProvider) {
+      BuildContext context, ProblemPracticeProvider practiceProvider,
+      {required bool shuffle}) {
     if (practiceProvider.currentProblems.isNotEmpty) {
+      if (shuffle) {
+        practiceProvider.shuffleCurrentProblems();
+      } else {
+        practiceProvider.useRegisteredProblemOrder();
+      }
+
       Navigator.push(
         context,
         MaterialPageRoute(
@@ -457,15 +418,127 @@ class PracticeDetailScreen extends StatelessWidget {
     } else {
       SnackBarDialog.showSnackBar(
         context: context,
-        message: '복습 노트가 비어있습니다!',
+        message: '복습 세트가 비어있습니다!',
         backgroundColor: Colors.red,
       );
     }
   }
 
-  Future<void> _showDeletePracticeDialog(BuildContext context) async {
-    final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
+  void _showPracticeStartModeSheet(BuildContext context,
+      ThemeHandler themeProvider, ProblemPracticeProvider practiceProvider) {
+    if (practiceProvider.currentProblems.isEmpty) {
+      SnackBarDialog.showSnackBar(
+        context: context,
+        message: '복습 세트가 비어있습니다!',
+        backgroundColor: Colors.red,
+      );
+      return;
+    }
 
+    final openTime = DateTime.now();
+    showModalBottomSheet(
+      backgroundColor: Colors.transparent,
+      context: context,
+      isDismissible: false,
+      builder: (sheetContext) {
+        return TapRegion(
+          onTapOutside: (_) {
+            if (DateTime.now().difference(openTime) <
+                const Duration(milliseconds: 500)) {
+              return;
+            }
+            if (Navigator.canPop(sheetContext)) {
+              Navigator.pop(sheetContext);
+            }
+          },
+          child: Container(
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(20),
+                topRight: Radius.circular(20),
+              ),
+            ),
+            child: Padding(
+              padding:
+                  const EdgeInsets.symmetric(vertical: 24.0, horizontal: 20.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 40,
+                    height: 4,
+                    margin: const EdgeInsets.only(bottom: 20),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color:
+                              themeProvider.primaryColor.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Icon(
+                          Icons.play_arrow,
+                          color: themeProvider.primaryColor,
+                          size: 22,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      const StandardText(
+                        text: '복습 방식 선택',
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black87,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                  _buildActionItem(
+                    icon: Icons.format_list_numbered,
+                    iconColor: themeProvider.primaryColor,
+                    title: '등록한 순서로 복습하기',
+                    onTap: () {
+                      Navigator.pop(sheetContext);
+                      _onNextButtonPressed(
+                        context,
+                        practiceProvider,
+                        shuffle: false,
+                      );
+                    },
+                    themeProvider: themeProvider,
+                  ),
+                  const SizedBox(height: 12),
+                  _buildActionItem(
+                    icon: Icons.shuffle,
+                    iconColor: themeProvider.primaryColor,
+                    title: '셔플 모드로 복습하기',
+                    onTap: () {
+                      Navigator.pop(sheetContext);
+                      _onNextButtonPressed(
+                        context,
+                        practiceProvider,
+                        shuffle: true,
+                      );
+                    },
+                    themeProvider: themeProvider,
+                  ),
+                  const SizedBox(height: 4),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _showDeletePracticeDialog(BuildContext context) async {
     return showDialog(
       context: context,
       builder: (context) {
@@ -496,7 +569,7 @@ class PracticeDetailScreen extends StatelessWidget {
                     ),
                     const SizedBox(width: 12),
                     const StandardText(
-                      text: '복습 노트 삭제',
+                      text: '복습 세트 삭제',
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
                       color: Colors.black87,
@@ -506,7 +579,7 @@ class PracticeDetailScreen extends StatelessWidget {
                 const SizedBox(height: 20),
                 // 내용
                 const StandardText(
-                  text: '정말로 이 복습 노트를 삭제하시겠습니까?',
+                  text: '정말로 이 복습 세트를 삭제하시겠습니까?',
                   fontSize: 15,
                   color: Colors.black87,
                   textAlign: TextAlign.center,

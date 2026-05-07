@@ -5,13 +5,13 @@ import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:ono/Model/Common/PaginatedResponse.dart';
-import 'package:ono/Model/Problem/ProblemAnalysisStatus.dart';
 import 'package:ono/Model/Problem/ProblemModel.dart';
 import 'package:ono/Service/Api/Problem/ProblemService.dart';
 
 import '../Model/Problem/ProblemRegisterModel.dart';
 import '../Module/Util/ReviewHandler.dart';
 import '../Service/Api/FileUpload/FileUploadService.dart';
+import '../Util/AppErrorReporter.dart';
 
 class ProblemsProvider with ChangeNotifier {
   // SplayTreeMap: O(log n) 삽입, O(log n) 조회, 자동 정렬
@@ -43,8 +43,14 @@ class ProblemsProvider with ChangeNotifier {
     _problemsMap[problem.problemId] = problem;
   }
 
-  Future<void> fetchProblem(int problemId) async {
-    final fetchedProblem = await problemService.getProblem(problemId);
+  Future<void> fetchProblem(
+    int problemId, {
+    bool showErrorSnackBar = true,
+  }) async {
+    final fetchedProblem = await problemService.getProblem(
+      problemId,
+      showErrorSnackBar: showErrorSnackBar,
+    );
     _upsertProblem(fetchedProblem);
     log('problem: $problemId fetch complete');
     notifyListeners();
@@ -65,12 +71,28 @@ class ProblemsProvider with ChangeNotifier {
   Future<void> registerProblem(
       ProblemRegisterModel problemData, BuildContext context) async {
     int registerProblemId = await problemService.registerProblem(problemData);
-    await fetchProblem(registerProblemId);
+    await _runPostMutationRefresh(
+      () => fetchProblem(
+        registerProblemId,
+        showErrorSnackBar: false,
+      ),
+      source: 'problem_register_refresh',
+    );
 
-    int userProblemCount = await getUserProblemCount();
-    _problemCount = userProblemCount;
+    await _runPostMutationRefresh(
+      () async {
+        int userProblemCount = await getUserProblemCount(
+          showErrorSnackBar: false,
+        );
+        _problemCount = userProblemCount;
+      },
+      source: 'problem_register_count_refresh',
+    );
 
-    await requestReview(context);
+    await _runPostMutationRefresh(
+      () => requestReview(context),
+      source: 'problem_register_review_request',
+    );
 
     log('register problem id: $registerProblemId complete');
     notifyListeners();
@@ -93,6 +115,12 @@ class ProblemsProvider with ChangeNotifier {
       log('문제 분석 결과 조회 실패 - Problem ID: $problemId');
       log('에러: $e');
       log('스택트레이스: $stackTrace');
+      await AppErrorReporter.report(
+        e,
+        stackTrace,
+        source: 'problem_analysis_fetch',
+        severity: AppErrorSeverity.warning,
+      );
     }
   }
 
@@ -107,14 +135,22 @@ class ProblemsProvider with ChangeNotifier {
       problemImageTypes: problemImageTypes,
     );
 
-    await fetchProblem(problemId);
+    await _runPostMutationRefresh(
+      () => fetchProblem(
+        problemId,
+        showErrorSnackBar: false,
+      ),
+      source: 'problem_image_register_refresh',
+    );
 
     log('register problem id: $problemId complete');
     notifyListeners();
   }
 
-  Future<int> getUserProblemCount() async {
-    return await problemService.getProblemCount();
+  Future<int> getUserProblemCount({bool showErrorSnackBar = true}) async {
+    return await problemService.getProblemCount(
+      showErrorSnackBar: showErrorSnackBar,
+    );
   }
 
   Future<void> updateProblem(ProblemRegisterModel problemData) async {
@@ -133,7 +169,13 @@ class ProblemsProvider with ChangeNotifier {
         await problemService.updateProblemPath(problemData);
       }
 
-      await fetchProblem(problemData.problemId!);
+      await _runPostMutationRefresh(
+        () => fetchProblem(
+          problemData.problemId!,
+          showErrorSnackBar: false,
+        ),
+        source: 'problem_update_refresh',
+      );
     } catch (e, stackTrace) {
       log('오답노트 수정 실패 - Problem ID: ${problemData.problemId}');
       log('에러: $e');
@@ -161,7 +203,14 @@ class ProblemsProvider with ChangeNotifier {
     }
 
     // 문제 개수 업데이트
-    _problemCount = await getUserProblemCount();
+    await _runPostMutationRefresh(
+      () async {
+        _problemCount = await getUserProblemCount(
+          showErrorSnackBar: false,
+        );
+      },
+      source: 'problem_delete_count_refresh',
+    );
 
     log('Deleted ${deleteProblemIdList.length} problems from cache');
     notifyListeners();
@@ -184,6 +233,23 @@ class ProblemsProvider with ChangeNotifier {
     final ReviewHandler reviewHandler = ReviewHandler();
     if (_problemCount > 0 && _problemCount % 10 == 0) {
       reviewHandler.requestReview(context);
+    }
+  }
+
+  Future<void> _runPostMutationRefresh(
+    Future<void> Function() refresh, {
+    required String source,
+  }) async {
+    try {
+      await refresh();
+    } catch (e, stackTrace) {
+      log('Post-mutation refresh failed ($source): $e');
+      await AppErrorReporter.report(
+        e,
+        stackTrace,
+        source: source,
+        severity: AppErrorSeverity.warning,
+      );
     }
   }
 
@@ -217,6 +283,62 @@ class ProblemsProvider with ChangeNotifier {
       return response;
     } catch (e, stackTrace) {
       log('Error loading folder problems V2: $e');
+      log(stackTrace.toString());
+      rethrow;
+    }
+  }
+
+  // V2 API - 태그 기반 문제 무한 스크롤 조회
+  Future<PaginatedResponse<ProblemModel>> loadMoreTagProblemsV2({
+    required int tagId,
+    int? cursor,
+    int size = 20,
+  }) async {
+    try {
+      final response = await problemService.getTagProblemsV2(
+        tagId: tagId,
+        cursor: cursor,
+        size: size,
+      );
+
+      for (var problem in response.content) {
+        _upsertProblem(problem);
+      }
+
+      log('Loaded ${response.content.length} problems from tag $tagId');
+      notifyListeners();
+
+      return response;
+    } catch (e, stackTrace) {
+      log('Error loading tag problems V2: $e');
+      log(stackTrace.toString());
+      rethrow;
+    }
+  }
+
+  // V2 API - 제목 기반 문제 무한 스크롤 조회
+  Future<PaginatedResponse<ProblemModel>> loadMoreTitleProblemsV2({
+    required String query,
+    int? cursor,
+    int size = 20,
+  }) async {
+    try {
+      final response = await problemService.getTitleProblemsV2(
+        query: query,
+        cursor: cursor,
+        size: size,
+      );
+
+      for (var problem in response.content) {
+        _upsertProblem(problem);
+      }
+
+      log('Loaded ${response.content.length} problems from title query: $query');
+      notifyListeners();
+
+      return response;
+    } catch (e, stackTrace) {
+      log('Error loading title problems V2: $e');
       log(stackTrace.toString());
       rethrow;
     }

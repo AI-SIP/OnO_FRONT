@@ -7,6 +7,7 @@ class ProblemRegisterModel {
   int? folderId;
   DateTime? solvedAt;
   List<ProblemImageDataRegisterModel>? imageDataDtoList;
+  List<int>? tagIds;
 
   ProblemRegisterModel({
     this.problemId,
@@ -15,6 +16,7 @@ class ProblemRegisterModel {
     this.folderId,
     this.solvedAt,
     this.imageDataDtoList,
+    this.tagIds,
   });
 
   Map<String, dynamic> toJson() {
@@ -26,6 +28,7 @@ class ProblemRegisterModel {
       'solvedAt':
           solvedAt?.subtract(const Duration(hours: 9)).toIso8601String(),
       'imageDataDtoList': imageDataDtoList?.map((e) => e.toJson()).toList(),
+      'tagIds': tagIds,
     };
   }
 }

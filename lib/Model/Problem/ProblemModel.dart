@@ -1,4 +1,5 @@
 import '../Common/ProblemImageDataType.dart';
+import '../Tag/TagModel.dart';
 import 'ProblemImageDataModel.dart';
 import 'ProblemAnalysisModel.dart';
 
@@ -8,14 +9,18 @@ class ProblemModel {
   final String? memo;
   final String? reference;
   final DateTime? solvedAt;
+  final DateTime? lastSolvedAt;
   final DateTime? createdAt;
   final DateTime? updateAt;
+  final int solveCount;
 
   final List<ProblemImageDataModel>? problemImageDataList;
   final List<ProblemImageDataModel>? answerImageDataList;
   final List<ProblemImageDataModel>? solveImageDataList;
 
   final ProblemAnalysisModel? analysis;
+  final List<int> tagIdList;
+  final List<TagModel> tags;
 
   ProblemModel({
     this.problemId = -1,
@@ -23,12 +28,16 @@ class ProblemModel {
     this.memo,
     this.reference,
     this.solvedAt,
+    this.lastSolvedAt,
     this.createdAt,
     this.updateAt,
+    this.solveCount = 0,
     this.problemImageDataList,
     this.answerImageDataList,
     this.solveImageDataList,
     this.analysis,
+    this.tagIdList = const [],
+    this.tags = const [],
   });
 
   factory ProblemModel.fromJson(Map<String, dynamic> json) {
@@ -51,6 +60,15 @@ class ProblemModel {
         solveImages.add(img);
       }
     }
+
+    final tagIds =
+        (json['tagIdList'] as List<dynamic>?)?.map((e) => e as int).toList() ??
+            [];
+    final tags = (json['tags'] as List<dynamic>?)
+            ?.map((e) => TagModel.fromJson(e as Map<String, dynamic>))
+            .toList() ??
+        [];
+
     return ProblemModel(
       problemId: json['problemId'] as int,
       folderId: json['folderId'] as int,
@@ -59,18 +77,25 @@ class ProblemModel {
       solvedAt: json['solvedAt'] != null
           ? DateTime.parse(json['solvedAt'] as String)
           : null,
+      lastSolvedAt: json['lastSolvedAt'] != null
+          ? DateTime.parse(json['lastSolvedAt'] as String)
+          : null,
       createdAt: json['createdAt'] != null
           ? DateTime.parse(json['createdAt'] as String)
           : null,
       updateAt: json['updatedAt'] != null
           ? DateTime.parse(json['updatedAt'] as String)
           : null,
+      solveCount: (json['solveCount'] as num?)?.toInt() ?? 0,
       problemImageDataList: problemImages,
       answerImageDataList: answerImages,
       solveImageDataList: solveImages,
       analysis: json['analysis'] != null
-          ? ProblemAnalysisModel.fromJson(json['analysis'] as Map<String, dynamic>)
+          ? ProblemAnalysisModel.fromJson(
+              json['analysis'] as Map<String, dynamic>)
           : null,
+      tagIdList: tagIds,
+      tags: tags,
     );
   }
 
@@ -81,12 +106,16 @@ class ProblemModel {
       memo: memo,
       reference: reference,
       solvedAt: solvedAt,
+      lastSolvedAt: lastSolvedAt,
       createdAt: createdAt,
       updateAt: updateAt,
+      solveCount: solveCount,
       problemImageDataList: problemImageDataList,
       answerImageDataList: answerImageDataList,
       solveImageDataList: solveImageDataList,
       analysis: analysis,
+      tagIdList: tagIdList,
+      tags: tags,
     );
   }
 

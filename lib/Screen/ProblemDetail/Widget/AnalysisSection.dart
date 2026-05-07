@@ -50,7 +50,7 @@ Widget _buildNoImageState(BuildContext context, Color primaryColor) {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Icon(
-          Icons.image_not_supported_outlined,
+          Icons.image_not_supported,
           color: Colors.grey[400],
           size: 48,
         ),
@@ -204,8 +204,8 @@ Widget _buildCompletedState(
             _hasMoreSections(analysis, 'problemType'))
           _buildDivider(),
         if (analysis.keyPoints != null && analysis.keyPoints!.isNotEmpty)
-          _buildAnalysisListSection('핵심 포인트', analysis.keyPoints!,
-              Icons.lightbulb_outline, primaryColor),
+          _buildAnalysisListSection(
+              '핵심 포인트', analysis.keyPoints!, Icons.lightbulb, primaryColor),
         if (analysis.keyPoints != null &&
             analysis.keyPoints!.isNotEmpty &&
             _hasMoreSections(analysis, 'keyPoints'))

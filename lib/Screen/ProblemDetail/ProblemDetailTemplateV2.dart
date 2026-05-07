@@ -105,7 +105,7 @@ class _ProblemDetailTemplateV2State extends State<ProblemDetailTemplateV2>
             children: [
               Row(
                 children: [
-                  Icon(Icons.calendar_today_outlined,
+                  Icon(Icons.calendar_month,
                       color: themeProvider.primaryColor, size: 18),
                   const SizedBox(width: 8),
                   buildDateRow(widget.problemModel.solvedAt!,

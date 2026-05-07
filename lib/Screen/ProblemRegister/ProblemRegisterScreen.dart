@@ -63,8 +63,8 @@ class _ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
           ],
         ),
         padding: EdgeInsets.only(
-          left: 20,
-          right: 20,
+          left: 24,
+          right: 24,
           top: 12,
           bottom: MediaQuery.of(context).padding.bottom + 12,
         ),
