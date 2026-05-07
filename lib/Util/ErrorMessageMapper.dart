@@ -1,7 +1,7 @@
 import '../Constants/ErrorMessages.dart';
 
 class ErrorMessageMapper {
-  static String byErrorCode({required int? errorCode, String? fallback}) {
+  static String? byErrorCodeOrNull(int? errorCode) {
     switch (errorCode) {
       case 1001:
         return ErrorMessages.invalidRefreshToken;
@@ -66,8 +66,12 @@ class ErrorMessageMapper {
       case 9005:
         return ErrorMessages.tagLimitExceeded;
       default:
-        return fallback ?? ErrorMessages.unknown;
+        return null;
     }
+  }
+
+  static String byErrorCode({required int? errorCode, String? fallback}) {
+    return byErrorCodeOrNull(errorCode) ?? fallback ?? ErrorMessages.unknown;
   }
 
   static String sanitizeRawMessage(

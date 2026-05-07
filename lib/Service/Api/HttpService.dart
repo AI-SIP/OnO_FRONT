@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:developer' as developer;
-import 'dart:developer';
 import 'dart:io';
 
 import 'package:http/http.dart' as http;
@@ -38,13 +37,7 @@ class HttpService {
       );
     }
     if (error is BadRequestException) {
-      return ErrorMessageMapper.byErrorCode(
-        errorCode: error.errorCode,
-        fallback: ErrorMessageMapper.sanitizeRawMessage(
-          error.getUserMessage(),
-          fallback: ErrorMessages.badRequest,
-        ),
-      );
+      return error.getUserMessage();
     }
     if (error is ParseException) {
       return ErrorMessageMapper.sanitizeRawMessage(
@@ -53,10 +46,7 @@ class HttpService {
       );
     }
     if (error is ApiException) {
-      return ErrorMessageMapper.byErrorCode(
-        errorCode: error.errorCode,
-        fallback: ErrorMessageMapper.sanitizeRawMessage(error.getUserMessage()),
-      );
+      return error.getUserMessage();
     }
     return ErrorMessages.unknown;
   }
@@ -135,7 +125,7 @@ class HttpService {
               });
             }
 
-            log('req: ${req.fields.toString()}.');
+            developer.log('req: ${req.fields.toString()}.');
             final streamed =
                 await req.send().timeout(const Duration(seconds: 90));
             response = await http.Response.fromStream(streamed);
@@ -379,15 +369,18 @@ class HttpService {
   }) {
     final statusFallback = _fallbackByStatus(status);
     if (errorCode != null) {
-      return ErrorMessageMapper.byErrorCode(
-        errorCode: errorCode,
-        fallback: statusFallback,
+      return ErrorMessageMapper.sanitizeRawMessage(
+        rawMessage,
+        fallback:
+            ErrorMessageMapper.byErrorCodeOrNull(errorCode) ?? statusFallback,
+        allowRawMessage: true,
       );
     }
 
     return ErrorMessageMapper.sanitizeRawMessage(
       rawMessage,
       fallback: statusFallback,
+      allowRawMessage: true,
     );
   }
 

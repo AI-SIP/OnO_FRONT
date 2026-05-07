@@ -25,9 +25,11 @@ class ApiException implements Exception {
 
   /// 사용자에게 표시할 메시지를 반환
   String getUserMessage() {
-    return ErrorMessageMapper.byErrorCode(
-      errorCode: errorCode,
-      fallback: ErrorMessageMapper.sanitizeRawMessage(message),
+    return ErrorMessageMapper.sanitizeRawMessage(
+      message,
+      fallback: ErrorMessageMapper.byErrorCodeOrNull(errorCode) ??
+          ErrorMessages.unknown,
+      allowRawMessage: true,
     );
   }
 }
@@ -71,12 +73,11 @@ class UnauthorizedException implements Exception {
   @override
   String toString() => 'UnauthorizedException(errorCode: $errorCode): $message';
 
-  String getUserMessage() => ErrorMessageMapper.byErrorCode(
-        errorCode: errorCode,
-        fallback: ErrorMessageMapper.sanitizeRawMessage(
-          message,
-          fallback: ErrorMessages.authRequired,
-        ),
+  String getUserMessage() => ErrorMessageMapper.sanitizeRawMessage(
+        message,
+        fallback: ErrorMessageMapper.byErrorCodeOrNull(errorCode) ??
+            ErrorMessages.authRequired,
+        allowRawMessage: true,
       );
 }
 
@@ -93,8 +94,11 @@ class ServerException implements Exception {
   @override
   String toString() => 'ServerException(status: $statusCode): $message';
 
-  String getUserMessage() => ErrorMessageMapper.sanitizeRawMessage(message,
-      fallback: ErrorMessages.server);
+  String getUserMessage() => ErrorMessageMapper.sanitizeRawMessage(
+        message,
+        fallback: ErrorMessages.server,
+        allowRawMessage: true,
+      );
 }
 
 /// 잘못된 요청 예외 (400번대 에러)
@@ -114,12 +118,11 @@ class BadRequestException implements Exception {
       'BadRequestException(status: $statusCode, errorCode: $errorCode): $message';
 
   String getUserMessage() {
-    return ErrorMessageMapper.byErrorCode(
-      errorCode: errorCode,
-      fallback: ErrorMessageMapper.sanitizeRawMessage(
-        message,
-        fallback: ErrorMessages.badRequest,
-      ),
+    return ErrorMessageMapper.sanitizeRawMessage(
+      message,
+      fallback: ErrorMessageMapper.byErrorCodeOrNull(errorCode) ??
+          ErrorMessages.badRequest,
+      allowRawMessage: true,
     );
   }
 }

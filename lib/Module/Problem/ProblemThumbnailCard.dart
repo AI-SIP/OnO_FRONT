@@ -161,7 +161,7 @@ class ProblemThumbnailCard extends StatelessWidget {
 
     return Semantics(
       label: lastSolvedDateText == null
-          ? '풀이 진행 $cappedSolveCount/3'
+          ? '복습 기록 없음, 풀이 진행 $cappedSolveCount/3'
           : '최근 복습 $lastSolvedDateText, 풀이 진행 $cappedSolveCount/3',
       child: SizedBox(
         width: 64,
@@ -195,32 +195,39 @@ class ProblemThumbnailCard extends StatelessWidget {
                 }),
               ),
             ),
-            if (lastSolvedDateText != null) ...[
-              const SizedBox(height: 6),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(vertical: 4),
-                decoration: BoxDecoration(
-                  color: themeProvider.primaryColor.withValues(alpha: 0.07),
-                  borderRadius: BorderRadius.circular(7),
-                ),
-                child: Column(
-                  children: [
-                    StandardText(
-                      text: '최근 복습',
-                      fontSize: 10,
-                      color: themeProvider.primaryColor,
-                    ),
-                    const SizedBox(height: 1),
-                    StandardText(
-                      text: lastSolvedDateText,
-                      fontSize: 10,
-                      color: themeProvider.primaryColor,
-                    ),
-                  ],
-                ),
+            const SizedBox(height: 6),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              decoration: BoxDecoration(
+                color: lastSolvedDateText != null
+                    ? themeProvider.primaryColor.withValues(alpha: 0.07)
+                    : Colors.grey.shade100,
+                borderRadius: BorderRadius.circular(7),
               ),
-            ],
+              child: lastSolvedDateText != null
+                  ? Column(
+                      children: [
+                        StandardText(
+                          text: '최근 복습',
+                          fontSize: 10,
+                          color: themeProvider.primaryColor,
+                        ),
+                        const SizedBox(height: 1),
+                        StandardText(
+                          text: lastSolvedDateText,
+                          fontSize: 10,
+                          color: themeProvider.primaryColor,
+                        ),
+                      ],
+                    )
+                  : StandardText(
+                      text: '기록 없음',
+                      fontSize: 10,
+                      color: Colors.grey.shade400,
+                      textAlign: TextAlign.center,
+                    ),
+            ),
           ],
         ),
       ),
