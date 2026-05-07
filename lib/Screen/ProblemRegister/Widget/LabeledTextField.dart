@@ -10,6 +10,8 @@ class LabeledTextField extends StatelessWidget {
   final IconData? icon;
   final TextEditingController controller;
   final int maxLines;
+  final bool showClearButton;
+  final ValueChanged<String>? onChanged;
 
   const LabeledTextField({
     super.key,
@@ -18,6 +20,8 @@ class LabeledTextField extends StatelessWidget {
     this.icon,
     required this.controller,
     this.maxLines = 1,
+    this.showClearButton = false,
+    this.onChanged,
   });
 
   @override
@@ -59,11 +63,32 @@ class LabeledTextField extends StatelessWidget {
                     fontWeight: FontWeight.w500,
                     color: Colors.black87,
                   ),
+                  if (showClearButton) ...[
+                    const Spacer(),
+                    IconButton(
+                      onPressed: () {
+                        controller.clear();
+                        onChanged?.call('');
+                      },
+                      icon: Icon(
+                        Icons.close,
+                        size: 18,
+                        color: Colors.grey[600],
+                      ),
+                      visualDensity: VisualDensity.compact,
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(
+                        minWidth: 32,
+                        minHeight: 32,
+                      ),
+                    ),
+                  ],
                 ],
               ),
               const SizedBox(height: 12),
               TextField(
                 controller: controller,
+                onChanged: onChanged,
                 style: standardTextStyle.copyWith(
                   color: Colors.black87,
                   fontSize: 15,
