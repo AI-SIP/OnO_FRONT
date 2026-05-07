@@ -67,6 +67,8 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
   final Set<int> _selectedTagIds = {};
   bool _isLoadingTags = false;
   bool _isLoadingRecommendations = false;
+  bool _hasUserEditedTitle = false;
+  bool _isApplyingDefaultTitle = false;
 
   @override
   void initState() {
@@ -96,6 +98,9 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
           folderProvider.currentFolder?.folderId;
     }
     _titleCtrl.text = problemModel?.reference ?? '';
+    if (!widget.isEditMode && _titleCtrl.text.trim().isEmpty) {
+      _setDefaultTitleForFolder(_selectedFolderId);
+    }
     _memoCtrl.text = problemModel?.memo ?? '';
     _selectedTagIds.addAll(problemModel?.tagIdList ?? []);
     _loadMyTags();
@@ -121,131 +126,19 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              DatePickerWidget(
-                selectedDate: _selectedDate,
-                onDateChanged: (d) => setState(() => _selectedDate = d),
-              ),
-              SizedBox(height: spacing),
-              FolderPickerWidget(
-                selectedId: _selectedFolderId,
-                onPicked: (id) => setState(() => _selectedFolderId = id),
-              ),
-              SizedBox(height: spacing),
-              if (isWide)
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildImageSectionContainer(
-                        child: ImageGridWidget(
-                          label: '문제 이미지',
-                          files: _problemImages,
-                          existingImageUrls: _existingProblemImageUrls,
-                          onAdd: _pickProblemImage,
-                          onRemove: widget.isEditMode
-                              ? (i) =>
-                                  setState(() => _problemImages.removeAt(i))
-                              : _removePendingProblemImage,
-                          onRemoveExisting: (i) {
-                            widget.isEditMode
-                                ? setState(() {
-                                    final removedUrl =
-                                        _existingProblemImageUrls.removeAt(i);
-                                    _deletedImageUrls.add(removedUrl);
-                                  })
-                                : _removeUploadedProblemImage(i);
-                          },
-                          titleIconPadding: const EdgeInsets.all(8),
-                          titleIconSize: 20,
-                          titleIconBorderRadius: 8,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 30),
-                    Expanded(
-                      child: _buildImageSectionContainer(
-                        child: ImageGridWidget(
-                          label: '해설 이미지',
-                          files: _answerImages,
-                          existingImageUrls: _existingAnswerImageUrls,
-                          onAdd: _pickAnswerImage,
-                          onRemove: widget.isEditMode
-                              ? (i) => setState(() => _answerImages.removeAt(i))
-                              : _removePendingAnswerImage,
-                          onRemoveExisting: (i) {
-                            widget.isEditMode
-                                ? setState(() {
-                                    final removedUrl =
-                                        _existingAnswerImageUrls.removeAt(i);
-                                    _deletedImageUrls.add(removedUrl);
-                                  })
-                                : _removeUploadedAnswerImage(i);
-                          },
-                          titleIconPadding: const EdgeInsets.all(8),
-                          titleIconSize: 20,
-                          titleIconBorderRadius: 8,
-                        ),
-                      ),
-                    ),
-                  ],
-                )
-              else
-                Column(
-                  children: [
-                    _buildImageSectionContainer(
-                      child: ImageGridWidget(
-                        label: '문제 이미지',
-                        files: _problemImages,
-                        existingImageUrls: _existingProblemImageUrls,
-                        onAdd: _pickProblemImage,
-                        onRemove: widget.isEditMode
-                            ? (i) => setState(() => _problemImages.removeAt(i))
-                            : _removePendingProblemImage,
-                        onRemoveExisting: (i) {
-                          widget.isEditMode
-                              ? setState(() {
-                                  final removedUrl =
-                                      _existingProblemImageUrls.removeAt(i);
-                                  _deletedImageUrls.add(removedUrl);
-                                })
-                              : _removeUploadedProblemImage(i);
-                        },
-                        titleIconPadding: const EdgeInsets.all(8),
-                        titleIconSize: 20,
-                        titleIconBorderRadius: 8,
-                      ),
-                    ),
-                    const SizedBox(height: 30),
-                    _buildImageSectionContainer(
-                      child: ImageGridWidget(
-                        label: '해설 이미지',
-                        files: _answerImages,
-                        existingImageUrls: _existingAnswerImageUrls,
-                        onAdd: _pickAnswerImage,
-                        onRemove: widget.isEditMode
-                            ? (i) => setState(() => _answerImages.removeAt(i))
-                            : _removePendingAnswerImage,
-                        onRemoveExisting: (i) {
-                          widget.isEditMode
-                              ? setState(() {
-                                  final removedUrl =
-                                      _existingAnswerImageUrls.removeAt(i);
-                                  _deletedImageUrls.add(removedUrl);
-                                })
-                              : _removeUploadedAnswerImage(i);
-                        },
-                        titleIconPadding: const EdgeInsets.all(8),
-                        titleIconSize: 20,
-                        titleIconBorderRadius: 8,
-                      ),
-                    ),
-                  ],
-                ),
+              _buildImageSections(isWide: isWide),
               SizedBox(height: spacing),
               LabeledTextField(
                 label: '제목',
                 hintText: '오답노트의 제목을 작성해주세요!',
                 icon: Icons.info,
                 controller: _titleCtrl,
+                showClearButton: true,
+                onChanged: (_) {
+                  if (!_isApplyingDefaultTitle) {
+                    _hasUserEditedTitle = true;
+                  }
+                },
               ),
               SizedBox(height: spacing),
               _buildTagSection(context),
@@ -257,9 +150,114 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
                 hintText: '기록하고 싶은 내용을 간단하게 작성해주세요!',
                 maxLines: 3,
               ),
+              SizedBox(height: spacing),
+              DatePickerWidget(
+                selectedDate: _selectedDate,
+                onDateChanged: (d) => setState(() => _selectedDate = d),
+              ),
+              SizedBox(height: spacing),
+              FolderPickerWidget(
+                selectedId: _selectedFolderId,
+                onPicked: _updateSelectedFolder,
+              ),
             ],
           ),
         ));
+  }
+
+  Widget _buildImageSections({required bool isWide}) {
+    final problemSection = _buildImageSectionContainer(
+      child: ImageGridWidget(
+        label: '문제 이미지',
+        files: _problemImages,
+        existingImageUrls: _existingProblemImageUrls,
+        onAdd: _pickProblemImage,
+        onRemove: widget.isEditMode
+            ? (i) => setState(() => _problemImages.removeAt(i))
+            : _removePendingProblemImage,
+        onRemoveExisting: (i) {
+          widget.isEditMode
+              ? setState(() {
+                  final removedUrl = _existingProblemImageUrls.removeAt(i);
+                  _deletedImageUrls.add(removedUrl);
+                })
+              : _removeUploadedProblemImage(i);
+        },
+        titleIconPadding: const EdgeInsets.all(8),
+        titleIconSize: 20,
+        titleIconBorderRadius: 8,
+      ),
+    );
+    final answerSection = _buildImageSectionContainer(
+      child: ImageGridWidget(
+        label: '해설 이미지',
+        files: _answerImages,
+        existingImageUrls: _existingAnswerImageUrls,
+        onAdd: _pickAnswerImage,
+        onRemove: widget.isEditMode
+            ? (i) => setState(() => _answerImages.removeAt(i))
+            : _removePendingAnswerImage,
+        onRemoveExisting: (i) {
+          widget.isEditMode
+              ? setState(() {
+                  final removedUrl = _existingAnswerImageUrls.removeAt(i);
+                  _deletedImageUrls.add(removedUrl);
+                })
+              : _removeUploadedAnswerImage(i);
+        },
+        titleIconPadding: const EdgeInsets.all(8),
+        titleIconSize: 20,
+        titleIconBorderRadius: 8,
+      ),
+    );
+
+    if (isWide) {
+      return Row(
+        children: [
+          Expanded(child: problemSection),
+          const SizedBox(width: 30),
+          Expanded(child: answerSection),
+        ],
+      );
+    }
+
+    return Column(
+      children: [
+        problemSection,
+        const SizedBox(height: 30),
+        answerSection,
+      ],
+    );
+  }
+
+  void _updateSelectedFolder(int? folderId) {
+    setState(() => _selectedFolderId = folderId);
+    if (!widget.isEditMode && !_hasUserEditedTitle) {
+      _setDefaultTitleForFolder(folderId);
+    }
+  }
+
+  void _setDefaultTitleForFolder(int? folderId) {
+    _isApplyingDefaultTitle = true;
+    _titleCtrl.text = '${_resolveFolderName(folderId)} 1';
+    _isApplyingDefaultTitle = false;
+  }
+
+  String _resolveFolderName(int? folderId) {
+    if (folderId == null) return '오답노트';
+
+    final foldersProvider =
+        Provider.of<FoldersProvider>(context, listen: false);
+    final currentFolder = foldersProvider.currentFolder;
+    if (currentFolder != null && currentFolder.folderId == folderId) {
+      return currentFolder.folderName;
+    }
+    for (final folder in foldersProvider.folders) {
+      if (folder.folderId == folderId) {
+        return folder.folderName;
+      }
+    }
+    return '오답노트';
   }
 
   Widget _buildImageSectionContainer({required Widget child}) {
