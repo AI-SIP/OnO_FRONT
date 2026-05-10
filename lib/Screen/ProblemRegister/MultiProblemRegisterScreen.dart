@@ -581,7 +581,21 @@ class _MultiProblemRegisterScreenState
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildDraftHeader(themeProvider, index),
+          DatePickerWidget(
+            selectedDate: draft.solvedAt,
+            onDateChanged: (date) {
+              draft.solvedAt = date;
+              refresh();
+            },
+          ),
+          const SizedBox(height: 14),
+          FolderPickerWidget(
+            selectedId: draft.folderId,
+            onPicked: (folderId) {
+              draft.folderId = folderId;
+              refresh();
+            },
+          ),
           const SizedBox(height: 14),
           _buildProblemImagePreview(themeProvider, draft),
           const SizedBox(height: 14),
@@ -613,22 +627,6 @@ class _MultiProblemRegisterScreenState
             controller: draft.memoController,
             maxLines: 4,
             showClearButton: true,
-          ),
-          const SizedBox(height: 14),
-          DatePickerWidget(
-            selectedDate: draft.solvedAt,
-            onDateChanged: (date) {
-              draft.solvedAt = date;
-              refresh();
-            },
-          ),
-          const SizedBox(height: 14),
-          FolderPickerWidget(
-            selectedId: draft.folderId,
-            onPicked: (folderId) {
-              draft.folderId = folderId;
-              refresh();
-            },
           ),
         ],
       ),
@@ -832,68 +830,6 @@ class _MultiProblemRegisterScreenState
               color: Colors.black87,
               fontWeight: FontWeight.w600,
               overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDraftHeader(ThemeHandler themeProvider, int index) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.grey[50],
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[200]!, width: 1),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: themeProvider.primaryColor.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Icon(
-              Icons.edit_note_outlined,
-              color: themeProvider.primaryColor,
-              size: 20,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                StandardText(
-                  text: '문제 ${index + 1} 상세 정보',
-                  fontSize: 16,
-                  color: Colors.black87,
-                  fontWeight: FontWeight.w600,
-                ),
-                const SizedBox(height: 3),
-                StandardText(
-                  text: '등록 전 내용을 확인해 주세요',
-                  fontSize: 13,
-                  color: Colors.grey[600]!,
-                ),
-              ],
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.grey[200]!),
-            ),
-            child: StandardText(
-              text: '${index + 1}/${_drafts.length}',
-              fontSize: 12,
-              color: themeProvider.primaryColor,
-              fontWeight: FontWeight.w600,
             ),
           ),
         ],
@@ -1445,8 +1381,8 @@ class _MultiProblemRegisterScreenState
   }
 
   Future<void> _openDraftEditor(int index) async {
-    final draft = _drafts[index];
     final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
+    var currentIndex = index;
 
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
@@ -1459,6 +1395,10 @@ class _MultiProblemRegisterScreenState
                 }
                 editorSetState(() {});
               }
+
+              final draft = _drafts[currentIndex];
+              final canMovePrevious = currentIndex > 0;
+              final canMoveNext = currentIndex < _drafts.length - 1;
 
               return Scaffold(
                 backgroundColor: Colors.white,
@@ -1474,45 +1414,113 @@ class _MultiProblemRegisterScreenState
                     onPressed: () => Navigator.pop(editorContext),
                   ),
                   title: StandardText(
-                    text: '문제 ${index + 1} 내용 확인',
+                    text: '문제 ${currentIndex + 1} 내용 확인',
                     fontSize: 17,
                     color: themeProvider.primaryColor,
                     fontWeight: FontWeight.w600,
                   ),
                   centerTitle: true,
                 ),
-                body: _buildDraftDetail(
-                  themeProvider,
-                  draft,
-                  index,
-                  refresh,
-                ),
-                bottomNavigationBar: SafeArea(
-                  top: false,
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 10, 16, 14),
-                    child: SizedBox(
-                      height: 48,
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: () => Navigator.pop(editorContext),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: themeProvider.primaryColor,
-                          foregroundColor: Colors.white,
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        child: const StandardText(
-                          text: '확인 완료',
-                          fontSize: 16,
-                          color: Colors.white,
-                          fontWeight: FontWeight.w600,
+                body: Column(
+                  children: [
+                    Expanded(
+                      child: _buildDraftDetail(
+                        themeProvider,
+                        draft,
+                        currentIndex,
+                        refresh,
+                      ),
+                    ),
+                    SafeArea(
+                      top: false,
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 10, 16, 14),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: SizedBox(
+                                height: 46,
+                                child: OutlinedButton.icon(
+                                  onPressed: canMovePrevious
+                                      ? () {
+                                          currentIndex--;
+                                          refresh();
+                                        }
+                                      : null,
+                                  style: OutlinedButton.styleFrom(
+                                    foregroundColor: Colors.black87,
+                                    disabledForegroundColor: Colors.grey[400],
+                                    side: BorderSide(
+                                      color: canMovePrevious
+                                          ? Colors.grey[300]!
+                                          : Colors.grey[200]!,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                  ),
+                                  icon: const Icon(
+                                    Icons.chevron_left,
+                                    size: 20,
+                                  ),
+                                  label: const StandardText(
+                                    text: '이전',
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            SizedBox(
+                              width: 64,
+                              child: Center(
+                                child: StandardText(
+                                  text: '${currentIndex + 1}/${_drafts.length}',
+                                  fontSize: 14,
+                                  color: Colors.black87,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
+                            Expanded(
+                              child: SizedBox(
+                                height: 46,
+                                child: ElevatedButton.icon(
+                                  onPressed: canMoveNext
+                                      ? () {
+                                          currentIndex++;
+                                          refresh();
+                                        }
+                                      : () => Navigator.pop(editorContext),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: themeProvider.primaryColor,
+                                    foregroundColor: Colors.white,
+                                    elevation: 0,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                  ),
+                                  icon: Icon(
+                                    canMoveNext
+                                        ? Icons.chevron_right
+                                        : Icons.check,
+                                    size: 20,
+                                    color: Colors.white,
+                                  ),
+                                  label: StandardText(
+                                    text: canMoveNext ? '다음' : '확인 완료',
+                                    fontSize: 14,
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
-                  ),
+                  ],
                 ),
               );
             },
