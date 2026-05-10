@@ -11,6 +11,7 @@ import '../../Model/Tag/TagModel.dart';
 import '../../Module/Dialog/SnackBarDialog.dart';
 import '../../Module/Image/ImagePickerHandler.dart';
 import '../../Module/Text/StandardText.dart';
+import '../../Module/Util/FolderPickerDialog.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Module/Util/FolderPickerWidget.dart';
 import '../../Provider/FoldersProvider.dart';
@@ -31,6 +32,8 @@ enum _BatchRegisterStep {
   selectImages,
   editDetails,
 }
+
+const int _maxBatchProblemCount = 20;
 
 class MultiProblemRegisterScreen extends StatefulWidget {
   final int? initialFolderId;
@@ -196,6 +199,9 @@ class _MultiProblemRegisterScreenState
       return _buildEmptyImageState(themeProvider);
     }
 
+    final canAddMoreImages =
+        !_isSubmitting && _problemImages.length < _maxBatchProblemCount;
+
     return Column(
       children: [
         Padding(
@@ -233,7 +239,7 @@ class _MultiProblemRegisterScreenState
                 ),
                 const SizedBox(width: 8),
                 ElevatedButton.icon(
-                  onPressed: _isSubmitting ? null : _pickProblemImages,
+                  onPressed: canAddMoreImages ? _pickProblemImages : null,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: themeProvider.primaryColor,
                     foregroundColor: Colors.white,
@@ -446,8 +452,11 @@ class _MultiProblemRegisterScreenState
   }
 
   Widget _buildAddImageTile(ThemeHandler themeProvider) {
+    final canAddMoreImages =
+        !_isSubmitting && _problemImages.length < _maxBatchProblemCount;
+
     return InkWell(
-      onTap: _isSubmitting ? null : _pickProblemImages,
+      onTap: canAddMoreImages ? _pickProblemImages : null,
       borderRadius: BorderRadius.circular(12),
       child: Container(
         decoration: BoxDecoration(
@@ -461,15 +470,19 @@ class _MultiProblemRegisterScreenState
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              Icons.add_photo_alternate_outlined,
-              color: themeProvider.primaryColor,
+              canAddMoreImages
+                  ? Icons.add_photo_alternate_outlined
+                  : Icons.check_circle_outline,
+              color:
+                  canAddMoreImages ? themeProvider.primaryColor : Colors.grey,
               size: 28,
             ),
             const SizedBox(height: 8),
             StandardText(
-              text: '더 추가',
+              text: canAddMoreImages ? '더 추가' : '최대 20장',
               fontSize: 13,
-              color: themeProvider.primaryColor,
+              color:
+                  canAddMoreImages ? themeProvider.primaryColor : Colors.grey,
               fontWeight: FontWeight.w500,
             ),
           ],
@@ -626,7 +639,7 @@ class _MultiProblemRegisterScreenState
           FolderPickerWidget(
             selectedId: draft.folderId,
             onPicked: (folderId) {
-              draft.folderId = folderId;
+              _updateDraftFolder(draft, index, folderId);
               refresh();
             },
           ),
@@ -1390,9 +1403,28 @@ class _MultiProblemRegisterScreenState
         await _imagePickerHandler.pickMultipleImagesFromGallery(context);
     if (!mounted || pickedImages.isEmpty) return;
 
+    final remainingCount = _maxBatchProblemCount - _problemImages.length;
+    if (remainingCount <= 0) {
+      SnackBarDialog.showSnackBar(
+        context: context,
+        message: '여러 장 작성은 한 번에 최대 20장까지 등록할 수 있습니다.',
+        backgroundColor: Colors.orange,
+      );
+      return;
+    }
+
+    final imagesToAdd = pickedImages.take(remainingCount).toList();
     setState(() {
-      _problemImages.addAll(pickedImages);
+      _problemImages.addAll(imagesToAdd);
     });
+
+    if (pickedImages.length > remainingCount) {
+      SnackBarDialog.showSnackBar(
+        context: context,
+        message: '최대 20장까지만 추가했습니다.',
+        backgroundColor: Colors.orange,
+      );
+    }
   }
 
   Future<void> _pickAnswerImages(
@@ -1474,13 +1506,12 @@ class _MultiProblemRegisterScreenState
     }
     _drafts.clear();
 
-    final titlePrefix = _resolvedTitlePrefix();
-    final titleStartNumber = _existingProblemCountForFolder(_selectedFolderId);
     for (var index = 0; index < _problemImages.length; index++) {
+      final title = _defaultDraftTitle(_selectedFolderId, index);
       _drafts.add(
         _BatchProblemDraft(
           problemImages: [_problemImages[index]],
-          title: '$titlePrefix - ${titleStartNumber + index + 1}',
+          title: title,
           memo: '',
           folderId: _selectedFolderId,
           solvedAt: _selectedDate,
@@ -1734,17 +1765,37 @@ class _MultiProblemRegisterScreenState
 
     Navigator.of(context, rootNavigator: true).pop();
     progress.dispose();
+    var practiceSetCreated = true;
     if (_createPracticeSet) {
-      await _createPracticeSetFromProblems(registeredProblemIds);
+      try {
+        await _createPracticeSetFromProblems(
+          registeredProblemIds,
+          draftsToRegister,
+        );
+      } catch (e, stackTrace) {
+        practiceSetCreated = false;
+        log('복습 세트 생성 실패: $e');
+        unawaited(
+          AppErrorReporter.report(
+            e,
+            stackTrace,
+            source: 'batch_problem_register_practice_create',
+            severity: AppErrorSeverity.error,
+          ),
+        );
+      }
       if (!mounted) return;
     }
     Provider.of<ScreenIndexProvider>(context, listen: false)
         .setSelectedIndex(0);
     SnackBarDialog.showSnackBar(
       context: context,
-      message: '${draftsToRegister.length}개의 문제가 등록되었습니다.',
-      backgroundColor:
-          Provider.of<ThemeHandler>(context, listen: false).primaryColor,
+      message: _createPracticeSet && !practiceSetCreated
+          ? '${draftsToRegister.length}개의 문제는 등록됐지만 복습 세트 생성에 실패했습니다.'
+          : '${draftsToRegister.length}개의 문제가 등록되었습니다.',
+      backgroundColor: _createPracticeSet && !practiceSetCreated
+          ? Colors.orange
+          : Provider.of<ThemeHandler>(context, listen: false).primaryColor,
     );
     Navigator.of(context).pop(true);
   }
@@ -1822,22 +1873,22 @@ class _MultiProblemRegisterScreenState
     return registeredProblemId;
   }
 
-  Future<void> _createPracticeSetFromProblems(List<int> problemIds) async {
+  Future<void> _createPracticeSetFromProblems(
+    List<int> problemIds,
+    List<_BatchProblemDraft> registeredDrafts,
+  ) async {
     if (problemIds.isEmpty) return;
 
     final practiceProvider =
         Provider.of<ProblemPracticeProvider>(context, listen: false);
-    final practiceTitle = _resolveFolderName(_selectedFolderId);
+    final practiceTitle = _resolvePracticeSetTitle(registeredDrafts);
     final registerModel = PracticeNoteRegisterModel(
       practiceId: null,
       practiceTitle: practiceTitle,
       registerProblemIdList: problemIds,
     );
 
-    await _runPostSaveTask(
-      () => practiceProvider.registerPractice(registerModel),
-      source: 'batch_problem_register_practice_create',
-    );
+    await practiceProvider.registerPractice(registerModel);
   }
 
   void _showProgressDialog(ValueNotifier<int> progress, int total) {
@@ -1977,14 +2028,37 @@ class _MultiProblemRegisterScreenState
     }
   }
 
-  String _resolvedTitlePrefix() {
-    return _resolveFolderName(_selectedFolderId);
+  String _defaultDraftTitle(int? folderId, int index) {
+    final titleStartNumber = _existingProblemCountForFolder(folderId);
+    return '${_resolveFolderName(folderId)} - ${titleStartNumber + index + 1}';
+  }
+
+  void _updateDraftFolder(
+    _BatchProblemDraft draft,
+    int index,
+    int? folderId,
+  ) {
+    draft.folderId = folderId;
+    draft.updateAutoTitle(_defaultDraftTitle(folderId, index));
   }
 
   String _resolveDraftTitle(_BatchProblemDraft draft) {
     final typedTitle = draft.titleController.text.trim();
     if (typedTitle.isNotEmpty) return typedTitle;
-    return _resolvedTitlePrefix();
+    return draft.autoTitle;
+  }
+
+  String _resolvePracticeSetTitle(List<_BatchProblemDraft> drafts) {
+    if (drafts.isEmpty) return _resolveFolderName(_selectedFolderId);
+
+    final firstFolderId = drafts.first.folderId;
+    final allSameFolder =
+        drafts.every((draft) => draft.folderId == firstFolderId);
+    if (allSameFolder) {
+      return _resolveFolderName(firstFolderId);
+    }
+
+    return _resolveFolderName(_selectedFolderId);
   }
 
   String _resolveFolderName(int? folderId) {
@@ -2002,6 +2076,9 @@ class _MultiProblemRegisterScreenState
         return folder.folderName;
       }
     }
+
+    final cachedName = FolderPickerDialog.getFolderNameByFolderId(folderId);
+    if (cachedName != null) return cachedName;
 
     return '책장';
   }
@@ -2030,6 +2107,7 @@ class _MultiProblemRegisterScreenState
 class _BatchProblemDraft {
   final List<XFile> problemImages;
   final List<XFile> answerImages = [];
+  String autoTitle;
   final TextEditingController titleController;
   final TextEditingController memoController;
   final Set<int> tagIds;
@@ -2043,8 +2121,19 @@ class _BatchProblemDraft {
     required this.folderId,
     required this.solvedAt,
     required this.tagIds,
-  })  : titleController = TextEditingController(text: title),
+  })  : autoTitle = title,
+        titleController = TextEditingController(text: title),
         memoController = TextEditingController(text: memo);
+
+  void updateAutoTitle(String newTitle) {
+    final currentTitle = titleController.text.trim();
+    final shouldReplaceTitle =
+        currentTitle.isEmpty || currentTitle == autoTitle;
+    autoTitle = newTitle;
+    if (shouldReplaceTitle) {
+      titleController.text = newTitle;
+    }
+  }
 
   void dispose() {
     titleController.dispose();

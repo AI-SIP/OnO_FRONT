@@ -14,6 +14,7 @@ import '../../Module/Dialog/SnackBarDialog.dart';
 import '../../Module/Image/ImagePickerHandler.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
+import '../../Module/Util/FolderPickerDialog.dart';
 import '../../Module/Util/FolderPickerWidget.dart';
 import '../../Provider/FoldersProvider.dart';
 import '../../Provider/ProblemsProvider.dart';
@@ -69,6 +70,7 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
   bool _isLoadingRecommendations = false;
   bool _hasUserEditedTitle = false;
   bool _isApplyingDefaultTitle = false;
+  String? _currentAutoTitle;
 
   @override
   void initState() {
@@ -112,6 +114,19 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
     _titleCtrl.dispose();
     _memoCtrl.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final foldersProvider = Provider.of<FoldersProvider>(context);
+    if (foldersProvider.folders.isEmpty &&
+        foldersProvider.currentFolder == null) {
+      return;
+    }
+    if (!widget.isEditMode && !_hasUserEditedTitle) {
+      _setDefaultTitleForFolder(_selectedFolderId);
+    }
   }
 
   @override
@@ -238,9 +253,15 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
   }
 
   void _setDefaultTitleForFolder(int? folderId) {
-    _isApplyingDefaultTitle = true;
-    _titleCtrl.text =
+    final nextTitle =
         '${_resolveFolderName(folderId)} ${_existingProblemCountForFolder(folderId) + 1}';
+    if (_currentAutoTitle == nextTitle && _titleCtrl.text == nextTitle) {
+      return;
+    }
+
+    _isApplyingDefaultTitle = true;
+    _currentAutoTitle = nextTitle;
+    _titleCtrl.text = _currentAutoTitle!;
     _isApplyingDefaultTitle = false;
   }
 
@@ -258,6 +279,8 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
         return folder.folderName;
       }
     }
+    final cachedName = FolderPickerDialog.getFolderNameByFolderId(folderId);
+    if (cachedName != null) return cachedName;
     return '오답노트';
   }
 
