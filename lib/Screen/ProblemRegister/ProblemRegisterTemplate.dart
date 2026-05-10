@@ -126,6 +126,16 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              DatePickerWidget(
+                selectedDate: _selectedDate,
+                onDateChanged: (d) => setState(() => _selectedDate = d),
+              ),
+              SizedBox(height: spacing),
+              FolderPickerWidget(
+                selectedId: _selectedFolderId,
+                onPicked: _updateSelectedFolder,
+              ),
+              SizedBox(height: spacing),
               _buildImageSections(isWide: isWide),
               SizedBox(height: spacing),
               LabeledTextField(
@@ -149,16 +159,6 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
                 icon: Icons.edit,
                 hintText: '기록하고 싶은 내용을 간단하게 작성해주세요!',
                 maxLines: 3,
-              ),
-              SizedBox(height: spacing),
-              DatePickerWidget(
-                selectedDate: _selectedDate,
-                onDateChanged: (d) => setState(() => _selectedDate = d),
-              ),
-              SizedBox(height: spacing),
-              FolderPickerWidget(
-                selectedId: _selectedFolderId,
-                onPicked: _updateSelectedFolder,
               ),
             ],
           ),
