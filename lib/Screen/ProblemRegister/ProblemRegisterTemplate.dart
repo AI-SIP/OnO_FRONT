@@ -239,7 +239,8 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
 
   void _setDefaultTitleForFolder(int? folderId) {
     _isApplyingDefaultTitle = true;
-    _titleCtrl.text = '${_resolveFolderName(folderId)} 1';
+    _titleCtrl.text =
+        '${_resolveFolderName(folderId)} ${_existingProblemCountForFolder(folderId) + 1}';
     _isApplyingDefaultTitle = false;
   }
 
@@ -258,6 +259,28 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
       }
     }
     return '오답노트';
+  }
+
+  int _existingProblemCountForFolder(int? folderId) {
+    final foldersProvider =
+        Provider.of<FoldersProvider>(context, listen: false);
+
+    if (folderId == null) {
+      return foldersProvider.rootFolder?.problemIdList.length ?? 0;
+    }
+
+    final currentFolder = foldersProvider.currentFolder;
+    if (currentFolder != null && currentFolder.folderId == folderId) {
+      return currentFolder.problemIdList.length;
+    }
+
+    for (final folder in foldersProvider.folders) {
+      if (folder.folderId == folderId) {
+        return folder.problemIdList.length;
+      }
+    }
+
+    return 0;
   }
 
   Widget _buildImageSectionContainer({required Widget child}) {
