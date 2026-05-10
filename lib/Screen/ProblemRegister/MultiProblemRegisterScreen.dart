@@ -56,12 +56,14 @@ class _MultiProblemRegisterScreenState
   final List<XFile> _problemImages = [];
   final List<_BatchProblemDraft> _drafts = [];
   final List<TagModel> _availableTags = [];
+  final List<TagModel> _recommendedTags = [];
   final Set<int> _selectedTagIds = {};
 
   _BatchRegisterStep _step = _BatchRegisterStep.selectImages;
   DateTime _selectedDate = DateTime.now();
   int? _selectedFolderId;
   bool _isLoadingTags = false;
+  bool _isLoadingRecommendations = false;
   bool _isSubmitting = false;
   bool _didOpenInitialGallery = false;
   bool _createPracticeSet = true;
@@ -71,6 +73,7 @@ class _MultiProblemRegisterScreenState
     super.initState();
     _selectedFolderId = widget.initialFolderId;
     _loadTags();
+    _loadRecommendedTags();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted || _didOpenInitialGallery) return;
       _didOpenInitialGallery = true;
@@ -97,12 +100,43 @@ class _MultiProblemRegisterScreenState
         _availableTags
           ..clear()
           ..addAll(fetched);
+        _mergeIntoAvailableTags(_recommendedTags);
       });
     } catch (e) {
       log('태그 목록 조회 실패: $e');
     } finally {
       if (mounted) {
         setState(() => _isLoadingTags = false);
+      }
+    }
+  }
+
+  void _mergeIntoAvailableTags(List<TagModel> tags) {
+    final existingIds = _availableTags.map((tag) => tag.tagId).toSet();
+    for (final tag in tags) {
+      if (!existingIds.contains(tag.tagId)) {
+        _availableTags.add(tag);
+      }
+    }
+    _availableTags.sort((a, b) => a.name.compareTo(b.name));
+  }
+
+  Future<void> _loadRecommendedTags() async {
+    setState(() => _isLoadingRecommendations = true);
+    try {
+      final recommended = await _tagService.recommendTags();
+      if (!mounted) return;
+      setState(() {
+        _recommendedTags
+          ..clear()
+          ..addAll(recommended);
+        _mergeIntoAvailableTags(recommended);
+      });
+    } catch (e) {
+      log('최근 사용 태그 조회 실패: $e');
+    } finally {
+      if (mounted) {
+        setState(() => _isLoadingRecommendations = false);
       }
     }
   }
@@ -317,8 +351,8 @@ class _MultiProblemRegisterScreenState
                   ),
                   SizedBox(height: isTight ? 12 : 24),
                   SizedBox(
-                    width: double.infinity,
-                    height: isTight ? 42 : 48,
+                    width: isTight ? 190 : 210,
+                    height: isTight ? 40 : 44,
                     child: ElevatedButton.icon(
                       onPressed: _isSubmitting ? null : _pickProblemImages,
                       style: ElevatedButton.styleFrom(
@@ -326,13 +360,13 @@ class _MultiProblemRegisterScreenState
                         foregroundColor: Colors.white,
                         elevation: 0,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(10),
                         ),
                       ),
-                      icon: const Icon(Icons.photo_library_outlined, size: 20),
+                      icon: const Icon(Icons.photo_library_outlined, size: 18),
                       label: const StandardText(
                         text: '갤러리에서 선택',
-                        fontSize: 15,
+                        fontSize: 14,
                         color: Colors.white,
                         fontWeight: FontWeight.w600,
                       ),
@@ -597,7 +631,7 @@ class _MultiProblemRegisterScreenState
             },
           ),
           const SizedBox(height: 14),
-          _buildProblemImagePreview(themeProvider, draft),
+          _buildProblemImageSection(themeProvider, draft, refresh),
           const SizedBox(height: 14),
           _buildAnswerImageSection(draft, refresh),
           const SizedBox(height: 14),
@@ -617,6 +651,7 @@ class _MultiProblemRegisterScreenState
               draft.tagIds.remove(tagId);
               refresh();
             },
+            onChanged: refresh,
             emptyText: '선택된 태그가 없습니다.',
           ),
           const SizedBox(height: 14),
@@ -639,6 +674,7 @@ class _MultiProblemRegisterScreenState
     int index,
   ) {
     final selectedTagCount = draft.tagIds.length;
+    final problemImageCount = draft.problemImages.length;
     final answerImageCount = draft.answerImages.length;
     final folderName = _resolveFolderName(draft.folderId);
 
@@ -668,7 +704,7 @@ class _MultiProblemRegisterScreenState
                     ),
                     clipBehavior: Clip.antiAlias,
                     child: Image.file(
-                      File(draft.problemImage.path),
+                      File(draft.problemImages.first.path),
                       width: 78,
                       height: 78,
                       fit: BoxFit.cover,
@@ -726,6 +762,11 @@ class _MultiProblemRegisterScreenState
                         _buildReviewMetaChip(
                           themeProvider,
                           Icons.image_outlined,
+                          '문제 $problemImageCount',
+                        ),
+                        _buildReviewMetaChip(
+                          themeProvider,
+                          Icons.collections_outlined,
                           '해설 $answerImageCount',
                         ),
                       ],
@@ -837,9 +878,10 @@ class _MultiProblemRegisterScreenState
     );
   }
 
-  Widget _buildProblemImagePreview(
+  Widget _buildProblemImageSection(
     ThemeHandler themeProvider,
     _BatchProblemDraft draft,
+    VoidCallback refresh,
   ) {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -848,65 +890,22 @@ class _MultiProblemRegisterScreenState
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Colors.grey[200]!, width: 1),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: themeProvider.primaryColor.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(
-                  Icons.image,
-                  color: themeProvider.primaryColor,
-                  size: 20,
-                ),
-              ),
-              const SizedBox(width: 12),
-              const StandardText(
-                text: '문제 이미지',
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-                color: Colors.black87,
-              ),
-              const SizedBox(width: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(
-                  color: themeProvider.primaryColor.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: StandardText(
-                  text: '1',
-                  fontSize: 12,
-                  color: themeProvider.primaryColor,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Container(
-            width: 112,
-            height: 112,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: Colors.grey[300]!,
-                width: 1.2,
-              ),
-            ),
-            clipBehavior: Clip.antiAlias,
-            child: Image.file(
-              File(draft.problemImage.path),
-              fit: BoxFit.cover,
-            ),
-          ),
-        ],
+      child: ImageGridWidget(
+        label: '문제 이미지',
+        files: draft.problemImages,
+        onAdd: () => _pickDraftProblemImages(draft, onChanged: refresh),
+        onRemove: (imageIndex) {
+          if (draft.problemImages.length == 1) {
+            SnackBarDialog.showSnackBar(
+              context: context,
+              message: '문제 이미지는 최소 1장이 필요합니다.',
+              backgroundColor: Colors.orange,
+            );
+            return;
+          }
+          draft.problemImages.removeAt(imageIndex);
+          refresh();
+        },
       ),
     );
   }
@@ -973,6 +972,7 @@ class _MultiProblemRegisterScreenState
                     onRemove: (tagId) => setState(() {
                       _selectedTagIds.remove(tagId);
                     }),
+                    onChanged: () => setState(() {}),
                     emptyText: '선택된 태그가 없습니다.',
                   ),
                   const SizedBox(height: 16),
@@ -1054,7 +1054,7 @@ class _MultiProblemRegisterScreenState
             const SizedBox(width: 12),
             const Expanded(
               child: StandardText(
-                text: '이 오답노트들로 복습 세트 생성',
+                text: '이 오답노트들로 복습 세트 자동 생성',
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
                 color: Colors.black87,
@@ -1126,6 +1126,7 @@ class _MultiProblemRegisterScreenState
     required Set<int> selectedTagIds,
     required VoidCallback onOpen,
     required ValueChanged<int> onRemove,
+    VoidCallback? onChanged,
     required String emptyText,
   }) {
     final selectedTags = _availableTags
@@ -1269,9 +1270,119 @@ class _MultiProblemRegisterScreenState
                     }).toList(),
                   ),
           ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              StandardText(
+                text: '최근 사용 태그',
+                fontSize: 14,
+                color: Colors.grey[700]!,
+                fontWeight: FontWeight.w500,
+              ),
+              const Spacer(),
+              if (_isLoadingRecommendations)
+                SizedBox(
+                  width: 14,
+                  height: 14,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: themeProvider.primaryColor,
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          if (_recommendedTags.isEmpty && !_isLoadingRecommendations)
+            StandardText(
+              text: '최근 사용 태그가 없습니다.',
+              fontSize: 13,
+              color: Colors.grey[400]!,
+            )
+          else
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: _recommendedTags.map((tag) {
+                final isSelected = selectedTagIds.contains(tag.tagId);
+                return Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: _isSubmitting
+                        ? null
+                        : () => _applyRecommendedTag(
+                              tag,
+                              selectedTagIds,
+                              onChanged: onChanged,
+                            ),
+                    borderRadius: BorderRadius.circular(8),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 11,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? themeProvider.primaryColor
+                            : Colors.white,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: isSelected
+                              ? themeProvider.primaryColor
+                              : themeProvider.primaryColor
+                                  .withValues(alpha: 0.35),
+                          width: isSelected ? 1.4 : 1,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (isSelected) ...[
+                            const Icon(
+                              Icons.check,
+                              size: 13,
+                              color: Colors.white,
+                            ),
+                            const SizedBox(width: 4),
+                          ],
+                          StandardText(
+                            text: '#${tag.name}',
+                            fontSize: 12,
+                            color: isSelected
+                                ? Colors.white
+                                : themeProvider.primaryColor,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
         ],
       ),
     );
+  }
+
+  void _applyRecommendedTag(
+    TagModel tag,
+    Set<int> selectedTagIds, {
+    VoidCallback? onChanged,
+  }) {
+    if (selectedTagIds.contains(tag.tagId)) return;
+    if (selectedTagIds.length >= 5) {
+      SnackBarDialog.showSnackBar(
+        context: context,
+        message: '태그는 최대 5개까지 선택할 수 있습니다.',
+        backgroundColor: Colors.orange,
+      );
+      return;
+    }
+
+    selectedTagIds.add(tag.tagId);
+    _mergeIntoAvailableTags([tag]);
+    onChanged?.call();
+    setState(() {});
   }
 
   Future<void> _pickProblemImages() async {
@@ -1293,6 +1404,19 @@ class _MultiProblemRegisterScreenState
     if (!mounted || pickedImages.isEmpty) return;
 
     draft.answerImages.addAll(pickedImages);
+    onChanged?.call();
+    setState(() {});
+  }
+
+  Future<void> _pickDraftProblemImages(
+    _BatchProblemDraft draft, {
+    VoidCallback? onChanged,
+  }) async {
+    final pickedImages =
+        await _imagePickerHandler.pickMultipleImagesFromGallery(context);
+    if (!mounted || pickedImages.isEmpty) return;
+
+    draft.problemImages.addAll(pickedImages);
     onChanged?.call();
     setState(() {});
   }
@@ -1355,7 +1479,7 @@ class _MultiProblemRegisterScreenState
     for (var index = 0; index < _problemImages.length; index++) {
       _drafts.add(
         _BatchProblemDraft(
-          problemImage: _problemImages[index],
+          problemImages: [_problemImages[index]],
           title: '$titlePrefix - ${titleStartNumber + index + 1}',
           memo: '',
           folderId: _selectedFolderId,
@@ -1637,9 +1761,11 @@ class _MultiProblemRegisterScreenState
     var isRegistered = false;
 
     try {
-      final problemImageUrl =
-          await _fileUploadService.uploadImageFile(draft.problemImage);
-      uploadedImageUrls.add(problemImageUrl);
+      final problemImageUrls =
+          await _fileUploadService.uploadMultipleImageFiles(
+        draft.problemImages,
+      );
+      uploadedImageUrls.addAll(problemImageUrls);
 
       final answerImageUrls = await _fileUploadService.uploadMultipleImageFiles(
         draft.answerImages,
@@ -1652,7 +1778,7 @@ class _MultiProblemRegisterScreenState
         reference: _resolveDraftTitle(draft),
         folderId: draft.folderId,
         solvedAt: draft.solvedAt,
-        problemImageUrls: [problemImageUrl],
+        problemImageUrls: problemImageUrls,
         answerImageUrls: answerImageUrls,
         tagIds: draft.tagIds.toList(),
       );
@@ -1902,7 +2028,7 @@ class _MultiProblemRegisterScreenState
 }
 
 class _BatchProblemDraft {
-  final XFile problemImage;
+  final List<XFile> problemImages;
   final List<XFile> answerImages = [];
   final TextEditingController titleController;
   final TextEditingController memoController;
@@ -1911,7 +2037,7 @@ class _BatchProblemDraft {
   DateTime solvedAt;
 
   _BatchProblemDraft({
-    required this.problemImage,
+    required this.problemImages,
     required String title,
     required String memo,
     required this.folderId,
