@@ -48,11 +48,11 @@ class UserInfoModel {
       email: json['email'],
       name: json['name'],
       createdAt: json['createdAt'] != null
-          ? DateTime.parse(json['createdAt']).add(const Duration(hours: 9))
-          : DateTime.now().subtract(const Duration(hours: 9)),
+          ? DateTime.parse(json['createdAt'])
+          : DateTime.now(),
       updatedAt: json['updatedAt'] != null
-          ? DateTime.parse(json['updatedAt']).add(const Duration(hours: 9))
-          : DateTime.now().subtract(const Duration(hours: 9)),
+          ? DateTime.parse(json['updatedAt'])
+          : DateTime.now(),
       attendanceLevel: json['attendanceLevel'] ?? 1,
       attendancePoint: json['attendancePoint'] ?? 0,
       noteWriteLevel: json['noteWriteLevel'] ?? 1,

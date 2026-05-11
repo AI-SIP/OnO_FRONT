@@ -74,8 +74,7 @@ class ProblemService {
         'memo': memo,
         'reference': reference,
         'folderId': folderId,
-        'solvedAt':
-            solvedAt?.subtract(const Duration(hours: 9)).toIso8601String(),
+        'solvedAt': solvedAt?.toIso8601String(),
         'problemImageUrls': problemImageUrls,
         'answerImageUrls': answerImageUrls,
         'tagIds': tagIds,
