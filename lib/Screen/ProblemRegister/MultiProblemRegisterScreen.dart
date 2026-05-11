@@ -69,6 +69,7 @@ class _MultiProblemRegisterScreenState
   bool _isLoadingRecommendations = false;
   bool _isSubmitting = false;
   bool _didOpenInitialGallery = false;
+  bool _isOpeningInitialGallery = true;
   bool _createPracticeSet = true;
 
   @override
@@ -80,7 +81,7 @@ class _MultiProblemRegisterScreenState
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted || _didOpenInitialGallery) return;
       _didOpenInitialGallery = true;
-      _pickProblemImages();
+      _pickProblemImages(isInitialOpen: true);
     });
   }
 
@@ -155,7 +156,9 @@ class _MultiProblemRegisterScreenState
           ? _buildImageSelectionBody(themeProvider)
           : _buildDraftReviewBody(themeProvider),
       bottomNavigationBar: _step == _BatchRegisterStep.selectImages
-          ? _buildCommonPanel(themeProvider)
+          ? _isOpeningInitialGallery
+              ? null
+              : _buildCommonPanel(themeProvider)
           : _buildReviewBottomBar(themeProvider),
     );
   }
@@ -195,6 +198,10 @@ class _MultiProblemRegisterScreenState
   }
 
   Widget _buildImageSelectionBody(ThemeHandler themeProvider) {
+    if (_isOpeningInitialGallery) {
+      return _buildOpeningGalleryState(themeProvider);
+    }
+
     if (_problemImages.isEmpty) {
       return _buildEmptyImageState(themeProvider);
     }
@@ -308,6 +315,42 @@ class _MultiProblemRegisterScreenState
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildOpeningGalleryState(ThemeHandler themeProvider) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(
+              width: 42,
+              height: 42,
+              child: CircularProgressIndicator(
+                strokeWidth: 3,
+                color: themeProvider.primaryColor,
+              ),
+            ),
+            const SizedBox(height: 18),
+            const StandardText(
+              text: '갤러리를 여는 중입니다.',
+              fontSize: 16,
+              color: Colors.black87,
+              fontWeight: FontWeight.w600,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 7),
+            StandardText(
+              text: '이미지 선택창이 열릴 때까지 잠시만 기다려 주세요.',
+              fontSize: 13,
+              color: Colors.grey[600]!,
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -1398,13 +1441,33 @@ class _MultiProblemRegisterScreenState
     setState(() {});
   }
 
-  Future<void> _pickProblemImages() async {
-    final pickedImages =
-        await _imagePickerHandler.pickMultipleImagesFromGallery(context);
-    if (!mounted || pickedImages.isEmpty) return;
+  Future<void> _pickProblemImages({bool isInitialOpen = false}) async {
+    void clearInitialOpeningState() {
+      if (isInitialOpen && _isOpeningInitialGallery) {
+        setState(() => _isOpeningInitialGallery = false);
+      }
+    }
+
+    late final List<XFile> pickedImages;
+    try {
+      pickedImages =
+          await _imagePickerHandler.pickMultipleImagesFromGallery(context);
+    } catch (_) {
+      if (mounted) {
+        clearInitialOpeningState();
+      }
+      rethrow;
+    }
+
+    if (!mounted) return;
+    if (pickedImages.isEmpty) {
+      clearInitialOpeningState();
+      return;
+    }
 
     final remainingCount = _maxBatchProblemCount - _problemImages.length;
     if (remainingCount <= 0) {
+      clearInitialOpeningState();
       SnackBarDialog.showSnackBar(
         context: context,
         message: '여러 장 작성은 한 번에 최대 20장까지 등록할 수 있습니다.',
@@ -1416,6 +1479,9 @@ class _MultiProblemRegisterScreenState
     final imagesToAdd = pickedImages.take(remainingCount).toList();
     setState(() {
       _problemImages.addAll(imagesToAdd);
+      if (isInitialOpen) {
+        _isOpeningInitialGallery = false;
+      }
     });
 
     if (pickedImages.length > remainingCount) {
