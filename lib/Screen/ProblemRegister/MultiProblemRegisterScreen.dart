@@ -1780,23 +1780,22 @@ class _MultiProblemRegisterScreenState
 
     final draftsToRegister = List<_BatchProblemDraft>.from(_drafts);
     final progress = ValueNotifier<int>(0);
-    final registeredProblemIds = <int>[];
-    var successCount = 0;
+    final uploadedImageUrls = <String>[];
+    late final List<int> registeredProblemIds;
 
     setState(() => _isSubmitting = true);
     _showProgressDialog(progress, draftsToRegister.length);
 
     try {
-      for (var index = 0; index < draftsToRegister.length; index++) {
-        final registeredProblemId =
-            await _registerProblemDraft(draftsToRegister[index]);
-        registeredProblemIds.add(registeredProblemId);
-        successCount++;
-        progress.value = successCount;
-      }
+      registeredProblemIds = await _registerProblemDraftsBatch(
+        draftsToRegister,
+        uploadedImageUrls: uploadedImageUrls,
+        progress: progress,
+      );
     } catch (e, stackTrace) {
       log('배치 오답노트 등록 실패: $e');
       log(stackTrace.toString());
+      await _deleteUploadedImages(uploadedImageUrls);
       unawaited(
         AppErrorReporter.report(
           e,
@@ -1807,12 +1806,9 @@ class _MultiProblemRegisterScreenState
       );
       if (mounted) {
         Navigator.of(context, rootNavigator: true).pop();
-        _removeSuccessfulDrafts(successCount);
         SnackBarDialog.showSnackBar(
           context: context,
-          message: successCount > 0
-              ? '$successCount개 등록 완료, 남은 오답노트만 다시 시도해 주세요.'
-              : '오답노트 등록에 실패했습니다. 잠시 후 다시 시도해주세요.',
+          message: '오답노트 묶음 등록에 실패했습니다. 잠시 후 다시 시도해주세요.',
           backgroundColor: Colors.red,
         );
       }
@@ -1866,77 +1862,109 @@ class _MultiProblemRegisterScreenState
     Navigator.of(context).pop(true);
   }
 
-  Future<int> _registerProblemDraft(_BatchProblemDraft draft) async {
+  Future<List<int>> _registerProblemDraftsBatch(
+    List<_BatchProblemDraft> drafts, {
+    required List<String> uploadedImageUrls,
+    required ValueNotifier<int> progress,
+  }) async {
     final problemsProvider =
         Provider.of<ProblemsProvider>(context, listen: false);
     final userProvider = Provider.of<UserProvider>(context, listen: false);
     final foldersProvider =
         Provider.of<FoldersProvider>(context, listen: false);
 
-    final uploadedImageUrls = <String>[];
-    late final int registeredProblemId;
-    var isRegistered = false;
-
-    try {
-      final problemImageUrls =
-          await _fileUploadService.uploadMultipleImageFiles(
-        draft.problemImages,
-      );
-      uploadedImageUrls.addAll(problemImageUrls);
-
-      final answerImageUrls = await _fileUploadService.uploadMultipleImageFiles(
-        draft.answerImages,
-      );
-      uploadedImageUrls.addAll(answerImageUrls);
-
-      registeredProblemId = await _problemService.registerProblemV2(
-        problemId: null,
-        memo: draft.memoController.text.trim(),
-        reference: _resolveDraftTitle(draft),
-        folderId: draft.folderId,
-        solvedAt: draft.solvedAt,
-        problemImageUrls: problemImageUrls,
-        answerImageUrls: answerImageUrls,
-        tagIds: draft.tagIds.toList(),
-      );
-      isRegistered = true;
-    } catch (_) {
-      if (!isRegistered) {
-        await _deleteUploadedImages(uploadedImageUrls);
-      }
-      rethrow;
+    final problemPayloads = <Map<String, dynamic>>[];
+    for (final draft in drafts) {
+      final uploadResult = await _uploadDraftImages(draft);
+      uploadedImageUrls.addAll(uploadResult.uploadedImageUrls);
+      problemPayloads.add(uploadResult.toProblemPayload());
+      progress.value = problemPayloads.length;
     }
 
-    await _runPostSaveTask(
-      () => _problemService.requestProblemAnalysis(
-        registeredProblemId,
-        showErrorSnackBar: false,
-      ),
-      source: 'batch_problem_register_analysis_request',
+    final registeredProblemIds = await _problemService.registerProblemsBatchV2(
+      problems: problemPayloads,
     );
-    await _runPostSaveTask(
-      () => problemsProvider.fetchProblem(
-        registeredProblemId,
-        showErrorSnackBar: false,
-      ),
-      source: 'batch_problem_register_detail_refresh',
+    progress.value = drafts.length;
+
+    await _refreshAfterBatchRegister(
+      registeredProblemIds: registeredProblemIds,
+      drafts: drafts,
+      problemsProvider: problemsProvider,
+      userProvider: userProvider,
+      foldersProvider: foldersProvider,
     );
-    await problemsProvider.updateProblemCount(1);
+
+    return registeredProblemIds;
+  }
+
+  Future<_BatchProblemUploadResult> _uploadDraftImages(
+    _BatchProblemDraft draft,
+  ) async {
+    final problemImageUrls = await _fileUploadService.uploadMultipleImageFiles(
+      draft.problemImages,
+    );
+    final answerImageUrls = await _fileUploadService.uploadMultipleImageFiles(
+      draft.answerImages,
+    );
+
+    return _BatchProblemUploadResult(
+      memo: draft.memoController.text.trim(),
+      reference: _resolveDraftTitle(draft),
+      folderId: draft.folderId,
+      solvedAt: draft.solvedAt,
+      problemImageUrls: problemImageUrls,
+      answerImageUrls: answerImageUrls,
+      tagIds: draft.tagIds.toList(),
+    );
+  }
+
+  Future<void> _refreshAfterBatchRegister({
+    required List<int> registeredProblemIds,
+    required List<_BatchProblemDraft> drafts,
+    required ProblemsProvider problemsProvider,
+    required UserProvider userProvider,
+    required FoldersProvider foldersProvider,
+  }) async {
+    await Future.wait(
+      registeredProblemIds.map(
+        (problemId) => _runPostSaveTask(
+          () => _problemService.requestProblemAnalysis(
+            problemId,
+            showErrorSnackBar: false,
+          ),
+          source: 'batch_problem_register_analysis_request',
+        ),
+      ),
+    );
+    await Future.wait(
+      registeredProblemIds.map(
+        (problemId) => _runPostSaveTask(
+          () => problemsProvider.fetchProblem(
+            problemId,
+            showErrorSnackBar: false,
+          ),
+          source: 'batch_problem_register_detail_refresh',
+        ),
+      ),
+    );
+    await problemsProvider.updateProblemCount(registeredProblemIds.length);
     await _runPostSaveTask(
       () => userProvider.fetchUserInfo(showErrorSnackBar: false),
       source: 'batch_problem_register_user_refresh',
     );
 
-    final refreshFolderId =
-        draft.folderId ?? foldersProvider.rootFolder?.folderId;
-    if (refreshFolderId != null) {
-      await _runPostSaveTask(
-        () => foldersProvider.refreshFolder(refreshFolderId),
-        source: 'batch_problem_register_folder_refresh',
-      );
-    }
-
-    return registeredProblemId;
+    final refreshFolderIds = drafts
+        .map((draft) => draft.folderId ?? foldersProvider.rootFolder?.folderId)
+        .whereType<int>()
+        .toSet();
+    await Future.wait(
+      refreshFolderIds.map(
+        (folderId) => _runPostSaveTask(
+          () => foldersProvider.refreshFolder(folderId),
+          source: 'batch_problem_register_folder_refresh',
+        ),
+      ),
+    );
   }
 
   Future<void> _createPracticeSetFromProblems(
@@ -2038,27 +2066,6 @@ class _MultiProblemRegisterScreenState
         );
       },
     );
-  }
-
-  void _removeSuccessfulDrafts(int count) {
-    if (count <= 0) return;
-
-    final removeCount = count.clamp(0, _drafts.length);
-    final removedDrafts = _drafts.take(removeCount).toList();
-    _drafts.removeRange(0, removeCount);
-    for (final draft in removedDrafts) {
-      draft.dispose();
-    }
-    _problemImages.removeRange(0, count.clamp(0, _problemImages.length));
-
-    if (_drafts.isEmpty) {
-      setState(() {
-        _step = _BatchRegisterStep.selectImages;
-      });
-      return;
-    }
-
-    setState(() {});
   }
 
   Future<void> _deleteUploadedImages(List<String> imageUrls) async {
@@ -2204,5 +2211,43 @@ class _BatchProblemDraft {
   void dispose() {
     titleController.dispose();
     memoController.dispose();
+  }
+}
+
+class _BatchProblemUploadResult {
+  final String memo;
+  final String reference;
+  final int? folderId;
+  final DateTime solvedAt;
+  final List<String> problemImageUrls;
+  final List<String> answerImageUrls;
+  final List<int> tagIds;
+
+  const _BatchProblemUploadResult({
+    required this.memo,
+    required this.reference,
+    required this.folderId,
+    required this.solvedAt,
+    required this.problemImageUrls,
+    required this.answerImageUrls,
+    required this.tagIds,
+  });
+
+  List<String> get uploadedImageUrls => [
+        ...problemImageUrls,
+        ...answerImageUrls,
+      ];
+
+  Map<String, dynamic> toProblemPayload() {
+    return {
+      'problemId': null,
+      'memo': memo,
+      'reference': reference,
+      'folderId': folderId,
+      'solvedAt': solvedAt.subtract(const Duration(hours: 9)).toIso8601String(),
+      'problemImageUrls': problemImageUrls,
+      'answerImageUrls': answerImageUrls,
+      'tagIds': tagIds,
+    };
   }
 }

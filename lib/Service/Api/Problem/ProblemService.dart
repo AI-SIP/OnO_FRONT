@@ -83,6 +83,20 @@ class ProblemService {
     ) as int;
   }
 
+  Future<List<int>> registerProblemsBatchV2({
+    required List<Map<String, dynamic>> problems,
+  }) async {
+    final data = await httpService.sendRequest(
+      method: 'POST',
+      url: '$baseUrl/v2/batch',
+      body: {
+        'problems': problems,
+      },
+    ) as List<dynamic>;
+
+    return data.map((id) => (id as num).toInt()).toList();
+  }
+
   Future<void> requestProblemAnalysis(
     int problemId, {
     bool showErrorSnackBar = true,
