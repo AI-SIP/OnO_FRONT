@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 
 import '../../Model/Common/LoginStatus.dart';
 import '../../Provider/UserProvider.dart';
+import '../../Util/NotificationService.dart';
 import 'LoginScreen.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -40,6 +41,9 @@ class _SplashScreenState extends State<SplashScreen> {
         MaterialPageRoute(
             builder: (context) => const MyHomePage()), // 로그인 상태면 HomeScreen으로
       );
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        NotificationService.instance.processPendingNotification();
+      });
     } else {
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
