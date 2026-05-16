@@ -206,8 +206,6 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   static const List<Widget> _widgetOptions = <Widget>[
     DirectoryScreen(),
     PracticeThumbnailScreen(),
-    ProblemRegisterScreen(problemModel: null, isEditMode: false),
-    //TemplateSelectionScreen(),
     SettingScreen(),
   ];
 
@@ -279,15 +277,9 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   List<BottomNavigationBarItem> _bottomNavigationItems() {
     return const [
       BottomNavigationBarItem(
-          icon: Icon(Icons.menu_book, size: 20), label: '노트 관리'),
+          icon: Icon(Icons.menu_book, size: 20), label: '오답노트 관리'),
       BottomNavigationBarItem(
-          icon: Icon(Icons.history, size: 20), label: '오답 복습'),
-      BottomNavigationBarItem(
-          icon: Icon(
-            Icons.edit,
-            size: 20,
-          ),
-          label: '오답노트 작성'),
+          icon: Icon(Icons.history, size: 20), label: '복습 세트'),
       BottomNavigationBarItem(
           icon: Icon(
             Icons.person,

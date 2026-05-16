@@ -6,6 +6,7 @@ import 'package:ono/Module/Text/StandardText.dart';
 import 'package:provider/provider.dart';
 
 import '../../../Module/Image/DisplayImage.dart';
+import '../../../Module/Image/FullScreenImage.dart';
 import '../../../Module/Theme/ThemeHandler.dart';
 
 class ImageGridWidget extends StatelessWidget {
@@ -143,24 +144,32 @@ class ImageGridWidget extends StatelessWidget {
                 final imageUrl = existingImageUrls[idx - 1];
                 return Stack(
                   children: [
-                    Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: Colors.grey[300]!,
-                          width: 1.2,
+                    GestureDetector(
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => FullScreenImage(imagePath: imageUrl),
                         ),
                       ),
-                      clipBehavior: Clip.antiAlias,
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
-                        child: SizedBox(
-                          width: 100,
-                          height: 100,
-                          child: DisplayImage(
-                            imagePath: imageUrl,
-                            fit: BoxFit.cover,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: Colors.grey[300]!,
+                            width: 1.2,
+                          ),
+                        ),
+                        clipBehavior: Clip.antiAlias,
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: SizedBox(
+                            width: 100,
+                            height: 100,
+                            child: DisplayImage(
+                              imagePath: imageUrl,
+                              fit: BoxFit.cover,
+                            ),
                           ),
                         ),
                       ),
@@ -193,23 +202,26 @@ class ImageGridWidget extends StatelessWidget {
               final file = files[fileIdx];
               return Stack(
                 children: [
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: Colors.grey[300]!,
-                        width: 1.2,
+                  GestureDetector(
+                    onTap: () => _openLocalImage(context, file),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: Colors.grey[300]!,
+                          width: 1.2,
+                        ),
                       ),
-                    ),
-                    clipBehavior: Clip.antiAlias,
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-                      child: Image.file(
-                        File(file.path),
-                        width: 100,
-                        height: 100,
-                        fit: BoxFit.cover,
+                      clipBehavior: Clip.antiAlias,
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: Image.file(
+                          File(file.path),
+                          width: 100,
+                          height: 100,
+                          fit: BoxFit.cover,
+                        ),
                       ),
                     ),
                   ),
@@ -238,6 +250,44 @@ class ImageGridWidget extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+
+  void _openLocalImage(BuildContext context, XFile file) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => Scaffold(
+          backgroundColor: Colors.black,
+          appBar: AppBar(
+            centerTitle: true,
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back, color: Colors.white),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+          ),
+          body: SafeArea(
+            bottom: true,
+            top: false,
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Center(
+                child: InteractiveViewer(
+                  panEnabled: true,
+                  minScale: 1.0,
+                  maxScale: 3.0,
+                  child: Image.file(
+                    File(file.path),
+                    fit: BoxFit.contain,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

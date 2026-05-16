@@ -28,6 +28,7 @@ import '../../Provider/ReviewDueProvider.dart';
 import '../../Provider/UserProvider.dart';
 import '../../Util/AppErrorReporter.dart';
 import '../ProblemDetail/ProblemDetailScreen.dart';
+import '../ProblemRegister/MultiProblemRegisterScreen.dart';
 import '../ProblemRegister/ProblemRegisterScreen.dart';
 import '../ProblemSearch/TagProblemSearchScreen.dart';
 import '../ReviewDue/ReviewDueScreen.dart';
@@ -645,12 +646,22 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                       ),
                       const SizedBox(height: 10),
                       _buildQuickCreateAction(
-                        label: '오답노트 작성',
+                        label: '오답노트 1장 작성',
                         icon: Icons.note_add_outlined,
                         themeProvider: themeProvider,
                         onTap: () async {
                           setState(() => _isQuickCreateOpen = false);
-                          await _navigateToProblemRegisterInCurrentFolder();
+                          await _navigateToSingleProblemRegisterInCurrentFolder();
+                        },
+                      ),
+                      const SizedBox(height: 10),
+                      _buildQuickCreateAction(
+                        label: '오답노트 여러장 작성',
+                        icon: Icons.library_add_outlined,
+                        themeProvider: themeProvider,
+                        onTap: () async {
+                          setState(() => _isQuickCreateOpen = false);
+                          await _navigateToMultiProblemRegisterInCurrentFolder();
                         },
                       ),
                     ],
@@ -791,17 +802,17 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     );
   }
 
-  Future<void> _navigateToProblemRegisterInCurrentFolder() async {
+  Future<void> _navigateToSingleProblemRegisterInCurrentFolder() async {
     FirebaseAnalytics.instance
-        .logEvent(name: 'directory_create_problem_note_click');
+        .logEvent(name: 'directory_create_single_problem_note_click');
 
     if (_currentFolder == null) return;
 
+    final folderId = _currentFolder!.folderId;
     final foldersProvider =
         Provider.of<FoldersProvider>(context, listen: false);
-
-    // 작성 화면의 기본 공책을 현재 공책으로 고정
-    await foldersProvider.moveToFolder(_currentFolder!.folderId);
+    await foldersProvider.moveToFolder(folderId);
+    if (!mounted) return;
 
     final result = await Navigator.push<bool>(
       context,
@@ -809,12 +820,38 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         builder: (context) => ProblemRegisterScreen(
           problemModel: null,
           isEditMode: false,
-          initialFolderId: _currentFolder?.folderId,
+          initialFolderId: folderId,
         ),
       ),
     );
 
-    // 작성 완료 후 현재 공책 화면으로 복귀 시 즉시 반영
+    if (!mounted || result != true || _currentFolder == null) return;
+
+    await foldersProvider.refreshFolder(_currentFolder!.folderId);
+    await _loadFolderData();
+  }
+
+  Future<void> _navigateToMultiProblemRegisterInCurrentFolder() async {
+    FirebaseAnalytics.instance
+        .logEvent(name: 'directory_create_multi_problem_note_click');
+
+    if (_currentFolder == null) return;
+
+    final folderId = _currentFolder!.folderId;
+    final foldersProvider =
+        Provider.of<FoldersProvider>(context, listen: false);
+    await foldersProvider.moveToFolder(folderId);
+    if (!mounted) return;
+
+    final result = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => MultiProblemRegisterScreen(
+          initialFolderId: folderId,
+        ),
+      ),
+    );
+
     if (!mounted || result != true || _currentFolder == null) return;
 
     await foldersProvider.refreshFolder(_currentFolder!.folderId);
@@ -903,16 +940,6 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                         FirebaseAnalytics.instance.logEvent(
                             name: 'directory_create_folder_button_click');
                         _showCreateFolderDialog();
-                      },
-                    ),
-                    const SizedBox(height: 8),
-                    _buildActionItem(
-                      icon: Icons.note_add_outlined,
-                      iconColor: themeProvider.primaryColor,
-                      title: '오답노트 작성하기',
-                      onTap: () async {
-                        Navigator.pop(context);
-                        await _navigateToProblemRegisterInCurrentFolder();
                       },
                     ),
                     const SizedBox(height: 8),
@@ -1376,28 +1403,11 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                           const SizedBox(
                             height: 30,
                           ),
-                          ElevatedButton(
-                            onPressed: () async {
-                              FirebaseAnalytics.instance.logEvent(
-                                  name: 'directory_empty_create_problem_click');
-                              await _navigateToProblemRegisterInCurrentFolder();
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor:
-                                  themeProvider.primaryColor, // primaryColor 적용
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 40,
-                                vertical: 8,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(15),
-                              ),
-                            ),
-                            child: const StandardText(
-                              text: '오답노트 작성하기',
-                              fontSize: 16,
-                              color: Colors.white,
-                            ),
+                          StandardText(
+                            text: '우측 하단 + 추가 버튼으로 새 오답노트를 작성할 수 있어요.',
+                            fontSize: 13,
+                            color: Colors.grey[600]!,
+                            textAlign: TextAlign.center,
                           ),
                         ],
                       ),
