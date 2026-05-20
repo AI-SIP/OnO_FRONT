@@ -514,7 +514,7 @@ class _AchievementCard extends StatelessWidget {
                   value,
                   style: TextStyle(
                     color: themeProvider.darkPrimaryColor,
-                    fontSize: 22,
+                    fontSize: 19,
                     fontFamily: 'PretendardBold',
                     fontWeight: FontWeight.w700,
                     height: 1.0,
@@ -530,7 +530,7 @@ class _AchievementCard extends StatelessWidget {
                     unit,
                     style: TextStyle(
                       color: themeProvider.primaryColor,
-                      fontSize: 12,
+                      fontSize: 11,
                       fontFamily: 'PretendardBold',
                       fontWeight: FontWeight.w700,
                     ),
@@ -632,14 +632,17 @@ class _AchievementCard extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                Container(
-                  height: barH,
-                  decoration: BoxDecoration(
-                    color: themeProvider.primaryColor
-                        .withValues(alpha: hasValue ? 0.8 : 0.12),
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(4),
-                      topRight: Radius.circular(4),
+                FractionallySizedBox(
+                  widthFactor: 0.62,
+                  child: Container(
+                    height: barH,
+                    decoration: BoxDecoration(
+                      color: themeProvider.primaryColor
+                          .withValues(alpha: hasValue ? 0.8 : 0.12),
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(4),
+                        topRight: Radius.circular(4),
+                      ),
                     ),
                   ),
                 ),
