@@ -226,7 +226,7 @@ class _AchievementCard extends StatelessWidget {
     return m == 0 ? '$h시간' : '$h시간 $m분';
   }
 
-  // 높이 합계: 160 + 200 + 148 + 92 = 600px
+  // 높이 합계: 128 + 200 + 160 + 112 = 600px
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeHandler>(context);
@@ -238,37 +238,37 @@ class _AchievementCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(24),
         child: Stack(
           children: [
-          Container(color: Colors.white),
-          Column(
-            children: [
-              _buildTopSection(themeProvider), // 160px
-              _buildStatsGrid(themeProvider), // 200px
-              _buildTrendChart(themeProvider), // 148px
-              _buildStreakCompact(themeProvider), //  92px
-            ],
-          ),
-          Positioned.fill(
-            child: IgnorePointer(
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  border: Border.all(
-                    color: themeProvider.primaryColor.withValues(alpha: 0.15),
-                    width: 1,
+            Container(color: Colors.white),
+            Column(
+              children: [
+                _buildTopSection(themeProvider), // 128px
+                _buildStatsGrid(themeProvider), // 200px
+                _buildTrendChart(themeProvider), // 160px
+                _buildStreakCompact(themeProvider), // 112px
+              ],
+            ),
+            Positioned.fill(
+              child: IgnorePointer(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                      color: themeProvider.primaryColor.withValues(alpha: 0.15),
+                      width: 1,
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
         ),
       ),
     );
   }
 
-  // ── 상단 160px: 레벨 + 유저명 ────────────────────────────────────────
+  // ── 상단 128px: 레벨 + 유저명 ────────────────────────────────────────
   Widget _buildTopSection(ThemeHandler themeProvider) {
     return Container(
-      height: 160,
+      height: 128,
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
@@ -324,75 +324,95 @@ class _AchievementCard extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // 상단: Lv 배지만 우측 정렬
               Padding(
-                padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-                child: Align(
-                  alignment: Alignment.centerRight,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.25),
-                      borderRadius: BorderRadius.circular(999),
-                      border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.5),
-                        width: 1,
-                      ),
-                    ),
-                    child: Text(
-                      'Lv.${userInfo.totalStudyLevel}',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 12,
+                padding: const EdgeInsets.fromLTRB(18, 14, 18, 0),
+                child: Row(
+                  children: [
+                    Text(
+                      'OnO',
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.88),
+                        fontSize: 13,
                         fontFamily: 'PretendardBold',
                         fontWeight: FontWeight.w700,
+                        height: 1.0,
                       ),
                     ),
-                  ),
-                ),
-              ),
-              // 메인 텍스트 — 좌측 정렬, weight contrast 타이포
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '이번 주 공부 기록',
-                        style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.55),
-                          fontSize: 11,
-                          fontFamily: 'PretendardLight',
-                          fontWeight: FontWeight.w300,
-                          letterSpacing: 0.8,
+                    const Spacer(),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 9, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.22),
+                        borderRadius: BorderRadius.circular(999),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.42),
+                          width: 1,
                         ),
                       ),
-                      const SizedBox(height: 7),
-                      // 이름 + "의 한 주" 한 줄, weight contrast
+                      child: Text(
+                        'Lv.${userInfo.totalStudyLevel}',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontFamily: 'PretendardBold',
+                          fontWeight: FontWeight.w700,
+                          height: 1.0,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(18, 12, 18, 18),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.16),
+                          borderRadius: BorderRadius.circular(7),
+                        ),
+                        child: Text(
+                          '이번 주 공부 기록',
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.86),
+                            fontSize: 11,
+                            fontFamily: 'PretendardBold',
+                            fontWeight: FontWeight.w700,
+                            height: 1.0,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
                       RichText(
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                         text: TextSpan(
                           children: [
                             TextSpan(
                               text: userInfo.name ?? '사용자',
                               style: const TextStyle(
                                 color: Colors.white,
-                                fontSize: 28,
+                                fontSize: 27,
                                 fontFamily: 'PretendardBold',
                                 fontWeight: FontWeight.w800,
-                                height: 1.2,
+                                height: 1.05,
                               ),
                             ),
                             TextSpan(
                               text: '의 한 주',
                               style: TextStyle(
-                                color: Colors.white.withValues(alpha: 0.75),
-                                fontSize: 18,
-                                fontFamily: 'PretendardLight',
-                                fontWeight: FontWeight.w300,
-                                letterSpacing: 1.0,
+                                color: Colors.white.withValues(alpha: 0.82),
+                                fontSize: 17,
+                                fontFamily: 'PretendardBold',
+                                fontWeight: FontWeight.w700,
+                                height: 1.05,
                               ),
                             ),
                           ],
@@ -402,7 +422,6 @@ class _AchievementCard extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(height: 14),
             ],
           ),
         ],
@@ -542,12 +561,11 @@ class _AchievementCard extends StatelessWidget {
     );
   }
 
-  // ── 복습 추이 bar chart 148px ─────────────────────────────────────────
-  // padding top:12 bottom:8 h:16 → label(14) + gap(8) + chart(106px)
+  // ── 복습 추이 bar chart 160px ─────────────────────────────────────────
   Widget _buildTrendChart(ThemeHandler themeProvider) {
     final trend = weeklyReport.trend;
     return SizedBox(
-      height: 148,
+      height: 160,
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
         child: Column(
@@ -643,14 +661,14 @@ class _AchievementCard extends StatelessWidget {
     );
   }
 
-  // ── 연속 학습 컴팩트 92px ─────────────────────────────────────────────
+  // ── 연속 학습 컴팩트 112px ─────────────────────────────────────────────
   Widget _buildStreakCompact(ThemeHandler themeProvider) {
     final days = weeklyReport.consecutiveLearningDays;
     final progress = (days / 30).clamp(0.0, 1.0);
 
     return Container(
-      height: 92,
-      padding: const EdgeInsets.fromLTRB(16, 22, 16, 28),
+      height: 112,
+      padding: const EdgeInsets.fromLTRB(16, 32, 16, 38),
       child: Row(
         children: [
           const Text('🔥', style: TextStyle(fontSize: 13)),
