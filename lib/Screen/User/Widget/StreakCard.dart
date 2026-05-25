@@ -1,29 +1,75 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../Model/StudyCalendar/StudyCalendarModel.dart';
 import '../../../Module/Text/StandardText.dart';
 import '../../../Module/Theme/ThemeHandler.dart';
-import '../../../Provider/UserProvider.dart';
 import '../../../Service/Api/StudyCalendar/StudyCalendarService.dart';
 import '../LearningCalendarScreen.dart';
 
 class StreakCard extends StatefulWidget {
   final ThemeHandler themeProvider;
-  const StreakCard({super.key, required this.themeProvider});
+  final double horizontalMarginFactor;
+
+  const StreakCard({
+    super.key,
+    required this.themeProvider,
+    this.horizontalMarginFactor = 0.04,
+  });
 
   @override
   State<StreakCard> createState() => _StreakCardState();
 }
 
 class _StreakCardState extends State<StreakCard> {
+  static const _calendarExpandedKey = 'my_page_calendar_expanded';
   StudyCalendarModel? _calendarData;
   bool _isCalendarLoading = true;
+  bool _isCalendarExpanded = false;
+  bool _prefLoaded = false;
 
   @override
   void initState() {
     super.initState();
     _loadCalendarData();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_prefLoaded) {
+      _prefLoaded = true;
+      final mq = MediaQuery.of(context);
+      final isTablet = mq.size.shortestSide >= 600;
+      // 태블릿이면 즉시 펼침 상태로 설정 (prefs 로드 전 플리커 방지)
+      _isCalendarExpanded = isTablet;
+      _loadExpandedPreference(tabletDefault: isTablet);
+    }
+  }
+
+  Future<void> _loadExpandedPreference({bool tabletDefault = false}) async {
+    final prefs = await SharedPreferences.getInstance();
+    if (!mounted) return;
+    setState(() {
+      _isCalendarExpanded = prefs.getBool(_calendarExpandedKey) ?? tabletDefault;
+    });
+  }
+
+  Future<void> _toggleCalendarExpanded() async {
+    final nextValue = !_isCalendarExpanded;
+    setState(() {
+      _isCalendarExpanded = nextValue;
+    });
+
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_calendarExpandedKey, nextValue);
+  }
+
+  void _openCalendarDetail() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const LearningCalendarScreen()),
+    );
   }
 
   Future<void> _loadCalendarData() async {
@@ -41,42 +87,28 @@ class _StreakCardState extends State<StreakCard> {
         });
       }
     } catch (_) {
-      // 실패해도 에러 미표시 — 미니 달력 섹션만 숨김
       if (mounted) setState(() => _isCalendarLoading = false);
     }
   }
 
-  static String _getFrogImagePath(int level) {
-    if (level >= 15) return 'assets/FrogCharacter/FROG_LEVEL15.png';
-    if (level >= 13) return 'assets/FrogCharacter/FROG_LEVEL13.png';
-    if (level >= 11) return 'assets/FrogCharacter/FROG_LEVEL11.png';
-    if (level >= 9) return 'assets/FrogCharacter/FROG_LEVEL9.png';
-    if (level >= 7) return 'assets/FrogCharacter/FROG_LEVEL7.png';
-    if (level >= 5) return 'assets/FrogCharacter/FROG_LEVEL5.png';
-    if (level >= 3) return 'assets/FrogCharacter/FROG_LEVEL3.png';
-    if (level >= 1) return 'assets/FrogCharacter/FROG_LEVEL1.png';
-    return 'assets/FrogCharacter/FROG_LEVEL1.png';
-  }
-
-  String _getStreakMessage(int streak) {
-    if (streak >= 100) return '100일 연속 학습 달성! 정말 대단해요 👑';
-    if (streak >= 30) return '한 달 이상 연속 학습! 실력이 쑥쑥 오르고 있어요 🌱';
-    if (streak >= 14) return '2주 연속 학습! 좋은 습관이 자리잡고 있어요 💪';
-    if (streak >= 7) return '일주일 연속 학습 달성! 아주 잘하고 있어요 🔥';
-    if (streak >= 3) return '꾸준히 학습 중이에요! (${streak}일째) 😊';
-    if (streak >= 1) return '학습을 시작했어요! 꾸준히 이어가 봐요 📚';
-    return '오늘 학습하면 연속 학습이 시작돼요!';
-  }
-
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final screenHeight = MediaQuery.of(context).size.height;
+    final mq = MediaQuery.of(context);
+    final screenWidth = mq.size.width;
+    final screenHeight = mq.size.height;
+    final isTablet = mq.size.shortestSide >= 600;
+    final isTabletLandscape = isTablet && screenWidth > screenHeight;
     final primaryColor = widget.themeProvider.primaryColor;
+
+    final cardPadding = isTabletLandscape
+        ? const EdgeInsets.fromLTRB(24, 24, 24, 20)
+        : isTablet
+            ? const EdgeInsets.fromLTRB(22, 18, 22, 16)
+            : const EdgeInsets.fromLTRB(16, 14, 16, 12);
 
     return Container(
       margin: EdgeInsets.symmetric(
-        horizontal: screenWidth * 0.04,
+        horizontal: screenWidth * widget.horizontalMarginFactor,
         vertical: screenHeight * 0.005,
       ),
       decoration: BoxDecoration(
@@ -85,25 +117,37 @@ class _StreakCardState extends State<StreakCard> {
         border: Border.all(color: Colors.grey[300]!, width: 1),
         boxShadow: [
           BoxShadow(
-            color: primaryColor.withOpacity(0.1),
+            color: primaryColor.withValues(alpha:0.1),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
         ],
       ),
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
+        padding: cardPadding,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildHeader(context, primaryColor),
-            const SizedBox(height: 14),
-            _buildStreakBanner(context, primaryColor),
+            _buildHeader(context, primaryColor, isTablet: isTablet),
+            SizedBox(height: isTabletLandscape ? 16 : 10),
+            _buildStreakBanner(primaryColor, isTablet: isTablet),
             if (!_isCalendarLoading && _calendarData != null) ...[
-              const SizedBox(height: 14),
-              _buildMiniCalendar(context, screenWidth, primaryColor),
+              SizedBox(height: isTabletLandscape ? 18 : 12),
+              InkWell(
+                onTap: _openCalendarDetail,
+                borderRadius: BorderRadius.circular(8),
+                child: AnimatedSize(
+                  duration: const Duration(milliseconds: 220),
+                  curve: Curves.easeInOut,
+                  child: _buildMiniCalendar(
+                    context,
+                    primaryColor,
+                    isTablet: isTablet,
+                  ),
+                ),
+              ),
             ] else if (_isCalendarLoading) ...[
-              const SizedBox(height: 12),
+              SizedBox(height: isTabletLandscape ? 18 : 12),
               SizedBox(
                 height: 48,
                 child: Center(
@@ -114,52 +158,52 @@ class _StreakCardState extends State<StreakCard> {
                 ),
               ),
             ],
-            const SizedBox(height: 12),
-            _buildFooterStats(primaryColor),
+            if (_isCalendarExpanded) ...[
+              if (isTabletLandscape) const Spacer() else const SizedBox(height: 12),
+              _buildFooterStats(primaryColor, isTablet: isTablet),
+            ],
           ],
         ),
       ),
     );
   }
 
-  Widget _buildHeader(BuildContext context, Color primaryColor) {
+  Widget _buildHeader(
+    BuildContext context,
+    Color primaryColor, {
+    bool isTablet = false,
+  }) {
     final calendarYear = _calendarData?.year ?? DateTime.now().year;
     final calendarMonth = _calendarData?.month ?? DateTime.now().month;
 
-    return Row(
-      children: [
-        StandardText(
-          text: '$calendarYear년 $calendarMonth월 학습 달력',
-          fontSize: 15,
-          color: Colors.black87,
-          fontWeight: FontWeight.w600,
-        ),
-        const Spacer(),
-        GestureDetector(
-          onTap: () => Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const LearningCalendarScreen()),
+    return InkWell(
+      onTap: _toggleCalendarExpanded,
+      borderRadius: BorderRadius.circular(8),
+      child: Row(
+        children: [
+          StandardText(
+            text: '$calendarYear년 $calendarMonth월 학습 달력',
+            fontSize: isTablet ? 18.0 : 15.0,
+            color: Colors.black87,
+            fontWeight: FontWeight.w600,
           ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const StandardText(
-                text: '자세히 보기',
-                fontSize: 12,
-                color: Colors.black38,
-              ),
-              const Icon(Icons.chevron_right, size: 16, color: Colors.black38),
-            ],
+          const Spacer(),
+          Icon(
+            _isCalendarExpanded
+                ? Icons.keyboard_arrow_up
+                : Icons.keyboard_arrow_down,
+            size: isTablet ? 26.0 : 20.0,
+            color: Colors.black38,
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
-  Widget _buildStreakBanner(BuildContext context, Color primaryColor) {
+  Widget _buildStreakBanner(Color primaryColor, {bool isTablet = false}) {
     if (_isCalendarLoading) {
       return SizedBox(
-        height: 64,
+        height: isTablet ? 80.0 : 64.0,
         child: Center(
           child: CircularProgressIndicator(
             color: primaryColor,
@@ -170,84 +214,85 @@ class _StreakCardState extends State<StreakCard> {
     }
 
     final currentStreak = _calendarData?.currentStreak;
-    final userLevel = Provider.of<UserProvider>(context, listen: false)
-            .userInfoModel
-            ?.totalStudyLevel ??
-        1;
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: BoxDecoration(
-        color: primaryColor.withOpacity(0.07),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        children: [
-          Image.asset(
-            _getFrogImagePath(userLevel),
-            width: 52,
-            height: 52,
-            fit: BoxFit.contain,
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.baseline,
-                  textBaseline: TextBaseline.alphabetic,
-                  children: [
-                    StandardText(
-                      text: currentStreak != null ? '$currentStreak' : '--',
-                      fontSize: 26,
-                      fontWeight: FontWeight.w700,
-                      color: primaryColor,
-                    ),
-                    const SizedBox(width: 4),
-                    const StandardText(
-                      text: '일 연속 학습중',
-                      fontSize: 13,
-                      color: Colors.black54,
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 3),
-                StandardText(
-                  text: currentStreak != null
-                      ? _getStreakMessage(currentStreak)
-                      : '학습 기록을 확인할 수 없어요',
-                  fontSize: 11,
-                  color: Colors.black45,
-                ),
-              ],
+    return InkWell(
+      onTap: _openCalendarDetail,
+      borderRadius: BorderRadius.circular(10),
+      child: Container(
+        padding: EdgeInsets.symmetric(
+          horizontal: isTablet ? 16.0 : 12.0,
+          vertical: isTablet ? 12.0 : 8.0,
+        ),
+        decoration: BoxDecoration(
+          color: primaryColor.withValues(alpha:0.07),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Row(
+          children: [
+            const SizedBox(width: 6),
+            StandardText(
+              text: currentStreak != null ? '$currentStreak' : '--',
+              fontSize: isTablet ? 28.0 : 21.0,
+              fontWeight: FontWeight.w700,
+              color: primaryColor,
             ),
-          ),
-        ],
+            const SizedBox(width: 4),
+            StandardText(
+              text: '일 연속 학습중',
+              fontSize: isTablet ? 15.0 : 12.0,
+              color: Colors.black54,
+            ),
+            const Spacer(),
+            Icon(
+              Icons.chevron_right,
+              size: isTablet ? 22.0 : 18.0,
+              color: Colors.grey[400],
+            ),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildMiniCalendar(
-      BuildContext context, double screenWidth, Color primaryColor) {
+    BuildContext context,
+    Color primaryColor, {
+    bool isTablet = false,
+  }) {
+    final mq = MediaQuery.of(context);
+    final screenWidth = mq.size.width;
+    final isTabletLandscape = isTablet && screenWidth > mq.size.height;
+
+    // Estimate available width without LayoutBuilder (avoids IntrinsicHeight conflict)
+    // Tablet landscape: each card is ~45% of screen width (outer 4%+4% padding, 2% gap, ÷2)
+    // Otherwise: full card width minus horizontal margins
+    final double cardWidth = isTabletLandscape
+        ? screenWidth * 0.45
+        : screenWidth * (1.0 - 2.0 * widget.horizontalMarginFactor);
+    final double cardPadding = isTablet ? 44.0 : 32.0;
+    final double availableWidth = cardWidth - cardPadding;
+    final double maxDotSize = isTablet ? 20.0 : 12.0;
+    final double dotSize = ((availableWidth / 7) * 0.6).clamp(0.0, maxDotSize);
+
     final now = DateTime.now();
     final calendarData = _calendarData!;
     final firstDayOfMonth = DateTime(calendarData.year, calendarData.month, 1);
-    // weekday: Mon=1..Sun=7, 달력 offset: 일=0..토=6
     final firstWeekdayOffset = firstDayOfMonth.weekday % 7;
     final daysInMonth =
         DateTime(calendarData.year, calendarData.month + 1, 0).day;
-    final rowCount = ((firstWeekdayOffset + daysInMonth) / 7).ceil();
-
-    // 점 크기 계산 (패딩 32 = 양쪽 16)
-    final availableWidth = screenWidth * 0.92 - 32;
-    final dotSize = (availableWidth / 7).clamp(0.0, 12.0);
+    final monthRowCount = ((firstWeekdayOffset + daysInMonth) / 7).ceil();
+    final todayIndex =
+        now.year == calendarData.year && now.month == calendarData.month
+            ? firstWeekdayOffset + now.day - 1
+            : 0;
+    final firstRowIndex =
+        _isCalendarExpanded ? 0 : (todayIndex ~/ 7).clamp(0, monthRowCount - 1);
+    final rowCount = _isCalendarExpanded ? monthRowCount : 1;
 
     const weekdayLabels = ['일', '월', '화', '수', '목', '금', '토'];
 
     return Column(
       children: [
-        // 요일 헤더
         Row(
           children: weekdayLabels
               .map(
@@ -255,7 +300,7 @@ class _StreakCardState extends State<StreakCard> {
                   child: Center(
                     child: StandardText(
                       text: label,
-                      fontSize: 10,
+                      fontSize: isTablet ? 12.0 : 10.0,
                       color: Colors.grey,
                     ),
                   ),
@@ -264,21 +309,17 @@ class _StreakCardState extends State<StreakCard> {
               .toList(),
         ),
         const SizedBox(height: 6),
-        // 필요한 주 수만큼 렌더링
         ...List.generate(rowCount, (rowIndex) {
+          final calendarRowIndex = firstRowIndex + rowIndex;
           return Padding(
             padding: const EdgeInsets.only(bottom: 4),
             child: Row(
               children: List.generate(7, (colIndex) {
-                final cellIndex = rowIndex * 7 + colIndex;
+                final cellIndex = calendarRowIndex * 7 + colIndex;
                 final day = cellIndex - firstWeekdayOffset + 1;
 
                 if (day < 1 || day > daysInMonth) {
-                  return Expanded(
-                    child: SizedBox(
-                      height: dotSize,
-                    ),
-                  );
+                  return Expanded(child: SizedBox(height: dotSize));
                 }
 
                 final cellDate =
@@ -296,10 +337,10 @@ class _StreakCardState extends State<StreakCard> {
                   final intensity = record?.intensityLevel ?? 0;
                   switch (intensity) {
                     case 1:
-                      dotColor = primaryColor.withOpacity(0.3);
+                      dotColor = primaryColor.withValues(alpha: 0.3);
                       break;
                     case 2:
-                      dotColor = primaryColor.withOpacity(0.6);
+                      dotColor = primaryColor.withValues(alpha: 0.6);
                       break;
                     case 3:
                       dotColor = primaryColor;
@@ -348,33 +389,34 @@ class _StreakCardState extends State<StreakCard> {
     );
   }
 
-  Widget _buildFooterStats(Color primaryColor) {
+  Widget _buildFooterStats(Color primaryColor, {bool isTablet = false}) {
     final bestStreak = _calendarData?.bestStreak;
     final thisMonthStudyDays = _calendarData?.thisMonthStudyDays;
+    final fontSize = isTablet ? 14.0 : 12.0;
+    final iconSize = isTablet ? 16.0 : 13.0;
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Row(
           children: [
-            const Icon(Icons.star_outline, size: 14, color: Colors.amber),
+            Icon(Icons.star_outline, size: iconSize, color: Colors.amber),
             const SizedBox(width: 4),
             StandardText(
               text: '이번 달 최장 복습: ${bestStreak != null ? '$bestStreak일' : '--'}',
-              fontSize: 12,
+              fontSize: fontSize,
               color: Colors.black54,
             ),
           ],
         ),
         Row(
           children: [
-            const Icon(Icons.calendar_today_outlined,
-                size: 13, color: Colors.black38),
+            Icon(Icons.calendar_today_outlined,
+                size: iconSize - 1, color: Colors.black38),
             const SizedBox(width: 4),
             StandardText(
-              text:
-                  '이번 달 복습 일수: ${thisMonthStudyDays != null ? '$thisMonthStudyDays일' : '--'}',
-              fontSize: 12,
+              text: '복습 일수: ${thisMonthStudyDays != null ? '$thisMonthStudyDays일' : '--'}',
+              fontSize: fontSize,
               color: Colors.black54,
             ),
           ],
