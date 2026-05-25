@@ -11,7 +11,6 @@ import '../../Provider/ScreenIndexProvider.dart';
 import '../../Provider/UserProvider.dart';
 import 'LoginScreen.dart';
 import 'Widget/AccountActionButtons.dart';
-import 'Widget/CompactActivityLevels.dart';
 import 'Widget/ReviewReportScreen.dart';
 import 'Widget/SettingMenuButtons.dart';
 import 'Widget/ThemeChangeButton.dart';
@@ -49,6 +48,21 @@ class _SettingScreenState extends State<SettingScreen> {
           fontSize: 18,
           color: themeProvider.primaryColor,
         ),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 16.0),
+            child: IconButton(
+              icon: Icon(Icons.settings, color: themeProvider.primaryColor),
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => const _MyPageSettingsScreen(),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
         backgroundColor: Colors.white,
       ),
       backgroundColor: Colors.white,
@@ -81,8 +95,7 @@ class _SettingScreenState extends State<SettingScreen> {
                             ),
                             SizedBox(width: screenWidth * 0.02),
                             Expanded(
-                              child: CompactActivityLevels(
-                                userInfo: userProvider.userInfoModel,
+                              child: StreakCard(
                                 themeProvider: themeProvider,
                                 horizontalMarginFactor: 0,
                               ),
@@ -92,124 +105,19 @@ class _SettingScreenState extends State<SettingScreen> {
                       ),
                     )
                   else ...[
-                    // 유저 레벨 카드 (캐릭터 + 이름)
                     UserLevelCard(
                       userInfo: userProvider.userInfoModel,
                       themeProvider: themeProvider,
                       userName: userProvider.userInfoModel?.name ?? '이름 없음',
                     ),
-
-                    SizedBox(height: screenHeight * 0.01),
-
-                    // 총 경험치 바 + 활동 레벨 (통합)
-                    CompactActivityLevels(
-                      userInfo: userProvider.userInfoModel,
-                      themeProvider: themeProvider,
-                    ),
                   ],
-
+                  if (!isTabletLandscape) ...[
+                    SizedBox(height: screenHeight * 0.01),
+                    StreakCard(themeProvider: themeProvider),
+                  ],
                   SizedBox(height: screenHeight * 0.01),
-
-                  StreakCard(themeProvider: themeProvider),
-
-                  SizedBox(height: screenHeight * 0.01),
-
                   _buildReviewReportButton(themeProvider),
-
                   SizedBox(height: screenHeight * 0.01),
-
-                  // 테마 변경 (독립)
-                  ThemeChangeButton(
-                    themeProvider: themeProvider,
-                    onTap: () {
-                      showDialog(
-                        context: context,
-                        builder: (BuildContext context) {
-                          return ThemeDialog();
-                        },
-                      );
-                    },
-                  ),
-
-                  SizedBox(height: screenHeight * 0.01),
-
-                  // 설정 메뉴 버튼들 (이름 수정 포함)
-                  SettingMenuButtons(
-                    themeProvider: themeProvider,
-                    onNameEditTap: () {
-                      FirebaseAnalytics.instance
-                          .logEvent(name: 'username_edit_button_click');
-                      _showChangeNameDialog(
-                          context, userProvider.userInfoModel?.name ?? '이름 없음');
-                    },
-                    onGuideTap: () {
-                      UrlLauncher.launchGuidePageURL();
-                    },
-                    onFeedbackTap: () {
-                      UrlLauncher.launchFeedbackPageURL();
-                    },
-                    onTermsTap: () {
-                      UrlLauncher.launchUserTemPageURL();
-                    },
-                    notificationEnabled:
-                        userProvider.userInfoModel?.notificationEnabled ?? true,
-                    onNotificationChanged: (value) async {
-                      try {
-                        await Provider.of<UserProvider>(context, listen: false)
-                            .updateNotificationSettings(value);
-                      } catch (_) {
-                        if (!context.mounted) return;
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: StandardText(
-                              text: '알림 설정 변경에 실패했습니다. 다시 시도해주세요.',
-                              fontSize: 14,
-                              color: Colors.white,
-                            ),
-                            backgroundColor: Colors.red,
-                          ),
-                        );
-                      }
-                    },
-                  ),
-
-                  // 로그아웃/회원탈퇴 (흐릿한 텍스트)
-                  AccountActionButtons(
-                    onLogoutTap: () => showConfirmationDialog(
-                      context,
-                      '로그아웃',
-                      '정말 로그아웃 하시겠습니까?\n(게스트 유저의 경우 모든 정보가 삭제됩니다.)',
-                      () async {
-                        await Provider.of<UserProvider>(context, listen: false)
-                            .signOut();
-
-                        Provider.of<ScreenIndexProvider>(context, listen: false)
-                            .setSelectedIndex(0);
-
-                        Navigator.of(context).pushReplacement(
-                          MaterialPageRoute(
-                              builder: (context) => const LoginScreen()),
-                        );
-                      },
-                    ),
-                    onDeleteAccountTap: () => showConfirmationDialog(
-                      context,
-                      '회원 탈퇴',
-                      '정말 회원 탈퇴 하시겠습니까?\n그동안 작성했던 모든 오답노트 및 개인정보가 삭제됩니다. 이 작업은 되돌릴 수 없습니다.',
-                      () async {
-                        await Provider.of<UserProvider>(context, listen: false)
-                            .deleteAccount();
-
-                        Provider.of<ScreenIndexProvider>(context, listen: false)
-                            .setSelectedIndex(0);
-
-                        Navigator.of(context).pushReplacement(
-                          MaterialPageRoute(
-                              builder: (context) => const LoginScreen()),
-                        );
-                      },
-                    ),
-                  ),
                 ],
               ),
             ),
@@ -227,13 +135,17 @@ class _SettingScreenState extends State<SettingScreen> {
     );
   }
 
-  Widget _buildReviewReportButton(ThemeHandler themeProvider) {
+  Widget _buildReviewReportButton(
+    ThemeHandler themeProvider, {
+    double horizontalMarginFactor = 0.04,
+    bool compact = false,
+  }) {
     final screenHeight = MediaQuery.of(context).size.height;
     final screenWidth = MediaQuery.of(context).size.width;
 
     return Container(
       margin: EdgeInsets.symmetric(
-        horizontal: screenWidth * 0.04,
+        horizontal: screenWidth * horizontalMarginFactor,
         vertical: screenHeight * 0.005,
       ),
       child: InkWell(
@@ -278,28 +190,23 @@ class _SettingScreenState extends State<SettingScreen> {
               ),
               SizedBox(width: screenHeight * 0.015),
               Expanded(
-                child: Row(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const StandardText(
-                      text: '학습 리포트',
-                      fontSize: 14,
+                    StandardText(
+                      text: compact ? '학습\n리포트' : '학습 리포트',
+                      fontSize: 15,
                       color: Colors.black87,
+                      fontWeight: FontWeight.w700,
                     ),
-                    const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 7, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: Colors.red[400],
-                        borderRadius: BorderRadius.circular(10),
+                    if (!compact) ...[
+                      const SizedBox(height: 3),
+                      StandardText(
+                        text: '오답 패턴과 복습 흐름을 한눈에 확인해요',
+                        fontSize: 11,
+                        color: Colors.grey[700]!,
                       ),
-                      child: const StandardText(
-                        text: 'NEW!',
-                        fontSize: 10,
-                        color: Colors.white,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
+                    ],
                   ],
                 ),
               ),
@@ -315,100 +222,332 @@ class _SettingScreenState extends State<SettingScreen> {
     );
   }
 
-  // 이름 변경 다이얼로그
-  void _showChangeNameDialog(BuildContext context, String currentName) {
-    final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
+  Future<void> _refreshData() async {
     final userProvider = Provider.of<UserProvider>(context, listen: false);
-    final TextEditingController nameController =
-        TextEditingController(text: currentName);
-    final standardTextStyle = const StandardText(text: '').getTextStyle();
 
-    showDialog(
-      context: context,
-      builder: (context) {
-        return Dialog(
-          backgroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Container(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
+    await Future.wait([
+      userProvider.fetchUserInfo(),
+    ]);
+  }
+}
+
+class _MyPageSettingsScreen extends StatelessWidget {
+  const _MyPageSettingsScreen();
+
+  @override
+  Widget build(BuildContext context) {
+    final userProvider = Provider.of<UserProvider>(context);
+    final themeProvider = Provider.of<ThemeHandler>(context);
+    final screenIndexProvider =
+        Provider.of<ScreenIndexProvider>(context, listen: false);
+
+    return Scaffold(
+      appBar: AppBar(
+        centerTitle: true,
+        title: StandardText(
+          text: '설정',
+          fontSize: 18,
+          color: themeProvider.primaryColor,
+        ),
+        backgroundColor: Colors.white,
+      ),
+      backgroundColor: Colors.white,
+      body: Column(
+        children: [
+          Expanded(
+            child: ListView(
+              padding: const EdgeInsets.only(top: 16),
               children: [
-                // 헤더
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: themeProvider.primaryColor.withOpacity(0.1),
+                ThemeChangeButton(
+                  themeProvider: themeProvider,
+                  onTap: () {
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return ThemeDialog();
+                      },
+                    );
+                  },
+                ),
+                const SizedBox(height: 8),
+                SettingMenuButtons(
+                  themeProvider: themeProvider,
+                  onNameEditTap: () {
+                    FirebaseAnalytics.instance
+                        .logEvent(name: 'username_edit_button_click');
+                    _showChangeNameDialog(
+                      context,
+                      userProvider.userInfoModel?.name ?? '이름 없음',
+                    );
+                  },
+                  onGuideTap: () {
+                    UrlLauncher.launchGuidePageURL();
+                  },
+                  onFeedbackTap: () {
+                    UrlLauncher.launchFeedbackPageURL();
+                  },
+                  onTermsTap: () {
+                    UrlLauncher.launchUserTemPageURL();
+                  },
+                  notificationEnabled:
+                      userProvider.userInfoModel?.notificationEnabled ?? true,
+                  onNotificationChanged: (value) async {
+                    try {
+                      await Provider.of<UserProvider>(context, listen: false)
+                          .updateNotificationSettings(value);
+                    } catch (_) {
+                      if (!context.mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: StandardText(
+                            text: '알림 설정 변경에 실패했습니다. 다시 시도해주세요.',
+                            fontSize: 14,
+                            color: Colors.white,
+                          ),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                    }
+                  },
+                ),
+              ],
+            ),
+          ),
+          SafeArea(
+            top: false,
+            child: AccountActionButtons(
+              onLogoutTap: () => _showConfirmationDialog(
+                context,
+                '로그아웃',
+                '정말 로그아웃 하시겠습니까?\n(게스트 유저의 경우 모든 정보가 삭제됩니다.)',
+                () async {
+                  await userProvider.signOut();
+                  screenIndexProvider.setSelectedIndex(0);
+
+                  if (!context.mounted) return;
+                  Navigator.of(context).pushAndRemoveUntil(
+                    MaterialPageRoute(
+                        builder: (context) => const LoginScreen()),
+                    (route) => false,
+                  );
+                },
+              ),
+              onDeleteAccountTap: () => _showConfirmationDialog(
+                context,
+                '회원 탈퇴',
+                '정말 회원 탈퇴 하시겠습니까?\n그동안 작성했던 모든 오답노트 및 개인정보가 삭제됩니다. 이 작업은 되돌릴 수 없습니다.',
+                () async {
+                  await userProvider.deleteAccount();
+                  screenIndexProvider.setSelectedIndex(0);
+
+                  if (!context.mounted) return;
+                  Navigator.of(context).pushAndRemoveUntil(
+                    MaterialPageRoute(
+                        builder: (context) => const LoginScreen()),
+                    (route) => false,
+                  );
+                },
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+void _showChangeNameDialog(BuildContext context, String currentName) {
+  final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
+  final TextEditingController nameController =
+      TextEditingController(text: currentName);
+  final standardTextStyle = const StandardText(text: '').getTextStyle();
+
+  showDialog(
+    context: context,
+    builder: (context) {
+      return Dialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: themeProvider.primaryColor.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(
+                      Icons.person,
+                      color: themeProvider.primaryColor,
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  const StandardText(
+                    text: '이름 수정',
+                    fontSize: 20,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black87,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+              TextField(
+                controller: nameController,
+                autofocus: true,
+                style: standardTextStyle.copyWith(
+                  color: Colors.black87,
+                  fontSize: 15,
+                ),
+                decoration: InputDecoration(
+                  hintText: '수정할 이름을 입력하세요',
+                  hintStyle: standardTextStyle.copyWith(
+                    color: Colors.grey[400],
+                    fontSize: 14,
+                  ),
+                  fillColor: Colors.grey[50],
+                  filled: true,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: Colors.grey[300]!, width: 1),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: Colors.grey[300]!, width: 1),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(
+                      color: themeProvider.primaryColor.withValues(alpha: 0.5),
+                      width: 2,
+                    ),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    vertical: 16,
+                    horizontal: 16,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 8),
+                      backgroundColor: Colors.grey[100],
+                      shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: Icon(
-                        Icons.person,
-                        color: themeProvider.primaryColor,
-                        size: 20,
-                      ),
                     ),
-                    const SizedBox(width: 12),
-                    const StandardText(
-                      text: '이름 수정',
-                      fontSize: 20,
-                      fontWeight: FontWeight.w600,
+                    child: const StandardText(
+                      text: '취소',
+                      fontSize: 14,
                       color: Colors.black87,
                     ),
-                  ],
-                ),
-                const SizedBox(height: 24),
-                // 입력 필드
-                TextField(
-                  controller: nameController,
-                  autofocus: true,
-                  style: standardTextStyle.copyWith(
-                    color: Colors.black87,
-                    fontSize: 15,
                   ),
-                  decoration: InputDecoration(
-                    hintText: '수정할 이름을 입력하세요',
-                    hintStyle: standardTextStyle.copyWith(
-                      color: Colors.grey[400],
-                      fontSize: 14,
-                    ),
-                    fillColor: Colors.grey[50],
-                    filled: true,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide:
-                          BorderSide(color: Colors.grey[300]!, width: 1),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide:
-                          BorderSide(color: Colors.grey[300]!, width: 1),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(
-                        color: themeProvider.primaryColor.withOpacity(0.5),
-                        width: 2,
+                  const SizedBox(width: 8),
+                  TextButton(
+                    onPressed: () async {
+                      String newName = nameController.text;
+                      if (newName.isNotEmpty) {
+                        Navigator.pop(context);
+                        await Provider.of<UserProvider>(context, listen: false)
+                            .updateUser(
+                          name: newName,
+                          email: null,
+                          identifier: null,
+                        );
+                      }
+                    },
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 8),
+                      backgroundColor: themeProvider.primaryColor,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
                       ),
                     ),
-                    contentPadding: const EdgeInsets.symmetric(
-                      vertical: 16,
-                      horizontal: 16,
+                    child: const StandardText(
+                      text: '수정',
+                      fontSize: 14,
+                      color: Colors.white,
                     ),
                   ),
-                ),
-                const SizedBox(height: 24),
-                // 액션 버튼
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    TextButton(
+                ],
+              ),
+            ],
+          ),
+        ),
+      );
+    },
+  );
+}
+
+void _showConfirmationDialog(BuildContext context, String title, String message,
+    VoidCallback onConfirm) {
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return Dialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.orange.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(
+                      Icons.warning_amber_rounded,
+                      color: Colors.orange,
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  StandardText(
+                    text: title,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black87,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              StandardText(
+                text: message,
+                fontSize: 15,
+                color: Colors.black87,
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextButton(
                       onPressed: () {
-                        Navigator.pop(context);
+                        Navigator.of(context).pop();
                       },
                       style: TextButton.styleFrom(
                         padding: const EdgeInsets.symmetric(
@@ -424,155 +563,35 @@ class _SettingScreenState extends State<SettingScreen> {
                         color: Colors.black87,
                       ),
                     ),
-                    const SizedBox(width: 8),
-                    TextButton(
-                      onPressed: () async {
-                        String newName = nameController.text;
-                        if (newName.isNotEmpty) {
-                          Navigator.pop(context);
-                          await Provider.of<UserProvider>(context,
-                                  listen: false)
-                              .updateUser(
-                            name: newName,
-                            email: null,
-                            identifier: null,
-                          );
-                        }
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: TextButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                        onConfirm();
                       },
                       style: TextButton.styleFrom(
                         padding: const EdgeInsets.symmetric(
                             horizontal: 12, vertical: 8),
-                        backgroundColor: themeProvider.primaryColor,
+                        backgroundColor: Colors.red,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),
                       ),
                       child: const StandardText(
-                        text: '수정',
+                        text: '확인',
                         fontSize: 14,
                         color: Colors.white,
                       ),
                     ),
-                  ],
-                ),
-              ],
-            ),
+                  ),
+                ],
+              ),
+            ],
           ),
-        );
-      },
-    );
-  }
-
-  Future<void> _refreshData() async {
-    final userProvider = Provider.of<UserProvider>(context, listen: false);
-
-    await Future.wait([
-      userProvider.fetchUserInfo(),
-    ]);
-  }
-
-  void showConfirmationDialog(BuildContext context, String title,
-      String message, VoidCallback onConfirm) {
-    final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
-
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return Dialog(
-          backgroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Container(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // 헤더
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Colors.orange.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: const Icon(
-                        Icons.warning_amber_rounded,
-                        color: Colors.orange,
-                        size: 20,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    StandardText(
-                      text: title,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black87,
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                // 내용
-                StandardText(
-                  text: message,
-                  fontSize: 15,
-                  color: Colors.black87,
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 24),
-                // 액션 버튼
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextButton(
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                        },
-                        style: TextButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 8),
-                          backgroundColor: Colors.grey[100],
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                        child: const StandardText(
-                          text: '취소',
-                          fontSize: 14,
-                          color: Colors.black87,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: TextButton(
-                        onPressed: () async {
-                          Navigator.of(context).pop();
-                          onConfirm();
-                        },
-                        style: TextButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 8),
-                          backgroundColor: Colors.red,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                        child: const StandardText(
-                          text: '확인',
-                          fontSize: 14,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
+        ),
+      );
+    },
+  );
 }

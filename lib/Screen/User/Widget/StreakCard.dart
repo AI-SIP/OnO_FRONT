@@ -1,29 +1,62 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../Model/StudyCalendar/StudyCalendarModel.dart';
 import '../../../Module/Text/StandardText.dart';
 import '../../../Module/Theme/ThemeHandler.dart';
-import '../../../Provider/UserProvider.dart';
 import '../../../Service/Api/StudyCalendar/StudyCalendarService.dart';
 import '../LearningCalendarScreen.dart';
 
 class StreakCard extends StatefulWidget {
   final ThemeHandler themeProvider;
-  const StreakCard({super.key, required this.themeProvider});
+  final double horizontalMarginFactor;
+
+  const StreakCard({
+    super.key,
+    required this.themeProvider,
+    this.horizontalMarginFactor = 0.04,
+  });
 
   @override
   State<StreakCard> createState() => _StreakCardState();
 }
 
 class _StreakCardState extends State<StreakCard> {
+  static const _calendarExpandedKey = 'my_page_calendar_expanded';
   StudyCalendarModel? _calendarData;
   bool _isCalendarLoading = true;
+  bool _isCalendarExpanded = false;
 
   @override
   void initState() {
     super.initState();
+    _loadExpandedPreference();
     _loadCalendarData();
+  }
+
+  Future<void> _loadExpandedPreference() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (!mounted) return;
+    setState(() {
+      _isCalendarExpanded = prefs.getBool(_calendarExpandedKey) ?? false;
+    });
+  }
+
+  Future<void> _toggleCalendarExpanded() async {
+    final nextValue = !_isCalendarExpanded;
+    setState(() {
+      _isCalendarExpanded = nextValue;
+    });
+
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_calendarExpandedKey, nextValue);
+  }
+
+  void _openCalendarDetail() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const LearningCalendarScreen()),
+    );
   }
 
   Future<void> _loadCalendarData() async {
@@ -46,28 +79,6 @@ class _StreakCardState extends State<StreakCard> {
     }
   }
 
-  static String _getFrogImagePath(int level) {
-    if (level >= 15) return 'assets/FrogCharacter/FROG_LEVEL15.png';
-    if (level >= 13) return 'assets/FrogCharacter/FROG_LEVEL13.png';
-    if (level >= 11) return 'assets/FrogCharacter/FROG_LEVEL11.png';
-    if (level >= 9) return 'assets/FrogCharacter/FROG_LEVEL9.png';
-    if (level >= 7) return 'assets/FrogCharacter/FROG_LEVEL7.png';
-    if (level >= 5) return 'assets/FrogCharacter/FROG_LEVEL5.png';
-    if (level >= 3) return 'assets/FrogCharacter/FROG_LEVEL3.png';
-    if (level >= 1) return 'assets/FrogCharacter/FROG_LEVEL1.png';
-    return 'assets/FrogCharacter/FROG_LEVEL1.png';
-  }
-
-  String _getStreakMessage(int streak) {
-    if (streak >= 100) return '100일 연속 학습 달성! 정말 대단해요 👑';
-    if (streak >= 30) return '한 달 이상 연속 학습! 실력이 쑥쑥 오르고 있어요 🌱';
-    if (streak >= 14) return '2주 연속 학습! 좋은 습관이 자리잡고 있어요 💪';
-    if (streak >= 7) return '일주일 연속 학습 달성! 아주 잘하고 있어요 🔥';
-    if (streak >= 3) return '꾸준히 학습 중이에요! (${streak}일째) 😊';
-    if (streak >= 1) return '학습을 시작했어요! 꾸준히 이어가 봐요 📚';
-    return '오늘 학습하면 연속 학습이 시작돼요!';
-  }
-
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
@@ -76,7 +87,7 @@ class _StreakCardState extends State<StreakCard> {
 
     return Container(
       margin: EdgeInsets.symmetric(
-        horizontal: screenWidth * 0.04,
+        horizontal: screenWidth * widget.horizontalMarginFactor,
         vertical: screenHeight * 0.005,
       ),
       decoration: BoxDecoration(
@@ -92,16 +103,24 @@ class _StreakCardState extends State<StreakCard> {
         ],
       ),
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
+        padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildHeader(context, primaryColor),
-            const SizedBox(height: 14),
-            _buildStreakBanner(context, primaryColor),
+            const SizedBox(height: 10),
+            _buildStreakBanner(primaryColor),
             if (!_isCalendarLoading && _calendarData != null) ...[
-              const SizedBox(height: 14),
-              _buildMiniCalendar(context, screenWidth, primaryColor),
+              const SizedBox(height: 12),
+              InkWell(
+                onTap: _openCalendarDetail,
+                borderRadius: BorderRadius.circular(8),
+                child: AnimatedSize(
+                  duration: const Duration(milliseconds: 220),
+                  curve: Curves.easeInOut,
+                  child: _buildMiniCalendar(context, screenWidth, primaryColor),
+                ),
+              ),
             ] else if (_isCalendarLoading) ...[
               const SizedBox(height: 12),
               SizedBox(
@@ -114,8 +133,10 @@ class _StreakCardState extends State<StreakCard> {
                 ),
               ),
             ],
-            const SizedBox(height: 12),
-            _buildFooterStats(primaryColor),
+            if (_isCalendarExpanded) ...[
+              const SizedBox(height: 12),
+              _buildFooterStats(primaryColor),
+            ],
           ],
         ),
       ),
@@ -126,37 +147,31 @@ class _StreakCardState extends State<StreakCard> {
     final calendarYear = _calendarData?.year ?? DateTime.now().year;
     final calendarMonth = _calendarData?.month ?? DateTime.now().month;
 
-    return Row(
-      children: [
-        StandardText(
-          text: '$calendarYear년 $calendarMonth월 학습 달력',
-          fontSize: 15,
-          color: Colors.black87,
-          fontWeight: FontWeight.w600,
-        ),
-        const Spacer(),
-        GestureDetector(
-          onTap: () => Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const LearningCalendarScreen()),
+    return InkWell(
+      onTap: _toggleCalendarExpanded,
+      borderRadius: BorderRadius.circular(8),
+      child: Row(
+        children: [
+          StandardText(
+            text: '$calendarYear년 $calendarMonth월 학습 달력',
+            fontSize: 15,
+            color: Colors.black87,
+            fontWeight: FontWeight.w600,
           ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const StandardText(
-                text: '자세히 보기',
-                fontSize: 12,
-                color: Colors.black38,
-              ),
-              const Icon(Icons.chevron_right, size: 16, color: Colors.black38),
-            ],
+          const Spacer(),
+          Icon(
+            _isCalendarExpanded
+                ? Icons.keyboard_arrow_up
+                : Icons.keyboard_arrow_down,
+            size: 20,
+            color: Colors.black38,
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
-  Widget _buildStreakBanner(BuildContext context, Color primaryColor) {
+  Widget _buildStreakBanner(Color primaryColor) {
     if (_isCalendarLoading) {
       return SizedBox(
         height: 64,
@@ -170,60 +185,39 @@ class _StreakCardState extends State<StreakCard> {
     }
 
     final currentStreak = _calendarData?.currentStreak;
-    final userLevel = Provider.of<UserProvider>(context, listen: false)
-            .userInfoModel
-            ?.totalStudyLevel ??
-        1;
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: BoxDecoration(
-        color: primaryColor.withOpacity(0.07),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        children: [
-          Image.asset(
-            _getFrogImagePath(userLevel),
-            width: 52,
-            height: 52,
-            fit: BoxFit.contain,
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.baseline,
-                  textBaseline: TextBaseline.alphabetic,
-                  children: [
-                    StandardText(
-                      text: currentStreak != null ? '$currentStreak' : '--',
-                      fontSize: 26,
-                      fontWeight: FontWeight.w700,
-                      color: primaryColor,
-                    ),
-                    const SizedBox(width: 4),
-                    const StandardText(
-                      text: '일 연속 학습중',
-                      fontSize: 13,
-                      color: Colors.black54,
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 3),
-                StandardText(
-                  text: currentStreak != null
-                      ? _getStreakMessage(currentStreak)
-                      : '학습 기록을 확인할 수 없어요',
-                  fontSize: 11,
-                  color: Colors.black45,
-                ),
-              ],
+    return InkWell(
+      onTap: _openCalendarDetail,
+      borderRadius: BorderRadius.circular(10),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: primaryColor.withOpacity(0.07),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Row(
+          children: [
+            const SizedBox(width: 6),
+            StandardText(
+              text: currentStreak != null ? '$currentStreak' : '--',
+              fontSize: 21,
+              fontWeight: FontWeight.w700,
+              color: primaryColor,
             ),
-          ),
-        ],
+            const SizedBox(width: 4),
+            const StandardText(
+              text: '일 연속 학습중',
+              fontSize: 12,
+              color: Colors.black54,
+            ),
+            const Spacer(),
+            Icon(
+              Icons.chevron_right,
+              size: 18,
+              color: Colors.grey[400],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -237,7 +231,14 @@ class _StreakCardState extends State<StreakCard> {
     final firstWeekdayOffset = firstDayOfMonth.weekday % 7;
     final daysInMonth =
         DateTime(calendarData.year, calendarData.month + 1, 0).day;
-    final rowCount = ((firstWeekdayOffset + daysInMonth) / 7).ceil();
+    final monthRowCount = ((firstWeekdayOffset + daysInMonth) / 7).ceil();
+    final todayIndex =
+        now.year == calendarData.year && now.month == calendarData.month
+            ? firstWeekdayOffset + now.day - 1
+            : 0;
+    final firstRowIndex =
+        _isCalendarExpanded ? 0 : (todayIndex ~/ 7).clamp(0, monthRowCount - 1);
+    final rowCount = _isCalendarExpanded ? monthRowCount : 1;
 
     // 점 크기 계산 (패딩 32 = 양쪽 16)
     final availableWidth = screenWidth * 0.92 - 32;
@@ -264,13 +265,14 @@ class _StreakCardState extends State<StreakCard> {
               .toList(),
         ),
         const SizedBox(height: 6),
-        // 필요한 주 수만큼 렌더링
+        // 펼치면 월 전체, 접히면 오늘이 포함된 주만 렌더링
         ...List.generate(rowCount, (rowIndex) {
+          final calendarRowIndex = firstRowIndex + rowIndex;
           return Padding(
             padding: const EdgeInsets.only(bottom: 4),
             child: Row(
               children: List.generate(7, (colIndex) {
-                final cellIndex = rowIndex * 7 + colIndex;
+                final cellIndex = calendarRowIndex * 7 + colIndex;
                 final day = cellIndex - firstWeekdayOffset + 1;
 
                 if (day < 1 || day > daysInMonth) {

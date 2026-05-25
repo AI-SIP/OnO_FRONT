@@ -7,11 +7,13 @@ import '../../../Module/Text/StandardText.dart';
 class FrogCharacter extends StatefulWidget {
   final int level;
   final VoidCallback? onTap;
+  final double size;
 
   const FrogCharacter({
     super.key,
     required this.level,
     this.onTap,
+    this.size = 180,
   });
 
   @override
@@ -106,6 +108,7 @@ class _FrogCharacterState extends State<FrogCharacter>
       onTap: _onCharacterTap,
       child: Stack(
         alignment: Alignment.center,
+        clipBehavior: Clip.none,
         children: [
           // 개구리 캐릭터
           AnimatedBuilder(
@@ -118,8 +121,8 @@ class _FrogCharacterState extends State<FrogCharacter>
             },
             child: Image.asset(
               _getFrogImagePath(widget.level),
-              width: 180,
-              height: 180,
+              width: widget.size,
+              height: widget.size,
               fit: BoxFit.contain,
             ),
           ),
