@@ -142,8 +142,11 @@ class _SettingScreenState extends State<SettingScreen> {
     double horizontalMarginFactor = 0.04,
     bool compact = false,
   }) {
-    final screenHeight = MediaQuery.of(context).size.height;
-    final screenWidth = MediaQuery.of(context).size.width;
+    final mediaQuery = MediaQuery.of(context);
+    final screenHeight = mediaQuery.size.height;
+    final screenWidth = mediaQuery.size.width;
+    final isTablet = mediaQuery.size.shortestSide >= 600;
+    final isTabletLandscape = isTablet && screenWidth > screenHeight;
 
     const dummyBars = [0.38, 0.55, 0.42, 0.78, 0.60, 0.88, 0.70];
     const dummyCounts = [4, 6, 5, 9, 7, 10, 8];
@@ -166,9 +169,9 @@ class _SettingScreenState extends State<SettingScreen> {
         child: Container(
           padding: EdgeInsets.fromLTRB(
             screenHeight * 0.018,
+            isTabletLandscape ? screenHeight * 0.030 : screenHeight * 0.018,
             screenHeight * 0.018,
-            screenHeight * 0.018,
-            screenHeight * 0.014,
+            isTabletLandscape ? screenHeight * 0.024 : screenHeight * 0.014,
           ),
           decoration: BoxDecoration(
             color: Colors.white,
@@ -231,12 +234,13 @@ class _SettingScreenState extends State<SettingScreen> {
                   ),
                 ],
               ),
-              SizedBox(height: screenHeight * 0.014),
+              SizedBox(height: isTabletLandscape ? screenHeight * 0.024 : screenHeight * 0.014),
               _buildMosaicTrendPreview(
                 themeProvider,
                 dummyBars,
                 dummyCounts,
                 dummyLabels,
+                graphHeight: isTabletLandscape ? 140.0 : 100.0,
               ),
             ],
           ),
@@ -249,12 +253,13 @@ class _SettingScreenState extends State<SettingScreen> {
     ThemeHandler themeProvider,
     List<double> bars,
     List<int> counts,
-    List<String> labels,
-  ) {
+    List<String> labels, {
+    double graphHeight = 100.0,
+  }) {
     final maxBar = bars.reduce((a, b) => a > b ? a : b);
 
     return SizedBox(
-      height: 100,
+      height: graphHeight,
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: List.generate(bars.length, (index) {

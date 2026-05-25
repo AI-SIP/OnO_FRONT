@@ -19,19 +19,16 @@ class UserLevelCard extends StatelessWidget {
     this.horizontalMarginFactor = 0.04,
   });
 
-  // 전체 레벨 (서버에서 계산된 값 사용)
   int _getOverallLevel() {
     if (userInfo == null) return 0;
     return userInfo!.totalStudyLevel;
   }
 
-  // 현재 경험치 (서버에서 계산된 값 사용)
   int _getCurrentPoint() {
     if (userInfo == null) return 0;
     return userInfo!.totalStudyCurrentPoint;
   }
 
-  // 다음 레벨까지 필요한 경험치 (서버에서 계산된 값 사용)
   int _getNextLevelThreshold() {
     if (userInfo == null) return 40;
     return userInfo!.totalStudyNextLevelThreshold;
@@ -39,8 +36,14 @@ class UserLevelCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    double screenHeight = MediaQuery.of(context).size.height;
-    double screenWidth = MediaQuery.of(context).size.width;
+    final mq = MediaQuery.of(context);
+    final double screenHeight = mq.size.height;
+    final double screenWidth = mq.size.width;
+    final bool isTablet = mq.size.shortestSide >= 600;
+    final bool isTabletLandscape = isTablet && screenWidth > screenHeight;
+
+    final double donutSize = isTablet ? 120.0 : 82.0;
+    final double frogSize = isTablet ? 130.0 : 92.0;
 
     int currentLevel = _getOverallLevel();
     int currentPoint = _getCurrentPoint();
@@ -52,7 +55,9 @@ class UserLevelCard extends StatelessWidget {
         horizontal: screenWidth * horizontalMarginFactor,
         vertical: screenHeight * 0.01,
       ),
-      padding: EdgeInsets.all(screenHeight * 0.02),
+      padding: EdgeInsets.all(
+        isTabletLandscape ? screenHeight * 0.038 : isTablet ? screenHeight * 0.025 : screenHeight * 0.02,
+      ),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(15),
@@ -73,49 +78,55 @@ class UserLevelCard extends StatelessWidget {
                   currentPoint,
                   requiredPoint,
                   progress,
+                  donutSize: donutSize,
+                  isTablet: isTablet,
                 ),
               ),
               Expanded(
                 child: Center(
-                  child: FrogCharacter(level: currentLevel, size: 92),
+                  child: FrogCharacter(level: currentLevel, size: frogSize),
                 ),
               ),
             ],
           ),
           if (userInfo != null) ...[
-            SizedBox(height: screenHeight * 0.018),
+            SizedBox(height: isTabletLandscape ? screenHeight * 0.030 : screenHeight * 0.018),
             Divider(height: 1, color: Colors.grey[200]),
-            SizedBox(height: screenHeight * 0.016),
+            SizedBox(height: isTabletLandscape ? screenHeight * 0.028 : screenHeight * 0.016),
             _buildActivityRow(
               icon: Icons.waving_hand_rounded,
               category: '출석',
               level: userInfo!.attendanceLevel,
               point: userInfo!.attendancePoint,
               color: Colors.pink[300]!,
+              isTablet: isTablet,
             ),
-            SizedBox(height: screenHeight * 0.012),
+            SizedBox(height: isTabletLandscape ? screenHeight * 0.022 : screenHeight * 0.012),
             _buildActivityRow(
               icon: Icons.edit_note,
               category: '오답노트 작성',
               level: userInfo!.noteWriteLevel,
               point: userInfo!.noteWritePoint,
               color: Colors.purple[300]!,
+              isTablet: isTablet,
             ),
-            SizedBox(height: screenHeight * 0.012),
+            SizedBox(height: isTabletLandscape ? screenHeight * 0.022 : screenHeight * 0.012),
             _buildActivityRow(
               icon: Icons.chrome_reader_mode_outlined,
               category: '문제 복습',
               level: userInfo!.problemPracticeLevel,
               point: userInfo!.problemPracticePoint,
               color: Colors.green[400]!,
+              isTablet: isTablet,
             ),
-            SizedBox(height: screenHeight * 0.012),
+            SizedBox(height: isTabletLandscape ? screenHeight * 0.022 : screenHeight * 0.012),
             _buildActivityRow(
               icon: Icons.history,
               category: '복습 세트 복습',
               level: userInfo!.notePracticeLevel,
               point: userInfo!.notePracticePoint,
               color: Colors.blue[300]!,
+              isTablet: isTablet,
             ),
           ],
         ],
@@ -127,29 +138,31 @@ class UserLevelCard extends StatelessWidget {
     int currentLevel,
     int currentPoint,
     int requiredPoint,
-    double progress,
-  ) {
+    double progress, {
+    double donutSize = 82.0,
+    bool isTablet = false,
+  }) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        const StandardText(
+        StandardText(
           text: '학습 레벨',
-          fontSize: 14,
+          fontSize: isTablet ? 16.0 : 14.0,
           color: Colors.black87,
         ),
         const SizedBox(height: 8),
         SizedBox(
-          width: 82,
-          height: 82,
+          width: donutSize,
+          height: donutSize,
           child: Stack(
             alignment: Alignment.center,
             children: [
               SizedBox(
-                width: 82,
-                height: 82,
+                width: donutSize,
+                height: donutSize,
                 child: CircularProgressIndicator(
                   value: progress.clamp(0.0, 1.0),
-                  strokeWidth: 9,
+                  strokeWidth: isTablet ? 12.0 : 9.0,
                   backgroundColor: Colors.grey[200],
                   valueColor: AlwaysStoppedAnimation<Color>(
                     themeProvider.primaryColor.withValues(alpha: 0.72),
@@ -161,95 +174,19 @@ class UserLevelCard extends StatelessWidget {
                 children: [
                   StandardText(
                     text: 'Lv.$currentLevel',
-                    fontSize: 15,
+                    fontSize: isTablet ? 19.0 : 15.0,
                     color: themeProvider.primaryColor,
                     fontWeight: FontWeight.w700,
                   ),
                   const SizedBox(height: 2),
                   StandardText(
                     text: '$currentPoint/$requiredPoint',
-                    fontSize: 9,
+                    fontSize: isTablet ? 11.0 : 9.0,
                     color: Colors.black45,
                   ),
                 ],
               ),
             ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildActivityLabel({
-    required IconData icon,
-    required String category,
-    required Color color,
-  }) {
-    return Expanded(
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(5),
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.18),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Icon(icon, color: color, size: 15),
-          ),
-          const SizedBox(width: 8),
-          Flexible(
-            child: StandardText(
-              text: category,
-              fontSize: 11,
-              color: Colors.black87,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildActivityProgress({
-    required int level,
-    required int point,
-    required int requiredPoint,
-    required double progress,
-    required Color color,
-  }) {
-    return Row(
-      children: [
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-          decoration: BoxDecoration(
-            color: color,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: StandardText(
-            text: 'Lv.$level',
-            fontSize: 9,
-            color: Colors.white,
-          ),
-        ),
-        const SizedBox(width: 10),
-        SizedBox(
-          width: 76,
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(4),
-            child: LinearProgressIndicator(
-              value: progress.clamp(0.0, 1.0),
-              backgroundColor: Colors.grey[200],
-              valueColor: AlwaysStoppedAnimation<Color>(color),
-              minHeight: 5,
-            ),
-          ),
-        ),
-        const SizedBox(width: 6),
-        SizedBox(
-          width: 38,
-          child: StandardText(
-            text: '$point/$requiredPoint',
-            fontSize: 9,
-            color: Colors.grey[600]!,
           ),
         ),
       ],
@@ -262,24 +199,73 @@ class UserLevelCard extends StatelessWidget {
     required int level,
     required int point,
     required Color color,
+    bool isTablet = false,
   }) {
-    int requiredPoint = 10 + (level - 1) * 10;
-    double progress = requiredPoint > 0 ? point / requiredPoint : 0;
+    final requiredPoint = 10 + (level - 1) * 10;
+    final progress = requiredPoint > 0 ? point / requiredPoint : 0.0;
+    final iconSize = isTablet ? 18.0 : 15.0;
+    final iconPadding = isTablet ? 6.0 : 5.0;
+    final labelFontSize = isTablet ? 13.0 : 11.0;
+    final levelFontSize = isTablet ? 10.0 : 9.0;
+    final barMinHeight = isTablet ? 7.0 : 5.0;
+    final pointsWidth = isTablet ? 56.0 : 38.0;
+    final pointsFontSize = isTablet ? 10.0 : 9.0;
 
     return Row(
       children: [
-        _buildActivityLabel(
-          icon: icon,
-          category: category,
-          color: color,
+        Container(
+          padding: EdgeInsets.all(iconPadding),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.18),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(icon, color: color, size: iconSize),
         ),
-        const SizedBox(width: 16),
-        _buildActivityProgress(
-          level: level,
-          point: point,
-          requiredPoint: requiredPoint,
-          progress: progress,
-          color: color,
+        const SizedBox(width: 8),
+        Expanded(
+          flex: 3,
+          child: StandardText(
+            text: category,
+            fontSize: labelFontSize,
+            color: Colors.black87,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: StandardText(
+            text: 'Lv.$level',
+            fontSize: levelFontSize,
+            color: Colors.white,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          flex: 4,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
+              value: progress.clamp(0.0, 1.0),
+              backgroundColor: Colors.grey[200],
+              valueColor: AlwaysStoppedAnimation<Color>(color),
+              minHeight: barMinHeight,
+            ),
+          ),
+        ),
+        const SizedBox(width: 6),
+        SizedBox(
+          width: pointsWidth,
+          child: StandardText(
+            text: '$point/$requiredPoint',
+            fontSize: pointsFontSize,
+            color: Colors.grey[600]!,
+          ),
         ),
       ],
     );
