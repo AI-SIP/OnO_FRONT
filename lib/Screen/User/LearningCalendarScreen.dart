@@ -22,8 +22,24 @@ class _LearningCalendarScreenState extends State<LearningCalendarScreen> {
 
   final StudyCalendarService _service = StudyCalendarService();
 
-  static const List<String> _weekdayLabels = ['일', '월', '화', '수', '목', '금', '토'];
-  static const List<String> _dayOfWeekNames = ['일요일', '월요일', '화요일', '수요일', '목요일', '금요일', '토요일'];
+  static const List<String> _weekdayLabels = [
+    '일',
+    '월',
+    '화',
+    '수',
+    '목',
+    '금',
+    '토'
+  ];
+  static const List<String> _dayOfWeekNames = [
+    '일요일',
+    '월요일',
+    '화요일',
+    '수요일',
+    '목요일',
+    '금요일',
+    '토요일'
+  ];
 
   @override
   void initState() {
@@ -37,7 +53,11 @@ class _LearningCalendarScreenState extends State<LearningCalendarScreen> {
   Future<void> _loadCalendar() async {
     setState(() => _isLoading = true);
     try {
-      final data = await _service.getStudyCalendar(year: _year, month: _month);
+      final data = await _service.getStudyCalendar(
+        year: _year,
+        month: _month,
+        showErrorSnackBar: false,
+      );
       if (mounted) {
         setState(() {
           _calendarData = data;
@@ -148,15 +168,20 @@ class _LearningCalendarScreenState extends State<LearningCalendarScreen> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  StandardText(text: '$_year년 $_month월', fontSize: 16, color: Colors.black87),
+                  StandardText(
+                      text: '$_year년 $_month월',
+                      fontSize: 16,
+                      color: Colors.black87),
                   const SizedBox(width: 4),
-                  Icon(Icons.arrow_drop_down, size: 18, color: Colors.grey[600]),
+                  Icon(Icons.arrow_drop_down,
+                      size: 18, color: Colors.grey[600]),
                 ],
               ),
             ),
           ),
           IconButton(
-            icon: Icon(Icons.chevron_right, color: _isCurrentMonth ? Colors.grey[300] : Colors.black87),
+            icon: Icon(Icons.chevron_right,
+                color: _isCurrentMonth ? Colors.grey[300] : Colors.black87),
             onPressed: _isCurrentMonth ? null : _nextMonth,
           ),
         ],
@@ -175,7 +200,8 @@ class _LearningCalendarScreenState extends State<LearningCalendarScreen> {
           builder: (dialogContext, setDialogState) {
             return Dialog(
               backgroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16)),
               child: Padding(
                 padding: const EdgeInsets.all(20),
                 child: Column(
@@ -190,11 +216,16 @@ class _LearningCalendarScreenState extends State<LearningCalendarScreen> {
                           onPressed: () => setDialogState(() => pickerYear--),
                           color: Colors.black87,
                         ),
-                        StandardText(text: '$pickerYear년', fontSize: 16, color: Colors.black87),
+                        StandardText(
+                            text: '$pickerYear년',
+                            fontSize: 16,
+                            color: Colors.black87),
                         IconButton(
                           icon: Icon(
                             Icons.chevron_right,
-                            color: pickerYear >= now.year ? Colors.grey[300] : Colors.black87,
+                            color: pickerYear >= now.year
+                                ? Colors.grey[300]
+                                : Colors.black87,
                           ),
                           onPressed: pickerYear >= now.year
                               ? null
@@ -207,7 +238,8 @@ class _LearningCalendarScreenState extends State<LearningCalendarScreen> {
                     GridView.builder(
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
-                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: 4,
                         childAspectRatio: 1.6,
                         mainAxisSpacing: 8,
@@ -218,7 +250,8 @@ class _LearningCalendarScreenState extends State<LearningCalendarScreen> {
                         final month = index + 1;
                         final isFuture = pickerYear > now.year ||
                             (pickerYear == now.year && month > now.month);
-                        final isSelected = pickerYear == _year && month == _month;
+                        final isSelected =
+                            pickerYear == _year && month == _month;
 
                         return GestureDetector(
                           onTap: isFuture
@@ -296,11 +329,13 @@ class _LearningCalendarScreenState extends State<LearningCalendarScreen> {
             final day = cellIndex - firstWeekday + 1;
 
             if (day < 1 || day > daysInMonth) {
-              return const Expanded(child: AspectRatio(aspectRatio: 1, child: SizedBox()));
+              return const Expanded(
+                  child: AspectRatio(aspectRatio: 1, child: SizedBox()));
             }
 
             final cellDate = DateTime(_year, _month, day);
-            final isFuture = cellDate.isAfter(DateTime(now.year, now.month, now.day));
+            final isFuture =
+                cellDate.isAfter(DateTime(now.year, now.month, now.day));
             final isToday = cellDate.year == now.year &&
                 cellDate.month == now.month &&
                 cellDate.day == now.day;
@@ -352,7 +387,8 @@ class _LearningCalendarScreenState extends State<LearningCalendarScreen> {
   }
 
   Widget _buildSelectedDayDetail(ThemeHandler themeProvider) {
-    if (_selectedDay == null || _calendarData == null) return const SizedBox.shrink();
+    if (_selectedDay == null || _calendarData == null)
+      return const SizedBox.shrink();
 
     final record = _calendarData!.recordFor(_selectedDay!);
     final weekdayIndex = DateTime(_year, _month, _selectedDay!).weekday % 7;
@@ -402,7 +438,8 @@ class _LearningCalendarScreenState extends State<LearningCalendarScreen> {
                 children: [
                   _buildStatChip('복습', '${record.reviewCount}회', primaryColor),
                   const SizedBox(width: 8),
-                  _buildStatChip('오답노트', '${record.noteWriteCount}개', primaryColor),
+                  _buildStatChip(
+                      '오답노트', '${record.noteWriteCount}개', primaryColor),
                   const SizedBox(width: 8),
                   _buildStatChip('학습', '${record.studyMinutes}분', primaryColor),
                 ],
@@ -416,21 +453,22 @@ class _LearningCalendarScreenState extends State<LearningCalendarScreen> {
                 ),
                 const SizedBox(height: 6),
                 ...record.reviewedItems.map((item) => Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 3),
-                  child: Row(
-                    children: [
-                      Icon(Icons.article_outlined, size: 13, color: Colors.grey[400]),
-                      const SizedBox(width: 6),
-                      Expanded(
-                        child: StandardText(
-                          text: item,
-                          fontSize: 12,
-                          color: Colors.black87,
-                        ),
+                      padding: const EdgeInsets.symmetric(vertical: 3),
+                      child: Row(
+                        children: [
+                          Icon(Icons.article_outlined,
+                              size: 13, color: Colors.grey[400]),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: StandardText(
+                              text: item,
+                              fontSize: 12,
+                              color: Colors.black87,
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                )),
+                    )),
               ],
             ],
           ],
@@ -481,7 +519,9 @@ class _LearningCalendarScreenState extends State<LearningCalendarScreen> {
                 color: Colors.black87,
               ),
               StandardText(
-                text: studyDays != null ? '${studyDays}일 / ${daysInMonth}일' : '--',
+                text: studyDays != null
+                    ? '${studyDays}일 / ${daysInMonth}일'
+                    : '--',
                 fontSize: 14,
                 color: Colors.black54,
               ),
@@ -547,7 +587,6 @@ class _LearningCalendarScreenState extends State<LearningCalendarScreen> {
       ),
     );
   }
-
 }
 
 class _CalendarCell extends StatelessWidget {

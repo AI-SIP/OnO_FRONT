@@ -4,7 +4,6 @@ import '../../../Model/StudyCalendar/StudyCalendarModel.dart';
 import '../../../Module/Text/StandardText.dart';
 import '../../../Module/Theme/ThemeHandler.dart';
 import '../../../Provider/UserProvider.dart';
-import '../../../Service/Api/LearningReport/LearningReportService.dart';
 import '../../../Service/Api/StudyCalendar/StudyCalendarService.dart';
 import '../LearningCalendarScreen.dart';
 
@@ -17,31 +16,13 @@ class StreakCard extends StatefulWidget {
 }
 
 class _StreakCardState extends State<StreakCard> {
-  int _currentStreak = 0;
-  bool _isStreakLoading = true;
-
   StudyCalendarModel? _calendarData;
   bool _isCalendarLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _loadStreakData();
     _loadCalendarData();
-  }
-
-  Future<void> _loadStreakData() async {
-    try {
-      final report = await LearningReportService().getLearningReport();
-      if (mounted) {
-        setState(() {
-          _currentStreak = report.total.consecutiveLearningDays;
-          _isStreakLoading = false;
-        });
-      }
-    } catch (_) {
-      if (mounted) setState(() => _isStreakLoading = false);
-    }
   }
 
   Future<void> _loadCalendarData() async {
@@ -50,6 +31,7 @@ class _StreakCardState extends State<StreakCard> {
       final data = await StudyCalendarService().getStudyCalendar(
         year: now.year,
         month: now.month,
+        showErrorSnackBar: false,
       );
       if (mounted) {
         setState(() {
@@ -77,11 +59,11 @@ class _StreakCardState extends State<StreakCard> {
 
   String _getStreakMessage(int streak) {
     if (streak >= 100) return '100일 연속 학습 달성! 정말 대단해요 👑';
-    if (streak >= 30)  return '한 달 이상 연속 학습! 실력이 쑥쑥 오르고 있어요 🌱';
-    if (streak >= 14)  return '2주 연속 학습! 좋은 습관이 자리잡고 있어요 💪';
-    if (streak >= 7)   return '일주일 연속 학습 달성! 아주 잘하고 있어요 🔥';
-    if (streak >= 3)   return '꾸준히 학습 중이에요! (${streak}일째) 😊';
-    if (streak >= 1)   return '학습을 시작했어요! 꾸준히 이어가 봐요 📚';
+    if (streak >= 30) return '한 달 이상 연속 학습! 실력이 쑥쑥 오르고 있어요 🌱';
+    if (streak >= 14) return '2주 연속 학습! 좋은 습관이 자리잡고 있어요 💪';
+    if (streak >= 7) return '일주일 연속 학습 달성! 아주 잘하고 있어요 🔥';
+    if (streak >= 3) return '꾸준히 학습 중이에요! (${streak}일째) 😊';
+    if (streak >= 1) return '학습을 시작했어요! 꾸준히 이어가 봐요 📚';
     return '오늘 학습하면 연속 학습이 시작돼요!';
   }
 
@@ -171,7 +153,7 @@ class _StreakCardState extends State<StreakCard> {
   }
 
   Widget _buildStreakBanner(BuildContext context, Color primaryColor) {
-    if (_isStreakLoading) {
+    if (_isCalendarLoading) {
       return SizedBox(
         height: 64,
         child: Center(
@@ -183,8 +165,11 @@ class _StreakCardState extends State<StreakCard> {
       );
     }
 
-    final userLevel =
-        Provider.of<UserProvider>(context, listen: false).userInfoModel?.totalStudyLevel ?? 1;
+    final currentStreak = _calendarData?.currentStreak;
+    final userLevel = Provider.of<UserProvider>(context, listen: false)
+            .userInfoModel
+            ?.totalStudyLevel ??
+        1;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -210,7 +195,7 @@ class _StreakCardState extends State<StreakCard> {
                   textBaseline: TextBaseline.alphabetic,
                   children: [
                     StandardText(
-                      text: '$_currentStreak',
+                      text: currentStreak != null ? '$currentStreak' : '--',
                       fontSize: 26,
                       fontWeight: FontWeight.w700,
                       color: primaryColor,
@@ -225,7 +210,9 @@ class _StreakCardState extends State<StreakCard> {
                 ),
                 const SizedBox(height: 3),
                 StandardText(
-                  text: _getStreakMessage(_currentStreak),
+                  text: currentStreak != null
+                      ? _getStreakMessage(currentStreak)
+                      : '학습 기록을 확인할 수 없어요',
                   fontSize: 11,
                   color: Colors.black45,
                 ),
@@ -241,12 +228,12 @@ class _StreakCardState extends State<StreakCard> {
       BuildContext context, double screenWidth, Color primaryColor) {
     final now = DateTime.now();
     final calendarData = _calendarData!;
-    final firstDayOfMonth =
-        DateTime(calendarData.year, calendarData.month, 1);
+    final firstDayOfMonth = DateTime(calendarData.year, calendarData.month, 1);
     // weekday: Mon=1..Sun=7, 달력 offset: 일=0..토=6
     final firstWeekdayOffset = firstDayOfMonth.weekday % 7;
     final daysInMonth =
         DateTime(calendarData.year, calendarData.month + 1, 0).day;
+    final rowCount = ((firstWeekdayOffset + daysInMonth) / 7).ceil();
 
     // 점 크기 계산 (패딩 32 = 양쪽 16)
     final availableWidth = screenWidth * 0.92 - 32;
@@ -273,8 +260,8 @@ class _StreakCardState extends State<StreakCard> {
               .toList(),
         ),
         const SizedBox(height: 6),
-        // 5행 × 7열 점 그리드
-        ...List.generate(5, (rowIndex) {
+        // 필요한 주 수만큼 렌더링
+        ...List.generate(rowCount, (rowIndex) {
           return Padding(
             padding: const EdgeInsets.only(bottom: 4),
             child: Row(
@@ -290,7 +277,8 @@ class _StreakCardState extends State<StreakCard> {
                   );
                 }
 
-                final cellDate = DateTime(calendarData.year, calendarData.month, day);
+                final cellDate =
+                    DateTime(calendarData.year, calendarData.month, day);
                 final isToday = cellDate.year == now.year &&
                     cellDate.month == now.month &&
                     cellDate.day == now.day;
@@ -372,10 +360,12 @@ class _StreakCardState extends State<StreakCard> {
         ),
         Row(
           children: [
-            const Icon(Icons.calendar_today_outlined, size: 13, color: Colors.black38),
+            const Icon(Icons.calendar_today_outlined,
+                size: 13, color: Colors.black38),
             const SizedBox(width: 4),
             StandardText(
-              text: '이번 달 ${thisMonthStudyDays != null ? '$thisMonthStudyDays일' : '--'}',
+              text:
+                  '이번 달 ${thisMonthStudyDays != null ? '$thisMonthStudyDays일' : '--'}',
               fontSize: 12,
               color: Colors.black54,
             ),
