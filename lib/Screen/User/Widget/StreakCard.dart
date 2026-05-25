@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import '../../../Model/StudyCalendar/StudyCalendarModel.dart';
 import '../../../Module/Text/StandardText.dart';
 import '../../../Module/Theme/ThemeHandler.dart';
@@ -122,10 +123,13 @@ class _StreakCardState extends State<StreakCard> {
   }
 
   Widget _buildHeader(BuildContext context, Color primaryColor) {
+    final calendarYear = _calendarData?.year ?? DateTime.now().year;
+    final calendarMonth = _calendarData?.month ?? DateTime.now().month;
+
     return Row(
       children: [
-        const StandardText(
-          text: '학습 달력',
+        StandardText(
+          text: '$calendarYear년 $calendarMonth월 학습 달력',
           fontSize: 15,
           color: Colors.black87,
           fontWeight: FontWeight.w600,
@@ -202,7 +206,7 @@ class _StreakCardState extends State<StreakCard> {
                     ),
                     const SizedBox(width: 4),
                     const StandardText(
-                      text: '일 연속',
+                      text: '일 연속 학습중',
                       fontSize: 13,
                       color: Colors.black54,
                     ),
@@ -284,21 +288,6 @@ class _StreakCardState extends State<StreakCard> {
                     cellDate.day == now.day;
                 final isFuture = cellDate.isAfter(now);
 
-                if (isToday) {
-                  return Expanded(
-                    child: Center(
-                      child: SizedBox(
-                        width: dotSize,
-                        height: dotSize,
-                        child: const FittedBox(
-                          fit: BoxFit.contain,
-                          child: Text('🐸'),
-                        ),
-                      ),
-                    ),
-                  );
-                }
-
                 Color dotColor;
                 if (isFuture) {
                   dotColor = Colors.grey[100]!;
@@ -322,12 +311,31 @@ class _StreakCardState extends State<StreakCard> {
 
                 return Expanded(
                   child: Center(
-                    child: Container(
+                    child: SizedBox(
                       width: dotSize,
-                      height: dotSize,
-                      decoration: BoxDecoration(
-                        color: dotColor,
-                        shape: BoxShape.circle,
+                      height: dotSize + 5,
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Container(
+                            width: dotSize,
+                            height: dotSize,
+                            decoration: BoxDecoration(
+                              color: dotColor,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(height: 3),
+                          Container(
+                            width: dotSize,
+                            height: 2,
+                            decoration: BoxDecoration(
+                              color:
+                                  isToday ? primaryColor : Colors.transparent,
+                              borderRadius: BorderRadius.circular(1),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
@@ -352,7 +360,7 @@ class _StreakCardState extends State<StreakCard> {
             const Icon(Icons.star_outline, size: 14, color: Colors.amber),
             const SizedBox(width: 4),
             StandardText(
-              text: '이번 달 최장 복습 ${bestStreak != null ? '$bestStreak일' : '--'}',
+              text: '이번 달 최장 복습: ${bestStreak != null ? '$bestStreak일' : '--'}',
               fontSize: 12,
               color: Colors.black54,
             ),
@@ -365,7 +373,7 @@ class _StreakCardState extends State<StreakCard> {
             const SizedBox(width: 4),
             StandardText(
               text:
-                  '이번 달 ${thisMonthStudyDays != null ? '$thisMonthStudyDays일' : '--'}',
+                  '이번 달 복습 일수: ${thisMonthStudyDays != null ? '$thisMonthStudyDays일' : '--'}',
               fontSize: 12,
               color: Colors.black54,
             ),
