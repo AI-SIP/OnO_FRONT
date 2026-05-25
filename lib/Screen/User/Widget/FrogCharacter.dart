@@ -129,7 +129,7 @@ class _FrogCharacterState extends State<FrogCharacter>
           // 격려 메시지
           if (_showMessage && _displayMessage != null)
             Positioned(
-              top: -10,
+              bottom: widget.size * 0.82,
               child: AnimatedOpacity(
                 opacity: _showMessage ? 1.0 : 0.0,
                 duration: const Duration(milliseconds: 300),

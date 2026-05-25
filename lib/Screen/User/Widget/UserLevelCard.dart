@@ -43,7 +43,9 @@ class UserLevelCard extends StatelessWidget {
     final bool isTabletLandscape = isTablet && screenWidth > screenHeight;
 
     final double donutSize = isTablet ? 120.0 : 82.0;
-    final double frogSize = isTablet ? 130.0 : 92.0;
+    final double labelFontSize = isTablet ? 16.0 : 14.0;
+    final double frogTopSpace = isTablet ? 14.0 : 10.0;
+    final double frogSize = donutSize + 8.0 + labelFontSize * 1.3 - frogTopSpace;
 
     int currentLevel = _getOverallLevel();
     int currentPoint = _getCurrentPoint();
@@ -83,8 +85,12 @@ class UserLevelCard extends StatelessWidget {
                 ),
               ),
               Expanded(
-                child: Center(
-                  child: FrogCharacter(level: currentLevel, size: frogSize),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SizedBox(height: frogTopSpace),
+                    FrogCharacter(level: currentLevel, size: frogSize),
+                  ],
                 ),
               ),
             ],
