@@ -315,6 +315,17 @@ class _LearningCalendarScreenState extends State<LearningCalendarScreen> {
   }
 
   Widget _buildCalendarGrid(ThemeHandler themeProvider) {
+    final mq = MediaQuery.of(context);
+    final screenWidth = mq.size.width;
+    final isTablet = mq.size.shortestSide >= 600;
+
+    // 셀 1개의 자연 크기: 전체 너비에서 그리드 패딩(32)과 셀 패딩(4×7) 제외
+    const double gridPadding = 32.0;
+    const double cellPadding = 4.0;
+    final double naturalCellSize = (screenWidth - gridPadding) / 7 - cellPadding;
+    // 태블릿에서는 최대 72px로 제한
+    final double cellSize = isTablet ? naturalCellSize.clamp(0.0, 72.0) : naturalCellSize;
+
     final now = DateTime.now();
     final firstWeekday = DateTime(_year, _month, 1).weekday % 7;
     final daysInMonth = DateTime(_year, _month + 1, 0).day;
@@ -329,8 +340,9 @@ class _LearningCalendarScreenState extends State<LearningCalendarScreen> {
             final day = cellIndex - firstWeekday + 1;
 
             if (day < 1 || day > daysInMonth) {
-              return const Expanded(
-                  child: AspectRatio(aspectRatio: 1, child: SizedBox()));
+              return Expanded(
+                child: SizedBox(height: cellSize + cellPadding),
+              );
             }
 
             final cellDate = DateTime(_year, _month, day);
@@ -346,17 +358,24 @@ class _LearningCalendarScreenState extends State<LearningCalendarScreen> {
             return Expanded(
               child: Padding(
                 padding: const EdgeInsets.all(2),
-                child: _CalendarCell(
-                  day: day,
-                  isToday: isToday,
-                  isFuture: isFuture,
-                  intensityLevel: intensity,
-                  themeProvider: themeProvider,
-                  onTap: isFuture
-                      ? null
-                      : () => setState(() {
-                            _selectedDay = (_selectedDay == day) ? null : day;
-                          }),
+                child: Center(
+                  child: SizedBox(
+                    width: cellSize,
+                    height: cellSize,
+                    child: _CalendarCell(
+                      day: day,
+                      isToday: isToday,
+                      isFuture: isFuture,
+                      intensityLevel: intensity,
+                      themeProvider: themeProvider,
+                      onTap: isFuture
+                          ? null
+                          : () => setState(() {
+                                _selectedDay =
+                                    (_selectedDay == day) ? null : day;
+                              }),
+                    ),
+                  ),
                 ),
               ),
             );
@@ -674,16 +693,13 @@ class _CalendarCell extends StatelessWidget {
 
     return GestureDetector(
       onTap: onTap,
-      child: AspectRatio(
-        aspectRatio: 1,
-        child: Container(
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: bgColor,
-            boxShadow: _getBoxShadow(),
-          ),
-          child: Center(child: _buildCellContent()),
+      child: Container(
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: bgColor,
+          boxShadow: _getBoxShadow(),
         ),
+        child: Center(child: _buildCellContent()),
       ),
     );
   }

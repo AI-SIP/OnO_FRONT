@@ -159,7 +159,7 @@ class _StreakCardState extends State<StreakCard> {
               ),
             ],
             if (_isCalendarExpanded) ...[
-              SizedBox(height: isTabletLandscape ? 18 : 12),
+              if (isTabletLandscape) const Spacer() else const SizedBox(height: 12),
               _buildFooterStats(primaryColor, isTablet: isTablet),
             ],
           ],
