@@ -15,6 +15,7 @@ import 'Widget/CompactActivityLevels.dart';
 import 'Widget/ReviewReportScreen.dart';
 import 'Widget/SettingMenuButtons.dart';
 import 'Widget/ThemeChangeButton.dart';
+import 'Widget/StreakCard.dart';
 import 'Widget/UserLevelCard.dart';
 
 class SettingScreen extends StatefulWidget {
@@ -106,6 +107,10 @@ class _SettingScreenState extends State<SettingScreen> {
                       themeProvider: themeProvider,
                     ),
                   ],
+
+                  SizedBox(height: screenHeight * 0.01),
+
+                  StreakCard(themeProvider: themeProvider),
 
                   SizedBox(height: screenHeight * 0.01),
 
