@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:ono/Model/Common/LoginStatus.dart';
@@ -143,6 +145,10 @@ class _SettingScreenState extends State<SettingScreen> {
     final screenHeight = MediaQuery.of(context).size.height;
     final screenWidth = MediaQuery.of(context).size.width;
 
+    const dummyBars = [0.38, 0.55, 0.42, 0.78, 0.60, 0.88, 0.70];
+    const dummyCounts = [4, 6, 5, 9, 7, 10, 8];
+    const dummyLabels = ['월', '화', '수', '목', '금', '토', '일'];
+
     return Container(
       margin: EdgeInsets.symmetric(
         horizontal: screenWidth * horizontalMarginFactor,
@@ -158,7 +164,12 @@ class _SettingScreenState extends State<SettingScreen> {
         },
         borderRadius: BorderRadius.circular(15),
         child: Container(
-          padding: EdgeInsets.all(screenHeight * 0.018),
+          padding: EdgeInsets.fromLTRB(
+            screenHeight * 0.018,
+            screenHeight * 0.018,
+            screenHeight * 0.018,
+            screenHeight * 0.014,
+          ),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(15),
@@ -174,50 +185,182 @@ class _SettingScreenState extends State<SettingScreen> {
               ),
             ],
           ),
-          child: Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: themeProvider.primaryColor.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(
-                  Icons.auto_graph,
-                  color: themeProvider.primaryColor,
-                  size: 16,
-                ),
-              ),
-              SizedBox(width: screenHeight * 0.015),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    StandardText(
-                      text: compact ? '학습\n리포트' : '학습 리포트',
-                      fontSize: 15,
-                      color: Colors.black87,
-                      fontWeight: FontWeight.w700,
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: themeProvider.primaryColor.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    if (!compact) ...[
-                      const SizedBox(height: 3),
-                      StandardText(
-                        text: '오답 패턴과 복습 흐름을 한눈에 확인해요',
-                        fontSize: 11,
-                        color: Colors.grey[700]!,
-                      ),
-                    ],
-                  ],
-                ),
+                    child: Icon(
+                      Icons.stacked_bar_chart_rounded,
+                      color: themeProvider.primaryColor,
+                      size: 16,
+                    ),
+                  ),
+                  SizedBox(width: screenHeight * 0.015),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        StandardText(
+                          text: compact ? '학습\n리포트' : '학습 리포트',
+                          fontSize: 15,
+                          color: Colors.black87,
+                          fontWeight: FontWeight.w700,
+                        ),
+                        if (!compact) ...[
+                          const SizedBox(height: 3),
+                          StandardText(
+                            text: '복습 추이와 약점 분석을 확인해요',
+                            fontSize: 11,
+                            color: Colors.grey[700]!,
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  Icon(
+                    Icons.chevron_right,
+                    size: 20,
+                    color: Colors.grey[400],
+                  ),
+                ],
               ),
-              Icon(
-                Icons.chevron_right,
-                size: 20,
-                color: Colors.grey[400],
+              SizedBox(height: screenHeight * 0.014),
+              _buildMosaicTrendPreview(
+                themeProvider,
+                dummyBars,
+                dummyCounts,
+                dummyLabels,
               ),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildMosaicTrendPreview(
+    ThemeHandler themeProvider,
+    List<double> bars,
+    List<int> counts,
+    List<String> labels,
+  ) {
+    final maxBar = bars.reduce((a, b) => a > b ? a : b);
+
+    return SizedBox(
+      height: 100,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: List.generate(bars.length, (index) {
+          final isPeak = bars[index] == maxBar;
+          return Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                Expanded(
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      const labelHeight = 14.0;
+                      const gap = 4.0;
+                      const minBarHeight = 4.0;
+                      final usableBarHeight =
+                          (constraints.maxHeight - labelHeight - gap)
+                              .clamp(0.0, constraints.maxHeight);
+                      final rawBarHeight = usableBarHeight * bars[index];
+                      final barHeight = rawBarHeight < minBarHeight
+                          ? minBarHeight
+                          : (rawBarHeight > usableBarHeight
+                              ? usableBarHeight
+                              : rawBarHeight);
+                      final numberBottom = barHeight + gap;
+
+                      return Stack(
+                        children: [
+                          Align(
+                            alignment: Alignment.bottomCenter,
+                            child: Container(
+                              width: 16,
+                              height: barHeight,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(8),
+                                gradient: LinearGradient(
+                                  begin: Alignment.bottomCenter,
+                                  end: Alignment.topCenter,
+                                  colors: [
+                                    themeProvider.primaryColor,
+                                    themeProvider.lightPrimaryColor,
+                                  ],
+                                ),
+                                boxShadow: isPeak
+                                    ? [
+                                        BoxShadow(
+                                          color: themeProvider.primaryColor
+                                              .withValues(alpha: 0.35),
+                                          blurRadius: 8,
+                                          offset: const Offset(0, 2),
+                                        ),
+                                      ]
+                                    : null,
+                              ),
+                            ),
+                          ),
+                          Positioned(
+                            left: 0,
+                            right: 0,
+                            bottom: numberBottom,
+                            child: Center(
+                              child: SizedBox(
+                                height: labelHeight,
+                                child: FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  child: ImageFiltered(
+                                    imageFilter: ImageFilter.blur(
+                                      sigmaX: 3.5,
+                                      sigmaY: 3.5,
+                                    ),
+                                    child: StandardText(
+                                      text: counts[index].toString(),
+                                      fontSize: 12,
+                                      color: Colors.black87,
+                                      fontWeight: FontWeight.w700,
+                                      fontFamily: 'PretendardBold',
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                ),
+                const SizedBox(height: 8),
+                SizedBox(
+                  height: 16,
+                  child: Center(
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: StandardText(
+                        text: labels[index],
+                        fontSize: 11,
+                        color: Colors.grey[700]!,
+                        fontWeight: FontWeight.w700,
+                        fontFamily: 'PretendardBold',
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }),
       ),
     );
   }
