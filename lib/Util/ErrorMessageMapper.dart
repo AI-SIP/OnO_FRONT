@@ -45,6 +45,8 @@ class ErrorMessageMapper {
         return ErrorMessages.rootFolderNotExist;
       case 5004:
         return ErrorMessages.rootFolderCannotRemove;
+      case 5005:
+        return ErrorMessages.rootFolderCannotUpdate;
       case 6001:
         return ErrorMessages.practiceNoteNotFound;
       case 7001:

@@ -41,6 +41,7 @@ class ErrorMessages {
   static const String folderUserUnmatched = '폴더를 소유한 유저가 아닙니다.';
   static const String rootFolderNotExist = '루트 폴더가 존재하지 않습니다.';
   static const String rootFolderCannotRemove = '루트 폴더는 삭제할 수 없습니다.';
+  static const String rootFolderCannotUpdate = '책장 이름은 변경할 수 없습니다.';
 
   static const String practiceNoteNotFound = '복습 세트를 찾을 수 없습니다.';
 

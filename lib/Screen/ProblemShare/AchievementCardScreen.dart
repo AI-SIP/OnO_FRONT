@@ -72,7 +72,8 @@ class _AchievementCardScreenState extends State<AchievementCardScreen> {
 
       final result = await Share.shareXFiles(
         [XFile(file.path)],
-        text: 'OnO에서 이번 주 학습 결과야! 📚\n\nOnO 다운로드: https://ono-app.com/home',
+        text:
+            'OnO에서 이번 주 학습 결과야! 📚\n\nOnO에서 복습하기: https://ono-prod.seungminki.shop',
         sharePositionOrigin: Rect.fromPoints(
           Offset.zero,
           Offset(screenSize.width * 2 / 3, screenSize.height),

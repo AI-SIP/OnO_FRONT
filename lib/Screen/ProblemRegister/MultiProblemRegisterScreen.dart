@@ -2139,6 +2139,9 @@ class _MultiProblemRegisterScreenState
         Provider.of<FoldersProvider>(context, listen: false);
     if (folderId == null) return '책장';
 
+    final rootFolderId = foldersProvider.rootFolder?.folderId;
+    if (folderId == rootFolderId) return '책장';
+
     final currentFolder = foldersProvider.currentFolder;
     if (currentFolder != null && currentFolder.folderId == folderId) {
       return currentFolder.folderName;
