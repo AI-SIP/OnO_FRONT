@@ -46,7 +46,7 @@ class _SettingScreenState extends State<SettingScreen> {
       appBar: AppBar(
         centerTitle: true,
         title: StandardText(
-          text: '${userProvider.userInfoModel?.name ?? '이름 없음'}님의 오답노트',
+          text: '${userProvider.userInfoModel?.name ?? '이름 없음'}님의 학습 기록',
           fontSize: 18,
           color: themeProvider.primaryColor,
         ),
