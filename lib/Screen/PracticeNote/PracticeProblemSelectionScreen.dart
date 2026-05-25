@@ -802,6 +802,11 @@ class _PracticeProblemSelectionScreenState
     final screenWidth = MediaQuery.of(context).size.width;
     final isWide = screenWidth >= 600;
     final folderNameWidth = isWide ? 120.0 : screenWidth * 0.2;
+    final rootFolderId =
+        context.read<FoldersProvider>().rootFolder?.folderId;
+    final displayName = folder.folderId == rootFolderId
+        ? '책장'
+        : folder.folderName;
 
     return Opacity(
       opacity: isSelected ? 1.0 : 0.5, // 선택된 폴더가 아니라면 흐리게 표시
@@ -816,9 +821,9 @@ class _PracticeProblemSelectionScreenState
           SizedBox(
             width: folderNameWidth,
             child: StandardText(
-              text: folder.folderName.length > 10
-                  ? '${folder.folderName.substring(0, 10)}..'
-                  : folder.folderName,
+              text: displayName.length > 10
+                  ? '${displayName.substring(0, 10)}..'
+                  : displayName,
               fontSize: 14,
               color: Colors.black,
               textAlign: TextAlign.center,

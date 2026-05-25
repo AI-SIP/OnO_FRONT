@@ -32,6 +32,9 @@ class _FolderPickerWidgetState extends State<FolderPickerWidget> {
     final selectedId = widget.selectedId;
     if (selectedId == null) return '책장';
 
+    final rootFolderId = foldersProvider.rootFolder?.folderId;
+    if (selectedId == rootFolderId) return '책장';
+
     final currentFolder = foldersProvider.currentFolder;
     if (currentFolder != null && currentFolder.folderId == selectedId) {
       return currentFolder.folderName;

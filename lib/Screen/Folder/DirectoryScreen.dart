@@ -942,18 +942,20 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                         _showCreateFolderDialog();
                       },
                     ),
-                    const SizedBox(height: 8),
-                    _buildActionItem(
-                      icon: Icons.drive_file_rename_outline,
-                      iconColor: themeProvider.primaryColor,
-                      title: '공책 이름 수정하기',
-                      onTap: () {
-                        Navigator.pop(context);
-                        FirebaseAnalytics.instance
-                            .logEvent(name: 'directory_rename_button_click');
-                        _showRenameFolderDialog(foldersProvider);
-                      },
-                    ),
+                    if (_currentFolder?.parentFolder?.folderId != null) ...[
+                      const SizedBox(height: 8),
+                      _buildActionItem(
+                        icon: Icons.drive_file_rename_outline,
+                        iconColor: themeProvider.primaryColor,
+                        title: '공책 이름 수정하기',
+                        onTap: () {
+                          Navigator.pop(context);
+                          FirebaseAnalytics.instance
+                              .logEvent(name: 'directory_rename_button_click');
+                          _showRenameFolderDialog(foldersProvider);
+                        },
+                      ),
+                    ],
                     const SizedBox(height: 8),
                     _buildActionItem(
                       icon: Icons.drive_file_move_outline,
@@ -1057,7 +1059,18 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   ) async {
     final foldersProvider =
         Provider.of<FoldersProvider>(context, listen: false);
-    await foldersProvider.updateFolder(newName, _currentFolder!.folderId, null);
+    try {
+      await foldersProvider.updateFolder(newName, _currentFolder!.folderId, null);
+    } on ApiException catch (e) {
+      if (mounted) {
+        SnackBarDialog.showSnackBar(
+          context: context,
+          message: e.getUserMessage(),
+          backgroundColor: Colors.redAccent,
+        );
+      }
+      return;
+    }
 
     // 데이터 다시 로드
     await _loadFolderData();
