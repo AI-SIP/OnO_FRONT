@@ -55,6 +55,8 @@ class NotificationService {
     );
   }
 
+  String? _pendingNotificationType;
+
   void _configureMessageHandlers() {
     // 포그라운드 메시지
     FirebaseMessaging.onMessage.listen((msg) {
@@ -67,13 +69,11 @@ class NotificationService {
       _handleNotificationNavigation(msg.data);
     });
 
-    // 종료 상태에서 알림 탭으로 앱 실행
+    // 종료 상태에서 알림 탭으로 앱 실행 — 홈 화면 전환 후 처리하도록 저장
     FirebaseMessaging.instance.getInitialMessage().then((msg) {
       if (msg != null) {
         log('Notification tapped (terminated), data: ${msg.data}');
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          _handleNotificationNavigation(msg.data);
-        });
+        _pendingNotificationType = msg.data['type'] as String?;
       }
     });
 
@@ -94,12 +94,25 @@ class NotificationService {
     }
   }
 
+  /// SplashScreen이 홈 화면으로 전환한 뒤 호출 — 저장된 알림 처리
+  void processPendingNotification() {
+    final type = _pendingNotificationType;
+    if (type == null) return;
+    _pendingNotificationType = null;
+    _navigateByType(type);
+  }
+
   void _handleNotificationNavigation(Map<String, dynamic> data) {
     final type = data['type'] as String?;
+    _navigateByType(type);
+  }
+
+  void _navigateByType(String? type) {
     final navigator = AppNavigator.navigatorKey.currentState;
     if (navigator == null) return;
 
     if (type == 'review_due') {
+      navigator.popUntil((route) => route.isFirst);
       navigator.push(
         MaterialPageRoute(builder: (_) => const ReviewDueScreen()),
       );

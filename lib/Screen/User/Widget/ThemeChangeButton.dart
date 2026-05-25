@@ -6,11 +6,15 @@ import '../../../Module/Theme/ThemeHandler.dart';
 class ThemeChangeButton extends StatelessWidget {
   final ThemeHandler themeProvider;
   final VoidCallback onTap;
+  final double horizontalMarginFactor;
+  final bool compact;
 
   const ThemeChangeButton({
     super.key,
     required this.themeProvider,
     required this.onTap,
+    this.horizontalMarginFactor = 0.04,
+    this.compact = false,
   });
 
   @override
@@ -20,7 +24,7 @@ class ThemeChangeButton extends StatelessWidget {
 
     return Container(
       margin: EdgeInsets.symmetric(
-        horizontal: screenWidth * 0.04,
+        horizontal: screenWidth * horizontalMarginFactor,
         vertical: screenHeight * 0.01,
       ),
       child: InkWell(
@@ -56,16 +60,18 @@ class ThemeChangeButton extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     StandardText(
-                      text: '테마 변경',
+                      text: compact ? '테마\n변경' : '테마 변경',
                       fontSize: 14,
                       color: themeProvider.primaryColor,
                     ),
-                    const SizedBox(height: 1),
-                    StandardText(
-                      text: '오답노트의 템플릿 색상을 변경하세요',
-                      fontSize: 12,
-                      color: Colors.grey[600]!,
-                    ),
+                    if (!compact) ...[
+                      const SizedBox(height: 1),
+                      StandardText(
+                        text: '오답노트의 템플릿 색상을 변경하세요',
+                        fontSize: 12,
+                        color: Colors.grey[600]!,
+                      ),
+                    ],
                   ],
                 ),
               ),

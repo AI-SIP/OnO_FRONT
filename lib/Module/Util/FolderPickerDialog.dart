@@ -74,7 +74,7 @@ class _FolderPickerDialogState extends State<FolderPickerDialog> {
       final root = foldersProvider.rootFolder!;
       _rootNode = FolderTreeNode(
         folderId: root.folderId,
-        folderName: root.folderName,
+        folderName: '책장',
         parentFolderId: null,
       );
 
@@ -82,7 +82,7 @@ class _FolderPickerDialogState extends State<FolderPickerDialog> {
       _rootNode!.isExpanded = true;
 
       // 캐시에 저장
-      FolderPickerDialog._cachedFolderNames[root.folderId] = root.folderName;
+      FolderPickerDialog._cachedFolderNames[root.folderId] = '책장';
 
       _selectedFolderId ??= root.folderId;
 

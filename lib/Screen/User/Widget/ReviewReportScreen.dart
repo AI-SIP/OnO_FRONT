@@ -5,8 +5,10 @@ import 'package:ono/Model/LearningReport/LearningReportResponseModel.dart';
 import 'package:ono/Module/Text/StandardText.dart';
 import 'package:ono/Module/Theme/ThemeHandler.dart';
 import 'package:ono/Provider/UserProvider.dart';
+import 'package:ono/Screen/ProblemShare/AchievementCardScreen.dart';
 import 'package:ono/Service/Api/LearningReport/LearningReportService.dart';
 import 'package:provider/provider.dart';
+import '../../../Util/AppSnackBar.dart';
 
 enum ReportPeriod { weekly, monthly, total }
 
@@ -70,6 +72,18 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
           fontSize: 18,
           color: themeProvider.primaryColor,
         ),
+        actions: [
+          IconButton(
+            icon: Icon(
+              Icons.share_rounded,
+              color: _report != null
+                  ? themeProvider.primaryColor
+                  : Colors.grey[300],
+            ),
+            onPressed:
+                _report != null ? () => _navigateToShareCard(context) : null,
+          ),
+        ],
       ),
       body: _buildBody(themeProvider),
     );
@@ -738,6 +752,24 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
               ),
             )
             .toList(),
+      ),
+    );
+  }
+
+  void _navigateToShareCard(BuildContext context) {
+    final userInfo =
+        Provider.of<UserProvider>(context, listen: false).userInfoModel;
+    if (userInfo == null) {
+      AppSnackBar.showError('사용자 정보를 불러올 수 없어요.');
+      return;
+    }
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => AchievementCardScreen(
+          userInfo: userInfo,
+          weeklyReport: _report!.weekly,
+        ),
       ),
     );
   }

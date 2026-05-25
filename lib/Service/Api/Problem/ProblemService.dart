@@ -74,13 +74,26 @@ class ProblemService {
         'memo': memo,
         'reference': reference,
         'folderId': folderId,
-        'solvedAt':
-            solvedAt?.subtract(const Duration(hours: 9)).toIso8601String(),
+        'solvedAt': solvedAt?.toIso8601String(),
         'problemImageUrls': problemImageUrls,
         'answerImageUrls': answerImageUrls,
         'tagIds': tagIds,
       },
     ) as int;
+  }
+
+  Future<List<int>> registerProblemsBatchV2({
+    required List<Map<String, dynamic>> problems,
+  }) async {
+    final data = await httpService.sendRequest(
+      method: 'POST',
+      url: '$baseUrl/v2/batch',
+      body: {
+        'problems': problems,
+      },
+    ) as List<dynamic>;
+
+    return data.map((id) => (id as num).toInt()).toList();
   }
 
   Future<void> requestProblemAnalysis(

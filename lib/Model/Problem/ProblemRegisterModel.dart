@@ -25,8 +25,7 @@ class ProblemRegisterModel {
       'memo': memo,
       'reference': reference,
       'folderId': folderId,
-      'solvedAt':
-          solvedAt?.subtract(const Duration(hours: 9)).toIso8601String(),
+      'solvedAt': solvedAt?.toIso8601String(),
       'imageDataDtoList': imageDataDtoList?.map((e) => e.toJson()).toList(),
       'tagIds': tagIds,
     };
