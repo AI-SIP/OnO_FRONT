@@ -648,10 +648,10 @@ class _CalendarCell extends StatelessWidget {
   Widget _buildCellContent() {
     if (intensityLevel > 0) {
       return FractionallySizedBox(
-        widthFactor: 0.72,
-        heightFactor: 0.72,
+        widthFactor: 0.68,
+        heightFactor: 0.68,
         child: Image.asset(
-          'assets/FrogCharacter/FROG_LEVEL1.png',
+          'assets/FrogCharacter/FROG_STAMP.png',
           fit: BoxFit.contain,
           errorBuilder: (_, __, ___) => const StandardText(
             text: '🐸',
