@@ -9,7 +9,7 @@ class ProblemSolveEntry {
   static Future<bool?> open({
     required BuildContext context,
     required int problemId,
-    required String? problemImageUrl,
+    required List<String> problemImageUrls,
     required VoidCallback onRefresh,
     required ThemeHandler themeProvider,
   }) async {
@@ -17,7 +17,7 @@ class ProblemSolveEntry {
       context: context,
       backgroundColor: Colors.transparent,
       builder: (sheetContext) => _ProblemSolveModeSheet(
-        problemImageUrl: problemImageUrl,
+        problemImageCount: problemImageUrls.length,
         themeProvider: themeProvider,
       ),
     );
@@ -38,7 +38,7 @@ class ProblemSolveEntry {
       );
     }
 
-    if (problemImageUrl == null) {
+    if (problemImageUrls.isEmpty) {
       return Navigator.push<bool>(
         context,
         MaterialPageRoute(
@@ -55,7 +55,7 @@ class ProblemSolveEntry {
       MaterialPageRoute(
         builder: (context) => ProblemSolveCanvasScreen(
           problemId: problemId,
-          problemImageUrl: problemImageUrl,
+          problemImageUrls: problemImageUrls,
           onRefresh: onRefresh,
         ),
       ),
@@ -69,11 +69,11 @@ enum _ProblemSolveMode {
 }
 
 class _ProblemSolveModeSheet extends StatelessWidget {
-  final String? problemImageUrl;
+  final int problemImageCount;
   final ThemeHandler themeProvider;
 
   const _ProblemSolveModeSheet({
-    required this.problemImageUrl,
+    required this.problemImageCount,
     required this.themeProvider,
   });
 
@@ -143,11 +143,11 @@ class _ProblemSolveModeSheet extends StatelessWidget {
           _ModeTile(
             icon: Icons.draw,
             title: '앱에서 바로 풀기',
-            description: problemImageUrl == null
+            description: problemImageCount == 0
                 ? '문제 이미지가 있어야 사용할 수 있습니다.'
-                : '문제 이미지 위에 필기하고 풀이 시간도 자동 기록합니다.',
+                : '문제 이미지 $problemImageCount장 위에 필기하고 풀이 시간도 자동 기록합니다.',
             themeProvider: themeProvider,
-            isEnabled: problemImageUrl != null,
+            isEnabled: problemImageCount > 0,
             onTap: () => Navigator.pop(context, _ProblemSolveMode.inApp),
           ),
         ],

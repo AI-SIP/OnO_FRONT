@@ -313,8 +313,8 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
 
   Widget _buildBottomReviewCta(ThemeHandler themeProvider, bool isWide) {
     final problemImages = widget.problemModel.problemImageDataList ?? [];
-    final problemImageUrl =
-        problemImages.isNotEmpty ? problemImages.first.imageUrl : null;
+    final problemImageUrls =
+        problemImages.map((image) => image.imageUrl).toList();
 
     return Container(
       width: double.infinity,
@@ -327,7 +327,7 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
             final result = await ProblemSolveEntry.open(
               context: context,
               problemId: widget.problemModel.problemId,
-              problemImageUrl: problemImageUrl,
+              problemImageUrls: problemImageUrls,
               onRefresh: () {},
               themeProvider: themeProvider,
             );

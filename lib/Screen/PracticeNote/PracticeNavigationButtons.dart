@@ -218,14 +218,14 @@ class _PracticeNavigationButtonsState extends State<PracticeNavigationButtons> {
         ? widget.practiceProvider.currentProblems[currentProblemIndex]
         : null;
     final problemImages = currentProblem?.problemImageDataList ?? [];
-    final problemImageUrl =
-        problemImages.isNotEmpty ? problemImages.first.imageUrl : null;
+    final problemImageUrls =
+        problemImages.map((image) => image.imageUrl).toList();
     final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
 
     final result = await ProblemSolveEntry.open(
       context: context,
       problemId: widget.currentProblemId,
-      problemImageUrl: problemImageUrl,
+      problemImageUrls: problemImageUrls,
       onRefresh: widget.onRefresh,
       themeProvider: themeProvider,
     );
