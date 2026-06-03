@@ -113,7 +113,8 @@ class SettingMenuButtons extends StatelessWidget {
             child: Switch(
               value: value,
               activeThumbColor: themeProvider.primaryColor,
-              activeTrackColor: themeProvider.primaryColor.withValues(alpha: 0.5),
+              activeTrackColor:
+                  themeProvider.primaryColor.withValues(alpha: 0.5),
               inactiveTrackColor: Colors.grey.shade300,
               inactiveThumbColor: Colors.grey,
               materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,

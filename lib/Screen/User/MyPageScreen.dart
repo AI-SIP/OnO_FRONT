@@ -10,7 +10,9 @@ import '../../Module/Dialog/ThemeDialog.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/ScreenIndexProvider.dart';
+import '../../Provider/TutorialProvider.dart';
 import '../../Provider/UserProvider.dart';
+import '../Tutorial/TutorialTargets.dart';
 import 'LoginScreen.dart';
 import 'Widget/AccountActionButtons.dart';
 import 'Widget/ReviewReportScreen.dart';
@@ -20,7 +22,12 @@ import 'Widget/StreakCard.dart';
 import 'Widget/UserLevelCard.dart';
 
 class SettingScreen extends StatefulWidget {
-  const SettingScreen({super.key});
+  final TutorialTargets? tutorialTargets;
+
+  const SettingScreen({
+    super.key,
+    this.tutorialTargets,
+  });
 
   @override
   _SettingScreenState createState() => _SettingScreenState();
@@ -88,6 +95,7 @@ class _SettingScreenState extends State<SettingScreen> {
                           children: [
                             Expanded(
                               child: UserLevelCard(
+                                key: widget.tutorialTargets?.levelCardKey,
                                 userInfo: userProvider.userInfoModel,
                                 themeProvider: themeProvider,
                                 userName:
@@ -98,6 +106,7 @@ class _SettingScreenState extends State<SettingScreen> {
                             SizedBox(width: screenWidth * 0.02),
                             Expanded(
                               child: StreakCard(
+                                key: widget.tutorialTargets?.calendarCardKey,
                                 themeProvider: themeProvider,
                                 horizontalMarginFactor: 0,
                               ),
@@ -108,6 +117,7 @@ class _SettingScreenState extends State<SettingScreen> {
                     )
                   else ...[
                     UserLevelCard(
+                      key: widget.tutorialTargets?.levelCardKey,
                       userInfo: userProvider.userInfoModel,
                       themeProvider: themeProvider,
                       userName: userProvider.userInfoModel?.name ?? '이름 없음',
@@ -115,7 +125,10 @@ class _SettingScreenState extends State<SettingScreen> {
                   ],
                   if (!isTabletLandscape) ...[
                     SizedBox(height: screenHeight * 0.01),
-                    StreakCard(themeProvider: themeProvider),
+                    StreakCard(
+                      key: widget.tutorialTargets?.calendarCardKey,
+                      themeProvider: themeProvider,
+                    ),
                   ],
                   SizedBox(height: screenHeight * 0.01),
                   _buildReviewReportButton(themeProvider),
@@ -153,6 +166,7 @@ class _SettingScreenState extends State<SettingScreen> {
     const dummyLabels = ['월', '화', '수', '목', '금', '토', '일'];
 
     return Container(
+      key: widget.tutorialTargets?.reportCardKey,
       margin: EdgeInsets.symmetric(
         horizontal: screenWidth * horizontalMarginFactor,
         vertical: screenHeight * 0.005,
@@ -234,7 +248,10 @@ class _SettingScreenState extends State<SettingScreen> {
                   ),
                 ],
               ),
-              SizedBox(height: isTabletLandscape ? screenHeight * 0.024 : screenHeight * 0.014),
+              SizedBox(
+                  height: isTabletLandscape
+                      ? screenHeight * 0.024
+                      : screenHeight * 0.014),
               _buildMosaicTrendPreview(
                 themeProvider,
                 dummyBars,
@@ -418,6 +435,22 @@ class _MyPageSettingsScreen extends StatelessWidget {
                   },
                 ),
                 const SizedBox(height: 8),
+                _buildTutorialReplaySection(
+                  context: context,
+                  themeProvider: themeProvider,
+                  onTap: () {
+                    final userId = userProvider.userInfoModel?.userId;
+                    if (userId == null) return;
+                    final tutorialProvider =
+                        Provider.of<TutorialProvider>(context, listen: false);
+                    FirebaseAnalytics.instance
+                        .logEvent(name: 'tutorial_replay_button_click');
+                    Navigator.of(context).pop();
+                    screenIndexProvider.setSelectedIndex(0);
+                    tutorialProvider.showReplayIntro(userId);
+                  },
+                ),
+                const SizedBox(height: 8),
                 SettingMenuButtons(
                   themeProvider: themeProvider,
                   onNameEditTap: () {
@@ -502,6 +535,75 @@ class _MyPageSettingsScreen extends StatelessWidget {
       ),
     );
   }
+}
+
+Widget _buildTutorialReplaySection({
+  required BuildContext context,
+  required ThemeHandler themeProvider,
+  required VoidCallback onTap,
+}) {
+  final mediaQuery = MediaQuery.of(context);
+  final screenHeight = mediaQuery.size.height;
+  final screenWidth = mediaQuery.size.width;
+
+  return Container(
+    margin: EdgeInsets.symmetric(
+      horizontal: screenWidth * 0.04,
+      vertical: screenHeight * 0.01,
+    ),
+    padding: EdgeInsets.all(screenHeight * 0.015),
+    decoration: BoxDecoration(
+      color: Colors.grey[50],
+      borderRadius: BorderRadius.circular(15),
+      border: Border.all(
+        color: Colors.grey[300]!,
+        width: 1,
+      ),
+    ),
+    child: InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Padding(
+        padding: EdgeInsets.symmetric(
+          vertical: screenHeight * 0.008,
+          horizontal: screenHeight * 0.01,
+        ),
+        child: Row(
+          children: [
+            Icon(
+              Icons.school_outlined,
+              size: 20,
+              color: themeProvider.primaryColor,
+            ),
+            SizedBox(width: screenHeight * 0.015),
+            const Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  StandardText(
+                    text: '튜토리얼 다시 보기',
+                    fontSize: 14,
+                    color: Colors.black87,
+                  ),
+                  SizedBox(height: 3),
+                  StandardText(
+                    text: 'OnO 사용법을 처음부터 다시 둘러봐요',
+                    fontSize: 11,
+                    color: Colors.grey,
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              Icons.chevron_right,
+              size: 20,
+              color: Colors.grey[400],
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
 }
 
 void _showChangeNameDialog(BuildContext context, String currentName) {

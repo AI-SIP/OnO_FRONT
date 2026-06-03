@@ -32,12 +32,17 @@ import '../ProblemRegister/MultiProblemRegisterScreen.dart';
 import '../ProblemRegister/ProblemRegisterScreen.dart';
 import '../ProblemSearch/TagProblemSearchScreen.dart';
 import '../ReviewDue/ReviewDueScreen.dart';
-import 'UserGuideScreen.dart';
+import '../Tutorial/TutorialTargets.dart';
 
 class DirectoryScreen extends StatefulWidget {
   final int? folderId; // 이 화면이 표시할 폴더 ID
+  final TutorialTargets? tutorialTargets;
 
-  const DirectoryScreen({super.key, this.folderId});
+  const DirectoryScreen({
+    super.key,
+    this.folderId,
+    this.tutorialTargets,
+  });
 
   @override
   _DirectoryScreenState createState() => _DirectoryScreenState();
@@ -45,7 +50,6 @@ class DirectoryScreen extends StatefulWidget {
 
 class _DirectoryScreenState extends State<DirectoryScreen> {
   static const double _dialogMaxWidth = 420;
-  bool modalShown = false;
   bool _isSelectionMode = false; // 선택 모드 활성화 여부
   final List<int> _selectedFolderIds = []; // 선택된 폴더 ID 리스트
   final List<int> _selectedProblemIds = []; // 선택된 문제 ID 리스트
@@ -86,19 +90,11 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     _scrollController.addListener(_onScroll);
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      final userProvider = Provider.of<UserProvider>(context, listen: false);
-
       // 이 화면의 폴더 데이터 로드
       await _loadFolderData();
 
       if (widget.folderId == null) {
         Provider.of<ReviewDueProvider>(context, listen: false).fetchReviewDue();
-      }
-
-      if (!modalShown && userProvider.isFirstLogin && widget.folderId == null) {
-        modalShown = true;
-        userProvider.changeIsFirstLogin();
-        _showUserGuideModal();
       }
     });
   }
@@ -451,39 +447,6 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     }
   }
 
-  void _showUserGuideModal() async {
-    FirebaseAnalytics.instance.logEvent(name: 'show_user_guide_modal');
-
-    final openTime = DateTime.now();
-    await showModalBottomSheet(
-      context: context,
-      isScrollControlled: true, // 스크롤 가능 모달 설정
-      backgroundColor: Colors.transparent, // 투명 배경
-      isDismissible: false,
-      builder: (BuildContext context) {
-        return TapRegion(
-            onTapOutside: (_) {
-              // Workaround for iPadOS 26.1 bug: https://github.com/flutter/flutter/issues/177992
-              if (DateTime.now().difference(openTime) <
-                  const Duration(milliseconds: 500)) {
-                return;
-              }
-              if (Navigator.canPop(context)) {
-                Navigator.pop(context);
-              }
-            },
-            child: FractionallySizedBox(
-              heightFactor: 0.6, // 화면 높이의 50% 차지
-              child: UserGuideScreen(
-                onFinish: () {
-                  Navigator.of(context).pop(); // 모달 닫기
-                },
-              ),
-            ));
-      },
-    );
-  }
-
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -622,6 +585,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
   Widget _buildQuickCreateFab(ThemeHandler themeProvider) {
     return Column(
+      key: widget.tutorialTargets?.directoryCreateFabKey,
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
@@ -1060,7 +1024,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     final foldersProvider =
         Provider.of<FoldersProvider>(context, listen: false);
     try {
-      await foldersProvider.updateFolder(newName, _currentFolder!.folderId, null);
+      await foldersProvider.updateFolder(
+          newName, _currentFolder!.folderId, null);
     } on ApiException catch (e) {
       if (mounted) {
         SnackBarDialog.showSnackBar(
@@ -1373,97 +1338,100 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
   Widget _buildFolderAndProblemGrid(ThemeHandler themeProvider) {
     return Expanded(
+        key: widget.tutorialTargets?.folderListKey,
         child: Column(
-      children: [
-        Expanded(
-          child: Builder(
-            builder: (context) {
-              // 로컬 상태 사용 (Provider와 독립적)
-              var currentSubfolders = _localSubfolders;
-              var currentProblems = _localProblems;
-              final isLoadingMore = _isLoadingSubfolders || _isLoadingProblems;
+          children: [
+            Expanded(
+              child: Builder(
+                builder: (context) {
+                  // 로컬 상태 사용 (Provider와 독립적)
+                  var currentSubfolders = _localSubfolders;
+                  var currentProblems = _localProblems;
+                  final isLoadingMore =
+                      _isLoadingSubfolders || _isLoadingProblems;
 
-              // 초기 로딩 중이면 로딩 인디케이터 표시
-              if (_isInitialLoading) {
-                return const Center(
-                  child: CircularProgressIndicator(),
-                );
-              }
+                  // 초기 로딩 중이면 로딩 인디케이터 표시
+                  if (_isInitialLoading) {
+                    return const Center(
+                      child: CircularProgressIndicator(),
+                    );
+                  }
 
-              // 로딩 완료 후에도 데이터가 없으면 빈 화면 표시
-              if (currentSubfolders.isEmpty && currentProblems.isEmpty) {
-                return SingleChildScrollView(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  child: SizedBox(
-                    height: MediaQuery.of(context).size.height * 0.7,
-                    child: Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          SvgPicture.asset(
-                            'assets/Icon/GreenNote.svg', // 아이콘 경로
-                            width: 100, // 적절한 크기 설정
-                            height: 100,
+                  // 로딩 완료 후에도 데이터가 없으면 빈 화면 표시
+                  if (currentSubfolders.isEmpty && currentProblems.isEmpty) {
+                    return SingleChildScrollView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      child: SizedBox(
+                        height: MediaQuery.of(context).size.height * 0.7,
+                        child: Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              SvgPicture.asset(
+                                'assets/Icon/GreenNote.svg', // 아이콘 경로
+                                width: 100, // 적절한 크기 설정
+                                height: 100,
+                              ),
+                              const SizedBox(height: 40), // 아이콘과 텍스트 사이 간격
+                              const StandardText(
+                                text: '작성한 오답노트를\n공책에 저장해 관리하세요!',
+                                fontSize: 16,
+                                color: Colors.black,
+                                textAlign: TextAlign.center,
+                              ),
+                              const SizedBox(
+                                height: 30,
+                              ),
+                              StandardText(
+                                text: '우측 하단 + 추가 버튼으로 새 오답노트를 작성할 수 있어요.',
+                                fontSize: 13,
+                                color: Colors.grey[600]!,
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
                           ),
-                          const SizedBox(height: 40), // 아이콘과 텍스트 사이 간격
-                          const StandardText(
-                            text: '작성한 오답노트를\n공책에 저장해 관리하세요!',
-                            fontSize: 16,
-                            color: Colors.black,
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(
-                            height: 30,
-                          ),
-                          StandardText(
-                            text: '우측 하단 + 추가 버튼으로 새 오답노트를 작성할 수 있어요.',
-                            fontSize: 13,
-                            color: Colors.grey[600]!,
-                            textAlign: TextAlign.center,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                );
-              }
-
-              final totalItems =
-                  currentSubfolders.length + currentProblems.length;
-              final hasMore = _subfolderHasNext || _problemHasNext;
-
-              return ListView.builder(
-                controller: _scrollController,
-                physics: const AlwaysScrollableScrollPhysics(),
-                itemCount: totalItems + (isLoadingMore || hasMore ? 1 : 0),
-                itemBuilder: (context, index) {
-                  // 로딩 인디케이터 표시
-                  if (index == totalItems) {
-                    return const Padding(
-                      padding: EdgeInsets.all(16.0),
-                      child: Center(
-                        child: CircularProgressIndicator(),
+                        ),
                       ),
                     );
                   }
 
-                  if (index < currentSubfolders.length) {
-                    var subfolder = currentSubfolders[index];
-                    return _buildFolderTile(subfolder, themeProvider, index);
-                  } else {
-                    var problem =
-                        currentProblems[index - currentSubfolders.length];
-                    return _buildProblemTile(problem, themeProvider);
-                  }
+                  final totalItems =
+                      currentSubfolders.length + currentProblems.length;
+                  final hasMore = _subfolderHasNext || _problemHasNext;
+
+                  return ListView.builder(
+                    controller: _scrollController,
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    itemCount: totalItems + (isLoadingMore || hasMore ? 1 : 0),
+                    itemBuilder: (context, index) {
+                      // 로딩 인디케이터 표시
+                      if (index == totalItems) {
+                        return const Padding(
+                          padding: EdgeInsets.all(16.0),
+                          child: Center(
+                            child: CircularProgressIndicator(),
+                          ),
+                        );
+                      }
+
+                      if (index < currentSubfolders.length) {
+                        var subfolder = currentSubfolders[index];
+                        return _buildFolderTile(
+                            subfolder, themeProvider, index);
+                      } else {
+                        var problem =
+                            currentProblems[index - currentSubfolders.length];
+                        return _buildProblemTile(problem, themeProvider);
+                      }
+                    },
+                  );
                 },
-              );
-            },
-          ),
-        ),
-        if (_isSelectionMode) _buildBottomActionButtons(themeProvider),
-      ],
-    ));
+              ),
+            ),
+            if (_isSelectionMode) _buildBottomActionButtons(themeProvider),
+          ],
+        ));
   }
 
   Widget _buildFolderTile(
