@@ -11,6 +11,7 @@ enum TutorialStatus {
   idle,
   intro,
   running,
+  outro,
 }
 
 enum TutorialTargetType {
@@ -82,7 +83,7 @@ const List<TutorialStep> tutorialSteps = [
     tabIndex: 2,
     targetType: TutorialTargetType.reportCard,
     title: '복습 리포트',
-    description: '복습 추이와 약점을 확인하고, 설정에서는 테마 변경과 튜토리얼 다시 보기를 할 수 있어요.',
+    description: '복습 추이와 약점을 확인하면 어떤 부분을 더 공부해야 할지 쉽게 알 수 있어요.',
   ),
 ];
 

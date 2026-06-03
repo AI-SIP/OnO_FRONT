@@ -20,6 +20,7 @@ class TutorialProvider extends ChangeNotifier {
   bool get isVisible => _status != TutorialStatus.idle;
   bool get isIntro => _status == TutorialStatus.intro;
   bool get isRunning => _status == TutorialStatus.running;
+  bool get isOutro => _status == TutorialStatus.outro;
 
   Future<void> showAutoIntroIfNeeded({
     required UserInfoModel? userInfo,
@@ -67,6 +68,13 @@ class TutorialProvider extends ChangeNotifier {
   }
 
   void previous() {
+    if (_status == TutorialStatus.outro) {
+      _status = TutorialStatus.running;
+      _logStepEvent('tutorial_previous');
+      _logStepEvent('tutorial_step_show');
+      notifyListeners();
+      return;
+    }
     if (_status != TutorialStatus.running || _currentStepIndex == 0) return;
     _logStepEvent('tutorial_previous');
     _currentStepIndex -= 1;
@@ -78,7 +86,9 @@ class TutorialProvider extends ChangeNotifier {
     if (_status != TutorialStatus.running) return;
     _logStepEvent('tutorial_next');
     if (_currentStepIndex >= tutorialSteps.length - 1) {
-      await complete();
+      _status = TutorialStatus.outro;
+      _logEvent('tutorial_outro_show');
+      notifyListeners();
       return;
     }
     _currentStepIndex += 1;

@@ -123,6 +123,8 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
             Container(color: Colors.black.withValues(alpha: 0.58)),
             if (tutorialProvider.isIntro)
               _buildIntroCard(tutorialProvider, themeProvider)
+            else if (tutorialProvider.isOutro)
+              _buildOutroCard(tutorialProvider, themeProvider)
             else
               _buildStepOverlay(tutorialProvider, themeProvider),
           ],
@@ -136,7 +138,14 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
     ThemeHandler themeProvider,
   ) {
     final mediaQuery = MediaQuery.of(context);
-    final maxWidth = mediaQuery.size.width >= 600 ? 420.0 : double.infinity;
+    final isTablet = mediaQuery.size.shortestSide >= 600;
+    final maxWidth = isTablet ? 560.0 : double.infinity;
+    final horizontalMargin = isTablet ? 32.0 : 24.0;
+    final cardPadding = isTablet ? 28.0 : 22.0;
+    final titleSize = isTablet ? 20.0 : 16.0;
+    final bodySize = isTablet ? 16.0 : 14.0;
+    final buttonSize = isTablet ? 15.0 : 14.0;
+    final frogSize = isTablet ? 116.0 : 86.0;
     final maxHeight = mediaQuery.size.height -
         mediaQuery.padding.top -
         mediaQuery.padding.bottom -
@@ -146,8 +155,8 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
       child: Center(
         child: Container(
           width: maxWidth,
-          margin: const EdgeInsets.symmetric(horizontal: 24),
-          padding: const EdgeInsets.all(22),
+          margin: EdgeInsets.symmetric(horizontal: horizontalMargin),
+          padding: EdgeInsets.all(cardPadding),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(18),
@@ -161,19 +170,20 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
                 children: [
                   _buildFrogSpeech(
                     themeProvider: themeProvider,
+                    frogSize: frogSize,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const StandardText(
+                        StandardText(
                           text: 'OnO를 빠르게 둘러볼까요?',
-                          fontSize: 16,
+                          fontSize: titleSize,
                           color: Colors.black87,
                           fontWeight: FontWeight.w700,
                         ),
-                        const SizedBox(height: 10),
+                        const SizedBox(height: 14),
                         StandardText(
                           text: '공책, 오답노트, 복습 세트가 어떻게 연결되는지 짧게 안내해드릴게요.',
-                          fontSize: 14,
+                          fontSize: bodySize,
                           color: Colors.grey[700]!,
                           fontWeight: FontWeight.w500,
                           fontFamily: 'PretendardBold',
@@ -189,7 +199,7 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
                         onPressed: tutorialProvider.skip,
                         child: StandardText(
                           text: '건너뛰기',
-                          fontSize: 14,
+                          fontSize: buttonSize,
                           color: Colors.grey[700]!,
                         ),
                       ),
@@ -203,9 +213,106 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
                             borderRadius: BorderRadius.circular(8),
                           ),
                         ),
-                        child: const StandardText(
+                        child: StandardText(
                           text: '시작하기',
-                          fontSize: 14,
+                          fontSize: buttonSize,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildOutroCard(
+    TutorialProvider tutorialProvider,
+    ThemeHandler themeProvider,
+  ) {
+    final mediaQuery = MediaQuery.of(context);
+    final isTablet = mediaQuery.size.shortestSide >= 600;
+    final maxWidth = isTablet ? 560.0 : double.infinity;
+    final horizontalMargin = isTablet ? 32.0 : 24.0;
+    final cardPadding = isTablet ? 28.0 : 22.0;
+    final frogSize = isTablet ? 116.0 : 86.0;
+    final titleSize = isTablet ? 22.0 : 18.0;
+    final bodySize = isTablet ? 16.0 : 14.0;
+    final buttonSize = isTablet ? 15.0 : 14.0;
+    final maxHeight = mediaQuery.size.height -
+        mediaQuery.padding.top -
+        mediaQuery.padding.bottom -
+        32;
+
+    return SafeArea(
+      child: Center(
+        child: Container(
+          width: maxWidth,
+          margin: EdgeInsets.symmetric(horizontal: horizontalMargin),
+          padding: EdgeInsets.all(cardPadding),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(18),
+          ),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxHeight: maxHeight),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildFrogSpeech(
+                    themeProvider: themeProvider,
+                    frogSize: frogSize,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        StandardText(
+                          text: '좋아요, 이제 OnO와 함께 시작해봐요!',
+                          fontSize: titleSize,
+                          color: Colors.black87,
+                          fontWeight: FontWeight.w700,
+                        ),
+                        const SizedBox(height: 14),
+                        StandardText(
+                          text:
+                              '공책에 오답을 모으고, 복습 세트로 다시 복습 하면서 100점을 향해 한 걸음씩 나아가요.',
+                          fontSize: bodySize,
+                          color: Colors.grey[700]!,
+                          fontWeight: FontWeight.w500,
+                          fontFamily: 'PretendardBold',
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 22),
+                  Row(
+                    children: [
+                      TextButton(
+                        onPressed: tutorialProvider.previous,
+                        child: StandardText(
+                          text: '이전',
+                          fontSize: buttonSize,
+                          color: Colors.grey[700]!,
+                        ),
+                      ),
+                      const Spacer(),
+                      ElevatedButton(
+                        onPressed: tutorialProvider.complete,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: themeProvider.primaryColor,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: StandardText(
+                          text: '완료',
+                          fontSize: buttonSize,
                           color: Colors.white,
                         ),
                       ),
@@ -229,22 +336,26 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
     final size = mediaQuery.size;
     final safeTop = mediaQuery.padding.top;
     final safeBottom = mediaQuery.padding.bottom;
-    final cardWidth = size.width >= 600 ? 420.0 : size.width - 32;
+    final isTablet = mediaQuery.size.shortestSide >= 600;
+    final cardWidth = isTablet ? 560.0 : size.width - 32;
     final cardLeft = size.width >= 600 ? (size.width - cardWidth) / 2 : 16.0;
     final cardMaxHeight = size.height - safeTop - safeBottom - 32;
+    final estimatedCardHeight = isTablet ? 310.0 : 230.0;
 
-    var cardTop = size.height - safeBottom - 250;
+    var cardTop = size.height - safeBottom - estimatedCardHeight - 20;
     if (rect != null) {
       final below = rect.bottom + 18;
-      final above = rect.top - 230;
-      if (below + 210 < size.height - safeBottom) {
+      final above = rect.top - estimatedCardHeight;
+      if (below + estimatedCardHeight < size.height - safeBottom) {
         cardTop = below;
       } else if (above > safeTop) {
         cardTop = above;
       }
     }
-    cardTop =
-        cardTop.clamp(safeTop + 12, size.height - safeBottom - 230).toDouble();
+    final minCardTop = safeTop + 12;
+    final maxCardTop = size.height - safeBottom - estimatedCardHeight;
+    final clampedMaxCardTop = maxCardTop < minCardTop ? minCardTop : maxCardTop;
+    cardTop = cardTop.clamp(minCardTop, clampedMaxCardTop).toDouble();
 
     return Stack(
       children: [
@@ -323,10 +434,19 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
     final step = tutorialProvider.currentStep;
     final isLast =
         tutorialProvider.currentStepIndex == tutorialSteps.length - 1;
+    final isTablet = MediaQuery.of(context).size.shortestSide >= 600;
+    final cardPadding = isTablet
+        ? const EdgeInsets.fromLTRB(22, 22, 22, 18)
+        : const EdgeInsets.fromLTRB(16, 16, 16, 14);
+    final frogSize = isTablet ? 104.0 : 76.0;
+    final progressSize = isTablet ? 13.0 : 11.0;
+    final titleSize = isTablet ? 20.0 : 16.0;
+    final bodySize = isTablet ? 16.0 : 14.0;
+    final buttonSize = isTablet ? 15.0 : 13.0;
 
     return Container(
       key: ValueKey(step.id),
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
+      padding: cardPadding,
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
@@ -337,27 +457,27 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
         children: [
           _buildFrogSpeech(
             themeProvider: themeProvider,
-            frogSize: 76,
+            frogSize: frogSize,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 StandardText(
                   text:
                       '${tutorialProvider.currentStepIndex + 1} / ${tutorialSteps.length}',
-                  fontSize: 11,
+                  fontSize: progressSize,
                   color: themeProvider.primaryColor,
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 12),
                 StandardText(
                   text: step.title,
-                  fontSize: 16,
+                  fontSize: titleSize,
                   color: Colors.black87,
                   fontWeight: FontWeight.w700,
                 ),
                 const SizedBox(height: 8),
                 StandardText(
                   text: step.description,
-                  fontSize: 14,
+                  fontSize: bodySize,
                   color: Colors.grey[700]!,
                   fontWeight: FontWeight.w500,
                   fontFamily: 'PretendardBold',
@@ -372,7 +492,7 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
                 onPressed: tutorialProvider.skip,
                 child: StandardText(
                   text: '건너뛰기',
-                  fontSize: 13,
+                  fontSize: buttonSize,
                   color: Colors.grey[700]!,
                 ),
               ),
@@ -382,7 +502,7 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
                   onPressed: tutorialProvider.previous,
                   child: StandardText(
                     text: '이전',
-                    fontSize: 13,
+                    fontSize: buttonSize,
                     color: Colors.grey[700]!,
                   ),
                 ),
@@ -397,8 +517,8 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
                   ),
                 ),
                 child: StandardText(
-                  text: isLast ? '완료' : '다음',
-                  fontSize: 13,
+                  text: '다음',
+                  fontSize: buttonSize,
                   color: Colors.white,
                 ),
               ),
