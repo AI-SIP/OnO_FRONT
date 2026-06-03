@@ -142,9 +142,9 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
     final maxWidth = isTablet ? 560.0 : double.infinity;
     final horizontalMargin = isTablet ? 32.0 : 24.0;
     final cardPadding = isTablet ? 28.0 : 22.0;
-    final titleSize = isTablet ? 20.0 : 16.0;
-    final bodySize = isTablet ? 16.0 : 14.0;
-    final buttonSize = isTablet ? 15.0 : 14.0;
+    final titleSize = isTablet ? 18.0 : 14.0;
+    final bodySize = isTablet ? 14.0 : 12.0;
+    final buttonSize = isTablet ? 14.0 : 13.0;
     final frogSize = isTablet ? 116.0 : 86.0;
     final maxHeight = mediaQuery.size.height -
         mediaQuery.padding.top -
@@ -182,7 +182,7 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
                         ),
                         const SizedBox(height: 14),
                         StandardText(
-                          text: '공책, 오답노트, 복습 세트가 어떻게 연결되는지 짧게 안내해드릴게요.',
+                          text: '공책, 오답노트, 복습 세트가\n어떻게 연결되는지 짧게 안내해드릴게요.',
                           fontSize: bodySize,
                           color: Colors.grey[700]!,
                           fontWeight: FontWeight.w500,
@@ -239,10 +239,10 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
     final maxWidth = isTablet ? 560.0 : double.infinity;
     final horizontalMargin = isTablet ? 32.0 : 24.0;
     final cardPadding = isTablet ? 28.0 : 22.0;
-    final frogSize = isTablet ? 116.0 : 86.0;
-    final titleSize = isTablet ? 22.0 : 18.0;
-    final bodySize = isTablet ? 16.0 : 14.0;
-    final buttonSize = isTablet ? 15.0 : 14.0;
+    final frogSize = isTablet ? 104.0 : 76.0;
+    final titleSize = isTablet ? 18.0 : 14.0;
+    final bodySize = isTablet ? 14.0 : 12.0;
+    final buttonSize = isTablet ? 14.0 : 13.0;
     final maxHeight = mediaQuery.size.height -
         mediaQuery.padding.top -
         mediaQuery.padding.bottom -
@@ -280,7 +280,7 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
                         const SizedBox(height: 14),
                         StandardText(
                           text:
-                              '공책에 오답을 모으고, 복습 세트로 다시 복습 하면서 100점을 향해 한 걸음씩 나아가요.',
+                              '공책에 오답을 모으고, 복습 세트로 다시 복습하면서 100점을 향해 한 걸음씩 나아가요!',
                           fontSize: bodySize,
                           color: Colors.grey[700]!,
                           fontWeight: FontWeight.w500,
@@ -439,10 +439,10 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
         ? const EdgeInsets.fromLTRB(22, 22, 22, 18)
         : const EdgeInsets.fromLTRB(16, 16, 16, 14);
     final frogSize = isTablet ? 104.0 : 76.0;
-    final progressSize = isTablet ? 13.0 : 11.0;
-    final titleSize = isTablet ? 20.0 : 16.0;
-    final bodySize = isTablet ? 16.0 : 14.0;
-    final buttonSize = isTablet ? 15.0 : 13.0;
+    final progressSize = isTablet ? 11.0 : 10.0;
+    final titleSize = isTablet ? 18.0 : 14.0;
+    final bodySize = isTablet ? 14.0 : 12.0;
+    final buttonSize = isTablet ? 14.0 : 12.0;
 
     return Container(
       key: ValueKey(step.id),
