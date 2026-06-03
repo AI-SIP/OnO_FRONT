@@ -6,6 +6,7 @@ class SettingMenuButtons extends StatelessWidget {
   final ThemeHandler themeProvider;
   final VoidCallback onNameEditTap;
   final VoidCallback onGuideTap;
+  final VoidCallback onTutorialReplayTap;
   final VoidCallback onFeedbackTap;
   final VoidCallback onTermsTap;
   final bool notificationEnabled;
@@ -16,6 +17,7 @@ class SettingMenuButtons extends StatelessWidget {
     required this.themeProvider,
     required this.onNameEditTap,
     required this.onGuideTap,
+    required this.onTutorialReplayTap,
     required this.onFeedbackTap,
     required this.onTermsTap,
     required this.notificationEnabled,
@@ -56,6 +58,13 @@ class SettingMenuButtons extends StatelessWidget {
             icon: Icons.edit,
             title: '이름 수정',
             onTap: onNameEditTap,
+          ),
+          Divider(height: screenHeight * 0.02, color: Colors.grey[300]),
+          _buildMenuItem(
+            context: context,
+            icon: Icons.school_outlined,
+            title: '튜토리얼 다시 보기',
+            onTap: onTutorialReplayTap,
           ),
           Divider(height: screenHeight * 0.02, color: Colors.grey[300]),
           _buildMenuItem(
@@ -113,7 +122,8 @@ class SettingMenuButtons extends StatelessWidget {
             child: Switch(
               value: value,
               activeThumbColor: themeProvider.primaryColor,
-              activeTrackColor: themeProvider.primaryColor.withValues(alpha: 0.5),
+              activeTrackColor:
+                  themeProvider.primaryColor.withValues(alpha: 0.5),
               inactiveTrackColor: Colors.grey.shade300,
               inactiveThumbColor: Colors.grey,
               materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,

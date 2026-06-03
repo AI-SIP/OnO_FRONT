@@ -8,12 +8,18 @@ import '../../Model/PracticeNote/PracticeNoteThumbnailModel.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/PracticeNoteProvider.dart';
+import '../Tutorial/TutorialTargets.dart';
 import '../../Util/AppSnackBar.dart';
 import 'PracticeDetailScreen.dart';
 import 'PracticeProblemSelectionScreen.dart';
 
 class PracticeThumbnailScreen extends StatefulWidget {
-  const PracticeThumbnailScreen({super.key});
+  final TutorialTargets? tutorialTargets;
+
+  const PracticeThumbnailScreen({
+    super.key,
+    this.tutorialTargets,
+  });
 
   @override
   _ProblemPracticeScreen createState() => _ProblemPracticeScreen();
@@ -93,6 +99,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
       floatingActionButton: _isSelectionMode
           ? null
           : SizedBox(
+              key: widget.tutorialTargets?.practiceCreateFabKey,
               height: 50,
               child: FloatingActionButton.extended(
                 heroTag: 'practice_create_fab',

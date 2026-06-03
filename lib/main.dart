@@ -23,8 +23,11 @@ import 'Provider/PracticeNoteProvider.dart';
 import 'Provider/ProblemsProvider.dart';
 import 'Provider/ReviewDueProvider.dart';
 import 'Provider/UserProvider.dart';
+import 'Provider/TutorialProvider.dart';
 import 'Screen/Folder/DirectoryScreen.dart';
 import 'Screen/PracticeNote/PracticeThumbnailScreen.dart';
+import 'Screen/Tutorial/TutorialOverlay.dart';
+import 'Screen/Tutorial/TutorialTargets.dart';
 import 'Screen/User/MyPageScreen.dart';
 import 'Util/AppErrorReporter.dart';
 import 'Util/AppNavigator.dart';
@@ -133,6 +136,7 @@ Future<void> _bootstrapApp() async {
         ),
         ChangeNotifierProvider(create: (_) => ScreenIndexProvider()),
         ChangeNotifierProvider(create: (_) => ReviewDueProvider()),
+        ChangeNotifierProvider(create: (_) => TutorialProvider()),
       ],
       child: const MyApp(),
     ),
@@ -203,16 +207,17 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
-  static const List<Widget> _widgetOptions = <Widget>[
-    DirectoryScreen(),
-    PracticeThumbnailScreen(),
-    SettingScreen(),
-  ];
+  final TutorialTargets _tutorialTargets = TutorialTargets();
+  bool _didPrepareTutorial = false;
+  int? _lastSyncedTutorialStepIndex;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _prepareInitialTutorial();
+    });
   }
 
   @override
@@ -228,6 +233,20 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
     ).setSelectedIndex(index);
   }
 
+  Future<void> _prepareInitialTutorial() async {
+    if (_didPrepareTutorial || !mounted) return;
+    _didPrepareTutorial = true;
+
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final tutorialProvider =
+        Provider.of<TutorialProvider>(context, listen: false);
+    await tutorialProvider.showAutoIntroIfNeeded(
+      userInfo: userProvider.userInfoModel,
+      isFirstLogin: userProvider.isFirstLogin,
+    );
+    userProvider.changeIsFirstLogin();
+  }
+
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) async {
     if (state == AppLifecycleState.resumed) {
@@ -239,14 +258,53 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     final screenIndexProvider = Provider.of<ScreenIndexProvider>(context);
+    final tutorialProvider = Provider.of<TutorialProvider>(context);
+    _syncTutorialTab(tutorialProvider, screenIndexProvider);
 
-    return Scaffold(
-      body: IndexedStack(
-        index: screenIndexProvider.screenIndex,
-        children: _widgetOptions,
-      ),
-      bottomNavigationBar: _buildBottomNavigationBar(context),
+    final widgetOptions = <Widget>[
+      DirectoryScreen(tutorialTargets: _tutorialTargets),
+      PracticeThumbnailScreen(tutorialTargets: _tutorialTargets),
+      SettingScreen(tutorialTargets: _tutorialTargets),
+    ];
+
+    return Stack(
+      children: [
+        Scaffold(
+          body: IndexedStack(
+            index: screenIndexProvider.screenIndex,
+            children: widgetOptions,
+          ),
+          bottomNavigationBar: _buildBottomNavigationBar(context),
+        ),
+        TutorialOverlay(targets: _tutorialTargets),
+      ],
     );
+  }
+
+  void _syncTutorialTab(
+    TutorialProvider tutorialProvider,
+    ScreenIndexProvider screenIndexProvider,
+  ) {
+    if (!tutorialProvider.isRunning) {
+      _lastSyncedTutorialStepIndex = null;
+      return;
+    }
+
+    final stepIndex = tutorialProvider.currentStepIndex;
+    final targetTabIndex = tutorialProvider.currentStep.tabIndex;
+    if (_lastSyncedTutorialStepIndex == stepIndex &&
+        screenIndexProvider.screenIndex == targetTabIndex) {
+      return;
+    }
+
+    _lastSyncedTutorialStepIndex = stepIndex;
+    if (screenIndexProvider.screenIndex == targetTabIndex) return;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      Provider.of<ScreenIndexProvider>(context, listen: false)
+          .setSelectedIndex(targetTabIndex);
+    });
   }
 
   BottomNavigationBar _buildBottomNavigationBar(BuildContext context) {
