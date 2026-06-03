@@ -27,6 +27,7 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
   static const Duration _motionDuration = Duration(milliseconds: 280);
   static const Curve _motionCurve = Curves.easeOutCubic;
   static const String _guideFrogAsset = 'assets/FrogCharacter/FROG_LEVEL15.png';
+  static const double _speechBorderWidth = 1.0;
 
   Rect? _targetRect;
   String? _lastStepId;
@@ -174,6 +175,8 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
                           text: '공책, 오답노트, 복습 세트가 어떻게 연결되는지 짧게 안내해드릴게요.',
                           fontSize: 14,
                           color: Colors.grey[700]!,
+                          fontWeight: FontWeight.w500,
+                          fontFamily: 'PretendardBold',
                         ),
                       ],
                     ),
@@ -356,6 +359,8 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
                   text: step.description,
                   fontSize: 14,
                   color: Colors.grey[700]!,
+                  fontWeight: FontWeight.w500,
+                  fontFamily: 'PretendardBold',
                 ),
               ],
             ),
@@ -410,11 +415,11 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
     double frogSize = 86,
   }) {
     final bubbleColor = Color.alphaBlend(
-      themeProvider.primaryColor.withValues(alpha: 0.16),
+      themeProvider.primaryColor.withValues(alpha: 0.08),
       Colors.white,
     );
     final bubbleBorderColor =
-        themeProvider.primaryColor.withValues(alpha: 0.14);
+        themeProvider.primaryColor.withValues(alpha: 0.20);
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -438,6 +443,7 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
                   borderRadius: BorderRadius.circular(18),
                   border: Border.all(
                     color: bubbleBorderColor,
+                    width: _speechBorderWidth,
                   ),
                   boxShadow: [
                     BoxShadow(
@@ -450,12 +456,14 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
                 child: child,
               ),
               Positioned(
-                left: -16,
+                left: -21,
                 top: 26,
                 child: CustomPaint(
-                  size: const Size(20, 24),
+                  size: const Size(23, 24),
                   painter: _SpeechTailPainter(
                     color: bubbleColor,
+                    borderColor: bubbleBorderColor,
+                    borderWidth: _speechBorderWidth,
                   ),
                 ),
               ),
@@ -469,25 +477,24 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
 
 class _SpeechTailPainter extends CustomPainter {
   final Color color;
+  final Color borderColor;
+  final double borderWidth;
 
   const _SpeechTailPainter({
     required this.color,
+    required this.borderColor,
+    required this.borderWidth,
   });
 
   @override
   void paint(Canvas canvas, Size size) {
+    final joinX = size.width;
+    final borderEndX = size.width - 1;
     final path = Path()
       ..moveTo(0, size.height / 2)
-      ..lineTo(size.width, 0)
-      ..lineTo(size.width, size.height)
+      ..lineTo(joinX, 0)
+      ..lineTo(joinX, size.height)
       ..close();
-
-    canvas.drawShadow(
-      path,
-      Colors.black.withValues(alpha: 0.08),
-      3,
-      false,
-    );
 
     canvas.drawPath(
       path,
@@ -495,10 +502,26 @@ class _SpeechTailPainter extends CustomPainter {
         ..color = color
         ..style = PaintingStyle.fill,
     );
+
+    final borderPaint = Paint()
+      ..color = borderColor
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = borderWidth
+      ..strokeCap = StrokeCap.butt
+      ..strokeJoin = StrokeJoin.round;
+
+    final borderPath = Path()
+      ..moveTo(0, size.height / 2)
+      ..lineTo(borderEndX, borderWidth / 2)
+      ..moveTo(0, size.height / 2)
+      ..lineTo(borderEndX, size.height - borderWidth / 2);
+    canvas.drawPath(borderPath, borderPaint);
   }
 
   @override
   bool shouldRepaint(covariant _SpeechTailPainter oldDelegate) {
-    return color != oldDelegate.color;
+    return color != oldDelegate.color ||
+        borderColor != oldDelegate.borderColor ||
+        borderWidth != oldDelegate.borderWidth;
   }
 }
