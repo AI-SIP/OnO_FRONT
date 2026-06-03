@@ -180,6 +180,9 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: themeProvider.primaryColor,
                       foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                     ),
                     child: const StandardText(
                       text: '시작하기',
@@ -351,6 +354,9 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: themeProvider.primaryColor,
                   foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                 ),
                 child: StandardText(
                   text: isLast ? '완료' : '다음',
