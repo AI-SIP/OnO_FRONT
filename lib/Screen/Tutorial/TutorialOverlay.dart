@@ -26,6 +26,7 @@ class TutorialOverlay extends StatefulWidget {
 class _TutorialOverlayState extends State<TutorialOverlay> {
   static const Duration _motionDuration = Duration(milliseconds: 280);
   static const Curve _motionCurve = Curves.easeOutCubic;
+  static const String _guideFrogAsset = 'assets/FrogCharacter/FROG_LEVEL15.png';
 
   Rect? _targetRect;
   String? _lastStepId;
@@ -135,6 +136,10 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
   ) {
     final mediaQuery = MediaQuery.of(context);
     final maxWidth = mediaQuery.size.width >= 600 ? 420.0 : double.infinity;
+    final maxHeight = mediaQuery.size.height -
+        mediaQuery.padding.top -
+        mediaQuery.padding.bottom -
+        32;
 
     return SafeArea(
       child: Center(
@@ -146,53 +151,66 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
             color: Colors.white,
             borderRadius: BorderRadius.circular(18),
           ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const StandardText(
-                text: 'OnO를 빠르게 둘러볼까요?',
-                fontSize: 20,
-                color: Colors.black87,
-                fontWeight: FontWeight.w700,
-              ),
-              const SizedBox(height: 12),
-              StandardText(
-                text: '공책, 오답노트, 복습 세트가 어떻게 연결되는지 짧게 안내해드릴게요.',
-                fontSize: 14,
-                color: Colors.grey[700]!,
-              ),
-              const SizedBox(height: 22),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxHeight: maxHeight),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  TextButton(
-                    onPressed: tutorialProvider.skip,
-                    child: StandardText(
-                      text: '건너뛰기',
-                      fontSize: 14,
-                      color: Colors.grey[700]!,
+                  _buildFrogSpeech(
+                    themeProvider: themeProvider,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const StandardText(
+                          text: 'OnO를 빠르게 둘러볼까요?',
+                          fontSize: 16,
+                          color: Colors.black87,
+                          fontWeight: FontWeight.w700,
+                        ),
+                        const SizedBox(height: 10),
+                        StandardText(
+                          text: '공책, 오답노트, 복습 세트가 어떻게 연결되는지 짧게 안내해드릴게요.',
+                          fontSize: 14,
+                          color: Colors.grey[700]!,
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  ElevatedButton(
-                    onPressed: tutorialProvider.start,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: themeProvider.primaryColor,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+                  const SizedBox(height: 22),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton(
+                        onPressed: tutorialProvider.skip,
+                        child: StandardText(
+                          text: '건너뛰기',
+                          fontSize: 14,
+                          color: Colors.grey[700]!,
+                        ),
                       ),
-                    ),
-                    child: const StandardText(
-                      text: '시작하기',
-                      fontSize: 14,
-                      color: Colors.white,
-                    ),
+                      const SizedBox(width: 8),
+                      ElevatedButton(
+                        onPressed: tutorialProvider.start,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: themeProvider.primaryColor,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: const StandardText(
+                          text: '시작하기',
+                          fontSize: 14,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
-            ],
+            ),
           ),
         ),
       ),
@@ -210,6 +228,7 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
     final safeBottom = mediaQuery.padding.bottom;
     final cardWidth = size.width >= 600 ? 420.0 : size.width - 32;
     final cardLeft = size.width >= 600 ? (size.width - cardWidth) / 2 : 16.0;
+    final cardMaxHeight = size.height - safeTop - safeBottom - 32;
 
     var cardTop = size.height - safeBottom - 250;
     if (rect != null) {
@@ -266,23 +285,28 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
           left: cardLeft,
           top: cardTop,
           width: cardWidth,
-          child: AnimatedSwitcher(
-            duration: const Duration(milliseconds: 180),
-            switchInCurve: Curves.easeOut,
-            switchOutCurve: Curves.easeIn,
-            transitionBuilder: (child, animation) {
-              return FadeTransition(
-                opacity: animation,
-                child: SlideTransition(
-                  position: Tween<Offset>(
-                    begin: const Offset(0, 0.04),
-                    end: Offset.zero,
-                  ).animate(animation),
-                  child: child,
-                ),
-              );
-            },
-            child: _buildStepCard(tutorialProvider, themeProvider),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxHeight: cardMaxHeight),
+            child: SingleChildScrollView(
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 180),
+                switchInCurve: Curves.easeOut,
+                switchOutCurve: Curves.easeIn,
+                transitionBuilder: (child, animation) {
+                  return FadeTransition(
+                    opacity: animation,
+                    child: SlideTransition(
+                      position: Tween<Offset>(
+                        begin: const Offset(0, 0.04),
+                        end: Offset.zero,
+                      ).animate(animation),
+                      child: child,
+                    ),
+                  );
+                },
+                child: _buildStepCard(tutorialProvider, themeProvider),
+              ),
+            ),
           ),
         ),
       ],
@@ -299,7 +323,7 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
 
     return Container(
       key: ValueKey(step.id),
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
@@ -308,24 +332,33 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          StandardText(
-            text:
-                '${tutorialProvider.currentStepIndex + 1} / ${tutorialSteps.length}',
-            fontSize: 12,
-            color: themeProvider.primaryColor,
-          ),
-          const SizedBox(height: 8),
-          StandardText(
-            text: step.title,
-            fontSize: 18,
-            color: Colors.black87,
-            fontWeight: FontWeight.w700,
-          ),
-          const SizedBox(height: 8),
-          StandardText(
-            text: step.description,
-            fontSize: 14,
-            color: Colors.grey[700]!,
+          _buildFrogSpeech(
+            themeProvider: themeProvider,
+            frogSize: 76,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                StandardText(
+                  text:
+                      '${tutorialProvider.currentStepIndex + 1} / ${tutorialSteps.length}',
+                  fontSize: 11,
+                  color: themeProvider.primaryColor,
+                ),
+                const SizedBox(height: 8),
+                StandardText(
+                  text: step.title,
+                  fontSize: 16,
+                  color: Colors.black87,
+                  fontWeight: FontWeight.w700,
+                ),
+                const SizedBox(height: 8),
+                StandardText(
+                  text: step.description,
+                  fontSize: 14,
+                  color: Colors.grey[700]!,
+                ),
+              ],
+            ),
           ),
           const SizedBox(height: 18),
           Row(
@@ -369,5 +402,103 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
         ],
       ),
     );
+  }
+
+  Widget _buildFrogSpeech({
+    required ThemeHandler themeProvider,
+    required Widget child,
+    double frogSize = 86,
+  }) {
+    final bubbleColor = Color.alphaBlend(
+      themeProvider.primaryColor.withValues(alpha: 0.16),
+      Colors.white,
+    );
+    final bubbleBorderColor =
+        themeProvider.primaryColor.withValues(alpha: 0.14);
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Image.asset(
+          _guideFrogAsset,
+          width: frogSize,
+          height: frogSize,
+          fit: BoxFit.contain,
+        ),
+        const SizedBox(width: 4),
+        Expanded(
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+                decoration: BoxDecoration(
+                  color: bubbleColor,
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(
+                    color: bubbleBorderColor,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.06),
+                      blurRadius: 12,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: child,
+              ),
+              Positioned(
+                left: -16,
+                top: 26,
+                child: CustomPaint(
+                  size: const Size(20, 24),
+                  painter: _SpeechTailPainter(
+                    color: bubbleColor,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _SpeechTailPainter extends CustomPainter {
+  final Color color;
+
+  const _SpeechTailPainter({
+    required this.color,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final path = Path()
+      ..moveTo(0, size.height / 2)
+      ..lineTo(size.width, 0)
+      ..lineTo(size.width, size.height)
+      ..close();
+
+    canvas.drawShadow(
+      path,
+      Colors.black.withValues(alpha: 0.08),
+      3,
+      false,
+    );
+
+    canvas.drawPath(
+      path,
+      Paint()
+        ..color = color
+        ..style = PaintingStyle.fill,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _SpeechTailPainter oldDelegate) {
+    return color != oldDelegate.color;
   }
 }
