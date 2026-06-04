@@ -126,5 +126,9 @@ lib/generated_plugin_registrant.dart
 
 # End of https://www.toptal.com/developers/gitignore/api/flutter
 
+# Claude Code local settings (machine-specific)
+.claude/settings.local.json
+.claude/memory/
+
 # Internal docs
 docs/
