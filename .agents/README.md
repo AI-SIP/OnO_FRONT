@@ -2,7 +2,7 @@
 
 이 디렉터리는 OnO Flutter 프론트 레포에서 Codex가 사용할 레포 전용 Skill과 사용 설명을 담는다.
 
-Codex의 예전 custom prompts 방식은 재사용 프롬프트를 슬래시 명령으로 등록하는 구조였지만, 현재는 Skill 사용이 권장된다. 이 레포에서는 `plan`, `feat`, `pr`, `check`, `commit`을 실제 CLI 명령이 아니라 Codex 작업 모드로 해석하고, `.agents/skills/ono-*` Skill이 그 동작을 정의한다.
+Codex의 예전 custom prompts 방식은 재사용 프롬프트를 슬래시 명령으로 등록하는 구조였지만, 현재는 Skill 사용이 권장된다. 이 레포에서는 `analysis`, `plan`, `feat`, `pr`, `check`, `commit`, `explain`, `release`를 실제 CLI 명령이 아니라 Codex 작업 모드로 해석하고, `.agents/skills/ono-*` Skill이 그 동작을 정의한다.
 
 ## 파일 구조
 
@@ -17,6 +17,7 @@ Codex의 예전 custom prompts 방식은 재사용 프롬프트를 슬래시 명
     ono-pr/SKILL.md
     ono-check/SKILL.md
     ono-commit/SKILL.md
+    ono-release/SKILL.md
 ```
 
 Codex는 레포 안에서 실행될 때 현재 디렉터리부터 레포 루트까지 `.agents/skills`를 스캔한다. 각 Skill은 `SKILL.md`의 front matter에 있는 `name`, `description`을 먼저 보고, 사용자 요청과 맞으면 본문을 읽어 적용한다.
@@ -40,6 +41,7 @@ commit
 analysis
 explain
 pr
+release
 ```
 
 위 요청들은 별도 인자가 없어도 현재 변경사항을 기준으로 검토, 분석, 설명, PR 초안 작성, 커밋 메시지 추천을 수행한다.
@@ -48,7 +50,7 @@ pr
 
 ## 공통 자가 반증 규칙
 
-`analysis`, `check`, `feat`는 1차 결론이나 구현 완료 후 반드시 한 번 스스로 반증한다.
+`analysis`, `check`, `feat`, `release`는 1차 결론이나 구현 완료 후 반드시 한 번 스스로 반증한다.
 
 자가 반증 질문:
 
@@ -71,8 +73,9 @@ pr
 | `pr [커밋 해쉬]` | `ono-pr` | PR 제목/본문 초안 작성 | 관련 `docs` 폴더의 PR markdown |
 | `commit` | `ono-commit` | 커밋 단위와 메시지 추천 | 커밋 단위, 포함 파일, 메시지 |
 | `explain [파일/위젯/기능]` | `ono-explain` | 코드 흐름과 설계 의도 설명 | 흐름 요약, 상태/API 흐름, 주의점 |
+| `release [기준 커밋]` | `ono-release` | 출시 전 종합 검증과 업데이트 내역 작성 | 배포 판정, 검증 결과, 복붙용 업데이트 내역 |
 
-명시 호출이 필요하면 `$ono-analysis`, `$ono-plan`, `$ono-feat`, `$ono-check`, `$ono-pr`, `$ono-commit`, `$ono-explain`처럼 Skill 이름을 직접 언급한다.
+명시 호출이 필요하면 `$ono-analysis`, `$ono-plan`, `$ono-feat`, `$ono-check`, `$ono-pr`, `$ono-commit`, `$ono-explain`, `$ono-release`처럼 Skill 이름을 직접 언급한다.
 
 ## 동작 방식
 
@@ -187,6 +190,24 @@ pr
 
 태그는 `[Feat]`, `[Fix]`, `[Refactor]`, `[Chore]`, `[Test]`, `[Docs]` 중 변경 성격에 맞춰 선택한다.
 
+### `release [기준 커밋]`
+
+앱스토어/플레이스토어 제출 전에 출시 가능 여부를 점검하고, 사용자가 바로 복사할 수 있는 업데이트 내역을 작성하는 모드다.
+
+동작 순서:
+
+1. 기준 커밋이 있으면 `<기준 커밋>..HEAD`와 현재 변경사항을 확인한다.
+2. 기준 커밋이 없으면 `git log`, `docs/업데이트 내역`, 현재 변경사항을 확인해 출시 범위를 찾고, 명확하지 않으면 사용자에게 확인한다.
+3. 관련 `docs` 명세서와 PR 문서를 확인해 기능 의도와 사용자 표현을 맞춘다.
+4. 가능한 경우 `flutter analyze`를 실행한다.
+5. 릴리즈 최종 검증이면 가능한 경우 `flutter test`를 실행한다.
+6. diff 기반 위험, API 계약, null 처리, 인증/동기화/FCM 부작용, 폰/태블릿 반응형 리스크를 검토한다.
+7. 배포 가능/불가/확인 후 배포 판정과 업데이트 내역 초안을 함께 보고한다.
+
+업데이트 내역은 앱스토어/플레이스토어에 바로 붙여 넣을 수 있도록 번호 목록과 짧은 bullet로 작성한다. 내부 구현명, 클래스명, API명, PR 번호, 커밋 해시는 포함하지 않는다.
+
+실제 앱스토어/플레이스토어 제출, 빌드 업로드, git push, tag 생성은 사용자 요청 없이는 하지 않는다.
+
 ### `explain [파일/위젯/기능]`
 
 낯선 Flutter 코드를 학습용으로 이해하는 모드다. 코드를 수정하지 않는다.
@@ -211,10 +232,10 @@ pr
 `.claude/agents`의 전문 에이전트 관점은 Codex Skill에 다음처럼 흡수되어 있다.
 
 - `code-tracer`: `ono-analysis`, `ono-explain`의 흐름 추적 관점
-- `perf-reviewer`: `ono-check`의 rebuild, jank, 메모리, 리스트 검토 관점
+- `perf-reviewer`: `ono-check`, `ono-release`의 rebuild, jank, 메모리, 리스트 검토 관점
 - `logic-reviewer`: `ono-check`의 null safety, async, 상태 전이, 에러 처리 관점
-- `side-effect-checker`: `ono-check`와 `ono-analysis`의 API 중복 호출, 로컬 저장소, FCM 부작용 관점
-- `permission-auditor`: `ono-check`의 화면 접근 제어와 인증 흐름 관점
+- `side-effect-checker`: `ono-check`, `ono-analysis`, `ono-release`의 API 중복 호출, 로컬 저장소, FCM 부작용 관점
+- `permission-auditor`: `ono-check`, `ono-release`의 화면 접근 제어와 인증 흐름 관점
 - `report-writer`: 현재 별도 Codex Skill로 만들지 않았다. PR/완료 보고는 `ono-pr`, `ono-feat`, `ono-commit`에 필요한 범위만 포함한다.
 
 ## 현재 Codex 설정
