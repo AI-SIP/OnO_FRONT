@@ -5,6 +5,7 @@ import 'package:ono/Module/Dialog/LoadingDialog.dart';
 import 'package:provider/provider.dart';
 
 import '../../Model/PracticeNote/PracticeNoteThumbnailModel.dart';
+import '../../Module/Emoji/OnoEmojiImage.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/PracticeNoteProvider.dart';
@@ -587,17 +588,32 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
       },
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        child: Container(
-          decoration: _buildBoxDecoration(isSelected, themeProvider),
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              _buildIconContainer(isSelected, themeProvider),
-              const SizedBox(width: 16),
-              _buildPracticeInfo(practice, themeProvider),
-            ],
-          ),
+        child: Stack(
+          children: [
+            Container(
+              decoration: _buildBoxDecoration(isSelected, themeProvider),
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  _buildIconContainer(isSelected, themeProvider),
+                  const SizedBox(width: 16),
+                  _buildPracticeInfo(practice, themeProvider),
+                  if (practice.lastSessionMoodEmojiKey != null)
+                    const SizedBox(width: 28),
+                ],
+              ),
+            ),
+            if (practice.lastSessionMoodEmojiKey != null)
+              Positioned(
+                right: 12,
+                bottom: 12,
+                child: OnoEmojiImage(
+                  emojiKey: practice.lastSessionMoodEmojiKey,
+                  size: 22,
+                ),
+              ),
+          ],
         ),
       ),
     );
