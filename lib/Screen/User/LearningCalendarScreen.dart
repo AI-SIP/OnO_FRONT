@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../Model/StudyCalendar/StudyCalendarModel.dart';
-import '../../Service/Api/StudyCalendar/StudyCalendarService.dart';
+import '../../Module/Emoji/OnoEmojiCategory.dart';
+import '../../Module/Emoji/OnoEmojiImage.dart';
+import '../../Module/Emoji/OnoEmojiPicker.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
+import '../../Service/Api/StudyCalendar/StudyCalendarService.dart';
 import '../../Util/AppSnackBar.dart';
 
 class LearningCalendarScreen extends StatefulWidget {
@@ -369,6 +372,7 @@ class _LearningCalendarScreenState extends State<LearningCalendarScreen> {
                       isToday: isToday,
                       isFuture: isFuture,
                       intensityLevel: intensity,
+                      moodEmojiKey: record?.moodEmojiKey,
                       themeProvider: themeProvider,
                       onTap: isFuture
                           ? null
@@ -455,6 +459,8 @@ class _LearningCalendarScreenState extends State<LearningCalendarScreen> {
                 ),
               )
             else ...[
+              _buildMoodSection(record, themeProvider),
+              const SizedBox(height: 12),
               Row(
                 children: [
                   _buildStatChip('복습', '${record.reviewCount}회', primaryColor),
@@ -567,6 +573,77 @@ class _LearningCalendarScreenState extends State<LearningCalendarScreen> {
     );
   }
 
+  Widget _buildMoodSection(
+      DailyStudyRecord record, ThemeHandler themeProvider) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.grey[200]!),
+      ),
+      child: Row(
+        children: [
+          StandardText(
+            text: '오늘의 감정',
+            fontSize: 12,
+            color: Colors.black54,
+          ),
+          const SizedBox(width: 10),
+          if (record.moodEmojiKey != null)
+            OnoEmojiImage(emojiKey: record.moodEmojiKey, size: 26)
+          else
+            StandardText(
+              text: '아직 없어요',
+              fontSize: 12,
+              color: Colors.grey,
+            ),
+          const Spacer(),
+          TextButton(
+            onPressed: () => _showMoodPicker(record),
+            style: TextButton.styleFrom(
+              foregroundColor: themeProvider.primaryColor,
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              minimumSize: const Size(0, 32),
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+            child: StandardText(
+              text: record.moodEmojiKey == null ? '선택' : '변경',
+              fontSize: 12,
+              color: themeProvider.primaryColor,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showMoodPicker(DailyStudyRecord record) {
+    OnoEmojiPicker.show(
+      context,
+      categories: const [
+        OnoEmojiCategory.emotion,
+        OnoEmojiCategory.study,
+        OnoEmojiCategory.cheer,
+      ],
+      selectedKey: record.moodEmojiKey,
+      onSelected: (emoji) async {
+        try {
+          await _service.updateMoodEmoji(
+            date: record.date,
+            emojiKey: emoji.key,
+            showErrorSnackBar: false,
+          );
+          if (!mounted) return;
+          await _loadCalendar();
+        } catch (_) {
+          if (!mounted) return;
+          AppSnackBar.showError('감정을 저장하지 못했어요.');
+        }
+      },
+    );
+  }
+
   Widget _buildStreakCard({
     required String label,
     required String emoji,
@@ -615,6 +692,7 @@ class _CalendarCell extends StatelessWidget {
   final bool isToday;
   final bool isFuture;
   final int intensityLevel;
+  final String? moodEmojiKey;
   final ThemeHandler themeProvider;
   final VoidCallback? onTap;
 
@@ -623,6 +701,7 @@ class _CalendarCell extends StatelessWidget {
     required this.isToday,
     required this.isFuture,
     required this.intensityLevel,
+    this.moodEmojiKey,
     required this.themeProvider,
     this.onTap,
   });
@@ -701,7 +780,18 @@ class _CalendarCell extends StatelessWidget {
           color: bgColor,
           boxShadow: _getBoxShadow(),
         ),
-        child: Center(child: _buildCellContent()),
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Center(child: _buildCellContent()),
+            if (moodEmojiKey != null)
+              Positioned(
+                right: -1,
+                bottom: -1,
+                child: OnoEmojiImage(emojiKey: moodEmojiKey, size: 14),
+              ),
+          ],
+        ),
       ),
     );
   }
