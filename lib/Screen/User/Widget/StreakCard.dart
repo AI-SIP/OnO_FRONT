@@ -51,7 +51,8 @@ class _StreakCardState extends State<StreakCard> {
     final prefs = await SharedPreferences.getInstance();
     if (!mounted) return;
     setState(() {
-      _isCalendarExpanded = prefs.getBool(_calendarExpandedKey) ?? tabletDefault;
+      _isCalendarExpanded =
+          prefs.getBool(_calendarExpandedKey) ?? tabletDefault;
     });
   }
 
@@ -117,7 +118,7 @@ class _StreakCardState extends State<StreakCard> {
         border: Border.all(color: Colors.grey[300]!, width: 1),
         boxShadow: [
           BoxShadow(
-            color: primaryColor.withValues(alpha:0.1),
+            color: primaryColor.withValues(alpha: 0.1),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -159,7 +160,10 @@ class _StreakCardState extends State<StreakCard> {
               ),
             ],
             if (_isCalendarExpanded) ...[
-              if (isTabletLandscape) const Spacer() else const SizedBox(height: 12),
+              if (isTabletLandscape)
+                const Spacer()
+              else
+                const SizedBox(height: 12),
               _buildFooterStats(primaryColor, isTablet: isTablet),
             ],
           ],
@@ -224,7 +228,7 @@ class _StreakCardState extends State<StreakCard> {
           vertical: isTablet ? 12.0 : 8.0,
         ),
         decoration: BoxDecoration(
-          color: primaryColor.withValues(alpha:0.07),
+          color: primaryColor.withValues(alpha: 0.07),
           borderRadius: BorderRadius.circular(10),
         ),
         child: Row(
@@ -415,7 +419,8 @@ class _StreakCardState extends State<StreakCard> {
                 size: iconSize - 1, color: Colors.black38),
             const SizedBox(width: 4),
             StandardText(
-              text: '복습 일수: ${thisMonthStudyDays != null ? '$thisMonthStudyDays일' : '--'}',
+              text:
+                  '복습 일수: ${thisMonthStudyDays != null ? '$thisMonthStudyDays일' : '--'}',
               fontSize: fontSize,
               color: Colors.black54,
             ),

@@ -31,7 +31,8 @@ class StudyCalendarModel {
   DailyStudyRecord? recordFor(int day) {
     try {
       return records.firstWhere(
-        (r) => r.date.day == day && r.date.month == month && r.date.year == year,
+        (r) =>
+            r.date.day == day && r.date.month == month && r.date.year == year,
       );
     } catch (_) {
       return null;

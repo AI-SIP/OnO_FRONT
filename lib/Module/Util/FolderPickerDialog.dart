@@ -168,7 +168,8 @@ class _FolderPickerDialogState extends State<FolderPickerDialog> {
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeHandler>(context);
     final selectedFolderName =
-        FolderPickerDialog.getFolderNameByFolderId(_selectedFolderId) ?? '선택 안 됨';
+        FolderPickerDialog.getFolderNameByFolderId(_selectedFolderId) ??
+            '선택 안 됨';
 
     return Dialog(
       backgroundColor: Colors.white,
@@ -250,7 +251,8 @@ class _FolderPickerDialogState extends State<FolderPickerDialog> {
                         defaultFolderName: '',
                         onFolderNameSubmitted: (folderName) async {
                           if (_rootNode != null) {
-                            await _createFolder(folderName, _rootNode!.folderId);
+                            await _createFolder(
+                                folderName, _rootNode!.folderId);
                           }
                         },
                       );
@@ -359,38 +361,38 @@ class _FolderPickerDialogState extends State<FolderPickerDialog> {
               borderRadius: BorderRadius.circular(10),
             ),
             leading: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // 확장/축소 버튼 (항상 같은 크기 유지)
-              SizedBox(
-                width: 40,
-                height: 40,
-                child: node.isLoading
-                    ? const Center(
-                        child: SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // 확장/축소 버튼 (항상 같은 크기 유지)
+                SizedBox(
+                  width: 40,
+                  height: 40,
+                  child: node.isLoading
+                      ? const Center(
+                          child: SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                        )
+                      : IconButton(
+                          icon: Icon(
+                            node.isExpanded
+                                ? Icons.expand_more
+                                : Icons.chevron_right,
+                          ),
+                          color: themeProvider.primaryColor,
+                          splashRadius: 20,
+                          onPressed: () => _toggleFolder(node),
                         ),
-                      )
-                    : IconButton(
-                        icon: Icon(
-                          node.isExpanded
-                              ? Icons.expand_more
-                              : Icons.chevron_right,
-                        ),
-                        color: themeProvider.primaryColor,
-                        splashRadius: 20,
-                        onPressed: () => _toggleFolder(node),
-                      ),
-              ),
-              // 폴더 아이콘
-              SvgPicture.asset(
-                NoteIconHandler.getNoteIcon(level),
-                width: 30,
-                height: 30,
-              ),
-            ],
+                ),
+                // 폴더 아이콘
+                SvgPicture.asset(
+                  NoteIconHandler.getNoteIcon(level),
+                  width: 30,
+                  height: 30,
+                ),
+              ],
             ),
             title: StandardText(
               text: node.folderName,
@@ -399,7 +401,8 @@ class _FolderPickerDialogState extends State<FolderPickerDialog> {
               overflow: TextOverflow.ellipsis,
             ),
             trailing: isSelected
-                ? Icon(Icons.check_circle, color: themeProvider.primaryColor, size: 20)
+                ? Icon(Icons.check_circle,
+                    color: themeProvider.primaryColor, size: 20)
                 : null,
             selected: isSelected,
             onTap: () {
@@ -427,7 +430,8 @@ class _FolderPickerDialogState extends State<FolderPickerDialog> {
             padding: EdgeInsets.only(left: (level + 1) * 18.0),
             child: ListTile(
               dense: true,
-              leading: Icon(Icons.more_horiz, color: themeProvider.primaryColor),
+              leading:
+                  Icon(Icons.more_horiz, color: themeProvider.primaryColor),
               title: StandardText(
                 text: '더 보기',
                 fontSize: 14,
@@ -510,11 +514,13 @@ class _FolderPickerDialogState extends State<FolderPickerDialog> {
                     filled: true,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.grey[300]!, width: 1),
+                      borderSide:
+                          BorderSide(color: Colors.grey[300]!, width: 1),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.grey[300]!, width: 1),
+                      borderSide:
+                          BorderSide(color: Colors.grey[300]!, width: 1),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -539,7 +545,8 @@ class _FolderPickerDialogState extends State<FolderPickerDialog> {
                         Navigator.pop(context);
                       },
                       style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 20, vertical: 12),
                         backgroundColor: Colors.grey[100],
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
@@ -560,7 +567,8 @@ class _FolderPickerDialogState extends State<FolderPickerDialog> {
                         }
                       },
                       style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 20, vertical: 12),
                         backgroundColor: themeProvider.primaryColor,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),

@@ -322,9 +322,11 @@ class _LearningCalendarScreenState extends State<LearningCalendarScreen> {
     // 셀 1개의 자연 크기: 전체 너비에서 그리드 패딩(32)과 셀 패딩(4×7) 제외
     const double gridPadding = 32.0;
     const double cellPadding = 4.0;
-    final double naturalCellSize = (screenWidth - gridPadding) / 7 - cellPadding;
+    final double naturalCellSize =
+        (screenWidth - gridPadding) / 7 - cellPadding;
     // 태블릿에서는 최대 72px로 제한
-    final double cellSize = isTablet ? naturalCellSize.clamp(0.0, 72.0) : naturalCellSize;
+    final double cellSize =
+        isTablet ? naturalCellSize.clamp(0.0, 72.0) : naturalCellSize;
 
     final now = DateTime.now();
     final firstWeekday = DateTime(_year, _month, 1).weekday % 7;

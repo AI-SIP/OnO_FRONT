@@ -116,7 +116,8 @@ class ImagePickerHandler {
         return TapRegion(
           onTapOutside: (_) {
             // Workaround for iPadOS 26.1 bug: https://github.com/flutter/flutter/issues/177992
-            if (DateTime.now().difference(openTime) < const Duration(milliseconds: 500)) {
+            if (DateTime.now().difference(openTime) <
+                const Duration(milliseconds: 500)) {
               return;
             }
             if (Navigator.canPop(context)) {
@@ -206,7 +207,8 @@ class ImagePickerHandler {
                             onMultipleImagesPicked(pickedFiles);
                           }
                         } else {
-                          final pickedFile = await pickImageFromGallery(context);
+                          final pickedFile =
+                              await pickImageFromGallery(context);
                           onImagePicked(pickedFile);
                         }
                       },
