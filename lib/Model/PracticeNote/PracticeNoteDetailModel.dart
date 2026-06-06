@@ -7,6 +7,7 @@ class PracticeNoteDetailModel {
   int practiceCount;
   final DateTime createdAt;
   final DateTime? lastSolvedAt;
+  final String? lastSessionMoodEmojiKey;
   final PracticeNotificationModel? practiceNotificationModel;
   List<int> problemIdList = [];
 
@@ -19,6 +20,7 @@ class PracticeNoteDetailModel {
     required this.practiceCount,
     required this.createdAt,
     required this.lastSolvedAt,
+    this.lastSessionMoodEmojiKey,
     this.practiceNotificationModel,
     required this.problemIdList,
   });
@@ -38,6 +40,7 @@ class PracticeNoteDetailModel {
       lastSolvedAt: json['lastSolvedAt'] != null
           ? DateTime.parse(json['lastSolvedAt'])
           : null,
+      lastSessionMoodEmojiKey: json['lastSessionMoodEmojiKey']?.toString(),
       practiceNotificationModel: practiceNotificationModel,
       problemIdList: problemIdList,
     );

@@ -270,8 +270,14 @@ class ProblemPracticeProvider with ChangeNotifier {
         .firstWhere((problem) => problem.problemId == problemId);
   }
 
-  Future<void> addPracticeCount(int practiceId) async {
-    await practiceNoteService.addPracticeNoteCount(practiceId);
+  Future<void> addPracticeCount(
+    int practiceId, {
+    String? moodEmojiKey,
+  }) async {
+    await practiceNoteService.addPracticeNoteCount(
+      practiceId,
+      moodEmojiKey: moodEmojiKey,
+    );
     await fetchPracticeCount(practiceId);
   }
 

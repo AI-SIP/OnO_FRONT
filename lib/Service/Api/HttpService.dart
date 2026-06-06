@@ -130,13 +130,17 @@ class HttpService {
                 await req.send().timeout(const Duration(seconds: 90));
             response = await http.Response.fromStream(streamed);
           } else {
-            response = await http
-                .post(
-                  uri,
-                  headers: mergedHeaders,
-                  body: json.encode(body),
-                )
-                .timeout(const Duration(seconds: 30));
+            response = body != null
+                ? await http
+                    .post(
+                      uri,
+                      headers: mergedHeaders,
+                      body: json.encode(body),
+                    )
+                    .timeout(const Duration(seconds: 30))
+                : await http
+                    .post(uri, headers: mergedHeaders)
+                    .timeout(const Duration(seconds: 30));
           }
           break;
 
@@ -151,9 +155,13 @@ class HttpService {
                 await req.send().timeout(const Duration(seconds: 30));
             response = await http.Response.fromStream(streamed);
           } else {
-            response = await http
-                .patch(uri, headers: mergedHeaders, body: json.encode(body))
-                .timeout(const Duration(seconds: 30));
+            response = body != null
+                ? await http
+                    .patch(uri, headers: mergedHeaders, body: json.encode(body))
+                    .timeout(const Duration(seconds: 30))
+                : await http
+                    .patch(uri, headers: mergedHeaders)
+                    .timeout(const Duration(seconds: 30));
           }
           break;
 
