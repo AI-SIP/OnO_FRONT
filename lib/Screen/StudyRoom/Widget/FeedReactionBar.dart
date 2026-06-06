@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 
 import '../../../Model/StudyRoom/FeedReactionModel.dart';
+import '../../../Module/Emoji/OnoEmojiImage.dart';
+import '../../../Module/Emoji/OnoEmojiPicker.dart';
 import '../../../Module/Theme/ThemeHandler.dart';
 
 class FeedReactionBar extends StatelessWidget {
   final List<FeedReactionModel> reactions;
   final ThemeHandler themeProvider;
   final ValueChanged<String>? onToggle;
-
-  static const _pickableEmojis = ['🔥', '👍', '🎉', '💪'];
 
   const FeedReactionBar({
     super.key,
@@ -34,22 +34,23 @@ class FeedReactionBar extends StatelessWidget {
                 .toList(),
           ),
         ),
-        PopupMenuButton<String>(
+        IconButton(
           icon: Icon(
             Icons.add_reaction_outlined,
-            size: 16,
+            size: 18,
             color: Colors.grey[500],
           ),
           tooltip: '반응 추가',
-          onSelected: onToggle,
-          itemBuilder: (_) => _pickableEmojis
-              .map(
-                (e) => PopupMenuItem<String>(
-                  value: e,
-                  child: Text(e, style: const TextStyle(fontSize: 20)),
-                ),
-              )
-              .toList(),
+          constraints: const BoxConstraints.tightFor(width: 32, height: 32),
+          padding: EdgeInsets.zero,
+          onPressed: onToggle == null
+              ? null
+              : () {
+                  OnoEmojiPicker.show(
+                    context,
+                    onSelected: (emoji) => onToggle?.call(emoji.key),
+                  );
+                },
         ),
       ],
     );
@@ -89,7 +90,7 @@ class _ReactionChip extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(reaction.emoji, style: const TextStyle(fontSize: 13)),
+            OnoEmojiImage(emojiKey: reaction.emoji, size: 18),
             const SizedBox(width: 4),
             Text(
               '${reaction.count}',

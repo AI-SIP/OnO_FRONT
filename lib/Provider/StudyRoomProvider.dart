@@ -12,6 +12,7 @@ import '../Model/StudyRoom/StudyRoomMemberModel.dart';
 import '../Model/StudyRoom/StudyRoomModel.dart';
 import '../Model/StudyRoom/StudySessionModel.dart';
 import '../Model/StudyRoom/WeeklyReportModel.dart';
+import '../Module/Emoji/OnoEmojiCatalog.dart';
 
 class StudyRoomProvider extends ChangeNotifier {
   List<StudyRoomModel> rooms = [];
@@ -113,8 +114,10 @@ class StudyRoomProvider extends ChangeNotifier {
         metadata: {'count': 3},
         createdAt: now.subtract(const Duration(minutes: 20)),
         reactions: [
-          FeedReactionModel(emoji: '🔥', count: 2, reactedByMe: true),
-          FeedReactionModel(emoji: '👍', count: 1, reactedByMe: false),
+          FeedReactionModel(
+              emoji: 'fired_up_sparkle_eyes', count: 2, reactedByMe: true),
+          FeedReactionModel(
+              emoji: 'thumbs_up_happy', count: 1, reactedByMe: false),
         ],
       ),
       ActivityFeedModel(
@@ -125,7 +128,8 @@ class StudyRoomProvider extends ChangeNotifier {
         metadata: {'days': 14},
         createdAt: now.subtract(const Duration(hours: 1)),
         reactions: [
-          FeedReactionModel(emoji: '🎉', count: 3, reactedByMe: false),
+          FeedReactionModel(
+              emoji: 'celebrating_confetti', count: 3, reactedByMe: false),
         ],
       ),
       ActivityFeedModel(
@@ -145,7 +149,8 @@ class StudyRoomProvider extends ChangeNotifier {
         metadata: {'level': 15},
         createdAt: now.subtract(const Duration(hours: 5)),
         reactions: [
-          FeedReactionModel(emoji: '🎉', count: 4, reactedByMe: false),
+          FeedReactionModel(
+              emoji: 'celebrating_confetti', count: 4, reactedByMe: false),
         ],
       ),
       ActivityFeedModel(
@@ -156,7 +161,8 @@ class StudyRoomProvider extends ChangeNotifier {
         metadata: {},
         createdAt: now.subtract(const Duration(hours: 8)),
         reactions: [
-          FeedReactionModel(emoji: '🔥', count: 1, reactedByMe: false),
+          FeedReactionModel(
+              emoji: 'fired_up_sparkle_eyes', count: 1, reactedByMe: false),
         ],
       ),
     ];
@@ -218,8 +224,10 @@ class StudyRoomProvider extends ChangeNotifier {
         comment: '이 문제 진짜 어렵다... 같이 풀어봐요!',
         sharedAt: DateTime.now().subtract(const Duration(hours: 2)),
         reactions: [
-          FeedReactionModel(emoji: '😱', count: 3, reactedByMe: false),
-          FeedReactionModel(emoji: '🔥', count: 1, reactedByMe: true),
+          FeedReactionModel(
+              emoji: 'dizzy_spiral_eyes2', count: 3, reactedByMe: false),
+          FeedReactionModel(
+              emoji: 'fired_up_sparkle_eyes', count: 1, reactedByMe: true),
         ],
       ),
       SharedProblemModel(
@@ -382,11 +390,18 @@ class StudyRoomProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  String _normalizeEmojiKey(String emoji) {
+    return OnoEmojiCatalog.byKey(emoji)?.key ?? emoji;
+  }
+
   void toggleFeedReaction(int feedId, String emoji) {
     final feed = feedItems.where((f) => f.feedId == feedId).firstOrNull;
     if (feed == null) return;
+    final emojiKey = _normalizeEmojiKey(emoji);
 
-    final existing = feed.reactions.where((r) => r.emoji == emoji).firstOrNull;
+    final existing = feed.reactions
+        .where((r) => _normalizeEmojiKey(r.emoji) == emojiKey)
+        .firstOrNull;
     if (existing != null) {
       if (existing.reactedByMe) {
         existing.count--;
@@ -398,7 +413,7 @@ class StudyRoomProvider extends ChangeNotifier {
       }
     } else {
       feed.reactions.add(
-        FeedReactionModel(emoji: emoji, count: 1, reactedByMe: true),
+        FeedReactionModel(emoji: emojiKey, count: 1, reactedByMe: true),
       );
     }
     notifyListeners();
@@ -508,9 +523,11 @@ class StudyRoomProvider extends ChangeNotifier {
         .where((s) => s.sharedProblemId == sharedProblemId)
         .firstOrNull;
     if (shared == null) return;
+    final emojiKey = _normalizeEmojiKey(emoji);
 
-    final existing =
-        shared.reactions.where((r) => r.emoji == emoji).firstOrNull;
+    final existing = shared.reactions
+        .where((r) => _normalizeEmojiKey(r.emoji) == emojiKey)
+        .firstOrNull;
     if (existing != null) {
       if (existing.reactedByMe) {
         existing.count--;
@@ -522,7 +539,7 @@ class StudyRoomProvider extends ChangeNotifier {
       }
     } else {
       shared.reactions.add(
-        FeedReactionModel(emoji: emoji, count: 1, reactedByMe: true),
+        FeedReactionModel(emoji: emojiKey, count: 1, reactedByMe: true),
       );
     }
     notifyListeners();

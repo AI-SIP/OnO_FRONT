@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../Model/StudyRoom/StudyRoomMemberModel.dart';
+import '../../../Module/Emoji/OnoEmojiImage.dart';
+import '../../../Module/Emoji/OnoEmojiPicker.dart';
 import '../../../Module/Text/StandardText.dart';
 import '../../../Module/Theme/ThemeHandler.dart';
 
@@ -34,8 +36,6 @@ class _MemberRankCardState extends State<MemberRankCard>
   late Animation<double> _scaleAnim;
   late Animation<double> _opacityAnim;
 
-  static const _emojis = ['🔥', '💪', '👏', '⭐'];
-
   @override
   void initState() {
     super.initState();
@@ -52,6 +52,11 @@ class _MemberRankCardState extends State<MemberRankCard>
         curve: const Interval(0.6, 1.0, curve: Curves.easeOut),
       ),
     );
+    _animController.addStatusListener((status) {
+      if (status == AnimationStatus.completed && mounted) {
+        setState(() => _flyingEmoji = null);
+      }
+    });
   }
 
   @override
@@ -60,103 +65,16 @@ class _MemberRankCardState extends State<MemberRankCard>
     super.dispose();
   }
 
-  void _sendReaction(String emoji) {
-    setState(() => _flyingEmoji = emoji);
+  void _sendReaction(String emojiKey) {
+    setState(() => _flyingEmoji = emojiKey);
     _animController.forward(from: 0);
   }
 
-  Future<void> _showReactionSheet(ThemeHandler themeProvider) async {
-    final selected = await showModalBottomSheet<String>(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (_) => Container(
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(20),
-            topRight: Radius.circular(20),
-          ),
-        ),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 40,
-                  height: 4,
-                  margin: const EdgeInsets.only(bottom: 18),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[300],
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color:
-                            themeProvider.primaryColor.withValues(alpha: 0.10),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Icon(
-                        Icons.add_reaction_outlined,
-                        color: themeProvider.primaryColor,
-                        size: 20,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    const Expanded(
-                      child: StandardText(
-                        text: '응원 보내기',
-                        fontSize: 18,
-                        color: Colors.black87,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  children: _emojis.map((emoji) {
-                    return Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 4),
-                        child: InkWell(
-                          onTap: () => Navigator.pop(context, emoji),
-                          borderRadius: BorderRadius.circular(14),
-                          child: Container(
-                            height: 54,
-                            decoration: BoxDecoration(
-                              color: themeProvider.primaryColor
-                                  .withValues(alpha: 0.07),
-                              borderRadius: BorderRadius.circular(14),
-                              border: Border.all(
-                                color: themeProvider.primaryColor
-                                    .withValues(alpha: 0.14),
-                                width: 1,
-                              ),
-                            ),
-                            child: Center(
-                              child: Text(
-                                emoji,
-                                style: const TextStyle(fontSize: 24),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    );
-                  }).toList(),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
+  void _showReactionSheet() {
+    OnoEmojiPicker.show(
+      context,
+      onSelected: (emoji) => _sendReaction(emoji.key),
     );
-    if (selected != null) _sendReaction(selected);
   }
 
   @override
@@ -220,9 +138,9 @@ class _MemberRankCardState extends State<MemberRankCard>
                       opacity: _opacityAnim.value,
                       child: Transform.scale(
                         scale: _scaleAnim.value,
-                        child: Text(
-                          _flyingEmoji!,
-                          style: const TextStyle(fontSize: 36),
+                        child: OnoEmojiImage(
+                          emojiKey: _flyingEmoji,
+                          size: 46,
                         ),
                       ),
                     ),
@@ -383,7 +301,7 @@ class _MemberRankCardState extends State<MemberRankCard>
 
   Widget _buildReactionButton(ThemeHandler themeProvider) {
     return InkWell(
-      onTap: () => _showReactionSheet(themeProvider),
+      onTap: _showReactionSheet,
       borderRadius: BorderRadius.circular(10),
       child: Container(
         width: 34,
