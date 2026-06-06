@@ -22,6 +22,10 @@ class TokenProvider {
     await _onAuthFailure!();
   }
 
+  Future<void> notifyAuthFailure() async {
+    await _notifyAuthFailure();
+  }
+
   Future<void> setAccessToken(String accessToken) async {
     await storage.write(key: 'accessToken', value: accessToken);
   }

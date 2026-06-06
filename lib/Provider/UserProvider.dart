@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:core';
 import 'dart:developer';
 
@@ -14,10 +15,12 @@ import 'package:ono/Service/Api/Problem/ProblemService.dart';
 import 'package:ono/Service/Api/User/UserService.dart';
 import 'package:ono/Service/SocialLogin/KakaoAuthService.dart';
 import 'package:ono/Util/AppErrorReporter.dart';
+import 'package:ono/Util/AppNavigator.dart';
 import 'package:ono/Util/NotificationService.dart';
 
 import '../Exception/ApiException.dart';
 import '../Module/Text/StandardText.dart';
+import '../Screen/User/LoginScreen.dart';
 import '../Service/Api/HttpService.dart';
 import '../Service/SocialLogin/AppleAuthService.dart';
 import '../Service/SocialLogin/GoogleAuthService.dart';
@@ -45,6 +48,7 @@ class UserProvider with ChangeNotifier {
 
   LoginStatus _loginStatus = LoginStatus.waiting;
   bool _isFirstLogin = true;
+  bool _handlingAuthFailure = false;
   LoginStatus get isLoggedIn => _loginStatus;
   LoginStatus? get loginStatus => _loginStatus;
   bool get isFirstLogin => _isFirstLogin;
@@ -445,6 +449,46 @@ class UserProvider with ChangeNotifier {
 
   Future<void> _handleAuthFailure() async {
     if (_loginStatus == LoginStatus.logout) return;
-    await resetUserInfo();
+    if (_handlingAuthFailure) return;
+
+    _handlingAuthFailure = true;
+    final shouldNavigateToLogin = _loginStatus == LoginStatus.login;
+    try {
+      await resetUserInfo();
+    } finally {
+      _handlingAuthFailure = false;
+    }
+
+    if (!shouldNavigateToLogin) return;
+    _navigateToLoginAfterAuthFailure();
+  }
+
+  void _navigateToLoginAfterAuthFailure({int retryCount = 0}) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final navigator = AppNavigator.navigatorKey.currentState;
+      if (navigator == null) {
+        if (retryCount < 2) {
+          Future<void>.delayed(const Duration(milliseconds: 100), () {
+            _navigateToLoginAfterAuthFailure(retryCount: retryCount + 1);
+          });
+          return;
+        }
+
+        unawaited(
+          AppErrorReporter.report(
+            StateError('Navigator is not ready for auth failure redirect.'),
+            StackTrace.current,
+            source: 'auth_failure_navigation',
+            severity: AppErrorSeverity.warning,
+          ),
+        );
+        return;
+      }
+
+      navigator.pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const LoginScreen()),
+        (route) => false,
+      );
+    });
   }
 }
