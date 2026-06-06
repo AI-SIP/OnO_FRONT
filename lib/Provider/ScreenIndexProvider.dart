@@ -18,6 +18,9 @@ class ScreenIndexProvider extends ChangeNotifier {
         _sendScreenView('ProblemPracticeScreen');
         break;
       case 2:
+        _sendScreenView('StudyRoomScreen');
+        break;
+      case 3:
         _sendScreenView('SettingScreen');
         break;
     }
