@@ -297,12 +297,15 @@ class HttpService {
       if (errorCode != null) {
         // 인증 관련 에러 코드
         if (errorCode >= 1000 && errorCode < 2000) {
+          if (requiredToken) {
+            await tokenProvider.notifyAuthFailure();
+          }
           _throwWithSnackBar(
             UnauthorizedException(
               errorCode: errorCode,
               message: message,
             ),
-            showErrorSnackBar: showErrorSnackBar,
+            showErrorSnackBar: requiredToken ? false : showErrorSnackBar,
           );
         }
         // 기타 비즈니스 로직 에러는 BadRequestException으로 처리
@@ -318,12 +321,15 @@ class HttpService {
 
       // errorCode가 없을 경우 상태 코드로 판단
       if (status == 401) {
+        if (requiredToken) {
+          await tokenProvider.notifyAuthFailure();
+        }
         _throwWithSnackBar(
           UnauthorizedException(
             errorCode: errorCode,
             message: message,
           ),
-          showErrorSnackBar: showErrorSnackBar,
+          showErrorSnackBar: requiredToken ? false : showErrorSnackBar,
         );
       } else if (status >= 400 && status < 500) {
         _throwWithSnackBar(
