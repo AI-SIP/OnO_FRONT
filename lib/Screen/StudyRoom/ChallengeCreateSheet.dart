@@ -26,14 +26,27 @@ class ChallengeCreateSheet extends StatefulWidget {
 class _ChallengeCreateSheetState extends State<ChallengeCreateSheet> {
   final _titleController = TextEditingController();
   final _targetController = TextEditingController();
-  String _type = 'individual';
+  String _scope = 'individual';
+  String _metric = 'weekly_problem_count';
+  String _period = 'weekly';
   DateTime _endAt = DateTime.now().add(const Duration(days: 7));
   bool _isLoading = false;
 
-  static const _types = [
-    ('individual', '개인 챌린지'),
-    ('group', '그룹 챌린지'),
-    ('streak', '연속 출석'),
+  static const _scopes = [
+    ('individual', '개인'),
+    ('group', '그룹'),
+  ];
+
+  static const _metrics = [
+    ('weekly_problem_count', '오답노트 작성', '문제'),
+    ('weekly_practice_count', '복습 완료', '회'),
+    ('streak', '출석', '일'),
+  ];
+
+  static const _periods = [
+    ('daily', '일간'),
+    ('weekly', '주간'),
+    ('monthly', '월간'),
   ];
 
   @override
@@ -60,7 +73,8 @@ class _ChallengeCreateSheetState extends State<ChallengeCreateSheet> {
       await Provider.of<StudyRoomProvider>(context, listen: false)
           .createChallenge(
         title: title,
-        type: _type,
+        type: _scope,
+        metric: _metric,
         targetValue: target,
         endAt: _endAt,
       );
@@ -122,40 +136,41 @@ class _ChallengeCreateSheetState extends State<ChallengeCreateSheet> {
               ],
             ),
             const SizedBox(height: 20),
-            _Label(text: '챌린지 유형'),
+            _Label(text: '참여 방식'),
             const SizedBox(height: 8),
-            Row(
-              children: _types.map((t) {
-                final selected = _type == t.$1;
-                return Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.only(right: 6),
-                    child: GestureDetector(
-                      onTap: () => setState(() => _type = t.$1),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 10),
-                        decoration: BoxDecoration(
-                          color: selected
-                              ? primary.withOpacity(0.1)
-                              : Colors.grey[50],
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(
-                            color: selected ? primary : Colors.grey[200]!,
-                            width: 1,
-                          ),
-                        ),
-                        child: Center(
-                          child: StandardText(
-                            text: t.$2,
-                            fontSize: 12,
-                            color: selected ? primary : Colors.grey[600]!,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                );
-              }).toList(),
+            _buildOptionWrap(
+              options: _scopes,
+              selectedValue: _scope,
+              primary: primary,
+              onSelected: (value) => setState(() => _scope = value),
+            ),
+            const SizedBox(height: 16),
+            _Label(text: '챌린지 내용'),
+            const SizedBox(height: 8),
+            _buildOptionWrap(
+              options: _metrics.map((m) => (m.$1, m.$2)).toList(),
+              selectedValue: _metric,
+              primary: primary,
+              onSelected: (value) {
+                setState(() {
+                  _metric = value;
+                  _targetController.clear();
+                });
+              },
+            ),
+            const SizedBox(height: 16),
+            _Label(text: '기간'),
+            const SizedBox(height: 8),
+            _buildOptionWrap(
+              options: _periods,
+              selectedValue: _period,
+              primary: primary,
+              onSelected: (value) {
+                setState(() {
+                  _period = value;
+                  _endAt = _defaultEndAtFor(value);
+                });
+              },
             ),
             const SizedBox(height: 16),
             _Label(text: '챌린지 제목'),
@@ -174,16 +189,13 @@ class _ChallengeCreateSheetState extends State<ChallengeCreateSheet> {
               primary: primary,
               inputType: TextInputType.number,
               inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-              suffix: '문제',
+              suffix: _metricSuffix,
             ),
             const SizedBox(height: 16),
             _Label(text: '마감일'),
             const SizedBox(height: 8),
             InkWell(
-              onTap: () async {
-                final picked = await _showEndDatePicker(context, primary);
-                if (picked != null) setState(() => _endAt = picked);
-              },
+              onTap: null,
               borderRadius: BorderRadius.circular(10),
               child: Container(
                 padding:
@@ -241,197 +253,58 @@ class _ChallengeCreateSheetState extends State<ChallengeCreateSheet> {
     );
   }
 
-  Future<DateTime?> _showEndDatePicker(
-    BuildContext context,
-    Color primary,
-  ) {
-    final today = DateTime.now();
-    final firstDate = DateTime(today.year, today.month, today.day + 1);
-    final lastDate = firstDate.add(const Duration(days: 29));
-    DateTime visibleMonth = DateTime(_endAt.year, _endAt.month);
-
-    return showModalBottomSheet<DateTime>(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (sheetContext) {
-        return StatefulBuilder(
-          builder: (context, setModalState) {
-            final canGoPrev = DateTime(visibleMonth.year, visibleMonth.month)
-                .isAfter(DateTime(firstDate.year, firstDate.month));
-            final canGoNext = DateTime(visibleMonth.year, visibleMonth.month)
-                .isBefore(DateTime(lastDate.year, lastDate.month));
-
-            return Container(
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(20),
-                  topRight: Radius.circular(20),
-                ),
-              ),
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
-              child: SafeArea(
-                top: false,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      width: 40,
-                      height: 4,
-                      margin: const EdgeInsets.only(bottom: 18),
-                      decoration: BoxDecoration(
-                        color: Colors.grey[300],
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                    ),
-                    Row(
-                      children: [
-                        IconButton(
-                          onPressed: canGoPrev
-                              ? () => setModalState(() {
-                                    visibleMonth = DateTime(
-                                      visibleMonth.year,
-                                      visibleMonth.month - 1,
-                                    );
-                                  })
-                              : null,
-                          icon: const Icon(Icons.chevron_left),
-                          color: primary,
-                        ),
-                        Expanded(
-                          child: Center(
-                            child: StandardText(
-                              text:
-                                  '${visibleMonth.year}.${visibleMonth.month.toString().padLeft(2, '0')}',
-                              fontSize: 18,
-                              color: Colors.black87,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ),
-                        IconButton(
-                          onPressed: canGoNext
-                              ? () => setModalState(() {
-                                    visibleMonth = DateTime(
-                                      visibleMonth.year,
-                                      visibleMonth.month + 1,
-                                    );
-                                  })
-                              : null,
-                          icon: const Icon(Icons.chevron_right),
-                          color: primary,
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    _buildWeekdayHeader(),
-                    const SizedBox(height: 8),
-                    _buildDateGrid(
-                      context: sheetContext,
-                      visibleMonth: visibleMonth,
-                      firstDate: firstDate,
-                      lastDate: lastDate,
-                      selectedDate: _endAt,
-                      primary: primary,
-                    ),
-                  ],
-                ),
-              ),
-            );
-          },
-        );
-      },
-    );
+  DateTime _defaultEndAtFor(String period) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    switch (period) {
+      case 'daily':
+        return today.add(const Duration(days: 1));
+      case 'monthly':
+        return DateTime(today.year, today.month + 1, today.day);
+      case 'weekly':
+      default:
+        return today.add(const Duration(days: 7));
+    }
   }
 
-  Widget _buildWeekdayHeader() {
-    const labels = ['일', '월', '화', '수', '목', '금', '토'];
-    return Row(
-      children: labels
-          .map(
-            (label) => Expanded(
-              child: Center(
-                child: StandardText(
-                  text: label,
-                  fontSize: 12,
-                  color: Colors.grey[500]!,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
-          )
-          .toList(),
-    );
+  String get _metricSuffix {
+    return _metrics
+        .where((metric) => metric.$1 == _metric)
+        .map((metric) => metric.$3)
+        .first;
   }
 
-  Widget _buildDateGrid({
-    required BuildContext context,
-    required DateTime visibleMonth,
-    required DateTime firstDate,
-    required DateTime lastDate,
-    required DateTime selectedDate,
+  Widget _buildOptionWrap({
+    required List<(String, String)> options,
+    required String selectedValue,
     required Color primary,
+    required ValueChanged<String> onSelected,
   }) {
-    final firstWeekday =
-        DateTime(visibleMonth.year, visibleMonth.month).weekday % 7;
-    final daysInMonth =
-        DateTime(visibleMonth.year, visibleMonth.month + 1, 0).day;
-    final totalCells = firstWeekday + daysInMonth;
-    final rowCount = (totalCells / 7).ceil();
-
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: rowCount * 7,
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 7,
-        mainAxisSpacing: 6,
-        crossAxisSpacing: 6,
-      ),
-      itemBuilder: (_, index) {
-        final day = index - firstWeekday + 1;
-        if (day < 1 || day > daysInMonth) {
-          return const SizedBox.shrink();
-        }
-
-        final date = DateTime(visibleMonth.year, visibleMonth.month, day);
-        final selectable = !date.isBefore(firstDate) && !date.isAfter(lastDate);
-        final selected = DateUtils.isSameDay(date, selectedDate);
-
-        return InkWell(
-          onTap: selectable ? () => Navigator.pop(context, date) : null,
-          borderRadius: BorderRadius.circular(10),
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: options.map((option) {
+        final selected = selectedValue == option.$1;
+        return GestureDetector(
+          onTap: () => onSelected(option.$1),
           child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             decoration: BoxDecoration(
-              color: selected
-                  ? primary
-                  : selectable
-                      ? Colors.grey[100]
-                      : Colors.grey[50],
-              borderRadius: BorderRadius.circular(10),
+              color: selected ? primary.withOpacity(0.1) : Colors.grey[50],
+              borderRadius: BorderRadius.circular(9),
               border: Border.all(
-                color: selected
-                    ? primary
-                    : selectable
-                        ? Colors.grey[200]!
-                        : Colors.transparent,
+                color: selected ? primary : Colors.grey[200]!,
                 width: 1,
               ),
             ),
-            child: Center(
-              child: StandardText(
-                text: '$day',
-                fontSize: 13,
-                color: selected
-                    ? Colors.white
-                    : selectable
-                        ? Colors.black87
-                        : Colors.grey[300]!,
-              ),
+            child: StandardText(
+              text: option.$2,
+              fontSize: 12,
+              color: selected ? primary : Colors.grey[600]!,
             ),
           ),
         );
-      },
+      }).toList(),
     );
   }
 
