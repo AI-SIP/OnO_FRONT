@@ -19,6 +19,27 @@ class ActivityFeedModel {
     required this.reactions,
   });
 
+  factory ActivityFeedModel.fromJson(Map<String, dynamic> json) {
+    final reactionsJson = json['reactions'];
+    return ActivityFeedModel(
+      feedId: ((json['feedId'] ?? 0) as num).toInt(),
+      userId: ((json['userId'] ?? 0) as num).toInt(),
+      userName: (json['userName'] ?? '알 수 없음').toString(),
+      eventType: (json['eventType'] ?? '').toString(),
+      metadata: json['metadata'] is Map
+          ? Map<String, dynamic>.from(json['metadata'] as Map)
+          : null,
+      createdAt: DateTime.tryParse((json['createdAt'] ?? '').toString()) ??
+          DateTime.now(),
+      reactions: reactionsJson is List
+          ? reactionsJson
+              .whereType<Map<String, dynamic>>()
+              .map(FeedReactionModel.fromJson)
+              .toList()
+          : <FeedReactionModel>[],
+    );
+  }
+
   String get displayText {
     switch (eventType) {
       case 'problem_registered':

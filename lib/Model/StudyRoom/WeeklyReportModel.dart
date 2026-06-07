@@ -20,4 +20,19 @@ class WeeklyReportModel {
     required this.cheerMessage,
     this.isRead = false,
   });
+
+  factory WeeklyReportModel.fromJson(Map<String, dynamic> json) {
+    return WeeklyReportModel(
+      reportId: ((json['reportId'] ?? 0) as num).toInt(),
+      topMemberName: (json['topMemberName'] ?? '없음').toString(),
+      topMemberProblemCount:
+          ((json['topMemberProblemCount'] ?? 0) as num).toInt(),
+      longestStreakName: (json['longestStreakName'] ?? '없음').toString(),
+      longestStreakDays: ((json['longestStreakDays'] ?? 0) as num).toInt(),
+      totalProblems: ((json['totalProblems'] ?? 0) as num).toInt(),
+      challengesCompleted: ((json['challengesCompleted'] ?? 0) as num).toInt(),
+      cheerMessage: (json['cheerMessage'] ?? '').toString(),
+      isRead: json['isRead'] == true,
+    );
+  }
 }

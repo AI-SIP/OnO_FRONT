@@ -8,4 +8,12 @@ class FeedReactionModel {
     required this.count,
     required this.reactedByMe,
   });
+
+  factory FeedReactionModel.fromJson(Map<String, dynamic> json) {
+    return FeedReactionModel(
+      emoji: (json['emoji'] ?? '').toString(),
+      count: ((json['count'] ?? 0) as num).toInt(),
+      reactedByMe: json['reactedByMe'] == true,
+    );
+  }
 }
