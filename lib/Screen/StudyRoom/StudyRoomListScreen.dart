@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/StudyRoomProvider.dart';
+import '../../Provider/UserProvider.dart';
 import '../../Model/StudyRoom/StudyRoomModel.dart';
 import 'StudyRoomCreateScreen.dart';
 import 'StudyRoomDetailScreen.dart';
@@ -23,7 +24,11 @@ class _StudyRoomListScreenState extends State<StudyRoomListScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<StudyRoomProvider>(context, listen: false).fetchMyRooms();
+      final provider = Provider.of<StudyRoomProvider>(context, listen: false);
+      provider.updateCurrentUserId(
+        Provider.of<UserProvider>(context, listen: false).userInfoModel?.userId,
+      );
+      provider.fetchMyRooms();
     });
   }
 

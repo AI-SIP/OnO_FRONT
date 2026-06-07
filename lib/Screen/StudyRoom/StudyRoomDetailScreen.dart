@@ -8,6 +8,7 @@ import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/StudyRoomProvider.dart';
 import '../../Provider/StudySessionProvider.dart';
+import '../../Provider/UserProvider.dart';
 import '../../Util/AppSnackBar.dart';
 import 'ChallengeCreateSheet.dart';
 import 'Widget/ActiveStudyBanner.dart';
@@ -16,7 +17,6 @@ import 'Widget/ChallengeCard.dart';
 import 'Widget/GoalSetDialog.dart';
 import 'Widget/InviteCodeSheet.dart';
 import 'Widget/MemberRankCard.dart';
-import 'Widget/SharedProblemCard.dart';
 import 'Widget/StudyRoomThumbnail.dart';
 import 'Widget/StudySessionResultSheet.dart';
 import 'Widget/WeeklyReportSheet.dart';
@@ -32,18 +32,24 @@ class StudyRoomDetailScreen extends StatefulWidget {
 
 class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
     with SingleTickerProviderStateMixin {
-  static const int _myUserId = 1;
   late TabController _tabController;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<StudyRoomProvider>(context, listen: false)
-          .fetchRoomDetail(widget.roomId);
-      _showUnreadReport();
+      _loadRoom();
     });
+  }
+
+  Future<void> _loadRoom() async {
+    final userId =
+        Provider.of<UserProvider>(context, listen: false).userInfoModel?.userId;
+    final provider = Provider.of<StudyRoomProvider>(context, listen: false);
+    provider.updateCurrentUserId(userId);
+    await provider.fetchRoomDetail(widget.roomId);
+    if (mounted) _showUnreadReport();
   }
 
   @override
@@ -59,8 +65,9 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
     Future.delayed(const Duration(milliseconds: 600), () {
       if (!mounted) return;
       final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
-      WeeklyReportSheet.show(context, report, themeProvider,
-          onClose: provider.markReportRead);
+      WeeklyReportSheet.show(context, report, themeProvider, onClose: () {
+        provider.markReportRead();
+      });
     });
   }
 
@@ -293,7 +300,6 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
             Tab(text: '랭킹'),
             Tab(text: '활동'),
             Tab(text: '챌린지'),
-            Tab(text: '공유문제'),
           ],
         ),
       ),
@@ -349,7 +355,6 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
               _buildRankingTab(context, room, provider, themeProvider, isHost),
               ActivityFeedTab(roomId: widget.roomId),
               _buildChallengeTab(context, provider, themeProvider, isHost),
-              _buildSharedProblemTab(context, provider, themeProvider),
             ],
           ),
         ),
@@ -395,8 +400,9 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
     double screenHeight,
     StudyRoomProvider provider,
   ) {
-    final myMember =
-        room.members.where((m) => m.userId == _myUserId).firstOrNull;
+    final myMember = room.members
+        .where((m) => m.userId == provider.currentUserId)
+        .firstOrNull;
     final isCompact = screenWidth < 360;
 
     return Container(
@@ -560,7 +566,7 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
         return MemberRankCard(
           rank: i + 1,
           member: member,
-          isMe: member.userId == _myUserId,
+          isMe: member.userId == provider.currentUserId,
           isHost: member.userId == room.hostUserId,
           canKick: false,
           onKick: null,
@@ -588,7 +594,7 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
         return MemberRankCard(
           rank: i + 1,
           member: member,
-          isMe: member.userId == _myUserId,
+          isMe: member.userId == provider.currentUserId,
           isHost: member.userId == room.hostUserId,
           canKick: false,
           onKick: null,
@@ -607,36 +613,6 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
   ) {
     return Column(
       children: [
-        if (isHost)
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-            child: SizedBox(
-              width: double.infinity,
-              child: TextButton(
-                onPressed: () => ChallengeCreateSheet.show(context),
-                style: TextButton.styleFrom(
-                  backgroundColor: themeProvider.primaryColor.withOpacity(0.1),
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.add,
-                        size: 16, color: themeProvider.primaryColor),
-                    const SizedBox(width: 6),
-                    StandardText(
-                      text: '새 챌린지 만들기',
-                      fontSize: 14,
-                      color: themeProvider.primaryColor,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
         Expanded(
           child: provider.challenges.isEmpty
               ? Center(
@@ -684,276 +660,46 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
                   ),
                 ),
         ),
+        if (isHost) _buildChallengeCreateButton(context, themeProvider),
       ],
     );
   }
 
-  // ── 공유 문제 탭 ──
-
-  Widget _buildSharedProblemTab(
+  Widget _buildChallengeCreateButton(
     BuildContext context,
-    StudyRoomProvider provider,
     ThemeHandler themeProvider,
   ) {
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-          child: SizedBox(
-            width: double.infinity,
-            child: TextButton(
-              onPressed: () => _showShareProblemSheet(context, provider),
-              style: TextButton.styleFrom(
-                backgroundColor: themeProvider.primaryColor.withOpacity(0.1),
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
+    return SafeArea(
+      top: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 8, 92, 12),
+        child: SizedBox(
+          width: double.infinity,
+          child: TextButton(
+            onPressed: () => ChallengeCreateSheet.show(context),
+            style: TextButton.styleFrom(
+              backgroundColor: themeProvider.primaryColor,
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            child: const Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.add, size: 18, color: Colors.white),
+                SizedBox(width: 6),
+                StandardText(
+                  text: '새 챌린지 만들기',
+                  fontSize: 14,
+                  color: Colors.white,
                 ),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.upload_outlined,
-                      size: 16, color: themeProvider.primaryColor),
-                  const SizedBox(width: 6),
-                  StandardText(
-                    text: '문제 공유하기',
-                    fontSize: 14,
-                    color: themeProvider.primaryColor,
-                  ),
-                ],
-              ),
+              ],
             ),
           ),
         ),
-        Expanded(
-          child: provider.sharedProblems.isEmpty
-              ? Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        width: 64,
-                        height: 64,
-                        decoration: BoxDecoration(
-                          color: themeProvider.primaryColor.withOpacity(0.1),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          Icons.menu_book_outlined,
-                          color: themeProvider.primaryColor,
-                          size: 28,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      const StandardText(
-                        text: '공유된 문제가 없어요',
-                        fontSize: 16,
-                        color: Colors.black87,
-                      ),
-                      const SizedBox(height: 6),
-                      StandardText(
-                        text: '어려운 문제를 멤버들과 함께 풀어보세요',
-                        fontSize: 13,
-                        color: Colors.grey[500]!,
-                        fontWeight: FontWeight.normal,
-                        fontFamily: 'PretendardLight',
-                      ),
-                    ],
-                  ),
-                )
-              : ListView.builder(
-                  padding: const EdgeInsets.only(top: 8, bottom: 80),
-                  itemCount: provider.sharedProblems.length,
-                  itemBuilder: (_, i) => SharedProblemCard(
-                    problem: provider.sharedProblems[i],
-                  ),
-                ),
-        ),
-      ],
+      ),
     );
-  }
-
-  void _showShareProblemSheet(
-      BuildContext context, StudyRoomProvider provider) {
-    final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
-    final refController = TextEditingController();
-    final commentController = TextEditingController();
-    bool isLoading = false;
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (sheetCtx) {
-        return StatefulBuilder(
-          builder: (ctx, setState) {
-            final insets = MediaQuery.of(ctx).viewInsets;
-            return Container(
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(20),
-                  topRight: Radius.circular(20),
-                ),
-              ),
-              padding: EdgeInsets.fromLTRB(20, 16, 20, 20 + insets.bottom),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Center(
-                    child: Container(
-                      width: 40,
-                      height: 4,
-                      margin: const EdgeInsets.only(bottom: 20),
-                      decoration: BoxDecoration(
-                        color: Colors.grey[300],
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                    ),
-                  ),
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: themeProvider.primaryColor.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Icon(Icons.upload_outlined,
-                            color: themeProvider.primaryColor, size: 20),
-                      ),
-                      const SizedBox(width: 12),
-                      const StandardText(
-                        text: '문제 공유',
-                        fontSize: 18,
-                        color: Colors.black87,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-                  const StandardText(
-                    text: '문제 출처',
-                    fontSize: 13,
-                    color: Colors.black87,
-                  ),
-                  const SizedBox(height: 8),
-                  TextField(
-                    controller: refController,
-                    style: StandardText(
-                            text: '', fontSize: 14, color: Colors.black87)
-                        .getTextStyle(),
-                    decoration: InputDecoration(
-                      hintText: '예: 2024 수능 수학 15번',
-                      hintStyle:
-                          TextStyle(fontSize: 14, color: Colors.grey[400]),
-                      filled: true,
-                      fillColor: Colors.grey[50],
-                      contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 14, vertical: 14),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        borderSide:
-                            BorderSide(color: Colors.grey[200]!, width: 1),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        borderSide: BorderSide(
-                            color: themeProvider.primaryColor, width: 1.5),
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        borderSide: BorderSide.none,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  const StandardText(
-                    text: '한 마디 (선택)',
-                    fontSize: 13,
-                    color: Colors.black87,
-                  ),
-                  const SizedBox(height: 8),
-                  TextField(
-                    controller: commentController,
-                    maxLines: 2,
-                    style: StandardText(
-                            text: '', fontSize: 14, color: Colors.black87)
-                        .getTextStyle(),
-                    decoration: InputDecoration(
-                      hintText: '어려웠던 점이나 팁을 공유해보세요',
-                      hintStyle:
-                          TextStyle(fontSize: 14, color: Colors.grey[400]),
-                      filled: true,
-                      fillColor: Colors.grey[50],
-                      contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 14, vertical: 14),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        borderSide:
-                            BorderSide(color: Colors.grey[200]!, width: 1),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        borderSide: BorderSide(
-                            color: themeProvider.primaryColor, width: 1.5),
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        borderSide: BorderSide.none,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  SizedBox(
-                    width: double.infinity,
-                    child: TextButton(
-                      onPressed: isLoading
-                          ? null
-                          : () async {
-                              final ref = refController.text.trim();
-                              if (ref.isEmpty) {
-                                AppSnackBar.showError('문제 출처를 입력해주세요');
-                                return;
-                              }
-                              setState(() => isLoading = true);
-                              await provider.shareProblems(
-                                ref,
-                                commentController.text.trim().isEmpty
-                                    ? null
-                                    : commentController.text.trim(),
-                              );
-                              if (sheetCtx.mounted) {
-                                Navigator.pop(sheetCtx);
-                              }
-                            },
-                      style: TextButton.styleFrom(
-                        backgroundColor: isLoading
-                            ? Colors.grey[300]
-                            : themeProvider.primaryColor,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      child: const StandardText(
-                        text: '공유하기',
-                        fontSize: 16,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            );
-          },
-        );
-      },
-    ).whenComplete(() {
-      refController.dispose();
-      commentController.dispose();
-    });
   }
 
   // ── 공부 세션 FAB ──
@@ -968,7 +714,11 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
       return FloatingActionButton.extended(
         onPressed: () async {
           final minutes = sessionProvider.endSession();
-          roomProvider.removeMySession();
+          try {
+            await roomProvider.removeMySession();
+          } catch (_) {
+            AppSnackBar.showError('공부 종료 기록을 저장하지 못했어요');
+          }
           if (context.mounted) {
             await StudySessionResultSheet.show(context, minutes, themeProvider);
           }
@@ -984,13 +734,17 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
     }
 
     return FloatingActionButton(
-      onPressed: () {
-        sessionProvider.startSession();
-        roomProvider.addMySession();
+      onPressed: () async {
+        try {
+          await roomProvider.addMySession();
+          sessionProvider.startSession();
+        } catch (_) {
+          AppSnackBar.showError('공부를 시작하지 못했어요');
+        }
       },
       backgroundColor: themeProvider.primaryColor,
-      child: const Icon(Icons.play_arrow_rounded, color: Colors.white),
       tooltip: '공부 시작',
+      child: const Icon(Icons.play_arrow_rounded, color: Colors.white),
     );
   }
 
@@ -1041,7 +795,9 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
                         context,
                         provider.weeklyReport!,
                         themeProvider,
-                        onClose: provider.markReportRead,
+                        onClose: () {
+                          provider.markReportRead();
+                        },
                       );
                     },
                   ),
@@ -1175,7 +931,7 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
                     separatorBuilder: (_, __) => const SizedBox(height: 8),
                     itemBuilder: (_, index) {
                       final member = room.members[index];
-                      final isMe = member.userId == _myUserId;
+                      final isMe = member.userId == provider.currentUserId;
                       final isRoomHost = member.userId == room.hostUserId;
                       return Container(
                         padding: const EdgeInsets.symmetric(
