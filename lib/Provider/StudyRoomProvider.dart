@@ -140,13 +140,41 @@ class StudyRoomProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void updateRoomThumbnail(int roomId, String imagePath) {
+  bool _isUploadingThumbnail = false;
+
+  Future<void> updateRoomThumbnail(int roomId, String imagePath) async {
+    if (_isUploadingThumbnail) return;
+    _isUploadingThumbnail = true;
+    try {
+      final thumbnailUrl = await _service.uploadRoomThumbnail(
+        roomId: roomId,
+        imagePath: imagePath,
+      );
+      if (thumbnailUrl == null) return;
+      rooms = rooms.map((r) {
+        if (r.roomId != roomId) return r;
+        return r.copyWith(thumbnailImagePath: thumbnailUrl);
+      }).toList();
+      if (selectedRoom?.roomId == roomId) {
+        selectedRoom = selectedRoom!.copyWith(thumbnailImagePath: thumbnailUrl);
+      }
+      notifyListeners();
+    } finally {
+      _isUploadingThumbnail = false;
+    }
+  }
+
+  Future<void> updateRoomName(int roomId, String name) async {
+    final updatedRoom = await _service.updateRoomName(
+      roomId: roomId,
+      name: name,
+    );
     rooms = rooms.map((r) {
       if (r.roomId != roomId) return r;
-      return r.copyWith(thumbnailImagePath: imagePath);
+      return r.copyWith(name: updatedRoom.name);
     }).toList();
     if (selectedRoom?.roomId == roomId) {
-      selectedRoom = selectedRoom!.copyWith(thumbnailImagePath: imagePath);
+      selectedRoom = selectedRoom!.copyWith(name: updatedRoom.name);
     }
     notifyListeners();
   }
@@ -209,12 +237,12 @@ class StudyRoomProvider extends ChangeNotifier {
   Future<void> createChallenge({
     required String title,
     required String type,
+    required String metric,
     required int targetValue,
     required DateTime endAt,
   }) async {
     final roomId = selectedRoom?.roomId ?? _activeRoomId;
     if (roomId == null) return;
-    final metric = type == 'streak' ? 'streak' : 'weekly_problem_count';
     final newChallenge = await _service.createChallenge(
       roomId: roomId,
       title: title,
@@ -335,6 +363,8 @@ class StudyRoomProvider extends ChangeNotifier {
           currentStreak: m.currentStreak,
           weeklyProblemCount: m.weeklyProblemCount,
           weeklyPracticeCount: m.weeklyPracticeCount,
+          todayPracticeCount: m.todayPracticeCount,
+          practicedToday: m.practicedToday,
           weeklyGoal: result.weeklyGoal,
           goalProgress: result.goalProgress,
         );

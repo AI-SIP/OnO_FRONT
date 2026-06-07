@@ -1,3 +1,4 @@
+import 'package:http/http.dart' as http;
 import 'package:ono/Config/AppConfig.dart';
 import 'package:ono/Model/StudyRoom/ActivityFeedModel.dart';
 import 'package:ono/Model/StudyRoom/ChallengeModel.dart';
@@ -46,6 +47,34 @@ class StudyRoomService {
       body: {'name': name.trim()},
     );
     return StudyRoomModel.fromJson(_asMap(data));
+  }
+
+  Future<StudyRoomModel> updateRoomName({
+    required int roomId,
+    required String name,
+  }) async {
+    final data = await httpService.sendRequest(
+      method: 'PATCH',
+      url: '$baseUrl/$roomId',
+      body: {'name': name.trim()},
+    );
+    return StudyRoomModel.fromJson(_asMap(data));
+  }
+
+  Future<String?> uploadRoomThumbnail({
+    required int roomId,
+    required String imagePath,
+  }) async {
+    final files = <http.MultipartFile>[
+      await http.MultipartFile.fromPath('thumbnail', imagePath),
+    ];
+    final data = await httpService.sendRequest(
+      method: 'PATCH',
+      url: '$baseUrl/$roomId/thumbnail',
+      isMultipart: true,
+      files: files,
+    );
+    return _asMap(data)['thumbnailUrl'] as String?;
   }
 
   Future<StudyRoomModel> joinRoom(String code) async {
