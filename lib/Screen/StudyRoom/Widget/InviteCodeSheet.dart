@@ -195,6 +195,19 @@ class InviteCodeSheet extends StatelessWidget {
   }
 
   Future<void> _shareCode(BuildContext context) async {
-    await Share.share('OnO 스터디룸 초대 코드: ${inviteCode.code}');
+    final box = context.findRenderObject() as RenderBox?;
+    final origin = box != null && box.hasSize && !box.size.isEmpty
+        ? box.localToGlobal(Offset.zero) & box.size
+        : Rect.fromLTWH(
+            MediaQuery.of(context).size.width / 2,
+            MediaQuery.of(context).size.height / 2,
+            1,
+            1,
+          );
+
+    await Share.share(
+      'OnO 스터디룸 초대 코드: ${inviteCode.code}',
+      sharePositionOrigin: origin,
+    );
   }
 }

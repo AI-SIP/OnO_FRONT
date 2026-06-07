@@ -181,18 +181,7 @@ class _ChallengeCreateSheetState extends State<ChallengeCreateSheet> {
             const SizedBox(height: 8),
             InkWell(
               onTap: () async {
-                final picked = await showDatePicker(
-                  context: context,
-                  initialDate: _endAt,
-                  firstDate: DateTime.now().add(const Duration(days: 1)),
-                  lastDate: DateTime.now().add(const Duration(days: 30)),
-                  builder: (context, child) => Theme(
-                    data: Theme.of(context).copyWith(
-                      colorScheme: ColorScheme.light(primary: primary),
-                    ),
-                    child: child!,
-                  ),
-                );
+                final picked = await _showEndDatePicker(context, primary);
                 if (picked != null) setState(() => _endAt = picked);
               },
               borderRadius: BorderRadius.circular(10),
@@ -249,6 +238,200 @@ class _ChallengeCreateSheetState extends State<ChallengeCreateSheet> {
           ],
         ),
       ),
+    );
+  }
+
+  Future<DateTime?> _showEndDatePicker(
+    BuildContext context,
+    Color primary,
+  ) {
+    final today = DateTime.now();
+    final firstDate = DateTime(today.year, today.month, today.day + 1);
+    final lastDate = firstDate.add(const Duration(days: 29));
+    DateTime visibleMonth = DateTime(_endAt.year, _endAt.month);
+
+    return showModalBottomSheet<DateTime>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            final canGoPrev = DateTime(visibleMonth.year, visibleMonth.month)
+                .isAfter(DateTime(firstDate.year, firstDate.month));
+            final canGoNext = DateTime(visibleMonth.year, visibleMonth.month)
+                .isBefore(DateTime(lastDate.year, lastDate.month));
+
+            return Container(
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(20),
+                  topRight: Radius.circular(20),
+                ),
+              ),
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+              child: SafeArea(
+                top: false,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 4,
+                      margin: const EdgeInsets.only(bottom: 18),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[300],
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                    Row(
+                      children: [
+                        IconButton(
+                          onPressed: canGoPrev
+                              ? () => setModalState(() {
+                                    visibleMonth = DateTime(
+                                      visibleMonth.year,
+                                      visibleMonth.month - 1,
+                                    );
+                                  })
+                              : null,
+                          icon: const Icon(Icons.chevron_left),
+                          color: primary,
+                        ),
+                        Expanded(
+                          child: Center(
+                            child: StandardText(
+                              text:
+                                  '${visibleMonth.year}.${visibleMonth.month.toString().padLeft(2, '0')}',
+                              fontSize: 18,
+                              color: Colors.black87,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                        IconButton(
+                          onPressed: canGoNext
+                              ? () => setModalState(() {
+                                    visibleMonth = DateTime(
+                                      visibleMonth.year,
+                                      visibleMonth.month + 1,
+                                    );
+                                  })
+                              : null,
+                          icon: const Icon(Icons.chevron_right),
+                          color: primary,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    _buildWeekdayHeader(),
+                    const SizedBox(height: 8),
+                    _buildDateGrid(
+                      context: sheetContext,
+                      visibleMonth: visibleMonth,
+                      firstDate: firstDate,
+                      lastDate: lastDate,
+                      selectedDate: _endAt,
+                      primary: primary,
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildWeekdayHeader() {
+    const labels = ['일', '월', '화', '수', '목', '금', '토'];
+    return Row(
+      children: labels
+          .map(
+            (label) => Expanded(
+              child: Center(
+                child: StandardText(
+                  text: label,
+                  fontSize: 12,
+                  color: Colors.grey[500]!,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          )
+          .toList(),
+    );
+  }
+
+  Widget _buildDateGrid({
+    required BuildContext context,
+    required DateTime visibleMonth,
+    required DateTime firstDate,
+    required DateTime lastDate,
+    required DateTime selectedDate,
+    required Color primary,
+  }) {
+    final firstWeekday =
+        DateTime(visibleMonth.year, visibleMonth.month).weekday % 7;
+    final daysInMonth =
+        DateTime(visibleMonth.year, visibleMonth.month + 1, 0).day;
+    final totalCells = firstWeekday + daysInMonth;
+    final rowCount = (totalCells / 7).ceil();
+
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: rowCount * 7,
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 7,
+        mainAxisSpacing: 6,
+        crossAxisSpacing: 6,
+      ),
+      itemBuilder: (_, index) {
+        final day = index - firstWeekday + 1;
+        if (day < 1 || day > daysInMonth) {
+          return const SizedBox.shrink();
+        }
+
+        final date = DateTime(visibleMonth.year, visibleMonth.month, day);
+        final selectable = !date.isBefore(firstDate) && !date.isAfter(lastDate);
+        final selected = DateUtils.isSameDay(date, selectedDate);
+
+        return InkWell(
+          onTap: selectable ? () => Navigator.pop(context, date) : null,
+          borderRadius: BorderRadius.circular(10),
+          child: Container(
+            decoration: BoxDecoration(
+              color: selected
+                  ? primary
+                  : selectable
+                      ? Colors.grey[100]
+                      : Colors.grey[50],
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: selected
+                    ? primary
+                    : selectable
+                        ? Colors.grey[200]!
+                        : Colors.transparent,
+                width: 1,
+              ),
+            ),
+            child: Center(
+              child: StandardText(
+                text: '$day',
+                fontSize: 13,
+                color: selected
+                    ? Colors.white
+                    : selectable
+                        ? Colors.black87
+                        : Colors.grey[300]!,
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 

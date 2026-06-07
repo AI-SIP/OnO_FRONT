@@ -98,7 +98,8 @@ class _ReactionChip extends StatelessWidget {
                 fontSize: 12,
                 color:
                     isReacted ? themeProvider.primaryColor : Colors.grey[600],
-                fontFamily: 'PretendardLight',
+                fontWeight: FontWeight.w700,
+                fontFamily: 'PretendardBold',
               ),
             ),
           ],
