@@ -64,14 +64,22 @@ class StudyRoomThumbnail extends StatelessWidget {
   }
 
   Widget _buildImage() {
-    if (imagePath != null && imagePath!.isNotEmpty) {
-      return Image.file(
-        File(imagePath!),
+    final path = imagePath;
+    if (path == null || path.isEmpty) return _buildDefaultImage();
+
+    if (path.startsWith('http://') || path.startsWith('https://')) {
+      return Image.network(
+        path,
         fit: BoxFit.cover,
         errorBuilder: (_, __, ___) => _buildDefaultImage(),
       );
     }
-    return _buildDefaultImage();
+
+    return Image.file(
+      File(path),
+      fit: BoxFit.cover,
+      errorBuilder: (_, __, ___) => _buildDefaultImage(),
+    );
   }
 
   Widget _buildDefaultImage() {

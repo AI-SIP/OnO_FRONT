@@ -247,10 +247,8 @@ class _StudyRoomListScreenState extends State<StudyRoomListScreen> {
     final isHost = provider.isHost(room);
     final weeklyTotal =
         room.members.fold<int>(0, (sum, m) => sum + m.weeklyProblemCount);
-    final reviewedMembers =
-        room.members.where((m) => m.weeklyPracticeCount > 0).toList();
-    final totalPractice =
-        room.members.fold<int>(0, (sum, m) => sum + m.weeklyPracticeCount);
+    final reviewedMemberCount = room.displayTodayPracticeMemberCount;
+    final totalPractice = room.displayTodayPracticeCount;
 
     return Container(
       margin: EdgeInsets.symmetric(
@@ -344,7 +342,7 @@ class _StudyRoomListScreenState extends State<StudyRoomListScreen> {
                   ),
                 ],
               ),
-              if (reviewedMembers.isNotEmpty) ...[
+              if (reviewedMemberCount > 0 || totalPractice > 0) ...[
                 const SizedBox(height: 10),
                 Row(
                   children: [
@@ -360,7 +358,7 @@ class _StudyRoomListScreenState extends State<StudyRoomListScreen> {
                             child: _buildInitialAvatar(
                               m.name,
                               themeProvider,
-                              isActive: m.weeklyPracticeCount > 0,
+                              isActive: m.hasPracticedToday,
                             ),
                           ),
                         ),
@@ -389,6 +387,13 @@ class _StudyRoomListScreenState extends State<StudyRoomListScreen> {
                       ),
                     ],
                     const SizedBox(width: 2),
+                    if (room.members.isEmpty && reviewedMemberCount > 0) ...[
+                      StandardText(
+                        text: '$reviewedMemberCount명 · ',
+                        fontSize: 12,
+                        color: Colors.grey[600]!,
+                      ),
+                    ],
                     StandardText(
                       text: '오늘 복습 $totalPractice회',
                       fontSize: 12,

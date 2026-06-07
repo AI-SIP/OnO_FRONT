@@ -53,7 +53,7 @@ class ActivityFeedItem extends StatelessWidget {
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
-      padding: const EdgeInsets.fromLTRB(14, 14, 14, 10),
+      padding: const EdgeInsets.fromLTRB(14, 18, 14, 8),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
@@ -115,7 +115,7 @@ class ActivityFeedItem extends StatelessWidget {
             ],
           ),
           if (feed.reactions.isNotEmpty || true) ...[
-            const SizedBox(height: 10),
+            const SizedBox(height: 6),
             FeedReactionBar(
               reactions: feed.reactions,
               themeProvider: themeProvider,

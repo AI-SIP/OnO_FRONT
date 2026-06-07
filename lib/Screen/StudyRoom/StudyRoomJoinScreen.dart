@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
+import '../../Exception/ApiException.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/StudyRoomProvider.dart';
@@ -25,6 +26,19 @@ class _StudyRoomJoinScreenState extends State<StudyRoomJoinScreen> {
     super.dispose();
   }
 
+  /// 서버 예외를 사용자에게 보여줄 메시지로 변환한다.
+  /// (raw exception toString()에는 상태 코드 등 디버그 정보가 섞여 있어 그대로 노출하면 안 됨)
+  String _joinErrorMessage(Object error) {
+    if (error is BadRequestException) return error.getUserMessage();
+    if (error is UnauthorizedException) return error.getUserMessage();
+    if (error is ServerException) return error.getUserMessage();
+    if (error is NetworkException) return error.getUserMessage();
+    if (error is TimeoutException) return error.getUserMessage();
+    if (error is ParseException) return error.getUserMessage();
+    if (error is ApiException) return error.getUserMessage();
+    return '초대 코드를 확인하지 못했어요. 잠시 후 다시 시도해 주세요';
+  }
+
   Future<void> _join() async {
     if (_isJoining) return;
     final code = _codeController.text.trim();
@@ -39,7 +53,7 @@ class _StudyRoomJoinScreenState extends State<StudyRoomJoinScreen> {
           .joinRoom(code);
       if (mounted) Navigator.pop(context, true);
     } catch (e) {
-      AppSnackBar.showError(e.toString().replaceFirst('Exception: ', ''));
+      AppSnackBar.showError(_joinErrorMessage(e));
     } finally {
       if (mounted) setState(() => _isJoining = false);
     }

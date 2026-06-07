@@ -60,28 +60,12 @@ class MemberRankCard extends StatelessWidget {
         ),
         child: Row(
           children: [
-            _buildRankLabel(themeProvider),
-            const SizedBox(width: 8),
             _buildAvatar(m, themeProvider),
             SizedBox(width: screenHeight * 0.012),
             Expanded(child: _buildMemberInfo(m, themeProvider)),
             _buildStats(m, themeProvider),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildRankLabel(ThemeHandler themeProvider) {
-    final isTop3 = rank <= 3;
-
-    return SizedBox(
-      width: 26,
-      child: StandardText(
-        text: '#$rank',
-        fontSize: 13,
-        color: isTop3 ? themeProvider.primaryColor : Colors.grey[500]!,
-        fontWeight: FontWeight.w700,
       ),
     );
   }
