@@ -97,9 +97,13 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
   void _changeThumbnail(StudyRoomProvider provider) {
     ImagePickerHandler().showImagePicker(
       context,
-      (XFile? file) {
+      (XFile? file) async {
         if (file == null) return;
-        provider.updateRoomThumbnail(widget.roomId, file.path);
+        try {
+          await provider.updateRoomThumbnail(widget.roomId, file.path);
+        } catch (_) {
+          if (mounted) AppSnackBar.showError('썸네일을 변경하지 못했어요');
+        }
       },
     );
   }
@@ -660,7 +664,7 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
                   ),
                 ),
         ),
-        if (isHost) _buildChallengeCreateButton(context, themeProvider),
+        _buildChallengeCreateButton(context, themeProvider),
       ],
     );
   }
@@ -675,6 +679,7 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
         padding: const EdgeInsets.fromLTRB(16, 8, 92, 12),
         child: SizedBox(
           width: double.infinity,
+          height: 56,
           child: TextButton(
             onPressed: () => ChallengeCreateSheet.show(context),
             style: TextButton.styleFrom(
@@ -802,7 +807,24 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
                     },
                   ),
                 if (provider.weeklyReport != null) const SizedBox(height: 8),
-                if (room != null)
+                if (room != null && isHost)
+                  _buildSheetItem(
+                    icon: Icons.edit_outlined,
+                    iconColor: themeProvider.primaryColor,
+                    label: '스터디룸 이름 변경',
+                    labelColor: Colors.black87,
+                    onTap: () {
+                      Navigator.pop(context);
+                      _showRoomNameEditDialog(
+                        context,
+                        provider,
+                        room,
+                        themeProvider,
+                      );
+                    },
+                  ),
+                if (room != null && isHost) const SizedBox(height: 8),
+                if (room != null && isHost)
                   _buildSheetItem(
                     icon: Icons.photo_camera_outlined,
                     iconColor: themeProvider.primaryColor,
@@ -813,7 +835,7 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
                       _changeThumbnail(provider);
                     },
                   ),
-                if (room != null) const SizedBox(height: 8),
+                if (room != null && isHost) const SizedBox(height: 8),
                 if (room != null && isHost)
                   _buildSheetItem(
                     icon: Icons.manage_accounts_outlined,
@@ -846,20 +868,210 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
                   },
                 ),
                 const SizedBox(height: 8),
-                _buildSheetItem(
-                  icon: Icons.close,
-                  iconColor: Colors.grey[600]!,
-                  label: '취소',
-                  labelColor: Colors.black87,
-                  onTap: () => Navigator.pop(context),
-                ),
-                const SizedBox(height: 8),
               ],
             ),
           ),
         ),
       ),
     );
+  }
+
+  Future<void> _showRoomNameEditDialog(
+    BuildContext context,
+    StudyRoomProvider provider,
+    StudyRoomModel room,
+    ThemeHandler themeProvider,
+  ) async {
+    final controller = TextEditingController(text: room.name);
+    bool isSaving = false;
+
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return Dialog(
+              backgroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(15),
+                side: BorderSide(color: Colors.grey[200]!, width: 1),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 20, 20, 18),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: themeProvider.primaryColor
+                                .withValues(alpha: 0.10),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Icon(
+                            Icons.edit_outlined,
+                            color: themeProvider.primaryColor,
+                            size: 20,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        const StandardText(
+                          text: '스터디룸 이름 변경',
+                          fontSize: 18,
+                          color: Colors.black87,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 18),
+                    TextField(
+                      controller: controller,
+                      autofocus: true,
+                      maxLength: 20,
+                      textInputAction: TextInputAction.done,
+                      style: const StandardText(
+                        text: '',
+                        fontSize: 14,
+                        color: Colors.black87,
+                      ).getTextStyle(),
+                      decoration: InputDecoration(
+                        counterText: '',
+                        hintText: '스터디룸 이름',
+                        filled: true,
+                        fillColor: Colors.grey[50],
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 14,
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide:
+                              BorderSide(color: Colors.grey[200]!, width: 1),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: BorderSide(
+                            color: themeProvider.primaryColor,
+                            width: 1.5,
+                          ),
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                      onSubmitted: (_) => _submitRoomName(
+                        dialogContext,
+                        provider,
+                        room.roomId,
+                        controller.text,
+                        setDialogState,
+                        () => isSaving,
+                        (value) => isSaving = value,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextButton(
+                            onPressed: isSaving
+                                ? null
+                                : () => Navigator.pop(dialogContext),
+                            style: TextButton.styleFrom(
+                              backgroundColor: Colors.grey[50],
+                              padding: const EdgeInsets.symmetric(vertical: 13),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                side: BorderSide(
+                                  color: Colors.grey[200]!,
+                                  width: 1,
+                                ),
+                              ),
+                            ),
+                            child: const StandardText(
+                              text: '닫기',
+                              fontSize: 14,
+                              color: Colors.black87,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: TextButton(
+                            onPressed: isSaving
+                                ? null
+                                : () => _submitRoomName(
+                                      dialogContext,
+                                      provider,
+                                      room.roomId,
+                                      controller.text,
+                                      setDialogState,
+                                      () => isSaving,
+                                      (value) => isSaving = value,
+                                    ),
+                            style: TextButton.styleFrom(
+                              backgroundColor: isSaving
+                                  ? Colors.grey[300]
+                                  : themeProvider.primaryColor,
+                              padding: const EdgeInsets.symmetric(vertical: 13),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            child: const StandardText(
+                              text: '저장',
+                              fontSize: 14,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+
+    controller.dispose();
+  }
+
+  Future<void> _submitRoomName(
+    BuildContext dialogContext,
+    StudyRoomProvider provider,
+    int roomId,
+    String rawName,
+    StateSetter setDialogState,
+    bool Function() getIsSaving,
+    ValueChanged<bool> setIsSaving,
+  ) async {
+    if (getIsSaving()) return;
+    final name = rawName.trim();
+    if (name.isEmpty) {
+      AppSnackBar.showError('방 이름을 입력해 주세요');
+      return;
+    }
+    if (name.length > 20) {
+      AppSnackBar.showError('방 이름은 20자 이하로 입력해 주세요');
+      return;
+    }
+
+    setDialogState(() => setIsSaving(true));
+    try {
+      await provider.updateRoomName(roomId, name);
+      if (dialogContext.mounted) Navigator.pop(dialogContext);
+    } catch (_) {
+      AppSnackBar.showError('방 이름을 변경하지 못했어요');
+    } finally {
+      setDialogState(() => setIsSaving(false));
+    }
   }
 
   void _showMemberManageSheet(
