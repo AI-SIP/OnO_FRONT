@@ -5,6 +5,8 @@ class StudyRoomMemberModel {
   final int currentStreak;
   final int weeklyProblemCount;
   final int weeklyPracticeCount;
+  final int? todayPracticeCount;
+  final bool? practicedToday;
   final int? weeklyGoal;
   final int? goalProgress;
 
@@ -15,9 +17,17 @@ class StudyRoomMemberModel {
     required this.currentStreak,
     required this.weeklyProblemCount,
     required this.weeklyPracticeCount,
+    this.todayPracticeCount,
+    this.practicedToday,
     this.weeklyGoal,
     this.goalProgress,
   });
+
+  bool get hasPracticedToday =>
+      practicedToday ?? ((todayPracticeCount ?? 0) > 0);
+
+  int get displayTodayPracticeCount =>
+      todayPracticeCount ?? (hasPracticedToday ? 1 : 0);
 
   factory StudyRoomMemberModel.fromJson(Map<String, dynamic> json) {
     return StudyRoomMemberModel(
@@ -27,6 +37,10 @@ class StudyRoomMemberModel {
       currentStreak: ((json['currentStreak'] ?? 0) as num).toInt(),
       weeklyProblemCount: ((json['weeklyProblemCount'] ?? 0) as num).toInt(),
       weeklyPracticeCount: ((json['weeklyPracticeCount'] ?? 0) as num).toInt(),
+      todayPracticeCount: json['todayPracticeCount'] == null
+          ? null
+          : (json['todayPracticeCount'] as num).toInt(),
+      practicedToday: json['practicedToday'] as bool?,
       weeklyGoal: json['weeklyGoal'] == null
           ? null
           : (json['weeklyGoal'] as num).toInt(),
@@ -47,6 +61,8 @@ class StudyRoomMemberModel {
       currentStreak: currentStreak,
       weeklyProblemCount: weeklyProblemCount,
       weeklyPracticeCount: weeklyPracticeCount,
+      todayPracticeCount: todayPracticeCount,
+      practicedToday: practicedToday,
       weeklyGoal: weeklyGoal,
       goalProgress: goalProgress,
     );

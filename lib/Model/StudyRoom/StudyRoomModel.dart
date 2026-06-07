@@ -9,6 +9,8 @@ class StudyRoomModel {
   final DateTime? inviteExpiredAt;
   final String? thumbnailImagePath;
   final int? serverMemberCount;
+  final int? todayPracticeMemberCount;
+  final int? todayPracticeCount;
 
   const StudyRoomModel({
     required this.roomId,
@@ -19,9 +21,22 @@ class StudyRoomModel {
     this.inviteExpiredAt,
     this.thumbnailImagePath,
     this.serverMemberCount,
+    this.todayPracticeMemberCount,
+    this.todayPracticeCount,
   });
 
   int get memberCount => serverMemberCount ?? members.length;
+
+  int get displayTodayPracticeMemberCount =>
+      todayPracticeMemberCount ??
+      members.where((member) => member.hasPracticedToday).length;
+
+  int get displayTodayPracticeCount =>
+      todayPracticeCount ??
+      members.fold<int>(
+        0,
+        (sum, member) => sum + member.displayTodayPracticeCount,
+      );
 
   factory StudyRoomModel.fromJson(Map<String, dynamic> json) {
     final membersJson = json['members'];
@@ -41,6 +56,12 @@ class StudyRoomModel {
       serverMemberCount: json['memberCount'] == null
           ? null
           : (json['memberCount'] as num).toInt(),
+      todayPracticeMemberCount: json['todayPracticeMemberCount'] == null
+          ? null
+          : (json['todayPracticeMemberCount'] as num).toInt(),
+      todayPracticeCount: json['todayPracticeCount'] == null
+          ? null
+          : (json['todayPracticeCount'] as num).toInt(),
     );
   }
 
@@ -53,6 +74,8 @@ class StudyRoomModel {
     DateTime? inviteExpiredAt,
     String? thumbnailImagePath,
     int? serverMemberCount,
+    int? todayPracticeMemberCount,
+    int? todayPracticeCount,
   }) {
     return StudyRoomModel(
       roomId: roomId ?? this.roomId,
@@ -63,6 +86,9 @@ class StudyRoomModel {
       inviteExpiredAt: inviteExpiredAt ?? this.inviteExpiredAt,
       thumbnailImagePath: thumbnailImagePath ?? this.thumbnailImagePath,
       serverMemberCount: serverMemberCount ?? this.serverMemberCount,
+      todayPracticeMemberCount:
+          todayPracticeMemberCount ?? this.todayPracticeMemberCount,
+      todayPracticeCount: todayPracticeCount ?? this.todayPracticeCount,
     );
   }
 }
