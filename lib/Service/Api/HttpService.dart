@@ -165,6 +165,16 @@ class HttpService {
           }
           break;
 
+        case 'PUT':
+          response = body != null
+              ? await http
+                  .put(uri, headers: mergedHeaders, body: json.encode(body))
+                  .timeout(const Duration(seconds: 30))
+              : await http
+                  .put(uri, headers: mergedHeaders)
+                  .timeout(const Duration(seconds: 30));
+          break;
+
         case 'DELETE':
           if (body != null) {
             response = await http
