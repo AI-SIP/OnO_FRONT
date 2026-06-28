@@ -4,6 +4,7 @@ import 'package:ono/Model/StudyRoom/ActivityFeedModel.dart';
 import 'package:ono/Model/StudyRoom/ChallengeModel.dart';
 import 'package:ono/Model/StudyRoom/FeedReactionModel.dart';
 import 'package:ono/Model/StudyRoom/InviteCodeModel.dart';
+import 'package:ono/Model/StudyRoom/SharedProblemCommentModel.dart';
 import 'package:ono/Model/StudyRoom/SharedProblemModel.dart';
 import 'package:ono/Model/StudyRoom/StudyRoomModel.dart';
 import 'package:ono/Model/StudyRoom/StudySessionModel.dart';
@@ -290,6 +291,67 @@ class StudyRoomService {
     return _mapList(_asMap(data)['reactions'], FeedReactionModel.fromJson);
   }
 
+  Future<CursorPage<SharedProblemCommentModel>> fetchSharedProblemComments({
+    required int roomId,
+    required int sharedProblemId,
+    int? cursor,
+    int size = 20,
+  }) async {
+    final data = await httpService.sendRequest(
+      method: 'GET',
+      url: '$baseUrl/$roomId/shared-problems/$sharedProblemId/comments',
+      showErrorSnackBar: false,
+      queryParams: {
+        if (cursor != null) 'cursor': cursor.toString(),
+        'size': size.toString(),
+      },
+    );
+    return _cursorPage(data, SharedProblemCommentModel.fromJson);
+  }
+
+  Future<SharedProblemCommentModel> createSharedProblemComment({
+    required int roomId,
+    required int sharedProblemId,
+    required String content,
+  }) async {
+    final data = await httpService.sendRequest(
+      method: 'POST',
+      url: '$baseUrl/$roomId/shared-problems/$sharedProblemId/comments',
+      showErrorSnackBar: false,
+      body: {'content': content.trim()},
+    );
+    return SharedProblemCommentModel.fromJson(_asMap(data));
+  }
+
+  Future<SharedProblemCommentModel> updateSharedProblemComment({
+    required int roomId,
+    required int sharedProblemId,
+    required int commentId,
+    required String content,
+  }) async {
+    final data = await httpService.sendRequest(
+      method: 'PATCH',
+      url:
+          '$baseUrl/$roomId/shared-problems/$sharedProblemId/comments/$commentId',
+      showErrorSnackBar: false,
+      body: {'content': content.trim()},
+    );
+    return SharedProblemCommentModel.fromJson(_asMap(data));
+  }
+
+  Future<void> deleteSharedProblemComment({
+    required int roomId,
+    required int sharedProblemId,
+    required int commentId,
+  }) async {
+    await httpService.sendRequest(
+      method: 'DELETE',
+      url:
+          '$baseUrl/$roomId/shared-problems/$sharedProblemId/comments/$commentId',
+      showErrorSnackBar: false,
+    );
+  }
+
   Future<List<WeeklyReportModel>> fetchWeeklyReports({
     required int roomId,
     int limit = 4,
@@ -317,6 +379,14 @@ class StudyRoomService {
     dynamic data,
     T Function(Map<String, dynamic>) parser,
   ) {
+    if (data is List) {
+      return CursorPage<T>(
+        content: _mapList(data, parser),
+        nextCursor: null,
+        hasNext: false,
+      );
+    }
+
     final map = _asMap(data);
     return CursorPage<T>(
       content: _mapList(map['content'], parser),

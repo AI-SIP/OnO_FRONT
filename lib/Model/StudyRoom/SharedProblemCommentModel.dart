@@ -1,0 +1,40 @@
+class SharedProblemCommentModel {
+  final int commentId;
+  final String content;
+  final int authorId;
+  final String authorName;
+  final String? authorProfileImageUrl;
+  final DateTime createdAt;
+  final DateTime? updatedAt;
+  final bool isEdited;
+  final bool isMine;
+
+  const SharedProblemCommentModel({
+    required this.commentId,
+    required this.content,
+    required this.authorId,
+    required this.authorName,
+    this.authorProfileImageUrl,
+    required this.createdAt,
+    this.updatedAt,
+    required this.isEdited,
+    required this.isMine,
+  });
+
+  factory SharedProblemCommentModel.fromJson(Map<String, dynamic> json) {
+    final updatedAtText = json['updatedAt']?.toString();
+    return SharedProblemCommentModel(
+      commentId: ((json['commentId'] ?? 0) as num).toInt(),
+      content: (json['content'] ?? '').toString(),
+      authorId: ((json['authorId'] ?? 0) as num).toInt(),
+      authorName: (json['authorName'] ?? '알 수 없음').toString(),
+      authorProfileImageUrl: json['authorProfileImageUrl'] as String?,
+      createdAt: DateTime.tryParse((json['createdAt'] ?? '').toString()) ??
+          DateTime.now(),
+      updatedAt:
+          updatedAtText == null ? null : DateTime.tryParse(updatedAtText),
+      isEdited: json['isEdited'] == true,
+      isMine: json['isMine'] == true,
+    );
+  }
+}

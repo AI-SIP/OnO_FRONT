@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../Model/StudyRoom/ActivityFeedModel.dart';
 import '../Model/StudyRoom/ChallengeModel.dart';
 import '../Model/StudyRoom/InviteCodeModel.dart';
+import '../Model/StudyRoom/SharedProblemCommentModel.dart';
 import '../Model/StudyRoom/SharedProblemModel.dart';
 import '../Model/StudyRoom/StudyRoomMemberModel.dart';
 import '../Model/StudyRoom/StudyRoomModel.dart';
@@ -25,6 +26,7 @@ class StudyRoomProvider extends ChangeNotifier {
   List<ChallengeModel> challenges = [];
   List<StudySessionModel> activeSessions = [];
   List<SharedProblemModel> sharedProblems = [];
+  final Map<int, List<SharedProblemCommentModel>> sharedProblemComments = {};
   WeeklyReportModel? weeklyReport;
   int? myWeeklyGoal;
 
@@ -327,6 +329,7 @@ class StudyRoomProvider extends ChangeNotifier {
       sharedProblemId: sharedProblemId,
     );
     sharedProblems.removeWhere((s) => s.sharedProblemId == sharedProblemId);
+    sharedProblemComments.remove(sharedProblemId);
     notifyListeners();
   }
 
@@ -352,6 +355,74 @@ class StudyRoomProvider extends ChangeNotifier {
       sharedProblemId: sharedProblemId,
       emoji: emojiKey,
     );
+    notifyListeners();
+  }
+
+  Future<void> fetchSharedProblemComments(int sharedProblemId) async {
+    final roomId = selectedRoom?.roomId ?? _activeRoomId;
+    if (roomId == null) return;
+    final page = await _service.fetchSharedProblemComments(
+      roomId: roomId,
+      sharedProblemId: sharedProblemId,
+    );
+    sharedProblemComments[sharedProblemId] = page.content;
+    notifyListeners();
+  }
+
+  Future<void> createSharedProblemComment(
+    int sharedProblemId,
+    String content,
+  ) async {
+    final roomId = selectedRoom?.roomId ?? _activeRoomId;
+    if (roomId == null) return;
+    final comment = await _service.createSharedProblemComment(
+      roomId: roomId,
+      sharedProblemId: sharedProblemId,
+      content: content,
+    );
+    sharedProblemComments[sharedProblemId] = [
+      ...(sharedProblemComments[sharedProblemId] ?? const []),
+      comment,
+    ];
+    notifyListeners();
+  }
+
+  Future<void> updateSharedProblemComment({
+    required int sharedProblemId,
+    required int commentId,
+    required String content,
+  }) async {
+    final roomId = selectedRoom?.roomId ?? _activeRoomId;
+    if (roomId == null) return;
+    final updated = await _service.updateSharedProblemComment(
+      roomId: roomId,
+      sharedProblemId: sharedProblemId,
+      commentId: commentId,
+      content: content,
+    );
+    sharedProblemComments[sharedProblemId] =
+        (sharedProblemComments[sharedProblemId] ?? const [])
+            .map(
+                (comment) => comment.commentId == commentId ? updated : comment)
+            .toList();
+    notifyListeners();
+  }
+
+  Future<void> deleteSharedProblemComment({
+    required int sharedProblemId,
+    required int commentId,
+  }) async {
+    final roomId = selectedRoom?.roomId ?? _activeRoomId;
+    if (roomId == null) return;
+    await _service.deleteSharedProblemComment(
+      roomId: roomId,
+      sharedProblemId: sharedProblemId,
+      commentId: commentId,
+    );
+    sharedProblemComments[sharedProblemId] =
+        (sharedProblemComments[sharedProblemId] ?? const [])
+            .where((comment) => comment.commentId != commentId)
+            .toList();
     notifyListeners();
   }
 
