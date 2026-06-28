@@ -8,6 +8,7 @@ class SharedProblemModel {
   final String? problemImageUrl;
   final String reference;
   final String? comment;
+  final int? commentCount;
   final DateTime sharedAt;
   List<FeedReactionModel> reactions;
 
@@ -19,6 +20,7 @@ class SharedProblemModel {
     this.problemImageUrl,
     required this.reference,
     this.comment,
+    this.commentCount,
     required this.sharedAt,
     required this.reactions,
   });
@@ -34,6 +36,9 @@ class SharedProblemModel {
       problemImageUrl: json['problemImageUrl'] as String?,
       reference: (json['reference'] ?? '공유 문제').toString(),
       comment: json['comment'] as String?,
+      commentCount: json['commentCount'] == null
+          ? null
+          : (json['commentCount'] as num).toInt(),
       sharedAt: DateTime.tryParse((json['sharedAt'] ?? '').toString()) ??
           DateTime.now(),
       reactions: reactionsJson is List

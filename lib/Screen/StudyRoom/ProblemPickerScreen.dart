@@ -34,7 +34,6 @@ class _ProblemPickerScreenState extends State<ProblemPickerScreen> {
   bool _isSharing = false;
 
   late ScrollController _problemScrollController;
-  final ScrollController _chipScrollController = ScrollController();
 
   @override
   void initState() {
@@ -48,7 +47,6 @@ class _ProblemPickerScreenState extends State<ProblemPickerScreen> {
   void dispose() {
     _problemScrollController.removeListener(_onProblemScroll);
     _problemScrollController.dispose();
-    _chipScrollController.dispose();
     super.dispose();
   }
 
@@ -334,21 +332,18 @@ class _ProblemPickerScreenState extends State<ProblemPickerScreen> {
               ? Center(child: _buildEmptyFolders())
               : LayoutBuilder(
                   builder: (context, constraints) {
-                    if (constraints.maxWidth >= 600) {
-                      return _buildWideLayout(themeProvider, constraints);
-                    } else {
-                      return _buildNarrowLayout(themeProvider);
-                    }
+                    return _buildSplitLayout(themeProvider, constraints);
                   },
                 ),
     );
   }
 
-  // ── 태블릿 / 가로 폰: 좌측 폴더 패널 + 우측 문제 목록 ──────────────────
-
-  Widget _buildWideLayout(
+  Widget _buildSplitLayout(
       ThemeHandler themeProvider, BoxConstraints constraints) {
-    final folderWidth = max(120.0, constraints.maxWidth * 0.28);
+    final folderWidth = max(
+      constraints.maxWidth < 360 ? 94.0 : 112.0,
+      min(constraints.maxWidth * 0.30, 184.0),
+    );
     return Row(
       children: [
         SizedBox(
@@ -359,7 +354,12 @@ class _ProblemPickerScreenState extends State<ProblemPickerScreen> {
         Expanded(
           child: _buildProblemList(
             themeProvider,
-            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 14),
+            padding: EdgeInsets.fromLTRB(
+              constraints.maxWidth < 360 ? 10 : 14,
+              12,
+              constraints.maxWidth < 360 ? 10 : 14,
+              18,
+            ),
           ),
         ),
       ],
@@ -368,104 +368,60 @@ class _ProblemPickerScreenState extends State<ProblemPickerScreen> {
 
   Widget _buildSideFolderList(ThemeHandler themeProvider) {
     return Container(
-      color: Colors.grey[50],
+      color: Colors.white,
       child: ListView.builder(
+        padding: const EdgeInsets.symmetric(vertical: 8),
         itemCount: _folders.length,
         itemBuilder: (_, i) {
           final folder = _folders[i];
           final isSelected = folder.folderId == _selectedFolderId;
-          return GestureDetector(
+          return InkWell(
             onTap: () => _selectFolder(folder),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
-              color: isSelected
-                  ? themeProvider.primaryColor.withValues(alpha: 0.08)
-                  : Colors.transparent,
-              child: Row(
-                children: [
-                  if (isSelected)
-                    Container(
-                      width: 3,
-                      height: 14,
-                      margin: const EdgeInsets.only(right: 8),
-                      decoration: BoxDecoration(
-                        color: themeProvider.primaryColor,
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                    ),
-                  Expanded(
-                    child: StandardText(
-                      text: folder.folderName,
-                      fontSize: 13,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 160),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 11),
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? themeProvider.primaryColor.withValues(alpha: 0.08)
+                      : Colors.transparent,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: isSelected
+                        ? themeProvider.primaryColor.withValues(alpha: 0.30)
+                        : Colors.transparent,
+                    width: 1,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      isSelected ? Icons.folder : Icons.folder_outlined,
+                      size: 17,
                       color: isSelected
                           ? themeProvider.primaryColor
-                          : Colors.black54,
-                      fontWeight:
-                          isSelected ? FontWeight.w700 : FontWeight.normal,
-                      fontFamily:
-                          isSelected ? 'PretendardBold' : 'PretendardLight',
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 2,
+                          : Colors.grey[500],
                     ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  // ── 세로 폰: 상단 칩 + 하단 문제 목록 ────────────────────────────────────
-
-  Widget _buildNarrowLayout(ThemeHandler themeProvider) {
-    return Column(
-      children: [
-        _buildFolderChips(themeProvider),
-        Divider(height: 1, thickness: 1, color: Colors.grey[200]),
-        Expanded(
-          child: _buildProblemList(
-            themeProvider,
-            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildFolderChips(ThemeHandler themeProvider) {
-    return SizedBox(
-      height: 52,
-      child: ListView.builder(
-        controller: _chipScrollController,
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        itemCount: _folders.length,
-        itemBuilder: (_, i) {
-          final folder = _folders[i];
-          final isSelected = folder.folderId == _selectedFolderId;
-          return GestureDetector(
-            onTap: () => _selectFolder(folder),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 180),
-              margin: const EdgeInsets.only(right: 8),
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-              decoration: BoxDecoration(
-                color: isSelected ? themeProvider.primaryColor : Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: isSelected
-                      ? themeProvider.primaryColor
-                      : Colors.grey[300]!,
+                    const SizedBox(width: 7),
+                    Expanded(
+                      child: StandardText(
+                        text: folder.folderName,
+                        fontSize: 12,
+                        color: isSelected
+                            ? themeProvider.primaryColor
+                            : Colors.grey[700]!,
+                        fontWeight:
+                            isSelected ? FontWeight.w700 : FontWeight.normal,
+                        fontFamily:
+                            isSelected ? 'PretendardBold' : 'PretendardLight',
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 2,
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-              child: StandardText(
-                text: folder.folderName,
-                fontSize: 13,
-                color: isSelected ? Colors.white : Colors.black54,
-                fontWeight: isSelected ? FontWeight.w700 : FontWeight.normal,
-                fontFamily: isSelected ? 'PretendardBold' : 'PretendardLight',
               ),
             ),
           );
@@ -512,6 +468,7 @@ class _ProblemPickerScreenState extends State<ProblemPickerScreen> {
     return GestureDetector(
       onTap: () => _onProblemTap(problem),
       child: Container(
+        padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(12),
@@ -525,15 +482,13 @@ class _ProblemPickerScreenState extends State<ProblemPickerScreen> {
           ],
         ),
         child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             ClipRRect(
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(12),
-                bottomLeft: Radius.circular(12),
-              ),
+              borderRadius: BorderRadius.circular(9),
               child: SizedBox(
-                width: 60,
-                height: 72,
+                width: 52,
+                height: 66,
                 child: firstImage?.imageUrl != null
                     ? Image.network(
                         firstImage!.imageUrl,
@@ -544,44 +499,47 @@ class _ProblemPickerScreenState extends State<ProblemPickerScreen> {
                     : _imagePlaceholder(primary),
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 10),
             Expanded(
               child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  if (problem.reference != null &&
-                      problem.reference!.isNotEmpty)
-                    StandardText(
-                      text: problem.reference!,
-                      fontSize: 14,
-                      color: Colors.black87,
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 2,
-                    ),
+                  StandardText(
+                    text: problem.reference?.trim().isNotEmpty == true
+                        ? problem.reference!
+                        : '제목 없는 문제',
+                    fontSize: 14,
+                    color: Colors.black87,
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 2,
+                  ),
                   const SizedBox(height: 6),
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: primary.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: StandardText(
-                      text: _selectedFolderName,
-                      fontSize: 11,
-                      color: primary,
-                      fontWeight: FontWeight.normal,
-                      fontFamily: 'PretendardLight',
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: primary.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: StandardText(
+                        text: _selectedFolderName,
+                        fontSize: 11,
+                        color: primary,
+                        fontWeight: FontWeight.normal,
+                        fontFamily: 'PretendardLight',
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                      ),
                     ),
                   ),
                 ],
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.only(right: 12),
-              child:
-                  Icon(Icons.chevron_right, color: Colors.grey[400], size: 20),
-            ),
+            const SizedBox(width: 8),
+            Icon(Icons.chevron_right, color: Colors.grey[400], size: 20),
           ],
         ),
       ),

@@ -8,6 +8,7 @@ class SharedProblemCommentModel {
   final DateTime? updatedAt;
   final bool isEdited;
   final bool isMine;
+  final bool canDelete;
 
   const SharedProblemCommentModel({
     required this.commentId,
@@ -19,6 +20,7 @@ class SharedProblemCommentModel {
     this.updatedAt,
     required this.isEdited,
     required this.isMine,
+    required this.canDelete,
   });
 
   factory SharedProblemCommentModel.fromJson(Map<String, dynamic> json) {
@@ -35,6 +37,7 @@ class SharedProblemCommentModel {
           updatedAtText == null ? null : DateTime.tryParse(updatedAtText),
       isEdited: json['isEdited'] == true,
       isMine: json['isMine'] == true,
+      canDelete: json['canDelete'] == true || json['isMine'] == true,
     );
   }
 }

@@ -268,10 +268,11 @@ class SharedProblemCard extends StatelessWidget {
             ),
           _SharedProblemCommentsSection(
             sharedProblemId: p.sharedProblemId,
+            initialCommentCount: p.commentCount,
             themeProvider: themeProvider,
           ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(4, 8, 4, 12),
+            padding: const EdgeInsets.fromLTRB(14, 8, 14, 12),
             child: FeedReactionBar(
               reactions: p.reactions,
               themeProvider: themeProvider,
@@ -345,10 +346,12 @@ class SharedProblemCard extends StatelessWidget {
 
 class _SharedProblemCommentsSection extends StatefulWidget {
   final int sharedProblemId;
+  final int? initialCommentCount;
   final ThemeHandler themeProvider;
 
   const _SharedProblemCommentsSection({
     required this.sharedProblemId,
+    required this.initialCommentCount,
     required this.themeProvider,
   });
 
@@ -547,6 +550,9 @@ class _SharedProblemCommentsSectionState
             .watch<StudyRoomProvider>()
             .sharedProblemComments[widget.sharedProblemId] ??
         const <SharedProblemCommentModel>[];
+    final displayCommentCount = comments.isNotEmpty
+        ? comments.length
+        : (widget.initialCommentCount ?? 0);
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(14, 10, 14, 0),
@@ -569,9 +575,9 @@ class _SharedProblemCommentsSectionState
                     fontWeight: FontWeight.w700,
                   ),
                   const SizedBox(width: 6),
-                  if (comments.isNotEmpty)
+                  if (displayCommentCount > 0)
                     StandardText(
-                      text: '${comments.length}',
+                      text: '$displayCommentCount',
                       fontSize: 12,
                       color: Colors.grey[500]!,
                       fontWeight: FontWeight.normal,
@@ -702,7 +708,7 @@ class _SharedProblemCommentsSectionState
                 fontWeight: FontWeight.normal,
                 fontFamily: 'PretendardLight',
               ),
-              if (comment.isMine)
+              if (comment.isMine || comment.canDelete)
                 PopupMenuButton<String>(
                   padding: EdgeInsets.zero,
                   icon:
@@ -714,7 +720,11 @@ class _SharedProblemCommentsSectionState
                   itemBuilder: (_) => const [
                     PopupMenuItem(value: 'edit', child: Text('수정')),
                     PopupMenuItem(value: 'delete', child: Text('삭제')),
-                  ],
+                  ].where((item) {
+                    if (item.value == 'edit') return comment.isMine;
+                    if (item.value == 'delete') return comment.canDelete;
+                    return true;
+                  }).toList(),
                 ),
             ],
           ),

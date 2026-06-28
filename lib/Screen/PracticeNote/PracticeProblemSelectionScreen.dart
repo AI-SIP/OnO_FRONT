@@ -507,9 +507,9 @@ class _PracticeProblemSelectionScreenState
           backgroundColor: Colors.white,
           body: LayoutBuilder(
             builder: (context, constraints) {
-              final useFolderSplit =
-                  _searchMode == _PracticeSearchMode.folder &&
-                      constraints.maxWidth >= 600;
+              final useFolderSplit = _searchMode == _PracticeSearchMode.folder;
+              final folderWidth =
+                  (constraints.maxWidth * 0.30).clamp(96.0, 184.0).toDouble();
 
               return Column(
                 children: [
@@ -524,7 +524,7 @@ class _PracticeProblemSelectionScreenState
                       child: Row(
                         children: [
                           SizedBox(
-                            width: constraints.maxWidth * 0.30,
+                            width: folderWidth,
                             child: _buildSideFolderList(themeProvider),
                           ),
                           Container(width: 1, color: Colors.grey[200]),
@@ -533,9 +533,11 @@ class _PracticeProblemSelectionScreenState
                               context,
                               themeProvider,
                               expand: false,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 18,
-                                vertical: 8,
+                              padding: EdgeInsets.fromLTRB(
+                                constraints.maxWidth < 360 ? 10 : 14,
+                                8,
+                                constraints.maxWidth < 360 ? 10 : 14,
+                                12,
                               ),
                             ),
                           ),
@@ -867,9 +869,10 @@ class _PracticeProblemSelectionScreenState
   Widget _buildSideFolderList(ThemeHandler themeProvider) {
     final rootFolderId = context.read<FoldersProvider>().rootFolder?.folderId;
     return Container(
-      color: Colors.grey[50],
+      color: Colors.white,
       child: ListView.builder(
         controller: _folderScrollController,
+        padding: const EdgeInsets.symmetric(vertical: 8),
         itemCount:
             allFolders.length + (_folderHasNext || _isLoadingFolders ? 1 : 0),
         itemBuilder: (context, index) {
@@ -897,37 +900,51 @@ class _PracticeProblemSelectionScreenState
               setState(() => selectedFolderId = folder.folderId);
               await _loadInitialProblems(folder.folderId);
             },
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
-              color: isSelected
-                  ? themeProvider.primaryColor.withValues(alpha: 0.08)
-                  : Colors.transparent,
-              child: Row(
-                children: [
-                  Icon(
-                    isSelected ? Icons.folder : Icons.folder_outlined,
-                    size: 18,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 160),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 11),
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? themeProvider.primaryColor.withValues(alpha: 0.08)
+                      : Colors.transparent,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
                     color: isSelected
-                        ? themeProvider.primaryColor
-                        : Colors.grey[500],
+                        ? themeProvider.primaryColor.withValues(alpha: 0.30)
+                        : Colors.transparent,
+                    width: 1,
                   ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: StandardText(
-                      text: displayName,
-                      fontSize: 13,
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      isSelected ? Icons.folder : Icons.folder_outlined,
+                      size: 17,
                       color: isSelected
                           ? themeProvider.primaryColor
-                          : Colors.black54,
-                      fontWeight:
-                          isSelected ? FontWeight.w700 : FontWeight.normal,
-                      fontFamily:
-                          isSelected ? 'PretendardBold' : 'PretendardLight',
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 2,
+                          : Colors.grey[500],
                     ),
-                  ),
-                ],
+                    const SizedBox(width: 7),
+                    Expanded(
+                      child: StandardText(
+                        text: displayName,
+                        fontSize: 12,
+                        color: isSelected
+                            ? themeProvider.primaryColor
+                            : Colors.grey[700]!,
+                        fontWeight:
+                            isSelected ? FontWeight.w700 : FontWeight.normal,
+                        fontFamily:
+                            isSelected ? 'PretendardBold' : 'PretendardLight',
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 2,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           );
