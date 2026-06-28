@@ -325,7 +325,7 @@ class _StudyRoomListScreenState extends State<StudyRoomListScreen> {
                     children: [
                       Icon(Icons.chevron_right,
                           size: 20, color: Colors.grey[400]),
-                      if (provider.weeklyReport?.isRead == false)
+                      if (room.hasUnreadReport)
                         Positioned(
                           top: -4,
                           right: -4,

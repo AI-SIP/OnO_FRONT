@@ -11,6 +11,7 @@ class StudyRoomModel {
   final int? serverMemberCount;
   final int? todayPracticeMemberCount;
   final int? todayPracticeCount;
+  final bool hasUnreadReport;
 
   const StudyRoomModel({
     required this.roomId,
@@ -23,6 +24,7 @@ class StudyRoomModel {
     this.serverMemberCount,
     this.todayPracticeMemberCount,
     this.todayPracticeCount,
+    this.hasUnreadReport = false,
   });
 
   int get memberCount => serverMemberCount ?? members.length;
@@ -62,6 +64,7 @@ class StudyRoomModel {
       todayPracticeCount: json['todayPracticeCount'] == null
           ? null
           : (json['todayPracticeCount'] as num).toInt(),
+      hasUnreadReport: (json['hasUnreadReport'] as bool?) ?? false,
     );
   }
 
@@ -76,6 +79,7 @@ class StudyRoomModel {
     int? serverMemberCount,
     int? todayPracticeMemberCount,
     int? todayPracticeCount,
+    bool? hasUnreadReport,
   }) {
     return StudyRoomModel(
       roomId: roomId ?? this.roomId,
@@ -89,6 +93,7 @@ class StudyRoomModel {
       todayPracticeMemberCount:
           todayPracticeMemberCount ?? this.todayPracticeMemberCount,
       todayPracticeCount: todayPracticeCount ?? this.todayPracticeCount,
+      hasUnreadReport: hasUnreadReport ?? this.hasUnreadReport,
     );
   }
 }

@@ -7,6 +7,8 @@ class WeeklyReportModel {
   final int totalProblems;
   final int challengesCompleted;
   final String cheerMessage;
+  final DateTime? weekStart;
+  final DateTime? weekEnd;
   bool isRead;
 
   WeeklyReportModel({
@@ -18,6 +20,8 @@ class WeeklyReportModel {
     required this.totalProblems,
     required this.challengesCompleted,
     required this.cheerMessage,
+    this.weekStart,
+    this.weekEnd,
     this.isRead = false,
   });
 
@@ -32,6 +36,12 @@ class WeeklyReportModel {
       totalProblems: ((json['totalProblems'] ?? 0) as num).toInt(),
       challengesCompleted: ((json['challengesCompleted'] ?? 0) as num).toInt(),
       cheerMessage: (json['cheerMessage'] ?? '').toString(),
+      weekStart: json['weekStart'] == null
+          ? null
+          : DateTime.tryParse(json['weekStart'] as String),
+      weekEnd: json['weekEnd'] == null
+          ? null
+          : DateTime.tryParse(json['weekEnd'] as String),
       isRead: json['isRead'] == true,
     );
   }
