@@ -59,6 +59,14 @@ class OnoEmojiPicker extends StatefulWidget {
 class _OnoEmojiPickerState extends State<OnoEmojiPicker> {
   late OnoEmojiCategory _selectedCategory;
 
+  static const Map<OnoEmojiCategory, String> _categoryDescriptions = {
+    OnoEmojiCategory.emotion: '지금 기분을 골라요',
+    OnoEmojiCategory.study: '공부할 때 쓰기 좋아요',
+    OnoEmojiCategory.cheer: '응원이 필요할 때',
+    OnoEmojiCategory.social: '친구와 말할 때',
+    OnoEmojiCategory.leisure: '쉬는 시간 느낌이에요',
+  };
+
   @override
   void initState() {
     super.initState();
@@ -89,47 +97,29 @@ class _OnoEmojiPickerState extends State<OnoEmojiPicker> {
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: widget.categories.map((category) {
-                final isSelected = category == _selectedCategory;
-                return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 5),
-                  child: Tooltip(
-                    message: category.label,
-                    child: InkWell(
-                      onTap: () => setState(() => _selectedCategory = category),
-                      borderRadius: BorderRadius.circular(18),
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 160),
-                        width: isTablet ? 54 : 48,
-                        height: isTablet ? 54 : 48,
-                        decoration: BoxDecoration(
-                          color: isSelected
-                              ? themeProvider.primaryColor
-                                  .withValues(alpha: 0.12)
-                              : Colors.grey[100],
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: isSelected
-                                ? themeProvider.primaryColor
-                                : Colors.grey[200]!,
-                            width: isSelected ? 2 : 1,
-                          ),
-                        ),
-                        child: Center(
-                          child: OnoEmojiImage(
-                            emojiKey: category.iconKey,
-                            size: isTablet ? 40 : 36,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                );
-              }).toList(),
+            SizedBox(
+              width: double.infinity,
+              child: Wrap(
+                alignment: WrapAlignment.center,
+                spacing: 8,
+                runSpacing: 8,
+                children: widget.categories
+                    .map((category) =>
+                        _buildCategoryChip(category, themeProvider, isTablet))
+                    .toList(),
+              ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 14),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: _EmojiCategoryHeader(
+                title: _selectedCategory.label,
+                description:
+                    _categoryDescriptions[_selectedCategory] ?? '이모지를 골라요',
+                color: themeProvider.primaryColor,
+              ),
+            ),
+            const SizedBox(height: 12),
             Expanded(
               child: GridView.builder(
                 itemCount: emojis.length,
@@ -172,6 +162,116 @@ class _OnoEmojiPickerState extends State<OnoEmojiPicker> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildCategoryChip(
+    OnoEmojiCategory category,
+    ThemeHandler themeProvider,
+    bool isTablet,
+  ) {
+    final isSelected = category == _selectedCategory;
+    return Tooltip(
+      message: category.label,
+      child: InkWell(
+        onTap: () => setState(() => _selectedCategory = category),
+        borderRadius: BorderRadius.circular(18),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 160),
+          constraints: BoxConstraints(
+            minWidth: isTablet ? 104 : 88,
+            minHeight: isTablet ? 42 : 38,
+          ),
+          padding: EdgeInsets.fromLTRB(
+            isTablet ? 10 : 8,
+            5,
+            isTablet ? 12 : 10,
+            5,
+          ),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? themeProvider.primaryColor.withValues(alpha: 0.12)
+                : Colors.grey[100],
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(
+              color:
+                  isSelected ? themeProvider.primaryColor : Colors.grey[200]!,
+              width: isSelected ? 2 : 1,
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              OnoEmojiImage(
+                emojiKey: category.iconKey,
+                size: isTablet ? 32 : 28,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                category.label,
+                style: TextStyle(
+                  color:
+                      isSelected ? themeProvider.primaryColor : Colors.black54,
+                  fontSize: isTablet ? 13 : 12,
+                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                  fontFamily: isSelected ? 'PretendardBold' : 'Pretendard',
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _EmojiCategoryHeader extends StatelessWidget {
+  final String title;
+  final String description;
+  final Color color;
+
+  const _EmojiCategoryHeader({
+    super.key,
+    required this.title,
+    required this.description,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.07),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          Text(
+            title,
+            style: TextStyle(
+              color: color,
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              fontFamily: 'PretendardBold',
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              description,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: Colors.grey[600],
+                fontSize: 12,
+                fontWeight: FontWeight.w400,
+                fontFamily: 'PretendardLight',
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
