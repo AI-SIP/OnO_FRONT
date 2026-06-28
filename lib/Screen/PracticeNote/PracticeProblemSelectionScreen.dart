@@ -505,16 +505,55 @@ class _PracticeProblemSelectionScreenState
         child: Scaffold(
           appBar: _buildAppBar(themeProvider),
           backgroundColor: Colors.white,
-          body: Column(
-            children: [
-              SizedBox(height: screenHeight * 0.012),
-              _buildSearchControlPanel(context, themeProvider),
-              SizedBox(
-                height: _searchMode == _PracticeSearchMode.folder ? 16 : 26,
-              ),
-              _buildProblemList(context, themeProvider),
-              _buildSubmitButton(context, themeProvider),
-            ],
+          body: LayoutBuilder(
+            builder: (context, constraints) {
+              final useFolderSplit =
+                  _searchMode == _PracticeSearchMode.folder &&
+                      constraints.maxWidth >= 600;
+
+              return Column(
+                children: [
+                  SizedBox(height: screenHeight * 0.012),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: _buildSearchModeSelector(themeProvider),
+                  ),
+                  SizedBox(height: useFolderSplit ? 16 : 24),
+                  if (useFolderSplit)
+                    Expanded(
+                      child: Row(
+                        children: [
+                          SizedBox(
+                            width: constraints.maxWidth * 0.30,
+                            child: _buildSideFolderList(themeProvider),
+                          ),
+                          Container(width: 1, color: Colors.grey[200]),
+                          Expanded(
+                            child: _buildProblemList(
+                              context,
+                              themeProvider,
+                              expand: false,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 18,
+                                vertical: 8,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  else ...[
+                    _buildSearchFilter(context, themeProvider),
+                    SizedBox(
+                      height:
+                          _searchMode == _PracticeSearchMode.folder ? 16 : 26,
+                    ),
+                    _buildProblemList(context, themeProvider),
+                  ],
+                  _buildSubmitButton(context, themeProvider),
+                ],
+              );
+            },
           ),
         ));
   }
@@ -531,23 +570,14 @@ class _PracticeProblemSelectionScreenState
     );
   }
 
-  Widget _buildSearchControlPanel(
-      BuildContext context, ThemeHandler themeProvider) {
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: _buildSearchModeSelector(themeProvider),
-        ),
-        const SizedBox(height: 24),
-        if (_searchMode == _PracticeSearchMode.folder)
-          _buildFolderList(context, themeProvider)
-        else if (_searchMode == _PracticeSearchMode.tag)
-          _buildTagFilterBar(themeProvider)
-        else
-          _buildTitleSearchBar(themeProvider),
-      ],
-    );
+  Widget _buildSearchFilter(BuildContext context, ThemeHandler themeProvider) {
+    if (_searchMode == _PracticeSearchMode.folder) {
+      return _buildFolderList(context, themeProvider);
+    }
+    if (_searchMode == _PracticeSearchMode.tag) {
+      return _buildTagFilterBar(themeProvider);
+    }
+    return _buildTitleSearchBar(themeProvider);
   }
 
   Widget _buildSearchModeSelector(ThemeHandler themeProvider) {
@@ -834,50 +864,126 @@ class _PracticeProblemSelectionScreenState
     );
   }
 
-  Widget _buildProblemList(BuildContext context, ThemeHandler themeProvider) {
-    return Expanded(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: _isLoadingProblems && _currentFolderProblems.isEmpty
-            ? const Center(child: CircularProgressIndicator())
-            : _currentFolderProblems.isNotEmpty
-                ? ListView.builder(
-                    controller: _problemScrollController,
-                    itemCount: _currentFolderProblems.length +
-                        (_problemHasNext || _isLoadingProblems ? 1 : 0),
-                    itemBuilder: (context, index) {
-                      // 로딩 인디케이터
-                      if (index == _currentFolderProblems.length) {
-                        return const Padding(
-                          padding: EdgeInsets.all(16.0),
-                          child: Center(child: CircularProgressIndicator()),
-                        );
-                      }
+  Widget _buildSideFolderList(ThemeHandler themeProvider) {
+    final rootFolderId = context.read<FoldersProvider>().rootFolder?.folderId;
+    return Container(
+      color: Colors.grey[50],
+      child: ListView.builder(
+        controller: _folderScrollController,
+        itemCount:
+            allFolders.length + (_folderHasNext || _isLoadingFolders ? 1 : 0),
+        itemBuilder: (context, index) {
+          if (index == allFolders.length) {
+            return const Padding(
+              padding: EdgeInsets.symmetric(vertical: 18),
+              child: Center(
+                child: SizedBox(
+                  width: 22,
+                  height: 22,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              ),
+            );
+          }
 
-                      final problem = _currentFolderProblems[index];
-                      final isSelected = selectedProblems.any(
-                          (selectedProblem) =>
-                              selectedProblem.problemId == problem.problemId);
+          final folder = allFolders[index];
+          final isSelected = selectedFolderId == folder.folderId;
+          final displayName =
+              folder.folderId == rootFolderId ? '책장' : folder.folderName;
 
-                      return GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            if (isSelected) {
-                              selectedProblems.removeWhere(
-                                  (p) => p.problemId == problem.problemId);
-                            } else {
-                              selectedProblems.add(problem);
-                            }
-                          });
-                        },
-                        child: _problemTileContent(
-                            problem, themeProvider, isSelected),
-                      );
-                    },
-                  )
-                : _buildEmptyProblemMessage(),
+          return InkWell(
+            onTap: () async {
+              if (selectedFolderId == folder.folderId) return;
+              setState(() => selectedFolderId = folder.folderId);
+              await _loadInitialProblems(folder.folderId);
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
+              color: isSelected
+                  ? themeProvider.primaryColor.withValues(alpha: 0.08)
+                  : Colors.transparent,
+              child: Row(
+                children: [
+                  Icon(
+                    isSelected ? Icons.folder : Icons.folder_outlined,
+                    size: 18,
+                    color: isSelected
+                        ? themeProvider.primaryColor
+                        : Colors.grey[500],
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: StandardText(
+                      text: displayName,
+                      fontSize: 13,
+                      color: isSelected
+                          ? themeProvider.primaryColor
+                          : Colors.black54,
+                      fontWeight:
+                          isSelected ? FontWeight.w700 : FontWeight.normal,
+                      fontFamily:
+                          isSelected ? 'PretendardBold' : 'PretendardLight',
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 2,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
       ),
     );
+  }
+
+  Widget _buildProblemList(
+    BuildContext context,
+    ThemeHandler themeProvider, {
+    bool expand = true,
+    EdgeInsets padding = const EdgeInsets.symmetric(horizontal: 16),
+  }) {
+    final list = Padding(
+      padding: padding,
+      child: _isLoadingProblems && _currentFolderProblems.isEmpty
+          ? const Center(child: CircularProgressIndicator())
+          : _currentFolderProblems.isNotEmpty
+              ? ListView.builder(
+                  controller: _problemScrollController,
+                  itemCount: _currentFolderProblems.length +
+                      (_problemHasNext || _isLoadingProblems ? 1 : 0),
+                  itemBuilder: (context, index) {
+                    // 로딩 인디케이터
+                    if (index == _currentFolderProblems.length) {
+                      return const Padding(
+                        padding: EdgeInsets.all(16.0),
+                        child: Center(child: CircularProgressIndicator()),
+                      );
+                    }
+
+                    final problem = _currentFolderProblems[index];
+                    final isSelected = selectedProblems.any((selectedProblem) =>
+                        selectedProblem.problemId == problem.problemId);
+
+                    return GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          if (isSelected) {
+                            selectedProblems.removeWhere(
+                                (p) => p.problemId == problem.problemId);
+                          } else {
+                            selectedProblems.add(problem);
+                          }
+                        });
+                      },
+                      child: _problemTileContent(
+                          problem, themeProvider, isSelected),
+                    );
+                  },
+                )
+              : _buildEmptyProblemMessage(),
+    );
+
+    return expand ? Expanded(child: list) : list;
   }
 
   Widget _buildEmptyProblemMessage() {
