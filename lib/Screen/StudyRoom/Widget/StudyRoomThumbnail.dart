@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import '../../../Module/Theme/ThemeHandler.dart';
 
 class StudyRoomThumbnail extends StatelessWidget {
+  static const String defaultImagePath = 'assets/emoji/studying_together.png';
+
   final String? imagePath;
   final ThemeHandler themeProvider;
   final double size;
@@ -67,6 +69,14 @@ class StudyRoomThumbnail extends StatelessWidget {
     final path = imagePath;
     if (path == null || path.isEmpty) return _buildDefaultImage();
 
+    if (path.startsWith('assets/')) {
+      return Image.asset(
+        path,
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) => _buildDefaultImage(),
+      );
+    }
+
     if (path.startsWith('http://') || path.startsWith('https://')) {
       return Image.network(
         path,
@@ -83,10 +93,6 @@ class StudyRoomThumbnail extends StatelessWidget {
   }
 
   Widget _buildDefaultImage() {
-    final initial = (roomName != null && roomName!.isNotEmpty)
-        ? roomName![0].toUpperCase()
-        : null;
-
     return DecoratedBox(
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -140,26 +146,15 @@ class StudyRoomThumbnail extends StatelessWidget {
               ),
             ),
           ),
-          // 중앙 콘텐츠: 이니셜 또는 아이콘
           Center(
-            child: initial != null
-                ? Text(
-                    initial,
-                    style: TextStyle(
-                      fontSize: size * 0.42,
-                      fontWeight: FontWeight.w800,
-                      color: Colors.white,
-                      fontFamily: 'PretendardBold',
-                      shadows: const [
-                        Shadow(
-                          color: Color(0x22000000),
-                          offset: Offset(0, 1),
-                          blurRadius: 4,
-                        ),
-                      ],
-                    ),
-                  )
-                : _buildFallbackIcons(),
+            child: Padding(
+              padding: EdgeInsets.all(size * 0.12),
+              child: Image.asset(
+                defaultImagePath,
+                fit: BoxFit.contain,
+                errorBuilder: (_, __, ___) => _buildFallbackIcons(),
+              ),
+            ),
           ),
         ],
       ),
