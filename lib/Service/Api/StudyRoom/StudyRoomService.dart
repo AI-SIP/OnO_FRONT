@@ -56,6 +56,7 @@ class StudyRoomService {
     final data = await httpService.sendRequest(
       method: 'PATCH',
       url: '$baseUrl/$roomId',
+      showErrorSnackBar: false,
       body: {'name': name.trim()},
     );
     return StudyRoomModel.fromJson(_asMap(data));
