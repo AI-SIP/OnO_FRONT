@@ -55,9 +55,14 @@ class _GoalSetDialogState extends State<GoalSetDialog> {
 
     return Dialog(
       backgroundColor: Colors.white,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Container(
-        padding: const EdgeInsets.all(24),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(15),
+        side: BorderSide(color: Colors.grey[200]!, width: 1),
+      ),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 340),
+        child: Container(
+        padding: const EdgeInsets.fromLTRB(20, 20, 20, 18),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -66,7 +71,7 @@ class _GoalSetDialogState extends State<GoalSetDialog> {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: primary.withOpacity(0.1),
+                    color: primary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(Icons.flag_outlined, color: primary, size: 20),
@@ -129,17 +134,18 @@ class _GoalSetDialogState extends State<GoalSetDialog> {
               ),
               autofocus: true,
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 22),
             Row(
               children: [
                 Expanded(
                   child: TextButton(
                     onPressed: () => Navigator.pop(context),
                     style: TextButton.styleFrom(
-                      backgroundColor: Colors.grey[100],
-                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      backgroundColor: Colors.grey[50],
+                      padding: const EdgeInsets.symmetric(vertical: 13),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(12),
+                        side: BorderSide(color: Colors.grey[200]!, width: 1),
                       ),
                     ),
                     child: const StandardText(
@@ -160,9 +166,9 @@ class _GoalSetDialogState extends State<GoalSetDialog> {
                     },
                     style: TextButton.styleFrom(
                       backgroundColor: primary,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      padding: const EdgeInsets.symmetric(vertical: 13),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(12),
                       ),
                     ),
                     child: const StandardText(
@@ -175,6 +181,7 @@ class _GoalSetDialogState extends State<GoalSetDialog> {
               ],
             ),
           ],
+        ),
         ),
       ),
     );

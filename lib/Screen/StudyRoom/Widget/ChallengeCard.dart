@@ -163,7 +163,9 @@ class ChallengeCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(15),
           side: BorderSide(color: Colors.grey[200]!, width: 1),
         ),
-        child: Padding(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 340),
+          child: Padding(
           padding: const EdgeInsets.fromLTRB(20, 20, 20, 18),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -245,6 +247,7 @@ class ChallengeCard extends StatelessWidget {
                 ],
               ),
             ],
+          ),
           ),
         ),
       ),

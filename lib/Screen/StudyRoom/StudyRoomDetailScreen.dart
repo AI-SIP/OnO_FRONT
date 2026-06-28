@@ -180,7 +180,9 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
           borderRadius: BorderRadius.circular(15),
           side: BorderSide(color: Colors.grey[200]!, width: 1),
         ),
-        child: Container(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 340),
+          child: Container(
           padding: const EdgeInsets.fromLTRB(20, 20, 20, 18),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -258,6 +260,7 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
                 ],
               ),
             ],
+          ),
           ),
         ),
       ),
