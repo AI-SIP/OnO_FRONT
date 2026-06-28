@@ -1,11 +1,14 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 
 import '../../Model/Folder/FolderThumbnailModel.dart';
 import '../../Model/Problem/ProblemModel.dart';
+import '../../Module/Problem/ProblemThumbnailCard.dart';
 import '../../Module/Text/StandardText.dart';
+import '../../Module/Theme/NoteIconHandler.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/FoldersProvider.dart';
 import '../../Provider/ProblemsProvider.dart';
@@ -25,7 +28,6 @@ class ProblemPickerScreen extends StatefulWidget {
 class _ProblemPickerScreenState extends State<ProblemPickerScreen> {
   List<FolderThumbnailModel> _folders = [];
   int? _selectedFolderId;
-  String _selectedFolderName = '';
   List<ProblemModel> _problems = [];
   int? _problemCursor;
   bool _problemHasNext = false;
@@ -71,7 +73,6 @@ class _ProblemPickerScreenState extends State<ProblemPickerScreen> {
         _folders = response.content;
         if (_folders.isNotEmpty) {
           _selectedFolderId = _folders.first.folderId;
-          _selectedFolderName = _folders.first.folderName;
         }
       });
       if (_selectedFolderId != null) {
@@ -151,75 +152,173 @@ class _ProblemPickerScreenState extends State<ProblemPickerScreen> {
     final problemTitle = problem.reference?.trim().isNotEmpty == true
         ? problem.reference!
         : '제목 없는 문제';
-    return showDialog<String>(
-      context: context,
-      builder: (_) => AlertDialog(
-        backgroundColor: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-        title: const StandardText(
-          text: '문제를 공유할까요?',
-          fontSize: 15,
-          color: Colors.black87,
-        ),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildShareSummaryRow(
-                icon: Icons.groups_2_outlined,
-                label: '공유할 방',
-                value: roomName,
-                themeProvider: themeProvider,
-              ),
-              const SizedBox(height: 10),
-              _buildShareSummaryRow(
-                icon: Icons.assignment_outlined,
-                label: '선택한 문제',
-                value: problemTitle,
-                themeProvider: themeProvider,
-                maxLines: 2,
-              ),
-              const SizedBox(height: 14),
-              TextField(
-                controller: controller,
-                maxLength: 100,
-                maxLines: 3,
-                decoration: InputDecoration(
-                  hintText: '한마디 남기기 (선택)',
-                  hintStyle: TextStyle(color: Colors.grey[400], fontSize: 13),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: BorderSide(color: Colors.grey[300]!),
+    try {
+      return await showDialog<String>(
+        context: context,
+        builder: (_) => Dialog(
+          backgroundColor: Colors.white,
+          insetPadding:
+              const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 520),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        width: 34,
+                        height: 34,
+                        decoration: BoxDecoration(
+                          color: themeProvider.primaryColor
+                              .withValues(alpha: 0.10),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Icon(
+                          Icons.ios_share_outlined,
+                          color: themeProvider.primaryColor,
+                          size: 19,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      const Expanded(
+                        child: StandardText(
+                          text: '문제를 공유할까요?',
+                          fontSize: 17,
+                          color: Colors.black87,
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                        ),
+                      ),
+                    ],
                   ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: BorderSide(
-                      color: themeProvider.primaryColor,
-                      width: 1.5,
+                  const SizedBox(height: 14),
+                  LayoutBuilder(
+                    builder: (context, constraints) {
+                      final isWide = constraints.maxWidth >= 420;
+                      final roomTile = _buildShareSummaryRow(
+                        icon: Icons.groups_2_outlined,
+                        label: '공유할 방',
+                        value: roomName,
+                        themeProvider: themeProvider,
+                      );
+                      final problemTile = _buildShareSummaryRow(
+                        icon: Icons.assignment_outlined,
+                        label: '선택한 문제',
+                        value: problemTitle,
+                        themeProvider: themeProvider,
+                        maxLines: isWide ? 1 : 2,
+                      );
+
+                      if (!isWide) {
+                        return Column(
+                          children: [
+                            roomTile,
+                            const SizedBox(height: 8),
+                            problemTile,
+                          ],
+                        );
+                      }
+
+                      return Row(
+                        children: [
+                          Expanded(child: roomTile),
+                          const SizedBox(width: 8),
+                          Expanded(child: problemTile),
+                        ],
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: controller,
+                    maxLength: 100,
+                    minLines: 2,
+                    maxLines: 2,
+                    decoration: InputDecoration(
+                      hintText: '한마디 남기기 (선택)',
+                      counterText: '',
+                      hintStyle:
+                          TextStyle(color: Colors.grey[400], fontSize: 13),
+                      filled: true,
+                      fillColor: Colors.grey[50],
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: Colors.grey[300]!),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: Colors.grey[300]!),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(
+                          color: themeProvider.primaryColor,
+                          width: 1.5,
+                        ),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 11,
+                      ),
                     ),
                   ),
-                  contentPadding: const EdgeInsets.all(12),
-                ),
+                  const SizedBox(height: 14),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextButton(
+                          onPressed: () => Navigator.pop(context, null),
+                          style: TextButton.styleFrom(
+                            backgroundColor: Colors.grey[50],
+                            padding: const EdgeInsets.symmetric(vertical: 13),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              side: BorderSide(color: Colors.grey[200]!),
+                            ),
+                          ),
+                          child: StandardText(
+                            text: '취소',
+                            fontSize: 14,
+                            color: Colors.grey[700]!,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: TextButton(
+                          onPressed: () =>
+                              Navigator.pop(context, controller.text.trim()),
+                          style: TextButton.styleFrom(
+                            backgroundColor: themeProvider.primaryColor,
+                            padding: const EdgeInsets.symmetric(vertical: 13),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: const StandardText(
+                            text: '공유하기',
+                            fontSize: 14,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, null),
-            child: Text('취소', style: TextStyle(color: Colors.grey[600])),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, controller.text.trim()),
-            child: Text('공유하기',
-                style: TextStyle(
-                    color: themeProvider.primaryColor,
-                    fontWeight: FontWeight.w700)),
-          ),
-        ],
-      ),
-    );
+      );
+    } finally {
+      controller.dispose();
+    }
   }
 
   Widget _buildShareSummaryRow({
@@ -234,7 +333,7 @@ class _ProblemPickerScreenState extends State<ProblemPickerScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
         color: themeProvider.primaryColor.withValues(alpha: 0.06),
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: themeProvider.primaryColor.withValues(alpha: 0.12),
         ),
@@ -246,6 +345,7 @@ class _ProblemPickerScreenState extends State<ProblemPickerScreen> {
           const SizedBox(width: 8),
           Expanded(
             child: Column(
+              mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 StandardText(
@@ -297,16 +397,16 @@ class _ProblemPickerScreenState extends State<ProblemPickerScreen> {
 
   void _selectFolder(FolderThumbnailModel folder) {
     if (_selectedFolderId == folder.folderId) return;
-    setState(() {
-      _selectedFolderId = folder.folderId;
-      _selectedFolderName = folder.folderName;
-    });
+    setState(() => _selectedFolderId = folder.folderId);
     _loadInitialProblems(folder.folderId);
   }
 
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeHandler>(context);
+    final roomName = Provider.of<StudyRoomProvider>(context, listen: false)
+        .selectedRoom
+        ?.name;
 
     return Scaffold(
       backgroundColor: Colors.grey[50],
@@ -317,12 +417,30 @@ class _ProblemPickerScreenState extends State<ProblemPickerScreen> {
           icon: const Icon(Icons.close, color: Colors.black87),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const StandardText(
-          text: '공유할 문제 선택',
-          fontSize: 16,
-          color: Colors.black87,
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const StandardText(
+              text: '공유할 문제 선택',
+              fontSize: 15,
+              color: Colors.black87,
+            ),
+            if (roomName != null && roomName.isNotEmpty)
+              StandardText(
+                text: roomName,
+                fontSize: 12,
+                color: themeProvider.primaryColor,
+                fontFamily: 'PretendardLight',
+                fontWeight: FontWeight.normal,
+              ),
+          ],
         ),
         centerTitle: true,
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1),
+          child: Container(height: 1, color: Colors.grey[200]),
+        ),
       ),
       body: _isLoadingFolders
           ? Center(
@@ -370,45 +488,46 @@ class _ProblemPickerScreenState extends State<ProblemPickerScreen> {
     return Container(
       color: Colors.white,
       child: ListView.builder(
-        padding: const EdgeInsets.symmetric(vertical: 8),
+        padding: const EdgeInsets.symmetric(vertical: 10),
         itemCount: _folders.length,
         itemBuilder: (_, i) {
           final folder = _folders[i];
           final isSelected = folder.folderId == _selectedFolderId;
-          return InkWell(
+          return GestureDetector(
             onTap: () => _selectFolder(folder),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 160),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 11),
-                decoration: BoxDecoration(
-                  color: isSelected
-                      ? themeProvider.primaryColor.withValues(alpha: 0.08)
-                      : Colors.transparent,
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(
+            child: AnimatedOpacity(
+              duration: const Duration(milliseconds: 180),
+              opacity: isSelected ? 1.0 : 0.45,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 180),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+                  decoration: BoxDecoration(
                     color: isSelected
-                        ? themeProvider.primaryColor.withValues(alpha: 0.30)
+                        ? themeProvider.primaryColor.withValues(alpha: 0.07)
                         : Colors.transparent,
-                    width: 1,
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      isSelected ? Icons.folder : Icons.folder_outlined,
-                      size: 17,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
                       color: isSelected
-                          ? themeProvider.primaryColor
-                          : Colors.grey[500],
+                          ? themeProvider.primaryColor.withValues(alpha: 0.22)
+                          : Colors.transparent,
+                      width: 1,
                     ),
-                    const SizedBox(width: 7),
-                    Expanded(
-                      child: StandardText(
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SvgPicture.asset(
+                        NoteIconHandler.getNoteIcon(i),
+                        width: 42,
+                        height: 42,
+                      ),
+                      const SizedBox(height: 6),
+                      StandardText(
                         text: folder.folderName,
-                        fontSize: 12,
+                        fontSize: 11,
                         color: isSelected
                             ? themeProvider.primaryColor
                             : Colors.grey[700]!,
@@ -416,11 +535,12 @@ class _ProblemPickerScreenState extends State<ProblemPickerScreen> {
                             isSelected ? FontWeight.w700 : FontWeight.normal,
                         fontFamily:
                             isSelected ? 'PretendardBold' : 'PretendardLight',
+                        textAlign: TextAlign.center,
                         overflow: TextOverflow.ellipsis,
                         maxLines: 2,
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -445,7 +565,7 @@ class _ProblemPickerScreenState extends State<ProblemPickerScreen> {
       controller: _problemScrollController,
       padding: padding,
       itemCount: _problems.length + (_problemHasNext ? 1 : 0),
-      separatorBuilder: (_, __) => const SizedBox(height: 10),
+      separatorBuilder: (_, __) => const SizedBox(height: 8),
       itemBuilder: (_, i) {
         if (i == _problems.length) {
           return Center(
@@ -462,97 +582,49 @@ class _ProblemPickerScreenState extends State<ProblemPickerScreen> {
   }
 
   Widget _buildProblemCard(ProblemModel problem, ThemeHandler themeProvider) {
-    final primary = themeProvider.primaryColor;
-    final firstImage = problem.problemImageDataList?.firstOrNull;
+    final title = problem.reference?.trim().isNotEmpty == true
+        ? problem.reference!
+        : '제목 없는 문제';
+    final imageUrl = problem.problemImageDataList?.firstOrNull?.imageUrl;
 
     return GestureDetector(
       onTap: () => _onProblemTap(problem),
-      child: Container(
-        padding: const EdgeInsets.all(10),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey[200]!, width: 1),
-          boxShadow: [
-            BoxShadow(
-              color: primary.withValues(alpha: 0.06),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(9),
-              child: SizedBox(
-                width: 52,
-                height: 66,
-                child: firstImage?.imageUrl != null
-                    ? Image.network(
-                        firstImage!.imageUrl,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) =>
-                            _imagePlaceholder(primary),
-                      )
-                    : _imagePlaceholder(primary),
-              ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  StandardText(
-                    text: problem.reference?.trim().isNotEmpty == true
-                        ? problem.reference!
-                        : '제목 없는 문제',
-                    fontSize: 14,
-                    color: Colors.black87,
-                    overflow: TextOverflow.ellipsis,
-                    maxLines: 2,
-                  ),
-                  const SizedBox(height: 6),
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 3),
-                      decoration: BoxDecoration(
-                        color: primary.withValues(alpha: 0.08),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: StandardText(
-                        text: _selectedFolderName,
-                        fontSize: 11,
-                        color: primary,
-                        fontWeight: FontWeight.normal,
-                        fontFamily: 'PretendardLight',
-                        overflow: TextOverflow.ellipsis,
-                        maxLines: 1,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 8),
-            Icon(Icons.chevron_right, color: Colors.grey[400], size: 20),
-          ],
-        ),
+      child: ProblemThumbnailCard(
+        title: title,
+        imageUrl: imageUrl,
+        tags: problem.tags,
+        solveCount: problem.solveCount,
+        lastSolvedAt: problem.lastSolvedAt,
+        themeProvider: themeProvider,
+        trailing: _buildShareTrailing(themeProvider),
       ),
     );
   }
 
-  Widget _imagePlaceholder(Color primary) {
+  Widget _buildShareTrailing(ThemeHandler themeProvider) {
     return Container(
-      color: primary.withValues(alpha: 0.06),
-      child: Icon(
-        Icons.assignment_outlined,
-        color: primary.withValues(alpha: 0.4),
-        size: 28,
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+      decoration: BoxDecoration(
+        color: themeProvider.primaryColor.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: themeProvider.primaryColor.withValues(alpha: 0.25),
+        ),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.send_outlined,
+              color: themeProvider.primaryColor, size: 16),
+          const SizedBox(height: 3),
+          StandardText(
+            text: '공유',
+            fontSize: 10,
+            color: themeProvider.primaryColor,
+            fontFamily: 'PretendardLight',
+            fontWeight: FontWeight.normal,
+          ),
+        ],
       ),
     );
   }
