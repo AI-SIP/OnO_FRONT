@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -32,6 +34,7 @@ class _ProblemPickerScreenState extends State<ProblemPickerScreen> {
   bool _isSharing = false;
 
   late ScrollController _problemScrollController;
+  final ScrollController _chipScrollController = ScrollController();
 
   @override
   void initState() {
@@ -45,6 +48,7 @@ class _ProblemPickerScreenState extends State<ProblemPickerScreen> {
   void dispose() {
     _problemScrollController.removeListener(_onProblemScroll);
     _problemScrollController.dispose();
+    _chipScrollController.dispose();
     super.dispose();
   }
 
@@ -230,6 +234,15 @@ class _ProblemPickerScreenState extends State<ProblemPickerScreen> {
     }
   }
 
+  void _selectFolder(FolderThumbnailModel folder) {
+    if (_selectedFolderId == folder.folderId) return;
+    setState(() {
+      _selectedFolderId = folder.folderId;
+      _selectedFolderName = folder.folderName;
+    });
+    _loadInitialProblems(folder.folderId);
+  }
+
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeHandler>(context);
@@ -255,61 +268,64 @@ class _ProblemPickerScreenState extends State<ProblemPickerScreen> {
               child: CircularProgressIndicator(
                   color: themeProvider.primaryColor))
           : _folders.isEmpty
-              ? Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.folder_open,
-                          size: 48, color: Colors.grey[400]),
-                      const SizedBox(height: 12),
-                      StandardText(
-                        text: '등록된 폴더가 없어요',
-                        fontSize: 15,
-                        color: Colors.grey[500]!,
-                      ),
-                    ],
-                  ),
-                )
-              : Row(
-                  children: [
-                    _buildFolderList(themeProvider),
-                    Container(width: 1, color: Colors.grey[200]),
-                    Expanded(child: _buildProblemList(themeProvider)),
-                  ],
+              ? Center(child: _buildEmptyFolders())
+              : LayoutBuilder(
+                  builder: (context, constraints) {
+                    if (constraints.maxWidth >= 600) {
+                      return _buildWideLayout(themeProvider, constraints);
+                    } else {
+                      return _buildNarrowLayout(themeProvider);
+                    }
+                  },
                 ),
     );
   }
 
-  Widget _buildFolderList(ThemeHandler themeProvider) {
-    return SizedBox(
-      width: 110,
+  // ── 태블릿 / 가로 폰: 좌측 폴더 패널 + 우측 문제 목록 ──────────────────
+
+  Widget _buildWideLayout(
+      ThemeHandler themeProvider, BoxConstraints constraints) {
+    final folderWidth = max(120.0, constraints.maxWidth * 0.28);
+    return Row(
+      children: [
+        SizedBox(
+          width: folderWidth,
+          child: _buildSideFolderList(themeProvider),
+        ),
+        Container(width: 1, color: Colors.grey[200]),
+        Expanded(
+          child: _buildProblemList(
+            themeProvider,
+            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 14),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSideFolderList(ThemeHandler themeProvider) {
+    return Container(
+      color: Colors.grey[50],
       child: ListView.builder(
         itemCount: _folders.length,
         itemBuilder: (_, i) {
           final folder = _folders[i];
           final isSelected = folder.folderId == _selectedFolderId;
           return GestureDetector(
-            onTap: () {
-              if (isSelected) return;
-              setState(() {
-                _selectedFolderId = folder.folderId;
-                _selectedFolderName = folder.folderName;
-              });
-              _loadInitialProblems(folder.folderId);
-            },
+            onTap: () => _selectFolder(folder),
             child: Container(
               padding:
-                  const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                  const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
               color: isSelected
-                  ? themeProvider.primaryColor.withValues(alpha: 0.07)
-                  : Colors.white,
+                  ? themeProvider.primaryColor.withValues(alpha: 0.08)
+                  : Colors.transparent,
               child: Row(
                 children: [
                   if (isSelected)
                     Container(
                       width: 3,
                       height: 14,
-                      margin: const EdgeInsets.only(right: 6),
+                      margin: const EdgeInsets.only(right: 8),
                       decoration: BoxDecoration(
                         color: themeProvider.primaryColor,
                         borderRadius: BorderRadius.circular(2),
@@ -318,7 +334,7 @@ class _ProblemPickerScreenState extends State<ProblemPickerScreen> {
                   Expanded(
                     child: StandardText(
                       text: folder.folderName,
-                      fontSize: 12,
+                      fontSize: 13,
                       color: isSelected
                           ? themeProvider.primaryColor
                           : Colors.black54,
@@ -340,32 +356,85 @@ class _ProblemPickerScreenState extends State<ProblemPickerScreen> {
     );
   }
 
-  Widget _buildProblemList(ThemeHandler themeProvider) {
+  // ── 세로 폰: 상단 칩 + 하단 문제 목록 ────────────────────────────────────
+
+  Widget _buildNarrowLayout(ThemeHandler themeProvider) {
+    return Column(
+      children: [
+        _buildFolderChips(themeProvider),
+        Divider(height: 1, thickness: 1, color: Colors.grey[200]),
+        Expanded(
+          child: _buildProblemList(
+            themeProvider,
+            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFolderChips(ThemeHandler themeProvider) {
+    return SizedBox(
+      height: 52,
+      child: ListView.builder(
+        controller: _chipScrollController,
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        itemCount: _folders.length,
+        itemBuilder: (_, i) {
+          final folder = _folders[i];
+          final isSelected = folder.folderId == _selectedFolderId;
+          return GestureDetector(
+            onTap: () => _selectFolder(folder),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 180),
+              margin: const EdgeInsets.only(right: 8),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? themeProvider.primaryColor
+                    : Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: isSelected
+                      ? themeProvider.primaryColor
+                      : Colors.grey[300]!,
+                ),
+              ),
+              child: StandardText(
+                text: folder.folderName,
+                fontSize: 13,
+                color: isSelected ? Colors.white : Colors.black54,
+                fontWeight:
+                    isSelected ? FontWeight.w700 : FontWeight.normal,
+                fontFamily:
+                    isSelected ? 'PretendardBold' : 'PretendardLight',
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  // ── 공통: 문제 목록 ───────────────────────────────────────────────────────
+
+  Widget _buildProblemList(ThemeHandler themeProvider,
+      {required EdgeInsets padding}) {
     if (_isLoadingProblems && _problems.isEmpty) {
       return Center(
-          child: CircularProgressIndicator(color: themeProvider.primaryColor));
+          child:
+              CircularProgressIndicator(color: themeProvider.primaryColor));
     }
     if (_problems.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.assignment_outlined, size: 40, color: Colors.grey[400]),
-            const SizedBox(height: 10),
-            StandardText(
-              text: '문제가 없어요',
-              fontSize: 14,
-              color: Colors.grey[500]!,
-            ),
-          ],
-        ),
-      );
+      return Center(child: _buildEmptyProblems());
     }
     return ListView.separated(
       controller: _problemScrollController,
-      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+      padding: padding,
       itemCount: _problems.length + (_problemHasNext ? 1 : 0),
-      separatorBuilder: (_, __) => const SizedBox(height: 8),
+      separatorBuilder: (_, __) => const SizedBox(height: 10),
       itemBuilder: (_, i) {
         if (i == _problems.length) {
           return Center(
@@ -376,8 +445,7 @@ class _ProblemPickerScreenState extends State<ProblemPickerScreen> {
             ),
           );
         }
-        final problem = _problems[i];
-        return _buildProblemCard(problem, themeProvider);
+        return _buildProblemCard(_problems[i], themeProvider);
       },
     );
   }
@@ -389,15 +457,14 @@ class _ProblemPickerScreenState extends State<ProblemPickerScreen> {
     return GestureDetector(
       onTap: () => _onProblemTap(problem),
       child: Container(
-        padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: Colors.grey[200]!, width: 1),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
-              blurRadius: 6,
+              color: primary.withValues(alpha: 0.06),
+              blurRadius: 8,
               offset: const Offset(0, 2),
             ),
           ],
@@ -405,21 +472,21 @@ class _ProblemPickerScreenState extends State<ProblemPickerScreen> {
         child: Row(
           children: [
             ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: Container(
-                width: 52,
-                height: 64,
-                color: primary.withValues(alpha: 0.07),
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(12),
+                bottomLeft: Radius.circular(12),
+              ),
+              child: SizedBox(
+                width: 60,
+                height: 72,
                 child: firstImage?.imageUrl != null
                     ? Image.network(
                         firstImage!.imageUrl,
                         fit: BoxFit.cover,
                         errorBuilder: (_, __, ___) =>
-                            Icon(Icons.image_not_supported_outlined,
-                                color: Colors.grey[400], size: 22),
+                            _imagePlaceholder(primary),
                       )
-                    : Icon(Icons.assignment_outlined,
-                        color: primary.withValues(alpha: 0.5), size: 26),
+                    : _imagePlaceholder(primary),
               ),
             ),
             const SizedBox(width: 12),
@@ -431,27 +498,89 @@ class _ProblemPickerScreenState extends State<ProblemPickerScreen> {
                       problem.reference!.isNotEmpty)
                     StandardText(
                       text: problem.reference!,
-                      fontSize: 13,
+                      fontSize: 14,
                       color: Colors.black87,
                       overflow: TextOverflow.ellipsis,
                       maxLines: 2,
                     ),
-                  const SizedBox(height: 4),
-                  StandardText(
-                    text: _selectedFolderName,
-                    fontSize: 11,
-                    color: Colors.grey[500]!,
-                    fontWeight: FontWeight.normal,
-                    fontFamily: 'PretendardLight',
+                  const SizedBox(height: 6),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: primary.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: StandardText(
+                      text: _selectedFolderName,
+                      fontSize: 11,
+                      color: primary,
+                      fontWeight: FontWeight.normal,
+                      fontFamily: 'PretendardLight',
+                    ),
                   ),
                 ],
               ),
             ),
-            const SizedBox(width: 8),
-            Icon(Icons.chevron_right, color: Colors.grey[400], size: 18),
+            Padding(
+              padding: const EdgeInsets.only(right: 12),
+              child:
+                  Icon(Icons.chevron_right, color: Colors.grey[400], size: 20),
+            ),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _imagePlaceholder(Color primary) {
+    return Container(
+      color: primary.withValues(alpha: 0.06),
+      child: Icon(
+        Icons.assignment_outlined,
+        color: primary.withValues(alpha: 0.4),
+        size: 28,
+      ),
+    );
+  }
+
+  // ── 빈 상태 ───────────────────────────────────────────────────────────────
+
+  Widget _buildEmptyFolders() {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(Icons.folder_open_outlined, size: 52, color: Colors.grey[300]),
+        const SizedBox(height: 12),
+        StandardText(
+          text: '폴더가 없어요',
+          fontSize: 15,
+          color: Colors.grey[400]!,
+        ),
+        const SizedBox(height: 4),
+        StandardText(
+          text: '문제 폴더를 먼저 만들어 보세요',
+          fontSize: 13,
+          color: Colors.grey[400]!,
+          fontWeight: FontWeight.normal,
+          fontFamily: 'PretendardLight',
+        ),
+      ],
+    );
+  }
+
+  Widget _buildEmptyProblems() {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(Icons.inbox_outlined, size: 48, color: Colors.grey[300]),
+        const SizedBox(height: 10),
+        StandardText(
+          text: '이 폴더에 문제가 없어요',
+          fontSize: 14,
+          color: Colors.grey[400]!,
+        ),
+      ],
     );
   }
 }
