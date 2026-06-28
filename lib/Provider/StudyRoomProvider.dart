@@ -19,6 +19,9 @@ class StudyRoomProvider extends ChangeNotifier {
   bool isLoading = false;
 
   List<ActivityFeedModel> feedItems = [];
+  int? _feedNextCursor;
+  bool feedHasNext = false;
+  bool isFeedLoadingMore = false;
   List<ChallengeModel> challenges = [];
   List<StudySessionModel> activeSessions = [];
   List<SharedProblemModel> sharedProblems = [];
@@ -195,21 +198,28 @@ class StudyRoomProvider extends ChangeNotifier {
   Future<void> fetchFeed(int roomId, {bool notify = true}) async {
     final page = await _service.fetchFeed(roomId);
     feedItems = page.content;
+    _feedNextCursor = page.nextCursor;
+    feedHasNext = page.hasNext;
     if (notify) notifyListeners();
+  }
+
+  Future<void> loadMoreFeed(int roomId) async {
+    if (!feedHasNext || isFeedLoadingMore || _feedNextCursor == null) return;
+    isFeedLoadingMore = true;
+    notifyListeners();
+    try {
+      final page = await _service.fetchFeed(roomId, cursor: _feedNextCursor);
+      feedItems = [...feedItems, ...page.content];
+      _feedNextCursor = page.nextCursor;
+      feedHasNext = page.hasNext;
+    } finally {
+      isFeedLoadingMore = false;
+      notifyListeners();
+    }
   }
 
   String _normalizeEmojiKey(String emoji) {
     return OnoEmojiCatalog.byKey(emoji)?.key ?? emoji;
-  }
-
-  String _toServerEmoji(String emoji) {
-    const serverEmojiByKey = {
-      'fired_up_sparkle_eyes': '🔥',
-      'thumbs_up_happy': '👍',
-      'celebrating_confetti': '🎉',
-      'dizzy_spiral_eyes2': '😱',
-    };
-    return serverEmojiByKey[emoji] ?? emoji;
   }
 
   Future<void> toggleFeedReaction(int feedId, String emoji) async {
@@ -222,7 +232,7 @@ class StudyRoomProvider extends ChangeNotifier {
     feed.reactions = await _service.toggleFeedReaction(
       roomId: roomId,
       feedId: feedId,
-      emoji: _toServerEmoji(emojiKey),
+      emoji: emojiKey,
     );
     notifyListeners();
   }
@@ -293,8 +303,31 @@ class StudyRoomProvider extends ChangeNotifier {
 
   // ── D. 문제 공유 ──
 
-  Future<void> shareProblems(String reference, String? comment) async {
-    throw UnsupportedError('Problem sharing requires a backend problemId.');
+  Future<void> shareProblems(
+    int problemId, {
+    String? comment,
+    bool notify = true,
+  }) async {
+    final roomId = selectedRoom?.roomId ?? _activeRoomId;
+    if (roomId == null) return;
+    final shared = await _service.shareProblems(
+      roomId: roomId,
+      problemId: problemId,
+      comment: comment,
+    );
+    sharedProblems = [shared, ...sharedProblems];
+    if (notify) notifyListeners();
+  }
+
+  Future<void> deleteSharedProblem(int sharedProblemId) async {
+    final roomId = selectedRoom?.roomId ?? _activeRoomId;
+    if (roomId == null) return;
+    await _service.deleteSharedProblem(
+      roomId: roomId,
+      sharedProblemId: sharedProblemId,
+    );
+    sharedProblems.removeWhere((s) => s.sharedProblemId == sharedProblemId);
+    notifyListeners();
   }
 
   Future<void> fetchSharedProblems(int roomId, {bool notify = true}) async {
@@ -317,7 +350,7 @@ class StudyRoomProvider extends ChangeNotifier {
     shared.reactions = await _service.toggleSharedProblemReaction(
       roomId: roomId,
       sharedProblemId: sharedProblemId,
-      emoji: _toServerEmoji(emojiKey),
+      emoji: emojiKey,
     );
     notifyListeners();
   }

@@ -6,13 +6,49 @@ import '../../../Module/Theme/ThemeHandler.dart';
 import '../../../Provider/StudyRoomProvider.dart';
 import 'ActivityFeedItem.dart';
 
-class ActivityFeedTab extends StatelessWidget {
+class ActivityFeedTab extends StatefulWidget {
   final int roomId;
 
   const ActivityFeedTab({super.key, required this.roomId});
 
   @override
+  State<ActivityFeedTab> createState() => _ActivityFeedTabState();
+}
+
+class _ActivityFeedTabState extends State<ActivityFeedTab>
+    with AutomaticKeepAliveClientMixin {
+  late ScrollController _scrollController;
+
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController = ScrollController();
+    _scrollController.addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent * 0.85) {
+      final provider = Provider.of<StudyRoomProvider>(context, listen: false);
+      if (provider.feedHasNext && !provider.isFeedLoadingMore) {
+        provider.loadMoreFeed(widget.roomId);
+      }
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    super.build(context);
     final themeProvider = Provider.of<ThemeHandler>(context);
     final provider = Provider.of<StudyRoomProvider>(context);
 
@@ -54,13 +90,28 @@ class ActivityFeedTab extends StatelessWidget {
     }
 
     return ListView.builder(
+      controller: _scrollController,
       physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.only(top: 8, bottom: 24),
-      itemCount: provider.feedItems.length,
-      itemBuilder: (_, i) => ActivityFeedItem(
-        feed: provider.feedItems[i],
-        roomId: roomId,
-      ),
+      itemCount:
+          provider.feedItems.length + (provider.feedHasNext ? 1 : 0),
+      itemBuilder: (_, i) {
+        if (i == provider.feedItems.length) {
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: CircularProgressIndicator(
+                color: themeProvider.primaryColor,
+                strokeWidth: 2,
+              ),
+            ),
+          );
+        }
+        return ActivityFeedItem(
+          feed: provider.feedItems[i],
+          roomId: widget.roomId,
+        );
+      },
     );
   }
 }

@@ -250,6 +250,33 @@ class StudyRoomService {
     return _cursorPage(data, SharedProblemModel.fromJson);
   }
 
+  Future<SharedProblemModel> shareProblems({
+    required int roomId,
+    required int problemId,
+    String? comment,
+  }) async {
+    final data = await httpService.sendRequest(
+      method: 'POST',
+      url: '$baseUrl/$roomId/shared-problems',
+      showErrorSnackBar: false,
+      body: {
+        'problemId': problemId,
+        if (comment != null && comment.isNotEmpty) 'comment': comment,
+      },
+    );
+    return SharedProblemModel.fromJson(_asMap(data));
+  }
+
+  Future<void> deleteSharedProblem({
+    required int roomId,
+    required int sharedProblemId,
+  }) async {
+    await httpService.sendRequest(
+      method: 'DELETE',
+      url: '$baseUrl/$roomId/shared-problems/$sharedProblemId',
+    );
+  }
+
   Future<List<FeedReactionModel>> toggleSharedProblemReaction({
     required int roomId,
     required int sharedProblemId,

@@ -20,6 +20,7 @@ import 'Widget/InviteCodeSheet.dart';
 import 'Widget/MemberRankCard.dart';
 import 'Widget/StudyRoomThumbnail.dart';
 import 'Widget/StudySessionResultSheet.dart';
+import 'Widget/SharedProblemTab.dart';
 import 'Widget/WeeklyReportSheet.dart';
 
 class StudyRoomDetailScreen extends StatefulWidget {
@@ -38,7 +39,7 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 4, vsync: this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadRoom();
     });
@@ -111,16 +112,25 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
 
   Future<void> _confirmLeave(
     BuildContext context,
-    StudyRoomProvider provider,
-  ) async {
+    StudyRoomProvider provider, {
+    bool isHost = false,
+  }) async {
     final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
+    final room = provider.selectedRoom;
+    final hasOtherMembers =
+        room != null && room.members.length > 1;
+    final content = isHost
+        ? hasOtherMembers
+            ? '탈퇴하면 다른 멤버에게 방장이 자동으로 넘어갑니다.\n정말 탈퇴하시겠어요?'
+            : '마지막 멤버이므로 탈퇴 시 방이 삭제됩니다.\n정말 탈퇴하시겠어요?'
+        : '정말 탈퇴하시겠어요?';
     final confirmed = await _showConfirmDialog(
       context: context,
       themeProvider: themeProvider,
       icon: Icons.exit_to_app,
       iconColor: Colors.orange,
       title: '스터디룸 탈퇴',
-      content: '정말 탈퇴하시겠어요?',
+      content: content,
       confirmLabel: '탈퇴',
       confirmColor: Colors.red,
     );
@@ -305,6 +315,7 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
             Tab(text: '랭킹'),
             Tab(text: '활동'),
             Tab(text: '챌린지'),
+            Tab(text: '공유'),
           ],
         ),
       ),
@@ -360,6 +371,7 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
               _buildRankingTab(context, room, provider, themeProvider, isHost),
               ActivityFeedTab(roomId: widget.roomId),
               _buildChallengeTab(context, provider, themeProvider, isHost),
+              SharedProblemTab(roomId: widget.roomId),
             ],
           ),
         ),
@@ -665,7 +677,7 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
                   ),
                 ),
         ),
-        _buildChallengeCreateButton(context, themeProvider),
+        if (isHost) _buildChallengeCreateButton(context, themeProvider),
       ],
     );
   }
@@ -854,20 +866,39 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
                     },
                   ),
                 if (room != null && isHost) const SizedBox(height: 8),
-                _buildSheetItem(
-                  icon: isHost ? Icons.delete_forever : Icons.exit_to_app,
-                  iconColor: Colors.red,
-                  label: isHost ? '방 삭제하기' : '스터디룸 탈퇴',
-                  labelColor: Colors.red,
-                  onTap: () {
-                    Navigator.pop(context);
-                    if (isHost) {
+                if (isHost) ...[
+                  _buildSheetItem(
+                    icon: Icons.exit_to_app,
+                    iconColor: Colors.orange,
+                    label: '스터디룸 탈퇴',
+                    labelColor: Colors.orange,
+                    onTap: () {
+                      Navigator.pop(context);
+                      _confirmLeave(context, provider, isHost: true);
+                    },
+                  ),
+                  const SizedBox(height: 8),
+                  _buildSheetItem(
+                    icon: Icons.delete_forever,
+                    iconColor: Colors.red,
+                    label: '방 삭제하기',
+                    labelColor: Colors.red,
+                    onTap: () {
+                      Navigator.pop(context);
                       _confirmDelete(context, provider);
-                    } else {
+                    },
+                  ),
+                ] else
+                  _buildSheetItem(
+                    icon: Icons.exit_to_app,
+                    iconColor: Colors.red,
+                    label: '스터디룸 탈퇴',
+                    labelColor: Colors.red,
+                    onTap: () {
+                      Navigator.pop(context);
                       _confirmLeave(context, provider);
-                    }
-                  },
-                ),
+                    },
+                  ),
                 const SizedBox(height: 8),
               ],
             ),
