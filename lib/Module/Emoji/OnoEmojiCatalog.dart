@@ -38,10 +38,6 @@ class OnoEmojiCatalog {
         label: '어지러움',
         category: OnoEmojiCategory.emotion),
     OnoEmoji(
-        key: 'stressed_bomb',
-        label: '스트레스',
-        category: OnoEmojiCategory.emotion),
-    OnoEmoji(
         key: 'shy_clasped_hands',
         label: '부끄러움',
         category: OnoEmojiCategory.emotion),
@@ -79,8 +75,6 @@ class OnoEmojiCatalog {
         key: 'studying_with_lamp',
         label: '집중 공부',
         category: OnoEmojiCategory.study),
-    OnoEmoji(
-        key: 'idea_lightbulb', label: '아이디어', category: OnoEmojiCategory.study),
     OnoEmoji(
         key: 'got_100_score', label: '100점', category: OnoEmojiCategory.study),
     OnoEmoji(
@@ -148,8 +142,6 @@ class OnoEmojiCatalog {
         key: 'hi_greeting', label: '안녕', category: OnoEmojiCategory.social),
     OnoEmoji(
         key: 'waving_hello', label: '손 흔들기', category: OnoEmojiCategory.social),
-    OnoEmoji(
-        key: 'cheers_beer', label: '건배', category: OnoEmojiCategory.social),
     OnoEmoji(
         key: 'cuddle_love', label: '포옹', category: OnoEmojiCategory.social),
     OnoEmoji(
@@ -232,14 +224,9 @@ class OnoEmojiCatalog {
     return null;
   }
 
-  static final Map<OnoEmojiCategory, List<OnoEmoji>> _byCategoryCache = {
-    for (final category in OnoEmojiCategory.values)
-      category: List.unmodifiable(
-        all.where((emoji) => emoji.category == category),
-      ),
-  };
-
   static List<OnoEmoji> byCategory(OnoEmojiCategory category) {
-    return _byCategoryCache[category] ?? const [];
+    return List.unmodifiable(
+      all.where((emoji) => emoji.category == category),
+    );
   }
 }

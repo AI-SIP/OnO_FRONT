@@ -2,10 +2,12 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 
+import '../../../Module/Emoji/OnoEmojiCatalog.dart';
+import '../../../Module/Emoji/OnoEmojiImage.dart';
 import '../../../Module/Theme/ThemeHandler.dart';
 
 class StudyRoomThumbnail extends StatelessWidget {
-  static const String defaultImagePath = 'assets/emoji/studying_together.png';
+  static const String defaultEmojiKey = 'studying_together';
 
   final String? imagePath;
   final ThemeHandler themeProvider;
@@ -69,6 +71,11 @@ class StudyRoomThumbnail extends StatelessWidget {
     final path = imagePath;
     if (path == null || path.isEmpty) return _buildDefaultImage();
 
+    final emojiKey = _emojiKeyFromAssetPath(path);
+    if (emojiKey != null) {
+      return _buildEmojiImage(emojiKey, size * 0.76);
+    }
+
     if (path.startsWith('assets/')) {
       return Image.asset(
         path,
@@ -93,90 +100,49 @@ class StudyRoomThumbnail extends StatelessWidget {
   }
 
   Widget _buildDefaultImage() {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            themeProvider.lightPrimaryColor,
-            themeProvider.primaryColor,
-          ],
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        const ColoredBox(color: Colors.white),
+        Center(
+          child: Padding(
+            padding: EdgeInsets.all(size * 0.20),
+            child: _buildEmojiImage(defaultEmojiKey, size * 0.60),
+          ),
         ),
-      ),
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          // 우측 상단 장식 원
-          Positioned(
-            right: -size * 0.18,
-            top: -size * 0.14,
-            child: Container(
-              width: size * 0.68,
-              height: size * 0.68,
-              decoration: const BoxDecoration(
-                color: Color(0x26FFFFFF),
-                shape: BoxShape.circle,
+        Positioned.fill(
+          child: Padding(
+            padding: const EdgeInsets.all(2),
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(size * 0.20),
+                border: Border.all(
+                  color: themeProvider.primaryColor,
+                  width: 2,
+                ),
               ),
             ),
           ),
-          // 좌측 하단 장식 원
-          Positioned(
-            left: -size * 0.14,
-            bottom: -size * 0.10,
-            child: Container(
-              width: size * 0.50,
-              height: size * 0.50,
-              decoration: const BoxDecoration(
-                color: Color(0x1AFFFFFF),
-                shape: BoxShape.circle,
-              ),
-            ),
-          ),
-          // 우측 하단 작은 점 강조
-          Positioned(
-            right: size * 0.14,
-            bottom: size * 0.13,
-            child: Container(
-              width: size * 0.09,
-              height: size * 0.09,
-              decoration: const BoxDecoration(
-                color: Color(0x4DFFFFFF),
-                shape: BoxShape.circle,
-              ),
-            ),
-          ),
-          Center(
-            child: Padding(
-              padding: EdgeInsets.all(size * 0.12),
-              child: Image.asset(
-                defaultImagePath,
-                fit: BoxFit.contain,
-                errorBuilder: (_, __, ___) => _buildFallbackIcons(),
-              ),
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
-  Widget _buildFallbackIcons() {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(
-          Icons.menu_book_rounded,
-          size: size * 0.34,
-          color: Colors.white,
-        ),
-        SizedBox(height: size * 0.04),
-        Icon(
-          Icons.people_alt_rounded,
-          size: size * 0.22,
-          color: const Color(0xCCFFFFFF),
-        ),
-      ],
+  String? _emojiKeyFromAssetPath(String path) {
+    if (!path.startsWith('assets/emoji/') || !path.endsWith('.png')) {
+      return null;
+    }
+
+    final emojiKey = path.split('/').last.replaceFirst('.png', '');
+    return OnoEmojiCatalog.byKey(emojiKey) == null ? null : emojiKey;
+  }
+
+  Widget _buildEmojiImage(String emojiKey, double emojiSize) {
+    return Center(
+      child: OnoEmojiImage(
+        emojiKey: emojiKey,
+        size: emojiSize,
+      ),
     );
   }
 }

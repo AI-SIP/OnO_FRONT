@@ -20,7 +20,6 @@ class OnoEmojiImage extends StatelessWidget {
   static const Map<String, double> _visualScaleByKey = {
     'birthday_cake': 1.12,
     'cheek_to_cheek': 1.45,
-    'cheers_beer': 1.14,
     'confused_question': 1.11,
     'cool_sunglasses': 1.19,
     'cozy_blanket': 1.10,
@@ -42,7 +41,6 @@ class OnoEmojiImage extends StatelessWidget {
     'shy_wink_heart': 1.24,
     'sprout_growth': 1.22,
     'star_eyes_excited': 1.11,
-    'stressed_bomb': 1.30,
     'studying_together': 1.10,
     'texting_heart': 1.14,
     'thumbs_up_wink': 1.08,
@@ -52,6 +50,13 @@ class OnoEmojiImage extends StatelessWidget {
     'winking_fist': 1.21,
     'writing_wink': 1.40,
   };
+
+  static const List<Offset> _contrastHaloOffsets = [
+    Offset(0, -1),
+    Offset(1, 0),
+    Offset(0, 1),
+    Offset(-1, 0),
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -66,22 +71,54 @@ class OnoEmojiImage extends StatelessWidget {
     return SizedBox(
       width: size,
       height: size,
-      child: ClipRect(
-        child: Transform.scale(
-          scale: visualScale,
-          child: Image.asset(
-            resolvedEmoji.assetPath,
-            width: size,
-            height: size,
-            fit: BoxFit.contain,
-            errorBuilder: (_, __, ___) {
-              developer
-                  .log('Missing OnO emoji asset: ${resolvedEmoji.assetPath}');
-              return SizedBox(width: size, height: size);
-            },
-          ),
+      child: Transform.scale(
+        scale: visualScale,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            for (final offset in _contrastHaloOffsets)
+              Transform.translate(
+                offset: offset * (size * 0.035),
+                child: _buildTintedAsset(
+                  resolvedEmoji.assetPath,
+                  Colors.black.withValues(alpha: 0.18),
+                ),
+              ),
+            Transform.translate(
+              offset: Offset(0, size * 0.045),
+              child: _buildTintedAsset(
+                resolvedEmoji.assetPath,
+                Colors.black.withValues(alpha: 0.12),
+              ),
+            ),
+            Image.asset(
+              resolvedEmoji.assetPath,
+              width: size,
+              height: size,
+              fit: BoxFit.contain,
+              filterQuality: FilterQuality.high,
+              errorBuilder: (_, __, ___) {
+                developer
+                    .log('Missing OnO emoji asset: ${resolvedEmoji.assetPath}');
+                return SizedBox(width: size, height: size);
+              },
+            ),
+          ],
         ),
       ),
+    );
+  }
+
+  Widget _buildTintedAsset(String assetPath, Color color) {
+    return Image.asset(
+      assetPath,
+      width: size,
+      height: size,
+      fit: BoxFit.contain,
+      color: color,
+      colorBlendMode: BlendMode.srcIn,
+      filterQuality: FilterQuality.high,
+      errorBuilder: (_, __, ___) => SizedBox(width: size, height: size),
     );
   }
 }

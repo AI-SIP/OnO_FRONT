@@ -591,7 +591,7 @@ class _LearningCalendarScreenState extends State<LearningCalendarScreen> {
           ),
           const SizedBox(width: 10),
           if (record.moodEmojiKey != null)
-            OnoEmojiImage(emojiKey: record.moodEmojiKey, size: 26)
+            OnoEmojiImage(emojiKey: record.moodEmojiKey, size: 32)
           else
             StandardText(
               text: '아직 없어요',
@@ -788,7 +788,7 @@ class _CalendarCell extends StatelessWidget {
               Positioned(
                 right: -1,
                 bottom: -1,
-                child: OnoEmojiImage(emojiKey: moodEmojiKey, size: 14),
+                child: OnoEmojiImage(emojiKey: moodEmojiKey, size: 18),
               ),
           ],
         ),

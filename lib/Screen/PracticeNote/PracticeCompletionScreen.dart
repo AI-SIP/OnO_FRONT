@@ -33,7 +33,6 @@ class _PracticeCompletionScreenState extends State<PracticeCompletionScreen> {
     'fired_up_sparkle_eyes',
     'happy_tears',
     'frustrated_studying',
-    'stressed_bomb',
     'dizzy_spiral_eyes2',
     'sleeping_blanket',
   ];
@@ -166,7 +165,7 @@ class _PracticeCompletionScreenState extends State<PracticeCompletionScreen> {
                   ),
                   child: Column(
                     children: [
-                      OnoEmojiImage(emoji: emoji, size: 46),
+                      OnoEmojiImage(emoji: emoji, size: 54),
                       const SizedBox(height: 4),
                       Container(
                         width: 5,

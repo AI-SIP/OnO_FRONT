@@ -90,7 +90,7 @@ class _ReactionChip extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            OnoEmojiImage(emojiKey: reaction.emoji, size: 18),
+            OnoEmojiImage(emojiKey: reaction.emoji, size: 22),
             const SizedBox(width: 4),
             Text(
               '${reaction.count}',

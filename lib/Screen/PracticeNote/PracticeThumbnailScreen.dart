@@ -610,7 +610,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
                 bottom: 12,
                 child: OnoEmojiImage(
                   emojiKey: practice.lastSessionMoodEmojiKey,
-                  size: 22,
+                  size: 28,
                 ),
               ),
           ],

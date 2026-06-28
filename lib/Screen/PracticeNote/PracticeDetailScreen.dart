@@ -275,7 +275,7 @@ class PracticeDetailScreen extends StatelessWidget {
             color: themeProvider.primaryColor,
           ),
           const SizedBox(width: 8),
-          OnoEmojiImage(emoji: emoji, size: 22),
+          OnoEmojiImage(emoji: emoji, size: 28),
         ],
       ),
     );

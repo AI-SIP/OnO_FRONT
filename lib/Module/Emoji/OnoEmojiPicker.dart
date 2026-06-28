@@ -71,7 +71,7 @@ class _OnoEmojiPickerState extends State<OnoEmojiPicker> {
     final emojis = OnoEmojiCatalog.byCategory(_selectedCategory);
     final isTablet = MediaQuery.of(context).size.shortestSide >= 600;
     final crossAxisCount = isTablet ? 6 : 4;
-    final emojiSize = isTablet ? 58.0 : 52.0;
+    final emojiSize = isTablet ? 66.0 : 60.0;
     final selectedEmojiKey =
         OnoEmojiCatalog.byKey(widget.selectedKey ?? '')?.key;
 
@@ -120,7 +120,7 @@ class _OnoEmojiPickerState extends State<OnoEmojiPicker> {
                         child: Center(
                           child: OnoEmojiImage(
                             emojiKey: category.iconKey,
-                            size: isTablet ? 34 : 30,
+                            size: isTablet ? 40 : 36,
                           ),
                         ),
                       ),
