@@ -238,6 +238,7 @@ class StudyRoomProvider extends ChangeNotifier {
     required String title,
     required String type,
     required String metric,
+    required String period,
     required int targetValue,
     required DateTime endAt,
   }) async {
@@ -248,6 +249,7 @@ class StudyRoomProvider extends ChangeNotifier {
       title: title,
       type: type,
       metric: metric,
+      period: period,
       targetValue: targetValue,
       endAt: endAt,
     );

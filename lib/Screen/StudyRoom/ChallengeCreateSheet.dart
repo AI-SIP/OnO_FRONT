@@ -6,6 +6,7 @@ import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/StudyRoomProvider.dart';
 import '../../Util/AppSnackBar.dart';
+import '../../Exception/ApiException.dart';
 
 class ChallengeCreateSheet extends StatefulWidget {
   const ChallengeCreateSheet({super.key});
@@ -27,7 +28,7 @@ class _ChallengeCreateSheetState extends State<ChallengeCreateSheet> {
   final _titleController = TextEditingController();
   final _targetController = TextEditingController();
   String _scope = 'individual';
-  String _metric = 'weekly_problem_count';
+  String _metric = 'problem_count';
   String _period = 'weekly';
   DateTime _endAt = DateTime.now().add(const Duration(days: 7));
   bool _isLoading = false;
@@ -38,9 +39,9 @@ class _ChallengeCreateSheetState extends State<ChallengeCreateSheet> {
   ];
 
   static const _metrics = [
-    ('weekly_problem_count', '오답노트 작성', '문제'),
-    ('weekly_practice_count', '복습 완료', '회'),
-    ('streak', '출석', '일'),
+    ('problem_count', '오답노트 작성', '문제'),
+    ('practice_count', '복습 완료', '회'),
+    ('attendance', '출석', '일'),
   ];
 
   static const _periods = [
@@ -75,12 +76,19 @@ class _ChallengeCreateSheetState extends State<ChallengeCreateSheet> {
         title: title,
         type: _scope,
         metric: _metric,
+        period: _period,
         targetValue: target,
         endAt: _endAt,
       );
       if (context.mounted) Navigator.pop(context);
-    } catch (_) {
-      AppSnackBar.showError('챌린지 생성에 실패했습니다');
+    } catch (error) {
+      if (error is ApiException) {
+        AppSnackBar.showError(error.getUserMessage());
+      } else if (error is BadRequestException) {
+        AppSnackBar.showError(error.getUserMessage());
+      } else {
+        AppSnackBar.showError('챌린지 생성에 실패했습니다');
+      }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }

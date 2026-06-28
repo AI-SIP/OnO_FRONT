@@ -173,17 +173,22 @@ class StudyRoomService {
     required String title,
     required String type,
     required String metric,
+    required String period,
     required int targetValue,
     required DateTime endAt,
   }) async {
+    final now = DateTime.now();
     final data = await httpService.sendRequest(
       method: 'POST',
       url: '$baseUrl/$roomId/challenges',
+      showErrorSnackBar: false,
       body: {
         'title': title,
         'type': type,
         'metric': metric,
+        'period': period,
         'targetValue': targetValue,
+        'startAt': now.toIso8601String(),
         'endAt': endAt.toIso8601String(),
       },
     );
