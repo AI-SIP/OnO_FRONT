@@ -20,11 +20,12 @@ class FeedReactionBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Expanded(
           child: Wrap(
-            spacing: 6,
-            runSpacing: 4,
+            spacing: 8,
+            runSpacing: 6,
             children: reactions
                 .map((r) => _ReactionChip(
                       reaction: r,
@@ -41,7 +42,7 @@ class FeedReactionBar extends StatelessWidget {
             color: Colors.grey[500],
           ),
           tooltip: '반응 추가',
-          constraints: const BoxConstraints.tightFor(width: 32, height: 32),
+          constraints: const BoxConstraints.tightFor(width: 36, height: 36),
           padding: EdgeInsets.zero,
           onPressed: onToggle == null
               ? null
@@ -74,12 +75,12 @@ class _ReactionChip extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        padding: const EdgeInsets.fromLTRB(7, 5, 9, 5),
         decoration: BoxDecoration(
           color: isReacted
               ? themeProvider.primaryColor.withOpacity(0.1)
               : Colors.grey[100],
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(14),
           border: Border.all(
             color: isReacted
                 ? themeProvider.primaryColor.withOpacity(0.4)
@@ -90,8 +91,8 @@ class _ReactionChip extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            OnoEmojiImage(emojiKey: reaction.emoji, size: 22),
-            const SizedBox(width: 4),
+            OnoEmojiImage(emojiKey: reaction.emoji, size: 20),
+            const SizedBox(width: 5),
             Text(
               '${reaction.count}',
               style: TextStyle(

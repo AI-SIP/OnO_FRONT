@@ -6,7 +6,6 @@ import '../../../Module/Text/StandardText.dart';
 import '../../../Module/Theme/ThemeHandler.dart';
 import '../../../Provider/StudyRoomProvider.dart';
 import '../../../Util/AppSnackBar.dart';
-import '../../ProblemDetail/ProblemDetailScreen.dart';
 import 'FeedReactionBar.dart';
 
 class SharedProblemCard extends StatelessWidget {
@@ -132,17 +131,6 @@ class SharedProblemCard extends StatelessWidget {
     }
   }
 
-  void _openProblemDetail(BuildContext context) {
-    if (problem.problemId == null) return;
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) =>
-            ProblemDetailScreen(problemId: problem.problemId!),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeHandler>(context);
@@ -221,54 +209,48 @@ class SharedProblemCard extends StatelessWidget {
           ),
           Padding(
             padding: const EdgeInsets.fromLTRB(14, 10, 14, 0),
-            child: GestureDetector(
-              onTap: () => _openProblemDetail(context),
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: primary.withValues(alpha: 0.055),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: primary.withValues(alpha: 0.15),
-                    width: 1,
-                  ),
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: primary.withValues(alpha: 0.055),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: primary.withValues(alpha: 0.15),
+                  width: 1,
                 ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildProblemPreview(primary),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          StandardText(
-                            text: p.reference,
-                            fontSize: 14,
-                            color: Colors.black87,
-                            fontWeight: FontWeight.w700,
-                            overflow: TextOverflow.ellipsis,
-                            maxLines: 2,
-                          ),
-                          const SizedBox(height: 4),
-                          StandardText(
-                            text: p.problemId != null
-                                ? '눌러서 같이 풀어보기'
-                                : '문제 미리보기 없음',
-                            fontSize: 11,
-                            color: Colors.grey[500]!,
-                            fontWeight: FontWeight.normal,
-                            fontFamily: 'PretendardLight',
-                          ),
-                        ],
-                      ),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildProblemPreview(primary),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        StandardText(
+                          text: p.reference,
+                          fontSize: 14,
+                          color: Colors.black87,
+                          fontWeight: FontWeight.w700,
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 2,
+                        ),
+                        const SizedBox(height: 4),
+                        StandardText(
+                          text: p.problemId != null
+                              ? '함께 보는 공유 문제'
+                              : '문제 미리보기 없음',
+                          fontSize: 11,
+                          color: Colors.grey[500]!,
+                          fontWeight: FontWeight.normal,
+                          fontFamily: 'PretendardLight',
+                        ),
+                      ],
                     ),
-                    if (p.problemId != null)
-                      Icon(Icons.chevron_right,
-                          color: Colors.grey[400], size: 18),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -288,8 +270,8 @@ class SharedProblemCard extends StatelessWidget {
             child: FeedReactionBar(
               reactions: p.reactions,
               themeProvider: themeProvider,
-              onToggle: (emoji) =>
-                  provider.toggleSharedProblemReaction(p.sharedProblemId, emoji),
+              onToggle: (emoji) => provider.toggleSharedProblemReaction(
+                  p.sharedProblemId, emoji),
             ),
           ),
         ],
