@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -336,7 +334,7 @@ class _TemplateSelectionScreenState extends State<TemplateSelectionScreen> {
           final coordinatePickerHandler = ImageCoordinatePickerHandler();
           coordinatePickerResult = await coordinatePickerHandler
               .showCoordinatePicker(context, pickedFile.path);
-          log(coordinatePickerResult.toString());
+          debugPrint(coordinatePickerResult.toString());
         }
 
         if (templateType == TemplateType.simple ||

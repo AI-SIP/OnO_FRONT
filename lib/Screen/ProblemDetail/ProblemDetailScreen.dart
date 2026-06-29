@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:developer';
 
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
@@ -69,7 +68,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
     _pollingCount = 0;
     _analysisPollingFailureCount = 0;
 
-    log('🔄 Started analysis polling for problem $problemId');
+    debugPrint('🔄 Started analysis polling for problem $problemId');
 
     _pollAnalysisStatus(problemId);
   }
@@ -92,7 +91,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
       nextInterval = const Duration(seconds: 10);
     } else {
       // 105초(1분 45초) 이상: 폴링 중지
-      log('⏱️ Analysis polling timeout - stopped after ${_pollingCount} attempts');
+      debugPrint('⏱️ Analysis polling timeout - stopped after ${_pollingCount} attempts');
       _stopAnalysisPolling();
       return;
     }
@@ -107,7 +106,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
           Provider.of<ProblemsProvider>(context, listen: false);
 
       try {
-        log('🔍 Polling analysis status (attempt $_pollingCount)...');
+        debugPrint('🔍 Polling analysis status (attempt $_pollingCount)...');
 
         // 서버에서 최신 분석 상태 조회
         await problemsProvider.fetchProblemAnalysis(problemId);
@@ -118,7 +117,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
 
         // 분석이 완료되거나 실패하거나 이미지가 없으면 폴링 중지
         if (problem.analysis?.status == ProblemAnalysisStatus.COMPLETED) {
-          log('✅ Analysis completed - polling stopped');
+          debugPrint('✅ Analysis completed - polling stopped');
           _stopAnalysisPolling();
           // UI 강제 업데이트
           if (mounted) {
@@ -128,7 +127,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
           }
           return;
         } else if (problem.analysis?.status == ProblemAnalysisStatus.FAILED) {
-          log('❌ Analysis failed - polling stopped');
+          debugPrint('❌ Analysis failed - polling stopped');
           _stopAnalysisPolling();
           // UI 강제 업데이트
           if (mounted) {
@@ -138,7 +137,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
           }
           return;
         } else if (problem.analysis?.status == ProblemAnalysisStatus.NO_IMAGE) {
-          log('📷 No image detected during polling - polling stopped');
+          debugPrint('📷 No image detected during polling - polling stopped');
           _stopAnalysisPolling();
           // UI 강제 업데이트 (중요: NO_IMAGE 상태를 화면에 반영)
           if (mounted) {
@@ -153,7 +152,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
         _pollAnalysisStatus(problemId);
       } catch (e, stackTrace) {
         _analysisPollingFailureCount++;
-        log('⚠️ Error during analysis polling: $e');
+        debugPrint('⚠️ Error during analysis polling: $e');
         await AppErrorReporter.report(
           e,
           stackTrace,
@@ -163,7 +162,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
               _analysisPollingFailureCount >= _maxAnalysisPollingFailures,
         );
         if (_analysisPollingFailureCount >= _maxAnalysisPollingFailures) {
-          log('⏱️ Analysis polling stopped after repeated failures');
+          debugPrint('⏱️ Analysis polling stopped after repeated failures');
           _stopAnalysisPolling();
           return;
         }
@@ -846,7 +845,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
         message: '복습 세트에 추가하지 못했습니다. 잠시 후 다시 시도해주세요.',
         backgroundColor: Colors.red,
       );
-      log('복습 세트 문제 추가 실패: $e');
+      debugPrint('복습 세트 문제 추가 실패: $e');
     }
   }
 
@@ -961,7 +960,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                             if (mounted) {
                               LoadingDialog.hide(context);
                             }
-                            log('문제 삭제 실패: $e');
+                            debugPrint('문제 삭제 실패: $e');
                           }
                         },
                         style: TextButton.styleFrom(
@@ -1050,11 +1049,11 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
         Provider.of<ProblemsProvider>(context, listen: false);
     final problem = await problemsProvider.getProblem(problemId!);
 
-    log('Moved to problem: ${problem.problemId}');
+    debugPrint('Moved to problem: ${problem.problemId}');
 
     // 분석 객체가 없으면 폴링하지 않음
     if (problem.analysis == null) {
-      log('⚠️ No analysis object - polling not needed');
+      debugPrint('⚠️ No analysis object - polling not needed');
       _stopAnalysisPolling();
       return problem;
     }
@@ -1064,20 +1063,20 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
 
     if (analysisStatus == ProblemAnalysisStatus.NO_IMAGE) {
       // 이미지 없음 - 폴링 중지
-      log('📷 No image for analysis - polling not needed');
+      debugPrint('📷 No image for analysis - polling not needed');
       _stopAnalysisPolling();
     } else if (analysisStatus == ProblemAnalysisStatus.COMPLETED) {
       // 분석 완료 - 폴링 중지
-      log('✅ Analysis already completed - no polling needed');
+      debugPrint('✅ Analysis already completed - no polling needed');
       _stopAnalysisPolling();
     } else if (analysisStatus == ProblemAnalysisStatus.FAILED) {
       // 분석 실패 - 폴링 중지
-      log('❌ Analysis failed - polling not needed');
+      debugPrint('❌ Analysis failed - polling not needed');
       _stopAnalysisPolling();
     } else if (analysisStatus == ProblemAnalysisStatus.PROCESSING ||
         analysisStatus == ProblemAnalysisStatus.NOT_STARTED) {
       // 분석 진행 중 또는 시작 전 - 폴링 시작
-      log('📊 Analysis in progress (status: $analysisStatus) - starting polling');
+      debugPrint('📊 Analysis in progress (status: $analysisStatus) - starting polling');
 
       // 분석 결과 조회 (await 하지 않고 백그라운드에서 실행)
       problemsProvider.fetchProblemAnalysis(problemId);

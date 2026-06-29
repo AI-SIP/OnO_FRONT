@@ -6,6 +6,8 @@ import 'package:provider/provider.dart';
 import '../../Model/PracticeNote/PracticeNoteDetailModel.dart';
 import '../../Model/Problem/ProblemModel.dart';
 import '../../Module/Dialog/SnackBarDialog.dart';
+import '../../Module/Emoji/OnoEmojiCatalog.dart';
+import '../../Module/Emoji/OnoEmojiImage.dart';
 import '../../Module/Problem/ProblemThumbnailCard.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
@@ -232,21 +234,48 @@ class PracticeDetailScreen extends StatelessWidget {
   Widget _buildPracticeInfo(BuildContext context, ThemeHandler themeProvider) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 16.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      child: Column(
         children: [
-          _buildPracticeTile('문제 수', '${practice.practiceSize}', themeProvider),
-          const VerticalDivider(thickness: 1, color: Colors.grey, width: 1),
-          _buildPracticeTile(
-              '복습 횟수', '${practice.practiceCount}회', themeProvider),
-          const VerticalDivider(thickness: 1, color: Colors.grey, width: 1),
-          _buildPracticeTile(
-            '마지막 복습 일시',
-            practice.lastSolvedAt != null
-                ? formatDateTime(practice.lastSolvedAt!)
-                : "기록 없음",
-            themeProvider,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              _buildPracticeTile(
+                  '문제 수', '${practice.practiceSize}', themeProvider),
+              const VerticalDivider(thickness: 1, color: Colors.grey, width: 1),
+              _buildPracticeTile(
+                  '복습 횟수', '${practice.practiceCount}회', themeProvider),
+              const VerticalDivider(thickness: 1, color: Colors.grey, width: 1),
+              _buildPracticeTile(
+                '마지막 복습 일시',
+                practice.lastSolvedAt != null
+                    ? formatDateTime(practice.lastSolvedAt!)
+                    : "기록 없음",
+                themeProvider,
+              ),
+            ],
           ),
+          if (practice.lastSessionMoodEmojiKey != null)
+            _buildLastMoodRow(themeProvider),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLastMoodRow(ThemeHandler themeProvider) {
+    final emoji = OnoEmojiCatalog.byKey(practice.lastSessionMoodEmojiKey!);
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 12),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          StandardText(
+            text: '지난 복습 소감',
+            fontSize: 13,
+            color: themeProvider.primaryColor,
+          ),
+          const SizedBox(width: 8),
+          OnoEmojiImage(emoji: emoji, size: 28),
         ],
       ),
     );

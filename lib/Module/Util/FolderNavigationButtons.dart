@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:developer';
 import 'dart:io';
 
 import 'package:firebase_analytics/firebase_analytics.dart';
@@ -358,7 +357,7 @@ class _FolderNavigationButtonsState extends State<FolderNavigationButtons> {
                                           isLoading = false;
                                         });
 
-                                        log("problemId: $problemId solve");
+                                        debugPrint("problemId: $problemId solve");
                                         LoadingDialog.hideFromNavigator(
                                           rootNavigator,
                                         );

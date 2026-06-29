@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:developer';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 
@@ -49,12 +49,12 @@ class TokenProvider {
         if (e is UnauthorizedException) {
           rethrow;
         }
-        log('Pre-refresh failed, fallback to existing access token: $e');
+        debugPrint('Pre-refresh failed, fallback to existing access token: $e');
         return accessToken;
       }
     }
 
-    log('Access token is missing. Try refresh.');
+    debugPrint('Access token is missing. Try refresh.');
     await refreshAccessToken();
 
     return await storage.read(key: 'accessToken');
@@ -96,7 +96,7 @@ class TokenProvider {
   Future<void> _refreshAccessTokenInternal() async {
     String? refreshToken = await storage.read(key: 'refreshToken');
     if (refreshToken == null) {
-      log('No refresh token available.');
+      debugPrint('No refresh token available.');
       await _notifyAuthFailure();
       throw UnauthorizedException(message: '로그인이 필요합니다. 다시 로그인해주세요.');
     }
@@ -163,7 +163,7 @@ class TokenProvider {
 
     await setAccessToken(newAccessToken);
     await setRefreshToken(newRefreshToken);
-    log('Access token refreshed.');
+    debugPrint('Access token refreshed.');
   }
 
   bool _isRefreshTokenInvalidResponse({

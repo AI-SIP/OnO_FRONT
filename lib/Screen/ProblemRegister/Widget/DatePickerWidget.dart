@@ -58,6 +58,7 @@ class DatePickerWidget extends StatelessWidget {
                 FirebaseAnalytics.instance.logEvent(name: 'date_select');
                 final d = await showModalBottomSheet<DateTime>(
                   context: context,
+                  isScrollControlled: true,
                   builder: (_) => DatePickerHandler(
                     initialDate: selectedDate,
                     onDateSelected: (d) => Navigator.pop(context, d),

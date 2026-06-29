@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
 import 'package:ono/Model/Problem/ReviewDueProblemModel.dart';
 import 'package:ono/Service/Api/Problem/ProblemService.dart';
@@ -22,7 +20,7 @@ class ReviewDueProvider with ChangeNotifier {
     try {
       _data = await _problemService.getReviewDueProblems();
     } catch (e, stackTrace) {
-      log('ReviewDueProvider fetchReviewDue error: $e');
+      debugPrint('ReviewDueProvider fetchReviewDue error: $e');
       await AppErrorReporter.report(
         e,
         stackTrace,

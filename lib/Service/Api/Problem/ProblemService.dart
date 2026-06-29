@@ -1,6 +1,6 @@
-import 'dart:developer';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:ono/Model/Common/PaginatedResponse.dart';
 import 'package:ono/Model/Problem/ProblemAnalysisModel.dart';
@@ -19,7 +19,7 @@ class ProblemService {
     int? problemId, {
     bool showErrorSnackBar = true,
   }) async {
-    log('find problem id : $problemId');
+    debugPrint('find problem id : $problemId');
     final data = await httpService.sendRequest(
       method: 'GET',
       url: '$baseUrl/$problemId',

@@ -55,10 +55,14 @@ class PracticeNoteService {
     ) as int;
   }
 
-  Future<void> addPracticeNoteCount(int practiceId) async {
+  Future<void> addPracticeNoteCount(
+    int practiceId, {
+    String? moodEmojiKey,
+  }) async {
     await httpService.sendRequest(
       method: 'PATCH',
       url: '$baseUrl/$practiceId/complete',
+      body: moodEmojiKey != null ? {'moodEmojiKey': moodEmojiKey} : null,
     );
   }
 

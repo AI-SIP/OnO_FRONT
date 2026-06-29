@@ -214,8 +214,8 @@ class ProblemSolveRegisterTemplateState
                     color: themeProvider.primaryColor,
                   ),
                   style: TextButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 8, vertical: 4),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     minimumSize: Size.zero,
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
@@ -677,8 +677,7 @@ class ProblemSolveRegisterTemplateState
                     Expanded(
                       child: TextButton(
                         onPressed: () {
-                          final parsed =
-                              _parseTimeInput(controller.text);
+                          final parsed = _parseTimeInput(controller.text);
                           if (parsed != null) {
                             setState(() => _timeSpentSeconds = parsed);
                           }

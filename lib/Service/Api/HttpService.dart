@@ -1,7 +1,8 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:developer' as developer;
 import 'dart:io';
+
+import 'package:flutter/foundation.dart';
 
 import 'package:http/http.dart' as http;
 
@@ -125,18 +126,22 @@ class HttpService {
               });
             }
 
-            developer.log('req: ${req.fields.toString()}.');
+            debugPrint('[HttpService] req: ${req.fields}');
             final streamed =
                 await req.send().timeout(const Duration(seconds: 90));
             response = await http.Response.fromStream(streamed);
           } else {
-            response = await http
-                .post(
-                  uri,
-                  headers: mergedHeaders,
-                  body: json.encode(body),
-                )
-                .timeout(const Duration(seconds: 30));
+            response = body != null
+                ? await http
+                    .post(
+                      uri,
+                      headers: mergedHeaders,
+                      body: json.encode(body),
+                    )
+                    .timeout(const Duration(seconds: 30))
+                : await http
+                    .post(uri, headers: mergedHeaders)
+                    .timeout(const Duration(seconds: 30));
           }
           break;
 
@@ -151,10 +156,24 @@ class HttpService {
                 await req.send().timeout(const Duration(seconds: 30));
             response = await http.Response.fromStream(streamed);
           } else {
-            response = await http
-                .patch(uri, headers: mergedHeaders, body: json.encode(body))
-                .timeout(const Duration(seconds: 30));
+            response = body != null
+                ? await http
+                    .patch(uri, headers: mergedHeaders, body: json.encode(body))
+                    .timeout(const Duration(seconds: 30))
+                : await http
+                    .patch(uri, headers: mergedHeaders)
+                    .timeout(const Duration(seconds: 30));
           }
+          break;
+
+        case 'PUT':
+          response = body != null
+              ? await http
+                  .put(uri, headers: mergedHeaders, body: json.encode(body))
+                  .timeout(const Duration(seconds: 30))
+              : await http
+                  .put(uri, headers: mergedHeaders)
+                  .timeout(const Duration(seconds: 30));
           break;
 
         case 'DELETE':
@@ -215,11 +234,7 @@ class HttpService {
     final status = response.statusCode;
 
     // 요청 로깅
-    developer.log(
-      '[$method] $uri',
-      name: 'HttpService',
-      error: 'Status: $status',
-    );
+    debugPrint('[HttpService] [$method] $uri — Status: $status');
 
     // 빈 응답이거나 응답 본문이 없는 경우 처리 (예: 204 No Content)
     if (response.body.isEmpty) {

@@ -1,5 +1,4 @@
 import 'dart:collection';
-import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:ono/Model/Folder/FolderRegisterModel.dart';
@@ -126,7 +125,7 @@ class FoldersProvider with ChangeNotifier {
     state.subfolderNextCursor = nextCursor;
     state.subfolderHasNext = hasNext;
 
-    log('💾 Saved ${subfolders.length} subfolders to cache for folder $folderId');
+    debugPrint('💾 Saved ${subfolders.length} subfolders to cache for folder $folderId');
   }
 
   // 외부에서 문제 데이터를 캐시에 저장
@@ -146,7 +145,7 @@ class FoldersProvider with ChangeNotifier {
     state.problemNextCursor = nextCursor;
     state.problemHasNext = hasNext;
 
-    log('💾 Saved ${problems.length} problems to cache for folder $folderId');
+    debugPrint('💾 Saved ${problems.length} problems to cache for folder $folderId');
   }
 
   FoldersProvider({required this.problemsProvider});
@@ -163,14 +162,14 @@ class FoldersProvider with ChangeNotifier {
     }
 
     // 캐시에 없으면 서버에서 fetch
-    log('Folder $folderId not in cache, fetching from server');
+    debugPrint('Folder $folderId not in cache, fetching from server');
     await fetchFolderMetadata(folderId);
 
     if (_foldersMap.containsKey(folderId)) {
       return _foldersMap[folderId]!;
     }
 
-    log('Failed to fetch folderId: $folderId');
+    debugPrint('Failed to fetch folderId: $folderId');
     throw Exception('Folder with id $folderId not found.');
   }
 
@@ -178,7 +177,7 @@ class FoldersProvider with ChangeNotifier {
   Future<void> fetchRootFolder() async {
     final rootFolder = await folderService.getRootFolder();
     _upsertFolder(rootFolder);
-    log('Root folder fetched: ${rootFolder.folderId}');
+    debugPrint('Root folder fetched: ${rootFolder.folderId}');
     notifyListeners();
   }
 
@@ -192,7 +191,7 @@ class FoldersProvider with ChangeNotifier {
       showErrorSnackBar: showErrorSnackBar,
     );
     _upsertFolder(folder);
-    log('Folder metadata fetched: $folderId');
+    debugPrint('Folder metadata fetched: $folderId');
     notifyListeners();
   }
 
@@ -205,14 +204,14 @@ class FoldersProvider with ChangeNotifier {
       // 2. 캐시 확인 (먼저 확인해서 불필요한 상태 변경 방지)
       if (_folderCache.containsKey(folderId)) {
         // 캐시에 있으면 저장된 데이터 사용
-        log('Using cached data for folder: $folderId');
+        debugPrint('Using cached data for folder: $folderId');
         _currentFolder = folder;
         notifyListeners();
         return;
       }
 
       // 3. 캐시에 없으면 새로 생성하고 첫 페이지 로드
-      log('Loading first page for folder: $folderId');
+      debugPrint('Loading first page for folder: $folderId');
       _folderCache[folderId] = FolderScrollState();
       _currentFolder = folder;
       notifyListeners(); // UI에 로딩 중임을 알림
@@ -224,8 +223,8 @@ class FoldersProvider with ChangeNotifier {
 
       // loadMoreSubfolders/Problems 내부에서 notifyListeners 호출됨
     } catch (e, stackTrace) {
-      log('Error moving to folder: $e');
-      log(stackTrace.toString());
+      debugPrint('Error moving to folder: $e');
+      debugPrint(stackTrace.toString());
       rethrow;
     }
   }
@@ -260,10 +259,10 @@ class FoldersProvider with ChangeNotifier {
       state.subfolderNextCursor = response.nextCursor;
       state.subfolderHasNext = response.hasNext;
 
-      log('Loaded ${response.content.length} subfolders for folder $folderId, hasNext: ${response.hasNext}');
+      debugPrint('Loaded ${response.content.length} subfolders for folder $folderId, hasNext: ${response.hasNext}');
     } catch (e, stackTrace) {
-      log('Error loading subfolders: $e');
-      log(stackTrace.toString());
+      debugPrint('Error loading subfolders: $e');
+      debugPrint(stackTrace.toString());
       await AppErrorReporter.report(
         e,
         stackTrace,
@@ -299,10 +298,10 @@ class FoldersProvider with ChangeNotifier {
       state.problemNextCursor = response.nextCursor;
       state.problemHasNext = response.hasNext;
 
-      log('Loaded ${response.content.length} problems for folder $folderId, hasNext: ${response.hasNext}');
+      debugPrint('Loaded ${response.content.length} problems for folder $folderId, hasNext: ${response.hasNext}');
     } catch (e, stackTrace) {
-      log('Error loading problems: $e');
-      log(stackTrace.toString());
+      debugPrint('Error loading problems: $e');
+      debugPrint(stackTrace.toString());
       await AppErrorReporter.report(
         e,
         stackTrace,
@@ -391,7 +390,7 @@ class FoldersProvider with ChangeNotifier {
       _foldersMap.remove(folderId);
     }
 
-    log('Deleted ${deleteFolderIdList.length} folders from cache');
+    debugPrint('Deleted ${deleteFolderIdList.length} folders from cache');
     notifyListeners();
   }
 
@@ -403,7 +402,7 @@ class FoldersProvider with ChangeNotifier {
     // 루트 폴더이면 타임스탬프 업데이트
     if (rootFolder != null && folderId == rootFolder!.folderId) {
       _rootFolderRefreshTimestamp = DateTime.now().millisecondsSinceEpoch;
-      log('🔄 Root folder refresh signaled - timestamp: $_rootFolderRefreshTimestamp');
+      debugPrint('🔄 Root folder refresh signaled - timestamp: $_rootFolderRefreshTimestamp');
     }
 
     // DirectoryScreen이 독립적으로 데이터를 로드하므로, moveToFolder를 호출하지 않음
@@ -424,7 +423,7 @@ class FoldersProvider with ChangeNotifier {
     try {
       await refresh();
     } catch (e, stackTrace) {
-      log('Post-mutation refresh failed ($source): $e');
+      debugPrint('Post-mutation refresh failed ($source): $e');
       await AppErrorReporter.report(
         e,
         stackTrace,

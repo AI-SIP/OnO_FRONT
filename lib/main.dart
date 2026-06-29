@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:developer';
 import 'dart:ui';
 
 import 'package:firebase_analytics/firebase_analytics.dart';
@@ -22,10 +21,13 @@ import 'Config/firebase_options.dart';
 import 'Provider/PracticeNoteProvider.dart';
 import 'Provider/ProblemsProvider.dart';
 import 'Provider/ReviewDueProvider.dart';
+import 'Provider/StudyRoomProvider.dart';
+import 'Provider/StudySessionProvider.dart';
 import 'Provider/UserProvider.dart';
 import 'Provider/TutorialProvider.dart';
 import 'Screen/Folder/DirectoryScreen.dart';
 import 'Screen/PracticeNote/PracticeThumbnailScreen.dart';
+import 'Screen/StudyRoom/StudyRoomListScreen.dart';
 import 'Screen/Tutorial/TutorialOverlay.dart';
 import 'Screen/Tutorial/TutorialTargets.dart';
 import 'Screen/User/MyPageScreen.dart';
@@ -99,7 +101,7 @@ Future<void> _bootstrapApp() async {
 
   final kakaoNativeAppKey = dotenv.env['KAKAO_NATIVE_APP_KEY']?.trim();
   if (kakaoNativeAppKey == null || kakaoNativeAppKey.isEmpty) {
-    log('KAKAO_NATIVE_APP_KEY is not configured.');
+    debugPrint('KAKAO_NATIVE_APP_KEY is not configured.');
   } else {
     KakaoSdk.init(nativeAppKey: kakaoNativeAppKey);
   }
@@ -137,6 +139,8 @@ Future<void> _bootstrapApp() async {
         ChangeNotifierProvider(create: (_) => ScreenIndexProvider()),
         ChangeNotifierProvider(create: (_) => ReviewDueProvider()),
         ChangeNotifierProvider(create: (_) => TutorialProvider()),
+        ChangeNotifierProvider(create: (_) => StudyRoomProvider()),
+        ChangeNotifierProvider(create: (_) => StudySessionProvider()),
       ],
       child: const MyApp(),
     ),
@@ -264,6 +268,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
     final widgetOptions = <Widget>[
       DirectoryScreen(tutorialTargets: _tutorialTargets),
       PracticeThumbnailScreen(tutorialTargets: _tutorialTargets),
+      const StudyRoomListScreen(),
       SettingScreen(tutorialTargets: _tutorialTargets),
     ];
 
@@ -338,6 +343,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
           icon: Icon(Icons.menu_book, size: 20), label: '오답노트 관리'),
       BottomNavigationBarItem(
           icon: Icon(Icons.history, size: 20), label: '복습 세트'),
+      BottomNavigationBarItem(icon: Icon(Icons.group, size: 20), label: '스터디룸'),
       BottomNavigationBarItem(
           icon: Icon(
             Icons.person,

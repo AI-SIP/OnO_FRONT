@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import '../../../Module/Text/StandardText.dart';
@@ -6,39 +5,55 @@ import '../../../Module/Text/StandardText.dart';
 class DatePickerHandler extends StatefulWidget {
   final DateTime initialDate;
   final Function(DateTime) onDateSelected;
+  final String title;
+  final DateTime? firstDate;
+  final DateTime? lastDate;
 
-  const DatePickerHandler(
-      {super.key, required this.initialDate, required this.onDateSelected});
+  const DatePickerHandler({
+    super.key,
+    required this.initialDate,
+    required this.onDateSelected,
+    this.title = '푼 날짜 선택',
+    this.firstDate,
+    this.lastDate,
+  });
 
   @override
-  _DatePickerHandlerState createState() => _DatePickerHandlerState();
+  State<DatePickerHandler> createState() => _DatePickerHandlerState();
 }
 
 class _DatePickerHandlerState extends State<DatePickerHandler> {
-  late DateTime _selectedDate;
+  static const _weekdayLabels = ['일', '월', '화', '수', '목', '금', '토'];
 
-  final List<int> _years =
-      List<int>.generate(101, (int index) => 2020 + index); // 2020부터 2120까지
-  final List<int> _months =
-      List<int>.generate(12, (int index) => index + 1); // 1부터 12까지
-  final List<int> _days =
-      List<int>.generate(31, (int index) => index + 1); // 1부터 31까지
-
-  int _daysInMonth(int year, int month) {
-    return DateTime(year, month + 1, 0).day;
-  }
-
-  int _clampDay(int year, int month, int day) {
-    final maxDay = _daysInMonth(year, month);
-    if (day < 1) return 1;
-    if (day > maxDay) return maxDay;
-    return day;
-  }
+  late DateTime _visibleMonth;
+  late final DateTime _firstSelectableDate;
+  late final DateTime _lastSelectableDate;
 
   @override
   void initState() {
     super.initState();
-    _selectedDate = widget.initialDate;
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    _firstSelectableDate =
+        _dateOnly(widget.firstDate ?? DateTime(now.year - 10, now.month));
+    _lastSelectableDate = _dateOnly(widget.lastDate ?? today);
+    _visibleMonth = DateTime(widget.initialDate.year, widget.initialDate.month);
+  }
+
+  bool get _canGoPrev => DateTime(_visibleMonth.year, _visibleMonth.month)
+      .isAfter(DateTime(_firstSelectableDate.year, _firstSelectableDate.month));
+
+  bool get _canGoNext => DateTime(_visibleMonth.year, _visibleMonth.month)
+      .isBefore(DateTime(_lastSelectableDate.year, _lastSelectableDate.month));
+
+  DateTime _dateOnly(DateTime date) {
+    return DateTime(date.year, date.month, date.day);
+  }
+
+  void _changeMonth(int delta) {
+    setState(() {
+      _visibleMonth = DateTime(_visibleMonth.year, _visibleMonth.month + delta);
+    });
   }
 
   @override
@@ -49,218 +64,151 @@ class _DatePickerHandlerState extends State<DatePickerHandler> {
       borderRadius: const BorderRadius.vertical(top: Radius.circular(24.0)),
       child: Container(
         color: Colors.white,
-        height: 360,
-        child: Column(
-          children: <Widget>[
-            const SizedBox(height: 10),
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Colors.grey[300],
-                borderRadius: BorderRadius.circular(999),
-              ),
-            ),
-            const SizedBox(height: 12),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Row(
-                children: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: const StandardText(
-                      text: '취소',
-                      fontSize: 15,
-                      color: Colors.black54,
-                    ),
-                  ),
-                  const Spacer(),
-                  const StandardText(
-                    text: '푼 날짜 선택',
-                    fontSize: 17,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black87,
-                  ),
-                  const Spacer(),
-                  TextButton(
-                    onPressed: () => Navigator.pop(context, _selectedDate),
-                    child: StandardText(
-                      text: '완료',
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      color: primaryColor,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Divider(color: Colors.grey[200], height: 1),
-            ),
-            const SizedBox(height: 12),
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16.0),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Center(
-                      child: StandardText(
-                        text: '년도',
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.black54,
-                      ),
-                    ),
-                  ),
-                  Expanded(
-                    child: Center(
-                      child: StandardText(
-                        text: '월',
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.black54,
-                      ),
-                    ),
-                  ),
-                  Expanded(
-                    child: Center(
-                      child: StandardText(
-                        text: '일',
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.black54,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 8),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: Row(
-                  children: <Widget>[
-                    _buildPickerColumn(
-                      child: CupertinoPicker(
-                        scrollController: FixedExtentScrollController(
-                          initialItem: _selectedDate.year - 2020,
-                        ),
-                        itemExtent: 34.0,
-                        useMagnifier: true,
-                        magnification: 1.06,
-                        onSelectedItemChanged: (int index) {
-                          setState(() {
-                            final year = _years[index];
-                            final day = _clampDay(
-                              year,
-                              _selectedDate.month,
-                              _selectedDate.day,
-                            );
-                            _selectedDate =
-                                DateTime(year, _selectedDate.month, day);
-                          });
-                        },
-                        children: _years.map((int year) {
-                          return Center(
-                            child: StandardText(
-                              text: '$year',
-                              fontSize: 17,
-                              color: Colors.black87,
-                            ),
-                          );
-                        }).toList(),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    _buildPickerColumn(
-                      child: CupertinoPicker(
-                        scrollController: FixedExtentScrollController(
-                          initialItem: _selectedDate.month - 1,
-                        ),
-                        itemExtent: 34.0,
-                        useMagnifier: true,
-                        magnification: 1.06,
-                        onSelectedItemChanged: (int index) {
-                          setState(() {
-                            final month = _months[index];
-                            final day = _clampDay(
-                              _selectedDate.year,
-                              month,
-                              _selectedDate.day,
-                            );
-                            _selectedDate =
-                                DateTime(_selectedDate.year, month, day);
-                          });
-                        },
-                        children: _months.map((int month) {
-                          return Center(
-                            child: StandardText(
-                              text: '$month',
-                              fontSize: 17,
-                              color: Colors.black87,
-                            ),
-                          );
-                        }).toList(),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    _buildPickerColumn(
-                      child: CupertinoPicker(
-                        scrollController: FixedExtentScrollController(
-                          initialItem: _selectedDate.day - 1,
-                        ),
-                        itemExtent: 34.0,
-                        useMagnifier: true,
-                        magnification: 1.06,
-                        onSelectedItemChanged: (int index) {
-                          setState(() {
-                            final requestedDay = _days[index];
-                            final day = _clampDay(
-                              _selectedDate.year,
-                              _selectedDate.month,
-                              requestedDay,
-                            );
-                            _selectedDate = DateTime(
-                              _selectedDate.year,
-                              _selectedDate.month,
-                              day,
-                            );
-                          });
-                        },
-                        children: _days.map((int day) {
-                          return Center(
-                            child: StandardText(
-                              text: '$day',
-                              fontSize: 17,
-                              color: Colors.black87,
-                            ),
-                          );
-                        }).toList(),
-                      ),
-                    ),
-                  ],
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+        child: SafeArea(
+          top: false,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(999),
                 ),
               ),
-            ),
-            const SizedBox(height: 10),
-          ],
+              StandardText(
+                text: widget.title,
+                fontSize: 17,
+                fontWeight: FontWeight.w600,
+                color: Colors.black87,
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  IconButton(
+                    onPressed: _canGoPrev ? () => _changeMonth(-1) : null,
+                    icon: Icon(
+                      Icons.chevron_left,
+                      color: _canGoPrev ? primaryColor : Colors.grey[300],
+                    ),
+                  ),
+                  Expanded(
+                    child: Center(
+                      child: StandardText(
+                        text:
+                            '${_visibleMonth.year}.${_visibleMonth.month.toString().padLeft(2, '0')}',
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.black87,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: _canGoNext ? () => _changeMonth(1) : null,
+                    icon: Icon(
+                      Icons.chevron_right,
+                      color: _canGoNext ? primaryColor : Colors.grey[300],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              _buildWeekdayHeader(),
+              const SizedBox(height: 8),
+              _buildDateGrid(primaryColor),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildPickerColumn({required Widget child}) {
-    return Expanded(
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.grey[50],
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey[200]!, width: 1),
-        ),
-        child: child,
+  Widget _buildWeekdayHeader() {
+    return Row(
+      children: _weekdayLabels.map((label) {
+        return Expanded(
+          child: Center(
+            child: StandardText(
+              text: label,
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: Colors.grey[500]!,
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildDateGrid(Color primaryColor) {
+    final firstWeekday =
+        DateTime(_visibleMonth.year, _visibleMonth.month, 1).weekday % 7;
+    final daysInMonth =
+        DateTime(_visibleMonth.year, _visibleMonth.month + 1, 0).day;
+    final totalCells = firstWeekday + daysInMonth;
+    final rowCount = (totalCells / 7).ceil();
+
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: rowCount * 7,
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 7,
+        mainAxisSpacing: 6,
+        crossAxisSpacing: 6,
       ),
+      itemBuilder: (_, index) {
+        final day = index - firstWeekday + 1;
+        if (day < 1 || day > daysInMonth) {
+          return const SizedBox.shrink();
+        }
+
+        final date = DateTime(_visibleMonth.year, _visibleMonth.month, day);
+        final selectable = !date.isBefore(_firstSelectableDate) &&
+            !date.isAfter(_lastSelectableDate);
+        final isSelected = DateUtils.isSameDay(date, widget.initialDate);
+        final isToday = DateUtils.isSameDay(date, DateTime.now());
+
+        return InkWell(
+          onTap: selectable ? () => widget.onDateSelected(date) : null,
+          borderRadius: BorderRadius.circular(10),
+          child: Container(
+            decoration: BoxDecoration(
+              color: isSelected
+                  ? primaryColor
+                  : selectable
+                      ? Colors.grey[100]
+                      : Colors.grey[50],
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: isSelected
+                    ? primaryColor
+                    : isToday
+                        ? primaryColor.withOpacity(0.6)
+                        : selectable
+                            ? Colors.grey[200]!
+                            : Colors.transparent,
+                width: isToday && !isSelected ? 1.4 : 1,
+              ),
+            ),
+            child: Center(
+              child: StandardText(
+                text: '$day',
+                fontSize: 13,
+                fontWeight: isToday ? FontWeight.w700 : FontWeight.normal,
+                color: isSelected
+                    ? Colors.white
+                    : selectable
+                        ? Colors.black87
+                        : Colors.grey[300]!,
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }

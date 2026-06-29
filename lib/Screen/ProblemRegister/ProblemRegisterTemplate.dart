@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:developer';
 import 'dart:io';
 
 import 'package:camera/camera.dart';
@@ -493,7 +492,7 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
       }
       _availableTags.sort((a, b) => a.name.compareTo(b.name));
     } catch (e) {
-      log('태그 목록 조회 실패: $e');
+      debugPrint('태그 목록 조회 실패: $e');
     } finally {
       if (mounted) {
         setState(() => _isLoadingTags = false);
@@ -525,7 +524,7 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
         _mergeIntoAvailableTags(recommended);
       });
     } catch (e) {
-      log('태그 추천 조회 실패: $e');
+      debugPrint('태그 추천 조회 실패: $e');
     } finally {
       if (mounted) {
         setState(() => _isLoadingRecommendations = false);
@@ -881,8 +880,8 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
         shouldPop = canPopBeforeSubmit;
       }
     } catch (e, stackTrace) {
-      log('오답노트 ${widget.isEditMode ? "수정" : "등록"} 실패: $e');
-      log(stackTrace.toString());
+      debugPrint('오답노트 ${widget.isEditMode ? "수정" : "등록"} 실패: $e');
+      debugPrint(stackTrace.toString());
       if (mounted) {
         LoadingDialog.hide(context);
         loadingHidden = true;
@@ -1078,7 +1077,7 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
 
   /// 오답노트 등록
   Future<void> _registerProblem() async {
-    log('register problem');
+    debugPrint('register problem');
 
     final problemsProvider =
         Provider.of<ProblemsProvider>(context, listen: false);
@@ -1140,7 +1139,7 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
       }
     }
 
-    log('problem register complete - problemId: $registeredProblemId');
+    debugPrint('problem register complete - problemId: $registeredProblemId');
 
     resetAll();
   }
@@ -1184,7 +1183,7 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
     }
 
     for (var imageUrl in _deletedImageUrls) {
-      log('이미지 삭제: $imageUrl');
+      debugPrint('이미지 삭제: $imageUrl');
       await problemsProvider.deleteProblemImageData(imageUrl);
     }
 
@@ -1252,7 +1251,7 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
     try {
       await task();
     } catch (e, stackTrace) {
-      log('Post-save task failed ($source): $e');
+      debugPrint('Post-save task failed ($source): $e');
       unawaited(
         AppErrorReporter.report(
           e,

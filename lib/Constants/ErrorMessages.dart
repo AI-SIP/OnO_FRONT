@@ -56,4 +56,21 @@ class ErrorMessages {
   static const String tagNotFound = '유효하지 않은 태그입니다.';
   static const String tagUserUnmatched = '해당 태그에 접근할 수 없습니다.';
   static const String tagLimitExceeded = '문제당 태그는 최대 5개까지 설정할 수 있습니다.';
+
+  static const String studyRoomNotFound = '스터디룸을 찾을 수 없습니다.';
+  static const String studyRoomForbidden = '스터디룸 멤버만 사용할 수 있습니다.';
+  static const String studyRoomHostOnly = '방장만 사용할 수 있습니다.';
+  static const String studyRoomFull = '스터디룸 인원이 가득 찼습니다.';
+  static const String studyRoomLimitExceeded = '참여 가능한 스터디룸 수를 초과했습니다.';
+  static const String inviteCodeInvalid = '초대 코드가 올바르지 않습니다.';
+  static const String inviteCodeExpired = '초대 코드가 만료되었습니다.';
+  static const String alreadyStudyRoomMember = '이미 참여 중인 스터디룸입니다.';
+  static const String challengeNotFound = '챌린지를 찾을 수 없습니다.';
+  static const String challengeLimitExceeded = '진행 중인 챌린지 수를 초과했습니다.';
+  static const String sessionAlreadyActive = '이미 공부 중인 세션이 있습니다.';
+  static const String sessionNotFound = '공부 세션을 찾을 수 없습니다.';
+  static const String sharedProblemNotFound = '공유 문제를 찾을 수 없습니다.';
+  static const String weeklyReportNotFound = '주간 리포트를 찾을 수 없습니다.';
+  static const String invalidReactionEmoji = '사용할 수 없는 반응입니다.';
+  static const String invalidStudyRoomRequest = '스터디룸 입력값을 확인해주세요.';
 }

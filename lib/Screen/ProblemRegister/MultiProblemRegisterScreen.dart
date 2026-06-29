@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:developer';
 import 'dart:io';
 
 import 'package:camera/camera.dart';
@@ -107,7 +106,7 @@ class _MultiProblemRegisterScreenState
         _mergeIntoAvailableTags(_recommendedTags);
       });
     } catch (e) {
-      log('태그 목록 조회 실패: $e');
+      debugPrint('태그 목록 조회 실패: $e');
     } finally {
       if (mounted) {
         setState(() => _isLoadingTags = false);
@@ -137,7 +136,7 @@ class _MultiProblemRegisterScreenState
         _mergeIntoAvailableTags(recommended);
       });
     } catch (e) {
-      log('최근 사용 태그 조회 실패: $e');
+      debugPrint('최근 사용 태그 조회 실패: $e');
     } finally {
       if (mounted) {
         setState(() => _isLoadingRecommendations = false);
@@ -1793,8 +1792,8 @@ class _MultiProblemRegisterScreenState
         progress: progress,
       );
     } catch (e, stackTrace) {
-      log('배치 오답노트 등록 실패: $e');
-      log(stackTrace.toString());
+      debugPrint('배치 오답노트 등록 실패: $e');
+      debugPrint(stackTrace.toString());
       await _deleteUploadedImages(uploadedImageUrls);
       unawaited(
         AppErrorReporter.report(
@@ -1836,7 +1835,7 @@ class _MultiProblemRegisterScreenState
         );
       } catch (e, stackTrace) {
         practiceSetCreated = false;
-        log('복습 세트 생성 실패: $e');
+        debugPrint('복습 세트 생성 실패: $e');
         unawaited(
           AppErrorReporter.report(
             e,
@@ -2073,7 +2072,7 @@ class _MultiProblemRegisterScreenState
       try {
         await _fileUploadService.deleteImage(imageUrl);
       } catch (e, stackTrace) {
-        log('업로드 이미지 롤백 실패: $e');
+        debugPrint('업로드 이미지 롤백 실패: $e');
         await AppErrorReporter.report(
           e,
           stackTrace,
@@ -2091,7 +2090,7 @@ class _MultiProblemRegisterScreenState
     try {
       await task();
     } catch (e, stackTrace) {
-      log('Post-save task failed ($source): $e');
+      debugPrint('Post-save task failed ($source): $e');
       await AppErrorReporter.report(
         e,
         stackTrace,

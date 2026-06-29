@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -150,7 +148,7 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
           Navigator.pop(context);
         }
       } catch (error, stackTrace) {
-        log(error.toString());
+        debugPrint(error.toString());
         final isUpdate = widget.practiceNoteUpdateModel != null;
         await AppErrorReporter.report(
           error,

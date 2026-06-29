@@ -45,7 +45,8 @@ class UserLevelCard extends StatelessWidget {
     final double donutSize = isTablet ? 120.0 : 82.0;
     final double labelFontSize = isTablet ? 16.0 : 14.0;
     final double frogTopSpace = isTablet ? 14.0 : 10.0;
-    final double frogSize = donutSize + 8.0 + labelFontSize * 1.3 - frogTopSpace;
+    final double frogSize =
+        donutSize + 8.0 + labelFontSize * 1.3 - frogTopSpace;
 
     int currentLevel = _getOverallLevel();
     int currentPoint = _getCurrentPoint();
@@ -58,7 +59,11 @@ class UserLevelCard extends StatelessWidget {
         vertical: screenHeight * 0.01,
       ),
       padding: EdgeInsets.all(
-        isTabletLandscape ? screenHeight * 0.038 : isTablet ? screenHeight * 0.025 : screenHeight * 0.02,
+        isTabletLandscape
+            ? screenHeight * 0.038
+            : isTablet
+                ? screenHeight * 0.025
+                : screenHeight * 0.02,
       ),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -96,9 +101,15 @@ class UserLevelCard extends StatelessWidget {
             ],
           ),
           if (userInfo != null) ...[
-            SizedBox(height: isTabletLandscape ? screenHeight * 0.030 : screenHeight * 0.018),
+            SizedBox(
+                height: isTabletLandscape
+                    ? screenHeight * 0.030
+                    : screenHeight * 0.018),
             Divider(height: 1, color: Colors.grey[200]),
-            SizedBox(height: isTabletLandscape ? screenHeight * 0.028 : screenHeight * 0.016),
+            SizedBox(
+                height: isTabletLandscape
+                    ? screenHeight * 0.028
+                    : screenHeight * 0.016),
             _buildActivityRow(
               icon: Icons.waving_hand_rounded,
               category: '출석',
@@ -107,7 +118,10 @@ class UserLevelCard extends StatelessWidget {
               color: Colors.pink[300]!,
               isTablet: isTablet,
             ),
-            SizedBox(height: isTabletLandscape ? screenHeight * 0.022 : screenHeight * 0.012),
+            SizedBox(
+                height: isTabletLandscape
+                    ? screenHeight * 0.022
+                    : screenHeight * 0.012),
             _buildActivityRow(
               icon: Icons.edit_note,
               category: '오답노트 작성',
@@ -116,7 +130,10 @@ class UserLevelCard extends StatelessWidget {
               color: Colors.purple[300]!,
               isTablet: isTablet,
             ),
-            SizedBox(height: isTabletLandscape ? screenHeight * 0.022 : screenHeight * 0.012),
+            SizedBox(
+                height: isTabletLandscape
+                    ? screenHeight * 0.022
+                    : screenHeight * 0.012),
             _buildActivityRow(
               icon: Icons.chrome_reader_mode_outlined,
               category: '문제 복습',
@@ -125,7 +142,10 @@ class UserLevelCard extends StatelessWidget {
               color: Colors.green[400]!,
               isTablet: isTablet,
             ),
-            SizedBox(height: isTabletLandscape ? screenHeight * 0.022 : screenHeight * 0.012),
+            SizedBox(
+                height: isTabletLandscape
+                    ? screenHeight * 0.022
+                    : screenHeight * 0.012),
             _buildActivityRow(
               icon: Icons.history,
               category: '복습 세트 복습',

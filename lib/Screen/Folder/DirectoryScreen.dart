@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -178,12 +176,12 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         _loadMoreProblemsLocal(targetFolderId),
       ]);
     } on UnauthorizedException catch (e) {
-      log('Directory auth failure: $e');
+      debugPrint('Directory auth failure: $e');
       if (mounted) {
         await Provider.of<UserProvider>(context, listen: false).resetUserInfo();
       }
     } on ApiException catch (e) {
-      log('Directory API failure: $e');
+      debugPrint('Directory API failure: $e');
       if (mounted) {
         SnackBarDialog.showSnackBar(
           context: context,
@@ -192,7 +190,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         );
       }
     } catch (e) {
-      log('Directory load failure: $e');
+      debugPrint('Directory load failure: $e');
       if (mounted) {
         SnackBarDialog.showSnackBar(
           context: context,
@@ -235,7 +233,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         final cachedHasNext =
             foldersProvider.getSubfolderHasNextForFolder(folderId);
 
-        log('✅ Using cached subfolders for folder $folderId (${cachedSubfolders.length} items)');
+        debugPrint('✅ Using cached subfolders for folder $folderId (${cachedSubfolders.length} items)');
         if (mounted) {
           setState(() {
             _localSubfolders.addAll(cachedSubfolders);
@@ -251,7 +249,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       }
 
       // 캐시에 없는 경우 서버 요청
-      log('📡 Fetching subfolders from server for folder $folderId (cursor: $_subfolderNextCursor)');
+      debugPrint('📡 Fetching subfolders from server for folder $folderId (cursor: $_subfolderNextCursor)');
 
       // 서버에서 직접 조회
       final response = await foldersProvider.folderService.getSubfoldersV2(
@@ -275,12 +273,12 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
           _localSubfolders, // 누적된 전체 데이터 저장
           response.nextCursor,
           response.hasNext);
-      log('💾 Saved total ${_localSubfolders.length} subfolders to cache for folder $folderId');
+      debugPrint('💾 Saved total ${_localSubfolders.length} subfolders to cache for folder $folderId');
 
-      log('Loaded ${response.content.length} subfolders from server for folder $folderId');
+      debugPrint('Loaded ${response.content.length} subfolders from server for folder $folderId');
     } catch (e, stackTrace) {
-      log('Error loading subfolders locally: $e');
-      log(stackTrace.toString());
+      debugPrint('Error loading subfolders locally: $e');
+      debugPrint(stackTrace.toString());
       await AppErrorReporter.report(
         e,
         stackTrace,
@@ -379,7 +377,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         final cachedHasNext =
             foldersProvider.getProblemHasNextForFolder(folderId);
 
-        log('✅ Using cached problems for folder $folderId (${cachedProblems.length} items)');
+        debugPrint('✅ Using cached problems for folder $folderId (${cachedProblems.length} items)');
         if (mounted) {
           setState(() {
             _localProblems.addAll(cachedProblems);
@@ -395,7 +393,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       }
 
       // 캐시에 없는 경우 서버 요청
-      log('📡 Fetching problems from server for folder $folderId (cursor: $_problemNextCursor)');
+      debugPrint('📡 Fetching problems from server for folder $folderId (cursor: $_problemNextCursor)');
       final problemsProvider =
           Provider.of<ProblemsProvider>(context, listen: false);
       final response = await problemsProvider.loadMoreFolderProblemsV2(
@@ -419,12 +417,12 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
           _localProblems, // 누적된 전체 데이터 저장
           response.nextCursor,
           response.hasNext);
-      log('💾 Saved total ${_localProblems.length} problems to cache for folder $folderId');
+      debugPrint('💾 Saved total ${_localProblems.length} problems to cache for folder $folderId');
 
-      log('Loaded ${response.content.length} problems from server for folder $folderId');
+      debugPrint('Loaded ${response.content.length} problems from server for folder $folderId');
     } catch (e, stackTrace) {
-      log('Error loading problems locally: $e');
-      log(stackTrace.toString());
+      debugPrint('Error loading problems locally: $e');
+      debugPrint(stackTrace.toString());
       await AppErrorReporter.report(
         e,
         stackTrace,
@@ -462,21 +460,21 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
           !_isRefreshing) {
         _lastRootFolderRefreshTimestamp =
             foldersProvider.rootFolderRefreshTimestamp;
-        log('🔄 Root folder refresh detected in didChangeDependencies! (timestamp: $_lastRootFolderRefreshTimestamp)');
+        debugPrint('🔄 Root folder refresh detected in didChangeDependencies! (timestamp: $_lastRootFolderRefreshTimestamp)');
 
         _isRefreshing = true;
 
         // 비동기 작업 실행
         WidgetsBinding.instance.addPostFrameCallback((_) async {
           if (mounted) {
-            log('🔄 Starting _loadFolderData...');
+            debugPrint('🔄 Starting _loadFolderData...');
             await _loadFolderData();
             if (mounted) {
               setState(() {
                 _isRefreshing = false;
               });
             }
-            log('✅ Root folder refresh completed!');
+            debugPrint('✅ Root folder refresh completed!');
           }
         });
       }
@@ -1782,7 +1780,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       }
 
       // 에러 처리
-      log('Error deleting items: $e');
+      debugPrint('Error deleting items: $e');
       if (mounted) {
         SnackBarDialog.showSnackBar(
           context: context,
@@ -1911,7 +1909,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   Future<void> _moveFolderToNewParent(
       FolderThumbnailModel folder, int? newParentFolderId) async {
     if (newParentFolderId == null) {
-      log('New parent folder ID is null.');
+      debugPrint('New parent folder ID is null.');
       return;
     }
 
@@ -1950,7 +1948,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   Future<void> _moveProblemToFolder(
       ProblemRegisterModel problemRegisterModel) async {
     if (problemRegisterModel.folderId == null) {
-      log('Problem ID or folderId is null. Cannot move the problem.');
+      debugPrint('Problem ID or folderId is null. Cannot move the problem.');
       return; // 문제 ID 또는 폴더 ID가 null이면 실행하지 않음
     }
 
@@ -1996,7 +1994,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
           .map((problem) => ProblemThumbnailModel.fromProblem(problem))
           .toList();
     } else {
-      log('No problems loaded');
+      debugPrint('No problems loaded');
       return [];
     }
   }

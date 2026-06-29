@@ -147,7 +147,8 @@ class _ThemeDialogState extends State<ThemeDialog> {
                     final colorName = ThemeLockManager.getThemeName(index);
                     final isUnlocked =
                         ThemeLockManager.isThemeUnlocked(index, userInfo);
-                    return _buildColorCircle(color, colorName, index, isUnlocked);
+                    return _buildColorCircle(
+                        color, colorName, index, isUnlocked);
                   },
                 ),
               ),
@@ -165,28 +166,29 @@ class _ThemeDialogState extends State<ThemeDialog> {
                 children: [
                   Expanded(
                     child: TextButton(
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                    },
-                    style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 11),
-                      backgroundColor: Colors.grey[100],
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 11),
+                        backgroundColor: Colors.grey[100],
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
                       ),
-                    ),
-                    child: const StandardText(
-                      text: '취소',
-                      fontSize: 14,
-                      color: Colors.black87,
-                    ),
+                      child: const StandardText(
+                        text: '취소',
+                        fontSize: 14,
+                        color: Colors.black87,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: TextButton(
                       onPressed: () {
-                        if (_selectedColor != null && _selectedColorName != null) {
+                        if (_selectedColor != null &&
+                            _selectedColorName != null) {
                           themeProvider.changePrimaryColor(
                               _selectedColor!, _selectedColorName!);
                         }

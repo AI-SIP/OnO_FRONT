@@ -95,6 +95,7 @@ flutter:
     - assets/Logo/
     - assets/SocialLogin/
     - assets/FrogCharacter/
+    - assets/emoji/
     - assets/no_image.png
 
   fonts:

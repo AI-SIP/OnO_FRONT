@@ -16,7 +16,8 @@ class PaginatedResponse<T> {
     T Function(Map<String, dynamic>) fromJsonT,
   ) {
     // API 응답이 { errorCode, message, data } 형식으로 래핑되어 있는 경우 처리
-    final dataMap = json.containsKey('data') ? json['data'] as Map<String, dynamic> : json;
+    final dataMap =
+        json.containsKey('data') ? json['data'] as Map<String, dynamic> : json;
 
     return PaginatedResponse<T>(
       content: (dataMap['content'] as List<dynamic>)

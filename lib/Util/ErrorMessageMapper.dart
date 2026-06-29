@@ -67,6 +67,38 @@ class ErrorMessageMapper {
         return ErrorMessages.tagUserUnmatched;
       case 9005:
         return ErrorMessages.tagLimitExceeded;
+      case 10001:
+        return ErrorMessages.studyRoomNotFound;
+      case 10002:
+        return ErrorMessages.studyRoomForbidden;
+      case 10003:
+        return ErrorMessages.studyRoomHostOnly;
+      case 10004:
+        return ErrorMessages.studyRoomFull;
+      case 10005:
+        return ErrorMessages.studyRoomLimitExceeded;
+      case 10006:
+        return ErrorMessages.inviteCodeInvalid;
+      case 10007:
+        return ErrorMessages.inviteCodeExpired;
+      case 10008:
+        return ErrorMessages.alreadyStudyRoomMember;
+      case 10009:
+        return ErrorMessages.challengeNotFound;
+      case 10010:
+        return ErrorMessages.challengeLimitExceeded;
+      case 10011:
+        return ErrorMessages.sessionAlreadyActive;
+      case 10012:
+        return ErrorMessages.sessionNotFound;
+      case 10013:
+        return ErrorMessages.sharedProblemNotFound;
+      case 10014:
+        return ErrorMessages.weeklyReportNotFound;
+      case 10015:
+        return ErrorMessages.invalidReactionEmoji;
+      case 10016:
+        return ErrorMessages.invalidStudyRoomRequest;
       default:
         return null;
     }

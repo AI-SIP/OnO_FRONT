@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -19,7 +18,7 @@ class KakaoAuthService {
           userRegisterModel = await registerUser(context, user);
         });
       } catch (error, stackTrace) {
-        log('카카오톡으로 로그인 실패 $error');
+        debugPrint('카카오톡으로 로그인 실패 $error');
         await Sentry.captureException(
           error,
           stackTrace: stackTrace,
@@ -40,7 +39,7 @@ class KakaoAuthService {
             userRegisterModel = await registerUser(context, user);
           });
         } catch (error, stackTrace) {
-          log('카카오계정으로 로그인 실패 $error');
+          debugPrint('카카오계정으로 로그인 실패 $error');
           await Sentry.captureException(
             error,
             stackTrace: stackTrace,
@@ -64,7 +63,7 @@ class KakaoAuthService {
         }
 
         //SnackBarDialog.showSnackBar(context: context, message: "로그인 과정에서 오류가 발생했습니다. 다시 시도해주세요.", backgroundColor: Colors.red);
-        log('카카오계정으로 로그인 실패 $error');
+        debugPrint('카카오계정으로 로그인 실패 $error');
         await Sentry.captureException(
           error,
           stackTrace: stackTrace,
@@ -88,7 +87,7 @@ class KakaoAuthService {
           identifier: identifier.toString(),
           platform: 'KAKAO');
     } catch (error, stackTrace) {
-      log(error.toString());
+      debugPrint(error.toString());
       await Sentry.captureException(
         error,
         stackTrace: stackTrace,

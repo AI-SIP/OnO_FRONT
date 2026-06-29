@@ -24,4 +24,23 @@ class StudyCalendarService {
 
     return StudyCalendarModel.fromJson(data);
   }
+
+  Future<void> updateMoodEmoji({
+    required DateTime date,
+    required String emojiKey,
+    bool showErrorSnackBar = true,
+  }) async {
+    final dateText =
+        '${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+
+    await httpService.sendRequest(
+      method: 'PATCH',
+      url: '$baseUrl/mood',
+      body: {
+        'date': dateText,
+        'emojiKey': emojiKey,
+      },
+      showErrorSnackBar: showErrorSnackBar,
+    );
+  }
 }
