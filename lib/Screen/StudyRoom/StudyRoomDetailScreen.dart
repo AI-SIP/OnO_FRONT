@@ -582,16 +582,14 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
                         fontSize: 16,
                         color: Colors.black87,
                       ),
-                      if (isHost) ...[
-                        const SizedBox(height: 6),
-                        StandardText(
-                          text: '새 챌린지를 만들어 멤버들과 함께 도전해보세요',
-                          fontSize: 13,
-                          color: Colors.grey[500]!,
-                          fontWeight: FontWeight.normal,
-                          fontFamily: 'PretendardLight',
-                        ),
-                      ],
+                      const SizedBox(height: 6),
+                      StandardText(
+                        text: '새 챌린지를 만들어 멤버들과 함께 도전해보세요',
+                        fontSize: 13,
+                        color: Colors.grey[500]!,
+                        fontWeight: FontWeight.normal,
+                        fontFamily: 'PretendardLight',
+                      ),
                     ],
                   ),
                 )
@@ -619,7 +617,7 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
                   ],
                 ),
         ),
-        if (isHost) _buildChallengeCreateButton(context, themeProvider),
+        _buildChallengeCreateButton(context, themeProvider),
       ],
     );
   }
