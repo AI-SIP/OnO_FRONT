@@ -62,6 +62,7 @@ class _StudyRoomListScreenState extends State<StudyRoomListScreen> {
   void _showAddMenu(ThemeHandler themeProvider) {
     showModalBottomSheet(
       context: context,
+      useRootNavigator: true,
       backgroundColor: Colors.transparent,
       builder: (_) => Container(
         decoration: const BoxDecoration(

@@ -683,6 +683,7 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
   ) {
     showModalBottomSheet(
       context: context,
+      useRootNavigator: true,
       backgroundColor: Colors.transparent,
       builder: (_) => Container(
         decoration: const BoxDecoration(
@@ -805,6 +806,7 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
   ) {
     showModalBottomSheet(
       context: context,
+      useRootNavigator: true,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
       builder: (_) => Container(
