@@ -315,6 +315,9 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
     final standardTextStyle = const StandardText(text: '').getTextStyle();
     final screenIndexProvider = Provider.of<ScreenIndexProvider>(context);
     double screenHeight = MediaQuery.of(context).size.height;
+    final isMobile = MediaQuery.of(context).size.width < 600;
+    final selectedLabelFontSize =
+        screenHeight * 0.015 - (isMobile ? 1.0 : 0.0);
 
     return BottomNavigationBar(
       backgroundColor: Colors.white,
@@ -325,7 +328,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
       unselectedItemColor: Colors.grey,
       selectedLabelStyle: standardTextStyle.copyWith(
         color: themeProvider.primaryColor,
-        fontSize: screenHeight * 0.015,
+        fontSize: selectedLabelFontSize,
       ),
       unselectedLabelStyle: standardTextStyle.copyWith(
         color: Colors.grey,

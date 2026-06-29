@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:ono/Module/Image/CameraHandler.dart';
 import 'package:provider/provider.dart';
 
+import '../Text/mobile_font_size.dart';
 import '../Text/StandardText.dart';
 import '../Theme/ThemeHandler.dart';
 
@@ -163,9 +164,9 @@ class ImagePickerHandler {
                           ),
                         ),
                         const SizedBox(width: 12),
-                        const StandardText(
+                        StandardText(
                           text: '이미지 업로드',
-                          fontSize: 18,
+                          fontSize: MobileFontSize.reduced(context, 18),
                           fontWeight: FontWeight.w600,
                           color: Colors.black87,
                         ),
@@ -174,6 +175,7 @@ class ImagePickerHandler {
                     const SizedBox(height: 20),
                     // Menu items
                     _buildActionItem(
+                      context: context,
                       icon: Icons.camera_alt,
                       iconColor: themeProvider.primaryColor,
                       title: '카메라로 촬영',
@@ -188,6 +190,7 @@ class ImagePickerHandler {
                     ),
                     const SizedBox(height: 12),
                     _buildActionItem(
+                      context: context,
                       icon: Icons.photo_library,
                       iconColor: themeProvider.primaryColor,
                       title: '갤러리에서 선택',
@@ -223,6 +226,7 @@ class ImagePickerHandler {
   }
 
   Widget _buildActionItem({
+    required BuildContext context,
     required IconData icon,
     required Color iconColor,
     required String title,
@@ -253,7 +257,7 @@ class ImagePickerHandler {
             Expanded(
               child: StandardText(
                 text: title,
-                fontSize: 16,
+                fontSize: MobileFontSize.reduced(context, 16),
                 color: Colors.black87,
               ),
             ),

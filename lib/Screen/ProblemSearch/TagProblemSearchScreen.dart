@@ -527,6 +527,7 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
     final isSelected = _isSelected(problem);
     final title =
         problem.reference?.isNotEmpty == true ? problem.reference! : '제목 없음';
+    final isMobile = MediaQuery.of(context).size.width < 600;
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
@@ -550,6 +551,12 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
           solveCount: problem.solveCount,
           lastSolvedAt: problem.lastSolvedAt,
           themeProvider: themeProvider,
+          titleFontSize: isMobile ? 15 : 16,
+          tagFontSize: isMobile ? 9 : 10,
+          tagPadding: EdgeInsets.symmetric(
+            horizontal: isMobile ? 6 : 8,
+            vertical: isMobile ? 2 : 3,
+          ),
           trailing: widget.selectable
               ? Icon(
                   isSelected ? Icons.check_circle : Icons.circle_outlined,

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../Model/Problem/ProblemModel.dart';
 import '../../Module/Text/HandWriteText.dart';
+import '../../Module/Text/mobile_font_size.dart';
 import '../../Module/Theme/GridPainter.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import 'Widget/AnalysisSection.dart';
@@ -128,7 +129,7 @@ class _ProblemDetailTemplateV2State extends State<ProblemDetailTemplateV2>
               Tab(
                 child: HandWriteText(
                   text: '문제',
-                  fontSize: 18,
+                  fontSize: MobileFontSize.reduced(context, 18),
                   color: _currentTabIndex == 0
                       ? themeProvider.primaryColor
                       : Colors.grey[600]!,
@@ -137,7 +138,7 @@ class _ProblemDetailTemplateV2State extends State<ProblemDetailTemplateV2>
               Tab(
                 child: HandWriteText(
                   text: '정답',
-                  fontSize: 18,
+                  fontSize: MobileFontSize.reduced(context, 18),
                   color: _currentTabIndex == 1
                       ? themeProvider.primaryColor
                       : Colors.grey[600]!,
@@ -146,7 +147,7 @@ class _ProblemDetailTemplateV2State extends State<ProblemDetailTemplateV2>
               Tab(
                 child: HandWriteText(
                   text: '복습 기록',
-                  fontSize: 18,
+                  fontSize: MobileFontSize.reduced(context, 18),
                   color: _currentTabIndex == 2
                       ? themeProvider.primaryColor
                       : Colors.grey[600]!,

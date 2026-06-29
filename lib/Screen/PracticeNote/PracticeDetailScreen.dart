@@ -9,6 +9,7 @@ import '../../Module/Dialog/SnackBarDialog.dart';
 import '../../Module/Emoji/OnoEmojiCatalog.dart';
 import '../../Module/Emoji/OnoEmojiImage.dart';
 import '../../Module/Problem/ProblemThumbnailCard.dart';
+import '../../Module/Text/mobile_font_size.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/PracticeNoteProvider.dart';
@@ -137,9 +138,9 @@ class PracticeDetailScreen extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(width: 12),
-                        const StandardText(
+                        StandardText(
                           text: '복습 세트 편집하기',
-                          fontSize: 18,
+                          fontSize: MobileFontSize.reduced(context, 18),
                           fontWeight: FontWeight.w600,
                           color: Colors.black87,
                         ),
@@ -148,6 +149,7 @@ class PracticeDetailScreen extends StatelessWidget {
                     const SizedBox(height: 24),
                     // Menu items
                     _buildActionItem(
+                      context: context,
                       icon: Icons.edit,
                       iconColor: themeProvider.primaryColor,
                       title: '복습 세트 편집하기',
@@ -167,6 +169,7 @@ class PracticeDetailScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 12),
                     _buildActionItem(
+                      context: context,
                       icon: Icons.delete_forever,
                       iconColor: Colors.red,
                       title: '복습 세트 삭제하기',
@@ -189,6 +192,7 @@ class PracticeDetailScreen extends StatelessWidget {
   }
 
   Widget _buildActionItem({
+    required BuildContext context,
     required IconData icon,
     required Color iconColor,
     required String title,
@@ -220,7 +224,7 @@ class PracticeDetailScreen extends StatelessWidget {
             Expanded(
               child: StandardText(
                 text: title,
-                fontSize: 16,
+                fontSize: MobileFontSize.reduced(context, 16),
                 color: titleColor ?? Colors.black87,
               ),
             ),
@@ -519,9 +523,9 @@ class PracticeDetailScreen extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(width: 12),
-                      const StandardText(
+                      StandardText(
                         text: '복습 방식 선택',
-                        fontSize: 18,
+                        fontSize: MobileFontSize.reduced(context, 18),
                         fontWeight: FontWeight.w600,
                         color: Colors.black87,
                       ),
@@ -529,6 +533,7 @@ class PracticeDetailScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 24),
                   _buildActionItem(
+                    context: context,
                     icon: Icons.format_list_numbered,
                     iconColor: themeProvider.primaryColor,
                     title: '등록한 순서로 복습하기',
@@ -544,6 +549,7 @@ class PracticeDetailScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 12),
                   _buildActionItem(
+                    context: context,
                     icon: Icons.shuffle,
                     iconColor: themeProvider.primaryColor,
                     title: '셔플 모드로 복습하기',
@@ -597,9 +603,9 @@ class PracticeDetailScreen extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 12),
-                    const StandardText(
+                    StandardText(
                       text: '복습 세트 삭제',
-                      fontSize: 18,
+                      fontSize: MobileFontSize.reduced(context, 18),
                       fontWeight: FontWeight.w600,
                       color: Colors.black87,
                     ),
@@ -607,9 +613,9 @@ class PracticeDetailScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 20),
                 // 내용
-                const StandardText(
+                StandardText(
                   text: '정말로 이 복습 세트를 삭제하시겠습니까?',
-                  fontSize: 15,
+                  fontSize: MobileFontSize.reduced(context, 15),
                   color: Colors.black87,
                   textAlign: TextAlign.center,
                 ),
@@ -630,9 +636,9 @@ class PracticeDetailScreen extends StatelessWidget {
                             borderRadius: BorderRadius.circular(8),
                           ),
                         ),
-                        child: const StandardText(
+                        child: StandardText(
                           text: '취소',
-                          fontSize: 15,
+                          fontSize: MobileFontSize.reduced(context, 15),
                           color: Colors.black87,
                         ),
                       ),

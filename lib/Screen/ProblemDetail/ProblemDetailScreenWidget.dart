@@ -52,7 +52,7 @@ class ProblemDetailScreenWidget {
           controller: controller,
           initiallyExpanded: isExpanded,
           onExpansionChanged: onExpansionChanged,
-          title: tileTitle('정답 확인', Colors.black),
+          title: tileTitle(ctx, '정답 확인', Colors.black),
           children: [
             verticalSpacer(ctx, .03),
             buildMemoSection(problem.memo, theme.primaryColor),

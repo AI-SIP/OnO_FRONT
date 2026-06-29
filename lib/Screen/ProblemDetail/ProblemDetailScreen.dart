@@ -12,6 +12,7 @@ import 'package:provider/provider.dart';
 import '../../Model/Problem/ProblemAnalysisStatus.dart';
 import '../../Model/Problem/ProblemModel.dart';
 import '../../Module/Dialog/LoadingDialog.dart';
+import '../../Module/Text/mobile_font_size.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/ProblemsProvider.dart';
@@ -91,7 +92,8 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
       nextInterval = const Duration(seconds: 10);
     } else {
       // 105초(1분 45초) 이상: 폴링 중지
-      debugPrint('⏱️ Analysis polling timeout - stopped after ${_pollingCount} attempts');
+      debugPrint(
+          '⏱️ Analysis polling timeout - stopped after ${_pollingCount} attempts');
       _stopAnalysisPolling();
       return;
     }
@@ -388,9 +390,9 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                           ),
                         ),
                         const SizedBox(width: 12),
-                        const StandardText(
+                        StandardText(
                           text: '오답노트 편집하기',
-                          fontSize: 20,
+                          fontSize: MobileFontSize.reduced(context, 20),
                           fontWeight: FontWeight.w600,
                           color: Colors.black87,
                         ),
@@ -493,7 +495,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
             Expanded(
               child: StandardText(
                 text: title,
-                fontSize: 16,
+                fontSize: MobileFontSize.reduced(context, 16),
                 color: titleColor ?? Colors.black87,
               ),
             ),
@@ -599,10 +601,10 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                             ),
                           ),
                           const SizedBox(width: 12),
-                          const Expanded(
+                          Expanded(
                             child: StandardText(
                               text: '복습 세트에 추가하기',
-                              fontSize: 20,
+                              fontSize: MobileFontSize.reduced(context, 20),
                               fontWeight: FontWeight.w600,
                               color: Colors.black87,
                             ),
@@ -621,9 +623,9 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                                 color: Colors.grey[350],
                               ),
                               const SizedBox(height: 12),
-                              const StandardText(
+                              StandardText(
                                 text: '아직 복습 세트가 없습니다.',
-                                fontSize: 16,
+                                fontSize: MobileFontSize.reduced(context, 16),
                                 color: Colors.black87,
                               ),
                             ],
@@ -755,9 +757,9 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                                   borderRadius: BorderRadius.circular(10),
                                 ),
                               ),
-                              child: const StandardText(
+                              child: StandardText(
                                 text: '취소',
-                                fontSize: 15,
+                                fontSize: MobileFontSize.reduced(context, 15),
                                 color: Colors.black87,
                               ),
                             ),
@@ -880,9 +882,9 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                       ),
                     ),
                     const SizedBox(width: 12),
-                    const StandardText(
+                    StandardText(
                       text: '오답노트 삭제',
-                      fontSize: 18,
+                      fontSize: MobileFontSize.reduced(context, 18),
                       fontWeight: FontWeight.w600,
                       color: Colors.black87,
                     ),
@@ -890,9 +892,9 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                 ),
                 const SizedBox(height: 20),
                 // 내용
-                const StandardText(
+                StandardText(
                   text: '정말로 이 오답노트를 삭제하시겠습니까?',
-                  fontSize: 15,
+                  fontSize: MobileFontSize.reduced(context, 15),
                   color: Colors.black87,
                   textAlign: TextAlign.center,
                 ),
@@ -912,9 +914,9 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                             borderRadius: BorderRadius.circular(8),
                           ),
                         ),
-                        child: const StandardText(
+                        child: StandardText(
                           text: '취소',
-                          fontSize: 15,
+                          fontSize: MobileFontSize.reduced(context, 15),
                           color: Colors.black87,
                         ),
                       ),
@@ -1076,7 +1078,8 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
     } else if (analysisStatus == ProblemAnalysisStatus.PROCESSING ||
         analysisStatus == ProblemAnalysisStatus.NOT_STARTED) {
       // 분석 진행 중 또는 시작 전 - 폴링 시작
-      debugPrint('📊 Analysis in progress (status: $analysisStatus) - starting polling');
+      debugPrint(
+          '📊 Analysis in progress (status: $analysisStatus) - starting polling');
 
       // 분석 결과 조회 (await 하지 않고 백그라운드에서 실행)
       problemsProvider.fetchProblemAnalysis(problemId);

@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 
 import '../../Model/PracticeNote/PracticeNoteThumbnailModel.dart';
 import '../../Module/Emoji/OnoEmojiImage.dart';
+import '../../Module/Text/mobile_font_size.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/PracticeNoteProvider.dart';
@@ -211,7 +212,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
                         const SizedBox(width: 12),
                         StandardText(
                           text: '복습 세트 편집하기',
-                          fontSize: 18,
+                          fontSize: MobileFontSize.reduced(context, 18),
                           fontWeight: FontWeight.w600,
                           color: Colors.black87,
                         ),
@@ -284,7 +285,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
             Expanded(
               child: StandardText(
                 text: title,
-                fontSize: 16,
+                fontSize: MobileFontSize.reduced(context, 16),
                 color: titleColor ?? Colors.black87,
               ),
             ),
@@ -398,9 +399,9 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
                       ),
                     ),
                     const SizedBox(width: 12),
-                    const StandardText(
+                    StandardText(
                       text: '복습 세트 삭제',
-                      fontSize: 18,
+                      fontSize: MobileFontSize.reduced(context, 18),
                       fontWeight: FontWeight.w600,
                       color: Colors.black87,
                     ),
@@ -408,9 +409,9 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
                 ),
                 const SizedBox(height: 20),
                 // 내용
-                const StandardText(
+                StandardText(
                   text: '정말로 이 복습 세트를 삭제하시겠습니까?',
-                  fontSize: 15,
+                  fontSize: MobileFontSize.reduced(context, 15),
                   color: Colors.black87,
                   textAlign: TextAlign.center,
                 ),
@@ -431,9 +432,9 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
                             borderRadius: BorderRadius.circular(8),
                           ),
                         ),
-                        child: const StandardText(
+                        child: StandardText(
                           text: '취소',
-                          fontSize: 15,
+                          fontSize: MobileFontSize.reduced(context, 15),
                           color: Colors.black87,
                         ),
                       ),
@@ -511,9 +512,9 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
                 height: 90,
               ),
               const SizedBox(height: 40),
-              const StandardText(
+              StandardText(
                 text: '복습 세트에 오답노트를 담아\n 편리하게 시험을 준비하세요!',
-                fontSize: 16,
+                fontSize: MobileFontSize.reduced(context, 16),
                 color: Colors.black,
                 textAlign: TextAlign.center,
               ),
@@ -686,6 +687,8 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
 
   Widget _buildPracticeInfo(
       PracticeNoteThumbnails practice, ThemeHandler themeProvider) {
+    final titleFontSize = MediaQuery.of(context).size.width < 600 ? 15.0 : 16.0;
+
     return Expanded(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -694,7 +697,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
             text: practice.practiceTitle.isNotEmpty
                 ? practice.practiceTitle
                 : "제목 없음",
-            fontSize: 18,
+            fontSize: titleFontSize,
             color: Colors.black,
           ),
           const SizedBox(height: 8),
@@ -721,8 +724,13 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
 
   Widget _buildTag(String text, ThemeHandler themeProvider,
       {bool highlight = false}) {
+    final isMobile = MediaQuery.of(context).size.width < 600;
+
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: EdgeInsets.symmetric(
+        horizontal: isMobile ? 7 : 8,
+        vertical: isMobile ? 3 : 4,
+      ),
       decoration: BoxDecoration(
         color: highlight
             ? themeProvider.primaryColor
@@ -731,7 +739,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
       ),
       child: StandardText(
         text: text,
-        fontSize: 12,
+        fontSize: isMobile ? 11 : 12,
         color: highlight ? Colors.white : themeProvider.primaryColor,
       ),
     );

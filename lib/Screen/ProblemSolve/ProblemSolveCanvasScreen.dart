@@ -11,6 +11,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 
 import '../../Module/Dialog/SnackBarDialog.dart';
+import '../../Module/Text/mobile_font_size.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import 'ProblemSolveRegisterScreen.dart';
@@ -445,9 +446,9 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
           const SizedBox(height: 10),
           Row(
             children: [
-              const StandardText(
+              StandardText(
                 text: '굵기',
-                fontSize: 13,
+                fontSize: MobileFontSize.reduced(context, 13),
                 fontWeight: FontWeight.w600,
                 color: Colors.black87,
               ),

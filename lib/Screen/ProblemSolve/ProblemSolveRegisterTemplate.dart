@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 import '../../Model/Problem/AnswerStatus.dart';
 import '../../Model/Problem/ImprovementType.dart';
 import '../../Module/Image/ImagePickerHandler.dart';
+import '../../Module/Text/mobile_font_size.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/ProblemsProvider.dart';
@@ -599,9 +600,9 @@ class ProblemSolveRegisterTemplateState
                       ),
                     ),
                     const SizedBox(width: 12),
-                    const StandardText(
+                    StandardText(
                       text: '소요 시간 입력',
-                      fontSize: 20,
+                      fontSize: MobileFontSize.reduced(context, 20),
                       fontWeight: FontWeight.w600,
                       color: Colors.black87,
                     ),
@@ -666,9 +667,9 @@ class ProblemSolveRegisterTemplateState
                             borderRadius: BorderRadius.circular(8),
                           ),
                         ),
-                        child: const StandardText(
+                        child: StandardText(
                           text: '취소',
-                          fontSize: 15,
+                          fontSize: MobileFontSize.reduced(context, 15),
                           color: Colors.black87,
                         ),
                       ),

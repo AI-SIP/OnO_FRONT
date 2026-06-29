@@ -2,6 +2,7 @@ import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../../Module/Text/mobile_font_size.dart';
 import '../../../Module/Text/StandardText.dart';
 import '../../../Module/Theme/ThemeHandler.dart';
 import 'DatePickerHandler.dart';
@@ -43,10 +44,10 @@ class DatePickerWidget extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 12),
-          const Expanded(
+          Expanded(
             child: StandardText(
               text: '푼 날짜',
-              fontSize: 16,
+              fontSize: MobileFontSize.reduced(context, 16),
               fontWeight: FontWeight.w500,
               color: Colors.black87,
             ),
@@ -85,7 +86,7 @@ class DatePickerWidget extends StatelessWidget {
                           child: StandardText(
                             text:
                                 '${selectedDate.year}년 ${selectedDate.month}월 ${selectedDate.day}일',
-                            fontSize: 14,
+                            fontSize: MobileFontSize.reduced(context, 14),
                             color: Colors.black87,
                           ),
                         ),

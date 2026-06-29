@@ -9,6 +9,7 @@ import 'package:provider/provider.dart';
 import '../../Model/PracticeNote/PracticeNoteRegisterModel.dart';
 import '../../Model/PracticeNote/RepeatType.dart';
 import '../../Module/Dialog/SnackBarDialog.dart';
+import '../../Module/Text/mobile_font_size.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/PracticeNoteProvider.dart';
@@ -202,9 +203,9 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
                       ),
                     ),
                     const SizedBox(width: 12),
-                    const StandardText(
+                    StandardText(
                       text: '경고',
-                      fontSize: 18,
+                      fontSize: MobileFontSize.reduced(context, 18),
                       fontWeight: FontWeight.w600,
                       color: Colors.black87,
                     ),
@@ -212,9 +213,9 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
                 ),
                 const SizedBox(height: 20),
                 // 내용
-                const StandardText(
+                StandardText(
                   text: '제목을 입력해 주세요!',
-                  fontSize: 15,
+                  fontSize: MobileFontSize.reduced(context, 15),
                   color: Colors.black87,
                   textAlign: TextAlign.center,
                 ),
@@ -766,9 +767,9 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
                         ),
                       ),
                       const SizedBox(width: 12),
-                      const StandardText(
+                      StandardText(
                         text: '알림 시각 선택',
-                        fontSize: 18,
+                        fontSize: MobileFontSize.reduced(context, 18),
                         fontWeight: FontWeight.w600,
                         color: Colors.black87,
                       ),

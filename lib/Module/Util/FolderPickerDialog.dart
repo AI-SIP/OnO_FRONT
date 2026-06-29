@@ -4,6 +4,7 @@ import 'package:ono/Module/Theme/NoteIconHandler.dart';
 import 'package:provider/provider.dart';
 
 import '../../Provider/FoldersProvider.dart';
+import '../Text/mobile_font_size.dart';
 import '../Text/StandardText.dart';
 import '../Theme/ThemeHandler.dart';
 
@@ -217,9 +218,9 @@ class _FolderPickerDialogState extends State<FolderPickerDialog> {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const StandardText(
+                          StandardText(
                             text: '공책 선택',
-                            fontSize: 20,
+                            fontSize: MobileFontSize.reduced(context, 20),
                             fontWeight: FontWeight.w600,
                             color: Colors.black87,
                           ),
@@ -294,9 +295,9 @@ class _FolderPickerDialogState extends State<FolderPickerDialog> {
                           borderRadius: BorderRadius.circular(8),
                         ),
                       ),
-                      child: const StandardText(
+                      child: StandardText(
                         text: '취소',
-                        fontSize: 15,
+                        fontSize: MobileFontSize.reduced(context, 15),
                         color: Colors.black87,
                       ),
                     ),
@@ -394,7 +395,7 @@ class _FolderPickerDialogState extends State<FolderPickerDialog> {
             ),
             title: StandardText(
               text: node.folderName,
-              fontSize: 15,
+              fontSize: MobileFontSize.reduced(context, 15),
               color: Colors.black87,
               overflow: TextOverflow.ellipsis,
             ),
@@ -487,7 +488,7 @@ class _FolderPickerDialogState extends State<FolderPickerDialog> {
                     const SizedBox(width: 12),
                     StandardText(
                       text: dialogTitle,
-                      fontSize: 20,
+                      fontSize: MobileFontSize.reduced(context, 20),
                       fontWeight: FontWeight.w600,
                       color: Colors.black87,
                     ),
@@ -500,13 +501,13 @@ class _FolderPickerDialogState extends State<FolderPickerDialog> {
                   autofocus: true,
                   style: standardTextStyle.copyWith(
                     color: Colors.black87,
-                    fontSize: 15,
+                    fontSize: MobileFontSize.reduced(context, 15),
                   ),
                   decoration: InputDecoration(
                     hintText: '공책 이름을 입력하세요',
                     hintStyle: standardTextStyle.copyWith(
                       color: Colors.grey[400],
-                      fontSize: 14,
+                      fontSize: MobileFontSize.reduced(context, 14),
                     ),
                     fillColor: Colors.grey[50],
                     filled: true,
@@ -550,9 +551,9 @@ class _FolderPickerDialogState extends State<FolderPickerDialog> {
                           borderRadius: BorderRadius.circular(8),
                         ),
                       ),
-                      child: const StandardText(
+                      child: StandardText(
                         text: '취소',
-                        fontSize: 15,
+                        fontSize: MobileFontSize.reduced(context, 15),
                         color: Colors.black87,
                       ),
                     ),

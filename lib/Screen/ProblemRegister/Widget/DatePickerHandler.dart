@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../Module/Text/mobile_font_size.dart';
 import '../../../Module/Text/StandardText.dart';
 
 class DatePickerHandler extends StatefulWidget {
@@ -81,7 +82,7 @@ class _DatePickerHandlerState extends State<DatePickerHandler> {
               ),
               StandardText(
                 text: widget.title,
-                fontSize: 17,
+                fontSize: MobileFontSize.reduced(context, 17),
                 fontWeight: FontWeight.w600,
                 color: Colors.black87,
               ),
@@ -100,7 +101,7 @@ class _DatePickerHandlerState extends State<DatePickerHandler> {
                       child: StandardText(
                         text:
                             '${_visibleMonth.year}.${_visibleMonth.month.toString().padLeft(2, '0')}',
-                        fontSize: 16,
+                        fontSize: MobileFontSize.reduced(context, 16),
                         fontWeight: FontWeight.w700,
                         color: Colors.black87,
                       ),
@@ -197,7 +198,7 @@ class _DatePickerHandlerState extends State<DatePickerHandler> {
             child: Center(
               child: StandardText(
                 text: '$day',
-                fontSize: 13,
+                fontSize: MobileFontSize.reduced(context, 13),
                 fontWeight: isToday ? FontWeight.w700 : FontWeight.normal,
                 color: isSelected
                     ? Colors.white
