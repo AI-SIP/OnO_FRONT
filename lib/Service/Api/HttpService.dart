@@ -86,7 +86,7 @@ class HttpService {
 
     Map<String, String> mergedHeaders = {
       if (requiredToken) 'Authorization': '$accessToken',
-      'Content-Type': 'application/json; charset=UTF-8',
+      if (!isMultipart) 'Content-Type': 'application/json; charset=UTF-8',
       ...?headers,
     };
 
