@@ -216,12 +216,13 @@ class OnoEmojiCatalog {
     '😱': 'dizzy_spiral_eyes2',
   };
 
+  static final Map<String, OnoEmoji> _keyIndex = {
+    for (final e in all) e.key: e,
+  };
+
   static OnoEmoji? byKey(String key) {
     final normalizedKey = unicodeKeyMap[key] ?? key;
-    for (final emoji in all) {
-      if (emoji.key == normalizedKey) return emoji;
-    }
-    return null;
+    return _keyIndex[normalizedKey];
   }
 
   static List<OnoEmoji> byCategory(OnoEmojiCategory category) {
