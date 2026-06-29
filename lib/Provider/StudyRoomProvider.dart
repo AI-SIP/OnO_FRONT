@@ -7,7 +7,6 @@ import '../Model/StudyRoom/SharedProblemCommentModel.dart';
 import '../Model/StudyRoom/SharedProblemModel.dart';
 import '../Model/StudyRoom/StudyRoomMemberModel.dart';
 import '../Model/StudyRoom/StudyRoomModel.dart';
-import '../Model/StudyRoom/StudySessionModel.dart';
 import '../Model/StudyRoom/WeeklyReportModel.dart';
 import '../Module/Emoji/OnoEmojiCatalog.dart';
 import '../Service/Api/StudyRoom/StudyRoomService.dart';
@@ -24,7 +23,6 @@ class StudyRoomProvider extends ChangeNotifier {
   bool feedHasNext = false;
   bool isFeedLoadingMore = false;
   List<ChallengeModel> challenges = [];
-  List<StudySessionModel> activeSessions = [];
   List<SharedProblemModel> sharedProblems = [];
   int? _sharedProblemsNextCursor;
   bool sharedProblemsHasNext = false;
@@ -35,7 +33,6 @@ class StudyRoomProvider extends ChangeNotifier {
 
   int? currentUserId;
   int? _activeRoomId;
-  int? _mySessionId;
 
   void updateCurrentUserId(int? userId) {
     currentUserId = userId;
@@ -69,7 +66,7 @@ class StudyRoomProvider extends ChangeNotifier {
       await Future.wait([
         fetchFeed(roomId, notify: false),
         fetchChallenges(roomId, notify: false),
-        fetchActiveSessions(roomId, notify: false),
+        fetchSharedProblems(roomId, notify: false),
         fetchWeeklyReport(roomId, notify: false),
       ]);
     } finally {
@@ -282,33 +279,7 @@ class StudyRoomProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // ── C. 공부 세션 ──
-
-  Future<void> fetchActiveSessions(int roomId, {bool notify = true}) async {
-    activeSessions = await _service.fetchActiveSessions(roomId);
-    if (notify) notifyListeners();
-  }
-
-  Future<void> addMySession() async {
-    final roomId = selectedRoom?.roomId ?? _activeRoomId;
-    if (roomId == null) return;
-    _mySessionId = await _service.startSession(roomId);
-    await fetchActiveSessions(roomId, notify: false);
-    notifyListeners();
-  }
-
-  Future<void> removeMySession() async {
-    final roomId = selectedRoom?.roomId ?? _activeRoomId;
-    if (roomId == null) return;
-    if (_mySessionId != null) {
-      await _service.endSession(roomId: roomId, sessionId: _mySessionId!);
-      _mySessionId = null;
-    }
-    await fetchActiveSessions(roomId, notify: false);
-    notifyListeners();
-  }
-
-  // ── D. 문제 공유 ──
+  // ── C. 문제 공유 ──
 
   Future<void> shareProblems(
     int problemId, {

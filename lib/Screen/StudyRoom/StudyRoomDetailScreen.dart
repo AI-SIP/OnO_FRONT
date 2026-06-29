@@ -5,18 +5,15 @@ import '../../Model/StudyRoom/StudyRoomModel.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/StudyRoomProvider.dart';
-import '../../Provider/StudySessionProvider.dart';
 import '../../Provider/UserProvider.dart';
 import '../../Util/AppSnackBar.dart';
 import 'ChallengeCreateSheet.dart';
 import 'StudyRoomEditScreen.dart';
-import 'Widget/ActiveStudyBanner.dart';
 import 'Widget/ActivityFeedTab.dart';
 import 'Widget/ChallengeCard.dart';
 import 'Widget/InviteCodeSheet.dart';
 import 'Widget/MemberRankCard.dart';
 import 'Widget/StudyRoomThumbnail.dart';
-import 'Widget/StudySessionResultSheet.dart';
 import 'Widget/SharedProblemTab.dart';
 import 'Widget/WeeklyReportSheet.dart';
 
@@ -326,14 +323,6 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
           ],
         ),
       ),
-      floatingActionButton: Consumer<StudySessionProvider>(
-        builder: (_, currentSessionProvider, __) => _buildSessionFAB(
-          context,
-          currentSessionProvider,
-          provider,
-          themeProvider,
-        ),
-      ),
       body: provider.isLoading && room == null
           ? Center(
               child: CircularProgressIndicator(
@@ -364,24 +353,13 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
     ThemeHandler themeProvider,
     bool isHost,
   ) {
-    return Column(
+    return TabBarView(
+      controller: _tabController,
       children: [
-        ActiveStudyBanner(
-          sessions: provider.activeSessions,
-          themeProvider: themeProvider,
-        ),
-        const SizedBox(height: 8),
-        Expanded(
-          child: TabBarView(
-            controller: _tabController,
-            children: [
-              _buildRankingTab(context, room, provider, themeProvider, isHost),
-              _buildChallengeTab(context, provider, themeProvider, isHost),
-              SharedProblemTab(roomId: widget.roomId),
-              ActivityFeedTab(roomId: widget.roomId),
-            ],
-          ),
-        ),
+        _buildRankingTab(context, room, provider, themeProvider, isHost),
+        _buildChallengeTab(context, provider, themeProvider, isHost),
+        SharedProblemTab(roomId: widget.roomId),
+        ActivityFeedTab(roomId: widget.roomId),
       ],
     );
   }
@@ -693,68 +671,6 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
           ),
         ),
       ),
-    );
-  }
-
-  // ── 공부 세션 FAB ──
-
-  Widget _buildSessionFAB(
-    BuildContext context,
-    StudySessionProvider sessionProvider,
-    StudyRoomProvider roomProvider,
-    ThemeHandler themeProvider,
-  ) {
-    if (_tabController.index != 0) {
-      return const SizedBox.shrink();
-    }
-
-    if (sessionProvider.isStudying) {
-      return FloatingActionButton.extended(
-        onPressed: () async {
-          final minutes = sessionProvider.endSession();
-          try {
-            await roomProvider.removeMySession();
-          } catch (_) {
-            AppSnackBar.showError('공부 종료 기록을 저장하지 못했어요');
-          }
-          if (context.mounted) {
-            await StudySessionResultSheet.show(context, minutes, themeProvider);
-          }
-        },
-        backgroundColor: Colors.red[400],
-        icon: const Icon(Icons.stop_circle_outlined, color: Colors.white),
-        label: StandardText(
-          text: sessionProvider.elapsedLabel,
-          fontSize: 14,
-          color: Colors.white,
-        ),
-      );
-    }
-
-    return FloatingActionButton(
-      onPressed: () async {
-        final confirmed = await _showConfirmDialog(
-          context: context,
-          themeProvider: themeProvider,
-          icon: Icons.play_arrow_rounded,
-          iconColor: themeProvider.primaryColor,
-          title: '공부를 시작할까요?',
-          content: '시작하면 스터디룸 멤버에게 공부 중으로 보여요.',
-          confirmLabel: '시작',
-          confirmColor: themeProvider.primaryColor,
-        );
-        if (confirmed != true || !context.mounted) return;
-
-        try {
-          await roomProvider.addMySession();
-          sessionProvider.startSession();
-        } catch (_) {
-          AppSnackBar.showError('공부를 시작하지 못했어요');
-        }
-      },
-      backgroundColor: themeProvider.primaryColor,
-      tooltip: '공부 시작',
-      child: const Icon(Icons.play_arrow_rounded, color: Colors.white),
     );
   }
 

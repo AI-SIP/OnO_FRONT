@@ -22,7 +22,6 @@ import 'Provider/PracticeNoteProvider.dart';
 import 'Provider/ProblemsProvider.dart';
 import 'Provider/ReviewDueProvider.dart';
 import 'Provider/StudyRoomProvider.dart';
-import 'Provider/StudySessionProvider.dart';
 import 'Provider/UserProvider.dart';
 import 'Provider/TutorialProvider.dart';
 import 'Screen/Folder/DirectoryScreen.dart';
@@ -140,7 +139,6 @@ Future<void> _bootstrapApp() async {
         ChangeNotifierProvider(create: (_) => ReviewDueProvider()),
         ChangeNotifierProvider(create: (_) => TutorialProvider()),
         ChangeNotifierProvider(create: (_) => StudyRoomProvider()),
-        ChangeNotifierProvider(create: (_) => StudySessionProvider()),
       ],
       child: const MyApp(),
     ),

@@ -7,7 +7,6 @@ import 'package:ono/Model/StudyRoom/InviteCodeModel.dart';
 import 'package:ono/Model/StudyRoom/SharedProblemCommentModel.dart';
 import 'package:ono/Model/StudyRoom/SharedProblemModel.dart';
 import 'package:ono/Model/StudyRoom/StudyRoomModel.dart';
-import 'package:ono/Model/StudyRoom/StudySessionModel.dart';
 import 'package:ono/Model/StudyRoom/WeeklyReportModel.dart';
 
 import '../HttpService.dart';
@@ -206,34 +205,6 @@ class StudyRoomService {
     await httpService.sendRequest(
       method: 'DELETE',
       url: '$baseUrl/$roomId/challenges/$challengeId',
-    );
-  }
-
-  Future<List<StudySessionModel>> fetchActiveSessions(int roomId) async {
-    final data = await httpService.sendRequest(
-      method: 'GET',
-      url: '$baseUrl/$roomId/sessions/active',
-    );
-    return _mapList(
-        _asMap(data)['activeSessions'], StudySessionModel.fromActiveJson);
-  }
-
-  Future<int?> startSession(int roomId) async {
-    final data = await httpService.sendRequest(
-      method: 'POST',
-      url: '$baseUrl/$roomId/sessions',
-    );
-    final map = _asMap(data);
-    return map['sessionId'] == null ? null : (map['sessionId'] as num).toInt();
-  }
-
-  Future<void> endSession({
-    required int roomId,
-    required int sessionId,
-  }) async {
-    await httpService.sendRequest(
-      method: 'PATCH',
-      url: '$baseUrl/$roomId/sessions/$sessionId/end',
     );
   }
 
