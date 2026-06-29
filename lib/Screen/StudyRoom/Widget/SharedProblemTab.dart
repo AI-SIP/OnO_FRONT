@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../../Module/Text/StandardText.dart';
 import '../../../Module/Theme/ThemeHandler.dart';
 import '../../../Provider/StudyRoomProvider.dart';
+import '../../../Util/AppSnackBar.dart';
 import '../ProblemPickerScreen.dart';
 import 'SharedProblemCard.dart';
 
@@ -19,6 +20,7 @@ class SharedProblemTab extends StatefulWidget {
 class _SharedProblemTabState extends State<SharedProblemTab>
     with AutomaticKeepAliveClientMixin {
   bool _loaded = false;
+  late ScrollController _scrollController;
 
   @override
   bool get wantKeepAlive => true;
@@ -26,7 +28,27 @@ class _SharedProblemTabState extends State<SharedProblemTab>
   @override
   void initState() {
     super.initState();
+    _scrollController = ScrollController();
+    _scrollController.addListener(_onScroll);
     WidgetsBinding.instance.addPostFrameCallback((_) => _load());
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent * 0.85) {
+      final provider = Provider.of<StudyRoomProvider>(context, listen: false);
+      if (provider.sharedProblemsHasNext &&
+          !provider.isSharedProblemsLoadingMore) {
+        provider.loadMoreSharedProblems(widget.roomId);
+      }
+    }
   }
 
   Future<void> _load() async {
@@ -40,18 +62,32 @@ class _SharedProblemTabState extends State<SharedProblemTab>
     BuildContext context,
     ThemeHandler themeProvider,
   ) async {
+    final provider = Provider.of<StudyRoomProvider>(context, listen: false);
+    final alreadySharedIds = provider.sharedProblems
+        .map((s) => s.problemId)
+        .whereType<int>()
+        .toSet();
+
     final result = await Navigator.push<bool>(
       context,
       MaterialPageRoute(
-        builder: (_) => ProblemPickerScreen(roomId: widget.roomId),
+        builder: (_) => ProblemPickerScreen(
+          roomId: widget.roomId,
+          alreadySharedProblemIds: alreadySharedIds,
+        ),
       ),
     );
     if (result == true && context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('문제를 공유했어요!'),
-          duration: Duration(seconds: 2),
+      AppSnackBar.messengerKey.currentState?.showSnackBar(
+        SnackBar(
+          content: const StandardText(
+            text: '문제를 공유했어요!',
+            fontSize: 14,
+            color: Colors.white,
+          ),
+          backgroundColor: themeProvider.primaryColor,
           behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 2),
         ),
       );
     }
@@ -114,11 +150,27 @@ class _SharedProblemTabState extends State<SharedProblemTab>
                   ),
                 )
               : ListView.builder(
+                  controller: _scrollController,
                   physics: const AlwaysScrollableScrollPhysics(),
                   padding: const EdgeInsets.only(top: 4, bottom: 18),
-                  itemCount: provider.sharedProblems.length,
-                  itemBuilder: (_, i) =>
-                      SharedProblemCard(problem: provider.sharedProblems[i]),
+                  itemCount: provider.sharedProblems.length +
+                      (provider.sharedProblemsHasNext ? 1 : 0),
+                  itemBuilder: (_, i) {
+                    if (i == provider.sharedProblems.length) {
+                      return Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: CircularProgressIndicator(
+                            color: themeProvider.primaryColor,
+                            strokeWidth: 2,
+                          ),
+                        ),
+                      );
+                    }
+                    return SharedProblemCard(
+                      problem: provider.sharedProblems[i],
+                    );
+                  },
                 ),
         ),
       ],
@@ -166,7 +218,7 @@ class _SharedProblemTabState extends State<SharedProblemTab>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const StandardText(
-                  text: '공유 게시판',
+                  text: '문제 공유 게시판',
                   fontSize: 15,
                   color: Colors.black87,
                 ),

@@ -26,6 +26,9 @@ class StudyRoomProvider extends ChangeNotifier {
   List<ChallengeModel> challenges = [];
   List<StudySessionModel> activeSessions = [];
   List<SharedProblemModel> sharedProblems = [];
+  int? _sharedProblemsNextCursor;
+  bool sharedProblemsHasNext = false;
+  bool isSharedProblemsLoadingMore = false;
   final Map<int, List<SharedProblemCommentModel>> sharedProblemComments = {};
   WeeklyReportModel? weeklyReport;
   int? myWeeklyGoal;
@@ -338,7 +341,31 @@ class StudyRoomProvider extends ChangeNotifier {
   Future<void> fetchSharedProblems(int roomId, {bool notify = true}) async {
     final page = await _service.fetchSharedProblems(roomId);
     sharedProblems = page.content;
+    _sharedProblemsNextCursor = page.nextCursor;
+    sharedProblemsHasNext = page.hasNext;
     if (notify) notifyListeners();
+  }
+
+  Future<void> loadMoreSharedProblems(int roomId) async {
+    if (!sharedProblemsHasNext ||
+        isSharedProblemsLoadingMore ||
+        _sharedProblemsNextCursor == null) {
+      return;
+    }
+    isSharedProblemsLoadingMore = true;
+    notifyListeners();
+    try {
+      final page = await _service.fetchSharedProblems(
+        roomId,
+        cursor: _sharedProblemsNextCursor,
+      );
+      sharedProblems = [...sharedProblems, ...page.content];
+      _sharedProblemsNextCursor = page.nextCursor;
+      sharedProblemsHasNext = page.hasNext;
+    } finally {
+      isSharedProblemsLoadingMore = false;
+      notifyListeners();
+    }
   }
 
   Future<void> toggleSharedProblemReaction(
@@ -363,11 +390,21 @@ class StudyRoomProvider extends ChangeNotifier {
   Future<void> fetchSharedProblemComments(int sharedProblemId) async {
     final roomId = selectedRoom?.roomId ?? _activeRoomId;
     if (roomId == null) return;
-    final page = await _service.fetchSharedProblemComments(
-      roomId: roomId,
-      sharedProblemId: sharedProblemId,
-    );
-    sharedProblemComments[sharedProblemId] = page.content;
+    final all = <SharedProblemCommentModel>[];
+    int? cursor;
+    bool hasNext = true;
+    while (hasNext) {
+      final page = await _service.fetchSharedProblemComments(
+        roomId: roomId,
+        sharedProblemId: sharedProblemId,
+        cursor: cursor,
+        size: 50,
+      );
+      all.addAll(page.content);
+      cursor = page.nextCursor;
+      hasNext = page.hasNext && page.nextCursor != null;
+    }
+    sharedProblemComments[sharedProblemId] = all;
     notifyListeners();
   }
 

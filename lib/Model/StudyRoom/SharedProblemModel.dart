@@ -5,7 +5,7 @@ class SharedProblemModel {
   final int sharedByUserId;
   final String sharedByName;
   final int? problemId;
-  final String? problemImageUrl;
+  final List<String> problemImageUrls;
   final String reference;
   final String? comment;
   int? commentCount;
@@ -17,7 +17,7 @@ class SharedProblemModel {
     required this.sharedByUserId,
     required this.sharedByName,
     this.problemId,
-    this.problemImageUrl,
+    required this.problemImageUrls,
     required this.reference,
     this.comment,
     this.commentCount,
@@ -33,7 +33,9 @@ class SharedProblemModel {
       sharedByName: (json['sharedByName'] ?? '알 수 없음').toString(),
       problemId:
           json['problemId'] == null ? null : (json['problemId'] as num).toInt(),
-      problemImageUrl: json['problemImageUrl'] as String?,
+      problemImageUrls: (json['problemImageUrls'] as List<dynamic>? ?? [])
+          .whereType<String>()
+          .toList(),
       reference: (json['reference'] ?? '공유 문제').toString(),
       comment: json['comment'] as String?,
       commentCount: json['commentCount'] == null

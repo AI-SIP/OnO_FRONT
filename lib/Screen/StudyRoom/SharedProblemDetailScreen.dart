@@ -1,18 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../../Model/StudyRoom/SharedProblemModel.dart';
-import '../../../Module/Text/StandardText.dart';
-import '../../../Module/Theme/ThemeHandler.dart';
-import '../../../Provider/StudyRoomProvider.dart';
-import '../../../Util/AppSnackBar.dart';
-import '../SharedProblemDetailScreen.dart';
-import 'FeedReactionBar.dart';
+import '../../Model/StudyRoom/SharedProblemModel.dart';
+import '../../Module/Text/StandardText.dart';
+import '../../Module/Theme/ThemeHandler.dart';
+import '../../Provider/StudyRoomProvider.dart';
+import '../../Util/AppSnackBar.dart';
+import '../ProblemDetail/Widget/ImageGallerySection.dart';
+import 'Widget/FeedReactionBar.dart';
+import 'Widget/SharedProblemCommentsSection.dart';
 
-class SharedProblemCard extends StatelessWidget {
+class SharedProblemDetailScreen extends StatelessWidget {
   final SharedProblemModel problem;
 
-  const SharedProblemCard({super.key, required this.problem});
+  const SharedProblemDetailScreen({super.key, required this.problem});
 
   String _timeAgo(DateTime dt) {
     final diff = DateTime.now().difference(dt);
@@ -24,6 +25,7 @@ class SharedProblemCard extends StatelessWidget {
 
   Future<void> _confirmDelete(
     BuildContext context,
+    SharedProblemModel problem,
     StudyRoomProvider provider,
     ThemeHandler themeProvider,
   ) async {
@@ -127,6 +129,7 @@ class SharedProblemCard extends StatelessWidget {
     if (confirmed != true || !context.mounted) return;
     try {
       await provider.deleteSharedProblem(problem.sharedProblemId);
+      if (context.mounted) Navigator.pop(context);
     } catch (_) {
       if (context.mounted) AppSnackBar.showError('공유 취소에 실패했습니다');
     }
@@ -134,6 +137,7 @@ class SharedProblemCard extends StatelessWidget {
 
   void _showProblemActions(
     BuildContext context,
+    SharedProblemModel problem,
     StudyRoomProvider provider,
     ThemeHandler themeProvider,
   ) {
@@ -182,7 +186,7 @@ class SharedProblemCard extends StatelessWidget {
                   child: TextButton(
                     onPressed: () {
                       Navigator.pop(dialogContext);
-                      _confirmDelete(context, provider, themeProvider);
+                      _confirmDelete(context, problem, provider, themeProvider);
                     },
                     style: TextButton.styleFrom(
                       backgroundColor: Colors.red.withValues(alpha: 0.08),
@@ -240,261 +244,200 @@ class SharedProblemCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeHandler>(context);
-    final provider = Provider.of<StudyRoomProvider>(context, listen: false);
+    final provider = Provider.of<StudyRoomProvider>(context);
     final primary = themeProvider.primaryColor;
-    final p = problem;
-    final isOwner = provider.currentUserId == p.sharedByUserId;
+    final p = provider.sharedProblems
+        .where((item) => item.sharedProblemId == problem.sharedProblemId)
+        .firstOrNull;
+    final currentProblem = p ?? problem;
 
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: () => Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => SharedProblemDetailScreen(problem: problem),
-          ),
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        leading: IconButton(
+          icon:
+              Icon(Icons.arrow_back_ios_new, color: Colors.grey[700], size: 20),
+          onPressed: () => Navigator.pop(context),
         ),
-        borderRadius: BorderRadius.circular(14),
-        child: Container(
-          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: Colors.grey[200]!, width: 1),
-            boxShadow: [
-              BoxShadow(
-                color: primary.withValues(alpha: 0.07),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(14, 14, 8, 0),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 32,
-                      height: 32,
-                      decoration: BoxDecoration(
-                        color: primary.withValues(alpha: 0.08),
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: primary.withValues(alpha: 0.18),
-                          width: 1,
-                        ),
-                      ),
-                      child:
-                          Icon(Icons.person_outline, size: 17, color: primary),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          StandardText(
-                            text: p.sharedByName,
-                            fontSize: 14,
-                            color: Colors.black87,
-                          ),
-                          StandardText(
-                            text: _timeAgo(p.sharedAt),
-                            fontSize: 11,
-                            color: Colors.grey[400]!,
-                            fontWeight: FontWeight.normal,
-                            fontFamily: 'PretendardLight',
-                          ),
-                        ],
-                      ),
-                    ),
-                    if (isOwner)
-                      IconButton(
-                        icon: Icon(
-                          Icons.more_vert,
-                          size: 20,
-                          color: Colors.grey[500],
-                        ),
-                        tooltip: '공유 문제 메뉴',
-                        padding: EdgeInsets.zero,
-                        constraints:
-                            const BoxConstraints(minWidth: 36, minHeight: 36),
-                        onPressed: () => _showProblemActions(
-                          context,
-                          provider,
-                          themeProvider,
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(14, 10, 14, 0),
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: primary.withValues(alpha: 0.055),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: primary.withValues(alpha: 0.15),
-                      width: 1,
-                    ),
-                  ),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildProblemPreview(primary),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            StandardText(
-                              text: p.reference,
-                              fontSize: 14,
-                              color: Colors.black87,
-                              fontWeight: FontWeight.w700,
-                              overflow: TextOverflow.ellipsis,
-                              maxLines: 2,
-                            ),
-                            const SizedBox(height: 4),
-                            StandardText(
-                              text: p.problemId != null
-                                  ? '함께 보는 공유 문제'
-                                  : '문제 미리보기 없음',
-                              fontSize: 11,
-                              color: Colors.grey[500]!,
-                              fontWeight: FontWeight.normal,
-                              fontFamily: 'PretendardLight',
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              if (p.comment != null && p.comment!.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(14, 10, 14, 0),
-                  child: StandardText(
-                    text: p.comment!,
-                    fontSize: 14,
-                    color: Colors.grey[800]!,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(14, 10, 14, 12),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Expanded(
-                      child: FeedReactionBar(
-                        reactions: p.reactions,
-                        themeProvider: themeProvider,
-                        onToggle: (emoji) =>
-                            provider.toggleSharedProblemReaction(
-                          p.sharedProblemId,
-                          emoji,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    _buildCommentBadge(primary),
-                  ],
-                ),
-              ),
-            ],
-          ),
+        title: StandardText(
+          text: currentProblem.reference,
+          fontSize: 17,
+          color: primary,
+          fontWeight: FontWeight.w700,
+          overflow: TextOverflow.ellipsis,
+          maxLines: 1,
         ),
       ),
-    );
-  }
-
-  Widget _buildCommentBadge(Color primary) {
-    final count = problem.commentCount ?? 0;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-      decoration: BoxDecoration(
-        color: Colors.grey[50],
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[200]!, width: 1),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(18, 8, 18, 32),
         children: [
-          Icon(Icons.mode_comment_outlined, size: 17, color: primary),
-          const SizedBox(width: 5),
-          StandardText(
-            text: '$count',
-            fontSize: 13,
-            color: Colors.grey[700]!,
+          _buildDetailHeader(
+              context, currentProblem, primary, provider, themeProvider),
+          const SizedBox(height: 14),
+          _buildProblemDetail(currentProblem, primary, themeProvider),
+          if (currentProblem.comment != null &&
+              currentProblem.comment!.isNotEmpty) ...[
+            const SizedBox(height: 14),
+            _buildOwnerComment(currentProblem, primary),
+          ],
+          const SizedBox(height: 14),
+          FeedReactionBar(
+            reactions: currentProblem.reactions,
+            themeProvider: themeProvider,
+            onToggle: (emoji) => provider.toggleSharedProblemReaction(
+              currentProblem.sharedProblemId,
+              emoji,
+            ),
+          ),
+          const SizedBox(height: 16),
+          SharedProblemCommentsSection(
+            sharedProblemId: currentProblem.sharedProblemId,
+            initialCommentCount: currentProblem.commentCount,
+            themeProvider: themeProvider,
+            initiallyExpanded: true,
+            showToggle: false,
           ),
         ],
       ),
     );
   }
 
-  Widget _buildProblemPreview(Color primary) {
-    final imageUrl = problem.problemImageUrls.isNotEmpty
-        ? problem.problemImageUrls.first
-        : null;
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(8),
-      child: Container(
-        width: 46,
-        height: 56,
-        color: Colors.white,
-        child: imageUrl != null && imageUrl.isNotEmpty
-            ? Image.network(
-                imageUrl,
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => _placeholderPreview(primary),
-              )
-            : _placeholderPreview(primary),
-      ),
+  Widget _buildDetailHeader(
+    BuildContext context,
+    SharedProblemModel problem,
+    Color primary,
+    StudyRoomProvider provider,
+    ThemeHandler themeProvider,
+  ) {
+    final isOwner = provider.currentUserId == problem.sharedByUserId;
+    return Row(
+      children: [
+        Container(
+          width: 38,
+          height: 38,
+          decoration: BoxDecoration(
+            color: primary.withValues(alpha: 0.08),
+            shape: BoxShape.circle,
+            border: Border.all(color: primary.withValues(alpha: 0.18)),
+          ),
+          child: Icon(Icons.person_outline, size: 19, color: primary),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              StandardText(
+                text: problem.sharedByName,
+                fontSize: 14,
+                color: Colors.black87,
+              ),
+              StandardText(
+                text: _timeAgo(problem.sharedAt),
+                fontSize: 12,
+                color: Colors.grey[500]!,
+                fontWeight: FontWeight.normal,
+                fontFamily: 'PretendardLight',
+              ),
+            ],
+          ),
+        ),
+        if (isOwner)
+          IconButton(
+            icon: Icon(Icons.more_vert, size: 22, color: Colors.grey[500]),
+            tooltip: '공유 문제 메뉴',
+            constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+            padding: EdgeInsets.zero,
+            onPressed: () => _showProblemActions(
+              context,
+              problem,
+              provider,
+              themeProvider,
+            ),
+          ),
+      ],
     );
   }
 
-  Widget _placeholderPreview(Color primary) {
+  Widget _buildProblemDetail(
+    SharedProblemModel problem,
+    Color primary,
+    ThemeHandler themeProvider,
+  ) {
     return Container(
-      width: 46,
-      height: 56,
-      padding: const EdgeInsets.fromLTRB(8, 9, 8, 8),
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        border: Border.all(color: primary.withValues(alpha: 0.18), width: 1),
-        borderRadius: BorderRadius.circular(8),
+        color: primary.withValues(alpha: 0.055),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: primary.withValues(alpha: 0.15)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 18,
-            height: 5,
-            decoration: BoxDecoration(
-              color: primary.withValues(alpha: 0.65),
-              borderRadius: BorderRadius.circular(4),
-            ),
+          if (problem.problemImageUrls.isNotEmpty)
+            ImageGallerySection(
+              imageUrls: problem.problemImageUrls,
+              label: problem.reference,
+              color: primary,
+              themeProvider: themeProvider,
+            )
+          else
+            _detailPlaceholder(primary),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildOwnerComment(SharedProblemModel problem, Color primary) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(13),
+      decoration: BoxDecoration(
+        color: Colors.grey[50],
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey[200]!, width: 1),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.chat_bubble_outline, size: 16, color: primary),
+              const SizedBox(width: 6),
+              StandardText(text: '공유한 말', fontSize: 12, color: primary),
+            ],
           ),
           const SizedBox(height: 8),
-          ...List.generate(3, (index) {
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 5),
-              child: Container(
-                height: 3,
-                width: index == 2 ? 18 : 28,
-                decoration: BoxDecoration(
-                  color: primary.withValues(alpha: index == 0 ? 0.35 : 0.18),
-                  borderRadius: BorderRadius.circular(3),
-                ),
-              ),
-            );
-          }),
+          StandardText(
+            text: problem.comment!,
+            fontSize: 14,
+            color: Colors.grey[800]!,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _detailPlaceholder(Color primary) {
+    return Container(
+      height: 180,
+      alignment: Alignment.center,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.assignment_outlined,
+              size: 36, color: primary.withValues(alpha: 0.45)),
+          const SizedBox(height: 8),
+          StandardText(
+            text: '문제 이미지를 불러올 수 없어요',
+            fontSize: 13,
+            color: Colors.grey[500]!,
+            fontWeight: FontWeight.normal,
+            fontFamily: 'PretendardLight',
+          ),
         ],
       ),
     );
