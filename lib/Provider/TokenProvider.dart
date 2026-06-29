@@ -31,8 +31,15 @@ class TokenProvider {
     try {
       return await storage.read(key: key);
     } on PlatformException catch (e) {
-      debugPrint('SecureStorage read failed (key=$key): $e');
-      await storage.deleteAll();
+      final msg = (e.message ?? '').toLowerCase();
+      // BAD_DECRYPT: Android에서 암호화 키 손상 시 발생하는 복구 불가 오류만 처리한다.
+      // 그 외 PlatformException(백그라운드 잠금, 생체인증 취소 등)은 재던진다.
+      if (!msg.contains('bad_decrypt') && !msg.contains('bad decrypt')) {
+        rethrow;
+      }
+      debugPrint('SecureStorage key corruption detected (key=$key): $e');
+      await storage.delete(key: 'accessToken');
+      await storage.delete(key: 'refreshToken');
       await _notifyAuthFailure();
       throw UnauthorizedException(message: '보안 저장소가 손상되어 로그아웃되었습니다. 다시 로그인해주세요.');
     }

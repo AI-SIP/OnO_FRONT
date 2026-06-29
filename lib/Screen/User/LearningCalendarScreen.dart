@@ -25,6 +25,7 @@ class _LearningCalendarScreenState extends State<LearningCalendarScreen> {
   bool _isLoading = true;
   int? _selectedDay;
   final TextEditingController _diaryController = TextEditingController();
+  int _loadDiarySeq = 0;
 
   final StudyCalendarService _service = StudyCalendarService();
 
@@ -66,10 +67,11 @@ class _LearningCalendarScreenState extends State<LearningCalendarScreen> {
       'diary_text_${year}_${month}_${day}';
 
   Future<void> _loadDiary(int year, int month, int day) async {
+    final seq = ++_loadDiarySeq;
     final prefs = await SharedPreferences.getInstance();
     final text = prefs.getString(_diaryKey(year, month, day)) ?? '';
-    if (!mounted) return;
-    setState(() => _diaryController.text = text);
+    if (!mounted || seq != _loadDiarySeq) return;
+    _diaryController.text = text;
   }
 
   Future<void> _saveDiary(int year, int month, int day, String text) async {
@@ -596,8 +598,10 @@ class _LearningCalendarScreenState extends State<LearningCalendarScreen> {
           alignment: Alignment.centerRight,
           child: TextButton(
             onPressed: () {
+              final day = _selectedDay;
+              if (day == null) return;
               final text = _diaryController.text.trim();
-              _saveDiary(_year, _month, _selectedDay!, text);
+              _saveDiary(_year, _month, day, text);
               FocusScope.of(context).unfocus();
             },
             style: TextButton.styleFrom(
