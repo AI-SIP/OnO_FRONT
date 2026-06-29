@@ -1,3 +1,4 @@
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -6,6 +7,7 @@ import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/StudyRoomProvider.dart';
 import '../../Provider/UserProvider.dart';
+import '../Tutorial/TutorialTargets.dart';
 import 'StudyRoomCreateScreen.dart';
 import 'StudyRoomDetailScreen.dart';
 import 'StudyRoomJoinScreen.dart';
@@ -13,7 +15,9 @@ import 'Widget/StudyRoomEmptyState.dart';
 import 'Widget/StudyRoomThumbnail.dart';
 
 class StudyRoomListScreen extends StatefulWidget {
-  const StudyRoomListScreen({super.key});
+  final TutorialTargets? tutorialTargets;
+
+  const StudyRoomListScreen({super.key, this.tutorialTargets});
 
   @override
   State<StudyRoomListScreen> createState() => _StudyRoomListScreenState();
@@ -23,6 +27,7 @@ class _StudyRoomListScreenState extends State<StudyRoomListScreen> {
   @override
   void initState() {
     super.initState();
+    FirebaseAnalytics.instance.logEvent(name: 'study_room_list_view');
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final provider = Provider.of<StudyRoomProvider>(context, listen: false);
       provider.updateCurrentUserId(
@@ -195,6 +200,7 @@ class _StudyRoomListScreenState extends State<StudyRoomListScreen> {
       floatingActionButton: SizedBox(
         height: 50,
         child: FloatingActionButton.extended(
+          key: widget.tutorialTargets?.studyRoomFabKey,
           heroTag: 'study_room_join_fab',
           onPressed: () => _showAddMenu(themeProvider),
           backgroundColor: themeProvider.primaryColor,

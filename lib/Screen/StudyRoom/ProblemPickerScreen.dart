@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
@@ -246,7 +247,10 @@ class _ProblemPickerScreenState extends State<ProblemPickerScreen> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 520),
-          child: Padding(
+          child: GestureDetector(
+            onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
+            behavior: HitTestBehavior.translucent,
+            child: Padding(
             padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -405,6 +409,7 @@ class _ProblemPickerScreenState extends State<ProblemPickerScreen> {
                 ),
               ],
             ),
+            ),
           ),
         ),
       ),
@@ -470,6 +475,7 @@ class _ProblemPickerScreenState extends State<ProblemPickerScreen> {
         problem.problemId,
         comment: comment.isEmpty ? null : comment,
       );
+      FirebaseAnalytics.instance.logEvent(name: 'problem_shared');
       if (mounted) {
         Navigator.pop(context, true);
       }

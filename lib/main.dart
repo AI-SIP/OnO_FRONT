@@ -266,7 +266,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
     final widgetOptions = <Widget>[
       DirectoryScreen(tutorialTargets: _tutorialTargets),
       PracticeThumbnailScreen(tutorialTargets: _tutorialTargets),
-      const StudyRoomListScreen(),
+      StudyRoomListScreen(tutorialTargets: _tutorialTargets),
       SettingScreen(tutorialTargets: _tutorialTargets),
     ];
 
