@@ -220,14 +220,17 @@ class OnoEmojiCatalog {
     for (final e in all) e.key: e,
   };
 
+  static final Map<OnoEmojiCategory, List<OnoEmoji>> _categoryIndex = {
+    for (final cat in OnoEmojiCategory.values)
+      cat: List.unmodifiable(all.where((e) => e.category == cat)),
+  };
+
   static OnoEmoji? byKey(String key) {
     final normalizedKey = unicodeKeyMap[key] ?? key;
     return _keyIndex[normalizedKey];
   }
 
   static List<OnoEmoji> byCategory(OnoEmojiCategory category) {
-    return List.unmodifiable(
-      all.where((emoji) => emoji.category == category),
-    );
+    return _categoryIndex[category] ?? const [];
   }
 }
