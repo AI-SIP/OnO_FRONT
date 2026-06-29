@@ -86,11 +86,15 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
     try {
       final code = await provider.generateInviteCode(widget.roomId);
       if (!context.mounted) return;
-      await InviteCodeSheet.show(
-        context,
-        inviteCode: code,
-        themeProvider: themeProvider,
-      );
+      // iPad에서 배리어 즉시 dismiss 방지 — 다음 프레임에 표시
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        if (!mounted) return;
+        await InviteCodeSheet.show(
+          context,
+          inviteCode: code,
+          themeProvider: themeProvider,
+        );
+      });
     } catch (_) {
       AppSnackBar.showError('초대 코드를 불러올 수 없습니다');
     }
@@ -337,12 +341,8 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
                     color: Colors.grey[500]!,
                   ),
                 )
-              : RefreshIndicator(
-                  onRefresh: _refresh,
-                  color: themeProvider.primaryColor,
-                  child: _buildTabBody(
-                      context, room, provider, themeProvider, isHost),
-                ),
+              : _buildTabBody(
+                  context, room, provider, themeProvider, isHost),
     );
   }
 
@@ -358,8 +358,8 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
       children: [
         _buildRankingTab(context, room, provider, themeProvider, isHost),
         _buildChallengeTab(context, provider, themeProvider, isHost),
-        SharedProblemTab(roomId: widget.roomId),
-        ActivityFeedTab(roomId: widget.roomId),
+        SharedProblemTab(roomId: widget.roomId, onRefresh: _refresh),
+        ActivityFeedTab(roomId: widget.roomId, onRefresh: _refresh),
       ],
     );
   }
@@ -387,9 +387,13 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
         _buildRankingHeader(
             themeProvider, room, screenWidth, screenHeight, provider),
         Expanded(
-          child: isTabletLandscape
-              ? _buildGrid(sorted, room, provider, isHost)
-              : _buildList(sorted, room, provider, isHost),
+          child: RefreshIndicator(
+            onRefresh: _refresh,
+            color: themeProvider.primaryColor,
+            child: isTabletLandscape
+                ? _buildGrid(sorted, room, provider, isHost)
+                : _buildList(sorted, room, provider, isHost),
+          ),
         ),
       ],
     );
@@ -557,65 +561,78 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
     return Column(
       children: [
         Expanded(
-          child: provider.challenges.isEmpty
-              ? Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
+          child: RefreshIndicator(
+            onRefresh: _refresh,
+            color: themeProvider.primaryColor,
+            child: provider.challenges.isEmpty
+                ? ListView(
+                    physics: const AlwaysScrollableScrollPhysics(),
                     children: [
-                      Container(
-                        width: 64,
-                        height: 64,
-                        decoration: BoxDecoration(
-                          color:
-                              themeProvider.primaryColor.withValues(alpha: 0.1),
-                          shape: BoxShape.circle,
+                      SizedBox(
+                        height: MediaQuery.of(context).size.height * 0.45,
+                        child: Center(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                width: 64,
+                                height: 64,
+                                decoration: BoxDecoration(
+                                  color: themeProvider.primaryColor
+                                      .withValues(alpha: 0.1),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(
+                                  Icons.flag_outlined,
+                                  color: themeProvider.primaryColor,
+                                  size: 28,
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              const StandardText(
+                                text: '아직 챌린지가 없어요',
+                                fontSize: 16,
+                                color: Colors.black87,
+                              ),
+                              const SizedBox(height: 6),
+                              StandardText(
+                                text: '새 챌린지를 만들어 멤버들과 함께 도전해보세요',
+                                fontSize: 13,
+                                color: Colors.grey[500]!,
+                                fontWeight: FontWeight.normal,
+                                fontFamily: 'PretendardLight',
+                              ),
+                            ],
+                          ),
                         ),
-                        child: Icon(
-                          Icons.flag_outlined,
-                          color: themeProvider.primaryColor,
-                          size: 28,
+                      ),
+                    ],
+                  )
+                : ListView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: const EdgeInsets.only(top: 8, bottom: 16),
+                    children: [
+                      if (inProgress.isNotEmpty) ...[
+                        _buildChallengeSectionHeader('진행 중'),
+                        ...inProgress.map(
+                          (challenge) => ChallengeCard(
+                            challenge: challenge,
+                            canDelete: isHost,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 16),
-                      const StandardText(
-                        text: '아직 챌린지가 없어요',
-                        fontSize: 16,
-                        color: Colors.black87,
-                      ),
-                      const SizedBox(height: 6),
-                      StandardText(
-                        text: '새 챌린지를 만들어 멤버들과 함께 도전해보세요',
-                        fontSize: 13,
-                        color: Colors.grey[500]!,
-                        fontWeight: FontWeight.normal,
-                        fontFamily: 'PretendardLight',
-                      ),
+                      ],
+                      if (ended.isNotEmpty) ...[
+                        _buildChallengeSectionHeader('종료된 챌린지'),
+                        ...ended.map(
+                          (challenge) => ChallengeCard(
+                            challenge: challenge,
+                            canDelete: isHost,
+                          ),
+                        ),
+                      ],
                     ],
                   ),
-                )
-              : ListView(
-                  padding: const EdgeInsets.only(top: 8, bottom: 16),
-                  children: [
-                    if (inProgress.isNotEmpty) ...[
-                      _buildChallengeSectionHeader('진행 중'),
-                      ...inProgress.map(
-                        (challenge) => ChallengeCard(
-                          challenge: challenge,
-                          canDelete: isHost,
-                        ),
-                      ),
-                    ],
-                    if (ended.isNotEmpty) ...[
-                      _buildChallengeSectionHeader('종료된 챌린지'),
-                      ...ended.map(
-                        (challenge) => ChallengeCard(
-                          challenge: challenge,
-                          canDelete: isHost,
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
+          ),
         ),
         _buildChallengeCreateButton(context, themeProvider),
       ],
@@ -681,9 +698,12 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
     ThemeHandler themeProvider,
     StudyRoomModel? room,
   ) {
-    showModalBottomSheet(
-      context: context,
-      useRootNavigator: true,
+    // iPad에서 AppBar 버튼 탭 이벤트가 모달 배리어에 전달돼 즉시 dismiss되는 버그 방지
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      showModalBottomSheet(
+        context: context,
+        useRootNavigator: true,
       backgroundColor: Colors.transparent,
       builder: (_) => Container(
         decoration: const BoxDecoration(
@@ -795,7 +815,8 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
           ),
         ),
       ),
-    );
+      );
+    });
   }
 
   void _showMemberManageSheet(

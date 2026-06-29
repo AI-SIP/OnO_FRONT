@@ -10,8 +10,13 @@ import 'SharedProblemCard.dart';
 
 class SharedProblemTab extends StatefulWidget {
   final int roomId;
+  final Future<void> Function() onRefresh;
 
-  const SharedProblemTab({super.key, required this.roomId});
+  const SharedProblemTab({
+    super.key,
+    required this.roomId,
+    required this.onRefresh,
+  });
 
   @override
   State<SharedProblemTab> createState() => _SharedProblemTabState();
@@ -113,7 +118,10 @@ class _SharedProblemTabState extends State<SharedProblemTab>
     return Column(
       children: [
         Expanded(
-          child: provider.sharedProblems.isEmpty
+          child: RefreshIndicator(
+            onRefresh: widget.onRefresh,
+            color: themeProvider.primaryColor,
+            child: provider.sharedProblems.isEmpty
               ? ListView(
                   physics: const AlwaysScrollableScrollPhysics(),
                   padding: const EdgeInsets.only(bottom: 14),
@@ -194,6 +202,7 @@ class _SharedProblemTabState extends State<SharedProblemTab>
                     );
                   },
                 ),
+          ),
         ),
         SafeArea(
           top: false,
