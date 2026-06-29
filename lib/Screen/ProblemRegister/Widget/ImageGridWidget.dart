@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 
 import '../../../Module/Image/DisplayImage.dart';
 import '../../../Module/Image/FullScreenImage.dart';
+import '../../../Module/Text/mobile_font_size.dart';
 import '../../../Module/Theme/ThemeHandler.dart';
 
 class ImageGridWidget extends StatelessWidget {
@@ -65,7 +66,7 @@ class ImageGridWidget extends StatelessWidget {
               const SizedBox(width: 12),
               StandardText(
                 text: label,
-                fontSize: titleFontSize,
+                fontSize: MobileFontSize.reduced(context, titleFontSize),
                 fontWeight: titleFontWeight,
                 color: Colors.black87,
               ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../Model/Problem/ProblemAnalysisModel.dart';
 import '../../../Model/Problem/ProblemAnalysisStatus.dart';
+import '../../../Module/Text/mobile_font_size.dart';
 import '../../../Module/Text/StandardLightText.dart';
 import '../../../Module/Text/StandardText.dart';
 
@@ -55,9 +56,9 @@ Widget _buildNoImageState(BuildContext context, Color primaryColor) {
           size: 48,
         ),
         const SizedBox(height: 16),
-        const StandardText(
+        StandardText(
           text: '이미지가 없어 분석하지 못했어요',
-          fontSize: 15,
+          fontSize: MobileFontSize.reduced(context, 15),
           fontWeight: FontWeight.bold,
           color: Colors.black87,
         ),
@@ -109,9 +110,9 @@ Widget _buildProcessingState(BuildContext context, Color primaryColor) {
               ),
             ),
             const SizedBox(height: 20),
-            const StandardText(
+            StandardText(
               text: 'AI가 문제를 분석하고 있어요',
-              fontSize: 16,
+              fontSize: MobileFontSize.reduced(context, 16),
               fontWeight: FontWeight.bold,
               color: Colors.black87,
             ),
@@ -152,9 +153,9 @@ Widget _buildFailedState(
           children: [
             Icon(Icons.warning_amber_rounded, color: Colors.red, size: 48),
             const SizedBox(height: 16),
-            const StandardText(
+            StandardText(
               text: '분석 중 오류가 발생했어요',
-              fontSize: 15,
+              fontSize: MobileFontSize.reduced(context, 15),
               fontWeight: FontWeight.bold,
               color: Colors.black87,
             ),
@@ -194,35 +195,35 @@ Widget _buildCompletedState(
       children: [
         if (analysis.subject != null)
           _buildAnalysisSection(
-              '과목', analysis.subject!, Icons.book, primaryColor),
+              context, '과목', analysis.subject!, Icons.book, primaryColor),
         if (analysis.subject != null && _hasMoreSections(analysis, 'subject'))
           _buildDivider(),
         if (analysis.problemType != null)
-          _buildAnalysisSection(
-              '문제 유형', analysis.problemType!, Icons.category, primaryColor),
+          _buildAnalysisSection(context, '문제 유형', analysis.problemType!,
+              Icons.category, primaryColor),
         if (analysis.problemType != null &&
             _hasMoreSections(analysis, 'problemType'))
           _buildDivider(),
         if (analysis.keyPoints != null && analysis.keyPoints!.isNotEmpty)
-          _buildAnalysisListSection(
-              '핵심 포인트', analysis.keyPoints!, Icons.lightbulb, primaryColor),
+          _buildAnalysisListSection(context, '핵심 포인트', analysis.keyPoints!,
+              Icons.lightbulb, primaryColor),
         if (analysis.keyPoints != null &&
             analysis.keyPoints!.isNotEmpty &&
             _hasMoreSections(analysis, 'keyPoints'))
           _buildDivider(),
         if (analysis.solution != null)
-          _buildAnalysisSection(
-              '풀이', analysis.solution!, Icons.psychology, primaryColor),
+          _buildAnalysisSection(context, '풀이', analysis.solution!,
+              Icons.psychology, primaryColor),
         if (analysis.solution != null && _hasMoreSections(analysis, 'solution'))
           _buildDivider(),
         if (analysis.commonMistakes != null)
-          _buildAnalysisSection('자주 하는 실수', analysis.commonMistakes!,
+          _buildAnalysisSection(context, '자주 하는 실수', analysis.commonMistakes!,
               Icons.warning_amber_rounded, primaryColor),
         if (analysis.commonMistakes != null &&
             _hasMoreSections(analysis, 'commonMistakes'))
           _buildDivider(),
         if (analysis.studyTips != null)
-          _buildAnalysisSection('학습 팁', analysis.studyTips!,
+          _buildAnalysisSection(context, '학습 팁', analysis.studyTips!,
               Icons.tips_and_updates, primaryColor),
       ],
     ),
@@ -265,8 +266,8 @@ Widget _buildDivider() {
   );
 }
 
-Widget _buildAnalysisSection(
-    String label, String content, IconData icon, Color primaryColor) {
+Widget _buildAnalysisSection(BuildContext context, String label, String content,
+    IconData icon, Color primaryColor) {
   return Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
@@ -292,7 +293,7 @@ Widget _buildAnalysisSection(
       const SizedBox(height: 12),
       StandardLightText(
         text: content,
-        fontSize: 13,
+        fontSize: MobileFontSize.reduced(context, 13),
         fontWeight: FontWeight.bold,
         color: Colors.black87,
       ),
@@ -300,8 +301,8 @@ Widget _buildAnalysisSection(
   );
 }
 
-Widget _buildAnalysisListSection(
-    String label, List<String> items, IconData icon, Color primaryColor) {
+Widget _buildAnalysisListSection(BuildContext context, String label,
+    List<String> items, IconData icon, Color primaryColor) {
   return Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
@@ -344,7 +345,7 @@ Widget _buildAnalysisListSection(
               Expanded(
                 child: StandardLightText(
                   text: entry.value,
-                  fontSize: 13,
+                  fontSize: MobileFontSize.reduced(context, 13),
                   fontWeight: FontWeight.bold,
                   color: Colors.black87,
                 ),

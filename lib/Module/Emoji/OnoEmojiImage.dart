@@ -66,41 +66,43 @@ class OnoEmojiImage extends StatelessWidget {
 
     final visualScale = _visualScaleByKey[resolvedEmoji.key] ?? 1.0;
 
-    return SizedBox(
-      width: size,
-      height: size,
-      child: Transform.scale(
-        scale: visualScale,
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            for (final offset in _contrastHaloOffsets)
+    return RepaintBoundary(
+      child: SizedBox(
+        width: size,
+        height: size,
+        child: Transform.scale(
+          scale: visualScale,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              for (final offset in _contrastHaloOffsets)
+                Transform.translate(
+                  offset: offset * (size * 0.035),
+                  child: _buildTintedAsset(
+                    resolvedEmoji.assetPath,
+                    Colors.black.withValues(alpha: 0.18),
+                  ),
+                ),
               Transform.translate(
-                offset: offset * (size * 0.035),
+                offset: Offset(0, size * 0.045),
                 child: _buildTintedAsset(
                   resolvedEmoji.assetPath,
-                  Colors.black.withValues(alpha: 0.18),
+                  Colors.black.withValues(alpha: 0.12),
                 ),
               ),
-            Transform.translate(
-              offset: Offset(0, size * 0.045),
-              child: _buildTintedAsset(
+              Image.asset(
                 resolvedEmoji.assetPath,
-                Colors.black.withValues(alpha: 0.12),
+                width: size,
+                height: size,
+                fit: BoxFit.contain,
+                filterQuality: FilterQuality.high,
+                errorBuilder: (_, __, ___) {
+                  debugPrint('Missing OnO emoji asset: ${resolvedEmoji.assetPath}');
+                  return SizedBox(width: size, height: size);
+                },
               ),
-            ),
-            Image.asset(
-              resolvedEmoji.assetPath,
-              width: size,
-              height: size,
-              fit: BoxFit.contain,
-              filterQuality: FilterQuality.high,
-              errorBuilder: (_, __, ___) {
-                debugPrint('Missing OnO emoji asset: ${resolvedEmoji.assetPath}');
-                return SizedBox(width: size, height: size);
-              },
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

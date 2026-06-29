@@ -5,18 +5,15 @@ import '../../Model/StudyRoom/StudyRoomModel.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/StudyRoomProvider.dart';
-import '../../Provider/StudySessionProvider.dart';
 import '../../Provider/UserProvider.dart';
 import '../../Util/AppSnackBar.dart';
 import 'ChallengeCreateSheet.dart';
 import 'StudyRoomEditScreen.dart';
-import 'Widget/ActiveStudyBanner.dart';
 import 'Widget/ActivityFeedTab.dart';
 import 'Widget/ChallengeCard.dart';
 import 'Widget/InviteCodeSheet.dart';
 import 'Widget/MemberRankCard.dart';
 import 'Widget/StudyRoomThumbnail.dart';
-import 'Widget/StudySessionResultSheet.dart';
 import 'Widget/SharedProblemTab.dart';
 import 'Widget/WeeklyReportSheet.dart';
 
@@ -37,14 +34,9 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
-    _tabController.addListener(_handleTabChanged);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadRoom();
     });
-  }
-
-  void _handleTabChanged() {
-    if (mounted) setState(() {});
   }
 
   Future<void> _loadRoom() async {
@@ -52,13 +44,16 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
         Provider.of<UserProvider>(context, listen: false).userInfoModel?.userId;
     final provider = Provider.of<StudyRoomProvider>(context, listen: false);
     provider.updateCurrentUserId(userId);
-    await provider.fetchRoomDetail(widget.roomId);
-    if (mounted) _showUnreadReport();
+    try {
+      await provider.fetchRoomDetail(widget.roomId);
+      if (mounted) _showUnreadReport();
+    } catch (_) {
+      if (mounted) setState(() {});
+    }
   }
 
   @override
   void dispose() {
-    _tabController.removeListener(_handleTabChanged);
     _tabController.dispose();
     super.dispose();
   }
@@ -77,8 +72,10 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
   }
 
   Future<void> _refresh() async {
-    await Provider.of<StudyRoomProvider>(context, listen: false)
-        .fetchRoomDetail(widget.roomId);
+    try {
+      await Provider.of<StudyRoomProvider>(context, listen: false)
+          .fetchRoomDetail(widget.roomId);
+    } catch (_) {}
   }
 
   Future<void> _showInviteCode(
@@ -89,7 +86,7 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
     try {
       final code = await provider.generateInviteCode(widget.roomId);
       if (!context.mounted) return;
-      await InviteCodeSheet.show(
+      InviteCodeSheet.show(
         context,
         inviteCode: code,
         themeProvider: themeProvider,
@@ -326,14 +323,6 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
           ],
         ),
       ),
-      floatingActionButton: Consumer<StudySessionProvider>(
-        builder: (_, currentSessionProvider, __) => _buildSessionFAB(
-          context,
-          currentSessionProvider,
-          provider,
-          themeProvider,
-        ),
-      ),
       body: provider.isLoading && room == null
           ? Center(
               child: CircularProgressIndicator(
@@ -348,12 +337,7 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
                     color: Colors.grey[500]!,
                   ),
                 )
-              : RefreshIndicator(
-                  onRefresh: _refresh,
-                  color: themeProvider.primaryColor,
-                  child: _buildTabBody(
-                      context, room, provider, themeProvider, isHost),
-                ),
+              : _buildTabBody(context, room, provider, themeProvider, isHost),
     );
   }
 
@@ -364,24 +348,13 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
     ThemeHandler themeProvider,
     bool isHost,
   ) {
-    return Column(
+    return TabBarView(
+      controller: _tabController,
       children: [
-        ActiveStudyBanner(
-          sessions: provider.activeSessions,
-          themeProvider: themeProvider,
-        ),
-        const SizedBox(height: 8),
-        Expanded(
-          child: TabBarView(
-            controller: _tabController,
-            children: [
-              _buildRankingTab(context, room, provider, themeProvider, isHost),
-              _buildChallengeTab(context, provider, themeProvider, isHost),
-              SharedProblemTab(roomId: widget.roomId),
-              ActivityFeedTab(roomId: widget.roomId),
-            ],
-          ),
-        ),
+        _buildRankingTab(context, room, provider, themeProvider, isHost),
+        _buildChallengeTab(context, provider, themeProvider, isHost),
+        SharedProblemTab(roomId: widget.roomId, onRefresh: _refresh),
+        ActivityFeedTab(roomId: widget.roomId, onRefresh: _refresh),
       ],
     );
   }
@@ -409,9 +382,13 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
         _buildRankingHeader(
             themeProvider, room, screenWidth, screenHeight, provider),
         Expanded(
-          child: isTabletLandscape
-              ? _buildGrid(sorted, room, provider, isHost)
-              : _buildList(sorted, room, provider, isHost),
+          child: RefreshIndicator(
+            onRefresh: _refresh,
+            color: themeProvider.primaryColor,
+            child: isTabletLandscape
+                ? _buildGrid(sorted, room, provider, isHost)
+                : _buildList(sorted, room, provider, isHost),
+          ),
         ),
       ],
     );
@@ -428,7 +405,7 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
 
     return Container(
       margin: EdgeInsets.symmetric(
-        horizontal: screenWidth * 0.04,
+        horizontal: 16,
         vertical: screenHeight * 0.01,
       ),
       padding: EdgeInsets.fromLTRB(
@@ -544,7 +521,7 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
       padding: const EdgeInsets.only(bottom: 80),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
-        childAspectRatio: 2.6,
+        mainAxisExtent: 100,
       ),
       itemCount: sorted.length,
       itemBuilder: (_, i) {
@@ -579,81 +556,132 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
     return Column(
       children: [
         Expanded(
-          child: provider.challenges.isEmpty
-              ? Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        width: 64,
-                        height: 64,
-                        decoration: BoxDecoration(
-                          color:
-                              themeProvider.primaryColor.withValues(alpha: 0.1),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          Icons.flag_outlined,
-                          color: themeProvider.primaryColor,
-                          size: 28,
-                        ),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              return RefreshIndicator(
+                onRefresh: _refresh,
+                color: themeProvider.primaryColor,
+                child: provider.challenges.isEmpty
+                    ? ListView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        children: [
+                          SizedBox(
+                            height: constraints.maxHeight,
+                            child: Center(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Container(
+                                    width: 64,
+                                    height: 64,
+                                    decoration: BoxDecoration(
+                                      color: themeProvider.primaryColor
+                                          .withValues(alpha: 0.1),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: Icon(
+                                      Icons.flag_outlined,
+                                      color: themeProvider.primaryColor,
+                                      size: 28,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  const StandardText(
+                                    text: '아직 챌린지가 없어요',
+                                    fontSize: 16,
+                                    color: Colors.black87,
+                                  ),
+                                  const SizedBox(height: 6),
+                                  StandardText(
+                                    text: '새 챌린지를 만들어 멤버들과 함께 도전해보세요',
+                                    fontSize: 13,
+                                    color: Colors.grey[500]!,
+                                    fontWeight: FontWeight.normal,
+                                    fontFamily: 'PretendardLight',
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      )
+                    : ListView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        padding: const EdgeInsets.only(top: 8, bottom: 16),
+                        children: [
+                          if (inProgress.isNotEmpty) ...[
+                            _buildChallengeSectionHeader(
+                              '진행 중',
+                              themeProvider,
+                              count: inProgress.length,
+                              isHighlighted: true,
+                            ),
+                            ...inProgress.map(
+                              (challenge) => ChallengeCard(
+                                challenge: challenge,
+                                canDelete: isHost,
+                              ),
+                            ),
+                          ],
+                          if (ended.isNotEmpty) ...[
+                            _buildChallengeSectionHeader(
+                              '종료된 챌린지',
+                              themeProvider,
+                            ),
+                            ...ended.map(
+                              (challenge) => ChallengeCard(
+                                challenge: challenge,
+                                canDelete: isHost,
+                              ),
+                            ),
+                          ],
+                        ],
                       ),
-                      const SizedBox(height: 16),
-                      const StandardText(
-                        text: '아직 챌린지가 없어요',
-                        fontSize: 16,
-                        color: Colors.black87,
-                      ),
-                      if (isHost) ...[
-                        const SizedBox(height: 6),
-                        StandardText(
-                          text: '새 챌린지를 만들어 멤버들과 함께 도전해보세요',
-                          fontSize: 13,
-                          color: Colors.grey[500]!,
-                          fontWeight: FontWeight.normal,
-                          fontFamily: 'PretendardLight',
-                        ),
-                      ],
-                    ],
-                  ),
-                )
-              : ListView(
-                  padding: const EdgeInsets.only(top: 8, bottom: 16),
-                  children: [
-                    if (inProgress.isNotEmpty) ...[
-                      _buildChallengeSectionHeader('진행 중'),
-                      ...inProgress.map(
-                        (challenge) => ChallengeCard(
-                          challenge: challenge,
-                          canDelete: isHost,
-                        ),
-                      ),
-                    ],
-                    if (ended.isNotEmpty) ...[
-                      _buildChallengeSectionHeader('종료된 챌린지'),
-                      ...ended.map(
-                        (challenge) => ChallengeCard(
-                          challenge: challenge,
-                          canDelete: isHost,
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
+              );
+            },
+          ),
         ),
-        if (isHost) _buildChallengeCreateButton(context, themeProvider),
+        _buildChallengeCreateButton(context, themeProvider),
       ],
     );
   }
 
-  Widget _buildChallengeSectionHeader(String title) {
+  Widget _buildChallengeSectionHeader(
+    String title,
+    ThemeHandler themeProvider, {
+    int? count,
+    bool isHighlighted = false,
+  }) {
+    final color =
+        isHighlighted ? themeProvider.primaryColor : Colors.grey[600]!;
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(18, 12, 18, 6),
-      child: StandardText(
-        text: title,
-        fontSize: 13,
-        color: Colors.grey[600]!,
-        fontWeight: FontWeight.w700,
+      child: Row(
+        children: [
+          StandardText(
+            text: title,
+            fontSize: 13,
+            color: color,
+            fontWeight: FontWeight.w700,
+          ),
+          if (count != null) ...[
+            const SizedBox(width: 7),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: themeProvider.primaryColor.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(999),
+              ),
+              child: StandardText(
+                text: '$count개',
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: themeProvider.primaryColor,
+              ),
+            ),
+          ],
+        ],
       ),
     );
   }
@@ -696,68 +724,6 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
     );
   }
 
-  // ── 공부 세션 FAB ──
-
-  Widget _buildSessionFAB(
-    BuildContext context,
-    StudySessionProvider sessionProvider,
-    StudyRoomProvider roomProvider,
-    ThemeHandler themeProvider,
-  ) {
-    if (_tabController.index != 0) {
-      return const SizedBox.shrink();
-    }
-
-    if (sessionProvider.isStudying) {
-      return FloatingActionButton.extended(
-        onPressed: () async {
-          final minutes = sessionProvider.endSession();
-          try {
-            await roomProvider.removeMySession();
-          } catch (_) {
-            AppSnackBar.showError('공부 종료 기록을 저장하지 못했어요');
-          }
-          if (context.mounted) {
-            await StudySessionResultSheet.show(context, minutes, themeProvider);
-          }
-        },
-        backgroundColor: Colors.red[400],
-        icon: const Icon(Icons.stop_circle_outlined, color: Colors.white),
-        label: StandardText(
-          text: sessionProvider.elapsedLabel,
-          fontSize: 14,
-          color: Colors.white,
-        ),
-      );
-    }
-
-    return FloatingActionButton(
-      onPressed: () async {
-        final confirmed = await _showConfirmDialog(
-          context: context,
-          themeProvider: themeProvider,
-          icon: Icons.play_arrow_rounded,
-          iconColor: themeProvider.primaryColor,
-          title: '공부를 시작할까요?',
-          content: '시작하면 스터디룸 멤버에게 공부 중으로 보여요.',
-          confirmLabel: '시작',
-          confirmColor: themeProvider.primaryColor,
-        );
-        if (confirmed != true || !context.mounted) return;
-
-        try {
-          await roomProvider.addMySession();
-          sessionProvider.startSession();
-        } catch (_) {
-          AppSnackBar.showError('공부를 시작하지 못했어요');
-        }
-      },
-      backgroundColor: themeProvider.primaryColor,
-      tooltip: '공부 시작',
-      child: const Icon(Icons.play_arrow_rounded, color: Colors.white),
-    );
-  }
-
   // ── 더보기 메뉴 ──
 
   void _showMoreMenu(
@@ -767,119 +733,140 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
     ThemeHandler themeProvider,
     StudyRoomModel? room,
   ) {
-    showModalBottomSheet(
+    showGeneralDialog(
       context: context,
-      backgroundColor: Colors.transparent,
-      builder: (_) => Container(
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(20),
-            topRight: Radius.circular(20),
+      barrierDismissible: false,
+      barrierLabel: '더보기 닫기',
+      barrierColor: Colors.black54,
+      transitionDuration: const Duration(milliseconds: 220),
+      useRootNavigator: true,
+      pageBuilder: (sheetContext, _, __) => _StudyRoomBottomSheetFrame(
+        child: Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(20),
+              topRight: Radius.circular(20),
+            ),
           ),
-        ),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 40,
-                  height: 4,
-                  margin: const EdgeInsets.only(bottom: 20),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[300],
-                    borderRadius: BorderRadius.circular(2),
+          child: SafeArea(
+            top: false,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 40,
+                    height: 4,
+                    margin: const EdgeInsets.only(bottom: 20),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(2),
+                    ),
                   ),
-                ),
-                if (provider.weeklyReport != null)
-                  _buildSheetItem(
-                    icon: Icons.summarize_outlined,
-                    iconColor: themeProvider.primaryColor,
-                    label: '주간 리포트 보기',
-                    labelColor: Colors.black87,
-                    onTap: () {
-                      Navigator.pop(context);
-                      WeeklyReportSheet.show(
-                        context,
-                        provider.weeklyReport!,
-                        themeProvider,
-                        onClose: () {
-                          provider.markReportRead();
-                        },
-                      );
-                    },
-                  ),
-                if (provider.weeklyReport != null) const SizedBox(height: 8),
-                if (room != null && isHost)
-                  _buildSheetItem(
-                    icon: Icons.edit_outlined,
-                    iconColor: themeProvider.primaryColor,
-                    label: '스터디룸 정보 수정',
-                    labelColor: Colors.black87,
-                    onTap: () {
-                      Navigator.pop(context);
-                      _openEditScreen(context, provider, room);
-                    },
-                  ),
-                if (room != null && isHost) const SizedBox(height: 8),
-                if (room != null && isHost)
-                  _buildSheetItem(
-                    icon: Icons.manage_accounts_outlined,
-                    iconColor: themeProvider.primaryColor,
-                    label: '멤버 관리',
-                    labelColor: Colors.black87,
-                    onTap: () {
-                      Navigator.pop(context);
-                      _showMemberManageSheet(
-                        context,
-                        provider,
-                        room,
-                        themeProvider,
-                      );
-                    },
-                  ),
-                if (room != null && isHost) const SizedBox(height: 8),
-                if (isHost) ...[
-                  _buildSheetItem(
-                    icon: Icons.exit_to_app,
-                    iconColor: Colors.orange,
-                    label: '스터디룸 탈퇴',
-                    labelColor: Colors.orange,
-                    onTap: () {
-                      Navigator.pop(context);
-                      _confirmLeave(context, provider, isHost: true);
-                    },
-                  ),
+                  if (provider.weeklyReport != null)
+                    _buildSheetItem(
+                      icon: Icons.summarize_outlined,
+                      iconColor: themeProvider.primaryColor,
+                      label: '주간 리포트 보기',
+                      labelColor: Colors.black87,
+                      onTap: () {
+                        Navigator.pop(sheetContext);
+                        WeeklyReportSheet.show(
+                          context,
+                          provider.weeklyReport!,
+                          themeProvider,
+                          onClose: () {
+                            provider.markReportRead();
+                          },
+                        );
+                      },
+                    ),
+                  if (provider.weeklyReport != null) const SizedBox(height: 8),
+                  if (room != null && isHost)
+                    _buildSheetItem(
+                      icon: Icons.edit_outlined,
+                      iconColor: themeProvider.primaryColor,
+                      label: '스터디룸 정보 수정',
+                      labelColor: Colors.black87,
+                      onTap: () {
+                        Navigator.pop(sheetContext);
+                        _openEditScreen(context, provider, room);
+                      },
+                    ),
+                  if (room != null && isHost) const SizedBox(height: 8),
+                  if (room != null && isHost)
+                    _buildSheetItem(
+                      icon: Icons.manage_accounts_outlined,
+                      iconColor: themeProvider.primaryColor,
+                      label: '멤버 관리',
+                      labelColor: Colors.black87,
+                      onTap: () {
+                        Navigator.pop(sheetContext);
+                        _showMemberManageSheet(
+                          context,
+                          provider,
+                          room,
+                          themeProvider,
+                        );
+                      },
+                    ),
+                  if (room != null && isHost) const SizedBox(height: 8),
+                  if (isHost) ...[
+                    _buildSheetItem(
+                      icon: Icons.exit_to_app,
+                      iconColor: Colors.orange,
+                      label: '스터디룸 탈퇴',
+                      labelColor: Colors.orange,
+                      onTap: () {
+                        Navigator.pop(sheetContext);
+                        _confirmLeave(context, provider, isHost: true);
+                      },
+                    ),
+                    const SizedBox(height: 8),
+                    _buildSheetItem(
+                      icon: Icons.delete_forever,
+                      iconColor: Colors.red,
+                      label: '방 삭제하기',
+                      labelColor: Colors.red,
+                      onTap: () {
+                        Navigator.pop(sheetContext);
+                        _confirmDelete(context, provider);
+                      },
+                    ),
+                  ] else
+                    _buildSheetItem(
+                      icon: Icons.exit_to_app,
+                      iconColor: Colors.red,
+                      label: '스터디룸 탈퇴',
+                      labelColor: Colors.red,
+                      onTap: () {
+                        Navigator.pop(sheetContext);
+                        _confirmLeave(context, provider);
+                      },
+                    ),
                   const SizedBox(height: 8),
-                  _buildSheetItem(
-                    icon: Icons.delete_forever,
-                    iconColor: Colors.red,
-                    label: '방 삭제하기',
-                    labelColor: Colors.red,
-                    onTap: () {
-                      Navigator.pop(context);
-                      _confirmDelete(context, provider);
-                    },
-                  ),
-                ] else
-                  _buildSheetItem(
-                    icon: Icons.exit_to_app,
-                    iconColor: Colors.red,
-                    label: '스터디룸 탈퇴',
-                    labelColor: Colors.red,
-                    onTap: () {
-                      Navigator.pop(context);
-                      _confirmLeave(context, provider);
-                    },
-                  ),
-                const SizedBox(height: 8),
-              ],
+                ],
+              ),
             ),
           ),
         ),
       ),
+      transitionBuilder: (_, animation, __, child) {
+        final curved = CurvedAnimation(
+          parent: animation,
+          curve: Curves.easeOutCubic,
+          reverseCurve: Curves.easeInCubic,
+        );
+        return SlideTransition(
+          position: Tween<Offset>(
+            begin: const Offset(0, 1),
+            end: Offset.zero,
+          ).animate(curved),
+          child: child,
+        );
+      },
     );
   }
 
@@ -891,6 +878,7 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
   ) {
     showModalBottomSheet(
       context: context,
+      useRootNavigator: true,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
       builder: (_) => Container(
@@ -1044,12 +1032,18 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
                                     confirmColor: Colors.red,
                                   );
                                   if (confirmed == true && context.mounted) {
-                                    await provider.kickMember(
-                                      room.roomId,
-                                      member.userId,
-                                    );
-                                    if (context.mounted) {
-                                      Navigator.pop(context);
+                                    try {
+                                      await provider.kickMember(
+                                        room.roomId,
+                                        member.userId,
+                                      );
+                                      if (context.mounted) {
+                                        Navigator.pop(context);
+                                      }
+                                    } catch (_) {
+                                      if (context.mounted) {
+                                        AppSnackBar.showError('멤버 내보내기에 실패했어요');
+                                      }
                                     }
                                   }
                                 },
@@ -1116,6 +1110,63 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
             StandardText(text: label, fontSize: 15, color: labelColor),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _StudyRoomBottomSheetFrame extends StatefulWidget {
+  final Widget child;
+
+  const _StudyRoomBottomSheetFrame({required this.child});
+
+  @override
+  State<_StudyRoomBottomSheetFrame> createState() =>
+      _StudyRoomBottomSheetFrameState();
+}
+
+class _StudyRoomBottomSheetFrameState
+    extends State<_StudyRoomBottomSheetFrame> {
+  bool _canDismissByOutsideTap = false;
+
+  @override
+  void initState() {
+    super.initState();
+    Future<void>.delayed(const Duration(milliseconds: 700), () {
+      if (!mounted) return;
+      setState(() => _canDismissByOutsideTap = true);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final sheetWidth = screenWidth < 600 ? screenWidth : 560.0;
+
+    return Material(
+      color: Colors.transparent,
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: _canDismissByOutsideTap
+                  ? () => Navigator.maybePop(context)
+                  : null,
+            ),
+          ),
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () {},
+              child: SizedBox(
+                width: sheetWidth,
+                child: widget.child,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

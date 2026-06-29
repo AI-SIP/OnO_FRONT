@@ -7,6 +7,12 @@ class StudyCalendarService {
   final HttpService httpService = HttpService();
   final String baseUrl = '${AppConfig.baseUrl}/api/learning-calendar';
 
+  Map<String, dynamic> _asMap(dynamic data) {
+    if (data is Map<String, dynamic>) return data;
+    if (data is Map) return Map<String, dynamic>.from(data);
+    return <String, dynamic>{};
+  }
+
   Future<StudyCalendarModel> getStudyCalendar({
     required int year,
     required int month,
@@ -20,9 +26,9 @@ class StudyCalendarService {
         'month': month.toString(),
       },
       showErrorSnackBar: showErrorSnackBar,
-    ) as Map<String, dynamic>;
+    );
 
-    return StudyCalendarModel.fromJson(data);
+    return StudyCalendarModel.fromJson(_asMap(data));
   }
 
   Future<void> updateMoodEmoji({

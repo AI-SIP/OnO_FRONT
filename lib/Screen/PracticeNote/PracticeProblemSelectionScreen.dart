@@ -14,6 +14,7 @@ import '../../Model/PracticeNote/PracticeNoteRegisterModel.dart';
 import '../../Model/PracticeNote/PracticeNoteUpdateModel.dart';
 import '../../Model/Problem/ProblemModel.dart';
 import '../../Module/Problem/ProblemThumbnailCard.dart';
+import '../../Module/Text/mobile_font_size.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/NoteIconHandler.dart';
 import '../../Module/Theme/ThemeHandler.dart';
@@ -1278,18 +1279,18 @@ class _PracticeProblemSelectionScreenState
                       ),
                     ),
                     const SizedBox(width: 12),
-                    const StandardText(
+                    StandardText(
                       text: '문제 선택 필요',
-                      fontSize: 18,
+                      fontSize: MobileFontSize.reduced(context, 18),
                       fontWeight: FontWeight.w600,
                       color: Colors.black87,
                     ),
                   ],
                 ),
                 const SizedBox(height: 20),
-                const StandardText(
+                StandardText(
                   text: '하나 이상의 문제를 선택해주세요!',
-                  fontSize: 15,
+                  fontSize: MobileFontSize.reduced(context, 15),
                   color: Colors.black87,
                   textAlign: TextAlign.center,
                 ),

@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../Model/Problem/ProblemModel.dart';
+import '../../Module/Text/mobile_font_size.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Text/UnderlinedText.dart';
 import '../../Module/Theme/GridPainter.dart';
@@ -202,7 +203,7 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
         SizedBox(width: gap),
         StandardText(
           text: title,
-          fontSize: textSize,
+          fontSize: MobileFontSize.reduced(context, textSize),
           fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
           color: isActive ? activeColor : inactiveColor,
         ),
@@ -292,9 +293,9 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
                 ),
               ),
               const SizedBox(width: 10),
-              const StandardText(
+              StandardText(
                 text: '푼 날짜',
-                fontSize: 14,
+                fontSize: MobileFontSize.reduced(context, 14),
                 fontWeight: FontWeight.w600,
                 color: Colors.black87,
               ),
@@ -406,7 +407,7 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
           const SizedBox(width: 10),
           StandardText(
             text: title,
-            fontSize: 14,
+            fontSize: MobileFontSize.reduced(context, 14),
             fontWeight: FontWeight.w600,
             color: Colors.black87,
           ),
@@ -486,7 +487,7 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
               const SizedBox(width: 10),
               StandardText(
                 text: title,
-                fontSize: 14,
+                fontSize: MobileFontSize.reduced(context, 14),
                 fontWeight: FontWeight.w600,
                 color: Colors.black87,
               ),

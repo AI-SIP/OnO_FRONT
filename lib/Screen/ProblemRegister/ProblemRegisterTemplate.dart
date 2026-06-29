@@ -11,6 +11,7 @@ import '../../Model/Tag/TagModel.dart';
 import '../../Module/Dialog/LoadingDialog.dart';
 import '../../Module/Dialog/SnackBarDialog.dart';
 import '../../Module/Image/ImagePickerHandler.dart';
+import '../../Module/Text/mobile_font_size.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Module/Util/FolderPickerDialog.dart';
@@ -605,9 +606,9 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
                 ),
               ),
               const SizedBox(width: 12),
-              const StandardText(
+              StandardText(
                 text: '태그',
-                fontSize: 16,
+                fontSize: MobileFontSize.reduced(context, 16),
                 fontWeight: FontWeight.w500,
                 color: Colors.black87,
               ),
@@ -953,9 +954,9 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
                       ),
                     ),
                     const SizedBox(width: 12),
-                    const StandardText(
+                    StandardText(
                       text: '경고',
-                      fontSize: 18,
+                      fontSize: MobileFontSize.reduced(context, 18),
                       fontWeight: FontWeight.w600,
                       color: Colors.black87,
                     ),
@@ -963,9 +964,9 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
                 ),
                 const SizedBox(height: 20),
                 // 내용
-                const StandardText(
+                StandardText(
                   text: '제목을 입력해 주세요!',
-                  fontSize: 15,
+                  fontSize: MobileFontSize.reduced(context, 15),
                   color: Colors.black87,
                   textAlign: TextAlign.center,
                 ),
@@ -1030,9 +1031,9 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
                       ),
                     ),
                     const SizedBox(width: 12),
-                    const StandardText(
+                    StandardText(
                       text: '경고',
-                      fontSize: 18,
+                      fontSize: MobileFontSize.reduced(context, 18),
                       fontWeight: FontWeight.w600,
                       color: Colors.black87,
                     ),
@@ -1040,9 +1041,9 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
                 ),
                 const SizedBox(height: 20),
                 // 내용
-                const StandardText(
+                StandardText(
                   text: '문제 이미지를 추가해 주세요!',
-                  fontSize: 15,
+                  fontSize: MobileFontSize.reduced(context, 15),
                   color: Colors.black87,
                   textAlign: TextAlign.center,
                 ),

@@ -13,6 +13,7 @@ import '../../../Module/Dialog/LoadingDialog.dart';
 import '../../../Module/Dialog/SnackBarDialog.dart';
 import '../../../Module/Image/DisplayImage.dart';
 import '../../../Module/Image/FullScreenImage.dart';
+import '../../../Module/Text/mobile_font_size.dart';
 import '../../../Module/Text/StandardText.dart';
 import '../../../Module/Theme/ThemeHandler.dart';
 import '../../../Service/Api/Problem/ProblemSolveService.dart';
@@ -137,15 +138,15 @@ class _RepeatSectionV2State extends State<RepeatSectionV2>
                             height: 100,
                           ),
                           const SizedBox(height: 16),
-                          const StandardText(
+                          StandardText(
                             text: '아직 복습 기록이 없습니다.',
-                            fontSize: 16,
+                            fontSize: MobileFontSize.reduced(context, 16),
                             color: Colors.black,
                           ),
                           const SizedBox(height: 8),
-                          const StandardText(
+                          StandardText(
                             text: '문제를 복습하고 기록을 남겨보세요!',
-                            fontSize: 14,
+                            fontSize: MobileFontSize.reduced(context, 14),
                             color: Colors.black,
                           ),
                         ],
@@ -384,7 +385,7 @@ class _ProblemSolveCard extends StatelessWidget {
                             children: [
                               StandardText(
                                 text: '$index회차',
-                                fontSize: 16,
+                                fontSize: MobileFontSize.reduced(context, 16),
                                 fontWeight: FontWeight.bold,
                                 color: Colors.black87,
                               ),
@@ -466,6 +467,7 @@ class _ProblemSolveCard extends StatelessWidget {
           // 소요 시간
           if (solve.timeSpentSeconds != null)
             _buildInfoRow(
+              context,
               Icons.timer,
               '소요 시간',
               _formatTimeSpent(solve.timeSpentSeconds!),
@@ -491,9 +493,9 @@ class _ProblemSolveCard extends StatelessWidget {
                       color: themeProvider.primaryColor, size: 18),
                 ),
                 const SizedBox(width: 8),
-                const StandardText(
+                StandardText(
                   text: '개선된 점',
-                  fontSize: 15,
+                  fontSize: MobileFontSize.reduced(context, 15),
                   fontWeight: FontWeight.w500,
                   color: Colors.black87,
                 ),
@@ -515,7 +517,7 @@ class _ProblemSolveCard extends StatelessWidget {
                     Expanded(
                       child: StandardLightText(
                         text: improvement.description,
-                        fontSize: 14,
+                        fontSize: MobileFontSize.reduced(context, 14),
                         color: Colors.black87,
                         fontWeight: FontWeight.bold,
                       ),
@@ -543,9 +545,9 @@ class _ProblemSolveCard extends StatelessWidget {
                       color: themeProvider.primaryColor, size: 18),
                 ),
                 const SizedBox(width: 8),
-                const StandardText(
+                StandardText(
                   text: '복습 메모',
-                  fontSize: 15,
+                  fontSize: MobileFontSize.reduced(context, 15),
                   fontWeight: FontWeight.w500,
                   color: Colors.black87,
                 ),
@@ -562,7 +564,7 @@ class _ProblemSolveCard extends StatelessWidget {
               ),
               child: UnderlinedText(
                 text: solve.reflection!,
-                fontSize: 16,
+                fontSize: MobileFontSize.reduced(context, 16),
                 color: Colors.black87,
               ),
             ),
@@ -585,9 +587,9 @@ class _ProblemSolveCard extends StatelessWidget {
                       color: themeProvider.primaryColor, size: 18),
                 ),
                 const SizedBox(width: 8),
-                const StandardText(
+                StandardText(
                   text: '풀이 이미지',
-                  fontSize: 15,
+                  fontSize: MobileFontSize.reduced(context, 15),
                   fontWeight: FontWeight.w500,
                   color: Colors.black87,
                 ),
@@ -620,20 +622,21 @@ class _ProblemSolveCard extends StatelessWidget {
     );
   }
 
-  Widget _buildInfoRow(IconData icon, String label, String value, Color color) {
+  Widget _buildInfoRow(BuildContext context, IconData icon, String label,
+      String value, Color color) {
     return Row(
       children: [
         Icon(icon, color: color, size: 18),
         const SizedBox(width: 8),
         StandardText(
           text: '$label: ',
-          fontSize: 14,
+          fontSize: MobileFontSize.reduced(context, 14),
           fontWeight: FontWeight.bold,
           color: color,
         ),
         StandardText(
           text: value,
-          fontSize: 14,
+          fontSize: MobileFontSize.reduced(context, 14),
           color: Colors.black87,
         ),
       ],
@@ -670,9 +673,9 @@ class _ProblemSolveCard extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 12),
-                  const StandardText(
+                  StandardText(
                     text: '복습 기록 관리',
-                    fontSize: 18,
+                    fontSize: MobileFontSize.reduced(parentContext, 18),
                     fontWeight: FontWeight.w600,
                     color: Colors.black87,
                   ),
@@ -758,9 +761,9 @@ class _ProblemSolveCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(8),
                     ),
                   ),
-                  child: const StandardText(
+                  child: StandardText(
                     text: '취소',
-                    fontSize: 15,
+                    fontSize: MobileFontSize.reduced(parentContext, 15),
                     color: Colors.black87,
                   ),
                 ),
@@ -802,9 +805,9 @@ class _ProblemSolveCard extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 12),
-                  const StandardText(
+                  StandardText(
                     text: '삭제 확인',
-                    fontSize: 18,
+                    fontSize: MobileFontSize.reduced(parentContext, 18),
                     fontWeight: FontWeight.w600,
                     color: Colors.black87,
                   ),
@@ -812,9 +815,9 @@ class _ProblemSolveCard extends StatelessWidget {
               ),
               const SizedBox(height: 20),
               // 내용
-              const StandardText(
+              StandardText(
                 text: '이 복습 기록을 정말 삭제하시겠습니까?',
-                fontSize: 15,
+                fontSize: MobileFontSize.reduced(parentContext, 15),
                 color: Colors.black87,
                 textAlign: TextAlign.center,
               ),
@@ -833,9 +836,9 @@ class _ProblemSolveCard extends StatelessWidget {
                           borderRadius: BorderRadius.circular(8),
                         ),
                       ),
-                      child: const StandardText(
+                      child: StandardText(
                         text: '취소',
-                        fontSize: 14,
+                        fontSize: MobileFontSize.reduced(parentContext, 14),
                         color: Colors.black87,
                       ),
                     ),
@@ -978,7 +981,7 @@ class _TabletSolveListItem extends StatelessWidget {
                     children: [
                       StandardText(
                         text: '$index회차',
-                        fontSize: 14,
+                        fontSize: MobileFontSize.reduced(context, 14),
                         fontWeight: FontWeight.bold,
                         color: Colors.black87,
                       ),

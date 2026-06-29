@@ -19,6 +19,7 @@ import '../../Exception/ApiException.dart';
 import '../../Module/Dialog/LoadingDialog.dart';
 import '../../Module/Image/DisplayImage.dart';
 import '../../Module/Problem/ProblemThumbnailCard.dart';
+import '../../Module/Text/mobile_font_size.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Module/Util/FolderPickerDialog.dart';
@@ -233,7 +234,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         final cachedHasNext =
             foldersProvider.getSubfolderHasNextForFolder(folderId);
 
-        debugPrint('✅ Using cached subfolders for folder $folderId (${cachedSubfolders.length} items)');
+        debugPrint(
+            '✅ Using cached subfolders for folder $folderId (${cachedSubfolders.length} items)');
         if (mounted) {
           setState(() {
             _localSubfolders.addAll(cachedSubfolders);
@@ -249,7 +251,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       }
 
       // 캐시에 없는 경우 서버 요청
-      debugPrint('📡 Fetching subfolders from server for folder $folderId (cursor: $_subfolderNextCursor)');
+      debugPrint(
+          '📡 Fetching subfolders from server for folder $folderId (cursor: $_subfolderNextCursor)');
 
       // 서버에서 직접 조회
       final response = await foldersProvider.folderService.getSubfoldersV2(
@@ -273,9 +276,11 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
           _localSubfolders, // 누적된 전체 데이터 저장
           response.nextCursor,
           response.hasNext);
-      debugPrint('💾 Saved total ${_localSubfolders.length} subfolders to cache for folder $folderId');
+      debugPrint(
+          '💾 Saved total ${_localSubfolders.length} subfolders to cache for folder $folderId');
 
-      debugPrint('Loaded ${response.content.length} subfolders from server for folder $folderId');
+      debugPrint(
+          'Loaded ${response.content.length} subfolders from server for folder $folderId');
     } catch (e, stackTrace) {
       debugPrint('Error loading subfolders locally: $e');
       debugPrint(stackTrace.toString());
@@ -377,7 +382,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         final cachedHasNext =
             foldersProvider.getProblemHasNextForFolder(folderId);
 
-        debugPrint('✅ Using cached problems for folder $folderId (${cachedProblems.length} items)');
+        debugPrint(
+            '✅ Using cached problems for folder $folderId (${cachedProblems.length} items)');
         if (mounted) {
           setState(() {
             _localProblems.addAll(cachedProblems);
@@ -393,7 +399,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       }
 
       // 캐시에 없는 경우 서버 요청
-      debugPrint('📡 Fetching problems from server for folder $folderId (cursor: $_problemNextCursor)');
+      debugPrint(
+          '📡 Fetching problems from server for folder $folderId (cursor: $_problemNextCursor)');
       final problemsProvider =
           Provider.of<ProblemsProvider>(context, listen: false);
       final response = await problemsProvider.loadMoreFolderProblemsV2(
@@ -417,9 +424,11 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
           _localProblems, // 누적된 전체 데이터 저장
           response.nextCursor,
           response.hasNext);
-      debugPrint('💾 Saved total ${_localProblems.length} problems to cache for folder $folderId');
+      debugPrint(
+          '💾 Saved total ${_localProblems.length} problems to cache for folder $folderId');
 
-      debugPrint('Loaded ${response.content.length} problems from server for folder $folderId');
+      debugPrint(
+          'Loaded ${response.content.length} problems from server for folder $folderId');
     } catch (e, stackTrace) {
       debugPrint('Error loading problems locally: $e');
       debugPrint(stackTrace.toString());
@@ -460,7 +469,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
           !_isRefreshing) {
         _lastRootFolderRefreshTimestamp =
             foldersProvider.rootFolderRefreshTimestamp;
-        debugPrint('🔄 Root folder refresh detected in didChangeDependencies! (timestamp: $_lastRootFolderRefreshTimestamp)');
+        debugPrint(
+            '🔄 Root folder refresh detected in didChangeDependencies! (timestamp: $_lastRootFolderRefreshTimestamp)');
 
         _isRefreshing = true;
 
@@ -885,7 +895,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                         const SizedBox(width: 12),
                         StandardText(
                           text: '공책 편집하기',
-                          fontSize: 20,
+                          fontSize: MobileFontSize.reduced(context, 20),
                           fontWeight: FontWeight.w600,
                           color: Colors.black87,
                         ),
@@ -991,7 +1001,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
             Expanded(
               child: StandardText(
                 text: title,
-                fontSize: 16,
+                fontSize: MobileFontSize.reduced(context, 16),
                 color: titleColor ?? Colors.black87,
               ),
             ),
@@ -1231,7 +1241,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                         const SizedBox(width: 12),
                         StandardText(
                           text: dialogTitle,
-                          fontSize: 20,
+                          fontSize: MobileFontSize.reduced(dialogContext, 20),
                           fontWeight: FontWeight.w600,
                           color: Colors.black87,
                         ),
@@ -1244,13 +1254,13 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                       autofocus: true,
                       style: standardTextStyle.copyWith(
                         color: Colors.black87,
-                        fontSize: 15,
+                        fontSize: MobileFontSize.reduced(dialogContext, 15),
                       ),
                       decoration: InputDecoration(
                         hintText: '공책 이름을 입력하세요',
                         hintStyle: standardTextStyle.copyWith(
                           color: Colors.grey[400],
-                          fontSize: 14,
+                          fontSize: MobileFontSize.reduced(dialogContext, 14),
                         ),
                         fillColor: Colors.grey[50],
                         filled: true,
@@ -1294,9 +1304,9 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                               borderRadius: BorderRadius.circular(8),
                             ),
                           ),
-                          child: const StandardText(
+                          child: StandardText(
                             text: '취소',
-                            fontSize: 14,
+                            fontSize: MobileFontSize.reduced(dialogContext, 14),
                             color: Colors.black87,
                           ),
                         ),
@@ -1514,6 +1524,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   Widget _folderTileContent(
       FolderThumbnailModel folder, ThemeHandler themeProvider, int index) {
     final isSelected = _selectedFolderIds.contains(folder.folderId);
+    final titleFontSize = MediaQuery.of(context).size.width < 600 ? 15.0 : 16.0;
     return Container(
       padding: const EdgeInsets.all(12.0),
       decoration: BoxDecoration(
@@ -1557,7 +1568,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                       ? folder.folderName
                       : '제목 없음',
                   color: Colors.black,
-                  fontSize: 18,
+                  fontSize: titleFontSize,
                 ),
               ],
             ),
@@ -1643,6 +1654,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         : null;
     final title =
         problem.reference?.isNotEmpty == true ? problem.reference! : '제목 없음';
+    final isMobile = MediaQuery.of(context).size.width < 600;
+    final titleFontSize = isMobile ? 15.0 : 16.0;
 
     return ProblemThumbnailCard(
       title: title,
@@ -1652,6 +1665,12 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       lastSolvedAt: problem.lastSolvedAt,
       themeProvider: themeProvider,
       isSelected: isSelected,
+      titleFontSize: titleFontSize,
+      tagFontSize: isMobile ? 9 : 10,
+      tagPadding: EdgeInsets.symmetric(
+        horizontal: isMobile ? 6 : 8,
+        vertical: isMobile ? 2 : 3,
+      ),
     );
   }
 

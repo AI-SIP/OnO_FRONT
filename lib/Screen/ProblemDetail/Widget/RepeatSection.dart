@@ -6,6 +6,7 @@ import '../../../Model/Problem/ProblemModel.dart';
 import '../../../Module/Image/DisplayImage.dart';
 import '../../../Module/Image/FullScreenImage.dart';
 import '../../../Module/Text/HandWriteText.dart';
+import '../../../Module/Text/mobile_font_size.dart';
 import '../../../Module/Text/StandardText.dart';
 import '../../../Module/Text/UnderlinedText.dart';
 import '../../../Module/Theme/ThemeHandler.dart';
@@ -77,9 +78,9 @@ Widget buildRepeatSection(
                                       ),
                                     ),
                                     const SizedBox(width: 12),
-                                    const StandardText(
+                                    StandardText(
                                       text: '삭제 확인',
-                                      fontSize: 18,
+                                      fontSize: MobileFontSize.reduced(ctx, 18),
                                       fontWeight: FontWeight.w600,
                                       color: Colors.black87,
                                     ),
@@ -87,9 +88,9 @@ Widget buildRepeatSection(
                                 ),
                                 const SizedBox(height: 20),
                                 // 내용
-                                const StandardText(
+                                StandardText(
                                   text: '이 복습 이미지를 정말 삭제하시겠습니까?',
-                                  fontSize: 15,
+                                  fontSize: MobileFontSize.reduced(ctx, 15),
                                   color: Colors.black87,
                                   textAlign: TextAlign.center,
                                 ),
@@ -110,9 +111,10 @@ Widget buildRepeatSection(
                                                 BorderRadius.circular(8),
                                           ),
                                         ),
-                                        child: const StandardText(
+                                        child: StandardText(
                                           text: '취소',
-                                          fontSize: 14,
+                                          fontSize:
+                                              MobileFontSize.reduced(ctx, 14),
                                           color: Colors.black87,
                                         ),
                                       ),

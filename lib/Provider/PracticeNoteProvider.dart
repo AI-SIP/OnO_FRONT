@@ -277,7 +277,11 @@ class ProblemPracticeProvider with ChangeNotifier {
       practiceId,
       moodEmojiKey: moodEmojiKey,
     );
-    await fetchPracticeCount(practiceId);
+    // PATCH 성공 후 GET 실패가 전파되면 호출부에서 재시도 → 이중 증가 발생.
+    // GET은 화면 갱신용이므로 실패해도 성공으로 간주한다.
+    try {
+      await fetchPracticeCount(practiceId);
+    } catch (_) {}
   }
 
   Future<void> fetchPracticeCount(int practiceNoteId) async {

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../../Module/Text/mobile_font_size.dart';
 import '../../../Module/Text/StandardText.dart';
 import '../../../Module/Theme/ThemeHandler.dart';
 
@@ -59,7 +60,7 @@ class LabeledTextField extends StatelessWidget {
                   const SizedBox(width: 12),
                   StandardText(
                     text: label,
-                    fontSize: 16,
+                    fontSize: MobileFontSize.reduced(context, 16),
                     fontWeight: FontWeight.w500,
                     color: Colors.black87,
                   ),
@@ -91,7 +92,7 @@ class LabeledTextField extends StatelessWidget {
                 onChanged: onChanged,
                 style: standardTextStyle.copyWith(
                   color: Colors.black87,
-                  fontSize: 15,
+                  fontSize: MobileFontSize.reduced(context, 15),
                 ),
                 decoration: InputDecoration(
                   border: OutlineInputBorder(

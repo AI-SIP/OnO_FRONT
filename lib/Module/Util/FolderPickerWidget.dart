@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../../Module/Text/StandardText.dart';
-import '../../../Module/Theme/ThemeHandler.dart';
-import '../../../Module/Util/FolderPickerDialog.dart';
-import '../../../Provider/FoldersProvider.dart';
+import '../../Provider/FoldersProvider.dart';
+import '../Text/mobile_font_size.dart';
+import '../Text/StandardText.dart';
+import '../Theme/ThemeHandler.dart';
+import 'FolderPickerDialog.dart';
 
 class FolderPickerWidget extends StatefulWidget {
   final int? selectedId;
@@ -80,10 +81,10 @@ class _FolderPickerWidgetState extends State<FolderPickerWidget> {
               ),
             ),
             const SizedBox(width: 12),
-            const Expanded(
+            Expanded(
               child: StandardText(
                 text: '공책 선택',
-                fontSize: 16,
+                fontSize: MobileFontSize.reduced(context, 16),
                 fontWeight: FontWeight.w500,
                 color: Colors.black87,
               ),
@@ -124,10 +125,10 @@ class _FolderPickerWidgetState extends State<FolderPickerWidget> {
             ),
           ),
           const SizedBox(width: 12),
-          const Expanded(
+          Expanded(
             child: StandardText(
               text: '공책 선택',
-              fontSize: 16,
+              fontSize: MobileFontSize.reduced(context, 16),
               fontWeight: FontWeight.w500,
               color: Colors.black87,
             ),
@@ -160,7 +161,7 @@ class _FolderPickerWidgetState extends State<FolderPickerWidget> {
                         alignment: Alignment.centerRight,
                         child: StandardText(
                           text: name,
-                          fontSize: 14,
+                          fontSize: MobileFontSize.reduced(context, 14),
                           color: Colors.black87,
                           overflow: TextOverflow.ellipsis,
                           textAlign: TextAlign.right,

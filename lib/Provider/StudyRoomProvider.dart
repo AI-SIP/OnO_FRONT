@@ -7,7 +7,6 @@ import '../Model/StudyRoom/SharedProblemCommentModel.dart';
 import '../Model/StudyRoom/SharedProblemModel.dart';
 import '../Model/StudyRoom/StudyRoomMemberModel.dart';
 import '../Model/StudyRoom/StudyRoomModel.dart';
-import '../Model/StudyRoom/StudySessionModel.dart';
 import '../Model/StudyRoom/WeeklyReportModel.dart';
 import '../Module/Emoji/OnoEmojiCatalog.dart';
 import '../Service/Api/StudyRoom/StudyRoomService.dart';
@@ -24,7 +23,6 @@ class StudyRoomProvider extends ChangeNotifier {
   bool feedHasNext = false;
   bool isFeedLoadingMore = false;
   List<ChallengeModel> challenges = [];
-  List<StudySessionModel> activeSessions = [];
   List<SharedProblemModel> sharedProblems = [];
   int? _sharedProblemsNextCursor;
   bool sharedProblemsHasNext = false;
@@ -35,7 +33,6 @@ class StudyRoomProvider extends ChangeNotifier {
 
   int? currentUserId;
   int? _activeRoomId;
-  int? _mySessionId;
 
   void updateCurrentUserId(int? userId) {
     currentUserId = userId;
@@ -66,11 +63,12 @@ class StudyRoomProvider extends ChangeNotifier {
         for (final room in rooms)
           if (room.roomId == roomId) selectedRoom! else room,
       ];
+      // 하나의 실패가 나머지 결과 전체를 소실시키지 않도록 각각 에러를 흡수한다.
       await Future.wait([
-        fetchFeed(roomId, notify: false),
-        fetchChallenges(roomId, notify: false),
-        fetchActiveSessions(roomId, notify: false),
-        fetchWeeklyReport(roomId, notify: false),
+        fetchFeed(roomId, notify: false).catchError((_) {}),
+        fetchChallenges(roomId, notify: false).catchError((_) {}),
+        fetchSharedProblems(roomId, notify: false).catchError((_) {}),
+        fetchWeeklyReport(roomId, notify: false).catchError((_) {}),
       ]);
     } finally {
       isLoading = false;
@@ -134,18 +132,7 @@ class StudyRoomProvider extends ChangeNotifier {
 
   Future<void> kickMember(int roomId, int memberId) async {
     await _service.kickMember(roomId, memberId);
-    rooms = rooms.map((r) {
-      if (r.roomId != roomId) return r;
-      return r.copyWith(
-        members: r.members.where((m) => m.userId != memberId).toList(),
-        serverMemberCount: r.memberCount - 1,
-      );
-    }).toList();
-    if (selectedRoom?.roomId == roomId) {
-      await fetchRoomDetail(roomId);
-      return;
-    }
-    notifyListeners();
+    await fetchRoomDetail(roomId);
   }
 
   bool _isUploadingThumbnail = false;
@@ -158,7 +145,7 @@ class StudyRoomProvider extends ChangeNotifier {
         roomId: roomId,
         imagePath: imagePath,
       );
-      if (thumbnailUrl == null) return;
+      if (thumbnailUrl == null) throw Exception('썸네일 업로드 실패');
       rooms = rooms.map((r) {
         if (r.roomId != roomId) return r;
         return r.copyWith(thumbnailImagePath: thumbnailUrl);
@@ -282,33 +269,7 @@ class StudyRoomProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // ── C. 공부 세션 ──
-
-  Future<void> fetchActiveSessions(int roomId, {bool notify = true}) async {
-    activeSessions = await _service.fetchActiveSessions(roomId);
-    if (notify) notifyListeners();
-  }
-
-  Future<void> addMySession() async {
-    final roomId = selectedRoom?.roomId ?? _activeRoomId;
-    if (roomId == null) return;
-    _mySessionId = await _service.startSession(roomId);
-    await fetchActiveSessions(roomId, notify: false);
-    notifyListeners();
-  }
-
-  Future<void> removeMySession() async {
-    final roomId = selectedRoom?.roomId ?? _activeRoomId;
-    if (roomId == null) return;
-    if (_mySessionId != null) {
-      await _service.endSession(roomId: roomId, sessionId: _mySessionId!);
-      _mySessionId = null;
-    }
-    await fetchActiveSessions(roomId, notify: false);
-    notifyListeners();
-  }
-
-  // ── D. 문제 공유 ──
+  // ── C. 문제 공유 ──
 
   Future<void> shareProblems(
     int problemId, {
@@ -508,16 +469,19 @@ class StudyRoomProvider extends ChangeNotifier {
   }
 
   Future<void> markReportRead() async {
+    // API 호출 전 낙관적 업데이트 — 실패해도 이번 세션에서는 리포트가 다시 뜨지 않는다.
+    weeklyReport?.isRead = true;
+    notifyListeners();
     final roomId = selectedRoom?.roomId ?? _activeRoomId;
     final report = weeklyReport;
     if (roomId != null && report != null) {
-      await _service.markWeeklyReportRead(
-        roomId: roomId,
-        reportId: report.reportId,
-      );
+      try {
+        await _service.markWeeklyReportRead(
+          roomId: roomId,
+          reportId: report.reportId,
+        );
+      } catch (_) {}
     }
-    weeklyReport?.isRead = true;
-    notifyListeners();
   }
 
   // ── F. 목표 설정 ──

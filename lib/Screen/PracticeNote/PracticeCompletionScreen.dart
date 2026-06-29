@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../Module/Emoji/OnoEmojiCatalog.dart';
 import '../../Module/Emoji/OnoEmojiImage.dart';
 import '../../Module/Emoji/OnoEmojiPicker.dart';
+import '../../Module/Text/mobile_font_size.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/PracticeNoteProvider.dart';
@@ -92,7 +93,7 @@ class _PracticeCompletionScreenState extends State<PracticeCompletionScreen> {
             SizedBox(height: screenHeight * 0.1),
             StandardText(
               text: '${widget.practiceRound}회차 복습을 완료했어요',
-              fontSize: 24,
+              fontSize: MobileFontSize.reduced(context, 24),
               fontWeight: FontWeight.bold,
               color: Colors.black,
               textAlign: TextAlign.center,
@@ -119,9 +120,9 @@ class _PracticeCompletionScreenState extends State<PracticeCompletionScreen> {
       children: [
         const Divider(),
         const SizedBox(height: 12),
-        const StandardText(
+        StandardText(
           text: '이번 복습 어땠나요?',
-          fontSize: 16,
+          fontSize: MobileFontSize.reduced(context, 16),
           fontWeight: FontWeight.bold,
           color: Colors.black87,
         ),

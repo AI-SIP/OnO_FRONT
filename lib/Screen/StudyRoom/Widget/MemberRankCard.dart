@@ -26,17 +26,15 @@ class MemberRankCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeHandler>(context);
-    final screenHeight = MediaQuery.of(context).size.height;
-    final screenWidth = MediaQuery.of(context).size.width;
     final m = member;
 
     return Padding(
-      padding: EdgeInsets.symmetric(
-        horizontal: screenWidth * 0.04,
-        vertical: screenHeight * 0.005,
+      padding: const EdgeInsets.symmetric(
+        horizontal: 16,
+        vertical: 5,
       ),
       child: Container(
-        padding: EdgeInsets.all(screenHeight * 0.016),
+        padding: const EdgeInsets.all(11),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(15),
@@ -57,7 +55,7 @@ class MemberRankCard extends StatelessWidget {
         child: Row(
           children: [
             _buildAvatar(m, themeProvider),
-            SizedBox(width: screenHeight * 0.012),
+            const SizedBox(width: 10),
             Expanded(child: _buildMemberInfo(m, themeProvider)),
             _buildStats(m, themeProvider),
           ],

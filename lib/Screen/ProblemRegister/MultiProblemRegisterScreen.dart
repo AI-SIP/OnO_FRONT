@@ -9,6 +9,7 @@ import '../../Model/PracticeNote/PracticeNoteRegisterModel.dart';
 import '../../Model/Tag/TagModel.dart';
 import '../../Module/Dialog/SnackBarDialog.dart';
 import '../../Module/Image/ImagePickerHandler.dart';
+import '../../Module/Text/mobile_font_size.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Util/FolderPickerDialog.dart';
 import '../../Module/Theme/ThemeHandler.dart';
@@ -237,7 +238,7 @@ class _MultiProblemRegisterScreenState
                 Expanded(
                   child: StandardText(
                     text: '선택한 이미지 ${_problemImages.length}장',
-                    fontSize: 15,
+                    fontSize: MobileFontSize.reduced(context, 15),
                     color: Colors.black87,
                     fontWeight: FontWeight.w700,
                     overflow: TextOverflow.ellipsis,
@@ -333,9 +334,9 @@ class _MultiProblemRegisterScreenState
               ),
             ),
             const SizedBox(height: 18),
-            const StandardText(
+            StandardText(
               text: '갤러리를 여는 중입니다.',
-              fontSize: 16,
+              fontSize: MobileFontSize.reduced(context, 16),
               color: Colors.black87,
               fontWeight: FontWeight.w600,
               textAlign: TextAlign.center,
@@ -385,7 +386,8 @@ class _MultiProblemRegisterScreenState
                   SizedBox(height: isTight ? 10 : 18),
                   StandardText(
                     text: '등록할 문제 이미지를 한 번에 선택해 주세요.',
-                    fontSize: isTight ? 15 : 17,
+                    fontSize:
+                        MobileFontSize.reduced(context, isTight ? 15 : 17),
                     color: Colors.black87,
                     fontWeight: FontWeight.w600,
                     textAlign: TextAlign.center,
@@ -577,9 +579,9 @@ class _MultiProblemRegisterScreenState
                       ),
                     ),
                     const SizedBox(width: 10),
-                    const StandardText(
+                    StandardText(
                       text: '내용 확인',
-                      fontSize: 15,
+                      fontSize: MobileFontSize.reduced(context, 15),
                       color: Colors.black87,
                       fontWeight: FontWeight.w700,
                     ),
@@ -648,7 +650,7 @@ class _MultiProblemRegisterScreenState
           Flexible(
             child: StandardText(
               text: text,
-              fontSize: 11,
+              fontSize: MobileFontSize.reduced(context, 11),
               color: Colors.black87,
               fontWeight: FontWeight.w600,
               overflow: TextOverflow.ellipsis,
@@ -794,7 +796,7 @@ class _MultiProblemRegisterScreenState
                   children: [
                     StandardText(
                       text: _resolveDraftTitle(draft),
-                      fontSize: 16,
+                      fontSize: MobileFontSize.reduced(context, 16),
                       color: Colors.black87,
                       fontWeight: FontWeight.w700,
                       overflow: TextOverflow.ellipsis,
@@ -922,7 +924,7 @@ class _MultiProblemRegisterScreenState
             constraints: const BoxConstraints(maxWidth: 132),
             child: StandardText(
               text: text,
-              fontSize: 12,
+              fontSize: MobileFontSize.reduced(context, 12),
               color: Colors.black87,
               fontWeight: FontWeight.w600,
               overflow: TextOverflow.ellipsis,
@@ -1107,10 +1109,10 @@ class _MultiProblemRegisterScreenState
               ),
             ),
             const SizedBox(width: 12),
-            const Expanded(
+            Expanded(
               child: StandardText(
                 text: '이 오답노트들로 복습 세트 자동 생성',
-                fontSize: 14,
+                fontSize: MobileFontSize.reduced(context, 14),
                 fontWeight: FontWeight.w500,
                 color: Colors.black87,
               ),
@@ -1213,9 +1215,9 @@ class _MultiProblemRegisterScreenState
                 ),
               ),
               const SizedBox(width: 12),
-              const StandardText(
+              StandardText(
                 text: '태그',
-                fontSize: 16,
+                fontSize: MobileFontSize.reduced(context, 16),
                 fontWeight: FontWeight.w500,
                 color: Colors.black87,
               ),
@@ -1683,9 +1685,10 @@ class _MultiProblemRegisterScreenState
                                     Icons.chevron_left,
                                     size: 20,
                                   ),
-                                  label: const StandardText(
+                                  label: StandardText(
                                     text: '이전',
-                                    fontSize: 14,
+                                    fontSize: MobileFontSize.reduced(
+                                        editorContext, 14),
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),
@@ -1696,7 +1699,8 @@ class _MultiProblemRegisterScreenState
                               child: Center(
                                 child: StandardText(
                                   text: '${currentIndex + 1}/${_drafts.length}',
-                                  fontSize: 14,
+                                  fontSize:
+                                      MobileFontSize.reduced(editorContext, 14),
                                   color: Colors.black87,
                                   fontWeight: FontWeight.w700,
                                 ),
@@ -2032,9 +2036,9 @@ class _MultiProblemRegisterScreenState
                       ),
                     ),
                     const SizedBox(height: 18),
-                    const StandardText(
+                    StandardText(
                       text: '이미지를 등록하고 있어요',
-                      fontSize: 17,
+                      fontSize: MobileFontSize.reduced(context, 17),
                       color: Colors.black87,
                       fontWeight: FontWeight.w600,
                     ),

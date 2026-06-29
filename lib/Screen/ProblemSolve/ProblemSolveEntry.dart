@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../Module/Text/mobile_font_size.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import 'ProblemSolveCanvasScreen.dart';
@@ -123,9 +124,9 @@ class _ProblemSolveModeSheet extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 12),
-              const StandardText(
+              StandardText(
                 text: '다시 풀기 방식 선택',
-                fontSize: 20,
+                fontSize: MobileFontSize.reduced(context, 20),
                 fontWeight: FontWeight.w600,
                 color: Colors.black87,
               ),
@@ -211,7 +212,8 @@ class _ModeTile extends StatelessWidget {
                 children: [
                   StandardText(
                     text: title,
-                    fontSize: 16,
+                    fontSize:
+                        isEnabled ? MobileFontSize.reduced(context, 16) : 16,
                     fontWeight: FontWeight.w600,
                     color: isEnabled ? Colors.black87 : Colors.grey,
                   ),
