@@ -1,3 +1,5 @@
+import 'FeedReactionModel.dart';
+
 class SharedProblemCommentModel {
   final int commentId;
   final String content;
@@ -9,8 +11,9 @@ class SharedProblemCommentModel {
   final bool isEdited;
   final bool isMine;
   final bool canDelete;
+  List<FeedReactionModel> reactions;
 
-  const SharedProblemCommentModel({
+  SharedProblemCommentModel({
     required this.commentId,
     required this.content,
     required this.authorId,
@@ -21,10 +24,12 @@ class SharedProblemCommentModel {
     required this.isEdited,
     required this.isMine,
     required this.canDelete,
+    required this.reactions,
   });
 
   factory SharedProblemCommentModel.fromJson(Map<String, dynamic> json) {
     final updatedAtText = json['updatedAt']?.toString();
+    final reactionsJson = json['reactions'];
     return SharedProblemCommentModel(
       commentId: ((json['commentId'] ?? 0) as num).toInt(),
       content: (json['content'] ?? '').toString(),
@@ -38,6 +43,12 @@ class SharedProblemCommentModel {
       isEdited: json['isEdited'] == true,
       isMine: json['isMine'] == true,
       canDelete: json['canDelete'] == true || json['isMine'] == true,
+      reactions: reactionsJson is List
+          ? reactionsJson
+              .whereType<Map<String, dynamic>>()
+              .map(FeedReactionModel.fromJson)
+              .toList()
+          : <FeedReactionModel>[],
     );
   }
 }

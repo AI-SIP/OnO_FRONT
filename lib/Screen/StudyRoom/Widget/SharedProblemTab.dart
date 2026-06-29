@@ -36,7 +36,10 @@ class _SharedProblemTabState extends State<SharedProblemTab>
     if (mounted) setState(() => _loaded = true);
   }
 
-  Future<void> _openPicker(BuildContext context, ThemeHandler themeProvider) async {
+  Future<void> _openPicker(
+    BuildContext context,
+    ThemeHandler themeProvider,
+  ) async {
     final result = await Navigator.push<bool>(
       context,
       MaterialPageRoute(
@@ -68,6 +71,11 @@ class _SharedProblemTabState extends State<SharedProblemTab>
 
     return Column(
       children: [
+        _buildBoardHeader(
+          context,
+          themeProvider,
+          provider.sharedProblems.length,
+        ),
         Expanded(
           child: provider.sharedProblems.isEmpty
               ? Center(
@@ -78,7 +86,8 @@ class _SharedProblemTabState extends State<SharedProblemTab>
                         width: 64,
                         height: 64,
                         decoration: BoxDecoration(
-                          color: themeProvider.primaryColor.withOpacity(0.1),
+                          color:
+                              themeProvider.primaryColor.withValues(alpha: 0.1),
                           shape: BoxShape.circle,
                         ),
                         child: Icon(
@@ -106,48 +115,90 @@ class _SharedProblemTabState extends State<SharedProblemTab>
                 )
               : ListView.builder(
                   physics: const AlwaysScrollableScrollPhysics(),
-                  padding: const EdgeInsets.only(top: 8, bottom: 80),
+                  padding: const EdgeInsets.only(top: 4, bottom: 18),
                   itemCount: provider.sharedProblems.length,
                   itemBuilder: (_, i) =>
                       SharedProblemCard(problem: provider.sharedProblems[i]),
                 ),
         ),
-        _buildShareButton(context, themeProvider),
       ],
     );
   }
 
-  Widget _buildShareButton(BuildContext context, ThemeHandler themeProvider) {
-    return SafeArea(
-      top: false,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 8, 92, 12),
-        child: SizedBox(
-          width: double.infinity,
-          height: 56,
-          child: TextButton(
-            onPressed: () => _openPicker(context, themeProvider),
-            style: TextButton.styleFrom(
-              backgroundColor: themeProvider.primaryColor,
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
+  Widget _buildBoardHeader(
+    BuildContext context,
+    ThemeHandler themeProvider,
+    int problemCount,
+  ) {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 10, 16, 6),
+      padding: const EdgeInsets.fromLTRB(14, 12, 12, 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.grey[200]!, width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: themeProvider.primaryColor.withValues(alpha: 0.06),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(
+              color: themeProvider.primaryColor.withValues(alpha: 0.09),
+              borderRadius: BorderRadius.circular(11),
             ),
-            child: const Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+            child: Icon(
+              Icons.forum_outlined,
+              color: themeProvider.primaryColor,
+              size: 20,
+            ),
+          ),
+          const SizedBox(width: 11),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(Icons.upload_outlined, size: 18, color: Colors.white),
-                SizedBox(width: 6),
+                const StandardText(
+                  text: '공유 게시판',
+                  fontSize: 15,
+                  color: Colors.black87,
+                ),
+                const SizedBox(height: 3),
                 StandardText(
-                  text: '문제 공유하기',
-                  fontSize: 14,
-                  color: Colors.white,
+                  text: '공유 문제 $problemCount개',
+                  fontSize: 12,
+                  color: Colors.grey[500]!,
+                  fontWeight: FontWeight.normal,
+                  fontFamily: 'PretendardLight',
                 ),
               ],
             ),
           ),
-        ),
+          TextButton.icon(
+            onPressed: () => _openPicker(context, themeProvider),
+            style: TextButton.styleFrom(
+              backgroundColor: themeProvider.primaryColor,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(11),
+              ),
+            ),
+            icon: const Icon(Icons.upload_outlined, size: 17),
+            label: const StandardText(
+              text: '공유',
+              fontSize: 13,
+              color: Colors.white,
+            ),
+          ),
+        ],
       ),
     );
   }

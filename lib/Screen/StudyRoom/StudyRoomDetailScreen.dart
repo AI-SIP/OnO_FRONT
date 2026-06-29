@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../Model/StudyRoom/StudyRoomModel.dart';
-import '../../Exception/ApiException.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/StudyRoomProvider.dart';
@@ -118,8 +117,7 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
   }) async {
     final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
     final room = provider.selectedRoom;
-    final hasOtherMembers =
-        room != null && room.members.length > 1;
+    final hasOtherMembers = room != null && room.members.length > 1;
     final content = isHost
         ? hasOtherMembers
             ? '탈퇴하면 다른 멤버에게 방장이 자동으로 넘어갑니다.\n정말 탈퇴하시겠어요?'
@@ -183,84 +181,84 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 340),
           child: Container(
-          padding: const EdgeInsets.fromLTRB(20, 20, 20, 18),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: iconColor.withValues(alpha: 0.10),
-                      borderRadius: BorderRadius.circular(8),
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 18),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: iconColor.withValues(alpha: 0.10),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(icon, color: iconColor, size: 20),
                     ),
-                    child: Icon(icon, color: iconColor, size: 20),
-                  ),
-                  const SizedBox(width: 12),
-                  StandardText(
-                    text: title,
-                    fontSize: 18,
-                    color: Colors.black87,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ],
-              ),
-              const SizedBox(height: 18),
-              StandardText(
-                text: content,
-                fontSize: 14,
-                color: Colors.grey[700]!,
-                textAlign: TextAlign.center,
-                fontWeight: FontWeight.normal,
-                fontFamily: 'PretendardLight',
-              ),
-              const SizedBox(height: 22),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextButton(
-                      onPressed: () => Navigator.pop(context, false),
-                      style: TextButton.styleFrom(
-                        backgroundColor: Colors.grey[50],
-                        padding: const EdgeInsets.symmetric(vertical: 13),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          side: BorderSide(
-                            color: Colors.grey[200]!,
-                            width: 1,
+                    const SizedBox(width: 12),
+                    StandardText(
+                      text: title,
+                      fontSize: 18,
+                      color: Colors.black87,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 18),
+                StandardText(
+                  text: content,
+                  fontSize: 14,
+                  color: Colors.grey[700]!,
+                  textAlign: TextAlign.center,
+                  fontWeight: FontWeight.normal,
+                  fontFamily: 'PretendardLight',
+                ),
+                const SizedBox(height: 22),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextButton(
+                        onPressed: () => Navigator.pop(context, false),
+                        style: TextButton.styleFrom(
+                          backgroundColor: Colors.grey[50],
+                          padding: const EdgeInsets.symmetric(vertical: 13),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            side: BorderSide(
+                              color: Colors.grey[200]!,
+                              width: 1,
+                            ),
                           ),
                         ),
-                      ),
-                      child: const StandardText(
-                        text: '취소',
-                        fontSize: 14,
-                        color: Colors.black87,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: TextButton(
-                      onPressed: () => Navigator.pop(context, true),
-                      style: TextButton.styleFrom(
-                        backgroundColor: confirmColor,
-                        padding: const EdgeInsets.symmetric(vertical: 13),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                        child: const StandardText(
+                          text: '취소',
+                          fontSize: 14,
+                          color: Colors.black87,
                         ),
                       ),
-                      child: StandardText(
-                        text: confirmLabel,
-                        fontSize: 14,
-                        color: Colors.white,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: TextButton(
+                        onPressed: () => Navigator.pop(context, true),
+                        style: TextButton.styleFrom(
+                          backgroundColor: confirmColor,
+                          padding: const EdgeInsets.symmetric(vertical: 13),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: StandardText(
+                          text: confirmLabel,
+                          fontSize: 14,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
-                  ),
-                ],
-              ),
-            ],
-          ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -317,9 +315,9 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
           ),
           tabs: const [
             Tab(text: '랭킹'),
-            Tab(text: '활동'),
             Tab(text: '챌린지'),
             Tab(text: '공유'),
+            Tab(text: '활동'),
           ],
         ),
       ),
@@ -373,9 +371,9 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
             controller: _tabController,
             children: [
               _buildRankingTab(context, room, provider, themeProvider, isHost),
-              ActivityFeedTab(roomId: widget.roomId),
               _buildChallengeTab(context, provider, themeProvider, isHost),
               SharedProblemTab(roomId: widget.roomId),
+              ActivityFeedTab(roomId: widget.roomId),
             ],
           ),
         ),
@@ -529,10 +527,10 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
-          color: themeProvider.primaryColor.withOpacity(0.08),
+          color: themeProvider.primaryColor.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
-            color: themeProvider.primaryColor.withOpacity(0.18),
+            color: themeProvider.primaryColor.withValues(alpha: 0.18),
             width: 1,
           ),
         ),
@@ -644,7 +642,8 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
                         width: 64,
                         height: 64,
                         decoration: BoxDecoration(
-                          color: themeProvider.primaryColor.withOpacity(0.1),
+                          color:
+                              themeProvider.primaryColor.withValues(alpha: 0.1),
                           shape: BoxShape.circle,
                         ),
                         child: Icon(
@@ -1119,7 +1118,7 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
             Container(
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
-                color: iconColor.withOpacity(0.1),
+                color: iconColor.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(6),
               ),
               child: Icon(icon, size: 16, color: iconColor),

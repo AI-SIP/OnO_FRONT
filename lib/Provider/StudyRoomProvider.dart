@@ -384,6 +384,12 @@ class StudyRoomProvider extends ChangeNotifier {
       ...(sharedProblemComments[sharedProblemId] ?? const []),
       comment,
     ];
+    final shared = sharedProblems
+        .where((problem) => problem.sharedProblemId == sharedProblemId)
+        .firstOrNull;
+    if (shared != null) {
+      shared.commentCount = (shared.commentCount ?? 0) + 1;
+    }
     notifyListeners();
   }
 
@@ -423,6 +429,34 @@ class StudyRoomProvider extends ChangeNotifier {
         (sharedProblemComments[sharedProblemId] ?? const [])
             .where((comment) => comment.commentId != commentId)
             .toList();
+    final shared = sharedProblems
+        .where((problem) => problem.sharedProblemId == sharedProblemId)
+        .firstOrNull;
+    if (shared != null) {
+      final nextCount = (shared.commentCount ?? 1) - 1;
+      shared.commentCount = nextCount < 0 ? 0 : nextCount;
+    }
+    notifyListeners();
+  }
+
+  Future<void> toggleSharedProblemCommentReaction({
+    required int sharedProblemId,
+    required int commentId,
+    required String emoji,
+  }) async {
+    final comments = sharedProblemComments[sharedProblemId];
+    final comment =
+        comments?.where((c) => c.commentId == commentId).firstOrNull;
+    if (comment == null) return;
+    final roomId = selectedRoom?.roomId ?? _activeRoomId;
+    if (roomId == null) return;
+    final emojiKey = _normalizeEmojiKey(emoji);
+    comment.reactions = await _service.toggleSharedProblemCommentReaction(
+      roomId: roomId,
+      sharedProblemId: sharedProblemId,
+      commentId: commentId,
+      emoji: emojiKey,
+    );
     notifyListeners();
   }
 

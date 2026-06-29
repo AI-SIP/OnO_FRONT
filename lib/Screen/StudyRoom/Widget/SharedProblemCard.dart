@@ -140,145 +140,418 @@ class SharedProblemCard extends StatelessWidget {
     final p = problem;
     final isOwner = provider.currentUserId == p.sharedByUserId;
 
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
-      decoration: BoxDecoration(
-        color: Colors.white,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => _openDetailSheet(context, themeProvider),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.grey[200]!, width: 1),
-        boxShadow: [
-          BoxShadow(
-            color: primary.withValues(alpha: 0.07),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+        child: Container(
+          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: Colors.grey[200]!, width: 1),
+            boxShadow: [
+              BoxShadow(
+                color: primary.withValues(alpha: 0.07),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
           ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(14, 14, 8, 0),
-            child: Row(
-              children: [
-                Container(
-                  width: 32,
-                  height: 32,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(14, 14, 8, 0),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 32,
+                      height: 32,
+                      decoration: BoxDecoration(
+                        color: primary.withValues(alpha: 0.08),
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: primary.withValues(alpha: 0.18),
+                          width: 1,
+                        ),
+                      ),
+                      child:
+                          Icon(Icons.person_outline, size: 17, color: primary),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          StandardText(
+                            text: p.sharedByName,
+                            fontSize: 14,
+                            color: Colors.black87,
+                          ),
+                          StandardText(
+                            text: _timeAgo(p.sharedAt),
+                            fontSize: 11,
+                            color: Colors.grey[400]!,
+                            fontWeight: FontWeight.normal,
+                            fontFamily: 'PretendardLight',
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (isOwner)
+                      IconButton(
+                        icon: Icon(Icons.delete_outline,
+                            size: 18, color: Colors.red[300]),
+                        tooltip: '공유 취소',
+                        padding: EdgeInsets.zero,
+                        constraints:
+                            const BoxConstraints(minWidth: 36, minHeight: 36),
+                        onPressed: () =>
+                            _confirmDelete(context, provider, themeProvider),
+                      ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(14, 10, 14, 0),
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: primary.withValues(alpha: 0.08),
-                    shape: BoxShape.circle,
+                    color: primary.withValues(alpha: 0.055),
+                    borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: primary.withValues(alpha: 0.18),
+                      color: primary.withValues(alpha: 0.15),
                       width: 1,
                     ),
                   ),
-                  child: Icon(Icons.person_outline, size: 17, color: primary),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
+                  child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      StandardText(
-                        text: p.sharedByName,
-                        fontSize: 14,
-                        color: Colors.black87,
-                      ),
-                      StandardText(
-                        text: _timeAgo(p.sharedAt),
-                        fontSize: 11,
-                        color: Colors.grey[400]!,
-                        fontWeight: FontWeight.normal,
-                        fontFamily: 'PretendardLight',
+                      _buildProblemPreview(primary),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            StandardText(
+                              text: p.reference,
+                              fontSize: 14,
+                              color: Colors.black87,
+                              fontWeight: FontWeight.w700,
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 2,
+                            ),
+                            const SizedBox(height: 4),
+                            StandardText(
+                              text: p.problemId != null
+                                  ? '함께 보는 공유 문제'
+                                  : '문제 미리보기 없음',
+                              fontSize: 11,
+                              color: Colors.grey[500]!,
+                              fontWeight: FontWeight.normal,
+                              fontFamily: 'PretendardLight',
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ),
                 ),
-                if (isOwner)
-                  IconButton(
-                    icon: Icon(Icons.delete_outline,
-                        size: 18, color: Colors.red[300]),
-                    tooltip: '공유 취소',
-                    padding: EdgeInsets.zero,
-                    constraints:
-                        const BoxConstraints(minWidth: 36, minHeight: 36),
-                    onPressed: () =>
-                        _confirmDelete(context, provider, themeProvider),
+              ),
+              if (p.comment != null && p.comment!.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(14, 10, 14, 0),
+                  child: StandardText(
+                    text: p.comment!,
+                    fontSize: 14,
+                    color: Colors.grey[800]!,
+                    fontWeight: FontWeight.normal,
+                    fontFamily: 'PretendardLight',
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
+                ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(14, 10, 14, 12),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Expanded(
+                      child: FeedReactionBar(
+                        reactions: p.reactions,
+                        themeProvider: themeProvider,
+                        onToggle: (emoji) =>
+                            provider.toggleSharedProblemReaction(
+                          p.sharedProblemId,
+                          emoji,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    _buildCommentBadge(primary),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCommentBadge(Color primary) {
+    final count = problem.commentCount ?? 0;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.grey[50],
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey[200]!, width: 1),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.mode_comment_outlined, size: 17, color: primary),
+          const SizedBox(width: 5),
+          StandardText(
+            text: '$count',
+            fontSize: 13,
+            color: Colors.grey[700]!,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _openDetailSheet(
+    BuildContext context,
+    ThemeHandler themeProvider,
+  ) async {
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
+      ),
+      builder: (sheetContext) {
+        final provider = sheetContext.read<StudyRoomProvider>();
+        return FractionallySizedBox(
+          heightFactor: 0.9,
+          child: SafeArea(
+            top: false,
+            child: Column(
+              children: [
+                const SizedBox(height: 10),
+                Container(
+                  width: 38,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[300],
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(18, 14, 8, 10),
+                  child: Row(
+                    children: [
+                      const Expanded(
+                        child: StandardText(
+                          text: '공유 문제',
+                          fontSize: 17,
+                          color: Colors.black87,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      IconButton(
+                        icon: Icon(Icons.close, color: Colors.grey[600]),
+                        onPressed: () => Navigator.pop(sheetContext),
+                      ),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: ListView(
+                    padding: const EdgeInsets.fromLTRB(18, 0, 18, 20),
+                    children: [
+                      _buildDetailHeader(themeProvider),
+                      const SizedBox(height: 14),
+                      _buildProblemDetail(themeProvider.primaryColor),
+                      if (problem.comment != null &&
+                          problem.comment!.isNotEmpty) ...[
+                        const SizedBox(height: 14),
+                        _buildOwnerComment(themeProvider.primaryColor),
+                      ],
+                      const SizedBox(height: 14),
+                      FeedReactionBar(
+                        reactions: problem.reactions,
+                        themeProvider: themeProvider,
+                        onToggle: (emoji) =>
+                            provider.toggleSharedProblemReaction(
+                          problem.sharedProblemId,
+                          emoji,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      _SharedProblemCommentsSection(
+                        sharedProblemId: problem.sharedProblemId,
+                        initialCommentCount: problem.commentCount,
+                        themeProvider: themeProvider,
+                        initiallyExpanded: true,
+                        showToggle: false,
+                      ),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(14, 10, 14, 0),
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: primary.withValues(alpha: 0.055),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: primary.withValues(alpha: 0.15),
-                  width: 1,
-                ),
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildProblemPreview(primary),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        StandardText(
-                          text: p.reference,
-                          fontSize: 14,
-                          color: Colors.black87,
-                          fontWeight: FontWeight.w700,
-                          overflow: TextOverflow.ellipsis,
-                          maxLines: 2,
-                        ),
-                        const SizedBox(height: 4),
-                        StandardText(
-                          text: p.problemId != null
-                              ? '함께 보는 공유 문제'
-                              : '문제 미리보기 없음',
-                          fontSize: 11,
-                          color: Colors.grey[500]!,
-                          fontWeight: FontWeight.normal,
-                          fontFamily: 'PretendardLight',
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
+        );
+      },
+    );
+  }
+
+  Widget _buildDetailHeader(ThemeHandler themeProvider) {
+    return Row(
+      children: [
+        Container(
+          width: 38,
+          height: 38,
+          decoration: BoxDecoration(
+            color: themeProvider.primaryColor.withValues(alpha: 0.08),
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: themeProvider.primaryColor.withValues(alpha: 0.18),
             ),
           ),
-          if (p.comment != null && p.comment!.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(14, 8, 14, 0),
-              child: StandardText(
-                text: p.comment!,
-                fontSize: 13,
-                color: Colors.grey[700]!,
+          child: Icon(
+            Icons.person_outline,
+            size: 19,
+            color: themeProvider.primaryColor,
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              StandardText(
+                text: problem.sharedByName,
+                fontSize: 14,
+                color: Colors.black87,
+              ),
+              StandardText(
+                text: _timeAgo(problem.sharedAt),
+                fontSize: 12,
+                color: Colors.grey[500]!,
                 fontWeight: FontWeight.normal,
                 fontFamily: 'PretendardLight',
               ),
-            ),
-          _SharedProblemCommentsSection(
-            sharedProblemId: p.sharedProblemId,
-            initialCommentCount: p.commentCount,
-            themeProvider: themeProvider,
+            ],
           ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(14, 8, 14, 12),
-            child: FeedReactionBar(
-              reactions: p.reactions,
-              themeProvider: themeProvider,
-              onToggle: (emoji) => provider.toggleSharedProblemReaction(
-                  p.sharedProblemId, emoji),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildProblemDetail(Color primary) {
+    final imageUrl = problem.problemImageUrl;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: primary.withValues(alpha: 0.055),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: primary.withValues(alpha: 0.15)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          StandardText(
+            text: problem.reference,
+            fontSize: 16,
+            color: Colors.black87,
+            fontWeight: FontWeight.w700,
+          ),
+          const SizedBox(height: 12),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: Container(
+              width: double.infinity,
+              constraints: const BoxConstraints(minHeight: 180, maxHeight: 420),
+              color: Colors.white,
+              child: imageUrl != null && imageUrl.isNotEmpty
+                  ? Image.network(
+                      imageUrl,
+                      fit: BoxFit.contain,
+                      errorBuilder: (_, __, ___) => _detailPlaceholder(primary),
+                    )
+                  : _detailPlaceholder(primary),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildOwnerComment(Color primary) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(13),
+      decoration: BoxDecoration(
+        color: Colors.grey[50],
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey[200]!, width: 1),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.chat_bubble_outline, size: 16, color: primary),
+              const SizedBox(width: 6),
+              StandardText(
+                text: '공유한 말',
+                fontSize: 12,
+                color: primary,
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          StandardText(
+            text: problem.comment!,
+            fontSize: 14,
+            color: Colors.grey[800]!,
+            fontWeight: FontWeight.normal,
+            fontFamily: 'PretendardLight',
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _detailPlaceholder(Color primary) {
+    return Container(
+      height: 180,
+      alignment: Alignment.center,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.assignment_outlined,
+            size: 36,
+            color: primary.withValues(alpha: 0.45),
+          ),
+          const SizedBox(height: 8),
+          StandardText(
+            text: '문제 이미지를 불러올 수 없어요',
+            fontSize: 13,
+            color: Colors.grey[500]!,
+            fontWeight: FontWeight.normal,
+            fontFamily: 'PretendardLight',
           ),
         ],
       ),
@@ -348,11 +621,15 @@ class _SharedProblemCommentsSection extends StatefulWidget {
   final int sharedProblemId;
   final int? initialCommentCount;
   final ThemeHandler themeProvider;
+  final bool initiallyExpanded;
+  final bool showToggle;
 
   const _SharedProblemCommentsSection({
     required this.sharedProblemId,
     required this.initialCommentCount,
     required this.themeProvider,
+    this.initiallyExpanded = false,
+    this.showToggle = true,
   });
 
   @override
@@ -363,10 +640,19 @@ class _SharedProblemCommentsSection extends StatefulWidget {
 class _SharedProblemCommentsSectionState
     extends State<_SharedProblemCommentsSection> {
   final TextEditingController _controller = TextEditingController();
-  bool _isExpanded = false;
+  late bool _isExpanded;
   bool _isLoading = false;
   bool _isSubmitting = false;
   bool _loadFailed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _isExpanded = widget.initiallyExpanded;
+    if (_isExpanded) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _loadIfNeeded());
+    }
+  }
 
   @override
   void dispose() {
@@ -374,15 +660,18 @@ class _SharedProblemCommentsSectionState
     super.dispose();
   }
 
-  Future<void> _toggleExpanded() async {
-    setState(() => _isExpanded = !_isExpanded);
-    if (!_isExpanded) return;
-
+  Future<void> _loadIfNeeded() async {
     final provider = context.read<StudyRoomProvider>();
     if (provider.sharedProblemComments.containsKey(widget.sharedProblemId)) {
       return;
     }
     await _loadComments();
+  }
+
+  Future<void> _toggleExpanded() async {
+    setState(() => _isExpanded = !_isExpanded);
+    if (!_isExpanded) return;
+    await _loadIfNeeded();
   }
 
   Future<void> _loadComments() async {
@@ -555,46 +844,74 @@ class _SharedProblemCommentsSectionState
         : (widget.initialCommentCount ?? 0);
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(14, 10, 14, 0),
+      padding: EdgeInsets.fromLTRB(
+        widget.showToggle ? 14 : 0,
+        widget.showToggle ? 10 : 0,
+        widget.showToggle ? 14 : 0,
+        0,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          InkWell(
-            onTap: _toggleExpanded,
-            borderRadius: BorderRadius.circular(8),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 4),
-              child: Row(
-                children: [
-                  Icon(Icons.forum_outlined, size: 17, color: primary),
-                  const SizedBox(width: 6),
-                  StandardText(
-                    text: _isExpanded ? '풀이 의견 접기' : '풀이 의견 보기',
-                    fontSize: 13,
-                    color: primary,
-                    fontWeight: FontWeight.w700,
-                  ),
-                  const SizedBox(width: 6),
-                  if (displayCommentCount > 0)
+          if (widget.showToggle)
+            InkWell(
+              onTap: _toggleExpanded,
+              borderRadius: BorderRadius.circular(8),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: Row(
+                  children: [
+                    Icon(Icons.forum_outlined, size: 17, color: primary),
+                    const SizedBox(width: 6),
                     StandardText(
-                      text: '$displayCommentCount',
-                      fontSize: 12,
-                      color: Colors.grey[500]!,
-                      fontWeight: FontWeight.normal,
-                      fontFamily: 'PretendardLight',
+                      text: '풀이 의견',
+                      fontSize: 13,
+                      color: primary,
+                      fontWeight: FontWeight.w700,
                     ),
-                  const Spacer(),
-                  Icon(
-                    _isExpanded
-                        ? Icons.keyboard_arrow_up
-                        : Icons.keyboard_arrow_down,
-                    size: 18,
-                    color: Colors.grey[500],
-                  ),
-                ],
+                    const SizedBox(width: 6),
+                    if (displayCommentCount > 0)
+                      StandardText(
+                        text: '$displayCommentCount',
+                        fontSize: 12,
+                        color: Colors.grey[500]!,
+                        fontWeight: FontWeight.normal,
+                        fontFamily: 'PretendardLight',
+                      ),
+                    const Spacer(),
+                    Icon(
+                      _isExpanded
+                          ? Icons.keyboard_arrow_up
+                          : Icons.keyboard_arrow_down,
+                      size: 18,
+                      color: Colors.grey[500],
+                    ),
+                  ],
+                ),
               ),
+            )
+          else
+            Row(
+              children: [
+                Icon(Icons.forum_outlined, size: 17, color: primary),
+                const SizedBox(width: 6),
+                StandardText(
+                  text: '댓글',
+                  fontSize: 15,
+                  color: primary,
+                  fontWeight: FontWeight.w700,
+                ),
+                const SizedBox(width: 6),
+                if (displayCommentCount > 0)
+                  StandardText(
+                    text: '$displayCommentCount',
+                    fontSize: 12,
+                    color: Colors.grey[500]!,
+                    fontWeight: FontWeight.normal,
+                    fontFamily: 'PretendardLight',
+                  ),
+              ],
             ),
-          ),
           if (_isExpanded) ...[
             const SizedBox(height: 8),
             if (_isLoading)
@@ -735,6 +1052,25 @@ class _SharedProblemCommentsSectionState
             color: Colors.grey[800]!,
             fontWeight: FontWeight.normal,
             fontFamily: 'PretendardLight',
+          ),
+          const SizedBox(height: 8),
+          FeedReactionBar(
+            reactions: comment.reactions,
+            themeProvider: widget.themeProvider,
+            onToggle: (emoji) {
+              context
+                  .read<StudyRoomProvider>()
+                  .toggleSharedProblemCommentReaction(
+                    sharedProblemId: widget.sharedProblemId,
+                    commentId: comment.commentId,
+                    emoji: emoji,
+                  )
+                  .catchError((_) {
+                if (mounted) {
+                  AppSnackBar.showError('댓글 반응을 남기지 못했어요');
+                }
+              });
+            },
           ),
         ],
       ),

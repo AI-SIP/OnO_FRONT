@@ -352,6 +352,22 @@ class StudyRoomService {
     );
   }
 
+  Future<List<FeedReactionModel>> toggleSharedProblemCommentReaction({
+    required int roomId,
+    required int sharedProblemId,
+    required int commentId,
+    required String emoji,
+  }) async {
+    final data = await httpService.sendRequest(
+      method: 'POST',
+      url:
+          '$baseUrl/$roomId/shared-problems/$sharedProblemId/comments/$commentId/reactions',
+      showErrorSnackBar: false,
+      body: {'emoji': emoji},
+    );
+    return _mapList(_asMap(data)['reactions'], FeedReactionModel.fromJson);
+  }
+
   Future<List<WeeklyReportModel>> fetchWeeklyReports({
     required int roomId,
     int limit = 4,

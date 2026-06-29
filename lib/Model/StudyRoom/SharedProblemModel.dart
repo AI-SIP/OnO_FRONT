@@ -8,7 +8,7 @@ class SharedProblemModel {
   final String? problemImageUrl;
   final String reference;
   final String? comment;
-  final int? commentCount;
+  int? commentCount;
   final DateTime sharedAt;
   List<FeedReactionModel> reactions;
 
