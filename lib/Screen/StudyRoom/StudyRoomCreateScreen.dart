@@ -28,14 +28,90 @@ class _StudyRoomCreateScreenState extends State<StudyRoomCreateScreen> {
     super.dispose();
   }
 
+  Future<void> _showValidationDialog(String message) {
+    final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
+    return showDialog<void>(
+      context: context,
+      builder: (_) => Dialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(15),
+          side: BorderSide(color: Colors.grey[200]!, width: 1),
+        ),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 340),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 18),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.orange.withValues(alpha: 0.10),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(
+                        Icons.warning_amber_rounded,
+                        color: Colors.orange,
+                        size: 20,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    const StandardText(
+                      text: '필수 항목 누락',
+                      fontSize: 18,
+                      color: Colors.black87,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 18),
+                StandardText(
+                  text: message,
+                  fontSize: 14,
+                  color: Colors.grey[700]!,
+                  textAlign: TextAlign.center,
+                  fontWeight: FontWeight.normal,
+                  fontFamily: 'PretendardLight',
+                ),
+                const SizedBox(height: 22),
+                SizedBox(
+                  width: double.infinity,
+                  child: TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    style: TextButton.styleFrom(
+                      backgroundColor: themeProvider.primaryColor,
+                      padding: const EdgeInsets.symmetric(vertical: 13),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const StandardText(
+                      text: '확인',
+                      fontSize: 14,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   Future<void> _create() async {
     final name = _nameController.text.trim();
     if (name.isEmpty) {
-      AppSnackBar.showError('방 이름을 입력해 주세요');
+      await _showValidationDialog('방 이름을 입력해 주세요.');
       return;
     }
     if (name.length > 20) {
-      AppSnackBar.showError('방 이름은 20자 이하로 입력해 주세요');
+      await _showValidationDialog('방 이름은 20자 이하로 입력해 주세요.');
       return;
     }
 
@@ -96,8 +172,11 @@ class _StudyRoomCreateScreenState extends State<StudyRoomCreateScreen> {
           color: themeProvider.primaryColor,
         ),
       ),
-      body: SafeArea(
-        child: Center(
+      body: GestureDetector(
+        onTap: () => FocusScope.of(context).unfocus(),
+        behavior: HitTestBehavior.translucent,
+        child: SafeArea(
+          child: Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 520),
             child: Padding(
@@ -285,6 +364,7 @@ class _StudyRoomCreateScreenState extends State<StudyRoomCreateScreen> {
               ),
             ),
           ),
+        ),
         ),
       ),
     );
