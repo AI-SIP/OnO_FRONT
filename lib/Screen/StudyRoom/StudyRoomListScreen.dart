@@ -189,16 +189,19 @@ class _StudyRoomListScreenState extends State<StudyRoomListScreen> {
           fontSize: 18,
           color: themeProvider.primaryColor,
         ),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 16),
-            child: IconButton(
-              icon: Icon(Icons.add, color: themeProvider.primaryColor),
-              onPressed: () => _showAddMenu(themeProvider),
-              tooltip: '방 추가',
-            ),
-          ),
-        ],
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => _showAddMenu(themeProvider),
+        backgroundColor: themeProvider.primaryColor,
+        tooltip: '방 추가',
+        icon: const Icon(Icons.add, color: Colors.white),
+        label: const StandardText(
+          text: '스터디룸 생성',
+          fontSize: 14,
+          color: Colors.white,
+          fontWeight: FontWeight.w700,
+        ),
       ),
       body: provider.isLoading && provider.rooms.isEmpty
           ? Center(
@@ -229,7 +232,7 @@ class _StudyRoomListScreenState extends State<StudyRoomListScreen> {
       physics: const AlwaysScrollableScrollPhysics(),
       padding: EdgeInsets.only(
         top: screenHeight * 0.01,
-        bottom: screenHeight * 0.02,
+        bottom: screenHeight * 0.12,
       ),
       itemCount: provider.rooms.length,
       itemBuilder: (_, i) => _buildRoomCard(provider.rooms[i], provider,
