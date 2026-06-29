@@ -7,6 +7,7 @@ import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/StudyRoomProvider.dart';
 import '../../Util/AppSnackBar.dart';
 import '../../Exception/ApiException.dart';
+import '../ProblemRegister/Widget/DatePickerHandler.dart';
 
 class ChallengeCreateSheet extends StatefulWidget {
   const ChallengeCreateSheet({super.key});
@@ -27,10 +28,13 @@ class ChallengeCreateSheet extends StatefulWidget {
 class _ChallengeCreateSheetState extends State<ChallengeCreateSheet> {
   final _titleController = TextEditingController();
   final _targetController = TextEditingController();
+  final _periodDaysController = TextEditingController();
   String _scope = 'individual';
   String _metric = 'problem_count';
   String _period = 'weekly';
-  DateTime _endAt = DateTime.now().add(const Duration(days: 7));
+  DateTime _endAt = _endOfDay(
+    _dateOnly(DateTime.now()).add(const Duration(days: 7)),
+  );
   bool _isLoading = false;
 
   static const _scopes = [
@@ -45,21 +49,27 @@ class _ChallengeCreateSheetState extends State<ChallengeCreateSheet> {
   ];
 
   static const _periods = [
+    ('none', '전체'),
     ('daily', '일간'),
     ('weekly', '주간'),
     ('monthly', '월간'),
+    ('custom', '직접 입력'),
   ];
 
   @override
   void dispose() {
     _titleController.dispose();
     _targetController.dispose();
+    _periodDaysController.dispose();
     super.dispose();
   }
 
   Future<void> _submit(BuildContext context) async {
     final title = _titleController.text.trim();
     final target = int.tryParse(_targetController.text);
+    final periodDays = _period == 'custom'
+        ? int.tryParse(_periodDaysController.text.trim())
+        : null;
     if (title.isEmpty) {
       AppSnackBar.showError('챌린지 제목을 입력해주세요');
       return;
@@ -68,15 +78,28 @@ class _ChallengeCreateSheetState extends State<ChallengeCreateSheet> {
       AppSnackBar.showError('목표 값을 올바르게 입력해주세요');
       return;
     }
+    if (_period == 'custom' && (periodDays == null || periodDays < 1)) {
+      AppSnackBar.showError('집계 일수를 1일 이상으로 입력해주세요');
+      return;
+    }
+    if (!_endAt.isAfter(DateTime.now())) {
+      AppSnackBar.showError('마감일은 현재 이후로 선택해주세요');
+      return;
+    }
 
     setState(() => _isLoading = true);
     try {
+      final period = switch (_period) {
+        'daily' || 'weekly' || 'monthly' => _period,
+        _ => null,
+      };
       await Provider.of<StudyRoomProvider>(context, listen: false)
           .createChallenge(
         title: title,
         type: _scope,
         metric: _metric,
-        period: _period,
+        period: period,
+        periodDays: periodDays,
         targetValue: target,
         endAt: _endAt,
       );
@@ -176,10 +199,23 @@ class _ChallengeCreateSheetState extends State<ChallengeCreateSheet> {
               onSelected: (value) {
                 setState(() {
                   _period = value;
-                  _endAt = _defaultEndAtFor(value);
+                  if (value != 'custom' && value != 'none') {
+                    _endAt = _defaultEndAtFor(value);
+                  }
                 });
               },
             ),
+            if (_period == 'custom') ...[
+              const SizedBox(height: 10),
+              _buildTextField(
+                controller: _periodDaysController,
+                hint: '예: 5',
+                primary: primary,
+                inputType: TextInputType.number,
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                suffix: '일마다',
+              ),
+            ],
             const SizedBox(height: 16),
             _Label(text: '챌린지 제목'),
             const SizedBox(height: 8),
@@ -203,7 +239,7 @@ class _ChallengeCreateSheetState extends State<ChallengeCreateSheet> {
             _Label(text: '마감일'),
             const SizedBox(height: 8),
             InkWell(
-              onTap: null,
+              onTap: () => _pickEndAt(context),
               borderRadius: BorderRadius.circular(10),
               child: Container(
                 padding:
@@ -218,11 +254,13 @@ class _ChallengeCreateSheetState extends State<ChallengeCreateSheet> {
                     Icon(Icons.calendar_today, size: 16, color: primary),
                     const SizedBox(width: 10),
                     StandardText(
-                      text:
-                          '${_endAt.year}.${_endAt.month.toString().padLeft(2, '0')}.${_endAt.day.toString().padLeft(2, '0')}',
+                      text: _formatDate(_endAt),
                       fontSize: 14,
                       color: Colors.black87,
                     ),
+                    const Spacer(),
+                    Icon(Icons.chevron_right,
+                        size: 18, color: Colors.grey[400]),
                   ],
                 ),
               ),
@@ -261,17 +299,46 @@ class _ChallengeCreateSheetState extends State<ChallengeCreateSheet> {
     );
   }
 
+  static DateTime _dateOnly(DateTime date) {
+    return DateTime(date.year, date.month, date.day);
+  }
+
+  static DateTime _endOfDay(DateTime date) {
+    return DateTime(date.year, date.month, date.day, 23, 59, 59);
+  }
+
+  Future<void> _pickEndAt(BuildContext context) async {
+    final today = _dateOnly(DateTime.now());
+    final picked = await showModalBottomSheet<DateTime>(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => DatePickerHandler(
+        title: '마감일 선택',
+        initialDate: _endAt.isBefore(today) ? today : _endAt,
+        firstDate: today,
+        lastDate: DateTime(today.year + 3, today.month, today.day),
+        onDateSelected: (date) => Navigator.pop(context, date),
+      ),
+    );
+    if (picked == null || !mounted) return;
+    setState(() => _endAt = _endOfDay(picked));
+  }
+
+  String _formatDate(DateTime date) {
+    return '${date.year}.${date.month.toString().padLeft(2, '0')}.${date.day.toString().padLeft(2, '0')}';
+  }
+
   DateTime _defaultEndAtFor(String period) {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     switch (period) {
       case 'daily':
-        return today.add(const Duration(days: 1));
+        return _endOfDay(today.add(const Duration(days: 1)));
       case 'monthly':
-        return DateTime(today.year, today.month + 1, today.day);
+        return _endOfDay(DateTime(today.year, today.month + 1, today.day));
       case 'weekly':
       default:
-        return today.add(const Duration(days: 7));
+        return _endOfDay(today.add(const Duration(days: 7)));
     }
   }
 

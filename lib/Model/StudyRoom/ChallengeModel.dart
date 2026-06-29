@@ -6,6 +6,7 @@ class ChallengeModel {
   final String type; // individual | group | streak
   final String metric; // problem_count | practice_count | attendance
   final String? period; // daily | weekly | monthly
+  final int? periodDays;
   final int targetValue;
   final DateTime? startAt;
   final DateTime endAt;
@@ -19,6 +20,7 @@ class ChallengeModel {
     required this.type,
     required this.metric,
     this.period,
+    this.periodDays,
     required this.targetValue,
     this.startAt,
     required this.endAt,
@@ -35,6 +37,9 @@ class ChallengeModel {
       type: (json['type'] ?? 'individual').toString(),
       metric: (json['metric'] ?? 'problem_count').toString(),
       period: json['period']?.toString(),
+      periodDays: json['periodDays'] == null
+          ? null
+          : (json['periodDays'] as num).toInt(),
       targetValue: ((json['targetValue'] ?? 0) as num).toInt(),
       startAt: DateTime.tryParse((json['startAt'] ?? '').toString()),
       endAt:

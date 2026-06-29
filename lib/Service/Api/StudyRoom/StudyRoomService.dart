@@ -175,7 +175,8 @@ class StudyRoomService {
     required String title,
     required String type,
     required String metric,
-    required String period,
+    String? period,
+    int? periodDays,
     required int targetValue,
     required DateTime endAt,
   }) async {
@@ -189,6 +190,7 @@ class StudyRoomService {
         'type': type,
         'metric': metric,
         'period': period,
+        'periodDays': periodDays,
         'targetValue': targetValue,
         'startAt': now.toIso8601String(),
         'endAt': endAt.toIso8601String(),

@@ -5,9 +5,18 @@ import '../../../Module/Text/StandardText.dart';
 class DatePickerHandler extends StatefulWidget {
   final DateTime initialDate;
   final Function(DateTime) onDateSelected;
+  final String title;
+  final DateTime? firstDate;
+  final DateTime? lastDate;
 
-  const DatePickerHandler(
-      {super.key, required this.initialDate, required this.onDateSelected});
+  const DatePickerHandler({
+    super.key,
+    required this.initialDate,
+    required this.onDateSelected,
+    this.title = '푼 날짜 선택',
+    this.firstDate,
+    this.lastDate,
+  });
 
   @override
   State<DatePickerHandler> createState() => _DatePickerHandlerState();
@@ -17,23 +26,29 @@ class _DatePickerHandlerState extends State<DatePickerHandler> {
   static const _weekdayLabels = ['일', '월', '화', '수', '목', '금', '토'];
 
   late DateTime _visibleMonth;
-  late final DateTime _today;
-  late final DateTime _firstSelectableMonth;
+  late final DateTime _firstSelectableDate;
+  late final DateTime _lastSelectableDate;
 
   @override
   void initState() {
     super.initState();
     final now = DateTime.now();
-    _today = DateTime(now.year, now.month, now.day);
-    _firstSelectableMonth = DateTime(now.year - 10, now.month);
+    final today = DateTime(now.year, now.month, now.day);
+    _firstSelectableDate =
+        _dateOnly(widget.firstDate ?? DateTime(now.year - 10, now.month));
+    _lastSelectableDate = _dateOnly(widget.lastDate ?? today);
     _visibleMonth = DateTime(widget.initialDate.year, widget.initialDate.month);
   }
 
   bool get _canGoPrev => DateTime(_visibleMonth.year, _visibleMonth.month)
-      .isAfter(_firstSelectableMonth);
+      .isAfter(DateTime(_firstSelectableDate.year, _firstSelectableDate.month));
 
   bool get _canGoNext => DateTime(_visibleMonth.year, _visibleMonth.month)
-      .isBefore(DateTime(_today.year, _today.month));
+      .isBefore(DateTime(_lastSelectableDate.year, _lastSelectableDate.month));
+
+  DateTime _dateOnly(DateTime date) {
+    return DateTime(date.year, date.month, date.day);
+  }
 
   void _changeMonth(int delta) {
     setState(() {
@@ -64,8 +79,8 @@ class _DatePickerHandlerState extends State<DatePickerHandler> {
                   borderRadius: BorderRadius.circular(999),
                 ),
               ),
-              const StandardText(
-                text: '푼 날짜 선택',
+              StandardText(
+                text: widget.title,
                 fontSize: 17,
                 fontWeight: FontWeight.w600,
                 color: Colors.black87,
@@ -152,9 +167,10 @@ class _DatePickerHandlerState extends State<DatePickerHandler> {
         }
 
         final date = DateTime(_visibleMonth.year, _visibleMonth.month, day);
-        final selectable = !date.isAfter(_today);
+        final selectable = !date.isBefore(_firstSelectableDate) &&
+            !date.isAfter(_lastSelectableDate);
         final isSelected = DateUtils.isSameDay(date, widget.initialDate);
-        final isToday = DateUtils.isSameDay(date, _today);
+        final isToday = DateUtils.isSameDay(date, DateTime.now());
 
         return InkWell(
           onTap: selectable ? () => widget.onDateSelected(date) : null,
