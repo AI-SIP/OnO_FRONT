@@ -33,9 +33,9 @@ class ChallengeProgressBar extends StatelessWidget {
                 child: StandardText(
                   text: label!,
                   fontSize: 12,
-                  color: Colors.grey[600]!,
-                  fontWeight: FontWeight.normal,
-                  fontFamily: 'PretendardLight',
+                  color: Colors.grey[700]!,
+                  fontWeight: FontWeight.w700,
+                  fontFamily: 'PretendardBold',
                   overflow: TextOverflow.ellipsis,
                 ),
               ),

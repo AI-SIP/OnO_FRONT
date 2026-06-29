@@ -38,9 +38,7 @@ class MemberRankCard extends StatelessWidget {
       child: Container(
         padding: EdgeInsets.all(screenHeight * 0.016),
         decoration: BoxDecoration(
-          color: isMe
-              ? themeProvider.primaryColor.withValues(alpha: 0.055)
-              : Colors.white,
+          color: Colors.white,
           borderRadius: BorderRadius.circular(15),
           border: Border.all(
             color: isMe
@@ -50,9 +48,7 @@ class MemberRankCard extends StatelessWidget {
           ),
           boxShadow: [
             BoxShadow(
-              color: isMe
-                  ? themeProvider.primaryColor.withValues(alpha: 0.10)
-                  : Colors.grey.withValues(alpha: 0.08),
+              color: Colors.grey.withValues(alpha: 0.08),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -79,19 +75,21 @@ class MemberRankCard extends StatelessWidget {
       height: 38,
       decoration: BoxDecoration(
         color: isMe
-            ? themeProvider.primaryColor
+            ? Colors.white
             : themeProvider.primaryColor.withValues(alpha: 0.10),
         shape: BoxShape.circle,
         border: Border.all(
-          color: themeProvider.primaryColor.withValues(alpha: 0.18),
-          width: 1,
+          color: isMe
+              ? themeProvider.primaryColor
+              : themeProvider.primaryColor.withValues(alpha: 0.18),
+          width: isMe ? 1.5 : 1,
         ),
       ),
       child: Center(
         child: Icon(
           isMe ? Icons.person : Icons.person_outline,
           size: 19,
-          color: isMe ? Colors.white : themeProvider.primaryColor,
+          color: themeProvider.primaryColor,
         ),
       ),
     );
@@ -116,8 +114,12 @@ class MemberRankCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
-                  color: themeProvider.primaryColor.withValues(alpha: 0.13),
+                  color: Colors.white,
                   borderRadius: BorderRadius.circular(6),
+                  border: Border.all(
+                    color: themeProvider.primaryColor.withValues(alpha: 0.35),
+                    width: 1,
+                  ),
                 ),
                 child: StandardText(
                   text: '나',
