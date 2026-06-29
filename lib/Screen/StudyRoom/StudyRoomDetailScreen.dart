@@ -13,7 +13,6 @@ import 'StudyRoomEditScreen.dart';
 import 'Widget/ActiveStudyBanner.dart';
 import 'Widget/ActivityFeedTab.dart';
 import 'Widget/ChallengeCard.dart';
-import 'Widget/GoalSetDialog.dart';
 import 'Widget/InviteCodeSheet.dart';
 import 'Widget/MemberRankCard.dart';
 import 'Widget/StudyRoomThumbnail.dart';
@@ -425,9 +424,6 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
     double screenHeight,
     StudyRoomProvider provider,
   ) {
-    final myMember = room.members
-        .where((m) => m.userId == provider.currentUserId)
-        .firstOrNull;
     final isCompact = screenWidth < 360;
 
     return Container(
@@ -467,11 +463,6 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
               const SizedBox(width: 12),
               Expanded(
                 child: _buildRoomSummary(room, themeProvider),
-              ),
-              _buildGoalButton(
-                themeProvider,
-                provider,
-                myMember?.weeklyGoal,
               ),
             ],
           ),
@@ -516,64 +507,6 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
         ),
       ],
     );
-  }
-
-  Widget _buildGoalButton(
-    ThemeHandler themeProvider,
-    StudyRoomProvider provider,
-    int? weeklyGoal,
-  ) {
-    return GestureDetector(
-      onTap: () => _openGoalSetting(
-        context,
-        provider,
-        themeProvider,
-        weeklyGoal,
-      ),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        decoration: BoxDecoration(
-          color: themeProvider.primaryColor.withValues(alpha: 0.08),
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color: themeProvider.primaryColor.withValues(alpha: 0.18),
-            width: 1,
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.flag_outlined,
-              size: 14,
-              color: themeProvider.primaryColor,
-            ),
-            const SizedBox(width: 4),
-            StandardText(
-              text: weeklyGoal != null ? '목표 $weeklyGoal문제' : '목표 설정',
-              fontSize: 12,
-              color: themeProvider.primaryColor,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Future<void> _openGoalSetting(
-    BuildContext context,
-    StudyRoomProvider provider,
-    ThemeHandler themeProvider,
-    int? currentGoal,
-  ) async {
-    final goal = await GoalSetDialog.show(
-      context,
-      themeProvider,
-      currentGoal: currentGoal,
-    );
-    if (goal != null) {
-      await provider.setMyGoal(goal);
-    }
   }
 
   Widget _buildList(
