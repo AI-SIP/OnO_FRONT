@@ -75,7 +75,7 @@ class _ReactionChip extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.fromLTRB(9, 7, 11, 7),
+        padding: const EdgeInsets.fromLTRB(9, 4, 11, 4),
         decoration: BoxDecoration(
           color: isReacted
               ? themeProvider.primaryColor.withValues(alpha: 0.1)
@@ -91,7 +91,7 @@ class _ReactionChip extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            OnoEmojiImage(emojiKey: reaction.emoji, size: 26),
+            OnoEmojiImage(emojiKey: reaction.emoji, size: 24),
             const SizedBox(width: 6),
             Text(
               '${reaction.count}',

@@ -164,11 +164,12 @@ class _SharedProblemCommentsSectionState
                     maxLength: 300,
                     maxLines: 4,
                     autofocus: true,
-                    style: const StandardText(
-                      text: '',
+                    style: const TextStyle(
                       fontSize: 14,
                       color: Colors.black87,
-                    ).getTextStyle(),
+                      fontWeight: FontWeight.w500,
+                      fontFamily: 'Pretendard',
+                    ),
                     decoration: InputDecoration(
                       hintText: '풀이 방법이나 생각을 적어보세요',
                       hintStyle:
@@ -528,15 +529,18 @@ class _SharedProblemCommentsSectionState
               ),
               const SizedBox(width: 8),
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    StandardText(
-                      text: comment.authorName,
-                      fontSize: 13,
-                      color: Colors.black87,
-                      overflow: TextOverflow.ellipsis,
+                    Flexible(
+                      child: StandardText(
+                        text: comment.authorName,
+                        fontSize: 13,
+                        color: Colors.black87,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
+                    const SizedBox(width: 6),
                     StandardText(
                       text: comment.isEdited
                           ? '${_timeAgo(comment.updatedAt ?? comment.createdAt)} · 수정됨'
@@ -565,26 +569,31 @@ class _SharedProblemCommentsSectionState
             padding: const EdgeInsets.only(left: 4, right: 4),
             child: StandardText(
               text: comment.content,
-              fontSize: 13,
+              fontSize: 14,
               color: Colors.grey[800]!,
+              fontWeight: FontWeight.w500,
+              fontFamily: 'Pretendard',
             ),
           ),
-          const SizedBox(height: 6),
-          FeedReactionBar(
-            reactions: comment.reactions,
-            themeProvider: widget.themeProvider,
-            onToggle: (emoji) {
-              context
-                  .read<StudyRoomProvider>()
-                  .toggleSharedProblemCommentReaction(
-                    sharedProblemId: widget.sharedProblemId,
-                    commentId: comment.commentId,
-                    emoji: emoji,
-                  )
-                  .catchError((_) {
-                if (mounted) AppSnackBar.showError('댓글 반응을 남기지 못했어요');
-              });
-            },
+          const SizedBox(height: 10),
+          Padding(
+            padding: const EdgeInsets.only(left: 4),
+            child: FeedReactionBar(
+              reactions: comment.reactions,
+              themeProvider: widget.themeProvider,
+              onToggle: (emoji) {
+                context
+                    .read<StudyRoomProvider>()
+                    .toggleSharedProblemCommentReaction(
+                      sharedProblemId: widget.sharedProblemId,
+                      commentId: comment.commentId,
+                      emoji: emoji,
+                    )
+                    .catchError((_) {
+                  if (mounted) AppSnackBar.showError('댓글 반응을 남기지 못했어요');
+                });
+              },
+            ),
           ),
         ],
       ),
@@ -642,11 +651,12 @@ class _SharedProblemCommentsSectionState
             maxLength: 300,
             minLines: 1,
             maxLines: 3,
-            style: const StandardText(
-              text: '',
+            style: const TextStyle(
               fontSize: 13,
               color: Colors.black87,
-            ).getTextStyle(),
+              fontWeight: FontWeight.w500,
+              fontFamily: 'Pretendard',
+            ),
             decoration: InputDecoration(
               hintText: '풀이 의견 남기기',
               counterText: '',

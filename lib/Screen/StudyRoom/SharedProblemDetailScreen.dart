@@ -280,15 +280,18 @@ class SharedProblemDetailScreen extends StatelessWidget {
           if (currentProblem.comment != null &&
               currentProblem.comment!.isNotEmpty) ...[
             const SizedBox(height: 14),
-            _buildOwnerComment(currentProblem, primary),
+            _buildOwnerComment(currentProblem),
           ],
-          const SizedBox(height: 14),
-          FeedReactionBar(
-            reactions: currentProblem.reactions,
-            themeProvider: themeProvider,
-            onToggle: (emoji) => provider.toggleSharedProblemReaction(
-              currentProblem.sharedProblemId,
-              emoji,
+          const SizedBox(height: 22),
+          Padding(
+            padding: const EdgeInsets.only(left: 8),
+            child: FeedReactionBar(
+              reactions: currentProblem.reactions,
+              themeProvider: themeProvider,
+              onToggle: (emoji) => provider.toggleSharedProblemReaction(
+                currentProblem.sharedProblemId,
+                emoji,
+              ),
             ),
           ),
           const SizedBox(height: 16),
@@ -391,32 +394,15 @@ class SharedProblemDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildOwnerComment(SharedProblemModel problem, Color primary) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(13),
-      decoration: BoxDecoration(
-        color: Colors.grey[50],
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[200]!, width: 1),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(Icons.chat_bubble_outline, size: 16, color: primary),
-              const SizedBox(width: 6),
-              StandardText(text: '공유한 말', fontSize: 12, color: primary),
-            ],
-          ),
-          const SizedBox(height: 8),
-          StandardText(
-            text: problem.comment!,
-            fontSize: 14,
-            color: Colors.grey[800]!,
-          ),
-        ],
+  Widget _buildOwnerComment(SharedProblemModel problem) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 8, right: 2),
+      child: StandardText(
+        text: problem.comment!,
+        fontSize: 14,
+        color: Colors.grey[800]!,
+        fontWeight: FontWeight.w500,
+        fontFamily: 'Pretendard',
       ),
     );
   }

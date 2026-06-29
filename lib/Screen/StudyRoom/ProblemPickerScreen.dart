@@ -323,11 +323,12 @@ class _ProblemPickerScreenState extends State<ProblemPickerScreen> {
                   maxLength: 100,
                   minLines: 2,
                   maxLines: 2,
-                  style: const StandardText(
-                    text: '',
+                  style: const TextStyle(
                     fontSize: 13,
                     color: Colors.black87,
-                  ).getTextStyle(),
+                    fontWeight: FontWeight.w500,
+                    fontFamily: 'Pretendard',
+                  ),
                   decoration: InputDecoration(
                     hintText: '한마디 남기기 (선택)',
                     counterText: '',
