@@ -1,6 +1,6 @@
 ---
 name: ono-commit
-description: OnO Flutter 레포에서 사용자가 "commit" 또는 현재 변경사항의 커밋 단위와 커밋 메시지 추천을 요청할 때 사용한다. 실제 커밋은 만들지 않고 추천만 한다.
+description: OnO Flutter 레포에서 사용자가 "commit" 또는 현재 변경사항의 커밋 단위와 커밋 메시지를 알맞게 작성해 커밋을 수행한다.
 ---
 
 # OnO Commit Skill
@@ -9,7 +9,7 @@ description: OnO Flutter 레포에서 사용자가 "commit" 또는 현재 변경
 
 ## 목표
 
-현재 변경사항을 분석해 적절한 커밋 단위와 OnO 형식의 커밋 메시지를 추천한다. 사용자가 명시하지 않으면 실제 `git add` 또는 `git commit`은 실행하지 않는다.
+현재 변경사항을 분석해 적절한 커밋 단위와 OnO 형식의 커밋 메시지를 바탕으로 커밋을 수행한다. 
 
 ## 절차
 
