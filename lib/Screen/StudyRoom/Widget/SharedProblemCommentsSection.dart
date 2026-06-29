@@ -1,3 +1,4 @@
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -95,6 +96,7 @@ class _SharedProblemCommentsSectionState
       await context
           .read<StudyRoomProvider>()
           .createSharedProblemComment(widget.sharedProblemId, content);
+      FirebaseAnalytics.instance.logEvent(name: 'comment_created');
       _controller.clear();
     } catch (_) {
       if (mounted) AppSnackBar.showError('풀이 의견을 남기지 못했어요');
