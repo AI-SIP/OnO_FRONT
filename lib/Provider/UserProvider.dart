@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:core';
-import 'dart:developer';
 
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
@@ -58,34 +57,34 @@ class UserProvider with ChangeNotifier {
     try {
       LoadingDialog.show(context, '로그인 중 입니다...');
       final userRegisterModel = await socialLogin(context);
-      log('[signInWithMember] userRegisterModel: $userRegisterModel');
+      debugPrint('[signInWithMember] userRegisterModel: $userRegisterModel');
 
       final response = await userService.signInWithMember(userRegisterModel);
-      log('[signInWithMember] response received');
+      debugPrint('[signInWithMember] response received');
 
       await saveUserLoginInfo(userRegisterModel?.platform);
       bool isRegister = await saveUserToken(response: response);
-      log('[signInWithMember] isRegister: $isRegister');
+      debugPrint('[signInWithMember] isRegister: $isRegister');
 
       await NotificationService.instance.sendTokenToServer();
-      log('[signInWithMember] notification token sent');
+      debugPrint('[signInWithMember] notification token sent');
 
       await fetchAllData();
-      log('[signInWithMember] all data fetched');
+      debugPrint('[signInWithMember] all data fetched');
 
       _loginStatus = LoginStatus.login;
       notifyListeners();
-      log('[signInWithMember] login status set to login');
+      debugPrint('[signInWithMember] login status set to login');
 
       if (!context.mounted) return;
       LoadingDialog.hide(context);
 
       if (!isRegister) {
-        log('register failed!, response: ${response.toString()}');
+        debugPrint('register failed!, response: ${response.toString()}');
         throw Exception('response: ${response.toString()}');
       }
     } catch (error, stackTrace) {
-      log('[signInWithMember] error occurred: $error');
+      debugPrint('[signInWithMember] error occurred: $error');
       if (!context.mounted) {
         await AppErrorReporter.report(
           error,
@@ -117,7 +116,7 @@ class UserProvider with ChangeNotifier {
       LoadingDialog.hide(context);
 
       if (!isRegister) {
-        log('register failed!, response: ${response.toString()}');
+        debugPrint('register failed!, response: ${response.toString()}');
         throw Exception('response: ${response.toString()}');
       }
     } catch (error, stackTrace) {
@@ -214,7 +213,7 @@ class UserProvider with ChangeNotifier {
   }
 
   Future<bool> saveUserToken({dynamic response}) async {
-    log('Response type: ${response.runtimeType}');
+    debugPrint('Response type: ${response.runtimeType}');
 
     if (response == null) {
       _loginStatus = LoginStatus.logout;
@@ -316,7 +315,7 @@ class UserProvider with ChangeNotifier {
         await fetchAllData();
       } catch (error, stackTrace) {
         // 데이터 로딩 실패만으로 세션을 끊지 않음
-        log('자동 로그인 후 데이터 로딩 실패: $error');
+        debugPrint('자동 로그인 후 데이터 로딩 실패: $error');
         await AppErrorReporter.report(
           error,
           stackTrace,
@@ -325,7 +324,7 @@ class UserProvider with ChangeNotifier {
         );
       }
     } on UnauthorizedException catch (error, stackTrace) {
-      log('자동 로그인 실패(인증 만료): $error');
+      debugPrint('자동 로그인 실패(인증 만료): $error');
       await AppErrorReporter.report(
         error,
         stackTrace,
@@ -335,7 +334,7 @@ class UserProvider with ChangeNotifier {
       await _handleAuthFailure();
     } catch (error, stackTrace) {
       // 일시적인 네트워크 오류 등은 로그인 상태 유지
-      log('자동 로그인 일시 실패: $error');
+      debugPrint('자동 로그인 일시 실패: $error');
       await AppErrorReporter.report(
         error,
         stackTrace,
@@ -356,7 +355,7 @@ class UserProvider with ChangeNotifier {
     try {
       await tokenProvider.refreshAccessTokenIfNeeded();
     } on UnauthorizedException catch (error, stackTrace) {
-      log('앱 복귀 중 인증 만료: $error');
+      debugPrint('앱 복귀 중 인증 만료: $error');
       await AppErrorReporter.report(
         error,
         stackTrace,
@@ -366,7 +365,7 @@ class UserProvider with ChangeNotifier {
       await _handleAuthFailure();
     } catch (error, stackTrace) {
       // 복귀 순간 네트워크 이슈로는 세션을 끊지 않음
-      log('앱 복귀 중 세션 갱신 일시 실패: $error');
+      debugPrint('앱 복귀 중 세션 갱신 일시 실패: $error');
       await AppErrorReporter.report(
         error,
         stackTrace,
@@ -437,7 +436,7 @@ class UserProvider with ChangeNotifier {
     try {
       await refresh();
     } catch (e, stackTrace) {
-      log('Post-mutation refresh failed ($source): $e');
+      debugPrint('Post-mutation refresh failed ($source): $e');
       await AppErrorReporter.report(
         e,
         stackTrace,

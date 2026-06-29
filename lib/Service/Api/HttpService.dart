@@ -1,7 +1,8 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:developer' as developer;
 import 'dart:io';
+
+import 'package:flutter/foundation.dart';
 
 import 'package:http/http.dart' as http;
 
@@ -125,7 +126,7 @@ class HttpService {
               });
             }
 
-            developer.log('req: ${req.fields.toString()}.');
+            debugPrint('[HttpService] req: ${req.fields}');
             final streamed =
                 await req.send().timeout(const Duration(seconds: 90));
             response = await http.Response.fromStream(streamed);
@@ -233,11 +234,7 @@ class HttpService {
     final status = response.statusCode;
 
     // 요청 로깅
-    developer.log(
-      '[$method] $uri',
-      name: 'HttpService',
-      error: 'Status: $status',
-    );
+    debugPrint('[HttpService] [$method] $uri — Status: $status');
 
     // 빈 응답이거나 응답 본문이 없는 경우 처리 (예: 204 No Content)
     if (response.body.isEmpty) {

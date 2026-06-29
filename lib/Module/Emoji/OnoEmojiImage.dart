@@ -1,5 +1,3 @@
-import 'dart:developer' as developer;
-
 import 'package:flutter/material.dart';
 
 import 'OnoEmoji.dart';
@@ -62,7 +60,7 @@ class OnoEmojiImage extends StatelessWidget {
   Widget build(BuildContext context) {
     final resolvedEmoji = emoji ?? OnoEmojiCatalog.byKey(emojiKey ?? '');
     if (resolvedEmoji == null) {
-      developer.log('Unknown OnO emoji key: $emojiKey');
+      debugPrint('Unknown OnO emoji key: $emojiKey');
       return SizedBox(width: size, height: size);
     }
 
@@ -98,8 +96,7 @@ class OnoEmojiImage extends StatelessWidget {
               fit: BoxFit.contain,
               filterQuality: FilterQuality.high,
               errorBuilder: (_, __, ___) {
-                developer
-                    .log('Missing OnO emoji asset: ${resolvedEmoji.assetPath}');
+                debugPrint('Missing OnO emoji asset: ${resolvedEmoji.assetPath}');
                 return SizedBox(width: size, height: size);
               },
             ),

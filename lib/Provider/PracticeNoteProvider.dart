@@ -1,5 +1,4 @@
 import 'dart:collection';
-import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:ono/Model/PracticeNote/PracticeNoteRegisterModel.dart';
@@ -59,14 +58,14 @@ class ProblemPracticeProvider with ChangeNotifier {
     }
 
     // 캐시에 없으면 서버에서 fetch
-    log('Practice note $practiceNoteId not in cache, fetching from server');
+    debugPrint('Practice note $practiceNoteId not in cache, fetching from server');
     await fetchPracticeNote(practiceNoteId);
 
     if (_practicesMap.containsKey(practiceNoteId)) {
       return _practicesMap[practiceNoteId]!;
     }
 
-    log('Failed to fetch practiceNoteId: $practiceNoteId');
+    debugPrint('Failed to fetch practiceNoteId: $practiceNoteId');
     throw Exception('Practice with id $practiceNoteId not found.');
   }
 
@@ -88,7 +87,7 @@ class ProblemPracticeProvider with ChangeNotifier {
       }
     }
 
-    log('practiceId: $practiceNoteId fetch complete');
+    debugPrint('practiceId: $practiceNoteId fetch complete');
     notifyListeners();
   }
 
@@ -99,7 +98,7 @@ class ProblemPracticeProvider with ChangeNotifier {
       _practicesMap[practice.practiceId] = practice;
     }
 
-    log('fetch practice complete');
+    debugPrint('fetch practice complete');
     notifyListeners();
   }
 
@@ -117,14 +116,14 @@ class ProblemPracticeProvider with ChangeNotifier {
           problemModel = await problemsProvider.getProblem(problemId);
         } catch (e) {
           // 로컬 캐시에 없으면 서버에서 조회
-          log('Problem $problemId not in cache, fetching from server');
+          debugPrint('Problem $problemId not in cache, fetching from server');
           await problemsProvider.fetchProblem(problemId);
           problemModel = await problemsProvider.getProblem(problemId);
         }
         currentProblems.add(problemModel);
       } catch (e, stackTrace) {
-        log('Error loading problem $problemId: $e');
-        log('Stack trace: $stackTrace');
+        debugPrint('Error loading problem $problemId: $e');
+        debugPrint('Stack trace: $stackTrace');
         await AppErrorReporter.report(
           e,
           stackTrace,
@@ -135,7 +134,7 @@ class ProblemPracticeProvider with ChangeNotifier {
       }
     }
 
-    log('Moved to practice: $practiceId, loaded ${currentProblems.length}/${targetPractice.problemIdList.length} problems');
+    debugPrint('Moved to practice: $practiceId, loaded ${currentProblems.length}/${targetPractice.problemIdList.length} problems');
     currentPracticeNote = targetPractice;
     notifyListeners();
   }
@@ -155,7 +154,7 @@ class ProblemPracticeProvider with ChangeNotifier {
 
     // 복습 세트 목록 새로고침 신호
     _practiceRefreshTimestamp = DateTime.now().millisecondsSinceEpoch;
-    log('Practice list refresh signaled - timestamp: $_practiceRefreshTimestamp');
+    debugPrint('Practice list refresh signaled - timestamp: $_practiceRefreshTimestamp');
     notifyListeners();
   }
 
@@ -183,7 +182,7 @@ class ProblemPracticeProvider with ChangeNotifier {
 
     // 복습 세트 목록 새로고침 신호
     _practiceRefreshTimestamp = DateTime.now().millisecondsSinceEpoch;
-    log('Practice list refresh signaled - timestamp: $_practiceRefreshTimestamp');
+    debugPrint('Practice list refresh signaled - timestamp: $_practiceRefreshTimestamp');
     notifyListeners();
   }
 
@@ -209,7 +208,7 @@ class ProblemPracticeProvider with ChangeNotifier {
     try {
       await refresh();
     } catch (e, stackTrace) {
-      log('Post-mutation refresh failed ($source): $e');
+      debugPrint('Post-mutation refresh failed ($source): $e');
       await AppErrorReporter.report(
         e,
         stackTrace,
@@ -227,7 +226,7 @@ class ProblemPracticeProvider with ChangeNotifier {
       (thumbnail) => deletePracticeIds.contains(thumbnail.practiceId),
     );
 
-    log('🗑️ Removed ${deletePracticeIds.length} practices from cache');
+    debugPrint('🗑️ Removed ${deletePracticeIds.length} practices from cache');
     notifyListeners();
   }
 
@@ -284,7 +283,7 @@ class ProblemPracticeProvider with ChangeNotifier {
   Future<void> fetchPracticeCount(int practiceNoteId) async {
     // 서버에서 최신 복습 세트 정보 조회
     await fetchPracticeNote(practiceNoteId);
-    log('복습 카운트 갱신 완료 - Practice ID: $practiceNoteId');
+    debugPrint('복습 카운트 갱신 완료 - Practice ID: $practiceNoteId');
   }
 
   // ==================== V2 무한 스크롤 메서드들 ====================
@@ -294,7 +293,7 @@ class ProblemPracticeProvider with ChangeNotifier {
       {int size = 20, bool forceRefresh = false}) async {
     // 캐시가 있고 강제 새로고침이 아니면 캐시 사용
     if (_hasCachedData && !forceRefresh) {
-      log('✅ Using cached practice thumbnails (${_practiceThumbnails.length} items)');
+      debugPrint('✅ Using cached practice thumbnails (${_practiceThumbnails.length} items)');
       return;
     }
 
@@ -306,7 +305,7 @@ class ProblemPracticeProvider with ChangeNotifier {
       _hasCachedData = false;
       notifyListeners();
 
-      log('📡 Fetching practice thumbnails from server');
+      debugPrint('📡 Fetching practice thumbnails from server');
       final response = await practiceNoteService.getPracticeNoteThumbnailsV2(
         cursor: null,
         size: size,
@@ -317,10 +316,10 @@ class ProblemPracticeProvider with ChangeNotifier {
       _hasNext = response.hasNext;
       _hasCachedData = true;
 
-      log('💾 Practice thumbnails loaded and cached: ${_practiceThumbnails.length}');
+      debugPrint('💾 Practice thumbnails loaded and cached: ${_practiceThumbnails.length}');
     } catch (e, stackTrace) {
-      log('Error loading initial practice thumbnails: $e');
-      log('Stack trace: $stackTrace');
+      debugPrint('Error loading initial practice thumbnails: $e');
+      debugPrint('Stack trace: $stackTrace');
       rethrow;
     } finally {
       _isLoading = false;
@@ -346,11 +345,11 @@ class ProblemPracticeProvider with ChangeNotifier {
       _nextCursor = response.nextCursor;
       _hasNext = response.hasNext;
 
-      log('More practice thumbnails loaded: ${response.content.length}');
-      log('Total thumbnails: ${_practiceThumbnails.length}');
+      debugPrint('More practice thumbnails loaded: ${response.content.length}');
+      debugPrint('Total thumbnails: ${_practiceThumbnails.length}');
     } catch (e, stackTrace) {
-      log('Error loading more practice thumbnails: $e');
-      log('Stack trace: $stackTrace');
+      debugPrint('Error loading more practice thumbnails: $e');
+      debugPrint('Stack trace: $stackTrace');
       rethrow;
     } finally {
       _isLoading = false;
@@ -366,7 +365,7 @@ class ProblemPracticeProvider with ChangeNotifier {
   /// 특정 복습 세트만 썸네일 캐시에서 업데이트
   Future<void> updateSinglePracticeThumbnail(int practiceId) async {
     try {
-      log('🔄 Updating single practice thumbnail: $practiceId');
+      debugPrint('🔄 Updating single practice thumbnail: $practiceId');
 
       // 상세 정보를 조회하여 최신 카운트 정보 확인
       final practiceDetail =
@@ -387,14 +386,14 @@ class ProblemPracticeProvider with ChangeNotifier {
         );
 
         _practiceThumbnails[index] = updatedThumbnail;
-        log('✅ Practice thumbnail updated in cache: $practiceId (count: ${practiceDetail.practiceCount})');
+        debugPrint('✅ Practice thumbnail updated in cache: $practiceId (count: ${practiceDetail.practiceCount})');
         notifyListeners();
       } else {
-        log('⚠️ Practice $practiceId not found in cache');
+        debugPrint('⚠️ Practice $practiceId not found in cache');
       }
     } catch (e, stackTrace) {
-      log('Error updating single practice thumbnail: $e');
-      log('Stack trace: $stackTrace');
+      debugPrint('Error updating single practice thumbnail: $e');
+      debugPrint('Stack trace: $stackTrace');
       await AppErrorReporter.report(
         e,
         stackTrace,
@@ -407,6 +406,6 @@ class ProblemPracticeProvider with ChangeNotifier {
   /// 캐시 무효화 (삭제 등의 경우)
   void invalidateCache() {
     _hasCachedData = false;
-    log('🗑️ Practice thumbnails cache invalidated');
+    debugPrint('🗑️ Practice thumbnails cache invalidated');
   }
 }

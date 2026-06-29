@@ -1,4 +1,3 @@
-import 'dart:developer';
 import 'dart:io';
 
 import 'package:device_info_plus/device_info_plus.dart';
@@ -28,7 +27,7 @@ class NotificationService {
     if (Platform.isIOS) {
       final iosInfo = await _deviceInfo.iosInfo;
       if (!iosInfo.isPhysicalDevice) {
-        log('iOS Simulator detected – skipping FCM init');
+        debugPrint('iOS Simulator detected – skipping FCM init');
         return;
       }
     }
@@ -60,19 +59,19 @@ class NotificationService {
   void _configureMessageHandlers() {
     // 포그라운드 메시지
     FirebaseMessaging.onMessage.listen((msg) {
-      log('Foreground message: ${msg.notification?.title}');
+      debugPrint('Foreground message: ${msg.notification?.title}');
     });
 
     // 백그라운드 상태에서 알림 탭
     FirebaseMessaging.onMessageOpenedApp.listen((msg) {
-      log('Notification tapped (background), data: ${msg.data}');
+      debugPrint('Notification tapped (background), data: ${msg.data}');
       _handleNotificationNavigation(msg.data);
     });
 
     // 종료 상태에서 알림 탭으로 앱 실행 — 홈 화면 전환 후 처리하도록 저장
     FirebaseMessaging.instance.getInitialMessage().then((msg) {
       if (msg != null) {
-        log('Notification tapped (terminated), data: ${msg.data}');
+        debugPrint('Notification tapped (terminated), data: ${msg.data}');
         _pendingNotificationType = msg.data['type'] as String?;
       }
     });
@@ -124,7 +123,7 @@ class NotificationService {
   Future<void> sendTokenToServer() async {
     final token = await _messaging.getToken();
     if (token == null) {
-      log('⚠️ FCM token is NULL');
+      debugPrint('⚠️ FCM token is NULL');
       return;
     }
 
@@ -139,7 +138,7 @@ class NotificationService {
         "token": token,
       },
     );
-    log('✅ FCM token sent to server');
+    debugPrint('✅ FCM token sent to server');
   }
 }
 
@@ -154,7 +153,7 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
       );
     }
 
-    log('Background message: ${message.notification?.title}');
+    debugPrint('Background message: ${message.notification?.title}');
     // TODO: flutter_local_notifications로 로컬 알림 띄우기
   } catch (error, stackTrace) {
     await AppErrorReporter.report(

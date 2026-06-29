@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'dart:core';
-import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -40,7 +39,7 @@ class AppleAuthService {
         return null;
       }
 
-      log('Apple sign-in error: $error');
+      debugPrint('Apple sign-in error: $error');
       await Sentry.captureException(
         error,
         stackTrace: stackTrace,
@@ -93,7 +92,7 @@ class AppleAuthService {
         tokenTypeHint: tokenTypeHint,
       );
     } on Exception catch (e, stackTrace) {
-      log('사용자 계정 삭제 중 오류 발생: $e');
+      debugPrint('사용자 계정 삭제 중 오류 발생: $e');
       AppSnackBar.showError('애플 계정 연동 해제에 실패했습니다.');
       await Sentry.captureException(
         e,
@@ -148,9 +147,9 @@ class AppleAuthService {
 
     if (response.statusCode == 200) {
       // 토큰이 성공적으로 취소됨
-      log('토큰이 성공적으로 취소되었습니다.');
+      debugPrint('토큰이 성공적으로 취소되었습니다.');
     } else {
-      log('토큰 취소 중 오류 발생: ${response.statusCode}');
+      debugPrint('토큰 취소 중 오류 발생: ${response.statusCode}');
       throw Exception('토큰 취소 중 오류 발생: ${response.statusCode}');
     }
   }

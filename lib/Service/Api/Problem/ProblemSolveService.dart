@@ -1,6 +1,6 @@
-import 'dart:developer';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 import '../../../Config/AppConfig.dart';
@@ -15,7 +15,7 @@ class ProblemSolveService {
 
   // 특정 복습 기록 조회
   Future<ProblemSolveModel> getProblemSolve(int problemSolveId) async {
-    log('problem-solve-id: $problemSolveId find start');
+    debugPrint('problem-solve-id: $problemSolveId find start');
     final data = await httpService.sendRequest(
       method: 'GET',
       url: '$baseUrl/$problemSolveId',
@@ -109,7 +109,7 @@ class ProblemSolveService {
 
   // 복습 기록 삭제
   Future<void> deleteProblemSolve(int problemSolveId) async {
-    log('problem-solve-id: $problemSolveId delete start');
+    debugPrint('problem-solve-id: $problemSolveId delete start');
     await httpService.sendRequest(
       method: 'DELETE',
       url: '$baseUrl/$problemSolveId',

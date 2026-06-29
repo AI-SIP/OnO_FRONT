@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -49,13 +48,13 @@ class GoogleAuthService {
       );
 
       if (response.statusCode == 200) {
-        log('Google sign-out Success!');
+        debugPrint('Google sign-out Success!');
       } else {
-        log('Failed to revoke Google token');
+        debugPrint('Failed to revoke Google token');
         throw Exception('Failed to revoke Google token');
       }
     } catch (error, stackTrace) {
-      log('Google sign-out error: $error');
+      debugPrint('Google sign-out error: $error');
       AppSnackBar.showError('구글 계정 연동 해제에 실패했습니다.');
       await Sentry.captureException(
         error,

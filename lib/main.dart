@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:developer';
 import 'dart:ui';
 
 import 'package:firebase_analytics/firebase_analytics.dart';
@@ -102,7 +101,7 @@ Future<void> _bootstrapApp() async {
 
   final kakaoNativeAppKey = dotenv.env['KAKAO_NATIVE_APP_KEY']?.trim();
   if (kakaoNativeAppKey == null || kakaoNativeAppKey.isEmpty) {
-    log('KAKAO_NATIVE_APP_KEY is not configured.');
+    debugPrint('KAKAO_NATIVE_APP_KEY is not configured.');
   } else {
     KakaoSdk.init(nativeAppKey: kakaoNativeAppKey);
   }

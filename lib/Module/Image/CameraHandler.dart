@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -22,7 +20,7 @@ class CameraHandler {
   // Launch the camera screen and return the captured image
   Future<XFile?> takePicture(BuildContext context) async {
     if (_availableCameras == null || _availableCameras!.isEmpty) {
-      log("No cameras available.");
+      debugPrint("No cameras available.");
       return null;
     }
 
@@ -190,7 +188,7 @@ class _CameraScreenState extends State<CameraScreen> {
                     if (!context.mounted) return;
                     Navigator.pop(context, image);
                   } catch (e) {
-                    log(e.toString());
+                    debugPrint(e.toString());
                   }
                 },
                 borderRadius: BorderRadius.circular(42),

@@ -1,5 +1,4 @@
 import 'dart:collection';
-import 'dart:developer';
 import 'dart:io';
 
 import 'package:camera/camera.dart';
@@ -31,7 +30,7 @@ class ProblemsProvider with ChangeNotifier {
     if (_problemsMap.containsKey(problemId)) {
       return _problemsMap[problemId]!;
     } else {
-      log('can\'t find problemId: $problemId');
+      debugPrint('can\'t find problemId: $problemId');
 
       await fetchProblem(problemId);
       return _problemsMap[problemId]!;
@@ -52,7 +51,7 @@ class ProblemsProvider with ChangeNotifier {
       showErrorSnackBar: showErrorSnackBar,
     );
     _upsertProblem(fetchedProblem);
-    log('problem: $problemId fetch complete');
+    debugPrint('problem: $problemId fetch complete');
     notifyListeners();
   }
 
@@ -64,7 +63,7 @@ class ProblemsProvider with ChangeNotifier {
     }
     _problemCount = await getUserProblemCount();
 
-    log('fetch problems complete');
+    debugPrint('fetch problems complete');
     notifyListeners();
   }
 
@@ -94,7 +93,7 @@ class ProblemsProvider with ChangeNotifier {
       source: 'problem_register_review_request',
     );
 
-    log('register problem id: $registerProblemId complete');
+    debugPrint('register problem id: $registerProblemId complete');
     notifyListeners();
   }
 
@@ -107,14 +106,14 @@ class ProblemsProvider with ChangeNotifier {
         _problemsMap[problemId] =
             _problemsMap[problemId]!.updateAnalysis(analysisResult);
         notifyListeners();
-        log('ProblemModel 업데이트 완료 (status: ${analysisResult.status}) - UI가 자동으로 갱신됩니다');
+        debugPrint('ProblemModel 업데이트 완료 (status: ${analysisResult.status}) - UI가 자동으로 갱신됩니다');
       }
 
-      log('문제 분석 결과 조회 완료');
+      debugPrint('문제 분석 결과 조회 완료');
     } catch (e, stackTrace) {
-      log('문제 분석 결과 조회 실패 - Problem ID: $problemId');
-      log('에러: $e');
-      log('스택트레이스: $stackTrace');
+      debugPrint('문제 분석 결과 조회 실패 - Problem ID: $problemId');
+      debugPrint('에러: $e');
+      debugPrint('스택트레이스: $stackTrace');
       await AppErrorReporter.report(
         e,
         stackTrace,
@@ -143,7 +142,7 @@ class ProblemsProvider with ChangeNotifier {
       source: 'problem_image_register_refresh',
     );
 
-    log('register problem id: $problemId complete');
+    debugPrint('register problem id: $problemId complete');
     notifyListeners();
   }
 
@@ -154,7 +153,7 @@ class ProblemsProvider with ChangeNotifier {
   }
 
   Future<void> updateProblem(ProblemRegisterModel problemData) async {
-    log('Update problem: ${problemData.problemId}');
+    debugPrint('Update problem: ${problemData.problemId}');
     try {
       if (problemData.imageDataDtoList != null &&
           problemData.imageDataDtoList!.isNotEmpty) {
@@ -177,9 +176,9 @@ class ProblemsProvider with ChangeNotifier {
         source: 'problem_update_refresh',
       );
     } catch (e, stackTrace) {
-      log('오답노트 수정 실패 - Problem ID: ${problemData.problemId}');
-      log('에러: $e');
-      log('스택트레이스: $stackTrace');
+      debugPrint('오답노트 수정 실패 - Problem ID: ${problemData.problemId}');
+      debugPrint('에러: $e');
+      debugPrint('스택트레이스: $stackTrace');
       rethrow;
     }
   }
@@ -194,7 +193,7 @@ class ProblemsProvider with ChangeNotifier {
   }
 
   Future<void> deleteProblems(List<int> deleteProblemIdList) async {
-    log('delete problems: $deleteProblemIdList');
+    debugPrint('delete problems: $deleteProblemIdList');
     await problemService.deleteProblems(deleteProblemIdList);
 
     // 로컬 캐시에서 삭제된 문제 제거
@@ -212,7 +211,7 @@ class ProblemsProvider with ChangeNotifier {
       source: 'problem_delete_count_refresh',
     );
 
-    log('Deleted ${deleteProblemIdList.length} problems from cache');
+    debugPrint('Deleted ${deleteProblemIdList.length} problems from cache');
     notifyListeners();
   }
 
@@ -243,7 +242,7 @@ class ProblemsProvider with ChangeNotifier {
     try {
       await refresh();
     } catch (e, stackTrace) {
-      log('Post-mutation refresh failed ($source): $e');
+      debugPrint('Post-mutation refresh failed ($source): $e');
       await AppErrorReporter.report(
         e,
         stackTrace,
@@ -277,13 +276,13 @@ class ProblemsProvider with ChangeNotifier {
         _upsertProblem(problem);
       }
 
-      log('Loaded ${response.content.length} problems from folder $folderId');
+      debugPrint('Loaded ${response.content.length} problems from folder $folderId');
       notifyListeners();
 
       return response;
     } catch (e, stackTrace) {
-      log('Error loading folder problems V2: $e');
-      log(stackTrace.toString());
+      debugPrint('Error loading folder problems V2: $e');
+      debugPrint(stackTrace.toString());
       rethrow;
     }
   }
@@ -305,13 +304,13 @@ class ProblemsProvider with ChangeNotifier {
         _upsertProblem(problem);
       }
 
-      log('Loaded ${response.content.length} problems from tag $tagId');
+      debugPrint('Loaded ${response.content.length} problems from tag $tagId');
       notifyListeners();
 
       return response;
     } catch (e, stackTrace) {
-      log('Error loading tag problems V2: $e');
-      log(stackTrace.toString());
+      debugPrint('Error loading tag problems V2: $e');
+      debugPrint(stackTrace.toString());
       rethrow;
     }
   }
@@ -333,13 +332,13 @@ class ProblemsProvider with ChangeNotifier {
         _upsertProblem(problem);
       }
 
-      log('Loaded ${response.content.length} problems from title query: $query');
+      debugPrint('Loaded ${response.content.length} problems from title query: $query');
       notifyListeners();
 
       return response;
     } catch (e, stackTrace) {
-      log('Error loading title problems V2: $e');
-      log(stackTrace.toString());
+      debugPrint('Error loading title problems V2: $e');
+      debugPrint(stackTrace.toString());
       rethrow;
     }
   }

@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:image_cropper/image_cropper.dart';
@@ -37,7 +35,7 @@ class ImagePickerHandler {
       }
       return null;
     } catch (e) {
-      log("Error picking image from gallery: $e");
+      debugPrint("Error picking image from gallery: $e");
       return null;
     }
   }
@@ -52,7 +50,7 @@ class ImagePickerHandler {
       }
       return [];
     } catch (e) {
-      log("Error picking multiple images from gallery: $e");
+      debugPrint("Error picking multiple images from gallery: $e");
       return [];
     }
   }
@@ -98,7 +96,7 @@ class ImagePickerHandler {
       }
       return null;
     } catch (e) {
-      log("Error cropping image: $e");
+      debugPrint("Error cropping image: $e");
       return null;
     }
   }

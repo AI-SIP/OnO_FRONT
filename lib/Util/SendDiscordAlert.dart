@@ -1,6 +1,6 @@
 import 'dart:convert';
-import 'dart:developer';
 
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 class DiscordAlertResult {
@@ -67,7 +67,7 @@ Future<DiscordAlertResult> sendDiscordAlert({
         return DiscordAlertResult.success(statusCode: response.statusCode);
       }
 
-      log('Discord webhook failed: ${response.statusCode} ${response.body}');
+      debugPrint('Discord webhook failed: ${response.statusCode} ${response.body}');
 
       if (attempt < maxAttempts && response.statusCode == 429) {
         await Future.delayed(_retryDelay(response.headers['retry-after']));
@@ -81,7 +81,7 @@ Future<DiscordAlertResult> sendDiscordAlert({
 
       return DiscordAlertResult.failure(statusCode: response.statusCode);
     } catch (e) {
-      log('Failed to send Discord webhook: $e');
+      debugPrint('Failed to send Discord webhook: $e');
 
       if (attempt < maxAttempts) {
         await Future.delayed(const Duration(milliseconds: 500));

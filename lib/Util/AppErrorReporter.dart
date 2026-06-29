@@ -1,5 +1,3 @@
-import 'dart:developer' as developer;
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
@@ -23,32 +21,19 @@ class AppErrorReporter {
   }) async {
     await _ensureDotenvLoaded();
 
-    developer.log(
-      '[${severity.name}] $source',
-      name: 'AppErrorReporter',
-      error: error,
-      stackTrace: stackTrace,
-    );
+    debugPrint('[AppErrorReporter][${severity.name}] $source\nError: $error\n$stackTrace');
 
     try {
       await Sentry.captureException(error, stackTrace: stackTrace);
     } catch (sentryError, sentryStackTrace) {
-      developer.log(
-        'Failed to report to Sentry',
-        name: 'AppErrorReporter',
-        error: sentryError,
-        stackTrace: sentryStackTrace,
-      );
+      debugPrint('[AppErrorReporter] Failed to report to Sentry\nError: $sentryError\n$sentryStackTrace');
     }
 
     if (!sendToDiscord) return;
 
     final webhookUrl = _resolveDiscordWebhookUrl();
     if (webhookUrl == null) {
-      developer.log(
-        'Discord webhook URL is not configured for env=$_appEnv',
-        name: 'AppErrorReporter',
-      );
+      debugPrint('[AppErrorReporter] Discord webhook URL is not configured for env=$_appEnv');
       return;
     }
 
@@ -59,12 +44,9 @@ class AppErrorReporter {
     );
 
     if (!result.isSuccess) {
-      developer.log(
-        'Discord webhook failed'
-        '${result.statusCode != null ? ' status=${result.statusCode}' : ''}'
-        '${result.error != null ? ' error=${result.error}' : ''}',
-        name: 'AppErrorReporter',
-      );
+      debugPrint('[AppErrorReporter] Discord webhook failed'
+          '${result.statusCode != null ? ' status=${result.statusCode}' : ''}'
+          '${result.error != null ? ' error=${result.error}' : ''}');
     }
   }
 
@@ -74,12 +56,7 @@ class AppErrorReporter {
     try {
       await dotenv.load(fileName: '.env');
     } catch (error, stackTrace) {
-      developer.log(
-        'Failed to load dotenv for error reporting',
-        name: 'AppErrorReporter',
-        error: error,
-        stackTrace: stackTrace,
-      );
+      debugPrint('[AppErrorReporter] Failed to load dotenv for error reporting\nError: $error\n$stackTrace');
     }
   }
 

@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:ono/Module/Theme/NoteIconHandler.dart';
@@ -89,7 +87,7 @@ class _FolderPickerDialogState extends State<FolderPickerDialog> {
       // 루트 폴더의 하위 폴더들을 바로 로드
       await _loadSubfolders(_rootNode!);
     } catch (e) {
-      log('Failed to load root folder: $e');
+      debugPrint('Failed to load root folder: $e');
     } finally {
       setState(() {
         _isLoading = false;
@@ -136,8 +134,8 @@ class _FolderPickerDialogState extends State<FolderPickerDialog> {
         node.isLoading = false;
       });
     } catch (e, stackTrace) {
-      log('Failed to load subfolders: $e');
-      log('Stack trace: $stackTrace');
+      debugPrint('Failed to load subfolders: $e');
+      debugPrint('Stack trace: $stackTrace');
       setState(() {
         node.isLoading = false;
       });

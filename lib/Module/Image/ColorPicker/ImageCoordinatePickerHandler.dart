@@ -1,4 +1,3 @@
-import 'dart:developer';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -288,7 +287,7 @@ class _CoordinatePickerScreenState extends State<CoordinatePickerScreen> {
                   Colors.white,
                   () {
                     final rectCoordinates = _getBoxCoordinates();
-                    log(rectCoordinates.toString());
+                    debugPrint(rectCoordinates.toString());
                     Navigator.of(context).pop(rectCoordinates);
                   },
                 ),
