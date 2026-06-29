@@ -630,6 +630,13 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
     ThemeHandler themeProvider,
     bool isHost,
   ) {
+    final inProgress = provider.challenges
+        .where((challenge) => challenge.isInProgress)
+        .toList();
+    final ended = provider.challenges
+        .where((challenge) => !challenge.isInProgress)
+        .toList();
+
     return Column(
       children: [
         Expanded(
@@ -654,7 +661,7 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
                       ),
                       const SizedBox(height: 16),
                       const StandardText(
-                        text: '진행 중인 챌린지가 없어요',
+                        text: '아직 챌린지가 없어요',
                         fontSize: 16,
                         color: Colors.black87,
                       ),
@@ -671,17 +678,44 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
                     ],
                   ),
                 )
-              : ListView.builder(
-                  padding: const EdgeInsets.only(top: 8, bottom: 80),
-                  itemCount: provider.challenges.length,
-                  itemBuilder: (_, i) => ChallengeCard(
-                    challenge: provider.challenges[i],
-                    canDelete: isHost,
-                  ),
+              : ListView(
+                  padding: const EdgeInsets.only(top: 8, bottom: 16),
+                  children: [
+                    if (inProgress.isNotEmpty) ...[
+                      _buildChallengeSectionHeader('진행 중'),
+                      ...inProgress.map(
+                        (challenge) => ChallengeCard(
+                          challenge: challenge,
+                          canDelete: isHost,
+                        ),
+                      ),
+                    ],
+                    if (ended.isNotEmpty) ...[
+                      _buildChallengeSectionHeader('종료된 챌린지'),
+                      ...ended.map(
+                        (challenge) => ChallengeCard(
+                          challenge: challenge,
+                          canDelete: isHost,
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
         ),
         if (isHost) _buildChallengeCreateButton(context, themeProvider),
       ],
+    );
+  }
+
+  Widget _buildChallengeSectionHeader(String title) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(18, 12, 18, 6),
+      child: StandardText(
+        text: title,
+        fontSize: 13,
+        color: Colors.grey[600]!,
+        fontWeight: FontWeight.w700,
+      ),
     );
   }
 
