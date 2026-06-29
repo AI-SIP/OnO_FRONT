@@ -54,8 +54,13 @@ class _SharedProblemTabState extends State<SharedProblemTab>
   Future<void> _load() async {
     if (!mounted) return;
     final provider = Provider.of<StudyRoomProvider>(context, listen: false);
-    await provider.fetchSharedProblems(widget.roomId);
-    if (mounted) setState(() => _loaded = true);
+    try {
+      await provider.fetchSharedProblems(widget.roomId);
+    } catch (_) {
+      // 실패해도 스피너가 무한 표시되지 않도록 _loaded를 true로 전환
+    } finally {
+      if (mounted) setState(() => _loaded = true);
+    }
   }
 
   Future<void> _openPicker(
