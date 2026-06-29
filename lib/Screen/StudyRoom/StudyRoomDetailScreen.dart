@@ -34,14 +34,9 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
-    _tabController.addListener(_handleTabChanged);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadRoom();
     });
-  }
-
-  void _handleTabChanged() {
-    if (mounted) setState(() {});
   }
 
   Future<void> _loadRoom() async {
@@ -49,13 +44,16 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
         Provider.of<UserProvider>(context, listen: false).userInfoModel?.userId;
     final provider = Provider.of<StudyRoomProvider>(context, listen: false);
     provider.updateCurrentUserId(userId);
-    await provider.fetchRoomDetail(widget.roomId);
-    if (mounted) _showUnreadReport();
+    try {
+      await provider.fetchRoomDetail(widget.roomId);
+      if (mounted) _showUnreadReport();
+    } catch (_) {
+      if (mounted) setState(() {});
+    }
   }
 
   @override
   void dispose() {
-    _tabController.removeListener(_handleTabChanged);
     _tabController.dispose();
     super.dispose();
   }
@@ -74,8 +72,10 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
   }
 
   Future<void> _refresh() async {
-    await Provider.of<StudyRoomProvider>(context, listen: false)
-        .fetchRoomDetail(widget.roomId);
+    try {
+      await Provider.of<StudyRoomProvider>(context, listen: false)
+          .fetchRoomDetail(widget.roomId);
+    } catch (_) {}
   }
 
   Future<void> _showInviteCode(
@@ -960,12 +960,19 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
                                     confirmColor: Colors.red,
                                   );
                                   if (confirmed == true && context.mounted) {
-                                    await provider.kickMember(
-                                      room.roomId,
-                                      member.userId,
-                                    );
-                                    if (context.mounted) {
-                                      Navigator.pop(context);
+                                    try {
+                                      await provider.kickMember(
+                                        room.roomId,
+                                        member.userId,
+                                      );
+                                      if (context.mounted) {
+                                        Navigator.pop(context);
+                                      }
+                                    } catch (_) {
+                                      if (context.mounted) {
+                                        AppSnackBar.showError(
+                                            '멤버 내보내기에 실패했어요');
+                                      }
                                     }
                                   }
                                 },
