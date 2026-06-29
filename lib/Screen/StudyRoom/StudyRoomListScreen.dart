@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../Model/StudyRoom/StudyRoomModel.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/StudyRoomProvider.dart';
 import '../../Provider/UserProvider.dart';
-import '../../Model/StudyRoom/StudyRoomModel.dart';
 import 'StudyRoomCreateScreen.dart';
 import 'StudyRoomDetailScreen.dart';
 import 'StudyRoomJoinScreen.dart';
@@ -197,7 +197,7 @@ class _StudyRoomListScreenState extends State<StudyRoomListScreen> {
         tooltip: '방 추가',
         icon: const Icon(Icons.add, color: Colors.white),
         label: const StandardText(
-          text: '스터디룸 생성',
+          text: '스터디룸 참여',
           fontSize: 14,
           color: Colors.white,
           fontWeight: FontWeight.w700,
@@ -255,7 +255,7 @@ class _StudyRoomListScreenState extends State<StudyRoomListScreen> {
 
     return Container(
       margin: EdgeInsets.symmetric(
-        horizontal: screenWidth * 0.04,
+        horizontal: 16,
         vertical: screenHeight * 0.006,
       ),
       child: InkWell(

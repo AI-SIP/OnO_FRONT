@@ -186,7 +186,7 @@ class ChallengeCard extends StatelessWidget {
           ] else ...[
             ...c.memberProgress.map(
               (mp) => Padding(
-                padding: const EdgeInsets.only(bottom: 8),
+                padding: const EdgeInsets.only(bottom: 14),
                 child: ChallengeProgressBar(
                   current: mp.current,
                   target: c.targetValue,

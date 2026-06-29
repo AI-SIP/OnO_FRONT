@@ -522,7 +522,7 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
       padding: const EdgeInsets.only(bottom: 80),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
-        childAspectRatio: 2.6,
+        mainAxisExtent: 88,
       ),
       itemCount: sorted.length,
       itemBuilder: (_, i) {
