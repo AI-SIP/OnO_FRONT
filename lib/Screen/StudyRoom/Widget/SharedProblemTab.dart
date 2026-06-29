@@ -108,7 +108,6 @@ class _SharedProblemTabState extends State<SharedProblemTab>
     return Column(
       children: [
         _buildBoardHeader(
-          context,
           themeProvider,
           provider.sharedProblems.length,
         ),
@@ -152,7 +151,7 @@ class _SharedProblemTabState extends State<SharedProblemTab>
               : ListView.builder(
                   controller: _scrollController,
                   physics: const AlwaysScrollableScrollPhysics(),
-                  padding: const EdgeInsets.only(top: 4, bottom: 18),
+                  padding: const EdgeInsets.only(top: 4, bottom: 14),
                   itemCount: provider.sharedProblems.length +
                       (provider.sharedProblemsHasNext ? 1 : 0),
                   itemBuilder: (_, i) {
@@ -173,12 +172,38 @@ class _SharedProblemTabState extends State<SharedProblemTab>
                   },
                 ),
         ),
+        SafeArea(
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+            child: SizedBox(
+              width: double.infinity,
+              child: TextButton.icon(
+                onPressed: () => _openPicker(context, themeProvider),
+                style: TextButton.styleFrom(
+                  backgroundColor: themeProvider.primaryColor,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(13),
+                  ),
+                ),
+                icon: const Icon(Icons.add_photo_alternate_outlined, size: 19),
+                label: const StandardText(
+                  text: '공유할 문제 추가',
+                  fontSize: 14,
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ),
+        ),
       ],
     );
   }
 
   Widget _buildBoardHeader(
-    BuildContext context,
     ThemeHandler themeProvider,
     int problemCount,
   ) {
@@ -231,23 +256,6 @@ class _SharedProblemTabState extends State<SharedProblemTab>
                   fontFamily: 'PretendardLight',
                 ),
               ],
-            ),
-          ),
-          TextButton.icon(
-            onPressed: () => _openPicker(context, themeProvider),
-            style: TextButton.styleFrom(
-              backgroundColor: themeProvider.primaryColor,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(11),
-              ),
-            ),
-            icon: const Icon(Icons.upload_outlined, size: 17),
-            label: const StandardText(
-              text: '공유',
-              fontSize: 13,
-              color: Colors.white,
             ),
           ),
         ],
