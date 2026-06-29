@@ -40,6 +40,7 @@ class _PracticeProblemSelectionScreenState
 
   int? selectedFolderId;
   List<ProblemModel> selectedProblems = [];
+  final Set<int> _selectedProblemIds = {};
   List<FolderThumbnailModel> allFolders = [];
   late final List<int> _originalProblemIds;
 
@@ -78,7 +79,11 @@ class _PracticeProblemSelectionScreenState
       _loadInitialFolders();
       _loadTags();
       if (widget.practiceModel != null) {
-        _originalProblemIds = widget.practiceModel!.problemIdList;
+        _originalProblemIds =
+            List<int>.from(widget.practiceModel!.problemIdList);
+        if (mounted) {
+          setState(() => _selectedProblemIds.addAll(_originalProblemIds));
+        }
         _fetchProblems();
       } else {
         _originalProblemIds = [];
@@ -131,7 +136,12 @@ class _PracticeProblemSelectionScreenState
 
     await practiceNoteProvider.moveToPractice(widget.practiceModel!.practiceId);
     final problemModelList = practiceNoteProvider.currentProblems;
-    setState(() => selectedProblems = problemModelList);
+    if (!mounted) return;
+    setState(() {
+      selectedProblems = problemModelList
+          .where((problem) => _selectedProblemIds.contains(problem.problemId))
+          .toList();
+    });
   }
 
   Future<void> _loadInitialFolders() async {
@@ -508,8 +518,10 @@ class _PracticeProblemSelectionScreenState
           body: LayoutBuilder(
             builder: (context, constraints) {
               final useFolderSplit = _searchMode == _PracticeSearchMode.folder;
-              final folderWidth =
-                  (constraints.maxWidth * 0.30).clamp(96.0, 184.0).toDouble();
+              final isCompact = constraints.maxWidth < 600;
+              final folderWidth = isCompact
+                  ? (constraints.maxWidth * 0.25).clamp(82.0, 160.0).toDouble()
+                  : (constraints.maxWidth * 0.30).clamp(96.0, 184.0).toDouble();
 
               return Column(
                 children: [
@@ -525,7 +537,10 @@ class _PracticeProblemSelectionScreenState
                         children: [
                           SizedBox(
                             width: folderWidth,
-                            child: _buildSideFolderList(themeProvider),
+                            child: _buildSideFolderList(
+                              themeProvider,
+                              isCompact: isCompact,
+                            ),
                           ),
                           Container(width: 1, color: Colors.grey[200]),
                           Expanded(
@@ -866,13 +881,16 @@ class _PracticeProblemSelectionScreenState
     );
   }
 
-  Widget _buildSideFolderList(ThemeHandler themeProvider) {
+  Widget _buildSideFolderList(
+    ThemeHandler themeProvider, {
+    required bool isCompact,
+  }) {
     final rootFolderId = context.read<FoldersProvider>().rootFolder?.folderId;
     return Container(
       color: Colors.white,
       child: ListView.builder(
         controller: _folderScrollController,
-        padding: const EdgeInsets.symmetric(vertical: 8),
+        padding: EdgeInsets.symmetric(vertical: isCompact ? 8 : 10),
         itemCount:
             allFolders.length + (_folderHasNext || _isLoadingFolders ? 1 : 0),
         itemBuilder: (context, index) {
@@ -901,11 +919,16 @@ class _PracticeProblemSelectionScreenState
               await _loadInitialProblems(folder.folderId);
             },
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              padding: EdgeInsets.symmetric(
+                horizontal: isCompact ? 4 : 8,
+                vertical: 4,
+              ),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 160),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 11),
+                padding: EdgeInsets.symmetric(
+                  horizontal: isCompact ? 7 : 10,
+                  vertical: isCompact ? 9 : 11,
+                ),
                 decoration: BoxDecoration(
                   color: isSelected
                       ? themeProvider.primaryColor.withValues(alpha: 0.08)
@@ -918,30 +941,28 @@ class _PracticeProblemSelectionScreenState
                     width: 1,
                   ),
                 ),
-                child: Row(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(
-                      isSelected ? Icons.folder : Icons.folder_outlined,
-                      size: 17,
+                    SvgPicture.asset(
+                      NoteIconHandler.getNoteIcon(index),
+                      width: isCompact ? 34 : 42,
+                      height: isCompact ? 34 : 42,
+                    ),
+                    SizedBox(height: isCompact ? 5 : 6),
+                    StandardText(
+                      text: displayName,
+                      fontSize: isCompact ? 10 : 11,
                       color: isSelected
                           ? themeProvider.primaryColor
-                          : Colors.grey[500],
-                    ),
-                    const SizedBox(width: 7),
-                    Expanded(
-                      child: StandardText(
-                        text: displayName,
-                        fontSize: 12,
-                        color: isSelected
-                            ? themeProvider.primaryColor
-                            : Colors.grey[700]!,
-                        fontWeight:
-                            isSelected ? FontWeight.w700 : FontWeight.normal,
-                        fontFamily:
-                            isSelected ? 'PretendardBold' : 'PretendardLight',
-                        overflow: TextOverflow.ellipsis,
-                        maxLines: 2,
-                      ),
+                          : Colors.grey[700]!,
+                      fontWeight:
+                          isSelected ? FontWeight.w700 : FontWeight.normal,
+                      fontFamily:
+                          isSelected ? 'PretendardBold' : 'PretendardLight',
+                      textAlign: TextAlign.center,
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 2,
                     ),
                   ],
                 ),
@@ -978,17 +999,22 @@ class _PracticeProblemSelectionScreenState
                     }
 
                     final problem = _currentFolderProblems[index];
-                    final isSelected = selectedProblems.any((selectedProblem) =>
-                        selectedProblem.problemId == problem.problemId);
+                    final isSelected =
+                        _selectedProblemIds.contains(problem.problemId);
 
                     return GestureDetector(
                       onTap: () {
                         setState(() {
                           if (isSelected) {
+                            _selectedProblemIds.remove(problem.problemId);
                             selectedProblems.removeWhere(
                                 (p) => p.problemId == problem.problemId);
                           } else {
-                            selectedProblems.add(problem);
+                            _selectedProblemIds.add(problem.problemId);
+                            if (!selectedProblems
+                                .any((p) => p.problemId == problem.problemId)) {
+                              selectedProblems.add(problem);
+                            }
                           }
                         });
                       },
@@ -1048,6 +1074,7 @@ class _PracticeProblemSelectionScreenState
 
   Widget _problemTileContent(
       ProblemModel problem, ThemeHandler themeProvider, bool isSelected) {
+    final isCompact = MediaQuery.of(context).size.width < 600;
     final problemImageUrl = problem.problemImageDataList != null &&
             problem.problemImageDataList!.isNotEmpty
         ? problem.problemImageDataList!.first.imageUrl
@@ -1064,10 +1091,60 @@ class _PracticeProblemSelectionScreenState
         solveCount: problem.solveCount,
         lastSolvedAt: problem.lastSolvedAt,
         themeProvider: themeProvider,
-        trailing: isSelected
-            ? Icon(Icons.check_circle,
-                color: themeProvider.primaryColor, size: 25)
-            : const Icon(Icons.circle_outlined, color: Colors.grey),
+        padding: EdgeInsets.fromLTRB(
+          isCompact ? 9 : 12,
+          isCompact ? 10 : 12,
+          isCompact ? 8 : 12,
+          isCompact ? 10 : 12,
+        ),
+        imageWidth: isCompact ? 44 : 50,
+        imageHeight: isCompact ? 66 : 70,
+        contentGap: isCompact ? 9 : 16,
+        trailingGap: isCompact ? 7 : 12,
+        titleFontSize: isCompact ? 12.5 : 16,
+        titleMaxLines: isCompact ? 2 : 1,
+        tagFontSize: isCompact ? 8 : 10,
+        tagPadding: EdgeInsets.symmetric(
+          horizontal: isCompact ? 5 : 8,
+          vertical: isCompact ? 1.5 : 3,
+        ),
+        tagSpacing: isCompact ? 4 : 6,
+        tagRunSpacing: isCompact ? 4 : 6,
+        trailing: _buildSelectionTrailing(
+          themeProvider,
+          isSelected: isSelected,
+          isCompact: isCompact,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSelectionTrailing(
+    ThemeHandler themeProvider, {
+    required bool isSelected,
+    required bool isCompact,
+  }) {
+    final color = isSelected ? themeProvider.primaryColor : Colors.grey[400]!;
+    return Container(
+      width: isCompact ? 34 : 40,
+      height: isCompact ? 34 : 40,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: isSelected
+            ? themeProvider.primaryColor.withValues(alpha: 0.08)
+            : Colors.grey[50],
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: isSelected
+              ? themeProvider.primaryColor.withValues(alpha: 0.35)
+              : Colors.grey[300]!,
+          width: 1,
+        ),
+      ),
+      child: Icon(
+        isSelected ? Icons.check_box : Icons.check_box_outline_blank,
+        color: color,
+        size: isCompact ? 19 : 22,
       ),
     );
   }
@@ -1080,10 +1157,9 @@ class _PracticeProblemSelectionScreenState
         width: double.infinity,
         height: 50,
         child: ElevatedButton(
-          onPressed: selectedProblems.isNotEmpty
+          onPressed: _selectedProblemIds.isNotEmpty
               ? () {
-                  final newIds =
-                      selectedProblems.map((p) => p.problemId).toList();
+                  final newIds = _selectedProblemIds.toList();
 
                   // 추가된 문제: newIds 에는 있지만 원본에는 없는 것
                   final addList = newIds
@@ -1159,7 +1235,7 @@ class _PracticeProblemSelectionScreenState
                   shape: BoxShape.circle,
                 ),
                 child: StandardText(
-                  text: selectedProblems.length.toString(),
+                  text: _selectedProblemIds.length.toString(),
                   fontSize: 12,
                   color: themeProvider.primaryColor,
                 ),
