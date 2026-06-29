@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 
@@ -26,12 +27,23 @@ class TokenProvider {
     await _notifyAuthFailure();
   }
 
+  Future<String?> _safeRead(String key) async {
+    try {
+      return await storage.read(key: key);
+    } on PlatformException catch (e) {
+      debugPrint('SecureStorage read failed (key=$key): $e');
+      await storage.deleteAll();
+      await _notifyAuthFailure();
+      throw UnauthorizedException(message: '보안 저장소가 손상되어 로그아웃되었습니다. 다시 로그인해주세요.');
+    }
+  }
+
   Future<void> setAccessToken(String accessToken) async {
     await storage.write(key: 'accessToken', value: accessToken);
   }
 
   Future<String?> getAccessToken() async {
-    String? accessToken = await storage.read(key: 'accessToken');
+    String? accessToken = await _safeRead('accessToken');
 
     // access token이 충분히 유효하면 그대로 사용
     if (accessToken != null &&
@@ -44,7 +56,7 @@ class TokenProvider {
     if (accessToken != null) {
       try {
         await refreshAccessToken();
-        return await storage.read(key: 'accessToken') ?? accessToken;
+        return await _safeRead('accessToken') ?? accessToken;
       } catch (e) {
         if (e is UnauthorizedException) {
           rethrow;
@@ -57,7 +69,7 @@ class TokenProvider {
     debugPrint('Access token is missing. Try refresh.');
     await refreshAccessToken();
 
-    return await storage.read(key: 'accessToken');
+    return await _safeRead('accessToken');
   }
 
   Future<void> setRefreshToken(String refreshToken) async {
@@ -65,13 +77,13 @@ class TokenProvider {
   }
 
   Future<String?> getRefreshToken() async {
-    return await storage.read(key: 'refreshToken');
+    return await _safeRead('refreshToken');
   }
 
   Future<void> refreshAccessTokenIfNeeded({
     Duration threshold = const Duration(minutes: 5),
   }) async {
-    final accessToken = await storage.read(key: 'accessToken');
+    final accessToken = await _safeRead('accessToken');
     if (accessToken != null && !_isTokenExpiringSoon(accessToken, threshold)) {
       return;
     }
@@ -94,7 +106,7 @@ class TokenProvider {
   }
 
   Future<void> _refreshAccessTokenInternal() async {
-    String? refreshToken = await storage.read(key: 'refreshToken');
+    String? refreshToken = await _safeRead('refreshToken');
     if (refreshToken == null) {
       debugPrint('No refresh token available.');
       await _notifyAuthFailure();

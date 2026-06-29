@@ -32,10 +32,9 @@ class AppleAuthService {
       return UserRegisterModel(
           email: email, name: name, identifier: identifier, platform: "APPLE");
     } catch (error, stackTrace) {
-      if (error == AuthorizationErrorCode.canceled) {
-        return null;
-      }
-      if (error == AuthorizationErrorCode.unknown) {
+      if (error is SignInWithAppleAuthorizationException &&
+          (error.code == AuthorizationErrorCode.canceled ||
+              error.code == AuthorizationErrorCode.unknown)) {
         return null;
       }
 
