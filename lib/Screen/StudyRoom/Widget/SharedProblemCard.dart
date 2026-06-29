@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../Model/StudyRoom/SharedProblemModel.dart';
+import '../../../Module/Image/DisplayImage.dart';
+import '../../../Module/Image/FullScreenImage.dart';
 import '../../../Module/Text/StandardText.dart';
 import '../../../Module/Theme/ThemeHandler.dart';
 import '../../../Provider/StudyRoomProvider.dart';
@@ -9,10 +11,37 @@ import '../../../Util/AppSnackBar.dart';
 import '../SharedProblemDetailScreen.dart';
 import 'FeedReactionBar.dart';
 
-class SharedProblemCard extends StatelessWidget {
+class SharedProblemCard extends StatefulWidget {
   final SharedProblemModel problem;
 
   const SharedProblemCard({super.key, required this.problem});
+
+  @override
+  State<SharedProblemCard> createState() => _SharedProblemCardState();
+}
+
+class _SharedProblemCardState extends State<SharedProblemCard> {
+  final PageController _imageController = PageController();
+  int _currentImageIndex = 0;
+
+  SharedProblemModel get problem => widget.problem;
+
+  @override
+  void didUpdateWidget(covariant SharedProblemCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.problem.sharedProblemId != widget.problem.sharedProblemId) {
+      _currentImageIndex = 0;
+      if (_imageController.hasClients) {
+        _imageController.jumpToPage(0);
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _imageController.dispose();
+    super.dispose();
+  }
 
   String _timeAgo(DateTime dt) {
     final diff = DateTime.now().difference(dt);
@@ -331,65 +360,35 @@ class SharedProblemCard extends StatelessWidget {
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.fromLTRB(14, 10, 14, 0),
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: primary.withValues(alpha: 0.055),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: primary.withValues(alpha: 0.15),
-                      width: 1,
-                    ),
-                  ),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildProblemPreview(primary),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            StandardText(
-                              text: p.reference,
-                              fontSize: 14,
-                              color: Colors.black87,
-                              fontWeight: FontWeight.w700,
-                              overflow: TextOverflow.ellipsis,
-                              maxLines: 2,
-                            ),
-                            const SizedBox(height: 4),
-                            StandardText(
-                              text: p.problemId != null
-                                  ? '함께 보는 공유 문제'
-                                  : '문제 미리보기 없음',
-                              fontSize: 11,
-                              color: Colors.grey[500]!,
-                              fontWeight: FontWeight.normal,
-                              fontFamily: 'PretendardLight',
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
+                padding: const EdgeInsets.fromLTRB(0, 12, 0, 0),
+                child: _buildImageGallery(context, primary),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(18, 12, 14, 0),
+                child: StandardText(
+                  text: p.reference,
+                  fontSize: 14,
+                  color: Colors.black87,
+                  fontWeight: FontWeight.w700,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
               if (p.comment != null && p.comment!.isNotEmpty)
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(14, 10, 14, 0),
+                  padding: const EdgeInsets.fromLTRB(18, 10, 14, 0),
                   child: StandardText(
                     text: p.comment!,
                     fontSize: 14,
                     color: Colors.grey[800]!,
+                    fontWeight: FontWeight.w500,
+                    fontFamily: 'Pretendard',
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
               Padding(
-                padding: const EdgeInsets.fromLTRB(14, 10, 14, 12),
+                padding: const EdgeInsets.fromLTRB(18, 18, 14, 12),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
@@ -413,6 +412,121 @@ class SharedProblemCard extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildImageGallery(BuildContext context, Color primary) {
+    final imageUrls = problem.problemImageUrls
+        .where((url) => url.trim().isNotEmpty)
+        .toList(growable: false);
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isTablet = screenWidth >= 600;
+    final imageHeight = isTablet
+        ? (MediaQuery.of(context).size.height * 0.42).clamp(300.0, 430.0)
+        : (screenWidth - 32).clamp(260.0, 390.0);
+
+    if (imageUrls.isEmpty) {
+      return Container(
+        height: isTablet ? 300 : 260,
+        margin: const EdgeInsets.symmetric(horizontal: 14),
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: primary.withValues(alpha: 0.055),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: primary.withValues(alpha: 0.15), width: 1),
+        ),
+        child: _placeholderPreview(primary),
+      );
+    }
+
+    return Column(
+      children: [
+        SizedBox(
+          height: imageHeight,
+          child: PageView.builder(
+            controller: _imageController,
+            itemCount: imageUrls.length,
+            onPageChanged: (index) {
+              setState(() => _currentImageIndex = index);
+            },
+            itemBuilder: (context, index) {
+              return GestureDetector(
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) =>
+                        FullScreenImage(imagePath: imageUrls[index]),
+                  ),
+                ),
+                child: Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 14),
+                  decoration: BoxDecoration(
+                    color: primary.withValues(alpha: 0.045),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: Colors.grey[200]!,
+                      width: 1,
+                    ),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: DisplayImage(
+                      imagePath: imageUrls[index],
+                      fit: BoxFit.contain,
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+        if (imageUrls.length > 1) ...[
+          const SizedBox(height: 8),
+          SizedBox(
+            height: isTablet ? 68 : 58,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 14),
+              itemCount: imageUrls.length,
+              separatorBuilder: (_, __) => const SizedBox(width: 8),
+              itemBuilder: (context, index) {
+                final isSelected = _currentImageIndex == index;
+                return GestureDetector(
+                  onTap: () {
+                    _imageController.animateToPage(
+                      index,
+                      duration: const Duration(milliseconds: 220),
+                      curve: Curves.easeOut,
+                    );
+                  },
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 160),
+                    width: isTablet ? 82 : 70,
+                    padding: const EdgeInsets.all(2),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: isSelected
+                            ? primary
+                            : primary.withValues(alpha: 0.18),
+                        width: isSelected ? 2 : 1,
+                      ),
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: DisplayImage(
+                        imagePath: imageUrls[index],
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ],
     );
   }
 
@@ -440,61 +554,25 @@ class SharedProblemCard extends StatelessWidget {
     );
   }
 
-  Widget _buildProblemPreview(Color primary) {
-    final imageUrl = problem.problemImageUrls.isNotEmpty
-        ? problem.problemImageUrls.first
-        : null;
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(8),
-      child: Container(
-        width: 46,
-        height: 56,
-        color: Colors.white,
-        child: imageUrl != null && imageUrl.isNotEmpty
-            ? Image.network(
-                imageUrl,
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => _placeholderPreview(primary),
-              )
-            : _placeholderPreview(primary),
-      ),
-    );
-  }
-
   Widget _placeholderPreview(Color primary) {
     return Container(
-      width: 46,
-      height: 56,
-      padding: const EdgeInsets.fromLTRB(8, 9, 8, 8),
-      decoration: BoxDecoration(
-        border: Border.all(color: primary.withValues(alpha: 0.18), width: 1),
-        borderRadius: BorderRadius.circular(8),
-      ),
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Container(
-            width: 18,
-            height: 5,
-            decoration: BoxDecoration(
-              color: primary.withValues(alpha: 0.65),
-              borderRadius: BorderRadius.circular(4),
-            ),
+          Icon(
+            Icons.assignment_outlined,
+            size: 34,
+            color: primary.withValues(alpha: 0.45),
           ),
           const SizedBox(height: 8),
-          ...List.generate(3, (index) {
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 5),
-              child: Container(
-                height: 3,
-                width: index == 2 ? 18 : 28,
-                decoration: BoxDecoration(
-                  color: primary.withValues(alpha: index == 0 ? 0.35 : 0.18),
-                  borderRadius: BorderRadius.circular(3),
-                ),
-              ),
-            );
-          }),
+          StandardText(
+            text: '문제 이미지를 불러올 수 없어요',
+            fontSize: 13,
+            color: Colors.grey[500]!,
+            fontWeight: FontWeight.normal,
+            fontFamily: 'PretendardLight',
+          ),
         ],
       ),
     );
