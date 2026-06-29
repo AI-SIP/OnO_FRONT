@@ -155,7 +155,7 @@ class StudyRoomProvider extends ChangeNotifier {
         roomId: roomId,
         imagePath: imagePath,
       );
-      if (thumbnailUrl == null) return;
+      if (thumbnailUrl == null) throw Exception('썸네일 업로드 실패');
       rooms = rooms.map((r) {
         if (r.roomId != roomId) return r;
         return r.copyWith(thumbnailImagePath: thumbnailUrl);
