@@ -176,13 +176,14 @@ class MemberRankCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(11),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.end,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           StandardText(
             text: '${m.weeklyProblemCount}',
             fontSize: 16,
             color: themeProvider.primaryColor,
             fontWeight: FontWeight.w700,
+            textAlign: TextAlign.center,
           ),
           StandardText(
             text: '문제',
@@ -190,6 +191,7 @@ class MemberRankCard extends StatelessWidget {
             color: Colors.grey[600]!,
             fontWeight: FontWeight.normal,
             fontFamily: 'PretendardLight',
+            textAlign: TextAlign.center,
           ),
         ],
       ),

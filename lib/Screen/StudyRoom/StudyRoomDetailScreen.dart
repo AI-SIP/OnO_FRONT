@@ -38,9 +38,14 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
+    _tabController.addListener(_handleTabChanged);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadRoom();
     });
+  }
+
+  void _handleTabChanged() {
+    if (mounted) setState(() {});
   }
 
   Future<void> _loadRoom() async {
@@ -54,6 +59,7 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
 
   @override
   void dispose() {
+    _tabController.removeListener(_handleTabChanged);
     _tabController.dispose();
     super.dispose();
   }
@@ -726,15 +732,15 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
     return SafeArea(
       top: false,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 8, 92, 12),
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
         child: SizedBox(
           width: double.infinity,
-          height: 56,
+          height: 50,
           child: TextButton(
             onPressed: () => ChallengeCreateSheet.show(context),
             style: TextButton.styleFrom(
               backgroundColor: themeProvider.primaryColor,
-              padding: const EdgeInsets.symmetric(vertical: 14),
+              padding: const EdgeInsets.symmetric(vertical: 12),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
@@ -765,6 +771,10 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
     StudyRoomProvider roomProvider,
     ThemeHandler themeProvider,
   ) {
+    if (_tabController.index != 0) {
+      return const SizedBox.shrink();
+    }
+
     if (sessionProvider.isStudying) {
       return FloatingActionButton.extended(
         onPressed: () async {
@@ -790,6 +800,18 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
 
     return FloatingActionButton(
       onPressed: () async {
+        final confirmed = await _showConfirmDialog(
+          context: context,
+          themeProvider: themeProvider,
+          icon: Icons.play_arrow_rounded,
+          iconColor: themeProvider.primaryColor,
+          title: '공부를 시작할까요?',
+          content: '시작하면 스터디룸 멤버에게 공부 중으로 보여요.',
+          confirmLabel: '시작',
+          confirmColor: themeProvider.primaryColor,
+        );
+        if (confirmed != true || !context.mounted) return;
+
         try {
           await roomProvider.addMySession();
           sessionProvider.startSession();
