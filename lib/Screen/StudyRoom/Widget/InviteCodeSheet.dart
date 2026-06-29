@@ -22,14 +22,33 @@ class InviteCodeSheet extends StatelessWidget {
     required InviteCodeModel inviteCode,
     required ThemeHandler themeProvider,
   }) {
-    return showModalBottomSheet(
+    return showGeneralDialog(
       context: context,
-      isScrollControlled: true,
-      isDismissible: true,
       useRootNavigator: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) =>
-          InviteCodeSheet(inviteCode: inviteCode, themeProvider: themeProvider),
+      barrierDismissible: false,
+      barrierLabel: '초대 코드 닫기',
+      barrierColor: Colors.black54,
+      transitionDuration: const Duration(milliseconds: 220),
+      pageBuilder: (dialogContext, _, __) => _DismissibleBottomSheetFrame(
+        child: InviteCodeSheet(
+          inviteCode: inviteCode,
+          themeProvider: themeProvider,
+        ),
+      ),
+      transitionBuilder: (_, animation, __, child) {
+        final curved = CurvedAnimation(
+          parent: animation,
+          curve: Curves.easeOutCubic,
+          reverseCurve: Curves.easeInCubic,
+        );
+        return SlideTransition(
+          position: Tween<Offset>(
+            begin: const Offset(0, 1),
+            end: Offset.zero,
+          ).animate(curved),
+          child: child,
+        );
+      },
     );
   }
 
@@ -206,6 +225,63 @@ class InviteCodeSheet extends StatelessWidget {
     await Share.share(
       'OnO 스터디룸 초대 코드: ${inviteCode.code}',
       sharePositionOrigin: origin,
+    );
+  }
+}
+
+class _DismissibleBottomSheetFrame extends StatefulWidget {
+  final Widget child;
+
+  const _DismissibleBottomSheetFrame({required this.child});
+
+  @override
+  State<_DismissibleBottomSheetFrame> createState() =>
+      _DismissibleBottomSheetFrameState();
+}
+
+class _DismissibleBottomSheetFrameState
+    extends State<_DismissibleBottomSheetFrame> {
+  bool _canDismissByOutsideTap = false;
+
+  @override
+  void initState() {
+    super.initState();
+    Future<void>.delayed(const Duration(milliseconds: 700), () {
+      if (!mounted) return;
+      setState(() => _canDismissByOutsideTap = true);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final sheetWidth = screenWidth < 600 ? screenWidth : 560.0;
+
+    return Material(
+      color: Colors.transparent,
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: _canDismissByOutsideTap
+                  ? () => Navigator.maybePop(context)
+                  : null,
+            ),
+          ),
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () {},
+              child: SizedBox(
+                width: sheetWidth,
+                child: widget.child,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

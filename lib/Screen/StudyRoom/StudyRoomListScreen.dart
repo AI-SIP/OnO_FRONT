@@ -192,16 +192,22 @@ class _StudyRoomListScreenState extends State<StudyRoomListScreen> {
         ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _showAddMenu(themeProvider),
-        backgroundColor: themeProvider.primaryColor,
-        tooltip: '방 추가',
-        icon: const Icon(Icons.add, color: Colors.white),
-        label: const StandardText(
-          text: '스터디룸 참여',
-          fontSize: 14,
-          color: Colors.white,
-          fontWeight: FontWeight.w700,
+      floatingActionButton: SizedBox(
+        height: 50,
+        child: FloatingActionButton.extended(
+          heroTag: 'study_room_join_fab',
+          onPressed: () => _showAddMenu(themeProvider),
+          backgroundColor: themeProvider.primaryColor,
+          elevation: 2,
+          tooltip: '방 추가',
+          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          icon: const Icon(Icons.add, color: Colors.white),
+          label: const StandardText(
+            text: '스터디룸 참여',
+            fontSize: 15,
+            color: Colors.white,
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ),
       body: provider.isLoading && provider.rooms.isEmpty
@@ -253,6 +259,7 @@ class _StudyRoomListScreenState extends State<StudyRoomListScreen> {
         room.members.fold<int>(0, (sum, m) => sum + m.weeklyProblemCount);
     final reviewedMemberCount = room.displayTodayPracticeMemberCount;
     final totalPractice = room.displayTodayPracticeCount;
+    final titleFontSize = screenWidth < 600 ? 15.0 : 16.0;
 
     return Container(
       margin: EdgeInsets.symmetric(
@@ -261,18 +268,18 @@ class _StudyRoomListScreenState extends State<StudyRoomListScreen> {
       ),
       child: InkWell(
         onTap: () => _openDetail(room.roomId),
-        borderRadius: BorderRadius.circular(15),
+        borderRadius: BorderRadius.circular(12),
         child: Container(
           padding: EdgeInsets.all(screenHeight * 0.018),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(15),
-            border: Border.all(color: Colors.grey[300]!, width: 1),
+            borderRadius: BorderRadius.circular(12),
             boxShadow: [
               BoxShadow(
-                color: Colors.grey.withOpacity(0.1),
+                color: Colors.grey.withOpacity(0.2),
+                spreadRadius: 1,
                 blurRadius: 5,
-                offset: const Offset(0, 2),
+                offset: const Offset(0, 3),
               ),
             ],
           ),
@@ -296,7 +303,7 @@ class _StudyRoomListScreenState extends State<StudyRoomListScreen> {
                             Flexible(
                               child: StandardText(
                                 text: room.name,
-                                fontSize: 16,
+                                fontSize: titleFontSize,
                                 color: Colors.black87,
                                 fontWeight: FontWeight.w700,
                                 overflow: TextOverflow.ellipsis,

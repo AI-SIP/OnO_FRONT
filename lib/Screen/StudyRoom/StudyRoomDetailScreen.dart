@@ -86,15 +86,11 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
     try {
       final code = await provider.generateInviteCode(widget.roomId);
       if (!context.mounted) return;
-      // iPad에서 배리어 즉시 dismiss 방지 — 다음 프레임에 표시
-      WidgetsBinding.instance.addPostFrameCallback((_) async {
-        if (!mounted) return;
-        await InviteCodeSheet.show(
-          context,
-          inviteCode: code,
-          themeProvider: themeProvider,
-        );
-      });
+      InviteCodeSheet.show(
+        context,
+        inviteCode: code,
+        themeProvider: themeProvider,
+      );
     } catch (_) {
       AppSnackBar.showError('초대 코드를 불러올 수 없습니다');
     }
@@ -341,8 +337,7 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
                     color: Colors.grey[500]!,
                   ),
                 )
-              : _buildTabBody(
-                  context, room, provider, themeProvider, isHost),
+              : _buildTabBody(context, room, provider, themeProvider, isHost),
     );
   }
 
@@ -410,7 +405,7 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
 
     return Container(
       margin: EdgeInsets.symmetric(
-        horizontal: screenWidth * 0.04,
+        horizontal: 16,
         vertical: screenHeight * 0.01,
       ),
       padding: EdgeInsets.fromLTRB(
@@ -561,77 +556,89 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
     return Column(
       children: [
         Expanded(
-          child: RefreshIndicator(
-            onRefresh: _refresh,
-            color: themeProvider.primaryColor,
-            child: provider.challenges.isEmpty
-                ? ListView(
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    children: [
-                      SizedBox(
-                        height: MediaQuery.of(context).size.height * 0.45,
-                        child: Center(
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Container(
-                                width: 64,
-                                height: 64,
-                                decoration: BoxDecoration(
-                                  color: themeProvider.primaryColor
-                                      .withValues(alpha: 0.1),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: Icon(
-                                  Icons.flag_outlined,
-                                  color: themeProvider.primaryColor,
-                                  size: 28,
-                                ),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              return RefreshIndicator(
+                onRefresh: _refresh,
+                color: themeProvider.primaryColor,
+                child: provider.challenges.isEmpty
+                    ? ListView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        children: [
+                          SizedBox(
+                            height: constraints.maxHeight,
+                            child: Center(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Container(
+                                    width: 64,
+                                    height: 64,
+                                    decoration: BoxDecoration(
+                                      color: themeProvider.primaryColor
+                                          .withValues(alpha: 0.1),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: Icon(
+                                      Icons.flag_outlined,
+                                      color: themeProvider.primaryColor,
+                                      size: 28,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  const StandardText(
+                                    text: '아직 챌린지가 없어요',
+                                    fontSize: 16,
+                                    color: Colors.black87,
+                                  ),
+                                  const SizedBox(height: 6),
+                                  StandardText(
+                                    text: '새 챌린지를 만들어 멤버들과 함께 도전해보세요',
+                                    fontSize: 13,
+                                    color: Colors.grey[500]!,
+                                    fontWeight: FontWeight.normal,
+                                    fontFamily: 'PretendardLight',
+                                  ),
+                                ],
                               ),
-                              const SizedBox(height: 16),
-                              const StandardText(
-                                text: '아직 챌린지가 없어요',
-                                fontSize: 16,
-                                color: Colors.black87,
-                              ),
-                              const SizedBox(height: 6),
-                              StandardText(
-                                text: '새 챌린지를 만들어 멤버들과 함께 도전해보세요',
-                                fontSize: 13,
-                                color: Colors.grey[500]!,
-                                fontWeight: FontWeight.normal,
-                                fontFamily: 'PretendardLight',
-                              ),
-                            ],
+                            ),
                           ),
-                        ),
+                        ],
+                      )
+                    : ListView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        padding: const EdgeInsets.only(top: 8, bottom: 16),
+                        children: [
+                          if (inProgress.isNotEmpty) ...[
+                            _buildChallengeSectionHeader(
+                              '진행 중',
+                              themeProvider,
+                              count: inProgress.length,
+                              isHighlighted: true,
+                            ),
+                            ...inProgress.map(
+                              (challenge) => ChallengeCard(
+                                challenge: challenge,
+                                canDelete: isHost,
+                              ),
+                            ),
+                          ],
+                          if (ended.isNotEmpty) ...[
+                            _buildChallengeSectionHeader(
+                              '종료된 챌린지',
+                              themeProvider,
+                            ),
+                            ...ended.map(
+                              (challenge) => ChallengeCard(
+                                challenge: challenge,
+                                canDelete: isHost,
+                              ),
+                            ),
+                          ],
+                        ],
                       ),
-                    ],
-                  )
-                : ListView(
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    padding: const EdgeInsets.only(top: 8, bottom: 16),
-                    children: [
-                      if (inProgress.isNotEmpty) ...[
-                        _buildChallengeSectionHeader('진행 중'),
-                        ...inProgress.map(
-                          (challenge) => ChallengeCard(
-                            challenge: challenge,
-                            canDelete: isHost,
-                          ),
-                        ),
-                      ],
-                      if (ended.isNotEmpty) ...[
-                        _buildChallengeSectionHeader('종료된 챌린지'),
-                        ...ended.map(
-                          (challenge) => ChallengeCard(
-                            challenge: challenge,
-                            canDelete: isHost,
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
+              );
+            },
           ),
         ),
         _buildChallengeCreateButton(context, themeProvider),
@@ -639,14 +646,42 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
     );
   }
 
-  Widget _buildChallengeSectionHeader(String title) {
+  Widget _buildChallengeSectionHeader(
+    String title,
+    ThemeHandler themeProvider, {
+    int? count,
+    bool isHighlighted = false,
+  }) {
+    final color =
+        isHighlighted ? themeProvider.primaryColor : Colors.grey[600]!;
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(18, 12, 18, 6),
-      child: StandardText(
-        text: title,
-        fontSize: 13,
-        color: Colors.grey[600]!,
-        fontWeight: FontWeight.w700,
+      child: Row(
+        children: [
+          StandardText(
+            text: title,
+            fontSize: 13,
+            color: color,
+            fontWeight: FontWeight.w700,
+          ),
+          if (count != null) ...[
+            const SizedBox(width: 7),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: themeProvider.primaryColor.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(999),
+              ),
+              child: StandardText(
+                text: '$count개',
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: themeProvider.primaryColor,
+              ),
+            ),
+          ],
+        ],
       ),
     );
   }
@@ -698,125 +733,141 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
     ThemeHandler themeProvider,
     StudyRoomModel? room,
   ) {
-    // iPad에서 AppBar 버튼 탭 이벤트가 모달 배리어에 전달돼 즉시 dismiss되는 버그 방지
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      showModalBottomSheet(
-        context: context,
-        useRootNavigator: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => Container(
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(20),
-            topRight: Radius.circular(20),
+    showGeneralDialog(
+      context: context,
+      barrierDismissible: false,
+      barrierLabel: '더보기 닫기',
+      barrierColor: Colors.black54,
+      transitionDuration: const Duration(milliseconds: 220),
+      useRootNavigator: true,
+      pageBuilder: (sheetContext, _, __) => _StudyRoomBottomSheetFrame(
+        child: Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(20),
+              topRight: Radius.circular(20),
+            ),
           ),
-        ),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 40,
-                  height: 4,
-                  margin: const EdgeInsets.only(bottom: 20),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[300],
-                    borderRadius: BorderRadius.circular(2),
+          child: SafeArea(
+            top: false,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 40,
+                    height: 4,
+                    margin: const EdgeInsets.only(bottom: 20),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(2),
+                    ),
                   ),
-                ),
-                if (provider.weeklyReport != null)
-                  _buildSheetItem(
-                    icon: Icons.summarize_outlined,
-                    iconColor: themeProvider.primaryColor,
-                    label: '주간 리포트 보기',
-                    labelColor: Colors.black87,
-                    onTap: () {
-                      Navigator.pop(context);
-                      WeeklyReportSheet.show(
-                        context,
-                        provider.weeklyReport!,
-                        themeProvider,
-                        onClose: () {
-                          provider.markReportRead();
-                        },
-                      );
-                    },
-                  ),
-                if (provider.weeklyReport != null) const SizedBox(height: 8),
-                if (room != null && isHost)
-                  _buildSheetItem(
-                    icon: Icons.edit_outlined,
-                    iconColor: themeProvider.primaryColor,
-                    label: '스터디룸 정보 수정',
-                    labelColor: Colors.black87,
-                    onTap: () {
-                      Navigator.pop(context);
-                      _openEditScreen(context, provider, room);
-                    },
-                  ),
-                if (room != null && isHost) const SizedBox(height: 8),
-                if (room != null && isHost)
-                  _buildSheetItem(
-                    icon: Icons.manage_accounts_outlined,
-                    iconColor: themeProvider.primaryColor,
-                    label: '멤버 관리',
-                    labelColor: Colors.black87,
-                    onTap: () {
-                      Navigator.pop(context);
-                      _showMemberManageSheet(
-                        context,
-                        provider,
-                        room,
-                        themeProvider,
-                      );
-                    },
-                  ),
-                if (room != null && isHost) const SizedBox(height: 8),
-                if (isHost) ...[
-                  _buildSheetItem(
-                    icon: Icons.exit_to_app,
-                    iconColor: Colors.orange,
-                    label: '스터디룸 탈퇴',
-                    labelColor: Colors.orange,
-                    onTap: () {
-                      Navigator.pop(context);
-                      _confirmLeave(context, provider, isHost: true);
-                    },
-                  ),
+                  if (provider.weeklyReport != null)
+                    _buildSheetItem(
+                      icon: Icons.summarize_outlined,
+                      iconColor: themeProvider.primaryColor,
+                      label: '주간 리포트 보기',
+                      labelColor: Colors.black87,
+                      onTap: () {
+                        Navigator.pop(sheetContext);
+                        WeeklyReportSheet.show(
+                          context,
+                          provider.weeklyReport!,
+                          themeProvider,
+                          onClose: () {
+                            provider.markReportRead();
+                          },
+                        );
+                      },
+                    ),
+                  if (provider.weeklyReport != null) const SizedBox(height: 8),
+                  if (room != null && isHost)
+                    _buildSheetItem(
+                      icon: Icons.edit_outlined,
+                      iconColor: themeProvider.primaryColor,
+                      label: '스터디룸 정보 수정',
+                      labelColor: Colors.black87,
+                      onTap: () {
+                        Navigator.pop(sheetContext);
+                        _openEditScreen(context, provider, room);
+                      },
+                    ),
+                  if (room != null && isHost) const SizedBox(height: 8),
+                  if (room != null && isHost)
+                    _buildSheetItem(
+                      icon: Icons.manage_accounts_outlined,
+                      iconColor: themeProvider.primaryColor,
+                      label: '멤버 관리',
+                      labelColor: Colors.black87,
+                      onTap: () {
+                        Navigator.pop(sheetContext);
+                        _showMemberManageSheet(
+                          context,
+                          provider,
+                          room,
+                          themeProvider,
+                        );
+                      },
+                    ),
+                  if (room != null && isHost) const SizedBox(height: 8),
+                  if (isHost) ...[
+                    _buildSheetItem(
+                      icon: Icons.exit_to_app,
+                      iconColor: Colors.orange,
+                      label: '스터디룸 탈퇴',
+                      labelColor: Colors.orange,
+                      onTap: () {
+                        Navigator.pop(sheetContext);
+                        _confirmLeave(context, provider, isHost: true);
+                      },
+                    ),
+                    const SizedBox(height: 8),
+                    _buildSheetItem(
+                      icon: Icons.delete_forever,
+                      iconColor: Colors.red,
+                      label: '방 삭제하기',
+                      labelColor: Colors.red,
+                      onTap: () {
+                        Navigator.pop(sheetContext);
+                        _confirmDelete(context, provider);
+                      },
+                    ),
+                  ] else
+                    _buildSheetItem(
+                      icon: Icons.exit_to_app,
+                      iconColor: Colors.red,
+                      label: '스터디룸 탈퇴',
+                      labelColor: Colors.red,
+                      onTap: () {
+                        Navigator.pop(sheetContext);
+                        _confirmLeave(context, provider);
+                      },
+                    ),
                   const SizedBox(height: 8),
-                  _buildSheetItem(
-                    icon: Icons.delete_forever,
-                    iconColor: Colors.red,
-                    label: '방 삭제하기',
-                    labelColor: Colors.red,
-                    onTap: () {
-                      Navigator.pop(context);
-                      _confirmDelete(context, provider);
-                    },
-                  ),
-                ] else
-                  _buildSheetItem(
-                    icon: Icons.exit_to_app,
-                    iconColor: Colors.red,
-                    label: '스터디룸 탈퇴',
-                    labelColor: Colors.red,
-                    onTap: () {
-                      Navigator.pop(context);
-                      _confirmLeave(context, provider);
-                    },
-                  ),
-                const SizedBox(height: 8),
-              ],
+                ],
+              ),
             ),
           ),
         ),
       ),
-      );
-    });
+      transitionBuilder: (_, animation, __, child) {
+        final curved = CurvedAnimation(
+          parent: animation,
+          curve: Curves.easeOutCubic,
+          reverseCurve: Curves.easeInCubic,
+        );
+        return SlideTransition(
+          position: Tween<Offset>(
+            begin: const Offset(0, 1),
+            end: Offset.zero,
+          ).animate(curved),
+          child: child,
+        );
+      },
+    );
   }
 
   void _showMemberManageSheet(
@@ -991,8 +1042,7 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
                                       }
                                     } catch (_) {
                                       if (context.mounted) {
-                                        AppSnackBar.showError(
-                                            '멤버 내보내기에 실패했어요');
+                                        AppSnackBar.showError('멤버 내보내기에 실패했어요');
                                       }
                                     }
                                   }
@@ -1060,6 +1110,63 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
             StandardText(text: label, fontSize: 15, color: labelColor),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _StudyRoomBottomSheetFrame extends StatefulWidget {
+  final Widget child;
+
+  const _StudyRoomBottomSheetFrame({required this.child});
+
+  @override
+  State<_StudyRoomBottomSheetFrame> createState() =>
+      _StudyRoomBottomSheetFrameState();
+}
+
+class _StudyRoomBottomSheetFrameState
+    extends State<_StudyRoomBottomSheetFrame> {
+  bool _canDismissByOutsideTap = false;
+
+  @override
+  void initState() {
+    super.initState();
+    Future<void>.delayed(const Duration(milliseconds: 700), () {
+      if (!mounted) return;
+      setState(() => _canDismissByOutsideTap = true);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final sheetWidth = screenWidth < 600 ? screenWidth : 560.0;
+
+    return Material(
+      color: Colors.transparent,
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: _canDismissByOutsideTap
+                  ? () => Navigator.maybePop(context)
+                  : null,
+            ),
+          ),
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () {},
+              child: SizedBox(
+                width: sheetWidth,
+                child: widget.child,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

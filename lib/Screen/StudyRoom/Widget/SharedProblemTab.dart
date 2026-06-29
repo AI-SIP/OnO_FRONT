@@ -118,90 +118,97 @@ class _SharedProblemTabState extends State<SharedProblemTab>
     return Column(
       children: [
         Expanded(
-          child: RefreshIndicator(
-            onRefresh: widget.onRefresh,
-            color: themeProvider.primaryColor,
-            child: provider.sharedProblems.isEmpty
-              ? ListView(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  padding: const EdgeInsets.only(bottom: 14),
-                  children: [
-                    _buildBoardHeader(
-                      themeProvider,
-                      provider.sharedProblems.length,
-                    ),
-                    SizedBox(
-                      height: MediaQuery.of(context).size.height * 0.46,
-                      child: Center(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Container(
-                              width: 64,
-                              height: 64,
-                              decoration: BoxDecoration(
-                                color: themeProvider.primaryColor
-                                    .withValues(alpha: 0.1),
-                                shape: BoxShape.circle,
-                              ),
-                              child: Icon(
-                                Icons.share_outlined,
-                                color: themeProvider.primaryColor,
-                                size: 28,
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-                            const StandardText(
-                              text: '공유된 문제가 없어요',
-                              fontSize: 16,
-                              color: Colors.black87,
-                            ),
-                            const SizedBox(height: 6),
-                            StandardText(
-                              text: '내 오답노트 문제를 룸에 공유해보세요',
-                              fontSize: 13,
-                              color: Colors.grey[500]!,
-                              fontWeight: FontWeight.normal,
-                              fontFamily: 'PretendardLight',
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                )
-              : ListView.builder(
-                  controller: _scrollController,
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  padding: const EdgeInsets.only(bottom: 14),
-                  itemCount: provider.sharedProblems.length +
-                      1 +
-                      (provider.sharedProblemsHasNext ? 1 : 0),
-                  itemBuilder: (_, i) {
-                    if (i == 0) {
-                      return _buildBoardHeader(
-                        themeProvider,
-                        provider.sharedProblems.length,
-                      );
-                    }
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final double emptyStateHeight =
+                  (constraints.maxHeight - 156).clamp(0.0, double.infinity);
 
-                    final problemIndex = i - 1;
-                    if (problemIndex == provider.sharedProblems.length) {
-                      return Center(
-                        child: Padding(
-                          padding: const EdgeInsets.all(12),
-                          child: CircularProgressIndicator(
-                            color: themeProvider.primaryColor,
-                            strokeWidth: 2,
+              return RefreshIndicator(
+                onRefresh: widget.onRefresh,
+                color: themeProvider.primaryColor,
+                child: provider.sharedProblems.isEmpty
+                    ? ListView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        padding: const EdgeInsets.only(bottom: 14),
+                        children: [
+                          _buildBoardHeader(
+                            themeProvider,
+                            provider.sharedProblems.length,
                           ),
-                        ),
-                      );
-                    }
-                    return SharedProblemCard(
-                      problem: provider.sharedProblems[problemIndex],
-                    );
-                  },
-                ),
+                          SizedBox(
+                            height: emptyStateHeight,
+                            child: Center(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Container(
+                                    width: 64,
+                                    height: 64,
+                                    decoration: BoxDecoration(
+                                      color: themeProvider.primaryColor
+                                          .withValues(alpha: 0.1),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: Icon(
+                                      Icons.share_outlined,
+                                      color: themeProvider.primaryColor,
+                                      size: 28,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  const StandardText(
+                                    text: '공유된 문제가 없어요',
+                                    fontSize: 16,
+                                    color: Colors.black87,
+                                  ),
+                                  const SizedBox(height: 6),
+                                  StandardText(
+                                    text: '내 오답노트 문제를 룸에 공유해보세요',
+                                    fontSize: 13,
+                                    color: Colors.grey[500]!,
+                                    fontWeight: FontWeight.normal,
+                                    fontFamily: 'PretendardLight',
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      )
+                    : ListView.builder(
+                        controller: _scrollController,
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        padding: const EdgeInsets.only(bottom: 14),
+                        itemCount: provider.sharedProblems.length +
+                            1 +
+                            (provider.sharedProblemsHasNext ? 1 : 0),
+                        itemBuilder: (_, i) {
+                          if (i == 0) {
+                            return _buildBoardHeader(
+                              themeProvider,
+                              provider.sharedProblems.length,
+                            );
+                          }
+
+                          final problemIndex = i - 1;
+                          if (problemIndex == provider.sharedProblems.length) {
+                            return Center(
+                              child: Padding(
+                                padding: const EdgeInsets.all(12),
+                                child: CircularProgressIndicator(
+                                  color: themeProvider.primaryColor,
+                                  strokeWidth: 2,
+                                ),
+                              ),
+                            );
+                          }
+                          return SharedProblemCard(
+                            problem: provider.sharedProblems[problemIndex],
+                          );
+                        },
+                      ),
+              );
+            },
           ),
         ),
         SafeArea(

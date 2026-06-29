@@ -99,12 +99,15 @@ class ChallengeCard extends StatelessWidget {
     final c = challenge;
 
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       padding: const EdgeInsets.all(15),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.grey[200]!, width: 1),
+        border: Border.all(
+          color: c.isInProgress ? primary : Colors.grey[200]!,
+          width: c.isInProgress ? 1.3 : 1,
+        ),
         boxShadow: [
           BoxShadow(
             color: primary.withValues(alpha: 0.07),

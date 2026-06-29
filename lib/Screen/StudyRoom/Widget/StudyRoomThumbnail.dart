@@ -28,11 +28,18 @@ class StudyRoomThumbnail extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final thumbnail = ClipRRect(
-      borderRadius: BorderRadius.circular(size * 0.22),
-      child: SizedBox(
-        width: size,
-        height: size,
+    final thumbnail = Container(
+      width: size,
+      height: size,
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(size * 0.22),
+        border: Border.all(color: themeProvider.primaryColor, width: 1.5),
+      ),
+      padding: const EdgeInsets.all(1.5),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(size * 0.20),
         child: _buildImage(),
       ),
     );
@@ -108,20 +115,6 @@ class StudyRoomThumbnail extends StatelessWidget {
           child: Padding(
             padding: EdgeInsets.all(size * 0.20),
             child: _buildEmojiImage(defaultEmojiKey, size * 0.60),
-          ),
-        ),
-        Positioned.fill(
-          child: Padding(
-            padding: const EdgeInsets.all(2),
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(size * 0.20),
-                border: Border.all(
-                  color: themeProvider.primaryColor,
-                  width: 2,
-                ),
-              ),
-            ),
           ),
         ),
       ],
