@@ -1,5 +1,7 @@
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../Model/StudyCalendar/StudyCalendarModel.dart';
 import '../../Module/Emoji/OnoEmojiCategory.dart';
 import '../../Module/Emoji/OnoEmojiImage.dart';
@@ -22,6 +24,7 @@ class _LearningCalendarScreenState extends State<LearningCalendarScreen> {
   StudyCalendarModel? _calendarData;
   bool _isLoading = true;
   int? _selectedDay;
+  final TextEditingController _diaryController = TextEditingController();
 
   final StudyCalendarService _service = StudyCalendarService();
 
@@ -51,6 +54,40 @@ class _LearningCalendarScreenState extends State<LearningCalendarScreen> {
     _year = now.year;
     _month = now.month;
     _loadCalendar();
+  }
+
+  @override
+  void dispose() {
+    _diaryController.dispose();
+    super.dispose();
+  }
+
+  String _diaryKey(int year, int month, int day) =>
+      'diary_text_${year}_${month}_${day}';
+
+  Future<void> _loadDiary(int year, int month, int day) async {
+    final prefs = await SharedPreferences.getInstance();
+    final text = prefs.getString(_diaryKey(year, month, day)) ?? '';
+    if (!mounted) return;
+    setState(() => _diaryController.text = text);
+  }
+
+  Future<void> _saveDiary(int year, int month, int day, String text) async {
+    final prefs = await SharedPreferences.getInstance();
+    final key = _diaryKey(year, month, day);
+    if (text.isEmpty) {
+      await prefs.remove(key);
+    } else {
+      await prefs.setString(key, text);
+    }
+    if (!mounted) return;
+    FirebaseAnalytics.instance.logEvent(name: 'calendar_diary_saved');
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('다이어리가 저장되었어요.'),
+        duration: Duration(seconds: 2),
+      ),
+    );
   }
 
   Future<void> _loadCalendar() async {
@@ -376,10 +413,13 @@ class _LearningCalendarScreenState extends State<LearningCalendarScreen> {
                       themeProvider: themeProvider,
                       onTap: isFuture
                           ? null
-                          : () => setState(() {
-                                _selectedDay =
-                                    (_selectedDay == day) ? null : day;
-                              }),
+                          : () {
+                              final newDay = (_selectedDay == day) ? null : day;
+                              setState(() => _selectedDay = newDay);
+                              if (newDay != null) {
+                                _loadDiary(_year, _month, newDay);
+                              }
+                            },
                     ),
                   ),
                 ),
@@ -498,9 +538,87 @@ class _LearningCalendarScreenState extends State<LearningCalendarScreen> {
                     )),
               ],
             ],
+            const SizedBox(height: 14),
+            _buildDiarySection(themeProvider),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildDiarySection(ThemeHandler themeProvider) {
+    final primaryColor = themeProvider.primaryColor;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(Icons.edit_note, size: 15, color: Colors.black45),
+            const SizedBox(width: 6),
+            StandardText(
+              text: '하루 기록',
+              fontSize: 12,
+              color: Colors.black45,
+            ),
+          ],
+        ),
+        const SizedBox(height: 6),
+        TextField(
+          controller: _diaryController,
+          maxLines: 4,
+          maxLength: 300,
+          style: const TextStyle(fontSize: 13, color: Colors.black87),
+          decoration: InputDecoration(
+            hintText: '오늘 하루를 기록해보세요...',
+            hintStyle: TextStyle(fontSize: 13, color: Colors.grey[400]),
+            filled: true,
+            fillColor: Colors.white,
+            counterStyle:
+                TextStyle(fontSize: 10, color: Colors.grey[400]),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide(color: Colors.grey[300]!),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide(color: Colors.grey[300]!),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide(color: primaryColor.withOpacity(0.5)),
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Align(
+          alignment: Alignment.centerRight,
+          child: TextButton(
+            onPressed: () {
+              final text = _diaryController.text.trim();
+              _saveDiary(_year, _month, _selectedDay!, text);
+              FocusScope.of(context).unfocus();
+            },
+            style: TextButton.styleFrom(
+              backgroundColor: primaryColor,
+              foregroundColor: Colors.white,
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              minimumSize: const Size(72, 34),
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+            child: const StandardText(
+              text: '저장',
+              fontSize: 13,
+              color: Colors.white,
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -634,6 +752,7 @@ class _LearningCalendarScreenState extends State<LearningCalendarScreen> {
             emojiKey: emoji.key,
             showErrorSnackBar: false,
           );
+          FirebaseAnalytics.instance.logEvent(name: 'mood_set');
           if (!mounted) return;
           await _loadCalendar();
         } catch (_) {
