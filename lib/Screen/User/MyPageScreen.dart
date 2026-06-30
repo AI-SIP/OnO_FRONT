@@ -411,9 +411,100 @@ class _MyPageSettingsScreenState extends State<_MyPageSettingsScreen> {
   final FileUploadService _fileUploadService = FileUploadService();
   bool _isUploadingProfileImage = false;
 
-  Future<void> _changeProfileImage() async {
+  Future<void> _showProfileImageOptions() async {
     if (_isUploadingProfileImage) return;
+    final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
 
+    await showModalBottomSheet<void>(
+      context: context,
+      useRootNavigator: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(20),
+            topRight: Radius.circular(20),
+          ),
+        ),
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 20),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[300],
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                const StandardText(
+                  text: '프로필 사진 변경',
+                  fontSize: 16,
+                  color: Colors.black87,
+                  fontWeight: FontWeight.w700,
+                ),
+                const SizedBox(height: 16),
+                _buildSheetOption(
+                  icon: Icons.photo_library_outlined,
+                  label: '갤러리에서 선택',
+                  color: themeProvider.primaryColor,
+                  onTap: () {
+                    Navigator.pop(context);
+                    _pickFromGallery();
+                  },
+                ),
+                const SizedBox(height: 8),
+                _buildSheetOption(
+                  icon: Icons.person_outline,
+                  label: '기본 이미지로 변경',
+                  color: Colors.grey[600]!,
+                  onTap: () {
+                    Navigator.pop(context);
+                    _resetToDefaultImage();
+                  },
+                ),
+                const SizedBox(height: 8),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSheetOption({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: Colors.grey[50],
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, size: 20, color: color),
+            const SizedBox(width: 12),
+            StandardText(text: label, fontSize: 15, color: Colors.black87),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _pickFromGallery() async {
     final userProvider = Provider.of<UserProvider>(context, listen: false);
     final pickedFile = await _imagePicker.pickImage(
       source: ImageSource.gallery,
@@ -432,20 +523,23 @@ class _MyPageSettingsScreenState extends State<_MyPageSettingsScreen> {
       FirebaseAnalytics.instance.logEvent(name: 'profile_image_updated');
     } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: StandardText(
-            text: '프로필 이미지 변경에 실패했습니다. 다시 시도해주세요.',
-            fontSize: 14,
-            color: Colors.white,
-          ),
-          backgroundColor: Colors.red,
-        ),
-      );
+      _showProfileSnackBar('프로필 이미지 변경에 실패했습니다. 다시 시도해주세요.');
     } finally {
-      if (mounted) {
-        setState(() => _isUploadingProfileImage = false);
-      }
+      if (mounted) setState(() => _isUploadingProfileImage = false);
+    }
+  }
+
+  Future<void> _resetToDefaultImage() async {
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    setState(() => _isUploadingProfileImage = true);
+    try {
+      await userProvider.deleteUserProfileImage();
+      FirebaseAnalytics.instance.logEvent(name: 'profile_image_reset');
+    } catch (_) {
+      if (!mounted) return;
+      _showProfileSnackBar('기본 이미지 변경에 실패했습니다. 다시 시도해주세요.');
+    } finally {
+      if (mounted) setState(() => _isUploadingProfileImage = false);
     }
   }
 
@@ -538,7 +632,7 @@ class _MyPageSettingsScreenState extends State<_MyPageSettingsScreen> {
                       child: InkWell(
                         onTap: _isUploadingProfileImage
                             ? null
-                            : _changeProfileImage,
+                            : _showProfileImageOptions,
                         customBorder: const CircleBorder(),
                         child: Container(
                           width: 26,

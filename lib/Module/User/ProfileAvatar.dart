@@ -47,12 +47,9 @@ class ProfileAvatar extends StatelessWidget {
 
   Widget _defaultImage() {
     if (ProfileImageDefaults.assetPath.toLowerCase().endsWith('.svg')) {
-      return Padding(
-        padding: EdgeInsets.all(size * 0.18),
-        child: SvgPicture.asset(
-          ProfileImageDefaults.assetPath,
-          fit: BoxFit.contain,
-        ),
+      return SvgPicture.asset(
+        ProfileImageDefaults.assetPath,
+        fit: BoxFit.cover,
       );
     }
 

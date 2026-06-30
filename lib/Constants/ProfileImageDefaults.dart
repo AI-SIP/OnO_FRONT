@@ -1,3 +1,3 @@
 class ProfileImageDefaults {
-  static const String assetPath = 'assets/Icon/SmallGreenFrog.svg';
+  static const String assetPath = 'assets/GuideScreen/GuideScreen5.svg';
 }
