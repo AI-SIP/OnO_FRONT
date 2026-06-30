@@ -1,6 +1,7 @@
 class StudyRoomMemberModel {
   final int userId;
   final String name;
+  final String? profileImageUrl;
   final int totalStudyLevel;
   final int currentStreak;
   final int weeklyProblemCount;
@@ -13,6 +14,7 @@ class StudyRoomMemberModel {
   const StudyRoomMemberModel({
     required this.userId,
     required this.name,
+    this.profileImageUrl,
     required this.totalStudyLevel,
     required this.currentStreak,
     required this.weeklyProblemCount,
@@ -33,6 +35,7 @@ class StudyRoomMemberModel {
     return StudyRoomMemberModel(
       userId: ((json['userId'] ?? 0) as num).toInt(),
       name: (json['name'] ?? '알 수 없음').toString(),
+      profileImageUrl: json['profileImageUrl'] as String?,
       totalStudyLevel: ((json['totalStudyLevel'] ?? 1) as num).toInt(),
       currentStreak: ((json['currentStreak'] ?? 0) as num).toInt(),
       weeklyProblemCount: ((json['weeklyProblemCount'] ?? 0) as num).toInt(),
@@ -57,6 +60,7 @@ class StudyRoomMemberModel {
     return StudyRoomMemberModel(
       userId: userId,
       name: name,
+      profileImageUrl: profileImageUrl,
       totalStudyLevel: totalStudyLevel,
       currentStreak: currentStreak,
       weeklyProblemCount: weeklyProblemCount,

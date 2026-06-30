@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../Model/StudyRoom/StudyRoomModel.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
+import '../../Module/User/ProfileAvatar.dart';
 import '../../Provider/StudyRoomProvider.dart';
 import '../../Provider/UserProvider.dart';
 import '../../Util/AppSnackBar.dart';
@@ -325,7 +326,7 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
           ],
         ),
       ),
-      body: provider.isLoading && room == null
+      body: provider.isLoading && (room == null || room.roomId != widget.roomId)
           ? Center(
               child: CircularProgressIndicator(
                 color: themeProvider.primaryColor,
@@ -957,25 +958,16 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
                         ),
                         child: Row(
                           children: [
-                            Container(
-                              width: 34,
-                              height: 34,
-                              decoration: BoxDecoration(
-                                color: isMe
-                                    ? themeProvider.primaryColor
-                                    : themeProvider.primaryColor
-                                        .withValues(alpha: 0.12),
-                                shape: BoxShape.circle,
-                              ),
-                              child: Center(
-                                child: Icon(
-                                  isMe ? Icons.person : Icons.person_outline,
-                                  size: 18,
-                                  color: isMe
-                                      ? Colors.white
-                                      : themeProvider.primaryColor,
-                                ),
-                              ),
+                            ProfileAvatar(
+                              imageUrl: member.profileImageUrl,
+                              size: 34,
+                              borderColor: isMe
+                                  ? themeProvider.primaryColor
+                                  : themeProvider.primaryColor
+                                      .withValues(alpha: 0.18),
+                              borderWidth: isMe ? 1.4 : 1,
+                              backgroundColor: themeProvider.primaryColor
+                                  .withValues(alpha: 0.08),
                             ),
                             const SizedBox(width: 10),
                             Expanded(

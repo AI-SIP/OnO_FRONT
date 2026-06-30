@@ -1,3 +1,4 @@
+import 'package:http/http.dart' as http;
 import 'package:ono/Config/AppConfig.dart';
 import 'package:ono/Model/User/UserInfoModel.dart';
 import 'package:ono/Model/User/UserRegisterModel.dart';
@@ -45,6 +46,41 @@ class UserService {
       url: '${AppConfig.baseUrl}/api/users',
       body: userRegisterModel?.toJson(),
     );
+  }
+
+  Future<UserInfoModel> updateUserProfileImage(String imagePath) async {
+    final data = await httpService.sendRequest(
+      method: 'PATCH',
+      url: '${AppConfig.baseUrl}/api/users/me/profile-image',
+      isMultipart: true,
+      files: [
+        await http.MultipartFile.fromPath('profileImage', imagePath),
+      ],
+    );
+
+    return UserInfoModel.fromJson(data);
+  }
+
+  Future<UserInfoModel> updateUserProfileImageUrl(
+      String profileImageUrl) async {
+    final data = await httpService.sendRequest(
+      method: 'PATCH',
+      url: '${AppConfig.baseUrl}/api/users/me/profile-image-url',
+      body: {
+        'profileImageUrl': profileImageUrl,
+      },
+    );
+
+    return UserInfoModel.fromJson(data);
+  }
+
+  Future<UserInfoModel> deleteUserProfileImage() async {
+    final data = await httpService.sendRequest(
+      method: 'DELETE',
+      url: '${AppConfig.baseUrl}/api/users/me/profile-image',
+    );
+
+    return UserInfoModel.fromJson(data);
   }
 
   Future<void> updateNotificationSettings(bool enabled) async {

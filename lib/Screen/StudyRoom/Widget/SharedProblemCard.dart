@@ -6,6 +6,7 @@ import '../../../Module/Image/DisplayImage.dart';
 import '../../../Module/Image/FullScreenImage.dart';
 import '../../../Module/Text/StandardText.dart';
 import '../../../Module/Theme/ThemeHandler.dart';
+import '../../../Module/User/ProfileAvatar.dart';
 import '../../../Provider/StudyRoomProvider.dart';
 import '../../../Util/AppSnackBar.dart';
 import '../SharedProblemDetailScreen.dart';
@@ -305,19 +306,11 @@ class _SharedProblemCardState extends State<SharedProblemCard> {
                 padding: const EdgeInsets.fromLTRB(14, 14, 8, 0),
                 child: Row(
                   children: [
-                    Container(
-                      width: 32,
-                      height: 32,
-                      decoration: BoxDecoration(
-                        color: primary.withValues(alpha: 0.08),
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: primary.withValues(alpha: 0.18),
-                          width: 1,
-                        ),
-                      ),
-                      child:
-                          Icon(Icons.person_outline, size: 17, color: primary),
+                    ProfileAvatar(
+                      imageUrl: p.sharedByProfileImageUrl,
+                      size: 32,
+                      borderColor: primary.withValues(alpha: 0.18),
+                      backgroundColor: primary.withValues(alpha: 0.08),
                     ),
                     const SizedBox(width: 10),
                     Expanded(

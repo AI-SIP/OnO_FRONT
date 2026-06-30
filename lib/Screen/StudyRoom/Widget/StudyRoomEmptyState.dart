@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../Module/Text/StandardText.dart';
 import '../../../Module/Theme/ThemeHandler.dart';
+import 'StudyRoomThumbnail.dart';
 
 class StudyRoomEmptyState extends StatelessWidget {
   final ThemeHandler themeProvider;
@@ -19,6 +20,10 @@ class StudyRoomEmptyState extends StatelessWidget {
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
     final screenWidth = MediaQuery.of(context).size.width;
+    final emptyImageCircleSize = screenWidth < 360 ? 128.0 : 150.0;
+    final imageSize = emptyImageCircleSize * 0.78;
+    const assetPath =
+        'assets/emoji/${StudyRoomThumbnail.defaultEmojiKey}.png';
 
     return Center(
       child: Padding(
@@ -27,15 +32,28 @@ class StudyRoomEmptyState extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              padding: const EdgeInsets.all(20),
+              width: emptyImageCircleSize,
+              height: emptyImageCircleSize,
               decoration: BoxDecoration(
-                color: themeProvider.primaryColor.withOpacity(0.1),
+                color: const Color(0xFFF4F7F5),
                 shape: BoxShape.circle,
+                border: Border.all(color: Colors.grey[200]!, width: 1),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.06),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
-              child: Icon(
-                Icons.group_outlined,
-                size: 48,
-                color: themeProvider.primaryColor,
+              child: Center(
+                child: Image.asset(
+                  assetPath,
+                  width: imageSize,
+                  height: imageSize,
+                  fit: BoxFit.contain,
+                  filterQuality: FilterQuality.high,
+                ),
               ),
             ),
             SizedBox(height: screenHeight * 0.025),

@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../../Model/StudyRoom/SharedProblemCommentModel.dart';
 import '../../../Module/Text/StandardText.dart';
 import '../../../Module/Theme/ThemeHandler.dart';
+import '../../../Module/User/ProfileAvatar.dart';
 import '../../../Provider/StudyRoomProvider.dart';
 import '../../../Util/AppSnackBar.dart';
 import 'FeedReactionBar.dart';
@@ -54,10 +55,6 @@ class _SharedProblemCommentsSectionState
   }
 
   Future<void> _loadIfNeeded() async {
-    final provider = context.read<StudyRoomProvider>();
-    if (provider.sharedProblemComments.containsKey(widget.sharedProblemId)) {
-      return;
-    }
     await _loadComments();
   }
 
@@ -516,18 +513,11 @@ class _SharedProblemCommentsSectionState
           Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Container(
-                width: 30,
-                height: 30,
-                decoration: BoxDecoration(
-                  color: primary.withValues(alpha: 0.09),
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: primary.withValues(alpha: 0.18),
-                    width: 1,
-                  ),
-                ),
-                child: Icon(Icons.person_outline, size: 15, color: primary),
+              ProfileAvatar(
+                imageUrl: comment.authorProfileImageUrl,
+                size: 30,
+                borderColor: primary.withValues(alpha: 0.18),
+                backgroundColor: primary.withValues(alpha: 0.09),
               ),
               const SizedBox(width: 8),
               Expanded(

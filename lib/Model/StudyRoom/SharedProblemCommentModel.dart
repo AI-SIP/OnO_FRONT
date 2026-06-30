@@ -35,7 +35,10 @@ class SharedProblemCommentModel {
       content: (json['content'] ?? '').toString(),
       authorId: ((json['authorId'] ?? 0) as num).toInt(),
       authorName: (json['authorName'] ?? '알 수 없음').toString(),
-      authorProfileImageUrl: json['authorProfileImageUrl'] as String?,
+      authorProfileImageUrl: (json['authorProfileImageUrl'] ??
+          json['userProfileImageUrl'] ??
+          json['profileImageUrl'] ??
+          json['authorImageUrl']) as String?,
       createdAt: DateTime.tryParse((json['createdAt'] ?? '').toString()) ??
           DateTime.now(),
       updatedAt:

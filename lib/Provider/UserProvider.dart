@@ -297,6 +297,22 @@ class UserProvider with ChangeNotifier {
     );
   }
 
+  Future<void> updateUserProfileImage(String imagePath) async {
+    userInfoModel = await userService.updateUserProfileImage(imagePath);
+    notifyListeners();
+  }
+
+  Future<void> updateUserProfileImageUrl(String profileImageUrl) async {
+    userInfoModel =
+        await userService.updateUserProfileImageUrl(profileImageUrl);
+    notifyListeners();
+  }
+
+  Future<void> deleteUserProfileImage() async {
+    userInfoModel = await userService.deleteUserProfileImage();
+    notifyListeners();
+  }
+
   Future<void> autoLogin() async {
     String? refreshToken = await tokenProvider.getRefreshToken();
 

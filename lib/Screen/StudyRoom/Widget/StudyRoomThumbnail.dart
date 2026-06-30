@@ -113,8 +113,8 @@ class StudyRoomThumbnail extends StatelessWidget {
         const ColoredBox(color: Colors.white),
         Center(
           child: Padding(
-            padding: EdgeInsets.all(size * 0.20),
-            child: _buildEmojiImage(defaultEmojiKey, size * 0.60),
+            padding: EdgeInsets.all(size * 0.08),
+            child: _buildEmojiImage(defaultEmojiKey, size * 0.80),
           ),
         ),
       ],

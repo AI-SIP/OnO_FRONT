@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 
 import '../../../Module/Text/StandardText.dart';
 import '../../../Module/Theme/ThemeHandler.dart';
+import '../../../Module/User/ProfileAvatar.dart';
 
 class ChallengeProgressBar extends StatelessWidget {
   final int current;
   final int target;
   final ThemeHandler themeProvider;
   final String? label;
+  final String? profileImageUrl;
 
   const ChallengeProgressBar({
     super.key,
@@ -15,6 +17,7 @@ class ChallengeProgressBar extends StatelessWidget {
     required this.target,
     required this.themeProvider,
     this.label,
+    this.profileImageUrl,
   });
 
   @override
@@ -30,13 +33,29 @@ class ChallengeProgressBar extends StatelessWidget {
           children: [
             if (label != null)
               Flexible(
-                child: StandardText(
-                  text: label!,
-                  fontSize: 12,
-                  color: Colors.grey[700]!,
-                  fontWeight: FontWeight.w700,
-                  fontFamily: 'PretendardBold',
-                  overflow: TextOverflow.ellipsis,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    ProfileAvatar(
+                      imageUrl: profileImageUrl,
+                      size: 20,
+                      borderColor:
+                          themeProvider.primaryColor.withValues(alpha: 0.18),
+                      backgroundColor:
+                          themeProvider.primaryColor.withValues(alpha: 0.08),
+                    ),
+                    const SizedBox(width: 6),
+                    Flexible(
+                      child: StandardText(
+                        text: label!,
+                        fontSize: 12,
+                        color: Colors.grey[700]!,
+                        fontWeight: FontWeight.w700,
+                        fontFamily: 'PretendardBold',
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             Row(
