@@ -79,16 +79,19 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
     return Scaffold(
       appBar: _buildAppBar(themeProvider),
       backgroundColor: Colors.white,
-      body: RefreshIndicator(
-        onRefresh: _refreshPracticeThumbnails,
-        child: Consumer<ProblemPracticeProvider>(
-          builder: (context, provider, child) {
-            if (provider.practiceThumbnails.isEmpty && !provider.isLoading) {
-              return _buildEmptyState(themeProvider);
-            } else {
-              return _buildPracticeListView(provider, themeProvider);
-            }
-          },
+      body: SizedBox.expand(
+        key: widget.tutorialTargets?.practiceListKey,
+        child: RefreshIndicator(
+          onRefresh: _refreshPracticeThumbnails,
+          child: Consumer<ProblemPracticeProvider>(
+            builder: (context, provider, child) {
+              if (provider.practiceThumbnails.isEmpty && !provider.isLoading) {
+                return _buildEmptyState(themeProvider);
+              } else {
+                return _buildPracticeListView(provider, themeProvider);
+              }
+            },
+          ),
         ),
       ),
       bottomNavigationBar: _isSelectionMode
@@ -101,7 +104,6 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
       floatingActionButton: _isSelectionMode
           ? null
           : SizedBox(
-              key: widget.tutorialTargets?.practiceCreateFabKey,
               height: 50,
               child: FloatingActionButton.extended(
                 heroTag: 'practice_create_fab',

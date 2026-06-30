@@ -201,7 +201,6 @@ class _StudyRoomListScreenState extends State<StudyRoomListScreen> {
       floatingActionButton: SizedBox(
         height: 50,
         child: FloatingActionButton.extended(
-          key: widget.tutorialTargets?.studyRoomFabKey,
           heroTag: 'study_room_join_fab',
           onPressed: () => _showAddMenu(themeProvider),
           backgroundColor: themeProvider.primaryColor,
@@ -217,23 +216,26 @@ class _StudyRoomListScreenState extends State<StudyRoomListScreen> {
           ),
         ),
       ),
-      body: provider.isLoading && provider.rooms.isEmpty
-          ? Center(
-              child: CircularProgressIndicator(
-                color: themeProvider.primaryColor,
-              ),
-            )
-          : provider.rooms.isEmpty
-              ? StudyRoomEmptyState(
-                  themeProvider: themeProvider,
-                  onCreateTap: _openCreate,
-                  onJoinTap: _openJoin,
-                )
-              : RefreshIndicator(
-                  onRefresh: _refresh,
+      body: SizedBox.expand(
+        key: widget.tutorialTargets?.studyRoomListKey,
+        child: provider.isLoading && provider.rooms.isEmpty
+            ? Center(
+                child: CircularProgressIndicator(
                   color: themeProvider.primaryColor,
-                  child: _buildRoomList(provider, themeProvider),
                 ),
+              )
+            : provider.rooms.isEmpty
+                ? StudyRoomEmptyState(
+                    themeProvider: themeProvider,
+                    onCreateTap: _openCreate,
+                    onJoinTap: _openJoin,
+                  )
+                : RefreshIndicator(
+                    onRefresh: _refresh,
+                    color: themeProvider.primaryColor,
+                    child: _buildRoomList(provider, themeProvider),
+                  ),
+      ),
     );
   }
 
@@ -344,7 +346,7 @@ class _StudyRoomListScreenState extends State<StudyRoomListScreen> {
               Stack(
                 clipBehavior: Clip.none,
                 children: [
-                  _buildMemberAvatars(room, themeProvider),
+                  _buildMemberAvatars(room, themeProvider, screenWidth),
                   if (room.hasUnreadReport)
                     Positioned(
                       top: -4,
@@ -370,9 +372,11 @@ class _StudyRoomListScreenState extends State<StudyRoomListScreen> {
   Widget _buildMemberAvatars(
     StudyRoomModel room,
     ThemeHandler themeProvider,
+    double screenWidth,
   ) {
+    final avatarSize = screenWidth < 600 ? 20.0 : 28.0;
     return SizedBox(
-      height: 20,
+      height: avatarSize,
       child: Row(
         children: [
           ...room.members.take(5).map(
@@ -381,14 +385,15 @@ class _StudyRoomListScreenState extends State<StudyRoomListScreen> {
                   child: _buildInitialAvatar(
                     m.profileImageUrl,
                     themeProvider,
+                    size: avatarSize,
                     isActive: m.hasPracticedToday,
                   ),
                 ),
               ),
           if (room.members.length > 5)
             Container(
-              width: 20,
-              height: 20,
+              width: avatarSize,
+              height: avatarSize,
               decoration: BoxDecoration(
                 color: Colors.grey[200],
                 shape: BoxShape.circle,
@@ -397,7 +402,7 @@ class _StudyRoomListScreenState extends State<StudyRoomListScreen> {
                 child: Text(
                   '+${room.members.length - 5}',
                   style: TextStyle(
-                    fontSize: 8,
+                    fontSize: avatarSize * 0.4,
                     color: Colors.grey[600],
                     fontFamily: 'PretendardBold',
                     fontWeight: FontWeight.bold,
@@ -413,11 +418,12 @@ class _StudyRoomListScreenState extends State<StudyRoomListScreen> {
   Widget _buildInitialAvatar(
     String? profileImageUrl,
     ThemeHandler themeProvider, {
+    required double size,
     bool isActive = false,
   }) {
     return ProfileAvatar(
       imageUrl: profileImageUrl,
-      size: 20,
+      size: size,
       borderColor: isActive ? themeProvider.primaryColor : Colors.grey[300]!,
       borderWidth: isActive ? 1.5 : 1,
       backgroundColor: isActive
