@@ -933,12 +933,12 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                     _buildActionItem(
                       icon: Icons.drive_file_move_outline,
                       iconColor: themeProvider.primaryColor,
-                      title: '공책 위치 변경하기',
+                      title: '공책 정리하기',
                       onTap: () {
                         Navigator.pop(context);
                         FirebaseAnalytics.instance.logEvent(
                             name: 'directory_path_change_button_click');
-                        _showMoveFolderDialog(foldersProvider);
+                        _showMoveFolderDialog();
                       },
                     ),
                     const SizedBox(height: 8),
@@ -1051,129 +1051,17 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   }
 
   // 폴더 이동 다이얼로그 출력
-  Future<void> _showMoveFolderDialog(FoldersProvider foldersProvider) async {
-    // 루트 폴더인지 확인
-    if (_currentFolder?.parentFolder?.folderId == null) {
-      _showCannotMoveRootFolderDialog();
-      return;
-    }
-
-    final int? selectedFolderId = await showDialog<int?>(
+  Future<void> _showMoveFolderDialog() async {
+    await showDialog<int?>(
       context: context,
-      builder: (context) => const FolderPickerDialog(),
+      builder: (context) => FolderPickerDialog(
+        initialFolderId: _currentFolder?.folderId,
+        isManagementMode: true,
+      ),
     );
 
-    if (selectedFolderId != null) {
-      final oldParentFolderId = _currentFolder?.parentFolder?.folderId;
-      final currentFolderId = _currentFolder!.folderId;
-
-      // 부모 폴더 변경
-      await foldersProvider.updateFolder(
-        _currentFolder!.folderName,
-        currentFolderId,
-        selectedFolderId,
-      );
-
-      // 기존 부모/새 부모/현재 폴더 캐시를 모두 무효화해 즉시 반영
-      if (oldParentFolderId != null) {
-        await foldersProvider.refreshFolder(oldParentFolderId);
-      }
-      await foldersProvider.refreshFolder(selectedFolderId);
-      await foldersProvider.refreshFolder(currentFolderId);
-
-      if (!mounted) return;
-
-      // 현재 화면 데이터 다시 로드
-      await _loadFolderData();
-
-      SnackBarDialog.showSnackBar(
-        context: context,
-        message: '공책 위치가 변경되었습니다.',
-        backgroundColor: Theme.of(context).primaryColor,
-      );
-    }
-  }
-
-  // 루트 폴더 위치 변경 시 경고 다이얼로그 출력
-  Future<void> _showCannotMoveRootFolderDialog() async {
-    final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
-
-    await showDialog(
-      context: context,
-      builder: (context) {
-        return _buildPhoneWidthDialog(
-          Dialog(
-            backgroundColor: Colors.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Container(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // 헤더
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: Colors.orange.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: const Icon(
-                          Icons.warning,
-                          color: Colors.orange,
-                          size: 20,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      const StandardText(
-                        text: '공책 위치 변경 불가',
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.black87,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-                  // 내용
-                  const StandardText(
-                    text: '책장의 위치를 변경할 수 없습니다.',
-                    fontSize: 15,
-                    color: Colors.black87,
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 24),
-                  // 버튼
-                  SizedBox(
-                    width: double.infinity,
-                    child: TextButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                      },
-                      style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 8),
-                        backgroundColor: themeProvider.primaryColor,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                      child: const StandardText(
-                        text: '확인',
-                        fontSize: 14,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    );
+    if (!mounted) return;
+    await _loadFolderData();
   }
 
   Widget _buildLoginPrompt(ThemeHandler themeProvider) {
