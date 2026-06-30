@@ -270,9 +270,12 @@ class SharedProblemDetailScreen extends StatelessWidget {
           maxLines: 1,
         ),
       ),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(18, 8, 18, 32),
-        children: [
+      body: GestureDetector(
+        onTap: () => FocusScope.of(context).unfocus(),
+        behavior: HitTestBehavior.translucent,
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(18, 8, 18, 32),
+          children: [
           _buildDetailHeader(
               context, currentProblem, primary, provider, themeProvider),
           const SizedBox(height: 14),
@@ -303,6 +306,7 @@ class SharedProblemDetailScreen extends StatelessWidget {
             showToggle: false,
           ),
         ],
+        ),
       ),
     );
   }

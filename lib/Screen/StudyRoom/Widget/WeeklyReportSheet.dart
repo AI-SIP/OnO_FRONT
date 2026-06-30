@@ -1,3 +1,4 @@
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 
 import '../../../Model/StudyRoom/WeeklyReportModel.dart';
@@ -20,6 +21,7 @@ class WeeklyReportSheet extends StatelessWidget {
     ThemeHandler themeProvider, {
     VoidCallback? onClose,
   }) {
+    FirebaseAnalytics.instance.logEvent(name: 'weekly_report_viewed');
     return showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,

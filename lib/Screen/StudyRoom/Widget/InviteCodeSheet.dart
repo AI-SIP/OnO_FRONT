@@ -1,3 +1,4 @@
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
@@ -198,6 +199,7 @@ class InviteCodeSheet extends StatelessWidget {
 
   void _copyCode(BuildContext context) {
     Clipboard.setData(ClipboardData(text: inviteCode.code));
+    FirebaseAnalytics.instance.logEvent(name: 'invite_code_copied');
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: const StandardText(
@@ -226,6 +228,7 @@ class InviteCodeSheet extends StatelessWidget {
       'OnO 스터디룸 초대 코드: ${inviteCode.code}',
       sharePositionOrigin: origin,
     );
+    FirebaseAnalytics.instance.logEvent(name: 'invite_code_shared');
   }
 }
 

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:camera/camera.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -911,6 +912,9 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
 
     if (!mounted) return;
 
+    FirebaseAnalytics.instance.logEvent(
+      name: widget.isEditMode ? 'problem_updated' : 'problem_created',
+    );
     showSuccessDialog(context);
 
     if (shouldPop) {

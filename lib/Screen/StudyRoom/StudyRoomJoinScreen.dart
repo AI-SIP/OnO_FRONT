@@ -1,3 +1,4 @@
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -51,6 +52,7 @@ class _StudyRoomJoinScreenState extends State<StudyRoomJoinScreen> {
     try {
       await Provider.of<StudyRoomProvider>(context, listen: false)
           .joinRoom(code);
+      FirebaseAnalytics.instance.logEvent(name: 'study_room_joined');
       if (mounted) Navigator.pop(context, true);
     } catch (e) {
       AppSnackBar.showError(_joinErrorMessage(e));

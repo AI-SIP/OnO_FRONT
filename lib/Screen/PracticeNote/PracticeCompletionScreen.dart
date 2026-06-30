@@ -1,3 +1,4 @@
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
@@ -247,6 +248,7 @@ class _PracticeCompletionScreenState extends State<PracticeCompletionScreen> {
               return;
             }
             if (!mounted) return;
+            FirebaseAnalytics.instance.logEvent(name: 'practice_session_completed');
             // 2번 pop: PracticeCompletionScreen -> PracticeDetailScreen -> PracticeThumbnailScreen
             // 두 번째 pop에서 true를 반환하여 썸네일 업데이트 신호 전달
             if (navigator.canPop()) {

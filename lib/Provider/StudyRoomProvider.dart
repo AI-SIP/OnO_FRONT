@@ -1,3 +1,4 @@
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 
 import '../Model/StudyRoom/ActivityFeedModel.dart';
@@ -226,6 +227,7 @@ class StudyRoomProvider extends ChangeNotifier {
       feedId: feedId,
       emoji: emojiKey,
     );
+    FirebaseAnalytics.instance.logEvent(name: 'feed_reaction_toggled');
     notifyListeners();
   }
 
@@ -258,6 +260,7 @@ class StudyRoomProvider extends ChangeNotifier {
       endAt: endAt,
     );
     challenges = [...challenges, newChallenge];
+    FirebaseAnalytics.instance.logEvent(name: 'challenge_created');
     notifyListeners();
   }
 
@@ -345,6 +348,7 @@ class StudyRoomProvider extends ChangeNotifier {
       sharedProblemId: sharedProblemId,
       emoji: emojiKey,
     );
+    FirebaseAnalytics.instance.logEvent(name: 'problem_reaction_toggled');
     notifyListeners();
   }
 
@@ -457,6 +461,7 @@ class StudyRoomProvider extends ChangeNotifier {
       commentId: commentId,
       emoji: emojiKey,
     );
+    FirebaseAnalytics.instance.logEvent(name: 'comment_reaction_toggled');
     notifyListeners();
   }
 

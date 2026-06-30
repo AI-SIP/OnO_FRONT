@@ -18,6 +18,7 @@ enum TutorialTargetType {
   folderList,
   directoryCreateFab,
   practiceCreateFab,
+  studyRoomFab,
   levelCard,
   calendarCard,
   reportCard,
@@ -39,7 +40,7 @@ class TutorialStep {
   });
 }
 
-const int currentTutorialVersion = 1;
+const int currentTutorialVersion = 2;
 
 const List<TutorialStep> tutorialSteps = [
   TutorialStep(
@@ -63,6 +64,13 @@ const List<TutorialStep> tutorialSteps = [
     targetType: TutorialTargetType.practiceCreateFab,
     title: '복습 세트',
     description: '복습 세트는 여러 오답노트를 묶어 다시 푸는 공간이에요.\n시험 전에 필요한 문제만 골라 반복할 수 있어요.',
+  ),
+  TutorialStep(
+    id: 'study_room',
+    tabIndex: 2,
+    targetType: TutorialTargetType.studyRoomFab,
+    title: '스터디룸',
+    description: '스터디룸에서 친구들과 함께 공부해요.\n방을 만들거나 초대 코드로 참여할 수 있어요.',
   ),
   TutorialStep(
     id: 'level',
@@ -96,6 +104,8 @@ extension TutorialTargetResolver on TutorialTargetType {
         return targets.directoryCreateFabKey;
       case TutorialTargetType.practiceCreateFab:
         return targets.practiceCreateFabKey;
+      case TutorialTargetType.studyRoomFab:
+        return targets.studyRoomFabKey;
       case TutorialTargetType.levelCard:
         return targets.levelCardKey;
       case TutorialTargetType.calendarCard:

@@ -1,3 +1,4 @@
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -34,6 +35,7 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
+    FirebaseAnalytics.instance.logEvent(name: 'study_room_detail_view');
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadRoom();
     });

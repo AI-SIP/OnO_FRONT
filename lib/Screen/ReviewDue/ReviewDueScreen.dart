@@ -1,3 +1,4 @@
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:ono/Model/Problem/ReviewDueProblemModel.dart';
 import 'package:ono/Model/Problem/ProblemModel.dart';
@@ -23,6 +24,7 @@ class _ReviewDueScreenState extends State<ReviewDueScreen> {
   @override
   void initState() {
     super.initState();
+    FirebaseAnalytics.instance.logEvent(name: 'review_due_screen_view');
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final provider = Provider.of<ReviewDueProvider>(context, listen: false);
       if (provider.data == null) {

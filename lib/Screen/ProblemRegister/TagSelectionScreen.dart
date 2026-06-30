@@ -1,3 +1,4 @@
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -75,6 +76,7 @@ class _TagSelectionScreenState extends State<TagSelectionScreen> {
   Future<void> _createTag() async {
     final name = _tagNameCtrl.text.trim();
     if (name.isEmpty) return;
+    if (name.length > 30) return;
 
     setState(() => _isCreating = true);
     try {
@@ -86,6 +88,7 @@ class _TagSelectionScreenState extends State<TagSelectionScreen> {
         _tags[index] = created;
       }
       _tags.sort((a, b) => a.name.compareTo(b.name));
+      FirebaseAnalytics.instance.logEvent(name: 'tag_created');
 
       _tagNameCtrl.clear();
       if (mounted) {
@@ -700,7 +703,7 @@ class _TagSelectionScreenState extends State<TagSelectionScreen> {
                             minHeight: 50,
                             maxHeight: 50,
                           ),
-                          hintText: '새 태그 이름을 입력하세요',
+                          hintText: '새 태그 이름 (최대 30자)',
                           hintStyle: baseTextStyle.copyWith(
                             fontSize: 13,
                             color: Colors.grey[500],
@@ -786,9 +789,11 @@ class _TagSelectionScreenState extends State<TagSelectionScreen> {
                           fillColor: Colors.white,
                           filled: true,
                           isDense: false,
+                          counterText: '',
                           contentPadding: const EdgeInsets.symmetric(
                               horizontal: 10, vertical: 12),
                         ),
+                        maxLength: 30,
                         onSubmitted: (_) => _createTag(),
                       ),
                     ),
