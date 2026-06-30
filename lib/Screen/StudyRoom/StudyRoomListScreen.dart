@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../Model/StudyRoom/StudyRoomModel.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
+import '../../Module/User/ProfileAvatar.dart';
 import '../../Provider/StudyRoomProvider.dart';
 import '../../Provider/UserProvider.dart';
 import '../Tutorial/TutorialTargets.dart';
@@ -359,21 +360,15 @@ class _StudyRoomListScreenState extends State<StudyRoomListScreen> {
                   ),
                 ],
               ),
-              if (reviewedMemberCount > 0 || totalPractice > 0) ...[
+              ...[
                 const SizedBox(height: 10),
                 Row(
                   children: [
-                    Icon(
-                      Icons.local_fire_department_rounded,
-                      size: 14,
-                      color: Colors.deepOrange[300],
-                    ),
-                    const SizedBox(width: 5),
                     ...room.members.take(5).map(
                           (m) => Padding(
                             padding: const EdgeInsets.only(right: 3),
                             child: _buildInitialAvatar(
-                              m.name,
+                              m.profileImageUrl,
                               themeProvider,
                               isActive: m.hasPracticedToday,
                             ),
@@ -427,34 +422,18 @@ class _StudyRoomListScreenState extends State<StudyRoomListScreen> {
   }
 
   Widget _buildInitialAvatar(
-    String name,
+    String? profileImageUrl,
     ThemeHandler themeProvider, {
     bool isActive = false,
   }) {
-    return Container(
-      width: 20,
-      height: 20,
-      decoration: BoxDecoration(
-        color: isActive
-            ? themeProvider.primaryColor.withValues(alpha: 0.08)
-            : Colors.grey[100],
-        shape: BoxShape.circle,
-        border: Border.all(
-          color: isActive ? themeProvider.primaryColor : Colors.grey[300]!,
-          width: isActive ? 1.5 : 1,
-        ),
-      ),
-      child: Center(
-        child: Text(
-          name.isNotEmpty ? name[0] : '?',
-          style: TextStyle(
-            fontSize: 9,
-            color: isActive ? themeProvider.primaryColor : Colors.grey[400],
-            fontFamily: 'PretendardBold',
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ),
+    return ProfileAvatar(
+      imageUrl: profileImageUrl,
+      size: 20,
+      borderColor: isActive ? themeProvider.primaryColor : Colors.grey[300]!,
+      borderWidth: isActive ? 1.5 : 1,
+      backgroundColor: isActive
+          ? themeProvider.primaryColor.withValues(alpha: 0.08)
+          : Colors.grey[100]!,
     );
   }
 }

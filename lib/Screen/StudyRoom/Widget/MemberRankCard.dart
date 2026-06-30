@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../../Model/StudyRoom/StudyRoomMemberModel.dart';
 import '../../../Module/Text/StandardText.dart';
 import '../../../Module/Theme/ThemeHandler.dart';
+import '../../../Module/User/ProfileAvatar.dart';
 
 class MemberRankCard extends StatelessWidget {
   final int rank;
@@ -69,26 +70,17 @@ class MemberRankCard extends StatelessWidget {
     ThemeHandler themeProvider,
   ) {
     return Container(
-      width: 38,
-      height: 38,
-      decoration: BoxDecoration(
-        color: isMe
+      decoration: const BoxDecoration(shape: BoxShape.circle),
+      child: ProfileAvatar(
+        imageUrl: m.profileImageUrl,
+        size: 38,
+        borderColor: isMe
+            ? themeProvider.primaryColor
+            : themeProvider.primaryColor.withValues(alpha: 0.18),
+        borderWidth: isMe ? 1.5 : 1,
+        backgroundColor: isMe
             ? Colors.white
             : themeProvider.primaryColor.withValues(alpha: 0.10),
-        shape: BoxShape.circle,
-        border: Border.all(
-          color: isMe
-              ? themeProvider.primaryColor
-              : themeProvider.primaryColor.withValues(alpha: 0.18),
-          width: isMe ? 1.5 : 1,
-        ),
-      ),
-      child: Center(
-        child: Icon(
-          isMe ? Icons.person : Icons.person_outline,
-          size: 19,
-          color: themeProvider.primaryColor,
-        ),
       ),
     );
   }

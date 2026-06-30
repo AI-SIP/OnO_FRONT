@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../Model/StudyRoom/SharedProblemModel.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
+import '../../Module/User/ProfileAvatar.dart';
 import '../../Provider/StudyRoomProvider.dart';
 import '../../Util/AppSnackBar.dart';
 import '../ProblemDetail/Widget/ImageGallerySection.dart';
@@ -276,36 +277,36 @@ class SharedProblemDetailScreen extends StatelessWidget {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(18, 8, 18, 32),
           children: [
-          _buildDetailHeader(
-              context, currentProblem, primary, provider, themeProvider),
-          const SizedBox(height: 14),
-          _buildProblemDetail(currentProblem, primary, themeProvider),
-          if (currentProblem.comment != null &&
-              currentProblem.comment!.isNotEmpty) ...[
+            _buildDetailHeader(
+                context, currentProblem, primary, provider, themeProvider),
             const SizedBox(height: 14),
-            _buildOwnerComment(currentProblem),
-          ],
-          const SizedBox(height: 22),
-          Padding(
-            padding: const EdgeInsets.only(left: 8),
-            child: FeedReactionBar(
-              reactions: currentProblem.reactions,
-              themeProvider: themeProvider,
-              onToggle: (emoji) => provider.toggleSharedProblemReaction(
-                currentProblem.sharedProblemId,
-                emoji,
+            _buildProblemDetail(currentProblem, primary, themeProvider),
+            if (currentProblem.comment != null &&
+                currentProblem.comment!.isNotEmpty) ...[
+              const SizedBox(height: 14),
+              _buildOwnerComment(currentProblem),
+            ],
+            const SizedBox(height: 22),
+            Padding(
+              padding: const EdgeInsets.only(left: 8),
+              child: FeedReactionBar(
+                reactions: currentProblem.reactions,
+                themeProvider: themeProvider,
+                onToggle: (emoji) => provider.toggleSharedProblemReaction(
+                  currentProblem.sharedProblemId,
+                  emoji,
+                ),
               ),
             ),
-          ),
-          const SizedBox(height: 16),
-          SharedProblemCommentsSection(
-            sharedProblemId: currentProblem.sharedProblemId,
-            initialCommentCount: currentProblem.commentCount,
-            themeProvider: themeProvider,
-            initiallyExpanded: true,
-            showToggle: false,
-          ),
-        ],
+            const SizedBox(height: 16),
+            SharedProblemCommentsSection(
+              sharedProblemId: currentProblem.sharedProblemId,
+              initialCommentCount: currentProblem.commentCount,
+              themeProvider: themeProvider,
+              initiallyExpanded: true,
+              showToggle: false,
+            ),
+          ],
         ),
       ),
     );
@@ -321,15 +322,11 @@ class SharedProblemDetailScreen extends StatelessWidget {
     final isOwner = provider.currentUserId == problem.sharedByUserId;
     return Row(
       children: [
-        Container(
-          width: 38,
-          height: 38,
-          decoration: BoxDecoration(
-            color: primary.withValues(alpha: 0.08),
-            shape: BoxShape.circle,
-            border: Border.all(color: primary.withValues(alpha: 0.18)),
-          ),
-          child: Icon(Icons.person_outline, size: 19, color: primary),
+        ProfileAvatar(
+          imageUrl: problem.sharedByProfileImageUrl,
+          size: 38,
+          borderColor: primary.withValues(alpha: 0.18),
+          backgroundColor: primary.withValues(alpha: 0.08),
         ),
         const SizedBox(width: 10),
         Expanded(

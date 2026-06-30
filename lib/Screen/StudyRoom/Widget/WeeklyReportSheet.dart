@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../../../Model/StudyRoom/WeeklyReportModel.dart';
 import '../../../Module/Text/StandardText.dart';
 import '../../../Module/Theme/ThemeHandler.dart';
+import '../../../Module/User/ProfileAvatar.dart';
 
 class WeeklyReportSheet extends StatelessWidget {
   final WeeklyReportModel report;
@@ -112,6 +113,7 @@ class WeeklyReportSheet extends StatelessWidget {
                     title: '이번 주 1등',
                     value: report.topMemberName,
                     sub: '${report.topMemberProblemCount}문제 등록',
+                    profileImageUrl: report.topMemberProfileImageUrl,
                     themeProvider: themeProvider,
                   ),
                   const SizedBox(height: 12),
@@ -121,6 +123,7 @@ class WeeklyReportSheet extends StatelessWidget {
                     title: '최장 연속 출석',
                     value: report.longestStreakName,
                     sub: '${report.longestStreakDays}일 연속',
+                    profileImageUrl: report.longestStreakProfileImageUrl,
                     themeProvider: themeProvider,
                   ),
                   const SizedBox(height: 12),
@@ -206,6 +209,7 @@ class _StatCard extends StatelessWidget {
   final String title;
   final String value;
   final String sub;
+  final String? profileImageUrl;
   final ThemeHandler themeProvider;
 
   const _StatCard({
@@ -214,6 +218,7 @@ class _StatCard extends StatelessWidget {
     required this.title,
     required this.value,
     required this.sub,
+    this.profileImageUrl,
     required this.themeProvider,
   });
 
@@ -235,13 +240,33 @@ class _StatCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: iconColor.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Icon(icon, color: iconColor, size: 18),
+          Stack(
+            clipBehavior: Clip.none,
+            children: [
+              ProfileAvatar(
+                imageUrl: profileImageUrl,
+                size: 34,
+                borderColor: iconColor.withValues(alpha: 0.24),
+                backgroundColor: iconColor.withValues(alpha: 0.08),
+              ),
+              Positioned(
+                right: -3,
+                bottom: -3,
+                child: Container(
+                  width: 17,
+                  height: 17,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: iconColor.withValues(alpha: 0.25),
+                      width: 1,
+                    ),
+                  ),
+                  child: Icon(icon, color: iconColor, size: 11),
+                ),
+              ),
+            ],
           ),
           const SizedBox(width: 12),
           Expanded(

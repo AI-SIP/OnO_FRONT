@@ -195,6 +195,7 @@ class ChallengeCard extends StatelessWidget {
                   target: c.targetValue,
                   themeProvider: themeProvider,
                   label: mp.name,
+                  profileImageUrl: mp.profileImageUrl,
                 ),
               ),
             ),
