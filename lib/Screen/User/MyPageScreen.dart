@@ -814,48 +814,53 @@ class _NameChangeDialogState extends State<_NameChangeDialog> {
   Widget build(BuildContext context) {
     return AlertDialog(
       backgroundColor: Colors.white,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+      constraints: const BoxConstraints(maxWidth: 380),
       title: const StandardText(
         text: '이름 변경',
         fontSize: 18,
         color: Colors.black87,
         fontWeight: FontWeight.w700,
       ),
-      content: TextField(
-        controller: _controller,
-        enabled: !_isSaving,
-        autofocus: true,
-        maxLength: 20,
-        style: const StandardText(text: '').getTextStyle().copyWith(
-              color: Colors.black87,
-              fontSize: 14,
+      content: SizedBox(
+        width: double.maxFinite,
+        child: TextField(
+          controller: _controller,
+          enabled: !_isSaving,
+          autofocus: true,
+          maxLength: 20,
+          style: const StandardText(text: '').getTextStyle().copyWith(
+                color: Colors.black87,
+                fontSize: 14,
+              ),
+          decoration: InputDecoration(
+            counterText: '',
+            hintText: '이름을 입력하세요',
+            hintStyle: const StandardText(text: '')
+                .getTextStyle()
+                .copyWith(color: Colors.grey[400], fontSize: 13),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 12,
+              vertical: 12,
             ),
-        decoration: InputDecoration(
-          counterText: '',
-          hintText: '이름을 입력하세요',
-          hintStyle: const StandardText(text: '')
-              .getTextStyle()
-              .copyWith(color: Colors.grey[400], fontSize: 13),
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 12,
-            vertical: 12,
-          ),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
-            borderSide: BorderSide(color: Colors.grey[300]!, width: 1),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
-            borderSide: BorderSide(color: Colors.grey[300]!, width: 1),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
-            borderSide: BorderSide(
-              color: widget.themeProvider.primaryColor.withValues(alpha: 0.6),
-              width: 1.5,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: BorderSide(color: Colors.grey[300]!, width: 1),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: BorderSide(color: Colors.grey[300]!, width: 1),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: BorderSide(
+                color: widget.themeProvider.primaryColor.withValues(alpha: 0.6),
+                width: 1.5,
+              ),
             ),
           ),
+          onSubmitted: (_) => _saveName(),
         ),
-        onSubmitted: (_) => _saveName(),
       ),
       actions: [
         TextButton(

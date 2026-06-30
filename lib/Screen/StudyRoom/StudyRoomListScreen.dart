@@ -262,10 +262,6 @@ class _StudyRoomListScreenState extends State<StudyRoomListScreen> {
     double screenWidth,
   ) {
     final isHost = provider.isHost(room);
-    final weeklyTotal =
-        room.members.fold<int>(0, (sum, m) => sum + m.weeklyProblemCount);
-    final reviewedMemberCount = room.displayTodayPracticeMemberCount;
-    final totalPractice = room.displayTodayPracticeCount;
     final titleFontSize = screenWidth < 600 ? 15.0 : 16.0;
 
     return Container(
@@ -277,7 +273,7 @@ class _StudyRoomListScreenState extends State<StudyRoomListScreen> {
         onTap: () => _openDetail(room.roomId),
         borderRadius: BorderRadius.circular(12),
         child: Container(
-          padding: EdgeInsets.all(screenHeight * 0.018),
+          padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(12),
@@ -290,133 +286,126 @@ class _StudyRoomListScreenState extends State<StudyRoomListScreen> {
               ),
             ],
           ),
-          child: Column(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Row(
-                children: [
-                  StudyRoomThumbnail(
+              SizedBox(
+                width: 50,
+                height: 70,
+                child: Center(
+                  child: StudyRoomThumbnail(
                     imagePath: room.thumbnailImagePath,
                     themeProvider: themeProvider,
-                    size: 54,
+                    size: 50,
                     roomName: room.name,
                   ),
-                  SizedBox(width: screenHeight * 0.015),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
                       children: [
-                        Row(
-                          children: [
-                            Flexible(
-                              child: StandardText(
-                                text: room.name,
-                                fontSize: titleFontSize,
-                                color: Colors.black87,
-                                fontWeight: FontWeight.w700,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                            if (isHost) ...[
-                              const SizedBox(width: 6),
-                              Icon(
-                                Icons.workspace_premium_outlined,
-                                size: 15,
-                                color: themeProvider.primaryColor,
-                              ),
-                            ],
-                          ],
+                        Flexible(
+                          child: StandardText(
+                            text: room.name,
+                            fontSize: titleFontSize,
+                            color: Colors.black87,
+                            fontWeight: FontWeight.w700,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
-                        const SizedBox(height: 6),
-                        StandardText(
-                          text: '멤버 ${room.memberCount}명 · 이번 주 $weeklyTotal문제',
-                          fontSize: 12,
-                          color: Colors.grey[600]!,
-                          fontWeight: FontWeight.normal,
-                          fontFamily: 'PretendardLight',
-                          overflow: TextOverflow.ellipsis,
-                        ),
+                        if (isHost) ...[
+                          const SizedBox(width: 6),
+                          Icon(
+                            Icons.workspace_premium_outlined,
+                            size: 15,
+                            color: themeProvider.primaryColor,
+                          ),
+                        ],
                       ],
                     ),
-                  ),
-                  Stack(
-                    clipBehavior: Clip.none,
-                    children: [
-                      Icon(Icons.chevron_right,
-                          size: 20, color: Colors.grey[400]),
-                      if (room.hasUnreadReport)
-                        Positioned(
-                          top: -4,
-                          right: -4,
-                          child: Container(
-                            width: 8,
-                            height: 8,
-                            decoration: BoxDecoration(
-                              color: themeProvider.primaryColor,
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                ],
-              ),
-              ...[
-                const SizedBox(height: 10),
-                Row(
-                  children: [
-                    ...room.members.take(5).map(
-                          (m) => Padding(
-                            padding: const EdgeInsets.only(right: 3),
-                            child: _buildInitialAvatar(
-                              m.profileImageUrl,
-                              themeProvider,
-                              isActive: m.hasPracticedToday,
-                            ),
-                          ),
-                        ),
-                    if (room.members.length > 5) ...[
-                      Padding(
-                        padding: const EdgeInsets.only(right: 5),
-                        child: Container(
-                          width: 20,
-                          height: 20,
-                          decoration: BoxDecoration(
-                            color: Colors.grey[200],
-                            shape: BoxShape.circle,
-                          ),
-                          child: Center(
-                            child: Text(
-                              '+${room.members.length - 5}',
-                              style: TextStyle(
-                                fontSize: 8,
-                                color: Colors.grey[600],
-                                fontFamily: 'PretendardBold',
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                    const SizedBox(width: 2),
-                    if (room.members.isEmpty && reviewedMemberCount > 0) ...[
-                      StandardText(
-                        text: '$reviewedMemberCount명 · ',
-                        fontSize: 12,
-                        color: Colors.grey[600]!,
-                      ),
-                    ],
+                    const SizedBox(height: 6),
                     StandardText(
-                      text: '오늘 복습 $totalPractice회',
+                      text: '멤버 ${room.memberCount}명',
                       fontSize: 12,
-                      color: themeProvider.primaryColor,
+                      color: Colors.grey[600]!,
+                      fontWeight: FontWeight.normal,
+                      fontFamily: 'PretendardLight',
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),
-              ],
+              ),
+              const SizedBox(width: 12),
+              Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  _buildMemberAvatars(room, themeProvider),
+                  if (room.hasUnreadReport)
+                    Positioned(
+                      top: -4,
+                      right: -4,
+                      child: Container(
+                        width: 8,
+                        height: 8,
+                        decoration: BoxDecoration(
+                          color: themeProvider.primaryColor,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildMemberAvatars(
+    StudyRoomModel room,
+    ThemeHandler themeProvider,
+  ) {
+    return SizedBox(
+      height: 20,
+      child: Row(
+        children: [
+          ...room.members.take(5).map(
+                (m) => Padding(
+                  padding: const EdgeInsets.only(right: 3),
+                  child: _buildInitialAvatar(
+                    m.profileImageUrl,
+                    themeProvider,
+                    isActive: m.hasPracticedToday,
+                  ),
+                ),
+              ),
+          if (room.members.length > 5)
+            Container(
+              width: 20,
+              height: 20,
+              decoration: BoxDecoration(
+                color: Colors.grey[200],
+                shape: BoxShape.circle,
+              ),
+              child: Center(
+                child: Text(
+                  '+${room.members.length - 5}',
+                  style: TextStyle(
+                    fontSize: 8,
+                    color: Colors.grey[600],
+                    fontFamily: 'PretendardBold',
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }

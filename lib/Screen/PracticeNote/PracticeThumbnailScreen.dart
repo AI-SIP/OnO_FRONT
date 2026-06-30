@@ -6,12 +6,12 @@ import 'package:provider/provider.dart';
 
 import '../../Model/PracticeNote/PracticeNoteThumbnailModel.dart';
 import '../../Module/Emoji/OnoEmojiImage.dart';
-import '../../Module/Text/mobile_font_size.dart';
 import '../../Module/Text/StandardText.dart';
+import '../../Module/Text/mobile_font_size.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/PracticeNoteProvider.dart';
-import '../Tutorial/TutorialTargets.dart';
 import '../../Util/AppSnackBar.dart';
+import '../Tutorial/TutorialTargets.dart';
 import 'PracticeDetailScreen.dart';
 import 'PracticeProblemSelectionScreen.dart';
 
@@ -589,32 +589,19 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
       },
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        child: Stack(
-          children: [
-            Container(
-              decoration: _buildBoxDecoration(isSelected, themeProvider),
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  _buildIconContainer(isSelected, themeProvider),
-                  const SizedBox(width: 16),
-                  _buildPracticeInfo(practice, themeProvider),
-                  if (practice.lastSessionMoodEmojiKey != null)
-                    const SizedBox(width: 28),
-                ],
-              ),
-            ),
-            if (practice.lastSessionMoodEmojiKey != null)
-              Positioned(
-                right: 12,
-                bottom: 12,
-                child: OnoEmojiImage(
-                  emojiKey: practice.lastSessionMoodEmojiKey,
-                  size: 28,
-                ),
-              ),
-          ],
+        child: Container(
+          decoration: _buildBoxDecoration(isSelected, themeProvider),
+          padding: const EdgeInsets.all(12),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              _buildIconContainer(isSelected, themeProvider),
+              const SizedBox(width: 16),
+              _buildPracticeInfo(practice),
+              const SizedBox(width: 12),
+              _buildPracticeMeta(practice, themeProvider),
+            ],
+          ),
         ),
       ),
     );
@@ -666,9 +653,9 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
   Widget _buildIconContainer(bool isSelected, ThemeHandler themeProvider) {
     return Container(
       width: 50,
-      height: 50,
+      height: 70,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(8),
         color: isSelected
             ? themeProvider.primaryColor
             : themeProvider.primaryColor.withOpacity(0.1),
@@ -685,12 +672,12 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
     );
   }
 
-  Widget _buildPracticeInfo(
-      PracticeNoteThumbnails practice, ThemeHandler themeProvider) {
+  Widget _buildPracticeInfo(PracticeNoteThumbnails practice) {
     final titleFontSize = MediaQuery.of(context).size.width < 600 ? 15.0 : 16.0;
 
     return Expanded(
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           StandardText(
@@ -699,22 +686,14 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
                 : "제목 없음",
             fontSize: titleFontSize,
             color: Colors.black,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              practice.practiceCount >= 3
-                  ? _buildTag('복습 완료', themeProvider, highlight: true)
-                  : _buildTag('${practice.practiceCount}회 복습', themeProvider),
-              const SizedBox(width: 8),
-              ..._buildStatusIcons(practice.practiceCount),
-            ],
-          ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 5),
           StandardText(
             text:
                 '마지막 복습 날짜: ${formatDateTime(practice.lastSolvedAt) ?? '복습 기록 없음'}',
-            fontSize: 12,
+            fontSize: 11,
             color: Colors.grey,
           ),
         ],
@@ -722,13 +701,63 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
     );
   }
 
+  Widget _buildPracticeMeta(
+      PracticeNoteThumbnails practice, ThemeHandler themeProvider) {
+    final hasMoodEmoji = practice.lastSessionMoodEmojiKey != null;
+    const frogIconBoxWidth = 68.0;
+
+    return Semantics(
+      label: practice.practiceCount >= 3
+          ? '복습 완료'
+          : '${practice.practiceCount}회 복습',
+      child: SizedBox(
+        width: hasMoodEmoji ? 92 : frogIconBoxWidth,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            SizedBox(
+              width: frogIconBoxWidth,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  practice.practiceCount >= 3
+                      ? _buildTag('복습 완료', themeProvider,
+                          highlight: true, width: frogIconBoxWidth)
+                      : _buildTag(
+                          '${practice.practiceCount}회 복습', themeProvider,
+                          width: frogIconBoxWidth),
+                  const SizedBox(height: 7),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
+                    children: _buildStatusIcons(practice.practiceCount),
+                  ),
+                ],
+              ),
+            ),
+            if (hasMoodEmoji) ...[
+              const SizedBox(width: 4),
+              OnoEmojiImage(
+                emojiKey: practice.lastSessionMoodEmojiKey,
+                size: 20,
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildTag(String text, ThemeHandler themeProvider,
-      {bool highlight = false}) {
+      {bool highlight = false, double? width}) {
     final isMobile = MediaQuery.of(context).size.width < 600;
 
     return Container(
+      width: width,
       padding: EdgeInsets.symmetric(
-        horizontal: isMobile ? 7 : 8,
+        horizontal: width == null ? (isMobile ? 7 : 8) : 0,
         vertical: isMobile ? 3 : 4,
       ),
       decoration: BoxDecoration(
@@ -741,6 +770,9 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
         text: text,
         fontSize: isMobile ? 11 : 12,
         color: highlight ? Colors.white : themeProvider.primaryColor,
+        textAlign: TextAlign.center,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
       ),
     );
   }
@@ -754,7 +786,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
 
     return List<Widget>.generate(3, (index) {
       return Padding(
-        padding: const EdgeInsets.only(right: 4.0),
+        padding: EdgeInsets.only(right: index == 2 ? 0 : 4.0),
         child: SvgPicture.asset(
           icons[index],
           width: 20,
