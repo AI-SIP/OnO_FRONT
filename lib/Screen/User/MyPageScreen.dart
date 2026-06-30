@@ -2,7 +2,9 @@ import 'dart:ui';
 
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:ono/Model/Common/LoginStatus.dart';
+import 'package:ono/Module/User/ProfileAvatar.dart';
 import 'package:ono/Module/Util/UrlLauncher.dart';
 import 'package:provider/provider.dart';
 
@@ -12,6 +14,7 @@ import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/ScreenIndexProvider.dart';
 import '../../Provider/TutorialProvider.dart';
 import '../../Provider/UserProvider.dart';
+import '../../Service/Api/FileUpload/FileUploadService.dart';
 import '../Tutorial/TutorialTargets.dart';
 import 'LoginScreen.dart';
 import 'Widget/AccountActionButtons.dart';
@@ -396,8 +399,217 @@ class _SettingScreenState extends State<SettingScreen> {
   }
 }
 
-class _MyPageSettingsScreen extends StatelessWidget {
+class _MyPageSettingsScreen extends StatefulWidget {
   const _MyPageSettingsScreen();
+
+  @override
+  State<_MyPageSettingsScreen> createState() => _MyPageSettingsScreenState();
+}
+
+class _MyPageSettingsScreenState extends State<_MyPageSettingsScreen> {
+  final ImagePicker _imagePicker = ImagePicker();
+  final FileUploadService _fileUploadService = FileUploadService();
+  bool _isUploadingProfileImage = false;
+
+  Future<void> _changeProfileImage() async {
+    if (_isUploadingProfileImage) return;
+
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final pickedFile = await _imagePicker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 90,
+    );
+    if (pickedFile == null) return;
+    if (!_isSupportedProfileImage(pickedFile.path)) {
+      _showProfileSnackBar('JPG, PNG, WEBP 이미지만 사용할 수 있어요.');
+      return;
+    }
+
+    setState(() => _isUploadingProfileImage = true);
+    try {
+      final imageUrl = await _fileUploadService.uploadImageFile(pickedFile);
+      await userProvider.updateUserProfileImageUrl(imageUrl);
+      FirebaseAnalytics.instance.logEvent(name: 'profile_image_updated');
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: StandardText(
+            text: '프로필 이미지 변경에 실패했습니다. 다시 시도해주세요.',
+            fontSize: 14,
+            color: Colors.white,
+          ),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isUploadingProfileImage = false);
+      }
+    }
+  }
+
+  bool _isSupportedProfileImage(String path) {
+    final extension = path.split('.').last.toLowerCase();
+    return extension == 'jpg' ||
+        extension == 'jpeg' ||
+        extension == 'png' ||
+        extension == 'webp';
+  }
+
+  Future<void> _showNameChangeDialog(String currentName) async {
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
+
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) => _NameChangeDialog(
+        currentName: currentName,
+        themeProvider: themeProvider,
+        onSave: (newName) async {
+          await userProvider.updateUser(name: newName);
+          FirebaseAnalytics.instance.logEvent(name: 'username_updated');
+        },
+        onError: _showProfileSnackBar,
+      ),
+    );
+  }
+
+  void _showProfileSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: StandardText(
+          text: message,
+          fontSize: 14,
+          color: Colors.white,
+        ),
+        backgroundColor: Colors.red,
+      ),
+    );
+  }
+
+  Widget _buildProfileSection({
+    required BuildContext context,
+    required UserProvider userProvider,
+    required ThemeHandler themeProvider,
+  }) {
+    final mediaQuery = MediaQuery.of(context);
+    final screenHeight = mediaQuery.size.height;
+    final screenWidth = mediaQuery.size.width;
+    final userInfo = userProvider.userInfoModel;
+    final currentName = userInfo?.name ?? '이름 없음';
+
+    return Container(
+      margin: EdgeInsets.symmetric(
+        horizontal: screenWidth * 0.04,
+        vertical: screenHeight * 0.01,
+      ),
+      padding: EdgeInsets.all(screenHeight * 0.015),
+      decoration: BoxDecoration(
+        color: Colors.grey[50],
+        borderRadius: BorderRadius.circular(15),
+        border: Border.all(
+          color: Colors.grey[300]!,
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  ProfileAvatar(
+                    imageUrl: userInfo?.profileImageUrl,
+                    size: 58,
+                    borderColor:
+                        themeProvider.primaryColor.withValues(alpha: 0.25),
+                    borderWidth: 1.2,
+                    backgroundColor:
+                        themeProvider.primaryColor.withValues(alpha: 0.06),
+                  ),
+                  Positioned(
+                    right: -2,
+                    bottom: -2,
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: _isUploadingProfileImage
+                            ? null
+                            : _changeProfileImage,
+                        customBorder: const CircleBorder(),
+                        child: Container(
+                          width: 26,
+                          height: 26,
+                          decoration: BoxDecoration(
+                            color: themeProvider.primaryColor,
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white, width: 2),
+                          ),
+                          child: _isUploadingProfileImage
+                              ? const Padding(
+                                  padding: EdgeInsets.all(6),
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white,
+                                  ),
+                                )
+                              : const Icon(
+                                  Icons.photo_camera_outlined,
+                                  size: 14,
+                                  color: Colors.white,
+                                ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(width: screenHeight * 0.016),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    StandardText(
+                      text: currentName,
+                      fontSize: 15,
+                      color: Colors.black87,
+                      fontWeight: FontWeight.w700,
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 10),
+              TextButton(
+                onPressed: () => _showNameChangeDialog(currentName),
+                style: TextButton.styleFrom(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  backgroundColor:
+                      themeProvider.primaryColor.withValues(alpha: 0.10),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: StandardText(
+                  text: '이름 변경',
+                  fontSize: 13,
+                  color: themeProvider.primaryColor,
+                  fontWeight: FontWeight.w700,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -423,6 +635,12 @@ class _MyPageSettingsScreen extends StatelessWidget {
             child: ListView(
               padding: const EdgeInsets.only(top: 16),
               children: [
+                _buildProfileSection(
+                  context: context,
+                  userProvider: userProvider,
+                  themeProvider: themeProvider,
+                ),
+                const SizedBox(height: 8),
                 ThemeChangeButton(
                   themeProvider: themeProvider,
                   onTap: () {
@@ -453,14 +671,6 @@ class _MyPageSettingsScreen extends StatelessWidget {
                 const SizedBox(height: 8),
                 SettingMenuButtons(
                   themeProvider: themeProvider,
-                  onNameEditTap: () {
-                    FirebaseAnalytics.instance
-                        .logEvent(name: 'username_edit_button_click');
-                    _showChangeNameDialog(
-                      context,
-                      userProvider.userInfoModel?.name ?? '이름 없음',
-                    );
-                  },
                   onGuideTap: () {
                     UrlLauncher.launchGuidePageURL();
                   },
@@ -537,6 +747,159 @@ class _MyPageSettingsScreen extends StatelessWidget {
   }
 }
 
+class _NameChangeDialog extends StatefulWidget {
+  final String currentName;
+  final ThemeHandler themeProvider;
+  final Future<void> Function(String newName) onSave;
+  final ValueChanged<String> onError;
+
+  const _NameChangeDialog({
+    required this.currentName,
+    required this.themeProvider,
+    required this.onSave,
+    required this.onError,
+  });
+
+  @override
+  State<_NameChangeDialog> createState() => _NameChangeDialogState();
+}
+
+class _NameChangeDialogState extends State<_NameChangeDialog> {
+  late final TextEditingController _controller;
+  bool _isSaving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.currentName);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Future<void> _saveName() async {
+    if (_isSaving) return;
+
+    final newName = _controller.text.trim();
+    if (newName.isEmpty) {
+      widget.onError('이름을 입력해주세요.');
+      return;
+    }
+    if (newName.length > 20) {
+      widget.onError('이름은 20자 이하로 입력해주세요.');
+      return;
+    }
+    if (newName == widget.currentName) {
+      Navigator.of(context).pop();
+      return;
+    }
+
+    setState(() => _isSaving = true);
+    try {
+      await widget.onSave(newName);
+      if (!mounted) return;
+      Navigator.of(context).pop();
+    } catch (_) {
+      widget.onError('이름 변경에 실패했습니다. 다시 시도해주세요.');
+      if (mounted) {
+        setState(() => _isSaving = false);
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      backgroundColor: Colors.white,
+      title: const StandardText(
+        text: '이름 변경',
+        fontSize: 18,
+        color: Colors.black87,
+        fontWeight: FontWeight.w700,
+      ),
+      content: TextField(
+        controller: _controller,
+        enabled: !_isSaving,
+        autofocus: true,
+        maxLength: 20,
+        style: const StandardText(text: '').getTextStyle().copyWith(
+              color: Colors.black87,
+              fontSize: 14,
+            ),
+        decoration: InputDecoration(
+          counterText: '',
+          hintText: '이름을 입력하세요',
+          hintStyle: const StandardText(text: '')
+              .getTextStyle()
+              .copyWith(color: Colors.grey[400], fontSize: 13),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 12,
+            vertical: 12,
+          ),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide: BorderSide(color: Colors.grey[300]!, width: 1),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide: BorderSide(color: Colors.grey[300]!, width: 1),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide: BorderSide(
+              color: widget.themeProvider.primaryColor.withValues(alpha: 0.6),
+              width: 1.5,
+            ),
+          ),
+        ),
+        onSubmitted: (_) => _saveName(),
+      ),
+      actions: [
+        TextButton(
+          onPressed: _isSaving ? null : () => Navigator.of(context).pop(),
+          child: StandardText(
+            text: '취소',
+            fontSize: 13,
+            color: Colors.grey[700]!,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        TextButton(
+          onPressed: _isSaving ? null : _saveName,
+          style: TextButton.styleFrom(
+            backgroundColor: widget.themeProvider.primaryColor,
+            padding: const EdgeInsets.symmetric(
+              horizontal: 14,
+              vertical: 10,
+            ),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
+          child: _isSaving
+              ? const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.white,
+                  ),
+                )
+              : const StandardText(
+                  text: '저장',
+                  fontSize: 13,
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
+                ),
+        ),
+      ],
+    );
+  }
+}
+
 Widget _buildTutorialReplaySection({
   required BuildContext context,
   required ThemeHandler themeProvider,
@@ -603,148 +966,6 @@ Widget _buildTutorialReplaySection({
         ),
       ),
     ),
-  );
-}
-
-void _showChangeNameDialog(BuildContext context, String currentName) {
-  final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
-  final TextEditingController nameController =
-      TextEditingController(text: currentName);
-  final standardTextStyle = const StandardText(text: '').getTextStyle();
-
-  showDialog(
-    context: context,
-    builder: (context) {
-      return Dialog(
-        backgroundColor: Colors.white,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Container(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: themeProvider.primaryColor.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Icon(
-                      Icons.person,
-                      color: themeProvider.primaryColor,
-                      size: 20,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  const StandardText(
-                    text: '이름 수정',
-                    fontSize: 20,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black87,
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-              TextField(
-                controller: nameController,
-                autofocus: true,
-                style: standardTextStyle.copyWith(
-                  color: Colors.black87,
-                  fontSize: 15,
-                ),
-                decoration: InputDecoration(
-                  hintText: '수정할 이름을 입력하세요',
-                  hintStyle: standardTextStyle.copyWith(
-                    color: Colors.grey[400],
-                    fontSize: 14,
-                  ),
-                  fillColor: Colors.grey[50],
-                  filled: true,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: Colors.grey[300]!, width: 1),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: Colors.grey[300]!, width: 1),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(
-                      color: themeProvider.primaryColor.withValues(alpha: 0.5),
-                      width: 2,
-                    ),
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(
-                    vertical: 16,
-                    horizontal: 16,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 24),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  TextButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
-                    style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 8),
-                      backgroundColor: Colors.grey[100],
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    child: const StandardText(
-                      text: '취소',
-                      fontSize: 14,
-                      color: Colors.black87,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  TextButton(
-                    onPressed: () async {
-                      String newName = nameController.text;
-                      if (newName.isNotEmpty) {
-                        Navigator.pop(context);
-                        await Provider.of<UserProvider>(context, listen: false)
-                            .updateUser(
-                          name: newName,
-                          email: null,
-                          identifier: null,
-                        );
-                        FirebaseAnalytics.instance
-                            .logEvent(name: 'username_updated');
-                      }
-                    },
-                    style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 8),
-                      backgroundColor: themeProvider.primaryColor,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    child: const StandardText(
-                      text: '수정',
-                      fontSize: 14,
-                      color: Colors.white,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      );
-    },
   );
 }
 

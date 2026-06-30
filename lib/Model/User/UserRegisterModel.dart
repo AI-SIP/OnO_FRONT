@@ -4,6 +4,7 @@ class UserRegisterModel {
   final String? identifier;
   final String? platform;
   final String? password;
+  final String? profileImageUrl;
 
   UserRegisterModel({
     this.email = '',
@@ -11,6 +12,7 @@ class UserRegisterModel {
     this.identifier = '',
     this.platform = '',
     this.password = '',
+    this.profileImageUrl,
   });
 
   Map<String, dynamic> toJson() {
@@ -20,6 +22,7 @@ class UserRegisterModel {
       'identifier': identifier,
       'platform': platform,
       'password': password,
+      'profileImageUrl': profileImageUrl,
     };
   }
 }

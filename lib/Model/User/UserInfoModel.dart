@@ -2,6 +2,7 @@ class UserInfoModel {
   int userId;
   String? email;
   String? name;
+  String? profileImageUrl;
   DateTime? createdAt;
   DateTime? updatedAt;
 
@@ -26,6 +27,7 @@ class UserInfoModel {
     this.userId = -1,
     this.email = '',
     this.name = '',
+    this.profileImageUrl,
     this.createdAt = null,
     this.updatedAt = null,
     this.attendanceLevel = 1,
@@ -47,6 +49,7 @@ class UserInfoModel {
       userId: json['userId'],
       email: json['email'],
       name: json['name'],
+      profileImageUrl: json['profileImageUrl'] as String?,
       createdAt: json['createdAt'] != null
           ? DateTime.parse(json['createdAt'])
           : DateTime.now(),
