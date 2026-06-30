@@ -32,11 +32,13 @@ class StudyRoomDetailScreen extends StatefulWidget {
 class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  bool _showSharedTabChrome = true;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
+    _tabController.addListener(_handleTabChanged);
     FirebaseAnalytics.instance.logEvent(name: 'study_room_detail_view');
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadRoom();
@@ -58,8 +60,20 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
 
   @override
   void dispose() {
+    _tabController.removeListener(_handleTabChanged);
     _tabController.dispose();
     super.dispose();
+  }
+
+  void _handleTabChanged() {
+    if (_tabController.index != 2 && !_showSharedTabChrome) {
+      setState(() => _showSharedTabChrome = true);
+    }
+  }
+
+  void _setSharedTabChromeVisible(bool visible) {
+    if (_showSharedTabChrome == visible) return;
+    setState(() => _showSharedTabChrome = visible);
   }
 
   void _showUnreadReport() {
@@ -303,29 +317,34 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
                 _showMoreMenu(context, provider, isHost, themeProvider, room),
           ),
         ],
-        bottom: TabBar(
-          controller: _tabController,
-          indicatorColor: themeProvider.primaryColor,
-          labelColor: themeProvider.primaryColor,
-          unselectedLabelColor: Colors.grey[500],
-          labelStyle: StandardText(
-            text: '',
-            fontSize: 13.5,
-            color: themeProvider.primaryColor,
-            fontWeight: FontWeight.w700,
-          ).getTextStyle(),
-          unselectedLabelStyle: const TextStyle(
-            fontSize: 13.5,
-            fontFamily: 'PretendardBold',
-            fontWeight: FontWeight.w700,
-          ),
-          tabs: const [
-            Tab(text: '랭킹'),
-            Tab(text: '챌린지'),
-            Tab(text: '공유'),
-            Tab(text: '활동'),
-          ],
-        ),
+        bottom: _showSharedTabChrome
+            ? TabBar(
+                controller: _tabController,
+                indicatorColor: themeProvider.primaryColor,
+                labelColor: themeProvider.primaryColor,
+                unselectedLabelColor: Colors.grey[500],
+                labelStyle: StandardText(
+                  text: '',
+                  fontSize: 13.5,
+                  color: themeProvider.primaryColor,
+                  fontWeight: FontWeight.w700,
+                ).getTextStyle(),
+                unselectedLabelStyle: const TextStyle(
+                  fontSize: 13.5,
+                  fontFamily: 'PretendardBold',
+                  fontWeight: FontWeight.w700,
+                ),
+                tabs: const [
+                  Tab(text: '랭킹'),
+                  Tab(text: '챌린지'),
+                  Tab(text: '공유'),
+                  Tab(text: '활동'),
+                ],
+              )
+            : const PreferredSize(
+                preferredSize: Size.fromHeight(0),
+                child: SizedBox.shrink(),
+              ),
       ),
       body: provider.isLoading && (room == null || room.roomId != widget.roomId)
           ? Center(
@@ -357,7 +376,11 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
       children: [
         _buildRankingTab(context, room, provider, themeProvider, isHost),
         _buildChallengeTab(context, provider, themeProvider, isHost),
-        SharedProblemTab(roomId: widget.roomId, onRefresh: _refresh),
+        SharedProblemTab(
+          roomId: widget.roomId,
+          onRefresh: _refresh,
+          onChromeVisibilityChanged: _setSharedTabChromeVisible,
+        ),
         ActivityFeedTab(roomId: widget.roomId, onRefresh: _refresh),
       ],
     );

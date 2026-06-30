@@ -11,11 +11,13 @@ import 'SharedProblemCard.dart';
 class SharedProblemTab extends StatefulWidget {
   final int roomId;
   final Future<void> Function() onRefresh;
+  final ValueChanged<bool>? onChromeVisibilityChanged;
 
   const SharedProblemTab({
     super.key,
     required this.roomId,
     required this.onRefresh,
+    this.onChromeVisibilityChanged,
   });
 
   @override
@@ -26,6 +28,8 @@ class _SharedProblemTabState extends State<SharedProblemTab>
     with AutomaticKeepAliveClientMixin {
   bool _loaded = false;
   late ScrollController _scrollController;
+  bool _showControls = true;
+  double _lastScrollOffset = 0;
 
   @override
   bool get wantKeepAlive => true;
@@ -40,12 +44,26 @@ class _SharedProblemTabState extends State<SharedProblemTab>
 
   @override
   void dispose() {
+    widget.onChromeVisibilityChanged?.call(true);
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
     super.dispose();
   }
 
   void _onScroll() {
+    final offset = _scrollController.position.pixels;
+    final delta = offset - _lastScrollOffset;
+    const threshold = 8.0;
+
+    if (offset <= 0) {
+      _setControlsVisible(true);
+    } else if (delta > threshold) {
+      _setControlsVisible(false);
+    } else if (delta < -threshold) {
+      _setControlsVisible(true);
+    }
+    _lastScrollOffset = offset;
+
     if (_scrollController.position.pixels >=
         _scrollController.position.maxScrollExtent * 0.85) {
       final provider = Provider.of<StudyRoomProvider>(context, listen: false);
@@ -54,6 +72,12 @@ class _SharedProblemTabState extends State<SharedProblemTab>
         provider.loadMoreSharedProblems(widget.roomId);
       }
     }
+  }
+
+  void _setControlsVisible(bool visible) {
+    if (_showControls == visible) return;
+    setState(() => _showControls = visible);
+    widget.onChromeVisibilityChanged?.call(visible);
   }
 
   Future<void> _load() async {
@@ -211,32 +235,43 @@ class _SharedProblemTabState extends State<SharedProblemTab>
             },
           ),
         ),
-        SafeArea(
-          top: false,
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-            child: SizedBox(
-              width: double.infinity,
-              child: TextButton.icon(
-                onPressed: () => _openPicker(context, themeProvider),
-                style: TextButton.styleFrom(
-                  backgroundColor: themeProvider.primaryColor,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(13),
+        AnimatedSwitcher(
+          duration: const Duration(milliseconds: 180),
+          switchInCurve: Curves.easeOut,
+          switchOutCurve: Curves.easeIn,
+          child: _showControls
+              ? SafeArea(
+                  key: const ValueKey('shared_problem_add_button'),
+                  top: false,
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: TextButton.icon(
+                        onPressed: () => _openPicker(context, themeProvider),
+                        style: TextButton.styleFrom(
+                          backgroundColor: themeProvider.primaryColor,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(13),
+                          ),
+                        ),
+                        icon: const Icon(
+                          Icons.add_photo_alternate_outlined,
+                          size: 19,
+                        ),
+                        label: const StandardText(
+                          text: '공유할 문제 추가',
+                          fontSize: 14,
+                          color: Colors.white,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
                   ),
-                ),
-                icon: const Icon(Icons.add_photo_alternate_outlined, size: 19),
-                label: const StandardText(
-                  text: '공유할 문제 추가',
-                  fontSize: 14,
-                  color: Colors.white,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
-          ),
+                )
+              : const SizedBox.shrink(),
         ),
       ],
     );
