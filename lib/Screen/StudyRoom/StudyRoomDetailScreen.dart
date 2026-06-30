@@ -2,6 +2,7 @@ import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../Model/StudyRoom/ChallengeModel.dart';
 import '../../Model/StudyRoom/StudyRoomModel.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
@@ -555,6 +556,9 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
     final ended = provider.challenges
         .where((challenge) => !challenge.isInProgress)
         .toList();
+    final mediaQuery = MediaQuery.of(context);
+    final isTabletLandscape = mediaQuery.size.shortestSide >= 600 &&
+        mediaQuery.size.width > mediaQuery.size.height;
 
     return Column(
       children: [
@@ -619,11 +623,11 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
                               count: inProgress.length,
                               isHighlighted: true,
                             ),
-                            ...inProgress.map(
-                              (challenge) => ChallengeCard(
-                                challenge: challenge,
-                                canDelete: isHost,
-                              ),
+                            _buildChallengeCards(
+                              inProgress,
+                              isHost,
+                              isTabletLandscape,
+                              constraints.maxWidth,
                             ),
                           ],
                           if (ended.isNotEmpty) ...[
@@ -631,11 +635,11 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
                               '종료된 챌린지',
                               themeProvider,
                             ),
-                            ...ended.map(
-                              (challenge) => ChallengeCard(
-                                challenge: challenge,
-                                canDelete: isHost,
-                              ),
+                            _buildChallengeCards(
+                              ended,
+                              isHost,
+                              isTabletLandscape,
+                              constraints.maxWidth,
                             ),
                           ],
                         ],
@@ -646,6 +650,55 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
         ),
         _buildChallengeCreateButton(context, themeProvider),
       ],
+    );
+  }
+
+  Widget _buildChallengeCards(
+    List<ChallengeModel> challenges,
+    bool isHost,
+    bool isTabletLandscape,
+    double maxWidth,
+  ) {
+    if (!isTabletLandscape) {
+      return Column(
+        children: challenges
+            .map(
+              (challenge) => ChallengeCard(
+                challenge: challenge,
+                canDelete: isHost,
+              ),
+            )
+            .toList(),
+      );
+    }
+
+    const horizontalPadding = 16.0;
+    const spacing = 12.0;
+    final cardWidth = (maxWidth - horizontalPadding * 2 - spacing) / 2;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        horizontalPadding,
+        8,
+        horizontalPadding,
+        8,
+      ),
+      child: Wrap(
+        spacing: spacing,
+        runSpacing: 12,
+        children: challenges
+            .map(
+              (challenge) => SizedBox(
+                width: cardWidth,
+                child: ChallengeCard(
+                  challenge: challenge,
+                  canDelete: isHost,
+                  margin: EdgeInsets.zero,
+                ),
+              ),
+            )
+            .toList(),
+      ),
     );
   }
 
