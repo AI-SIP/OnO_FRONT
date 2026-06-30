@@ -31,10 +31,14 @@ class TokenProvider {
     try {
       return await storage.read(key: key);
     } on PlatformException catch (e) {
-      final msg = (e.message ?? '').toLowerCase();
-      // BAD_DECRYPT: Android에서 암호화 키 손상 시 발생하는 복구 불가 오류만 처리한다.
-      // 그 외 PlatformException(백그라운드 잠금, 생체인증 취소 등)은 재던진다.
-      if (!msg.contains('bad_decrypt') && !msg.contains('bad decrypt')) {
+      // FlutterSecureStorage Android: code="Exception encountered", message="read",
+      // details="javax.crypto.BadPaddingException: ...BAD_DECRYPT..."
+      // BAD_DECRYPT 정보는 e.message가 아닌 e.details에 들어오므로 셋 다 확인한다.
+      final combined =
+          '${e.code} ${e.message ?? ''} ${e.details ?? ''}'.toLowerCase();
+      if (!combined.contains('bad_decrypt') &&
+          !combined.contains('bad decrypt') &&
+          !combined.contains('badpaddingexception')) {
         rethrow;
       }
       debugPrint('SecureStorage key corruption detected (key=$key): $e');
