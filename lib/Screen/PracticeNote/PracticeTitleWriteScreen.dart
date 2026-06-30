@@ -1,3 +1,4 @@
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -112,6 +113,7 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
 
           await problemPracticeProvider
               .updatePractice(widget.practiceNoteUpdateModel!);
+          FirebaseAnalytics.instance.logEvent(name: 'practice_set_updated');
 
           if (!context.mounted) return;
           _showSnackBar(context, themeProvider, '복습 세트가 수정되었습니다.',
@@ -140,6 +142,7 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
           }
           await problemPracticeProvider
               .registerPractice(widget.practiceRegisterModel!);
+          FirebaseAnalytics.instance.logEvent(name: 'practice_set_created');
 
           if (!context.mounted) return;
           _showSnackBar(context, themeProvider, '복습 세트가 생성되었습니다.',

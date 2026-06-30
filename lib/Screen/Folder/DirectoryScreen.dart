@@ -767,6 +767,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
             Provider.of<FoldersProvider>(context, listen: false);
         await foldersProvider.createFolder(folderName,
             parentFolderId: _currentFolder?.folderId);
+        FirebaseAnalytics.instance.logEvent(name: 'folder_created');
 
         // 현재 화면 새로고침
         await _loadFolderData();
@@ -1783,6 +1784,13 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
       // 삭제 성공 메시지
       if (mounted) {
+        FirebaseAnalytics.instance.logEvent(
+          name: 'items_deleted',
+          parameters: {
+            'folder_count': _selectedFolderIds.length,
+            'problem_count': _selectedProblemIds.length,
+          },
+        );
         SnackBarDialog.showSnackBar(
           context: context,
           message: '선택된 항목이 삭제되었습니다!',

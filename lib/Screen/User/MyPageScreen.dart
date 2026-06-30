@@ -720,6 +720,8 @@ void _showChangeNameDialog(BuildContext context, String currentName) {
                           email: null,
                           identifier: null,
                         );
+                        FirebaseAnalytics.instance
+                            .logEvent(name: 'username_updated');
                       }
                     },
                     style: TextButton.styleFrom(
