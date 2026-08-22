@@ -142,16 +142,37 @@ class NotificationService {
   }
 }
 
+/// 'OnO' FirebaseApp 을 초기화한다.
+///
+/// `Firebase.apps` 는 네이티브 레지스트리가 아니라 해당 isolate 의 Dart 캐시라서
+/// 중복 초기화를 막지 못한다. 메인 isolate 와 백그라운드 메시지 isolate 는 캐시가
+/// 분리되어 있지만 Android 의 네이티브 FirebaseApp 레지스트리는 공유하기 때문에,
+/// 둘이 함께 초기화를 시도하면 나중 쪽이 'already exists' 로 죽는다 (Sentry FLUTTER-158).
+///
+/// 완전한 해결책은 아니다. 이미 만들어져 있으면 그것을 쓰도록 해서 실패를 흡수하는
+/// 완화책이고, 두 isolate 가 네이티브 호출에 동시에 진입하는 좁은 경합 구간은 남는다.
+/// 네이티브에 나가는 호출 자체는 변경 전과 같고 try/catch 만 덧댄 구조다.
+Future<void> initializeOnOFirebaseApp() async {
+  try {
+    await Firebase.initializeApp(
+      name: 'OnO',
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+  } catch (error, stackTrace) {
+    try {
+      Firebase.app('OnO');
+    } catch (_) {
+      Error.throwWithStackTrace(error, stackTrace);
+    }
+    debugPrint('FirebaseApp OnO is already initialized: $error');
+  }
+}
+
 /// 백그라운드/종료 상태에서 호출
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   try {
-    if (Firebase.apps.isEmpty) {
-      await Firebase.initializeApp(
-        name: 'OnO',
-        options: DefaultFirebaseOptions.currentPlatform,
-      );
-    }
+    await initializeOnOFirebaseApp();
 
     debugPrint('Background message: ${message.notification?.title}');
     // TODO: flutter_local_notifications로 로컬 알림 띄우기

@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:ui';
 
 import 'package:firebase_analytics/firebase_analytics.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -17,7 +16,6 @@ import 'package:provider/provider.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
 import 'Config/AppConfig.dart';
-import 'Config/firebase_options.dart';
 import 'Provider/PracticeNoteProvider.dart';
 import 'Provider/ProblemsProvider.dart';
 import 'Provider/ReviewDueProvider.dart';
@@ -88,12 +86,7 @@ Future<void> main() async {
 Future<void> _bootstrapApp() async {
   await AppConfig.load();
 
-  if (Firebase.apps.where((app) => app.name == 'OnO').isEmpty) {
-    await Firebase.initializeApp(
-      name: 'OnO',
-      options: DefaultFirebaseOptions.currentPlatform,
-    );
-  }
+  await initializeOnOFirebaseApp();
 
   await NotificationService.instance.init();
   FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
