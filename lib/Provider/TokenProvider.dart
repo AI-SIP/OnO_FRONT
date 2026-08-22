@@ -198,14 +198,23 @@ class TokenProvider {
     final isRefreshTokenMessage = normalizedMessage.contains('리프레시 토큰') ||
         normalizedMessage.contains('리프레시토큰') ||
         normalizedMessage.contains('refresh token');
-    // 서버 구현에 따라 400 + 리프레시 토큰 메시지로 내려오는 케이스를 인증 만료로 처리
-    return (statusCode == 400 || statusCode == 403) &&
-        (isRefreshTokenMessage ||
-            errorCode == 1001 ||
-            errorCode == 1002 ||
-            errorCode == 1003 ||
-            errorCode == 1004 ||
-            errorCode == 1006);
+
+    // 리프레시 토큰 계열 errorCode 는 상태 코드와 무관하게 인증 실패로 처리한다.
+    // 서버는 1002(리프레시 토큰 정보를 찾을 수 없음)를 404로 내려주는데, 상태 코드로만
+    // 판단하면 토큰을 지우지 못해 죽은 토큰으로 계속 재시도하게 된다.
+    final isRefreshTokenErrorCode = errorCode == 1001 ||
+        errorCode == 1002 ||
+        errorCode == 1003 ||
+        errorCode == 1004 ||
+        errorCode == 1006;
+    if (isRefreshTokenErrorCode) {
+      return true;
+    }
+
+    // errorCode 가 없는 경우 서버 구현에 따라 400/403/404 + 리프레시 토큰 메시지로
+    // 내려오는 케이스를 인증 만료로 처리
+    return (statusCode == 400 || statusCode == 403 || statusCode == 404) &&
+        isRefreshTokenMessage;
   }
 
   bool _isTokenExpiringSoon(String token, Duration threshold) {
