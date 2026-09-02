@@ -767,7 +767,9 @@ class _FolderPickerDialogState extends State<FolderPickerDialog> {
         parentFolderId: parentFolderId);
 
     // 생성된 폴더의 부모 노드를 찾아서 갱신
-    _refreshNodeChildren(_rootNode!, parentFolderId);
+    final rootNode = _rootNode;
+    if (!mounted || rootNode == null) return;
+    _refreshNodeChildren(rootNode, parentFolderId);
   }
 
   bool _canMoveFolder(FolderTreeNode dragged, FolderTreeNode target) {
@@ -877,6 +879,8 @@ class _FolderPickerDialogState extends State<FolderPickerDialog> {
 
   // 특정 폴더 ID의 노드를 찾아서 자식 목록을 새로고침
   void _refreshNodeChildren(FolderTreeNode node, int targetFolderId) {
+    // 폴더 생성 직후 다이얼로그가 닫히면 dispose 된 State 에 setState 가 걸린다 (FLUTTER-162)
+    if (!mounted) return;
     if (node.folderId == targetFolderId) {
       // 찾았으면 자식 목록 초기화 후 다시 로드
       setState(() {
