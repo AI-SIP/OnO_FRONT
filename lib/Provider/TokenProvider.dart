@@ -1,5 +1,6 @@
-import 'dart:async';
+import 'dart:async' as async_lib;
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -45,7 +46,8 @@ class TokenProvider {
       await storage.delete(key: 'accessToken');
       await storage.delete(key: 'refreshToken');
       await _notifyAuthFailure();
-      throw UnauthorizedException(message: '보안 저장소가 손상되어 로그아웃되었습니다. 다시 로그인해주세요.');
+      throw UnauthorizedException(
+          message: '보안 저장소가 손상되어 로그아웃되었습니다. 다시 로그인해주세요.');
     }
   }
 
@@ -124,13 +126,29 @@ class TokenProvider {
       throw UnauthorizedException(message: '로그인이 필요합니다. 다시 로그인해주세요.');
     }
 
-    final response = await http
-        .post(
-          Uri.parse('${AppConfig.baseUrl}/api/auth/refresh'),
-          headers: {'Content-Type': 'application/json'},
-          body: jsonEncode({'refreshToken': refreshToken}),
-        )
-        .timeout(const Duration(seconds: 30));
+    // 토큰 갱신은 HttpService 를 거치지 않고 직접 http 를 쓰기 때문에, 네트워크 계열
+    // 예외가 ClientException/SocketException/TimeoutException 원형 그대로 올라간다.
+    // 앱 공통 예외로 감싸서 "인증 실패"가 아니라 "네트워크 문제"로 다뤄지게 한다.
+    // (Sentry FLUTTER-100/110/15S/102)
+    final http.Response response;
+    try {
+      response = await http
+          .post(
+            Uri.parse('${AppConfig.baseUrl}/api/auth/refresh'),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({'refreshToken': refreshToken}),
+          )
+          .timeout(const Duration(seconds: 30));
+    } on async_lib.TimeoutException catch (e) {
+      debugPrint('Refresh request timed out: $e');
+      throw TimeoutException();
+    } on SocketException catch (e) {
+      debugPrint('Refresh request network failure: $e');
+      throw NetworkException();
+    } on http.ClientException catch (e) {
+      debugPrint('Refresh request network failure: $e');
+      throw NetworkException();
+    }
 
     if (response.statusCode < 200 || response.statusCode >= 300) {
       String errorMessage;
