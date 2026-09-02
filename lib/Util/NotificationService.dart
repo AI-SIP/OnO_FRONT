@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:ono/Config/AppConfig.dart';
 
 import '../Config/firebase_options.dart';
+import '../Provider/TokenProvider.dart';
 import '../Screen/ReviewDue/ReviewDueScreen.dart';
 import '../Service/Api/HttpService.dart';
 import 'AppErrorReporter.dart';
@@ -17,6 +18,7 @@ class NotificationService {
   static final instance = NotificationService._();
 
   final HttpService httpService = HttpService();
+  final TokenProvider _tokenProvider = TokenProvider();
   final FirebaseMessaging _messaging = FirebaseMessaging.instance;
   final DeviceInfoPlugin _deviceInfo = DeviceInfoPlugin();
   bool _tokenRefreshListenerConfigured = false;
@@ -80,6 +82,12 @@ class NotificationService {
       _tokenRefreshListenerConfigured = true;
       _messaging.onTokenRefresh.listen((token) async {
         try {
+          // 첫 실행 시 로그인 전에도 토큰이 발급되는데, 그대로 서버에 보내면
+          // 리프레시 토큰이 없어 401 로 죽는다 (Sentry FLUTTER-11Y).
+          if (!await _isLoggedIn()) {
+            debugPrint('FCM token refreshed before login - skip upload');
+            return;
+          }
           await _sendTokenValueToServer(token);
         } catch (error, stackTrace) {
           await AppErrorReporter.report(
@@ -121,6 +129,16 @@ class NotificationService {
   }
 
   Future<void> sendTokenToServer() async {
+    if (!await _isLoggedIn()) {
+      debugPrint('Not logged in - skip FCM token upload');
+      return;
+    }
+
+    if (!await _ensureApnsTokenReady()) {
+      debugPrint('⚠️ APNS token is not ready - skip FCM token upload');
+      return;
+    }
+
     final token = await _messaging.getToken();
     if (token == null) {
       debugPrint('⚠️ FCM token is NULL');
@@ -128,6 +146,34 @@ class NotificationService {
     }
 
     await _sendTokenValueToServer(token);
+  }
+
+  Future<bool> _isLoggedIn() async {
+    try {
+      final refreshToken = await _tokenProvider.getRefreshToken();
+      return refreshToken != null;
+    } catch (error) {
+      debugPrint('Failed to read refresh token for FCM upload: $error');
+      return false;
+    }
+  }
+
+  /// iOS 는 APNS 토큰이 준비되기 전에 getToken() 을 부르면 예외가 난다 (Sentry FLUTTER-15Z).
+  /// 로그인 흐름 안에서 호출되므로 길게 잡지 않고 최대 1.5초만 기다린 뒤 포기한다.
+  /// (토큰을 못 보내도 onTokenRefresh 에서 다시 시도된다)
+  Future<bool> _ensureApnsTokenReady() async {
+    if (!Platform.isIOS) return true;
+
+    for (var attempt = 0; attempt < 3; attempt++) {
+      try {
+        final apnsToken = await _messaging.getAPNSToken();
+        if (apnsToken != null) return true;
+      } catch (error) {
+        debugPrint('getAPNSToken failed (attempt $attempt): $error');
+      }
+      await Future.delayed(const Duration(milliseconds: 500));
+    }
+    return false;
   }
 
   Future<void> _sendTokenValueToServer(String token) async {
