@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
+import '../Exception/ApiException.dart';
 import 'SendDiscordAlert.dart';
 
 enum AppErrorSeverity { warning, error, fatal }
@@ -21,19 +22,34 @@ class AppErrorReporter {
   }) async {
     await _ensureDotenvLoaded();
 
-    debugPrint('[AppErrorReporter][${severity.name}] $source\nError: $error\n$stackTrace');
+    // 사용자 단말의 일시적인 통신 문제는 앱 결함이 아니므로 warning 으로 낮춘다.
+    final effectiveSeverity =
+        _isTransientNetworkError(error) ? AppErrorSeverity.warning : severity;
+
+    debugPrint(
+        '[AppErrorReporter][${effectiveSeverity.name}] $source\nError: $error\n$stackTrace');
 
     try {
-      await Sentry.captureException(error, stackTrace: stackTrace);
+      await Sentry.captureException(
+        error,
+        stackTrace: stackTrace,
+        withScope: (scope) {
+          scope.level = _toSentryLevel(effectiveSeverity);
+          scope.setTag('error_source', source);
+        },
+      );
     } catch (sentryError, sentryStackTrace) {
-      debugPrint('[AppErrorReporter] Failed to report to Sentry\nError: $sentryError\n$sentryStackTrace');
+      debugPrint(
+          '[AppErrorReporter] Failed to report to Sentry\nError: $sentryError\n$sentryStackTrace');
     }
 
-    if (!sendToDiscord) return;
+    // warning 은 디스코드로 알리지 않는다. (네트워크 끊김 등으로 알림이 묻히는 것을 막는다)
+    if (!sendToDiscord || effectiveSeverity == AppErrorSeverity.warning) return;
 
     final webhookUrl = _resolveDiscordWebhookUrl();
     if (webhookUrl == null) {
-      debugPrint('[AppErrorReporter] Discord webhook URL is not configured for env=$_appEnv');
+      debugPrint(
+          '[AppErrorReporter] Discord webhook URL is not configured for env=$_appEnv');
       return;
     }
 
@@ -50,13 +66,29 @@ class AppErrorReporter {
     }
   }
 
+  static SentryLevel _toSentryLevel(AppErrorSeverity severity) {
+    switch (severity) {
+      case AppErrorSeverity.warning:
+        return SentryLevel.warning;
+      case AppErrorSeverity.error:
+        return SentryLevel.error;
+      case AppErrorSeverity.fatal:
+        return SentryLevel.fatal;
+    }
+  }
+
+  static bool _isTransientNetworkError(Object error) {
+    return error is NetworkException || error is TimeoutException;
+  }
+
   static Future<void> _ensureDotenvLoaded() async {
     if (dotenv.env.isNotEmpty) return;
 
     try {
       await dotenv.load(fileName: '.env');
     } catch (error, stackTrace) {
-      debugPrint('[AppErrorReporter] Failed to load dotenv for error reporting\nError: $error\n$stackTrace');
+      debugPrint(
+          '[AppErrorReporter] Failed to load dotenv for error reporting\nError: $error\n$stackTrace');
     }
   }
 
