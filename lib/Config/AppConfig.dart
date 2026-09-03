@@ -22,7 +22,7 @@ class AppConfig {
     }
 
     guidePageUrl = dotenv.env['GUIDE_PAGE_URL']!;
-    feedbackPageUrl = dotenv.env['FEEDBACK_PAGE_URL']!;
+    feedbackPageUrl = '$baseUrl/feedback';
     userInfoProcessRulePageUrl = dotenv.env['USER_RULES_URL']!;
     userTermPageUrl = dotenv.env['USER_TERMS_URL']!;
   }
