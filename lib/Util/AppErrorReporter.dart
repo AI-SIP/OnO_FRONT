@@ -13,6 +13,17 @@ class AppErrorReporter {
     defaultValue: 'local',
   );
 
+  /// 실제 Discord 전송기. 테스트에서 가짜로 바꿔 끼운다.
+  /// 이 클래스는 전부 static 이라 생성자 주입을 쓸 수 없어 이 방식으로 연다.
+  @visibleForTesting
+  static DiscordAlertSender discordAlertSender = sendDiscordAlert;
+
+  /// 테스트가 바꿔 끼운 전송기를 원래대로 되돌린다. tearDown 에서 부른다.
+  @visibleForTesting
+  static void resetDiscordAlertSender() {
+    discordAlertSender = sendDiscordAlert;
+  }
+
   static Future<void> report(
     Object error,
     StackTrace stackTrace, {
@@ -53,7 +64,7 @@ class AppErrorReporter {
       return;
     }
 
-    final result = await sendDiscordAlert(
+    final result = await discordAlertSender(
       message: '[$source] $error',
       stack: stackTrace,
       webhookUrl: webhookUrl,

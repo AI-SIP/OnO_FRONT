@@ -1,4 +1,4 @@
-// Provider 테스트 전용 SecureStorage 스텁.
+// 테스트 공용 SecureStorage 스텁.
 //
 // TokenProvider 와 UserProvider 는 `const FlutterSecureStorage()` 를 필드로 직접
 // 들고 있어 생성자로 주입할 수 없다. 단위 테스트 환경(flutter tester)에는 플랫폼
@@ -7,7 +7,7 @@
 //
 // flutter_secure_storage 패키지가 테스트용으로 `TestFlutterSecureStoragePlatform`
 // 을 함께 배포하므로 그걸로 `FlutterSecureStoragePlatform.instance` 를 바꿔치기한다.
-// `test/provider/` 안에서만 쓰는 보조 파일이라 `test/helpers/` 는 건드리지 않는다.
+
 import 'package:flutter_secure_storage/test/test_flutter_secure_storage_platform.dart';
 import 'package:flutter_secure_storage_platform_interface/flutter_secure_storage_platform_interface.dart';
 

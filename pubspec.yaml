@@ -74,6 +74,13 @@ dev_dependencies:
   # 테스트용 mock 라이브러리. 코드 생성(build_runner)이 필요 없다.
   mocktail: ^1.0.4
 
+  # 테스트에서 플랫폼 채널 구현을 가짜로 바꿔 끼우기 위해 직접 참조한다.
+  # (transitive 로 이미 들어와 있지만 명시하지 않으면 analyzer 가 경고한다)
+  firebase_core_platform_interface: ^5.4.0
+  firebase_analytics_platform_interface: ^4.3.0
+  flutter_secure_storage_platform_interface: ^1.1.2
+  plugin_platform_interface: ^2.1.8
+
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
   # activated in the `analysis_options.yaml` file located at the root of your

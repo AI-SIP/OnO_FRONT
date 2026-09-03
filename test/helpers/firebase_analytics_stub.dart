@@ -1,4 +1,4 @@
-// Provider 테스트 전용 Firebase 스텁.
+// 테스트 공용 Firebase 스텁.
 //
 // StudyRoomProvider / ScreenIndexProvider / TutorialProvider / UserProvider 는
 // FirebaseAnalytics.instance 를 fire-and-forget 으로 호출한다. 단위 테스트 환경에는
@@ -9,7 +9,7 @@
 // firebase_core/firebase_analytics 는 plugin_platform_interface 패턴을 쓰므로
 // 실제 플랫폼 채널을 타지 않고 `FirebasePlatform.instance` /
 // `FirebaseAnalyticsPlatform.instance` 를 가짜로 바꿔치기할 수 있다.
-// `test/provider/` 안에서만 쓰는 보조 파일이라 `test/helpers/` 는 건드리지 않는다.
+
 import 'package:firebase_analytics_platform_interface/firebase_analytics_platform_interface.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_core_platform_interface/firebase_core_platform_interface.dart';

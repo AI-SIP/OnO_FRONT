@@ -22,7 +22,7 @@ import 'package:ono/Exception/ApiException.dart';
 import 'package:ono/Provider/TokenProvider.dart';
 
 import '../helpers/helpers.dart';
-import 'support/secure_storage_stub.dart';
+import '../helpers/secure_storage_stub.dart';
 
 /// SecureStorage 가 복호화 실패(BAD_DECRYPT)로 깨진 상황을 흉내내는 가짜 플랫폼.
 class _CorruptedSecureStoragePlatform extends FlutterSecureStoragePlatform {

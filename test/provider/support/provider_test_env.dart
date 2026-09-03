@@ -10,7 +10,7 @@
 // 먼저 하기 때문에 겪지 않는다.)
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-import 'firebase_analytics_stub.dart';
+import '../../helpers/firebase_analytics_stub.dart';
 
 /// Provider 테스트 파일의 `setUpAll` 에서 한 번 부른다.
 ///

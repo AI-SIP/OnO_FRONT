@@ -32,7 +32,7 @@ import 'package:ono/Service/SocialLogin/KakaoAuthService.dart';
 
 import '../helpers/helpers.dart';
 import 'support/provider_test_env.dart';
-import 'support/secure_storage_stub.dart';
+import '../helpers/secure_storage_stub.dart';
 
 class _MockAppleAuthService extends Mock implements AppleAuthService {}
 

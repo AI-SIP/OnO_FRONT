@@ -12,8 +12,15 @@ import '../HttpService.dart';
 class FileUploadService {
   final HttpService httpService;
 
-  FileUploadService({HttpService? httpService})
-      : httpService = httpService ?? HttpService();
+  /// presigned URL 로 S3 에 직접 PUT 할 때 쓰는 클라이언트.
+  /// 이 요청만 우리 서버가 아니라 S3 로 나가기 때문에 HttpService 를 거치지 않는다.
+  final http.Client _s3Client;
+
+  FileUploadService({
+    HttpService? httpService,
+    http.Client? s3Client,
+  })  : httpService = httpService ?? HttpService(),
+        _s3Client = s3Client ?? http.Client();
   final baseUrl = "${AppConfig.baseUrl}/api/fileUpload";
 
   Future<String> uploadImageFile(XFile file) async {
@@ -102,7 +109,7 @@ class FileUploadService {
     required String contentType,
   }) async {
     try {
-      final response = await http
+      final response = await _s3Client
           .put(
             Uri.parse(presignedUrl),
             headers: {'Content-Type': contentType},

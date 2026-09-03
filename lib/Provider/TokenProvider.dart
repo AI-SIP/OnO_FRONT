@@ -11,7 +11,17 @@ import '../Config/AppConfig.dart';
 import '../Exception/ApiException.dart';
 
 class TokenProvider {
-  final storage = const FlutterSecureStorage();
+  final FlutterSecureStorage storage;
+
+  /// 토큰 갱신 요청에 쓰는 클라이언트.
+  /// 갱신은 HttpService 를 거치지 않고 직접 http 를 쓰기 때문에 여기서 따로 받는다.
+  final http.Client _client;
+
+  TokenProvider({
+    FlutterSecureStorage? storage,
+    http.Client? client,
+  })  : storage = storage ?? const FlutterSecureStorage(),
+        _client = client ?? http.Client();
   static Future<void>? _refreshInFlight;
   static Future<void> Function()? _onAuthFailure;
 
@@ -132,7 +142,7 @@ class TokenProvider {
     // (Sentry FLUTTER-100/110/15S/102)
     final http.Response response;
     try {
-      response = await http
+      response = await _client
           .post(
             Uri.parse('${AppConfig.baseUrl}/api/auth/refresh'),
             headers: {'Content-Type': 'application/json'},
