@@ -22,8 +22,14 @@ class ProblemsProvider with ChangeNotifier {
   int _problemCount = 0;
   int get problemCount => _problemCount;
 
-  final problemService = ProblemService();
-  final fileUploadService = FileUploadService();
+  final ProblemService problemService;
+  final FileUploadService fileUploadService;
+
+  ProblemsProvider({
+    ProblemService? problemService,
+    FileUploadService? fileUploadService,
+  })  : problemService = problemService ?? ProblemService(),
+        fileUploadService = fileUploadService ?? FileUploadService();
 
   // O(log n) 조회
   Future<ProblemModel> getProblem(int problemId) async {
@@ -106,7 +112,8 @@ class ProblemsProvider with ChangeNotifier {
         _problemsMap[problemId] =
             _problemsMap[problemId]!.updateAnalysis(analysisResult);
         notifyListeners();
-        debugPrint('ProblemModel 업데이트 완료 (status: ${analysisResult.status}) - UI가 자동으로 갱신됩니다');
+        debugPrint(
+            'ProblemModel 업데이트 완료 (status: ${analysisResult.status}) - UI가 자동으로 갱신됩니다');
       }
 
       debugPrint('문제 분석 결과 조회 완료');
@@ -276,7 +283,8 @@ class ProblemsProvider with ChangeNotifier {
         _upsertProblem(problem);
       }
 
-      debugPrint('Loaded ${response.content.length} problems from folder $folderId');
+      debugPrint(
+          'Loaded ${response.content.length} problems from folder $folderId');
       notifyListeners();
 
       return response;
@@ -332,7 +340,8 @@ class ProblemsProvider with ChangeNotifier {
         _upsertProblem(problem);
       }
 
-      debugPrint('Loaded ${response.content.length} problems from title query: $query');
+      debugPrint(
+          'Loaded ${response.content.length} problems from title query: $query');
       notifyListeners();
 
       return response;

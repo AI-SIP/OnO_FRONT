@@ -31,17 +31,33 @@ class UserProvider with ChangeNotifier {
   final ProblemsProvider problemsProvider;
   final FoldersProvider foldersProvider;
   final ProblemPracticeProvider practiceProvider;
-  final TokenProvider tokenProvider = TokenProvider();
-  final httpService = HttpService();
-  final userService = UserService();
-  final problemService = ProblemService();
-  final AppleAuthService appleAuthService = AppleAuthService();
-  final GoogleAuthService googleAuthService = GoogleAuthService();
-  final KakaoAuthService kakaoAuthService = KakaoAuthService();
+  final TokenProvider tokenProvider;
+  final HttpService httpService;
+  final UserService userService;
+  final ProblemService problemService;
+  final AppleAuthService appleAuthService;
+  final GoogleAuthService googleAuthService;
+  final KakaoAuthService kakaoAuthService;
   UserInfoModel? userInfoModel;
 
   UserProvider(
-      this.problemsProvider, this.foldersProvider, this.practiceProvider) {
+    this.problemsProvider,
+    this.foldersProvider,
+    this.practiceProvider, {
+    TokenProvider? tokenProvider,
+    HttpService? httpService,
+    UserService? userService,
+    ProblemService? problemService,
+    AppleAuthService? appleAuthService,
+    GoogleAuthService? googleAuthService,
+    KakaoAuthService? kakaoAuthService,
+  })  : tokenProvider = tokenProvider ?? TokenProvider(),
+        httpService = httpService ?? HttpService(),
+        userService = userService ?? UserService(),
+        problemService = problemService ?? ProblemService(),
+        appleAuthService = appleAuthService ?? AppleAuthService(),
+        googleAuthService = googleAuthService ?? GoogleAuthService(),
+        kakaoAuthService = kakaoAuthService ?? KakaoAuthService() {
     TokenProvider.registerAuthFailureHandler(_handleAuthFailure);
   }
 

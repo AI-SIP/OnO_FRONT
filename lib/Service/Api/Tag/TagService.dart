@@ -3,7 +3,10 @@ import 'package:ono/Model/Tag/TagModel.dart';
 import 'package:ono/Service/Api/HttpService.dart';
 
 class TagService {
-  final HttpService _httpService = HttpService();
+  final HttpService _httpService;
+
+  TagService({HttpService? httpService})
+      : _httpService = httpService ?? HttpService();
   final String _baseUrl = '${AppConfig.baseUrl}/api/tags';
 
   Future<List<TagModel>> getMyTags() async {

@@ -71,6 +71,9 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
 
+  # 테스트용 mock 라이브러리. 코드 생성(build_runner)이 필요 없다.
+  mocktail: ^1.0.4
+
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
   # activated in the `analysis_options.yaml` file located at the root of your

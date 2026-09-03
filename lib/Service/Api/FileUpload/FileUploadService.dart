@@ -10,7 +10,10 @@ import '../../../Exception/ApiException.dart';
 import '../HttpService.dart';
 
 class FileUploadService {
-  final HttpService httpService = HttpService();
+  final HttpService httpService;
+
+  FileUploadService({HttpService? httpService})
+      : httpService = httpService ?? HttpService();
   final baseUrl = "${AppConfig.baseUrl}/api/fileUpload";
 
   Future<String> uploadImageFile(XFile file) async {

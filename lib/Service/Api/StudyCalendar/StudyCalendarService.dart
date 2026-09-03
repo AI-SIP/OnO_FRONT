@@ -4,7 +4,10 @@ import 'package:ono/Model/StudyCalendar/StudyCalendarModel.dart';
 import '../HttpService.dart';
 
 class StudyCalendarService {
-  final HttpService httpService = HttpService();
+  final HttpService httpService;
+
+  StudyCalendarService({HttpService? httpService})
+      : httpService = httpService ?? HttpService();
   final String baseUrl = '${AppConfig.baseUrl}/api/learning-calendar';
 
   Map<String, dynamic> _asMap(dynamic data) {
