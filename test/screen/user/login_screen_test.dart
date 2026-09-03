@@ -1,3 +1,5 @@
+import 'dart:io' show Platform;
+
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -46,7 +48,7 @@ void main() {
     expect(find.textContaining('나만의 진정한 오답노트'), findsOneWidget);
   });
 
-  testWidgets('로그아웃 상태면 소셜 로그인 버튼 세 개가 보인다', (tester) async {
+  testWidgets('로그아웃 상태면 구글과 카카오 로그인 버튼이 보인다', (tester) async {
     await pumpOnoWidget(
       tester,
       const LoginScreen(),
@@ -54,8 +56,25 @@ void main() {
     );
 
     expect(svgAsset('assets/SocialLogin/GoogleLogin.svg'), findsOneWidget);
-    expect(svgAsset('assets/SocialLogin/AppleLogin.svg'), findsOneWidget);
     expect(svgAsset('assets/SocialLogin/KakaoLogin.svg'), findsOneWidget);
+  });
+
+  testWidgets('애플 로그인 버튼은 iOS 와 macOS 에서만 보인다', (tester) async {
+    await pumpOnoWidget(
+      tester,
+      const LoginScreen(),
+      userProvider: userProvider,
+    );
+
+    // LoginScreen.dart:111 이 `if (Platform.isIOS || Platform.isMacOS)` 로 분기한다.
+    // 위젯 테스트는 호스트 플랫폼에서 돌기 때문에, 개발자 macOS 에서는 버튼이 있고
+    // 리눅스 CI 에서는 없다. 한쪽만 단언하면 다른 쪽에서 깨진다.
+    final appleButton = svgAsset('assets/SocialLogin/AppleLogin.svg');
+    if (Platform.isIOS || Platform.isMacOS) {
+      expect(appleButton, findsOneWidget);
+    } else {
+      expect(appleButton, findsNothing);
+    }
   });
 
   testWidgets('태블릿 폭에서도 예외 없이 그려진다', (tester) async {
