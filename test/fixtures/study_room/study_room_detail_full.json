@@ -1,0 +1,38 @@
+{
+  "roomId": 100,
+  "name": "수학 스터디룸",
+  "hostUserId": 1,
+  "thumbnailUrl": "https://cdn.test/room-thumb.png",
+  "memberCount": 2,
+  "todayPracticeMemberCount": 1,
+  "todayPracticeCount": 3,
+  "hasUnreadReport": true,
+  "members": [
+    {
+      "userId": 1,
+      "name": "기승민",
+      "profileImageUrl": "https://cdn.test/p1.png",
+      "totalStudyLevel": 5,
+      "currentStreak": 3,
+      "weeklyProblemCount": 10,
+      "weeklyPracticeCount": 4,
+      "todayPracticeCount": 2,
+      "practicedToday": true,
+      "weeklyGoal": 5,
+      "goalProgress": 4
+    },
+    {
+      "userId": 2,
+      "name": "홍길동",
+      "profileImageUrl": null,
+      "totalStudyLevel": 2,
+      "currentStreak": 0,
+      "weeklyProblemCount": 1,
+      "weeklyPracticeCount": 0,
+      "todayPracticeCount": 0,
+      "practicedToday": false,
+      "weeklyGoal": null,
+      "goalProgress": null
+    }
+  ]
+}
