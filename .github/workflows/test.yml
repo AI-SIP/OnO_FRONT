@@ -1,0 +1,90 @@
+name: Test
+
+on:
+  pull_request:
+    branches:
+      - develop
+      - main
+  push:
+    branches:
+      - develop
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 저장소 체크아웃
+        uses: actions/checkout@v4
+
+      - name: Flutter 설치
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.35.6'
+          channel: 'stable'
+          cache: true
+
+      - name: 더미 .env 생성
+        # .env 는 .gitignore 되어 있지만 pubspec.yaml assets 에 등록돼 있어서,
+        # 파일이 없으면 `flutter pub get`/`flutter test` 의 에셋 번들링 단계에서
+        # "No file or variants found for asset: .env" 로 죽는다. 실제 값은
+        # 필요 없고 파일이 존재하기만 하면 되므로 키만 빈 값으로 채워 둔다.
+        run: |
+          cat <<'EOF' > .env
+          BASE_URL_LOCAL=
+          BASE_URL_DEV=
+          BASE_URL_PROD=
+          DISCORD_WEBHOOK_LOCAL_URL=
+          DISCORD_WEBHOOK_PROD_URL=
+          SENTRY_DSN=
+          KAKAO_NATIVE_APP_KEY=
+          GUIDE_PAGE_URL=
+          FEEDBACK_PAGE_URL=
+          USER_RULES_URL=
+          USER_TERMS_URL=
+          APPLE_PRIVATE_KEY_LINE=
+          EOF
+
+      - name: 패키지 설치
+        run: flutter pub get
+
+      - name: 포맷 검사
+        # lib 전체에는 이미 포맷이 안 맞는 기존 파일이 있어서 lib 를 걸면 무관한
+        # 이유로 항상 실패한다. test 디렉토리만 검사한다.
+        run: dart format --output=none --set-exit-if-changed test
+
+      - name: 정적 분석
+        # flutter analyze 는 info 하나만 있어도 exit 1 을 낸다. 이 레포에는 파일명
+        # 규칙(file_names) 같은 기존 info 가 500개 넘게 쌓여 있어서 종료 코드를
+        # 그대로 쓰면 첫 실행부터 상시 빨간불이 된다. 그래서 출력을 직접 판정한다.
+        #
+        # warning 23개는 develop 에도 그대로 있는 기존 문제(unused_element 등)라
+        # 지금 0으로 만드는 것은 이 PR 범위 밖이다. 대신 기준선을 박아 두고
+        # 새 warning 이 늘어나면 실패시킨다. 기존 것을 정리할 때마다 이 숫자를 내린다.
+        env:
+          ALLOWED_WARNINGS: '23'
+        run: |
+          flutter analyze --no-fatal-infos --no-fatal-warnings > analyze.log 2>&1 || true
+          cat analyze.log
+
+          error_count=$(grep -cE '^[[:space:]]*error •' analyze.log || true)
+          warning_count=$(grep -cE '^[[:space:]]*warning •' analyze.log || true)
+          echo "error=$error_count warning=$warning_count (허용 warning=$ALLOWED_WARNINGS)"
+
+          if [ "$error_count" -gt 0 ]; then
+            echo "::error::정적 분석 error $error_count 건"
+            exit 1
+          fi
+
+          if [ "$warning_count" -gt "$ALLOWED_WARNINGS" ]; then
+            echo "::error::warning 이 기준선($ALLOWED_WARNINGS)보다 $((warning_count - ALLOWED_WARNINGS)) 건 늘었다"
+            grep -E '^[[:space:]]*warning •' analyze.log
+            exit 1
+          fi
+
+          if [ "$warning_count" -lt "$ALLOWED_WARNINGS" ]; then
+            echo "::notice::warning 이 $warning_count 건으로 줄었다. ALLOWED_WARNINGS 를 낮춰라"
+          fi
+
+      - name: 테스트 실행
+        run: flutter test
