@@ -59,6 +59,17 @@ class UserProvider with ChangeNotifier {
       final userRegisterModel = await socialLogin(context);
       debugPrint('[signInWithMember] userRegisterModel: $userRegisterModel');
 
+      // 소셜 로그인 창을 사용자가 닫은 경우 null 이 온다. 실패 원인이 있는 경우는
+      // 각 AuthService 에서 이미 보고하므로, 여기서 다시 에러로 만들지 않는다.
+      // (Sentry FLUTTER-VK/T8/VH "잘못된 유저 정보입니다" 노이즈)
+      if (userRegisterModel == null) {
+        debugPrint('[signInWithMember] social login cancelled');
+        if (context.mounted) {
+          LoadingDialog.hide(context);
+        }
+        return;
+      }
+
       final response = await userService.signInWithMember(userRegisterModel);
       debugPrint('[signInWithMember] response received');
 

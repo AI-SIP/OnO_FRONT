@@ -11,10 +11,18 @@ import '../ProblemDetail/Widget/ImageGallerySection.dart';
 import 'Widget/FeedReactionBar.dart';
 import 'Widget/SharedProblemCommentsSection.dart';
 
-class SharedProblemDetailScreen extends StatelessWidget {
+class SharedProblemDetailScreen extends StatefulWidget {
   final SharedProblemModel problem;
 
   const SharedProblemDetailScreen({super.key, required this.problem});
+
+  @override
+  State<SharedProblemDetailScreen> createState() =>
+      _SharedProblemDetailScreenState();
+}
+
+class _SharedProblemDetailScreenState extends State<SharedProblemDetailScreen> {
+  bool _isRefreshing = false;
 
   String _timeAgo(DateTime dt) {
     final diff = DateTime.now().difference(dt);
@@ -22,6 +30,23 @@ class SharedProblemDetailScreen extends StatelessWidget {
     if (diff.inMinutes < 60) return '${diff.inMinutes}분 전';
     if (diff.inHours < 24) return '${diff.inHours}시간 전';
     return '${diff.inDays}일 전';
+  }
+
+  Future<void> _refreshDetail() async {
+    if (_isRefreshing) return;
+    setState(() => _isRefreshing = true);
+    final provider = context.read<StudyRoomProvider>();
+    try {
+      final roomId = provider.selectedRoom?.roomId;
+      if (roomId != null) {
+        await provider.fetchSharedProblems(roomId);
+      }
+      await provider.fetchSharedProblemComments(widget.problem.sharedProblemId);
+    } catch (_) {
+      if (mounted) AppSnackBar.showError('공유 문제를 새로고침하지 못했어요');
+    } finally {
+      if (mounted) setState(() => _isRefreshing = false);
+    }
   }
 
   Future<void> _confirmDelete(
@@ -248,9 +273,11 @@ class SharedProblemDetailScreen extends StatelessWidget {
     final provider = Provider.of<StudyRoomProvider>(context);
     final primary = themeProvider.primaryColor;
     final p = provider.sharedProblems
-        .where((item) => item.sharedProblemId == problem.sharedProblemId)
+        .where(
+          (item) => item.sharedProblemId == widget.problem.sharedProblemId,
+        )
         .firstOrNull;
-    final currentProblem = p ?? problem;
+    final currentProblem = p ?? widget.problem;
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -270,43 +297,64 @@ class SharedProblemDetailScreen extends StatelessWidget {
           overflow: TextOverflow.ellipsis,
           maxLines: 1,
         ),
+        actions: [
+          IconButton(
+            icon: _isRefreshing
+                ? SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: primary,
+                    ),
+                  )
+                : Icon(Icons.refresh, color: Colors.grey[600], size: 22),
+            tooltip: '새로고침',
+            onPressed: _isRefreshing ? null : _refreshDetail,
+          ),
+        ],
       ),
       body: GestureDetector(
         onTap: () => FocusScope.of(context).unfocus(),
         behavior: HitTestBehavior.translucent,
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(18, 8, 18, 32),
-          children: [
-            _buildDetailHeader(
-                context, currentProblem, primary, provider, themeProvider),
-            const SizedBox(height: 14),
-            _buildProblemDetail(currentProblem, primary, themeProvider),
-            if (currentProblem.comment != null &&
-                currentProblem.comment!.isNotEmpty) ...[
+        child: RefreshIndicator(
+          onRefresh: _refreshDetail,
+          color: primary,
+          child: ListView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.fromLTRB(18, 8, 18, 32),
+            children: [
+              _buildDetailHeader(
+                  context, currentProblem, primary, provider, themeProvider),
               const SizedBox(height: 14),
-              _buildOwnerComment(currentProblem),
-            ],
-            const SizedBox(height: 22),
-            Padding(
-              padding: const EdgeInsets.only(left: 8),
-              child: FeedReactionBar(
-                reactions: currentProblem.reactions,
-                themeProvider: themeProvider,
-                onToggle: (emoji) => provider.toggleSharedProblemReaction(
-                  currentProblem.sharedProblemId,
-                  emoji,
+              _buildProblemDetail(currentProblem, primary, themeProvider),
+              if (currentProblem.comment != null &&
+                  currentProblem.comment!.isNotEmpty) ...[
+                const SizedBox(height: 14),
+                _buildOwnerComment(currentProblem),
+              ],
+              const SizedBox(height: 22),
+              Padding(
+                padding: const EdgeInsets.only(left: 8),
+                child: FeedReactionBar(
+                  reactions: currentProblem.reactions,
+                  themeProvider: themeProvider,
+                  onToggle: (emoji) => provider.toggleSharedProblemReaction(
+                    currentProblem.sharedProblemId,
+                    emoji,
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(height: 16),
-            SharedProblemCommentsSection(
-              sharedProblemId: currentProblem.sharedProblemId,
-              initialCommentCount: currentProblem.commentCount,
-              themeProvider: themeProvider,
-              initiallyExpanded: true,
-              showToggle: false,
-            ),
-          ],
+              const SizedBox(height: 16),
+              SharedProblemCommentsSection(
+                sharedProblemId: currentProblem.sharedProblemId,
+                initialCommentCount: currentProblem.commentCount,
+                themeProvider: themeProvider,
+                initiallyExpanded: true,
+                showToggle: false,
+              ),
+            ],
+          ),
         ),
       ),
     );

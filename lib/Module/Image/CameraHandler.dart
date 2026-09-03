@@ -92,20 +92,38 @@ class _CameraScreenState extends State<CameraScreen> {
           FutureBuilder<void>(
             future: _initializeControllerFuture,
             builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.done) {
-                return Center(
-                  child: AspectRatio(
-                    aspectRatio: _controller.value.aspectRatio,
-                    child: OverflowBox(
-                      maxHeight: MediaQuery.of(context).size.height,
-                      maxWidth: MediaQuery.of(context).size.width,
-                      child: CameraPreview(_controller),
+              // ConnectionState.done 은 future 가 에러로 끝난 경우에도 done 이다.
+              // 권한 거부나 다른 앱의 카메라 점유로 initialize() 가 실패하면
+              // previewSize 가 null 이라 aspectRatio 접근에서 크래시가 난다.
+              if (snapshot.connectionState != ConnectionState.done) {
+                return const Center(child: CircularProgressIndicator());
+              }
+
+              if (snapshot.hasError || !_controller.value.isInitialized) {
+                return const Center(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 32),
+                    child: StandardText(
+                      text: '카메라를 열 수 없습니다.\n카메라 권한을 확인하거나 다른 앱을 종료한 뒤 다시 시도해주세요.',
+                      color: Colors.white,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      textAlign: TextAlign.center,
                     ),
                   ),
                 );
-              } else {
-                return const Center(child: CircularProgressIndicator());
               }
+
+              return Center(
+                child: AspectRatio(
+                  aspectRatio: _controller.value.aspectRatio,
+                  child: OverflowBox(
+                    maxHeight: MediaQuery.of(context).size.height,
+                    maxWidth: MediaQuery.of(context).size.width,
+                    child: CameraPreview(_controller),
+                  ),
+                ),
+              );
             },
           ),
 

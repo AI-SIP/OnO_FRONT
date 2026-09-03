@@ -1,5 +1,6 @@
-import 'dart:async';
+import 'dart:async' as async_lib;
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -45,7 +46,8 @@ class TokenProvider {
       await storage.delete(key: 'accessToken');
       await storage.delete(key: 'refreshToken');
       await _notifyAuthFailure();
-      throw UnauthorizedException(message: '보안 저장소가 손상되어 로그아웃되었습니다. 다시 로그인해주세요.');
+      throw UnauthorizedException(
+          message: '보안 저장소가 손상되어 로그아웃되었습니다. 다시 로그인해주세요.');
     }
   }
 
@@ -124,13 +126,29 @@ class TokenProvider {
       throw UnauthorizedException(message: '로그인이 필요합니다. 다시 로그인해주세요.');
     }
 
-    final response = await http
-        .post(
-          Uri.parse('${AppConfig.baseUrl}/api/auth/refresh'),
-          headers: {'Content-Type': 'application/json'},
-          body: jsonEncode({'refreshToken': refreshToken}),
-        )
-        .timeout(const Duration(seconds: 30));
+    // 토큰 갱신은 HttpService 를 거치지 않고 직접 http 를 쓰기 때문에, 네트워크 계열
+    // 예외가 ClientException/SocketException/TimeoutException 원형 그대로 올라간다.
+    // 앱 공통 예외로 감싸서 "인증 실패"가 아니라 "네트워크 문제"로 다뤄지게 한다.
+    // (Sentry FLUTTER-100/110/15S/102)
+    final http.Response response;
+    try {
+      response = await http
+          .post(
+            Uri.parse('${AppConfig.baseUrl}/api/auth/refresh'),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({'refreshToken': refreshToken}),
+          )
+          .timeout(const Duration(seconds: 30));
+    } on async_lib.TimeoutException catch (e) {
+      debugPrint('Refresh request timed out: $e');
+      throw TimeoutException();
+    } on SocketException catch (e) {
+      debugPrint('Refresh request network failure: $e');
+      throw NetworkException();
+    } on http.ClientException catch (e) {
+      debugPrint('Refresh request network failure: $e');
+      throw NetworkException();
+    }
 
     if (response.statusCode < 200 || response.statusCode >= 300) {
       String errorMessage;
@@ -198,14 +216,23 @@ class TokenProvider {
     final isRefreshTokenMessage = normalizedMessage.contains('리프레시 토큰') ||
         normalizedMessage.contains('리프레시토큰') ||
         normalizedMessage.contains('refresh token');
-    // 서버 구현에 따라 400 + 리프레시 토큰 메시지로 내려오는 케이스를 인증 만료로 처리
-    return (statusCode == 400 || statusCode == 403) &&
-        (isRefreshTokenMessage ||
-            errorCode == 1001 ||
-            errorCode == 1002 ||
-            errorCode == 1003 ||
-            errorCode == 1004 ||
-            errorCode == 1006);
+
+    // 리프레시 토큰 계열 errorCode 는 상태 코드와 무관하게 인증 실패로 처리한다.
+    // 서버는 1002(리프레시 토큰 정보를 찾을 수 없음)를 404로 내려주는데, 상태 코드로만
+    // 판단하면 토큰을 지우지 못해 죽은 토큰으로 계속 재시도하게 된다.
+    final isRefreshTokenErrorCode = errorCode == 1001 ||
+        errorCode == 1002 ||
+        errorCode == 1003 ||
+        errorCode == 1004 ||
+        errorCode == 1006;
+    if (isRefreshTokenErrorCode) {
+      return true;
+    }
+
+    // errorCode 가 없는 경우 서버 구현에 따라 400/403/404 + 리프레시 토큰 메시지로
+    // 내려오는 케이스를 인증 만료로 처리
+    return (statusCode == 400 || statusCode == 403 || statusCode == 404) &&
+        isRefreshTokenMessage;
   }
 
   bool _isTokenExpiringSoon(String token, Duration threshold) {

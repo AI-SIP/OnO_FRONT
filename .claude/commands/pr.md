@@ -100,7 +100,7 @@ PR 생성 후 PR 번호를 대상으로 assignee와 label을 설정한다. GitHu
 - labels: 존재하는 label만 추가
 - reviewers: 생략
 
-원격에 현재 브랜치가 없어 PR 생성이 실패하면, push가 필요하다고 보고하고 사용자의 명시적 허용 없이는 push하지 않는다.
+PR 생성 전에 `git ls-remote --exit-code origin <브랜치명>`으로 원격 브랜치 존재 여부를 확인한다. 원격에 브랜치가 없으면 `git push -u origin <브랜치명>`으로 먼저 push하여 브랜치를 생성한 뒤 PR을 생성한다.
 
 **7단계 - 결과 보고**
 

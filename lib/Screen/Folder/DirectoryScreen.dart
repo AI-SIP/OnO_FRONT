@@ -314,6 +314,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     int? nextCursor,
     bool hasNext,
   ) async {
+    // 화면이 dispose 된 뒤 context 에 접근하면 State.context 의 null check 로 죽는다 (FLUTTER-125/126/15X/15Y)
+    if (!mounted) return;
     final foldersProvider =
         Provider.of<FoldersProvider>(context, listen: false);
     foldersProvider.saveSubfoldersToCache(
@@ -327,6 +329,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     int? nextCursor,
     bool hasNext,
   ) async {
+    if (!mounted) return;
     final foldersProvider =
         Provider.of<FoldersProvider>(context, listen: false);
     foldersProvider.saveSubfoldersToCache(
@@ -340,6 +343,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     int? nextCursor,
     bool hasNext,
   ) async {
+    if (!mounted) return;
     final foldersProvider =
         Provider.of<FoldersProvider>(context, listen: false);
     foldersProvider.saveProblemsToCache(
@@ -353,6 +357,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     int? nextCursor,
     bool hasNext,
   ) async {
+    if (!mounted) return;
     final foldersProvider =
         Provider.of<FoldersProvider>(context, listen: false);
     foldersProvider.saveProblemsToCache(

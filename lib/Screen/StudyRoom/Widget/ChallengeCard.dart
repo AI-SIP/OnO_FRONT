@@ -10,11 +10,13 @@ import 'ChallengeProgressBar.dart';
 class ChallengeCard extends StatelessWidget {
   final ChallengeModel challenge;
   final bool canDelete;
+  final EdgeInsetsGeometry margin;
 
   const ChallengeCard({
     super.key,
     required this.challenge,
     this.canDelete = false,
+    this.margin = const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
   });
 
   String _daysLeft(DateTime endAt) {
@@ -99,7 +101,7 @@ class ChallengeCard extends StatelessWidget {
     final c = challenge;
 
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      margin: margin,
       padding: const EdgeInsets.all(15),
       decoration: BoxDecoration(
         color: Colors.white,

@@ -2,6 +2,7 @@ import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../Model/StudyRoom/ChallengeModel.dart';
 import '../../Model/StudyRoom/StudyRoomModel.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
@@ -31,11 +32,13 @@ class StudyRoomDetailScreen extends StatefulWidget {
 class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  bool _showSharedTabChrome = true;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
+    _tabController.addListener(_handleTabChanged);
     FirebaseAnalytics.instance.logEvent(name: 'study_room_detail_view');
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadRoom();
@@ -57,8 +60,20 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
 
   @override
   void dispose() {
+    _tabController.removeListener(_handleTabChanged);
     _tabController.dispose();
     super.dispose();
+  }
+
+  void _handleTabChanged() {
+    if (_tabController.index != 2 && !_showSharedTabChrome) {
+      setState(() => _showSharedTabChrome = true);
+    }
+  }
+
+  void _setSharedTabChromeVisible(bool visible) {
+    if (_showSharedTabChrome == visible) return;
+    setState(() => _showSharedTabChrome = visible);
   }
 
   void _showUnreadReport() {
@@ -302,29 +317,34 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
                 _showMoreMenu(context, provider, isHost, themeProvider, room),
           ),
         ],
-        bottom: TabBar(
-          controller: _tabController,
-          indicatorColor: themeProvider.primaryColor,
-          labelColor: themeProvider.primaryColor,
-          unselectedLabelColor: Colors.grey[500],
-          labelStyle: StandardText(
-            text: '',
-            fontSize: 13.5,
-            color: themeProvider.primaryColor,
-            fontWeight: FontWeight.w700,
-          ).getTextStyle(),
-          unselectedLabelStyle: const TextStyle(
-            fontSize: 13.5,
-            fontFamily: 'PretendardBold',
-            fontWeight: FontWeight.w700,
-          ),
-          tabs: const [
-            Tab(text: '랭킹'),
-            Tab(text: '챌린지'),
-            Tab(text: '공유'),
-            Tab(text: '활동'),
-          ],
-        ),
+        bottom: _showSharedTabChrome
+            ? TabBar(
+                controller: _tabController,
+                indicatorColor: themeProvider.primaryColor,
+                labelColor: themeProvider.primaryColor,
+                unselectedLabelColor: Colors.grey[500],
+                labelStyle: StandardText(
+                  text: '',
+                  fontSize: 13.5,
+                  color: themeProvider.primaryColor,
+                  fontWeight: FontWeight.w700,
+                ).getTextStyle(),
+                unselectedLabelStyle: const TextStyle(
+                  fontSize: 13.5,
+                  fontFamily: 'PretendardBold',
+                  fontWeight: FontWeight.w700,
+                ),
+                tabs: const [
+                  Tab(text: '랭킹'),
+                  Tab(text: '챌린지'),
+                  Tab(text: '공유'),
+                  Tab(text: '활동'),
+                ],
+              )
+            : const PreferredSize(
+                preferredSize: Size.fromHeight(0),
+                child: SizedBox.shrink(),
+              ),
       ),
       body: provider.isLoading && (room == null || room.roomId != widget.roomId)
           ? Center(
@@ -356,7 +376,11 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
       children: [
         _buildRankingTab(context, room, provider, themeProvider, isHost),
         _buildChallengeTab(context, provider, themeProvider, isHost),
-        SharedProblemTab(roomId: widget.roomId, onRefresh: _refresh),
+        SharedProblemTab(
+          roomId: widget.roomId,
+          onRefresh: _refresh,
+          onChromeVisibilityChanged: _setSharedTabChromeVisible,
+        ),
         ActivityFeedTab(roomId: widget.roomId, onRefresh: _refresh),
       ],
     );
@@ -555,6 +579,9 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
     final ended = provider.challenges
         .where((challenge) => !challenge.isInProgress)
         .toList();
+    final mediaQuery = MediaQuery.of(context);
+    final isTabletLandscape = mediaQuery.size.shortestSide >= 600 &&
+        mediaQuery.size.width > mediaQuery.size.height;
 
     return Column(
       children: [
@@ -619,11 +646,11 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
                               count: inProgress.length,
                               isHighlighted: true,
                             ),
-                            ...inProgress.map(
-                              (challenge) => ChallengeCard(
-                                challenge: challenge,
-                                canDelete: isHost,
-                              ),
+                            _buildChallengeCards(
+                              inProgress,
+                              isHost,
+                              isTabletLandscape,
+                              constraints.maxWidth,
                             ),
                           ],
                           if (ended.isNotEmpty) ...[
@@ -631,11 +658,11 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
                               '종료된 챌린지',
                               themeProvider,
                             ),
-                            ...ended.map(
-                              (challenge) => ChallengeCard(
-                                challenge: challenge,
-                                canDelete: isHost,
-                              ),
+                            _buildChallengeCards(
+                              ended,
+                              isHost,
+                              isTabletLandscape,
+                              constraints.maxWidth,
                             ),
                           ],
                         ],
@@ -646,6 +673,55 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
         ),
         _buildChallengeCreateButton(context, themeProvider),
       ],
+    );
+  }
+
+  Widget _buildChallengeCards(
+    List<ChallengeModel> challenges,
+    bool isHost,
+    bool isTabletLandscape,
+    double maxWidth,
+  ) {
+    if (!isTabletLandscape) {
+      return Column(
+        children: challenges
+            .map(
+              (challenge) => ChallengeCard(
+                challenge: challenge,
+                canDelete: isHost,
+              ),
+            )
+            .toList(),
+      );
+    }
+
+    const horizontalPadding = 16.0;
+    const spacing = 12.0;
+    final cardWidth = (maxWidth - horizontalPadding * 2 - spacing) / 2;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        horizontalPadding,
+        8,
+        horizontalPadding,
+        8,
+      ),
+      child: Wrap(
+        spacing: spacing,
+        runSpacing: 12,
+        children: challenges
+            .map(
+              (challenge) => SizedBox(
+                width: cardWidth,
+                child: ChallengeCard(
+                  challenge: challenge,
+                  canDelete: isHost,
+                  margin: EdgeInsets.zero,
+                ),
+              ),
+            )
+            .toList(),
+      ),
     );
   }
 

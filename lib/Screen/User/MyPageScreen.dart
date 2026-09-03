@@ -570,6 +570,8 @@ class _MyPageSettingsScreenState extends State<_MyPageSettingsScreen> {
   }
 
   void _showProfileSnackBar(String message) {
+    // 업로드 중 화면을 벗어나면 dispose 된 State 의 context 에 접근해 죽는다 (FLUTTER-15K)
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: StandardText(

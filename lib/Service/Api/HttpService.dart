@@ -1,4 +1,4 @@
-import 'dart:async';
+import 'dart:async' as async_lib;
 import 'dart:convert';
 import 'dart:io';
 
@@ -203,7 +203,17 @@ class HttpService {
         NetworkException(),
         showErrorSnackBar: showErrorSnackBar,
       );
-    } on TimeoutException {
+    } on http.ClientException {
+      // package:http 는 연결이 중간에 끊긴 경우 등을 ClientException 으로 던진다.
+      _throwWithSnackBar(
+        NetworkException(),
+        showErrorSnackBar: showErrorSnackBar,
+      );
+    } on async_lib.TimeoutException {
+      // .timeout() 이 던지는 것은 dart:async 의 TimeoutException 이다.
+      // 앱 자체 TimeoutException 과 이름이 같아 접두 없이 쓰면 앱 쪽으로 해석되어
+      // 이 절이 영영 걸리지 않았고, 타임아웃이 "일시적인 오류"로 뭉개졌다.
+      // (Sentry FLUTTER-15Q/160/161/15T/15M)
       _throwWithSnackBar(
         TimeoutException(),
         showErrorSnackBar: showErrorSnackBar,

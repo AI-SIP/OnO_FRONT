@@ -8,74 +8,57 @@ import 'package:sentry_flutter/sentry_flutter.dart';
 
 class KakaoAuthService {
   Future<UserRegisterModel?> signInWithKakao(BuildContext context) async {
-    UserRegisterModel? userRegisterModel;
-
     if (await isKakaoTalkInstalled()) {
       try {
-        await UserApi.instance.loginWithKakaoTalk().then((_) async {
-          User user = await UserApi.instance.me();
-
-          userRegisterModel = await registerUser(context, user);
-        });
+        await UserApi.instance.loginWithKakaoTalk();
+        final user = await UserApi.instance.me();
+        return await registerUser(user);
       } catch (error, stackTrace) {
         debugPrint('카카오톡으로 로그인 실패 $error');
-        await Sentry.captureException(
-          error,
-          stackTrace: stackTrace,
-        );
 
-        // 사용자가 카카오톡 설치 후 디바이스 권한 요청 화면에서 로그인을 취소한 경우,
-        // 의도적인 로그인 취소로 보고 카카오계정으로 로그인 시도 없이 로그인 취소로 처리 (예: 뒤로 가기)
-        if (error is PlatformException && error.code == 'CANCELED') {
-          userRegisterModel = null;
+        // 사용자가 직접 취소한 경우는 오류가 아니다. 카카오계정 로그인으로 넘어가지 않고
+        // 그대로 로그인 취소로 처리한다. (Sentry FLUTTER-165/VJ 노이즈)
+        if (isUserCancelled(error)) {
+          return null;
         }
 
-        // 카카오톡에 연결된 카카오계정이 없는 경우, 카카오계정으로 로그인
-        try {
-          await UserApi.instance.loginWithKakaoAccount().then((_) async {
-            await UserApi.instance.loginWithKakaoAccount();
-            User user = await UserApi.instance.me();
-
-            userRegisterModel = await registerUser(context, user);
-          });
-        } catch (error, stackTrace) {
-          debugPrint('카카오계정으로 로그인 실패 $error');
-          await Sentry.captureException(
-            error,
-            stackTrace: stackTrace,
-          );
-
-          //SnackBarDialog.showSnackBar(context: context, message: "로그인 과정에서 오류가 발생했습니다. 다시 시도해주세요.", backgroundColor: Colors.red);
-          userRegisterModel = null;
-        }
-      }
-    } else {
-      try {
-        await UserApi.instance.loginWithKakaoAccount().then((_) async {
-          await UserApi.instance.loginWithKakaoAccount();
-          User user = await UserApi.instance.me();
-
-          userRegisterModel = await registerUser(context, user);
-        });
-      } catch (error, stackTrace) {
-        if (error is PlatformException && error.code == 'CANCELED') {
-          userRegisterModel = null;
-        }
-
-        //SnackBarDialog.showSnackBar(context: context, message: "로그인 과정에서 오류가 발생했습니다. 다시 시도해주세요.", backgroundColor: Colors.red);
-        debugPrint('카카오계정으로 로그인 실패 $error');
-        await Sentry.captureException(
-          error,
-          stackTrace: stackTrace,
-        );
+        await Sentry.captureException(error, stackTrace: stackTrace);
+        // 카카오톡에 연결된 카카오계정이 없는 경우 등 → 카카오계정 로그인으로 재시도
+        return await _signInWithKakaoAccount();
       }
     }
 
-    return userRegisterModel;
+    return await _signInWithKakaoAccount();
   }
 
-  Future<UserRegisterModel?> registerUser(
-      BuildContext context, User user) async {
+  Future<UserRegisterModel?> _signInWithKakaoAccount() async {
+    try {
+      await UserApi.instance.loginWithKakaoAccount();
+      final user = await UserApi.instance.me();
+      return await registerUser(user);
+    } catch (error, stackTrace) {
+      debugPrint('카카오계정으로 로그인 실패 $error');
+
+      if (isUserCancelled(error)) {
+        return null;
+      }
+
+      await Sentry.captureException(error, stackTrace: stackTrace);
+      return null;
+    }
+  }
+
+  /// 사용자가 로그인 창을 직접 닫거나 취소한 경우인지 판단한다.
+  /// 카카오 SDK 는 취소를 PlatformException(CANCELED), KakaoAuthException
+  /// (error_description 에 cancelled), ClientErrorCause.cancelled 등 여러 형태로 던진다.
+  static bool isUserCancelled(Object error) {
+    if (error is PlatformException && error.code == 'CANCELED') {
+      return true;
+    }
+    return error.toString().toLowerCase().contains('cancel');
+  }
+
+  Future<UserRegisterModel?> registerUser(User user) async {
     try {
       final String? email = user.kakaoAccount?.email;
       final String? name = user.kakaoAccount?.profile?.nickname;
