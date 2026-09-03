@@ -13,7 +13,10 @@ import '../Module/Emoji/OnoEmojiCatalog.dart';
 import '../Service/Api/StudyRoom/StudyRoomService.dart';
 
 class StudyRoomProvider extends ChangeNotifier {
-  final StudyRoomService _service = StudyRoomService();
+  final StudyRoomService _service;
+
+  StudyRoomProvider({StudyRoomService? studyRoomService})
+      : _service = studyRoomService ?? StudyRoomService();
 
   List<StudyRoomModel> rooms = [];
   StudyRoomModel? selectedRoom;

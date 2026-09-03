@@ -13,7 +13,17 @@ import '../../Util/AppSnackBar.dart';
 import '../../Util/ErrorMessageMapper.dart';
 
 class HttpService {
-  final TokenProvider tokenProvider = TokenProvider();
+  final TokenProvider tokenProvider;
+
+  /// 실제 HTTP 전송을 담당한다.
+  /// 테스트에서 http.testing 의 MockClient 등을 주입해 응답을 고정할 수 있다.
+  final http.Client _client;
+
+  HttpService({
+    http.Client? client,
+    TokenProvider? tokenProvider,
+  })  : _client = client ?? http.Client(),
+        tokenProvider = tokenProvider ?? TokenProvider();
 
   String _getErrorMessage(Object error) {
     if (error is UnauthorizedException) {
@@ -102,7 +112,7 @@ class HttpService {
     try {
       switch (method.toUpperCase()) {
         case 'GET':
-          response = await http
+          response = await _client
               .get(uri, headers: mergedHeaders)
               .timeout(const Duration(seconds: 30));
           break;
@@ -128,18 +138,18 @@ class HttpService {
 
             debugPrint('[HttpService] req: ${req.fields}');
             final streamed =
-                await req.send().timeout(const Duration(seconds: 90));
+                await _client.send(req).timeout(const Duration(seconds: 90));
             response = await http.Response.fromStream(streamed);
           } else {
             response = body != null
-                ? await http
+                ? await _client
                     .post(
                       uri,
                       headers: mergedHeaders,
                       body: json.encode(body),
                     )
                     .timeout(const Duration(seconds: 30))
-                : await http
+                : await _client
                     .post(uri, headers: mergedHeaders)
                     .timeout(const Duration(seconds: 30));
           }
@@ -153,14 +163,14 @@ class HttpService {
                   .addAll(body?.map((k, v) => MapEntry(k, v.toString())) ?? {})
               ..files.addAll(files);
             final streamed =
-                await req.send().timeout(const Duration(seconds: 30));
+                await _client.send(req).timeout(const Duration(seconds: 30));
             response = await http.Response.fromStream(streamed);
           } else {
             response = body != null
-                ? await http
+                ? await _client
                     .patch(uri, headers: mergedHeaders, body: json.encode(body))
                     .timeout(const Duration(seconds: 30))
-                : await http
+                : await _client
                     .patch(uri, headers: mergedHeaders)
                     .timeout(const Duration(seconds: 30));
           }
@@ -168,17 +178,17 @@ class HttpService {
 
         case 'PUT':
           response = body != null
-              ? await http
+              ? await _client
                   .put(uri, headers: mergedHeaders, body: json.encode(body))
                   .timeout(const Duration(seconds: 30))
-              : await http
+              : await _client
                   .put(uri, headers: mergedHeaders)
                   .timeout(const Duration(seconds: 30));
           break;
 
         case 'DELETE':
           if (body != null) {
-            response = await http
+            response = await _client
                 .delete(
                   uri,
                   headers: mergedHeaders,
@@ -186,7 +196,7 @@ class HttpService {
                 )
                 .timeout(const Duration(seconds: 30));
           } else {
-            response = await http
+            response = await _client
                 .delete(uri, headers: mergedHeaders)
                 .timeout(const Duration(seconds: 30));
           }

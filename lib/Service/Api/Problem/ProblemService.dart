@@ -12,7 +12,10 @@ import '../../../Config/AppConfig.dart';
 import '../HttpService.dart';
 
 class ProblemService {
-  final HttpService httpService = HttpService();
+  final HttpService httpService;
+
+  ProblemService({HttpService? httpService})
+      : httpService = httpService ?? HttpService();
   final baseUrl = "${AppConfig.baseUrl}/api/problems";
 
   Future<ProblemModel> getProblem(

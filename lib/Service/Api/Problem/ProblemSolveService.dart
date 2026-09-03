@@ -10,7 +10,10 @@ import '../../../Model/Problem/ProblemSolveUpdateDto.dart';
 import '../HttpService.dart';
 
 class ProblemSolveService {
-  final HttpService httpService = HttpService();
+  final HttpService httpService;
+
+  ProblemSolveService({HttpService? httpService})
+      : httpService = httpService ?? HttpService();
   final baseUrl = "${AppConfig.baseUrl}/api/problem-solves";
 
   // 특정 복습 기록 조회

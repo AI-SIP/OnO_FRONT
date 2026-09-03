@@ -5,7 +5,10 @@ import 'package:ono/Model/User/UserRegisterModel.dart';
 import 'package:ono/Service/Api/HttpService.dart';
 
 class UserService {
-  final HttpService httpService = HttpService();
+  final HttpService httpService;
+
+  UserService({HttpService? httpService})
+      : httpService = httpService ?? HttpService();
 
   Future<dynamic> signInWithGuest() async {
     return await httpService.sendRequest(

@@ -5,7 +5,10 @@ import 'package:ono/Model/LearningReport/LearningReportResponseModel.dart';
 import '../HttpService.dart';
 
 class LearningReportService {
-  final HttpService httpService = HttpService();
+  final HttpService httpService;
+
+  LearningReportService({HttpService? httpService})
+      : httpService = httpService ?? HttpService();
   final String baseUrl = '${AppConfig.baseUrl}/api/learning-reports';
 
   Future<LearningReportResponseModel> getLearningReport({

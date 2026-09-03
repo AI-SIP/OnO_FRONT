@@ -14,13 +14,45 @@ import 'AppErrorReporter.dart';
 import 'AppNavigator.dart';
 
 class NotificationService {
-  NotificationService._();
+  NotificationService._({
+    HttpService? httpService,
+    TokenProvider? tokenProvider,
+    FirebaseMessaging? messaging,
+    DeviceInfoPlugin? deviceInfo,
+  })  : httpService = httpService ?? HttpService(),
+        _tokenProvider = tokenProvider ?? TokenProvider(),
+        _injectedMessaging = messaging,
+        _deviceInfo = deviceInfo ?? DeviceInfoPlugin();
+
   static final instance = NotificationService._();
 
-  final HttpService httpService = HttpService();
-  final TokenProvider _tokenProvider = TokenProvider();
-  final FirebaseMessaging _messaging = FirebaseMessaging.instance;
-  final DeviceInfoPlugin _deviceInfo = DeviceInfoPlugin();
+  /// 테스트 전용 생성자. 운영 코드는 [instance] 만 쓴다.
+  /// FCM 발송 경로라 실제 동작은 건드리지 않고, 가짜 의존성을 넣을 자리만 열었다.
+  @visibleForTesting
+  factory NotificationService.forTest({
+    HttpService? httpService,
+    TokenProvider? tokenProvider,
+    FirebaseMessaging? messaging,
+    DeviceInfoPlugin? deviceInfo,
+  }) =>
+      NotificationService._(
+        httpService: httpService,
+        tokenProvider: tokenProvider,
+        messaging: messaging,
+        deviceInfo: deviceInfo,
+      );
+
+  final HttpService httpService;
+  final TokenProvider _tokenProvider;
+  final DeviceInfoPlugin _deviceInfo;
+
+  /// 주입된 것이 없으면 예전처럼 전역 인스턴스를 쓴다.
+  /// 필드가 아니라 getter 인 이유는, 생성 시점에 Firebase 가 아직 초기화되지 않았어도
+  /// 객체를 만들 수 있게 하기 위해서다.
+  final FirebaseMessaging? _injectedMessaging;
+  FirebaseMessaging get _messaging =>
+      _injectedMessaging ?? FirebaseMessaging.instance;
+
   bool _tokenRefreshListenerConfigured = false;
 
   /// 앱 실행 시 한 번만 호출
