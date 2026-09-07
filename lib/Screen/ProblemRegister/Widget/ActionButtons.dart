@@ -5,6 +5,7 @@ import '../../../Module/Motion/AppHaptic.dart';
 import '../../../Module/Motion/PressableScale.dart';
 import '../../../Module/Text/StandardText.dart';
 import '../../../Module/Theme/ThemeHandler.dart';
+import '../../../Module/Design/AppRadius.dart';
 
 class ActionButtons extends StatelessWidget {
   final bool isEdit;
@@ -31,7 +32,7 @@ class ActionButtons extends StatelessWidget {
         alignment: Alignment.center,
         decoration: BoxDecoration(
           color: theme.primaryColor,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppRadius.large),
         ),
         child: StandardText(
           text: isEdit ? '수정 완료' : '작성 완료',

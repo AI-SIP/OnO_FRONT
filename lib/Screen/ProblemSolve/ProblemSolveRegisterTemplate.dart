@@ -17,6 +17,8 @@ import '../../Module/Motion/AppHaptic.dart';
 import '../../Module/Motion/PressableScale.dart';
 import '../../Module/Motion/TossPageRoute.dart';
 import '../../Module/Motion/TossDialog.dart';
+import '../../Module/Design/AppColors.dart';
+import '../../Module/Design/AppRadius.dart';
 
 class ProblemSolveRegisterTemplate extends StatefulWidget {
   final int problemId;
@@ -133,7 +135,7 @@ class ProblemSolveRegisterTemplateState
       padding: const EdgeInsets.all(20.0),
       decoration: BoxDecoration(
         color: themeProvider.primaryColor.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(16.0),
+        borderRadius: BorderRadius.circular(AppRadius.large),
       ),
       child: Row(
         children: [
@@ -286,7 +288,7 @@ class ProblemSolveRegisterTemplateState
             color: isSelected ? color : Colors.grey[300]!,
             width: 1,
           ),
-          borderRadius: BorderRadius.circular(12.0),
+          borderRadius: BorderRadius.circular(AppRadius.medium),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -361,7 +363,7 @@ class ProblemSolveRegisterTemplateState
         padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 10.0),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(8.0),
+          borderRadius: BorderRadius.circular(AppRadius.small),
           border: Border.all(
             color: value
                 ? themeProvider.primaryColor.withOpacity(0.3)
@@ -414,8 +416,8 @@ class ProblemSolveRegisterTemplateState
             padding: const EdgeInsets.fromLTRB(12, 10, 8, 10),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: Colors.grey[300]!, width: 1),
+              borderRadius: BorderRadius.circular(AppRadius.medium),
+              border: Border.all(color: AppColors.border),
             ),
             child: Row(
               children: [
@@ -506,15 +508,15 @@ class ProblemSolveRegisterTemplateState
             ),
             decoration: InputDecoration(
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppRadius.medium),
                 borderSide: BorderSide(color: Colors.grey[300]!, width: 1),
               ),
               enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppRadius.medium),
                 borderSide: BorderSide(color: Colors.grey[300]!, width: 1),
               ),
               focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppRadius.medium),
                 borderSide: BorderSide(
                   color: themeProvider.primaryColor.withOpacity(0.5),
                   width: 1,
@@ -580,7 +582,7 @@ class ProblemSolveRegisterTemplateState
         return Dialog(
           backgroundColor: Colors.white,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(AppRadius.large),
           ),
           child: Container(
             padding: const EdgeInsets.all(24),
@@ -594,7 +596,7 @@ class ProblemSolveRegisterTemplateState
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
                         color: themeProvider.primaryColor.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(AppRadius.small),
                       ),
                       child: Icon(
                         Icons.timer_outlined,
@@ -635,17 +637,17 @@ class ProblemSolveRegisterTemplateState
                     fillColor: Colors.grey[50],
                     filled: true,
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppRadius.medium),
                       borderSide:
                           BorderSide(color: Colors.grey[300]!, width: 1),
                     ),
                     enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppRadius.medium),
                       borderSide:
                           BorderSide(color: Colors.grey[300]!, width: 1),
                     ),
                     focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppRadius.medium),
                       borderSide: BorderSide(
                         color: themeProvider.primaryColor.withOpacity(0.5),
                         width: 2,
@@ -667,7 +669,8 @@ class ProblemSolveRegisterTemplateState
                           padding: const EdgeInsets.symmetric(vertical: 12),
                           backgroundColor: Colors.grey[100],
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius:
+                                BorderRadius.circular(AppRadius.small),
                           ),
                         ),
                         child: StandardText(
@@ -691,7 +694,8 @@ class ProblemSolveRegisterTemplateState
                           padding: const EdgeInsets.symmetric(vertical: 12),
                           backgroundColor: themeProvider.primaryColor,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius:
+                                BorderRadius.circular(AppRadius.small),
                           ),
                         ),
                         child: const StandardText(
@@ -722,7 +726,7 @@ class ProblemSolveRegisterTemplateState
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
             color: themeProvider.primaryColor.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(AppRadius.small),
           ),
           child: Icon(
             icon,
@@ -746,8 +750,8 @@ class ProblemSolveRegisterTemplateState
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.grey[50],
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[200]!, width: 1),
+        borderRadius: BorderRadius.circular(AppRadius.medium),
+        border: Border.all(color: AppColors.border),
       ),
       child: child,
     );

@@ -33,6 +33,8 @@ import '../../Module/Motion/AppHaptic.dart';
 import '../../Module/Motion/PressableScale.dart';
 import '../../Module/Motion/TossPageRoute.dart';
 import '../../Module/Motion/TossDialog.dart';
+import '../../Module/Design/AppColors.dart';
+import '../../Module/Design/AppRadius.dart';
 
 class ProblemRegisterTemplate extends StatefulWidget {
   final ProblemModel? problemModel;
@@ -316,8 +318,8 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.grey[50],
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[200]!, width: 1),
+        borderRadius: BorderRadius.circular(AppRadius.medium),
+        border: Border.all(color: AppColors.border),
       ),
       child: child,
     );
@@ -590,8 +592,8 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.grey[50],
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[200]!, width: 1),
+        borderRadius: BorderRadius.circular(AppRadius.medium),
+        border: Border.all(color: AppColors.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -602,7 +604,7 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
                   color: themeProvider.primaryColor.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(AppRadius.small),
                 ),
                 child: Icon(
                   Icons.local_offer,
@@ -630,7 +632,7 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
                   backgroundColor: themeProvider.primaryColor,
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(AppRadius.medium),
                   ),
                   padding:
                       const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
@@ -661,8 +663,8 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: Colors.grey[300]!, width: 1),
+              borderRadius: BorderRadius.circular(AppRadius.medium),
+              border: Border.all(color: AppColors.border),
             ),
             child: _selectedTagIds.isEmpty
                 ? StandardText(
@@ -683,7 +685,8 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
                                       horizontal: 10, vertical: 5),
                                   decoration: BoxDecoration(
                                     color: Colors.white,
-                                    borderRadius: BorderRadius.circular(8),
+                                    borderRadius:
+                                        BorderRadius.circular(AppRadius.small),
                                     border: Border.all(
                                       color: themeProvider.primaryColor,
                                       width: 1,
@@ -783,7 +786,8 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
                                       color: isSelected
                                           ? themeProvider.primaryColor
                                           : Colors.white,
-                                      borderRadius: BorderRadius.circular(8),
+                                      borderRadius: BorderRadius.circular(
+                                          AppRadius.small),
                                       border: Border.all(
                                         color: isSelected
                                             ? themeProvider.primaryColor
@@ -940,7 +944,7 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
         return Dialog(
           backgroundColor: Colors.white,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(AppRadius.large),
           ),
           child: Container(
             padding: const EdgeInsets.all(24),
@@ -954,7 +958,7 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
                         color: Colors.orange.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(AppRadius.small),
                       ),
                       child: const Icon(
                         Icons.warning_rounded,
@@ -990,7 +994,7 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
                           horizontal: 16, vertical: 10),
                       backgroundColor: themeProvider.primaryColor,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(AppRadius.small),
                       ),
                     ),
                     child: const StandardText(
@@ -1017,7 +1021,7 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
         return Dialog(
           backgroundColor: Colors.white,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(AppRadius.large),
           ),
           child: Container(
             padding: const EdgeInsets.all(24),
@@ -1031,7 +1035,7 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
                         color: Colors.orange.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(AppRadius.small),
                       ),
                       child: const Icon(
                         Icons.warning_rounded,
@@ -1067,7 +1071,7 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
                           horizontal: 16, vertical: 10),
                       backgroundColor: themeProvider.primaryColor,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(AppRadius.small),
                       ),
                     ),
                     child: const StandardText(

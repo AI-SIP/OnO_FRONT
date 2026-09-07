@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../Module/Text/StandardText.dart';
 import '../../../Module/Theme/ThemeHandler.dart';
 import '../../../Module/Motion/PressableScale.dart';
+import '../../../Module/Design/AppRadius.dart';
 
 class SettingMenuButtons extends StatelessWidget {
   final ThemeHandler themeProvider;
@@ -34,7 +35,7 @@ class SettingMenuButtons extends StatelessWidget {
       padding: EdgeInsets.all(screenHeight * 0.015),
       decoration: BoxDecoration(
         color: Colors.grey[50],
-        borderRadius: BorderRadius.circular(15),
+        borderRadius: BorderRadius.circular(AppRadius.large),
         border: Border.all(
           color: Colors.grey[300]!,
           width: 1,

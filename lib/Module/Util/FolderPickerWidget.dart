@@ -8,6 +8,8 @@ import '../Theme/ThemeHandler.dart';
 import 'FolderPickerDialog.dart';
 import '../Motion/PressableScale.dart';
 import '../Motion/TossDialog.dart';
+import '../Design/AppColors.dart';
+import '../Design/AppRadius.dart';
 
 class FolderPickerWidget extends StatefulWidget {
   final int? selectedId;
@@ -65,8 +67,8 @@ class _FolderPickerWidgetState extends State<FolderPickerWidget> {
         padding: const EdgeInsets.all(16.0),
         decoration: BoxDecoration(
           color: Colors.grey[50],
-          borderRadius: BorderRadius.circular(12.0),
-          border: Border.all(color: Colors.grey[200]!, width: 1),
+          borderRadius: BorderRadius.circular(AppRadius.medium),
+          border: Border.all(color: AppColors.border),
         ),
         child: Row(
           children: [
@@ -74,7 +76,7 @@ class _FolderPickerWidgetState extends State<FolderPickerWidget> {
               padding: const EdgeInsets.all(8.0),
               decoration: BoxDecoration(
                 color: theme.primaryColor.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8.0),
+                borderRadius: BorderRadius.circular(AppRadius.small),
               ),
               child: Icon(
                 Icons.menu_book_outlined,
@@ -109,8 +111,8 @@ class _FolderPickerWidgetState extends State<FolderPickerWidget> {
       padding: const EdgeInsets.all(16.0),
       decoration: BoxDecoration(
         color: Colors.grey[50],
-        borderRadius: BorderRadius.circular(12.0),
-        border: Border.all(color: Colors.grey[200]!, width: 1),
+        borderRadius: BorderRadius.circular(AppRadius.medium),
+        border: Border.all(color: AppColors.border),
       ),
       child: Row(
         children: [
@@ -118,7 +120,7 @@ class _FolderPickerWidgetState extends State<FolderPickerWidget> {
             padding: const EdgeInsets.all(8.0),
             decoration: BoxDecoration(
               color: theme.primaryColor.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8.0),
+              borderRadius: BorderRadius.circular(AppRadius.small),
             ),
             child: Icon(
               Icons.menu_book_outlined,
@@ -147,8 +149,8 @@ class _FolderPickerWidgetState extends State<FolderPickerWidget> {
                 padding: const EdgeInsets.fromLTRB(22, 10, 12, 10),
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.grey[300]!, width: 1),
+                  borderRadius: BorderRadius.circular(AppRadius.small),
+                  border: Border.all(color: AppColors.border),
                 ),
                 child: Row(
                   children: [

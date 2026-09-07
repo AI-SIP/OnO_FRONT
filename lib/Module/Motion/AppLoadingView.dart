@@ -4,6 +4,7 @@ import 'package:flutter_svg/svg.dart';
 import '../Text/StandardText.dart';
 import 'AnimatedGauge.dart';
 import 'AppMotion.dart';
+import '../Design/AppRadius.dart';
 
 /// 기다리는 동안 보여 주는 화면을 한 가지로 맞춘 것이다.
 ///
@@ -136,7 +137,7 @@ class AppLoadingCard extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(AppRadius.xlarge),
         ),
         child: AppLoadingView(
           message: message,

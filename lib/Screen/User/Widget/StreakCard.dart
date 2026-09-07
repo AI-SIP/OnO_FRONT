@@ -11,6 +11,8 @@ import '../../../Module/Theme/ThemeHandler.dart';
 import '../../../Service/Api/StudyCalendar/StudyCalendarService.dart';
 import '../LearningCalendarScreen.dart';
 import '../../../Module/Motion/TossPageRoute.dart';
+import '../../../Module/Design/AppColors.dart';
+import '../../../Module/Design/AppRadius.dart';
 
 class StreakCard extends StatefulWidget {
   final ThemeHandler themeProvider;
@@ -119,8 +121,8 @@ class _StreakCardState extends State<StreakCard> {
       ),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(15),
-        border: Border.all(color: Colors.grey[300]!, width: 1),
+        borderRadius: BorderRadius.circular(AppRadius.large),
+        border: Border.all(color: AppColors.border),
         boxShadow: [
           BoxShadow(
             color: primaryColor.withValues(alpha: 0.1),
@@ -227,7 +229,7 @@ class _StreakCardState extends State<StreakCard> {
         ),
         decoration: BoxDecoration(
           color: primaryColor.withValues(alpha: 0.07),
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(AppRadius.medium),
         ),
         child: Row(
           children: [

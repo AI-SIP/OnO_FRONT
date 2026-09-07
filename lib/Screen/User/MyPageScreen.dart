@@ -29,6 +29,7 @@ import 'Widget/ThemeChangeButton.dart';
 import 'Widget/StreakCard.dart';
 import 'Widget/UserLevelCard.dart';
 import '../../Module/Motion/TossDialog.dart';
+import '../../Module/Design/AppRadius.dart';
 
 class SettingScreen extends StatefulWidget {
   final TutorialTargets? tutorialTargets;
@@ -238,7 +239,7 @@ class _SettingScreenState extends State<SettingScreen> {
           ),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(15),
+            borderRadius: BorderRadius.circular(AppRadius.large),
             border: Border.all(
               color: Colors.grey[300]!,
               width: 1,
@@ -260,7 +261,7 @@ class _SettingScreenState extends State<SettingScreen> {
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
                       color: themeProvider.primaryColor.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppRadius.medium),
                     ),
                     child: Icon(
                       Icons.stacked_bar_chart_rounded,
@@ -359,7 +360,8 @@ class _SettingScreenState extends State<SettingScreen> {
                               width: 16,
                               height: barHeight,
                               decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(8),
+                                borderRadius:
+                                    BorderRadius.circular(AppRadius.small),
                                 gradient: LinearGradient(
                                   begin: Alignment.bottomCenter,
                                   end: Alignment.topCenter,
@@ -517,7 +519,7 @@ class _MyPageSettingsScreenState extends State<_MyPageSettingsScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
           color: Colors.grey[50],
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppRadius.medium),
         ),
         child: Row(
           children: [
@@ -629,7 +631,7 @@ class _MyPageSettingsScreenState extends State<_MyPageSettingsScreen> {
       padding: EdgeInsets.all(screenHeight * 0.015),
       decoration: BoxDecoration(
         color: Colors.grey[50],
-        borderRadius: BorderRadius.circular(15),
+        borderRadius: BorderRadius.circular(AppRadius.large),
         border: Border.all(
           color: Colors.grey[300]!,
           width: 1,
@@ -711,7 +713,7 @@ class _MyPageSettingsScreenState extends State<_MyPageSettingsScreen> {
                   backgroundColor:
                       themeProvider.primaryColor.withValues(alpha: 0.10),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(AppRadius.small),
                   ),
                 ),
                 child: StandardText(
@@ -961,15 +963,15 @@ class _NameChangeDialogState extends State<_NameChangeDialog> {
               vertical: 12,
             ),
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(AppRadius.medium),
               borderSide: BorderSide(color: Colors.grey[300]!, width: 1),
             ),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(AppRadius.medium),
               borderSide: BorderSide(color: Colors.grey[300]!, width: 1),
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(AppRadius.medium),
               borderSide: BorderSide(
                 color: widget.themeProvider.primaryColor.withValues(alpha: 0.6),
                 width: 1.5,
@@ -998,7 +1000,7 @@ class _NameChangeDialogState extends State<_NameChangeDialog> {
               vertical: 10,
             ),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(AppRadius.small),
             ),
           ),
           child: _isSaving
@@ -1039,7 +1041,7 @@ Widget _buildTutorialReplaySection({
     padding: EdgeInsets.all(screenHeight * 0.015),
     decoration: BoxDecoration(
       color: Colors.grey[50],
-      borderRadius: BorderRadius.circular(15),
+      borderRadius: BorderRadius.circular(AppRadius.large),
       border: Border.all(
         color: Colors.grey[300]!,
         width: 1,
@@ -1098,7 +1100,7 @@ void _showConfirmationDialog(BuildContext context, String title, String message,
       return Dialog(
         backgroundColor: Colors.white,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppRadius.large),
         ),
         child: Container(
           padding: const EdgeInsets.all(24),
@@ -1111,7 +1113,7 @@ void _showConfirmationDialog(BuildContext context, String title, String message,
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
                       color: Colors.orange.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(AppRadius.small),
                     ),
                     child: const Icon(
                       Icons.warning_amber_rounded,
@@ -1148,7 +1150,7 @@ void _showConfirmationDialog(BuildContext context, String title, String message,
                             horizontal: 12, vertical: 8),
                         backgroundColor: Colors.grey[100],
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(AppRadius.small),
                         ),
                       ),
                       child: const StandardText(
@@ -1170,7 +1172,7 @@ void _showConfirmationDialog(BuildContext context, String title, String message,
                             horizontal: 12, vertical: 8),
                         backgroundColor: Colors.red,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(AppRadius.small),
                         ),
                       ),
                       child: const StandardText(

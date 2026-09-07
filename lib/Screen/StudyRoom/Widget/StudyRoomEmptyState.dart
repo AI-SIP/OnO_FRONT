@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '../../../Module/Text/StandardText.dart';
 import '../../../Module/Theme/ThemeHandler.dart';
 import 'StudyRoomThumbnail.dart';
+import '../../../Module/Design/AppColors.dart';
+import '../../../Module/Design/AppRadius.dart';
 
 class StudyRoomEmptyState extends StatelessWidget {
   final ThemeHandler themeProvider;
@@ -36,7 +38,7 @@ class StudyRoomEmptyState extends StatelessWidget {
               decoration: BoxDecoration(
                 color: const Color(0xFFF4F7F5),
                 shape: BoxShape.circle,
-                border: Border.all(color: Colors.grey[200]!, width: 1),
+                border: Border.all(color: AppColors.border),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withValues(alpha: 0.06),
@@ -110,7 +112,7 @@ class StudyRoomEmptyState extends StatelessWidget {
           backgroundColor: backgroundColor,
           padding: const EdgeInsets.symmetric(vertical: 14),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppRadius.medium),
           ),
         ),
         child: Row(

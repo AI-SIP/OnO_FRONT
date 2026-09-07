@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:ono/Module/Text/StandardText.dart';
+import '../../Module/Design/AppRadius.dart';
 
 class UserGuideScreen extends StatefulWidget {
   final VoidCallback
@@ -154,7 +155,8 @@ class _UserGuideScreenState extends State<UserGuideScreen> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.green,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20), // 둥근 모서리 설정
+                      borderRadius:
+                          BorderRadius.circular(AppRadius.xlarge), // 둥근 모서리 설정
                     ),
                   ),
                   child: StandardText(
@@ -178,7 +180,7 @@ class _UserGuideScreenState extends State<UserGuideScreen> {
       height: 8.0,
       decoration: BoxDecoration(
         color: isActive ? Colors.green : Colors.grey,
-        borderRadius: BorderRadius.circular(8.0),
+        borderRadius: BorderRadius.circular(AppRadius.small),
       ),
     );
   }

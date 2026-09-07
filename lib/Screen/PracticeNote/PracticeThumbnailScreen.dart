@@ -21,6 +21,8 @@ import '../../Module/Motion/PressableScale.dart';
 import '../../Module/Motion/Skeleton.dart';
 import '../../Module/Motion/TossPageRoute.dart';
 import '../../Module/Motion/TossDialog.dart';
+import '../../Module/Design/AppColors.dart';
+import '../../Module/Design/AppRadius.dart';
 
 class PracticeThumbnailScreen extends StatefulWidget {
   final TutorialTargets? tutorialTargets;
@@ -211,7 +213,8 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
                             color: themeProvider.primaryColor.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius:
+                                BorderRadius.circular(AppRadius.small),
                           ),
                           child: Icon(
                             Icons.edit_note,
@@ -277,8 +280,8 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
           color: Colors.grey[50],
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey[200]!, width: 1),
+          borderRadius: BorderRadius.circular(AppRadius.medium),
+          border: Border.all(color: AppColors.border),
         ),
         child: Row(
           children: [
@@ -317,7 +320,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
                 backgroundColor: Colors.grey[300],
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(AppRadius.small),
                 ),
               ),
               onPressed: () {
@@ -340,7 +343,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
                 backgroundColor: Colors.red,
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(AppRadius.small),
                 ),
               ),
               onPressed: _selectedPracticeIds.isNotEmpty
@@ -385,7 +388,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
         return Dialog(
           backgroundColor: Colors.white,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(AppRadius.large),
           ),
           child: Container(
             padding: const EdgeInsets.all(24),
@@ -399,7 +402,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
                         color: Colors.red.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(AppRadius.small),
                       ),
                       child: const Icon(
                         Icons.delete_forever,
@@ -438,7 +441,8 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
                               horizontal: 16, vertical: 10),
                           backgroundColor: Colors.grey[100],
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius:
+                                BorderRadius.circular(AppRadius.small),
                           ),
                         ),
                         child: StandardText(
@@ -481,7 +485,8 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
                               horizontal: 16, vertical: 10),
                           backgroundColor: Colors.red,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius:
+                                BorderRadius.circular(AppRadius.small),
                           ),
                         ),
                         child: const StandardText(
@@ -543,7 +548,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
                     vertical: 8,
                   ),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(15),
+                    borderRadius: BorderRadius.circular(AppRadius.large),
                   ),
                 ),
                 child: const StandardText(
@@ -667,7 +672,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
       color: isSelected
           ? themeProvider.primaryColor.withOpacity(0.1)
           : Colors.white,
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(AppRadius.medium),
       boxShadow: [
         BoxShadow(
           color: Colors.grey.withOpacity(0.2),
@@ -684,7 +689,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
       width: 50,
       height: 70,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppRadius.small),
         color: isSelected
             ? themeProvider.primaryColor
             : themeProvider.primaryColor.withOpacity(0.1),

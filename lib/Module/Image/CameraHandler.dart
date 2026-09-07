@@ -7,6 +7,7 @@ import '../Text/StandardText.dart';
 import '../Theme/ThemeHandler.dart';
 import '../Motion/TossPageRoute.dart';
 import '../Motion/PressableScale.dart';
+import '../Design/AppRadius.dart';
 
 class CameraHandler {
   CameraController? _controller;
@@ -144,7 +145,7 @@ class _CameraScreenState extends State<CameraScreen> {
                       height: 40,
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.88),
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(AppRadius.medium),
                       ),
                       child: const Icon(
                         Icons.close_rounded,
@@ -166,7 +167,7 @@ class _CameraScreenState extends State<CameraScreen> {
                             themeProvider.primaryColor.withValues(alpha: 0.12),
                           ],
                         ),
-                        borderRadius: BorderRadius.circular(14),
+                        borderRadius: BorderRadius.circular(AppRadius.large),
                       ),
                       child: Row(
                         children: [

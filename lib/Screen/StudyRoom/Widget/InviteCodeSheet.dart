@@ -7,6 +7,7 @@ import 'package:share_plus/share_plus.dart';
 import '../../../Model/StudyRoom/InviteCodeModel.dart';
 import '../../../Module/Text/StandardText.dart';
 import '../../../Module/Theme/ThemeHandler.dart';
+import '../../../Module/Design/AppRadius.dart';
 
 class InviteCodeSheet extends StatelessWidget {
   final InviteCodeModel inviteCode;
@@ -89,7 +90,7 @@ class InviteCodeSheet extends StatelessWidget {
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
                   color: themeProvider.primaryColor.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(AppRadius.small),
                 ),
                 child: Icon(
                   Icons.key_outlined,
@@ -119,7 +120,7 @@ class InviteCodeSheet extends StatelessWidget {
             padding: EdgeInsets.symmetric(vertical: screenHeight * 0.028),
             decoration: BoxDecoration(
               color: themeProvider.primaryColor.withOpacity(0.08),
-              borderRadius: BorderRadius.circular(15),
+              borderRadius: BorderRadius.circular(AppRadius.large),
               border: Border.all(
                 color: themeProvider.primaryColor.withOpacity(0.2),
                 width: 1,
@@ -143,7 +144,7 @@ class InviteCodeSheet extends StatelessWidget {
                     backgroundColor: Colors.grey[100],
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppRadius.medium),
                     ),
                   ),
                   child: Row(
@@ -168,7 +169,7 @@ class InviteCodeSheet extends StatelessWidget {
                     backgroundColor: themeProvider.primaryColor,
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppRadius.medium),
                     ),
                   ),
                   child: const Row(

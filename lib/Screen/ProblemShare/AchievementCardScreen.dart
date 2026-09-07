@@ -14,6 +14,7 @@ import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Util/AppErrorReporter.dart';
 import '../../Util/AppSnackBar.dart';
+import '../../Module/Design/AppRadius.dart';
 
 class AchievementCardScreen extends StatefulWidget {
   final UserInfoModel userInfo;
@@ -188,8 +189,8 @@ class _AchievementCardScreenState extends State<AchievementCardScreen> {
         style: ElevatedButton.styleFrom(
           backgroundColor: themeProvider.primaryColor,
           minimumSize: const Size(double.infinity, 48),
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppRadius.medium)),
           elevation: 0,
         ),
       ),
@@ -236,7 +237,7 @@ class _AchievementCard extends StatelessWidget {
       width: 360,
       height: 600,
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(AppRadius.xlarge),
         child: Stack(
           children: [
             Container(color: Colors.white),
@@ -345,7 +346,7 @@ class _AchievementCard extends StatelessWidget {
                           horizontal: 9, vertical: 4),
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.22),
-                        borderRadius: BorderRadius.circular(999),
+                        borderRadius: BorderRadius.circular(AppRadius.full),
                         border: Border.all(
                           color: Colors.white.withValues(alpha: 0.42),
                           width: 1,
@@ -377,7 +378,7 @@ class _AchievementCard extends StatelessWidget {
                             horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.16),
-                          borderRadius: BorderRadius.circular(7),
+                          borderRadius: BorderRadius.circular(AppRadius.small),
                         ),
                         child: Text(
                           '이번 주 공부 기록',
@@ -500,7 +501,7 @@ class _AchievementCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: themeProvider.primaryColor.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppRadius.large),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -689,7 +690,7 @@ class _AchievementCard extends StatelessWidget {
           const SizedBox(width: 10),
           Expanded(
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(999),
+              borderRadius: BorderRadius.circular(AppRadius.full),
               child: LinearProgressIndicator(
                 value: progress,
                 backgroundColor:

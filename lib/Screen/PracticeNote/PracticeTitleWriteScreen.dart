@@ -19,6 +19,8 @@ import '../../Module/Motion/AppHaptic.dart';
 import '../../Module/Motion/PressableScale.dart';
 import '../../Module/Motion/TossDialog.dart';
 import '../../Module/Motion/AppMotion.dart';
+import '../../Module/Design/AppColors.dart';
+import '../../Module/Design/AppRadius.dart';
 
 class PracticeTitleWriteScreen extends StatefulWidget {
   final PracticeNoteRegisterModel? practiceRegisterModel;
@@ -187,7 +189,7 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
         return Dialog(
           backgroundColor: Colors.white,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(AppRadius.large),
           ),
           child: Container(
             padding: const EdgeInsets.all(24),
@@ -201,7 +203,7 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
                         color: Colors.orange.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(AppRadius.small),
                       ),
                       child: const Icon(
                         Icons.warning_rounded,
@@ -237,7 +239,7 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
                           horizontal: 16, vertical: 10),
                       backgroundColor: themeProvider.primaryColor,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(AppRadius.small),
                       ),
                     ),
                     child: const StandardText(
@@ -367,15 +369,15 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
           ),
           decoration: InputDecoration(
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppRadius.medium),
               borderSide: BorderSide(color: Colors.grey[300]!, width: 1),
             ),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppRadius.medium),
               borderSide: BorderSide(color: Colors.grey[300]!, width: 1),
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppRadius.medium),
               borderSide: BorderSide(
                 color: themeProvider.primaryColor.withOpacity(0.5),
                 width: 2,
@@ -405,7 +407,7 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
       decoration: BoxDecoration(
         color: themeProvider.primaryColor.withOpacity(0.1),
         border: Border.all(color: themeProvider.primaryColor, width: 1.0),
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(AppRadius.medium),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -453,7 +455,7 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
           style: ElevatedButton.styleFrom(
             backgroundColor: themeProvider.primaryColor,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(AppRadius.large),
             ),
             elevation: 0,
           ),
@@ -501,8 +503,8 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
         Container(
           decoration: BoxDecoration(
             color: Colors.grey[50],
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.grey[200]!, width: 1),
+            borderRadius: BorderRadius.circular(AppRadius.medium),
+            border: Border.all(color: AppColors.border),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -603,7 +605,8 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
                                   color: isSelected
                                       ? theme.primaryColor.withOpacity(0.1)
                                       : Colors.white,
-                                  borderRadius: BorderRadius.circular(20),
+                                  borderRadius:
+                                      BorderRadius.circular(AppRadius.xlarge),
                                   border: Border.all(
                                     color: isSelected
                                         ? theme.primaryColor
@@ -642,9 +645,9 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
                               horizontal: 16, vertical: 12),
                           decoration: BoxDecoration(
                             color: Colors.white,
-                            borderRadius: BorderRadius.circular(8),
-                            border:
-                                Border.all(color: Colors.grey[300]!, width: 1),
+                            borderRadius:
+                                BorderRadius.circular(AppRadius.small),
+                            border: Border.all(color: AppColors.border),
                           ),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -697,7 +700,7 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
         decoration: BoxDecoration(
           color:
               isSelected ? theme.primaryColor.withOpacity(0.1) : Colors.white,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(AppRadius.small),
           border: Border.all(
             color: isSelected ? theme.primaryColor : Colors.grey[300]!,
             width: isSelected ? 2 : 1,
@@ -764,7 +767,7 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
                           color: themeProvider.primaryColor.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(AppRadius.small),
                         ),
                         child: Icon(
                           Icons.access_time,
@@ -815,7 +818,7 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         backgroundColor: themeProvider.primaryColor,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(AppRadius.medium),
                         ),
                       ),
                       child: const StandardText(

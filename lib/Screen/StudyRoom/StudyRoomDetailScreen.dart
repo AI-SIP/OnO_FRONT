@@ -23,6 +23,8 @@ import '../../Module/Motion/PressableScale.dart';
 import '../../Module/Motion/TossPageRoute.dart';
 import '../../Module/Motion/TossDialog.dart';
 import '../../Module/Motion/AppMotion.dart';
+import '../../Module/Design/AppColors.dart';
+import '../../Module/Design/AppRadius.dart';
 
 class StudyRoomDetailScreen extends StatefulWidget {
   final int roomId;
@@ -199,7 +201,7 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
       builder: (_) => Dialog(
         backgroundColor: Colors.white,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(15),
+          borderRadius: BorderRadius.circular(AppRadius.large),
           side: BorderSide(color: Colors.grey[200]!, width: 1),
         ),
         child: ConstrainedBox(
@@ -215,7 +217,7 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
                         color: iconColor.withValues(alpha: 0.10),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(AppRadius.small),
                       ),
                       child: Icon(icon, color: iconColor, size: 20),
                     ),
@@ -247,7 +249,8 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
                           backgroundColor: Colors.grey[50],
                           padding: const EdgeInsets.symmetric(vertical: 13),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius:
+                                BorderRadius.circular(AppRadius.medium),
                             side: BorderSide(
                               color: Colors.grey[200]!,
                               width: 1,
@@ -269,7 +272,8 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
                           backgroundColor: confirmColor,
                           padding: const EdgeInsets.symmetric(vertical: 13),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius:
+                                BorderRadius.circular(AppRadius.medium),
                           ),
                         ),
                         child: StandardText(
@@ -447,8 +451,8 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
       ),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(15),
-        border: Border.all(color: Colors.grey[300]!, width: 1),
+        borderRadius: BorderRadius.circular(AppRadius.large),
+        border: Border.all(color: AppColors.border),
         boxShadow: [
           BoxShadow(
             color: themeProvider.primaryColor.withValues(alpha: 0.10),
@@ -754,7 +758,7 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
                 color: themeProvider.primaryColor.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(999),
+                borderRadius: BorderRadius.circular(AppRadius.full),
               ),
               child: StandardText(
                 text: '$count개',
@@ -786,7 +790,7 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
               backgroundColor: themeProvider.primaryColor,
               padding: const EdgeInsets.symmetric(vertical: 12),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppRadius.medium),
               ),
             ),
             child: const Row(
@@ -998,7 +1002,7 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
                       decoration: BoxDecoration(
                         color:
                             themeProvider.primaryColor.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(AppRadius.small),
                       ),
                       child: Icon(
                         Icons.manage_accounts_outlined,
@@ -1033,9 +1037,8 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
                         ),
                         decoration: BoxDecoration(
                           color: Colors.grey[50],
-                          borderRadius: BorderRadius.circular(12),
-                          border:
-                              Border.all(color: Colors.grey[200]!, width: 1),
+                          borderRadius: BorderRadius.circular(AppRadius.medium),
+                          border: Border.all(color: AppColors.border),
                         ),
                         child: Row(
                           children: [
@@ -1131,7 +1134,8 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
                                     vertical: 8,
                                   ),
                                   shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(10),
+                                    borderRadius:
+                                        BorderRadius.circular(AppRadius.medium),
                                   ),
                                 ),
                                 child: const StandardText(
@@ -1167,8 +1171,8 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
           color: Colors.grey[50],
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey[200]!, width: 1),
+          borderRadius: BorderRadius.circular(AppRadius.medium),
+          border: Border.all(color: AppColors.border),
         ),
         child: Row(
           children: [

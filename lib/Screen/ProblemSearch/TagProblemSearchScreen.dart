@@ -18,6 +18,8 @@ import '../../Module/Motion/AppHaptic.dart';
 import '../../Module/Motion/PressableScale.dart';
 import '../../Module/Motion/Skeleton.dart';
 import '../../Module/Motion/TossPageRoute.dart';
+import '../../Module/Design/AppColors.dart';
+import '../../Module/Design/AppRadius.dart';
 
 enum _SearchMode { tag, title }
 
@@ -309,7 +311,7 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
               color: selected
                   ? themeProvider.primaryColor.withOpacity(0.08)
                   : Colors.white,
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(AppRadius.medium),
               border: Border.all(
                 color:
                     selected ? themeProvider.primaryColor : Colors.grey[300]!,
@@ -385,15 +387,15 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
           contentPadding:
               const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(AppRadius.medium),
             borderSide: BorderSide(color: Colors.grey[300]!, width: 1),
           ),
           enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(AppRadius.medium),
             borderSide: BorderSide(color: Colors.grey[300]!, width: 1),
           ),
           focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(AppRadius.medium),
             borderSide: BorderSide(
               color: themeProvider.primaryColor.withOpacity(0.5),
               width: 1.5,
@@ -420,8 +422,8 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           decoration: BoxDecoration(
             color: Colors.grey[50],
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: Colors.grey[300]!, width: 1),
+            borderRadius: BorderRadius.circular(AppRadius.medium),
+            border: Border.all(color: AppColors.border),
           ),
           child: StandardText(
             text: '생성된 태그가 없습니다.',
@@ -452,7 +454,7 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
                     color: selected
                         ? themeProvider.primaryColor.withOpacity(0.08)
                         : Colors.white,
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(AppRadius.small),
                     border: Border.all(
                       color: selected
                           ? themeProvider.primaryColor
@@ -624,7 +626,7 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
         style: ElevatedButton.styleFrom(
           backgroundColor: themeProvider.primaryColor,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(15),
+            borderRadius: BorderRadius.circular(AppRadius.large),
           ),
           padding: const EdgeInsets.all(10),
         ),

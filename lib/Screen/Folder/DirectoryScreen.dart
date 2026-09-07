@@ -39,6 +39,8 @@ import '../ProblemSearch/TagProblemSearchScreen.dart';
 import '../ReviewDue/ReviewDueScreen.dart';
 import '../Tutorial/TutorialTargets.dart';
 import '../../Module/Motion/TossDialog.dart';
+import '../../Module/Design/AppColors.dart';
+import '../../Module/Design/AppRadius.dart';
 
 class DirectoryScreen extends StatefulWidget {
   final int? folderId; // 이 화면이 표시할 폴더 ID
@@ -744,8 +746,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey[200]!, width: 1),
+          borderRadius: BorderRadius.circular(AppRadius.medium),
+          border: Border.all(color: AppColors.border),
           boxShadow: const [
             BoxShadow(
               color: Color(0x1A000000),
@@ -904,7 +906,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
                             color: themeProvider.primaryColor.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius:
+                                BorderRadius.circular(AppRadius.small),
                           ),
                           child: Icon(
                             Icons.edit_note,
@@ -999,8 +1002,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
           color: Colors.grey[50],
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey[200]!, width: 1),
+          borderRadius: BorderRadius.circular(AppRadius.medium),
+          border: Border.all(color: AppColors.border),
         ),
         child: Row(
           children: [
@@ -1122,7 +1125,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
             Dialog(
               backgroundColor: Colors.white,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(AppRadius.large),
               ),
               child: Container(
                 padding: const EdgeInsets.all(24),
@@ -1137,7 +1140,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
                             color: themeProvider.primaryColor.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius:
+                                BorderRadius.circular(AppRadius.small),
                           ),
                           child: Icon(
                             Icons.edit,
@@ -1172,17 +1176,17 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                         fillColor: Colors.grey[50],
                         filled: true,
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(AppRadius.medium),
                           borderSide:
                               BorderSide(color: Colors.grey[300]!, width: 1),
                         ),
                         enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(AppRadius.medium),
                           borderSide:
                               BorderSide(color: Colors.grey[300]!, width: 1),
                         ),
                         focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(AppRadius.medium),
                           borderSide: BorderSide(
                             color: themeProvider.primaryColor.withOpacity(0.5),
                             width: 2,
@@ -1208,7 +1212,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                                 horizontal: 12, vertical: 8),
                             backgroundColor: Colors.grey[100],
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius:
+                                  BorderRadius.circular(AppRadius.small),
                             ),
                           ),
                           child: StandardText(
@@ -1230,7 +1235,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                                 horizontal: 12, vertical: 8),
                             backgroundColor: themeProvider.primaryColor,
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius:
+                                  BorderRadius.circular(AppRadius.small),
                             ),
                           ),
                           child: const StandardText(
@@ -1466,7 +1472,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       padding: const EdgeInsets.all(12.0),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppRadius.medium),
         boxShadow: [
           BoxShadow(
             color: Colors.grey.withOpacity(0.2),
@@ -1484,7 +1490,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
             height: 70,
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(8.0),
+              borderRadius: BorderRadius.circular(AppRadius.small),
             ),
             child: isSelected
                 ? const Icon(Icons.check, color: Colors.red)
@@ -1539,7 +1545,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       ),
       decoration: BoxDecoration(
         color: themeProvider.primaryColor.withValues(alpha: 0.09),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppRadius.small),
         border: Border.all(
           color: themeProvider.primaryColor.withValues(alpha: 0.18),
         ),
@@ -1606,7 +1612,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
               width: 50,
               height: 70,
               child: ClipRRect(
-                borderRadius: BorderRadius.circular(8.0),
+                borderRadius: BorderRadius.circular(AppRadius.small),
                 child: DisplayImage(
                   imagePath: imageUrl,
                   fit: BoxFit.cover,
@@ -1759,7 +1765,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
               style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.grey[300],
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(AppRadius.small),
                   ),
                   padding: const EdgeInsets.symmetric(vertical: 8)),
               onPressed: () {
@@ -1783,7 +1789,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
               style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.red,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(AppRadius.small),
                   ),
                   padding: const EdgeInsets.symmetric(vertical: 8)),
               onPressed: selectedCount > 0 ? _confirmDelete : () {},
@@ -1945,7 +1951,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         Dialog(
           backgroundColor: Colors.white,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(AppRadius.large),
           ),
           child: Container(
             padding: const EdgeInsets.all(24),
@@ -1959,7 +1965,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
                         color: Colors.red.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(AppRadius.small),
                       ),
                       child: const Icon(
                         Icons.delete_forever,
@@ -1996,7 +2002,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                               horizontal: 12, vertical: 8),
                           backgroundColor: Colors.grey[100],
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius:
+                                BorderRadius.circular(AppRadius.small),
                           ),
                         ),
                         child: const StandardText(
@@ -2018,7 +2025,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                               horizontal: 12, vertical: 8),
                           backgroundColor: Colors.red,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius:
+                                BorderRadius.circular(AppRadius.small),
                           ),
                         ),
                         child: const StandardText(
@@ -2198,8 +2206,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(15),
-            border: Border.all(color: Colors.grey[300]!, width: 1),
+            borderRadius: BorderRadius.circular(AppRadius.large),
+            border: Border.all(color: AppColors.border),
             boxShadow: [
               BoxShadow(
                 color: themeProvider.primaryColor.withValues(alpha: 0.1),
@@ -2214,7 +2222,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
                   color: themeProvider.primaryColor.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppRadius.medium),
                 ),
                 child: Icon(
                   Icons.auto_stories_outlined,
@@ -2240,7 +2248,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                               horizontal: 7, vertical: 2),
                           decoration: BoxDecoration(
                             color: themeProvider.primaryColor,
-                            borderRadius: BorderRadius.circular(10),
+                            borderRadius:
+                                BorderRadius.circular(AppRadius.medium),
                           ),
                           child: StandardText(
                             text: '${reviewDueProvider.dueCount}개',

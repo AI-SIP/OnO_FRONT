@@ -19,6 +19,8 @@ import '../../Exception/ApiException.dart';
 import '../../Module/Motion/AppHaptic.dart';
 import '../../Module/Motion/PressableScale.dart';
 import '../../Module/Motion/TossDialog.dart';
+import '../../Module/Design/AppColors.dart';
+import '../../Module/Design/AppRadius.dart';
 
 class ProblemPickerScreen extends StatefulWidget {
   final int roomId;
@@ -166,7 +168,8 @@ class _ProblemPickerScreenState extends State<ProblemPickerScreen> {
       builder: (_) => Dialog(
         backgroundColor: Colors.white,
         insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadius.large)),
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 340),
           child: Padding(
@@ -180,7 +183,7 @@ class _ProblemPickerScreenState extends State<ProblemPickerScreen> {
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
                         color: Colors.amber.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(AppRadius.small),
                       ),
                       child: const Icon(
                         Icons.info_outline,
@@ -215,7 +218,7 @@ class _ProblemPickerScreenState extends State<ProblemPickerScreen> {
                       backgroundColor: themeProvider.primaryColor,
                       padding: const EdgeInsets.symmetric(vertical: 13),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(AppRadius.medium),
                       ),
                     ),
                     child: const StandardText(
@@ -247,7 +250,8 @@ class _ProblemPickerScreenState extends State<ProblemPickerScreen> {
       builder: (_) => Dialog(
         backgroundColor: Colors.white,
         insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadius.large)),
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 520),
           child: GestureDetector(
@@ -267,7 +271,7 @@ class _ProblemPickerScreenState extends State<ProblemPickerScreen> {
                         decoration: BoxDecoration(
                           color: themeProvider.primaryColor
                               .withValues(alpha: 0.10),
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: BorderRadius.circular(AppRadius.medium),
                         ),
                         child: Icon(
                           Icons.ios_share_outlined,
@@ -344,15 +348,15 @@ class _ProblemPickerScreenState extends State<ProblemPickerScreen> {
                       filled: true,
                       fillColor: Colors.grey[50],
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(AppRadius.medium),
                         borderSide: BorderSide(color: Colors.grey[300]!),
                       ),
                       enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(AppRadius.medium),
                         borderSide: BorderSide(color: Colors.grey[300]!),
                       ),
                       focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(AppRadius.medium),
                         borderSide: BorderSide(
                           color: themeProvider.primaryColor,
                           width: 1.5,
@@ -374,7 +378,8 @@ class _ProblemPickerScreenState extends State<ProblemPickerScreen> {
                             backgroundColor: Colors.grey[50],
                             padding: const EdgeInsets.symmetric(vertical: 13),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius:
+                                  BorderRadius.circular(AppRadius.medium),
                               side: BorderSide(color: Colors.grey[200]!),
                             ),
                           ),
@@ -399,7 +404,8 @@ class _ProblemPickerScreenState extends State<ProblemPickerScreen> {
                             backgroundColor: themeProvider.primaryColor,
                             padding: const EdgeInsets.symmetric(vertical: 13),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius:
+                                  BorderRadius.circular(AppRadius.medium),
                             ),
                           ),
                           child: const StandardText(
@@ -432,7 +438,7 @@ class _ProblemPickerScreenState extends State<ProblemPickerScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
         color: themeProvider.primaryColor.withValues(alpha: 0.06),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppRadius.medium),
         border: Border.all(
           color: themeProvider.primaryColor.withValues(alpha: 0.12),
         ),
@@ -619,7 +625,7 @@ class _ProblemPickerScreenState extends State<ProblemPickerScreen> {
                     color: isSelected
                         ? themeProvider.primaryColor.withValues(alpha: 0.07)
                         : Colors.transparent,
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(AppRadius.medium),
                     border: Border.all(
                       color: isSelected
                           ? themeProvider.primaryColor.withValues(alpha: 0.22)
@@ -752,8 +758,8 @@ class _ProblemPickerScreenState extends State<ProblemPickerScreen> {
       ),
       decoration: BoxDecoration(
         color: Colors.grey[100],
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.grey[300]!),
+        borderRadius: BorderRadius.circular(AppRadius.small),
+        border: Border.all(color: AppColors.border),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -787,7 +793,7 @@ class _ProblemPickerScreenState extends State<ProblemPickerScreen> {
       ),
       decoration: BoxDecoration(
         color: themeProvider.primaryColor.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppRadius.small),
         border: Border.all(
           color: themeProvider.primaryColor.withValues(alpha: 0.25),
         ),

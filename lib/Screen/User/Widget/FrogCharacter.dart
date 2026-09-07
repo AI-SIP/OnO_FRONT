@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 
 import '../../../Module/Text/StandardText.dart';
+import '../../../Module/Design/AppRadius.dart';
 
 class FrogCharacter extends StatefulWidget {
   final int level;
@@ -145,7 +146,7 @@ class _FrogCharacterState extends State<FrogCharacter>
                           horizontal: 20, vertical: 10),
                       decoration: BoxDecoration(
                         color: Colors.white,
-                        borderRadius: BorderRadius.circular(20),
+                        borderRadius: BorderRadius.circular(AppRadius.xlarge),
                         boxShadow: [
                           BoxShadow(
                             color: Colors.black.withOpacity(0.1),

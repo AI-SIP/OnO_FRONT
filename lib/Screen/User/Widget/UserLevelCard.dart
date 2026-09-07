@@ -6,6 +6,7 @@ import '../../../Module/Motion/AnimatedGauge.dart';
 import '../../../Module/Text/StandardText.dart';
 import '../../../Module/Theme/ThemeHandler.dart';
 import 'FrogCharacter.dart';
+import '../../../Module/Design/AppRadius.dart';
 
 class UserLevelCard extends StatelessWidget {
   final UserInfoModel? userInfo;
@@ -76,7 +77,7 @@ class UserLevelCard extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(15),
+        borderRadius: BorderRadius.circular(AppRadius.large),
         border: Border.all(
           color: Colors.grey[300]!,
           width: 1,
@@ -243,7 +244,7 @@ class UserLevelCard extends StatelessWidget {
           padding: EdgeInsets.all(iconPadding),
           decoration: BoxDecoration(
             color: color.withValues(alpha: 0.18),
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(AppRadius.small),
           ),
           child: Icon(icon, color: color, size: iconSize),
         ),
@@ -263,7 +264,7 @@ class UserLevelCard extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
           decoration: BoxDecoration(
             color: color,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppRadius.medium),
           ),
           child: StandardText(
             text: 'Lv.$level',

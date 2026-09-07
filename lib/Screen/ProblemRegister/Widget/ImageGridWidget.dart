@@ -12,6 +12,7 @@ import '../../../Module/Theme/ThemeHandler.dart';
 import '../../../Module/Motion/AppHaptic.dart';
 import '../../../Module/Motion/PressableScale.dart';
 import '../../../Module/Motion/TossPageRoute.dart';
+import '../../../Module/Design/AppRadius.dart';
 
 class ImageGridWidget extends StatelessWidget {
   final String label;
@@ -80,7 +81,7 @@ class ImageGridWidget extends StatelessWidget {
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                   decoration: BoxDecoration(
                     color: theme.primaryColor.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppRadius.medium),
                   ),
                   child: StandardText(
                     text: '$totalImages',
@@ -114,7 +115,7 @@ class ImageGridWidget extends StatelessWidget {
                         width: 1,
                         style: BorderStyle.solid,
                       ),
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppRadius.medium),
                     ),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -159,7 +160,7 @@ class ImageGridWidget extends StatelessWidget {
                       child: Container(
                         decoration: BoxDecoration(
                           color: Colors.white,
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(AppRadius.medium),
                           border: Border.all(
                             color: Colors.grey[300]!,
                             width: 1.2,
@@ -167,7 +168,7 @@ class ImageGridWidget extends StatelessWidget {
                         ),
                         clipBehavior: Clip.antiAlias,
                         child: ClipRRect(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(AppRadius.medium),
                           child: SizedBox(
                             width: 100,
                             height: 100,
@@ -214,7 +215,7 @@ class ImageGridWidget extends StatelessWidget {
                     child: Container(
                       decoration: BoxDecoration(
                         color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(AppRadius.medium),
                         border: Border.all(
                           color: Colors.grey[300]!,
                           width: 1.2,
@@ -222,7 +223,7 @@ class ImageGridWidget extends StatelessWidget {
                       ),
                       clipBehavior: Clip.antiAlias,
                       child: ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(AppRadius.medium),
                         child: Image.file(
                           File(file.path),
                           width: 100,

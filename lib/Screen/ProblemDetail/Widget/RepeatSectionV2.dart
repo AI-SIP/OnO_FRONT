@@ -21,6 +21,8 @@ import '../../../Module/Motion/AppHaptic.dart';
 import '../../../Module/Motion/PressableScale.dart';
 import '../../../Module/Motion/TossPageRoute.dart';
 import '../../../Module/Motion/TossDialog.dart';
+import '../../../Module/Design/AppColors.dart';
+import '../../../Module/Design/AppRadius.dart';
 
 class RepeatSectionV2 extends StatefulWidget {
   final ProblemModel problem;
@@ -214,7 +216,7 @@ class _RepeatSectionV2State extends State<RepeatSectionV2>
             child: Container(
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(16.0),
+                borderRadius: BorderRadius.circular(AppRadius.large),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withOpacity(0.05),
@@ -338,7 +340,7 @@ class _ProblemSolveCard extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(16.0),
+          borderRadius: BorderRadius.circular(AppRadius.large),
           border: Border.all(
             color: statusColor.withOpacity(0.3),
             width: 2,
@@ -372,7 +374,7 @@ class _ProblemSolveCard extends StatelessWidget {
                       padding: const EdgeInsets.all(8.0),
                       decoration: BoxDecoration(
                         color: statusColor.withOpacity(0.15),
-                        borderRadius: BorderRadius.circular(8.0),
+                        borderRadius: BorderRadius.circular(AppRadius.small),
                       ),
                       child: Icon(_getStatusIcon(solve.answerStatus),
                           color: statusColor, size: 22),
@@ -398,7 +400,8 @@ class _ProblemSolveCard extends StatelessWidget {
                                     horizontal: 8, vertical: 3),
                                 decoration: BoxDecoration(
                                   color: statusColor.withOpacity(0.15),
-                                  borderRadius: BorderRadius.circular(12),
+                                  borderRadius:
+                                      BorderRadius.circular(AppRadius.medium),
                                 ),
                                 child: StandardText(
                                   text: solve.answerStatus.displayName,
@@ -562,8 +565,8 @@ class _ProblemSolveCard extends StatelessWidget {
               padding: const EdgeInsets.all(12.0),
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(8.0),
-                border: Border.all(color: Colors.grey[300]!, width: 1),
+                borderRadius: BorderRadius.circular(AppRadius.small),
+                border: Border.all(color: AppColors.border),
               ),
               child: UnderlinedText(
                 text: solve.reflection!,
@@ -602,7 +605,7 @@ class _ProblemSolveCard extends StatelessWidget {
                       const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
                     color: themeProvider.primaryColor.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(999),
+                    borderRadius: BorderRadius.circular(AppRadius.full),
                   ),
                   child: StandardText(
                     text: '${solve.imageUrls.length}장',
@@ -653,7 +656,7 @@ class _ProblemSolveCard extends StatelessWidget {
       builder: (dialogContext) => Dialog(
         backgroundColor: Colors.white,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppRadius.large),
         ),
         child: Container(
           padding: const EdgeInsets.all(24),
@@ -667,7 +670,7 @@ class _ProblemSolveCard extends StatelessWidget {
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
                       color: themeProvider.primaryColor.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(AppRadius.small),
                     ),
                     child: Icon(
                       Icons.settings,
@@ -699,7 +702,7 @@ class _ProblemSolveCard extends StatelessWidget {
               //       backgroundColor:
               //           themeProvider.primaryColor.withOpacity(0.1),
               //       shape: RoundedRectangleBorder(
-              //         borderRadius: BorderRadius.circular(8),
+              //         borderRadius: BorderRadius.circular(AppRadius.small),
               //       ),
               //     ),
               //     child: Row(
@@ -732,7 +735,7 @@ class _ProblemSolveCard extends StatelessWidget {
                         horizontal: 16, vertical: 12),
                     backgroundColor: Colors.red.withOpacity(0.1),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(AppRadius.small),
                     ),
                   ),
                   child: const Row(
@@ -761,7 +764,7 @@ class _ProblemSolveCard extends StatelessWidget {
                         horizontal: 16, vertical: 12),
                     backgroundColor: Colors.grey[100],
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(AppRadius.small),
                     ),
                   ),
                   child: StandardText(
@@ -785,7 +788,7 @@ class _ProblemSolveCard extends StatelessWidget {
       builder: (dialogContext) => Dialog(
         backgroundColor: Colors.white,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppRadius.large),
         ),
         child: Container(
           padding: const EdgeInsets.all(24),
@@ -799,7 +802,7 @@ class _ProblemSolveCard extends StatelessWidget {
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
                       color: Colors.red.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(AppRadius.small),
                     ),
                     child: const Icon(
                       Icons.delete_forever,
@@ -836,7 +839,7 @@ class _ProblemSolveCard extends StatelessWidget {
                             horizontal: 12, vertical: 12),
                         backgroundColor: Colors.grey[100],
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(AppRadius.small),
                         ),
                       ),
                       child: StandardText(
@@ -858,7 +861,7 @@ class _ProblemSolveCard extends StatelessWidget {
                             horizontal: 12, vertical: 12),
                         backgroundColor: Colors.red,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(AppRadius.small),
                         ),
                       ),
                       child: const StandardText(
@@ -960,7 +963,7 @@ class _TabletSolveListItem extends StatelessWidget {
         padding: const EdgeInsets.all(12.0),
         decoration: BoxDecoration(
           color: isSelected ? statusColor.withOpacity(0.08) : Colors.white,
-          borderRadius: BorderRadius.circular(12.0),
+          borderRadius: BorderRadius.circular(AppRadius.medium),
           border: Border.all(color: borderColor, width: isSelected ? 2 : 1),
         ),
         child: Row(
@@ -969,7 +972,7 @@ class _TabletSolveListItem extends StatelessWidget {
               padding: const EdgeInsets.all(8.0),
               decoration: BoxDecoration(
                 color: statusColor.withOpacity(0.15),
-                borderRadius: BorderRadius.circular(8.0),
+                borderRadius: BorderRadius.circular(AppRadius.small),
               ),
               child: Icon(_getStatusIcon(solve.answerStatus),
                   color: statusColor, size: 18),
@@ -993,7 +996,7 @@ class _TabletSolveListItem extends StatelessWidget {
                             horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
                           color: statusColor.withOpacity(0.15),
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: BorderRadius.circular(AppRadius.medium),
                         ),
                         child: StandardText(
                           text: solve.answerStatus.displayName,
@@ -1084,7 +1087,7 @@ class _ImageSliderState extends State<_ImageSlider> {
           height: screenHeight * 0.3,
           decoration: BoxDecoration(
             color: widget.primaryColor.withOpacity(0.05),
-            borderRadius: BorderRadius.circular(12.0),
+            borderRadius: BorderRadius.circular(AppRadius.medium),
             border: Border.all(
               color: widget.primaryColor.withOpacity(0.2),
               width: 2,
@@ -1105,7 +1108,7 @@ class _ImageSliderState extends State<_ImageSlider> {
                   ),
                 ),
                 child: ClipRRect(
-                  borderRadius: BorderRadius.circular(10.0),
+                  borderRadius: BorderRadius.circular(AppRadius.medium),
                   child: DisplayImage(
                     imagePath: widget.imageUrls[i],
                     fit: BoxFit.contain,

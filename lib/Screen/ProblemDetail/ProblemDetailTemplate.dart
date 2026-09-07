@@ -12,6 +12,8 @@ import '../ProblemSolve/ProblemSolveEntry.dart';
 import 'Widget/AnalysisSection.dart';
 import 'Widget/ImageSection.dart';
 import 'Widget/RepeatSectionV2.dart';
+import '../../Module/Design/AppColors.dart';
+import '../../Module/Design/AppRadius.dart';
 
 class ProblemDetailTemplate extends StatefulWidget {
   final ProblemModel problemModel;
@@ -117,8 +119,8 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
         padding: EdgeInsets.all(tabContainerPadding),
         decoration: BoxDecoration(
           color: Colors.grey[100],
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.grey[200]!, width: 1),
+          borderRadius: BorderRadius.circular(AppRadius.large),
+          border: Border.all(color: AppColors.border),
         ),
         child: TabBar(
           controller: _tabController,
@@ -126,7 +128,7 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
           unselectedLabelColor: Colors.grey[600],
           indicator: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppRadius.medium),
             border: Border.all(
               color: themeProvider.primaryColor.withOpacity(0.22),
               width: 1,
@@ -263,7 +265,7 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(14.0),
+        borderRadius: BorderRadius.circular(AppRadius.large),
         border: Border.all(
           color: themeProvider.primaryColor.withOpacity(0.18),
           width: 1.2,
@@ -284,7 +286,7 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
                 padding: const EdgeInsets.all(6.0),
                 decoration: BoxDecoration(
                   color: themeProvider.primaryColor.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(10.0),
+                  borderRadius: BorderRadius.circular(AppRadius.medium),
                 ),
                 child: Icon(
                   Icons.calendar_month,
@@ -358,7 +360,7 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
         color: themeProvider.primaryColor.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(AppRadius.full),
       ),
       child: StandardText(
         text: '$count장',
@@ -377,7 +379,7 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(14.0),
+        borderRadius: BorderRadius.circular(AppRadius.large),
         border: Border.all(
           color: themeProvider.primaryColor.withOpacity(0.18),
           width: 1.2,
@@ -396,7 +398,7 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
             padding: const EdgeInsets.all(8.0),
             decoration: BoxDecoration(
               color: themeProvider.primaryColor.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(10.0),
+              borderRadius: BorderRadius.circular(AppRadius.medium),
             ),
             child: Icon(
               icon,
@@ -425,7 +427,7 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
       padding: const EdgeInsets.all(14.0),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(14.0),
+        borderRadius: BorderRadius.circular(AppRadius.large),
         border: Border.all(
           color: themeProvider.primaryColor.withOpacity(0.14),
           width: 1.1,
@@ -454,7 +456,7 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(14.0),
+        borderRadius: BorderRadius.circular(AppRadius.large),
         border: Border.all(
           color: themeProvider.primaryColor.withOpacity(0.18),
           width: 1.2,
@@ -476,7 +478,7 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
                 padding: const EdgeInsets.all(8.0),
                 decoration: BoxDecoration(
                   color: themeProvider.primaryColor.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(10.0),
+                  borderRadius: BorderRadius.circular(AppRadius.medium),
                 ),
                 child: Icon(
                   icon,
@@ -560,7 +562,7 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
                       const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(AppRadius.small),
                     border: Border.all(
                       color: themeProvider.primaryColor,
                       width: 1,
@@ -646,7 +648,7 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
       padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 12.0),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12.0),
+        borderRadius: BorderRadius.circular(AppRadius.medium),
         border: Border.all(
           color: themeProvider.primaryColor.withOpacity(0.14),
           width: 1,

@@ -12,6 +12,7 @@ import 'TutorialStep.dart';
 import 'TutorialTargets.dart';
 import '../../Module/Motion/AppMotion.dart';
 import '../../Module/Motion/StepProgressBar.dart';
+import '../../Module/Design/AppRadius.dart';
 
 class TutorialOverlay extends StatefulWidget {
   final TutorialTargets targets;
@@ -162,7 +163,7 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
           padding: EdgeInsets.all(cardPadding),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(AppRadius.large),
           ),
           child: ConstrainedBox(
             constraints: BoxConstraints(maxHeight: maxHeight),
@@ -213,7 +214,8 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
                           backgroundColor: themeProvider.primaryColor,
                           foregroundColor: Colors.white,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius:
+                                BorderRadius.circular(AppRadius.small),
                           ),
                         ),
                         child: StandardText(
@@ -259,7 +261,7 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
           padding: EdgeInsets.all(cardPadding),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(AppRadius.large),
           ),
           child: ConstrainedBox(
             constraints: BoxConstraints(maxHeight: maxHeight),
@@ -310,7 +312,8 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
                           backgroundColor: themeProvider.primaryColor,
                           foregroundColor: Colors.white,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius:
+                                BorderRadius.circular(AppRadius.small),
                           ),
                         ),
                         child: StandardText(
@@ -398,7 +401,7 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
                 opacity: 1,
                 child: Container(
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(18),
+                    borderRadius: BorderRadius.circular(AppRadius.large),
                     border: Border.all(
                       color: themeProvider.primaryColor,
                       width: 3,
@@ -471,7 +474,7 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
       padding: cardPadding,
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppRadius.large),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -556,7 +559,7 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
                         backgroundColor: themeProvider.primaryColor,
                         foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(AppRadius.small),
                         ),
                       ),
                       child: StandardText(
@@ -616,7 +619,7 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
                 padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
                 decoration: BoxDecoration(
                   color: bubbleColor,
-                  borderRadius: BorderRadius.circular(18),
+                  borderRadius: BorderRadius.circular(AppRadius.large),
                   border: Border.all(
                     color: bubbleBorderColor,
                     width: _speechBorderWidth,

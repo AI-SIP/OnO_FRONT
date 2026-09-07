@@ -11,6 +11,7 @@ import '../Text/StandardText.dart';
 import '../Theme/ThemeHandler.dart';
 import '../Motion/PressableScale.dart';
 import '../Motion/TossDialog.dart';
+import '../Design/AppRadius.dart';
 
 // 트리 노드 상태를 관리하는 클래스
 class FolderTreeNode {
@@ -189,7 +190,7 @@ class _FolderPickerDialogState extends State<FolderPickerDialog> {
     return Dialog(
       backgroundColor: Colors.white,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(AppRadius.large),
       ),
       insetPadding: EdgeInsets.symmetric(
         horizontal: isTablet ? 40 : 12,
@@ -221,7 +222,7 @@ class _FolderPickerDialogState extends State<FolderPickerDialog> {
                         padding: const EdgeInsets.all(7),
                         decoration: BoxDecoration(
                           color: Colors.white,
-                          borderRadius: BorderRadius.circular(9),
+                          borderRadius: BorderRadius.circular(AppRadius.small),
                         ),
                         child: Icon(
                           Icons.folder_open,
@@ -326,7 +327,7 @@ class _FolderPickerDialogState extends State<FolderPickerDialog> {
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         backgroundColor: Colors.grey[100],
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(AppRadius.small),
                         ),
                       ),
                       child: StandardText(
@@ -351,7 +352,7 @@ class _FolderPickerDialogState extends State<FolderPickerDialog> {
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         backgroundColor: themeProvider.primaryColor,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(AppRadius.small),
                         ),
                       ),
                       child: StandardText(
@@ -485,7 +486,7 @@ class _FolderPickerDialogState extends State<FolderPickerDialog> {
             color: isHovered
                 ? themeProvider.primaryColor.withOpacity(0.08)
                 : Colors.transparent,
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(AppRadius.medium),
             border: Border.all(
               color: isHovered
                   ? themeProvider.primaryColor.withOpacity(0.35)
@@ -513,7 +514,7 @@ class _FolderPickerDialogState extends State<FolderPickerDialog> {
         color: isSelected
             ? themeProvider.primaryColor.withOpacity(0.12)
             : Colors.white,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(AppRadius.medium),
         border: Border.all(
           color: isSelected
               ? themeProvider.primaryColor.withOpacity(0.26)
@@ -611,7 +612,7 @@ class _FolderPickerDialogState extends State<FolderPickerDialog> {
         return Dialog(
           backgroundColor: Colors.white,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(AppRadius.large),
           ),
           child: Container(
             padding: const EdgeInsets.all(24),
@@ -626,7 +627,7 @@ class _FolderPickerDialogState extends State<FolderPickerDialog> {
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
                         color: themeProvider.primaryColor.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(AppRadius.small),
                       ),
                       child: Icon(
                         Icons.create_new_folder,
@@ -653,7 +654,7 @@ class _FolderPickerDialogState extends State<FolderPickerDialog> {
                     ),
                     decoration: BoxDecoration(
                       color: themeProvider.primaryColor.withOpacity(0.07),
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(AppRadius.medium),
                     ),
                     child: StandardText(
                       text: '$parentFolderName 아래에 만들어요',
@@ -681,17 +682,17 @@ class _FolderPickerDialogState extends State<FolderPickerDialog> {
                     fillColor: Colors.grey[50],
                     filled: true,
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppRadius.medium),
                       borderSide:
                           BorderSide(color: Colors.grey[300]!, width: 1),
                     ),
                     enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppRadius.medium),
                       borderSide:
                           BorderSide(color: Colors.grey[300]!, width: 1),
                     ),
                     focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppRadius.medium),
                       borderSide: BorderSide(
                         color: themeProvider.primaryColor.withOpacity(0.5),
                         width: 2,
@@ -717,7 +718,7 @@ class _FolderPickerDialogState extends State<FolderPickerDialog> {
                             horizontal: 20, vertical: 12),
                         backgroundColor: Colors.grey[100],
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(AppRadius.small),
                         ),
                       ),
                       child: StandardText(
@@ -742,7 +743,7 @@ class _FolderPickerDialogState extends State<FolderPickerDialog> {
                             horizontal: 20, vertical: 12),
                         backgroundColor: themeProvider.primaryColor,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(AppRadius.small),
                         ),
                       ),
                       child: const StandardText(

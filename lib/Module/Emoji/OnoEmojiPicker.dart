@@ -8,6 +8,7 @@ import 'OnoEmojiCategory.dart';
 import 'OnoEmojiImage.dart';
 import '../Motion/PressableScale.dart';
 import '../Motion/AppMotion.dart';
+import '../Design/AppRadius.dart';
 
 class OnoEmojiPicker extends StatefulWidget {
   final List<OnoEmojiCategory> categories;
@@ -144,7 +145,7 @@ class _OnoEmojiPickerState extends State<OnoEmojiPicker> {
                         color: isSelected
                             ? themeProvider.primaryColor.withValues(alpha: 0.1)
                             : Colors.grey[50],
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: BorderRadius.circular(AppRadius.medium),
                         border: Border.all(
                           color: isSelected
                               ? themeProvider.primaryColor
@@ -194,7 +195,7 @@ class _OnoEmojiPickerState extends State<OnoEmojiPicker> {
             color: isSelected
                 ? themeProvider.primaryColor.withValues(alpha: 0.12)
                 : Colors.grey[100],
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(AppRadius.large),
             border: Border.all(
               color:
                   isSelected ? themeProvider.primaryColor : Colors.grey[200]!,
@@ -246,7 +247,7 @@ class _EmojiCategoryHeader extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.07),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppRadius.medium),
       ),
       child: Row(
         children: [

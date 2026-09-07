@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../Model/User/UserInfoModel.dart';
 import '../../../Module/Text/StandardText.dart';
 import '../../../Module/Theme/ThemeHandler.dart';
+import '../../../Module/Design/AppRadius.dart';
 
 class CompactActivityLevels extends StatelessWidget {
   final UserInfoModel? userInfo;
@@ -59,7 +60,7 @@ class CompactActivityLevels extends StatelessWidget {
       padding: EdgeInsets.all(screenHeight * 0.02),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(15),
+        borderRadius: BorderRadius.circular(AppRadius.large),
         border: Border.all(
           color: Colors.grey[300]!,
           width: 1,
@@ -140,7 +141,7 @@ class CompactActivityLevels extends StatelessWidget {
                       const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
                   decoration: BoxDecoration(
                     color: themeProvider.primaryColor,
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppRadius.medium),
                   ),
                   child: StandardText(
                     text: 'Lv.$currentLevel',
@@ -159,7 +160,7 @@ class CompactActivityLevels extends StatelessWidget {
         ),
         SizedBox(height: screenHeight * 0.01),
         ClipRRect(
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(AppRadius.medium),
           child: LinearProgressIndicator(
             value: progress.clamp(0.0, 1.0),
             backgroundColor: Colors.grey[300],
@@ -192,7 +193,7 @@ class CompactActivityLevels extends StatelessWidget {
           padding: const EdgeInsets.all(6),
           decoration: BoxDecoration(
             color: color.withOpacity(0.2),
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(AppRadius.small),
           ),
           child: Icon(
             icon,
@@ -216,7 +217,7 @@ class CompactActivityLevels extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
           decoration: BoxDecoration(
             color: color,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppRadius.medium),
           ),
           child: StandardText(
             text: 'Lv.$level',

@@ -257,7 +257,7 @@ class _LearningCalendarScreenState extends State<LearningCalendarScreen> {
             return Dialog(
               backgroundColor: Colors.white,
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16)),
+                  borderRadius: BorderRadius.circular(AppRadius.large)),
               child: Padding(
                 padding: const EdgeInsets.all(20),
                 child: Column(
@@ -490,7 +490,7 @@ class _LearningCalendarScreenState extends State<LearningCalendarScreen> {
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: Colors.grey[50],
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppRadius.medium),
           border: Border.all(color: AppColors.border),
         ),
         child: Column(
@@ -791,7 +791,7 @@ class _LearningCalendarScreenState extends State<LearningCalendarScreen> {
       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
       decoration: BoxDecoration(
         color: Colors.grey[50],
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppRadius.medium),
         border: Border.all(color: AppColors.border),
       ),
       child: Column(

@@ -5,6 +5,7 @@ import '../../../Model/StudyRoom/StudyRoomMemberModel.dart';
 import '../../../Module/Text/StandardText.dart';
 import '../../../Module/Theme/ThemeHandler.dart';
 import '../../../Module/User/ProfileAvatar.dart';
+import '../../../Module/Design/AppRadius.dart';
 
 class MemberRankCard extends StatelessWidget {
   final int rank;
@@ -38,7 +39,7 @@ class MemberRankCard extends StatelessWidget {
         padding: const EdgeInsets.all(11),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(15),
+          borderRadius: BorderRadius.circular(AppRadius.large),
           border: Border.all(
             color: isMe
                 ? themeProvider.primaryColor.withValues(alpha: 0.35)
@@ -165,7 +166,7 @@ class MemberRankCard extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
       decoration: BoxDecoration(
         color: themeProvider.primaryColor.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(11),
+        borderRadius: BorderRadius.circular(AppRadius.medium),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,

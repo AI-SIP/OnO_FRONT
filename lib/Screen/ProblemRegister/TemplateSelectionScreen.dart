@@ -18,6 +18,7 @@ import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/UserProvider.dart';
 import '../../Module/Motion/AppHaptic.dart';
 import '../../Module/Motion/PressableScale.dart';
+import '../../Module/Design/AppRadius.dart';
 
 class TemplateSelectionScreen extends StatefulWidget {
   const TemplateSelectionScreen({super.key});
@@ -110,7 +111,7 @@ class _TemplateSelectionScreenState extends State<TemplateSelectionScreen> {
                         : Colors.grey,
                     width: 2,
                   ),
-                  borderRadius: BorderRadius.circular(15.0),
+                  borderRadius: BorderRadius.circular(AppRadius.large),
                 ),
                 child: Center(
                   child: SvgPicture.asset(
@@ -275,7 +276,7 @@ class _TemplateSelectionScreenState extends State<TemplateSelectionScreen> {
           style: ElevatedButton.styleFrom(
             backgroundColor: themeProvider.primaryColor,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(15),
+              borderRadius: BorderRadius.circular(AppRadius.large),
             ),
             padding: const EdgeInsets.symmetric(vertical: 10), // 버튼 높이
           ),
@@ -299,7 +300,7 @@ class _TemplateSelectionScreenState extends State<TemplateSelectionScreen> {
           color: isActive ? themeProvider.primaryColor : Colors.grey,
           width: 2,
         ),
-        borderRadius: BorderRadius.circular(15),
+        borderRadius: BorderRadius.circular(AppRadius.large),
       ),
       child: StandardText(
         text: text,

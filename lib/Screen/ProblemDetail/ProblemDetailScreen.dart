@@ -23,6 +23,8 @@ import '../../Module/Motion/PressableScale.dart';
 import '../../Module/Motion/TossPageRoute.dart';
 import '../../Module/Motion/TossDialog.dart';
 import '../../Module/Motion/AppMotion.dart';
+import '../../Module/Design/AppColors.dart';
+import '../../Module/Design/AppRadius.dart';
 
 class ProblemDetailScreen extends StatefulWidget {
   final int problemId;
@@ -387,7 +389,8 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
                             color: themeProvider.primaryColor.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius:
+                                BorderRadius.circular(AppRadius.small),
                           ),
                           child: Icon(
                             Icons.edit_note,
@@ -479,8 +482,8 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
           color: Colors.grey[50],
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey[200]!, width: 1),
+          borderRadius: BorderRadius.circular(AppRadius.medium),
+          border: Border.all(color: AppColors.border),
         ),
         child: Row(
           children: [
@@ -598,7 +601,8 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                             decoration: BoxDecoration(
                               color: themeProvider.primaryColor
                                   .withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius:
+                                  BorderRadius.circular(AppRadius.small),
                             ),
                             child: Icon(
                               Icons.playlist_add,
@@ -688,7 +692,8 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                                       horizontal: 14, vertical: 12),
                                   decoration: BoxDecoration(
                                     color: itemBackgroundColor,
-                                    borderRadius: BorderRadius.circular(12),
+                                    borderRadius:
+                                        BorderRadius.circular(AppRadius.medium),
                                     border: Border.all(
                                       color: itemBorderColor,
                                       width: selected || alreadyAdded ? 1.5 : 1,
@@ -702,8 +707,8 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                                         decoration: BoxDecoration(
                                           color:
                                               itemColor.withValues(alpha: 0.12),
-                                          borderRadius:
-                                              BorderRadius.circular(10),
+                                          borderRadius: BorderRadius.circular(
+                                              AppRadius.medium),
                                         ),
                                         child: Icon(
                                           alreadyAdded
@@ -761,7 +766,8 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                                     const EdgeInsets.symmetric(vertical: 13),
                                 backgroundColor: Colors.grey[100],
                                 shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
+                                  borderRadius:
+                                      BorderRadius.circular(AppRadius.medium),
                                 ),
                               ),
                               child: StandardText(
@@ -793,7 +799,8 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                                     ? Colors.grey[300]
                                     : themeProvider.primaryColor,
                                 shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
+                                  borderRadius:
+                                      BorderRadius.circular(AppRadius.medium),
                                 ),
                               ),
                               child: const StandardText(
@@ -866,7 +873,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
         return Dialog(
           backgroundColor: Colors.white,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(AppRadius.large),
           ),
           child: Container(
             padding: const EdgeInsets.all(24),
@@ -880,7 +887,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
                         color: Colors.red.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(AppRadius.small),
                       ),
                       child: const Icon(
                         Icons.delete_forever,
@@ -918,7 +925,8 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                           padding: const EdgeInsets.symmetric(vertical: 12),
                           backgroundColor: Colors.grey[100],
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius:
+                                BorderRadius.circular(AppRadius.small),
                           ),
                         ),
                         child: StandardText(
@@ -976,7 +984,8 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                           padding: const EdgeInsets.symmetric(vertical: 12),
                           backgroundColor: Colors.red,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius:
+                                BorderRadius.circular(AppRadius.small),
                           ),
                         ),
                         child: const StandardText(

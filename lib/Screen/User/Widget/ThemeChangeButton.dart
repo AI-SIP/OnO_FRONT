@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../Module/Text/StandardText.dart';
 import '../../../Module/Theme/ThemeHandler.dart';
 import '../../../Module/Motion/PressableScale.dart';
+import '../../../Module/Design/AppRadius.dart';
 
 class ThemeChangeButton extends StatelessWidget {
   final ThemeHandler themeProvider;
@@ -34,7 +35,7 @@ class ThemeChangeButton extends StatelessWidget {
           padding: EdgeInsets.all(screenHeight * 0.018),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(15),
+            borderRadius: BorderRadius.circular(AppRadius.large),
             border: Border.all(
               color: Colors.grey[300]!,
               width: 1,
@@ -46,7 +47,7 @@ class ThemeChangeButton extends StatelessWidget {
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
                   color: themeProvider.primaryColor.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppRadius.medium),
                 ),
                 child: Icon(
                   Icons.palette,

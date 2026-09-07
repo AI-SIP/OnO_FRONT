@@ -13,6 +13,7 @@ import '../../Module/Motion/AppHaptic.dart';
 import '../../Module/Motion/PressableScale.dart';
 import '../../Module/Motion/Skeleton.dart';
 import '../../Module/Motion/TossPageRoute.dart';
+import '../../Module/Design/AppRadius.dart';
 
 class ReviewDueScreen extends StatefulWidget {
   const ReviewDueScreen({super.key});
@@ -119,7 +120,7 @@ class _ReviewDueScreenState extends State<ReviewDueScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
         color: themeProvider.primaryColor.withValues(alpha: 0.06),
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(AppRadius.large),
       ),
       child: Row(
         children: [

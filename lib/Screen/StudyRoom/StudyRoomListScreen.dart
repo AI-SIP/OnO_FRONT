@@ -17,6 +17,8 @@ import 'Widget/StudyRoomThumbnail.dart';
 import '../../Module/Motion/TossPageRoute.dart';
 import '../../Module/Motion/PressableScale.dart';
 import '../../Module/Motion/AppMotion.dart';
+import '../../Module/Design/AppColors.dart';
+import '../../Module/Design/AppRadius.dart';
 
 class StudyRoomListScreen extends StatefulWidget {
   final TutorialTargets? tutorialTargets;
@@ -103,7 +105,7 @@ class _StudyRoomListScreenState extends State<StudyRoomListScreen> {
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
                         color: themeProvider.primaryColor.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(AppRadius.small),
                       ),
                       child: Icon(
                         Icons.group,
@@ -161,8 +163,8 @@ class _StudyRoomListScreenState extends State<StudyRoomListScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
           color: Colors.grey[50],
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey[200]!, width: 1),
+          borderRadius: BorderRadius.circular(AppRadius.medium),
+          border: Border.all(color: AppColors.border),
         ),
         child: Row(
           children: [
@@ -280,7 +282,7 @@ class _StudyRoomListScreenState extends State<StudyRoomListScreen> {
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppRadius.medium),
             boxShadow: [
               BoxShadow(
                 color: Colors.grey.withOpacity(0.2),

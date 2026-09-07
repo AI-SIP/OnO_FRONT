@@ -8,6 +8,7 @@ import 'ProblemSolveRegisterScreen.dart';
 import '../../Module/Motion/TossPageRoute.dart';
 import '../../Module/Motion/PressableScale.dart';
 import '../../Module/Motion/AppMotion.dart';
+import '../../Module/Design/AppRadius.dart';
 
 class ProblemSolveEntry {
   static Future<bool?> open({
@@ -119,7 +120,7 @@ class _ProblemSolveModeSheet extends StatelessWidget {
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
                   color: themeProvider.primaryColor.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(AppRadius.small),
                 ),
                 child: Icon(
                   Icons.edit_note,
@@ -189,7 +190,7 @@ class _ModeTile extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: isEnabled ? Colors.grey[50] : Colors.grey[100],
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(AppRadius.large),
           border: Border.all(
             color: isEnabled
                 ? themeProvider.primaryColor.withOpacity(0.18)
@@ -204,7 +205,7 @@ class _ModeTile extends StatelessWidget {
               height: 42,
               decoration: BoxDecoration(
                 color: color.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppRadius.medium),
               ),
               child: Icon(icon, color: color, size: 23),
             ),

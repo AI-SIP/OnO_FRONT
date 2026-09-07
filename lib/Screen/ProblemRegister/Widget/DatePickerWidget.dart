@@ -8,6 +8,8 @@ import '../../../Module/Theme/ThemeHandler.dart';
 import 'DatePickerHandler.dart';
 import '../../../Module/Motion/PressableScale.dart';
 import '../../../Module/Motion/AppMotion.dart';
+import '../../../Module/Design/AppColors.dart';
+import '../../../Module/Design/AppRadius.dart';
 
 class DatePickerWidget extends StatelessWidget {
   final DateTime selectedDate;
@@ -28,8 +30,8 @@ class DatePickerWidget extends StatelessWidget {
       padding: const EdgeInsets.all(16.0),
       decoration: BoxDecoration(
         color: Colors.grey[50],
-        borderRadius: BorderRadius.circular(12.0),
-        border: Border.all(color: Colors.grey[200]!, width: 1),
+        borderRadius: BorderRadius.circular(AppRadius.medium),
+        border: Border.all(color: AppColors.border),
       ),
       child: Row(
         children: [
@@ -37,7 +39,7 @@ class DatePickerWidget extends StatelessWidget {
             padding: const EdgeInsets.all(8.0),
             decoration: BoxDecoration(
               color: theme.primaryColor.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8.0),
+              borderRadius: BorderRadius.circular(AppRadius.small),
             ),
             child: Icon(
               Icons.calendar_month,
@@ -75,8 +77,8 @@ class DatePickerWidget extends StatelessWidget {
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.grey[300]!, width: 1),
+                  borderRadius: BorderRadius.circular(AppRadius.small),
+                  border: Border.all(color: AppColors.border),
                 ),
                 child: Row(
                   children: [

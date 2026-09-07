@@ -4,6 +4,7 @@ import '../../../Module/Text/mobile_font_size.dart';
 import '../../../Module/Text/StandardText.dart';
 import '../../../Module/Motion/AppHaptic.dart';
 import '../../../Module/Motion/PressableScale.dart';
+import '../../../Module/Design/AppRadius.dart';
 
 class DatePickerHandler extends StatefulWidget {
   final DateTime initialDate;
@@ -79,7 +80,7 @@ class _DatePickerHandlerState extends State<DatePickerHandler> {
                 margin: const EdgeInsets.only(bottom: 16),
                 decoration: BoxDecoration(
                   color: Colors.grey[300],
-                  borderRadius: BorderRadius.circular(999),
+                  borderRadius: BorderRadius.circular(AppRadius.full),
                 ),
               ),
               StandardText(
@@ -186,7 +187,7 @@ class _DatePickerHandlerState extends State<DatePickerHandler> {
                   : selectable
                       ? Colors.grey[100]
                       : Colors.grey[50],
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(AppRadius.medium),
               border: Border.all(
                 color: isSelected
                     ? primaryColor

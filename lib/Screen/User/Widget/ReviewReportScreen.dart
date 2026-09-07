@@ -746,7 +746,8 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
                                   width: 16,
                                   height: grown,
                                   decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(8),
+                                    borderRadius:
+                                        BorderRadius.circular(AppRadius.small),
                                     gradient: LinearGradient(
                                       begin: Alignment.bottomCenter,
                                       end: Alignment.topCenter,

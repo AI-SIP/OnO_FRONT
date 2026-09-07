@@ -18,6 +18,7 @@ import 'ProblemSolveRegisterScreen.dart';
 import '../../Module/Motion/AppHaptic.dart';
 import '../../Module/Motion/PressableScale.dart';
 import '../../Module/Motion/TossPageRoute.dart';
+import '../../Module/Design/AppRadius.dart';
 
 class ProblemSolveCanvasScreen extends StatefulWidget {
   final int problemId;
@@ -526,7 +527,7 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
                     const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                 decoration: BoxDecoration(
                   color: themeProvider.primaryColor.withOpacity(0.08),
-                  borderRadius: BorderRadius.circular(999),
+                  borderRadius: BorderRadius.circular(AppRadius.full),
                   border: Border.all(
                     color: themeProvider.primaryColor.withOpacity(0.18),
                     width: 1,
@@ -608,7 +609,7 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
           color: isSelected
               ? themeProvider.primaryColor.withOpacity(0.12)
               : Colors.grey[100],
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(AppRadius.medium),
           border: Border.all(
             color: isSelected
                 ? themeProvider.primaryColor.withOpacity(0.35)
@@ -677,7 +678,7 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
           style: ElevatedButton.styleFrom(
             backgroundColor: themeProvider.primaryColor,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(AppRadius.large),
             ),
             elevation: 0,
           ),

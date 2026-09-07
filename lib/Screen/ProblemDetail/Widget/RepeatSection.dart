@@ -15,6 +15,7 @@ import '../../../Module/Motion/AppHaptic.dart';
 import '../../../Module/Motion/PressableScale.dart';
 import '../../../Module/Motion/TossPageRoute.dart';
 import '../../../Module/Motion/TossDialog.dart';
+import '../../../Module/Design/AppRadius.dart';
 
 Widget buildRepeatSection(
     BuildContext ctx, ProblemModel problem, Color iconColor) {
@@ -60,7 +61,8 @@ Widget buildRepeatSection(
                     builder: (_) => Dialog(
                           backgroundColor: Colors.white,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
+                            borderRadius:
+                                BorderRadius.circular(AppRadius.large),
                           ),
                           child: Container(
                             padding: const EdgeInsets.all(24),
@@ -74,7 +76,8 @@ Widget buildRepeatSection(
                                       padding: const EdgeInsets.all(8),
                                       decoration: BoxDecoration(
                                         color: Colors.red.withOpacity(0.1),
-                                        borderRadius: BorderRadius.circular(8),
+                                        borderRadius: BorderRadius.circular(
+                                            AppRadius.small),
                                       ),
                                       child: const Icon(
                                         Icons.delete_forever,
@@ -112,8 +115,8 @@ Widget buildRepeatSection(
                                               horizontal: 12, vertical: 8),
                                           backgroundColor: Colors.grey[100],
                                           shape: RoundedRectangleBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(8),
+                                            borderRadius: BorderRadius.circular(
+                                                AppRadius.small),
                                           ),
                                         ),
                                         child: StandardText(
@@ -134,8 +137,8 @@ Widget buildRepeatSection(
                                               horizontal: 12, vertical: 8),
                                           backgroundColor: Colors.red,
                                           shape: RoundedRectangleBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(8),
+                                            borderRadius: BorderRadius.circular(
+                                                AppRadius.small),
                                           ),
                                         ),
                                         child: const StandardText(
@@ -161,7 +164,7 @@ Widget buildRepeatSection(
                 height: MediaQuery.of(ctx).size.height * 0.5,
                 decoration: BoxDecoration(
                     color: iconColor.withOpacity(0.05),
-                    borderRadius: BorderRadius.circular(10)),
+                    borderRadius: BorderRadius.circular(AppRadius.medium)),
                 child: DisplayImage(
                     imagePath: solve.imageUrl, fit: BoxFit.contain),
               ),

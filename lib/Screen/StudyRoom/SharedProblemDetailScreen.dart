@@ -11,6 +11,7 @@ import '../ProblemDetail/Widget/ImageGallerySection.dart';
 import 'Widget/FeedReactionBar.dart';
 import 'Widget/SharedProblemCommentsSection.dart';
 import '../../Module/Motion/TossDialog.dart';
+import '../../Module/Design/AppRadius.dart';
 
 class SharedProblemDetailScreen extends StatefulWidget {
   final SharedProblemModel problem;
@@ -61,7 +62,7 @@ class _SharedProblemDetailScreenState extends State<SharedProblemDetailScreen> {
       builder: (_) => Dialog(
         backgroundColor: Colors.white,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(15),
+          borderRadius: BorderRadius.circular(AppRadius.large),
           side: BorderSide(color: Colors.grey[200]!, width: 1),
         ),
         child: ConstrainedBox(
@@ -77,7 +78,7 @@ class _SharedProblemDetailScreenState extends State<SharedProblemDetailScreen> {
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
                         color: Colors.red.withValues(alpha: 0.10),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(AppRadius.small),
                       ),
                       child: const Icon(
                         Icons.cancel_outlined,
@@ -113,7 +114,8 @@ class _SharedProblemDetailScreenState extends State<SharedProblemDetailScreen> {
                           backgroundColor: Colors.grey[50],
                           padding: const EdgeInsets.symmetric(vertical: 13),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius:
+                                BorderRadius.circular(AppRadius.medium),
                             side: BorderSide(
                               color: Colors.grey[200]!,
                               width: 1,
@@ -135,7 +137,8 @@ class _SharedProblemDetailScreenState extends State<SharedProblemDetailScreen> {
                           backgroundColor: Colors.red,
                           padding: const EdgeInsets.symmetric(vertical: 13),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius:
+                                BorderRadius.circular(AppRadius.medium),
                           ),
                         ),
                         child: const StandardText(
@@ -174,7 +177,7 @@ class _SharedProblemDetailScreenState extends State<SharedProblemDetailScreen> {
       builder: (dialogContext) => Dialog(
         backgroundColor: Colors.white,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(15),
+          borderRadius: BorderRadius.circular(AppRadius.large),
           side: BorderSide(color: Colors.grey[200]!, width: 1),
         ),
         child: ConstrainedBox(
@@ -190,7 +193,7 @@ class _SharedProblemDetailScreenState extends State<SharedProblemDetailScreen> {
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
                         color: primary.withValues(alpha: 0.10),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(AppRadius.small),
                       ),
                       child: Icon(
                         Icons.more_horiz,
@@ -219,7 +222,7 @@ class _SharedProblemDetailScreenState extends State<SharedProblemDetailScreen> {
                       backgroundColor: Colors.red.withValues(alpha: 0.08),
                       padding: const EdgeInsets.symmetric(vertical: 13),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(AppRadius.medium),
                         side: BorderSide(
                           color: Colors.red.withValues(alpha: 0.16),
                           width: 1,
@@ -249,7 +252,7 @@ class _SharedProblemDetailScreenState extends State<SharedProblemDetailScreen> {
                       backgroundColor: Colors.grey[50],
                       padding: const EdgeInsets.symmetric(vertical: 13),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(AppRadius.medium),
                         side: BorderSide(color: Colors.grey[200]!, width: 1),
                       ),
                     ),
@@ -424,7 +427,7 @@ class _SharedProblemDetailScreenState extends State<SharedProblemDetailScreen> {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: primary.withValues(alpha: 0.055),
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(AppRadius.large),
         border: Border.all(color: primary.withValues(alpha: 0.15)),
       ),
       child: Column(

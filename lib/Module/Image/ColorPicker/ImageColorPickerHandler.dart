@@ -11,6 +11,7 @@ import 'PixelPicker.dart';
 import '../../Motion/TossPageRoute.dart';
 import '../../Motion/AppHaptic.dart';
 import '../../Motion/PressableScale.dart';
+import '../../Design/AppRadius.dart';
 
 class ImageColorPickerHandler {
   Future<Map<String, dynamic>?> showColorPicker(
@@ -206,8 +207,8 @@ class _ColorPickerScreenState extends State<ColorPickerScreen> {
                         height: screenHeight * 0.04, // 타원의 높이를 설정
                         decoration: BoxDecoration(
                           color: selectedColors[index] ?? Colors.white,
-                          borderRadius:
-                              BorderRadius.circular(30), // 타원형 모양을 위한 큰 값
+                          borderRadius: BorderRadius.circular(
+                              AppRadius.full), // 타원형 모양을 위한 큰 값
                           border: Border.all(
                             color: themeProvider.primaryColor,
                             width: 2.0,

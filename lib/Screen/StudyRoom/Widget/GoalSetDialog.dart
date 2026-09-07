@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import '../../../Module/Text/StandardText.dart';
 import '../../../Module/Theme/ThemeHandler.dart';
 import '../../../Module/Motion/TossDialog.dart';
+import '../../../Module/Design/AppRadius.dart';
 
 class GoalSetDialog extends StatefulWidget {
   final ThemeHandler themeProvider;
@@ -57,7 +58,7 @@ class _GoalSetDialogState extends State<GoalSetDialog> {
     return Dialog(
       backgroundColor: Colors.white,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(15),
+        borderRadius: BorderRadius.circular(AppRadius.large),
         side: BorderSide(color: Colors.grey[200]!, width: 1),
       ),
       child: ConstrainedBox(
@@ -73,7 +74,7 @@ class _GoalSetDialogState extends State<GoalSetDialog> {
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
                       color: primary.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(AppRadius.small),
                     ),
                     child: Icon(Icons.flag_outlined, color: primary, size: 20),
                   ),
@@ -121,15 +122,15 @@ class _GoalSetDialogState extends State<GoalSetDialog> {
                   filled: true,
                   fillColor: Colors.grey[50],
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppRadius.medium),
                     borderSide: BorderSide.none,
                   ),
                   enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppRadius.medium),
                     borderSide: BorderSide(color: Colors.grey[200]!, width: 1),
                   ),
                   focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppRadius.medium),
                     borderSide: BorderSide(color: primary, width: 1.5),
                   ),
                 ),
@@ -145,7 +146,7 @@ class _GoalSetDialogState extends State<GoalSetDialog> {
                         backgroundColor: Colors.grey[50],
                         padding: const EdgeInsets.symmetric(vertical: 13),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(AppRadius.medium),
                           side: BorderSide(color: Colors.grey[200]!, width: 1),
                         ),
                       ),
@@ -169,7 +170,7 @@ class _GoalSetDialogState extends State<GoalSetDialog> {
                         backgroundColor: primary,
                         padding: const EdgeInsets.symmetric(vertical: 13),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(AppRadius.medium),
                         ),
                       ),
                       child: const StandardText(

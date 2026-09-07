@@ -18,6 +18,7 @@ import '../../Module/Theme/GridPainter.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Util/AppErrorReporter.dart';
 import '../../Util/AppSnackBar.dart';
+import '../../Module/Design/AppRadius.dart';
 
 class ProblemShareScreen extends StatefulWidget {
   final ProblemModel problem;
@@ -247,7 +248,7 @@ class _ProblemShareScreenState extends State<ProblemShareScreen> {
         width: mediaQuery.size.width * 0.9,
         decoration: BoxDecoration(
           color: themeProvider.primaryColor.withOpacity(0.1), // 배경색 추가
-          borderRadius: BorderRadius.circular(10), // 모서리 둥글게 설정
+          borderRadius: BorderRadius.circular(AppRadius.medium), // 모서리 둥글게 설정
         ),
         child: AspectRatio(
           aspectRatio: 0.8, // 원하는 비율로 이미지의 높이를 조정

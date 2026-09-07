@@ -5,6 +5,7 @@ import '../../../Model/Problem/ProblemAnalysisStatus.dart';
 import '../../../Module/Text/mobile_font_size.dart';
 import '../../../Module/Text/StandardLightText.dart';
 import '../../../Module/Text/StandardText.dart';
+import '../../../Module/Design/AppRadius.dart';
 
 Widget buildAnalysisSection(
     BuildContext context, ProblemAnalysisModel? analysis, Color primaryColor) {
@@ -38,7 +39,7 @@ Widget _buildNoImageState(BuildContext context, Color primaryColor) {
     padding: const EdgeInsets.all(24.0),
     decoration: BoxDecoration(
       color: Colors.white,
-      borderRadius: BorderRadius.circular(12.0),
+      borderRadius: BorderRadius.circular(AppRadius.medium),
       boxShadow: [
         BoxShadow(
           color: Colors.grey.withOpacity(0.1),
@@ -89,7 +90,7 @@ Widget _buildProcessingState(BuildContext context, Color primaryColor) {
         padding: const EdgeInsets.all(24.0),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(12.0),
+          borderRadius: BorderRadius.circular(AppRadius.medium),
           boxShadow: [
             BoxShadow(
               color: primaryColor.withOpacity(0.1),
@@ -139,7 +140,7 @@ Widget _buildFailedState(
         padding: const EdgeInsets.all(20.0),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(12.0),
+          borderRadius: BorderRadius.circular(AppRadius.medium),
           border: Border.all(color: Colors.red.withOpacity(0.3), width: 1),
           boxShadow: [
             BoxShadow(
@@ -181,7 +182,7 @@ Widget _buildCompletedState(
     padding: const EdgeInsets.all(16.0),
     decoration: BoxDecoration(
       color: Colors.white,
-      borderRadius: BorderRadius.circular(16.0),
+      borderRadius: BorderRadius.circular(AppRadius.large),
       boxShadow: [
         BoxShadow(
           color: primaryColor.withOpacity(0.1),

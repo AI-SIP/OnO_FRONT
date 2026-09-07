@@ -33,6 +33,8 @@ import 'Widget/DatePickerWidget.dart';
 import 'Widget/ImageGridWidget.dart';
 import 'Widget/LabeledTextField.dart';
 import '../../Module/Motion/TossDialog.dart';
+import '../../Module/Design/AppColors.dart';
+import '../../Module/Design/AppRadius.dart';
 
 enum _BatchRegisterStep {
   selectImages,
@@ -233,8 +235,8 @@ class _MultiProblemRegisterScreenState
             padding: const EdgeInsets.fromLTRB(12, 10, 10, 10),
             decoration: BoxDecoration(
               color: Colors.grey[50],
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.grey[200]!, width: 1),
+              borderRadius: BorderRadius.circular(AppRadius.medium),
+              border: Border.all(color: AppColors.border),
             ),
             child: Row(
               children: [
@@ -242,7 +244,7 @@ class _MultiProblemRegisterScreenState
                   padding: const EdgeInsets.all(7),
                   decoration: BoxDecoration(
                     color: themeProvider.primaryColor.withValues(alpha: 0.09),
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(AppRadius.small),
                   ),
                   child: Icon(
                     Icons.collections,
@@ -274,7 +276,7 @@ class _MultiProblemRegisterScreenState
                     minimumSize: Size.zero,
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(9),
+                      borderRadius: BorderRadius.circular(AppRadius.small),
                     ),
                   ),
                   icon: const Icon(Icons.add_photo_alternate, size: 17),
@@ -295,17 +297,17 @@ class _MultiProblemRegisterScreenState
             child: Container(
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppRadius.medium),
               ),
               foregroundDecoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppRadius.medium),
                 border: Border.all(
                   color: themeProvider.primaryColor.withValues(alpha: 0.36),
                   width: 1,
                 ),
               ),
               child: ClipRRect(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppRadius.medium),
                 child: Material(
                   color: Colors.white,
                   child: GridView.builder(
@@ -426,7 +428,7 @@ class _MultiProblemRegisterScreenState
                         foregroundColor: Colors.white,
                         elevation: 0,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: BorderRadius.circular(AppRadius.medium),
                         ),
                       ),
                       icon: const Icon(Icons.photo_library_outlined, size: 18),
@@ -451,7 +453,7 @@ class _MultiProblemRegisterScreenState
     final image = _problemImages[index];
 
     return ClipRRect(
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(AppRadius.medium),
       child: Stack(
         fit: StackFit.expand,
         children: [
@@ -475,7 +477,7 @@ class _MultiProblemRegisterScreenState
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
                 color: Colors.black.withValues(alpha: 0.62),
-                borderRadius: BorderRadius.circular(999),
+                borderRadius: BorderRadius.circular(AppRadius.full),
               ),
               child: StandardText(
                 text: '${index + 1}',
@@ -521,7 +523,7 @@ class _MultiProblemRegisterScreenState
       child: Container(
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppRadius.medium),
           border: Border.all(
             color: themeProvider.primaryColor.withValues(alpha: 0.24),
           ),
@@ -573,7 +575,7 @@ class _MultiProblemRegisterScreenState
                 ),
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppRadius.medium),
                   border: Border.all(
                     color: themeProvider.primaryColor.withValues(alpha: 0.18),
                     width: 1,
@@ -586,7 +588,7 @@ class _MultiProblemRegisterScreenState
                       decoration: BoxDecoration(
                         color:
                             themeProvider.primaryColor.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(AppRadius.small),
                       ),
                       child: Icon(
                         Icons.checklist_outlined,
@@ -649,7 +651,7 @@ class _MultiProblemRegisterScreenState
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(7),
+        borderRadius: BorderRadius.circular(AppRadius.small),
         border: Border.all(
           color: Colors.grey[300]!,
         ),
@@ -755,8 +757,8 @@ class _MultiProblemRegisterScreenState
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[200]!, width: 1),
+        borderRadius: BorderRadius.circular(AppRadius.medium),
+        border: Border.all(color: AppColors.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -769,7 +771,7 @@ class _MultiProblemRegisterScreenState
                   Container(
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppRadius.medium),
                       border: Border.all(
                         color: Colors.grey[300]!,
                         width: 1,
@@ -793,7 +795,7 @@ class _MultiProblemRegisterScreenState
                       ),
                       decoration: BoxDecoration(
                         color: themeProvider.primaryColor,
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(AppRadius.small),
                       ),
                       child: StandardText(
                         text: '${index + 1}',
@@ -868,7 +870,7 @@ class _MultiProblemRegisterScreenState
                       ),
                       padding: const EdgeInsets.symmetric(horizontal: 12),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(AppRadius.small),
                       ),
                     ),
                     icon: const Icon(Icons.edit_note_outlined, size: 17),
@@ -890,7 +892,7 @@ class _MultiProblemRegisterScreenState
                       backgroundColor: Colors.white,
                       foregroundColor: Colors.red,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(AppRadius.small),
                         side: BorderSide(color: Colors.grey[300]!),
                       ),
                     ),
@@ -914,7 +916,7 @@ class _MultiProblemRegisterScreenState
       padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(7),
+        borderRadius: BorderRadius.circular(AppRadius.small),
         border: Border.all(
           color: themeProvider.primaryColor.withValues(alpha: 0.28),
         ),
@@ -960,8 +962,8 @@ class _MultiProblemRegisterScreenState
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.grey[50],
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[200]!, width: 1),
+        borderRadius: BorderRadius.circular(AppRadius.medium),
+        border: Border.all(color: AppColors.border),
       ),
       child: ImageGridWidget(
         label: '문제 이미지',
@@ -991,8 +993,8 @@ class _MultiProblemRegisterScreenState
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.grey[50],
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[200]!, width: 1),
+        borderRadius: BorderRadius.circular(AppRadius.medium),
+        border: Border.all(color: AppColors.border),
       ),
       child: ImageGridWidget(
         label: '해설 이미지',
@@ -1068,7 +1070,7 @@ class _MultiProblemRegisterScreenState
                         disabledForegroundColor: Colors.grey[600],
                         elevation: 0,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(AppRadius.medium),
                         ),
                       ),
                       child: StandardText(
@@ -1104,7 +1106,7 @@ class _MultiProblemRegisterScreenState
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppRadius.medium),
           border: Border.all(
             color: themeProvider.primaryColor.withValues(alpha: 0.16),
             width: 1,
@@ -1116,7 +1118,7 @@ class _MultiProblemRegisterScreenState
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
                 color: themeProvider.primaryColor.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(AppRadius.small),
               ),
               child: Icon(
                 Icons.fact_check_outlined,
@@ -1176,7 +1178,7 @@ class _MultiProblemRegisterScreenState
                     foregroundColor: Colors.white,
                     elevation: 0,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppRadius.medium),
                     ),
                   ),
                   child: StandardText(
@@ -1210,8 +1212,8 @@ class _MultiProblemRegisterScreenState
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.grey[50],
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[200]!, width: 1),
+        borderRadius: BorderRadius.circular(AppRadius.medium),
+        border: Border.all(color: AppColors.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1222,7 +1224,7 @@ class _MultiProblemRegisterScreenState
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
                   color: themeProvider.primaryColor.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(AppRadius.small),
                 ),
                 child: Icon(
                   Icons.local_offer,
@@ -1250,7 +1252,7 @@ class _MultiProblemRegisterScreenState
                   backgroundColor: themeProvider.primaryColor,
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(AppRadius.medium),
                   ),
                   padding:
                       const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
@@ -1281,8 +1283,8 @@ class _MultiProblemRegisterScreenState
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: Colors.grey[300]!, width: 1),
+              borderRadius: BorderRadius.circular(AppRadius.medium),
+              border: Border.all(color: AppColors.border),
             ),
             child: selectedTags.isEmpty
                 ? StandardText(
@@ -1304,7 +1306,8 @@ class _MultiProblemRegisterScreenState
                             ),
                             decoration: BoxDecoration(
                               color: Colors.white,
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius:
+                                  BorderRadius.circular(AppRadius.small),
                               border: Border.all(
                                 color: themeProvider.primaryColor,
                                 width: 1,
@@ -1396,7 +1399,7 @@ class _MultiProblemRegisterScreenState
                       color: isSelected
                           ? themeProvider.primaryColor
                           : Colors.white,
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(AppRadius.small),
                       border: Border.all(
                         color: isSelected
                             ? themeProvider.primaryColor
@@ -1692,7 +1695,8 @@ class _MultiProblemRegisterScreenState
                                           : Colors.grey[200]!,
                                     ),
                                     shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
+                                      borderRadius: BorderRadius.circular(
+                                          AppRadius.medium),
                                     ),
                                   ),
                                   icon: const Icon(
@@ -1735,7 +1739,8 @@ class _MultiProblemRegisterScreenState
                                     foregroundColor: Colors.white,
                                     elevation: 0,
                                     shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
+                                      borderRadius: BorderRadius.circular(
+                                          AppRadius.medium),
                                     ),
                                   ),
                                   icon: Icon(
@@ -2013,7 +2018,7 @@ class _MultiProblemRegisterScreenState
         return Dialog(
           backgroundColor: Colors.white,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(AppRadius.xlarge),
           ),
           child: Padding(
             padding: const EdgeInsets.fromLTRB(24, 24, 24, 22),

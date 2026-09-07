@@ -15,6 +15,8 @@ import '../../Module/Motion/PressableScale.dart';
 import '../../Module/Motion/AnimatedCountText.dart';
 import '../../Module/Motion/AppMotion.dart';
 import '../../Module/Motion/AppearTransition.dart';
+import '../../Module/Design/AppColors.dart';
+import '../../Module/Design/AppRadius.dart';
 
 class PracticeCompletionScreen extends StatefulWidget {
   final int practiceId;
@@ -186,7 +188,7 @@ class _PracticeCompletionScreenState extends State<PracticeCompletionScreen> {
                     color: isSelected
                         ? themeProvider.primaryColor.withValues(alpha: 0.1)
                         : Colors.grey[50],
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppRadius.medium),
                     border: Border.all(
                       color: isSelected
                           ? themeProvider.primaryColor
@@ -231,8 +233,8 @@ class _PracticeCompletionScreenState extends State<PracticeCompletionScreen> {
         width: 70,
         decoration: BoxDecoration(
           color: Colors.grey[50],
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey[200]!),
+          borderRadius: BorderRadius.circular(AppRadius.medium),
+          border: Border.all(color: AppColors.border),
         ),
         child: Icon(
           Icons.more_horiz,
@@ -300,7 +302,7 @@ class _PracticeCompletionScreenState extends State<PracticeCompletionScreen> {
           style: ElevatedButton.styleFrom(
             backgroundColor: themeProvider.primaryColor,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(AppRadius.large),
             ),
             elevation: 0,
           ),

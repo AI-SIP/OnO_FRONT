@@ -8,6 +8,7 @@ import '../Theme/ThemeLockManager.dart';
 import '../Motion/AppHaptic.dart';
 import '../Motion/PressableScale.dart';
 import '../Motion/TossDialog.dart';
+import '../Design/AppRadius.dart';
 
 class ThemeDialog extends StatefulWidget {
   @override
@@ -52,7 +53,7 @@ class _ThemeDialogState extends State<ThemeDialog> {
     return Dialog(
       backgroundColor: Colors.white,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppRadius.xlarge),
       ),
       insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
       child: Container(
@@ -86,7 +87,7 @@ class _ThemeDialogState extends State<ThemeDialog> {
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
                           color: Colors.white.withOpacity(0.75),
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: BorderRadius.circular(AppRadius.medium),
                         ),
                         child: Icon(
                           Icons.palette,
@@ -176,7 +177,7 @@ class _ThemeDialogState extends State<ThemeDialog> {
                         padding: const EdgeInsets.symmetric(vertical: 11),
                         backgroundColor: Colors.grey[100],
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(AppRadius.small),
                         ),
                       ),
                       child: const StandardText(
@@ -201,7 +202,7 @@ class _ThemeDialogState extends State<ThemeDialog> {
                         padding: const EdgeInsets.symmetric(vertical: 11),
                         backgroundColor: themeProvider.primaryColor,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(AppRadius.small),
                         ),
                       ),
                       child: const StandardText(
@@ -249,7 +250,7 @@ class _ThemeDialogState extends State<ThemeDialog> {
               return Dialog(
                 backgroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(AppRadius.large),
                 ),
                 child: Container(
                   padding: const EdgeInsets.all(24),
@@ -263,7 +264,8 @@ class _ThemeDialogState extends State<ThemeDialog> {
                             padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
                               color: color.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius:
+                                  BorderRadius.circular(AppRadius.small),
                             ),
                             child: Icon(
                               Icons.lock,
@@ -297,7 +299,8 @@ class _ThemeDialogState extends State<ThemeDialog> {
                               horizontal: 20, vertical: 10),
                           backgroundColor: themeProvider.primaryColor,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius:
+                                BorderRadius.circular(AppRadius.small),
                           ),
                         ),
                         child: const StandardText(

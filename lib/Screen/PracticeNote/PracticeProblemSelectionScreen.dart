@@ -27,6 +27,8 @@ import '../../Module/Motion/PressableScale.dart';
 import '../../Module/Motion/TossPageRoute.dart';
 import '../../Module/Motion/Skeleton.dart';
 import '../../Module/Motion/TossDialog.dart';
+import '../../Module/Design/AppColors.dart';
+import '../../Module/Design/AppRadius.dart';
 
 enum _PracticeSearchMode { folder, tag, title }
 
@@ -620,7 +622,7 @@ class _PracticeProblemSelectionScreenState
               color: selected
                   ? themeProvider.primaryColor.withOpacity(0.08)
                   : Colors.grey[50],
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(AppRadius.medium),
               border: Border.all(
                 color:
                     selected ? themeProvider.primaryColor : Colors.grey[300]!,
@@ -655,8 +657,8 @@ class _PracticeProblemSelectionScreenState
       padding: const EdgeInsets.all(6),
       decoration: BoxDecoration(
         color: Colors.grey[100],
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[200]!, width: 1),
+        borderRadius: BorderRadius.circular(AppRadius.medium),
+        border: Border.all(color: AppColors.border),
       ),
       child: Row(
         children: [
@@ -697,8 +699,8 @@ class _PracticeProblemSelectionScreenState
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           decoration: BoxDecoration(
             color: Colors.grey[50],
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: Colors.grey[300]!, width: 1),
+            borderRadius: BorderRadius.circular(AppRadius.medium),
+            border: Border.all(color: AppColors.border),
           ),
           child: StandardText(
             text: '생성된 태그가 없습니다.',
@@ -730,7 +732,7 @@ class _PracticeProblemSelectionScreenState
                       color: selected
                           ? themeProvider.primaryColor.withOpacity(0.08)
                           : Colors.white,
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(AppRadius.small),
                       border: Border.all(
                         color: selected
                             ? themeProvider.primaryColor
@@ -781,15 +783,15 @@ class _PracticeProblemSelectionScreenState
           contentPadding:
               const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(AppRadius.medium),
             borderSide: BorderSide(color: Colors.grey[300]!, width: 1),
           ),
           enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(AppRadius.medium),
             borderSide: BorderSide(color: Colors.grey[300]!, width: 1),
           ),
           focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(AppRadius.medium),
             borderSide: BorderSide(
               color: themeProvider.primaryColor.withOpacity(0.5),
               width: 1.5,
@@ -941,7 +943,7 @@ class _PracticeProblemSelectionScreenState
                   color: isSelected
                       ? themeProvider.primaryColor.withValues(alpha: 0.08)
                       : Colors.transparent,
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(AppRadius.medium),
                   border: Border.all(
                     color: isSelected
                         ? themeProvider.primaryColor.withValues(alpha: 0.30)
@@ -1142,7 +1144,7 @@ class _PracticeProblemSelectionScreenState
         color: isSelected
             ? themeProvider.primaryColor.withValues(alpha: 0.08)
             : Colors.grey[50],
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(AppRadius.medium),
         border: Border.all(
           color: isSelected
               ? themeProvider.primaryColor.withValues(alpha: 0.35)
@@ -1218,7 +1220,7 @@ class _PracticeProblemSelectionScreenState
           style: ElevatedButton.styleFrom(
             backgroundColor: themeProvider.primaryColor,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(AppRadius.large),
             ),
             elevation: 0,
           ),
@@ -1265,7 +1267,7 @@ class _PracticeProblemSelectionScreenState
         return Dialog(
           backgroundColor: Colors.white,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(AppRadius.large),
           ),
           child: Container(
             padding: const EdgeInsets.all(24),
@@ -1278,7 +1280,7 @@ class _PracticeProblemSelectionScreenState
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
                         color: Colors.orange.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(AppRadius.small),
                       ),
                       child: const Icon(
                         Icons.warning_amber_rounded,
@@ -1314,7 +1316,7 @@ class _PracticeProblemSelectionScreenState
                           horizontal: 12, vertical: 10),
                       backgroundColor: themeProvider.primaryColor,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(AppRadius.small),
                       ),
                     ),
                     child: const StandardText(

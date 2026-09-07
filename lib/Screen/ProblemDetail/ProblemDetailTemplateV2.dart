@@ -10,6 +10,7 @@ import 'Widget/AnalysisSection.dart';
 import 'Widget/DateRowWidget.dart';
 import 'Widget/ImageSection.dart';
 import 'Widget/RepeatSectionV2.dart';
+import '../../Module/Design/AppRadius.dart';
 
 class ProblemDetailTemplateV2 extends StatefulWidget {
   final ProblemModel problemModel;
@@ -228,7 +229,7 @@ class _ProblemDetailTemplateV2State extends State<ProblemDetailTemplateV2>
       padding: const EdgeInsets.all(20.0),
       decoration: BoxDecoration(
         color: themeProvider.primaryColor.withOpacity(0.05),
-        borderRadius: BorderRadius.circular(16.0),
+        borderRadius: BorderRadius.circular(AppRadius.large),
         border: Border.all(
           color: themeProvider.primaryColor.withOpacity(0.2),
           width: 2,

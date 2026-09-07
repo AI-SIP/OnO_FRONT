@@ -12,6 +12,7 @@ import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/UserProvider.dart';
 import '../../main.dart';
 import '../../Module/Motion/TossDialog.dart';
+import '../../Module/Design/AppRadius.dart';
 
 class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});
@@ -158,7 +159,7 @@ class LoginScreen extends StatelessWidget {
       builder: (ctx) => Dialog(
         backgroundColor: Colors.white,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(AppRadius.xlarge),
         ),
         insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
         child: Container(
@@ -190,7 +191,7 @@ class LoginScreen extends StatelessWidget {
                       height: 34,
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.9),
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: BorderRadius.circular(AppRadius.medium),
                       ),
                       child: const Icon(
                         Icons.warning_amber_rounded,
@@ -259,7 +260,8 @@ class LoginScreen extends StatelessWidget {
                           padding: const EdgeInsets.symmetric(vertical: 11),
                           backgroundColor: Colors.grey[100],
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
+                            borderRadius:
+                                BorderRadius.circular(AppRadius.medium),
                           ),
                         ),
                         child: const StandardText(
@@ -281,7 +283,8 @@ class LoginScreen extends StatelessWidget {
                           padding: const EdgeInsets.symmetric(vertical: 11),
                           backgroundColor: Colors.redAccent,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
+                            borderRadius:
+                                BorderRadius.circular(AppRadius.medium),
                           ),
                         ),
                         child: const StandardText(

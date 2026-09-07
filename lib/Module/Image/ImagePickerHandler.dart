@@ -10,6 +10,8 @@ import '../Text/StandardText.dart';
 import '../Theme/ThemeHandler.dart';
 import '../Motion/PressableScale.dart';
 import '../Motion/AppMotion.dart';
+import '../Design/AppColors.dart';
+import '../Design/AppRadius.dart';
 
 class ImagePickerHandler {
   final ImagePicker _picker = ImagePicker();
@@ -158,7 +160,8 @@ class ImagePickerHandler {
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
                             color: themeProvider.primaryColor.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius:
+                                BorderRadius.circular(AppRadius.small),
                           ),
                           child: Icon(
                             Icons.add_photo_alternate,
@@ -242,8 +245,8 @@ class ImagePickerHandler {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
           color: Colors.grey[50],
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey[200]!, width: 1),
+          borderRadius: BorderRadius.circular(AppRadius.medium),
+          border: Border.all(color: AppColors.border),
         ),
         child: Row(
           children: [
