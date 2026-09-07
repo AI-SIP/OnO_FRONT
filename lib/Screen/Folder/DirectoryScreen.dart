@@ -1444,14 +1444,25 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
               );
               await _moveProblemToFolder(problemRegisterModel);
             },
-            builder: (context, candidateData, rejectedData) {
+            builder: (context, problemCandidates, rejectedData) {
               return DragTarget<FolderThumbnailModel>(
+                onWillAcceptWithDetails: (details) =>
+                    details.data.folderId != folder.folderId,
                 onAcceptWithDetails: (details) async {
                   // 폴더를 드롭하면 자식 폴더로 이동
                   await _moveFolderToNewParent(details.data, folder.folderId);
                 },
-                builder: (context, candidateData, rejectedData) {
-                  return _folderTileContent(folder, themeProvider, index);
+                builder: (context, folderCandidates, rejectedData) {
+                  // 끌고 온 것이 이 공책 위에 있으면 받을 수 있다는 것을
+                  // 보여 준다. 그동안 candidateData 를 받아만 두고 쓰지
+                  // 않아서 어디에 놓아야 할지 알 수 없었다.
+                  final isHovering = problemCandidates.isNotEmpty ||
+                      folderCandidates.isNotEmpty;
+                  return _DropHighlight(
+                    active: isHovering,
+                    color: themeProvider.primaryColor,
+                    child: _folderTileContent(folder, themeProvider, index),
+                  );
                 },
               );
             },
@@ -1652,7 +1663,11 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
               await _moveProblemToFolder(problemRegisterModel);
             },
             builder: (context, candidateData, rejectedData) {
-              return _problemTileContent(problem, themeProvider);
+              return _DropHighlight(
+                active: candidateData.isNotEmpty,
+                color: themeProvider.primaryColor,
+                child: _problemTileContent(problem, themeProvider),
+              );
             },
           ),
         ),
@@ -2275,6 +2290,53 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// 끌고 온 것을 여기에 놓을 수 있다는 것을 알린다.
+///
+/// 손가락 아래에 무엇이 놓일지 보이지 않으면 어디에 떨어뜨려야 할지 알 수
+/// 없다. 테두리를 두르고 살짝 키워서 이 자리가 받는 자리임을 보여 준다.
+class _DropHighlight extends StatelessWidget {
+  /// 지금 이 위에 무언가 올라와 있는지.
+  final bool active;
+
+  final Color color;
+  final Widget child;
+
+  const _DropHighlight({
+    required this.active,
+    required this.color,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedScale(
+      scale: active ? 1.03 : 1.0,
+      duration: AppMotion.fast,
+      curve: AppMotion.standard,
+      child: AnimatedContainer(
+        duration: AppMotion.fast,
+        curve: AppMotion.standard,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(AppRadius.medium),
+          border: Border.all(
+            color: active ? color : Colors.transparent,
+            width: 2,
+          ),
+          boxShadow: active
+              ? [
+                  BoxShadow(
+                    color: color.withValues(alpha: 0.28),
+                    blurRadius: 14,
+                  ),
+                ]
+              : null,
+        ),
+        child: child,
       ),
     );
   }

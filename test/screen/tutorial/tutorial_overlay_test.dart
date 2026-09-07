@@ -312,13 +312,18 @@ void main() {
     await tester.pump(const Duration(milliseconds: 600));
 
     expect(tester.takeException(), isNull);
-    // 타겟을 감싸는 강조 테두리(3px 보더) 컨테이너가 그려졌는지 확인한다.
+    // 타겟을 감싸는 강조 테두리 컨테이너가 그려졌는지 확인한다.
+    //
+    // 단계가 바뀔 때 테두리가 한 번 두꺼워졌다 제자리로 돌아오므로, 두께가
+    // 정확히 3 인 순간을 노리면 시점에 따라 어긋난다. 기본 3 에서 반짝일 때
+    // 6 까지 가는 범위로 본다.
     final highlight = find.byWidgetPredicate((widget) {
       if (widget is! Container) return false;
       final decoration = widget.decoration;
       if (decoration is! BoxDecoration) return false;
       final border = decoration.border;
-      return border is Border && border.top.width == 3;
+      if (border is! Border) return false;
+      return border.top.width >= 3 && border.top.width <= 6;
     });
     expect(highlight, findsOneWidget);
 

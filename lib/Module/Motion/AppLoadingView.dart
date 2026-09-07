@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
 
 import '../Text/StandardText.dart';
 import 'AnimatedGauge.dart';
@@ -41,16 +40,12 @@ class AppLoadingView extends StatelessWidget {
   /// 강조색. 넘기지 않으면 테마의 기본 색을 쓴다.
   final Color? color;
 
-  /// 개구리를 함께 보일지. 화면을 통째로 덮는 로딩에서만 쓴다.
-  final bool showCharacter;
-
   const AppLoadingView({
     super.key,
     required this.message,
     this.detail,
     this.progress,
     this.color,
-    this.showCharacter = true,
   });
 
   @override
@@ -60,19 +55,8 @@ class AppLoadingView extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        if (showCharacter) ...[
-          SvgPicture.asset('assets/Logo/GreenFrog.svg', width: 72, height: 72),
-          const SizedBox(height: 18),
-        ],
         if (progress == null)
-          SizedBox(
-            width: 30,
-            height: 30,
-            child: CircularProgressIndicator(
-              strokeWidth: 3,
-              valueColor: AlwaysStoppedAnimation<Color>(accent),
-            ),
-          )
+          _PulsingDots(color: accent)
         else
           SizedBox(
             width: 180,
@@ -87,7 +71,7 @@ class AppLoadingView extends StatelessWidget {
               curve: AppMotion.standard,
             ),
           ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 18),
         StandardText(
           text: message,
           fontSize: 15,
@@ -119,7 +103,6 @@ class AppLoadingCard extends StatelessWidget {
   final String? detail;
   final double? progress;
   final Color? color;
-  final bool showCharacter;
 
   const AppLoadingCard({
     super.key,
@@ -127,7 +110,6 @@ class AppLoadingCard extends StatelessWidget {
     this.detail,
     this.progress,
     this.color,
-    this.showCharacter = true,
   });
 
   @override
@@ -145,9 +127,77 @@ class AppLoadingCard extends StatelessWidget {
           detail: detail,
           progress: progress,
           color: color,
-          showCharacter: showCharacter,
         ),
       ),
+    );
+  }
+}
+
+/// 점 세 개가 차례로 부풀었다 가라앉는다.
+///
+/// 도는 동그라미는 어느 앱에나 있어서 눈에 남지 않고, 캐릭터를 크게 넣으면
+/// 기다리는 것보다 그림이 먼저 보인다. 점 세 개는 자리를 적게 쓰면서
+/// 무언가 진행 중이라는 것만 조용히 알린다.
+class _PulsingDots extends StatefulWidget {
+  final Color color;
+
+  const _PulsingDots({required this.color});
+
+  @override
+  State<_PulsingDots> createState() => _PulsingDotsState();
+}
+
+class _PulsingDotsState extends State<_PulsingDots>
+    with SingleTickerProviderStateMixin {
+  static const int _dotCount = 3;
+  static const double _dotSize = 9.0;
+
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1100),
+  )..repeat();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, _) {
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          children: List.generate(_dotCount, (index) {
+            // 점마다 시작을 어긋나게 해서 물결처럼 이어지게 한다.
+            final shifted = (_controller.value - index * 0.18) % 1.0;
+            // 앞쪽 절반 동안 부풀었다가 나머지 절반 동안 가라앉는다.
+            final wave = shifted < 0.5
+                ? Curves.easeOut.transform(shifted * 2)
+                : Curves.easeIn.transform((1 - shifted) * 2);
+
+            return Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: Container(
+                width: _dotSize,
+                height: _dotSize,
+                transform: Matrix4.diagonal3Values(
+                  0.7 + 0.5 * wave,
+                  0.7 + 0.5 * wave,
+                  1.0,
+                ),
+                transformAlignment: Alignment.center,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: widget.color.withValues(alpha: 0.35 + 0.65 * wave),
+                ),
+              ),
+            );
+          }),
+        );
+      },
     );
   }
 }
