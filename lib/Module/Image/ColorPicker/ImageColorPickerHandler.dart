@@ -9,6 +9,8 @@ import '../../Text/StandardText.dart';
 import '../../Theme/ThemeHandler.dart';
 import 'PixelPicker.dart';
 import '../../Motion/TossPageRoute.dart';
+import '../../Motion/AppHaptic.dart';
+import '../../Motion/PressableScale.dart';
 
 class ImageColorPickerHandler {
   Future<Map<String, dynamic>?> showColorPicker(
@@ -190,7 +192,8 @@ class _ColorPickerScreenState extends State<ColorPickerScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: List.generate(3, (index) {
-                    return GestureDetector(
+                    return PressableScale(
+                      haptic: HapticLevel.selection,
                       onTap: () {
                         setState(() {
                           activeCircleIndex = index;

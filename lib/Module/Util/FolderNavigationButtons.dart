@@ -17,6 +17,7 @@ import '../Dialog/SnackBarDialog.dart';
 import '../Image/ImagePickerHandler.dart';
 import '../Text/StandardText.dart';
 import '../Theme/ThemeHandler.dart';
+import '../Motion/PressableScale.dart';
 
 class FolderNavigationButtons extends StatefulWidget {
   final BuildContext context;
@@ -219,7 +220,7 @@ class _FolderNavigationButtonsState extends State<FolderNavigationButtons> {
                     ),
                     const SizedBox(height: 24),
                     // 이미지 선택 영역
-                    GestureDetector(
+                    PressableScale(
                       onTap: () {
                         FirebaseAnalytics.instance.logEvent(
                           name: 'add_solve_image_button_click',

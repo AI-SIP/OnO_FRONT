@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 import '../Text/mobile_font_size.dart';
 import '../Text/StandardText.dart';
 import '../Theme/ThemeHandler.dart';
+import '../Motion/PressableScale.dart';
 
 class ImagePickerHandler {
   final ImagePicker _picker = ImagePicker();
@@ -233,9 +234,8 @@ class ImagePickerHandler {
     required VoidCallback onTap,
     required ThemeHandler themeProvider,
   }) {
-    return InkWell(
+    return PressableScale(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(

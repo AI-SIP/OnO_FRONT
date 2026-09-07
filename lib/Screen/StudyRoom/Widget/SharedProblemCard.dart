@@ -488,7 +488,8 @@ class _SharedProblemCardState extends State<SharedProblemCard> {
               separatorBuilder: (_, __) => const SizedBox(width: 8),
               itemBuilder: (context, index) {
                 final isSelected = _currentImageIndex == index;
-                return GestureDetector(
+                return PressableScale(
+                  haptic: HapticLevel.none,
                   onTap: () {
                     _imageController.animateToPage(
                       index,

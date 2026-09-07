@@ -15,6 +15,7 @@ import 'StudyRoomJoinScreen.dart';
 import 'Widget/StudyRoomEmptyState.dart';
 import 'Widget/StudyRoomThumbnail.dart';
 import '../../Module/Motion/TossPageRoute.dart';
+import '../../Module/Motion/PressableScale.dart';
 
 class StudyRoomListScreen extends StatefulWidget {
   final TutorialTargets? tutorialTargets;
@@ -152,9 +153,8 @@ class _StudyRoomListScreenState extends State<StudyRoomListScreen> {
     required String label,
     required VoidCallback onTap,
   }) {
-    return InkWell(
+    return PressableScale(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
@@ -272,9 +272,8 @@ class _StudyRoomListScreenState extends State<StudyRoomListScreen> {
         horizontal: 16,
         vertical: screenHeight * 0.006,
       ),
-      child: InkWell(
+      child: PressableScale(
         onTap: () => _openDetail(room.roomId),
-        borderRadius: BorderRadius.circular(12),
         child: Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(

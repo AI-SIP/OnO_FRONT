@@ -6,6 +6,7 @@ import '../../../Module/Text/StandardText.dart';
 import '../../../Module/Theme/ThemeHandler.dart';
 import '../../../Provider/StudyRoomProvider.dart';
 import 'ChallengeProgressBar.dart';
+import '../../../Module/Motion/PressableScale.dart';
 
 class ChallengeCard extends StatelessWidget {
   final ChallengeModel challenge;
@@ -174,7 +175,7 @@ class ChallengeCard extends StatelessWidget {
                 ),
               ),
               if (canDelete)
-                GestureDetector(
+                PressableScale(
                   onTap: () => _confirmDelete(context, provider),
                   child: Icon(Icons.close, size: 18, color: Colors.grey[400]),
                 ),

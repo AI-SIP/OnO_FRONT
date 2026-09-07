@@ -5,6 +5,8 @@ import '../../Provider/UserProvider.dart';
 import '../Text/StandardText.dart';
 import '../Theme/ThemeHandler.dart';
 import '../Theme/ThemeLockManager.dart';
+import '../Motion/AppHaptic.dart';
+import '../Motion/PressableScale.dart';
 
 class ThemeDialog extends StatefulWidget {
   @override
@@ -221,7 +223,8 @@ class _ThemeDialogState extends State<ThemeDialog> {
       Color color, String colorName, int index, bool isUnlocked) {
     final isSelected = _selectedIndex == index;
 
-    return GestureDetector(
+    return PressableScale(
+      haptic: HapticLevel.selection,
       onTap: () {
         if (isUnlocked) {
           setState(() {

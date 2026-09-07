@@ -11,6 +11,7 @@
 // 던진다).
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:ono/Module/Motion/PressableScale.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:ono/Model/Common/PaginatedResponse.dart';
 import 'package:ono/Model/Folder/FolderModel.dart';
@@ -146,12 +147,12 @@ void main() {
     stubSubfolders(id, children: children, hasNext: hasNext);
   }
 
-  /// 특정 폴더명 행을 감싸는 InkWell 을 찾는다. 토글 버튼과 이름 텍스트가
-  /// 같은 InkWell 아래에 있어서, 이 Finder 하나로 "행 탭"과 "토글 버튼 찾기"
+  /// 특정 폴더명 행을 감싸는 PressableScale 을 찾는다. 토글 버튼과 이름 텍스트가
+  /// 같은 PressableScale 아래에 있어서, 이 Finder 하나로 "행 탭"과 "토글 버튼 찾기"
   /// 둘 다에 쓸 수 있다.
   Finder folderRow(String folderName) => find.ancestor(
         of: find.text(folderName),
-        matching: find.byType(InkWell),
+        matching: find.byType(PressableScale),
       );
 
   Finder toggleButtonOf(String folderName) => find.descendant(

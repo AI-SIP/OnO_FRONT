@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../Module/Text/StandardText.dart';
 import '../../../Module/Theme/ThemeHandler.dart';
+import '../../../Module/Motion/PressableScale.dart';
 
 class ThemeChangeButton extends StatelessWidget {
   final ThemeHandler themeProvider;
@@ -27,9 +28,8 @@ class ThemeChangeButton extends StatelessWidget {
         horizontal: screenWidth * horizontalMarginFactor,
         vertical: screenHeight * 0.01,
       ),
-      child: InkWell(
+      child: PressableScale(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(15),
         child: Container(
           padding: EdgeInsets.all(screenHeight * 0.018),
           decoration: BoxDecoration(

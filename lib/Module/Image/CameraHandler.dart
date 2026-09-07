@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../Text/StandardText.dart';
 import '../Theme/ThemeHandler.dart';
 import '../Motion/TossPageRoute.dart';
+import '../Motion/PressableScale.dart';
 
 class CameraHandler {
   CameraController? _controller;
@@ -136,9 +137,8 @@ class _CameraScreenState extends State<CameraScreen> {
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
               child: Row(
                 children: [
-                  InkWell(
+                  PressableScale(
                     onTap: () => Navigator.of(context).pop(),
-                    borderRadius: BorderRadius.circular(12),
                     child: Container(
                       width: 40,
                       height: 40,
@@ -200,7 +200,7 @@ class _CameraScreenState extends State<CameraScreen> {
             right: 0,
             bottom: safeBottom + 24,
             child: Center(
-              child: InkWell(
+              child: PressableScale(
                 onTap: () async {
                   try {
                     await _initializeControllerFuture;
@@ -211,7 +211,6 @@ class _CameraScreenState extends State<CameraScreen> {
                     debugPrint(e.toString());
                   }
                 },
-                borderRadius: BorderRadius.circular(42),
                 child: Container(
                   width: 76,
                   height: 76,

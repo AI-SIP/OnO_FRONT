@@ -6,6 +6,7 @@ import '../Text/mobile_font_size.dart';
 import '../Text/StandardText.dart';
 import '../Theme/ThemeHandler.dart';
 import 'FolderPickerDialog.dart';
+import '../Motion/PressableScale.dart';
 
 class FolderPickerWidget extends StatefulWidget {
   final int? selectedId;
@@ -135,7 +136,7 @@ class _FolderPickerWidgetState extends State<FolderPickerWidget> {
           ),
           SizedBox(
             width: selectorWidth,
-            child: GestureDetector(
+            child: PressableScale(
               onTap: () async {
                 final id = await FolderPickerWidget.showPicker(
                     context, widget.selectedId);

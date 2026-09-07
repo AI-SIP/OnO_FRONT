@@ -8,6 +8,8 @@ import '../../Provider/StudyRoomProvider.dart';
 import '../../Util/AppSnackBar.dart';
 import '../../Exception/ApiException.dart';
 import '../ProblemRegister/Widget/DatePickerHandler.dart';
+import '../../Module/Motion/PressableScale.dart';
+import '../../Module/Motion/AppHaptic.dart';
 
 class ChallengeCreateSheet extends StatefulWidget {
   const ChallengeCreateSheet({super.key});
@@ -317,9 +319,8 @@ class _ChallengeCreateSheetState extends State<ChallengeCreateSheet> {
             const SizedBox(height: 16),
             _Label(text: '마감일'),
             const SizedBox(height: 8),
-            InkWell(
+            PressableScale(
               onTap: () => _pickEndAt(context),
-              borderRadius: BorderRadius.circular(10),
               child: Container(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
@@ -439,7 +440,8 @@ class _ChallengeCreateSheetState extends State<ChallengeCreateSheet> {
       runSpacing: 8,
       children: options.map((option) {
         final selected = selectedValue == option.$1;
-        return GestureDetector(
+        return PressableScale(
+          haptic: HapticLevel.selection,
           onTap: () => onSelected(option.$1),
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),

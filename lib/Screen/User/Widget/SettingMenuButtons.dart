@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../Module/Text/StandardText.dart';
 import '../../../Module/Theme/ThemeHandler.dart';
+import '../../../Module/Motion/PressableScale.dart';
 
 class SettingMenuButtons extends StatelessWidget {
   final ThemeHandler themeProvider;
@@ -126,9 +127,8 @@ class SettingMenuButtons extends StatelessWidget {
   }) {
     double screenHeight = MediaQuery.of(context).size.height;
 
-    return InkWell(
+    return PressableScale(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
       child: Padding(
         padding: EdgeInsets.symmetric(
           vertical: screenHeight * 0.008,

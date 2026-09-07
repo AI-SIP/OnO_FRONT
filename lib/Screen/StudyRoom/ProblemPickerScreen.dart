@@ -16,6 +16,8 @@ import '../../Provider/ProblemsProvider.dart';
 import '../../Provider/StudyRoomProvider.dart';
 import '../../Util/AppSnackBar.dart';
 import '../../Exception/ApiException.dart';
+import '../../Module/Motion/AppHaptic.dart';
+import '../../Module/Motion/PressableScale.dart';
 
 class ProblemPickerScreen extends StatefulWidget {
   final int roomId;
@@ -595,7 +597,8 @@ class _ProblemPickerScreenState extends State<ProblemPickerScreen> {
         itemBuilder: (_, i) {
           final folder = _folders[i];
           final isSelected = folder.folderId == _selectedFolderId;
-          return GestureDetector(
+          return PressableScale(
+            haptic: HapticLevel.selection,
             onTap: () => _selectFolder(folder),
             child: AnimatedOpacity(
               duration: const Duration(milliseconds: 180),
@@ -704,7 +707,8 @@ class _ProblemPickerScreenState extends State<ProblemPickerScreen> {
     final isAlreadyShared =
         widget.alreadySharedProblemIds.contains(problem.problemId);
 
-    return GestureDetector(
+    return PressableScale(
+      haptic: HapticLevel.selection,
       onTap: () => _onProblemTap(problem),
       child: ProblemThumbnailCard(
         title: title,

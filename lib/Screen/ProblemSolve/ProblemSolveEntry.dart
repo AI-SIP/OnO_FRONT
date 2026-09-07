@@ -6,6 +6,7 @@ import '../../Module/Theme/ThemeHandler.dart';
 import 'ProblemSolveCanvasScreen.dart';
 import 'ProblemSolveRegisterScreen.dart';
 import '../../Module/Motion/TossPageRoute.dart';
+import '../../Module/Motion/PressableScale.dart';
 
 class ProblemSolveEntry {
   static Future<bool?> open({
@@ -179,9 +180,8 @@ class _ModeTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = isEnabled ? themeProvider.primaryColor : Colors.grey;
 
-    return InkWell(
+    return PressableScale(
       onTap: isEnabled ? onTap : null,
-      borderRadius: BorderRadius.circular(14),
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.all(16),

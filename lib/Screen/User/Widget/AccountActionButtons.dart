@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../Module/Text/StandardText.dart';
+import '../../../Module/Motion/PressableScale.dart';
 
 class AccountActionButtons extends StatelessWidget {
   final VoidCallback onLogoutTap;
@@ -43,9 +44,8 @@ class AccountActionButtons extends StatelessWidget {
     required String text,
     required VoidCallback onTap,
   }) {
-    return InkWell(
+    return PressableScale(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(4),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         child: StandardText(

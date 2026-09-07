@@ -6,6 +6,7 @@ import 'OnoEmoji.dart';
 import 'OnoEmojiCatalog.dart';
 import 'OnoEmojiCategory.dart';
 import 'OnoEmojiImage.dart';
+import '../Motion/PressableScale.dart';
 
 class OnoEmojiPicker extends StatefulWidget {
   final List<OnoEmojiCategory> categories;
@@ -133,9 +134,8 @@ class _OnoEmojiPickerState extends State<OnoEmojiPicker> {
                   final emoji = emojis[index];
                   final isSelected = selectedEmojiKey == emoji.key;
 
-                  return InkWell(
+                  return PressableScale(
                     onTap: () => widget.onSelected(emoji),
-                    borderRadius: BorderRadius.circular(10),
                     child: Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
@@ -174,9 +174,8 @@ class _OnoEmojiPickerState extends State<OnoEmojiPicker> {
     final isSelected = category == _selectedCategory;
     return Tooltip(
       message: category.label,
-      child: InkWell(
+      child: PressableScale(
         onTap: () => setState(() => _selectedCategory = category),
-        borderRadius: BorderRadius.circular(18),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 160),
           constraints: BoxConstraints(

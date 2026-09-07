@@ -10,6 +10,8 @@ import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Service/Api/StudyCalendar/StudyCalendarService.dart';
 import '../../Util/AppSnackBar.dart';
+import '../../Module/Motion/AppHaptic.dart';
+import '../../Module/Motion/PressableScale.dart';
 
 class LearningCalendarScreen extends StatefulWidget {
   const LearningCalendarScreen({super.key});
@@ -203,7 +205,7 @@ class _LearningCalendarScreenState extends State<LearningCalendarScreen> {
             onPressed: _prevMonth,
             color: Colors.black87,
           ),
-          GestureDetector(
+          PressableScale(
             onTap: () => _showMonthPicker(themeProvider),
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -295,7 +297,8 @@ class _LearningCalendarScreenState extends State<LearningCalendarScreen> {
                         final isSelected =
                             pickerYear == _year && month == _month;
 
-                        return GestureDetector(
+                        return PressableScale(
+                          haptic: HapticLevel.selection,
                           onTap: isFuture
                               ? null
                               : () {
@@ -482,7 +485,7 @@ class _LearningCalendarScreenState extends State<LearningCalendarScreen> {
                   fontSize: 14,
                   color: primaryColor,
                 ),
-                GestureDetector(
+                PressableScale(
                   onTap: () => setState(() => _selectedDay = null),
                   child: Icon(Icons.close, size: 16, color: Colors.grey[400]),
                 ),
@@ -893,7 +896,8 @@ class _CalendarCell extends StatelessWidget {
   Widget build(BuildContext context) {
     final bgColor = _getBackgroundColor();
 
-    return GestureDetector(
+    return PressableScale(
+      haptic: HapticLevel.selection,
       onTap: onTap,
       child: Container(
         decoration: BoxDecoration(

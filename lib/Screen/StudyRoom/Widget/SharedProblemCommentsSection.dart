@@ -9,6 +9,7 @@ import '../../../Module/User/ProfileAvatar.dart';
 import '../../../Provider/StudyRoomProvider.dart';
 import '../../../Util/AppSnackBar.dart';
 import 'FeedReactionBar.dart';
+import '../../../Module/Motion/PressableScale.dart';
 
 class SharedProblemCommentsSection extends StatefulWidget {
   final int sharedProblemId;
@@ -723,9 +724,8 @@ class _SharedProblemCommentsSectionState
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (widget.showToggle)
-            InkWell(
+            PressableScale(
               onTap: _toggleExpanded,
-              borderRadius: BorderRadius.circular(8),
               child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 4),
                 child: Row(

@@ -418,7 +418,7 @@ class ProblemSolveRegisterTemplateState
             ),
             child: Row(
               children: [
-                GestureDetector(
+                PressableScale(
                   onTap: _showTimeInputDialog,
                   child: Container(
                     color: Colors.transparent,
@@ -463,9 +463,8 @@ class ProblemSolveRegisterTemplateState
 
   Widget _buildAdjustChip(
       String label, ThemeHandler themeProvider, VoidCallback onTap) {
-    return InkWell(
+    return PressableScale(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(6),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 5),
         decoration: BoxDecoration(

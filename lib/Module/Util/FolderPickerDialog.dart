@@ -9,6 +9,7 @@ import '../../Provider/FoldersProvider.dart';
 import '../Text/mobile_font_size.dart';
 import '../Text/StandardText.dart';
 import '../Theme/ThemeHandler.dart';
+import '../Motion/PressableScale.dart';
 
 // 트리 노드 상태를 관리하는 클래스
 class FolderTreeNode {
@@ -527,8 +528,7 @@ class _FolderPickerDialogState extends State<FolderPickerDialog> {
               ]
             : null,
       ),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(10),
+      child: PressableScale(
         onTap: () {
           setState(() {
             _selectedFolderId = node.folderId;
