@@ -29,6 +29,10 @@ abstract final class AppMotion {
   /// 목록이 나타나거나 성공 표시가 그려지는 정도의 큰 움직임.
   static const Duration slow = Duration(milliseconds: 350);
 
+  /// 게이지가 차오르고 숫자가 올라가는 시간. 눈으로 변화를 따라갈 수 있어야
+  /// 해서 다른 값보다 길다.
+  static const Duration gauge = Duration(milliseconds: 700);
+
   /// 목록 항목이 차례로 나타날 때 항목 사이의 간격.
   static const Duration stagger = Duration(milliseconds: 40);
 
