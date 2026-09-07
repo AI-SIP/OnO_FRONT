@@ -5,6 +5,7 @@ import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import 'ProblemSolveCanvasScreen.dart';
 import 'ProblemSolveRegisterScreen.dart';
+import '../../Module/Motion/TossPageRoute.dart';
 
 class ProblemSolveEntry {
   static Future<bool?> open({
@@ -30,7 +31,7 @@ class ProblemSolveEntry {
     if (mode == _ProblemSolveMode.offline) {
       return Navigator.push<bool>(
         context,
-        MaterialPageRoute(
+        TossPageRoute(
           builder: (context) => ProblemSolveRegisterScreen(
             problemId: problemId,
             onRefresh: onRefresh,
@@ -42,7 +43,7 @@ class ProblemSolveEntry {
     if (problemImageUrls.isEmpty) {
       return Navigator.push<bool>(
         context,
-        MaterialPageRoute(
+        TossPageRoute(
           builder: (context) => ProblemSolveRegisterScreen(
             problemId: problemId,
             onRefresh: onRefresh,
@@ -53,7 +54,7 @@ class ProblemSolveEntry {
 
     return Navigator.push<bool>(
       context,
-      MaterialPageRoute(
+      TossPageRoute(
         builder: (context) => ProblemSolveCanvasScreen(
           problemId: problemId,
           problemImageUrls: problemImageUrls,

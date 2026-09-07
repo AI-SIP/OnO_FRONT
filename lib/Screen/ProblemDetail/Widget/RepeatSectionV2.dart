@@ -17,6 +17,9 @@ import '../../../Module/Text/mobile_font_size.dart';
 import '../../../Module/Text/StandardText.dart';
 import '../../../Module/Theme/ThemeHandler.dart';
 import '../../../Service/Api/Problem/ProblemSolveService.dart';
+import '../../../Module/Motion/AppHaptic.dart';
+import '../../../Module/Motion/PressableScale.dart';
+import '../../../Module/Motion/TossPageRoute.dart';
 
 class RepeatSectionV2 extends StatefulWidget {
   final ProblemModel problem;
@@ -351,10 +354,9 @@ class _ProblemSolveCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // 헤더
-            InkWell(
+            PressableScale(
+              haptic: HapticLevel.selection,
               onTap: () => onToggle(!isExpanded),
-              borderRadius:
-                  const BorderRadius.vertical(top: Radius.circular(16.0)),
               child: Container(
                 padding: const EdgeInsets.fromLTRB(16.0, 16.0, 8.0, 16.0),
                 decoration: BoxDecoration(
@@ -950,9 +952,8 @@ class _TabletSolveListItem extends StatelessWidget {
     final borderColor =
         isSelected ? statusColor.withOpacity(0.7) : Colors.grey[300]!;
 
-    return InkWell(
+    return PressableScale(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12.0),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
         padding: const EdgeInsets.all(12.0),
@@ -1093,10 +1094,11 @@ class _ImageSliderState extends State<_ImageSlider> {
             itemCount: widget.imageUrls.length,
             onPageChanged: (i) => setState(() => _current = i),
             itemBuilder: (context, i) {
-              return GestureDetector(
+              return PressableScale(
+                haptic: HapticLevel.none,
                 onTap: () => Navigator.push(
                   context,
-                  MaterialPageRoute(
+                  TossPageRoute(
                     builder: (_) =>
                         FullScreenImage(imagePath: widget.imageUrls[i]),
                   ),

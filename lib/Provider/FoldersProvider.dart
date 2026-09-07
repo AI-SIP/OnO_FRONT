@@ -125,7 +125,8 @@ class FoldersProvider with ChangeNotifier {
     state.subfolderNextCursor = nextCursor;
     state.subfolderHasNext = hasNext;
 
-    debugPrint('💾 Saved ${subfolders.length} subfolders to cache for folder $folderId');
+    debugPrint(
+        '💾 Saved ${subfolders.length} subfolders to cache for folder $folderId');
   }
 
   // 외부에서 문제 데이터를 캐시에 저장
@@ -145,7 +146,8 @@ class FoldersProvider with ChangeNotifier {
     state.problemNextCursor = nextCursor;
     state.problemHasNext = hasNext;
 
-    debugPrint('💾 Saved ${problems.length} problems to cache for folder $folderId');
+    debugPrint(
+        '💾 Saved ${problems.length} problems to cache for folder $folderId');
   }
 
   FoldersProvider({
@@ -264,7 +266,8 @@ class FoldersProvider with ChangeNotifier {
       state.subfolderNextCursor = response.nextCursor;
       state.subfolderHasNext = response.hasNext;
 
-      debugPrint('Loaded ${response.content.length} subfolders for folder $folderId, hasNext: ${response.hasNext}');
+      debugPrint(
+          'Loaded ${response.content.length} subfolders for folder $folderId, hasNext: ${response.hasNext}');
     } catch (e, stackTrace) {
       debugPrint('Error loading subfolders: $e');
       debugPrint(stackTrace.toString());
@@ -303,7 +306,8 @@ class FoldersProvider with ChangeNotifier {
       state.problemNextCursor = response.nextCursor;
       state.problemHasNext = response.hasNext;
 
-      debugPrint('Loaded ${response.content.length} problems for folder $folderId, hasNext: ${response.hasNext}');
+      debugPrint(
+          'Loaded ${response.content.length} problems for folder $folderId, hasNext: ${response.hasNext}');
     } catch (e, stackTrace) {
       debugPrint('Error loading problems: $e');
       debugPrint(stackTrace.toString());
@@ -407,7 +411,8 @@ class FoldersProvider with ChangeNotifier {
     // 루트 폴더이면 타임스탬프 업데이트
     if (rootFolder != null && folderId == rootFolder!.folderId) {
       _rootFolderRefreshTimestamp = DateTime.now().millisecondsSinceEpoch;
-      debugPrint('🔄 Root folder refresh signaled - timestamp: $_rootFolderRefreshTimestamp');
+      debugPrint(
+          '🔄 Root folder refresh signaled - timestamp: $_rootFolderRefreshTimestamp');
     }
 
     // DirectoryScreen이 독립적으로 데이터를 로드하므로, moveToFolder를 호출하지 않음

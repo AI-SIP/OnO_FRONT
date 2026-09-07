@@ -11,6 +11,9 @@ import '../../../Provider/StudyRoomProvider.dart';
 import '../../../Util/AppSnackBar.dart';
 import '../SharedProblemDetailScreen.dart';
 import 'FeedReactionBar.dart';
+import '../../../Module/Motion/AppHaptic.dart';
+import '../../../Module/Motion/PressableScale.dart';
+import '../../../Module/Motion/TossPageRoute.dart';
 
 class SharedProblemCard extends StatefulWidget {
   final SharedProblemModel problem;
@@ -277,14 +280,14 @@ class _SharedProblemCardState extends State<SharedProblemCard> {
 
     return Material(
       color: Colors.transparent,
-      child: InkWell(
+      child: PressableScale(
+        haptic: HapticLevel.none,
         onTap: () => Navigator.push(
           context,
-          MaterialPageRoute(
+          TossPageRoute(
             builder: (_) => SharedProblemDetailScreen(problem: problem),
           ),
         ),
-        borderRadius: BorderRadius.circular(14),
         child: Container(
           margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
           decoration: BoxDecoration(
@@ -443,10 +446,11 @@ class _SharedProblemCardState extends State<SharedProblemCard> {
               setState(() => _currentImageIndex = index);
             },
             itemBuilder: (context, index) {
-              return GestureDetector(
+              return PressableScale(
+                haptic: HapticLevel.none,
                 onTap: () => Navigator.push(
                   context,
-                  MaterialPageRoute(
+                  TossPageRoute(
                     builder: (_) =>
                         FullScreenImage(imagePath: imageUrls[index]),
                   ),

@@ -251,164 +251,165 @@ class _ProblemPickerScreenState extends State<ProblemPickerScreen> {
             onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
             behavior: HitTestBehavior.translucent,
             child: Padding(
-            padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      width: 34,
-                      height: 34,
-                      decoration: BoxDecoration(
-                        color:
-                            themeProvider.primaryColor.withValues(alpha: 0.10),
-                        borderRadius: BorderRadius.circular(10),
+              padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        width: 34,
+                        height: 34,
+                        decoration: BoxDecoration(
+                          color: themeProvider.primaryColor
+                              .withValues(alpha: 0.10),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Icon(
+                          Icons.ios_share_outlined,
+                          color: themeProvider.primaryColor,
+                          size: 19,
+                        ),
                       ),
-                      child: Icon(
-                        Icons.ios_share_outlined,
-                        color: themeProvider.primaryColor,
-                        size: 19,
+                      const SizedBox(width: 10),
+                      const Expanded(
+                        child: StandardText(
+                          text: '문제를 공유할까요?',
+                          fontSize: 17,
+                          color: Colors.black87,
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 10),
-                    const Expanded(
-                      child: StandardText(
-                        text: '문제를 공유할까요?',
-                        fontSize: 17,
-                        color: Colors.black87,
-                        overflow: TextOverflow.ellipsis,
-                        maxLines: 1,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 14),
-                LayoutBuilder(
-                  builder: (context, constraints) {
-                    final isWide = constraints.maxWidth >= 420;
-                    final roomTile = _buildShareSummaryRow(
-                      icon: Icons.groups_2_outlined,
-                      label: '공유할 방',
-                      value: roomName,
-                      themeProvider: themeProvider,
-                    );
-                    final problemTile = _buildShareSummaryRow(
-                      icon: Icons.assignment_outlined,
-                      label: '선택한 문제',
-                      value: problemTitle,
-                      themeProvider: themeProvider,
-                      maxLines: isWide ? 1 : 2,
-                    );
+                    ],
+                  ),
+                  const SizedBox(height: 14),
+                  LayoutBuilder(
+                    builder: (context, constraints) {
+                      final isWide = constraints.maxWidth >= 420;
+                      final roomTile = _buildShareSummaryRow(
+                        icon: Icons.groups_2_outlined,
+                        label: '공유할 방',
+                        value: roomName,
+                        themeProvider: themeProvider,
+                      );
+                      final problemTile = _buildShareSummaryRow(
+                        icon: Icons.assignment_outlined,
+                        label: '선택한 문제',
+                        value: problemTitle,
+                        themeProvider: themeProvider,
+                        maxLines: isWide ? 1 : 2,
+                      );
 
-                    if (!isWide) {
-                      return Column(
+                      if (!isWide) {
+                        return Column(
+                          children: [
+                            roomTile,
+                            const SizedBox(height: 8),
+                            problemTile,
+                          ],
+                        );
+                      }
+
+                      return Row(
                         children: [
-                          roomTile,
-                          const SizedBox(height: 8),
-                          problemTile,
+                          Expanded(child: roomTile),
+                          const SizedBox(width: 8),
+                          Expanded(child: problemTile),
                         ],
                       );
-                    }
-
-                    return Row(
-                      children: [
-                        Expanded(child: roomTile),
-                        const SizedBox(width: 8),
-                        Expanded(child: problemTile),
-                      ],
-                    );
-                  },
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: _commentController,
-                  maxLength: 100,
-                  minLines: 2,
-                  maxLines: 2,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    color: Colors.black87,
-                    fontWeight: FontWeight.w500,
-                    fontFamily: 'Pretendard',
+                    },
                   ),
-                  decoration: InputDecoration(
-                    hintText: '한마디 남기기 (선택)',
-                    counterText: '',
-                    hintStyle: TextStyle(color: Colors.grey[400], fontSize: 13),
-                    filled: true,
-                    fillColor: Colors.grey[50],
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.grey[300]!),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: _commentController,
+                    maxLength: 100,
+                    minLines: 2,
+                    maxLines: 2,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: Colors.black87,
+                      fontWeight: FontWeight.w500,
+                      fontFamily: 'Pretendard',
                     ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.grey[300]!),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(
-                        color: themeProvider.primaryColor,
-                        width: 1.5,
+                    decoration: InputDecoration(
+                      hintText: '한마디 남기기 (선택)',
+                      counterText: '',
+                      hintStyle:
+                          TextStyle(color: Colors.grey[400], fontSize: 13),
+                      filled: true,
+                      fillColor: Colors.grey[50],
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: Colors.grey[300]!),
                       ),
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 11,
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: Colors.grey[300]!),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(
+                          color: themeProvider.primaryColor,
+                          width: 1.5,
+                        ),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 11,
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 14),
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextButton(
-                        onPressed: () => Navigator.pop(context, null),
-                        style: TextButton.styleFrom(
-                          backgroundColor: Colors.grey[50],
-                          padding: const EdgeInsets.symmetric(vertical: 13),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            side: BorderSide(color: Colors.grey[200]!),
+                  const SizedBox(height: 14),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextButton(
+                          onPressed: () => Navigator.pop(context, null),
+                          style: TextButton.styleFrom(
+                            backgroundColor: Colors.grey[50],
+                            padding: const EdgeInsets.symmetric(vertical: 13),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              side: BorderSide(color: Colors.grey[200]!),
+                            ),
+                          ),
+                          child: StandardText(
+                            text: '취소',
+                            fontSize: 14,
+                            color: Colors.grey[700]!,
                           ),
                         ),
-                        child: StandardText(
-                          text: '취소',
-                          fontSize: 14,
-                          color: Colors.grey[700]!,
-                        ),
                       ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: TextButton(
-                        onPressed: () {
-                          FocusManager.instance.primaryFocus?.unfocus();
-                          Navigator.pop(
-                            context,
-                            _commentController.text.trim(),
-                          );
-                        },
-                        style: TextButton.styleFrom(
-                          backgroundColor: themeProvider.primaryColor,
-                          padding: const EdgeInsets.symmetric(vertical: 13),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: TextButton(
+                          onPressed: () {
+                            FocusManager.instance.primaryFocus?.unfocus();
+                            Navigator.pop(
+                              context,
+                              _commentController.text.trim(),
+                            );
+                          },
+                          style: TextButton.styleFrom(
+                            backgroundColor: themeProvider.primaryColor,
+                            padding: const EdgeInsets.symmetric(vertical: 13),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: const StandardText(
+                            text: '공유하기',
+                            fontSize: 14,
+                            color: Colors.white,
                           ),
                         ),
-                        child: const StandardText(
-                          text: '공유하기',
-                          fontSize: 14,
-                          color: Colors.white,
-                        ),
                       ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
         ),

@@ -32,6 +32,7 @@ import 'Util/AppErrorReporter.dart';
 import 'Util/AppNavigator.dart';
 import 'Util/AppSnackBar.dart';
 import 'Util/NotificationService.dart';
+import 'Module/Motion/TossPageRoute.dart';
 
 Future<void> main() async {
   await runZonedGuarded<Future<void>>(
@@ -159,7 +160,7 @@ class MyApp extends StatelessWidget {
       onGenerateRoute: (settings) {
         if (settings.name == '/problemRegister') {
           final args = settings.arguments as Map<String, dynamic>;
-          return MaterialPageRoute(
+          return TossPageRoute(
             builder: (context) {
               return ProblemRegisterScreen(
                 problemModel: args['problemModel'],
@@ -309,8 +310,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
     final screenIndexProvider = Provider.of<ScreenIndexProvider>(context);
     double screenHeight = MediaQuery.of(context).size.height;
     final isMobile = MediaQuery.of(context).size.width < 600;
-    final selectedLabelFontSize =
-        screenHeight * 0.015 - (isMobile ? 1.0 : 0.0);
+    final selectedLabelFontSize = screenHeight * 0.015 - (isMobile ? 1.0 : 0.0);
 
     return BottomNavigationBar(
       backgroundColor: Colors.white,

@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 
 import '../Text/StandardText.dart';
 import '../Theme/ThemeHandler.dart';
+import '../Motion/TossPageRoute.dart';
 
 class CameraHandler {
   CameraController? _controller;
@@ -26,7 +27,7 @@ class CameraHandler {
 
     final camera = _availableCameras!.first;
     return Navigator.of(context).push(
-      MaterialPageRoute(
+      TossPageRoute(
         builder: (context) => CameraScreen(camera: camera),
       ),
     );
@@ -104,7 +105,8 @@ class _CameraScreenState extends State<CameraScreen> {
                   child: Padding(
                     padding: EdgeInsets.symmetric(horizontal: 32),
                     child: StandardText(
-                      text: '카메라를 열 수 없습니다.\n카메라 권한을 확인하거나 다른 앱을 종료한 뒤 다시 시도해주세요.',
+                      text:
+                          '카메라를 열 수 없습니다.\n카메라 권한을 확인하거나 다른 앱을 종료한 뒤 다시 시도해주세요.',
                       color: Colors.white,
                       fontSize: 15,
                       fontWeight: FontWeight.w600,

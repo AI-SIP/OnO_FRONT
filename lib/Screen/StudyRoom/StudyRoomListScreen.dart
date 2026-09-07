@@ -14,6 +14,7 @@ import 'StudyRoomDetailScreen.dart';
 import 'StudyRoomJoinScreen.dart';
 import 'Widget/StudyRoomEmptyState.dart';
 import 'Widget/StudyRoomThumbnail.dart';
+import '../../Module/Motion/TossPageRoute.dart';
 
 class StudyRoomListScreen extends StatefulWidget {
   final TutorialTargets? tutorialTargets;
@@ -45,21 +46,21 @@ class _StudyRoomListScreenState extends State<StudyRoomListScreen> {
   void _openCreate() {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => const StudyRoomCreateScreen()),
+      TossPageRoute(builder: (_) => const StudyRoomCreateScreen()),
     );
   }
 
   void _openJoin() {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => const StudyRoomJoinScreen()),
+      TossPageRoute(builder: (_) => const StudyRoomJoinScreen()),
     );
   }
 
   void _openDetail(int roomId) {
     Navigator.push(
       context,
-      MaterialPageRoute(
+      TossPageRoute(
         builder: (_) => StudyRoomDetailScreen(roomId: roomId),
       ),
     );

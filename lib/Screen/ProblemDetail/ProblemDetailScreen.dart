@@ -18,6 +18,9 @@ import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/ProblemsProvider.dart';
 import '../PracticeNote/PracticeNavigationButtons.dart';
 import 'ProblemDetailTemplate.dart';
+import '../../Module/Motion/AppHaptic.dart';
+import '../../Module/Motion/PressableScale.dart';
+import '../../Module/Motion/TossPageRoute.dart';
 
 class ProblemDetailScreen extends StatefulWidget {
   final int problemId;
@@ -410,7 +413,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                         Navigator.pop(context);
                         Navigator.of(context)
                             .push(
-                          MaterialPageRoute(
+                          TossPageRoute(
                             builder: (context) => ProblemRegisterScreen(
                               problemModel: problemModel,
                               isEditMode: true,
@@ -467,9 +470,8 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
     Color? titleColor,
     required VoidCallback onTap,
   }) {
-    return InkWell(
+    return PressableScale(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
@@ -661,7 +663,9 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                                       ? themeProvider.primaryColor
                                       : Colors.grey.shade200;
 
-                              return InkWell(
+                              return PressableScale(
+                                haptic: HapticLevel.selection,
+                                enabled: !alreadyAdded,
                                 onTap: alreadyAdded
                                     ? null
                                     : () {
@@ -675,7 +679,6 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                                           }
                                         });
                                       },
-                                borderRadius: BorderRadius.circular(12),
                                 child: Container(
                                   padding: const EdgeInsets.symmetric(
                                       horizontal: 14, vertical: 12),

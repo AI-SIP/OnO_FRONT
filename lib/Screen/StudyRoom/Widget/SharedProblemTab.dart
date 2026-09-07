@@ -7,6 +7,7 @@ import '../../../Provider/StudyRoomProvider.dart';
 import '../../../Util/AppSnackBar.dart';
 import '../ProblemPickerScreen.dart';
 import 'SharedProblemCard.dart';
+import '../../../Module/Motion/TossPageRoute.dart';
 
 class SharedProblemTab extends StatefulWidget {
   final int roomId;
@@ -104,7 +105,7 @@ class _SharedProblemTabState extends State<SharedProblemTab>
 
     final result = await Navigator.push<bool>(
       context,
-      MaterialPageRoute(
+      TossPageRoute(
         builder: (_) => ProblemPickerScreen(
           roomId: widget.roomId,
           alreadySharedProblemIds: alreadySharedIds,

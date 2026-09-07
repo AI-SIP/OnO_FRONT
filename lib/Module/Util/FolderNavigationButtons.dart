@@ -357,7 +357,8 @@ class _FolderNavigationButtonsState extends State<FolderNavigationButtons> {
                                           isLoading = false;
                                         });
 
-                                        debugPrint("problemId: $problemId solve");
+                                        debugPrint(
+                                            "problemId: $problemId solve");
                                         LoadingDialog.hideFromNavigator(
                                           rootNavigator,
                                         );

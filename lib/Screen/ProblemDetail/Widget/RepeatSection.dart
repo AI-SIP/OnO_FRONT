@@ -11,6 +11,9 @@ import '../../../Module/Text/StandardText.dart';
 import '../../../Module/Text/UnderlinedText.dart';
 import '../../../Module/Theme/ThemeHandler.dart';
 import '../../../Provider/ProblemsProvider.dart';
+import '../../../Module/Motion/AppHaptic.dart';
+import '../../../Module/Motion/PressableScale.dart';
+import '../../../Module/Motion/TossPageRoute.dart';
 
 Widget buildRepeatSection(
     BuildContext ctx, ProblemModel problem, Color iconColor) {
@@ -39,10 +42,11 @@ Widget buildRepeatSection(
                     '${idx + 1}. 복습 날짜 : ${DateFormat('yyyy년 MM월 dd일').format(solve.createdAt)}',
                 fontSize: 18),
             const SizedBox(height: 10),
-            GestureDetector(
+            PressableScale(
+              haptic: HapticLevel.none,
               onTap: () => Navigator.push(
                   ctx,
-                  MaterialPageRoute(
+                  TossPageRoute(
                       builder: (_) =>
                           FullScreenImage(imagePath: solve.imageUrl))),
               onLongPress: () async {

@@ -101,7 +101,8 @@ Future<DiscordAlertResult> _sendDiscordAlert({
         return DiscordAlertResult.success(statusCode: response.statusCode);
       }
 
-      debugPrint('Discord webhook failed: ${response.statusCode} ${response.body}');
+      debugPrint(
+          'Discord webhook failed: ${response.statusCode} ${response.body}');
 
       if (attempt < maxAttempts && response.statusCode == 429) {
         await Future.delayed(_retryDelay(response.headers['retry-after']));

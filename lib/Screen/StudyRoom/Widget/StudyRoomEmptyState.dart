@@ -22,8 +22,7 @@ class StudyRoomEmptyState extends StatelessWidget {
     final screenWidth = MediaQuery.of(context).size.width;
     final emptyImageCircleSize = screenWidth < 360 ? 128.0 : 150.0;
     final imageSize = emptyImageCircleSize * 0.78;
-    const assetPath =
-        'assets/emoji/${StudyRoomThumbnail.defaultEmojiKey}.png';
+    const assetPath = 'assets/emoji/${StudyRoomThumbnail.defaultEmojiKey}.png';
 
     return Center(
       child: Padding(

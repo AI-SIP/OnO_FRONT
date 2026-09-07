@@ -9,6 +9,10 @@ import 'package:ono/Provider/ReviewDueProvider.dart';
 import 'package:ono/Screen/ProblemDetail/ProblemDetailScreen.dart';
 import 'package:ono/Service/Api/Problem/ProblemService.dart';
 import 'package:provider/provider.dart';
+import '../../Module/Motion/AppHaptic.dart';
+import '../../Module/Motion/PressableScale.dart';
+import '../../Module/Motion/Skeleton.dart';
+import '../../Module/Motion/TossPageRoute.dart';
 
 class ReviewDueScreen extends StatefulWidget {
   const ReviewDueScreen({super.key});
@@ -85,10 +89,11 @@ class _ReviewDueScreenState extends State<ReviewDueScreen> {
         ),
       ),
       body: reviewDueProvider.isLoading && data == null
-          ? Center(
-              child: CircularProgressIndicator(
-                color: themeProvider.primaryColor,
-              ),
+          ? const SkeletonList(
+              itemCount: 5,
+              itemHeight: 88,
+              spacing: 12,
+              padding: EdgeInsets.fromLTRB(20, 16, 20, 20),
             )
           : data == null || data.problems.isEmpty
               ? _buildEmptyState(themeProvider)
@@ -182,11 +187,12 @@ class _ReviewDueScreenState extends State<ReviewDueScreen> {
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
-      child: GestureDetector(
+      child: PressableScale(
+        haptic: HapticLevel.none,
         onTap: () async {
           await Navigator.push(
             context,
-            MaterialPageRoute(
+            TossPageRoute(
               builder: (_) => ProblemDetailScreen(problemId: problem.problemId),
             ),
           );

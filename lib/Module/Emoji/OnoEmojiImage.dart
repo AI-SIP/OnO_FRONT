@@ -97,7 +97,8 @@ class OnoEmojiImage extends StatelessWidget {
                 fit: BoxFit.contain,
                 filterQuality: FilterQuality.high,
                 errorBuilder: (_, __, ___) {
-                  debugPrint('Missing OnO emoji asset: ${resolvedEmoji.assetPath}');
+                  debugPrint(
+                      'Missing OnO emoji asset: ${resolvedEmoji.assetPath}');
                   return SizedBox(width: size, height: size);
                 },
               ),

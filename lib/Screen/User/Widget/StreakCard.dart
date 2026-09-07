@@ -3,12 +3,14 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../Model/StudyCalendar/StudyCalendarModel.dart';
 import '../../../Module/Motion/AnimatedCountText.dart';
+import '../../../Module/Motion/AppHaptic.dart';
 import '../../../Module/Motion/PressableScale.dart';
 import '../../../Module/Motion/Skeleton.dart';
 import '../../../Module/Text/StandardText.dart';
 import '../../../Module/Theme/ThemeHandler.dart';
 import '../../../Service/Api/StudyCalendar/StudyCalendarService.dart';
 import '../LearningCalendarScreen.dart';
+import '../../../Module/Motion/TossPageRoute.dart';
 
 class StreakCard extends StatefulWidget {
   final ThemeHandler themeProvider;
@@ -72,7 +74,7 @@ class _StreakCardState extends State<StreakCard> {
   void _openCalendarDetail() {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => const LearningCalendarScreen()),
+      TossPageRoute(builder: (_) => const LearningCalendarScreen()),
     );
   }
 
@@ -137,9 +139,8 @@ class _StreakCardState extends State<StreakCard> {
             _buildStreakBanner(primaryColor, isTablet: isTablet),
             if (!_isCalendarLoading && _calendarData != null) ...[
               SizedBox(height: isTabletLandscape ? 18 : 12),
-              InkWell(
+              PressableScale(
                 onTap: _openCalendarDetail,
-                borderRadius: BorderRadius.circular(8),
                 child: AnimatedSize(
                   duration: const Duration(milliseconds: 220),
                   curve: Curves.easeInOut,
@@ -183,9 +184,9 @@ class _StreakCardState extends State<StreakCard> {
     final calendarYear = _calendarData?.year ?? DateTime.now().year;
     final calendarMonth = _calendarData?.month ?? DateTime.now().month;
 
-    return InkWell(
+    return PressableScale(
+      haptic: HapticLevel.selection,
       onTap: _toggleCalendarExpanded,
-      borderRadius: BorderRadius.circular(8),
       child: Row(
         children: [
           StandardText(

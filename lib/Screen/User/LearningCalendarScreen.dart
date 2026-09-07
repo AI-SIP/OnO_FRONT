@@ -575,8 +575,7 @@ class _LearningCalendarScreenState extends State<LearningCalendarScreen> {
             hintStyle: TextStyle(fontSize: 13, color: Colors.grey[400]),
             filled: true,
             fillColor: Colors.white,
-            counterStyle:
-                TextStyle(fontSize: 10, color: Colors.grey[400]),
+            counterStyle: TextStyle(fontSize: 10, color: Colors.grey[400]),
             contentPadding:
                 const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             border: OutlineInputBorder(
@@ -607,8 +606,7 @@ class _LearningCalendarScreenState extends State<LearningCalendarScreen> {
             style: TextButton.styleFrom(
               backgroundColor: primaryColor,
               foregroundColor: Colors.white,
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
               ),

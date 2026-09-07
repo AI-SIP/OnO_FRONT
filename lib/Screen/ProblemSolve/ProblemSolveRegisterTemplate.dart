@@ -13,6 +13,9 @@ import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/ProblemsProvider.dart';
 import '../ProblemRegister/Widget/ImageGridWidget.dart';
+import '../../Module/Motion/AppHaptic.dart';
+import '../../Module/Motion/PressableScale.dart';
+import '../../Module/Motion/TossPageRoute.dart';
 
 class ProblemSolveRegisterTemplate extends StatefulWidget {
   final int problemId;
@@ -272,7 +275,7 @@ class ProblemSolveRegisterTemplateState
     required bool isSelected,
     required VoidCallback onTap,
   }) {
-    return GestureDetector(
+    return PressableScale(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 14.0, horizontal: 8.0),
@@ -350,9 +353,9 @@ class ProblemSolveRegisterTemplateState
     required Function(bool?) onChanged,
     required ThemeHandler themeProvider,
   }) {
-    return InkWell(
+    return PressableScale(
+      haptic: HapticLevel.selection,
       onTap: () => onChanged(!value),
-      borderRadius: BorderRadius.circular(8.0),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 10.0),
         decoration: BoxDecoration(
@@ -536,7 +539,7 @@ class ProblemSolveRegisterTemplateState
   void _showAnswerImages(BuildContext context) {
     Navigator.push(
       context,
-      MaterialPageRoute(
+      TossPageRoute(
         builder: (_) => _AnswerImagesScreen(imageUrls: _answerImageUrls),
       ),
     );

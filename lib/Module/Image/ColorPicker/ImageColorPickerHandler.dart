@@ -8,12 +8,13 @@ import 'package:provider/provider.dart';
 import '../../Text/StandardText.dart';
 import '../../Theme/ThemeHandler.dart';
 import 'PixelPicker.dart';
+import '../../Motion/TossPageRoute.dart';
 
 class ImageColorPickerHandler {
   Future<Map<String, dynamic>?> showColorPicker(
       BuildContext context, String imagePath) async {
     final result = await Navigator.of(context).push(
-      MaterialPageRoute(
+      TossPageRoute(
         builder: (context) => ColorPickerScreen(imagePath: imagePath),
       ),
     );

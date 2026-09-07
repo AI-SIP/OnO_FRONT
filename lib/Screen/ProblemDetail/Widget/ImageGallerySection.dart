@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import '../../../Module/Image/DisplayImage.dart';
 import '../../../Module/Image/FullScreenImage.dart';
 import '../../../Module/Theme/ThemeHandler.dart';
+import '../../../Module/Motion/AppHaptic.dart';
+import '../../../Module/Motion/PressableScale.dart';
+import '../../../Module/Motion/TossPageRoute.dart';
 
 class ImageGallerySection extends StatefulWidget {
   final List<String> imageUrls;
@@ -60,10 +63,11 @@ class _ImageGallerySectionState extends State<ImageGallerySection> {
             itemCount: widget.imageUrls.length,
             onPageChanged: (i) => setState(() => _current = i),
             itemBuilder: (context, i) {
-              return GestureDetector(
+              return PressableScale(
+                haptic: HapticLevel.none,
                 onTap: () => Navigator.push(
                   context,
-                  MaterialPageRoute(
+                  TossPageRoute(
                     builder: (_) =>
                         FullScreenImage(imagePath: widget.imageUrls[i]),
                   ),
@@ -89,7 +93,8 @@ class _ImageGallerySectionState extends State<ImageGallerySection> {
               separatorBuilder: (_, __) => const SizedBox(width: 8),
               itemBuilder: (context, i) {
                 final isSelected = _current == i;
-                return GestureDetector(
+                return PressableScale(
+                  haptic: HapticLevel.none,
                   onTap: () {
                     _controller.animateToPage(
                       i,

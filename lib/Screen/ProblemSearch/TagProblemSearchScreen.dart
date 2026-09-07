@@ -12,6 +12,12 @@ import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/ProblemsProvider.dart';
 import '../../Service/Api/Tag/TagService.dart';
 import '../ProblemDetail/ProblemDetailScreen.dart';
+import '../../Module/Motion/AppMotion.dart';
+import '../../Module/Motion/AppearTransition.dart';
+import '../../Module/Motion/AppHaptic.dart';
+import '../../Module/Motion/PressableScale.dart';
+import '../../Module/Motion/Skeleton.dart';
+import '../../Module/Motion/TossPageRoute.dart';
 
 enum _SearchMode { tag, title }
 
@@ -292,9 +298,9 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
     }) {
       final selected = _mode == mode;
       return Expanded(
-        child: InkWell(
+        child: PressableScale(
+          haptic: HapticLevel.selection,
           onTap: () => _switchMode(mode),
-          borderRadius: BorderRadius.circular(10),
           child: Container(
             height: 38,
             alignment: Alignment.center,
@@ -379,8 +385,8 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
   Widget _buildTagFilterBar(ThemeHandler themeProvider) {
     if (_isLoadingTags) {
       return const Padding(
-        padding: EdgeInsets.symmetric(vertical: 20),
-        child: CircularProgressIndicator(),
+        padding: EdgeInsets.fromLTRB(20, 10, 20, 8),
+        child: SkeletonBox(height: 34, borderRadius: 17),
       );
     }
 
@@ -414,9 +420,9 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
             final selected = tag.tagId == _selectedTagId;
             return Padding(
               padding: const EdgeInsets.only(right: 8),
-              child: InkWell(
+              child: PressableScale(
+                haptic: HapticLevel.selection,
                 onTap: () => _loadTagProblems(tag.tagId, isInitial: true),
-                borderRadius: BorderRadius.circular(8),
                 child: Container(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
@@ -449,9 +455,17 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
     );
   }
 
+  /// 검색 결과에서 하나씩 들어오게 할 항목 수.
+  static const int _staggeredItemLimit = 8;
+
   Widget _buildProblemList(ThemeHandler themeProvider) {
     if (_isLoadingProblems && _problems.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
+      return const SkeletonList(
+        itemCount: 5,
+        itemHeight: 88,
+        spacing: 12,
+        padding: EdgeInsets.fromLTRB(20, 4, 20, 20),
+      );
     }
 
     if (_problems.isEmpty) {
@@ -482,7 +496,12 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
         }
 
         final problem = _problems[index];
-        return _buildProblemTile(problem, themeProvider);
+        // 검색 결과가 툭 나타나지 않고 하나씩 들어온다.
+        return AppearTransition(
+          enabled: index < _staggeredItemLimit,
+          delay: AppMotion.stagger * index,
+          child: _buildProblemTile(problem, themeProvider),
+        );
       },
     );
   }
@@ -539,7 +558,7 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
           }
           await Navigator.push(
             context,
-            MaterialPageRoute(
+            TossPageRoute(
               builder: (_) => ProblemDetailScreen(problemId: problem.problemId),
             ),
           );

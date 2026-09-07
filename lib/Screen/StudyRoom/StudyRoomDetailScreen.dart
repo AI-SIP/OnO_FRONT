@@ -19,6 +19,8 @@ import 'Widget/MemberRankCard.dart';
 import 'Widget/StudyRoomThumbnail.dart';
 import 'Widget/SharedProblemTab.dart';
 import 'Widget/WeeklyReportSheet.dart';
+import '../../Module/Motion/PressableScale.dart';
+import '../../Module/Motion/TossPageRoute.dart';
 
 class StudyRoomDetailScreen extends StatefulWidget {
   final int roomId;
@@ -121,7 +123,7 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
   ) async {
     final updated = await Navigator.push<bool>(
       context,
-      MaterialPageRoute(
+      TossPageRoute(
         builder: (_) => StudyRoomEditScreen(room: room),
       ),
     );
@@ -1156,9 +1158,8 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
     required Color labelColor,
     required VoidCallback onTap,
   }) {
-    return InkWell(
+    return PressableScale(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(

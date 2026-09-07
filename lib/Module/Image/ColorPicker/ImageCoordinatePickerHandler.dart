@@ -6,12 +6,13 @@ import 'package:provider/provider.dart';
 import '../../Text/StandardText.dart';
 import '../../Theme/ThemeHandler.dart';
 import 'ImageCoordinateGuideDialog.dart';
+import '../../Motion/TossPageRoute.dart';
 
 class ImageCoordinatePickerHandler {
   Future<List<List<double>>?> showCoordinatePicker(
       BuildContext context, String imagePath) async {
     final result = await Navigator.of(context).push(
-      MaterialPageRoute(
+      TossPageRoute(
         builder: (context) => CoordinatePickerScreen(imagePath: imagePath),
       ),
     );

@@ -9,6 +9,9 @@ import 'package:ono/Screen/ProblemShare/AchievementCardScreen.dart';
 import 'package:ono/Service/Api/LearningReport/LearningReportService.dart';
 import 'package:provider/provider.dart';
 import '../../../Util/AppSnackBar.dart';
+import '../../../Module/Motion/AppHaptic.dart';
+import '../../../Module/Motion/PressableScale.dart';
+import '../../../Module/Motion/TossPageRoute.dart';
 
 enum ReportPeriod { weekly, monthly, total }
 
@@ -395,7 +398,8 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
   ) {
     final isSelected = _selectedPeriod == period;
     return Expanded(
-      child: GestureDetector(
+      child: PressableScale(
+        haptic: HapticLevel.selection,
         onTap: () {
           setState(() {
             _selectedPeriod = period;
@@ -765,7 +769,7 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
     }
     Navigator.push(
       context,
-      MaterialPageRoute(
+      TossPageRoute(
         builder: (_) => AchievementCardScreen(
           userInfo: userInfo,
           weeklyReport: _report!.weekly,
