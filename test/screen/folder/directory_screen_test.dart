@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:ono/Module/Motion/PressableScale.dart';
+import 'package:ono/Module/Motion/Skeleton.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:ono/Model/Common/LoginStatus.dart';
 import 'package:ono/Model/Common/PaginatedResponse.dart';
@@ -193,7 +195,7 @@ void main() {
   });
 
   group('폴더/문제 목록', () {
-    testWidgets('초기 로딩 중에는 스피너가 보인다', (tester) async {
+    testWidgets('초기 로딩 중에는 목록 자리에 스켈레톤이 보인다', (tester) async {
       // 루트 폴더 조회에 지연을 줘서, 응답이 오기 전 로딩 상태를 붙잡는다.
       // (mock 은 기본적으로 즉시 완료되어 pump 한 번으로는 로딩 상태를 볼 수 없다.)
       when(() => folderService.getRootFolder()).thenAnswer(
@@ -206,10 +208,13 @@ void main() {
       await pumpDirectory(tester, settle: false);
       await tester.pump();
 
-      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      // 화면 가운데 스피너 대신 실제 목록과 같은 모양의 회색 덩어리를 놓는다.
+      expect(find.byType(SkeletonList), findsOneWidget);
+      expect(find.byType(CircularProgressIndicator), findsNothing);
 
       // 지연된 응답을 마저 흘려보내 테스트 종료 시 pending 타이머를 남기지 않는다.
       await tester.pump(const Duration(milliseconds: 250));
+      await tester.pumpAndSettle();
     });
 
     testWidgets('하위 폴더도 문제도 없으면 빈 상태 문구가 보인다', (tester) async {
@@ -301,7 +306,7 @@ void main() {
     // (아이템 자체는 선택 모드 진입 → 삭제 기능이라 '삭제하기' 류의 문구가 맞아 보인다.)
     Finder deleteMenuItem() => find.ancestor(
           of: find.byIcon(Icons.delete_outline),
-          matching: find.byType(InkWell),
+          matching: find.byType(PressableScale),
         );
 
     testWidgets('더보기 버튼을 누르면 편집 메뉴가 열린다', (tester) async {

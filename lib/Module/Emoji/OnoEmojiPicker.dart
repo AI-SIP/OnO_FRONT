@@ -6,6 +6,9 @@ import 'OnoEmoji.dart';
 import 'OnoEmojiCatalog.dart';
 import 'OnoEmojiCategory.dart';
 import 'OnoEmojiImage.dart';
+import '../Motion/PressableScale.dart';
+import '../Motion/AppMotion.dart';
+import '../Design/AppRadius.dart';
 
 class OnoEmojiPicker extends StatefulWidget {
   final List<OnoEmojiCategory> categories;
@@ -27,6 +30,7 @@ class OnoEmojiPicker extends StatefulWidget {
   }) {
     final availableCategories = categories ?? OnoEmojiCategory.values;
     return showModalBottomSheet<void>(
+      sheetAnimationStyle: AppMotion.sheetStyle,
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
@@ -133,16 +137,15 @@ class _OnoEmojiPickerState extends State<OnoEmojiPicker> {
                   final emoji = emojis[index];
                   final isSelected = selectedEmojiKey == emoji.key;
 
-                  return InkWell(
+                  return PressableScale(
                     onTap: () => widget.onSelected(emoji),
-                    borderRadius: BorderRadius.circular(10),
                     child: Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
                         color: isSelected
                             ? themeProvider.primaryColor.withValues(alpha: 0.1)
                             : Colors.grey[50],
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: BorderRadius.circular(AppRadius.medium),
                         border: Border.all(
                           color: isSelected
                               ? themeProvider.primaryColor
@@ -174,9 +177,8 @@ class _OnoEmojiPickerState extends State<OnoEmojiPicker> {
     final isSelected = category == _selectedCategory;
     return Tooltip(
       message: category.label,
-      child: InkWell(
+      child: PressableScale(
         onTap: () => setState(() => _selectedCategory = category),
-        borderRadius: BorderRadius.circular(18),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 160),
           constraints: BoxConstraints(
@@ -193,7 +195,7 @@ class _OnoEmojiPickerState extends State<OnoEmojiPicker> {
             color: isSelected
                 ? themeProvider.primaryColor.withValues(alpha: 0.12)
                 : Colors.grey[100],
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(AppRadius.large),
             border: Border.all(
               color:
                   isSelected ? themeProvider.primaryColor : Colors.grey[200]!,
@@ -232,7 +234,6 @@ class _EmojiCategoryHeader extends StatelessWidget {
   final Color color;
 
   const _EmojiCategoryHeader({
-    super.key,
     required this.title,
     required this.description,
     required this.color,
@@ -245,7 +246,7 @@ class _EmojiCategoryHeader extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.07),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppRadius.medium),
       ),
       child: Row(
         children: [

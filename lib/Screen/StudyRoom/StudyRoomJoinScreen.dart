@@ -8,6 +8,7 @@ import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/StudyRoomProvider.dart';
 import '../../Util/AppSnackBar.dart';
+import '../../Module/Design/AppRadius.dart';
 
 class StudyRoomJoinScreen extends StatefulWidget {
   const StudyRoomJoinScreen({super.key});
@@ -152,17 +153,17 @@ class _StudyRoomJoinScreenState extends State<StudyRoomJoinScreen> {
                     fillColor: Colors.grey[50],
                     filled: true,
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(15),
+                      borderRadius: BorderRadius.circular(AppRadius.large),
                       borderSide:
                           BorderSide(color: Colors.grey[300]!, width: 1),
                     ),
                     enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(15),
+                      borderRadius: BorderRadius.circular(AppRadius.large),
                       borderSide:
                           BorderSide(color: Colors.grey[300]!, width: 1),
                     ),
                     focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(15),
+                      borderRadius: BorderRadius.circular(AppRadius.large),
                       borderSide: BorderSide(
                         color:
                             themeProvider.primaryColor.withValues(alpha: 0.5),
@@ -174,14 +175,6 @@ class _StudyRoomJoinScreenState extends State<StudyRoomJoinScreen> {
                       horizontal: 16,
                     ),
                   ),
-                ),
-                SizedBox(height: screenHeight * 0.012),
-                StandardText(
-                  text: '※ 체험용 코드: 123456',
-                  fontSize: 12,
-                  color: Colors.grey[400]!,
-                  fontWeight: FontWeight.normal,
-                  fontFamily: 'PretendardLight',
                 ),
                 const Spacer(),
                 SizedBox(
@@ -196,7 +189,7 @@ class _StudyRoomJoinScreenState extends State<StudyRoomJoinScreen> {
                         vertical: screenHeight * 0.018,
                       ),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
+                        borderRadius: BorderRadius.circular(AppRadius.large),
                       ),
                     ),
                     child: _isJoining

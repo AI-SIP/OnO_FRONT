@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 
 import '../../../Model/User/UserInfoModel.dart';
+import '../../../Module/Motion/AnimatedCountText.dart';
+import '../../../Module/Motion/AnimatedGauge.dart';
 import '../../../Module/Text/StandardText.dart';
 import '../../../Module/Theme/ThemeHandler.dart';
 import 'FrogCharacter.dart';
+import '../../../Module/Design/AppRadius.dart';
+import '../../../Module/Design/AppColors.dart';
 
 class UserLevelCard extends StatelessWidget {
   final UserInfoModel? userInfo;
@@ -18,6 +22,13 @@ class UserLevelCard extends StatelessWidget {
     required this.userName,
     this.horizontalMarginFactor = 0.04,
   });
+
+  /// 활동 레벨 막대가 위에서부터 하나씩 차오르도록 매기는 간격이다.
+  /// 다섯 개가 한꺼번에 움직이면 산만하고, 너무 벌리면 마지막 것이 늦게 끝난다.
+  static const Duration _activityStart = Duration(milliseconds: 140);
+  static const Duration _activityGap = Duration(milliseconds: 90);
+
+  Duration _activityDelay(int index) => _activityStart + _activityGap * index;
 
   int _getOverallLevel() {
     if (userInfo == null) return 0;
@@ -67,7 +78,7 @@ class UserLevelCard extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(15),
+        borderRadius: BorderRadius.circular(AppRadius.large),
         border: Border.all(
           color: Colors.grey[300]!,
           width: 1,
@@ -117,6 +128,7 @@ class UserLevelCard extends StatelessWidget {
               point: userInfo!.attendancePoint,
               color: Colors.pink[300]!,
               isTablet: isTablet,
+              delay: _activityDelay(0),
             ),
             SizedBox(
                 height: isTabletLandscape
@@ -129,6 +141,7 @@ class UserLevelCard extends StatelessWidget {
               point: userInfo!.noteWritePoint,
               color: Colors.purple[300]!,
               isTablet: isTablet,
+              delay: _activityDelay(1),
             ),
             SizedBox(
                 height: isTabletLandscape
@@ -141,6 +154,7 @@ class UserLevelCard extends StatelessWidget {
               point: userInfo!.problemPracticePoint,
               color: Colors.green[400]!,
               isTablet: isTablet,
+              delay: _activityDelay(2),
             ),
             SizedBox(
                 height: isTabletLandscape
@@ -153,6 +167,7 @@ class UserLevelCard extends StatelessWidget {
               point: userInfo!.notePracticePoint,
               color: Colors.blue[300]!,
               isTablet: isTablet,
+              delay: _activityDelay(3),
             ),
           ],
         ],
@@ -174,43 +189,29 @@ class UserLevelCard extends StatelessWidget {
         StandardText(
           text: '학습 레벨',
           fontSize: isTablet ? 16.0 : 14.0,
-          color: Colors.black87,
+          color: AppColors.textPrimary,
         ),
         const SizedBox(height: 8),
-        SizedBox(
-          width: donutSize,
-          height: donutSize,
-          child: Stack(
-            alignment: Alignment.center,
+        AnimatedCircularGauge(
+          value: progress,
+          size: donutSize,
+          strokeWidth: isTablet ? 12.0 : 9.0,
+          color: themeProvider.primaryColor.withValues(alpha: 0.72),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              SizedBox(
-                width: donutSize,
-                height: donutSize,
-                child: CircularProgressIndicator(
-                  value: progress.clamp(0.0, 1.0),
-                  strokeWidth: isTablet ? 12.0 : 9.0,
-                  backgroundColor: Colors.grey[200],
-                  valueColor: AlwaysStoppedAnimation<Color>(
-                    themeProvider.primaryColor.withValues(alpha: 0.72),
-                  ),
-                ),
+              StandardText(
+                text: 'Lv.$currentLevel',
+                fontSize: isTablet ? 19.0 : 15.0,
+                color: themeProvider.primaryColor,
+                fontWeight: FontWeight.w700,
               ),
-              Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  StandardText(
-                    text: 'Lv.$currentLevel',
-                    fontSize: isTablet ? 19.0 : 15.0,
-                    color: themeProvider.primaryColor,
-                    fontWeight: FontWeight.w700,
-                  ),
-                  const SizedBox(height: 2),
-                  StandardText(
-                    text: '$currentPoint/$requiredPoint',
-                    fontSize: isTablet ? 11.0 : 9.0,
-                    color: Colors.black45,
-                  ),
-                ],
+              const SizedBox(height: 2),
+              AnimatedCountText(
+                value: currentPoint,
+                formatter: (value) => '${value.round()}/$requiredPoint',
+                fontSize: isTablet ? 11.0 : 9.0,
+                color: AppColors.textTertiary,
               ),
             ],
           ),
@@ -226,6 +227,7 @@ class UserLevelCard extends StatelessWidget {
     required int point,
     required Color color,
     bool isTablet = false,
+    Duration delay = Duration.zero,
   }) {
     final requiredPoint = 10 + (level - 1) * 10;
     final progress = requiredPoint > 0 ? point / requiredPoint : 0.0;
@@ -243,7 +245,7 @@ class UserLevelCard extends StatelessWidget {
           padding: EdgeInsets.all(iconPadding),
           decoration: BoxDecoration(
             color: color.withValues(alpha: 0.18),
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(AppRadius.small),
           ),
           child: Icon(icon, color: color, size: iconSize),
         ),
@@ -253,7 +255,7 @@ class UserLevelCard extends StatelessWidget {
           child: StandardText(
             text: category,
             fontSize: labelFontSize,
-            color: Colors.black87,
+            color: AppColors.textPrimary,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
@@ -263,7 +265,7 @@ class UserLevelCard extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
           decoration: BoxDecoration(
             color: color,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppRadius.medium),
           ),
           child: StandardText(
             text: 'Lv.$level',
@@ -274,23 +276,23 @@ class UserLevelCard extends StatelessWidget {
         const SizedBox(width: 8),
         Expanded(
           flex: 4,
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(4),
-            child: LinearProgressIndicator(
-              value: progress.clamp(0.0, 1.0),
-              backgroundColor: Colors.grey[200],
-              valueColor: AlwaysStoppedAnimation<Color>(color),
-              minHeight: barMinHeight,
-            ),
+          child: AnimatedLinearGauge(
+            value: progress,
+            color: color,
+            backgroundColor: Colors.grey[200],
+            height: barMinHeight,
+            delay: delay,
           ),
         ),
         const SizedBox(width: 6),
         SizedBox(
           width: pointsWidth,
-          child: StandardText(
-            text: '$point/$requiredPoint',
+          child: AnimatedCountText(
+            value: point,
+            formatter: (value) => '${value.round()}/$requiredPoint',
             fontSize: pointsFontSize,
             color: Colors.grey[600]!,
+            delay: delay,
           ),
         ),
       ],

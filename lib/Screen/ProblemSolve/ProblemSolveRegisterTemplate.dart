@@ -13,6 +13,12 @@ import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/ProblemsProvider.dart';
 import '../ProblemRegister/Widget/ImageGridWidget.dart';
+import '../../Module/Motion/AppHaptic.dart';
+import '../../Module/Motion/PressableScale.dart';
+import '../../Module/Motion/TossPageRoute.dart';
+import '../../Module/Motion/TossDialog.dart';
+import '../../Module/Design/AppColors.dart';
+import '../../Module/Design/AppRadius.dart';
 
 class ProblemSolveRegisterTemplate extends StatefulWidget {
   final int problemId;
@@ -129,7 +135,7 @@ class ProblemSolveRegisterTemplateState
       padding: const EdgeInsets.all(20.0),
       decoration: BoxDecoration(
         color: themeProvider.primaryColor.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(16.0),
+        borderRadius: BorderRadius.circular(AppRadius.large),
       ),
       child: Row(
         children: [
@@ -153,7 +159,7 @@ class ProblemSolveRegisterTemplateState
                 const StandardText(
                   text: '복습 내용을 기록해보세요',
                   fontSize: 14,
-                  color: Colors.black54,
+                  color: AppColors.textSecondary,
                 ),
               ],
             ),
@@ -272,7 +278,7 @@ class ProblemSolveRegisterTemplateState
     required bool isSelected,
     required VoidCallback onTap,
   }) {
-    return GestureDetector(
+    return PressableScale(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 14.0, horizontal: 8.0),
@@ -282,7 +288,7 @@ class ProblemSolveRegisterTemplateState
             color: isSelected ? color : Colors.grey[300]!,
             width: 1,
           ),
-          borderRadius: BorderRadius.circular(12.0),
+          borderRadius: BorderRadius.circular(AppRadius.medium),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -319,7 +325,7 @@ class ProblemSolveRegisterTemplateState
           const StandardText(
             text: '해당되는 항목을 선택해주세요 (선택사항)',
             fontSize: 13,
-            color: Colors.black54,
+            color: AppColors.textSecondary,
           ),
           const SizedBox(height: 12),
           Column(
@@ -350,14 +356,14 @@ class ProblemSolveRegisterTemplateState
     required Function(bool?) onChanged,
     required ThemeHandler themeProvider,
   }) {
-    return InkWell(
+    return PressableScale(
+      haptic: HapticLevel.selection,
       onTap: () => onChanged(!value),
-      borderRadius: BorderRadius.circular(8.0),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 10.0),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(8.0),
+          borderRadius: BorderRadius.circular(AppRadius.small),
           border: Border.all(
             color: value
                 ? themeProvider.primaryColor.withOpacity(0.3)
@@ -410,12 +416,12 @@ class ProblemSolveRegisterTemplateState
             padding: const EdgeInsets.fromLTRB(12, 10, 8, 10),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: Colors.grey[300]!, width: 1),
+              borderRadius: BorderRadius.circular(AppRadius.medium),
+              border: Border.all(color: AppColors.border),
             ),
             child: Row(
               children: [
-                GestureDetector(
+                PressableScale(
                   onTap: _showTimeInputDialog,
                   child: Container(
                     color: Colors.transparent,
@@ -460,9 +466,8 @@ class ProblemSolveRegisterTemplateState
 
   Widget _buildAdjustChip(
       String label, ThemeHandler themeProvider, VoidCallback onTap) {
-    return InkWell(
+    return PressableScale(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(6),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 5),
         decoration: BoxDecoration(
@@ -498,20 +503,20 @@ class ProblemSolveRegisterTemplateState
             controller: _memoCtrl,
             maxLines: 5,
             style: standardTextStyle.copyWith(
-              color: Colors.black87,
+              color: AppColors.textPrimary,
               fontSize: 15,
             ),
             decoration: InputDecoration(
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppRadius.medium),
                 borderSide: BorderSide(color: Colors.grey[300]!, width: 1),
               ),
               enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppRadius.medium),
                 borderSide: BorderSide(color: Colors.grey[300]!, width: 1),
               ),
               focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppRadius.medium),
                 borderSide: BorderSide(
                   color: themeProvider.primaryColor.withOpacity(0.5),
                   width: 1,
@@ -536,7 +541,7 @@ class ProblemSolveRegisterTemplateState
   void _showAnswerImages(BuildContext context) {
     Navigator.push(
       context,
-      MaterialPageRoute(
+      TossPageRoute(
         builder: (_) => _AnswerImagesScreen(imageUrls: _answerImageUrls),
       ),
     );
@@ -571,13 +576,13 @@ class ProblemSolveRegisterTemplateState
     final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
     final standardTextStyle = const StandardText(text: '').getTextStyle();
 
-    await showDialog(
+    await showTossDialog(
       context: context,
       builder: (dialogContext) {
         return Dialog(
           backgroundColor: Colors.white,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(AppRadius.large),
           ),
           child: Container(
             padding: const EdgeInsets.all(24),
@@ -591,7 +596,7 @@ class ProblemSolveRegisterTemplateState
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
                         color: themeProvider.primaryColor.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(AppRadius.small),
                       ),
                       child: Icon(
                         Icons.timer_outlined,
@@ -604,7 +609,7 @@ class ProblemSolveRegisterTemplateState
                       text: '소요 시간 입력',
                       fontSize: MobileFontSize.reduced(context, 20),
                       fontWeight: FontWeight.w600,
-                      color: Colors.black87,
+                      color: AppColors.textPrimary,
                     ),
                   ],
                 ),
@@ -612,7 +617,7 @@ class ProblemSolveRegisterTemplateState
                 const StandardText(
                   text: '분:초(예: 3:47) 또는 분(예: 17) 형식으로 입력하세요',
                   fontSize: 14,
-                  color: Colors.black54,
+                  color: AppColors.textSecondary,
                 ),
                 const SizedBox(height: 18),
                 TextField(
@@ -620,7 +625,7 @@ class ProblemSolveRegisterTemplateState
                   autofocus: true,
                   keyboardType: TextInputType.number,
                   style: standardTextStyle.copyWith(
-                    color: Colors.black87,
+                    color: AppColors.textPrimary,
                     fontSize: 15,
                   ),
                   decoration: InputDecoration(
@@ -632,17 +637,17 @@ class ProblemSolveRegisterTemplateState
                     fillColor: Colors.grey[50],
                     filled: true,
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppRadius.medium),
                       borderSide:
                           BorderSide(color: Colors.grey[300]!, width: 1),
                     ),
                     enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppRadius.medium),
                       borderSide:
                           BorderSide(color: Colors.grey[300]!, width: 1),
                     ),
                     focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppRadius.medium),
                       borderSide: BorderSide(
                         color: themeProvider.primaryColor.withOpacity(0.5),
                         width: 2,
@@ -664,13 +669,14 @@ class ProblemSolveRegisterTemplateState
                           padding: const EdgeInsets.symmetric(vertical: 12),
                           backgroundColor: Colors.grey[100],
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius:
+                                BorderRadius.circular(AppRadius.small),
                           ),
                         ),
                         child: StandardText(
                           text: '취소',
                           fontSize: MobileFontSize.reduced(context, 15),
-                          color: Colors.black87,
+                          color: AppColors.textPrimary,
                         ),
                       ),
                     ),
@@ -688,7 +694,8 @@ class ProblemSolveRegisterTemplateState
                           padding: const EdgeInsets.symmetric(vertical: 12),
                           backgroundColor: themeProvider.primaryColor,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius:
+                                BorderRadius.circular(AppRadius.small),
                           ),
                         ),
                         child: const StandardText(
@@ -719,7 +726,7 @@ class ProblemSolveRegisterTemplateState
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
             color: themeProvider.primaryColor.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(AppRadius.small),
           ),
           child: Icon(
             icon,
@@ -732,7 +739,7 @@ class ProblemSolveRegisterTemplateState
           text: title,
           fontSize: 16,
           fontWeight: FontWeight.w500,
-          color: Colors.black87,
+          color: AppColors.textPrimary,
         ),
       ],
     );
@@ -743,8 +750,8 @@ class ProblemSolveRegisterTemplateState
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.grey[50],
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[200]!, width: 1),
+        borderRadius: BorderRadius.circular(AppRadius.medium),
+        border: Border.all(color: AppColors.border),
       ),
       child: child,
     );

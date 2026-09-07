@@ -21,6 +21,12 @@ import '../../Module/Image/DisplayImage.dart';
 import '../../Module/Problem/ProblemThumbnailCard.dart';
 import '../../Module/Text/mobile_font_size.dart';
 import '../../Module/Text/StandardText.dart';
+import '../../Module/Motion/AppHaptic.dart';
+import '../../Module/Motion/AppMotion.dart';
+import '../../Module/Motion/AppearTransition.dart';
+import '../../Module/Motion/PressableScale.dart';
+import '../../Module/Motion/Skeleton.dart';
+import '../../Module/Motion/TossPageRoute.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Module/Util/FolderPickerDialog.dart';
 import '../../Provider/ReviewDueProvider.dart';
@@ -32,6 +38,9 @@ import '../ProblemRegister/ProblemRegisterScreen.dart';
 import '../ProblemSearch/TagProblemSearchScreen.dart';
 import '../ReviewDue/ReviewDueScreen.dart';
 import '../Tutorial/TutorialTargets.dart';
+import '../../Module/Motion/TossDialog.dart';
+import '../../Module/Design/AppColors.dart';
+import '../../Module/Design/AppRadius.dart';
 
 class DirectoryScreen extends StatefulWidget {
   final int? folderId; // 이 화면이 표시할 폴더 ID
@@ -307,21 +316,6 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     }
   }
 
-  // Provider 캐시에 하위 폴더 저장 (첫 페이지용)
-  Future<void> _saveSubfoldersToProviderCache(
-    int folderId,
-    List<FolderThumbnailModel> subfolders,
-    int? nextCursor,
-    bool hasNext,
-  ) async {
-    // 화면이 dispose 된 뒤 context 에 접근하면 State.context 의 null check 로 죽는다 (FLUTTER-125/126/15X/15Y)
-    if (!mounted) return;
-    final foldersProvider =
-        Provider.of<FoldersProvider>(context, listen: false);
-    foldersProvider.saveSubfoldersToCache(
-        folderId, subfolders, nextCursor, hasNext);
-  }
-
   // Provider 캐시에 하위 폴더 누적 저장 (모든 페이지용)
   Future<void> _appendSubfoldersToProviderCache(
     int folderId,
@@ -334,20 +328,6 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         Provider.of<FoldersProvider>(context, listen: false);
     foldersProvider.saveSubfoldersToCache(
         folderId, allSubfolders, nextCursor, hasNext);
-  }
-
-  // Provider 캐시에 문제 저장 (첫 페이지용)
-  Future<void> _saveProblemsToProviderCache(
-    int folderId,
-    List<ProblemModel> problems,
-    int? nextCursor,
-    bool hasNext,
-  ) async {
-    if (!mounted) return;
-    final foldersProvider =
-        Provider.of<FoldersProvider>(context, listen: false);
-    foldersProvider.saveProblemsToCache(
-        folderId, problems, nextCursor, hasNext);
   }
 
   // Provider 캐시에 문제 누적 저장 (모든 페이지용)
@@ -572,7 +552,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                   onPressed: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(
+                      TossPageRoute(
                         builder: (_) => const TagProblemSearchScreen(),
                       ),
                     );
@@ -603,6 +583,9 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     );
   }
 
+  /// 목록에서 하나씩 들어오게 할 항목 수. 첫 화면에 보이는 만큼이다.
+  static const int _staggeredItemLimit = 8;
+
   Widget _buildQuickCreateFab(ThemeHandler themeProvider) {
     return Column(
       key: widget.tutorialTargets?.directoryCreateFabKey,
@@ -610,7 +593,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
         AnimatedSwitcher(
-          duration: const Duration(milliseconds: 180),
+          duration: AppMotion.fast,
           child: _isQuickCreateOpen
               ? Padding(
                   padding: const EdgeInsets.only(bottom: 12),
@@ -654,9 +637,9 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
               : const SizedBox.shrink(),
         ),
         AnimatedSwitcher(
-          duration: const Duration(milliseconds: 220),
-          switchInCurve: Curves.easeOutCubic,
-          switchOutCurve: Curves.easeInCubic,
+          duration: AppMotion.normal,
+          switchInCurve: AppMotion.enter,
+          switchOutCurve: AppMotion.exit,
           layoutBuilder: (currentChild, previousChildren) {
             return Stack(
               alignment: Alignment.centerRight,
@@ -728,42 +711,38 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     required ThemeHandler themeProvider,
     required Future<void> Function() onTap,
   }) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.grey[200]!, width: 1),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x1A000000),
-                blurRadius: 10,
-                offset: Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                icon,
-                size: 18,
-                color: themeProvider.primaryColor,
-              ),
-              const SizedBox(width: 8),
-              StandardText(
-                text: label,
-                fontSize: 14,
-                color: Colors.black87,
-                fontWeight: FontWeight.w600,
-              ),
-            ],
-          ),
+    return PressableScale(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(AppRadius.medium),
+          border: Border.all(color: AppColors.border),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x1A000000),
+              blurRadius: 10,
+              offset: Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              size: 18,
+              color: themeProvider.primaryColor,
+            ),
+            const SizedBox(width: 8),
+            StandardText(
+              text: label,
+              fontSize: 14,
+              color: AppColors.textPrimary,
+              fontWeight: FontWeight.w600,
+            ),
+          ],
         ),
       ),
     );
@@ -801,7 +780,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
     final result = await Navigator.push<bool>(
       context,
-      MaterialPageRoute(
+      TossPageRoute(
         builder: (context) => ProblemRegisterScreen(
           problemModel: null,
           isEditMode: false,
@@ -830,7 +809,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
     final result = await Navigator.push<bool>(
       context,
-      MaterialPageRoute(
+      TossPageRoute(
         builder: (context) => MultiProblemRegisterScreen(
           initialFolderId: folderId,
         ),
@@ -850,6 +829,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
     final openTime = DateTime.now();
     showModalBottomSheet(
+      sheetAnimationStyle: AppMotion.sheetStyle,
       backgroundColor: Colors.transparent,
       context: context,
       isDismissible: false,
@@ -897,7 +877,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
                             color: themeProvider.primaryColor.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius:
+                                BorderRadius.circular(AppRadius.small),
                           ),
                           child: Icon(
                             Icons.edit_note,
@@ -910,7 +891,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                           text: '공책 편집하기',
                           fontSize: MobileFontSize.reduced(context, 20),
                           fontWeight: FontWeight.w600,
-                          color: Colors.black87,
+                          color: AppColors.textPrimary,
                         ),
                       ],
                     ),
@@ -986,15 +967,14 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     Color? titleColor,
     required VoidCallback onTap,
   }) {
-    return InkWell(
+    return PressableScale(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
           color: Colors.grey[50],
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey[200]!, width: 1),
+          borderRadius: BorderRadius.circular(AppRadius.medium),
+          border: Border.all(color: AppColors.border),
         ),
         child: Row(
           children: [
@@ -1064,7 +1044,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
   // 폴더 이동 다이얼로그 출력
   Future<void> _showMoveFolderDialog() async {
-    await showDialog<int?>(
+    await showTossDialog<int?>(
       context: context,
       builder: (context) => FolderPickerDialog(
         initialFolderId: _currentFolder?.folderId,
@@ -1097,7 +1077,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     final standardTextStyle = const StandardText(text: '').getTextStyle();
     final openTime = DateTime.now();
 
-    await showDialog(
+    await showTossDialog(
       context: context,
       barrierDismissible: false,
       builder: (dialogContext) {
@@ -1116,7 +1096,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
             Dialog(
               backgroundColor: Colors.white,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(AppRadius.large),
               ),
               child: Container(
                 padding: const EdgeInsets.all(24),
@@ -1131,7 +1111,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
                             color: themeProvider.primaryColor.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius:
+                                BorderRadius.circular(AppRadius.small),
                           ),
                           child: Icon(
                             Icons.edit,
@@ -1144,7 +1125,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                           text: dialogTitle,
                           fontSize: MobileFontSize.reduced(dialogContext, 20),
                           fontWeight: FontWeight.w600,
-                          color: Colors.black87,
+                          color: AppColors.textPrimary,
                         ),
                       ],
                     ),
@@ -1154,7 +1135,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                       controller: folderNameController,
                       autofocus: true,
                       style: standardTextStyle.copyWith(
-                        color: Colors.black87,
+                        color: AppColors.textPrimary,
                         fontSize: MobileFontSize.reduced(dialogContext, 15),
                       ),
                       decoration: InputDecoration(
@@ -1166,17 +1147,17 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                         fillColor: Colors.grey[50],
                         filled: true,
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(AppRadius.medium),
                           borderSide:
                               BorderSide(color: Colors.grey[300]!, width: 1),
                         ),
                         enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(AppRadius.medium),
                           borderSide:
                               BorderSide(color: Colors.grey[300]!, width: 1),
                         ),
                         focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(AppRadius.medium),
                           borderSide: BorderSide(
                             color: themeProvider.primaryColor.withOpacity(0.5),
                             width: 2,
@@ -1202,13 +1183,14 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                                 horizontal: 12, vertical: 8),
                             backgroundColor: Colors.grey[100],
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius:
+                                  BorderRadius.circular(AppRadius.small),
                             ),
                           ),
                           child: StandardText(
                             text: '취소',
                             fontSize: MobileFontSize.reduced(dialogContext, 14),
-                            color: Colors.black87,
+                            color: AppColors.textPrimary,
                           ),
                         ),
                         const SizedBox(width: 8),
@@ -1224,7 +1206,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                                 horizontal: 12, vertical: 8),
                             backgroundColor: themeProvider.primaryColor,
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius:
+                                  BorderRadius.circular(AppRadius.small),
                             ),
                           ),
                           child: const StandardText(
@@ -1261,8 +1244,12 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
                   // 초기 로딩 중이면 로딩 인디케이터 표시
                   if (_isInitialLoading) {
-                    return const Center(
-                      child: CircularProgressIndicator(),
+                    return const SkeletonList(
+                      itemCount: 5,
+                      itemHeight: 96,
+                      spacing: 16,
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     );
                   }
 
@@ -1324,15 +1311,21 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                         );
                       }
 
-                      if (index < currentSubfolders.length) {
-                        var subfolder = currentSubfolders[index];
-                        return _buildFolderTile(
-                            subfolder, themeProvider, index);
-                      } else {
-                        var problem =
-                            currentProblems[index - currentSubfolders.length];
-                        return _buildProblemTile(problem, themeProvider);
-                      }
+                      final tile = index < currentSubfolders.length
+                          ? _buildFolderTile(
+                              currentSubfolders[index], themeProvider, index)
+                          : _buildProblemTile(
+                              currentProblems[index - currentSubfolders.length],
+                              themeProvider);
+
+                      // 첫 화면에 보이는 것만 하나씩 들어온다. 아래쪽까지
+                      // 지연을 매기면 스크롤해 내려갔을 때 항목이 뒤늦게
+                      // 나타나서 오히려 거슬린다.
+                      return AppearTransition(
+                        enabled: index < _staggeredItemLimit,
+                        delay: AppMotion.stagger * index,
+                        child: tile,
+                      );
                     },
                   );
                 },
@@ -1348,7 +1341,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     final isSelected = _selectedFolderIds.contains(folder.folderId);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0), // 아이템 간 간격 추가
-      child: GestureDetector(
+      child: PressableScale(
+        haptic: HapticLevel.none,
         onTap: () {
           // 폴더를 클릭했을 때 해당 폴더로 이동
           FirebaseAnalytics.instance
@@ -1367,7 +1361,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
           } else {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) {
+              TossPageRoute(builder: (context) {
                 return DirectoryScreen(folderId: folder.folderId);
               }),
             ).then((_) {
@@ -1421,14 +1415,25 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
               );
               await _moveProblemToFolder(problemRegisterModel);
             },
-            builder: (context, candidateData, rejectedData) {
+            builder: (context, problemCandidates, rejectedData) {
               return DragTarget<FolderThumbnailModel>(
+                onWillAcceptWithDetails: (details) =>
+                    details.data.folderId != folder.folderId,
                 onAcceptWithDetails: (details) async {
                   // 폴더를 드롭하면 자식 폴더로 이동
                   await _moveFolderToNewParent(details.data, folder.folderId);
                 },
-                builder: (context, candidateData, rejectedData) {
-                  return _folderTileContent(folder, themeProvider, index);
+                builder: (context, folderCandidates, rejectedData) {
+                  // 끌고 온 것이 이 공책 위에 있으면 받을 수 있다는 것을
+                  // 보여 준다. 그동안 candidateData 를 받아만 두고 쓰지
+                  // 않아서 어디에 놓아야 할지 알 수 없었다.
+                  final isHovering = problemCandidates.isNotEmpty ||
+                      folderCandidates.isNotEmpty;
+                  return _DropHighlight(
+                    active: isHovering,
+                    color: themeProvider.primaryColor,
+                    child: _folderTileContent(folder, themeProvider, index),
+                  );
                 },
               );
             },
@@ -1449,7 +1454,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       padding: const EdgeInsets.all(12.0),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppRadius.medium),
         boxShadow: [
           BoxShadow(
             color: Colors.grey.withOpacity(0.2),
@@ -1467,7 +1472,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
             height: 70,
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(8.0),
+              borderRadius: BorderRadius.circular(AppRadius.small),
             ),
             child: isSelected
                 ? const Icon(Icons.check, color: Colors.red)
@@ -1522,7 +1527,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       ),
       decoration: BoxDecoration(
         color: themeProvider.primaryColor.withValues(alpha: 0.09),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppRadius.small),
         border: Border.all(
           color: themeProvider.primaryColor.withValues(alpha: 0.18),
         ),
@@ -1562,7 +1567,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0), // 아이템 간 간격 추가
-      child: GestureDetector(
+      child: PressableScale(
+        haptic: HapticLevel.none,
         onTap: () {
           FirebaseAnalytics.instance
               .logEvent(name: 'move_to_problem', parameters: {
@@ -1588,7 +1594,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
               width: 50,
               height: 70,
               child: ClipRRect(
-                borderRadius: BorderRadius.circular(8.0),
+                borderRadius: BorderRadius.circular(AppRadius.small),
                 child: DisplayImage(
                   imagePath: imageUrl,
                   fit: BoxFit.cover,
@@ -1628,7 +1634,11 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
               await _moveProblemToFolder(problemRegisterModel);
             },
             builder: (context, candidateData, rejectedData) {
-              return _problemTileContent(problem, themeProvider);
+              return _DropHighlight(
+                active: candidateData.isNotEmpty,
+                color: themeProvider.primaryColor,
+                child: _problemTileContent(problem, themeProvider),
+              );
             },
           ),
         ),
@@ -1741,7 +1751,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
               style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.grey[300],
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(AppRadius.small),
                   ),
                   padding: const EdgeInsets.symmetric(vertical: 8)),
               onPressed: () {
@@ -1765,7 +1775,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
               style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.red,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(AppRadius.small),
                   ),
                   padding: const EdgeInsets.symmetric(vertical: 8)),
               onPressed: selectedCount > 0 ? _confirmDelete : () {},
@@ -1921,13 +1931,13 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   }
 
   void _confirmDelete() {
-    showDialog(
+    showTossDialog(
       context: context,
       builder: (dialogContext) => _buildPhoneWidthDialog(
         Dialog(
           backgroundColor: Colors.white,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(AppRadius.large),
           ),
           child: Container(
             padding: const EdgeInsets.all(24),
@@ -1941,7 +1951,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
                         color: Colors.red.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(AppRadius.small),
                       ),
                       child: const Icon(
                         Icons.delete_forever,
@@ -1954,7 +1964,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                       text: '삭제 확인',
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
-                      color: Colors.black87,
+                      color: AppColors.textPrimary,
                     ),
                   ],
                 ),
@@ -1963,7 +1973,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                 const StandardText(
                   text: '선택한 항목을 정말 삭제하시겠습니까?',
                   fontSize: 15,
-                  color: Colors.black87,
+                  color: AppColors.textPrimary,
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 24),
@@ -1978,13 +1988,14 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                               horizontal: 12, vertical: 8),
                           backgroundColor: Colors.grey[100],
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius:
+                                BorderRadius.circular(AppRadius.small),
                           ),
                         ),
                         child: const StandardText(
                           text: '취소',
                           fontSize: 14,
-                          color: Colors.black87,
+                          color: AppColors.textPrimary,
                         ),
                       ),
                     ),
@@ -2000,7 +2011,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                               horizontal: 12, vertical: 8),
                           backgroundColor: Colors.red,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius:
+                                BorderRadius.circular(AppRadius.small),
                           ),
                         ),
                         child: const StandardText(
@@ -2143,7 +2155,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   void navigateToProblemDetail(BuildContext context, int problemId) {
     Navigator.push(
       context,
-      MaterialPageRoute(
+      TossPageRoute(
         builder: (context) => ProblemDetailScreen(problemId: problemId),
       ),
     ).then((value) async {
@@ -2169,20 +2181,19 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
-      child: InkWell(
+      child: PressableScale(
         onTap: () {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (_) => const ReviewDueScreen()),
+            TossPageRoute(builder: (_) => const ReviewDueScreen()),
           );
         },
-        borderRadius: BorderRadius.circular(15),
         child: Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(15),
-            border: Border.all(color: Colors.grey[300]!, width: 1),
+            borderRadius: BorderRadius.circular(AppRadius.large),
+            border: Border.all(color: AppColors.border),
             boxShadow: [
               BoxShadow(
                 color: themeProvider.primaryColor.withValues(alpha: 0.1),
@@ -2197,7 +2208,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
                   color: themeProvider.primaryColor.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppRadius.medium),
                 ),
                 child: Icon(
                   Icons.auto_stories_outlined,
@@ -2215,7 +2226,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                         const StandardText(
                           text: '추천 복습 문제',
                           fontSize: 14,
-                          color: Colors.black87,
+                          color: AppColors.textPrimary,
                         ),
                         const SizedBox(width: 6),
                         Container(
@@ -2223,7 +2234,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                               horizontal: 7, vertical: 2),
                           decoration: BoxDecoration(
                             color: themeProvider.primaryColor,
-                            borderRadius: BorderRadius.circular(10),
+                            borderRadius:
+                                BorderRadius.circular(AppRadius.medium),
                           ),
                           child: StandardText(
                             text: '${reviewDueProvider.dueCount}개',
@@ -2249,6 +2261,53 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// 끌고 온 것을 여기에 놓을 수 있다는 것을 알린다.
+///
+/// 손가락 아래에 무엇이 놓일지 보이지 않으면 어디에 떨어뜨려야 할지 알 수
+/// 없다. 테두리를 두르고 살짝 키워서 이 자리가 받는 자리임을 보여 준다.
+class _DropHighlight extends StatelessWidget {
+  /// 지금 이 위에 무언가 올라와 있는지.
+  final bool active;
+
+  final Color color;
+  final Widget child;
+
+  const _DropHighlight({
+    required this.active,
+    required this.color,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedScale(
+      scale: active ? 1.03 : 1.0,
+      duration: AppMotion.fast,
+      curve: AppMotion.standard,
+      child: AnimatedContainer(
+        duration: AppMotion.fast,
+        curve: AppMotion.standard,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(AppRadius.medium),
+          border: Border.all(
+            color: active ? color : Colors.transparent,
+            width: 2,
+          ),
+          boxShadow: active
+              ? [
+                  BoxShadow(
+                    color: color.withValues(alpha: 0.28),
+                    blurRadius: 14,
+                  ),
+                ]
+              : null,
+        ),
+        child: child,
       ),
     );
   }

@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import '../../../Module/Emoji/OnoEmojiCatalog.dart';
 import '../../../Module/Emoji/OnoEmojiImage.dart';
 import '../../../Module/Theme/ThemeHandler.dart';
+import '../../../Module/Motion/AppHaptic.dart';
+import '../../../Module/Motion/PressableScale.dart';
 
 class StudyRoomThumbnail extends StatelessWidget {
   static const String defaultEmojiKey = 'studying_together';
@@ -44,7 +46,8 @@ class StudyRoomThumbnail extends StatelessWidget {
       ),
     );
 
-    return GestureDetector(
+    return PressableScale(
+      haptic: HapticLevel.none,
       onTap: onTap,
       child: Stack(
         clipBehavior: Clip.none,

@@ -5,6 +5,7 @@ import '../../Model/Tag/TagModel.dart';
 import '../Image/DisplayImage.dart';
 import '../Text/StandardText.dart';
 import '../Theme/ThemeHandler.dart';
+import '../Design/AppRadius.dart';
 
 class ProblemThumbnailCard extends StatelessWidget {
   final String title;
@@ -56,7 +57,7 @@ class ProblemThumbnailCard extends StatelessWidget {
       padding: padding,
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppRadius.medium),
         boxShadow: [
           BoxShadow(
             color: Colors.grey.withValues(alpha: 0.2),
@@ -90,7 +91,7 @@ class ProblemThumbnailCard extends StatelessWidget {
       height: imageHeight,
       child: Container(
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(AppRadius.small),
           border: Border.all(
             color: Colors.grey.shade300,
             width: 0.8,
@@ -137,7 +138,7 @@ class ProblemThumbnailCard extends StatelessWidget {
       padding: tagPadding,
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppRadius.small),
         border: Border.all(
           color: themeProvider.primaryColor,
           width: 1,
@@ -156,7 +157,7 @@ class ProblemThumbnailCard extends StatelessWidget {
       padding: tagPadding,
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppRadius.small),
         border: Border.all(
           color: Colors.grey.shade300,
           width: 1,
@@ -194,7 +195,7 @@ class ProblemThumbnailCard extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
               decoration: BoxDecoration(
                 color: Colors.grey.shade50,
-                borderRadius: BorderRadius.circular(7),
+                borderRadius: BorderRadius.circular(AppRadius.small),
                 border: Border.all(color: Colors.grey.shade200),
               ),
               child: Row(
@@ -223,7 +224,7 @@ class ProblemThumbnailCard extends StatelessWidget {
                 color: lastSolvedDateText != null
                     ? themeProvider.primaryColor.withValues(alpha: 0.07)
                     : Colors.grey.shade100,
-                borderRadius: BorderRadius.circular(7),
+                borderRadius: BorderRadius.circular(AppRadius.small),
               ),
               child: lastSolvedDateText != null
                   ? Column(

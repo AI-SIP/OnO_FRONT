@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../Module/Text/StandardText.dart';
 import '../../../Module/Theme/ThemeHandler.dart';
+import '../../../Module/Motion/AnimatedGauge.dart';
 
 class GoalProgressBar extends StatelessWidget {
   final int current;
@@ -51,18 +52,13 @@ class GoalProgressBar extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 4),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(4),
-          child: LinearProgressIndicator(
-            value: ratio,
-            minHeight: 5,
-            backgroundColor: Colors.grey[100],
-            valueColor: AlwaysStoppedAnimation<Color>(
-              isComplete
-                  ? themeProvider.primaryColor
-                  : themeProvider.primaryColor.withOpacity(0.6),
-            ),
-          ),
+        AnimatedLinearGauge(
+          value: ratio,
+          color: isComplete
+              ? themeProvider.primaryColor
+              : themeProvider.primaryColor.withOpacity(0.6),
+          backgroundColor: Colors.grey[100],
+          height: 5,
         ),
       ],
     );

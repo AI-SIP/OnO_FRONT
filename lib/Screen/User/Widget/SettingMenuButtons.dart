@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import '../../../Module/Text/StandardText.dart';
 import '../../../Module/Theme/ThemeHandler.dart';
+import '../../../Module/Motion/PressableScale.dart';
+import '../../../Module/Design/AppRadius.dart';
+import '../../../Module/Design/AppColors.dart';
 
 class SettingMenuButtons extends StatelessWidget {
   final ThemeHandler themeProvider;
@@ -33,7 +36,7 @@ class SettingMenuButtons extends StatelessWidget {
       padding: EdgeInsets.all(screenHeight * 0.015),
       decoration: BoxDecoration(
         color: Colors.grey[50],
-        borderRadius: BorderRadius.circular(15),
+        borderRadius: BorderRadius.circular(AppRadius.large),
         border: Border.all(
           color: Colors.grey[300]!,
           width: 1,
@@ -96,7 +99,7 @@ class SettingMenuButtons extends StatelessWidget {
             child: StandardText(
               text: title,
               fontSize: 14,
-              color: Colors.black87,
+              color: AppColors.textPrimary,
             ),
           ),
           Transform.scale(
@@ -126,9 +129,8 @@ class SettingMenuButtons extends StatelessWidget {
   }) {
     double screenHeight = MediaQuery.of(context).size.height;
 
-    return InkWell(
+    return PressableScale(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
       child: Padding(
         padding: EdgeInsets.symmetric(
           vertical: screenHeight * 0.008,
@@ -146,7 +148,7 @@ class SettingMenuButtons extends StatelessWidget {
               child: StandardText(
                 text: title,
                 fontSize: 14,
-                color: Colors.black87,
+                color: AppColors.textPrimary,
               ),
             ),
             if (showThemeColor)

@@ -7,6 +7,9 @@ import '../../../Provider/StudyRoomProvider.dart';
 import '../../../Util/AppSnackBar.dart';
 import '../ProblemPickerScreen.dart';
 import 'SharedProblemCard.dart';
+import '../../../Module/Motion/TossPageRoute.dart';
+import '../../../Module/Design/AppColors.dart';
+import '../../../Module/Design/AppRadius.dart';
 
 class SharedProblemTab extends StatefulWidget {
   final int roomId;
@@ -104,7 +107,7 @@ class _SharedProblemTabState extends State<SharedProblemTab>
 
     final result = await Navigator.push<bool>(
       context,
-      MaterialPageRoute(
+      TossPageRoute(
         builder: (_) => ProblemPickerScreen(
           roomId: widget.roomId,
           alreadySharedProblemIds: alreadySharedIds,
@@ -183,7 +186,7 @@ class _SharedProblemTabState extends State<SharedProblemTab>
                                   const StandardText(
                                     text: '공유된 문제가 없어요',
                                     fontSize: 16,
-                                    color: Colors.black87,
+                                    color: AppColors.textPrimary,
                                   ),
                                   const SizedBox(height: 6),
                                   StandardText(
@@ -254,7 +257,8 @@ class _SharedProblemTabState extends State<SharedProblemTab>
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(13),
+                            borderRadius:
+                                BorderRadius.circular(AppRadius.medium),
                           ),
                         ),
                         icon: const Icon(
@@ -286,8 +290,8 @@ class _SharedProblemTabState extends State<SharedProblemTab>
       padding: const EdgeInsets.fromLTRB(14, 12, 12, 12),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.grey[200]!, width: 1),
+        borderRadius: BorderRadius.circular(AppRadius.large),
+        border: Border.all(color: AppColors.border),
         boxShadow: [
           BoxShadow(
             color: themeProvider.primaryColor.withValues(alpha: 0.06),
@@ -303,7 +307,7 @@ class _SharedProblemTabState extends State<SharedProblemTab>
             height: 38,
             decoration: BoxDecoration(
               color: themeProvider.primaryColor.withValues(alpha: 0.09),
-              borderRadius: BorderRadius.circular(11),
+              borderRadius: BorderRadius.circular(AppRadius.medium),
             ),
             child: Icon(
               Icons.forum_outlined,
@@ -319,7 +323,7 @@ class _SharedProblemTabState extends State<SharedProblemTab>
                 const StandardText(
                   text: '문제 공유 게시판',
                   fontSize: 15,
-                  color: Colors.black87,
+                  color: AppColors.textPrimary,
                 ),
                 const SizedBox(height: 3),
                 StandardText(

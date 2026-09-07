@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '../../../Model/User/UserInfoModel.dart';
 import '../../../Module/Text/StandardText.dart';
 import '../../../Module/Theme/ThemeHandler.dart';
+import '../../../Module/Design/AppRadius.dart';
+import '../../../Module/Design/AppColors.dart';
 
 class CompactActivityLevels extends StatelessWidget {
   final UserInfoModel? userInfo;
@@ -15,32 +17,6 @@ class CompactActivityLevels extends StatelessWidget {
     required this.themeProvider,
     this.horizontalMarginFactor = 0.04,
   });
-
-  // 전체 레벨 계산 (4개 활동의 평균)
-  int _calculateOverallLevel() {
-    if (userInfo == null) return 0;
-    return ((userInfo!.attendanceLevel +
-                userInfo!.noteWriteLevel +
-                userInfo!.problemPracticeLevel +
-                userInfo!.notePracticeLevel) /
-            4)
-        .floor();
-  }
-
-  // 전체 경험치 계산
-  int _calculateOverallPoint() {
-    if (userInfo == null) return 0;
-    return userInfo!.attendancePoint +
-        userInfo!.noteWritePoint +
-        userInfo!.problemPracticePoint +
-        userInfo!.notePracticePoint;
-  }
-
-  // 다음 레벨까지 필요한 경험치
-  int _calculateRequiredPoint() {
-    int level = _calculateOverallLevel();
-    return (level + 1) * 400; // 4개 활동 각각 100포인트씩 = 400포인트
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -59,7 +35,7 @@ class CompactActivityLevels extends StatelessWidget {
       padding: EdgeInsets.all(screenHeight * 0.02),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(15),
+        borderRadius: BorderRadius.circular(AppRadius.large),
         border: Border.all(
           color: Colors.grey[300]!,
           width: 1,
@@ -72,7 +48,7 @@ class CompactActivityLevels extends StatelessWidget {
           const StandardText(
             text: '활동 레벨',
             fontSize: 15,
-            color: Colors.black87,
+            color: AppColors.textPrimary,
           ),
           SizedBox(height: screenHeight * 0.02),
           _buildActivityRow(
@@ -115,64 +91,6 @@ class CompactActivityLevels extends StatelessWidget {
     );
   }
 
-  Widget _buildOverallExpBar(double screenHeight) {
-    int currentLevel = _calculateOverallLevel();
-    int currentPoint = _calculateOverallPoint();
-    int requiredPoint = _calculateRequiredPoint();
-    double progress = requiredPoint > 0 ? currentPoint / requiredPoint : 0;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Row(
-              children: [
-                StandardText(
-                  text: '총 경험치',
-                  fontSize: 16,
-                  color: Colors.black87,
-                ),
-                SizedBox(width: screenHeight * 0.01),
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: themeProvider.primaryColor,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: StandardText(
-                    text: 'Lv.$currentLevel',
-                    fontSize: 12,
-                    color: Colors.white,
-                  ),
-                ),
-              ],
-            ),
-            StandardText(
-              text: '$currentPoint / $requiredPoint',
-              fontSize: 13,
-              color: Colors.black54,
-            ),
-          ],
-        ),
-        SizedBox(height: screenHeight * 0.01),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(10),
-          child: LinearProgressIndicator(
-            value: progress.clamp(0.0, 1.0),
-            backgroundColor: Colors.grey[300],
-            valueColor: AlwaysStoppedAnimation<Color>(
-              themeProvider.primaryColor,
-            ),
-            minHeight: 10,
-          ),
-        ),
-      ],
-    );
-  }
-
   Widget _buildActivityRow({
     required IconData icon,
     required String category,
@@ -192,7 +110,7 @@ class CompactActivityLevels extends StatelessWidget {
           padding: const EdgeInsets.all(6),
           decoration: BoxDecoration(
             color: color.withOpacity(0.2),
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(AppRadius.small),
           ),
           child: Icon(
             icon,
@@ -207,7 +125,7 @@ class CompactActivityLevels extends StatelessWidget {
           child: StandardText(
             text: category,
             fontSize: 13,
-            color: Colors.black87,
+            color: AppColors.textPrimary,
           ),
         ),
         SizedBox(width: screenHeight * 0.008),
@@ -216,7 +134,7 @@ class CompactActivityLevels extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
           decoration: BoxDecoration(
             color: color,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppRadius.medium),
           ),
           child: StandardText(
             text: 'Lv.$level',

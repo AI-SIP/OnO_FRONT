@@ -6,6 +6,10 @@ import '../../../Module/Text/mobile_font_size.dart';
 import '../../../Module/Text/StandardText.dart';
 import '../../../Module/Theme/ThemeHandler.dart';
 import 'DatePickerHandler.dart';
+import '../../../Module/Motion/PressableScale.dart';
+import '../../../Module/Motion/AppMotion.dart';
+import '../../../Module/Design/AppColors.dart';
+import '../../../Module/Design/AppRadius.dart';
 
 class DatePickerWidget extends StatelessWidget {
   final DateTime selectedDate;
@@ -26,8 +30,8 @@ class DatePickerWidget extends StatelessWidget {
       padding: const EdgeInsets.all(16.0),
       decoration: BoxDecoration(
         color: Colors.grey[50],
-        borderRadius: BorderRadius.circular(12.0),
-        border: Border.all(color: Colors.grey[200]!, width: 1),
+        borderRadius: BorderRadius.circular(AppRadius.medium),
+        border: Border.all(color: AppColors.border),
       ),
       child: Row(
         children: [
@@ -35,7 +39,7 @@ class DatePickerWidget extends StatelessWidget {
             padding: const EdgeInsets.all(8.0),
             decoration: BoxDecoration(
               color: theme.primaryColor.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8.0),
+              borderRadius: BorderRadius.circular(AppRadius.small),
             ),
             child: Icon(
               Icons.calendar_month,
@@ -49,15 +53,16 @@ class DatePickerWidget extends StatelessWidget {
               text: '푼 날짜',
               fontSize: MobileFontSize.reduced(context, 16),
               fontWeight: FontWeight.w500,
-              color: Colors.black87,
+              color: AppColors.textPrimary,
             ),
           ),
           SizedBox(
             width: selectorWidth,
-            child: GestureDetector(
+            child: PressableScale(
               onTap: () async {
                 FirebaseAnalytics.instance.logEvent(name: 'date_select');
                 final d = await showModalBottomSheet<DateTime>(
+                  sheetAnimationStyle: AppMotion.sheetStyle,
                   context: context,
                   isScrollControlled: true,
                   builder: (_) => DatePickerHandler(
@@ -72,8 +77,8 @@ class DatePickerWidget extends StatelessWidget {
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.grey[300]!, width: 1),
+                  borderRadius: BorderRadius.circular(AppRadius.small),
+                  border: Border.all(color: AppColors.border),
                 ),
                 child: Row(
                   children: [
@@ -87,7 +92,7 @@ class DatePickerWidget extends StatelessWidget {
                             text:
                                 '${selectedDate.year}년 ${selectedDate.month}월 ${selectedDate.day}일',
                             fontSize: MobileFontSize.reduced(context, 14),
-                            color: Colors.black87,
+                            color: AppColors.textPrimary,
                           ),
                         ),
                       ),

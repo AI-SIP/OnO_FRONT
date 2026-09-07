@@ -16,6 +16,11 @@ import '../../Provider/ProblemsProvider.dart';
 import '../../Provider/StudyRoomProvider.dart';
 import '../../Util/AppSnackBar.dart';
 import '../../Exception/ApiException.dart';
+import '../../Module/Motion/AppHaptic.dart';
+import '../../Module/Motion/PressableScale.dart';
+import '../../Module/Motion/TossDialog.dart';
+import '../../Module/Design/AppColors.dart';
+import '../../Module/Design/AppRadius.dart';
 
 class ProblemPickerScreen extends StatefulWidget {
   final int roomId;
@@ -158,12 +163,13 @@ class _ProblemPickerScreenState extends State<ProblemPickerScreen> {
   Future<void> _showAlreadySharedDialog() async {
     if (!mounted) return;
     final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
-    await showDialog<void>(
+    await showTossDialog<void>(
       context: context,
       builder: (_) => Dialog(
         backgroundColor: Colors.white,
         insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadius.large)),
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 340),
           child: Padding(
@@ -177,7 +183,7 @@ class _ProblemPickerScreenState extends State<ProblemPickerScreen> {
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
                         color: Colors.amber.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(AppRadius.small),
                       ),
                       child: const Icon(
                         Icons.info_outline,
@@ -189,7 +195,7 @@ class _ProblemPickerScreenState extends State<ProblemPickerScreen> {
                     const StandardText(
                       text: '이미 공유된 문제',
                       fontSize: 18,
-                      color: Colors.black87,
+                      color: AppColors.textPrimary,
                       fontWeight: FontWeight.w700,
                     ),
                   ],
@@ -212,7 +218,7 @@ class _ProblemPickerScreenState extends State<ProblemPickerScreen> {
                       backgroundColor: themeProvider.primaryColor,
                       padding: const EdgeInsets.symmetric(vertical: 13),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(AppRadius.medium),
                       ),
                     ),
                     child: const StandardText(
@@ -239,176 +245,180 @@ class _ProblemPickerScreenState extends State<ProblemPickerScreen> {
     final problemTitle = problem.reference?.trim().isNotEmpty == true
         ? problem.reference!
         : '제목 없는 문제';
-    return showDialog<String>(
+    return showTossDialog<String>(
       context: context,
       builder: (_) => Dialog(
         backgroundColor: Colors.white,
         insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadius.large)),
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 520),
           child: GestureDetector(
             onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
             behavior: HitTestBehavior.translucent,
             child: Padding(
-            padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      width: 34,
-                      height: 34,
-                      decoration: BoxDecoration(
-                        color:
-                            themeProvider.primaryColor.withValues(alpha: 0.10),
-                        borderRadius: BorderRadius.circular(10),
+              padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        width: 34,
+                        height: 34,
+                        decoration: BoxDecoration(
+                          color: themeProvider.primaryColor
+                              .withValues(alpha: 0.10),
+                          borderRadius: BorderRadius.circular(AppRadius.medium),
+                        ),
+                        child: Icon(
+                          Icons.ios_share_outlined,
+                          color: themeProvider.primaryColor,
+                          size: 19,
+                        ),
                       ),
-                      child: Icon(
-                        Icons.ios_share_outlined,
-                        color: themeProvider.primaryColor,
-                        size: 19,
+                      const SizedBox(width: 10),
+                      const Expanded(
+                        child: StandardText(
+                          text: '문제를 공유할까요?',
+                          fontSize: 17,
+                          color: AppColors.textPrimary,
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 10),
-                    const Expanded(
-                      child: StandardText(
-                        text: '문제를 공유할까요?',
-                        fontSize: 17,
-                        color: Colors.black87,
-                        overflow: TextOverflow.ellipsis,
-                        maxLines: 1,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 14),
-                LayoutBuilder(
-                  builder: (context, constraints) {
-                    final isWide = constraints.maxWidth >= 420;
-                    final roomTile = _buildShareSummaryRow(
-                      icon: Icons.groups_2_outlined,
-                      label: '공유할 방',
-                      value: roomName,
-                      themeProvider: themeProvider,
-                    );
-                    final problemTile = _buildShareSummaryRow(
-                      icon: Icons.assignment_outlined,
-                      label: '선택한 문제',
-                      value: problemTitle,
-                      themeProvider: themeProvider,
-                      maxLines: isWide ? 1 : 2,
-                    );
+                    ],
+                  ),
+                  const SizedBox(height: 14),
+                  LayoutBuilder(
+                    builder: (context, constraints) {
+                      final isWide = constraints.maxWidth >= 420;
+                      final roomTile = _buildShareSummaryRow(
+                        icon: Icons.groups_2_outlined,
+                        label: '공유할 방',
+                        value: roomName,
+                        themeProvider: themeProvider,
+                      );
+                      final problemTile = _buildShareSummaryRow(
+                        icon: Icons.assignment_outlined,
+                        label: '선택한 문제',
+                        value: problemTitle,
+                        themeProvider: themeProvider,
+                        maxLines: isWide ? 1 : 2,
+                      );
 
-                    if (!isWide) {
-                      return Column(
+                      if (!isWide) {
+                        return Column(
+                          children: [
+                            roomTile,
+                            const SizedBox(height: 8),
+                            problemTile,
+                          ],
+                        );
+                      }
+
+                      return Row(
                         children: [
-                          roomTile,
-                          const SizedBox(height: 8),
-                          problemTile,
+                          Expanded(child: roomTile),
+                          const SizedBox(width: 8),
+                          Expanded(child: problemTile),
                         ],
                       );
-                    }
-
-                    return Row(
-                      children: [
-                        Expanded(child: roomTile),
-                        const SizedBox(width: 8),
-                        Expanded(child: problemTile),
-                      ],
-                    );
-                  },
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: _commentController,
-                  maxLength: 100,
-                  minLines: 2,
-                  maxLines: 2,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    color: Colors.black87,
-                    fontWeight: FontWeight.w500,
-                    fontFamily: 'Pretendard',
+                    },
                   ),
-                  decoration: InputDecoration(
-                    hintText: '한마디 남기기 (선택)',
-                    counterText: '',
-                    hintStyle: TextStyle(color: Colors.grey[400], fontSize: 13),
-                    filled: true,
-                    fillColor: Colors.grey[50],
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.grey[300]!),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: _commentController,
+                    maxLength: 100,
+                    minLines: 2,
+                    maxLines: 2,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.w500,
+                      fontFamily: 'Pretendard',
                     ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.grey[300]!),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(
-                        color: themeProvider.primaryColor,
-                        width: 1.5,
+                    decoration: InputDecoration(
+                      hintText: '한마디 남기기 (선택)',
+                      counterText: '',
+                      hintStyle:
+                          TextStyle(color: Colors.grey[400], fontSize: 13),
+                      filled: true,
+                      fillColor: Colors.grey[50],
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(AppRadius.medium),
+                        borderSide: BorderSide(color: Colors.grey[300]!),
                       ),
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 11,
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(AppRadius.medium),
+                        borderSide: BorderSide(color: Colors.grey[300]!),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(AppRadius.medium),
+                        borderSide: BorderSide(
+                          color: themeProvider.primaryColor,
+                          width: 1.5,
+                        ),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 11,
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 14),
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextButton(
-                        onPressed: () => Navigator.pop(context, null),
-                        style: TextButton.styleFrom(
-                          backgroundColor: Colors.grey[50],
-                          padding: const EdgeInsets.symmetric(vertical: 13),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            side: BorderSide(color: Colors.grey[200]!),
+                  const SizedBox(height: 14),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextButton(
+                          onPressed: () => Navigator.pop(context, null),
+                          style: TextButton.styleFrom(
+                            backgroundColor: Colors.grey[50],
+                            padding: const EdgeInsets.symmetric(vertical: 13),
+                            shape: RoundedRectangleBorder(
+                              borderRadius:
+                                  BorderRadius.circular(AppRadius.medium),
+                              side: BorderSide(color: Colors.grey[200]!),
+                            ),
+                          ),
+                          child: StandardText(
+                            text: '취소',
+                            fontSize: 14,
+                            color: Colors.grey[700]!,
                           ),
                         ),
-                        child: StandardText(
-                          text: '취소',
-                          fontSize: 14,
-                          color: Colors.grey[700]!,
-                        ),
                       ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: TextButton(
-                        onPressed: () {
-                          FocusManager.instance.primaryFocus?.unfocus();
-                          Navigator.pop(
-                            context,
-                            _commentController.text.trim(),
-                          );
-                        },
-                        style: TextButton.styleFrom(
-                          backgroundColor: themeProvider.primaryColor,
-                          padding: const EdgeInsets.symmetric(vertical: 13),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: TextButton(
+                          onPressed: () {
+                            FocusManager.instance.primaryFocus?.unfocus();
+                            Navigator.pop(
+                              context,
+                              _commentController.text.trim(),
+                            );
+                          },
+                          style: TextButton.styleFrom(
+                            backgroundColor: themeProvider.primaryColor,
+                            padding: const EdgeInsets.symmetric(vertical: 13),
+                            shape: RoundedRectangleBorder(
+                              borderRadius:
+                                  BorderRadius.circular(AppRadius.medium),
+                            ),
+                          ),
+                          child: const StandardText(
+                            text: '공유하기',
+                            fontSize: 14,
+                            color: Colors.white,
                           ),
                         ),
-                        child: const StandardText(
-                          text: '공유하기',
-                          fontSize: 14,
-                          color: Colors.white,
-                        ),
                       ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -428,7 +438,7 @@ class _ProblemPickerScreenState extends State<ProblemPickerScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
         color: themeProvider.primaryColor.withValues(alpha: 0.06),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppRadius.medium),
         border: Border.all(
           color: themeProvider.primaryColor.withValues(alpha: 0.12),
         ),
@@ -454,7 +464,7 @@ class _ProblemPickerScreenState extends State<ProblemPickerScreen> {
                 StandardText(
                   text: value,
                   fontSize: 13,
-                  color: Colors.black87,
+                  color: AppColors.textPrimary,
                   overflow: TextOverflow.ellipsis,
                   maxLines: maxLines,
                 ),
@@ -510,7 +520,7 @@ class _ProblemPickerScreenState extends State<ProblemPickerScreen> {
         backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.close, color: Colors.black87),
+          icon: const Icon(Icons.close, color: AppColors.textPrimary),
           onPressed: () => Navigator.pop(context),
         ),
         title: Column(
@@ -520,7 +530,7 @@ class _ProblemPickerScreenState extends State<ProblemPickerScreen> {
             const StandardText(
               text: '공유할 문제 선택',
               fontSize: 15,
-              color: Colors.black87,
+              color: AppColors.textPrimary,
             ),
             if (roomName != null && roomName.isNotEmpty)
               StandardText(
@@ -594,7 +604,8 @@ class _ProblemPickerScreenState extends State<ProblemPickerScreen> {
         itemBuilder: (_, i) {
           final folder = _folders[i];
           final isSelected = folder.folderId == _selectedFolderId;
-          return GestureDetector(
+          return PressableScale(
+            haptic: HapticLevel.selection,
             onTap: () => _selectFolder(folder),
             child: AnimatedOpacity(
               duration: const Duration(milliseconds: 180),
@@ -614,7 +625,7 @@ class _ProblemPickerScreenState extends State<ProblemPickerScreen> {
                     color: isSelected
                         ? themeProvider.primaryColor.withValues(alpha: 0.07)
                         : Colors.transparent,
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(AppRadius.medium),
                     border: Border.all(
                       color: isSelected
                           ? themeProvider.primaryColor.withValues(alpha: 0.22)
@@ -703,7 +714,8 @@ class _ProblemPickerScreenState extends State<ProblemPickerScreen> {
     final isAlreadyShared =
         widget.alreadySharedProblemIds.contains(problem.problemId);
 
-    return GestureDetector(
+    return PressableScale(
+      haptic: HapticLevel.selection,
       onTap: () => _onProblemTap(problem),
       child: ProblemThumbnailCard(
         title: title,
@@ -746,8 +758,8 @@ class _ProblemPickerScreenState extends State<ProblemPickerScreen> {
       ),
       decoration: BoxDecoration(
         color: Colors.grey[100],
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.grey[300]!),
+        borderRadius: BorderRadius.circular(AppRadius.small),
+        border: Border.all(color: AppColors.border),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -781,7 +793,7 @@ class _ProblemPickerScreenState extends State<ProblemPickerScreen> {
       ),
       decoration: BoxDecoration(
         color: themeProvider.primaryColor.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppRadius.small),
         border: Border.all(
           color: themeProvider.primaryColor.withValues(alpha: 0.25),
         ),

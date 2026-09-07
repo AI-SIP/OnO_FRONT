@@ -6,6 +6,10 @@ import '../Text/mobile_font_size.dart';
 import '../Text/StandardText.dart';
 import '../Theme/ThemeHandler.dart';
 import 'FolderPickerDialog.dart';
+import '../Motion/PressableScale.dart';
+import '../Motion/TossDialog.dart';
+import '../Design/AppColors.dart';
+import '../Design/AppRadius.dart';
 
 class FolderPickerWidget extends StatefulWidget {
   final int? selectedId;
@@ -18,7 +22,7 @@ class FolderPickerWidget extends StatefulWidget {
   }) : super(key: key);
 
   static Future<int?> showPicker(BuildContext ctx, int? current) {
-    return showDialog<int>(
+    return showTossDialog<int>(
       context: ctx,
       builder: (_) => FolderPickerDialog(initialFolderId: current),
     );
@@ -63,8 +67,8 @@ class _FolderPickerWidgetState extends State<FolderPickerWidget> {
         padding: const EdgeInsets.all(16.0),
         decoration: BoxDecoration(
           color: Colors.grey[50],
-          borderRadius: BorderRadius.circular(12.0),
-          border: Border.all(color: Colors.grey[200]!, width: 1),
+          borderRadius: BorderRadius.circular(AppRadius.medium),
+          border: Border.all(color: AppColors.border),
         ),
         child: Row(
           children: [
@@ -72,7 +76,7 @@ class _FolderPickerWidgetState extends State<FolderPickerWidget> {
               padding: const EdgeInsets.all(8.0),
               decoration: BoxDecoration(
                 color: theme.primaryColor.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8.0),
+                borderRadius: BorderRadius.circular(AppRadius.small),
               ),
               child: Icon(
                 Icons.menu_book_outlined,
@@ -86,7 +90,7 @@ class _FolderPickerWidgetState extends State<FolderPickerWidget> {
                 text: '공책 선택',
                 fontSize: MobileFontSize.reduced(context, 16),
                 fontWeight: FontWeight.w500,
-                color: Colors.black87,
+                color: AppColors.textPrimary,
               ),
             ),
             SizedBox(
@@ -107,8 +111,8 @@ class _FolderPickerWidgetState extends State<FolderPickerWidget> {
       padding: const EdgeInsets.all(16.0),
       decoration: BoxDecoration(
         color: Colors.grey[50],
-        borderRadius: BorderRadius.circular(12.0),
-        border: Border.all(color: Colors.grey[200]!, width: 1),
+        borderRadius: BorderRadius.circular(AppRadius.medium),
+        border: Border.all(color: AppColors.border),
       ),
       child: Row(
         children: [
@@ -116,7 +120,7 @@ class _FolderPickerWidgetState extends State<FolderPickerWidget> {
             padding: const EdgeInsets.all(8.0),
             decoration: BoxDecoration(
               color: theme.primaryColor.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8.0),
+              borderRadius: BorderRadius.circular(AppRadius.small),
             ),
             child: Icon(
               Icons.menu_book_outlined,
@@ -130,12 +134,12 @@ class _FolderPickerWidgetState extends State<FolderPickerWidget> {
               text: '공책 선택',
               fontSize: MobileFontSize.reduced(context, 16),
               fontWeight: FontWeight.w500,
-              color: Colors.black87,
+              color: AppColors.textPrimary,
             ),
           ),
           SizedBox(
             width: selectorWidth,
-            child: GestureDetector(
+            child: PressableScale(
               onTap: () async {
                 final id = await FolderPickerWidget.showPicker(
                     context, widget.selectedId);
@@ -145,8 +149,8 @@ class _FolderPickerWidgetState extends State<FolderPickerWidget> {
                 padding: const EdgeInsets.fromLTRB(22, 10, 12, 10),
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.grey[300]!, width: 1),
+                  borderRadius: BorderRadius.circular(AppRadius.small),
+                  border: Border.all(color: AppColors.border),
                 ),
                 child: Row(
                   children: [
@@ -162,7 +166,7 @@ class _FolderPickerWidgetState extends State<FolderPickerWidget> {
                         child: StandardText(
                           text: name,
                           fontSize: MobileFontSize.reduced(context, 14),
-                          color: Colors.black87,
+                          color: AppColors.textPrimary,
                           overflow: TextOverflow.ellipsis,
                           textAlign: TextAlign.right,
                         ),

@@ -5,6 +5,10 @@ import 'package:provider/provider.dart';
 
 import '../Text/StandardText.dart';
 import '../Theme/ThemeHandler.dart';
+import '../Motion/TossPageRoute.dart';
+import '../Motion/PressableScale.dart';
+import '../Design/AppRadius.dart';
+import '../Design/AppColors.dart';
 
 class CameraHandler {
   CameraController? _controller;
@@ -26,7 +30,7 @@ class CameraHandler {
 
     final camera = _availableCameras!.first;
     return Navigator.of(context).push(
-      MaterialPageRoute(
+      TossPageRoute(
         builder: (context) => CameraScreen(camera: camera),
       ),
     );
@@ -104,7 +108,8 @@ class _CameraScreenState extends State<CameraScreen> {
                   child: Padding(
                     padding: EdgeInsets.symmetric(horizontal: 32),
                     child: StandardText(
-                      text: '카메라를 열 수 없습니다.\n카메라 권한을 확인하거나 다른 앱을 종료한 뒤 다시 시도해주세요.',
+                      text:
+                          '카메라를 열 수 없습니다.\n카메라 권한을 확인하거나 다른 앱을 종료한 뒤 다시 시도해주세요.',
                       color: Colors.white,
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
@@ -134,19 +139,18 @@ class _CameraScreenState extends State<CameraScreen> {
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
               child: Row(
                 children: [
-                  InkWell(
+                  PressableScale(
                     onTap: () => Navigator.of(context).pop(),
-                    borderRadius: BorderRadius.circular(12),
                     child: Container(
                       width: 40,
                       height: 40,
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.88),
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(AppRadius.medium),
                       ),
                       child: const Icon(
                         Icons.close_rounded,
-                        color: Colors.black87,
+                        color: AppColors.textPrimary,
                         size: 22,
                       ),
                     ),
@@ -164,7 +168,7 @@ class _CameraScreenState extends State<CameraScreen> {
                             themeProvider.primaryColor.withValues(alpha: 0.12),
                           ],
                         ),
-                        borderRadius: BorderRadius.circular(14),
+                        borderRadius: BorderRadius.circular(AppRadius.large),
                       ),
                       child: Row(
                         children: [
@@ -177,7 +181,7 @@ class _CameraScreenState extends State<CameraScreen> {
                           const Expanded(
                             child: StandardText(
                               text: '이미지를 촬영해주세요!',
-                              color: Colors.black87,
+                              color: AppColors.textPrimary,
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
                               overflow: TextOverflow.ellipsis,
@@ -198,7 +202,7 @@ class _CameraScreenState extends State<CameraScreen> {
             right: 0,
             bottom: safeBottom + 24,
             child: Center(
-              child: InkWell(
+              child: PressableScale(
                 onTap: () async {
                   try {
                     await _initializeControllerFuture;
@@ -209,7 +213,6 @@ class _CameraScreenState extends State<CameraScreen> {
                     debugPrint(e.toString());
                   }
                 },
-                borderRadius: BorderRadius.circular(42),
                 child: Container(
                   width: 76,
                   height: 76,

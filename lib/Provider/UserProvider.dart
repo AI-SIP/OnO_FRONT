@@ -18,13 +18,13 @@ import 'package:ono/Util/AppNavigator.dart';
 import 'package:ono/Util/NotificationService.dart';
 
 import '../Exception/ApiException.dart';
-import '../Module/Text/StandardText.dart';
 import '../Screen/User/LoginScreen.dart';
 import '../Service/Api/HttpService.dart';
 import '../Service/SocialLogin/AppleAuthService.dart';
 import '../Service/SocialLogin/GoogleAuthService.dart';
 import 'ProblemsProvider.dart';
 import 'TokenProvider.dart';
+import '../Module/Design/AppToast.dart';
 
 class UserProvider with ChangeNotifier {
   final storage = const FlutterSecureStorage();
@@ -89,7 +89,7 @@ class UserProvider with ChangeNotifier {
       final response = await userService.signInWithMember(userRegisterModel);
       debugPrint('[signInWithMember] response received');
 
-      await saveUserLoginInfo(userRegisterModel?.platform);
+      await saveUserLoginInfo(userRegisterModel.platform);
       bool isRegister = await saveUserToken(response: response);
       debugPrint('[signInWithMember] isRegister: $isRegister');
 
@@ -198,16 +198,7 @@ class UserProvider with ChangeNotifier {
 
     LoadingDialog.hide(context);
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: StandardText(
-          text: _mapLoginErrorMessage(error),
-          color: Colors.white,
-          fontSize: 14,
-        ),
-        backgroundColor: Colors.red,
-      ),
-    );
+    AppToast.error(_mapLoginErrorMessage(error));
   }
 
   String _mapLoginErrorMessage(Object error) {

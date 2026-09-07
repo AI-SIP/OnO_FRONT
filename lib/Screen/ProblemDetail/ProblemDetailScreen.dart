@@ -18,6 +18,16 @@ import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/ProblemsProvider.dart';
 import '../PracticeNote/PracticeNavigationButtons.dart';
 import 'ProblemDetailTemplate.dart';
+import '../../Module/Motion/AppHaptic.dart';
+import '../../Module/Motion/PressableScale.dart';
+import '../../Module/Motion/TossPageRoute.dart';
+import '../../Module/Motion/TossDialog.dart';
+import '../../Module/Motion/AppMotion.dart';
+import '../../Module/Design/AppColors.dart';
+import '../../Module/Design/AppToast.dart';
+import '../../Module/Design/AppRadius.dart';
+import '../../Module/Motion/AppearTransition.dart';
+import '../../Module/Motion/Skeleton.dart';
 
 class ProblemDetailScreen extends StatefulWidget {
   final int problemId;
@@ -227,7 +237,12 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                             .getProblem(widget.problemId),
                     builder: (context, snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting) {
-                        return const Center(child: CircularProgressIndicator());
+                        return const SkeletonList(
+                          itemCount: 3,
+                          itemHeight: 160,
+                          spacing: 16,
+                          padding: EdgeInsets.all(16),
+                        );
                       } else if (snapshot.hasError) {
                         return Center(
                           child: StandardText(
@@ -236,7 +251,12 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                           ),
                         );
                       } else if (snapshot.hasData) {
-                        return _buildContent(snapshot.data!);
+                        // 화면이 열릴 때 주는 모션은 데이터가 오기 전에 끝난다.
+                        // 정작 내용이 뜨는 순간에는 아무 움직임이 없어서,
+                        // 여기서 한 번 더 자리를 잡으며 나타나게 한다.
+                        return AppearTransition(
+                          child: _buildContent(snapshot.data!),
+                        );
                       } else {
                         return Center(
                           child: StandardText(
@@ -250,7 +270,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                 }
 
                 // 이미 로드된 경우 바로 렌더링
-                return _buildContent(problemModel);
+                return AppearTransition(child: _buildContent(problemModel));
               },
             ),
           ),
@@ -334,6 +354,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
 
     final openTime = DateTime.now();
     showModalBottomSheet(
+      sheetAnimationStyle: AppMotion.sheetStyle,
       backgroundColor: Colors.transparent,
       context: context,
       isDismissible: false,
@@ -381,7 +402,8 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
                             color: themeProvider.primaryColor.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius:
+                                BorderRadius.circular(AppRadius.small),
                           ),
                           child: Icon(
                             Icons.edit_note,
@@ -394,7 +416,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                           text: '오답노트 편집하기',
                           fontSize: MobileFontSize.reduced(context, 20),
                           fontWeight: FontWeight.w600,
-                          color: Colors.black87,
+                          color: AppColors.textPrimary,
                         ),
                       ],
                     ),
@@ -410,7 +432,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                         Navigator.pop(context);
                         Navigator.of(context)
                             .push(
-                          MaterialPageRoute(
+                          TossPageRoute(
                             builder: (context) => ProblemRegisterScreen(
                               problemModel: problemModel,
                               isEditMode: true,
@@ -467,15 +489,14 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
     Color? titleColor,
     required VoidCallback onTap,
   }) {
-    return InkWell(
+    return PressableScale(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
           color: Colors.grey[50],
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey[200]!, width: 1),
+          borderRadius: BorderRadius.circular(AppRadius.medium),
+          border: Border.all(color: AppColors.border),
         ),
         child: Row(
           children: [
@@ -537,6 +558,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
     final openTime = DateTime.now();
 
     showModalBottomSheet(
+      sheetAnimationStyle: AppMotion.sheetStyle,
       backgroundColor: Colors.transparent,
       context: context,
       isScrollControlled: true,
@@ -592,7 +614,8 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                             decoration: BoxDecoration(
                               color: themeProvider.primaryColor
                                   .withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius:
+                                  BorderRadius.circular(AppRadius.small),
                             ),
                             child: Icon(
                               Icons.playlist_add,
@@ -606,7 +629,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                               text: '복습 세트에 추가하기',
                               fontSize: MobileFontSize.reduced(context, 20),
                               fontWeight: FontWeight.w600,
-                              color: Colors.black87,
+                              color: AppColors.textPrimary,
                             ),
                           ),
                         ],
@@ -626,7 +649,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                               StandardText(
                                 text: '아직 복습 세트가 없습니다.',
                                 fontSize: MobileFontSize.reduced(context, 16),
-                                color: Colors.black87,
+                                color: AppColors.textPrimary,
                               ),
                             ],
                           ),
@@ -661,7 +684,9 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                                       ? themeProvider.primaryColor
                                       : Colors.grey.shade200;
 
-                              return InkWell(
+                              return PressableScale(
+                                haptic: HapticLevel.selection,
+                                enabled: !alreadyAdded,
                                 onTap: alreadyAdded
                                     ? null
                                     : () {
@@ -675,13 +700,13 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                                           }
                                         });
                                       },
-                                borderRadius: BorderRadius.circular(12),
                                 child: Container(
                                   padding: const EdgeInsets.symmetric(
                                       horizontal: 14, vertical: 12),
                                   decoration: BoxDecoration(
                                     color: itemBackgroundColor,
-                                    borderRadius: BorderRadius.circular(12),
+                                    borderRadius:
+                                        BorderRadius.circular(AppRadius.medium),
                                     border: Border.all(
                                       color: itemBorderColor,
                                       width: selected || alreadyAdded ? 1.5 : 1,
@@ -695,8 +720,8 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                                         decoration: BoxDecoration(
                                           color:
                                               itemColor.withValues(alpha: 0.12),
-                                          borderRadius:
-                                              BorderRadius.circular(10),
+                                          borderRadius: BorderRadius.circular(
+                                              AppRadius.medium),
                                         ),
                                         child: Icon(
                                           alreadyAdded
@@ -718,7 +743,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                                               text: practice.practiceTitle,
                                               fontSize: 16,
                                               fontWeight: FontWeight.w500,
-                                              color: Colors.black87,
+                                              color: AppColors.textPrimary,
                                             ),
                                             const SizedBox(height: 4),
                                             StandardText(
@@ -754,13 +779,14 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                                     const EdgeInsets.symmetric(vertical: 13),
                                 backgroundColor: Colors.grey[100],
                                 shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
+                                  borderRadius:
+                                      BorderRadius.circular(AppRadius.medium),
                                 ),
                               ),
                               child: StandardText(
                                 text: '취소',
                                 fontSize: MobileFontSize.reduced(context, 15),
-                                color: Colors.black87,
+                                color: AppColors.textPrimary,
                               ),
                             ),
                           ),
@@ -786,7 +812,8 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                                     ? Colors.grey[300]
                                     : themeProvider.primaryColor,
                                 shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
+                                  borderRadius:
+                                      BorderRadius.circular(AppRadius.medium),
                                 ),
                               ),
                               child: const StandardText(
@@ -853,13 +880,13 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
 
   Future<void> _showDeleteProblemDialog(
       int problemId, ThemeHandler themeProvider) async {
-    return showDialog(
+    return showTossDialog(
       context: context,
       builder: (dialogContext) {
         return Dialog(
           backgroundColor: Colors.white,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(AppRadius.large),
           ),
           child: Container(
             padding: const EdgeInsets.all(24),
@@ -873,7 +900,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
                         color: Colors.red.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(AppRadius.small),
                       ),
                       child: const Icon(
                         Icons.delete_forever,
@@ -886,7 +913,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                       text: '오답노트 삭제',
                       fontSize: MobileFontSize.reduced(context, 18),
                       fontWeight: FontWeight.w600,
-                      color: Colors.black87,
+                      color: AppColors.textPrimary,
                     ),
                   ],
                 ),
@@ -895,7 +922,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                 StandardText(
                   text: '정말로 이 오답노트를 삭제하시겠습니까?',
                   fontSize: MobileFontSize.reduced(context, 15),
-                  color: Colors.black87,
+                  color: AppColors.textPrimary,
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 24),
@@ -911,13 +938,14 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                           padding: const EdgeInsets.symmetric(vertical: 12),
                           backgroundColor: Colors.grey[100],
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius:
+                                BorderRadius.circular(AppRadius.small),
                           ),
                         ),
                         child: StandardText(
                           text: '취소',
                           fontSize: MobileFontSize.reduced(context, 15),
-                          color: Colors.black87,
+                          color: AppColors.textPrimary,
                         ),
                       ),
                     ),
@@ -957,19 +985,24 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                             if (mounted) {
                               navigator.pop(true);
                             }
+                            // 화면을 닫은 뒤에 알린다. 토스트는 앱 전체
+                            // Overlay 를 쓰므로 이 화면이 사라져도 뜬다.
+                            AppToast.success('오답노트를 삭제했어요.');
                           } catch (e) {
                             // 에러 발생 시 로딩 다이얼로그 닫기
                             if (mounted) {
                               LoadingDialog.hide(context);
                             }
                             debugPrint('문제 삭제 실패: $e');
+                            AppToast.error('오답노트를 삭제하지 못했어요. 잠시 후 다시 시도해주세요.');
                           }
                         },
                         style: TextButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 12),
                           backgroundColor: Colors.red,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius:
+                                BorderRadius.circular(AppRadius.small),
                           ),
                         ),
                         child: const StandardText(

@@ -19,6 +19,12 @@ import 'Widget/MemberRankCard.dart';
 import 'Widget/StudyRoomThumbnail.dart';
 import 'Widget/SharedProblemTab.dart';
 import 'Widget/WeeklyReportSheet.dart';
+import '../../Module/Motion/PressableScale.dart';
+import '../../Module/Motion/TossPageRoute.dart';
+import '../../Module/Motion/TossDialog.dart';
+import '../../Module/Motion/AppMotion.dart';
+import '../../Module/Design/AppColors.dart';
+import '../../Module/Design/AppRadius.dart';
 
 class StudyRoomDetailScreen extends StatefulWidget {
   final int roomId;
@@ -121,7 +127,7 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
   ) async {
     final updated = await Navigator.push<bool>(
       context,
-      MaterialPageRoute(
+      TossPageRoute(
         builder: (_) => StudyRoomEditScreen(room: room),
       ),
     );
@@ -190,12 +196,12 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
     required String confirmLabel,
     required Color confirmColor,
   }) {
-    return showDialog<bool>(
+    return showTossDialog<bool>(
       context: context,
       builder: (_) => Dialog(
         backgroundColor: Colors.white,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(15),
+          borderRadius: BorderRadius.circular(AppRadius.large),
           side: BorderSide(color: Colors.grey[200]!, width: 1),
         ),
         child: ConstrainedBox(
@@ -211,7 +217,7 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
                         color: iconColor.withValues(alpha: 0.10),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(AppRadius.small),
                       ),
                       child: Icon(icon, color: iconColor, size: 20),
                     ),
@@ -219,7 +225,7 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
                     StandardText(
                       text: title,
                       fontSize: 18,
-                      color: Colors.black87,
+                      color: AppColors.textPrimary,
                       fontWeight: FontWeight.w700,
                     ),
                   ],
@@ -243,7 +249,8 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
                           backgroundColor: Colors.grey[50],
                           padding: const EdgeInsets.symmetric(vertical: 13),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius:
+                                BorderRadius.circular(AppRadius.medium),
                             side: BorderSide(
                               color: Colors.grey[200]!,
                               width: 1,
@@ -253,7 +260,7 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
                         child: const StandardText(
                           text: '취소',
                           fontSize: 14,
-                          color: Colors.black87,
+                          color: AppColors.textPrimary,
                         ),
                       ),
                     ),
@@ -265,7 +272,8 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
                           backgroundColor: confirmColor,
                           padding: const EdgeInsets.symmetric(vertical: 13),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius:
+                                BorderRadius.circular(AppRadius.medium),
                           ),
                         ),
                         child: StandardText(
@@ -443,8 +451,8 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
       ),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(15),
-        border: Border.all(color: Colors.grey[300]!, width: 1),
+        borderRadius: BorderRadius.circular(AppRadius.large),
+        border: Border.all(color: AppColors.border),
         boxShadow: [
           BoxShadow(
             color: themeProvider.primaryColor.withValues(alpha: 0.10),
@@ -488,7 +496,7 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
               child: StandardText(
                 text: room.name,
                 fontSize: 17,
-                color: Colors.black87,
+                color: AppColors.textPrimary,
                 fontWeight: FontWeight.w700,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -619,7 +627,7 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
                                   const StandardText(
                                     text: '아직 챌린지가 없어요',
                                     fontSize: 16,
-                                    color: Colors.black87,
+                                    color: AppColors.textPrimary,
                                   ),
                                   const SizedBox(height: 6),
                                   StandardText(
@@ -750,7 +758,7 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
                 color: themeProvider.primaryColor.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(999),
+                borderRadius: BorderRadius.circular(AppRadius.full),
               ),
               child: StandardText(
                 text: '$count개',
@@ -782,7 +790,7 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
               backgroundColor: themeProvider.primaryColor,
               padding: const EdgeInsets.symmetric(vertical: 12),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppRadius.medium),
               ),
             ),
             child: const Row(
@@ -956,6 +964,7 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
     ThemeHandler themeProvider,
   ) {
     showModalBottomSheet(
+      sheetAnimationStyle: AppMotion.sheetStyle,
       context: context,
       useRootNavigator: true,
       backgroundColor: Colors.transparent,
@@ -993,7 +1002,7 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
                       decoration: BoxDecoration(
                         color:
                             themeProvider.primaryColor.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(AppRadius.small),
                       ),
                       child: Icon(
                         Icons.manage_accounts_outlined,
@@ -1006,7 +1015,7 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
                       child: StandardText(
                         text: '멤버 관리',
                         fontSize: 18,
-                        color: Colors.black87,
+                        color: AppColors.textPrimary,
                       ),
                     ),
                   ],
@@ -1028,9 +1037,8 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
                         ),
                         decoration: BoxDecoration(
                           color: Colors.grey[50],
-                          borderRadius: BorderRadius.circular(12),
-                          border:
-                              Border.all(color: Colors.grey[200]!, width: 1),
+                          borderRadius: BorderRadius.circular(AppRadius.medium),
+                          border: Border.all(color: AppColors.border),
                         ),
                         child: Row(
                           children: [
@@ -1056,7 +1064,7 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
                                         child: StandardText(
                                           text: member.name,
                                           fontSize: 14,
-                                          color: Colors.black87,
+                                          color: AppColors.textPrimary,
                                           overflow: TextOverflow.ellipsis,
                                         ),
                                       ),
@@ -1126,7 +1134,8 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
                                     vertical: 8,
                                   ),
                                   shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(10),
+                                    borderRadius:
+                                        BorderRadius.circular(AppRadius.medium),
                                   ),
                                 ),
                                 child: const StandardText(
@@ -1156,15 +1165,14 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
     required Color labelColor,
     required VoidCallback onTap,
   }) {
-    return InkWell(
+    return PressableScale(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
           color: Colors.grey[50],
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey[200]!, width: 1),
+          borderRadius: BorderRadius.circular(AppRadius.medium),
+          border: Border.all(color: AppColors.border),
         ),
         child: Row(
           children: [

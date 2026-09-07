@@ -8,12 +8,19 @@ import '../../Provider/StudyRoomProvider.dart';
 import '../../Util/AppSnackBar.dart';
 import '../../Exception/ApiException.dart';
 import '../ProblemRegister/Widget/DatePickerHandler.dart';
+import '../../Module/Motion/PressableScale.dart';
+import '../../Module/Motion/AppHaptic.dart';
+import '../../Module/Motion/TossDialog.dart';
+import '../../Module/Motion/AppMotion.dart';
+import '../../Module/Design/AppColors.dart';
+import '../../Module/Design/AppRadius.dart';
 
 class ChallengeCreateSheet extends StatefulWidget {
   const ChallengeCreateSheet({super.key});
 
   static Future<void> show(BuildContext context) {
     return showModalBottomSheet(
+      sheetAnimationStyle: AppMotion.sheetStyle,
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
@@ -69,12 +76,12 @@ class _ChallengeCreateSheetState extends State<ChallengeCreateSheet> {
     String message,
   ) {
     final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
-    return showDialog<void>(
+    return showTossDialog<void>(
       context: context,
       builder: (dialogContext) => Dialog(
         backgroundColor: Colors.white,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(15),
+          borderRadius: BorderRadius.circular(AppRadius.large),
           side: BorderSide(color: Colors.grey[200]!, width: 1),
         ),
         child: ConstrainedBox(
@@ -90,7 +97,7 @@ class _ChallengeCreateSheetState extends State<ChallengeCreateSheet> {
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
                         color: Colors.orange.withValues(alpha: 0.10),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(AppRadius.small),
                       ),
                       child: const Icon(
                         Icons.warning_amber_rounded,
@@ -102,7 +109,7 @@ class _ChallengeCreateSheetState extends State<ChallengeCreateSheet> {
                     const StandardText(
                       text: '입력 확인',
                       fontSize: 18,
-                      color: Colors.black87,
+                      color: AppColors.textPrimary,
                       fontWeight: FontWeight.w700,
                     ),
                   ],
@@ -125,7 +132,7 @@ class _ChallengeCreateSheetState extends State<ChallengeCreateSheet> {
                       backgroundColor: themeProvider.primaryColor,
                       padding: const EdgeInsets.symmetric(vertical: 13),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(AppRadius.medium),
                       ),
                     ),
                     child: const StandardText(
@@ -233,7 +240,7 @@ class _ChallengeCreateSheetState extends State<ChallengeCreateSheet> {
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
                     color: primary.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(AppRadius.small),
                   ),
                   child: Icon(Icons.flag_outlined, color: primary, size: 20),
                 ),
@@ -241,7 +248,7 @@ class _ChallengeCreateSheetState extends State<ChallengeCreateSheet> {
                 const StandardText(
                   text: '새 챌린지 만들기',
                   fontSize: 18,
-                  color: Colors.black87,
+                  color: AppColors.textPrimary,
                 ),
               ],
             ),
@@ -317,16 +324,15 @@ class _ChallengeCreateSheetState extends State<ChallengeCreateSheet> {
             const SizedBox(height: 16),
             _Label(text: '마감일'),
             const SizedBox(height: 8),
-            InkWell(
+            PressableScale(
               onTap: () => _pickEndAt(context),
-              borderRadius: BorderRadius.circular(10),
               child: Container(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
                 decoration: BoxDecoration(
                   color: Colors.grey[50],
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: Colors.grey[200]!, width: 1),
+                  borderRadius: BorderRadius.circular(AppRadius.medium),
+                  border: Border.all(color: AppColors.border),
                 ),
                 child: Row(
                   children: [
@@ -335,7 +341,7 @@ class _ChallengeCreateSheetState extends State<ChallengeCreateSheet> {
                     StandardText(
                       text: _formatDate(_endAt),
                       fontSize: 14,
-                      color: Colors.black87,
+                      color: AppColors.textPrimary,
                     ),
                     const Spacer(),
                     Icon(Icons.chevron_right,
@@ -353,7 +359,7 @@ class _ChallengeCreateSheetState extends State<ChallengeCreateSheet> {
                   backgroundColor: _isLoading ? Colors.grey[300] : primary,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppRadius.medium),
                   ),
                 ),
                 child: _isLoading
@@ -389,6 +395,7 @@ class _ChallengeCreateSheetState extends State<ChallengeCreateSheet> {
   Future<void> _pickEndAt(BuildContext context) async {
     final today = _dateOnly(DateTime.now());
     final picked = await showModalBottomSheet<DateTime>(
+      sheetAnimationStyle: AppMotion.sheetStyle,
       context: context,
       isScrollControlled: true,
       builder: (_) => DatePickerHandler(
@@ -439,13 +446,14 @@ class _ChallengeCreateSheetState extends State<ChallengeCreateSheet> {
       runSpacing: 8,
       children: options.map((option) {
         final selected = selectedValue == option.$1;
-        return GestureDetector(
+        return PressableScale(
+          haptic: HapticLevel.selection,
           onTap: () => onSelected(option.$1),
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             decoration: BoxDecoration(
               color: selected ? primary.withOpacity(0.1) : Colors.grey[50],
-              borderRadius: BorderRadius.circular(9),
+              borderRadius: BorderRadius.circular(AppRadius.small),
               border: Border.all(
                 color: selected ? primary : Colors.grey[200]!,
                 width: 1,
@@ -473,7 +481,7 @@ class _ChallengeCreateSheetState extends State<ChallengeCreateSheet> {
     final style = StandardText(
       text: '',
       fontSize: 14,
-      color: Colors.black87,
+      color: AppColors.textPrimary,
     ).getTextStyle();
 
     return TextField(
@@ -490,15 +498,15 @@ class _ChallengeCreateSheetState extends State<ChallengeCreateSheet> {
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(AppRadius.medium),
           borderSide: BorderSide.none,
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(AppRadius.medium),
           borderSide: BorderSide(color: Colors.grey[200]!, width: 1),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(AppRadius.medium),
           borderSide: BorderSide(color: primary, width: 1.5),
         ),
       ),

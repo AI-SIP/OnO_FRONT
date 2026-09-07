@@ -1,4 +1,3 @@
-import 'package:intl/intl.dart';
 import 'package:ono/Model/PracticeNote/PracticeNotificationModel.dart';
 
 class PracticeNoteDetailModel {
@@ -44,12 +43,6 @@ class PracticeNoteDetailModel {
       practiceNotificationModel: practiceNotificationModel,
       problemIdList: problemIdList,
     );
-  }
-
-  // 날짜 포맷팅 함수
-  String? _formatDateTime(DateTime? dateTime) {
-    if (dateTime == null) return null;
-    return DateFormat('yyyy-MM-dd').format(dateTime);
   }
 
   void addPracticeCount() {

@@ -12,6 +12,7 @@ import '../Screen/ReviewDue/ReviewDueScreen.dart';
 import '../Service/Api/HttpService.dart';
 import 'AppErrorReporter.dart';
 import 'AppNavigator.dart';
+import '../Module/Motion/TossPageRoute.dart';
 
 class NotificationService {
   NotificationService._({
@@ -153,7 +154,7 @@ class NotificationService {
     if (type == 'review_due') {
       navigator.popUntil((route) => route.isFirst);
       navigator.push(
-        MaterialPageRoute(builder: (_) => const ReviewDueScreen()),
+        TossPageRoute(builder: (_) => const ReviewDueScreen()),
       );
     } else if (type == 'reengagement' || type == 'reengagement_monthly') {
       navigator.popUntil((route) => route.isFirst);

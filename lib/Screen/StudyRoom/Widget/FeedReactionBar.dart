@@ -4,6 +4,9 @@ import '../../../Model/StudyRoom/FeedReactionModel.dart';
 import '../../../Module/Emoji/OnoEmojiImage.dart';
 import '../../../Module/Emoji/OnoEmojiPicker.dart';
 import '../../../Module/Theme/ThemeHandler.dart';
+import '../../../Module/Motion/AppHaptic.dart';
+import '../../../Module/Motion/PressableScale.dart';
+import '../../../Module/Design/AppRadius.dart';
 
 class FeedReactionBar extends StatelessWidget {
   final List<FeedReactionModel> reactions;
@@ -72,7 +75,8 @@ class _ReactionChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isReacted = reaction.reactedByMe;
-    return GestureDetector(
+    return PressableScale(
+      haptic: HapticLevel.selection,
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.fromLTRB(9, 4, 11, 4),
@@ -80,7 +84,7 @@ class _ReactionChip extends StatelessWidget {
           color: isReacted
               ? themeProvider.primaryColor.withValues(alpha: 0.1)
               : Colors.grey[100],
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(AppRadius.large),
           border: Border.all(
             color: isReacted
                 ? themeProvider.primaryColor.withValues(alpha: 0.4)

@@ -15,6 +15,12 @@ import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/PracticeNoteProvider.dart';
 import '../../Util/AppErrorReporter.dart';
+import '../../Module/Motion/AppHaptic.dart';
+import '../../Module/Motion/PressableScale.dart';
+import '../../Module/Motion/TossDialog.dart';
+import '../../Module/Motion/AppMotion.dart';
+import '../../Module/Design/AppColors.dart';
+import '../../Module/Design/AppRadius.dart';
 
 class PracticeTitleWriteScreen extends StatefulWidget {
   final PracticeNoteRegisterModel? practiceRegisterModel;
@@ -177,13 +183,13 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
   void _showTitleRequiredDialog(BuildContext context) {
     final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
 
-    showDialog(
+    showTossDialog(
       context: context,
       builder: (BuildContext context) {
         return Dialog(
           backgroundColor: Colors.white,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(AppRadius.large),
           ),
           child: Container(
             padding: const EdgeInsets.all(24),
@@ -197,7 +203,7 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
                         color: Colors.orange.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(AppRadius.small),
                       ),
                       child: const Icon(
                         Icons.warning_rounded,
@@ -210,7 +216,7 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
                       text: '경고',
                       fontSize: MobileFontSize.reduced(context, 18),
                       fontWeight: FontWeight.w600,
-                      color: Colors.black87,
+                      color: AppColors.textPrimary,
                     ),
                   ],
                 ),
@@ -219,7 +225,7 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
                 StandardText(
                   text: '제목을 입력해 주세요!',
                   fontSize: MobileFontSize.reduced(context, 15),
-                  color: Colors.black87,
+                  color: AppColors.textPrimary,
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 24),
@@ -233,7 +239,7 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
                           horizontal: 16, vertical: 10),
                       backgroundColor: themeProvider.primaryColor,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(AppRadius.small),
                       ),
                     ),
                     child: const StandardText(
@@ -316,16 +322,6 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
     );
   }
 
-  Widget _buildTitleText() {
-    return StandardText(
-      text: widget.practiceNoteUpdateModel == null
-          ? "복습 세트의 이름을 입력해주세요"
-          : "수정할 이름을 입력해주세요",
-      fontSize: 18,
-      color: Colors.black,
-    );
-  }
-
   Widget _buildTextField(
       TextStyle standardTextStyle, ThemeHandler themeProvider) {
     return Column(
@@ -350,7 +346,7 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
               text: '복습 세트 제목',
               fontSize: 16,
               fontWeight: FontWeight.w500,
-              color: Colors.black87,
+              color: AppColors.textPrimary,
             ),
           ],
         ),
@@ -358,20 +354,20 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
         TextField(
           controller: _titleController,
           style: standardTextStyle.copyWith(
-            color: Colors.black87,
+            color: AppColors.textPrimary,
             fontSize: 15,
           ),
           decoration: InputDecoration(
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppRadius.medium),
               borderSide: BorderSide(color: Colors.grey[300]!, width: 1),
             ),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppRadius.medium),
               borderSide: BorderSide(color: Colors.grey[300]!, width: 1),
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppRadius.medium),
               borderSide: BorderSide(
                 color: themeProvider.primaryColor.withOpacity(0.5),
                 width: 2,
@@ -401,7 +397,7 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
       decoration: BoxDecoration(
         color: themeProvider.primaryColor.withOpacity(0.1),
         border: Border.all(color: themeProvider.primaryColor, width: 1.0),
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(AppRadius.medium),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -449,7 +445,7 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
           style: ElevatedButton.styleFrom(
             backgroundColor: themeProvider.primaryColor,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(AppRadius.large),
             ),
             elevation: 0,
           ),
@@ -489,7 +485,7 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
               text: '복습 주기 알림',
               fontSize: 16,
               fontWeight: FontWeight.w500,
-              color: Colors.black87,
+              color: AppColors.textPrimary,
             ),
           ],
         ),
@@ -497,8 +493,8 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
         Container(
           decoration: BoxDecoration(
             color: Colors.grey[50],
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.grey[200]!, width: 1),
+            borderRadius: BorderRadius.circular(AppRadius.medium),
+            border: Border.all(color: AppColors.border),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -511,7 +507,7 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
                     const StandardText(
                       text: '알림 사용',
                       fontSize: 15,
-                      color: Colors.black87,
+                      color: AppColors.textPrimary,
                     ),
                     Transform.scale(
                       scale: 0.8,
@@ -537,7 +533,7 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
                       const StandardText(
                         text: '반복 주기',
                         fontSize: 14,
-                        color: Colors.black54,
+                        color: AppColors.textSecondary,
                         fontWeight: FontWeight.w500,
                       ),
                       const SizedBox(height: 12),
@@ -569,7 +565,7 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
                         const StandardText(
                           text: '요일 선택',
                           fontSize: 14,
-                          color: Colors.black54,
+                          color: AppColors.textSecondary,
                           fontWeight: FontWeight.w500,
                         ),
                         const SizedBox(height: 12),
@@ -581,7 +577,8 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
                             final dayText =
                                 ['월', '화', '수', '목', '금', '토', '일'][index];
                             final isSelected = _selectedWeekdays.contains(day);
-                            return InkWell(
+                            return PressableScale(
+                              haptic: HapticLevel.selection,
                               onTap: () {
                                 setState(() {
                                   if (isSelected) {
@@ -591,7 +588,6 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
                                   }
                                 });
                               },
-                              borderRadius: BorderRadius.circular(20),
                               child: Container(
                                 width: 40,
                                 height: 40,
@@ -599,7 +595,8 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
                                   color: isSelected
                                       ? theme.primaryColor.withOpacity(0.1)
                                       : Colors.white,
-                                  borderRadius: BorderRadius.circular(20),
+                                  borderRadius:
+                                      BorderRadius.circular(AppRadius.xlarge),
                                   border: Border.all(
                                     color: isSelected
                                         ? theme.primaryColor
@@ -627,21 +624,20 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
                       const StandardText(
                         text: '알림 시각',
                         fontSize: 14,
-                        color: Colors.black54,
+                        color: AppColors.textSecondary,
                         fontWeight: FontWeight.w500,
                       ),
                       const SizedBox(height: 12),
-                      InkWell(
+                      PressableScale(
                         onTap: () => _showTimePickerBottomSheet(context),
-                        borderRadius: BorderRadius.circular(8),
                         child: Container(
                           padding: const EdgeInsets.symmetric(
                               horizontal: 16, vertical: 12),
                           decoration: BoxDecoration(
                             color: Colors.white,
-                            borderRadius: BorderRadius.circular(8),
-                            border:
-                                Border.all(color: Colors.grey[300]!, width: 1),
+                            borderRadius:
+                                BorderRadius.circular(AppRadius.small),
+                            border: Border.all(color: AppColors.border),
                           ),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -657,7 +653,7 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
                                   StandardText(
                                     text: _notifyTime.format(context),
                                     fontSize: 15,
-                                    color: Colors.black87,
+                                    color: AppColors.textPrimary,
                                   ),
                                 ],
                               ),
@@ -687,15 +683,14 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
     required VoidCallback onTap,
     required ThemeHandler theme,
   }) {
-    return InkWell(
+    return PressableScale(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 10),
         decoration: BoxDecoration(
           color:
               isSelected ? theme.primaryColor.withOpacity(0.1) : Colors.white,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(AppRadius.small),
           border: Border.all(
             color: isSelected ? theme.primaryColor : Colors.grey[300]!,
             width: isSelected ? 2 : 1,
@@ -716,6 +711,7 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
     final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
     final openTime = DateTime.now();
     showModalBottomSheet(
+      sheetAnimationStyle: AppMotion.sheetStyle,
       context: context,
       backgroundColor: Colors.transparent,
       isDismissible: false,
@@ -761,7 +757,7 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
                           color: themeProvider.primaryColor.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(AppRadius.small),
                         ),
                         child: Icon(
                           Icons.access_time,
@@ -774,7 +770,7 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
                         text: '알림 시각 선택',
                         fontSize: MobileFontSize.reduced(context, 18),
                         fontWeight: FontWeight.w600,
-                        color: Colors.black87,
+                        color: AppColors.textPrimary,
                       ),
                     ],
                   ),
@@ -812,7 +808,7 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         backgroundColor: themeProvider.primaryColor,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(AppRadius.medium),
                         ),
                       ),
                       child: const StandardText(
@@ -829,44 +825,6 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
           ),
         );
       },
-    );
-  }
-
-  Widget _buildNumberInput({
-    required String label,
-    required int value,
-    required ValueChanged<int> onChanged,
-    required ThemeHandler themeProvider,
-  }) {
-    return SizedBox(
-      width: double.infinity, // 폭을 최대한으로 늘립니다.
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween, // 양 끝 정렬
-        children: [
-          StandardText(
-            text: label,
-            fontSize: 16,
-            color: themeProvider.primaryColor,
-          ),
-          Row(
-            children: [
-              IconButton(
-                icon: const Icon(Icons.remove, color: Colors.black),
-                onPressed: value > 1 ? () => onChanged(value - 1) : null,
-              ),
-              StandardText(
-                text: '$value',
-                fontSize: 16,
-                color: Colors.black,
-              ),
-              IconButton(
-                icon: const Icon(Icons.add, color: Colors.black),
-                onPressed: () => onChanged(value + 1),
-              ),
-            ],
-          ),
-        ],
-      ),
     );
   }
 }

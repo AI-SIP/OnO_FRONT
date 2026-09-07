@@ -10,6 +10,15 @@ import '../../Module/Text/mobile_font_size.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/PracticeNoteProvider.dart';
+import '../../Module/Motion/AppHaptic.dart';
+import '../../Module/Motion/SuccessCheck.dart';
+import '../../Module/Motion/PressableScale.dart';
+import '../../Module/Motion/AnimatedCountText.dart';
+import '../../Module/Motion/AppMotion.dart';
+import '../../Module/Motion/AppearTransition.dart';
+import '../../Module/Design/AppColors.dart';
+import '../../Module/Design/AppRadius.dart';
+import '../../Module/Design/AppToast.dart';
 
 class PracticeCompletionScreen extends StatefulWidget {
   final int practiceId;
@@ -85,29 +94,64 @@ class _PracticeCompletionScreenState extends State<PracticeCompletionScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             SizedBox(height: screenHeight * 0.2),
-            Center(
-              child: SvgPicture.asset(
-                'assets/Icon/BigGreenFrog.svg',
-                height: screenHeight * 0.2,
+            // 복습을 끝낸 자리다. 캐릭터가 먼저 커지며 나타나고 문구와 기분
+            // 고르기가 차례로 따라온다.
+            AppearTransition(
+              offset: 0,
+              child: TweenAnimationBuilder<double>(
+                tween: Tween<double>(begin: 0.86, end: 1.0),
+                duration: AppMotion.slow,
+                curve: AppMotion.emphasized,
+                builder: (context, scale, child) =>
+                    Transform.scale(scale: scale, child: child),
+                child: Center(
+                  child: Stack(
+                    alignment: Alignment.bottomRight,
+                    children: [
+                      SvgPicture.asset(
+                        'assets/Icon/BigGreenFrog.svg',
+                        height: screenHeight * 0.2,
+                      ),
+                      // 화면만 바뀌면 끝났다는 느낌이 없어서, 캐릭터 옆에
+                      // 확인 표시가 그어지게 했다.
+                      SuccessCheck(
+                        size: screenHeight * 0.06,
+                        color: themeProvider.primaryColor,
+                        backgroundColor: Colors.white,
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ),
             SizedBox(height: screenHeight * 0.1),
-            StandardText(
-              text: '${widget.practiceRound}회차 복습을 완료했어요',
-              fontSize: MobileFontSize.reduced(context, 24),
-              fontWeight: FontWeight.bold,
-              color: Colors.black,
-              textAlign: TextAlign.center,
+            AppearTransition(
+              delay: AppMotion.stagger * 3,
+              child: StandardText(
+                text: '${widget.practiceRound}회차 복습을 완료했어요',
+                fontSize: MobileFontSize.reduced(context, 24),
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
+                textAlign: TextAlign.center,
+              ),
             ),
             SizedBox(height: screenHeight * 0.01),
-            StandardText(
-              text: '총 ${widget.totalProblems}문제를 풀었어요.',
-              fontSize: 16,
-              color: Colors.black54,
-              textAlign: TextAlign.center,
+            AppearTransition(
+              delay: AppMotion.stagger * 5,
+              child: AnimatedCountText(
+                value: widget.totalProblems,
+                formatter: (value) => '총 ${value.round()}문제를 풀었어요.',
+                fontSize: 16,
+                fontWeight: FontWeight.normal,
+                color: AppColors.textSecondary,
+                textAlign: TextAlign.center,
+              ),
             ),
             SizedBox(height: screenHeight * 0.06),
-            _buildMoodSection(themeProvider),
+            AppearTransition(
+              delay: AppMotion.stagger * 7,
+              child: _buildMoodSection(themeProvider),
+            ),
             SizedBox(height: screenHeight * 0.08),
           ],
         ),
@@ -125,7 +169,7 @@ class _PracticeCompletionScreenState extends State<PracticeCompletionScreen> {
           text: '이번 복습 어땠나요?',
           fontSize: MobileFontSize.reduced(context, 16),
           fontWeight: FontWeight.bold,
-          color: Colors.black87,
+          color: AppColors.textPrimary,
         ),
         const SizedBox(height: 12),
         SizedBox(
@@ -144,13 +188,13 @@ class _PracticeCompletionScreenState extends State<PracticeCompletionScreen> {
               if (emoji == null) return const SizedBox.shrink();
 
               final isSelected = _selectedMoodKey == emojiKey;
-              return InkWell(
+              return PressableScale(
+                haptic: HapticLevel.selection,
                 onTap: () {
                   setState(() {
                     _selectedMoodKey = isSelected ? null : emojiKey;
                   });
                 },
-                borderRadius: BorderRadius.circular(12),
                 child: Container(
                   width: 70,
                   padding: const EdgeInsets.symmetric(vertical: 8),
@@ -158,7 +202,7 @@ class _PracticeCompletionScreenState extends State<PracticeCompletionScreen> {
                     color: isSelected
                         ? themeProvider.primaryColor.withValues(alpha: 0.1)
                         : Colors.grey[50],
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppRadius.medium),
                     border: Border.all(
                       color: isSelected
                           ? themeProvider.primaryColor
@@ -191,7 +235,7 @@ class _PracticeCompletionScreenState extends State<PracticeCompletionScreen> {
   }
 
   Widget _buildMoreMoodButton(ThemeHandler themeProvider) {
-    return InkWell(
+    return PressableScale(
       onTap: () {
         OnoEmojiPicker.show(
           context,
@@ -199,13 +243,12 @@ class _PracticeCompletionScreenState extends State<PracticeCompletionScreen> {
           onSelected: (emoji) => setState(() => _selectedMoodKey = emoji.key),
         );
       },
-      borderRadius: BorderRadius.circular(12),
       child: Container(
         width: 70,
         decoration: BoxDecoration(
           color: Colors.grey[50],
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey[200]!),
+          borderRadius: BorderRadius.circular(AppRadius.medium),
+          border: Border.all(color: AppColors.border),
         ),
         child: Icon(
           Icons.more_horiz,
@@ -226,7 +269,6 @@ class _PracticeCompletionScreenState extends State<PracticeCompletionScreen> {
         child: ElevatedButton(
           onPressed: () async {
             final navigator = Navigator.of(context);
-            final messenger = ScaffoldMessenger.of(context);
             try {
               await practiceProvider.addPracticeCount(
                 widget.practiceId,
@@ -234,21 +276,12 @@ class _PracticeCompletionScreenState extends State<PracticeCompletionScreen> {
               );
             } catch (_) {
               if (!mounted) return;
-              messenger.showSnackBar(
-                const SnackBar(
-                  content: StandardText(
-                    text: '복습 완료를 저장하지 못했어요.',
-                    fontSize: 14,
-                    color: Colors.white,
-                  ),
-                  backgroundColor: Colors.red,
-                  duration: Duration(seconds: 2),
-                ),
-              );
+              AppToast.error('복습 완료를 저장하지 못했어요.');
               return;
             }
             if (!mounted) return;
-            FirebaseAnalytics.instance.logEvent(name: 'practice_session_completed');
+            FirebaseAnalytics.instance
+                .logEvent(name: 'practice_session_completed');
             // 2번 pop: PracticeCompletionScreen -> PracticeDetailScreen -> PracticeThumbnailScreen
             // 두 번째 pop에서 true를 반환하여 썸네일 업데이트 신호 전달
             if (navigator.canPop()) {
@@ -257,22 +290,12 @@ class _PracticeCompletionScreenState extends State<PracticeCompletionScreen> {
             if (navigator.canPop()) {
               navigator.pop(true); // PracticeDetailScreen 닫으면서 true 반환
             }
-            messenger.showSnackBar(
-              SnackBar(
-                content: const StandardText(
-                  text: '복습을 완료했습니다!',
-                  fontSize: 14,
-                  color: Colors.white,
-                ),
-                backgroundColor: themeProvider.primaryColor,
-                duration: const Duration(seconds: 2),
-              ),
-            );
+            AppToast.success('복습을 완료했습니다!');
           },
           style: ElevatedButton.styleFrom(
             backgroundColor: themeProvider.primaryColor,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(AppRadius.large),
             ),
             elevation: 0,
           ),

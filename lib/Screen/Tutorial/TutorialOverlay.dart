@@ -10,6 +10,10 @@ import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/TutorialProvider.dart';
 import 'TutorialStep.dart';
 import 'TutorialTargets.dart';
+import '../../Module/Motion/AppMotion.dart';
+import '../../Module/Motion/StepProgressBar.dart';
+import '../../Module/Design/AppRadius.dart';
+import '../../Module/Design/AppColors.dart';
 
 class TutorialOverlay extends StatefulWidget {
   final TutorialTargets targets;
@@ -23,14 +27,39 @@ class TutorialOverlay extends StatefulWidget {
   State<TutorialOverlay> createState() => _TutorialOverlayState();
 }
 
-class _TutorialOverlayState extends State<TutorialOverlay> {
-  static const Duration _motionDuration = Duration(milliseconds: 280);
-  static const Curve _motionCurve = Curves.easeOutCubic;
+class _TutorialOverlayState extends State<TutorialOverlay>
+    with SingleTickerProviderStateMixin {
+  // 다른 화면과 같은 값을 쓴다. 튜토리얼만 따로 놀지 않게 한다.
+  static const Duration _motionDuration = AppMotion.normal;
+  static const Curve _motionCurve = AppMotion.enter;
   static const String _guideFrogAsset = 'assets/FrogCharacter/FROG_LEVEL15.png';
   static const double _speechBorderWidth = 1.0;
 
   Rect? _targetRect;
   String? _lastStepId;
+
+  /// 단계가 바뀔 때 테두리를 한 번 두껍게 했다 되돌린다.
+  ///
+  /// 복습 세트와 스터디룸처럼 이어지는 두 단계가 둘 다 화면 전체를 가리키면
+  /// 테두리 위치가 거의 같아서 화면이 넘어간 줄 모른다. 한 번 반짝이면
+  /// 다음으로 넘어왔다는 것이 눈에 들어온다.
+  late final AnimationController _pulseController;
+
+  @override
+  void initState() {
+    super.initState();
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: AppMotion.slow,
+      value: 1.0,
+    );
+  }
+
+  @override
+  void dispose() {
+    _pulseController.dispose();
+    super.dispose();
+  }
 
   @override
   void didChangeDependencies() {
@@ -57,8 +86,10 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
 
     _lastStepId = step.id;
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      unawaited(_updateTargetRect());
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await _updateTargetRect();
+      if (!mounted) return;
+      _pulseController.forward(from: 0.0);
     });
   }
 
@@ -159,7 +190,7 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
           padding: EdgeInsets.all(cardPadding),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(AppRadius.large),
           ),
           child: ConstrainedBox(
             constraints: BoxConstraints(maxHeight: maxHeight),
@@ -177,7 +208,7 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
                         StandardText(
                           text: 'OnO를 빠르게 둘러볼까요?',
                           fontSize: titleSize,
-                          color: Colors.black87,
+                          color: AppColors.textPrimary,
                           fontWeight: FontWeight.w700,
                         ),
                         const SizedBox(height: 14),
@@ -210,7 +241,8 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
                           backgroundColor: themeProvider.primaryColor,
                           foregroundColor: Colors.white,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius:
+                                BorderRadius.circular(AppRadius.small),
                           ),
                         ),
                         child: StandardText(
@@ -256,7 +288,7 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
           padding: EdgeInsets.all(cardPadding),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(AppRadius.large),
           ),
           child: ConstrainedBox(
             constraints: BoxConstraints(maxHeight: maxHeight),
@@ -274,7 +306,7 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
                         StandardText(
                           text: '좋아요, 이제 OnO와 함께 시작해봐요!',
                           fontSize: titleSize,
-                          color: Colors.black87,
+                          color: AppColors.textPrimary,
                           fontWeight: FontWeight.w700,
                         ),
                         const SizedBox(height: 14),
@@ -294,6 +326,12 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
                     children: [
                       TextButton(
                         onPressed: tutorialProvider.previous,
+                        style: TextButton.styleFrom(
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 8),
+                          minimumSize: Size.zero,
+                        ),
                         child: StandardText(
                           text: '이전',
                           fontSize: buttonSize,
@@ -306,8 +344,13 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: themeProvider.primaryColor,
                           foregroundColor: Colors.white,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 20, vertical: 12),
+                          minimumSize: Size.zero,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius:
+                                BorderRadius.circular(AppRadius.small),
                           ),
                         ),
                         child: StandardText(
@@ -358,7 +401,13 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
     if (rect != null) {
       final below = rect.bottom + 18;
       final above = rect.top - layoutCardHeight - 18;
-      if (below + layoutCardHeight < availableBottom) {
+      // 가리키는 것이 화면 아래쪽에 있으면 설명 카드를 위에 둔다. 그러지
+      // 않으면 카드가 기본 자리인 하단에 눌러앉아 정작 가리키는 버튼을
+      // 덮어 버린다. + 추가 버튼을 설명하는 단계가 그랬다.
+      final targetIsLow = rect.center.dy > size.height / 2;
+      if (targetIsLow && above > minCardTop) {
+        cardTop = above;
+      } else if (below + layoutCardHeight < availableBottom) {
         cardTop = below;
       } else if (above > safeTop) {
         cardTop = above;
@@ -393,21 +442,29 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
                 duration: _motionDuration,
                 curve: _motionCurve,
                 opacity: 1,
-                child: Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(18),
-                    border: Border.all(
-                      color: themeProvider.primaryColor,
-                      width: 3,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color:
-                            themeProvider.primaryColor.withValues(alpha: 0.35),
-                        blurRadius: 18,
+                child: AnimatedBuilder(
+                  animation: _pulseController,
+                  builder: (context, _) {
+                    // 0 에서 1 로 가는 동안 두껍고 진했다가 제자리로 돌아온다.
+                    final t = Curves.easeOut.transform(_pulseController.value);
+                    final emphasis = 1.0 - t;
+                    return Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(AppRadius.large),
+                        border: Border.all(
+                          color: themeProvider.primaryColor,
+                          width: 3 + 3 * emphasis,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: themeProvider.primaryColor
+                                .withValues(alpha: 0.35 + 0.35 * emphasis),
+                            blurRadius: 18 + 14 * emphasis,
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
+                    );
+                  },
                 ),
               ),
             ),
@@ -422,9 +479,9 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
             constraints: BoxConstraints(maxHeight: cardMaxHeight),
             child: SingleChildScrollView(
               child: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 180),
-                switchInCurve: Curves.easeOut,
-                switchOutCurve: Curves.easeIn,
+                duration: AppMotion.fast,
+                switchInCurve: AppMotion.enter,
+                switchOutCurve: AppMotion.exit,
                 transitionBuilder: (child, animation) {
                   return FadeTransition(
                     opacity: animation,
@@ -468,7 +525,7 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
       padding: cardPadding,
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppRadius.large),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -486,11 +543,21 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
                   fontSize: progressSize,
                   color: themeProvider.primaryColor,
                 ),
+                const SizedBox(height: 8),
+                // 숫자만으로는 얼마나 남았는지 잘 안 들어와서 막대를 함께 둔다.
+                StepProgressBar(
+                  currentStep: tutorialProvider.currentStepIndex + 1,
+                  totalSteps: tutorialSteps.length,
+                  color: themeProvider.primaryColor,
+                  backgroundColor:
+                      themeProvider.primaryColor.withValues(alpha: 0.15),
+                  height: 3,
+                ),
                 const SizedBox(height: 12),
                 StandardText(
                   text: step.title,
                   fontSize: titleSize,
-                  color: Colors.black87,
+                  color: AppColors.textPrimary,
                   fontWeight: FontWeight.w700,
                 ),
                 const SizedBox(height: 8),
@@ -508,20 +575,27 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
           Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Flexible(
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: TextButton(
-                    onPressed: tutorialProvider.skip,
-                    child: StandardText(
-                      text: '건너뛰기',
-                      fontSize: buttonSize,
-                      color: Colors.grey[700]!,
-                    ),
-                  ),
+              TextButton(
+                onPressed: tutorialProvider.skip,
+                // Material 버튼은 기본으로 48px 터치 영역을 확보하느라
+                // 좌우에 여백이 붙는다. 그대로 두면 위 설명 텍스트와
+                // 시작점, 끝점이 어긋난다.
+                style: TextButton.styleFrom(
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+                  minimumSize: Size.zero,
+                ),
+                child: StandardText(
+                  text: '건너뛰기',
+                  fontSize: buttonSize,
+                  color: Colors.grey[700]!,
                 ),
               ),
-              Flexible(
+              // 남는 자리를 오른쪽 묶음이 다 가져가야 카드 오른쪽 끝에 붙는다.
+              // 양쪽을 Flexible 로 두면 남는 폭을 절반씩 갈라 가져서, 오른쪽
+              // 버튼과 카드 사이에 빈 자리가 남았다.
+              Expanded(
                 child: Wrap(
                   spacing: 8,
                   runSpacing: 4,
@@ -531,6 +605,12 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
                     if (tutorialProvider.currentStepIndex > 0)
                       TextButton(
                         onPressed: tutorialProvider.previous,
+                        style: TextButton.styleFrom(
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 8),
+                          minimumSize: Size.zero,
+                        ),
                         child: StandardText(
                           text: '이전',
                           fontSize: buttonSize,
@@ -542,8 +622,13 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: themeProvider.primaryColor,
                         foregroundColor: Colors.white,
+                        elevation: 0,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 20, vertical: 12),
+                        minimumSize: Size.zero,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(AppRadius.medium),
                         ),
                       ),
                       child: StandardText(
@@ -603,7 +688,7 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
                 padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
                 decoration: BoxDecoration(
                   color: bubbleColor,
-                  borderRadius: BorderRadius.circular(18),
+                  borderRadius: BorderRadius.circular(AppRadius.large),
                   border: Border.all(
                     color: bubbleBorderColor,
                     width: _speechBorderWidth,

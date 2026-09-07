@@ -9,8 +9,13 @@ import '../../../Module/Text/HandWriteText.dart';
 import '../../../Module/Text/mobile_font_size.dart';
 import '../../../Module/Text/StandardText.dart';
 import '../../../Module/Text/UnderlinedText.dart';
-import '../../../Module/Theme/ThemeHandler.dart';
 import '../../../Provider/ProblemsProvider.dart';
+import '../../../Module/Motion/AppHaptic.dart';
+import '../../../Module/Motion/PressableScale.dart';
+import '../../../Module/Motion/TossPageRoute.dart';
+import '../../../Module/Motion/TossDialog.dart';
+import '../../../Module/Design/AppRadius.dart';
+import '../../../Module/Design/AppColors.dart';
 
 Widget buildRepeatSection(
     BuildContext ctx, ProblemModel problem, Color iconColor) {
@@ -39,23 +44,23 @@ Widget buildRepeatSection(
                     '${idx + 1}. 복습 날짜 : ${DateFormat('yyyy년 MM월 dd일').format(solve.createdAt)}',
                 fontSize: 18),
             const SizedBox(height: 10),
-            GestureDetector(
+            PressableScale(
+              haptic: HapticLevel.none,
               onTap: () => Navigator.push(
                   ctx,
-                  MaterialPageRoute(
+                  TossPageRoute(
                       builder: (_) =>
                           FullScreenImage(imagePath: solve.imageUrl))),
               onLongPress: () async {
                 final problemsProvider =
                     Provider.of<ProblemsProvider>(ctx, listen: false);
-                final themeProvider =
-                    Provider.of<ThemeHandler>(ctx, listen: false);
-                final should = await showDialog<bool>(
+                final should = await showTossDialog<bool>(
                     context: ctx,
                     builder: (_) => Dialog(
                           backgroundColor: Colors.white,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
+                            borderRadius:
+                                BorderRadius.circular(AppRadius.large),
                           ),
                           child: Container(
                             padding: const EdgeInsets.all(24),
@@ -69,7 +74,8 @@ Widget buildRepeatSection(
                                       padding: const EdgeInsets.all(8),
                                       decoration: BoxDecoration(
                                         color: Colors.red.withOpacity(0.1),
-                                        borderRadius: BorderRadius.circular(8),
+                                        borderRadius: BorderRadius.circular(
+                                            AppRadius.small),
                                       ),
                                       child: const Icon(
                                         Icons.delete_forever,
@@ -82,7 +88,7 @@ Widget buildRepeatSection(
                                       text: '삭제 확인',
                                       fontSize: MobileFontSize.reduced(ctx, 18),
                                       fontWeight: FontWeight.w600,
-                                      color: Colors.black87,
+                                      color: AppColors.textPrimary,
                                     ),
                                   ],
                                 ),
@@ -91,7 +97,7 @@ Widget buildRepeatSection(
                                 StandardText(
                                   text: '이 복습 이미지를 정말 삭제하시겠습니까?',
                                   fontSize: MobileFontSize.reduced(ctx, 15),
-                                  color: Colors.black87,
+                                  color: AppColors.textPrimary,
                                   textAlign: TextAlign.center,
                                 ),
                                 const SizedBox(height: 24),
@@ -107,15 +113,15 @@ Widget buildRepeatSection(
                                               horizontal: 12, vertical: 8),
                                           backgroundColor: Colors.grey[100],
                                           shape: RoundedRectangleBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(8),
+                                            borderRadius: BorderRadius.circular(
+                                                AppRadius.small),
                                           ),
                                         ),
                                         child: StandardText(
                                           text: '취소',
                                           fontSize:
                                               MobileFontSize.reduced(ctx, 14),
-                                          color: Colors.black87,
+                                          color: AppColors.textPrimary,
                                         ),
                                       ),
                                     ),
@@ -129,8 +135,8 @@ Widget buildRepeatSection(
                                               horizontal: 12, vertical: 8),
                                           backgroundColor: Colors.red,
                                           shape: RoundedRectangleBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(8),
+                                            borderRadius: BorderRadius.circular(
+                                                AppRadius.small),
                                           ),
                                         ),
                                         child: const StandardText(
@@ -156,7 +162,7 @@ Widget buildRepeatSection(
                 height: MediaQuery.of(ctx).size.height * 0.5,
                 decoration: BoxDecoration(
                     color: iconColor.withOpacity(0.05),
-                    borderRadius: BorderRadius.circular(10)),
+                    borderRadius: BorderRadius.circular(AppRadius.medium)),
                 child: DisplayImage(
                     imagePath: solve.imageUrl, fit: BoxFit.contain),
               ),

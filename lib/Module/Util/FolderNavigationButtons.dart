@@ -17,6 +17,10 @@ import '../Dialog/SnackBarDialog.dart';
 import '../Image/ImagePickerHandler.dart';
 import '../Text/StandardText.dart';
 import '../Theme/ThemeHandler.dart';
+import '../Motion/PressableScale.dart';
+import '../Motion/TossDialog.dart';
+import '../Design/AppRadius.dart';
+import '../Design/AppColors.dart';
 
 class FolderNavigationButtons extends StatefulWidget {
   final BuildContext context;
@@ -94,7 +98,7 @@ class _FolderNavigationButtonsState extends State<FolderNavigationButtons> {
           ),
           backgroundColor: themeProvider.primaryColor,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppRadius.medium),
           ),
         ),
         child: isSolved
@@ -175,7 +179,7 @@ class _FolderNavigationButtonsState extends State<FolderNavigationButtons> {
     final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
     bool isLoading = false; // 로딩 상태 변수 외부로 이동
 
-    showDialog(
+    showTossDialog(
       context: context,
       builder: (BuildContext context) {
         return StatefulBuilder(
@@ -183,7 +187,7 @@ class _FolderNavigationButtonsState extends State<FolderNavigationButtons> {
             return Dialog(
               backgroundColor: Colors.white,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(AppRadius.large),
               ),
               insetPadding:
                   const EdgeInsets.symmetric(horizontal: 30, vertical: 30),
@@ -200,7 +204,8 @@ class _FolderNavigationButtonsState extends State<FolderNavigationButtons> {
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
                             color: themeProvider.primaryColor.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius:
+                                BorderRadius.circular(AppRadius.small),
                           ),
                           child: Icon(
                             Icons.touch_app,
@@ -213,13 +218,13 @@ class _FolderNavigationButtonsState extends State<FolderNavigationButtons> {
                           text: '복습을 완료했나요?',
                           fontSize: 20,
                           fontWeight: FontWeight.w600,
-                          color: Colors.black87,
+                          color: AppColors.textPrimary,
                         ),
                       ],
                     ),
                     const SizedBox(height: 24),
                     // 이미지 선택 영역
-                    GestureDetector(
+                    PressableScale(
                       onTap: () {
                         FirebaseAnalytics.instance.logEvent(
                           name: 'add_solve_image_button_click',
@@ -239,7 +244,7 @@ class _FolderNavigationButtonsState extends State<FolderNavigationButtons> {
                         width: double.infinity,
                         decoration: BoxDecoration(
                           color: Colors.grey[50],
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(AppRadius.medium),
                           border: Border.all(
                             color: Colors.grey[300]!,
                             width: 2,
@@ -272,7 +277,8 @@ class _FolderNavigationButtonsState extends State<FolderNavigationButtons> {
                                 ],
                               )
                             : ClipRRect(
-                                borderRadius: BorderRadius.circular(12),
+                                borderRadius:
+                                    BorderRadius.circular(AppRadius.medium),
                                 child: Image.file(
                                   File(selectedImage!.path),
                                   fit: BoxFit.cover,
@@ -293,13 +299,14 @@ class _FolderNavigationButtonsState extends State<FolderNavigationButtons> {
                               padding: const EdgeInsets.symmetric(vertical: 14),
                               backgroundColor: Colors.grey[100],
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
+                                borderRadius:
+                                    BorderRadius.circular(AppRadius.small),
                               ),
                             ),
                             child: const StandardText(
                               text: '취소',
                               fontSize: 15,
-                              color: Colors.black87,
+                              color: AppColors.textPrimary,
                             ),
                           ),
                         ),
@@ -357,7 +364,8 @@ class _FolderNavigationButtonsState extends State<FolderNavigationButtons> {
                                           isLoading = false;
                                         });
 
-                                        debugPrint("problemId: $problemId solve");
+                                        debugPrint(
+                                            "problemId: $problemId solve");
                                         LoadingDialog.hideFromNavigator(
                                           rootNavigator,
                                         );
@@ -475,7 +483,8 @@ class _FolderNavigationButtonsState extends State<FolderNavigationButtons> {
                                   ? Colors.grey[300]
                                   : themeProvider.primaryColor,
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
+                                borderRadius:
+                                    BorderRadius.circular(AppRadius.small),
                               ),
                             ),
                             child: isLoading

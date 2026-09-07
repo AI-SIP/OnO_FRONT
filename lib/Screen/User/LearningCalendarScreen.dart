@@ -10,6 +10,16 @@ import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Service/Api/StudyCalendar/StudyCalendarService.dart';
 import '../../Util/AppSnackBar.dart';
+import '../../Module/Motion/AppHaptic.dart';
+import '../../Module/Motion/PressableScale.dart';
+import '../../Module/Motion/AnimatedGauge.dart';
+import '../../Module/Motion/Skeleton.dart';
+import '../../Module/Motion/TossDialog.dart';
+import '../../Module/Motion/AppMotion.dart';
+import '../../Module/Motion/AppearTransition.dart';
+import '../../Module/Design/AppColors.dart';
+import '../../Module/Design/AppRadius.dart';
+import '../../Module/Design/AppToast.dart';
 
 class LearningCalendarScreen extends StatefulWidget {
   const LearningCalendarScreen({super.key});
@@ -84,11 +94,11 @@ class _LearningCalendarScreenState extends State<LearningCalendarScreen> {
     }
     if (!mounted) return;
     FirebaseAnalytics.instance.logEvent(name: 'calendar_diary_saved');
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('다이어리가 저장되었어요.'),
-        duration: Duration(seconds: 2),
-      ),
+    AppToast.show(
+      message: '다이어리가 저장되었어요.',
+      type: ToastType.success,
+      context: context,
+      duration: const Duration(seconds: 2),
     );
   }
 
@@ -161,10 +171,15 @@ class _LearningCalendarScreenState extends State<LearningCalendarScreen> {
           fontSize: 18,
           color: themeProvider.primaryColor,
         ),
-        iconTheme: const IconThemeData(color: Colors.black87),
+        iconTheme: const IconThemeData(color: AppColors.textPrimary),
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const SkeletonList(
+              itemCount: 3,
+              itemHeight: 180,
+              spacing: 16,
+              padding: EdgeInsets.fromLTRB(16, 16, 16, 16),
+            )
           : SingleChildScrollView(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -201,9 +216,9 @@ class _LearningCalendarScreenState extends State<LearningCalendarScreen> {
           IconButton(
             icon: const Icon(Icons.chevron_left),
             onPressed: _prevMonth,
-            color: Colors.black87,
+            color: AppColors.textPrimary,
           ),
-          GestureDetector(
+          PressableScale(
             onTap: () => _showMonthPicker(themeProvider),
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -213,7 +228,7 @@ class _LearningCalendarScreenState extends State<LearningCalendarScreen> {
                   StandardText(
                       text: '$_year년 $_month월',
                       fontSize: 16,
-                      color: Colors.black87),
+                      color: AppColors.textPrimary),
                   const SizedBox(width: 4),
                   Icon(Icons.arrow_drop_down,
                       size: 18, color: Colors.grey[600]),
@@ -235,7 +250,7 @@ class _LearningCalendarScreenState extends State<LearningCalendarScreen> {
     int pickerYear = _year;
     final now = DateTime.now();
 
-    showDialog(
+    showTossDialog(
       context: context,
       builder: (ctx) {
         return StatefulBuilder(
@@ -243,7 +258,7 @@ class _LearningCalendarScreenState extends State<LearningCalendarScreen> {
             return Dialog(
               backgroundColor: Colors.white,
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16)),
+                  borderRadius: BorderRadius.circular(AppRadius.large)),
               child: Padding(
                 padding: const EdgeInsets.all(20),
                 child: Column(
@@ -256,12 +271,12 @@ class _LearningCalendarScreenState extends State<LearningCalendarScreen> {
                         IconButton(
                           icon: const Icon(Icons.chevron_left),
                           onPressed: () => setDialogState(() => pickerYear--),
-                          color: Colors.black87,
+                          color: AppColors.textPrimary,
                         ),
                         StandardText(
                             text: '$pickerYear년',
                             fontSize: 16,
-                            color: Colors.black87),
+                            color: AppColors.textPrimary),
                         IconButton(
                           icon: Icon(
                             Icons.chevron_right,
@@ -295,7 +310,8 @@ class _LearningCalendarScreenState extends State<LearningCalendarScreen> {
                         final isSelected =
                             pickerYear == _year && month == _month;
 
-                        return GestureDetector(
+                        return PressableScale(
+                          haptic: HapticLevel.selection,
                           onTap: isFuture
                               ? null
                               : () {
@@ -312,7 +328,8 @@ class _LearningCalendarScreenState extends State<LearningCalendarScreen> {
                               color: isSelected
                                   ? themeProvider.primaryColor
                                   : Colors.grey[100],
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius:
+                                  BorderRadius.circular(AppRadius.small),
                             ),
                             child: Center(
                               child: StandardText(
@@ -347,7 +364,7 @@ class _LearningCalendarScreenState extends State<LearningCalendarScreen> {
             child: StandardText(
               text: label,
               fontSize: 12,
-              color: Colors.grey[600]!,
+              color: AppColors.textTertiary,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -377,57 +394,63 @@ class _LearningCalendarScreenState extends State<LearningCalendarScreen> {
     final rows = (totalCells / 7).ceil();
 
     return Column(
+      // 달력이 첫 주부터 한 줄씩 내려오며 그려진다. 한꺼번에 나타나면
+      // 어느 날에 기록이 있는지 눈이 따라가기 어렵다.
       children: List.generate(rows, (rowIndex) {
-        return Row(
-          children: List.generate(7, (colIndex) {
-            final cellIndex = rowIndex * 7 + colIndex;
-            final day = cellIndex - firstWeekday + 1;
+        return AppearTransition(
+          delay: AppMotion.stagger * rowIndex,
+          child: Row(
+            children: List.generate(7, (colIndex) {
+              final cellIndex = rowIndex * 7 + colIndex;
+              final day = cellIndex - firstWeekday + 1;
 
-            if (day < 1 || day > daysInMonth) {
+              if (day < 1 || day > daysInMonth) {
+                return Expanded(
+                  child: SizedBox(height: cellSize + cellPadding),
+                );
+              }
+
+              final cellDate = DateTime(_year, _month, day);
+              final isFuture =
+                  cellDate.isAfter(DateTime(now.year, now.month, now.day));
+              final isToday = cellDate.year == now.year &&
+                  cellDate.month == now.month &&
+                  cellDate.day == now.day;
+
+              final record = _calendarData?.recordFor(day);
+              final intensity = record?.intensityLevel ?? 0;
+
               return Expanded(
-                child: SizedBox(height: cellSize + cellPadding),
-              );
-            }
-
-            final cellDate = DateTime(_year, _month, day);
-            final isFuture =
-                cellDate.isAfter(DateTime(now.year, now.month, now.day));
-            final isToday = cellDate.year == now.year &&
-                cellDate.month == now.month &&
-                cellDate.day == now.day;
-
-            final record = _calendarData?.recordFor(day);
-            final intensity = record?.intensityLevel ?? 0;
-
-            return Expanded(
-              child: Padding(
-                padding: const EdgeInsets.all(2),
-                child: Center(
-                  child: SizedBox(
-                    width: cellSize,
-                    height: cellSize,
-                    child: _CalendarCell(
-                      day: day,
-                      isToday: isToday,
-                      isFuture: isFuture,
-                      intensityLevel: intensity,
-                      moodEmojiKey: record?.moodEmojiKey,
-                      themeProvider: themeProvider,
-                      onTap: isFuture
-                          ? null
-                          : () {
-                              final newDay = (_selectedDay == day) ? null : day;
-                              setState(() => _selectedDay = newDay);
-                              if (newDay != null) {
-                                _loadDiary(_year, _month, newDay);
-                              }
-                            },
+                child: Padding(
+                  padding: const EdgeInsets.all(2),
+                  child: Center(
+                    child: SizedBox(
+                      width: cellSize,
+                      height: cellSize,
+                      child: _CalendarCell(
+                        day: day,
+                        isToday: isToday,
+                        isFuture: isFuture,
+                        intensityLevel: intensity,
+                        moodEmojiKey: record?.moodEmojiKey,
+                        themeProvider: themeProvider,
+                        onTap: isFuture
+                            ? null
+                            : () {
+                                final newDay =
+                                    (_selectedDay == day) ? null : day;
+                                setState(() => _selectedDay = newDay);
+                                if (newDay != null) {
+                                  _loadDiary(_year, _month, newDay);
+                                }
+                              },
+                      ),
                     ),
                   ),
                 ),
-              ),
-            );
-          }),
+              );
+            }),
+          ),
         );
       }),
     );
@@ -439,14 +462,15 @@ class _LearningCalendarScreenState extends State<LearningCalendarScreen> {
         padding: const EdgeInsets.symmetric(vertical: 9),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Colors.grey[200]!),
+          borderRadius: BorderRadius.circular(AppRadius.small),
+          border: Border.all(color: AppColors.border),
         ),
         child: Column(
           children: [
             StandardText(text: value, fontSize: 15, color: primaryColor),
             const SizedBox(height: 2),
-            StandardText(text: label, fontSize: 10, color: Colors.black38),
+            StandardText(
+                text: label, fontSize: 10, color: AppColors.textTertiary),
           ],
         ),
       ),
@@ -468,8 +492,8 @@ class _LearningCalendarScreenState extends State<LearningCalendarScreen> {
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: Colors.grey[50],
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey[200]!),
+          borderRadius: BorderRadius.circular(AppRadius.medium),
+          border: Border.all(color: AppColors.border),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -482,7 +506,7 @@ class _LearningCalendarScreenState extends State<LearningCalendarScreen> {
                   fontSize: 14,
                   color: primaryColor,
                 ),
-                GestureDetector(
+                PressableScale(
                   onTap: () => setState(() => _selectedDay = null),
                   child: Icon(Icons.close, size: 16, color: Colors.grey[400]),
                 ),
@@ -518,7 +542,7 @@ class _LearningCalendarScreenState extends State<LearningCalendarScreen> {
                 StandardText(
                   text: '복습한 항목',
                   fontSize: 11,
-                  color: Colors.black45,
+                  color: AppColors.textTertiary,
                 ),
                 const SizedBox(height: 6),
                 ...record.reviewedItems.map((item) => Padding(
@@ -532,7 +556,7 @@ class _LearningCalendarScreenState extends State<LearningCalendarScreen> {
                             child: StandardText(
                               text: item,
                               fontSize: 12,
-                              color: Colors.black87,
+                              color: AppColors.textPrimary,
                             ),
                           ),
                         ],
@@ -555,12 +579,12 @@ class _LearningCalendarScreenState extends State<LearningCalendarScreen> {
       children: [
         Row(
           children: [
-            Icon(Icons.edit_note, size: 15, color: Colors.black45),
+            Icon(Icons.edit_note, size: 15, color: AppColors.textTertiary),
             const SizedBox(width: 6),
             StandardText(
               text: '하루 기록',
               fontSize: 12,
-              color: Colors.black45,
+              color: AppColors.textTertiary,
             ),
           ],
         ),
@@ -569,26 +593,25 @@ class _LearningCalendarScreenState extends State<LearningCalendarScreen> {
           controller: _diaryController,
           maxLines: 4,
           maxLength: 300,
-          style: const TextStyle(fontSize: 13, color: Colors.black87),
+          style: const TextStyle(fontSize: 13, color: AppColors.textPrimary),
           decoration: InputDecoration(
             hintText: '오늘 하루를 기록해보세요...',
             hintStyle: TextStyle(fontSize: 13, color: Colors.grey[400]),
             filled: true,
             fillColor: Colors.white,
-            counterStyle:
-                TextStyle(fontSize: 10, color: Colors.grey[400]),
+            counterStyle: TextStyle(fontSize: 10, color: Colors.grey[400]),
             contentPadding:
                 const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(AppRadius.small),
               borderSide: BorderSide(color: Colors.grey[300]!),
             ),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(AppRadius.small),
               borderSide: BorderSide(color: Colors.grey[300]!),
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(AppRadius.small),
               borderSide: BorderSide(color: primaryColor.withOpacity(0.5)),
             ),
           ),
@@ -607,10 +630,9 @@ class _LearningCalendarScreenState extends State<LearningCalendarScreen> {
             style: TextButton.styleFrom(
               backgroundColor: primaryColor,
               foregroundColor: Colors.white,
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(AppRadius.small),
               ),
               minimumSize: const Size(72, 34),
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -665,30 +687,24 @@ class _LearningCalendarScreenState extends State<LearningCalendarScreen> {
               StandardText(
                 text: '이번 달 학습',
                 fontSize: 14,
-                color: Colors.black87,
+                color: AppColors.textPrimary,
               ),
               StandardText(
                 text: studyDays != null
                     ? '${studyDays}일 / ${daysInMonth}일'
                     : '--',
                 fontSize: 14,
-                color: Colors.black54,
+                color: AppColors.textSecondary,
               ),
             ],
           ),
           const SizedBox(height: 8),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: LinearProgressIndicator(
-              value: studyDays != null
-                  ? (studyDays / daysInMonth).clamp(0.0, 1.0)
-                  : 0.0,
-              backgroundColor: Colors.grey[200],
-              valueColor: AlwaysStoppedAnimation<Color>(
-                themeProvider.primaryColor.withOpacity(0.7),
-              ),
-              minHeight: 10,
-            ),
+          AnimatedLinearGauge(
+            value: studyDays != null ? studyDays / daysInMonth : 0.0,
+            color: themeProvider.primaryColor.withOpacity(0.7),
+            backgroundColor: Colors.grey[200],
+            height: 10,
+            borderRadius: 8,
           ),
         ],
       ),
@@ -701,15 +717,15 @@ class _LearningCalendarScreenState extends State<LearningCalendarScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.grey[200]!),
+        borderRadius: BorderRadius.circular(AppRadius.small),
+        border: Border.all(color: AppColors.border),
       ),
       child: Row(
         children: [
           StandardText(
             text: '오늘의 감정',
             fontSize: 12,
-            color: Colors.black54,
+            color: AppColors.textSecondary,
           ),
           const SizedBox(width: 10),
           if (record.moodEmojiKey != null)
@@ -777,8 +793,8 @@ class _LearningCalendarScreenState extends State<LearningCalendarScreen> {
       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
       decoration: BoxDecoration(
         color: Colors.grey[50],
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[200]!),
+        borderRadius: BorderRadius.circular(AppRadius.medium),
+        border: Border.all(color: AppColors.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -794,7 +810,7 @@ class _LearningCalendarScreenState extends State<LearningCalendarScreen> {
               StandardText(
                 text: emoji,
                 fontSize: 20,
-                color: Colors.black87,
+                color: AppColors.textPrimary,
               ),
               const SizedBox(width: 6),
               StandardText(
@@ -895,7 +911,8 @@ class _CalendarCell extends StatelessWidget {
   Widget build(BuildContext context) {
     final bgColor = _getBackgroundColor();
 
-    return GestureDetector(
+    return PressableScale(
+      haptic: HapticLevel.selection,
       onTap: onTap,
       child: Container(
         decoration: BoxDecoration(

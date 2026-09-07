@@ -17,12 +17,21 @@ import '../../Provider/UserProvider.dart';
 import '../../Service/Api/FileUpload/FileUploadService.dart';
 import '../Tutorial/TutorialTargets.dart';
 import 'LoginScreen.dart';
+import '../../Module/Motion/AppearTransition.dart';
+import '../../Module/Motion/MotionReplayScope.dart';
+import '../../Module/Motion/PressableScale.dart';
+import '../../Module/Motion/TossBottomSheet.dart';
+import '../../Module/Motion/TossPageRoute.dart';
 import 'Widget/AccountActionButtons.dart';
 import 'Widget/ReviewReportScreen.dart';
 import 'Widget/SettingMenuButtons.dart';
 import 'Widget/ThemeChangeButton.dart';
 import 'Widget/StreakCard.dart';
 import 'Widget/UserLevelCard.dart';
+import '../../Module/Motion/TossDialog.dart';
+import '../../Module/Design/AppRadius.dart';
+import '../../Module/Design/AppColors.dart';
+import '../../Module/Design/AppToast.dart';
 
 class SettingScreen extends StatefulWidget {
   final TutorialTargets? tutorialTargets;
@@ -37,15 +46,41 @@ class SettingScreen extends StatefulWidget {
 }
 
 class _SettingScreenState extends State<SettingScreen> {
+  /// 마이 페이지가 홈의 몇 번째 탭인지. main.dart 의 widgetOptions 순서를 따른다.
+  static const int _myPageTabIndex = 3;
+
+  /// 카드가 하나씩 들어오는 간격.
+  static const Duration _cardGap = Duration(milliseconds: 80);
+
+  /// 이 탭에 몇 번째로 들어왔는지.
+  ///
+  /// 홈이 탭 넷을 IndexedStack 으로 들고 있어서 앱을 켜는 순간 이 화면까지
+  /// 함께 만들어진다. 그대로 두면 게이지가 탭을 누르기도 전에 다 차 있으므로,
+  /// 들어올 때마다 이 값을 올려 게이지와 카드를 처음부터 다시 재생한다.
+  int _visitSequence = 0;
+  bool _wasSelected = false;
+
   @override
   void initState() {
     super.initState();
+  }
+
+  /// build 안에서 부른다. setState 를 부르지 않고 값만 갱신하므로 이번 build
+  /// 에 그대로 반영된다.
+  void _syncVisitSequence(int screenIndex) {
+    final isSelected = screenIndex == _myPageTabIndex;
+    if (isSelected == _wasSelected) return;
+    _wasSelected = isSelected;
+    if (isSelected) _visitSequence++;
   }
 
   @override
   Widget build(BuildContext context) {
     final userProvider = Provider.of<UserProvider>(context);
     final themeProvider = Provider.of<ThemeHandler>(context);
+    _syncVisitSequence(
+      Provider.of<ScreenIndexProvider>(context).screenIndex,
+    );
     final mediaQuery = MediaQuery.of(context);
     final screenHeight = mediaQuery.size.height;
     final screenWidth = mediaQuery.size.width;
@@ -67,7 +102,7 @@ class _SettingScreenState extends State<SettingScreen> {
               icon: Icon(Icons.settings, color: themeProvider.primaryColor),
               onPressed: () {
                 Navigator.of(context).push(
-                  MaterialPageRoute(
+                  TossPageRoute(
                     builder: (context) => const _MyPageSettingsScreen(),
                   ),
                 );
@@ -80,63 +115,78 @@ class _SettingScreenState extends State<SettingScreen> {
       backgroundColor: Colors.white,
       body: !(userProvider.isLoggedIn == LoginStatus.login)
           ? _buildLoginPrompt(themeProvider)
-          : RefreshIndicator(
-              onRefresh: _refreshData,
-              color: themeProvider.primaryColor,
-              child: ListView(
-                clipBehavior: Clip.none,
-                padding: EdgeInsets.only(
-                    bottom: screenHeight * 0.01, top: screenHeight * 0.02),
-                children: [
-                  if (isTabletLandscape)
-                    Padding(
-                      padding:
-                          EdgeInsets.symmetric(horizontal: screenWidth * 0.04),
-                      child: IntrinsicHeight(
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            Expanded(
-                              child: UserLevelCard(
-                                key: widget.tutorialTargets?.levelCardKey,
-                                userInfo: userProvider.userInfoModel,
-                                themeProvider: themeProvider,
-                                userName:
-                                    userProvider.userInfoModel?.name ?? '이름 없음',
-                                horizontalMarginFactor: 0,
-                              ),
+          : MotionReplayScope(
+              token: _visitSequence,
+              child: RefreshIndicator(
+                onRefresh: _refreshData,
+                color: themeProvider.primaryColor,
+                child: ListView(
+                  clipBehavior: Clip.none,
+                  padding: EdgeInsets.only(
+                      bottom: screenHeight * 0.01, top: screenHeight * 0.02),
+                  children: [
+                    if (isTabletLandscape)
+                      AppearTransition(
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(
+                              horizontal: screenWidth * 0.04),
+                          child: IntrinsicHeight(
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                Expanded(
+                                  child: UserLevelCard(
+                                    key: widget.tutorialTargets?.levelCardKey,
+                                    userInfo: userProvider.userInfoModel,
+                                    themeProvider: themeProvider,
+                                    userName:
+                                        userProvider.userInfoModel?.name ??
+                                            '이름 없음',
+                                    horizontalMarginFactor: 0,
+                                  ),
+                                ),
+                                SizedBox(width: screenWidth * 0.02),
+                                Expanded(
+                                  child: StreakCard(
+                                    key:
+                                        widget.tutorialTargets?.calendarCardKey,
+                                    themeProvider: themeProvider,
+                                    horizontalMarginFactor: 0,
+                                  ),
+                                ),
+                              ],
                             ),
-                            SizedBox(width: screenWidth * 0.02),
-                            Expanded(
-                              child: StreakCard(
-                                key: widget.tutorialTargets?.calendarCardKey,
-                                themeProvider: themeProvider,
-                                horizontalMarginFactor: 0,
-                              ),
-                            ),
-                          ],
+                          ),
+                        ),
+                      )
+                    else ...[
+                      AppearTransition(
+                        child: UserLevelCard(
+                          key: widget.tutorialTargets?.levelCardKey,
+                          userInfo: userProvider.userInfoModel,
+                          themeProvider: themeProvider,
+                          userName: userProvider.userInfoModel?.name ?? '이름 없음',
                         ),
                       ),
-                    )
-                  else ...[
-                    UserLevelCard(
-                      key: widget.tutorialTargets?.levelCardKey,
-                      userInfo: userProvider.userInfoModel,
-                      themeProvider: themeProvider,
-                      userName: userProvider.userInfoModel?.name ?? '이름 없음',
-                    ),
-                  ],
-                  if (!isTabletLandscape) ...[
+                    ],
+                    if (!isTabletLandscape) ...[
+                      SizedBox(height: screenHeight * 0.01),
+                      AppearTransition(
+                        delay: _cardGap,
+                        child: StreakCard(
+                          key: widget.tutorialTargets?.calendarCardKey,
+                          themeProvider: themeProvider,
+                        ),
+                      ),
+                    ],
                     SizedBox(height: screenHeight * 0.01),
-                    StreakCard(
-                      key: widget.tutorialTargets?.calendarCardKey,
-                      themeProvider: themeProvider,
+                    AppearTransition(
+                      delay: _cardGap * 2,
+                      child: _buildReviewReportButton(themeProvider),
                     ),
+                    SizedBox(height: screenHeight * 0.01),
                   ],
-                  SizedBox(height: screenHeight * 0.01),
-                  _buildReviewReportButton(themeProvider),
-                  SizedBox(height: screenHeight * 0.01),
-                ],
+                ),
               ),
             ),
     );
@@ -174,15 +224,14 @@ class _SettingScreenState extends State<SettingScreen> {
         horizontal: screenWidth * horizontalMarginFactor,
         vertical: screenHeight * 0.005,
       ),
-      child: InkWell(
+      child: PressableScale(
         onTap: () {
           Navigator.of(context).push(
-            MaterialPageRoute(
+            TossPageRoute(
               builder: (context) => const ReviewReportScreen(),
             ),
           );
         },
-        borderRadius: BorderRadius.circular(15),
         child: Container(
           padding: EdgeInsets.fromLTRB(
             screenHeight * 0.018,
@@ -192,7 +241,7 @@ class _SettingScreenState extends State<SettingScreen> {
           ),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(15),
+            borderRadius: BorderRadius.circular(AppRadius.large),
             border: Border.all(
               color: Colors.grey[300]!,
               width: 1,
@@ -214,7 +263,7 @@ class _SettingScreenState extends State<SettingScreen> {
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
                       color: themeProvider.primaryColor.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppRadius.medium),
                     ),
                     child: Icon(
                       Icons.stacked_bar_chart_rounded,
@@ -230,7 +279,7 @@ class _SettingScreenState extends State<SettingScreen> {
                         StandardText(
                           text: compact ? '학습\n리포트' : '학습 리포트',
                           fontSize: 15,
-                          color: Colors.black87,
+                          color: AppColors.textPrimary,
                           fontWeight: FontWeight.w700,
                         ),
                         if (!compact) ...[
@@ -313,7 +362,8 @@ class _SettingScreenState extends State<SettingScreen> {
                               width: 16,
                               height: barHeight,
                               decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(8),
+                                borderRadius:
+                                    BorderRadius.circular(AppRadius.small),
                                 gradient: LinearGradient(
                                   begin: Alignment.bottomCenter,
                                   end: Alignment.topCenter,
@@ -352,7 +402,7 @@ class _SettingScreenState extends State<SettingScreen> {
                                     child: StandardText(
                                       text: counts[index].toString(),
                                       fontSize: 12,
-                                      color: Colors.black87,
+                                      color: AppColors.textPrimary,
                                       fontWeight: FontWeight.w700,
                                       fontFamily: 'PretendardBold',
                                     ),
@@ -415,63 +465,44 @@ class _MyPageSettingsScreenState extends State<_MyPageSettingsScreen> {
     if (_isUploadingProfileImage) return;
     final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
 
-    await showModalBottomSheet<void>(
+    // 손잡이와 모서리, 올라오는 속도는 showTossSheet 이 맞춘다.
+    await showTossSheet<void>(
       context: context,
       useRootNavigator: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => Container(
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(20),
-            topRight: Radius.circular(20),
-          ),
-        ),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 40,
-                  height: 4,
-                  margin: const EdgeInsets.only(bottom: 20),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[300],
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-                const StandardText(
-                  text: '프로필 사진 변경',
-                  fontSize: 16,
-                  color: Colors.black87,
-                  fontWeight: FontWeight.w700,
-                ),
-                const SizedBox(height: 16),
-                _buildSheetOption(
-                  icon: Icons.photo_library_outlined,
-                  label: '갤러리에서 선택',
-                  color: themeProvider.primaryColor,
-                  onTap: () {
-                    Navigator.pop(context);
-                    _pickFromGallery();
-                  },
-                ),
-                const SizedBox(height: 8),
-                _buildSheetOption(
-                  icon: Icons.person_outline,
-                  label: '기본 이미지로 변경',
-                  color: Colors.grey[600]!,
-                  onTap: () {
-                    Navigator.pop(context);
-                    _resetToDefaultImage();
-                  },
-                ),
-                const SizedBox(height: 8),
-              ],
+      isScrollControlled: false,
+      builder: (_) => Padding(
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const StandardText(
+              text: '프로필 사진 변경',
+              fontSize: 16,
+              color: AppColors.textPrimary,
+              fontWeight: FontWeight.w700,
             ),
-          ),
+            const SizedBox(height: 16),
+            _buildSheetOption(
+              icon: Icons.photo_library_outlined,
+              label: '갤러리에서 선택',
+              color: themeProvider.primaryColor,
+              onTap: () {
+                Navigator.pop(context);
+                _pickFromGallery();
+              },
+            ),
+            const SizedBox(height: 8),
+            _buildSheetOption(
+              icon: Icons.person_outline,
+              label: '기본 이미지로 변경',
+              color: Colors.grey[600]!,
+              onTap: () {
+                Navigator.pop(context);
+                _resetToDefaultImage();
+              },
+            ),
+            const SizedBox(height: 8),
+          ],
         ),
       ),
     );
@@ -483,21 +514,21 @@ class _MyPageSettingsScreenState extends State<_MyPageSettingsScreen> {
     required Color color,
     required VoidCallback onTap,
   }) {
-    return InkWell(
+    return PressableScale(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
           color: Colors.grey[50],
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppRadius.medium),
         ),
         child: Row(
           children: [
             Icon(icon, size: 20, color: color),
             const SizedBox(width: 12),
-            StandardText(text: label, fontSize: 15, color: Colors.black87),
+            StandardText(
+                text: label, fontSize: 15, color: AppColors.textPrimary),
           ],
         ),
       ),
@@ -555,7 +586,7 @@ class _MyPageSettingsScreenState extends State<_MyPageSettingsScreen> {
     final userProvider = Provider.of<UserProvider>(context, listen: false);
     final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
 
-    await showDialog<void>(
+    await showTossDialog<void>(
       context: context,
       builder: (dialogContext) => _NameChangeDialog(
         currentName: currentName,
@@ -572,16 +603,7 @@ class _MyPageSettingsScreenState extends State<_MyPageSettingsScreen> {
   void _showProfileSnackBar(String message) {
     // 업로드 중 화면을 벗어나면 dispose 된 State 의 context 에 접근해 죽는다 (FLUTTER-15K)
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: StandardText(
-          text: message,
-          fontSize: 14,
-          color: Colors.white,
-        ),
-        backgroundColor: Colors.red,
-      ),
-    );
+    AppToast.error(message);
   }
 
   Widget _buildProfileSection({
@@ -603,7 +625,7 @@ class _MyPageSettingsScreenState extends State<_MyPageSettingsScreen> {
       padding: EdgeInsets.all(screenHeight * 0.015),
       decoration: BoxDecoration(
         color: Colors.grey[50],
-        borderRadius: BorderRadius.circular(15),
+        borderRadius: BorderRadius.circular(AppRadius.large),
         border: Border.all(
           color: Colors.grey[300]!,
           width: 1,
@@ -629,35 +651,32 @@ class _MyPageSettingsScreenState extends State<_MyPageSettingsScreen> {
                   Positioned(
                     right: -2,
                     bottom: -2,
-                    child: Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        onTap: _isUploadingProfileImage
-                            ? null
-                            : _showProfileImageOptions,
-                        customBorder: const CircleBorder(),
-                        child: Container(
-                          width: 26,
-                          height: 26,
-                          decoration: BoxDecoration(
-                            color: themeProvider.primaryColor,
-                            shape: BoxShape.circle,
-                            border: Border.all(color: Colors.white, width: 2),
-                          ),
-                          child: _isUploadingProfileImage
-                              ? const Padding(
-                                  padding: EdgeInsets.all(6),
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: Colors.white,
-                                  ),
-                                )
-                              : const Icon(
-                                  Icons.photo_camera_outlined,
-                                  size: 14,
+                    child: PressableScale(
+                      onTap: _isUploadingProfileImage
+                          ? null
+                          : _showProfileImageOptions,
+                      scale: 0.92,
+                      child: Container(
+                        width: 26,
+                        height: 26,
+                        decoration: BoxDecoration(
+                          color: themeProvider.primaryColor,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white, width: 2),
+                        ),
+                        child: _isUploadingProfileImage
+                            ? const Padding(
+                                padding: EdgeInsets.all(6),
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
                                   color: Colors.white,
                                 ),
-                        ),
+                              )
+                            : const Icon(
+                                Icons.photo_camera_outlined,
+                                size: 14,
+                                color: Colors.white,
+                              ),
                       ),
                     ),
                   ),
@@ -671,7 +690,7 @@ class _MyPageSettingsScreenState extends State<_MyPageSettingsScreen> {
                     StandardText(
                       text: currentName,
                       fontSize: 15,
-                      color: Colors.black87,
+                      color: AppColors.textPrimary,
                       fontWeight: FontWeight.w700,
                       overflow: TextOverflow.ellipsis,
                       maxLines: 1,
@@ -688,7 +707,7 @@ class _MyPageSettingsScreenState extends State<_MyPageSettingsScreen> {
                   backgroundColor:
                       themeProvider.primaryColor.withValues(alpha: 0.10),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(AppRadius.small),
                   ),
                 ),
                 child: StandardText(
@@ -740,7 +759,7 @@ class _MyPageSettingsScreenState extends State<_MyPageSettingsScreen> {
                 ThemeChangeButton(
                   themeProvider: themeProvider,
                   onTap: () {
-                    showDialog(
+                    showTossDialog(
                       context: context,
                       builder: (BuildContext context) {
                         return ThemeDialog();
@@ -784,16 +803,7 @@ class _MyPageSettingsScreenState extends State<_MyPageSettingsScreen> {
                           .updateNotificationSettings(value);
                     } catch (_) {
                       if (!context.mounted) return;
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: StandardText(
-                            text: '알림 설정 변경에 실패했습니다. 다시 시도해주세요.',
-                            fontSize: 14,
-                            color: Colors.white,
-                          ),
-                          backgroundColor: Colors.red,
-                        ),
-                      );
+                      AppToast.error('알림 설정 변경에 실패했습니다. 다시 시도해주세요.');
                     }
                   },
                 ),
@@ -813,8 +823,7 @@ class _MyPageSettingsScreenState extends State<_MyPageSettingsScreen> {
 
                   if (!context.mounted) return;
                   Navigator.of(context).pushAndRemoveUntil(
-                    MaterialPageRoute(
-                        builder: (context) => const LoginScreen()),
+                    TossPageRoute(builder: (context) => const LoginScreen()),
                     (route) => false,
                   );
                 },
@@ -829,8 +838,7 @@ class _MyPageSettingsScreenState extends State<_MyPageSettingsScreen> {
 
                   if (!context.mounted) return;
                   Navigator.of(context).pushAndRemoveUntil(
-                    MaterialPageRoute(
-                        builder: (context) => const LoginScreen()),
+                    TossPageRoute(builder: (context) => const LoginScreen()),
                     (route) => false,
                   );
                 },
@@ -915,7 +923,7 @@ class _NameChangeDialogState extends State<_NameChangeDialog> {
       title: const StandardText(
         text: '이름 변경',
         fontSize: 18,
-        color: Colors.black87,
+        color: AppColors.textPrimary,
         fontWeight: FontWeight.w700,
       ),
       content: SizedBox(
@@ -926,7 +934,7 @@ class _NameChangeDialogState extends State<_NameChangeDialog> {
           autofocus: true,
           maxLength: 20,
           style: const StandardText(text: '').getTextStyle().copyWith(
-                color: Colors.black87,
+                color: AppColors.textPrimary,
                 fontSize: 14,
               ),
           decoration: InputDecoration(
@@ -940,15 +948,15 @@ class _NameChangeDialogState extends State<_NameChangeDialog> {
               vertical: 12,
             ),
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(AppRadius.medium),
               borderSide: BorderSide(color: Colors.grey[300]!, width: 1),
             ),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(AppRadius.medium),
               borderSide: BorderSide(color: Colors.grey[300]!, width: 1),
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(AppRadius.medium),
               borderSide: BorderSide(
                 color: widget.themeProvider.primaryColor.withValues(alpha: 0.6),
                 width: 1.5,
@@ -977,7 +985,7 @@ class _NameChangeDialogState extends State<_NameChangeDialog> {
               vertical: 10,
             ),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(AppRadius.small),
             ),
           ),
           child: _isSaving
@@ -1018,15 +1026,14 @@ Widget _buildTutorialReplaySection({
     padding: EdgeInsets.all(screenHeight * 0.015),
     decoration: BoxDecoration(
       color: Colors.grey[50],
-      borderRadius: BorderRadius.circular(15),
+      borderRadius: BorderRadius.circular(AppRadius.large),
       border: Border.all(
         color: Colors.grey[300]!,
         width: 1,
       ),
     ),
-    child: InkWell(
+    child: PressableScale(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
       child: Padding(
         padding: EdgeInsets.symmetric(
           vertical: screenHeight * 0.008,
@@ -1047,7 +1054,7 @@ Widget _buildTutorialReplaySection({
                   StandardText(
                     text: '튜토리얼 다시 보기',
                     fontSize: 14,
-                    color: Colors.black87,
+                    color: AppColors.textPrimary,
                   ),
                   SizedBox(height: 3),
                   StandardText(
@@ -1072,13 +1079,13 @@ Widget _buildTutorialReplaySection({
 
 void _showConfirmationDialog(BuildContext context, String title, String message,
     VoidCallback onConfirm) {
-  showDialog(
+  showTossDialog(
     context: context,
     builder: (BuildContext context) {
       return Dialog(
         backgroundColor: Colors.white,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppRadius.large),
         ),
         child: Container(
           padding: const EdgeInsets.all(24),
@@ -1091,7 +1098,7 @@ void _showConfirmationDialog(BuildContext context, String title, String message,
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
                       color: Colors.orange.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(AppRadius.small),
                     ),
                     child: const Icon(
                       Icons.warning_amber_rounded,
@@ -1104,7 +1111,7 @@ void _showConfirmationDialog(BuildContext context, String title, String message,
                     text: title,
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
-                    color: Colors.black87,
+                    color: AppColors.textPrimary,
                   ),
                 ],
               ),
@@ -1112,7 +1119,7 @@ void _showConfirmationDialog(BuildContext context, String title, String message,
               StandardText(
                 text: message,
                 fontSize: 15,
-                color: Colors.black87,
+                color: AppColors.textPrimary,
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 24),
@@ -1128,13 +1135,13 @@ void _showConfirmationDialog(BuildContext context, String title, String message,
                             horizontal: 12, vertical: 8),
                         backgroundColor: Colors.grey[100],
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(AppRadius.small),
                         ),
                       ),
                       child: const StandardText(
                         text: '취소',
                         fontSize: 14,
-                        color: Colors.black87,
+                        color: AppColors.textPrimary,
                       ),
                     ),
                   ),
@@ -1150,7 +1157,7 @@ void _showConfirmationDialog(BuildContext context, String title, String message,
                             horizontal: 12, vertical: 8),
                         backgroundColor: Colors.red,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(AppRadius.small),
                         ),
                       ),
                       child: const StandardText(

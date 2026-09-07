@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:ono/Module/Motion/PressableScale.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:ono/Model/PracticeNote/PracticeNoteDetailModel.dart';
 import 'package:ono/Provider/PracticeNoteProvider.dart';
@@ -74,13 +75,13 @@ void main() {
   testWidgets('기분 이모지를 탭해도 예외 없이 선택·해제된다', (tester) async {
     await pumpScreen(tester);
 
-    final moodInkWell = find.byType(InkWell).first;
-    await tester.tap(moodInkWell);
+    final moodButton = find.byType(PressableScale).first;
+    await tester.tap(moodButton);
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
 
     // 같은 이모지를 다시 탭하면 선택이 풀린다 (토글).
-    await tester.tap(moodInkWell);
+    await tester.tap(moodButton);
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
   });
@@ -114,7 +115,7 @@ void main() {
         moodEmojiKey: any(named: 'moodEmojiKey'))).thenAnswer((_) async {});
 
     await pumpScreen(tester);
-    await tester.tap(find.byType(InkWell).first);
+    await tester.tap(find.byType(PressableScale).first);
     await tester.pumpAndSettle();
     await tester.tap(find.text('확인'));
     await tester.pump();

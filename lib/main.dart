@@ -32,6 +32,11 @@ import 'Util/AppErrorReporter.dart';
 import 'Util/AppNavigator.dart';
 import 'Util/AppSnackBar.dart';
 import 'Util/NotificationService.dart';
+import 'Module/Motion/AppHaptic.dart';
+import 'Module/Motion/AppScrollBehavior.dart';
+import 'Module/Motion/BouncyNavIcon.dart';
+import 'Module/Motion/TabSwitchFade.dart';
+import 'Module/Motion/TossPageRoute.dart';
 
 Future<void> main() async {
   await runZonedGuarded<Future<void>>(
@@ -154,12 +159,13 @@ class MyApp extends StatelessWidget {
       scaffoldMessengerKey: AppSnackBar.messengerKey,
       navigatorKey: AppNavigator.navigatorKey,
       navigatorObservers: <NavigatorObserver>[observer],
+      scrollBehavior: const AppScrollBehavior(),
       home: SplashScreen(),
       debugShowCheckedModeBanner: false,
       onGenerateRoute: (settings) {
         if (settings.name == '/problemRegister') {
           final args = settings.arguments as Map<String, dynamic>;
-          return MaterialPageRoute(
+          return TossPageRoute(
             builder: (context) {
               return ProblemRegisterScreen(
                 problemModel: args['problemModel'],
@@ -187,6 +193,21 @@ class MyApp extends StatelessWidget {
       colorScheme: ColorScheme.fromSeed(seedColor: themeHandler.primaryColor),
       primaryColor: themeHandler.primaryColor,
       useMaterial3: true,
+      // 물결 효과를 앱 전체에서 끈다. 눌림은 PressableScale 의 축소로
+      // 표현하는데, 아직 남아 있는 TextButton 과 IconButton 이 물결을
+      // 그리면 같은 앱 안에서 두 가지 반응이 섞인다.
+      // 화면마다 회색이거나 테마색이거나 두께가 달랐다. 기본값을 맞춰 두면
+      // 색을 따로 넘기지 않은 곳도 같은 모양이 된다.
+      progressIndicatorTheme: ProgressIndicatorThemeData(
+        color: themeHandler.primaryColor,
+        circularTrackColor: Colors.transparent,
+        linearTrackColor: Colors.grey[200],
+        strokeWidth: 3,
+      ),
+      splashFactory: NoSplash.splashFactory,
+      splashColor: Colors.transparent,
+      highlightColor: Colors.transparent,
+      hoverColor: Colors.transparent,
       dialogTheme: const DialogThemeData(
         constraints: BoxConstraints(maxWidth: 420),
       ),
@@ -222,10 +243,10 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   }
 
   void _onItemTapped(int index) {
-    Provider.of<ScreenIndexProvider>(
-      context,
-      listen: false,
-    ).setSelectedIndex(index);
+    final provider = Provider.of<ScreenIndexProvider>(context, listen: false);
+    // 이미 보고 있는 탭을 다시 눌렀을 때까지 진동을 주면 손이 피곤하다.
+    if (provider.screenIndex != index) AppHaptic.selection();
+    provider.setSelectedIndex(index);
   }
 
   Future<void> _prepareInitialTutorial() async {
@@ -266,9 +287,12 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
     return Stack(
       children: [
         Scaffold(
-          body: IndexedStack(
+          body: TabSwitchFade(
             index: screenIndexProvider.screenIndex,
-            children: widgetOptions,
+            child: IndexedStack(
+              index: screenIndexProvider.screenIndex,
+              children: widgetOptions,
+            ),
           ),
           bottomNavigationBar: _buildBottomNavigationBar(context),
         ),
@@ -309,13 +333,15 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
     final screenIndexProvider = Provider.of<ScreenIndexProvider>(context);
     double screenHeight = MediaQuery.of(context).size.height;
     final isMobile = MediaQuery.of(context).size.width < 600;
-    final selectedLabelFontSize =
-        screenHeight * 0.015 - (isMobile ? 1.0 : 0.0);
+    final selectedLabelFontSize = screenHeight * 0.015 - (isMobile ? 1.0 : 0.0);
 
     return BottomNavigationBar(
       backgroundColor: Colors.white,
       type: BottomNavigationBarType.fixed,
-      items: _bottomNavigationItems(),
+      items: _bottomNavigationItems(
+        themeProvider.primaryColor,
+        screenIndexProvider.screenIndex,
+      ),
       currentIndex: screenIndexProvider.screenIndex,
       selectedItemColor: themeProvider.primaryColor,
       unselectedItemColor: Colors.grey,
@@ -331,19 +357,35 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
     );
   }
 
-  List<BottomNavigationBarItem> _bottomNavigationItems() {
-    return const [
-      BottomNavigationBarItem(
-          icon: Icon(Icons.menu_book, size: 20), label: '오답노트 관리'),
-      BottomNavigationBarItem(
-          icon: Icon(Icons.history, size: 20), label: '복습 세트'),
-      BottomNavigationBarItem(icon: Icon(Icons.group, size: 20), label: '스터디룸'),
-      BottomNavigationBarItem(
-          icon: Icon(
-            Icons.person,
-            size: 20,
-          ),
-          label: '마이 페이지'),
+  /// 아이콘을 [BouncyNavIcon] 으로 감싸서 선택될 때 한 번 튀어오르게 한다.
+  /// 선택 여부를 아이콘이 직접 알아야 해서 `activeIcon` 을 쓰지 않는다.
+  List<BottomNavigationBarItem> _bottomNavigationItems(
+    Color activeColor,
+    int currentIndex,
+  ) {
+    const specs = <({IconData icon, IconData activeIcon, String label})>[
+      (
+        icon: Icons.menu_book_outlined,
+        activeIcon: Icons.menu_book,
+        label: '오답노트 관리'
+      ),
+      (icon: Icons.history_outlined, activeIcon: Icons.history, label: '복습 세트'),
+      (icon: Icons.group_outlined, activeIcon: Icons.group, label: '스터디룸'),
+      (icon: Icons.person_outline, activeIcon: Icons.person, label: '마이 페이지'),
     ];
+
+    return List<BottomNavigationBarItem>.generate(specs.length, (index) {
+      final spec = specs[index];
+      return BottomNavigationBarItem(
+        icon: BouncyNavIcon(
+          icon: spec.icon,
+          activeIcon: spec.activeIcon,
+          selected: currentIndex == index,
+          activeColor: activeColor,
+          inactiveColor: Colors.grey,
+        ),
+        label: spec.label,
+      );
+    });
   }
 }

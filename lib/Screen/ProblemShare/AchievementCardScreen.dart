@@ -14,6 +14,11 @@ import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Util/AppErrorReporter.dart';
 import '../../Util/AppSnackBar.dart';
+import '../../Module/Design/AppRadius.dart';
+import '../../Module/Design/AppColors.dart';
+import '../../Module/Design/AppToast.dart';
+import '../../Module/Motion/AppMotion.dart';
+import '../../Module/Motion/AppearTransition.dart';
 
 class AchievementCardScreen extends StatefulWidget {
   final UserInfoModel userInfo;
@@ -81,11 +86,7 @@ class _AchievementCardScreenState extends State<AchievementCardScreen> {
       );
 
       if (result.status == ShareResultStatus.success && mounted) {
-        final themeProvider = Provider.of<ThemeHandler>(
-          context,
-          listen: false,
-        );
-        _showShareCompletedSnackBar(themeProvider);
+        _showShareCompletedSnackBar();
       }
     } catch (e, stackTrace) {
       await AppErrorReporter.report(
@@ -102,22 +103,9 @@ class _AchievementCardScreenState extends State<AchievementCardScreen> {
     }
   }
 
-  void _showShareCompletedSnackBar(ThemeHandler themeProvider) {
-    final messenger = AppSnackBar.messengerKey.currentState;
-    if (messenger == null) return;
-
-    messenger.hideCurrentSnackBar();
-    messenger.showSnackBar(
-      SnackBar(
-        content: const StandardText(
-          text: '학습 성취 카드 공유가 완료되었습니다.',
-          fontSize: 14,
-          color: Colors.white,
-        ),
-        backgroundColor: themeProvider.primaryColor,
-        duration: const Duration(seconds: 2),
-      ),
-    );
+  void _showShareCompletedSnackBar() {
+    // 다른 화면과 같은 상단 토스트를 쓴다. 여기만 하단 SnackBar 로 남아 있었다.
+    AppToast.success('학습 성취 카드 공유가 완료되었습니다.');
   }
 
   @override
@@ -139,29 +127,38 @@ class _AchievementCardScreenState extends State<AchievementCardScreen> {
         children: [
           Expanded(
             child: Center(
-              // 그림자는 RepaintBoundary 밖에 둬서 미리보기에만 보임
-              child: Container(
-                decoration: BoxDecoration(
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.12),
-                      blurRadius: 20,
-                      spreadRadius: 0,
-                      offset: const Offset(0, 6),
+              // 카드가 아래에서 올라오며 들어온다. 캡처 대상인 RepaintBoundary
+              // 바깥에 둬야 공유 이미지에 영향이 없다.
+              child: AppearTransition(
+                offset: 24,
+                duration: AppMotion.slow,
+                // 그림자는 RepaintBoundary 밖에 둬서 미리보기에만 보임
+                child: Container(
+                  decoration: BoxDecoration(
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.12),
+                        blurRadius: 20,
+                        spreadRadius: 0,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
+                  ),
+                  child: RepaintBoundary(
+                    key: _globalKey,
+                    child: _AchievementCard(
+                      userInfo: widget.userInfo,
+                      weeklyReport: widget.weeklyReport,
                     ),
-                  ],
-                ),
-                child: RepaintBoundary(
-                  key: _globalKey,
-                  child: _AchievementCard(
-                    userInfo: widget.userInfo,
-                    weeklyReport: widget.weeklyReport,
                   ),
                 ),
               ),
             ),
           ),
-          _buildShareButton(themeProvider),
+          AppearTransition(
+            delay: const Duration(milliseconds: 120),
+            child: _buildShareButton(themeProvider),
+          ),
         ],
       ),
     );
@@ -188,8 +185,8 @@ class _AchievementCardScreenState extends State<AchievementCardScreen> {
         style: ElevatedButton.styleFrom(
           backgroundColor: themeProvider.primaryColor,
           minimumSize: const Size(double.infinity, 48),
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppRadius.medium)),
           elevation: 0,
         ),
       ),
@@ -236,7 +233,7 @@ class _AchievementCard extends StatelessWidget {
       width: 360,
       height: 600,
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(AppRadius.xlarge),
         child: Stack(
           children: [
             Container(color: Colors.white),
@@ -345,7 +342,7 @@ class _AchievementCard extends StatelessWidget {
                           horizontal: 9, vertical: 4),
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.22),
-                        borderRadius: BorderRadius.circular(999),
+                        borderRadius: BorderRadius.circular(AppRadius.full),
                         border: Border.all(
                           color: Colors.white.withValues(alpha: 0.42),
                           width: 1,
@@ -377,7 +374,7 @@ class _AchievementCard extends StatelessWidget {
                             horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.16),
-                          borderRadius: BorderRadius.circular(7),
+                          borderRadius: BorderRadius.circular(AppRadius.small),
                         ),
                         child: Text(
                           '이번 주 공부 기록',
@@ -500,7 +497,7 @@ class _AchievementCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: themeProvider.primaryColor.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppRadius.large),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -549,7 +546,7 @@ class _AchievementCard extends StatelessWidget {
               Text(
                 label,
                 style: const TextStyle(
-                  color: Colors.black54,
+                  color: AppColors.textSecondary,
                   fontSize: 10,
                   fontFamily: 'PretendardBold',
                   fontWeight: FontWeight.w700,
@@ -579,7 +576,7 @@ class _AchievementCard extends StatelessWidget {
                 Text(
                   '복습 추이',
                   style: TextStyle(
-                    color: Colors.black54,
+                    color: AppColors.textSecondary,
                     fontSize: 11,
                     fontFamily: 'PretendardBold',
                     fontWeight: FontWeight.w700,
@@ -594,7 +591,7 @@ class _AchievementCard extends StatelessWidget {
                       child: Text(
                         '이번 주 데이터가 없어요',
                         style: TextStyle(
-                          color: Colors.black38,
+                          color: AppColors.textTertiary,
                           fontSize: 11,
                           fontFamily: 'PretendardLight',
                         ),
@@ -651,7 +648,7 @@ class _AchievementCard extends StatelessWidget {
                 Text(
                   labelText,
                   style: const TextStyle(
-                    color: Colors.black38,
+                    color: AppColors.textTertiary,
                     fontSize: 9,
                     fontFamily: 'PretendardLight',
                   ),
@@ -689,7 +686,7 @@ class _AchievementCard extends StatelessWidget {
           const SizedBox(width: 10),
           Expanded(
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(999),
+              borderRadius: BorderRadius.circular(AppRadius.full),
               child: LinearProgressIndicator(
                 value: progress,
                 backgroundColor:
@@ -703,7 +700,7 @@ class _AchievementCard extends StatelessWidget {
           Text(
             '$days / 30일',
             style: const TextStyle(
-              color: Colors.black38,
+              color: AppColors.textTertiary,
               fontSize: 9,
               fontFamily: 'PretendardLight',
               fontWeight: FontWeight.w300,

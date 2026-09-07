@@ -12,6 +12,11 @@ import '../../Module/Image/ImagePickerHandler.dart';
 import '../../Module/Text/mobile_font_size.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Util/FolderPickerDialog.dart';
+import '../../Module/Motion/AppLoadingView.dart';
+import '../../Module/Motion/AppHaptic.dart';
+import '../../Module/Motion/PressableScale.dart';
+import '../../Module/Motion/StepProgressBar.dart';
+import '../../Module/Motion/TossPageRoute.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Module/Util/FolderPickerWidget.dart';
 import '../../Provider/FoldersProvider.dart';
@@ -27,6 +32,9 @@ import 'TagSelectionScreen.dart';
 import 'Widget/DatePickerWidget.dart';
 import 'Widget/ImageGridWidget.dart';
 import 'Widget/LabeledTextField.dart';
+import '../../Module/Motion/TossDialog.dart';
+import '../../Module/Design/AppColors.dart';
+import '../../Module/Design/AppRadius.dart';
 
 enum _BatchRegisterStep {
   selectImages,
@@ -173,7 +181,7 @@ class _MultiProblemRegisterScreenState
           _step == _BatchRegisterStep.selectImages
               ? Icons.close
               : Icons.arrow_back,
-          color: Colors.black87,
+          color: AppColors.textPrimary,
         ),
         onPressed: _isSubmitting
             ? null
@@ -194,6 +202,16 @@ class _MultiProblemRegisterScreenState
         fontWeight: FontWeight.w600,
       ),
       centerTitle: true,
+      // 이미지를 고르고 내용을 확인하는 두 단계다. 지금 어디인지 보여준다.
+      bottom: PreferredSize(
+        preferredSize: const Size.fromHeight(3),
+        child: StepProgressBar(
+          currentStep: _step == _BatchRegisterStep.selectImages ? 1 : 2,
+          totalSteps: 2,
+          color: themeProvider.primaryColor,
+          height: 3,
+        ),
+      ),
     );
   }
 
@@ -217,8 +235,8 @@ class _MultiProblemRegisterScreenState
             padding: const EdgeInsets.fromLTRB(12, 10, 10, 10),
             decoration: BoxDecoration(
               color: Colors.grey[50],
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.grey[200]!, width: 1),
+              borderRadius: BorderRadius.circular(AppRadius.medium),
+              border: Border.all(color: AppColors.border),
             ),
             child: Row(
               children: [
@@ -226,7 +244,7 @@ class _MultiProblemRegisterScreenState
                   padding: const EdgeInsets.all(7),
                   decoration: BoxDecoration(
                     color: themeProvider.primaryColor.withValues(alpha: 0.09),
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(AppRadius.small),
                   ),
                   child: Icon(
                     Icons.collections,
@@ -239,7 +257,7 @@ class _MultiProblemRegisterScreenState
                   child: StandardText(
                     text: '선택한 이미지 ${_problemImages.length}장',
                     fontSize: MobileFontSize.reduced(context, 15),
-                    color: Colors.black87,
+                    color: AppColors.textPrimary,
                     fontWeight: FontWeight.w700,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -258,7 +276,7 @@ class _MultiProblemRegisterScreenState
                     minimumSize: Size.zero,
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(9),
+                      borderRadius: BorderRadius.circular(AppRadius.small),
                     ),
                   ),
                   icon: const Icon(Icons.add_photo_alternate, size: 17),
@@ -279,17 +297,17 @@ class _MultiProblemRegisterScreenState
             child: Container(
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppRadius.medium),
               ),
               foregroundDecoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppRadius.medium),
                 border: Border.all(
                   color: themeProvider.primaryColor.withValues(alpha: 0.36),
                   width: 1,
                 ),
               ),
               child: ClipRRect(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppRadius.medium),
                 child: Material(
                   color: Colors.white,
                   child: GridView.builder(
@@ -337,7 +355,7 @@ class _MultiProblemRegisterScreenState
             StandardText(
               text: '갤러리를 여는 중입니다.',
               fontSize: MobileFontSize.reduced(context, 16),
-              color: Colors.black87,
+              color: AppColors.textPrimary,
               fontWeight: FontWeight.w600,
               textAlign: TextAlign.center,
             ),
@@ -388,7 +406,7 @@ class _MultiProblemRegisterScreenState
                     text: '등록할 문제 이미지를 한 번에 선택해 주세요.',
                     fontSize:
                         MobileFontSize.reduced(context, isTight ? 15 : 17),
-                    color: Colors.black87,
+                    color: AppColors.textPrimary,
                     fontWeight: FontWeight.w600,
                     textAlign: TextAlign.center,
                   ),
@@ -410,7 +428,7 @@ class _MultiProblemRegisterScreenState
                         foregroundColor: Colors.white,
                         elevation: 0,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: BorderRadius.circular(AppRadius.medium),
                         ),
                       ),
                       icon: const Icon(Icons.photo_library_outlined, size: 18),
@@ -435,7 +453,7 @@ class _MultiProblemRegisterScreenState
     final image = _problemImages[index];
 
     return ClipRRect(
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(AppRadius.medium),
       child: Stack(
         fit: StackFit.expand,
         children: [
@@ -459,7 +477,7 @@ class _MultiProblemRegisterScreenState
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
                 color: Colors.black.withValues(alpha: 0.62),
-                borderRadius: BorderRadius.circular(999),
+                borderRadius: BorderRadius.circular(AppRadius.full),
               ),
               child: StandardText(
                 text: '${index + 1}',
@@ -472,9 +490,9 @@ class _MultiProblemRegisterScreenState
           Positioned(
             right: 6,
             top: 6,
-            child: InkWell(
+            child: PressableScale(
               onTap: _isSubmitting ? null : () => _removeProblemImage(index),
-              borderRadius: BorderRadius.circular(999),
+              scale: 0.88,
               child: Container(
                 width: 30,
                 height: 30,
@@ -499,13 +517,13 @@ class _MultiProblemRegisterScreenState
     final canAddMoreImages =
         !_isSubmitting && _problemImages.length < _maxBatchProblemCount;
 
-    return InkWell(
+    return PressableScale(
       onTap: canAddMoreImages ? _pickProblemImages : null,
-      borderRadius: BorderRadius.circular(12),
+      enabled: canAddMoreImages,
       child: Container(
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppRadius.medium),
           border: Border.all(
             color: themeProvider.primaryColor.withValues(alpha: 0.24),
           ),
@@ -557,7 +575,7 @@ class _MultiProblemRegisterScreenState
                 ),
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppRadius.medium),
                   border: Border.all(
                     color: themeProvider.primaryColor.withValues(alpha: 0.18),
                     width: 1,
@@ -570,7 +588,7 @@ class _MultiProblemRegisterScreenState
                       decoration: BoxDecoration(
                         color:
                             themeProvider.primaryColor.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(AppRadius.small),
                       ),
                       child: Icon(
                         Icons.checklist_outlined,
@@ -582,7 +600,7 @@ class _MultiProblemRegisterScreenState
                     StandardText(
                       text: '내용 확인',
                       fontSize: MobileFontSize.reduced(context, 15),
-                      color: Colors.black87,
+                      color: AppColors.textPrimary,
                       fontWeight: FontWeight.w700,
                     ),
                     const SizedBox(width: 8),
@@ -633,7 +651,7 @@ class _MultiProblemRegisterScreenState
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(7),
+        borderRadius: BorderRadius.circular(AppRadius.small),
         border: Border.all(
           color: Colors.grey[300]!,
         ),
@@ -651,7 +669,7 @@ class _MultiProblemRegisterScreenState
             child: StandardText(
               text: text,
               fontSize: MobileFontSize.reduced(context, 11),
-              color: Colors.black87,
+              color: AppColors.textPrimary,
               fontWeight: FontWeight.w600,
               overflow: TextOverflow.ellipsis,
             ),
@@ -739,8 +757,8 @@ class _MultiProblemRegisterScreenState
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[200]!, width: 1),
+        borderRadius: BorderRadius.circular(AppRadius.medium),
+        border: Border.all(color: AppColors.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -753,7 +771,7 @@ class _MultiProblemRegisterScreenState
                   Container(
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppRadius.medium),
                       border: Border.all(
                         color: Colors.grey[300]!,
                         width: 1,
@@ -777,7 +795,7 @@ class _MultiProblemRegisterScreenState
                       ),
                       decoration: BoxDecoration(
                         color: themeProvider.primaryColor,
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(AppRadius.small),
                       ),
                       child: StandardText(
                         text: '${index + 1}',
@@ -797,7 +815,7 @@ class _MultiProblemRegisterScreenState
                     StandardText(
                       text: _resolveDraftTitle(draft),
                       fontSize: MobileFontSize.reduced(context, 16),
-                      color: Colors.black87,
+                      color: AppColors.textPrimary,
                       fontWeight: FontWeight.w700,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -852,7 +870,7 @@ class _MultiProblemRegisterScreenState
                       ),
                       padding: const EdgeInsets.symmetric(horizontal: 12),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(AppRadius.small),
                       ),
                     ),
                     icon: const Icon(Icons.edit_note_outlined, size: 17),
@@ -874,7 +892,7 @@ class _MultiProblemRegisterScreenState
                       backgroundColor: Colors.white,
                       foregroundColor: Colors.red,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(AppRadius.small),
                         side: BorderSide(color: Colors.grey[300]!),
                       ),
                     ),
@@ -898,7 +916,7 @@ class _MultiProblemRegisterScreenState
       padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(7),
+        borderRadius: BorderRadius.circular(AppRadius.small),
         border: Border.all(
           color: themeProvider.primaryColor.withValues(alpha: 0.28),
         ),
@@ -925,7 +943,7 @@ class _MultiProblemRegisterScreenState
             child: StandardText(
               text: text,
               fontSize: MobileFontSize.reduced(context, 12),
-              color: Colors.black87,
+              color: AppColors.textPrimary,
               fontWeight: FontWeight.w600,
               overflow: TextOverflow.ellipsis,
             ),
@@ -944,8 +962,8 @@ class _MultiProblemRegisterScreenState
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.grey[50],
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[200]!, width: 1),
+        borderRadius: BorderRadius.circular(AppRadius.medium),
+        border: Border.all(color: AppColors.border),
       ),
       child: ImageGridWidget(
         label: '문제 이미지',
@@ -975,8 +993,8 @@ class _MultiProblemRegisterScreenState
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.grey[50],
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[200]!, width: 1),
+        borderRadius: BorderRadius.circular(AppRadius.medium),
+        border: Border.all(color: AppColors.border),
       ),
       child: ImageGridWidget(
         label: '해설 이미지',
@@ -1052,7 +1070,7 @@ class _MultiProblemRegisterScreenState
                         disabledForegroundColor: Colors.grey[600],
                         elevation: 0,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(AppRadius.medium),
                         ),
                       ),
                       child: StandardText(
@@ -1077,18 +1095,18 @@ class _MultiProblemRegisterScreenState
   }
 
   Widget _buildPracticeSetOption(ThemeHandler themeProvider) {
-    return InkWell(
+    return PressableScale(
+      haptic: HapticLevel.selection,
       onTap: _isSubmitting
           ? null
           : () => setState(() {
                 _createPracticeSet = !_createPracticeSet;
               }),
-      borderRadius: BorderRadius.circular(12),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppRadius.medium),
           border: Border.all(
             color: themeProvider.primaryColor.withValues(alpha: 0.16),
             width: 1,
@@ -1100,7 +1118,7 @@ class _MultiProblemRegisterScreenState
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
                 color: themeProvider.primaryColor.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(AppRadius.small),
               ),
               child: Icon(
                 Icons.fact_check_outlined,
@@ -1114,7 +1132,7 @@ class _MultiProblemRegisterScreenState
                 text: '이 오답노트들로 복습 세트 자동 생성',
                 fontSize: MobileFontSize.reduced(context, 14),
                 fontWeight: FontWeight.w500,
-                color: Colors.black87,
+                color: AppColors.textPrimary,
               ),
             ),
             Checkbox(
@@ -1160,7 +1178,7 @@ class _MultiProblemRegisterScreenState
                     foregroundColor: Colors.white,
                     elevation: 0,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppRadius.medium),
                     ),
                   ),
                   child: StandardText(
@@ -1194,8 +1212,8 @@ class _MultiProblemRegisterScreenState
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.grey[50],
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[200]!, width: 1),
+        borderRadius: BorderRadius.circular(AppRadius.medium),
+        border: Border.all(color: AppColors.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1206,7 +1224,7 @@ class _MultiProblemRegisterScreenState
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
                   color: themeProvider.primaryColor.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(AppRadius.small),
                 ),
                 child: Icon(
                   Icons.local_offer,
@@ -1219,7 +1237,7 @@ class _MultiProblemRegisterScreenState
                 text: '태그',
                 fontSize: MobileFontSize.reduced(context, 16),
                 fontWeight: FontWeight.w500,
-                color: Colors.black87,
+                color: AppColors.textPrimary,
               ),
               const SizedBox(width: 8),
               StandardText(
@@ -1234,7 +1252,7 @@ class _MultiProblemRegisterScreenState
                   backgroundColor: themeProvider.primaryColor,
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(AppRadius.medium),
                   ),
                   padding:
                       const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
@@ -1265,8 +1283,8 @@ class _MultiProblemRegisterScreenState
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: Colors.grey[300]!, width: 1),
+              borderRadius: BorderRadius.circular(AppRadius.medium),
+              border: Border.all(color: AppColors.border),
             ),
             child: selectedTags.isEmpty
                 ? StandardText(
@@ -1288,7 +1306,8 @@ class _MultiProblemRegisterScreenState
                             ),
                             decoration: BoxDecoration(
                               color: Colors.white,
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius:
+                                  BorderRadius.circular(AppRadius.small),
                               border: Border.all(
                                 color: themeProvider.primaryColor,
                                 width: 1,
@@ -1303,7 +1322,8 @@ class _MultiProblemRegisterScreenState
                           Positioned(
                             top: -5,
                             right: -5,
-                            child: GestureDetector(
+                            child: PressableScale(
+                              scale: 0.85,
                               onTap: _isSubmitting
                                   ? null
                                   : () => onRemove(tag.tagId),
@@ -1361,56 +1381,53 @@ class _MultiProblemRegisterScreenState
               runSpacing: 8,
               children: _recommendedTags.map((tag) {
                 final isSelected = selectedTagIds.contains(tag.tagId);
-                return Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    onTap: _isSubmitting
-                        ? null
-                        : () => _applyRecommendedTag(
-                              tag,
-                              selectedTagIds,
-                              onChanged: onChanged,
-                            ),
-                    borderRadius: BorderRadius.circular(8),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 11,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
+                return PressableScale(
+                  haptic: HapticLevel.selection,
+                  onTap: _isSubmitting
+                      ? null
+                      : () => _applyRecommendedTag(
+                            tag,
+                            selectedTagIds,
+                            onChanged: onChanged,
+                          ),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 11,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? themeProvider.primaryColor
+                          : Colors.white,
+                      borderRadius: BorderRadius.circular(AppRadius.small),
+                      border: Border.all(
                         color: isSelected
                             ? themeProvider.primaryColor
-                            : Colors.white,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: isSelected
-                              ? themeProvider.primaryColor
-                              : themeProvider.primaryColor
-                                  .withValues(alpha: 0.35),
-                          width: isSelected ? 1.4 : 1,
-                        ),
+                            : themeProvider.primaryColor
+                                .withValues(alpha: 0.35),
+                        width: isSelected ? 1.4 : 1,
                       ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          if (isSelected) ...[
-                            const Icon(
-                              Icons.check,
-                              size: 13,
-                              color: Colors.white,
-                            ),
-                            const SizedBox(width: 4),
-                          ],
-                          StandardText(
-                            text: '#${tag.name}',
-                            fontSize: 12,
-                            color: isSelected
-                                ? Colors.white
-                                : themeProvider.primaryColor,
-                            fontWeight: FontWeight.w500,
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (isSelected) ...[
+                          const Icon(
+                            Icons.check,
+                            size: 13,
+                            color: Colors.white,
                           ),
+                          const SizedBox(width: 4),
                         ],
-                      ),
+                        StandardText(
+                          text: '#${tag.name}',
+                          fontSize: 12,
+                          color: isSelected
+                              ? Colors.white
+                              : themeProvider.primaryColor,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ],
                     ),
                   ),
                 );
@@ -1538,7 +1555,7 @@ class _MultiProblemRegisterScreenState
   }) async {
     final result = await Navigator.push<TagSelectionResult>(
       context,
-      MaterialPageRoute(
+      TossPageRoute(
         builder: (_) => TagSelectionScreen(
           initialTags: _availableTags,
           initialSelectedTagIds: draft == null ? _selectedTagIds : draft.tagIds,
@@ -1607,7 +1624,7 @@ class _MultiProblemRegisterScreenState
     var currentIndex = index;
 
     await Navigator.of(context).push(
-      MaterialPageRoute<void>(
+      TossPageRoute<void>(
         builder: (_) {
           return StatefulBuilder(
             builder: (editorContext, editorSetState) {
@@ -1631,7 +1648,7 @@ class _MultiProblemRegisterScreenState
                   leading: IconButton(
                     icon: const Icon(
                       Icons.arrow_back,
-                      color: Colors.black87,
+                      color: AppColors.textPrimary,
                     ),
                     onPressed: () => Navigator.pop(editorContext),
                   ),
@@ -1678,7 +1695,8 @@ class _MultiProblemRegisterScreenState
                                           : Colors.grey[200]!,
                                     ),
                                     shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
+                                      borderRadius: BorderRadius.circular(
+                                          AppRadius.medium),
                                     ),
                                   ),
                                   icon: const Icon(
@@ -1701,7 +1719,7 @@ class _MultiProblemRegisterScreenState
                                   text: '${currentIndex + 1}/${_drafts.length}',
                                   fontSize:
                                       MobileFontSize.reduced(editorContext, 14),
-                                  color: Colors.black87,
+                                  color: AppColors.textPrimary,
                                   fontWeight: FontWeight.w700,
                                 ),
                               ),
@@ -1721,7 +1739,8 @@ class _MultiProblemRegisterScreenState
                                     foregroundColor: Colors.white,
                                     elevation: 0,
                                     shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
+                                      borderRadius: BorderRadius.circular(
+                                          AppRadius.medium),
                                     ),
                                   ),
                                   icon: Icon(
@@ -1853,6 +1872,8 @@ class _MultiProblemRegisterScreenState
     }
     Provider.of<ScreenIndexProvider>(context, listen: false)
         .setSelectedIndex(0);
+    // 작성이 끝나는 자리라 진동을 준다.
+    AppHaptic.primary();
     SnackBarDialog.showSnackBar(
       context: context,
       message: _createPracticeSet && !practiceSetCreated
@@ -1989,7 +2010,7 @@ class _MultiProblemRegisterScreenState
   }
 
   void _showProgressDialog(ValueNotifier<int> progress, int total) {
-    showDialog(
+    showTossDialog(
       context: context,
       barrierDismissible: false,
       builder: (dialogContext) {
@@ -1997,7 +2018,7 @@ class _MultiProblemRegisterScreenState
         return Dialog(
           backgroundColor: Colors.white,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(AppRadius.xlarge),
           ),
           child: Padding(
             padding: const EdgeInsets.fromLTRB(24, 24, 24, 22),
@@ -2008,58 +2029,12 @@ class _MultiProblemRegisterScreenState
                 return Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    SizedBox(
-                      width: 58,
-                      height: 58,
-                      child: Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          SizedBox(
-                            width: 58,
-                            height: 58,
-                            child: CircularProgressIndicator(
-                              value: progressValue,
-                              strokeWidth: 5,
-                              backgroundColor: themeProvider.primaryColor
-                                  .withValues(alpha: 0.12),
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                themeProvider.primaryColor,
-                              ),
-                            ),
-                          ),
-                          Icon(
-                            Icons.cloud_upload_outlined,
-                            color: themeProvider.primaryColor,
-                            size: 24,
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 18),
-                    StandardText(
-                      text: '이미지를 등록하고 있어요',
-                      fontSize: MobileFontSize.reduced(context, 17),
-                      color: Colors.black87,
-                      fontWeight: FontWeight.w600,
-                    ),
-                    const SizedBox(height: 8),
-                    StandardText(
-                      text: '$value / $total',
-                      fontSize: 14,
-                      color: Colors.grey[600]!,
-                    ),
-                    const SizedBox(height: 16),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(999),
-                      child: LinearProgressIndicator(
-                        value: progressValue,
-                        minHeight: 7,
-                        backgroundColor:
-                            themeProvider.primaryColor.withValues(alpha: 0.12),
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          themeProvider.primaryColor,
-                        ),
-                      ),
+                    // 다른 로딩과 같은 모양을 쓴다.
+                    AppLoadingView(
+                      message: '오답노트를 등록하고 있어요',
+                      detail: '$value / $total',
+                      progress: progressValue,
+                      color: themeProvider.primaryColor,
                     ),
                   ],
                 );

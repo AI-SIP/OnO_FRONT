@@ -5,6 +5,9 @@ import '../../../Model/StudyRoom/WeeklyReportModel.dart';
 import '../../../Module/Text/StandardText.dart';
 import '../../../Module/Theme/ThemeHandler.dart';
 import '../../../Module/User/ProfileAvatar.dart';
+import '../../../Module/Motion/AppMotion.dart';
+import '../../../Module/Design/AppColors.dart';
+import '../../../Module/Design/AppRadius.dart';
 
 class WeeklyReportSheet extends StatelessWidget {
   final WeeklyReportModel report;
@@ -24,6 +27,7 @@ class WeeklyReportSheet extends StatelessWidget {
   }) {
     FirebaseAnalytics.instance.logEvent(name: 'weekly_report_viewed');
     return showModalBottomSheet(
+      sheetAnimationStyle: AppMotion.sheetStyle,
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
@@ -71,7 +75,7 @@ class WeeklyReportSheet extends StatelessWidget {
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
                           color: primary.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: BorderRadius.circular(AppRadius.medium),
                         ),
                         child: Icon(
                           Icons.summarize_outlined,
@@ -86,7 +90,7 @@ class WeeklyReportSheet extends StatelessWidget {
                           const StandardText(
                             text: '주간 리포트',
                             fontSize: 18,
-                            color: Colors.black87,
+                            color: AppColors.textPrimary,
                           ),
                           StandardText(
                             text: '지난 7일 활동 요약',
@@ -153,7 +157,7 @@ class WeeklyReportSheet extends StatelessWidget {
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
                       color: primary.withOpacity(0.06),
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppRadius.medium),
                       border: Border.all(
                         color: primary.withOpacity(0.15),
                         width: 1,
@@ -167,7 +171,7 @@ class WeeklyReportSheet extends StatelessWidget {
                           child: StandardText(
                             text: report.cheerMessage,
                             fontSize: 14,
-                            color: Colors.black87,
+                            color: AppColors.textPrimary,
                             fontWeight: FontWeight.normal,
                             fontFamily: 'PretendardLight',
                           ),
@@ -184,7 +188,7 @@ class WeeklyReportSheet extends StatelessWidget {
                       backgroundColor: primary,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(AppRadius.medium),
                       ),
                     ),
                     child: const StandardText(
@@ -228,8 +232,8 @@ class _StatCard extends StatelessWidget {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[200]!, width: 1),
+        borderRadius: BorderRadius.circular(AppRadius.medium),
+        border: Border.all(color: AppColors.border),
         boxShadow: [
           BoxShadow(
             color: Colors.grey.withOpacity(0.06),
@@ -284,7 +288,7 @@ class _StatCard extends StatelessWidget {
                 StandardText(
                   text: value,
                   fontSize: 16,
-                  color: Colors.black87,
+                  color: AppColors.textPrimary,
                 ),
               ],
             ),
@@ -319,8 +323,8 @@ class _MiniStat extends StatelessWidget {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[200]!, width: 1),
+        borderRadius: BorderRadius.circular(AppRadius.medium),
+        border: Border.all(color: AppColors.border),
         boxShadow: [
           BoxShadow(
             color: Colors.grey.withOpacity(0.06),
@@ -345,7 +349,7 @@ class _MiniStat extends StatelessWidget {
           StandardText(
             text: value,
             fontSize: 16,
-            color: Colors.black87,
+            color: AppColors.textPrimary,
           ),
         ],
       ),

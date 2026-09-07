@@ -5,6 +5,11 @@ import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import 'ProblemSolveCanvasScreen.dart';
 import 'ProblemSolveRegisterScreen.dart';
+import '../../Module/Motion/TossPageRoute.dart';
+import '../../Module/Motion/PressableScale.dart';
+import '../../Module/Motion/AppMotion.dart';
+import '../../Module/Design/AppRadius.dart';
+import '../../Module/Design/AppColors.dart';
 
 class ProblemSolveEntry {
   static Future<bool?> open({
@@ -15,6 +20,7 @@ class ProblemSolveEntry {
     required ThemeHandler themeProvider,
   }) async {
     final mode = await showModalBottomSheet<_ProblemSolveMode>(
+      sheetAnimationStyle: AppMotion.sheetStyle,
       context: context,
       backgroundColor: Colors.transparent,
       builder: (sheetContext) => _ProblemSolveModeSheet(
@@ -30,7 +36,7 @@ class ProblemSolveEntry {
     if (mode == _ProblemSolveMode.offline) {
       return Navigator.push<bool>(
         context,
-        MaterialPageRoute(
+        TossPageRoute(
           builder: (context) => ProblemSolveRegisterScreen(
             problemId: problemId,
             onRefresh: onRefresh,
@@ -42,7 +48,7 @@ class ProblemSolveEntry {
     if (problemImageUrls.isEmpty) {
       return Navigator.push<bool>(
         context,
-        MaterialPageRoute(
+        TossPageRoute(
           builder: (context) => ProblemSolveRegisterScreen(
             problemId: problemId,
             onRefresh: onRefresh,
@@ -53,7 +59,7 @@ class ProblemSolveEntry {
 
     return Navigator.push<bool>(
       context,
-      MaterialPageRoute(
+      TossPageRoute(
         builder: (context) => ProblemSolveCanvasScreen(
           problemId: problemId,
           problemImageUrls: problemImageUrls,
@@ -115,7 +121,7 @@ class _ProblemSolveModeSheet extends StatelessWidget {
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
                   color: themeProvider.primaryColor.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(AppRadius.small),
                 ),
                 child: Icon(
                   Icons.edit_note,
@@ -128,7 +134,7 @@ class _ProblemSolveModeSheet extends StatelessWidget {
                 text: '다시 풀기 방식 선택',
                 fontSize: MobileFontSize.reduced(context, 20),
                 fontWeight: FontWeight.w600,
-                color: Colors.black87,
+                color: AppColors.textPrimary,
               ),
             ],
           ),
@@ -178,15 +184,14 @@ class _ModeTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = isEnabled ? themeProvider.primaryColor : Colors.grey;
 
-    return InkWell(
+    return PressableScale(
       onTap: isEnabled ? onTap : null,
-      borderRadius: BorderRadius.circular(14),
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: isEnabled ? Colors.grey[50] : Colors.grey[100],
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(AppRadius.large),
           border: Border.all(
             color: isEnabled
                 ? themeProvider.primaryColor.withOpacity(0.18)
@@ -201,7 +206,7 @@ class _ModeTile extends StatelessWidget {
               height: 42,
               decoration: BoxDecoration(
                 color: color.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppRadius.medium),
               ),
               child: Icon(icon, color: color, size: 23),
             ),

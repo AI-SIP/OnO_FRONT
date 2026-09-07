@@ -22,6 +22,16 @@ import '../../Provider/FoldersProvider.dart';
 import '../../Provider/ProblemsProvider.dart';
 import '../../Util/AppErrorReporter.dart';
 import '../../Util/AppSnackBar.dart';
+import '../../Module/Motion/AppHaptic.dart';
+import '../../Module/Motion/AppMotion.dart';
+import '../../Module/Motion/AppearTransition.dart';
+import '../../Module/Motion/SelectionPop.dart';
+import '../../Module/Motion/PressableScale.dart';
+import '../../Module/Motion/TossPageRoute.dart';
+import '../../Module/Motion/Skeleton.dart';
+import '../../Module/Motion/TossDialog.dart';
+import '../../Module/Design/AppColors.dart';
+import '../../Module/Design/AppRadius.dart';
 
 enum _PracticeSearchMode { folder, tag, title }
 
@@ -605,9 +615,9 @@ class _PracticeProblemSelectionScreenState
     }) {
       final selected = _searchMode == mode;
       return Expanded(
-        child: InkWell(
+        child: PressableScale(
+          haptic: HapticLevel.selection,
           onTap: () => _switchSearchMode(mode),
-          borderRadius: BorderRadius.circular(10),
           child: Container(
             height: 40,
             alignment: Alignment.center,
@@ -615,7 +625,7 @@ class _PracticeProblemSelectionScreenState
               color: selected
                   ? themeProvider.primaryColor.withOpacity(0.08)
                   : Colors.grey[50],
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(AppRadius.medium),
               border: Border.all(
                 color:
                     selected ? themeProvider.primaryColor : Colors.grey[300]!,
@@ -650,8 +660,8 @@ class _PracticeProblemSelectionScreenState
       padding: const EdgeInsets.all(6),
       decoration: BoxDecoration(
         color: Colors.grey[100],
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[200]!, width: 1),
+        borderRadius: BorderRadius.circular(AppRadius.medium),
+        border: Border.all(color: AppColors.border),
       ),
       child: Row(
         children: [
@@ -692,8 +702,8 @@ class _PracticeProblemSelectionScreenState
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           decoration: BoxDecoration(
             color: Colors.grey[50],
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: Colors.grey[300]!, width: 1),
+            borderRadius: BorderRadius.circular(AppRadius.medium),
+            border: Border.all(color: AppColors.border),
           ),
           child: StandardText(
             text: '생성된 태그가 없습니다.',
@@ -715,9 +725,9 @@ class _PracticeProblemSelectionScreenState
               final selected = _selectedTagId == tag.tagId;
               return Padding(
                 padding: const EdgeInsets.only(right: 8),
-                child: InkWell(
+                child: PressableScale(
+                  haptic: HapticLevel.selection,
                   onTap: () => _loadTagProblems(tag.tagId, isInitial: true),
-                  borderRadius: BorderRadius.circular(8),
                   child: Container(
                     padding:
                         const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
@@ -725,7 +735,7 @@ class _PracticeProblemSelectionScreenState
                       color: selected
                           ? themeProvider.primaryColor.withOpacity(0.08)
                           : Colors.white,
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(AppRadius.small),
                       border: Border.all(
                         color: selected
                             ? themeProvider.primaryColor
@@ -761,7 +771,7 @@ class _PracticeProblemSelectionScreenState
         onSubmitted: (value) => _searchTitleProblems(value, isInitial: true),
         style: baseTextStyle.copyWith(
           fontSize: 14,
-          color: Colors.black87,
+          color: AppColors.textPrimary,
           fontWeight: FontWeight.w500,
         ),
         decoration: InputDecoration(
@@ -776,15 +786,15 @@ class _PracticeProblemSelectionScreenState
           contentPadding:
               const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(AppRadius.medium),
             borderSide: BorderSide(color: Colors.grey[300]!, width: 1),
           ),
           enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(AppRadius.medium),
             borderSide: BorderSide(color: Colors.grey[300]!, width: 1),
           ),
           focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(AppRadius.medium),
             borderSide: BorderSide(
               color: themeProvider.primaryColor.withOpacity(0.5),
               width: 1.5,
@@ -825,7 +835,8 @@ class _PracticeProblemSelectionScreenState
             }
 
             final folder = allFolders[index];
-            return GestureDetector(
+            return PressableScale(
+              haptic: HapticLevel.selection,
               onTap: () async {
                 setState(() {
                   selectedFolderId = folder.folderId;
@@ -854,30 +865,38 @@ class _PracticeProblemSelectionScreenState
     final displayName =
         folder.folderId == rootFolderId ? '책장' : folder.folderName;
 
-    return Opacity(
-      opacity: isSelected ? 1.0 : 0.5, // 선택된 폴더가 아니라면 흐리게 표시
-      child: Column(
-        children: [
-          SvgPicture.asset(
-            NoteIconHandler.getNoteIcon(allFolders.indexOf(folder)),
-            width: 60,
-            height: 60,
-          ),
-          const SizedBox(height: 8),
-          SizedBox(
-            width: folderNameWidth,
-            child: StandardText(
-              text: displayName.length > 10
-                  ? '${displayName.substring(0, 10)}..'
-                  : displayName,
-              fontSize: 14,
-              color: Colors.black,
-              textAlign: TextAlign.center,
-              overflow: TextOverflow.ellipsis,
-              maxLines: 1,
+    return AnimatedOpacity(
+      // 선택된 폴더가 아니라면 흐리게 표시
+      opacity: isSelected ? 1.0 : 0.5,
+      duration: AppMotion.fast,
+      curve: AppMotion.standard,
+      child: AnimatedScale(
+        scale: isSelected ? 1.0 : 0.94,
+        duration: AppMotion.normal,
+        curve: AppMotion.emphasized,
+        child: Column(
+          children: [
+            SvgPicture.asset(
+              NoteIconHandler.getNoteIcon(allFolders.indexOf(folder)),
+              width: 60,
+              height: 60,
             ),
-          ),
-        ],
+            const SizedBox(height: 8),
+            SizedBox(
+              width: folderNameWidth,
+              child: StandardText(
+                text: displayName.length > 10
+                    ? '${displayName.substring(0, 10)}..'
+                    : displayName,
+                fontSize: 14,
+                color: Colors.black,
+                textAlign: TextAlign.center,
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -913,7 +932,8 @@ class _PracticeProblemSelectionScreenState
           final displayName =
               folder.folderId == rootFolderId ? '책장' : folder.folderName;
 
-          return InkWell(
+          return PressableScale(
+            haptic: HapticLevel.selection,
             onTap: () async {
               if (selectedFolderId == folder.folderId) return;
               setState(() => selectedFolderId = folder.folderId);
@@ -934,7 +954,7 @@ class _PracticeProblemSelectionScreenState
                   color: isSelected
                       ? themeProvider.primaryColor.withValues(alpha: 0.08)
                       : Colors.transparent,
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(AppRadius.medium),
                   border: Border.all(
                     color: isSelected
                         ? themeProvider.primaryColor.withValues(alpha: 0.30)
@@ -984,7 +1004,7 @@ class _PracticeProblemSelectionScreenState
     final list = Padding(
       padding: padding,
       child: _isLoadingProblems && _currentFolderProblems.isEmpty
-          ? const Center(child: CircularProgressIndicator())
+          ? const SkeletonList(itemCount: 4, itemHeight: 88, spacing: 12)
           : _currentFolderProblems.isNotEmpty
               ? ListView.builder(
                   controller: _problemScrollController,
@@ -1003,24 +1023,28 @@ class _PracticeProblemSelectionScreenState
                     final isSelected =
                         _selectedProblemIds.contains(problem.problemId);
 
-                    return GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          if (isSelected) {
-                            _selectedProblemIds.remove(problem.problemId);
-                            selectedProblems.removeWhere(
-                                (p) => p.problemId == problem.problemId);
-                          } else {
-                            _selectedProblemIds.add(problem.problemId);
-                            if (!selectedProblems
-                                .any((p) => p.problemId == problem.problemId)) {
-                              selectedProblems.add(problem);
+                    return AppearTransition(
+                      delay: AppMotion.stagger * (index < 6 ? index : 6),
+                      child: PressableScale(
+                        haptic: HapticLevel.selection,
+                        onTap: () {
+                          setState(() {
+                            if (isSelected) {
+                              _selectedProblemIds.remove(problem.problemId);
+                              selectedProblems.removeWhere(
+                                  (p) => p.problemId == problem.problemId);
+                            } else {
+                              _selectedProblemIds.add(problem.problemId);
+                              if (!selectedProblems.any(
+                                  (p) => p.problemId == problem.problemId)) {
+                                selectedProblems.add(problem);
+                              }
                             }
-                          }
-                        });
-                      },
-                      child: _problemTileContent(
-                          problem, themeProvider, isSelected),
+                          });
+                        },
+                        child: _problemTileContent(
+                            problem, themeProvider, isSelected),
+                      ),
                     );
                   },
                 )
@@ -1036,11 +1060,40 @@ class _PracticeProblemSelectionScreenState
         : '작성한 오답노트가 없습니다!';
 
     if (_searchMode == _PracticeSearchMode.title && _titleQuery.isEmpty) {
+      // 문구만 있으면 화면이 비어 보인다. 검색 안내라 연필 대신 돋보기를 쓴다.
       return Center(
-        child: StandardText(
-          text: message,
-          color: Colors.grey[600]!,
-          fontSize: 15,
+        child: AppearTransition(
+          offset: 12,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 84,
+                height: 84,
+                decoration: const BoxDecoration(
+                  color: AppColors.surfaceMuted,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.search_rounded,
+                  size: 36,
+                  color: AppColors.textTertiary,
+                ),
+              ),
+              const SizedBox(height: 16),
+              StandardText(
+                text: message,
+                color: AppColors.textPrimary,
+                fontSize: 16,
+              ),
+              const SizedBox(height: 6),
+              const StandardText(
+                text: '오답노트 제목의 일부만 넣어도 찾을 수 있어요.',
+                color: AppColors.textTertiary,
+                fontSize: 13,
+              ),
+            ],
+          ),
         ),
       );
     }
@@ -1126,26 +1179,32 @@ class _PracticeProblemSelectionScreenState
     required bool isCompact,
   }) {
     final color = isSelected ? themeProvider.primaryColor : Colors.grey[400]!;
-    return Container(
-      width: isCompact ? 34 : 40,
-      height: isCompact ? 34 : 40,
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        color: isSelected
-            ? themeProvider.primaryColor.withValues(alpha: 0.08)
-            : Colors.grey[50],
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(
+    return SelectionPop(
+      selected: isSelected,
+      peak: 1.15,
+      child: AnimatedContainer(
+        duration: AppMotion.fast,
+        curve: AppMotion.standard,
+        width: isCompact ? 34 : 40,
+        height: isCompact ? 34 : 40,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
           color: isSelected
-              ? themeProvider.primaryColor.withValues(alpha: 0.35)
-              : Colors.grey[300]!,
-          width: 1,
+              ? themeProvider.primaryColor.withValues(alpha: 0.08)
+              : Colors.grey[50],
+          borderRadius: BorderRadius.circular(AppRadius.medium),
+          border: Border.all(
+            color: isSelected
+                ? themeProvider.primaryColor.withValues(alpha: 0.35)
+                : Colors.grey[300]!,
+            width: 1,
+          ),
         ),
-      ),
-      child: Icon(
-        isSelected ? Icons.check_box : Icons.check_box_outline_blank,
-        color: color,
-        size: isCompact ? 19 : 22,
+        child: Icon(
+          isSelected ? Icons.check_box : Icons.check_box_outline_blank,
+          color: color,
+          size: isCompact ? 19 : 22,
+        ),
       ),
     );
   }
@@ -1182,7 +1241,7 @@ class _PracticeProblemSelectionScreenState
                     // 다음 화면으로 updateModel 넘기기
                     Navigator.push(
                       context,
-                      MaterialPageRoute(
+                      TossPageRoute(
                         builder: (context) => PracticeTitleWriteScreen(
                           practiceNoteUpdateModel: updateModel,
                           practiceNoteDetailModel: widget.practiceModel!,
@@ -1198,7 +1257,7 @@ class _PracticeProblemSelectionScreenState
                     );
                     Navigator.push(
                       context,
-                      MaterialPageRoute(
+                      TossPageRoute(
                         builder: (context) => PracticeTitleWriteScreen(
                           practiceRegisterModel: registerModel,
                         ),
@@ -1210,7 +1269,7 @@ class _PracticeProblemSelectionScreenState
           style: ElevatedButton.styleFrom(
             backgroundColor: themeProvider.primaryColor,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(AppRadius.large),
             ),
             elevation: 0,
           ),
@@ -1235,10 +1294,17 @@ class _PracticeProblemSelectionScreenState
                   color: Colors.white,
                   shape: BoxShape.circle,
                 ),
-                child: StandardText(
-                  text: _selectedProblemIds.length.toString(),
-                  fontSize: 12,
-                  color: themeProvider.primaryColor,
+                // 개수가 바뀔 때마다 숫자가 한 번 튀어서, 눌린 것이 셈에
+                // 반영됐다는 걸 알 수 있게 한다.
+                child: SelectionPop(
+                  key: ValueKey<int>(_selectedProblemIds.length),
+                  selected: true,
+                  peak: 1.3,
+                  child: StandardText(
+                    text: _selectedProblemIds.length.toString(),
+                    fontSize: 12,
+                    color: themeProvider.primaryColor,
+                  ),
                 ),
               ),
             ],
@@ -1251,13 +1317,13 @@ class _PracticeProblemSelectionScreenState
   void _showSelectProblemDialog(BuildContext context) {
     final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
 
-    showDialog(
+    showTossDialog(
       context: context,
       builder: (BuildContext dialogContext) {
         return Dialog(
           backgroundColor: Colors.white,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(AppRadius.large),
           ),
           child: Container(
             padding: const EdgeInsets.all(24),
@@ -1270,7 +1336,7 @@ class _PracticeProblemSelectionScreenState
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
                         color: Colors.orange.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(AppRadius.small),
                       ),
                       child: const Icon(
                         Icons.warning_amber_rounded,
@@ -1283,7 +1349,7 @@ class _PracticeProblemSelectionScreenState
                       text: '문제 선택 필요',
                       fontSize: MobileFontSize.reduced(context, 18),
                       fontWeight: FontWeight.w600,
-                      color: Colors.black87,
+                      color: AppColors.textPrimary,
                     ),
                   ],
                 ),
@@ -1291,7 +1357,7 @@ class _PracticeProblemSelectionScreenState
                 StandardText(
                   text: '하나 이상의 문제를 선택해주세요!',
                   fontSize: MobileFontSize.reduced(context, 15),
-                  color: Colors.black87,
+                  color: AppColors.textPrimary,
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 24),
@@ -1306,7 +1372,7 @@ class _PracticeProblemSelectionScreenState
                           horizontal: 12, vertical: 10),
                       backgroundColor: themeProvider.primaryColor,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(AppRadius.small),
                       ),
                     ),
                     child: const StandardText(

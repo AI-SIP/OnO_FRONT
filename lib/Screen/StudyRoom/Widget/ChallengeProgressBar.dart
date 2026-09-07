@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../Module/Text/StandardText.dart';
 import '../../../Module/Theme/ThemeHandler.dart';
 import '../../../Module/User/ProfileAvatar.dart';
+import '../../../Module/Motion/AnimatedGauge.dart';
 
 class ChallengeProgressBar extends StatelessWidget {
   final int current;
@@ -77,18 +78,13 @@ class ChallengeProgressBar extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 4),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(4),
-          child: LinearProgressIndicator(
-            value: ratio,
-            minHeight: 6,
-            backgroundColor: Colors.grey[100],
-            valueColor: AlwaysStoppedAnimation<Color>(
-              isDone
-                  ? themeProvider.primaryColor
-                  : themeProvider.primaryColor.withOpacity(0.55),
-            ),
-          ),
+        AnimatedLinearGauge(
+          value: ratio,
+          color: isDone
+              ? themeProvider.primaryColor
+              : themeProvider.primaryColor.withOpacity(0.55),
+          backgroundColor: Colors.grey[100],
+          height: 6,
         ),
       ],
     );

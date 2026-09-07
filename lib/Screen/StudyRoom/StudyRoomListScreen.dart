@@ -14,6 +14,11 @@ import 'StudyRoomDetailScreen.dart';
 import 'StudyRoomJoinScreen.dart';
 import 'Widget/StudyRoomEmptyState.dart';
 import 'Widget/StudyRoomThumbnail.dart';
+import '../../Module/Motion/TossPageRoute.dart';
+import '../../Module/Motion/PressableScale.dart';
+import '../../Module/Motion/AppMotion.dart';
+import '../../Module/Design/AppColors.dart';
+import '../../Module/Design/AppRadius.dart';
 
 class StudyRoomListScreen extends StatefulWidget {
   final TutorialTargets? tutorialTargets;
@@ -45,21 +50,21 @@ class _StudyRoomListScreenState extends State<StudyRoomListScreen> {
   void _openCreate() {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => const StudyRoomCreateScreen()),
+      TossPageRoute(builder: (_) => const StudyRoomCreateScreen()),
     );
   }
 
   void _openJoin() {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => const StudyRoomJoinScreen()),
+      TossPageRoute(builder: (_) => const StudyRoomJoinScreen()),
     );
   }
 
   void _openDetail(int roomId) {
     Navigator.push(
       context,
-      MaterialPageRoute(
+      TossPageRoute(
         builder: (_) => StudyRoomDetailScreen(roomId: roomId),
       ),
     );
@@ -67,6 +72,7 @@ class _StudyRoomListScreenState extends State<StudyRoomListScreen> {
 
   void _showAddMenu(ThemeHandler themeProvider) {
     showModalBottomSheet(
+      sheetAnimationStyle: AppMotion.sheetStyle,
       context: context,
       useRootNavigator: true,
       backgroundColor: Colors.transparent,
@@ -99,7 +105,7 @@ class _StudyRoomListScreenState extends State<StudyRoomListScreen> {
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
                         color: themeProvider.primaryColor.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(AppRadius.small),
                       ),
                       child: Icon(
                         Icons.group,
@@ -112,7 +118,7 @@ class _StudyRoomListScreenState extends State<StudyRoomListScreen> {
                       text: '스터디룸 참여하기',
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
-                      color: Colors.black87,
+                      color: AppColors.textPrimary,
                     ),
                   ],
                 ),
@@ -151,15 +157,14 @@ class _StudyRoomListScreenState extends State<StudyRoomListScreen> {
     required String label,
     required VoidCallback onTap,
   }) {
-    return InkWell(
+    return PressableScale(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
           color: Colors.grey[50],
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey[200]!, width: 1),
+          borderRadius: BorderRadius.circular(AppRadius.medium),
+          border: Border.all(color: AppColors.border),
         ),
         child: Row(
           children: [
@@ -172,7 +177,8 @@ class _StudyRoomListScreenState extends State<StudyRoomListScreen> {
               child: Icon(icon, size: 18, color: iconColor),
             ),
             const SizedBox(width: 12),
-            StandardText(text: label, fontSize: 15, color: Colors.black87),
+            StandardText(
+                text: label, fontSize: 15, color: AppColors.textPrimary),
             const Spacer(),
             Icon(Icons.chevron_right, size: 18, color: Colors.grey[400]),
           ],
@@ -224,17 +230,31 @@ class _StudyRoomListScreenState extends State<StudyRoomListScreen> {
                   color: themeProvider.primaryColor,
                 ),
               )
-            : provider.rooms.isEmpty
-                ? StudyRoomEmptyState(
-                    themeProvider: themeProvider,
-                    onCreateTap: _openCreate,
-                    onJoinTap: _openJoin,
-                  )
-                : RefreshIndicator(
-                    onRefresh: _refresh,
-                    color: themeProvider.primaryColor,
-                    child: _buildRoomList(provider, themeProvider),
-                  ),
+            : RefreshIndicator(
+                onRefresh: _refresh,
+                color: themeProvider.primaryColor,
+                child: provider.rooms.isEmpty
+                    // 참여 중인 방이 없어도 당겨서 새로고침할 수 있어야 한다.
+                    // 빈 상태는 스크롤되지 않아서 그냥 두면 당길 것이 없다.
+                    // 화면 높이만큼 스크롤 영역을 만들어 준다.
+                    ? LayoutBuilder(
+                        builder: (context, constraints) =>
+                            SingleChildScrollView(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          child: ConstrainedBox(
+                            constraints: BoxConstraints(
+                              minHeight: constraints.maxHeight,
+                            ),
+                            child: StudyRoomEmptyState(
+                              themeProvider: themeProvider,
+                              onCreateTap: _openCreate,
+                              onJoinTap: _openJoin,
+                            ),
+                          ),
+                        ),
+                      )
+                    : _buildRoomList(provider, themeProvider),
+              ),
       ),
     );
   }
@@ -271,14 +291,13 @@ class _StudyRoomListScreenState extends State<StudyRoomListScreen> {
         horizontal: 16,
         vertical: screenHeight * 0.006,
       ),
-      child: InkWell(
+      child: PressableScale(
         onTap: () => _openDetail(room.roomId),
-        borderRadius: BorderRadius.circular(12),
         child: Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppRadius.medium),
             boxShadow: [
               BoxShadow(
                 color: Colors.grey.withOpacity(0.2),
@@ -315,7 +334,7 @@ class _StudyRoomListScreenState extends State<StudyRoomListScreen> {
                           child: StandardText(
                             text: room.name,
                             fontSize: titleFontSize,
-                            color: Colors.black87,
+                            color: AppColors.textPrimary,
                             fontWeight: FontWeight.w700,
                             overflow: TextOverflow.ellipsis,
                           ),

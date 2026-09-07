@@ -15,6 +15,11 @@ import '../../Module/Text/mobile_font_size.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import 'ProblemSolveRegisterScreen.dart';
+import '../../Module/Motion/AppHaptic.dart';
+import '../../Module/Motion/PressableScale.dart';
+import '../../Module/Motion/TossPageRoute.dart';
+import '../../Module/Design/AppRadius.dart';
+import '../../Module/Design/AppColors.dart';
 
 class ProblemSolveCanvasScreen extends StatefulWidget {
   final int problemId;
@@ -450,7 +455,7 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
                 text: '굵기',
                 fontSize: MobileFontSize.reduced(context, 13),
                 fontWeight: FontWeight.w600,
-                color: Colors.black87,
+                color: AppColors.textPrimary,
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -523,7 +528,7 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
                     const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                 decoration: BoxDecoration(
                   color: themeProvider.primaryColor.withOpacity(0.08),
-                  borderRadius: BorderRadius.circular(999),
+                  borderRadius: BorderRadius.circular(AppRadius.full),
                   border: Border.all(
                     color: themeProvider.primaryColor.withOpacity(0.18),
                     width: 1,
@@ -596,9 +601,8 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
   }) {
     final color = isSelected ? themeProvider.primaryColor : Colors.grey[600]!;
 
-    return InkWell(
+    return PressableScale(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(10),
       child: Container(
         height: 38,
         padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -606,7 +610,7 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
           color: isSelected
               ? themeProvider.primaryColor.withOpacity(0.12)
               : Colors.grey[100],
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(AppRadius.medium),
           border: Border.all(
             color: isSelected
                 ? themeProvider.primaryColor.withOpacity(0.35)
@@ -633,12 +637,12 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
   Widget _buildColorButton(Color color) {
     final isSelected = _selectedTool == _CanvasTool.pen && _penColor == color;
 
-    return InkWell(
+    return PressableScale(
+      haptic: HapticLevel.selection,
       onTap: () => setState(() {
         _penColor = color;
         _setTool(_CanvasTool.pen);
       }),
-      borderRadius: BorderRadius.circular(19),
       child: Container(
         width: 38,
         height: 38,
@@ -675,7 +679,7 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
           style: ElevatedButton.styleFrom(
             backgroundColor: themeProvider.primaryColor,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(AppRadius.large),
             ),
             elevation: 0,
           ),
@@ -941,7 +945,7 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
 
       final result = await Navigator.push(
         context,
-        MaterialPageRoute(
+        TossPageRoute(
           builder: (context) => ProblemSolveRegisterScreen(
             problemId: widget.problemId,
             onRefresh: widget.onRefresh,

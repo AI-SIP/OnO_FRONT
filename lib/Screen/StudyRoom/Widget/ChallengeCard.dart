@@ -6,6 +6,10 @@ import '../../../Module/Text/StandardText.dart';
 import '../../../Module/Theme/ThemeHandler.dart';
 import '../../../Provider/StudyRoomProvider.dart';
 import 'ChallengeProgressBar.dart';
+import '../../../Module/Motion/PressableScale.dart';
+import '../../../Module/Motion/TossDialog.dart';
+import '../../../Module/Design/AppColors.dart';
+import '../../../Module/Design/AppRadius.dart';
 
 class ChallengeCard extends StatelessWidget {
   final ChallengeModel challenge;
@@ -105,7 +109,7 @@ class ChallengeCard extends StatelessWidget {
       padding: const EdgeInsets.all(15),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(AppRadius.large),
         border: Border.all(
           color: c.isInProgress ? primary : Colors.grey[200]!,
           width: c.isInProgress ? 1.3 : 1,
@@ -128,7 +132,7 @@ class ChallengeCard extends StatelessWidget {
                 height: 34,
                 decoration: BoxDecoration(
                   color: _typeColor(c.type, primary).withValues(alpha: 0.10),
-                  borderRadius: BorderRadius.circular(11),
+                  borderRadius: BorderRadius.circular(AppRadius.medium),
                 ),
                 child: Icon(
                   c.type == 'group'
@@ -148,7 +152,7 @@ class ChallengeCard extends StatelessWidget {
                     StandardText(
                       text: c.title,
                       fontSize: 15,
-                      color: Colors.black87,
+                      color: AppColors.textPrimary,
                       fontWeight: FontWeight.w700,
                       overflow: TextOverflow.ellipsis,
                       maxLines: 1,
@@ -174,7 +178,7 @@ class ChallengeCard extends StatelessWidget {
                 ),
               ),
               if (canDelete)
-                GestureDetector(
+                PressableScale(
                   onTap: () => _confirmDelete(context, provider),
                   child: Icon(Icons.close, size: 18, color: Colors.grey[400]),
                 ),
@@ -217,12 +221,12 @@ class ChallengeCard extends StatelessWidget {
 
   Future<void> _confirmDelete(
       BuildContext context, StudyRoomProvider provider) async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showTossDialog<bool>(
       context: context,
       builder: (_) => Dialog(
         backgroundColor: Colors.white,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(15),
+          borderRadius: BorderRadius.circular(AppRadius.large),
           side: BorderSide(color: Colors.grey[200]!, width: 1),
         ),
         child: ConstrainedBox(
@@ -238,7 +242,7 @@ class ChallengeCard extends StatelessWidget {
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
                         color: Colors.red.withValues(alpha: 0.10),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(AppRadius.small),
                       ),
                       child: const Icon(
                         Icons.delete_outline,
@@ -250,7 +254,7 @@ class ChallengeCard extends StatelessWidget {
                     const StandardText(
                       text: '챌린지 삭제',
                       fontSize: 18,
-                      color: Colors.black87,
+                      color: AppColors.textPrimary,
                       fontWeight: FontWeight.w700,
                     ),
                   ],
@@ -274,7 +278,8 @@ class ChallengeCard extends StatelessWidget {
                           backgroundColor: Colors.grey[50],
                           padding: const EdgeInsets.symmetric(vertical: 13),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius:
+                                BorderRadius.circular(AppRadius.medium),
                             side: BorderSide(
                               color: Colors.grey[200]!,
                               width: 1,
@@ -284,7 +289,7 @@ class ChallengeCard extends StatelessWidget {
                         child: const StandardText(
                           text: '취소',
                           fontSize: 14,
-                          color: Colors.black87,
+                          color: AppColors.textPrimary,
                         ),
                       ),
                     ),
@@ -296,7 +301,8 @@ class ChallengeCard extends StatelessWidget {
                           backgroundColor: Colors.red,
                           padding: const EdgeInsets.symmetric(vertical: 13),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius:
+                                BorderRadius.circular(AppRadius.medium),
                           ),
                         ),
                         child: const StandardText(
@@ -337,8 +343,8 @@ class _InfoChip extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
       decoration: BoxDecoration(
         color: backgroundColor ?? Colors.grey[50],
-        borderRadius: BorderRadius.circular(7),
-        border: Border.all(color: Colors.grey[200]!, width: 1),
+        borderRadius: BorderRadius.circular(AppRadius.small),
+        border: Border.all(color: AppColors.border),
       ),
       child: StandardText(
         text: text,

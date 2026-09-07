@@ -15,6 +15,13 @@ import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/PracticeNoteProvider.dart';
 import '../ProblemDetail/ProblemDetailScreen.dart';
 import 'PracticeProblemSelectionScreen.dart';
+import '../../Module/Motion/PressableScale.dart';
+import '../../Module/Motion/TossPageRoute.dart';
+import '../../Module/Motion/TossDialog.dart';
+import '../../Module/Motion/AppMotion.dart';
+import '../../Module/Design/AppColors.dart';
+import '../../Module/Design/AppToast.dart';
+import '../../Module/Design/AppRadius.dart';
 
 class PracticeDetailScreen extends StatelessWidget {
   final PracticeNoteDetailModel practice;
@@ -82,6 +89,7 @@ class PracticeDetailScreen extends StatelessWidget {
 
     final openTime = DateTime.now();
     showModalBottomSheet(
+      sheetAnimationStyle: AppMotion.sheetStyle,
       backgroundColor: Colors.transparent,
       context: context,
       isDismissible: false,
@@ -129,7 +137,8 @@ class PracticeDetailScreen extends StatelessWidget {
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
                             color: themeProvider.primaryColor.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius:
+                                BorderRadius.circular(AppRadius.small),
                           ),
                           child: Icon(
                             Icons.edit_note,
@@ -142,7 +151,7 @@ class PracticeDetailScreen extends StatelessWidget {
                           text: '복습 세트 편집하기',
                           fontSize: MobileFontSize.reduced(context, 18),
                           fontWeight: FontWeight.w600,
-                          color: Colors.black87,
+                          color: AppColors.textPrimary,
                         ),
                       ],
                     ),
@@ -157,7 +166,7 @@ class PracticeDetailScreen extends StatelessWidget {
                         Navigator.pop(context);
                         Navigator.push(
                           context,
-                          MaterialPageRoute(
+                          TossPageRoute(
                             builder: (context) =>
                                 PracticeProblemSelectionScreen(
                               practiceModel: practice,
@@ -200,15 +209,14 @@ class PracticeDetailScreen extends StatelessWidget {
     required VoidCallback onTap,
     required ThemeHandler themeProvider,
   }) {
-    return InkWell(
+    return PressableScale(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
           color: Colors.grey[50],
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey[200]!, width: 1),
+          borderRadius: BorderRadius.circular(AppRadius.medium),
+          border: Border.all(color: AppColors.border),
         ),
         child: Row(
           children: [
@@ -363,7 +371,7 @@ class PracticeDetailScreen extends StatelessWidget {
             const StandardText(
               text: '복습 세트가 비어있습니다.\n오답노트를 추가해 편리한 복습을 해보세요!',
               fontSize: 16,
-              color: Colors.black87,
+              color: AppColors.textPrimary,
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 30),
@@ -373,7 +381,7 @@ class PracticeDetailScreen extends StatelessWidget {
                 onPressed: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(
+                    TossPageRoute(
                       builder: (context) => PracticeProblemSelectionScreen(
                         practiceModel: practice,
                       ),
@@ -384,7 +392,7 @@ class PracticeDetailScreen extends StatelessWidget {
                   backgroundColor: themeProvider.primaryColor,
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppRadius.medium),
                   ),
                 ),
                 child: const StandardText(
@@ -412,7 +420,7 @@ class PracticeDetailScreen extends StatelessWidget {
           style: ElevatedButton.styleFrom(
             backgroundColor: themeProvider.primaryColor,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(AppRadius.large),
             ),
             elevation: 0,
           ),
@@ -441,7 +449,7 @@ class PracticeDetailScreen extends StatelessWidget {
 
       Navigator.push(
         context,
-        MaterialPageRoute(
+        TossPageRoute(
           builder: (context) => ProblemDetailScreen(
             problemId: practiceProvider.currentProblems.first.problemId,
             isPractice: true,
@@ -470,6 +478,7 @@ class PracticeDetailScreen extends StatelessWidget {
 
     final openTime = DateTime.now();
     showModalBottomSheet(
+      sheetAnimationStyle: AppMotion.sheetStyle,
       backgroundColor: Colors.transparent,
       context: context,
       isDismissible: false,
@@ -514,7 +523,7 @@ class PracticeDetailScreen extends StatelessWidget {
                         decoration: BoxDecoration(
                           color:
                               themeProvider.primaryColor.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(AppRadius.small),
                         ),
                         child: Icon(
                           Icons.play_arrow,
@@ -527,7 +536,7 @@ class PracticeDetailScreen extends StatelessWidget {
                         text: '복습 방식 선택',
                         fontSize: MobileFontSize.reduced(context, 18),
                         fontWeight: FontWeight.w600,
-                        color: Colors.black87,
+                        color: AppColors.textPrimary,
                       ),
                     ],
                   ),
@@ -574,13 +583,13 @@ class PracticeDetailScreen extends StatelessWidget {
   }
 
   Future<void> _showDeletePracticeDialog(BuildContext context) async {
-    return showDialog(
+    return showTossDialog(
       context: context,
       builder: (context) {
         return Dialog(
           backgroundColor: Colors.white,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(AppRadius.large),
           ),
           child: Container(
             padding: const EdgeInsets.all(24),
@@ -594,7 +603,7 @@ class PracticeDetailScreen extends StatelessWidget {
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
                         color: Colors.red.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(AppRadius.small),
                       ),
                       child: const Icon(
                         Icons.delete_forever,
@@ -607,7 +616,7 @@ class PracticeDetailScreen extends StatelessWidget {
                       text: '복습 세트 삭제',
                       fontSize: MobileFontSize.reduced(context, 18),
                       fontWeight: FontWeight.w600,
-                      color: Colors.black87,
+                      color: AppColors.textPrimary,
                     ),
                   ],
                 ),
@@ -616,7 +625,7 @@ class PracticeDetailScreen extends StatelessWidget {
                 StandardText(
                   text: '정말로 이 복습 세트를 삭제하시겠습니까?',
                   fontSize: MobileFontSize.reduced(context, 15),
-                  color: Colors.black87,
+                  color: AppColors.textPrimary,
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 24),
@@ -633,13 +642,14 @@ class PracticeDetailScreen extends StatelessWidget {
                               horizontal: 16, vertical: 10),
                           backgroundColor: Colors.grey[100],
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius:
+                                BorderRadius.circular(AppRadius.small),
                           ),
                         ),
                         child: StandardText(
                           text: '취소',
                           fontSize: MobileFontSize.reduced(context, 15),
-                          color: Colors.black87,
+                          color: AppColors.textPrimary,
                         ),
                       ),
                     ),
@@ -647,23 +657,33 @@ class PracticeDetailScreen extends StatelessWidget {
                     Expanded(
                       child: TextButton(
                         onPressed: () async {
+                          // 화면을 닫고 나면 context 가 죽어서 Provider 를 못
+                          // 찾는다. 닫기 전에 미리 잡아 둔다.
+                          final provider = Provider.of<ProblemPracticeProvider>(
+                              context,
+                              listen: false);
+
                           Navigator.pop(context);
                           if (Navigator.canPop(context)) {
                             Navigator.pop(context);
                           }
 
-                          final provider = Provider.of<ProblemPracticeProvider>(
-                              context,
-                              listen: false);
-                          List<int> deletePracticeIds = [practice.practiceId];
-                          await provider.deletePractices(deletePracticeIds);
+                          try {
+                            await provider
+                                .deletePractices([practice.practiceId]);
+                            AppToast.success('복습 세트를 삭제했어요.');
+                          } catch (e) {
+                            debugPrint('복습 세트 삭제 실패: $e');
+                            AppToast.error('복습 세트를 삭제하지 못했어요. 잠시 후 다시 시도해주세요.');
+                          }
                         },
                         style: TextButton.styleFrom(
                           padding: const EdgeInsets.symmetric(
                               horizontal: 16, vertical: 10),
                           backgroundColor: Colors.red,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius:
+                                BorderRadius.circular(AppRadius.small),
                           ),
                         ),
                         child: const StandardText(

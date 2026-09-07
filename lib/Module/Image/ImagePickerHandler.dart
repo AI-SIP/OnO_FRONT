@@ -8,6 +8,10 @@ import 'package:provider/provider.dart';
 import '../Text/mobile_font_size.dart';
 import '../Text/StandardText.dart';
 import '../Theme/ThemeHandler.dart';
+import '../Motion/PressableScale.dart';
+import '../Motion/AppMotion.dart';
+import '../Design/AppColors.dart';
+import '../Design/AppRadius.dart';
 
 class ImagePickerHandler {
   final ImagePicker _picker = ImagePicker();
@@ -106,6 +110,7 @@ class ImagePickerHandler {
       {Function(List<XFile>)? onMultipleImagesPicked}) {
     final openTime = DateTime.now();
     showModalBottomSheet(
+      sheetAnimationStyle: AppMotion.sheetStyle,
       backgroundColor: Colors.transparent,
       context: context,
       isDismissible: false,
@@ -155,7 +160,8 @@ class ImagePickerHandler {
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
                             color: themeProvider.primaryColor.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius:
+                                BorderRadius.circular(AppRadius.small),
                           ),
                           child: Icon(
                             Icons.add_photo_alternate,
@@ -168,7 +174,7 @@ class ImagePickerHandler {
                           text: '이미지 업로드',
                           fontSize: MobileFontSize.reduced(context, 18),
                           fontWeight: FontWeight.w600,
-                          color: Colors.black87,
+                          color: AppColors.textPrimary,
                         ),
                       ],
                     ),
@@ -233,15 +239,14 @@ class ImagePickerHandler {
     required VoidCallback onTap,
     required ThemeHandler themeProvider,
   }) {
-    return InkWell(
+    return PressableScale(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
           color: Colors.grey[50],
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey[200]!, width: 1),
+          borderRadius: BorderRadius.circular(AppRadius.medium),
+          border: Border.all(color: AppColors.border),
         ),
         child: Row(
           children: [
@@ -258,7 +263,7 @@ class ImagePickerHandler {
               child: StandardText(
                 text: title,
                 fontSize: MobileFontSize.reduced(context, 16),
-                color: Colors.black87,
+                color: AppColors.textPrimary,
               ),
             ),
             Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey[400]),

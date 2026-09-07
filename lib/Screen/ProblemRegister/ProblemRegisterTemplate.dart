@@ -29,6 +29,12 @@ import 'TagSelectionScreen.dart';
 import 'Widget/DatePickerWidget.dart';
 import 'Widget/ImageGridWidget.dart';
 import 'Widget/LabeledTextField.dart';
+import '../../Module/Motion/AppHaptic.dart';
+import '../../Module/Motion/PressableScale.dart';
+import '../../Module/Motion/TossPageRoute.dart';
+import '../../Module/Motion/TossDialog.dart';
+import '../../Module/Design/AppColors.dart';
+import '../../Module/Design/AppRadius.dart';
 
 class ProblemRegisterTemplate extends StatefulWidget {
   final ProblemModel? problemModel;
@@ -135,49 +141,50 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
     final isWide = MediaQuery.of(context).size.width >= 600;
     final spacing = isWide ? 50.0 : 30.0; // 태블릿: 50px, 모바일: 30px
 
+    // 스크롤은 이 위젯을 감싸는 ProblemRegisterScreen 이 맡는다. 여기서도
+    // SingleChildScrollView 를 두면 스크롤이 겹쳐서, 안쪽이 무한 높이를 받아
+    // 스크롤 기능을 잃고 아래쪽 내용까지 내려가지 못한다.
     return GestureDetector(
         behavior: HitTestBehavior.translucent,
         onTap: () => FocusScope.of(context).unfocus(),
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              DatePickerWidget(
-                selectedDate: _selectedDate,
-                onDateChanged: (d) => setState(() => _selectedDate = d),
-              ),
-              SizedBox(height: spacing),
-              FolderPickerWidget(
-                selectedId: _selectedFolderId,
-                onPicked: _updateSelectedFolder,
-              ),
-              SizedBox(height: spacing),
-              _buildImageSections(isWide: isWide),
-              SizedBox(height: spacing),
-              LabeledTextField(
-                label: '제목',
-                hintText: '오답노트의 제목을 작성해주세요!',
-                icon: Icons.info,
-                controller: _titleCtrl,
-                showClearButton: true,
-                onChanged: (_) {
-                  if (!_isApplyingDefaultTitle) {
-                    _hasUserEditedTitle = true;
-                  }
-                },
-              ),
-              SizedBox(height: spacing),
-              _buildTagSection(context),
-              SizedBox(height: spacing),
-              LabeledTextField(
-                label: '메모',
-                controller: _memoCtrl,
-                icon: Icons.edit,
-                hintText: '기록하고 싶은 내용을 간단하게 작성해주세요!',
-                maxLines: 3,
-              ),
-            ],
-          ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            DatePickerWidget(
+              selectedDate: _selectedDate,
+              onDateChanged: (d) => setState(() => _selectedDate = d),
+            ),
+            SizedBox(height: spacing),
+            FolderPickerWidget(
+              selectedId: _selectedFolderId,
+              onPicked: _updateSelectedFolder,
+            ),
+            SizedBox(height: spacing),
+            _buildImageSections(isWide: isWide),
+            SizedBox(height: spacing),
+            LabeledTextField(
+              label: '제목',
+              hintText: '오답노트의 제목을 작성해주세요!',
+              icon: Icons.info,
+              controller: _titleCtrl,
+              showClearButton: true,
+              onChanged: (_) {
+                if (!_isApplyingDefaultTitle) {
+                  _hasUserEditedTitle = true;
+                }
+              },
+            ),
+            SizedBox(height: spacing),
+            _buildTagSection(context),
+            SizedBox(height: spacing),
+            LabeledTextField(
+              label: '메모',
+              controller: _memoCtrl,
+              icon: Icons.edit,
+              hintText: '기록하고 싶은 내용을 간단하게 작성해주세요!',
+              maxLines: 3,
+            ),
+          ],
         ));
   }
 
@@ -312,8 +319,8 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.grey[50],
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[200]!, width: 1),
+        borderRadius: BorderRadius.circular(AppRadius.medium),
+        border: Border.all(color: AppColors.border),
       ),
       child: child,
     );
@@ -559,7 +566,7 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
 
   Future<void> _openTagSelectionScreen() async {
     final result = await Navigator.of(context).push<TagSelectionResult>(
-      MaterialPageRoute(
+      TossPageRoute(
         builder: (_) => TagSelectionScreen(
           initialTags: List<TagModel>.from(_availableTags),
           initialSelectedTagIds: Set<int>.from(_selectedTagIds),
@@ -586,8 +593,8 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.grey[50],
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[200]!, width: 1),
+        borderRadius: BorderRadius.circular(AppRadius.medium),
+        border: Border.all(color: AppColors.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -598,7 +605,7 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
                   color: themeProvider.primaryColor.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(AppRadius.small),
                 ),
                 child: Icon(
                   Icons.local_offer,
@@ -611,7 +618,7 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
                 text: '태그',
                 fontSize: MobileFontSize.reduced(context, 16),
                 fontWeight: FontWeight.w500,
-                color: Colors.black87,
+                color: AppColors.textPrimary,
               ),
               const SizedBox(width: 8),
               StandardText(
@@ -626,7 +633,7 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
                   backgroundColor: themeProvider.primaryColor,
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(AppRadius.medium),
                   ),
                   padding:
                       const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
@@ -657,8 +664,8 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: Colors.grey[300]!, width: 1),
+              borderRadius: BorderRadius.circular(AppRadius.medium),
+              border: Border.all(color: AppColors.border),
             ),
             child: _selectedTagIds.isEmpty
                 ? StandardText(
@@ -679,7 +686,8 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
                                       horizontal: 10, vertical: 5),
                                   decoration: BoxDecoration(
                                     color: Colors.white,
-                                    borderRadius: BorderRadius.circular(8),
+                                    borderRadius:
+                                        BorderRadius.circular(AppRadius.small),
                                     border: Border.all(
                                       color: themeProvider.primaryColor,
                                       width: 1,
@@ -694,7 +702,8 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
                                 Positioned(
                                   top: -5,
                                   right: -5,
-                                  child: GestureDetector(
+                                  child: PressableScale(
+                                    scale: 0.85,
                                     onTap: () => _removeSelectedTag(tag.tagId),
                                     child: Container(
                                       width: 15,
@@ -768,9 +777,9 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
                                   _selectedTagIds.contains(tag.tagId);
                               return Material(
                                 color: Colors.transparent,
-                                child: InkWell(
+                                child: PressableScale(
+                                  haptic: HapticLevel.selection,
                                   onTap: () => _applyRecommendedTag(tag),
-                                  borderRadius: BorderRadius.circular(8),
                                   child: Container(
                                     padding: const EdgeInsets.symmetric(
                                         horizontal: 11, vertical: 6),
@@ -778,7 +787,8 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
                                       color: isSelected
                                           ? themeProvider.primaryColor
                                           : Colors.white,
-                                      borderRadius: BorderRadius.circular(8),
+                                      borderRadius: BorderRadius.circular(
+                                          AppRadius.small),
                                       border: Border.all(
                                         color: isSelected
                                             ? themeProvider.primaryColor
@@ -929,13 +939,13 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
   void _showTitleRequiredDialog(BuildContext context) {
     final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
 
-    showDialog(
+    showTossDialog(
       context: context,
       builder: (BuildContext context) {
         return Dialog(
           backgroundColor: Colors.white,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(AppRadius.large),
           ),
           child: Container(
             padding: const EdgeInsets.all(24),
@@ -949,7 +959,7 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
                         color: Colors.orange.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(AppRadius.small),
                       ),
                       child: const Icon(
                         Icons.warning_rounded,
@@ -962,7 +972,7 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
                       text: '경고',
                       fontSize: MobileFontSize.reduced(context, 18),
                       fontWeight: FontWeight.w600,
-                      color: Colors.black87,
+                      color: AppColors.textPrimary,
                     ),
                   ],
                 ),
@@ -971,7 +981,7 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
                 StandardText(
                   text: '제목을 입력해 주세요!',
                   fontSize: MobileFontSize.reduced(context, 15),
-                  color: Colors.black87,
+                  color: AppColors.textPrimary,
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 24),
@@ -985,7 +995,7 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
                           horizontal: 16, vertical: 10),
                       backgroundColor: themeProvider.primaryColor,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(AppRadius.small),
                       ),
                     ),
                     child: const StandardText(
@@ -1006,13 +1016,13 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
   void _showProblemImageRequiredDialog(BuildContext context) {
     final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
 
-    showDialog(
+    showTossDialog(
       context: context,
       builder: (BuildContext context) {
         return Dialog(
           backgroundColor: Colors.white,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(AppRadius.large),
           ),
           child: Container(
             padding: const EdgeInsets.all(24),
@@ -1026,7 +1036,7 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
                         color: Colors.orange.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(AppRadius.small),
                       ),
                       child: const Icon(
                         Icons.warning_rounded,
@@ -1039,7 +1049,7 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
                       text: '경고',
                       fontSize: MobileFontSize.reduced(context, 18),
                       fontWeight: FontWeight.w600,
-                      color: Colors.black87,
+                      color: AppColors.textPrimary,
                     ),
                   ],
                 ),
@@ -1048,7 +1058,7 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
                 StandardText(
                   text: '문제 이미지를 추가해 주세요!',
                   fontSize: MobileFontSize.reduced(context, 15),
-                  color: Colors.black87,
+                  color: AppColors.textPrimary,
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 24),
@@ -1062,7 +1072,7 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
                           horizontal: 16, vertical: 10),
                       backgroundColor: themeProvider.primaryColor,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(AppRadius.small),
                       ),
                     ),
                     child: const StandardText(

@@ -9,6 +9,10 @@ import '../../../Module/User/ProfileAvatar.dart';
 import '../../../Provider/StudyRoomProvider.dart';
 import '../../../Util/AppSnackBar.dart';
 import 'FeedReactionBar.dart';
+import '../../../Module/Motion/PressableScale.dart';
+import '../../../Module/Motion/TossDialog.dart';
+import '../../../Module/Design/AppColors.dart';
+import '../../../Module/Design/AppRadius.dart';
 
 class SharedProblemCommentsSection extends StatefulWidget {
   final int sharedProblemId;
@@ -122,12 +126,12 @@ class _SharedProblemCommentsSectionState
     final controller = TextEditingController(text: initialText);
     final primary = widget.themeProvider.primaryColor;
     try {
-      return await showDialog<String>(
+      return await showTossDialog<String>(
         context: context,
         builder: (dialogContext) => Dialog(
           backgroundColor: Colors.white,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(15),
+            borderRadius: BorderRadius.circular(AppRadius.large),
             side: BorderSide(color: Colors.grey[200]!, width: 1),
           ),
           child: ConstrainedBox(
@@ -143,7 +147,7 @@ class _SharedProblemCommentsSectionState
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
                           color: primary.withValues(alpha: 0.10),
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(AppRadius.small),
                         ),
                         child:
                             Icon(Icons.edit_outlined, color: primary, size: 20),
@@ -152,7 +156,7 @@ class _SharedProblemCommentsSectionState
                       const StandardText(
                         text: '풀이 의견 수정',
                         fontSize: 18,
-                        color: Colors.black87,
+                        color: AppColors.textPrimary,
                         fontWeight: FontWeight.w700,
                       ),
                     ],
@@ -165,7 +169,7 @@ class _SharedProblemCommentsSectionState
                     autofocus: true,
                     style: const TextStyle(
                       fontSize: 14,
-                      color: Colors.black87,
+                      color: AppColors.textPrimary,
                       fontWeight: FontWeight.w500,
                       fontFamily: 'Pretendard',
                     ),
@@ -178,16 +182,16 @@ class _SharedProblemCommentsSectionState
                       counterText: '',
                       contentPadding: const EdgeInsets.all(12),
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(AppRadius.medium),
                         borderSide: BorderSide.none,
                       ),
                       enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(AppRadius.medium),
                         borderSide:
                             BorderSide(color: Colors.grey[200]!, width: 1),
                       ),
                       focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(AppRadius.medium),
                         borderSide: BorderSide(color: primary, width: 1.5),
                       ),
                     ),
@@ -202,7 +206,8 @@ class _SharedProblemCommentsSectionState
                             backgroundColor: Colors.grey[50],
                             padding: const EdgeInsets.symmetric(vertical: 13),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius:
+                                  BorderRadius.circular(AppRadius.medium),
                               side: BorderSide(
                                   color: Colors.grey[200]!, width: 1),
                             ),
@@ -210,7 +215,7 @@ class _SharedProblemCommentsSectionState
                           child: const StandardText(
                             text: '취소',
                             fontSize: 14,
-                            color: Colors.black87,
+                            color: AppColors.textPrimary,
                           ),
                         ),
                       ),
@@ -223,7 +228,8 @@ class _SharedProblemCommentsSectionState
                             backgroundColor: primary,
                             padding: const EdgeInsets.symmetric(vertical: 13),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius:
+                                  BorderRadius.circular(AppRadius.medium),
                             ),
                           ),
                           child: const StandardText(
@@ -248,12 +254,12 @@ class _SharedProblemCommentsSectionState
 
   Future<void> _deleteComment(SharedProblemCommentModel comment) async {
     if (!mounted) return;
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showTossDialog<bool>(
       context: context,
       builder: (dialogContext) => Dialog(
         backgroundColor: Colors.white,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(15),
+          borderRadius: BorderRadius.circular(AppRadius.large),
           side: BorderSide(color: Colors.grey[200]!, width: 1),
         ),
         child: ConstrainedBox(
@@ -269,7 +275,7 @@ class _SharedProblemCommentsSectionState
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
                         color: Colors.red.withValues(alpha: 0.10),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(AppRadius.small),
                       ),
                       child: const Icon(
                         Icons.delete_outline,
@@ -281,7 +287,7 @@ class _SharedProblemCommentsSectionState
                     const StandardText(
                       text: '풀이 의견 삭제',
                       fontSize: 18,
-                      color: Colors.black87,
+                      color: AppColors.textPrimary,
                       fontWeight: FontWeight.w700,
                     ),
                   ],
@@ -305,7 +311,8 @@ class _SharedProblemCommentsSectionState
                           backgroundColor: Colors.grey[50],
                           padding: const EdgeInsets.symmetric(vertical: 13),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius:
+                                BorderRadius.circular(AppRadius.medium),
                             side:
                                 BorderSide(color: Colors.grey[200]!, width: 1),
                           ),
@@ -313,7 +320,7 @@ class _SharedProblemCommentsSectionState
                         child: const StandardText(
                           text: '취소',
                           fontSize: 14,
-                          color: Colors.black87,
+                          color: AppColors.textPrimary,
                         ),
                       ),
                     ),
@@ -325,7 +332,8 @@ class _SharedProblemCommentsSectionState
                           backgroundColor: Colors.red,
                           padding: const EdgeInsets.symmetric(vertical: 13),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius:
+                                BorderRadius.circular(AppRadius.medium),
                           ),
                         ),
                         child: const StandardText(
@@ -365,12 +373,12 @@ class _SharedProblemCommentsSectionState
   void _showCommentActions(SharedProblemCommentModel comment) {
     if (!mounted) return;
     final primary = widget.themeProvider.primaryColor;
-    showDialog<void>(
+    showTossDialog<void>(
       context: context,
       builder: (dialogContext) => Dialog(
         backgroundColor: Colors.white,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppRadius.large),
         ),
         child: Container(
           padding: const EdgeInsets.all(24),
@@ -383,7 +391,7 @@ class _SharedProblemCommentsSectionState
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
                       color: primary.withValues(alpha: 0.10),
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(AppRadius.small),
                     ),
                     child: Icon(Icons.forum_outlined, color: primary, size: 20),
                   ),
@@ -392,7 +400,7 @@ class _SharedProblemCommentsSectionState
                     text: '댓글 관리',
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
-                    color: Colors.black87,
+                    color: AppColors.textPrimary,
                   ),
                 ],
               ),
@@ -410,7 +418,7 @@ class _SharedProblemCommentsSectionState
                           horizontal: 16, vertical: 12),
                       backgroundColor: primary.withValues(alpha: 0.10),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(AppRadius.small),
                       ),
                     ),
                     child: Row(
@@ -443,7 +451,7 @@ class _SharedProblemCommentsSectionState
                           horizontal: 16, vertical: 12),
                       backgroundColor: Colors.red.withValues(alpha: 0.10),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(AppRadius.small),
                       ),
                     ),
                     child: const Row(
@@ -472,13 +480,13 @@ class _SharedProblemCommentsSectionState
                         horizontal: 16, vertical: 12),
                     backgroundColor: Colors.grey[100],
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(AppRadius.small),
                     ),
                   ),
                   child: const StandardText(
                     text: '취소',
                     fontSize: 15,
-                    color: Colors.black87,
+                    color: AppColors.textPrimary,
                   ),
                 ),
               ),
@@ -497,8 +505,8 @@ class _SharedProblemCommentsSectionState
       padding: const EdgeInsets.fromLTRB(12, 12, 8, 8),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[200]!, width: 1),
+        borderRadius: BorderRadius.circular(AppRadius.medium),
+        border: Border.all(color: AppColors.border),
         boxShadow: [
           BoxShadow(
             color: primary.withValues(alpha: 0.06),
@@ -528,7 +536,7 @@ class _SharedProblemCommentsSectionState
                       child: StandardText(
                         text: comment.authorName,
                         fontSize: 13,
-                        color: Colors.black87,
+                        color: AppColors.textPrimary,
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
@@ -603,8 +611,8 @@ class _SharedProblemCommentsSectionState
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       decoration: BoxDecoration(
         color: Colors.grey[50],
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Colors.grey[200]!, width: 1),
+        borderRadius: BorderRadius.circular(AppRadius.medium),
+        border: Border.all(color: AppColors.border),
       ),
       child: Row(
         children: [
@@ -645,7 +653,7 @@ class _SharedProblemCommentsSectionState
             maxLines: 3,
             style: const TextStyle(
               fontSize: 13,
-              color: Colors.black87,
+              color: AppColors.textPrimary,
               fontWeight: FontWeight.w500,
               fontFamily: 'Pretendard',
             ),
@@ -658,15 +666,15 @@ class _SharedProblemCommentsSectionState
               contentPadding:
                   const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(AppRadius.medium),
                 borderSide: BorderSide(color: Colors.grey[300]!),
               ),
               enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(AppRadius.medium),
                 borderSide: BorderSide(color: Colors.grey[300]!),
               ),
               focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(AppRadius.medium),
                 borderSide: BorderSide(color: primary, width: 1.5),
               ),
             ),
@@ -682,7 +690,7 @@ class _SharedProblemCommentsSectionState
               backgroundColor: _isSubmitting ? Colors.grey[300] : primary,
               padding: EdgeInsets.zero,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(AppRadius.medium),
               ),
             ),
             child: _isSubmitting
@@ -723,9 +731,8 @@ class _SharedProblemCommentsSectionState
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (widget.showToggle)
-            InkWell(
+            PressableScale(
               onTap: _toggleExpanded,
-              borderRadius: BorderRadius.circular(8),
               child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 4),
                 child: Row(

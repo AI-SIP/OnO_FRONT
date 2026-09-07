@@ -9,6 +9,12 @@ import 'package:ono/Provider/ReviewDueProvider.dart';
 import 'package:ono/Screen/ProblemDetail/ProblemDetailScreen.dart';
 import 'package:ono/Service/Api/Problem/ProblemService.dart';
 import 'package:provider/provider.dart';
+import '../../Module/Motion/AppHaptic.dart';
+import '../../Module/Motion/PressableScale.dart';
+import '../../Module/Motion/Skeleton.dart';
+import '../../Module/Motion/TossPageRoute.dart';
+import '../../Module/Design/AppRadius.dart';
+import '../../Module/Design/AppColors.dart';
 
 class ReviewDueScreen extends StatefulWidget {
   const ReviewDueScreen({super.key});
@@ -85,10 +91,11 @@ class _ReviewDueScreenState extends State<ReviewDueScreen> {
         ),
       ),
       body: reviewDueProvider.isLoading && data == null
-          ? Center(
-              child: CircularProgressIndicator(
-                color: themeProvider.primaryColor,
-              ),
+          ? const SkeletonList(
+              itemCount: 5,
+              itemHeight: 88,
+              spacing: 12,
+              padding: EdgeInsets.fromLTRB(20, 16, 20, 20),
             )
           : data == null || data.problems.isEmpty
               ? _buildEmptyState(themeProvider)
@@ -114,7 +121,7 @@ class _ReviewDueScreenState extends State<ReviewDueScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
         color: themeProvider.primaryColor.withValues(alpha: 0.06),
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(AppRadius.large),
       ),
       child: Row(
         children: [
@@ -127,7 +134,7 @@ class _ReviewDueScreenState extends State<ReviewDueScreen> {
                     const StandardText(
                       text: '추천 복습 문제 ',
                       fontSize: 14,
-                      color: Colors.black87,
+                      color: AppColors.textPrimary,
                     ),
                     StandardText(
                       text: '${data.dueCount}개',
@@ -182,11 +189,12 @@ class _ReviewDueScreenState extends State<ReviewDueScreen> {
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
-      child: GestureDetector(
+      child: PressableScale(
+        haptic: HapticLevel.none,
         onTap: () async {
           await Navigator.push(
             context,
-            MaterialPageRoute(
+            TossPageRoute(
               builder: (_) => ProblemDetailScreen(problemId: problem.problemId),
             ),
           );
@@ -219,13 +227,13 @@ class _ReviewDueScreenState extends State<ReviewDueScreen> {
           const StandardText(
             text: '추천 복습 문제가 없어요',
             fontSize: 16,
-            color: Colors.black54,
+            color: AppColors.textSecondary,
           ),
           const SizedBox(height: 6),
           const StandardText(
             text: '문제를 풀면 자동으로 복습 일정이 생겨요',
             fontSize: 13,
-            color: Colors.black38,
+            color: AppColors.textTertiary,
           ),
         ],
       ),

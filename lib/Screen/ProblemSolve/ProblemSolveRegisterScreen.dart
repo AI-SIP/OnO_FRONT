@@ -16,6 +16,7 @@ import '../../Provider/ProblemsProvider.dart';
 import '../../Provider/UserProvider.dart';
 import '../../Service/Api/Problem/ProblemSolveService.dart';
 import 'ProblemSolveRegisterTemplate.dart';
+import '../../Module/Design/AppRadius.dart';
 
 class ProblemSolveRegisterScreen extends StatefulWidget {
   final int problemId;
@@ -98,7 +99,7 @@ class _ProblemSolveRegisterScreenState
           style: ElevatedButton.styleFrom(
             backgroundColor: themeProvider.primaryColor,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(AppRadius.large),
             ),
             elevation: 0,
           ),

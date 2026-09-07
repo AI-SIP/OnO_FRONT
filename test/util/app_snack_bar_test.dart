@@ -1,15 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:ono/Module/Design/AppToast.dart';
+import 'package:ono/Util/AppNavigator.dart';
 import 'package:ono/Util/AppSnackBar.dart';
 
 import '../helpers/helpers.dart';
 
 /// lib/Util/AppSnackBar.dart 검증.
 ///
-/// AppSnackBar.messengerKey 는 앱 전체가 공유하는 static GlobalKey 라서,
-/// 테스트 사이에도 상태가 이어질 수 있다. 각 테스트는 시작할 때 반드시
-/// key 가 붙은 위젯을 새로 pump 해서(또는 떼어내서) 이전 테스트의 잔여 상태와
-/// 섞이지 않게 한다.
+/// 알림이 아래에서 올라오는 SnackBar 에서 위에서 내려오는 AppToast 로 바뀌었다.
+/// 토스트는 ScaffoldMessenger 가 아니라 Navigator 의 Overlay 에 올라가므로,
+/// 테스트도 navigatorKey 를 물린 MaterialApp 을 띄워야 한다.
+///
+/// AppNavigator.navigatorKey 는 앱 전체가 공유하는 static GlobalKey 라서
+/// 테스트 사이에 상태가 이어질 수 있다. 각 테스트는 시작할 때 트리를 새로
+/// pump 하고, 끝나면 떠 있는 토스트를 닫아 다음 테스트와 섞이지 않게 한다.
 void main() {
   setUpOnoTest();
 
@@ -17,19 +22,22 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         scaffoldMessengerKey: AppSnackBar.messengerKey,
+        navigatorKey: AppNavigator.navigatorKey,
         home: const Scaffold(body: SizedBox.shrink()),
       ),
     );
   }
 
   Future<void> detachMessenger(WidgetTester tester) async {
-    // AppSnackBar.messengerKey 를 참조하지 않는 트리로 교체해서
-    // 이전 트리를 unmount 시키고 currentState 를 null 로 되돌린다.
+    // 떠 있는 토스트를 먼저 걷어낸다. Overlay 가 사라진 뒤에 남아 있으면
+    // 다음 테스트에서 이전 알림이 그대로 보인다.
+    AppToast.dismiss();
+    // key 를 참조하지 않는 트리로 교체해서 이전 트리를 unmount 시킨다.
     await tester.pumpWidget(const SizedBox.shrink());
   }
 
   group('AppSnackBar.showError', () {
-    testWidgets('messengerKey.currentState 가 없으면 조용히 무시한다', (tester) async {
+    testWidgets('띄울 Overlay 가 없으면 조용히 무시한다', (tester) async {
       await detachMessenger(tester);
 
       expect(AppSnackBar.messengerKey.currentState, isNull);
@@ -37,21 +45,23 @@ void main() {
       expect(() => AppSnackBar.showError('에러 메시지'), returnsNormally);
     });
 
-    testWidgets('빈 문자열이나 공백 메시지는 무시하고 스낵바를 띄우지 않는다', (tester) async {
+    testWidgets('빈 문자열이나 공백 메시지는 무시하고 토스트를 띄우지 않는다', (tester) async {
       await pumpAppWithMessenger(tester);
 
       AppSnackBar.showError('');
       await tester.pump();
       expect(find.byType(SnackBar), findsNothing);
+      expect(find.byIcon(Icons.error), findsNothing);
 
       AppSnackBar.showError('   ');
       await tester.pump();
       expect(find.byType(SnackBar), findsNothing);
+      expect(find.byIcon(Icons.error), findsNothing);
 
       await detachMessenger(tester);
     });
 
-    testWidgets('안전한 메시지는 그대로 스낵바에 노출된다', (tester) async {
+    testWidgets('안전한 메시지는 그대로 토스트에 노출된다', (tester) async {
       await pumpAppWithMessenger(tester);
 
       AppSnackBar.showError('폴더 이름은 20자 이하여야 합니다.');

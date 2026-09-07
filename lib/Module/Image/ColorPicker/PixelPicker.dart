@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 import '../../Theme/ThemeHandler.dart';
 import 'FindPixelColor.dart';
 import 'PickerResponse.dart';
+import '../../Design/AppRadius.dart';
 
 class ColorPicker extends StatefulWidget {
   final Widget child;
@@ -126,7 +127,7 @@ class ColorPickerState extends State<ColorPicker> {
                     height: 50,
                     alignment: Alignment.center,
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(25),
+                      borderRadius: BorderRadius.circular(AppRadius.xlarge),
                       border: Border.all(
                         color: selectedColor ?? Colors.transparent,
                         width: 10,

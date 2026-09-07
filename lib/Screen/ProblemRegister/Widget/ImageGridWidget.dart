@@ -9,6 +9,11 @@ import '../../../Module/Image/DisplayImage.dart';
 import '../../../Module/Image/FullScreenImage.dart';
 import '../../../Module/Text/mobile_font_size.dart';
 import '../../../Module/Theme/ThemeHandler.dart';
+import '../../../Module/Motion/AppHaptic.dart';
+import '../../../Module/Motion/PressableScale.dart';
+import '../../../Module/Motion/TossPageRoute.dart';
+import '../../../Module/Design/AppRadius.dart';
+import '../../../Module/Design/AppColors.dart';
 
 class ImageGridWidget extends StatelessWidget {
   final String label;
@@ -68,7 +73,7 @@ class ImageGridWidget extends StatelessWidget {
                 text: label,
                 fontSize: MobileFontSize.reduced(context, titleFontSize),
                 fontWeight: titleFontWeight,
-                color: Colors.black87,
+                color: AppColors.textPrimary,
               ),
               const SizedBox(width: 8),
               if (totalImages > 0)
@@ -77,7 +82,7 @@ class ImageGridWidget extends StatelessWidget {
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                   decoration: BoxDecoration(
                     color: theme.primaryColor.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppRadius.medium),
                   ),
                   child: StandardText(
                     text: '$totalImages',
@@ -99,7 +104,7 @@ class ImageGridWidget extends StatelessWidget {
             itemBuilder: (ctx, idx) {
               // 첫 번째 아이템: 추가 버튼
               if (idx == 0) {
-                return GestureDetector(
+                return PressableScale(
                   onTap: onAdd,
                   child: Container(
                     width: 100,
@@ -111,7 +116,7 @@ class ImageGridWidget extends StatelessWidget {
                         width: 1,
                         style: BorderStyle.solid,
                       ),
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppRadius.medium),
                     ),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -145,17 +150,18 @@ class ImageGridWidget extends StatelessWidget {
                 final imageUrl = existingImageUrls[idx - 1];
                 return Stack(
                   children: [
-                    GestureDetector(
+                    PressableScale(
+                      haptic: HapticLevel.none,
                       onTap: () => Navigator.push(
                         context,
-                        MaterialPageRoute(
+                        TossPageRoute(
                           builder: (_) => FullScreenImage(imagePath: imageUrl),
                         ),
                       ),
                       child: Container(
                         decoration: BoxDecoration(
                           color: Colors.white,
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(AppRadius.medium),
                           border: Border.all(
                             color: Colors.grey[300]!,
                             width: 1.2,
@@ -163,7 +169,7 @@ class ImageGridWidget extends StatelessWidget {
                         ),
                         clipBehavior: Clip.antiAlias,
                         child: ClipRRect(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(AppRadius.medium),
                           child: SizedBox(
                             width: 100,
                             height: 100,
@@ -178,7 +184,8 @@ class ImageGridWidget extends StatelessWidget {
                     Positioned(
                       top: 6,
                       right: 6,
-                      child: GestureDetector(
+                      child: PressableScale(
+                        scale: 0.85,
                         onTap: () => onRemoveExisting?.call(idx - 1),
                         child: Container(
                           padding: const EdgeInsets.all(4),
@@ -203,12 +210,13 @@ class ImageGridWidget extends StatelessWidget {
               final file = files[fileIdx];
               return Stack(
                 children: [
-                  GestureDetector(
+                  PressableScale(
+                    haptic: HapticLevel.none,
                     onTap: () => _openLocalImage(context, file),
                     child: Container(
                       decoration: BoxDecoration(
                         color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(AppRadius.medium),
                         border: Border.all(
                           color: Colors.grey[300]!,
                           width: 1.2,
@@ -216,7 +224,7 @@ class ImageGridWidget extends StatelessWidget {
                       ),
                       clipBehavior: Clip.antiAlias,
                       child: ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(AppRadius.medium),
                         child: Image.file(
                           File(file.path),
                           width: 100,
@@ -229,7 +237,8 @@ class ImageGridWidget extends StatelessWidget {
                   Positioned(
                     top: 6,
                     right: 6,
-                    child: GestureDetector(
+                    child: PressableScale(
+                      scale: 0.85,
                       onTap: () => onRemove(fileIdx),
                       child: Container(
                         padding: const EdgeInsets.all(4),
@@ -257,7 +266,7 @@ class ImageGridWidget extends StatelessWidget {
   void _openLocalImage(BuildContext context, XFile file) {
     Navigator.push(
       context,
-      MaterialPageRoute(
+      TossPageRoute(
         builder: (_) => Scaffold(
           backgroundColor: Colors.black,
           appBar: AppBar(

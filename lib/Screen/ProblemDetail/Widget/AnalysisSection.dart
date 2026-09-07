@@ -5,6 +5,8 @@ import '../../../Model/Problem/ProblemAnalysisStatus.dart';
 import '../../../Module/Text/mobile_font_size.dart';
 import '../../../Module/Text/StandardLightText.dart';
 import '../../../Module/Text/StandardText.dart';
+import '../../../Module/Design/AppRadius.dart';
+import '../../../Module/Design/AppColors.dart';
 
 Widget buildAnalysisSection(
     BuildContext context, ProblemAnalysisModel? analysis, Color primaryColor) {
@@ -38,7 +40,7 @@ Widget _buildNoImageState(BuildContext context, Color primaryColor) {
     padding: const EdgeInsets.all(24.0),
     decoration: BoxDecoration(
       color: Colors.white,
-      borderRadius: BorderRadius.circular(12.0),
+      borderRadius: BorderRadius.circular(AppRadius.medium),
       boxShadow: [
         BoxShadow(
           color: Colors.grey.withOpacity(0.1),
@@ -60,13 +62,13 @@ Widget _buildNoImageState(BuildContext context, Color primaryColor) {
           text: '이미지가 없어 분석하지 못했어요',
           fontSize: MobileFontSize.reduced(context, 15),
           fontWeight: FontWeight.bold,
-          color: Colors.black87,
+          color: AppColors.textPrimary,
         ),
         const SizedBox(height: 8),
         StandardText(
           text: '문제 이미지를 추가하면 AI가 자동으로 분석해드려요',
           fontSize: 13,
-          color: Colors.black54,
+          color: AppColors.textSecondary,
           textAlign: TextAlign.center,
         ),
       ],
@@ -89,7 +91,7 @@ Widget _buildProcessingState(BuildContext context, Color primaryColor) {
         padding: const EdgeInsets.all(24.0),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(12.0),
+          borderRadius: BorderRadius.circular(AppRadius.medium),
           boxShadow: [
             BoxShadow(
               color: primaryColor.withOpacity(0.1),
@@ -114,13 +116,13 @@ Widget _buildProcessingState(BuildContext context, Color primaryColor) {
               text: 'AI가 문제를 분석하고 있어요',
               fontSize: MobileFontSize.reduced(context, 16),
               fontWeight: FontWeight.bold,
-              color: Colors.black87,
+              color: AppColors.textPrimary,
             ),
             const SizedBox(height: 8),
             const StandardText(
               text: '잠시만 기다려주세요',
               fontSize: 13,
-              color: Colors.black54,
+              color: AppColors.textSecondary,
             ),
           ],
         ),
@@ -139,7 +141,7 @@ Widget _buildFailedState(
         padding: const EdgeInsets.all(20.0),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(12.0),
+          borderRadius: BorderRadius.circular(AppRadius.medium),
           border: Border.all(color: Colors.red.withOpacity(0.3), width: 1),
           boxShadow: [
             BoxShadow(
@@ -157,14 +159,14 @@ Widget _buildFailedState(
               text: '분석 중 오류가 발생했어요',
               fontSize: MobileFontSize.reduced(context, 15),
               fontWeight: FontWeight.bold,
-              color: Colors.black87,
+              color: AppColors.textPrimary,
             ),
             if (errorMessage != null && errorMessage.isNotEmpty) ...[
               const SizedBox(height: 8),
               StandardText(
                 text: errorMessage,
                 fontSize: 12,
-                color: Colors.black54,
+                color: AppColors.textSecondary,
                 textAlign: TextAlign.center,
               ),
             ],
@@ -181,7 +183,7 @@ Widget _buildCompletedState(
     padding: const EdgeInsets.all(16.0),
     decoration: BoxDecoration(
       color: Colors.white,
-      borderRadius: BorderRadius.circular(16.0),
+      borderRadius: BorderRadius.circular(AppRadius.large),
       boxShadow: [
         BoxShadow(
           color: primaryColor.withOpacity(0.1),
@@ -286,7 +288,7 @@ Widget _buildAnalysisSection(BuildContext context, String label, String content,
             text: label,
             fontSize: 14,
             fontWeight: FontWeight.w500,
-            color: Colors.black87,
+            color: AppColors.textPrimary,
           ),
         ],
       ),
@@ -295,7 +297,7 @@ Widget _buildAnalysisSection(BuildContext context, String label, String content,
         text: content,
         fontSize: MobileFontSize.reduced(context, 13),
         fontWeight: FontWeight.bold,
-        color: Colors.black87,
+        color: AppColors.textPrimary,
       ),
     ],
   );
@@ -321,7 +323,7 @@ Widget _buildAnalysisListSection(BuildContext context, String label,
             text: label,
             fontSize: 14,
             fontWeight: FontWeight.w500,
-            color: Colors.black87,
+            color: AppColors.textPrimary,
           ),
         ],
       ),
@@ -347,7 +349,7 @@ Widget _buildAnalysisListSection(BuildContext context, String label,
                   text: entry.value,
                   fontSize: MobileFontSize.reduced(context, 13),
                   fontWeight: FontWeight.bold,
-                  color: Colors.black87,
+                  color: AppColors.textPrimary,
                 ),
               ),
             ],

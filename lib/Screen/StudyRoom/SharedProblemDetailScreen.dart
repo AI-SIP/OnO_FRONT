@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../Model/StudyRoom/SharedProblemModel.dart';
+import '../../Module/Motion/AppearTransition.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Module/User/ProfileAvatar.dart';
@@ -10,6 +11,9 @@ import '../../Util/AppSnackBar.dart';
 import '../ProblemDetail/Widget/ImageGallerySection.dart';
 import 'Widget/FeedReactionBar.dart';
 import 'Widget/SharedProblemCommentsSection.dart';
+import '../../Module/Motion/TossDialog.dart';
+import '../../Module/Design/AppRadius.dart';
+import '../../Module/Design/AppColors.dart';
 
 class SharedProblemDetailScreen extends StatefulWidget {
   final SharedProblemModel problem;
@@ -55,12 +59,12 @@ class _SharedProblemDetailScreenState extends State<SharedProblemDetailScreen> {
     StudyRoomProvider provider,
     ThemeHandler themeProvider,
   ) async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showTossDialog<bool>(
       context: context,
       builder: (_) => Dialog(
         backgroundColor: Colors.white,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(15),
+          borderRadius: BorderRadius.circular(AppRadius.large),
           side: BorderSide(color: Colors.grey[200]!, width: 1),
         ),
         child: ConstrainedBox(
@@ -76,7 +80,7 @@ class _SharedProblemDetailScreenState extends State<SharedProblemDetailScreen> {
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
                         color: Colors.red.withValues(alpha: 0.10),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(AppRadius.small),
                       ),
                       child: const Icon(
                         Icons.cancel_outlined,
@@ -88,7 +92,7 @@ class _SharedProblemDetailScreenState extends State<SharedProblemDetailScreen> {
                     const StandardText(
                       text: '공유 취소',
                       fontSize: 18,
-                      color: Colors.black87,
+                      color: AppColors.textPrimary,
                       fontWeight: FontWeight.w700,
                     ),
                   ],
@@ -112,7 +116,8 @@ class _SharedProblemDetailScreenState extends State<SharedProblemDetailScreen> {
                           backgroundColor: Colors.grey[50],
                           padding: const EdgeInsets.symmetric(vertical: 13),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius:
+                                BorderRadius.circular(AppRadius.medium),
                             side: BorderSide(
                               color: Colors.grey[200]!,
                               width: 1,
@@ -122,7 +127,7 @@ class _SharedProblemDetailScreenState extends State<SharedProblemDetailScreen> {
                         child: const StandardText(
                           text: '닫기',
                           fontSize: 14,
-                          color: Colors.black87,
+                          color: AppColors.textPrimary,
                         ),
                       ),
                     ),
@@ -134,7 +139,8 @@ class _SharedProblemDetailScreenState extends State<SharedProblemDetailScreen> {
                           backgroundColor: Colors.red,
                           padding: const EdgeInsets.symmetric(vertical: 13),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius:
+                                BorderRadius.circular(AppRadius.medium),
                           ),
                         ),
                         child: const StandardText(
@@ -168,12 +174,12 @@ class _SharedProblemDetailScreenState extends State<SharedProblemDetailScreen> {
     ThemeHandler themeProvider,
   ) {
     final primary = themeProvider.primaryColor;
-    showDialog<void>(
+    showTossDialog<void>(
       context: context,
       builder: (dialogContext) => Dialog(
         backgroundColor: Colors.white,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(15),
+          borderRadius: BorderRadius.circular(AppRadius.large),
           side: BorderSide(color: Colors.grey[200]!, width: 1),
         ),
         child: ConstrainedBox(
@@ -189,7 +195,7 @@ class _SharedProblemDetailScreenState extends State<SharedProblemDetailScreen> {
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
                         color: primary.withValues(alpha: 0.10),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(AppRadius.small),
                       ),
                       child: Icon(
                         Icons.more_horiz,
@@ -201,7 +207,7 @@ class _SharedProblemDetailScreenState extends State<SharedProblemDetailScreen> {
                     const StandardText(
                       text: '공유 문제 관리',
                       fontSize: 18,
-                      color: Colors.black87,
+                      color: AppColors.textPrimary,
                       fontWeight: FontWeight.w700,
                     ),
                   ],
@@ -218,7 +224,7 @@ class _SharedProblemDetailScreenState extends State<SharedProblemDetailScreen> {
                       backgroundColor: Colors.red.withValues(alpha: 0.08),
                       padding: const EdgeInsets.symmetric(vertical: 13),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(AppRadius.medium),
                         side: BorderSide(
                           color: Colors.red.withValues(alpha: 0.16),
                           width: 1,
@@ -248,14 +254,14 @@ class _SharedProblemDetailScreenState extends State<SharedProblemDetailScreen> {
                       backgroundColor: Colors.grey[50],
                       padding: const EdgeInsets.symmetric(vertical: 13),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(AppRadius.medium),
                         side: BorderSide(color: Colors.grey[200]!, width: 1),
                       ),
                     ),
                     child: const StandardText(
                       text: '닫기',
                       fontSize: 14,
-                      color: Colors.black87,
+                      color: AppColors.textPrimary,
                     ),
                   ),
                 ),
@@ -297,22 +303,6 @@ class _SharedProblemDetailScreenState extends State<SharedProblemDetailScreen> {
           overflow: TextOverflow.ellipsis,
           maxLines: 1,
         ),
-        actions: [
-          IconButton(
-            icon: _isRefreshing
-                ? SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: primary,
-                    ),
-                  )
-                : Icon(Icons.refresh, color: Colors.grey[600], size: 22),
-            tooltip: '새로고침',
-            onPressed: _isRefreshing ? null : _refreshDetail,
-          ),
-        ],
       ),
       body: GestureDetector(
         onTap: () => FocusScope.of(context).unfocus(),
@@ -323,7 +313,8 @@ class _SharedProblemDetailScreenState extends State<SharedProblemDetailScreen> {
           child: ListView(
             physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.fromLTRB(18, 8, 18, 32),
-            children: [
+            // 글이 통째로 툭 뜨지 않고 위에서부터 차례로 들어온다.
+            children: AppearTransition.stagger([
               _buildDetailHeader(
                   context, currentProblem, primary, provider, themeProvider),
               const SizedBox(height: 14),
@@ -353,7 +344,7 @@ class _SharedProblemDetailScreenState extends State<SharedProblemDetailScreen> {
                 initiallyExpanded: true,
                 showToggle: false,
               ),
-            ],
+            ]),
           ),
         ),
       ),
@@ -384,7 +375,7 @@ class _SharedProblemDetailScreenState extends State<SharedProblemDetailScreen> {
               StandardText(
                 text: problem.sharedByName,
                 fontSize: 14,
-                color: Colors.black87,
+                color: AppColors.textPrimary,
               ),
               StandardText(
                 text: _timeAgo(problem.sharedAt),
@@ -423,7 +414,7 @@ class _SharedProblemDetailScreenState extends State<SharedProblemDetailScreen> {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: primary.withValues(alpha: 0.055),
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(AppRadius.large),
         border: Border.all(color: primary.withValues(alpha: 0.15)),
       ),
       child: Column(

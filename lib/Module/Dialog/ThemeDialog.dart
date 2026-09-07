@@ -5,6 +5,11 @@ import '../../Provider/UserProvider.dart';
 import '../Text/StandardText.dart';
 import '../Theme/ThemeHandler.dart';
 import '../Theme/ThemeLockManager.dart';
+import '../Motion/AppHaptic.dart';
+import '../Motion/PressableScale.dart';
+import '../Motion/TossDialog.dart';
+import '../Design/AppRadius.dart';
+import '../Design/AppColors.dart';
 
 class ThemeDialog extends StatefulWidget {
   @override
@@ -49,7 +54,7 @@ class _ThemeDialogState extends State<ThemeDialog> {
     return Dialog(
       backgroundColor: Colors.white,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppRadius.xlarge),
       ),
       insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
       child: Container(
@@ -83,7 +88,7 @@ class _ThemeDialogState extends State<ThemeDialog> {
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
                           color: Colors.white.withOpacity(0.75),
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: BorderRadius.circular(AppRadius.medium),
                         ),
                         child: Icon(
                           Icons.palette,
@@ -96,7 +101,7 @@ class _ThemeDialogState extends State<ThemeDialog> {
                         text: '테마 색상 선택',
                         fontSize: 20,
                         fontWeight: FontWeight.w600,
-                        color: Colors.black87,
+                        color: AppColors.textPrimary,
                       ),
                     ],
                   ),
@@ -106,7 +111,7 @@ class _ThemeDialogState extends State<ThemeDialog> {
                       const StandardText(
                         text: '현재 선택',
                         fontSize: 13,
-                        color: Colors.black54,
+                        color: AppColors.textSecondary,
                       ),
                       const SizedBox(width: 8),
                       Container(
@@ -123,7 +128,7 @@ class _ThemeDialogState extends State<ThemeDialog> {
                           text: _selectedColorName ?? '선택 안 됨',
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
-                          color: Colors.black87,
+                          color: AppColors.textPrimary,
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
@@ -173,13 +178,13 @@ class _ThemeDialogState extends State<ThemeDialog> {
                         padding: const EdgeInsets.symmetric(vertical: 11),
                         backgroundColor: Colors.grey[100],
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(AppRadius.small),
                         ),
                       ),
                       child: const StandardText(
                         text: '취소',
                         fontSize: 14,
-                        color: Colors.black87,
+                        color: AppColors.textPrimary,
                       ),
                     ),
                   ),
@@ -198,7 +203,7 @@ class _ThemeDialogState extends State<ThemeDialog> {
                         padding: const EdgeInsets.symmetric(vertical: 11),
                         backgroundColor: themeProvider.primaryColor,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(AppRadius.small),
                         ),
                       ),
                       child: const StandardText(
@@ -221,7 +226,8 @@ class _ThemeDialogState extends State<ThemeDialog> {
       Color color, String colorName, int index, bool isUnlocked) {
     final isSelected = _selectedIndex == index;
 
-    return GestureDetector(
+    return PressableScale(
+      haptic: HapticLevel.selection,
       onTap: () {
         if (isUnlocked) {
           setState(() {
@@ -239,13 +245,13 @@ class _ThemeDialogState extends State<ThemeDialog> {
           final themeProvider =
               Provider.of<ThemeHandler>(context, listen: false);
 
-          showDialog(
+          showTossDialog(
             context: context,
             builder: (BuildContext dialogContext) {
               return Dialog(
                 backgroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(AppRadius.large),
                 ),
                 child: Container(
                   padding: const EdgeInsets.all(24),
@@ -259,7 +265,8 @@ class _ThemeDialogState extends State<ThemeDialog> {
                             padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
                               color: color.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius:
+                                  BorderRadius.circular(AppRadius.small),
                             ),
                             child: Icon(
                               Icons.lock,
@@ -272,7 +279,7 @@ class _ThemeDialogState extends State<ThemeDialog> {
                             text: '잠금된 테마',
                             fontSize: 18,
                             fontWeight: FontWeight.w600,
-                            color: Colors.black87,
+                            color: AppColors.textPrimary,
                           ),
                         ],
                       ),
@@ -281,7 +288,7 @@ class _ThemeDialogState extends State<ThemeDialog> {
                       StandardText(
                         text: message,
                         fontSize: 15,
-                        color: Colors.black87,
+                        color: AppColors.textPrimary,
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 24),
@@ -293,7 +300,8 @@ class _ThemeDialogState extends State<ThemeDialog> {
                               horizontal: 20, vertical: 10),
                           backgroundColor: themeProvider.primaryColor,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius:
+                                BorderRadius.circular(AppRadius.small),
                           ),
                         ),
                         child: const StandardText(

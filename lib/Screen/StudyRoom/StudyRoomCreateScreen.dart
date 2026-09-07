@@ -9,6 +9,9 @@ import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/StudyRoomProvider.dart';
 import '../../Util/AppSnackBar.dart';
 import 'Widget/StudyRoomThumbnail.dart';
+import '../../Module/Motion/TossDialog.dart';
+import '../../Module/Design/AppRadius.dart';
+import '../../Module/Design/AppColors.dart';
 
 class StudyRoomCreateScreen extends StatefulWidget {
   const StudyRoomCreateScreen({super.key});
@@ -31,12 +34,12 @@ class _StudyRoomCreateScreenState extends State<StudyRoomCreateScreen> {
 
   Future<void> _showValidationDialog(String message) {
     final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
-    return showDialog<void>(
+    return showTossDialog<void>(
       context: context,
       builder: (_) => Dialog(
         backgroundColor: Colors.white,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(15),
+          borderRadius: BorderRadius.circular(AppRadius.large),
           side: BorderSide(color: Colors.grey[200]!, width: 1),
         ),
         child: ConstrainedBox(
@@ -52,7 +55,7 @@ class _StudyRoomCreateScreenState extends State<StudyRoomCreateScreen> {
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
                         color: Colors.orange.withValues(alpha: 0.10),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(AppRadius.small),
                       ),
                       child: const Icon(
                         Icons.warning_amber_rounded,
@@ -64,7 +67,7 @@ class _StudyRoomCreateScreenState extends State<StudyRoomCreateScreen> {
                     const StandardText(
                       text: '필수 항목 누락',
                       fontSize: 18,
-                      color: Colors.black87,
+                      color: AppColors.textPrimary,
                       fontWeight: FontWeight.w700,
                     ),
                   ],
@@ -87,7 +90,7 @@ class _StudyRoomCreateScreenState extends State<StudyRoomCreateScreen> {
                       backgroundColor: themeProvider.primaryColor,
                       padding: const EdgeInsets.symmetric(vertical: 13),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(AppRadius.medium),
                       ),
                     ),
                     child: const StandardText(
@@ -179,194 +182,200 @@ class _StudyRoomCreateScreenState extends State<StudyRoomCreateScreen> {
         behavior: HitTestBehavior.translucent,
         child: SafeArea(
           child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 520),
-            child: Padding(
-              padding: EdgeInsets.fromLTRB(
-                screenWidth * 0.06,
-                screenHeight * 0.04,
-                screenWidth * 0.06,
-                screenHeight * 0.03,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: SingleChildScrollView(
-                      keyboardDismissBehavior:
-                          ScrollViewKeyboardDismissBehavior.onDrag,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Center(
-                            child: StudyRoomThumbnail(
-                              imagePath: _thumbnailFile?.path,
-                              themeProvider: themeProvider,
-                              size: thumbnailSize,
-                              showEditBadge: true,
-                              onTap: _isCreating ? null : _pickThumbnail,
-                            ),
-                          ),
-                          SizedBox(height: screenHeight * 0.014),
-                          Center(
-                            child: TextButton.icon(
-                              onPressed: _isCreating ? null : _pickThumbnail,
-                              icon: Icon(
-                                Icons.photo_camera_outlined,
-                                size: 18,
-                                color: themeProvider.primaryColor,
-                              ),
-                              label: StandardText(
-                                text:
-                                    _thumbnailFile == null ? '사진 선택' : '사진 바꾸기',
-                                fontSize: 13,
-                                color: themeProvider.primaryColor,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                          if (_thumbnailFile != null)
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 520),
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(
+                  screenWidth * 0.06,
+                  screenHeight * 0.04,
+                  screenWidth * 0.06,
+                  screenHeight * 0.03,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: SingleChildScrollView(
+                        keyboardDismissBehavior:
+                            ScrollViewKeyboardDismissBehavior.onDrag,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
                             Center(
-                              child: TextButton(
-                                onPressed: _clearThumbnail,
-                                child: StandardText(
-                                  text: '사진 선택 취소',
-                                  fontSize: 12,
-                                  color: Colors.grey[600]!,
-                                  fontWeight: FontWeight.normal,
-                                  fontFamily: 'PretendardLight',
+                              child: StudyRoomThumbnail(
+                                imagePath: _thumbnailFile?.path,
+                                themeProvider: themeProvider,
+                                size: thumbnailSize,
+                                showEditBadge: true,
+                                onTap: _isCreating ? null : _pickThumbnail,
+                              ),
+                            ),
+                            SizedBox(height: screenHeight * 0.014),
+                            Center(
+                              child: TextButton.icon(
+                                onPressed: _isCreating ? null : _pickThumbnail,
+                                icon: Icon(
+                                  Icons.photo_camera_outlined,
+                                  size: 18,
+                                  color: themeProvider.primaryColor,
+                                ),
+                                label: StandardText(
+                                  text: _thumbnailFile == null
+                                      ? '사진 선택'
+                                      : '사진 바꾸기',
+                                  fontSize: 13,
+                                  color: themeProvider.primaryColor,
+                                  fontWeight: FontWeight.w600,
                                 ),
                               ),
                             ),
-                          Center(
-                            child: StandardText(
-                              text: '선택하지 않으면 기본 사진으로 보여요',
-                              fontSize: 12,
+                            if (_thumbnailFile != null)
+                              Center(
+                                child: TextButton(
+                                  onPressed: _clearThumbnail,
+                                  child: StandardText(
+                                    text: '사진 선택 취소',
+                                    fontSize: 12,
+                                    color: Colors.grey[600]!,
+                                    fontWeight: FontWeight.normal,
+                                    fontFamily: 'PretendardLight',
+                                  ),
+                                ),
+                              ),
+                            Center(
+                              child: StandardText(
+                                text: '선택하지 않으면 기본 사진으로 보여요',
+                                fontSize: 12,
+                                color: Colors.grey[500]!,
+                                fontWeight: FontWeight.normal,
+                                fontFamily: 'PretendardLight',
+                              ),
+                            ),
+                            SizedBox(height: screenHeight * 0.035),
+                            Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: themeProvider.primaryColor
+                                        .withValues(alpha: 0.1),
+                                    borderRadius:
+                                        BorderRadius.circular(AppRadius.small),
+                                  ),
+                                  child: Icon(
+                                    Icons.group_add_outlined,
+                                    color: themeProvider.primaryColor,
+                                    size: 20,
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                const StandardText(
+                                  text: '새 스터디룸 이름',
+                                  fontSize: 16,
+                                  color: AppColors.textPrimary,
+                                ),
+                              ],
+                            ),
+                            SizedBox(height: screenHeight * 0.02),
+                            TextField(
+                              controller: _nameController,
+                              autofocus: true,
+                              maxLength: 20,
+                              textInputAction: TextInputAction.done,
+                              onSubmitted: (_) => _create(),
+                              style: _standardStyle.copyWith(
+                                color: AppColors.textPrimary,
+                                fontSize: 15,
+                              ),
+                              decoration: InputDecoration(
+                                hintText: '예) 수능 준비방, 영어 스터디',
+                                hintStyle: _standardStyle.copyWith(
+                                  color: Colors.grey[400],
+                                  fontSize: 14,
+                                ),
+                                fillColor: Colors.grey[50],
+                                filled: true,
+                                border: OutlineInputBorder(
+                                  borderRadius:
+                                      BorderRadius.circular(AppRadius.medium),
+                                  borderSide: BorderSide(
+                                    color: Colors.grey[300]!,
+                                    width: 1,
+                                  ),
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius:
+                                      BorderRadius.circular(AppRadius.medium),
+                                  borderSide: BorderSide(
+                                    color: Colors.grey[300]!,
+                                    width: 1,
+                                  ),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius:
+                                      BorderRadius.circular(AppRadius.medium),
+                                  borderSide: BorderSide(
+                                    color: themeProvider.primaryColor
+                                        .withValues(alpha: 0.5),
+                                    width: 2,
+                                  ),
+                                ),
+                                contentPadding: const EdgeInsets.symmetric(
+                                  vertical: 16,
+                                  horizontal: 16,
+                                ),
+                              ),
+                            ),
+                            SizedBox(height: screenHeight * 0.01),
+                            StandardText(
+                              text: '방을 만들면 자동으로 초대 코드가 생성됩니다.',
+                              fontSize: 13,
                               color: Colors.grey[500]!,
                               fontWeight: FontWeight.normal,
                               fontFamily: 'PretendardLight',
                             ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: screenHeight * 0.02),
+                    SizedBox(
+                      width: double.infinity,
+                      child: TextButton(
+                        onPressed: _isCreating ? null : _create,
+                        style: TextButton.styleFrom(
+                          backgroundColor: _isCreating
+                              ? Colors.grey[300]
+                              : themeProvider.primaryColor,
+                          padding: EdgeInsets.symmetric(
+                            vertical: screenHeight * 0.018,
                           ),
-                          SizedBox(height: screenHeight * 0.035),
-                          Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: themeProvider.primaryColor
-                                      .withValues(alpha: 0.1),
-                                  borderRadius: BorderRadius.circular(8),
+                          shape: RoundedRectangleBorder(
+                            borderRadius:
+                                BorderRadius.circular(AppRadius.large),
+                          ),
+                        ),
+                        child: _isCreating
+                            ? const SizedBox(
+                                width: 22,
+                                height: 22,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2,
                                 ),
-                                child: Icon(
-                                  Icons.group_add_outlined,
-                                  color: themeProvider.primaryColor,
-                                  size: 20,
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              const StandardText(
-                                text: '새 스터디룸 이름',
+                              )
+                            : const StandardText(
+                                text: '방 만들기',
                                 fontSize: 16,
-                                color: Colors.black87,
-                              ),
-                            ],
-                          ),
-                          SizedBox(height: screenHeight * 0.02),
-                          TextField(
-                            controller: _nameController,
-                            autofocus: true,
-                            maxLength: 20,
-                            textInputAction: TextInputAction.done,
-                            onSubmitted: (_) => _create(),
-                            style: _standardStyle.copyWith(
-                              color: Colors.black87,
-                              fontSize: 15,
-                            ),
-                            decoration: InputDecoration(
-                              hintText: '예) 수능 준비방, 영어 스터디',
-                              hintStyle: _standardStyle.copyWith(
-                                color: Colors.grey[400],
-                                fontSize: 14,
-                              ),
-                              fillColor: Colors.grey[50],
-                              filled: true,
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide(
-                                  color: Colors.grey[300]!,
-                                  width: 1,
-                                ),
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide(
-                                  color: Colors.grey[300]!,
-                                  width: 1,
-                                ),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide(
-                                  color: themeProvider.primaryColor
-                                      .withValues(alpha: 0.5),
-                                  width: 2,
-                                ),
-                              ),
-                              contentPadding: const EdgeInsets.symmetric(
-                                vertical: 16,
-                                horizontal: 16,
-                              ),
-                            ),
-                          ),
-                          SizedBox(height: screenHeight * 0.01),
-                          StandardText(
-                            text: '방을 만들면 자동으로 초대 코드가 생성됩니다.',
-                            fontSize: 13,
-                            color: Colors.grey[500]!,
-                            fontWeight: FontWeight.normal,
-                            fontFamily: 'PretendardLight',
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: screenHeight * 0.02),
-                  SizedBox(
-                    width: double.infinity,
-                    child: TextButton(
-                      onPressed: _isCreating ? null : _create,
-                      style: TextButton.styleFrom(
-                        backgroundColor: _isCreating
-                            ? Colors.grey[300]
-                            : themeProvider.primaryColor,
-                        padding: EdgeInsets.symmetric(
-                          vertical: screenHeight * 0.018,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                      ),
-                      child: _isCreating
-                          ? const SizedBox(
-                              width: 22,
-                              height: 22,
-                              child: CircularProgressIndicator(
                                 color: Colors.white,
-                                strokeWidth: 2,
                               ),
-                            )
-                          : const StandardText(
-                              text: '방 만들기',
-                              fontSize: 16,
-                              color: Colors.white,
-                            ),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
-        ),
         ),
       ),
     );

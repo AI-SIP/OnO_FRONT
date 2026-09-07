@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
-import 'package:ono/Module/Dialog/LoadingDialog.dart';
 import 'package:provider/provider.dart';
 
 import '../../Model/PracticeNote/PracticeNoteThumbnailModel.dart';
-import '../../Module/Emoji/OnoEmojiImage.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Text/mobile_font_size.dart';
 import '../../Module/Theme/ThemeHandler.dart';
@@ -14,6 +12,15 @@ import '../../Util/AppSnackBar.dart';
 import '../Tutorial/TutorialTargets.dart';
 import 'PracticeDetailScreen.dart';
 import 'PracticeProblemSelectionScreen.dart';
+import '../../Module/Motion/AppMotion.dart';
+import '../../Module/Motion/AppearTransition.dart';
+import '../../Module/Motion/AppHaptic.dart';
+import '../../Module/Motion/PressableScale.dart';
+import '../../Module/Motion/Skeleton.dart';
+import '../../Module/Motion/TossPageRoute.dart';
+import '../../Module/Motion/TossDialog.dart';
+import '../../Module/Design/AppColors.dart';
+import '../../Module/Design/AppRadius.dart';
 
 class PracticeThumbnailScreen extends StatefulWidget {
   final TutorialTargets? tutorialTargets;
@@ -156,6 +163,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
 
     final openTime = DateTime.now();
     showModalBottomSheet(
+      sheetAnimationStyle: AppMotion.sheetStyle,
       backgroundColor: Colors.transparent,
       context: context,
       isDismissible: false,
@@ -203,7 +211,8 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
                             color: themeProvider.primaryColor.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius:
+                                BorderRadius.circular(AppRadius.small),
                           ),
                           child: Icon(
                             Icons.edit_note,
@@ -216,7 +225,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
                           text: '복습 세트 편집하기',
                           fontSize: MobileFontSize.reduced(context, 18),
                           fontWeight: FontWeight.w600,
-                          color: Colors.black87,
+                          color: AppColors.textPrimary,
                         ),
                       ],
                     ),
@@ -263,15 +272,14 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
     Color? titleColor,
     required VoidCallback onTap,
   }) {
-    return InkWell(
+    return PressableScale(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
           color: Colors.grey[50],
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey[200]!, width: 1),
+          borderRadius: BorderRadius.circular(AppRadius.medium),
+          border: Border.all(color: AppColors.border),
         ),
         child: Row(
           children: [
@@ -310,7 +318,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
                 backgroundColor: Colors.grey[300],
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(AppRadius.small),
                 ),
               ),
               onPressed: () {
@@ -333,7 +341,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
                 backgroundColor: Colors.red,
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(AppRadius.small),
                 ),
               ),
               onPressed: _selectedPracticeIds.isNotEmpty
@@ -372,13 +380,13 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
   Future<void> _showDeletePracticeDialog(List<int> deletePracticeIds) async {
     final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
 
-    return showDialog(
+    return showTossDialog(
       context: context,
       builder: (context) {
         return Dialog(
           backgroundColor: Colors.white,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(AppRadius.large),
           ),
           child: Container(
             padding: const EdgeInsets.all(24),
@@ -392,7 +400,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
                         color: Colors.red.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(AppRadius.small),
                       ),
                       child: const Icon(
                         Icons.delete_forever,
@@ -405,7 +413,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
                       text: '복습 세트 삭제',
                       fontSize: MobileFontSize.reduced(context, 18),
                       fontWeight: FontWeight.w600,
-                      color: Colors.black87,
+                      color: AppColors.textPrimary,
                     ),
                   ],
                 ),
@@ -414,7 +422,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
                 StandardText(
                   text: '정말로 이 복습 세트를 삭제하시겠습니까?',
                   fontSize: MobileFontSize.reduced(context, 15),
-                  color: Colors.black87,
+                  color: AppColors.textPrimary,
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 24),
@@ -431,13 +439,14 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
                               horizontal: 16, vertical: 10),
                           backgroundColor: Colors.grey[100],
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius:
+                                BorderRadius.circular(AppRadius.small),
                           ),
                         ),
                         child: StandardText(
                           text: '취소',
                           fontSize: MobileFontSize.reduced(context, 15),
-                          color: Colors.black87,
+                          color: AppColors.textPrimary,
                         ),
                       ),
                     ),
@@ -474,7 +483,8 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
                               horizontal: 16, vertical: 10),
                           backgroundColor: Colors.red,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius:
+                                BorderRadius.circular(AppRadius.small),
                           ),
                         ),
                         child: const StandardText(
@@ -495,7 +505,12 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
   }
 
   Widget _buildLoadingIndicator() {
-    return const Center(child: CircularProgressIndicator());
+    return const SkeletonList(
+      itemCount: 4,
+      itemHeight: 96,
+      spacing: 16,
+      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+    );
   }
 
   Widget _buildEmptyState(ThemeHandler themeProvider) {
@@ -531,7 +546,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
                     vertical: 8,
                   ),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(15),
+                    borderRadius: BorderRadius.circular(AppRadius.large),
                   ),
                 ),
                 child: const StandardText(
@@ -547,11 +562,19 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
     );
   }
 
+  /// 목록에서 하나씩 들어오게 할 항목 수. 첫 화면에 보이는 만큼이다.
+  static const int _staggeredItemLimit = 8;
+
   Widget _buildPracticeListView(
       ProblemPracticeProvider provider, ThemeHandler themeProvider) {
     final thumbnails = provider.practiceThumbnails;
     final isLoadingMore = provider.isLoading;
     final hasMore = provider.hasNext;
+
+    // 처음 불러오는 중이면 화면 가운데 스피너 대신 목록 모양을 보여준다.
+    if (thumbnails.isEmpty && isLoadingMore) {
+      return _buildLoadingIndicator();
+    }
 
     return ListView.builder(
       controller: _scrollController,
@@ -559,7 +582,8 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
       padding: const EdgeInsets.symmetric(vertical: 20),
       itemCount: thumbnails.length + (isLoadingMore || hasMore ? 1 : 0),
       itemBuilder: (context, index) {
-        // 로딩 인디케이터
+        // 더 불러오는 중임을 알리는 자리. 목록 아래에 잠깐 보이는 것이라
+        // 스켈레톤보다 작은 표시가 낫다.
         if (index == thumbnails.length) {
           return const Padding(
             padding: EdgeInsets.all(16.0),
@@ -568,7 +592,12 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
         }
 
         final practice = thumbnails[index];
-        return _buildPracticeItem(practice, themeProvider);
+        // 첫 화면에 보이는 것만 하나씩 들어온다.
+        return AppearTransition(
+          enabled: index < _staggeredItemLimit,
+          delay: AppMotion.stagger * index,
+          child: _buildPracticeItem(practice, themeProvider),
+        );
       },
     );
   }
@@ -577,7 +606,8 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
       PracticeNoteThumbnails practice, ThemeHandler themeProvider) {
     final isSelected = _selectedPracticeIds.contains(practice.practiceId);
 
-    return GestureDetector(
+    return PressableScale(
+      haptic: HapticLevel.none,
       onTap: () {
         if (_isSelectionMode) {
           setState(() {
@@ -612,16 +642,17 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
   void _navigateToPracticeDetail(int practiceId) async {
     final practiceProvider =
         Provider.of<ProblemPracticeProvider>(context, listen: false);
-    LoadingDialog.show(context, '복습 세트 로딩 중...');
 
-    // 상세 정보 조회 및 이동
+    // 로딩 다이얼로그를 띄우지 않는다. 떴다 사라진 다음 화면이 넘어가서
+    // 한 번 눌렀는데 두 번 바뀌는 것처럼 보였다. 누른 항목이 줄어드는 것으로
+    // 눌린 것은 이미 알 수 있고, 열린 화면은 자기 자리를 잡으며 나타난다.
     await practiceProvider.fetchPracticeNote(practiceId);
     await practiceProvider.moveToPractice(practiceId);
-    LoadingDialog.hide(context);
+    if (!mounted) return;
 
     final result = await Navigator.push<bool>(
       context,
-      MaterialPageRoute(
+      TossPageRoute(
         builder: (context) => PracticeDetailScreen(
             practice: practiceProvider.currentPracticeNote!),
       ),
@@ -640,7 +671,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
       color: isSelected
           ? themeProvider.primaryColor.withOpacity(0.1)
           : Colors.white,
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(AppRadius.medium),
       boxShadow: [
         BoxShadow(
           color: Colors.grey.withOpacity(0.2),
@@ -657,7 +688,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
       width: 50,
       height: 70,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppRadius.small),
         color: isSelected
             ? themeProvider.primaryColor
             : themeProvider.primaryColor.withOpacity(0.1),
@@ -705,47 +736,31 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
 
   Widget _buildPracticeMeta(
       PracticeNoteThumbnails practice, ThemeHandler themeProvider) {
-    final hasMoodEmoji = practice.lastSessionMoodEmojiKey != null;
     const frogIconBoxWidth = 68.0;
 
+    // 지난 복습 소감 이모지는 여기 두지 않는다. 목록에서는 몇 회 복습했는지만
+    // 보면 되고, 소감은 상세 화면에서 본다.
     return Semantics(
       label: practice.practiceCount >= 3
           ? '복습 완료'
           : '${practice.practiceCount}회 복습',
       child: SizedBox(
-        width: hasMoodEmoji ? 92 : frogIconBoxWidth,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          crossAxisAlignment: CrossAxisAlignment.end,
+        width: frogIconBoxWidth,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            SizedBox(
-              width: frogIconBoxWidth,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  practice.practiceCount >= 3
-                      ? _buildTag('복습 완료', themeProvider,
-                          highlight: true, width: frogIconBoxWidth)
-                      : _buildTag(
-                          '${practice.practiceCount}회 복습', themeProvider,
-                          width: frogIconBoxWidth),
-                  const SizedBox(height: 7),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    mainAxisSize: MainAxisSize.min,
-                    children: _buildStatusIcons(practice.practiceCount),
-                  ),
-                ],
-              ),
+            practice.practiceCount >= 3
+                ? _buildTag('복습 완료', themeProvider,
+                    highlight: true, width: frogIconBoxWidth)
+                : _buildTag('${practice.practiceCount}회 복습', themeProvider,
+                    width: frogIconBoxWidth),
+            const SizedBox(height: 7),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: _buildStatusIcons(practice.practiceCount),
             ),
-            if (hasMoodEmoji) ...[
-              const SizedBox(width: 4),
-              OnoEmojiImage(
-                emojiKey: practice.lastSessionMoodEmojiKey,
-                size: 20,
-              ),
-            ],
           ],
         ),
       ),
@@ -806,12 +821,6 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
     return DateFormat('yyyy/MM/dd').format(dateTime);
   }
 
-  Future<void> _fetchAllPracticeContents() async {
-    final provider =
-        Provider.of<ProblemPracticeProvider>(context, listen: false);
-    await provider.fetchAllPracticeContents();
-  }
-
   Future<void> _refreshPracticeThumbnails() async {
     final provider =
         Provider.of<ProblemPracticeProvider>(context, listen: false);
@@ -821,7 +830,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
   Future<void> _navigateToPracticeCreate() async {
     await Navigator.push(
       context,
-      MaterialPageRoute(
+      TossPageRoute(
         builder: (context) => const PracticeProblemSelectionScreen(),
       ),
     );

@@ -6,6 +6,8 @@ import '../../../Module/Text/StandardText.dart';
 import '../../../Module/Theme/ThemeHandler.dart';
 import '../../../Provider/StudyRoomProvider.dart';
 import 'FeedReactionBar.dart';
+import '../../../Module/Design/AppColors.dart';
+import '../../../Module/Design/AppRadius.dart';
 
 class ActivityFeedItem extends StatelessWidget {
   final ActivityFeedModel feed;
@@ -56,8 +58,8 @@ class ActivityFeedItem extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(14, 18, 14, 8),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[200]!, width: 1),
+        borderRadius: BorderRadius.circular(AppRadius.medium),
+        border: Border.all(color: AppColors.border),
         boxShadow: [
           BoxShadow(
             color: themeProvider.primaryColor.withValues(alpha: 0.06),
@@ -76,7 +78,7 @@ class ActivityFeedItem extends StatelessWidget {
                 height: 36,
                 decoration: BoxDecoration(
                   color: themeProvider.primaryColor.withValues(alpha: 0.09),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppRadius.medium),
                   border: Border.all(
                     color: themeProvider.primaryColor.withValues(alpha: 0.18),
                     width: 1,
@@ -96,7 +98,7 @@ class ActivityFeedItem extends StatelessWidget {
                     StandardText(
                       text: feed.displayText,
                       fontSize: 14,
-                      color: Colors.black87,
+                      color: AppColors.textPrimary,
                       fontWeight: FontWeight.w600,
                       overflow: TextOverflow.ellipsis,
                       maxLines: 2,

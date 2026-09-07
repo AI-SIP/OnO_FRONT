@@ -8,6 +8,8 @@ import 'package:provider/provider.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/PracticeNoteProvider.dart';
+import '../../Module/Motion/TossPageRoute.dart';
+import '../../Module/Design/AppRadius.dart';
 
 class PracticeNavigationButtons extends StatefulWidget {
   final BuildContext context;
@@ -87,7 +89,7 @@ class _PracticeNavigationButtonsState extends State<PracticeNavigationButtons> {
           width: 2.0,
         ),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(15.0),
+          borderRadius: BorderRadius.circular(AppRadius.large),
         ),
       ),
       child: isReviewed
@@ -193,11 +195,11 @@ class _PracticeNavigationButtonsState extends State<PracticeNavigationButtons> {
     final matchingPractices = widget.practiceProvider.practices
         .where((practice) => practice.practiceId == practiceId);
     final practiceRound = matchingPractices.isNotEmpty
-        ? (matchingPractices.first.practiceCount ?? 0)
+        ? matchingPractices.first.practiceCount
         : 0;
 
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute(
+      TossPageRoute(
         builder: (context) => PracticeCompletionScreen(
           practiceId: practiceId,
           totalProblems: totalProblems,
@@ -244,7 +246,8 @@ class _PracticeNavigationButtonsState extends State<PracticeNavigationButtons> {
       padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
       backgroundColor: isCompletion ? themeProvider.primaryColor : Colors.white,
       side: BorderSide(color: themeProvider.primaryColor, width: 2.0),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15.0)),
+      shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.large)),
     );
   }
 }

@@ -11,6 +11,12 @@ import '../../../Provider/StudyRoomProvider.dart';
 import '../../../Util/AppSnackBar.dart';
 import '../SharedProblemDetailScreen.dart';
 import 'FeedReactionBar.dart';
+import '../../../Module/Motion/AppHaptic.dart';
+import '../../../Module/Motion/PressableScale.dart';
+import '../../../Module/Motion/TossPageRoute.dart';
+import '../../../Module/Motion/TossDialog.dart';
+import '../../../Module/Design/AppColors.dart';
+import '../../../Module/Design/AppRadius.dart';
 
 class SharedProblemCard extends StatefulWidget {
   final SharedProblemModel problem;
@@ -57,12 +63,12 @@ class _SharedProblemCardState extends State<SharedProblemCard> {
     StudyRoomProvider provider,
     ThemeHandler themeProvider,
   ) async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showTossDialog<bool>(
       context: context,
       builder: (_) => Dialog(
         backgroundColor: Colors.white,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(15),
+          borderRadius: BorderRadius.circular(AppRadius.large),
           side: BorderSide(color: Colors.grey[200]!, width: 1),
         ),
         child: ConstrainedBox(
@@ -78,7 +84,7 @@ class _SharedProblemCardState extends State<SharedProblemCard> {
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
                         color: Colors.red.withValues(alpha: 0.10),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(AppRadius.small),
                       ),
                       child: const Icon(
                         Icons.cancel_outlined,
@@ -90,7 +96,7 @@ class _SharedProblemCardState extends State<SharedProblemCard> {
                     const StandardText(
                       text: '공유 취소',
                       fontSize: 18,
-                      color: Colors.black87,
+                      color: AppColors.textPrimary,
                       fontWeight: FontWeight.w700,
                     ),
                   ],
@@ -114,7 +120,8 @@ class _SharedProblemCardState extends State<SharedProblemCard> {
                           backgroundColor: Colors.grey[50],
                           padding: const EdgeInsets.symmetric(vertical: 13),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius:
+                                BorderRadius.circular(AppRadius.medium),
                             side: BorderSide(
                               color: Colors.grey[200]!,
                               width: 1,
@@ -124,7 +131,7 @@ class _SharedProblemCardState extends State<SharedProblemCard> {
                         child: const StandardText(
                           text: '닫기',
                           fontSize: 14,
-                          color: Colors.black87,
+                          color: AppColors.textPrimary,
                         ),
                       ),
                     ),
@@ -136,7 +143,8 @@ class _SharedProblemCardState extends State<SharedProblemCard> {
                           backgroundColor: Colors.red,
                           padding: const EdgeInsets.symmetric(vertical: 13),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius:
+                                BorderRadius.circular(AppRadius.medium),
                           ),
                         ),
                         child: const StandardText(
@@ -168,12 +176,12 @@ class _SharedProblemCardState extends State<SharedProblemCard> {
     ThemeHandler themeProvider,
   ) {
     final primary = themeProvider.primaryColor;
-    showDialog<void>(
+    showTossDialog<void>(
       context: context,
       builder: (dialogContext) => Dialog(
         backgroundColor: Colors.white,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(15),
+          borderRadius: BorderRadius.circular(AppRadius.large),
           side: BorderSide(color: Colors.grey[200]!, width: 1),
         ),
         child: ConstrainedBox(
@@ -189,7 +197,7 @@ class _SharedProblemCardState extends State<SharedProblemCard> {
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
                         color: primary.withValues(alpha: 0.10),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(AppRadius.small),
                       ),
                       child: Icon(
                         Icons.more_horiz,
@@ -201,7 +209,7 @@ class _SharedProblemCardState extends State<SharedProblemCard> {
                     const StandardText(
                       text: '공유 문제 관리',
                       fontSize: 18,
-                      color: Colors.black87,
+                      color: AppColors.textPrimary,
                       fontWeight: FontWeight.w700,
                     ),
                   ],
@@ -218,7 +226,7 @@ class _SharedProblemCardState extends State<SharedProblemCard> {
                       backgroundColor: Colors.red.withValues(alpha: 0.08),
                       padding: const EdgeInsets.symmetric(vertical: 13),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(AppRadius.medium),
                         side: BorderSide(
                           color: Colors.red.withValues(alpha: 0.16),
                           width: 1,
@@ -248,14 +256,14 @@ class _SharedProblemCardState extends State<SharedProblemCard> {
                       backgroundColor: Colors.grey[50],
                       padding: const EdgeInsets.symmetric(vertical: 13),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(AppRadius.medium),
                         side: BorderSide(color: Colors.grey[200]!, width: 1),
                       ),
                     ),
                     child: const StandardText(
                       text: '닫기',
                       fontSize: 14,
-                      color: Colors.black87,
+                      color: AppColors.textPrimary,
                     ),
                   ),
                 ),
@@ -277,20 +285,20 @@ class _SharedProblemCardState extends State<SharedProblemCard> {
 
     return Material(
       color: Colors.transparent,
-      child: InkWell(
+      child: PressableScale(
+        haptic: HapticLevel.none,
         onTap: () => Navigator.push(
           context,
-          MaterialPageRoute(
+          TossPageRoute(
             builder: (_) => SharedProblemDetailScreen(problem: problem),
           ),
         ),
-        borderRadius: BorderRadius.circular(14),
         child: Container(
           margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: Colors.grey[200]!, width: 1),
+            borderRadius: BorderRadius.circular(AppRadius.large),
+            border: Border.all(color: AppColors.border),
             boxShadow: [
               BoxShadow(
                 color: primary.withValues(alpha: 0.07),
@@ -320,7 +328,7 @@ class _SharedProblemCardState extends State<SharedProblemCard> {
                           StandardText(
                             text: p.sharedByName,
                             fontSize: 14,
-                            color: Colors.black87,
+                            color: AppColors.textPrimary,
                           ),
                           StandardText(
                             text: _timeAgo(p.sharedAt),
@@ -361,7 +369,7 @@ class _SharedProblemCardState extends State<SharedProblemCard> {
                 child: StandardText(
                   text: p.reference,
                   fontSize: 14,
-                  color: Colors.black87,
+                  color: AppColors.textPrimary,
                   fontWeight: FontWeight.w700,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
@@ -425,7 +433,7 @@ class _SharedProblemCardState extends State<SharedProblemCard> {
         alignment: Alignment.center,
         decoration: BoxDecoration(
           color: primary.withValues(alpha: 0.055),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppRadius.medium),
           border: Border.all(color: primary.withValues(alpha: 0.15), width: 1),
         ),
         child: _placeholderPreview(primary),
@@ -443,10 +451,11 @@ class _SharedProblemCardState extends State<SharedProblemCard> {
               setState(() => _currentImageIndex = index);
             },
             itemBuilder: (context, index) {
-              return GestureDetector(
+              return PressableScale(
+                haptic: HapticLevel.none,
                 onTap: () => Navigator.push(
                   context,
-                  MaterialPageRoute(
+                  TossPageRoute(
                     builder: (_) =>
                         FullScreenImage(imagePath: imageUrls[index]),
                   ),
@@ -455,14 +464,14 @@ class _SharedProblemCardState extends State<SharedProblemCard> {
                   margin: const EdgeInsets.symmetric(horizontal: 14),
                   decoration: BoxDecoration(
                     color: primary.withValues(alpha: 0.045),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppRadius.medium),
                     border: Border.all(
                       color: Colors.grey[200]!,
                       width: 1,
                     ),
                   ),
                   child: ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppRadius.medium),
                     child: DisplayImage(
                       imagePath: imageUrls[index],
                       fit: BoxFit.contain,
@@ -484,7 +493,8 @@ class _SharedProblemCardState extends State<SharedProblemCard> {
               separatorBuilder: (_, __) => const SizedBox(width: 8),
               itemBuilder: (context, index) {
                 final isSelected = _currentImageIndex == index;
-                return GestureDetector(
+                return PressableScale(
+                  haptic: HapticLevel.none,
                   onTap: () {
                     _imageController.animateToPage(
                       index,
@@ -498,7 +508,7 @@ class _SharedProblemCardState extends State<SharedProblemCard> {
                     padding: const EdgeInsets.all(2),
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(AppRadius.medium),
                       border: Border.all(
                         color: isSelected
                             ? primary
@@ -507,7 +517,7 @@ class _SharedProblemCardState extends State<SharedProblemCard> {
                       ),
                     ),
                     child: ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(AppRadius.small),
                       child: DisplayImage(
                         imagePath: imageUrls[index],
                         fit: BoxFit.cover,
@@ -529,8 +539,8 @@ class _SharedProblemCardState extends State<SharedProblemCard> {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
         color: Colors.grey[50],
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[200]!, width: 1),
+        borderRadius: BorderRadius.circular(AppRadius.medium),
+        border: Border.all(color: AppColors.border),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

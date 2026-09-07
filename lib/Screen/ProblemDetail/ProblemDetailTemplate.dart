@@ -12,6 +12,11 @@ import '../ProblemSolve/ProblemSolveEntry.dart';
 import 'Widget/AnalysisSection.dart';
 import 'Widget/ImageSection.dart';
 import 'Widget/RepeatSectionV2.dart';
+import '../../Module/Motion/AppHaptic.dart';
+import '../../Module/Motion/AppMotion.dart';
+import '../../Module/Motion/SelectionPop.dart';
+import '../../Module/Design/AppColors.dart';
+import '../../Module/Design/AppRadius.dart';
 
 class ProblemDetailTemplate extends StatefulWidget {
   final ProblemModel problemModel;
@@ -40,11 +45,13 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
     _tabController.addListener(() {
-      if (_tabController.indexIsChanging) {
-        setState(() {
-          _currentTabIndex = _tabController.index;
-        });
-      }
+      // indexIsChanging 은 탭을 눌렀을 때만 참이라, 그것만 보면 손으로 밀어
+      // 넘겼을 때 탭 표시가 이전 자리에 머물러 있었다.
+      if (_tabController.index == _currentTabIndex) return;
+      AppHaptic.selection();
+      setState(() {
+        _currentTabIndex = _tabController.index;
+      });
     });
   }
 
@@ -77,15 +84,43 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
               child: TabBarView(
                 controller: _tabController,
                 children: [
-                  _buildProblemTab(themeProvider, isWide),
-                  _buildSolutionTab(themeProvider, isWide),
-                  _buildReviewHistoryTab(themeProvider, isWide),
+                  _tabContent(0, _buildProblemTab(themeProvider, isWide)),
+                  _tabContent(1, _buildSolutionTab(themeProvider, isWide)),
+                  _tabContent(2, _buildReviewHistoryTab(themeProvider, isWide)),
                 ],
               ),
             ),
           ),
         ),
       ],
+    );
+  }
+
+  /// 탭 사이를 오갈 때 옆으로 밀리기만 하던 것에 옅어짐과 내려앉음을 더한다.
+  ///
+  /// `TabController.animation` 은 손으로 미는 중에도 값이 계속 바뀌므로,
+  /// 탭을 누른 경우와 밀어 넘긴 경우가 같은 모양으로 움직인다.
+  Widget _tabContent(int index, Widget child) {
+    final animation = _tabController.animation;
+    if (animation == null) return child;
+
+    return AnimatedBuilder(
+      animation: animation,
+      child: child,
+      builder: (context, child) {
+        // 0 이면 이 탭이 화면 한가운데, 1 이면 완전히 옆으로 비켜난 상태다.
+        final distance = (animation.value - index).abs().clamp(0.0, 1.0);
+        return Opacity(
+          opacity: 1 - distance,
+          child: Transform.translate(
+            offset: Offset(0, 12 * distance),
+            child: Transform.scale(
+              scale: 1 - 0.02 * distance,
+              child: child,
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -117,8 +152,8 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
         padding: EdgeInsets.all(tabContainerPadding),
         decoration: BoxDecoration(
           color: Colors.grey[100],
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.grey[200]!, width: 1),
+          borderRadius: BorderRadius.circular(AppRadius.large),
+          border: Border.all(color: AppColors.border),
         ),
         child: TabBar(
           controller: _tabController,
@@ -126,7 +161,7 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
           unselectedLabelColor: Colors.grey[600],
           indicator: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppRadius.medium),
             border: Border.all(
               color: themeProvider.primaryColor.withOpacity(0.22),
               width: 1,
@@ -192,22 +227,30 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
     final textSize = isWide ? 15.0 : 14.0;
     final gap = isWide ? 6.0 : 6.0;
 
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Icon(
-          icon,
-          size: iconSize,
-          color: isActive ? activeColor : inactiveColor,
-        ),
-        SizedBox(width: gap),
-        StandardText(
-          text: title,
-          fontSize: MobileFontSize.reduced(context, textSize),
-          fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
-          color: isActive ? activeColor : inactiveColor,
-        ),
-      ],
+    return SelectionPop(
+      selected: isActive,
+      peak: 1.1,
+      child: TweenAnimationBuilder<double>(
+        tween: Tween<double>(end: isActive ? 1.0 : 0.0),
+        duration: AppMotion.fast,
+        curve: AppMotion.standard,
+        builder: (context, t, _) {
+          final color = Color.lerp(inactiveColor, activeColor, t)!;
+          return Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, size: iconSize, color: color),
+              SizedBox(width: gap),
+              StandardText(
+                text: title,
+                fontSize: MobileFontSize.reduced(context, textSize),
+                fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
+                color: color,
+              ),
+            ],
+          );
+        },
+      ),
     );
   }
 
@@ -263,7 +306,7 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(14.0),
+        borderRadius: BorderRadius.circular(AppRadius.large),
         border: Border.all(
           color: themeProvider.primaryColor.withOpacity(0.18),
           width: 1.2,
@@ -284,7 +327,7 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
                 padding: const EdgeInsets.all(6.0),
                 decoration: BoxDecoration(
                   color: themeProvider.primaryColor.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(10.0),
+                  borderRadius: BorderRadius.circular(AppRadius.medium),
                 ),
                 child: Icon(
                   Icons.calendar_month,
@@ -297,7 +340,7 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
                 text: '푼 날짜',
                 fontSize: MobileFontSize.reduced(context, 14),
                 fontWeight: FontWeight.w600,
-                color: Colors.black87,
+                color: AppColors.textPrimary,
               ),
               const Spacer(),
               UnderlinedText(
@@ -358,7 +401,7 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
         color: themeProvider.primaryColor.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(AppRadius.full),
       ),
       child: StandardText(
         text: '$count장',
@@ -366,79 +409,6 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
         fontWeight: FontWeight.w600,
         color: themeProvider.primaryColor,
       ),
-    );
-  }
-
-  Widget _buildProblemSectionHeaderCard(
-      String title, IconData icon, ThemeHandler themeProvider,
-      {Widget? trailing}) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14.0),
-        border: Border.all(
-          color: themeProvider.primaryColor.withOpacity(0.18),
-          width: 1.2,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8.0),
-            decoration: BoxDecoration(
-              color: themeProvider.primaryColor.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(10.0),
-            ),
-            child: Icon(
-              icon,
-              color: themeProvider.primaryColor,
-              size: 18,
-            ),
-          ),
-          const SizedBox(width: 10),
-          StandardText(
-            text: title,
-            fontSize: MobileFontSize.reduced(context, 14),
-            fontWeight: FontWeight.w600,
-            color: Colors.black87,
-          ),
-          const Spacer(),
-          if (trailing != null) trailing,
-        ],
-      ),
-    );
-  }
-
-  Widget _buildProblemImagePanel(ThemeHandler themeProvider,
-      {required Widget child}) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(14.0),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14.0),
-        border: Border.all(
-          color: themeProvider.primaryColor.withOpacity(0.14),
-          width: 1.1,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.03),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: child,
     );
   }
 
@@ -454,7 +424,7 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(14.0),
+        borderRadius: BorderRadius.circular(AppRadius.large),
         border: Border.all(
           color: themeProvider.primaryColor.withOpacity(0.18),
           width: 1.2,
@@ -476,7 +446,7 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
                 padding: const EdgeInsets.all(8.0),
                 decoration: BoxDecoration(
                   color: themeProvider.primaryColor.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(10.0),
+                  borderRadius: BorderRadius.circular(AppRadius.medium),
                 ),
                 child: Icon(
                   icon,
@@ -489,7 +459,7 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
                 text: title,
                 fontSize: MobileFontSize.reduced(context, 14),
                 fontWeight: FontWeight.w600,
-                color: Colors.black87,
+                color: AppColors.textPrimary,
               ),
               const Spacer(),
               if (trailing != null) trailing,
@@ -560,7 +530,7 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
                       const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(AppRadius.small),
                     border: Border.all(
                       color: themeProvider.primaryColor,
                       width: 1,
@@ -636,55 +606,6 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
         ),
       );
     }
-  }
-
-  Widget _buildSectionTitle(
-      String title, IconData icon, ThemeHandler themeProvider,
-      {Widget? trailing}) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 12.0),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12.0),
-        border: Border.all(
-          color: themeProvider.primaryColor.withOpacity(0.14),
-          width: 1,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.02),
-            blurRadius: 6,
-            offset: const Offset(0, 1),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(6.0),
-            decoration: BoxDecoration(
-              color: themeProvider.primaryColor.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(6.0),
-            ),
-            child: Icon(
-              icon,
-              color: themeProvider.primaryColor,
-              size: 18,
-            ),
-          ),
-          const SizedBox(width: 8),
-          StandardText(
-            text: title,
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-            color: Colors.black87,
-          ),
-          const Spacer(),
-          if (trailing != null) trailing,
-        ],
-      ),
-    );
   }
 
   Widget _buildReviewHistoryTab(ThemeHandler themeProvider, bool isWide) {

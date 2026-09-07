@@ -9,6 +9,8 @@ import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/StudyRoomProvider.dart';
 import '../../Util/AppSnackBar.dart';
 import 'Widget/StudyRoomThumbnail.dart';
+import '../../Module/Design/AppRadius.dart';
+import '../../Module/Design/AppColors.dart';
 
 class StudyRoomEditScreen extends StatefulWidget {
   final StudyRoomModel room;
@@ -217,7 +219,8 @@ class _StudyRoomEditScreenState extends State<StudyRoomEditScreen> {
                                 decoration: BoxDecoration(
                                   color: themeProvider.primaryColor
                                       .withValues(alpha: 0.1),
-                                  borderRadius: BorderRadius.circular(8),
+                                  borderRadius:
+                                      BorderRadius.circular(AppRadius.small),
                                 ),
                                 child: Icon(
                                   Icons.edit_outlined,
@@ -229,7 +232,7 @@ class _StudyRoomEditScreenState extends State<StudyRoomEditScreen> {
                               const StandardText(
                                 text: '스터디룸 이름',
                                 fontSize: 16,
-                                color: Colors.black87,
+                                color: AppColors.textPrimary,
                               ),
                             ],
                           ),
@@ -240,7 +243,7 @@ class _StudyRoomEditScreenState extends State<StudyRoomEditScreen> {
                             textInputAction: TextInputAction.done,
                             onSubmitted: (_) => _save(),
                             style: _standardStyle.copyWith(
-                              color: Colors.black87,
+                              color: AppColors.textPrimary,
                               fontSize: 15,
                             ),
                             decoration: InputDecoration(
@@ -252,21 +255,24 @@ class _StudyRoomEditScreenState extends State<StudyRoomEditScreen> {
                               fillColor: Colors.grey[50],
                               filled: true,
                               border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
+                                borderRadius:
+                                    BorderRadius.circular(AppRadius.medium),
                                 borderSide: BorderSide(
                                   color: Colors.grey[300]!,
                                   width: 1,
                                 ),
                               ),
                               enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
+                                borderRadius:
+                                    BorderRadius.circular(AppRadius.medium),
                                 borderSide: BorderSide(
                                   color: Colors.grey[300]!,
                                   width: 1,
                                 ),
                               ),
                               focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
+                                borderRadius:
+                                    BorderRadius.circular(AppRadius.medium),
                                 borderSide: BorderSide(
                                   color: themeProvider.primaryColor
                                       .withValues(alpha: 0.5),
@@ -296,7 +302,7 @@ class _StudyRoomEditScreenState extends State<StudyRoomEditScreen> {
                           vertical: screenHeight * 0.018,
                         ),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
+                          borderRadius: BorderRadius.circular(AppRadius.large),
                         ),
                       ),
                       child: _isSaving

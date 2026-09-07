@@ -9,6 +9,15 @@ import 'package:ono/Screen/ProblemShare/AchievementCardScreen.dart';
 import 'package:ono/Service/Api/LearningReport/LearningReportService.dart';
 import 'package:provider/provider.dart';
 import '../../../Util/AppSnackBar.dart';
+import '../../../Module/Motion/AppHaptic.dart';
+import '../../../Module/Motion/PressableScale.dart';
+import '../../../Module/Motion/TossPageRoute.dart';
+import '../../../Module/Motion/AnimatedGauge.dart';
+import '../../../Module/Motion/AppMotion.dart';
+import '../../../Module/Motion/AppearTransition.dart';
+import '../../../Module/Design/AppColors.dart';
+import '../../../Module/Design/AppRadius.dart';
+import '../../../Module/Design/AppSpacing.dart';
 
 enum ReportPeriod { weekly, monthly, total }
 
@@ -104,7 +113,7 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
             const StandardText(
               text: '리포트 분석 중...',
               fontSize: 17,
-              color: Colors.black87,
+              color: AppColors.textPrimary,
               fontWeight: FontWeight.w700,
               fontFamily: 'PretendardBold',
             ),
@@ -132,7 +141,7 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
               StandardText(
                 text: _errorMessage!,
                 fontSize: 14,
-                color: Colors.black87,
+                color: AppColors.textPrimary,
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 12),
@@ -158,7 +167,7 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
         child: StandardText(
           text: '표시할 리포트가 없습니다.',
           fontSize: 14,
-          color: Colors.black87,
+          color: AppColors.textPrimary,
         ),
       );
     }
@@ -167,34 +176,46 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
     final comparison = _getCurrentComparison();
     final viewData = _ReportViewData.fromPeriod(periodReport);
 
+    // 위에서부터 한 덩어리씩 들어오게 한다. 숫자와 그래프가 많은 화면이라
+    // 한꺼번에 나타나면 어디를 봐야 할지 알기 어렵다.
+    var step = 0;
+    Widget appear(Widget child) => AppearTransition(
+          delay: AppMotion.stagger * (step++),
+          child: child,
+        );
+
     return ListView(
+      // 화면 밖 카드를 미리 만들어 두면 스크롤해서 닿기도 전에 막대가 다
+      // 자라 버린다. 도달할 때 만들어지도록 미리 만드는 범위를 없앤다.
+      // 카드가 열 개 남짓이라 이렇게 해도 스크롤이 무거워지지 않는다.
+      cacheExtent: 0,
       padding: const EdgeInsets.fromLTRB(16, 18, 16, 30),
       children: [
-        _buildSummaryCard(themeProvider, viewData, comparison),
+        appear(_buildSummaryCard(themeProvider, viewData, comparison)),
         const SizedBox(height: 26),
-        _buildPeriodSelector(themeProvider),
+        appear(_buildPeriodSelector(themeProvider)),
         const SizedBox(height: 30),
-        _buildSectionTitle(themeProvider, '핵심 지표', Icons.auto_graph),
+        appear(_buildSectionTitle(themeProvider, '핵심 지표', Icons.auto_graph)),
         const SizedBox(height: 14),
-        _buildStatsGrid(themeProvider, viewData),
+        appear(_buildStatsGrid(themeProvider, viewData)),
         const SizedBox(height: 20),
-        _buildSectionTitle(
+        appear(_buildSectionTitle(
           themeProvider,
           '복습 횟수 추이',
           Icons.stacked_bar_chart_rounded,
-        ),
+        )),
         const SizedBox(height: 14),
-        _buildTrendCard(themeProvider, viewData),
+        appear(_buildTrendCard(themeProvider, viewData)),
         const SizedBox(height: 40),
-        _buildSectionTitle(
+        appear(_buildSectionTitle(
           themeProvider,
           '집중 복습 추천',
           Icons.edit_note_rounded,
-        ),
+        )),
         const SizedBox(height: 14),
-        _buildWeakTopicCard(themeProvider, viewData),
+        appear(_buildWeakTopicCard(themeProvider, viewData)),
         const SizedBox(height: 14),
-        _buildActionCard(themeProvider),
+        appear(_buildActionCard(themeProvider)),
         const SizedBox(height: 18),
         const Padding(
           padding: EdgeInsets.only(left: 4),
@@ -250,7 +271,7 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(AppRadius.xlarge),
         border: Border.all(
           color: themeProvider.primaryColor.withValues(alpha: 0.22),
           width: 1.2,
@@ -273,7 +294,7 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
                     const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
                   color: themeProvider.primaryColor,
-                  borderRadius: BorderRadius.circular(999),
+                  borderRadius: BorderRadius.circular(AppRadius.full),
                 ),
                 child: StandardText(
                   text: data.badge,
@@ -295,7 +316,7 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
           StandardText(
             text: data.title,
             fontSize: 18,
-            color: Colors.black87,
+            color: AppColors.textPrimary,
             fontWeight: FontWeight.w800,
             fontFamily: 'PretendardBold',
           ),
@@ -303,12 +324,61 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
           StandardText(
             text: _buildSummarySubtitle(comparison),
             fontSize: 13,
-            color: Colors.black87,
+            color: AppColors.textSecondary,
             fontWeight: FontWeight.w600,
             fontFamily: 'PretendardLight',
           ),
+          const SizedBox(height: AppSpacing.lg),
+          // 이 기간을 한 줄로 요약한다. 아래 카드를 다 읽지 않아도
+          // 무엇을 얼마나 했는지 먼저 눈에 들어오게 한다.
+          Row(
+            children: [
+              _buildSummaryFigure(
+                  '작성', '${data.noteWriteCount}', themeProvider),
+              _buildSummaryDivider(),
+              _buildSummaryFigure('복습', '${data.reviewCount}', themeProvider),
+              _buildSummaryDivider(),
+              _buildSummaryFigure(
+                '정답률',
+                '${data.averageAccuracy.toStringAsFixed(0)}%',
+                themeProvider,
+              ),
+            ],
+          ),
         ],
       ),
+    );
+  }
+
+  /// 요약 카드 안에 나란히 놓는 수치 하나.
+  Widget _buildSummaryFigure(
+      String label, String value, ThemeHandler themeProvider) {
+    return Expanded(
+      child: Column(
+        children: [
+          StandardText(
+            text: value,
+            fontSize: 20,
+            color: themeProvider.primaryColor,
+            fontFamily: 'PretendardBold',
+          ),
+          const SizedBox(height: 2),
+          StandardText(
+            text: label,
+            fontSize: 11,
+            color: AppColors.textTertiary,
+            fontWeight: FontWeight.w600,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSummaryDivider() {
+    return Container(
+      width: 1,
+      height: 28,
+      color: AppColors.border,
     );
   }
 
@@ -375,8 +445,8 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
       padding: const EdgeInsets.all(3),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.grey[300]!, width: 1),
+        borderRadius: BorderRadius.circular(AppRadius.large),
+        border: Border.all(color: AppColors.border),
       ),
       child: Row(
         children: [
@@ -395,7 +465,8 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
   ) {
     final isSelected = _selectedPeriod == period;
     return Expanded(
-      child: GestureDetector(
+      child: PressableScale(
+        haptic: HapticLevel.selection,
         onTap: () {
           setState(() {
             _selectedPeriod = period;
@@ -410,7 +481,7 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
             color: isSelected
                 ? themeProvider.primaryColor.withValues(alpha: 0.15)
                 : Colors.transparent,
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(AppRadius.medium),
             border: isSelected
                 ? Border.all(color: themeProvider.primaryColor, width: 1)
                 : null,
@@ -438,19 +509,19 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
     return Row(
       children: [
         Container(
-          width: 28,
-          height: 28,
+          width: 32,
+          height: 32,
           decoration: BoxDecoration(
-            color: themeProvider.primaryColor.withValues(alpha: 0.15),
-            borderRadius: BorderRadius.circular(8),
+            color: themeProvider.primaryColor.withValues(alpha: 0.10),
+            borderRadius: BorderRadius.circular(AppRadius.medium),
           ),
           child: Icon(icon, size: 17, color: themeProvider.primaryColor),
         ),
-        const SizedBox(width: 8),
+        const SizedBox(width: AppSpacing.md),
         StandardText(
           text: title,
           fontSize: 17,
-          color: Colors.black87,
+          color: AppColors.textPrimary,
           fontFamily: 'PretendardBold',
         ),
       ],
@@ -468,6 +539,7 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
                 '작성한 오답 노트',
                 '${data.noteWriteCount}개',
                 Icons.edit_note_rounded,
+                const Color(0xFF9B7EDE),
               ),
             ),
             const SizedBox(width: 10),
@@ -477,6 +549,7 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
                 '복습 세트 열람',
                 '${data.notePracticeCount}회',
                 Icons.menu_book_rounded,
+                const Color(0xFF4A90D9),
               ),
             ),
           ],
@@ -490,6 +563,7 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
                 '오답노트 복습',
                 '${data.reviewCount}회',
                 Icons.repeat,
+                const Color(0xFF3DBE8B),
               ),
             ),
             const SizedBox(width: 10),
@@ -499,6 +573,7 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
                 '평균 정답률',
                 '${data.averageAccuracy.toStringAsFixed(1)}%',
                 Icons.check_circle_outline,
+                const Color(0xFF2FA97C),
               ),
             ),
           ],
@@ -512,6 +587,7 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
                 '연속 학습일',
                 '${data.consecutiveLearningDays}일',
                 Icons.local_fire_department_outlined,
+                const Color(0xFFF2764B),
               ),
             ),
             const SizedBox(width: 10),
@@ -521,10 +597,43 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
                 '평균 학습 시간',
                 '${data.averageStudyTimeMinutes.toStringAsFixed(1)}분',
                 Icons.schedule,
+                const Color(0xFFE0736F),
               ),
             ),
           ],
         ),
+      ],
+    );
+  }
+
+  /// "12개", "0.0%", "3.5분" 처럼 숫자 뒤에 단위가 붙은 값을 갈라 그린다.
+  ///
+  /// 통째로 키우면 글자가 커서 부담스럽고, 통째로 줄이면 무엇이 중요한 값인지
+  /// 안 보인다. 숫자만 키우고 단위는 작고 옅게 두면 시선이 숫자에 먼저 간다.
+  Widget _buildStatValue(String value) {
+    final match = RegExp(r'^([\d.,]+)(.*)$').firstMatch(value);
+    final number = match?.group(1) ?? value;
+    final unit = match?.group(2) ?? '';
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.baseline,
+      textBaseline: TextBaseline.alphabetic,
+      children: [
+        StandardText(
+          text: number,
+          fontSize: 22,
+          color: AppColors.textPrimary,
+          fontFamily: 'PretendardBold',
+        ),
+        if (unit.isNotEmpty) ...[
+          const SizedBox(width: 2),
+          StandardText(
+            text: unit,
+            fontSize: 13,
+            color: AppColors.textTertiary,
+            fontWeight: FontWeight.w600,
+          ),
+        ],
       ],
     );
   }
@@ -534,14 +643,16 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
     String label,
     String value,
     IconData icon,
+    Color accent,
   ) {
     return Container(
-      height: 98,
-      padding: const EdgeInsets.fromLTRB(12, 14, 12, 10),
+      height: 104,
+      padding: const EdgeInsets.fromLTRB(
+          AppSpacing.lg, AppSpacing.lg, AppSpacing.lg, AppSpacing.md),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.grey[300]!, width: 1),
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.large),
+        border: Border.all(color: AppColors.border),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.03),
@@ -553,28 +664,34 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // 아이콘을 맨몸으로 두면 존재감이 없다. 지표마다 다른 색을 옅게 깔되,
+          // 라벨과 같은 줄에 둔다. 세로로 쌓으면 카드 높이를 넘긴다.
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              StandardText(
-                text: label,
-                fontSize: 12,
-                color: Colors.black87,
-                fontWeight: FontWeight.w700,
-                fontFamily: 'PretendardBold',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: accent.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(AppRadius.small),
+                ),
+                child: Icon(icon, size: 14, color: accent),
               ),
-              Icon(icon, size: 16, color: themeProvider.primaryColor),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: StandardText(
+                  text: label,
+                  fontSize: 12,
+                  color: AppColors.textTertiary,
+                  fontWeight: FontWeight.w600,
+                  fontFamily: 'PretendardBold',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
             ],
           ),
           const Spacer(),
-          StandardText(
-            text: value,
-            fontSize: 20,
-            color: themeProvider.darkPrimaryColor,
-            fontFamily: 'PretendardBold',
-          ),
+          _buildStatValue(value),
         ],
       ),
     );
@@ -585,8 +702,8 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.grey[300]!, width: 1),
+        borderRadius: BorderRadius.circular(AppRadius.large),
+        border: Border.all(color: AppColors.border),
       ),
       child: SizedBox(
         height: 134,
@@ -623,31 +740,37 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
                           children: [
                             Align(
                               alignment: Alignment.bottomCenter,
-                              child: AnimatedContainer(
-                                duration: const Duration(milliseconds: 220),
-                                curve: Curves.easeOut,
-                                width: 16,
-                                height: barHeight,
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(8),
-                                  gradient: LinearGradient(
-                                    begin: Alignment.bottomCenter,
-                                    end: Alignment.topCenter,
-                                    colors: [
-                                      themeProvider.primaryColor,
-                                      themeProvider.lightPrimaryColor,
-                                    ],
+                              // 0 에서 제 높이까지 자라난다. 값이 바뀌면 그때
+                              // 있던 높이에서 이어서 움직인다.
+                              child: AnimatedGaugeValue(
+                                value: barHeight,
+                                duration: AppMotion.gauge,
+                                delay: AppMotion.stagger * index,
+                                builder: (context, grown) => Container(
+                                  width: 16,
+                                  height: grown,
+                                  decoration: BoxDecoration(
+                                    borderRadius:
+                                        BorderRadius.circular(AppRadius.small),
+                                    gradient: LinearGradient(
+                                      begin: Alignment.bottomCenter,
+                                      end: Alignment.topCenter,
+                                      colors: [
+                                        themeProvider.primaryColor,
+                                        themeProvider.lightPrimaryColor,
+                                      ],
+                                    ),
+                                    boxShadow: isPeak
+                                        ? [
+                                            BoxShadow(
+                                              color: themeProvider.primaryColor
+                                                  .withValues(alpha: 0.35),
+                                              blurRadius: 8,
+                                              offset: const Offset(0, 2),
+                                            ),
+                                          ]
+                                        : null,
                                   ),
-                                  boxShadow: isPeak
-                                      ? [
-                                          BoxShadow(
-                                            color: themeProvider.primaryColor
-                                                .withValues(alpha: 0.35),
-                                            blurRadius: 8,
-                                            offset: const Offset(0, 2),
-                                          ),
-                                        ]
-                                      : null,
                                 ),
                               ),
                             ),
@@ -663,7 +786,7 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
                                     child: StandardText(
                                       text: data.trendCounts[index].toString(),
                                       fontSize: 12,
-                                      color: Colors.black87,
+                                      color: AppColors.textPrimary,
                                       fontWeight: FontWeight.w700,
                                       fontFamily: 'PretendardBold',
                                     ),
@@ -685,7 +808,7 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
                         child: StandardText(
                           text: data.trendLabels[index],
                           fontSize: 11,
-                          color: Colors.grey[700]!,
+                          color: AppColors.textSecondary,
                           fontWeight: FontWeight.w700,
                           fontFamily: 'PretendardBold',
                         ),
@@ -712,8 +835,8 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.grey[300]!, width: 1),
+        borderRadius: BorderRadius.circular(AppRadius.large),
+        border: Border.all(color: AppColors.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -724,7 +847,7 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(AppRadius.medium),
                   color: themeProvider.primaryColor.withValues(alpha: 0.08),
                   border: Border.all(
                     color: themeProvider.primaryColor.withValues(alpha: 0.2),
@@ -742,7 +865,7 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
                       child: StandardText(
                         text: topic,
                         fontSize: 13,
-                        color: Colors.black87,
+                        color: AppColors.textPrimary,
                         fontWeight: FontWeight.w700,
                         fontFamily: 'PretendardBold',
                       ),
@@ -765,7 +888,7 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
     }
     Navigator.push(
       context,
-      MaterialPageRoute(
+      TossPageRoute(
         builder: (_) => AchievementCardScreen(
           userInfo: userInfo,
           weeklyReport: _report!.weekly,
@@ -781,8 +904,8 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.grey[300]!, width: 1),
+        borderRadius: BorderRadius.circular(AppRadius.large),
+        border: Border.all(color: AppColors.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -792,7 +915,7 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
               StandardText(
                 text: '학습 가이드',
                 fontSize: 15,
-                color: Colors.black87,
+                color: AppColors.textPrimary,
                 fontWeight: FontWeight.w700,
                 fontFamily: 'PretendardBold',
               ),
@@ -818,7 +941,7 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
                     child: StandardText(
                       text: action,
                       fontSize: 12,
-                      color: Colors.black87,
+                      color: AppColors.textPrimary,
                       fontWeight: FontWeight.w600,
                       fontFamily: 'PretendardLight',
                     ),
