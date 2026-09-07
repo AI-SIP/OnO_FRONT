@@ -194,6 +194,14 @@ class MyApp extends StatelessWidget {
       // 물결 효과를 앱 전체에서 끈다. 눌림은 PressableScale 의 축소로
       // 표현하는데, 아직 남아 있는 TextButton 과 IconButton 이 물결을
       // 그리면 같은 앱 안에서 두 가지 반응이 섞인다.
+      // 화면마다 회색이거나 테마색이거나 두께가 달랐다. 기본값을 맞춰 두면
+      // 색을 따로 넘기지 않은 곳도 같은 모양이 된다.
+      progressIndicatorTheme: ProgressIndicatorThemeData(
+        color: themeHandler.primaryColor,
+        circularTrackColor: Colors.transparent,
+        linearTrackColor: Colors.grey[200],
+        strokeWidth: 3,
+      ),
       splashFactory: NoSplash.splashFactory,
       splashColor: Colors.transparent,
       highlightColor: Colors.transparent,

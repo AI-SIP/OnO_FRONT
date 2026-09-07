@@ -15,6 +15,8 @@ import '../../Module/Motion/PressableScale.dart';
 import '../../Module/Motion/AnimatedGauge.dart';
 import '../../Module/Motion/Skeleton.dart';
 import '../../Module/Motion/TossDialog.dart';
+import '../../Module/Motion/AppMotion.dart';
+import '../../Module/Motion/AppearTransition.dart';
 
 class LearningCalendarScreen extends StatefulWidget {
   const LearningCalendarScreen({super.key});
@@ -388,57 +390,63 @@ class _LearningCalendarScreenState extends State<LearningCalendarScreen> {
     final rows = (totalCells / 7).ceil();
 
     return Column(
+      // 달력이 첫 주부터 한 줄씩 내려오며 그려진다. 한꺼번에 나타나면
+      // 어느 날에 기록이 있는지 눈이 따라가기 어렵다.
       children: List.generate(rows, (rowIndex) {
-        return Row(
-          children: List.generate(7, (colIndex) {
-            final cellIndex = rowIndex * 7 + colIndex;
-            final day = cellIndex - firstWeekday + 1;
+        return AppearTransition(
+          delay: AppMotion.stagger * rowIndex,
+          child: Row(
+            children: List.generate(7, (colIndex) {
+              final cellIndex = rowIndex * 7 + colIndex;
+              final day = cellIndex - firstWeekday + 1;
 
-            if (day < 1 || day > daysInMonth) {
+              if (day < 1 || day > daysInMonth) {
+                return Expanded(
+                  child: SizedBox(height: cellSize + cellPadding),
+                );
+              }
+
+              final cellDate = DateTime(_year, _month, day);
+              final isFuture =
+                  cellDate.isAfter(DateTime(now.year, now.month, now.day));
+              final isToday = cellDate.year == now.year &&
+                  cellDate.month == now.month &&
+                  cellDate.day == now.day;
+
+              final record = _calendarData?.recordFor(day);
+              final intensity = record?.intensityLevel ?? 0;
+
               return Expanded(
-                child: SizedBox(height: cellSize + cellPadding),
-              );
-            }
-
-            final cellDate = DateTime(_year, _month, day);
-            final isFuture =
-                cellDate.isAfter(DateTime(now.year, now.month, now.day));
-            final isToday = cellDate.year == now.year &&
-                cellDate.month == now.month &&
-                cellDate.day == now.day;
-
-            final record = _calendarData?.recordFor(day);
-            final intensity = record?.intensityLevel ?? 0;
-
-            return Expanded(
-              child: Padding(
-                padding: const EdgeInsets.all(2),
-                child: Center(
-                  child: SizedBox(
-                    width: cellSize,
-                    height: cellSize,
-                    child: _CalendarCell(
-                      day: day,
-                      isToday: isToday,
-                      isFuture: isFuture,
-                      intensityLevel: intensity,
-                      moodEmojiKey: record?.moodEmojiKey,
-                      themeProvider: themeProvider,
-                      onTap: isFuture
-                          ? null
-                          : () {
-                              final newDay = (_selectedDay == day) ? null : day;
-                              setState(() => _selectedDay = newDay);
-                              if (newDay != null) {
-                                _loadDiary(_year, _month, newDay);
-                              }
-                            },
+                child: Padding(
+                  padding: const EdgeInsets.all(2),
+                  child: Center(
+                    child: SizedBox(
+                      width: cellSize,
+                      height: cellSize,
+                      child: _CalendarCell(
+                        day: day,
+                        isToday: isToday,
+                        isFuture: isFuture,
+                        intensityLevel: intensity,
+                        moodEmojiKey: record?.moodEmojiKey,
+                        themeProvider: themeProvider,
+                        onTap: isFuture
+                            ? null
+                            : () {
+                                final newDay =
+                                    (_selectedDay == day) ? null : day;
+                                setState(() => _selectedDay = newDay);
+                                if (newDay != null) {
+                                  _loadDiary(_year, _month, newDay);
+                                }
+                              },
+                      ),
                     ),
                   ),
                 ),
-              ),
-            );
-          }),
+              );
+            }),
+          ),
         );
       }),
     );

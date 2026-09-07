@@ -12,6 +12,9 @@ import '../../../Util/AppSnackBar.dart';
 import '../../../Module/Motion/AppHaptic.dart';
 import '../../../Module/Motion/PressableScale.dart';
 import '../../../Module/Motion/TossPageRoute.dart';
+import '../../../Module/Motion/AnimatedGauge.dart';
+import '../../../Module/Motion/AppMotion.dart';
+import '../../../Module/Motion/AppearTransition.dart';
 
 enum ReportPeriod { weekly, monthly, total }
 
@@ -170,34 +173,42 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
     final comparison = _getCurrentComparison();
     final viewData = _ReportViewData.fromPeriod(periodReport);
 
+    // 위에서부터 한 덩어리씩 들어오게 한다. 숫자와 그래프가 많은 화면이라
+    // 한꺼번에 나타나면 어디를 봐야 할지 알기 어렵다.
+    var step = 0;
+    Widget appear(Widget child) => AppearTransition(
+          delay: AppMotion.stagger * (step++),
+          child: child,
+        );
+
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 18, 16, 30),
       children: [
-        _buildSummaryCard(themeProvider, viewData, comparison),
+        appear(_buildSummaryCard(themeProvider, viewData, comparison)),
         const SizedBox(height: 26),
-        _buildPeriodSelector(themeProvider),
+        appear(_buildPeriodSelector(themeProvider)),
         const SizedBox(height: 30),
-        _buildSectionTitle(themeProvider, '핵심 지표', Icons.auto_graph),
+        appear(_buildSectionTitle(themeProvider, '핵심 지표', Icons.auto_graph)),
         const SizedBox(height: 14),
-        _buildStatsGrid(themeProvider, viewData),
+        appear(_buildStatsGrid(themeProvider, viewData)),
         const SizedBox(height: 20),
-        _buildSectionTitle(
+        appear(_buildSectionTitle(
           themeProvider,
           '복습 횟수 추이',
           Icons.stacked_bar_chart_rounded,
-        ),
+        )),
         const SizedBox(height: 14),
-        _buildTrendCard(themeProvider, viewData),
+        appear(_buildTrendCard(themeProvider, viewData)),
         const SizedBox(height: 40),
-        _buildSectionTitle(
+        appear(_buildSectionTitle(
           themeProvider,
           '집중 복습 추천',
           Icons.edit_note_rounded,
-        ),
+        )),
         const SizedBox(height: 14),
-        _buildWeakTopicCard(themeProvider, viewData),
+        appear(_buildWeakTopicCard(themeProvider, viewData)),
         const SizedBox(height: 14),
-        _buildActionCard(themeProvider),
+        appear(_buildActionCard(themeProvider)),
         const SizedBox(height: 18),
         const Padding(
           padding: EdgeInsets.only(left: 4),
@@ -627,31 +638,36 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
                           children: [
                             Align(
                               alignment: Alignment.bottomCenter,
-                              child: AnimatedContainer(
-                                duration: const Duration(milliseconds: 220),
-                                curve: Curves.easeOut,
-                                width: 16,
-                                height: barHeight,
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(8),
-                                  gradient: LinearGradient(
-                                    begin: Alignment.bottomCenter,
-                                    end: Alignment.topCenter,
-                                    colors: [
-                                      themeProvider.primaryColor,
-                                      themeProvider.lightPrimaryColor,
-                                    ],
+                              // 0 에서 제 높이까지 자라난다. 값이 바뀌면 그때
+                              // 있던 높이에서 이어서 움직인다.
+                              child: AnimatedGaugeValue(
+                                value: barHeight,
+                                duration: AppMotion.gauge,
+                                delay: AppMotion.stagger * index,
+                                builder: (context, grown) => Container(
+                                  width: 16,
+                                  height: grown,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(8),
+                                    gradient: LinearGradient(
+                                      begin: Alignment.bottomCenter,
+                                      end: Alignment.topCenter,
+                                      colors: [
+                                        themeProvider.primaryColor,
+                                        themeProvider.lightPrimaryColor,
+                                      ],
+                                    ),
+                                    boxShadow: isPeak
+                                        ? [
+                                            BoxShadow(
+                                              color: themeProvider.primaryColor
+                                                  .withValues(alpha: 0.35),
+                                              blurRadius: 8,
+                                              offset: const Offset(0, 2),
+                                            ),
+                                          ]
+                                        : null,
                                   ),
-                                  boxShadow: isPeak
-                                      ? [
-                                          BoxShadow(
-                                            color: themeProvider.primaryColor
-                                                .withValues(alpha: 0.35),
-                                            blurRadius: 8,
-                                            offset: const Offset(0, 2),
-                                          ),
-                                        ]
-                                      : null,
                                 ),
                               ),
                             ),

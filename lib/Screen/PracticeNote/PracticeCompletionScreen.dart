@@ -12,6 +12,9 @@ import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/PracticeNoteProvider.dart';
 import '../../Module/Motion/AppHaptic.dart';
 import '../../Module/Motion/PressableScale.dart';
+import '../../Module/Motion/AnimatedCountText.dart';
+import '../../Module/Motion/AppMotion.dart';
+import '../../Module/Motion/AppearTransition.dart';
 
 class PracticeCompletionScreen extends StatefulWidget {
   final int practiceId;
@@ -87,29 +90,52 @@ class _PracticeCompletionScreenState extends State<PracticeCompletionScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             SizedBox(height: screenHeight * 0.2),
-            Center(
-              child: SvgPicture.asset(
-                'assets/Icon/BigGreenFrog.svg',
-                height: screenHeight * 0.2,
+            // 복습을 끝낸 자리다. 캐릭터가 먼저 커지며 나타나고 문구와 기분
+            // 고르기가 차례로 따라온다.
+            AppearTransition(
+              offset: 0,
+              child: TweenAnimationBuilder<double>(
+                tween: Tween<double>(begin: 0.86, end: 1.0),
+                duration: AppMotion.slow,
+                curve: AppMotion.emphasized,
+                builder: (context, scale, child) =>
+                    Transform.scale(scale: scale, child: child),
+                child: Center(
+                  child: SvgPicture.asset(
+                    'assets/Icon/BigGreenFrog.svg',
+                    height: screenHeight * 0.2,
+                  ),
+                ),
               ),
             ),
             SizedBox(height: screenHeight * 0.1),
-            StandardText(
-              text: '${widget.practiceRound}회차 복습을 완료했어요',
-              fontSize: MobileFontSize.reduced(context, 24),
-              fontWeight: FontWeight.bold,
-              color: Colors.black,
-              textAlign: TextAlign.center,
+            AppearTransition(
+              delay: AppMotion.stagger * 3,
+              child: StandardText(
+                text: '${widget.practiceRound}회차 복습을 완료했어요',
+                fontSize: MobileFontSize.reduced(context, 24),
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
+                textAlign: TextAlign.center,
+              ),
             ),
             SizedBox(height: screenHeight * 0.01),
-            StandardText(
-              text: '총 ${widget.totalProblems}문제를 풀었어요.',
-              fontSize: 16,
-              color: Colors.black54,
-              textAlign: TextAlign.center,
+            AppearTransition(
+              delay: AppMotion.stagger * 5,
+              child: AnimatedCountText(
+                value: widget.totalProblems,
+                formatter: (value) => '총 ${value.round()}문제를 풀었어요.',
+                fontSize: 16,
+                fontWeight: FontWeight.normal,
+                color: Colors.black54,
+                textAlign: TextAlign.center,
+              ),
             ),
             SizedBox(height: screenHeight * 0.06),
-            _buildMoodSection(themeProvider),
+            AppearTransition(
+              delay: AppMotion.stagger * 7,
+              child: _buildMoodSection(themeProvider),
+            ),
             SizedBox(height: screenHeight * 0.08),
           ],
         ),

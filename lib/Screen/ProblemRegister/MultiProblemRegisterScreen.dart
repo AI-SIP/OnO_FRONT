@@ -12,9 +12,8 @@ import '../../Module/Image/ImagePickerHandler.dart';
 import '../../Module/Text/mobile_font_size.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Util/FolderPickerDialog.dart';
-import '../../Module/Motion/AnimatedGauge.dart';
+import '../../Module/Motion/AppLoadingView.dart';
 import '../../Module/Motion/AppHaptic.dart';
-import '../../Module/Motion/AppMotion.dart';
 import '../../Module/Motion/PressableScale.dart';
 import '../../Module/Motion/StepProgressBar.dart';
 import '../../Module/Motion/TossPageRoute.dart';
@@ -2025,57 +2024,12 @@ class _MultiProblemRegisterScreenState
                 return Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    SizedBox(
-                      width: 58,
-                      height: 58,
-                      child: Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          SizedBox(
-                            width: 58,
-                            height: 58,
-                            child: CircularProgressIndicator(
-                              value: progressValue,
-                              strokeWidth: 5,
-                              backgroundColor: themeProvider.primaryColor
-                                  .withValues(alpha: 0.12),
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                themeProvider.primaryColor,
-                              ),
-                            ),
-                          ),
-                          Icon(
-                            Icons.cloud_upload_outlined,
-                            color: themeProvider.primaryColor,
-                            size: 24,
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 18),
-                    StandardText(
-                      text: '이미지를 등록하고 있어요',
-                      fontSize: MobileFontSize.reduced(context, 17),
-                      color: Colors.black87,
-                      fontWeight: FontWeight.w600,
-                    ),
-                    const SizedBox(height: 8),
-                    StandardText(
-                      text: '$value / $total',
-                      fontSize: 14,
-                      color: Colors.grey[600]!,
-                    ),
-                    const SizedBox(height: 16),
-                    AnimatedLinearGauge(
-                      value: progressValue,
+                    // 다른 로딩과 같은 모양을 쓴다.
+                    AppLoadingView(
+                      message: '이미지를 등록하고 있어요',
+                      detail: '$value / $total',
+                      progress: progressValue,
                       color: themeProvider.primaryColor,
-                      backgroundColor:
-                          themeProvider.primaryColor.withValues(alpha: 0.12),
-                      height: 7,
-                      borderRadius: 999,
-                      // 올라간 만큼만 따라가면 되므로 짧게 움직인다.
-                      duration: AppMotion.normal,
-                      curve: AppMotion.standard,
                     ),
                   ],
                 );
