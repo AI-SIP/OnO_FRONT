@@ -295,6 +295,7 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
     Widget modeChip({
       required _SearchMode mode,
       required String label,
+      required IconData icon,
     }) {
       final selected = _mode == mode;
       return Expanded(
@@ -315,11 +316,24 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
                 width: 1,
               ),
             ),
-            child: StandardText(
-              text: label,
-              fontSize: 13,
-              color: selected ? themeProvider.primaryColor : Colors.grey[700]!,
-              fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  icon,
+                  size: 15,
+                  color:
+                      selected ? themeProvider.primaryColor : Colors.grey[600],
+                ),
+                const SizedBox(width: 6),
+                StandardText(
+                  text: label,
+                  fontSize: 13,
+                  color:
+                      selected ? themeProvider.primaryColor : Colors.grey[700]!,
+                  fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+                ),
+              ],
             ),
           ),
         ),
@@ -330,9 +344,17 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
       child: Row(
         children: [
-          modeChip(mode: _SearchMode.tag, label: '태그로 검색'),
+          modeChip(
+            mode: _SearchMode.tag,
+            label: '태그로 검색',
+            icon: Icons.sell_outlined,
+          ),
           const SizedBox(width: 8),
-          modeChip(mode: _SearchMode.title, label: '제목으로 검색'),
+          modeChip(
+            mode: _SearchMode.title,
+            label: '제목으로 검색',
+            icon: Icons.search_rounded,
+          ),
         ],
       ),
     );

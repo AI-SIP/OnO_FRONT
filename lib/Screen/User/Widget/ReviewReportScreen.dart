@@ -15,6 +15,9 @@ import '../../../Module/Motion/TossPageRoute.dart';
 import '../../../Module/Motion/AnimatedGauge.dart';
 import '../../../Module/Motion/AppMotion.dart';
 import '../../../Module/Motion/AppearTransition.dart';
+import '../../../Module/Design/AppColors.dart';
+import '../../../Module/Design/AppRadius.dart';
+import '../../../Module/Design/AppSpacing.dart';
 
 enum ReportPeriod { weekly, monthly, total }
 
@@ -110,7 +113,7 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
             const StandardText(
               text: '리포트 분석 중...',
               fontSize: 17,
-              color: Colors.black87,
+              color: AppColors.textPrimary,
               fontWeight: FontWeight.w700,
               fontFamily: 'PretendardBold',
             ),
@@ -138,7 +141,7 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
               StandardText(
                 text: _errorMessage!,
                 fontSize: 14,
-                color: Colors.black87,
+                color: AppColors.textPrimary,
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 12),
@@ -164,7 +167,7 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
         child: StandardText(
           text: '표시할 리포트가 없습니다.',
           fontSize: 14,
-          color: Colors.black87,
+          color: AppColors.textPrimary,
         ),
       );
     }
@@ -264,7 +267,7 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(AppRadius.xlarge),
         border: Border.all(
           color: themeProvider.primaryColor.withValues(alpha: 0.22),
           width: 1.2,
@@ -287,7 +290,7 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
                     const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
                   color: themeProvider.primaryColor,
-                  borderRadius: BorderRadius.circular(999),
+                  borderRadius: BorderRadius.circular(AppRadius.full),
                 ),
                 child: StandardText(
                   text: data.badge,
@@ -309,7 +312,7 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
           StandardText(
             text: data.title,
             fontSize: 18,
-            color: Colors.black87,
+            color: AppColors.textPrimary,
             fontWeight: FontWeight.w800,
             fontFamily: 'PretendardBold',
           ),
@@ -317,7 +320,7 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
           StandardText(
             text: _buildSummarySubtitle(comparison),
             fontSize: 13,
-            color: Colors.black87,
+            color: AppColors.textPrimary,
             fontWeight: FontWeight.w600,
             fontFamily: 'PretendardLight',
           ),
@@ -389,8 +392,8 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
       padding: const EdgeInsets.all(3),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.grey[300]!, width: 1),
+        borderRadius: BorderRadius.circular(AppRadius.large),
+        border: Border.all(color: AppColors.border),
       ),
       child: Row(
         children: [
@@ -425,7 +428,7 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
             color: isSelected
                 ? themeProvider.primaryColor.withValues(alpha: 0.15)
                 : Colors.transparent,
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(AppRadius.medium),
             border: isSelected
                 ? Border.all(color: themeProvider.primaryColor, width: 1)
                 : null,
@@ -453,19 +456,19 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
     return Row(
       children: [
         Container(
-          width: 28,
-          height: 28,
+          width: 32,
+          height: 32,
           decoration: BoxDecoration(
-            color: themeProvider.primaryColor.withValues(alpha: 0.15),
-            borderRadius: BorderRadius.circular(8),
+            color: themeProvider.primaryColor.withValues(alpha: 0.10),
+            borderRadius: BorderRadius.circular(AppRadius.medium),
           ),
           child: Icon(icon, size: 17, color: themeProvider.primaryColor),
         ),
-        const SizedBox(width: 8),
+        const SizedBox(width: AppSpacing.md),
         StandardText(
           text: title,
           fontSize: 17,
-          color: Colors.black87,
+          color: AppColors.textPrimary,
           fontFamily: 'PretendardBold',
         ),
       ],
@@ -551,12 +554,13 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
     IconData icon,
   ) {
     return Container(
-      height: 98,
-      padding: const EdgeInsets.fromLTRB(12, 14, 12, 10),
+      height: 108,
+      padding: const EdgeInsets.fromLTRB(
+          AppSpacing.lg, AppSpacing.lg, AppSpacing.lg, AppSpacing.md),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.grey[300]!, width: 1),
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.large),
+        border: Border.all(color: AppColors.border),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.03),
@@ -573,9 +577,9 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
             children: [
               StandardText(
                 text: label,
-                fontSize: 12,
-                color: Colors.black87,
-                fontWeight: FontWeight.w700,
+                fontSize: 13,
+                color: AppColors.textTertiary,
+                fontWeight: FontWeight.w600,
                 fontFamily: 'PretendardBold',
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
@@ -586,8 +590,8 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
           const Spacer(),
           StandardText(
             text: value,
-            fontSize: 20,
-            color: themeProvider.darkPrimaryColor,
+            fontSize: 26,
+            color: AppColors.textPrimary,
             fontFamily: 'PretendardBold',
           ),
         ],
@@ -600,8 +604,8 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.grey[300]!, width: 1),
+        borderRadius: BorderRadius.circular(AppRadius.large),
+        border: Border.all(color: AppColors.border),
       ),
       child: SizedBox(
         height: 134,
@@ -683,7 +687,7 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
                                     child: StandardText(
                                       text: data.trendCounts[index].toString(),
                                       fontSize: 12,
-                                      color: Colors.black87,
+                                      color: AppColors.textPrimary,
                                       fontWeight: FontWeight.w700,
                                       fontFamily: 'PretendardBold',
                                     ),
@@ -705,7 +709,7 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
                         child: StandardText(
                           text: data.trendLabels[index],
                           fontSize: 11,
-                          color: Colors.grey[700]!,
+                          color: AppColors.textSecondary,
                           fontWeight: FontWeight.w700,
                           fontFamily: 'PretendardBold',
                         ),
@@ -732,8 +736,8 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.grey[300]!, width: 1),
+        borderRadius: BorderRadius.circular(AppRadius.large),
+        border: Border.all(color: AppColors.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -744,7 +748,7 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(AppRadius.medium),
                   color: themeProvider.primaryColor.withValues(alpha: 0.08),
                   border: Border.all(
                     color: themeProvider.primaryColor.withValues(alpha: 0.2),
@@ -762,7 +766,7 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
                       child: StandardText(
                         text: topic,
                         fontSize: 13,
-                        color: Colors.black87,
+                        color: AppColors.textPrimary,
                         fontWeight: FontWeight.w700,
                         fontFamily: 'PretendardBold',
                       ),
@@ -801,8 +805,8 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.grey[300]!, width: 1),
+        borderRadius: BorderRadius.circular(AppRadius.large),
+        border: Border.all(color: AppColors.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -812,7 +816,7 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
               StandardText(
                 text: '학습 가이드',
                 fontSize: 15,
-                color: Colors.black87,
+                color: AppColors.textPrimary,
                 fontWeight: FontWeight.w700,
                 fontFamily: 'PretendardBold',
               ),
@@ -838,7 +842,7 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
                     child: StandardText(
                       text: action,
                       fontSize: 12,
-                      color: Colors.black87,
+                      color: AppColors.textPrimary,
                       fontWeight: FontWeight.w600,
                       fontFamily: 'PretendardLight',
                     ),

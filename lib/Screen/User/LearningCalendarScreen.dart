@@ -17,6 +17,8 @@ import '../../Module/Motion/Skeleton.dart';
 import '../../Module/Motion/TossDialog.dart';
 import '../../Module/Motion/AppMotion.dart';
 import '../../Module/Motion/AppearTransition.dart';
+import '../../Module/Design/AppColors.dart';
+import '../../Module/Design/AppRadius.dart';
 
 class LearningCalendarScreen extends StatefulWidget {
   const LearningCalendarScreen({super.key});
@@ -213,7 +215,7 @@ class _LearningCalendarScreenState extends State<LearningCalendarScreen> {
           IconButton(
             icon: const Icon(Icons.chevron_left),
             onPressed: _prevMonth,
-            color: Colors.black87,
+            color: AppColors.textPrimary,
           ),
           PressableScale(
             onTap: () => _showMonthPicker(themeProvider),
@@ -268,7 +270,7 @@ class _LearningCalendarScreenState extends State<LearningCalendarScreen> {
                         IconButton(
                           icon: const Icon(Icons.chevron_left),
                           onPressed: () => setDialogState(() => pickerYear--),
-                          color: Colors.black87,
+                          color: AppColors.textPrimary,
                         ),
                         StandardText(
                             text: '$pickerYear년',
@@ -325,7 +327,8 @@ class _LearningCalendarScreenState extends State<LearningCalendarScreen> {
                               color: isSelected
                                   ? themeProvider.primaryColor
                                   : Colors.grey[100],
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius:
+                                  BorderRadius.circular(AppRadius.small),
                             ),
                             child: Center(
                               child: StandardText(
@@ -360,7 +363,7 @@ class _LearningCalendarScreenState extends State<LearningCalendarScreen> {
             child: StandardText(
               text: label,
               fontSize: 12,
-              color: Colors.grey[600]!,
+              color: AppColors.textTertiary,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -458,8 +461,8 @@ class _LearningCalendarScreenState extends State<LearningCalendarScreen> {
         padding: const EdgeInsets.symmetric(vertical: 9),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Colors.grey[200]!),
+          borderRadius: BorderRadius.circular(AppRadius.small),
+          border: Border.all(color: AppColors.border),
         ),
         child: Column(
           children: [
@@ -488,7 +491,7 @@ class _LearningCalendarScreenState extends State<LearningCalendarScreen> {
         decoration: BoxDecoration(
           color: Colors.grey[50],
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey[200]!),
+          border: Border.all(color: AppColors.border),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -551,7 +554,7 @@ class _LearningCalendarScreenState extends State<LearningCalendarScreen> {
                             child: StandardText(
                               text: item,
                               fontSize: 12,
-                              color: Colors.black87,
+                              color: AppColors.textPrimary,
                             ),
                           ),
                         ],
@@ -598,15 +601,15 @@ class _LearningCalendarScreenState extends State<LearningCalendarScreen> {
             contentPadding:
                 const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(AppRadius.small),
               borderSide: BorderSide(color: Colors.grey[300]!),
             ),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(AppRadius.small),
               borderSide: BorderSide(color: Colors.grey[300]!),
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(AppRadius.small),
               borderSide: BorderSide(color: primaryColor.withOpacity(0.5)),
             ),
           ),
@@ -627,7 +630,7 @@ class _LearningCalendarScreenState extends State<LearningCalendarScreen> {
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(AppRadius.small),
               ),
               minimumSize: const Size(72, 34),
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -682,14 +685,14 @@ class _LearningCalendarScreenState extends State<LearningCalendarScreen> {
               StandardText(
                 text: '이번 달 학습',
                 fontSize: 14,
-                color: Colors.black87,
+                color: AppColors.textPrimary,
               ),
               StandardText(
                 text: studyDays != null
                     ? '${studyDays}일 / ${daysInMonth}일'
                     : '--',
                 fontSize: 14,
-                color: Colors.black54,
+                color: AppColors.textSecondary,
               ),
             ],
           ),
@@ -712,15 +715,15 @@ class _LearningCalendarScreenState extends State<LearningCalendarScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.grey[200]!),
+        borderRadius: BorderRadius.circular(AppRadius.small),
+        border: Border.all(color: AppColors.border),
       ),
       child: Row(
         children: [
           StandardText(
             text: '오늘의 감정',
             fontSize: 12,
-            color: Colors.black54,
+            color: AppColors.textSecondary,
           ),
           const SizedBox(width: 10),
           if (record.moodEmojiKey != null)
@@ -789,7 +792,7 @@ class _LearningCalendarScreenState extends State<LearningCalendarScreen> {
       decoration: BoxDecoration(
         color: Colors.grey[50],
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[200]!),
+        border: Border.all(color: AppColors.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -805,7 +808,7 @@ class _LearningCalendarScreenState extends State<LearningCalendarScreen> {
               StandardText(
                 text: emoji,
                 fontSize: 20,
-                color: Colors.black87,
+                color: AppColors.textPrimary,
               ),
               const SizedBox(width: 6),
               StandardText(
