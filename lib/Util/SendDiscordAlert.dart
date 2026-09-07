@@ -26,11 +26,45 @@ String _truncate(String text, int maxLength) {
   return '${text.substring(0, maxLength - 3)}...';
 }
 
+/// Discord 웹훅 전송 함수의 모양.
+/// AppErrorReporter 가 테스트에서 가짜 전송기로 바꿔 끼울 수 있게 타입을 열어 둔다.
+typedef DiscordAlertSender = Future<DiscordAlertResult> Function({
+  required String message,
+  StackTrace? stack,
+  required String webhookUrl,
+  int maxAttempts,
+  http.Client? client,
+});
+
 Future<DiscordAlertResult> sendDiscordAlert({
   required String message,
   StackTrace? stack,
   required String webhookUrl,
   int maxAttempts = 2,
+  http.Client? client,
+}) async {
+  // 직접 만든 클라이언트는 우리가 닫는다. 주입받은 것은 호출한 쪽이 관리한다.
+  final httpClient = client ?? http.Client();
+  final shouldClose = client == null;
+  try {
+    return await _sendDiscordAlert(
+      message: message,
+      stack: stack,
+      webhookUrl: webhookUrl,
+      maxAttempts: maxAttempts,
+      client: httpClient,
+    );
+  } finally {
+    if (shouldClose) httpClient.close();
+  }
+}
+
+Future<DiscordAlertResult> _sendDiscordAlert({
+  required String message,
+  StackTrace? stack,
+  required String webhookUrl,
+  required int maxAttempts,
+  required http.Client client,
 }) async {
   // Discord embed 제한 대응
   final safeMessage = _truncate(message, 1500);
@@ -55,7 +89,7 @@ Future<DiscordAlertResult> sendDiscordAlert({
 
   for (var attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
-      final response = await http
+      final response = await client
           .post(
             Uri.parse(webhookUrl),
             headers: {'Content-Type': 'application/json'},

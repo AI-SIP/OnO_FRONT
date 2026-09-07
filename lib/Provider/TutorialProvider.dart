@@ -6,7 +6,10 @@ import '../Screen/Tutorial/TutorialStep.dart';
 import '../Screen/Tutorial/TutorialStorage.dart';
 
 class TutorialProvider extends ChangeNotifier {
-  final TutorialStorage _storage = TutorialStorage();
+  final TutorialStorage _storage;
+
+  TutorialProvider({TutorialStorage? storage})
+      : _storage = storage ?? TutorialStorage();
 
   TutorialStatus _status = TutorialStatus.idle;
   TutorialLaunchSource? _source;

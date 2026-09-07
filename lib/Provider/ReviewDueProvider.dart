@@ -4,7 +4,10 @@ import 'package:ono/Service/Api/Problem/ProblemService.dart';
 import 'package:ono/Util/AppErrorReporter.dart';
 
 class ReviewDueProvider with ChangeNotifier {
-  final ProblemService _problemService = ProblemService();
+  final ProblemService _problemService;
+
+  ReviewDueProvider({ProblemService? problemService})
+      : _problemService = problemService ?? ProblemService();
 
   ReviewDueResponse? _data;
   bool _isLoading = false;

@@ -335,27 +335,44 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
     final mediaQuery = MediaQuery.of(context);
     final size = mediaQuery.size;
     final safeTop = mediaQuery.padding.top;
-    final safeBottom = mediaQuery.padding.bottom;
+    final systemBottomInset = _maxBottomInset(mediaQuery.padding.bottom,
+        mediaQuery.viewPadding.bottom, mediaQuery.systemGestureInsets.bottom);
+    final bottomObstruction = systemBottomInset > mediaQuery.viewInsets.bottom
+        ? systemBottomInset
+        : mediaQuery.viewInsets.bottom;
+    final reservedBottom =
+        bottomObstruction + kBottomNavigationBarHeight + 12.0;
+    final availableBottom = size.height - reservedBottom;
+    final minCardTop = safeTop + 12;
+    final availableCardHeight = availableBottom - minCardTop;
     final isTablet = mediaQuery.size.shortestSide >= 600;
     final cardWidth = isTablet ? 560.0 : size.width - 32;
     final cardLeft = size.width >= 600 ? (size.width - cardWidth) / 2 : 16.0;
-    final cardMaxHeight = size.height - safeTop - safeBottom - 32;
+    final cardMaxHeight = availableCardHeight > 0 ? availableCardHeight : 0.0;
     final estimatedCardHeight = isTablet ? 310.0 : 230.0;
+    final layoutCardHeight = estimatedCardHeight > cardMaxHeight
+        ? cardMaxHeight
+        : estimatedCardHeight;
 
-    var cardTop = size.height - safeBottom - estimatedCardHeight - 20;
+    var cardTop = availableBottom - layoutCardHeight - 8;
     if (rect != null) {
       final below = rect.bottom + 18;
-      final above = rect.top - estimatedCardHeight;
-      if (below + estimatedCardHeight < size.height - safeBottom) {
+      final above = rect.top - layoutCardHeight - 18;
+      if (below + layoutCardHeight < availableBottom) {
         cardTop = below;
       } else if (above > safeTop) {
         cardTop = above;
       }
     }
-    final minCardTop = safeTop + 12;
-    final maxCardTop = size.height - safeBottom - estimatedCardHeight;
+    final maxCardTop = availableBottom - layoutCardHeight;
     final clampedMaxCardTop = maxCardTop < minCardTop ? minCardTop : maxCardTop;
     cardTop = cardTop.clamp(minCardTop, clampedMaxCardTop).toDouble();
+    final highlightMaxTop = size.height - bottomObstruction - 24;
+    final clampedHighlightMaxTop =
+        highlightMaxTop < safeTop + 8 ? safeTop + 8 : highlightMaxTop;
+    final highlightMaxHeight = size.height - safeTop - bottomObstruction - 16;
+    final clampedHighlightMaxHeight =
+        highlightMaxHeight < 24.0 ? 24.0 : highlightMaxHeight;
 
     return Stack(
       children: [
@@ -364,10 +381,12 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
             duration: _motionDuration,
             curve: _motionCurve,
             left: (rect.left - 8).clamp(8.0, size.width - 24).toDouble(),
-            top: (rect.top - 8).clamp(safeTop + 8, size.height - 24).toDouble(),
+            top: (rect.top - 8)
+                .clamp(safeTop + 8, clampedHighlightMaxTop)
+                .toDouble(),
             width: (rect.width + 16).clamp(24.0, size.width - 16).toDouble(),
             height: (rect.height + 16)
-                .clamp(24.0, size.height - safeTop - 16)
+                .clamp(24.0, clampedHighlightMaxHeight)
                 .toDouble(),
             child: IgnorePointer(
               child: AnimatedOpacity(
@@ -487,39 +506,53 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
           ),
           const SizedBox(height: 18),
           Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              TextButton(
-                onPressed: tutorialProvider.skip,
-                child: StandardText(
-                  text: '건너뛰기',
-                  fontSize: buttonSize,
-                  color: Colors.grey[700]!,
+              Flexible(
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: TextButton(
+                    onPressed: tutorialProvider.skip,
+                    child: StandardText(
+                      text: '건너뛰기',
+                      fontSize: buttonSize,
+                      color: Colors.grey[700]!,
+                    ),
+                  ),
                 ),
               ),
-              const Spacer(),
-              if (tutorialProvider.currentStepIndex > 0)
-                TextButton(
-                  onPressed: tutorialProvider.previous,
-                  child: StandardText(
-                    text: '이전',
-                    fontSize: buttonSize,
-                    color: Colors.grey[700]!,
-                  ),
-                ),
-              const SizedBox(width: 8),
-              ElevatedButton(
-                onPressed: tutorialProvider.next,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: themeProvider.primaryColor,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                child: StandardText(
-                  text: '다음',
-                  fontSize: buttonSize,
-                  color: Colors.white,
+              Flexible(
+                child: Wrap(
+                  spacing: 8,
+                  runSpacing: 4,
+                  alignment: WrapAlignment.end,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    if (tutorialProvider.currentStepIndex > 0)
+                      TextButton(
+                        onPressed: tutorialProvider.previous,
+                        child: StandardText(
+                          text: '이전',
+                          fontSize: buttonSize,
+                          color: Colors.grey[700]!,
+                        ),
+                      ),
+                    ElevatedButton(
+                      onPressed: tutorialProvider.next,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: themeProvider.primaryColor,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: StandardText(
+                        text: isLast ? '마무리' : '다음',
+                        fontSize: buttonSize,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -527,6 +560,16 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
         ],
       ),
     );
+  }
+
+  double _maxBottomInset(double padding, double viewPadding, double gesture) {
+    if (viewPadding > padding && viewPadding > gesture) {
+      return viewPadding;
+    }
+    if (gesture > padding) {
+      return gesture;
+    }
+    return padding;
   }
 
   Widget _buildFrogSpeech({

@@ -30,7 +30,7 @@ class ProblemPracticeProvider with ChangeNotifier {
   List<ProblemModel> currentProblems = [];
   final TokenProvider tokenProvider = TokenProvider();
   final HttpService httpService = HttpService();
-  final PracticeNoteService practiceNoteService = PracticeNoteService();
+  final PracticeNoteService practiceNoteService;
   final ProblemsProvider problemsProvider;
 
   // 복습 세트 목록 새로고침 타임스탬프
@@ -44,7 +44,10 @@ class ProblemPracticeProvider with ChangeNotifier {
   bool get isLoading => _isLoading;
   bool get hasCachedData => _hasCachedData;
 
-  ProblemPracticeProvider({required this.problemsProvider});
+  ProblemPracticeProvider({
+    required this.problemsProvider,
+    PracticeNoteService? practiceNoteService,
+  }) : practiceNoteService = practiceNoteService ?? PracticeNoteService();
 
   // O(log n) 삽입/업데이트 (SplayTreeMap이 자동으로 정렬 유지)
   void _upsertPracticeNote(PracticeNoteDetailModel practiceNote) {
@@ -58,7 +61,8 @@ class ProblemPracticeProvider with ChangeNotifier {
     }
 
     // 캐시에 없으면 서버에서 fetch
-    debugPrint('Practice note $practiceNoteId not in cache, fetching from server');
+    debugPrint(
+        'Practice note $practiceNoteId not in cache, fetching from server');
     await fetchPracticeNote(practiceNoteId);
 
     if (_practicesMap.containsKey(practiceNoteId)) {
@@ -134,7 +138,8 @@ class ProblemPracticeProvider with ChangeNotifier {
       }
     }
 
-    debugPrint('Moved to practice: $practiceId, loaded ${currentProblems.length}/${targetPractice.problemIdList.length} problems');
+    debugPrint(
+        'Moved to practice: $practiceId, loaded ${currentProblems.length}/${targetPractice.problemIdList.length} problems');
     currentPracticeNote = targetPractice;
     notifyListeners();
   }
@@ -154,7 +159,8 @@ class ProblemPracticeProvider with ChangeNotifier {
 
     // 복습 세트 목록 새로고침 신호
     _practiceRefreshTimestamp = DateTime.now().millisecondsSinceEpoch;
-    debugPrint('Practice list refresh signaled - timestamp: $_practiceRefreshTimestamp');
+    debugPrint(
+        'Practice list refresh signaled - timestamp: $_practiceRefreshTimestamp');
     notifyListeners();
   }
 
@@ -182,7 +188,8 @@ class ProblemPracticeProvider with ChangeNotifier {
 
     // 복습 세트 목록 새로고침 신호
     _practiceRefreshTimestamp = DateTime.now().millisecondsSinceEpoch;
-    debugPrint('Practice list refresh signaled - timestamp: $_practiceRefreshTimestamp');
+    debugPrint(
+        'Practice list refresh signaled - timestamp: $_practiceRefreshTimestamp');
     notifyListeners();
   }
 
@@ -297,7 +304,8 @@ class ProblemPracticeProvider with ChangeNotifier {
       {int size = 20, bool forceRefresh = false}) async {
     // 캐시가 있고 강제 새로고침이 아니면 캐시 사용
     if (_hasCachedData && !forceRefresh) {
-      debugPrint('✅ Using cached practice thumbnails (${_practiceThumbnails.length} items)');
+      debugPrint(
+          '✅ Using cached practice thumbnails (${_practiceThumbnails.length} items)');
       return;
     }
 
@@ -320,7 +328,8 @@ class ProblemPracticeProvider with ChangeNotifier {
       _hasNext = response.hasNext;
       _hasCachedData = true;
 
-      debugPrint('💾 Practice thumbnails loaded and cached: ${_practiceThumbnails.length}');
+      debugPrint(
+          '💾 Practice thumbnails loaded and cached: ${_practiceThumbnails.length}');
     } catch (e, stackTrace) {
       debugPrint('Error loading initial practice thumbnails: $e');
       debugPrint('Stack trace: $stackTrace');
@@ -390,7 +399,8 @@ class ProblemPracticeProvider with ChangeNotifier {
         );
 
         _practiceThumbnails[index] = updatedThumbnail;
-        debugPrint('✅ Practice thumbnail updated in cache: $practiceId (count: ${practiceDetail.practiceCount})');
+        debugPrint(
+            '✅ Practice thumbnail updated in cache: $practiceId (count: ${practiceDetail.practiceCount})');
         notifyListeners();
       } else {
         debugPrint('⚠️ Practice $practiceId not found in cache');

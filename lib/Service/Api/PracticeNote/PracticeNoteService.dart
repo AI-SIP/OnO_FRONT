@@ -8,7 +8,10 @@ import '../../../Model/PracticeNote/PracticeNoteRegisterModel.dart';
 import '../HttpService.dart';
 
 class PracticeNoteService {
-  final HttpService httpService = HttpService();
+  final HttpService httpService;
+
+  PracticeNoteService({HttpService? httpService})
+      : httpService = httpService ?? HttpService();
   final baseUrl = "${AppConfig.baseUrl}/api/practiceNotes";
 
   Future<PracticeNoteDetailModel> getPracticeNoteById(

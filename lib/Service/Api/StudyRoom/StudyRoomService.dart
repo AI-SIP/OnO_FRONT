@@ -24,7 +24,10 @@ class CursorPage<T> {
 }
 
 class StudyRoomService {
-  final HttpService httpService = HttpService();
+  final HttpService httpService;
+
+  StudyRoomService({HttpService? httpService})
+      : httpService = httpService ?? HttpService();
   final String baseUrl = '${AppConfig.baseUrl}/api/study-room';
 
   Future<List<StudyRoomModel>> fetchMyRooms() async {

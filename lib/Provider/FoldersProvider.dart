@@ -35,8 +35,8 @@ class FoldersProvider with ChangeNotifier {
   // 폴더별 캐시 데이터 (핵심!)
   final Map<int, FolderScrollState> _folderCache = {};
 
-  final folderService = FolderService();
-  final fileUploadService = FileUploadService();
+  final FolderService folderService;
+  final FileUploadService fileUploadService;
 
   // 루트 폴더 새로고침 플래그
   int _rootFolderRefreshTimestamp = 0;
@@ -148,7 +148,12 @@ class FoldersProvider with ChangeNotifier {
     debugPrint('💾 Saved ${problems.length} problems to cache for folder $folderId');
   }
 
-  FoldersProvider({required this.problemsProvider});
+  FoldersProvider({
+    required this.problemsProvider,
+    FolderService? folderService,
+    FileUploadService? fileUploadService,
+  })  : folderService = folderService ?? FolderService(),
+        fileUploadService = fileUploadService ?? FileUploadService();
 
   // O(log n) 삽입/업데이트 (SplayTreeMap이 자동으로 정렬 유지)
   void _upsertFolder(FolderModel folder) {
