@@ -344,6 +344,10 @@ class _TutorialOverlayState extends State<TutorialOverlay>
                         style: ElevatedButton.styleFrom(
                           backgroundColor: themeProvider.primaryColor,
                           foregroundColor: Colors.white,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 20, vertical: 12),
+                          minimumSize: Size.zero,
                           shape: RoundedRectangleBorder(
                             borderRadius:
                                 BorderRadius.circular(AppRadius.small),
@@ -571,29 +575,27 @@ class _TutorialOverlayState extends State<TutorialOverlay>
           Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Flexible(
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: TextButton(
-                    onPressed: tutorialProvider.skip,
-                    // Material 버튼은 기본으로 48px 터치 영역을 확보하느라
-                    // 좌우에 여백이 붙는다. 그대로 두면 위 설명 텍스트와
-                    // 시작점, 끝점이 어긋난다.
-                    style: TextButton.styleFrom(
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 4, vertical: 8),
-                      minimumSize: Size.zero,
-                    ),
-                    child: StandardText(
-                      text: '건너뛰기',
-                      fontSize: buttonSize,
-                      color: Colors.grey[700]!,
-                    ),
-                  ),
+              TextButton(
+                onPressed: tutorialProvider.skip,
+                // Material 버튼은 기본으로 48px 터치 영역을 확보하느라
+                // 좌우에 여백이 붙는다. 그대로 두면 위 설명 텍스트와
+                // 시작점, 끝점이 어긋난다.
+                style: TextButton.styleFrom(
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+                  minimumSize: Size.zero,
+                ),
+                child: StandardText(
+                  text: '건너뛰기',
+                  fontSize: buttonSize,
+                  color: Colors.grey[700]!,
                 ),
               ),
-              Flexible(
+              // 남는 자리를 오른쪽 묶음이 다 가져가야 카드 오른쪽 끝에 붙는다.
+              // 양쪽을 Flexible 로 두면 남는 폭을 절반씩 갈라 가져서, 오른쪽
+              // 버튼과 카드 사이에 빈 자리가 남았다.
+              Expanded(
                 child: Wrap(
                   spacing: 8,
                   runSpacing: 4,
@@ -603,6 +605,12 @@ class _TutorialOverlayState extends State<TutorialOverlay>
                     if (tutorialProvider.currentStepIndex > 0)
                       TextButton(
                         onPressed: tutorialProvider.previous,
+                        style: TextButton.styleFrom(
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 8),
+                          minimumSize: Size.zero,
+                        ),
                         child: StandardText(
                           text: '이전',
                           fontSize: buttonSize,

@@ -176,14 +176,6 @@ class _StudyRoomJoinScreenState extends State<StudyRoomJoinScreen> {
                     ),
                   ),
                 ),
-                SizedBox(height: screenHeight * 0.012),
-                StandardText(
-                  text: '※ 체험용 코드: 123456',
-                  fontSize: 12,
-                  color: Colors.grey[400]!,
-                  fontWeight: FontWeight.normal,
-                  fontFamily: 'PretendardLight',
-                ),
                 const Spacer(),
                 SizedBox(
                   width: double.infinity,

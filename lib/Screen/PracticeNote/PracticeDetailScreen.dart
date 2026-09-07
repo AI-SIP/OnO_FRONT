@@ -20,6 +20,7 @@ import '../../Module/Motion/TossPageRoute.dart';
 import '../../Module/Motion/TossDialog.dart';
 import '../../Module/Motion/AppMotion.dart';
 import '../../Module/Design/AppColors.dart';
+import '../../Module/Design/AppToast.dart';
 import '../../Module/Design/AppRadius.dart';
 
 class PracticeDetailScreen extends StatelessWidget {
@@ -656,16 +657,25 @@ class PracticeDetailScreen extends StatelessWidget {
                     Expanded(
                       child: TextButton(
                         onPressed: () async {
+                          // 화면을 닫고 나면 context 가 죽어서 Provider 를 못
+                          // 찾는다. 닫기 전에 미리 잡아 둔다.
+                          final provider = Provider.of<ProblemPracticeProvider>(
+                              context,
+                              listen: false);
+
                           Navigator.pop(context);
                           if (Navigator.canPop(context)) {
                             Navigator.pop(context);
                           }
 
-                          final provider = Provider.of<ProblemPracticeProvider>(
-                              context,
-                              listen: false);
-                          List<int> deletePracticeIds = [practice.practiceId];
-                          await provider.deletePractices(deletePracticeIds);
+                          try {
+                            await provider
+                                .deletePractices([practice.practiceId]);
+                            AppToast.success('복습 세트를 삭제했어요.');
+                          } catch (e) {
+                            debugPrint('복습 세트 삭제 실패: $e');
+                            AppToast.error('복습 세트를 삭제하지 못했어요. 잠시 후 다시 시도해주세요.');
+                          }
                         },
                         style: TextButton.styleFrom(
                           padding: const EdgeInsets.symmetric(

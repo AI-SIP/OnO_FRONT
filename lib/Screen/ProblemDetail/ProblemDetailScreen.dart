@@ -24,6 +24,7 @@ import '../../Module/Motion/TossPageRoute.dart';
 import '../../Module/Motion/TossDialog.dart';
 import '../../Module/Motion/AppMotion.dart';
 import '../../Module/Design/AppColors.dart';
+import '../../Module/Design/AppToast.dart';
 import '../../Module/Design/AppRadius.dart';
 import '../../Module/Motion/AppearTransition.dart';
 import '../../Module/Motion/Skeleton.dart';
@@ -984,12 +985,16 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                             if (mounted) {
                               navigator.pop(true);
                             }
+                            // 화면을 닫은 뒤에 알린다. 토스트는 앱 전체
+                            // Overlay 를 쓰므로 이 화면이 사라져도 뜬다.
+                            AppToast.success('오답노트를 삭제했어요.');
                           } catch (e) {
                             // 에러 발생 시 로딩 다이얼로그 닫기
                             if (mounted) {
                               LoadingDialog.hide(context);
                             }
                             debugPrint('문제 삭제 실패: $e');
+                            AppToast.error('오답노트를 삭제하지 못했어요. 잠시 후 다시 시도해주세요.');
                           }
                         },
                         style: TextButton.styleFrom(

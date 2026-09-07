@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../Model/StudyRoom/SharedProblemModel.dart';
+import '../../Module/Motion/AppearTransition.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Module/User/ProfileAvatar.dart';
@@ -302,22 +303,6 @@ class _SharedProblemDetailScreenState extends State<SharedProblemDetailScreen> {
           overflow: TextOverflow.ellipsis,
           maxLines: 1,
         ),
-        actions: [
-          IconButton(
-            icon: _isRefreshing
-                ? SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: primary,
-                    ),
-                  )
-                : Icon(Icons.refresh, color: Colors.grey[600], size: 22),
-            tooltip: '새로고침',
-            onPressed: _isRefreshing ? null : _refreshDetail,
-          ),
-        ],
       ),
       body: GestureDetector(
         onTap: () => FocusScope.of(context).unfocus(),
@@ -328,7 +313,8 @@ class _SharedProblemDetailScreenState extends State<SharedProblemDetailScreen> {
           child: ListView(
             physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.fromLTRB(18, 8, 18, 32),
-            children: [
+            // 글이 통째로 툭 뜨지 않고 위에서부터 차례로 들어온다.
+            children: AppearTransition.stagger([
               _buildDetailHeader(
                   context, currentProblem, primary, provider, themeProvider),
               const SizedBox(height: 14),
@@ -358,7 +344,7 @@ class _SharedProblemDetailScreenState extends State<SharedProblemDetailScreen> {
                 initiallyExpanded: true,
                 showToggle: false,
               ),
-            ],
+            ]),
           ),
         ),
       ),
