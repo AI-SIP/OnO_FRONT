@@ -494,12 +494,12 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
 
     if (_problems.isEmpty) {
       if (_mode == _SearchMode.title && _currentQuery.isEmpty) {
-        return const Center(
-          child: StandardText(
-            text: '검색어를 입력해주세요.',
-            fontSize: 15,
-            color: Colors.black,
-          ),
+        // 문구만 덩그러니 있으면 화면이 비어 보인다. 다른 빈 화면처럼
+        // 그림을 두되, 검색 안내라 연필 대신 돋보기를 쓴다.
+        return _buildEmptyState(
+          '검색어를 입력해주세요.',
+          icon: Icons.search_rounded,
+          detail: '오답노트 제목의 일부만 넣어도 찾을 수 있어요.',
         );
       }
       final emptyText =
@@ -530,30 +530,58 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
     );
   }
 
-  Widget _buildEmptyState(String message) {
+  /// [icon] 을 주면 그림 대신 동그란 아이콘을 그린다. [detail] 은 그 아래
+  /// 덧붙이는 한 줄이다.
+  Widget _buildEmptyState(String message, {IconData? icon, String? detail}) {
     return LayoutBuilder(
       builder: (context, constraints) => SingleChildScrollView(
         child: ConstrainedBox(
           constraints: BoxConstraints(minHeight: constraints.maxHeight),
           child: Center(
-            child: Transform.translate(
-              offset: const Offset(0, -28),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  SvgPicture.asset(
-                    'assets/Icon/PencilDetail.svg',
-                    width: 100,
-                    height: 100,
-                  ),
-                  const SizedBox(height: 16),
-                  StandardText(
-                    text: message,
-                    color: Colors.black,
-                    fontSize: 16,
-                  ),
-                ],
+            child: AppearTransition(
+              offset: 12,
+              child: Transform.translate(
+                offset: const Offset(0, -28),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    if (icon != null)
+                      Container(
+                        width: 84,
+                        height: 84,
+                        decoration: const BoxDecoration(
+                          color: AppColors.surfaceMuted,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          icon,
+                          size: 36,
+                          color: AppColors.textTertiary,
+                        ),
+                      )
+                    else
+                      SvgPicture.asset(
+                        'assets/Icon/PencilDetail.svg',
+                        width: 100,
+                        height: 100,
+                      ),
+                    const SizedBox(height: 16),
+                    StandardText(
+                      text: message,
+                      color: AppColors.textPrimary,
+                      fontSize: 16,
+                    ),
+                    if (detail != null) ...[
+                      const SizedBox(height: 6),
+                      StandardText(
+                        text: detail,
+                        color: AppColors.textTertiary,
+                        fontSize: 13,
+                      ),
+                    ],
+                  ],
+                ),
               ),
             ),
           ),

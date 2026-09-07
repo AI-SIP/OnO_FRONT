@@ -23,6 +23,9 @@ import '../../Provider/ProblemsProvider.dart';
 import '../../Util/AppErrorReporter.dart';
 import '../../Util/AppSnackBar.dart';
 import '../../Module/Motion/AppHaptic.dart';
+import '../../Module/Motion/AppMotion.dart';
+import '../../Module/Motion/AppearTransition.dart';
+import '../../Module/Motion/SelectionPop.dart';
 import '../../Module/Motion/PressableScale.dart';
 import '../../Module/Motion/TossPageRoute.dart';
 import '../../Module/Motion/Skeleton.dart';
@@ -862,30 +865,38 @@ class _PracticeProblemSelectionScreenState
     final displayName =
         folder.folderId == rootFolderId ? '책장' : folder.folderName;
 
-    return Opacity(
-      opacity: isSelected ? 1.0 : 0.5, // 선택된 폴더가 아니라면 흐리게 표시
-      child: Column(
-        children: [
-          SvgPicture.asset(
-            NoteIconHandler.getNoteIcon(allFolders.indexOf(folder)),
-            width: 60,
-            height: 60,
-          ),
-          const SizedBox(height: 8),
-          SizedBox(
-            width: folderNameWidth,
-            child: StandardText(
-              text: displayName.length > 10
-                  ? '${displayName.substring(0, 10)}..'
-                  : displayName,
-              fontSize: 14,
-              color: Colors.black,
-              textAlign: TextAlign.center,
-              overflow: TextOverflow.ellipsis,
-              maxLines: 1,
+    return AnimatedOpacity(
+      // 선택된 폴더가 아니라면 흐리게 표시
+      opacity: isSelected ? 1.0 : 0.5,
+      duration: AppMotion.fast,
+      curve: AppMotion.standard,
+      child: AnimatedScale(
+        scale: isSelected ? 1.0 : 0.94,
+        duration: AppMotion.normal,
+        curve: AppMotion.emphasized,
+        child: Column(
+          children: [
+            SvgPicture.asset(
+              NoteIconHandler.getNoteIcon(allFolders.indexOf(folder)),
+              width: 60,
+              height: 60,
             ),
-          ),
-        ],
+            const SizedBox(height: 8),
+            SizedBox(
+              width: folderNameWidth,
+              child: StandardText(
+                text: displayName.length > 10
+                    ? '${displayName.substring(0, 10)}..'
+                    : displayName,
+                fontSize: 14,
+                color: Colors.black,
+                textAlign: TextAlign.center,
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -1012,25 +1023,28 @@ class _PracticeProblemSelectionScreenState
                     final isSelected =
                         _selectedProblemIds.contains(problem.problemId);
 
-                    return PressableScale(
-                      haptic: HapticLevel.selection,
-                      onTap: () {
-                        setState(() {
-                          if (isSelected) {
-                            _selectedProblemIds.remove(problem.problemId);
-                            selectedProblems.removeWhere(
-                                (p) => p.problemId == problem.problemId);
-                          } else {
-                            _selectedProblemIds.add(problem.problemId);
-                            if (!selectedProblems
-                                .any((p) => p.problemId == problem.problemId)) {
-                              selectedProblems.add(problem);
+                    return AppearTransition(
+                      delay: AppMotion.stagger * (index < 6 ? index : 6),
+                      child: PressableScale(
+                        haptic: HapticLevel.selection,
+                        onTap: () {
+                          setState(() {
+                            if (isSelected) {
+                              _selectedProblemIds.remove(problem.problemId);
+                              selectedProblems.removeWhere(
+                                  (p) => p.problemId == problem.problemId);
+                            } else {
+                              _selectedProblemIds.add(problem.problemId);
+                              if (!selectedProblems.any(
+                                  (p) => p.problemId == problem.problemId)) {
+                                selectedProblems.add(problem);
+                              }
                             }
-                          }
-                        });
-                      },
-                      child: _problemTileContent(
-                          problem, themeProvider, isSelected),
+                          });
+                        },
+                        child: _problemTileContent(
+                            problem, themeProvider, isSelected),
+                      ),
                     );
                   },
                 )
@@ -1046,11 +1060,40 @@ class _PracticeProblemSelectionScreenState
         : '작성한 오답노트가 없습니다!';
 
     if (_searchMode == _PracticeSearchMode.title && _titleQuery.isEmpty) {
+      // 문구만 있으면 화면이 비어 보인다. 검색 안내라 연필 대신 돋보기를 쓴다.
       return Center(
-        child: StandardText(
-          text: message,
-          color: Colors.grey[600]!,
-          fontSize: 15,
+        child: AppearTransition(
+          offset: 12,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 84,
+                height: 84,
+                decoration: const BoxDecoration(
+                  color: AppColors.surfaceMuted,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.search_rounded,
+                  size: 36,
+                  color: AppColors.textTertiary,
+                ),
+              ),
+              const SizedBox(height: 16),
+              StandardText(
+                text: message,
+                color: AppColors.textPrimary,
+                fontSize: 16,
+              ),
+              const SizedBox(height: 6),
+              const StandardText(
+                text: '오답노트 제목의 일부만 넣어도 찾을 수 있어요.',
+                color: AppColors.textTertiary,
+                fontSize: 13,
+              ),
+            ],
+          ),
         ),
       );
     }
@@ -1136,26 +1179,32 @@ class _PracticeProblemSelectionScreenState
     required bool isCompact,
   }) {
     final color = isSelected ? themeProvider.primaryColor : Colors.grey[400]!;
-    return Container(
-      width: isCompact ? 34 : 40,
-      height: isCompact ? 34 : 40,
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        color: isSelected
-            ? themeProvider.primaryColor.withValues(alpha: 0.08)
-            : Colors.grey[50],
-        borderRadius: BorderRadius.circular(AppRadius.medium),
-        border: Border.all(
+    return SelectionPop(
+      selected: isSelected,
+      peak: 1.15,
+      child: AnimatedContainer(
+        duration: AppMotion.fast,
+        curve: AppMotion.standard,
+        width: isCompact ? 34 : 40,
+        height: isCompact ? 34 : 40,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
           color: isSelected
-              ? themeProvider.primaryColor.withValues(alpha: 0.35)
-              : Colors.grey[300]!,
-          width: 1,
+              ? themeProvider.primaryColor.withValues(alpha: 0.08)
+              : Colors.grey[50],
+          borderRadius: BorderRadius.circular(AppRadius.medium),
+          border: Border.all(
+            color: isSelected
+                ? themeProvider.primaryColor.withValues(alpha: 0.35)
+                : Colors.grey[300]!,
+            width: 1,
+          ),
         ),
-      ),
-      child: Icon(
-        isSelected ? Icons.check_box : Icons.check_box_outline_blank,
-        color: color,
-        size: isCompact ? 19 : 22,
+        child: Icon(
+          isSelected ? Icons.check_box : Icons.check_box_outline_blank,
+          color: color,
+          size: isCompact ? 19 : 22,
+        ),
       ),
     );
   }
@@ -1245,10 +1294,17 @@ class _PracticeProblemSelectionScreenState
                   color: Colors.white,
                   shape: BoxShape.circle,
                 ),
-                child: StandardText(
-                  text: _selectedProblemIds.length.toString(),
-                  fontSize: 12,
-                  color: themeProvider.primaryColor,
+                // 개수가 바뀔 때마다 숫자가 한 번 튀어서, 눌린 것이 셈에
+                // 반영됐다는 걸 알 수 있게 한다.
+                child: SelectionPop(
+                  key: ValueKey<int>(_selectedProblemIds.length),
+                  selected: true,
+                  peak: 1.3,
+                  child: StandardText(
+                    text: _selectedProblemIds.length.toString(),
+                    fontSize: 12,
+                    color: themeProvider.primaryColor,
+                  ),
                 ),
               ),
             ],

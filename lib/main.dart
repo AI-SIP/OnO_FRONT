@@ -32,7 +32,9 @@ import 'Util/AppErrorReporter.dart';
 import 'Util/AppNavigator.dart';
 import 'Util/AppSnackBar.dart';
 import 'Util/NotificationService.dart';
+import 'Module/Motion/AppHaptic.dart';
 import 'Module/Motion/AppScrollBehavior.dart';
+import 'Module/Motion/BouncyNavIcon.dart';
 import 'Module/Motion/TabSwitchFade.dart';
 import 'Module/Motion/TossPageRoute.dart';
 
@@ -241,10 +243,10 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   }
 
   void _onItemTapped(int index) {
-    Provider.of<ScreenIndexProvider>(
-      context,
-      listen: false,
-    ).setSelectedIndex(index);
+    final provider = Provider.of<ScreenIndexProvider>(context, listen: false);
+    // 이미 보고 있는 탭을 다시 눌렀을 때까지 진동을 주면 손이 피곤하다.
+    if (provider.screenIndex != index) AppHaptic.selection();
+    provider.setSelectedIndex(index);
   }
 
   Future<void> _prepareInitialTutorial() async {
@@ -336,7 +338,10 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
     return BottomNavigationBar(
       backgroundColor: Colors.white,
       type: BottomNavigationBarType.fixed,
-      items: _bottomNavigationItems(),
+      items: _bottomNavigationItems(
+        themeProvider.primaryColor,
+        screenIndexProvider.screenIndex,
+      ),
       currentIndex: screenIndexProvider.screenIndex,
       selectedItemColor: themeProvider.primaryColor,
       unselectedItemColor: Colors.grey,
@@ -352,19 +357,35 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
     );
   }
 
-  List<BottomNavigationBarItem> _bottomNavigationItems() {
-    return const [
-      BottomNavigationBarItem(
-          icon: Icon(Icons.menu_book, size: 20), label: '오답노트 관리'),
-      BottomNavigationBarItem(
-          icon: Icon(Icons.history, size: 20), label: '복습 세트'),
-      BottomNavigationBarItem(icon: Icon(Icons.group, size: 20), label: '스터디룸'),
-      BottomNavigationBarItem(
-          icon: Icon(
-            Icons.person,
-            size: 20,
-          ),
-          label: '마이 페이지'),
+  /// 아이콘을 [BouncyNavIcon] 으로 감싸서 선택될 때 한 번 튀어오르게 한다.
+  /// 선택 여부를 아이콘이 직접 알아야 해서 `activeIcon` 을 쓰지 않는다.
+  List<BottomNavigationBarItem> _bottomNavigationItems(
+    Color activeColor,
+    int currentIndex,
+  ) {
+    const specs = <({IconData icon, IconData activeIcon, String label})>[
+      (
+        icon: Icons.menu_book_outlined,
+        activeIcon: Icons.menu_book,
+        label: '오답노트 관리'
+      ),
+      (icon: Icons.history_outlined, activeIcon: Icons.history, label: '복습 세트'),
+      (icon: Icons.group_outlined, activeIcon: Icons.group, label: '스터디룸'),
+      (icon: Icons.person_outline, activeIcon: Icons.person, label: '마이 페이지'),
     ];
+
+    return List<BottomNavigationBarItem>.generate(specs.length, (index) {
+      final spec = specs[index];
+      return BottomNavigationBarItem(
+        icon: BouncyNavIcon(
+          icon: spec.icon,
+          activeIcon: spec.activeIcon,
+          selected: currentIndex == index,
+          activeColor: activeColor,
+          inactiveColor: Colors.grey,
+        ),
+        label: spec.label,
+      );
+    });
   }
 }

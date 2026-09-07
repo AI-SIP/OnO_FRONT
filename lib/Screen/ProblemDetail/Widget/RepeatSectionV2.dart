@@ -18,6 +18,8 @@ import '../../../Module/Text/StandardText.dart';
 import '../../../Module/Theme/ThemeHandler.dart';
 import '../../../Service/Api/Problem/ProblemSolveService.dart';
 import '../../../Module/Motion/AppHaptic.dart';
+import '../../../Module/Motion/AppMotion.dart';
+import '../../../Module/Motion/AppearTransition.dart';
 import '../../../Module/Motion/PressableScale.dart';
 import '../../../Module/Motion/TossPageRoute.dart';
 import '../../../Module/Motion/TossDialog.dart';
@@ -185,13 +187,20 @@ class _RepeatSectionV2State extends State<RepeatSectionV2>
           itemBuilder: (context, index) {
             final solve = latestFirst[index];
             final displayIndex = index + 1; // 최신 기록이 1회차
-            return _ProblemSolveCard(
-              solve: solve,
-              index: displayIndex,
-              iconColor: widget.iconColor,
-              isExpanded: _expandedStates[solve.problemSolveId] ?? false,
-              onToggle: (value) => _toggleExpanded(solve.problemSolveId, value),
-              onRefreshAsync: refreshAsync,
+            // 기록이 한꺼번에 툭 나타나는 대신 위에서부터 차례로 들어온다.
+            // 아래쪽까지 지연을 매기면 마지막 카드가 한참 뒤에 뜨므로
+            // 여섯 번째부터는 같은 시점에 들어오게 묶는다.
+            return AppearTransition(
+              delay: AppMotion.stagger * (index < 6 ? index : 6),
+              child: _ProblemSolveCard(
+                solve: solve,
+                index: displayIndex,
+                iconColor: widget.iconColor,
+                isExpanded: _expandedStates[solve.problemSolveId] ?? false,
+                onToggle: (value) =>
+                    _toggleExpanded(solve.problemSolveId, value),
+                onRefreshAsync: refreshAsync,
+              ),
             );
           },
         );
@@ -231,15 +240,18 @@ class _RepeatSectionV2State extends State<RepeatSectionV2>
                 separatorBuilder: (_, __) => const SizedBox(height: 10),
                 itemBuilder: (context, index) {
                   final solve = latestFirst[index];
-                  return _TabletSolveListItem(
-                    solve: solve,
-                    index: index + 1,
-                    isSelected: solve.problemSolveId == _selectedSolveId,
-                    onTap: () {
-                      setState(() {
-                        _selectedSolveId = solve.problemSolveId;
-                      });
-                    },
+                  return AppearTransition(
+                    delay: AppMotion.stagger * (index < 6 ? index : 6),
+                    child: _TabletSolveListItem(
+                      solve: solve,
+                      index: index + 1,
+                      isSelected: solve.problemSolveId == _selectedSolveId,
+                      onTap: () {
+                        setState(() {
+                          _selectedSolveId = solve.problemSolveId;
+                        });
+                      },
+                    ),
                   );
                 },
               ),
@@ -432,9 +444,11 @@ class _ProblemSolveCard extends StatelessWidget {
 
                     // 확장 아이콘
                     if (showExpandIcon)
-                      Icon(
-                        isExpanded ? Icons.expand_less : Icons.expand_more,
-                        color: statusColor,
+                      AnimatedRotation(
+                        turns: isExpanded ? 0.5 : 0.0,
+                        duration: AppMotion.normal,
+                        curve: AppMotion.emphasized,
+                        child: Icon(Icons.expand_more, color: statusColor),
                       ),
                     if (showExpandIcon) const SizedBox(width: 8),
                     // 메뉴 버튼
@@ -454,9 +468,20 @@ class _ProblemSolveCard extends StatelessWidget {
               ),
             ),
 
-            // 상세 내용
-            if (isExpanded)
-              _buildExpandedContent(context, themeProvider, statusColor),
+            // 상세 내용. 붙였다 뗐다 하면 툭툭 끊겨서, 높이가 늘어나는 동안
+            // 내용이 옅게 들어오도록 바꿨다.
+            AnimatedCrossFade(
+              firstChild: const SizedBox(width: double.infinity, height: 0),
+              secondChild:
+                  _buildExpandedContent(context, themeProvider, statusColor),
+              crossFadeState: isExpanded
+                  ? CrossFadeState.showSecond
+                  : CrossFadeState.showFirst,
+              duration: AppMotion.normal,
+              sizeCurve: AppMotion.emphasized,
+              firstCurve: AppMotion.exit,
+              secondCurve: AppMotion.enter,
+            ),
           ],
         ),
       ),

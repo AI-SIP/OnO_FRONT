@@ -16,6 +16,9 @@ import '../../Util/AppErrorReporter.dart';
 import '../../Util/AppSnackBar.dart';
 import '../../Module/Design/AppRadius.dart';
 import '../../Module/Design/AppColors.dart';
+import '../../Module/Design/AppToast.dart';
+import '../../Module/Motion/AppMotion.dart';
+import '../../Module/Motion/AppearTransition.dart';
 
 class AchievementCardScreen extends StatefulWidget {
   final UserInfoModel userInfo;
@@ -83,11 +86,7 @@ class _AchievementCardScreenState extends State<AchievementCardScreen> {
       );
 
       if (result.status == ShareResultStatus.success && mounted) {
-        final themeProvider = Provider.of<ThemeHandler>(
-          context,
-          listen: false,
-        );
-        _showShareCompletedSnackBar(themeProvider);
+        _showShareCompletedSnackBar();
       }
     } catch (e, stackTrace) {
       await AppErrorReporter.report(
@@ -104,22 +103,9 @@ class _AchievementCardScreenState extends State<AchievementCardScreen> {
     }
   }
 
-  void _showShareCompletedSnackBar(ThemeHandler themeProvider) {
-    final messenger = AppSnackBar.messengerKey.currentState;
-    if (messenger == null) return;
-
-    messenger.hideCurrentSnackBar();
-    messenger.showSnackBar(
-      SnackBar(
-        content: const StandardText(
-          text: '학습 성취 카드 공유가 완료되었습니다.',
-          fontSize: 14,
-          color: Colors.white,
-        ),
-        backgroundColor: themeProvider.primaryColor,
-        duration: const Duration(seconds: 2),
-      ),
-    );
+  void _showShareCompletedSnackBar() {
+    // 다른 화면과 같은 상단 토스트를 쓴다. 여기만 하단 SnackBar 로 남아 있었다.
+    AppToast.success('학습 성취 카드 공유가 완료되었습니다.');
   }
 
   @override
@@ -141,29 +127,38 @@ class _AchievementCardScreenState extends State<AchievementCardScreen> {
         children: [
           Expanded(
             child: Center(
-              // 그림자는 RepaintBoundary 밖에 둬서 미리보기에만 보임
-              child: Container(
-                decoration: BoxDecoration(
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.12),
-                      blurRadius: 20,
-                      spreadRadius: 0,
-                      offset: const Offset(0, 6),
+              // 카드가 아래에서 올라오며 들어온다. 캡처 대상인 RepaintBoundary
+              // 바깥에 둬야 공유 이미지에 영향이 없다.
+              child: AppearTransition(
+                offset: 24,
+                duration: AppMotion.slow,
+                // 그림자는 RepaintBoundary 밖에 둬서 미리보기에만 보임
+                child: Container(
+                  decoration: BoxDecoration(
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.12),
+                        blurRadius: 20,
+                        spreadRadius: 0,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
+                  ),
+                  child: RepaintBoundary(
+                    key: _globalKey,
+                    child: _AchievementCard(
+                      userInfo: widget.userInfo,
+                      weeklyReport: widget.weeklyReport,
                     ),
-                  ],
-                ),
-                child: RepaintBoundary(
-                  key: _globalKey,
-                  child: _AchievementCard(
-                    userInfo: widget.userInfo,
-                    weeklyReport: widget.weeklyReport,
                   ),
                 ),
               ),
             ),
           ),
-          _buildShareButton(themeProvider),
+          AppearTransition(
+            delay: const Duration(milliseconds: 120),
+            child: _buildShareButton(themeProvider),
+          ),
         ],
       ),
     );

@@ -12,6 +12,8 @@ import 'Widget/ImageSection.dart';
 import 'Widget/RepeatSectionV2.dart';
 import '../../Module/Design/AppRadius.dart';
 import '../../Module/Design/AppColors.dart';
+import '../../Module/Motion/AppHaptic.dart';
+import '../../Module/Motion/AppMotion.dart';
 
 class ProblemDetailTemplateV2 extends StatefulWidget {
   final ProblemModel problemModel;
@@ -36,11 +38,13 @@ class _ProblemDetailTemplateV2State extends State<ProblemDetailTemplateV2>
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
     _tabController.addListener(() {
-      if (_tabController.indexIsChanging) {
-        setState(() {
-          _currentTabIndex = _tabController.index;
-        });
-      }
+      // indexIsChanging 은 탭을 눌렀을 때만 참이라, 그것만 보면 손으로 밀어
+      // 넘겼을 때 라벨이 이전 탭에 머물러 있었다.
+      if (_tabController.index == _currentTabIndex) return;
+      AppHaptic.selection();
+      setState(() {
+        _currentTabIndex = _tabController.index;
+      });
     });
   }
 
@@ -75,15 +79,43 @@ class _ProblemDetailTemplateV2State extends State<ProblemDetailTemplateV2>
               child: TabBarView(
                 controller: _tabController,
                 children: [
-                  _buildProblemTab(themeProvider, isWide),
-                  _buildSolutionTab(themeProvider, isWide),
-                  _buildReviewHistoryTab(themeProvider, isWide),
+                  _tabContent(0, _buildProblemTab(themeProvider, isWide)),
+                  _tabContent(1, _buildSolutionTab(themeProvider, isWide)),
+                  _tabContent(2, _buildReviewHistoryTab(themeProvider, isWide)),
                 ],
               ),
             ),
           ],
         ),
       ],
+    );
+  }
+
+  /// 탭 사이를 오갈 때 옆으로 밀리기만 하던 것에 옅어짐과 내려앉음을 더한다.
+  ///
+  /// `TabController.animation` 은 손으로 미는 중에도 계속 값이 바뀌므로,
+  /// 탭을 누른 경우와 밀어 넘긴 경우가 같은 모양으로 움직인다.
+  Widget _tabContent(int index, Widget child) {
+    final animation = _tabController.animation;
+    if (animation == null) return child;
+
+    return AnimatedBuilder(
+      animation: animation,
+      child: child,
+      builder: (context, child) {
+        // 0 이면 이 탭이 화면 한가운데, 1 이면 완전히 옆으로 비켜난 상태다.
+        final distance = (animation.value - index).abs().clamp(0.0, 1.0);
+        return Opacity(
+          opacity: 1 - distance,
+          child: Transform.translate(
+            offset: Offset(0, 12 * distance),
+            child: Transform.scale(
+              scale: 1 - 0.02 * distance,
+              child: child,
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -129,30 +161,27 @@ class _ProblemDetailTemplateV2State extends State<ProblemDetailTemplateV2>
             labelPadding: const EdgeInsets.symmetric(horizontal: 8),
             tabs: [
               Tab(
-                child: HandWriteText(
+                child: _AnimatedTabLabel(
                   text: '문제',
+                  selected: _currentTabIndex == 0,
                   fontSize: MobileFontSize.reduced(context, 18),
-                  color: _currentTabIndex == 0
-                      ? themeProvider.primaryColor
-                      : Colors.grey[600]!,
+                  activeColor: themeProvider.primaryColor,
                 ),
               ),
               Tab(
-                child: HandWriteText(
+                child: _AnimatedTabLabel(
                   text: '정답',
+                  selected: _currentTabIndex == 1,
                   fontSize: MobileFontSize.reduced(context, 18),
-                  color: _currentTabIndex == 1
-                      ? themeProvider.primaryColor
-                      : Colors.grey[600]!,
+                  activeColor: themeProvider.primaryColor,
                 ),
               ),
               Tab(
-                child: HandWriteText(
+                child: _AnimatedTabLabel(
                   text: '복습 기록',
+                  selected: _currentTabIndex == 2,
                   fontSize: MobileFontSize.reduced(context, 18),
-                  color: _currentTabIndex == 2
-                      ? themeProvider.primaryColor
-                      : Colors.grey[600]!,
+                  activeColor: themeProvider.primaryColor,
                 ),
               ),
             ],
@@ -268,6 +297,43 @@ class _ProblemDetailTemplateV2State extends State<ProblemDetailTemplateV2>
       widget.problemModel,
       themeProvider.primaryColor,
       isWide,
+    );
+  }
+}
+
+/// 선택된 탭 이름이 한 번 커졌다가 제자리를 잡는다.
+///
+/// 탭 바 밑줄만 움직이면 어느 쪽을 눌렀는지가 눈에 잘 안 들어와서, 글씨에도
+/// 반응을 준다.
+class _AnimatedTabLabel extends StatelessWidget {
+  final String text;
+  final bool selected;
+  final double fontSize;
+  final Color activeColor;
+
+  const _AnimatedTabLabel({
+    required this.text,
+    required this.selected,
+    required this.fontSize,
+    required this.activeColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween<double>(end: selected ? 1.0 : 0.0),
+      duration: AppMotion.normal,
+      curve: AppMotion.emphasized,
+      builder: (context, t, _) {
+        return Transform.scale(
+          scale: 1 + 0.08 * t,
+          child: HandWriteText(
+            text: text,
+            fontSize: fontSize,
+            color: Color.lerp(Colors.grey[600]!, activeColor, t)!,
+          ),
+        );
+      },
     );
   }
 }
