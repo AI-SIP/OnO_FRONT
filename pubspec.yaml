@@ -56,9 +56,9 @@ dependencies:
   kakao_flutter_sdk: ^1.9.6
   sentry_flutter: ^8.14.1
   url_launcher_ios: ^6.3.1
-  firebase_core: ^3.5.0
-  firebase_analytics: ^11.3.2
-  firebase_messaging: ^15.2.6
+  firebase_core: ^4.0.0
+  firebase_analytics: ^12.0.0
+  firebase_messaging: ^16.0.0
   image_gallery_saver_plus: ^4.0.1
   flutter_tex: ^4.0.9
   animated_text_kit: ^4.2.2
@@ -76,8 +76,8 @@ dev_dependencies:
 
   # 테스트에서 플랫폼 채널 구현을 가짜로 바꿔 끼우기 위해 직접 참조한다.
   # (transitive 로 이미 들어와 있지만 명시하지 않으면 analyzer 가 경고한다)
-  firebase_core_platform_interface: ^5.4.0
-  firebase_analytics_platform_interface: ^4.3.0
+  firebase_core_platform_interface: ^8.0.0
+  firebase_analytics_platform_interface: ^6.0.0
   flutter_secure_storage_platform_interface: ^1.1.2
   plugin_platform_interface: ^2.1.8
 
