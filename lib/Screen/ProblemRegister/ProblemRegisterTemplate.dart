@@ -141,49 +141,50 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
     final isWide = MediaQuery.of(context).size.width >= 600;
     final spacing = isWide ? 50.0 : 30.0; // 태블릿: 50px, 모바일: 30px
 
+    // 스크롤은 이 위젯을 감싸는 ProblemRegisterScreen 이 맡는다. 여기서도
+    // SingleChildScrollView 를 두면 스크롤이 겹쳐서, 안쪽이 무한 높이를 받아
+    // 스크롤 기능을 잃고 아래쪽 내용까지 내려가지 못한다.
     return GestureDetector(
         behavior: HitTestBehavior.translucent,
         onTap: () => FocusScope.of(context).unfocus(),
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              DatePickerWidget(
-                selectedDate: _selectedDate,
-                onDateChanged: (d) => setState(() => _selectedDate = d),
-              ),
-              SizedBox(height: spacing),
-              FolderPickerWidget(
-                selectedId: _selectedFolderId,
-                onPicked: _updateSelectedFolder,
-              ),
-              SizedBox(height: spacing),
-              _buildImageSections(isWide: isWide),
-              SizedBox(height: spacing),
-              LabeledTextField(
-                label: '제목',
-                hintText: '오답노트의 제목을 작성해주세요!',
-                icon: Icons.info,
-                controller: _titleCtrl,
-                showClearButton: true,
-                onChanged: (_) {
-                  if (!_isApplyingDefaultTitle) {
-                    _hasUserEditedTitle = true;
-                  }
-                },
-              ),
-              SizedBox(height: spacing),
-              _buildTagSection(context),
-              SizedBox(height: spacing),
-              LabeledTextField(
-                label: '메모',
-                controller: _memoCtrl,
-                icon: Icons.edit,
-                hintText: '기록하고 싶은 내용을 간단하게 작성해주세요!',
-                maxLines: 3,
-              ),
-            ],
-          ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            DatePickerWidget(
+              selectedDate: _selectedDate,
+              onDateChanged: (d) => setState(() => _selectedDate = d),
+            ),
+            SizedBox(height: spacing),
+            FolderPickerWidget(
+              selectedId: _selectedFolderId,
+              onPicked: _updateSelectedFolder,
+            ),
+            SizedBox(height: spacing),
+            _buildImageSections(isWide: isWide),
+            SizedBox(height: spacing),
+            LabeledTextField(
+              label: '제목',
+              hintText: '오답노트의 제목을 작성해주세요!',
+              icon: Icons.info,
+              controller: _titleCtrl,
+              showClearButton: true,
+              onChanged: (_) {
+                if (!_isApplyingDefaultTitle) {
+                  _hasUserEditedTitle = true;
+                }
+              },
+            ),
+            SizedBox(height: spacing),
+            _buildTagSection(context),
+            SizedBox(height: spacing),
+            LabeledTextField(
+              label: '메모',
+              controller: _memoCtrl,
+              icon: Icons.edit,
+              hintText: '기록하고 싶은 내용을 간단하게 작성해주세요!',
+              maxLines: 3,
+            ),
+          ],
         ));
   }
 

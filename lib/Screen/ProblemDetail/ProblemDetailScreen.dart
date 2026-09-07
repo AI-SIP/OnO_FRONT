@@ -25,6 +25,8 @@ import '../../Module/Motion/TossDialog.dart';
 import '../../Module/Motion/AppMotion.dart';
 import '../../Module/Design/AppColors.dart';
 import '../../Module/Design/AppRadius.dart';
+import '../../Module/Motion/AppearTransition.dart';
+import '../../Module/Motion/Skeleton.dart';
 
 class ProblemDetailScreen extends StatefulWidget {
   final int problemId;
@@ -234,7 +236,12 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                             .getProblem(widget.problemId),
                     builder: (context, snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting) {
-                        return const Center(child: CircularProgressIndicator());
+                        return const SkeletonList(
+                          itemCount: 3,
+                          itemHeight: 160,
+                          spacing: 16,
+                          padding: EdgeInsets.all(16),
+                        );
                       } else if (snapshot.hasError) {
                         return Center(
                           child: StandardText(
@@ -243,7 +250,12 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                           ),
                         );
                       } else if (snapshot.hasData) {
-                        return _buildContent(snapshot.data!);
+                        // 화면이 열릴 때 주는 모션은 데이터가 오기 전에 끝난다.
+                        // 정작 내용이 뜨는 순간에는 아무 움직임이 없어서,
+                        // 여기서 한 번 더 자리를 잡으며 나타나게 한다.
+                        return AppearTransition(
+                          child: _buildContent(snapshot.data!),
+                        );
                       } else {
                         return Center(
                           child: StandardText(
@@ -257,7 +269,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                 }
 
                 // 이미 로드된 경우 바로 렌더링
-                return _buildContent(problemModel);
+                return AppearTransition(child: _buildContent(problemModel));
               },
             ),
           ),

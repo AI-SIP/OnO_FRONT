@@ -157,7 +157,9 @@ class _ToastViewState extends State<_ToastView>
     );
 
     return Positioned(
-      top: topInset + AppSpacing.sm,
+      // 상태바 바로 아래에 두면 앱바와 겹쳐 묻힌다. 앱바 높이만큼 내려서
+      // 화면 내용 위에 또렷하게 얹힌다.
+      top: topInset + kToolbarHeight + AppSpacing.sm,
       left: AppSpacing.screenHorizontal,
       right: AppSpacing.screenHorizontal,
       child: SlideTransition(
