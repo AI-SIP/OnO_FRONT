@@ -642,7 +642,7 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
     Color accent,
   ) {
     return Container(
-      height: 98,
+      height: 104,
       padding: const EdgeInsets.fromLTRB(
           AppSpacing.lg, AppSpacing.lg, AppSpacing.lg, AppSpacing.md),
       decoration: BoxDecoration(
@@ -660,27 +660,33 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 아이콘을 맨몸으로 두면 존재감이 없다. 지표마다 다른 색을 옅게 깔아
-          // 여섯 칸이 그냥 나열된 것처럼 보이지 않게 한다.
-          Container(
-            padding: const EdgeInsets.all(7),
-            decoration: BoxDecoration(
-              color: accent.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(AppRadius.small),
-            ),
-            child: Icon(icon, size: 16, color: accent),
+          // 아이콘을 맨몸으로 두면 존재감이 없다. 지표마다 다른 색을 옅게 깔되,
+          // 라벨과 같은 줄에 둔다. 세로로 쌓으면 카드 높이를 넘긴다.
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: accent.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(AppRadius.small),
+                ),
+                child: Icon(icon, size: 14, color: accent),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: StandardText(
+                  text: label,
+                  fontSize: 12,
+                  color: AppColors.textTertiary,
+                  fontWeight: FontWeight.w600,
+                  fontFamily: 'PretendardBold',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
           ),
           const Spacer(),
-          StandardText(
-            text: label,
-            fontSize: 12,
-            color: AppColors.textTertiary,
-            fontWeight: FontWeight.w600,
-            fontFamily: 'PretendardBold',
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-          const SizedBox(height: 2),
           _buildStatValue(value),
         ],
       ),
