@@ -10,6 +10,10 @@ class ProblemSolveModel {
   final String? reflection;
   final List<ImprovementType> improvements;
   final int? timeSpentSeconds;
+
+  /// 이 복습 회차의 기분 이모지 키다. 안 고르고 넘어갈 수 있어서 null 이 온다.
+  /// 유니코드 이모지 문자가 아니라 `excited_happy` 같은 키 문자열이다.
+  final String? moodEmojiKey;
   final bool migratedFromLegacy;
   final List<String> imageUrls;
   final DateTime createdAt;
@@ -24,6 +28,7 @@ class ProblemSolveModel {
     this.reflection,
     required this.improvements,
     this.timeSpentSeconds,
+    this.moodEmojiKey,
     required this.migratedFromLegacy,
     required this.imageUrls,
     required this.createdAt,
@@ -43,6 +48,7 @@ class ProblemSolveModel {
               .toList() ??
           [],
       timeSpentSeconds: json['timeSpentSeconds'],
+      moodEmojiKey: json['moodEmojiKey'] as String?,
       migratedFromLegacy: json['migratedFromLegacy'] ?? false,
       imageUrls: (json['imageUrls'] as List<dynamic>?)
               ?.map((e) => e as String)
@@ -63,6 +69,7 @@ class ProblemSolveModel {
       'reflection': reflection,
       'improvements': improvements.map((e) => e.toJson()).toList(),
       'timeSpentSeconds': timeSpentSeconds,
+      'moodEmojiKey': moodEmojiKey,
       'migratedFromLegacy': migratedFromLegacy,
       'imageUrls': imageUrls,
       'createdAt': createdAt.toIso8601String(),

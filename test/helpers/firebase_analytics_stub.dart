@@ -47,7 +47,8 @@ class _FakeFirebasePlatform extends FirebasePlatform
 }
 
 class _FakeFirebaseAnalyticsPlatform extends FirebaseAnalyticsPlatform
-    with MockPlatformInterfaceMixin {
+    with MockPlatformInterfaceMixin
+    implements FakeAnalyticsRecorder {
   /// 실제로 기록된 이벤트 이름들. 필요하면 테스트에서 검증에 쓸 수 있다.
   final List<String> loggedEvents = [];
 
@@ -61,6 +62,12 @@ class _FakeFirebaseAnalyticsPlatform extends FirebaseAnalyticsPlatform
   // FirebaseAnalytics.logScreenView() / logLogin() 은 플랫폼 인터페이스에
   // 별도 메서드가 없다 — 둘 다 결국 이 logEvent() 하나로 위임된다
   // (screen_view / login 이라는 이벤트 이름으로).
+  /// 마지막으로 설정된 유저 식별자. 로그아웃하면 null 이 된다.
+  String? userId;
+
+  /// 설정된 유저 속성. 값이 null 이면 지운 것이다.
+  final Map<String, String?> userProperties = {};
+
   @override
   Future<void> logEvent({
     required String name,
@@ -69,6 +76,23 @@ class _FakeFirebaseAnalyticsPlatform extends FirebaseAnalyticsPlatform
   }) async {
     loggedEvents.add(name);
   }
+
+  @override
+  Future<void> setUserId({
+    String? id,
+    AnalyticsCallOptions? callOptions,
+  }) async {
+    userId = id;
+  }
+
+  @override
+  Future<void> setUserProperty({
+    required String name,
+    required String? value,
+    AnalyticsCallOptions? callOptions,
+  }) async {
+    userProperties[name] = value;
+  }
 }
 
 /// FirebaseAnalytics 관련 호출이 예외 없이 무시되도록 플랫폼 델리게이트를 바꿔치운다.
@@ -76,4 +100,38 @@ class _FakeFirebaseAnalyticsPlatform extends FirebaseAnalyticsPlatform
 void stubFirebaseAnalytics() {
   FirebasePlatform.instance = _FakeFirebasePlatform();
   FirebaseAnalyticsPlatform.instance = _FakeFirebaseAnalyticsPlatform();
+}
+
+/// 스텁이 기록한 것을 테스트에서 들여다본다.
+///
+/// [stubFirebaseAnalytics] 를 먼저 불러야 한다. 유저 식별과 유저 속성이
+/// 실제로 나갔는지 확인할 때 쓴다.
+FakeAnalyticsRecorder get analyticsRecorder {
+  final platform = FirebaseAnalyticsPlatform.instance;
+  if (platform is! _FakeFirebaseAnalyticsPlatform) {
+    throw StateError('stubFirebaseAnalytics() 를 먼저 불러라');
+  }
+  return platform;
+}
+
+/// 스텁이 기록해 둔 것을 비운다.
+///
+/// [stubFirebaseAnalytics] 를 다시 부르면 안 된다. `FirebaseAnalytics.instance`
+/// 는 처음 만들어질 때의 델리게이트를 붙들고 있어서, 플랫폼을 새로 갈아 끼우면
+/// 그 뒤의 호출은 옛 스텁으로 가고 테스트는 빈 기록만 보게 된다. 테스트마다
+/// 초기화가 필요하면 이것을 쓴다.
+void resetAnalyticsRecorder() {
+  final platform = FirebaseAnalyticsPlatform.instance;
+  if (platform is _FakeFirebaseAnalyticsPlatform) {
+    platform.loggedEvents.clear();
+    platform.userProperties.clear();
+    platform.userId = null;
+  }
+}
+
+/// 스텁이 기록해 둔 것을 읽는 창구.
+abstract interface class FakeAnalyticsRecorder {
+  List<String> get loggedEvents;
+  String? get userId;
+  Map<String, String?> get userProperties;
 }

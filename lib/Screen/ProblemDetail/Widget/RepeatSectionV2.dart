@@ -9,6 +9,7 @@ import '../../../Model/Problem/AnswerStatus.dart';
 import '../../../Model/Problem/ImprovementType.dart';
 import '../../../Model/Problem/ProblemModel.dart';
 import '../../../Model/Problem/ProblemSolveModel.dart';
+import '../../../Module/Emoji/OnoEmojiImage.dart';
 import '../../../Module/Dialog/LoadingDialog.dart';
 import '../../../Module/Dialog/SnackBarDialog.dart';
 import '../../../Module/Image/DisplayImage.dart';
@@ -422,6 +423,15 @@ class _ProblemSolveCard extends StatelessWidget {
                                   color: statusColor,
                                 ),
                               ),
+                              // 회차마다 기분이 따로 남는다. 안 고른 회차도
+                              // 있어서 있을 때만 그린다.
+                              if (solve.moodEmojiKey != null) ...[
+                                const SizedBox(width: 8),
+                                OnoEmojiImage(
+                                  emojiKey: solve.moodEmojiKey,
+                                  size: 22,
+                                ),
+                              ],
                             ],
                           ),
                           const SizedBox(height: 6),
@@ -1021,6 +1031,10 @@ class _TabletSolveListItem extends StatelessWidget {
                           color: statusColor,
                         ),
                       ),
+                      if (solve.moodEmojiKey != null) ...[
+                        const SizedBox(width: 6),
+                        OnoEmojiImage(emojiKey: solve.moodEmojiKey, size: 18),
+                      ],
                     ],
                   ),
                   const SizedBox(height: 4),

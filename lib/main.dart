@@ -32,6 +32,8 @@ import 'Util/AppErrorReporter.dart';
 import 'Util/AppNavigator.dart';
 import 'Util/AppSnackBar.dart';
 import 'Util/NotificationService.dart';
+import 'Module/Notice/ServiceNoticeDialog.dart';
+import 'Service/Api/Notice/NoticeService.dart';
 import 'Module/Motion/AppHaptic.dart';
 import 'Module/Motion/AppScrollBehavior.dart';
 import 'Module/Motion/BouncyNavIcon.dart';
@@ -224,20 +226,29 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   final TutorialTargets _tutorialTargets = TutorialTargets();
+  final NoticeService _noticeService = NoticeService();
   bool _didPrepareTutorial = false;
+  bool _didHandleNotice = false;
   int? _lastSyncedTutorialStepIndex;
+
+  /// 튜토리얼이 끝나기를 기다리는 동안 붙여 둔 리스너다. 기다리는 도중에
+  /// 화면이 사라지면 dispose 에서 떼야 해서 들고 있는다.
+  TutorialProvider? _watchedTutorialProvider;
+  VoidCallback? _tutorialFinishListener;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _prepareInitialTutorial();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await _prepareInitialTutorial();
+      await _prepareServiceNotice();
     });
   }
 
   @override
   void dispose() {
+    _detachTutorialFinishListener();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -261,6 +272,57 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
       isFirstLogin: userProvider.isFirstLogin,
     );
     userProvider.changeIsFirstLogin();
+  }
+
+  /// 메인에 들어온 뒤 서비스 공지가 있으면 한 번 띄운다.
+  ///
+  /// 공지는 있으면 좋은 것이라 실패해도 앱 진입을 막지 않는다. 조회와
+  /// 숨기기 모두 [NoticeService] 안에서 예외를 삼키고 null 또는 false 를
+  /// 돌려준다.
+  Future<void> _prepareServiceNotice() async {
+    if (_didHandleNotice || !mounted) return;
+    _didHandleNotice = true;
+
+    final tutorialProvider =
+        Provider.of<TutorialProvider>(context, listen: false);
+    // 튜토리얼이 떠 있는데 공지를 겹쳐 띄우면, 처음 들어온 사용자가 튜토리얼
+    // 위에 덮인 팝업부터 만나게 된다. 튜토리얼이 끝난 뒤로 미룬다.
+    if (tutorialProvider.isVisible) {
+      await _waitForTutorialToFinish(tutorialProvider);
+      if (!mounted) return;
+    }
+
+    final notice = await _noticeService.getActiveNotice();
+    if (notice == null || !mounted) return;
+
+    final result = await ServiceNoticeDialog.show(context, notice);
+    if (result == NoticeDialogResult.dismissed) {
+      await _noticeService.dismissNotice(notice.noticeId);
+    }
+  }
+
+  Future<void> _waitForTutorialToFinish(TutorialProvider provider) {
+    final completer = Completer<void>();
+
+    void listener() {
+      if (provider.isVisible) return;
+      _detachTutorialFinishListener();
+      if (!completer.isCompleted) completer.complete();
+    }
+
+    _watchedTutorialProvider = provider;
+    _tutorialFinishListener = listener;
+    provider.addListener(listener);
+    return completer.future;
+  }
+
+  void _detachTutorialFinishListener() {
+    final listener = _tutorialFinishListener;
+    if (listener != null) {
+      _watchedTutorialProvider?.removeListener(listener);
+    }
+    _watchedTutorialProvider = null;
+    _tutorialFinishListener = null;
   }
 
   @override

@@ -7,6 +7,9 @@ import 'package:provider/provider.dart';
 
 import '../../Model/Problem/AnswerStatus.dart';
 import '../../Model/Problem/ImprovementType.dart';
+import '../../Module/Emoji/OnoEmojiCatalog.dart';
+import '../../Module/Emoji/OnoEmojiImage.dart';
+import '../../Module/Emoji/OnoEmojiPicker.dart';
 import '../../Module/Image/ImagePickerHandler.dart';
 import '../../Module/Text/mobile_font_size.dart';
 import '../../Module/Text/StandardText.dart';
@@ -44,6 +47,21 @@ class ProblemSolveRegisterTemplateState
   AnswerStatus _answerStatus = AnswerStatus.CORRECT; // 정답 상태 (기본값: 정답)
   int _timeSpentSeconds = 10 * 60; // 소요 시간 (초)
   List<String> _answerImageUrls = [];
+
+  /// 이 회차의 기분 이모지 키. 안 고르고 넘어가도 된다.
+  String? _selectedMoodKey;
+
+  /// 목록에 먼저 보여줄 이모지다. 복습 세트 완료 화면과 같은 것을 쓴다.
+  /// 여기 없는 것은 `더보기` 에서 전체 목록으로 고른다.
+  static const List<String> _recommendedMoodKeys = [
+    'success_checkmark',
+    'got_100_score',
+    'fired_up_sparkle_eyes',
+    'happy_tears',
+    'frustrated_studying',
+    'dizzy_spiral_eyes2',
+    'sleeping_blanket',
+  ];
 
   // 개선 체크리스트 (ImprovementType enum 사용)
   final Map<ImprovementType, bool> _improvements = {
@@ -119,6 +137,10 @@ class ProblemSolveRegisterTemplateState
 
             // 개선된 점 체크리스트
             _buildImprovementSection(themeProvider),
+            SizedBox(height: spacing),
+
+            // 이번 회차 기분
+            _buildMoodSection(themeProvider),
             SizedBox(height: spacing),
 
             // 복습 메모
@@ -772,6 +794,101 @@ class ProblemSolveRegisterTemplateState
     );
   }
 
+  Widget _buildMoodSection(ThemeHandler themeProvider) {
+    return _buildSectionBox(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildSectionTitle(
+            icon: Icons.mood,
+            title: '이번 복습 어땠나요?',
+            themeProvider: themeProvider,
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            height: 82,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: _recommendedMoodKeys.length + 1,
+              separatorBuilder: (_, __) => const SizedBox(width: 10),
+              itemBuilder: (context, index) {
+                if (index == _recommendedMoodKeys.length) {
+                  return _buildMoreMoodButton(themeProvider);
+                }
+
+                final emojiKey = _recommendedMoodKeys[index];
+                final emoji = OnoEmojiCatalog.byKey(emojiKey);
+                if (emoji == null) return const SizedBox.shrink();
+
+                final isSelected = _selectedMoodKey == emojiKey;
+                return PressableScale(
+                  haptic: HapticLevel.selection,
+                  // 고른 것을 다시 누르면 해제된다. 안 고르고 넘어가는 것도
+                  // 그대로 되어야 해서 되돌릴 길을 열어 둔다.
+                  onTap: () => setState(
+                    () => _selectedMoodKey = isSelected ? null : emojiKey,
+                  ),
+                  child: Container(
+                    width: 70,
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? themeProvider.primaryColor.withValues(alpha: 0.1)
+                          : Colors.grey[50],
+                      borderRadius: BorderRadius.circular(AppRadius.medium),
+                      border: Border.all(
+                        color: isSelected
+                            ? themeProvider.primaryColor
+                            : AppColors.border,
+                      ),
+                    ),
+                    child: Column(
+                      children: [
+                        OnoEmojiImage(emoji: emoji, size: 54),
+                        const SizedBox(height: 4),
+                        Container(
+                          width: 5,
+                          height: 5,
+                          decoration: BoxDecoration(
+                            color: isSelected
+                                ? themeProvider.primaryColor
+                                : Colors.transparent,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMoreMoodButton(ThemeHandler themeProvider) {
+    return PressableScale(
+      onTap: () {
+        OnoEmojiPicker.show(
+          context,
+          selectedKey: _selectedMoodKey,
+          onSelected: (emoji) => setState(() => _selectedMoodKey = emoji.key),
+        );
+      },
+      child: Container(
+        width: 70,
+        decoration: BoxDecoration(
+          color: Colors.grey[50],
+          borderRadius: BorderRadius.circular(AppRadius.medium),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Icon(Icons.more_horiz, color: themeProvider.primaryColor),
+      ),
+    );
+  }
+
   // API 연동 시 사용할 데이터 수집 메서드
   Map<String, dynamic> getReviewData() {
     return {
@@ -784,6 +901,7 @@ class ProblemSolveRegisterTemplateState
           .map((entry) => entry.key)
           .toList(),
       'timeSpentSeconds': _timeSpentSeconds > 0 ? _timeSpentSeconds : null,
+      'moodEmojiKey': _selectedMoodKey,
     };
   }
 
@@ -794,6 +912,7 @@ class ProblemSolveRegisterTemplateState
       _answerStatus = AnswerStatus.CORRECT;
       _timeSpentSeconds = 10 * 60;
       _improvements.updateAll((key, value) => false);
+      _selectedMoodKey = null;
     });
   }
 

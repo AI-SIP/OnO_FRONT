@@ -144,6 +144,7 @@ class _ProblemSolveRegisterScreenState
         reflection: reviewData['reflection'] as String?,
         improvements: reviewData['improvements'] as List<ImprovementType>,
         timeSpentSeconds: reviewData['timeSpentSeconds'] as int?,
+        moodEmojiKey: reviewData['moodEmojiKey'] as String?,
       );
 
       final practiceRecordId =

@@ -177,12 +177,19 @@ class _TutorialOverlayState extends State<TutorialOverlay>
     final bodySize = isTablet ? 14.0 : 12.0;
     final buttonSize = isTablet ? 14.0 : 13.0;
     final frogSize = isTablet ? 116.0 : 86.0;
-    final maxHeight = mediaQuery.size.height -
-        mediaQuery.padding.top -
-        mediaQuery.padding.bottom -
-        32;
+    final safeTop = mediaQuery.padding.top;
+    // 하단은 padding 만 봐서는 모자란다. 제스처 내비게이션 기기는 padding 이
+    // 작게 잡히는 대신 화면 아래에서 쓸어 올리는 영역이 넓어서, SafeArea 만
+    // 믿으면 버튼이 그 영역에 걸린다.
+    final bottomObstruction = _maxBottomInset(
+      mediaQuery.padding.bottom,
+      mediaQuery.viewPadding.bottom,
+      mediaQuery.systemGestureInsets.bottom,
+    );
+    final maxHeight = mediaQuery.size.height - safeTop - bottomObstruction - 32;
 
-    return SafeArea(
+    return Padding(
+      padding: EdgeInsets.only(top: safeTop, bottom: bottomObstruction),
       child: Center(
         child: Container(
           width: maxWidth,
@@ -194,67 +201,75 @@ class _TutorialOverlayState extends State<TutorialOverlay>
           ),
           child: ConstrainedBox(
             constraints: BoxConstraints(maxHeight: maxHeight),
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildFrogSpeech(
-                    themeProvider: themeProvider,
-                    frogSize: frogSize,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        StandardText(
-                          text: 'OnO를 빠르게 둘러볼까요?',
-                          fontSize: titleSize,
-                          color: AppColors.textPrimary,
-                          fontWeight: FontWeight.w700,
-                        ),
-                        const SizedBox(height: 14),
-                        StandardText(
-                          text: '공책, 오답노트, 복습 세트가\n어떻게 연결되는지 짧게 안내해드릴게요.',
-                          fontSize: bodySize,
-                          color: Colors.grey[700]!,
-                          fontWeight: FontWeight.w500,
-                          fontFamily: 'PretendardBold',
-                        ),
-                      ],
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // 넘치는 것은 설명 쪽이다. 카드 전체를 스크롤시키면 글자를
+                // 키운 기기에서 버튼 줄이 스크롤 아래로 밀려 보이지 않는다.
+                // 설명만 스크롤시키고 버튼은 카드 아래에 붙여 둔다.
+                Flexible(
+                  child: SingleChildScrollView(
+                    child: _buildFrogSpeech(
+                      themeProvider: themeProvider,
+                      frogSize: frogSize,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          StandardText(
+                            text: 'OnO를 빠르게 둘러볼까요?',
+                            fontSize: titleSize,
+                            color: AppColors.textPrimary,
+                            fontWeight: FontWeight.w700,
+                          ),
+                          const SizedBox(height: 14),
+                          StandardText(
+                            text: '공책, 오답노트, 복습 세트가\n어떻게 연결되는지 짧게 안내해드릴게요.',
+                            fontSize: bodySize,
+                            color: Colors.grey[700]!,
+                            fontWeight: FontWeight.w500,
+                            fontFamily: 'PretendardBold',
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                  const SizedBox(height: 22),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      TextButton(
-                        onPressed: tutorialProvider.skip,
-                        child: StandardText(
-                          text: '건너뛰기',
-                          fontSize: buttonSize,
-                          color: Colors.grey[700]!,
+                ),
+                const SizedBox(height: 22),
+                // 글자를 키운 기기에서는 두 버튼이 한 줄에 다 들어가지 않아
+                // 오른쪽으로 넘쳤다. 넘치면 아랫줄로 내린다.
+                Wrap(
+                  alignment: WrapAlignment.end,
+                  spacing: 8,
+                  runSpacing: 8,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    TextButton(
+                      onPressed: tutorialProvider.skip,
+                      child: StandardText(
+                        text: '건너뛰기',
+                        fontSize: buttonSize,
+                        color: Colors.grey[700]!,
+                      ),
+                    ),
+                    ElevatedButton(
+                      onPressed: tutorialProvider.start,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: themeProvider.primaryColor,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(AppRadius.small),
                         ),
                       ),
-                      const SizedBox(width: 8),
-                      ElevatedButton(
-                        onPressed: tutorialProvider.start,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: themeProvider.primaryColor,
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius:
-                                BorderRadius.circular(AppRadius.small),
-                          ),
-                        ),
-                        child: StandardText(
-                          text: '시작하기',
-                          fontSize: buttonSize,
-                          color: Colors.white,
-                        ),
+                      child: StandardText(
+                        text: '시작하기',
+                        fontSize: buttonSize,
+                        color: Colors.white,
                       ),
-                    ],
-                  ),
-                ],
-              ),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
         ),
@@ -275,12 +290,19 @@ class _TutorialOverlayState extends State<TutorialOverlay>
     final titleSize = isTablet ? 18.0 : 14.0;
     final bodySize = isTablet ? 14.0 : 12.0;
     final buttonSize = isTablet ? 14.0 : 13.0;
-    final maxHeight = mediaQuery.size.height -
-        mediaQuery.padding.top -
-        mediaQuery.padding.bottom -
-        32;
+    final safeTop = mediaQuery.padding.top;
+    // 하단은 padding 만 봐서는 모자란다. 제스처 내비게이션 기기는 padding 이
+    // 작게 잡히는 대신 화면 아래에서 쓸어 올리는 영역이 넓어서, SafeArea 만
+    // 믿으면 버튼이 그 영역에 걸린다.
+    final bottomObstruction = _maxBottomInset(
+      mediaQuery.padding.bottom,
+      mediaQuery.viewPadding.bottom,
+      mediaQuery.systemGestureInsets.bottom,
+    );
+    final maxHeight = mediaQuery.size.height - safeTop - bottomObstruction - 32;
 
-    return SafeArea(
+    return Padding(
+      padding: EdgeInsets.only(top: safeTop, bottom: bottomObstruction),
       child: Center(
         child: Container(
           width: maxWidth,
@@ -292,77 +314,93 @@ class _TutorialOverlayState extends State<TutorialOverlay>
           ),
           child: ConstrainedBox(
             constraints: BoxConstraints(maxHeight: maxHeight),
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildFrogSpeech(
-                    themeProvider: themeProvider,
-                    frogSize: frogSize,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        StandardText(
-                          text: '좋아요, 이제 OnO와 함께 시작해봐요!',
-                          fontSize: titleSize,
-                          color: AppColors.textPrimary,
-                          fontWeight: FontWeight.w700,
-                        ),
-                        const SizedBox(height: 14),
-                        StandardText(
-                          text:
-                              '공책에 오답을 모으고, 복습 세트로 다시 복습하면서 100점을 향해 한 걸음씩 나아가요!',
-                          fontSize: bodySize,
-                          color: Colors.grey[700]!,
-                          fontWeight: FontWeight.w500,
-                          fontFamily: 'PretendardBold',
-                        ),
-                      ],
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // 넘치는 것은 설명 쪽이다. 카드 전체를 스크롤시키면 글자를
+                // 키운 기기에서 버튼 줄이 스크롤 아래로 밀려 보이지 않는다.
+                // 설명만 스크롤시키고 버튼은 카드 아래에 붙여 둔다.
+                Flexible(
+                  child: SingleChildScrollView(
+                    child: _buildFrogSpeech(
+                      themeProvider: themeProvider,
+                      frogSize: frogSize,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          StandardText(
+                            text: '좋아요, 이제 OnO와 함께 시작해봐요!',
+                            fontSize: titleSize,
+                            color: AppColors.textPrimary,
+                            fontWeight: FontWeight.w700,
+                          ),
+                          const SizedBox(height: 14),
+                          StandardText(
+                            text:
+                                '공책에 오답을 모으고, 복습 세트로 다시 복습하면서 100점을 향해 한 걸음씩 나아가요!',
+                            fontSize: bodySize,
+                            color: Colors.grey[700]!,
+                            fontWeight: FontWeight.w500,
+                            fontFamily: 'PretendardBold',
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                  const SizedBox(height: 22),
-                  Row(
-                    children: [
-                      TextButton(
-                        onPressed: tutorialProvider.previous,
-                        style: TextButton.styleFrom(
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 8),
-                          minimumSize: Size.zero,
-                        ),
-                        child: StandardText(
-                          text: '이전',
-                          fontSize: buttonSize,
-                          color: Colors.grey[700]!,
-                        ),
+                ),
+                const SizedBox(height: 22),
+                Row(
+                  children: [
+                    TextButton(
+                      onPressed: tutorialProvider.previous,
+                      style: TextButton.styleFrom(
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 8),
+                        minimumSize: Size.zero,
                       ),
-                      const Spacer(),
-                      ElevatedButton(
-                        onPressed: tutorialProvider.complete,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: themeProvider.primaryColor,
-                          foregroundColor: Colors.white,
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 20, vertical: 12),
-                          minimumSize: Size.zero,
-                          shape: RoundedRectangleBorder(
-                            borderRadius:
-                                BorderRadius.circular(AppRadius.small),
+                      child: StandardText(
+                        text: '이전',
+                        fontSize: buttonSize,
+                        color: Colors.grey[700]!,
+                      ),
+                    ),
+                    // 스텝 카드와 같은 방식이다. 남는 자리를 오른쪽 묶음이
+                    // 가져가고, 글자를 키워 한 줄에 안 들어가면 아랫줄로 내린다.
+                    Expanded(
+                      child: Wrap(
+                        alignment: WrapAlignment.end,
+                        spacing: 8,
+                        runSpacing: 8,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        children: [
+                          ElevatedButton(
+                            onPressed: tutorialProvider.complete,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: themeProvider.primaryColor,
+                              foregroundColor: Colors.white,
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 20, vertical: 12),
+                              minimumSize: Size.zero,
+                              shape: RoundedRectangleBorder(
+                                borderRadius:
+                                    BorderRadius.circular(AppRadius.small),
+                              ),
+                            ),
+                            child: StandardText(
+                              text: '완료',
+                              fontSize: buttonSize,
+                              color: Colors.white,
+                            ),
                           ),
-                        ),
-                        child: StandardText(
-                          text: '완료',
-                          fontSize: buttonSize,
-                          color: Colors.white,
-                        ),
+                        ],
                       ),
-                    ],
-                  ),
-                ],
-              ),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
         ),
@@ -392,7 +430,13 @@ class _TutorialOverlayState extends State<TutorialOverlay>
     final cardWidth = isTablet ? 560.0 : size.width - 32;
     final cardLeft = size.width >= 600 ? (size.width - cardWidth) / 2 : 16.0;
     final cardMaxHeight = availableCardHeight > 0 ? availableCardHeight : 0.0;
-    final estimatedCardHeight = isTablet ? 310.0 : 230.0;
+    // 카드 높이는 그리기 전에 알 수 없어서 짐작한 값으로 자리를 잡는다.
+    // 그런데 글자 크기를 키운 기기에서는 제목과 설명이 여러 줄로 늘어나
+    // 짐작한 값보다 카드가 훨씬 커진다. 삼성 기기는 기본 글자도 크고
+    // 접근성에서 더 키우는 사용자도 많아서, 짐작을 그대로 두면 카드가
+    // 아래로 삐져나가 버튼이 하단 내비게이션에 깔린다.
+    final textScale = mediaQuery.textScaler.scale(1.0);
+    final estimatedCardHeight = (isTablet ? 310.0 : 230.0) * textScale;
     final layoutCardHeight = estimatedCardHeight > cardMaxHeight
         ? cardMaxHeight
         : estimatedCardHeight;
@@ -475,27 +519,32 @@ class _TutorialOverlayState extends State<TutorialOverlay>
           left: cardLeft,
           top: cardTop,
           width: cardWidth,
+          // 카드가 자리 잡은 곳부터 아래로 실제로 쓸 수 있는 높이로 묶는다.
+          // 예전에는 화면 전체에서 계산한 cardMaxHeight 로 묶어서, 카드가
+          // cardTop 아래로 얼마든지 자랄 수 있었다. 짐작한 높이보다 카드가
+          // 크면 그만큼 아래로 삐져나가 `이전`·`다음` 이 하단 내비게이션에
+          // 깔리거나 아예 화면 밖으로 나갔다.
           child: ConstrainedBox(
-            constraints: BoxConstraints(maxHeight: cardMaxHeight),
-            child: SingleChildScrollView(
-              child: AnimatedSwitcher(
-                duration: AppMotion.fast,
-                switchInCurve: AppMotion.enter,
-                switchOutCurve: AppMotion.exit,
-                transitionBuilder: (child, animation) {
-                  return FadeTransition(
-                    opacity: animation,
-                    child: SlideTransition(
-                      position: Tween<Offset>(
-                        begin: const Offset(0, 0.04),
-                        end: Offset.zero,
-                      ).animate(animation),
-                      child: child,
-                    ),
-                  );
-                },
-                child: _buildStepCard(tutorialProvider, themeProvider),
-              ),
+            constraints: BoxConstraints(
+              maxHeight: _cardAvailableHeight(availableBottom, cardTop),
+            ),
+            child: AnimatedSwitcher(
+              duration: AppMotion.fast,
+              switchInCurve: AppMotion.enter,
+              switchOutCurve: AppMotion.exit,
+              transitionBuilder: (child, animation) {
+                return FadeTransition(
+                  opacity: animation,
+                  child: SlideTransition(
+                    position: Tween<Offset>(
+                      begin: const Offset(0, 0.04),
+                      end: Offset.zero,
+                    ).animate(animation),
+                    child: child,
+                  ),
+                );
+              },
+              child: _buildStepCard(tutorialProvider, themeProvider),
             ),
           ),
         ),
@@ -531,44 +580,52 @@ class _TutorialOverlayState extends State<TutorialOverlay>
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildFrogSpeech(
-            themeProvider: themeProvider,
-            frogSize: frogSize,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                StandardText(
-                  text:
-                      '${tutorialProvider.currentStepIndex + 1} / ${tutorialSteps.length}',
-                  fontSize: progressSize,
-                  color: themeProvider.primaryColor,
+          // 넘치는 것은 설명 쪽이다. 카드 전체를 스크롤시키면 글자가 길 때
+          // 버튼까지 화면 밖으로 밀려나므로, 설명만 스크롤시키고 버튼 줄은
+          // 카드 아래에 붙여 둔다. 그래야 어떤 글자 크기에서도 `다음` 을
+          // 누를 수 있다.
+          Flexible(
+            child: SingleChildScrollView(
+              child: _buildFrogSpeech(
+                themeProvider: themeProvider,
+                frogSize: frogSize,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    StandardText(
+                      text:
+                          '${tutorialProvider.currentStepIndex + 1} / ${tutorialSteps.length}',
+                      fontSize: progressSize,
+                      color: themeProvider.primaryColor,
+                    ),
+                    const SizedBox(height: 8),
+                    // 숫자만으로는 얼마나 남았는지 잘 안 들어와서 막대를 함께 둔다.
+                    StepProgressBar(
+                      currentStep: tutorialProvider.currentStepIndex + 1,
+                      totalSteps: tutorialSteps.length,
+                      color: themeProvider.primaryColor,
+                      backgroundColor:
+                          themeProvider.primaryColor.withValues(alpha: 0.15),
+                      height: 3,
+                    ),
+                    const SizedBox(height: 12),
+                    StandardText(
+                      text: step.title,
+                      fontSize: titleSize,
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.w700,
+                    ),
+                    const SizedBox(height: 8),
+                    StandardText(
+                      text: step.description,
+                      fontSize: bodySize,
+                      color: Colors.grey[700]!,
+                      fontWeight: FontWeight.w500,
+                      fontFamily: 'PretendardBold',
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 8),
-                // 숫자만으로는 얼마나 남았는지 잘 안 들어와서 막대를 함께 둔다.
-                StepProgressBar(
-                  currentStep: tutorialProvider.currentStepIndex + 1,
-                  totalSteps: tutorialSteps.length,
-                  color: themeProvider.primaryColor,
-                  backgroundColor:
-                      themeProvider.primaryColor.withValues(alpha: 0.15),
-                  height: 3,
-                ),
-                const SizedBox(height: 12),
-                StandardText(
-                  text: step.title,
-                  fontSize: titleSize,
-                  color: AppColors.textPrimary,
-                  fontWeight: FontWeight.w700,
-                ),
-                const SizedBox(height: 8),
-                StandardText(
-                  text: step.description,
-                  fontSize: bodySize,
-                  color: Colors.grey[700]!,
-                  fontWeight: FontWeight.w500,
-                  fontFamily: 'PretendardBold',
-                ),
-              ],
+              ),
             ),
           ),
           const SizedBox(height: 18),
@@ -645,6 +702,15 @@ class _TutorialOverlayState extends State<TutorialOverlay>
         ],
       ),
     );
+  }
+
+  /// 카드가 [cardTop] 에 자리 잡았을 때 아래로 쓸 수 있는 높이다.
+  ///
+  /// 화면이 아주 작아 계산 결과가 0 이하로 내려가면 카드가 아예 안 그려진다.
+  /// 그럴 바에는 최소한만 확보해 두고 안에서 스크롤시키는 편이 낫다.
+  double _cardAvailableHeight(double availableBottom, double cardTop) {
+    final height = availableBottom - cardTop;
+    return height < 120.0 ? 120.0 : height;
   }
 
   double _maxBottomInset(double padding, double viewPadding, double gesture) {
