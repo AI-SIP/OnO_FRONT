@@ -61,7 +61,7 @@ class StudyRoomEmptyState extends StatelessWidget {
             const StandardText(
               text: '참여 중인 스터디룸이 없어요',
               fontSize: 18,
-              color: Colors.black87,
+              color: AppColors.textPrimary,
             ),
             SizedBox(height: screenHeight * 0.01),
             StandardText(

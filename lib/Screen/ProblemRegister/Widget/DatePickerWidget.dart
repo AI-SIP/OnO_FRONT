@@ -53,7 +53,7 @@ class DatePickerWidget extends StatelessWidget {
               text: '푼 날짜',
               fontSize: MobileFontSize.reduced(context, 16),
               fontWeight: FontWeight.w500,
-              color: Colors.black87,
+              color: AppColors.textPrimary,
             ),
           ),
           SizedBox(
@@ -92,7 +92,7 @@ class DatePickerWidget extends StatelessWidget {
                             text:
                                 '${selectedDate.year}년 ${selectedDate.month}월 ${selectedDate.day}일',
                             fontSize: MobileFontSize.reduced(context, 14),
-                            color: Colors.black87,
+                            color: AppColors.textPrimary,
                           ),
                         ),
                       ),

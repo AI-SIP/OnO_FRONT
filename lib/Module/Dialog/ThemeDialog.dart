@@ -9,6 +9,7 @@ import '../Motion/AppHaptic.dart';
 import '../Motion/PressableScale.dart';
 import '../Motion/TossDialog.dart';
 import '../Design/AppRadius.dart';
+import '../Design/AppColors.dart';
 
 class ThemeDialog extends StatefulWidget {
   @override
@@ -100,7 +101,7 @@ class _ThemeDialogState extends State<ThemeDialog> {
                         text: '테마 색상 선택',
                         fontSize: 20,
                         fontWeight: FontWeight.w600,
-                        color: Colors.black87,
+                        color: AppColors.textPrimary,
                       ),
                     ],
                   ),
@@ -110,7 +111,7 @@ class _ThemeDialogState extends State<ThemeDialog> {
                       const StandardText(
                         text: '현재 선택',
                         fontSize: 13,
-                        color: Colors.black54,
+                        color: AppColors.textSecondary,
                       ),
                       const SizedBox(width: 8),
                       Container(
@@ -127,7 +128,7 @@ class _ThemeDialogState extends State<ThemeDialog> {
                           text: _selectedColorName ?? '선택 안 됨',
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
-                          color: Colors.black87,
+                          color: AppColors.textPrimary,
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
@@ -183,7 +184,7 @@ class _ThemeDialogState extends State<ThemeDialog> {
                       child: const StandardText(
                         text: '취소',
                         fontSize: 14,
-                        color: Colors.black87,
+                        color: AppColors.textPrimary,
                       ),
                     ),
                   ),
@@ -278,7 +279,7 @@ class _ThemeDialogState extends State<ThemeDialog> {
                             text: '잠금된 테마',
                             fontSize: 18,
                             fontWeight: FontWeight.w600,
-                            color: Colors.black87,
+                            color: AppColors.textPrimary,
                           ),
                         ],
                       ),
@@ -287,7 +288,7 @@ class _ThemeDialogState extends State<ThemeDialog> {
                       StandardText(
                         text: message,
                         fontSize: 15,
-                        color: Colors.black87,
+                        color: AppColors.textPrimary,
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 24),

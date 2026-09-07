@@ -19,6 +19,7 @@ import '../../Module/Motion/AppHaptic.dart';
 import '../../Module/Motion/PressableScale.dart';
 import '../../Module/Motion/TossPageRoute.dart';
 import '../../Module/Design/AppRadius.dart';
+import '../../Module/Design/AppColors.dart';
 
 class ProblemSolveCanvasScreen extends StatefulWidget {
   final int problemId;
@@ -454,7 +455,7 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
                 text: '굵기',
                 fontSize: MobileFontSize.reduced(context, 13),
                 fontWeight: FontWeight.w600,
-                color: Colors.black87,
+                color: AppColors.textPrimary,
               ),
               const SizedBox(width: 12),
               Expanded(

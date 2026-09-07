@@ -20,6 +20,7 @@ import '../Theme/ThemeHandler.dart';
 import '../Motion/PressableScale.dart';
 import '../Motion/TossDialog.dart';
 import '../Design/AppRadius.dart';
+import '../Design/AppColors.dart';
 
 class FolderNavigationButtons extends StatefulWidget {
   final BuildContext context;
@@ -217,7 +218,7 @@ class _FolderNavigationButtonsState extends State<FolderNavigationButtons> {
                           text: '복습을 완료했나요?',
                           fontSize: 20,
                           fontWeight: FontWeight.w600,
-                          color: Colors.black87,
+                          color: AppColors.textPrimary,
                         ),
                       ],
                     ),
@@ -305,7 +306,7 @@ class _FolderNavigationButtonsState extends State<FolderNavigationButtons> {
                             child: const StandardText(
                               text: '취소',
                               fontSize: 15,
-                              color: Colors.black87,
+                              color: AppColors.textPrimary,
                             ),
                           ),
                         ),

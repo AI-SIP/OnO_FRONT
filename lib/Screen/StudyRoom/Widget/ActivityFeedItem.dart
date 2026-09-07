@@ -98,7 +98,7 @@ class ActivityFeedItem extends StatelessWidget {
                     StandardText(
                       text: feed.displayText,
                       fontSize: 14,
-                      color: Colors.black87,
+                      color: AppColors.textPrimary,
                       fontWeight: FontWeight.w600,
                       overflow: TextOverflow.ellipsis,
                       maxLines: 2,

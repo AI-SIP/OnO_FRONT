@@ -11,6 +11,7 @@ import '../../Util/AppSnackBar.dart';
 import 'Widget/StudyRoomThumbnail.dart';
 import '../../Module/Motion/TossDialog.dart';
 import '../../Module/Design/AppRadius.dart';
+import '../../Module/Design/AppColors.dart';
 
 class StudyRoomCreateScreen extends StatefulWidget {
   const StudyRoomCreateScreen({super.key});
@@ -66,7 +67,7 @@ class _StudyRoomCreateScreenState extends State<StudyRoomCreateScreen> {
                     const StandardText(
                       text: '필수 항목 누락',
                       fontSize: 18,
-                      color: Colors.black87,
+                      color: AppColors.textPrimary,
                       fontWeight: FontWeight.w700,
                     ),
                   ],
@@ -271,7 +272,7 @@ class _StudyRoomCreateScreenState extends State<StudyRoomCreateScreen> {
                                 const StandardText(
                                   text: '새 스터디룸 이름',
                                   fontSize: 16,
-                                  color: Colors.black87,
+                                  color: AppColors.textPrimary,
                                 ),
                               ],
                             ),
@@ -283,7 +284,7 @@ class _StudyRoomCreateScreenState extends State<StudyRoomCreateScreen> {
                               textInputAction: TextInputAction.done,
                               onSubmitted: (_) => _create(),
                               style: _standardStyle.copyWith(
-                                color: Colors.black87,
+                                color: AppColors.textPrimary,
                                 fontSize: 15,
                               ),
                               decoration: InputDecoration(

@@ -768,7 +768,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
             StandardText(
               text: label,
               fontSize: 14,
-              color: Colors.black87,
+              color: AppColors.textPrimary,
               fontWeight: FontWeight.w600,
             ),
           ],
@@ -920,7 +920,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                           text: '공책 편집하기',
                           fontSize: MobileFontSize.reduced(context, 20),
                           fontWeight: FontWeight.w600,
-                          color: Colors.black87,
+                          color: AppColors.textPrimary,
                         ),
                       ],
                     ),
@@ -1154,7 +1154,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                           text: dialogTitle,
                           fontSize: MobileFontSize.reduced(dialogContext, 20),
                           fontWeight: FontWeight.w600,
-                          color: Colors.black87,
+                          color: AppColors.textPrimary,
                         ),
                       ],
                     ),
@@ -1164,7 +1164,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                       controller: folderNameController,
                       autofocus: true,
                       style: standardTextStyle.copyWith(
-                        color: Colors.black87,
+                        color: AppColors.textPrimary,
                         fontSize: MobileFontSize.reduced(dialogContext, 15),
                       ),
                       decoration: InputDecoration(
@@ -1219,7 +1219,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                           child: StandardText(
                             text: '취소',
                             fontSize: MobileFontSize.reduced(dialogContext, 14),
-                            color: Colors.black87,
+                            color: AppColors.textPrimary,
                           ),
                         ),
                         const SizedBox(width: 8),
@@ -1978,7 +1978,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                       text: '삭제 확인',
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
-                      color: Colors.black87,
+                      color: AppColors.textPrimary,
                     ),
                   ],
                 ),
@@ -1987,7 +1987,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                 const StandardText(
                   text: '선택한 항목을 정말 삭제하시겠습니까?',
                   fontSize: 15,
-                  color: Colors.black87,
+                  color: AppColors.textPrimary,
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 24),
@@ -2009,7 +2009,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                         child: const StandardText(
                           text: '취소',
                           fontSize: 14,
-                          color: Colors.black87,
+                          color: AppColors.textPrimary,
                         ),
                       ),
                     ),
@@ -2240,7 +2240,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                         const StandardText(
                           text: '추천 복습 문제',
                           fontSize: 14,
-                          color: Colors.black87,
+                          color: AppColors.textPrimary,
                         ),
                         const SizedBox(width: 6),
                         Container(

@@ -174,7 +174,7 @@ class ImagePickerHandler {
                           text: '이미지 업로드',
                           fontSize: MobileFontSize.reduced(context, 18),
                           fontWeight: FontWeight.w600,
-                          color: Colors.black87,
+                          color: AppColors.textPrimary,
                         ),
                       ],
                     ),
@@ -263,7 +263,7 @@ class ImagePickerHandler {
               child: StandardText(
                 text: title,
                 fontSize: MobileFontSize.reduced(context, 16),
-                color: Colors.black87,
+                color: AppColors.textPrimary,
               ),
             ),
             Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey[400]),

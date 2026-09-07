@@ -159,7 +159,7 @@ class ProblemSolveRegisterTemplateState
                 const StandardText(
                   text: '복습 내용을 기록해보세요',
                   fontSize: 14,
-                  color: Colors.black54,
+                  color: AppColors.textSecondary,
                 ),
               ],
             ),
@@ -325,7 +325,7 @@ class ProblemSolveRegisterTemplateState
           const StandardText(
             text: '해당되는 항목을 선택해주세요 (선택사항)',
             fontSize: 13,
-            color: Colors.black54,
+            color: AppColors.textSecondary,
           ),
           const SizedBox(height: 12),
           Column(
@@ -503,7 +503,7 @@ class ProblemSolveRegisterTemplateState
             controller: _memoCtrl,
             maxLines: 5,
             style: standardTextStyle.copyWith(
-              color: Colors.black87,
+              color: AppColors.textPrimary,
               fontSize: 15,
             ),
             decoration: InputDecoration(
@@ -609,7 +609,7 @@ class ProblemSolveRegisterTemplateState
                       text: '소요 시간 입력',
                       fontSize: MobileFontSize.reduced(context, 20),
                       fontWeight: FontWeight.w600,
-                      color: Colors.black87,
+                      color: AppColors.textPrimary,
                     ),
                   ],
                 ),
@@ -617,7 +617,7 @@ class ProblemSolveRegisterTemplateState
                 const StandardText(
                   text: '분:초(예: 3:47) 또는 분(예: 17) 형식으로 입력하세요',
                   fontSize: 14,
-                  color: Colors.black54,
+                  color: AppColors.textSecondary,
                 ),
                 const SizedBox(height: 18),
                 TextField(
@@ -625,7 +625,7 @@ class ProblemSolveRegisterTemplateState
                   autofocus: true,
                   keyboardType: TextInputType.number,
                   style: standardTextStyle.copyWith(
-                    color: Colors.black87,
+                    color: AppColors.textPrimary,
                     fontSize: 15,
                   ),
                   decoration: InputDecoration(
@@ -676,7 +676,7 @@ class ProblemSolveRegisterTemplateState
                         child: StandardText(
                           text: '취소',
                           fontSize: MobileFontSize.reduced(context, 15),
-                          color: Colors.black87,
+                          color: AppColors.textPrimary,
                         ),
                       ),
                     ),
@@ -739,7 +739,7 @@ class ProblemSolveRegisterTemplateState
           text: title,
           fontSize: 16,
           fontWeight: FontWeight.w500,
-          color: Colors.black87,
+          color: AppColors.textPrimary,
         ),
       ],
     );

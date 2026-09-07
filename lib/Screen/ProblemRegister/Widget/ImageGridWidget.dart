@@ -13,6 +13,7 @@ import '../../../Module/Motion/AppHaptic.dart';
 import '../../../Module/Motion/PressableScale.dart';
 import '../../../Module/Motion/TossPageRoute.dart';
 import '../../../Module/Design/AppRadius.dart';
+import '../../../Module/Design/AppColors.dart';
 
 class ImageGridWidget extends StatelessWidget {
   final String label;
@@ -72,7 +73,7 @@ class ImageGridWidget extends StatelessWidget {
                 text: label,
                 fontSize: MobileFontSize.reduced(context, titleFontSize),
                 fontWeight: titleFontWeight,
-                color: Colors.black87,
+                color: AppColors.textPrimary,
               ),
               const SizedBox(width: 8),
               if (totalImages > 0)

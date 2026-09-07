@@ -96,7 +96,7 @@ class _SharedProblemCardState extends State<SharedProblemCard> {
                     const StandardText(
                       text: '공유 취소',
                       fontSize: 18,
-                      color: Colors.black87,
+                      color: AppColors.textPrimary,
                       fontWeight: FontWeight.w700,
                     ),
                   ],
@@ -131,7 +131,7 @@ class _SharedProblemCardState extends State<SharedProblemCard> {
                         child: const StandardText(
                           text: '닫기',
                           fontSize: 14,
-                          color: Colors.black87,
+                          color: AppColors.textPrimary,
                         ),
                       ),
                     ),
@@ -209,7 +209,7 @@ class _SharedProblemCardState extends State<SharedProblemCard> {
                     const StandardText(
                       text: '공유 문제 관리',
                       fontSize: 18,
-                      color: Colors.black87,
+                      color: AppColors.textPrimary,
                       fontWeight: FontWeight.w700,
                     ),
                   ],
@@ -263,7 +263,7 @@ class _SharedProblemCardState extends State<SharedProblemCard> {
                     child: const StandardText(
                       text: '닫기',
                       fontSize: 14,
-                      color: Colors.black87,
+                      color: AppColors.textPrimary,
                     ),
                   ),
                 ),
@@ -328,7 +328,7 @@ class _SharedProblemCardState extends State<SharedProblemCard> {
                           StandardText(
                             text: p.sharedByName,
                             fontSize: 14,
-                            color: Colors.black87,
+                            color: AppColors.textPrimary,
                           ),
                           StandardText(
                             text: _timeAgo(p.sharedAt),
@@ -369,7 +369,7 @@ class _SharedProblemCardState extends State<SharedProblemCard> {
                 child: StandardText(
                   text: p.reference,
                   fontSize: 14,
-                  color: Colors.black87,
+                  color: AppColors.textPrimary,
                   fontWeight: FontWeight.w700,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,

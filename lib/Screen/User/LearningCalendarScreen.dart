@@ -170,7 +170,7 @@ class _LearningCalendarScreenState extends State<LearningCalendarScreen> {
           fontSize: 18,
           color: themeProvider.primaryColor,
         ),
-        iconTheme: const IconThemeData(color: Colors.black87),
+        iconTheme: const IconThemeData(color: AppColors.textPrimary),
       ),
       body: _isLoading
           ? const SkeletonList(
@@ -227,7 +227,7 @@ class _LearningCalendarScreenState extends State<LearningCalendarScreen> {
                   StandardText(
                       text: '$_year년 $_month월',
                       fontSize: 16,
-                      color: Colors.black87),
+                      color: AppColors.textPrimary),
                   const SizedBox(width: 4),
                   Icon(Icons.arrow_drop_down,
                       size: 18, color: Colors.grey[600]),
@@ -275,7 +275,7 @@ class _LearningCalendarScreenState extends State<LearningCalendarScreen> {
                         StandardText(
                             text: '$pickerYear년',
                             fontSize: 16,
-                            color: Colors.black87),
+                            color: AppColors.textPrimary),
                         IconButton(
                           icon: Icon(
                             Icons.chevron_right,
@@ -468,7 +468,8 @@ class _LearningCalendarScreenState extends State<LearningCalendarScreen> {
           children: [
             StandardText(text: value, fontSize: 15, color: primaryColor),
             const SizedBox(height: 2),
-            StandardText(text: label, fontSize: 10, color: Colors.black38),
+            StandardText(
+                text: label, fontSize: 10, color: AppColors.textTertiary),
           ],
         ),
       ),
@@ -540,7 +541,7 @@ class _LearningCalendarScreenState extends State<LearningCalendarScreen> {
                 StandardText(
                   text: '복습한 항목',
                   fontSize: 11,
-                  color: Colors.black45,
+                  color: AppColors.textTertiary,
                 ),
                 const SizedBox(height: 6),
                 ...record.reviewedItems.map((item) => Padding(
@@ -577,12 +578,12 @@ class _LearningCalendarScreenState extends State<LearningCalendarScreen> {
       children: [
         Row(
           children: [
-            Icon(Icons.edit_note, size: 15, color: Colors.black45),
+            Icon(Icons.edit_note, size: 15, color: AppColors.textTertiary),
             const SizedBox(width: 6),
             StandardText(
               text: '하루 기록',
               fontSize: 12,
-              color: Colors.black45,
+              color: AppColors.textTertiary,
             ),
           ],
         ),
@@ -591,7 +592,7 @@ class _LearningCalendarScreenState extends State<LearningCalendarScreen> {
           controller: _diaryController,
           maxLines: 4,
           maxLength: 300,
-          style: const TextStyle(fontSize: 13, color: Colors.black87),
+          style: const TextStyle(fontSize: 13, color: AppColors.textPrimary),
           decoration: InputDecoration(
             hintText: '오늘 하루를 기록해보세요...',
             hintStyle: TextStyle(fontSize: 13, color: Colors.grey[400]),

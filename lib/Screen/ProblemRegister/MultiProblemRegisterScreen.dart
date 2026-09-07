@@ -181,7 +181,7 @@ class _MultiProblemRegisterScreenState
           _step == _BatchRegisterStep.selectImages
               ? Icons.close
               : Icons.arrow_back,
-          color: Colors.black87,
+          color: AppColors.textPrimary,
         ),
         onPressed: _isSubmitting
             ? null
@@ -257,7 +257,7 @@ class _MultiProblemRegisterScreenState
                   child: StandardText(
                     text: '선택한 이미지 ${_problemImages.length}장',
                     fontSize: MobileFontSize.reduced(context, 15),
-                    color: Colors.black87,
+                    color: AppColors.textPrimary,
                     fontWeight: FontWeight.w700,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -355,7 +355,7 @@ class _MultiProblemRegisterScreenState
             StandardText(
               text: '갤러리를 여는 중입니다.',
               fontSize: MobileFontSize.reduced(context, 16),
-              color: Colors.black87,
+              color: AppColors.textPrimary,
               fontWeight: FontWeight.w600,
               textAlign: TextAlign.center,
             ),
@@ -406,7 +406,7 @@ class _MultiProblemRegisterScreenState
                     text: '등록할 문제 이미지를 한 번에 선택해 주세요.',
                     fontSize:
                         MobileFontSize.reduced(context, isTight ? 15 : 17),
-                    color: Colors.black87,
+                    color: AppColors.textPrimary,
                     fontWeight: FontWeight.w600,
                     textAlign: TextAlign.center,
                   ),
@@ -600,7 +600,7 @@ class _MultiProblemRegisterScreenState
                     StandardText(
                       text: '내용 확인',
                       fontSize: MobileFontSize.reduced(context, 15),
-                      color: Colors.black87,
+                      color: AppColors.textPrimary,
                       fontWeight: FontWeight.w700,
                     ),
                     const SizedBox(width: 8),
@@ -669,7 +669,7 @@ class _MultiProblemRegisterScreenState
             child: StandardText(
               text: text,
               fontSize: MobileFontSize.reduced(context, 11),
-              color: Colors.black87,
+              color: AppColors.textPrimary,
               fontWeight: FontWeight.w600,
               overflow: TextOverflow.ellipsis,
             ),
@@ -815,7 +815,7 @@ class _MultiProblemRegisterScreenState
                     StandardText(
                       text: _resolveDraftTitle(draft),
                       fontSize: MobileFontSize.reduced(context, 16),
-                      color: Colors.black87,
+                      color: AppColors.textPrimary,
                       fontWeight: FontWeight.w700,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -943,7 +943,7 @@ class _MultiProblemRegisterScreenState
             child: StandardText(
               text: text,
               fontSize: MobileFontSize.reduced(context, 12),
-              color: Colors.black87,
+              color: AppColors.textPrimary,
               fontWeight: FontWeight.w600,
               overflow: TextOverflow.ellipsis,
             ),
@@ -1132,7 +1132,7 @@ class _MultiProblemRegisterScreenState
                 text: '이 오답노트들로 복습 세트 자동 생성',
                 fontSize: MobileFontSize.reduced(context, 14),
                 fontWeight: FontWeight.w500,
-                color: Colors.black87,
+                color: AppColors.textPrimary,
               ),
             ),
             Checkbox(
@@ -1237,7 +1237,7 @@ class _MultiProblemRegisterScreenState
                 text: '태그',
                 fontSize: MobileFontSize.reduced(context, 16),
                 fontWeight: FontWeight.w500,
-                color: Colors.black87,
+                color: AppColors.textPrimary,
               ),
               const SizedBox(width: 8),
               StandardText(
@@ -1648,7 +1648,7 @@ class _MultiProblemRegisterScreenState
                   leading: IconButton(
                     icon: const Icon(
                       Icons.arrow_back,
-                      color: Colors.black87,
+                      color: AppColors.textPrimary,
                     ),
                     onPressed: () => Navigator.pop(editorContext),
                   ),
@@ -1719,7 +1719,7 @@ class _MultiProblemRegisterScreenState
                                   text: '${currentIndex + 1}/${_drafts.length}',
                                   fontSize:
                                       MobileFontSize.reduced(editorContext, 14),
-                                  color: Colors.black87,
+                                  color: AppColors.textPrimary,
                                   fontWeight: FontWeight.w700,
                                 ),
                               ),

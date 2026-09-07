@@ -13,6 +13,7 @@ import 'TutorialTargets.dart';
 import '../../Module/Motion/AppMotion.dart';
 import '../../Module/Motion/StepProgressBar.dart';
 import '../../Module/Design/AppRadius.dart';
+import '../../Module/Design/AppColors.dart';
 
 class TutorialOverlay extends StatefulWidget {
   final TutorialTargets targets;
@@ -181,7 +182,7 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
                         StandardText(
                           text: 'OnO를 빠르게 둘러볼까요?',
                           fontSize: titleSize,
-                          color: Colors.black87,
+                          color: AppColors.textPrimary,
                           fontWeight: FontWeight.w700,
                         ),
                         const SizedBox(height: 14),
@@ -279,7 +280,7 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
                         StandardText(
                           text: '좋아요, 이제 OnO와 함께 시작해봐요!',
                           fontSize: titleSize,
-                          color: Colors.black87,
+                          color: AppColors.textPrimary,
                           fontWeight: FontWeight.w700,
                         ),
                         const SizedBox(height: 14),
@@ -506,7 +507,7 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
                 StandardText(
                   text: step.title,
                   fontSize: titleSize,
-                  color: Colors.black87,
+                  color: AppColors.textPrimary,
                   fontWeight: FontWeight.w700,
                 ),
                 const SizedBox(height: 8),

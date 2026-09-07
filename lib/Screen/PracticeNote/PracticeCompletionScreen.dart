@@ -129,7 +129,7 @@ class _PracticeCompletionScreenState extends State<PracticeCompletionScreen> {
                 formatter: (value) => '총 ${value.round()}문제를 풀었어요.',
                 fontSize: 16,
                 fontWeight: FontWeight.normal,
-                color: Colors.black54,
+                color: AppColors.textSecondary,
                 textAlign: TextAlign.center,
               ),
             ),
@@ -155,7 +155,7 @@ class _PracticeCompletionScreenState extends State<PracticeCompletionScreen> {
           text: '이번 복습 어땠나요?',
           fontSize: MobileFontSize.reduced(context, 16),
           fontWeight: FontWeight.bold,
-          color: Colors.black87,
+          color: AppColors.textPrimary,
         ),
         const SizedBox(height: 12),
         SizedBox(

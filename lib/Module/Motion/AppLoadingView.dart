@@ -5,6 +5,7 @@ import '../Text/StandardText.dart';
 import 'AnimatedGauge.dart';
 import 'AppMotion.dart';
 import '../Design/AppRadius.dart';
+import '../Design/AppColors.dart';
 
 /// 기다리는 동안 보여 주는 화면을 한 가지로 맞춘 것이다.
 ///
@@ -90,7 +91,7 @@ class AppLoadingView extends StatelessWidget {
         StandardText(
           text: message,
           fontSize: 15,
-          color: Colors.black87,
+          color: AppColors.textPrimary,
           fontWeight: FontWeight.w600,
           textAlign: TextAlign.center,
         ),

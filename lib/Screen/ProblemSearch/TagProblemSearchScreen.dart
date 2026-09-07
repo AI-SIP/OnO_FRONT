@@ -372,7 +372,7 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
         onSubmitted: (value) => _searchByTitle(value.trim(), isInitial: true),
         style: baseTextStyle.copyWith(
           fontSize: 14,
-          color: Colors.black87,
+          color: AppColors.textPrimary,
           fontWeight: FontWeight.w500,
         ),
         decoration: InputDecoration(

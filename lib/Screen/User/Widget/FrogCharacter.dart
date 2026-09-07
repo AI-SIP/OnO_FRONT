@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../../Module/Text/StandardText.dart';
 import '../../../Module/Design/AppRadius.dart';
+import '../../../Module/Design/AppColors.dart';
 
 class FrogCharacter extends StatefulWidget {
   final int level;
@@ -158,7 +159,7 @@ class _FrogCharacterState extends State<FrogCharacter>
                       child: StandardText(
                         text: _displayMessage!,
                         fontSize: 12,
-                        color: Colors.black87,
+                        color: AppColors.textPrimary,
                         textAlign: TextAlign.center,
                       ),
                     ),

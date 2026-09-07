@@ -30,6 +30,7 @@ import 'Widget/StreakCard.dart';
 import 'Widget/UserLevelCard.dart';
 import '../../Module/Motion/TossDialog.dart';
 import '../../Module/Design/AppRadius.dart';
+import '../../Module/Design/AppColors.dart';
 
 class SettingScreen extends StatefulWidget {
   final TutorialTargets? tutorialTargets;
@@ -277,7 +278,7 @@ class _SettingScreenState extends State<SettingScreen> {
                         StandardText(
                           text: compact ? '학습\n리포트' : '학습 리포트',
                           fontSize: 15,
-                          color: Colors.black87,
+                          color: AppColors.textPrimary,
                           fontWeight: FontWeight.w700,
                         ),
                         if (!compact) ...[
@@ -400,7 +401,7 @@ class _SettingScreenState extends State<SettingScreen> {
                                     child: StandardText(
                                       text: counts[index].toString(),
                                       fontSize: 12,
-                                      color: Colors.black87,
+                                      color: AppColors.textPrimary,
                                       fontWeight: FontWeight.w700,
                                       fontFamily: 'PretendardBold',
                                     ),
@@ -476,7 +477,7 @@ class _MyPageSettingsScreenState extends State<_MyPageSettingsScreen> {
             const StandardText(
               text: '프로필 사진 변경',
               fontSize: 16,
-              color: Colors.black87,
+              color: AppColors.textPrimary,
               fontWeight: FontWeight.w700,
             ),
             const SizedBox(height: 16),
@@ -525,7 +526,8 @@ class _MyPageSettingsScreenState extends State<_MyPageSettingsScreen> {
           children: [
             Icon(icon, size: 20, color: color),
             const SizedBox(width: 12),
-            StandardText(text: label, fontSize: 15, color: Colors.black87),
+            StandardText(
+                text: label, fontSize: 15, color: AppColors.textPrimary),
           ],
         ),
       ),
@@ -696,7 +698,7 @@ class _MyPageSettingsScreenState extends State<_MyPageSettingsScreen> {
                     StandardText(
                       text: currentName,
                       fontSize: 15,
-                      color: Colors.black87,
+                      color: AppColors.textPrimary,
                       fontWeight: FontWeight.w700,
                       overflow: TextOverflow.ellipsis,
                       maxLines: 1,
@@ -938,7 +940,7 @@ class _NameChangeDialogState extends State<_NameChangeDialog> {
       title: const StandardText(
         text: '이름 변경',
         fontSize: 18,
-        color: Colors.black87,
+        color: AppColors.textPrimary,
         fontWeight: FontWeight.w700,
       ),
       content: SizedBox(
@@ -949,7 +951,7 @@ class _NameChangeDialogState extends State<_NameChangeDialog> {
           autofocus: true,
           maxLength: 20,
           style: const StandardText(text: '').getTextStyle().copyWith(
-                color: Colors.black87,
+                color: AppColors.textPrimary,
                 fontSize: 14,
               ),
           decoration: InputDecoration(
@@ -1069,7 +1071,7 @@ Widget _buildTutorialReplaySection({
                   StandardText(
                     text: '튜토리얼 다시 보기',
                     fontSize: 14,
-                    color: Colors.black87,
+                    color: AppColors.textPrimary,
                   ),
                   SizedBox(height: 3),
                   StandardText(
@@ -1126,7 +1128,7 @@ void _showConfirmationDialog(BuildContext context, String title, String message,
                     text: title,
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
-                    color: Colors.black87,
+                    color: AppColors.textPrimary,
                   ),
                 ],
               ),
@@ -1134,7 +1136,7 @@ void _showConfirmationDialog(BuildContext context, String title, String message,
               StandardText(
                 text: message,
                 fontSize: 15,
-                color: Colors.black87,
+                color: AppColors.textPrimary,
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 24),
@@ -1156,7 +1158,7 @@ void _showConfirmationDialog(BuildContext context, String title, String message,
                       child: const StandardText(
                         text: '취소',
                         fontSize: 14,
-                        color: Colors.black87,
+                        color: AppColors.textPrimary,
                       ),
                     ),
                   ),

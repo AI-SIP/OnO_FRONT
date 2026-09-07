@@ -195,7 +195,7 @@ class _ProblemPickerScreenState extends State<ProblemPickerScreen> {
                     const StandardText(
                       text: '이미 공유된 문제',
                       fontSize: 18,
-                      color: Colors.black87,
+                      color: AppColors.textPrimary,
                       fontWeight: FontWeight.w700,
                     ),
                   ],
@@ -284,7 +284,7 @@ class _ProblemPickerScreenState extends State<ProblemPickerScreen> {
                         child: StandardText(
                           text: '문제를 공유할까요?',
                           fontSize: 17,
-                          color: Colors.black87,
+                          color: AppColors.textPrimary,
                           overflow: TextOverflow.ellipsis,
                           maxLines: 1,
                         ),
@@ -336,7 +336,7 @@ class _ProblemPickerScreenState extends State<ProblemPickerScreen> {
                     maxLines: 2,
                     style: const TextStyle(
                       fontSize: 13,
-                      color: Colors.black87,
+                      color: AppColors.textPrimary,
                       fontWeight: FontWeight.w500,
                       fontFamily: 'Pretendard',
                     ),
@@ -464,7 +464,7 @@ class _ProblemPickerScreenState extends State<ProblemPickerScreen> {
                 StandardText(
                   text: value,
                   fontSize: 13,
-                  color: Colors.black87,
+                  color: AppColors.textPrimary,
                   overflow: TextOverflow.ellipsis,
                   maxLines: maxLines,
                 ),
@@ -520,7 +520,7 @@ class _ProblemPickerScreenState extends State<ProblemPickerScreen> {
         backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.close, color: Colors.black87),
+          icon: const Icon(Icons.close, color: AppColors.textPrimary),
           onPressed: () => Navigator.pop(context),
         ),
         title: Column(
@@ -530,7 +530,7 @@ class _ProblemPickerScreenState extends State<ProblemPickerScreen> {
             const StandardText(
               text: '공유할 문제 선택',
               fontSize: 15,
-              color: Colors.black87,
+              color: AppColors.textPrimary,
             ),
             if (roomName != null && roomName.isNotEmpty)
               StandardText(

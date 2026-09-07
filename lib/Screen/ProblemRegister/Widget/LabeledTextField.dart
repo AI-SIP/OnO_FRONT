@@ -64,7 +64,7 @@ class LabeledTextField extends StatelessWidget {
                     text: label,
                     fontSize: MobileFontSize.reduced(context, 16),
                     fontWeight: FontWeight.w500,
-                    color: Colors.black87,
+                    color: AppColors.textPrimary,
                   ),
                   if (showClearButton) ...[
                     const Spacer(),
@@ -93,7 +93,7 @@ class LabeledTextField extends StatelessWidget {
                 controller: controller,
                 onChanged: onChanged,
                 style: standardTextStyle.copyWith(
-                  color: Colors.black87,
+                  color: AppColors.textPrimary,
                   fontSize: MobileFontSize.reduced(context, 15),
                 ),
                 decoration: InputDecoration(

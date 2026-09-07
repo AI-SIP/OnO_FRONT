@@ -90,7 +90,7 @@ class WeeklyReportSheet extends StatelessWidget {
                           const StandardText(
                             text: '주간 리포트',
                             fontSize: 18,
-                            color: Colors.black87,
+                            color: AppColors.textPrimary,
                           ),
                           StandardText(
                             text: '지난 7일 활동 요약',
@@ -171,7 +171,7 @@ class WeeklyReportSheet extends StatelessWidget {
                           child: StandardText(
                             text: report.cheerMessage,
                             fontSize: 14,
-                            color: Colors.black87,
+                            color: AppColors.textPrimary,
                             fontWeight: FontWeight.normal,
                             fontFamily: 'PretendardLight',
                           ),
@@ -288,7 +288,7 @@ class _StatCard extends StatelessWidget {
                 StandardText(
                   text: value,
                   fontSize: 16,
-                  color: Colors.black87,
+                  color: AppColors.textPrimary,
                 ),
               ],
             ),
@@ -349,7 +349,7 @@ class _MiniStat extends StatelessWidget {
           StandardText(
             text: value,
             fontSize: 16,
-            color: Colors.black87,
+            color: AppColors.textPrimary,
           ),
         ],
       ),

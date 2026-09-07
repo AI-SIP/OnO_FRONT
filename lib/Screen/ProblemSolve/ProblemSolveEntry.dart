@@ -9,6 +9,7 @@ import '../../Module/Motion/TossPageRoute.dart';
 import '../../Module/Motion/PressableScale.dart';
 import '../../Module/Motion/AppMotion.dart';
 import '../../Module/Design/AppRadius.dart';
+import '../../Module/Design/AppColors.dart';
 
 class ProblemSolveEntry {
   static Future<bool?> open({
@@ -133,7 +134,7 @@ class _ProblemSolveModeSheet extends StatelessWidget {
                 text: '다시 풀기 방식 선택',
                 fontSize: MobileFontSize.reduced(context, 20),
                 fontWeight: FontWeight.w600,
-                color: Colors.black87,
+                color: AppColors.textPrimary,
               ),
             ],
           ),

@@ -392,7 +392,7 @@ class _ProblemSolveCard extends StatelessWidget {
                                 text: '$index회차',
                                 fontSize: MobileFontSize.reduced(context, 16),
                                 fontWeight: FontWeight.bold,
-                                color: Colors.black87,
+                                color: AppColors.textPrimary,
                               ),
                               const SizedBox(width: 8),
                               Container(
@@ -503,7 +503,7 @@ class _ProblemSolveCard extends StatelessWidget {
                   text: '개선된 점',
                   fontSize: MobileFontSize.reduced(context, 15),
                   fontWeight: FontWeight.w500,
-                  color: Colors.black87,
+                  color: AppColors.textPrimary,
                 ),
               ],
             ),
@@ -524,7 +524,7 @@ class _ProblemSolveCard extends StatelessWidget {
                       child: StandardLightText(
                         text: improvement.description,
                         fontSize: MobileFontSize.reduced(context, 14),
-                        color: Colors.black87,
+                        color: AppColors.textPrimary,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -555,7 +555,7 @@ class _ProblemSolveCard extends StatelessWidget {
                   text: '복습 메모',
                   fontSize: MobileFontSize.reduced(context, 15),
                   fontWeight: FontWeight.w500,
-                  color: Colors.black87,
+                  color: AppColors.textPrimary,
                 ),
               ],
             ),
@@ -571,7 +571,7 @@ class _ProblemSolveCard extends StatelessWidget {
               child: UnderlinedText(
                 text: solve.reflection!,
                 fontSize: MobileFontSize.reduced(context, 16),
-                color: Colors.black87,
+                color: AppColors.textPrimary,
               ),
             ),
             const SizedBox(height: 20),
@@ -597,7 +597,7 @@ class _ProblemSolveCard extends StatelessWidget {
                   text: '풀이 이미지',
                   fontSize: MobileFontSize.reduced(context, 15),
                   fontWeight: FontWeight.w500,
-                  color: Colors.black87,
+                  color: AppColors.textPrimary,
                 ),
                 const Spacer(),
                 Container(
@@ -643,7 +643,7 @@ class _ProblemSolveCard extends StatelessWidget {
         StandardText(
           text: value,
           fontSize: MobileFontSize.reduced(context, 14),
-          color: Colors.black87,
+          color: AppColors.textPrimary,
         ),
       ],
     );
@@ -683,7 +683,7 @@ class _ProblemSolveCard extends StatelessWidget {
                     text: '복습 기록 관리',
                     fontSize: MobileFontSize.reduced(parentContext, 18),
                     fontWeight: FontWeight.w600,
-                    color: Colors.black87,
+                    color: AppColors.textPrimary,
                   ),
                 ],
               ),
@@ -770,7 +770,7 @@ class _ProblemSolveCard extends StatelessWidget {
                   child: StandardText(
                     text: '취소',
                     fontSize: MobileFontSize.reduced(parentContext, 15),
-                    color: Colors.black87,
+                    color: AppColors.textPrimary,
                   ),
                 ),
               ),
@@ -815,7 +815,7 @@ class _ProblemSolveCard extends StatelessWidget {
                     text: '삭제 확인',
                     fontSize: MobileFontSize.reduced(parentContext, 18),
                     fontWeight: FontWeight.w600,
-                    color: Colors.black87,
+                    color: AppColors.textPrimary,
                   ),
                 ],
               ),
@@ -824,7 +824,7 @@ class _ProblemSolveCard extends StatelessWidget {
               StandardText(
                 text: '이 복습 기록을 정말 삭제하시겠습니까?',
                 fontSize: MobileFontSize.reduced(parentContext, 15),
-                color: Colors.black87,
+                color: AppColors.textPrimary,
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 24),
@@ -845,7 +845,7 @@ class _ProblemSolveCard extends StatelessWidget {
                       child: StandardText(
                         text: '취소',
                         fontSize: MobileFontSize.reduced(parentContext, 14),
-                        color: Colors.black87,
+                        color: AppColors.textPrimary,
                       ),
                     ),
                   ),
@@ -988,7 +988,7 @@ class _TabletSolveListItem extends StatelessWidget {
                         text: '$index회차',
                         fontSize: MobileFontSize.reduced(context, 14),
                         fontWeight: FontWeight.bold,
-                        color: Colors.black87,
+                        color: AppColors.textPrimary,
                       ),
                       const SizedBox(width: 6),
                       Container(

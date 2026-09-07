@@ -6,6 +6,7 @@ import '../../../Module/Text/StandardText.dart';
 import '../../../Module/Theme/ThemeHandler.dart';
 import '../../../Module/User/ProfileAvatar.dart';
 import '../../../Module/Design/AppRadius.dart';
+import '../../../Module/Design/AppColors.dart';
 
 class MemberRankCard extends StatelessWidget {
   final int rank;
@@ -96,7 +97,7 @@ class MemberRankCard extends StatelessWidget {
               child: StandardText(
                 text: m.name,
                 fontSize: 15,
-                color: Colors.black87,
+                color: AppColors.textPrimary,
                 overflow: TextOverflow.ellipsis,
               ),
             ),

@@ -152,7 +152,7 @@ class ChallengeCard extends StatelessWidget {
                     StandardText(
                       text: c.title,
                       fontSize: 15,
-                      color: Colors.black87,
+                      color: AppColors.textPrimary,
                       fontWeight: FontWeight.w700,
                       overflow: TextOverflow.ellipsis,
                       maxLines: 1,
@@ -254,7 +254,7 @@ class ChallengeCard extends StatelessWidget {
                     const StandardText(
                       text: '챌린지 삭제',
                       fontSize: 18,
-                      color: Colors.black87,
+                      color: AppColors.textPrimary,
                       fontWeight: FontWeight.w700,
                     ),
                   ],
@@ -289,7 +289,7 @@ class ChallengeCard extends StatelessWidget {
                         child: const StandardText(
                           text: '취소',
                           fontSize: 14,
-                          color: Colors.black87,
+                          color: AppColors.textPrimary,
                         ),
                       ),
                     ),

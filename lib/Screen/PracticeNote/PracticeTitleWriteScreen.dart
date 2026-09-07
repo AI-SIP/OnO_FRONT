@@ -216,7 +216,7 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
                       text: '경고',
                       fontSize: MobileFontSize.reduced(context, 18),
                       fontWeight: FontWeight.w600,
-                      color: Colors.black87,
+                      color: AppColors.textPrimary,
                     ),
                   ],
                 ),
@@ -225,7 +225,7 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
                 StandardText(
                   text: '제목을 입력해 주세요!',
                   fontSize: MobileFontSize.reduced(context, 15),
-                  color: Colors.black87,
+                  color: AppColors.textPrimary,
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 24),
@@ -356,7 +356,7 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
               text: '복습 세트 제목',
               fontSize: 16,
               fontWeight: FontWeight.w500,
-              color: Colors.black87,
+              color: AppColors.textPrimary,
             ),
           ],
         ),
@@ -364,7 +364,7 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
         TextField(
           controller: _titleController,
           style: standardTextStyle.copyWith(
-            color: Colors.black87,
+            color: AppColors.textPrimary,
             fontSize: 15,
           ),
           decoration: InputDecoration(
@@ -495,7 +495,7 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
               text: '복습 주기 알림',
               fontSize: 16,
               fontWeight: FontWeight.w500,
-              color: Colors.black87,
+              color: AppColors.textPrimary,
             ),
           ],
         ),
@@ -517,7 +517,7 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
                     const StandardText(
                       text: '알림 사용',
                       fontSize: 15,
-                      color: Colors.black87,
+                      color: AppColors.textPrimary,
                     ),
                     Transform.scale(
                       scale: 0.8,
@@ -543,7 +543,7 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
                       const StandardText(
                         text: '반복 주기',
                         fontSize: 14,
-                        color: Colors.black54,
+                        color: AppColors.textSecondary,
                         fontWeight: FontWeight.w500,
                       ),
                       const SizedBox(height: 12),
@@ -575,7 +575,7 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
                         const StandardText(
                           text: '요일 선택',
                           fontSize: 14,
-                          color: Colors.black54,
+                          color: AppColors.textSecondary,
                           fontWeight: FontWeight.w500,
                         ),
                         const SizedBox(height: 12),
@@ -634,7 +634,7 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
                       const StandardText(
                         text: '알림 시각',
                         fontSize: 14,
-                        color: Colors.black54,
+                        color: AppColors.textSecondary,
                         fontWeight: FontWeight.w500,
                       ),
                       const SizedBox(height: 12),
@@ -663,7 +663,7 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
                                   StandardText(
                                     text: _notifyTime.format(context),
                                     fontSize: 15,
-                                    color: Colors.black87,
+                                    color: AppColors.textPrimary,
                                   ),
                                 ],
                               ),
@@ -780,7 +780,7 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
                         text: '알림 시각 선택',
                         fontSize: MobileFontSize.reduced(context, 18),
                         fontWeight: FontWeight.w600,
-                        color: Colors.black87,
+                        color: AppColors.textPrimary,
                       ),
                     ],
                   ),

@@ -225,7 +225,7 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
                     StandardText(
                       text: title,
                       fontSize: 18,
-                      color: Colors.black87,
+                      color: AppColors.textPrimary,
                       fontWeight: FontWeight.w700,
                     ),
                   ],
@@ -260,7 +260,7 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
                         child: const StandardText(
                           text: '취소',
                           fontSize: 14,
-                          color: Colors.black87,
+                          color: AppColors.textPrimary,
                         ),
                       ),
                     ),
@@ -496,7 +496,7 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
               child: StandardText(
                 text: room.name,
                 fontSize: 17,
-                color: Colors.black87,
+                color: AppColors.textPrimary,
                 fontWeight: FontWeight.w700,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -627,7 +627,7 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
                                   const StandardText(
                                     text: '아직 챌린지가 없어요',
                                     fontSize: 16,
-                                    color: Colors.black87,
+                                    color: AppColors.textPrimary,
                                   ),
                                   const SizedBox(height: 6),
                                   StandardText(
@@ -1015,7 +1015,7 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
                       child: StandardText(
                         text: '멤버 관리',
                         fontSize: 18,
-                        color: Colors.black87,
+                        color: AppColors.textPrimary,
                       ),
                     ),
                   ],
@@ -1064,7 +1064,7 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
                                         child: StandardText(
                                           text: member.name,
                                           fontSize: 14,
-                                          color: Colors.black87,
+                                          color: AppColors.textPrimary,
                                           overflow: TextOverflow.ellipsis,
                                         ),
                                       ),

@@ -8,6 +8,7 @@ import '../Theme/ThemeHandler.dart';
 import '../Motion/TossPageRoute.dart';
 import '../Motion/PressableScale.dart';
 import '../Design/AppRadius.dart';
+import '../Design/AppColors.dart';
 
 class CameraHandler {
   CameraController? _controller;
@@ -149,7 +150,7 @@ class _CameraScreenState extends State<CameraScreen> {
                       ),
                       child: const Icon(
                         Icons.close_rounded,
-                        color: Colors.black87,
+                        color: AppColors.textPrimary,
                         size: 22,
                       ),
                     ),
@@ -180,7 +181,7 @@ class _CameraScreenState extends State<CameraScreen> {
                           const Expanded(
                             child: StandardText(
                               text: '이미지를 촬영해주세요!',
-                              color: Colors.black87,
+                              color: AppColors.textPrimary,
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
                               overflow: TextOverflow.ellipsis,

@@ -185,6 +185,10 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
         );
 
     return ListView(
+      // 화면 밖 카드를 미리 만들어 두면 스크롤해서 닿기도 전에 막대가 다
+      // 자라 버린다. 도달할 때 만들어지도록 미리 만드는 범위를 없앤다.
+      // 카드가 열 개 남짓이라 이렇게 해도 스크롤이 무거워지지 않는다.
+      cacheExtent: 0,
       padding: const EdgeInsets.fromLTRB(16, 18, 16, 30),
       children: [
         appear(_buildSummaryCard(themeProvider, viewData, comparison)),

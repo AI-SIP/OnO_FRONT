@@ -7,6 +7,7 @@ import '../../../Module/Text/StandardText.dart';
 import '../../../Module/Theme/ThemeHandler.dart';
 import 'FrogCharacter.dart';
 import '../../../Module/Design/AppRadius.dart';
+import '../../../Module/Design/AppColors.dart';
 
 class UserLevelCard extends StatelessWidget {
   final UserInfoModel? userInfo;
@@ -188,7 +189,7 @@ class UserLevelCard extends StatelessWidget {
         StandardText(
           text: '학습 레벨',
           fontSize: isTablet ? 16.0 : 14.0,
-          color: Colors.black87,
+          color: AppColors.textPrimary,
         ),
         const SizedBox(height: 8),
         AnimatedCircularGauge(
@@ -210,7 +211,7 @@ class UserLevelCard extends StatelessWidget {
                 value: currentPoint,
                 formatter: (value) => '${value.round()}/$requiredPoint',
                 fontSize: isTablet ? 11.0 : 9.0,
-                color: Colors.black45,
+                color: AppColors.textTertiary,
               ),
             ],
           ),
@@ -254,7 +255,7 @@ class UserLevelCard extends StatelessWidget {
           child: StandardText(
             text: category,
             fontSize: labelFontSize,
-            color: Colors.black87,
+            color: AppColors.textPrimary,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),

@@ -11,6 +11,7 @@ import 'Widget/DateRowWidget.dart';
 import 'Widget/ImageSection.dart';
 import 'Widget/RepeatSectionV2.dart';
 import '../../Module/Design/AppRadius.dart';
+import '../../Module/Design/AppColors.dart';
 
 class ProblemDetailTemplateV2 extends StatefulWidget {
   final ProblemModel problemModel;
@@ -254,7 +255,7 @@ class _ProblemDetailTemplateV2State extends State<ProblemDetailTemplateV2>
           HandWriteText(
             text: widget.problemModel.memo!,
             fontSize: 16,
-            color: Colors.black87,
+            color: AppColors.textPrimary,
           ),
         ],
       ),

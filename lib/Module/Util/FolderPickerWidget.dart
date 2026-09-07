@@ -90,7 +90,7 @@ class _FolderPickerWidgetState extends State<FolderPickerWidget> {
                 text: '공책 선택',
                 fontSize: MobileFontSize.reduced(context, 16),
                 fontWeight: FontWeight.w500,
-                color: Colors.black87,
+                color: AppColors.textPrimary,
               ),
             ),
             SizedBox(
@@ -134,7 +134,7 @@ class _FolderPickerWidgetState extends State<FolderPickerWidget> {
               text: '공책 선택',
               fontSize: MobileFontSize.reduced(context, 16),
               fontWeight: FontWeight.w500,
-              color: Colors.black87,
+              color: AppColors.textPrimary,
             ),
           ),
           SizedBox(
@@ -166,7 +166,7 @@ class _FolderPickerWidgetState extends State<FolderPickerWidget> {
                         child: StandardText(
                           text: name,
                           fontSize: MobileFontSize.reduced(context, 14),
-                          color: Colors.black87,
+                          color: AppColors.textPrimary,
                           overflow: TextOverflow.ellipsis,
                           textAlign: TextAlign.right,
                         ),

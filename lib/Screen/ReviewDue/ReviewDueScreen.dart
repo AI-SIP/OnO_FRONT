@@ -14,6 +14,7 @@ import '../../Module/Motion/PressableScale.dart';
 import '../../Module/Motion/Skeleton.dart';
 import '../../Module/Motion/TossPageRoute.dart';
 import '../../Module/Design/AppRadius.dart';
+import '../../Module/Design/AppColors.dart';
 
 class ReviewDueScreen extends StatefulWidget {
   const ReviewDueScreen({super.key});
@@ -133,7 +134,7 @@ class _ReviewDueScreenState extends State<ReviewDueScreen> {
                     const StandardText(
                       text: '추천 복습 문제 ',
                       fontSize: 14,
-                      color: Colors.black87,
+                      color: AppColors.textPrimary,
                     ),
                     StandardText(
                       text: '${data.dueCount}개',
@@ -226,13 +227,13 @@ class _ReviewDueScreenState extends State<ReviewDueScreen> {
           const StandardText(
             text: '추천 복습 문제가 없어요',
             fontSize: 16,
-            color: Colors.black54,
+            color: AppColors.textSecondary,
           ),
           const SizedBox(height: 6),
           const StandardText(
             text: '문제를 풀면 자동으로 복습 일정이 생겨요',
             fontSize: 13,
-            color: Colors.black38,
+            color: AppColors.textTertiary,
           ),
         ],
       ),

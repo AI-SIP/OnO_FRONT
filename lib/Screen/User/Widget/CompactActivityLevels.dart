@@ -4,6 +4,7 @@ import '../../../Model/User/UserInfoModel.dart';
 import '../../../Module/Text/StandardText.dart';
 import '../../../Module/Theme/ThemeHandler.dart';
 import '../../../Module/Design/AppRadius.dart';
+import '../../../Module/Design/AppColors.dart';
 
 class CompactActivityLevels extends StatelessWidget {
   final UserInfoModel? userInfo;
@@ -73,7 +74,7 @@ class CompactActivityLevels extends StatelessWidget {
           const StandardText(
             text: '활동 레벨',
             fontSize: 15,
-            color: Colors.black87,
+            color: AppColors.textPrimary,
           ),
           SizedBox(height: screenHeight * 0.02),
           _buildActivityRow(
@@ -133,7 +134,7 @@ class CompactActivityLevels extends StatelessWidget {
                 StandardText(
                   text: '총 경험치',
                   fontSize: 16,
-                  color: Colors.black87,
+                  color: AppColors.textPrimary,
                 ),
                 SizedBox(width: screenHeight * 0.01),
                 Container(
@@ -154,7 +155,7 @@ class CompactActivityLevels extends StatelessWidget {
             StandardText(
               text: '$currentPoint / $requiredPoint',
               fontSize: 13,
-              color: Colors.black54,
+              color: AppColors.textSecondary,
             ),
           ],
         ),
@@ -208,7 +209,7 @@ class CompactActivityLevels extends StatelessWidget {
           child: StandardText(
             text: category,
             fontSize: 13,
-            color: Colors.black87,
+            color: AppColors.textPrimary,
           ),
         ),
         SizedBox(width: screenHeight * 0.008),

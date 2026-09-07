@@ -3,6 +3,7 @@ import '../../../Module/Text/StandardText.dart';
 import '../../../Module/Theme/ThemeHandler.dart';
 import '../../../Module/Motion/PressableScale.dart';
 import '../../../Module/Design/AppRadius.dart';
+import '../../../Module/Design/AppColors.dart';
 
 class SettingMenuButtons extends StatelessWidget {
   final ThemeHandler themeProvider;
@@ -98,7 +99,7 @@ class SettingMenuButtons extends StatelessWidget {
             child: StandardText(
               text: title,
               fontSize: 14,
-              color: Colors.black87,
+              color: AppColors.textPrimary,
             ),
           ),
           Transform.scale(
@@ -147,7 +148,7 @@ class SettingMenuButtons extends StatelessWidget {
               child: StandardText(
                 text: title,
                 fontSize: 14,
-                color: Colors.black87,
+                color: AppColors.textPrimary,
               ),
             ),
             if (showThemeColor)

@@ -16,6 +16,7 @@ import '../../../Module/Motion/PressableScale.dart';
 import '../../../Module/Motion/TossPageRoute.dart';
 import '../../../Module/Motion/TossDialog.dart';
 import '../../../Module/Design/AppRadius.dart';
+import '../../../Module/Design/AppColors.dart';
 
 Widget buildRepeatSection(
     BuildContext ctx, ProblemModel problem, Color iconColor) {
@@ -90,7 +91,7 @@ Widget buildRepeatSection(
                                       text: '삭제 확인',
                                       fontSize: MobileFontSize.reduced(ctx, 18),
                                       fontWeight: FontWeight.w600,
-                                      color: Colors.black87,
+                                      color: AppColors.textPrimary,
                                     ),
                                   ],
                                 ),
@@ -99,7 +100,7 @@ Widget buildRepeatSection(
                                 StandardText(
                                   text: '이 복습 이미지를 정말 삭제하시겠습니까?',
                                   fontSize: MobileFontSize.reduced(ctx, 15),
-                                  color: Colors.black87,
+                                  color: AppColors.textPrimary,
                                   textAlign: TextAlign.center,
                                 ),
                                 const SizedBox(height: 24),
@@ -123,7 +124,7 @@ Widget buildRepeatSection(
                                           text: '취소',
                                           fontSize:
                                               MobileFontSize.reduced(ctx, 14),
-                                          color: Colors.black87,
+                                          color: AppColors.textPrimary,
                                         ),
                                       ),
                                     ),

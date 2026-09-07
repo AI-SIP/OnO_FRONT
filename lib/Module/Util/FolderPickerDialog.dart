@@ -12,6 +12,7 @@ import '../Theme/ThemeHandler.dart';
 import '../Motion/PressableScale.dart';
 import '../Motion/TossDialog.dart';
 import '../Design/AppRadius.dart';
+import '../Design/AppColors.dart';
 
 // 트리 노드 상태를 관리하는 클래스
 class FolderTreeNode {
@@ -239,7 +240,7 @@ class _FolderPickerDialogState extends State<FolderPickerDialog> {
                               text: dialogTitle,
                               fontSize: MobileFontSize.reduced(context, 21),
                               fontWeight: FontWeight.w700,
-                              color: Colors.black87,
+                              color: AppColors.textPrimary,
                             ),
                             const SizedBox(height: 4),
                             StandardText(
@@ -247,7 +248,7 @@ class _FolderPickerDialogState extends State<FolderPickerDialog> {
                                   ? '공책을 길게 눌러 위치를 바꿀 수 있어요'
                                   : '오답노트를 넣을 공책을 골라주세요',
                               fontSize: MobileFontSize.reduced(context, 12),
-                              color: Colors.black54,
+                              color: AppColors.textSecondary,
                               overflow: TextOverflow.ellipsis,
                             ),
                           ],
@@ -280,7 +281,7 @@ class _FolderPickerDialogState extends State<FolderPickerDialog> {
                       IconButton(
                         tooltip: '닫기',
                         icon: const Icon(Icons.close, size: 22),
-                        color: Colors.black54,
+                        color: AppColors.textSecondary,
                         onPressed: () {
                           Navigator.pop(context, widget.initialFolderId);
                         },
@@ -333,7 +334,7 @@ class _FolderPickerDialogState extends State<FolderPickerDialog> {
                       child: StandardText(
                         text: '취소',
                         fontSize: MobileFontSize.reduced(context, 15),
-                        color: Colors.black87,
+                        color: AppColors.textPrimary,
                       ),
                     ),
                   ),
@@ -574,7 +575,7 @@ class _FolderPickerDialogState extends State<FolderPickerDialog> {
                 text: node.folderName,
                 fontSize: MobileFontSize.reduced(context, 14),
                 fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                color: Colors.black87,
+                color: AppColors.textPrimary,
                 overflow: TextOverflow.ellipsis,
               ),
             ),
@@ -640,7 +641,7 @@ class _FolderPickerDialogState extends State<FolderPickerDialog> {
                       text: dialogTitle,
                       fontSize: MobileFontSize.reduced(context, 20),
                       fontWeight: FontWeight.w600,
-                      color: Colors.black87,
+                      color: AppColors.textPrimary,
                     ),
                   ],
                 ),
@@ -659,7 +660,7 @@ class _FolderPickerDialogState extends State<FolderPickerDialog> {
                     child: StandardText(
                       text: '$parentFolderName 아래에 만들어요',
                       fontSize: MobileFontSize.reduced(context, 13),
-                      color: Colors.black87,
+                      color: AppColors.textPrimary,
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
@@ -670,7 +671,7 @@ class _FolderPickerDialogState extends State<FolderPickerDialog> {
                   controller: folderNameController,
                   autofocus: true,
                   style: standardTextStyle.copyWith(
-                    color: Colors.black87,
+                    color: AppColors.textPrimary,
                     fontSize: MobileFontSize.reduced(context, 15),
                   ),
                   decoration: InputDecoration(
@@ -724,7 +725,7 @@ class _FolderPickerDialogState extends State<FolderPickerDialog> {
                       child: StandardText(
                         text: '취소',
                         fontSize: MobileFontSize.reduced(context, 15),
-                        color: Colors.black87,
+                        color: AppColors.textPrimary,
                       ),
                     ),
                     const SizedBox(width: 12),

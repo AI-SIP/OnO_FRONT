@@ -194,7 +194,7 @@ class _StreakCardState extends State<StreakCard> {
           StandardText(
             text: '$calendarYear년 $calendarMonth월 학습 달력',
             fontSize: isTablet ? 18.0 : 15.0,
-            color: Colors.black87,
+            color: AppColors.textPrimary,
             fontWeight: FontWeight.w600,
           ),
           const Spacer(),
@@ -203,7 +203,7 @@ class _StreakCardState extends State<StreakCard> {
                 ? Icons.keyboard_arrow_up
                 : Icons.keyboard_arrow_down,
             size: isTablet ? 26.0 : 20.0,
-            color: Colors.black38,
+            color: AppColors.textTertiary,
           ),
         ],
       ),
@@ -252,7 +252,7 @@ class _StreakCardState extends State<StreakCard> {
             StandardText(
               text: '일 연속 학습중',
               fontSize: isTablet ? 15.0 : 12.0,
-              color: Colors.black54,
+              color: AppColors.textSecondary,
             ),
             const Spacer(),
             Icon(
@@ -417,20 +417,20 @@ class _StreakCardState extends State<StreakCard> {
             StandardText(
               text: '이번 달 최장 복습: ${bestStreak != null ? '$bestStreak일' : '--'}',
               fontSize: fontSize,
-              color: Colors.black54,
+              color: AppColors.textSecondary,
             ),
           ],
         ),
         Row(
           children: [
             Icon(Icons.calendar_today_outlined,
-                size: iconSize - 1, color: Colors.black38),
+                size: iconSize - 1, color: AppColors.textTertiary),
             const SizedBox(width: 4),
             StandardText(
               text:
                   '복습 일수: ${thisMonthStudyDays != null ? '$thisMonthStudyDays일' : '--'}',
               fontSize: fontSize,
-              color: Colors.black54,
+              color: AppColors.textSecondary,
             ),
           ],
         ),

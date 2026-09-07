@@ -186,7 +186,7 @@ class _SharedProblemTabState extends State<SharedProblemTab>
                                   const StandardText(
                                     text: '공유된 문제가 없어요',
                                     fontSize: 16,
-                                    color: Colors.black87,
+                                    color: AppColors.textPrimary,
                                   ),
                                   const SizedBox(height: 6),
                                   StandardText(
@@ -323,7 +323,7 @@ class _SharedProblemTabState extends State<SharedProblemTab>
                 const StandardText(
                   text: '문제 공유 게시판',
                   fontSize: 15,
-                  color: Colors.black87,
+                  color: AppColors.textPrimary,
                 ),
                 const SizedBox(height: 3),
                 StandardText(

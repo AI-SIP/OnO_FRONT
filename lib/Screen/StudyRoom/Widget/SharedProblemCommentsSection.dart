@@ -156,7 +156,7 @@ class _SharedProblemCommentsSectionState
                       const StandardText(
                         text: '풀이 의견 수정',
                         fontSize: 18,
-                        color: Colors.black87,
+                        color: AppColors.textPrimary,
                         fontWeight: FontWeight.w700,
                       ),
                     ],
@@ -169,7 +169,7 @@ class _SharedProblemCommentsSectionState
                     autofocus: true,
                     style: const TextStyle(
                       fontSize: 14,
-                      color: Colors.black87,
+                      color: AppColors.textPrimary,
                       fontWeight: FontWeight.w500,
                       fontFamily: 'Pretendard',
                     ),
@@ -215,7 +215,7 @@ class _SharedProblemCommentsSectionState
                           child: const StandardText(
                             text: '취소',
                             fontSize: 14,
-                            color: Colors.black87,
+                            color: AppColors.textPrimary,
                           ),
                         ),
                       ),
@@ -287,7 +287,7 @@ class _SharedProblemCommentsSectionState
                     const StandardText(
                       text: '풀이 의견 삭제',
                       fontSize: 18,
-                      color: Colors.black87,
+                      color: AppColors.textPrimary,
                       fontWeight: FontWeight.w700,
                     ),
                   ],
@@ -320,7 +320,7 @@ class _SharedProblemCommentsSectionState
                         child: const StandardText(
                           text: '취소',
                           fontSize: 14,
-                          color: Colors.black87,
+                          color: AppColors.textPrimary,
                         ),
                       ),
                     ),
@@ -400,7 +400,7 @@ class _SharedProblemCommentsSectionState
                     text: '댓글 관리',
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
-                    color: Colors.black87,
+                    color: AppColors.textPrimary,
                   ),
                 ],
               ),
@@ -486,7 +486,7 @@ class _SharedProblemCommentsSectionState
                   child: const StandardText(
                     text: '취소',
                     fontSize: 15,
-                    color: Colors.black87,
+                    color: AppColors.textPrimary,
                   ),
                 ),
               ),
@@ -536,7 +536,7 @@ class _SharedProblemCommentsSectionState
                       child: StandardText(
                         text: comment.authorName,
                         fontSize: 13,
-                        color: Colors.black87,
+                        color: AppColors.textPrimary,
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
@@ -653,7 +653,7 @@ class _SharedProblemCommentsSectionState
             maxLines: 3,
             style: const TextStyle(
               fontSize: 13,
-              color: Colors.black87,
+              color: AppColors.textPrimary,
               fontWeight: FontWeight.w500,
               fontFamily: 'Pretendard',
             ),

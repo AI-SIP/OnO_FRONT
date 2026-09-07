@@ -14,6 +14,7 @@ import 'package:ono/Provider/ScreenIndexProvider.dart';
 import 'package:ono/Provider/StudyRoomProvider.dart';
 import 'package:ono/Provider/TutorialProvider.dart';
 import 'package:ono/Provider/UserProvider.dart';
+import 'package:ono/Util/AppNavigator.dart';
 import 'package:ono/Util/AppSnackBar.dart';
 import 'package:provider/provider.dart';
 
@@ -129,8 +130,11 @@ Future<void> pumpOnoWidget(
         builder: (context) {
           final theme = Provider.of<ThemeHandler>(context);
           return MaterialApp(
-            // 앱과 같은 키를 물려야 AppSnackBar.showError 가 실제로 스낵바를 띄운다.
+            // 앱과 같은 키를 물려야 알림이 실제로 뜬다. 알림이 SnackBar 에서
+            // 위에서 내려오는 AppToast 로 바뀌면서 Navigator 의 Overlay 를
+            // 쓰게 되어, navigatorKey 도 함께 물려야 한다.
             scaffoldMessengerKey: AppSnackBar.messengerKey,
+            navigatorKey: AppNavigator.navigatorKey,
             navigatorObservers: navigatorObservers,
             routes: routes,
             theme: ThemeData(

@@ -5,6 +5,7 @@ import '../../../Module/Text/StandardText.dart';
 import '../../../Module/Motion/AppHaptic.dart';
 import '../../../Module/Motion/PressableScale.dart';
 import '../../../Module/Design/AppRadius.dart';
+import '../../../Module/Design/AppColors.dart';
 
 class DatePickerHandler extends StatefulWidget {
   final DateTime initialDate;
@@ -87,7 +88,7 @@ class _DatePickerHandlerState extends State<DatePickerHandler> {
                 text: widget.title,
                 fontSize: MobileFontSize.reduced(context, 17),
                 fontWeight: FontWeight.w600,
-                color: Colors.black87,
+                color: AppColors.textPrimary,
               ),
               const SizedBox(height: 16),
               Row(
@@ -106,7 +107,7 @@ class _DatePickerHandlerState extends State<DatePickerHandler> {
                             '${_visibleMonth.year}.${_visibleMonth.month.toString().padLeft(2, '0')}',
                         fontSize: MobileFontSize.reduced(context, 16),
                         fontWeight: FontWeight.w700,
-                        color: Colors.black87,
+                        color: AppColors.textPrimary,
                       ),
                     ),
                   ),

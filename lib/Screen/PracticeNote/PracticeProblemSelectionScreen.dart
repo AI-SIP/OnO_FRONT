@@ -768,7 +768,7 @@ class _PracticeProblemSelectionScreenState
         onSubmitted: (value) => _searchTitleProblems(value, isInitial: true),
         style: baseTextStyle.copyWith(
           fontSize: 14,
-          color: Colors.black87,
+          color: AppColors.textPrimary,
           fontWeight: FontWeight.w500,
         ),
         decoration: InputDecoration(
@@ -1293,7 +1293,7 @@ class _PracticeProblemSelectionScreenState
                       text: '문제 선택 필요',
                       fontSize: MobileFontSize.reduced(context, 18),
                       fontWeight: FontWeight.w600,
-                      color: Colors.black87,
+                      color: AppColors.textPrimary,
                     ),
                   ],
                 ),
@@ -1301,7 +1301,7 @@ class _PracticeProblemSelectionScreenState
                 StandardText(
                   text: '하나 이상의 문제를 선택해주세요!',
                   fontSize: MobileFontSize.reduced(context, 15),
-                  color: Colors.black87,
+                  color: AppColors.textPrimary,
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 24),

@@ -8,6 +8,7 @@ import '../../../Model/StudyRoom/InviteCodeModel.dart';
 import '../../../Module/Text/StandardText.dart';
 import '../../../Module/Theme/ThemeHandler.dart';
 import '../../../Module/Design/AppRadius.dart';
+import '../../../Module/Design/AppColors.dart';
 
 class InviteCodeSheet extends StatelessWidget {
   final InviteCodeModel inviteCode;
@@ -103,7 +104,7 @@ class InviteCodeSheet extends StatelessWidget {
                 text: '초대 코드',
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
-                color: Colors.black87,
+                color: AppColors.textPrimary,
               ),
             ],
           ),

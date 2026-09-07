@@ -5,6 +5,7 @@ import '../../../Module/Text/StandardText.dart';
 import '../../../Module/Theme/ThemeHandler.dart';
 import '../../../Module/Motion/TossDialog.dart';
 import '../../../Module/Design/AppRadius.dart';
+import '../../../Module/Design/AppColors.dart';
 
 class GoalSetDialog extends StatefulWidget {
   final ThemeHandler themeProvider;
@@ -82,7 +83,7 @@ class _GoalSetDialogState extends State<GoalSetDialog> {
                   const StandardText(
                     text: '주간 목표 설정',
                     fontSize: 18,
-                    color: Colors.black87,
+                    color: AppColors.textPrimary,
                   ),
                 ],
               ),
@@ -153,7 +154,7 @@ class _GoalSetDialogState extends State<GoalSetDialog> {
                       child: const StandardText(
                         text: '취소',
                         fontSize: 14,
-                        color: Colors.black87,
+                        color: AppColors.textPrimary,
                       ),
                     ),
                   ),

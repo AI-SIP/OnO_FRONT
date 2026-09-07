@@ -5,7 +5,6 @@ import 'package:ono/Module/Dialog/LoadingDialog.dart';
 import 'package:provider/provider.dart';
 
 import '../../Model/PracticeNote/PracticeNoteThumbnailModel.dart';
-import '../../Module/Emoji/OnoEmojiImage.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Text/mobile_font_size.dart';
 import '../../Module/Theme/ThemeHandler.dart';
@@ -227,7 +226,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
                           text: '복습 세트 편집하기',
                           fontSize: MobileFontSize.reduced(context, 18),
                           fontWeight: FontWeight.w600,
-                          color: Colors.black87,
+                          color: AppColors.textPrimary,
                         ),
                       ],
                     ),
@@ -415,7 +414,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
                       text: '복습 세트 삭제',
                       fontSize: MobileFontSize.reduced(context, 18),
                       fontWeight: FontWeight.w600,
-                      color: Colors.black87,
+                      color: AppColors.textPrimary,
                     ),
                   ],
                 ),
@@ -424,7 +423,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
                 StandardText(
                   text: '정말로 이 복습 세트를 삭제하시겠습니까?',
                   fontSize: MobileFontSize.reduced(context, 15),
-                  color: Colors.black87,
+                  color: AppColors.textPrimary,
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 24),
@@ -448,7 +447,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
                         child: StandardText(
                           text: '취소',
                           fontSize: MobileFontSize.reduced(context, 15),
-                          color: Colors.black87,
+                          color: AppColors.textPrimary,
                         ),
                       ),
                     ),
@@ -737,47 +736,31 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
 
   Widget _buildPracticeMeta(
       PracticeNoteThumbnails practice, ThemeHandler themeProvider) {
-    final hasMoodEmoji = practice.lastSessionMoodEmojiKey != null;
     const frogIconBoxWidth = 68.0;
 
+    // 지난 복습 소감 이모지는 여기 두지 않는다. 목록에서는 몇 회 복습했는지만
+    // 보면 되고, 소감은 상세 화면에서 본다.
     return Semantics(
       label: practice.practiceCount >= 3
           ? '복습 완료'
           : '${practice.practiceCount}회 복습',
       child: SizedBox(
-        width: hasMoodEmoji ? 92 : frogIconBoxWidth,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          crossAxisAlignment: CrossAxisAlignment.end,
+        width: frogIconBoxWidth,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            SizedBox(
-              width: frogIconBoxWidth,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  practice.practiceCount >= 3
-                      ? _buildTag('복습 완료', themeProvider,
-                          highlight: true, width: frogIconBoxWidth)
-                      : _buildTag(
-                          '${practice.practiceCount}회 복습', themeProvider,
-                          width: frogIconBoxWidth),
-                  const SizedBox(height: 7),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    mainAxisSize: MainAxisSize.min,
-                    children: _buildStatusIcons(practice.practiceCount),
-                  ),
-                ],
-              ),
+            practice.practiceCount >= 3
+                ? _buildTag('복습 완료', themeProvider,
+                    highlight: true, width: frogIconBoxWidth)
+                : _buildTag('${practice.practiceCount}회 복습', themeProvider,
+                    width: frogIconBoxWidth),
+            const SizedBox(height: 7),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: _buildStatusIcons(practice.practiceCount),
             ),
-            if (hasMoodEmoji) ...[
-              const SizedBox(width: 4),
-              OnoEmojiImage(
-                emojiKey: practice.lastSessionMoodEmojiKey,
-                size: 20,
-              ),
-            ],
           ],
         ),
       ),

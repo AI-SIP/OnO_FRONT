@@ -15,6 +15,7 @@ import '../../Module/Theme/ThemeHandler.dart';
 import '../../Util/AppErrorReporter.dart';
 import '../../Util/AppSnackBar.dart';
 import '../../Module/Design/AppRadius.dart';
+import '../../Module/Design/AppColors.dart';
 
 class AchievementCardScreen extends StatefulWidget {
   final UserInfoModel userInfo;
@@ -550,7 +551,7 @@ class _AchievementCard extends StatelessWidget {
               Text(
                 label,
                 style: const TextStyle(
-                  color: Colors.black54,
+                  color: AppColors.textSecondary,
                   fontSize: 10,
                   fontFamily: 'PretendardBold',
                   fontWeight: FontWeight.w700,
@@ -580,7 +581,7 @@ class _AchievementCard extends StatelessWidget {
                 Text(
                   '복습 추이',
                   style: TextStyle(
-                    color: Colors.black54,
+                    color: AppColors.textSecondary,
                     fontSize: 11,
                     fontFamily: 'PretendardBold',
                     fontWeight: FontWeight.w700,
@@ -595,7 +596,7 @@ class _AchievementCard extends StatelessWidget {
                       child: Text(
                         '이번 주 데이터가 없어요',
                         style: TextStyle(
-                          color: Colors.black38,
+                          color: AppColors.textTertiary,
                           fontSize: 11,
                           fontFamily: 'PretendardLight',
                         ),
@@ -652,7 +653,7 @@ class _AchievementCard extends StatelessWidget {
                 Text(
                   labelText,
                   style: const TextStyle(
-                    color: Colors.black38,
+                    color: AppColors.textTertiary,
                     fontSize: 9,
                     fontFamily: 'PretendardLight',
                   ),
@@ -704,7 +705,7 @@ class _AchievementCard extends StatelessWidget {
           Text(
             '$days / 30일',
             style: const TextStyle(
-              color: Colors.black38,
+              color: AppColors.textTertiary,
               fontSize: 9,
               fontFamily: 'PretendardLight',
               fontWeight: FontWeight.w300,

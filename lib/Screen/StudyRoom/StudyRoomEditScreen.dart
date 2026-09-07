@@ -10,6 +10,7 @@ import '../../Provider/StudyRoomProvider.dart';
 import '../../Util/AppSnackBar.dart';
 import 'Widget/StudyRoomThumbnail.dart';
 import '../../Module/Design/AppRadius.dart';
+import '../../Module/Design/AppColors.dart';
 
 class StudyRoomEditScreen extends StatefulWidget {
   final StudyRoomModel room;
@@ -231,7 +232,7 @@ class _StudyRoomEditScreenState extends State<StudyRoomEditScreen> {
                               const StandardText(
                                 text: '스터디룸 이름',
                                 fontSize: 16,
-                                color: Colors.black87,
+                                color: AppColors.textPrimary,
                               ),
                             ],
                           ),
@@ -242,7 +243,7 @@ class _StudyRoomEditScreenState extends State<StudyRoomEditScreen> {
                             textInputAction: TextInputAction.done,
                             onSubmitted: (_) => _save(),
                             style: _standardStyle.copyWith(
-                              color: Colors.black87,
+                              color: AppColors.textPrimary,
                               fontSize: 15,
                             ),
                             decoration: InputDecoration(

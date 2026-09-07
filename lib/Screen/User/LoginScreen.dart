@@ -13,6 +13,7 @@ import '../../Provider/UserProvider.dart';
 import '../../main.dart';
 import '../../Module/Motion/TossDialog.dart';
 import '../../Module/Design/AppRadius.dart';
+import '../../Module/Design/AppColors.dart';
 
 class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});
@@ -205,7 +206,7 @@ class LoginScreen extends StatelessWidget {
                         text: '게스트 로그인 안내',
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
-                        color: Colors.black87,
+                        color: AppColors.textPrimary,
                       ),
                     ),
                   ],
@@ -267,7 +268,7 @@ class LoginScreen extends StatelessWidget {
                         child: const StandardText(
                           text: '취소',
                           fontSize: 14,
-                          color: Colors.black87,
+                          color: AppColors.textPrimary,
                         ),
                       ),
                     ),

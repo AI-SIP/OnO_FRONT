@@ -5,6 +5,7 @@ import '../../../Module/Text/StandardText.dart';
 import '../../../Module/Theme/ThemeHandler.dart';
 import '../../../Provider/StudyRoomProvider.dart';
 import 'ActivityFeedItem.dart';
+import '../../../Module/Design/AppColors.dart';
 
 class ActivityFeedTab extends StatefulWidget {
   final int roomId;
@@ -90,7 +91,7 @@ class _ActivityFeedTabState extends State<ActivityFeedTab>
                             const StandardText(
                               text: '아직 활동이 없어요',
                               fontSize: 16,
-                              color: Colors.black87,
+                              color: AppColors.textPrimary,
                             ),
                             const SizedBox(height: 6),
                             StandardText(

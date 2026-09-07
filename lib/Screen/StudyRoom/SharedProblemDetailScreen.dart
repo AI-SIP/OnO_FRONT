@@ -12,6 +12,7 @@ import 'Widget/FeedReactionBar.dart';
 import 'Widget/SharedProblemCommentsSection.dart';
 import '../../Module/Motion/TossDialog.dart';
 import '../../Module/Design/AppRadius.dart';
+import '../../Module/Design/AppColors.dart';
 
 class SharedProblemDetailScreen extends StatefulWidget {
   final SharedProblemModel problem;
@@ -90,7 +91,7 @@ class _SharedProblemDetailScreenState extends State<SharedProblemDetailScreen> {
                     const StandardText(
                       text: '공유 취소',
                       fontSize: 18,
-                      color: Colors.black87,
+                      color: AppColors.textPrimary,
                       fontWeight: FontWeight.w700,
                     ),
                   ],
@@ -125,7 +126,7 @@ class _SharedProblemDetailScreenState extends State<SharedProblemDetailScreen> {
                         child: const StandardText(
                           text: '닫기',
                           fontSize: 14,
-                          color: Colors.black87,
+                          color: AppColors.textPrimary,
                         ),
                       ),
                     ),
@@ -205,7 +206,7 @@ class _SharedProblemDetailScreenState extends State<SharedProblemDetailScreen> {
                     const StandardText(
                       text: '공유 문제 관리',
                       fontSize: 18,
-                      color: Colors.black87,
+                      color: AppColors.textPrimary,
                       fontWeight: FontWeight.w700,
                     ),
                   ],
@@ -259,7 +260,7 @@ class _SharedProblemDetailScreenState extends State<SharedProblemDetailScreen> {
                     child: const StandardText(
                       text: '닫기',
                       fontSize: 14,
-                      color: Colors.black87,
+                      color: AppColors.textPrimary,
                     ),
                   ),
                 ),
@@ -388,7 +389,7 @@ class _SharedProblemDetailScreenState extends State<SharedProblemDetailScreen> {
               StandardText(
                 text: problem.sharedByName,
                 fontSize: 14,
-                color: Colors.black87,
+                color: AppColors.textPrimary,
               ),
               StandardText(
                 text: _timeAgo(problem.sharedAt),

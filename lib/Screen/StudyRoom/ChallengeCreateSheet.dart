@@ -109,7 +109,7 @@ class _ChallengeCreateSheetState extends State<ChallengeCreateSheet> {
                     const StandardText(
                       text: '입력 확인',
                       fontSize: 18,
-                      color: Colors.black87,
+                      color: AppColors.textPrimary,
                       fontWeight: FontWeight.w700,
                     ),
                   ],
@@ -248,7 +248,7 @@ class _ChallengeCreateSheetState extends State<ChallengeCreateSheet> {
                 const StandardText(
                   text: '새 챌린지 만들기',
                   fontSize: 18,
-                  color: Colors.black87,
+                  color: AppColors.textPrimary,
                 ),
               ],
             ),
@@ -341,7 +341,7 @@ class _ChallengeCreateSheetState extends State<ChallengeCreateSheet> {
                     StandardText(
                       text: _formatDate(_endAt),
                       fontSize: 14,
-                      color: Colors.black87,
+                      color: AppColors.textPrimary,
                     ),
                     const Spacer(),
                     Icon(Icons.chevron_right,
@@ -481,7 +481,7 @@ class _ChallengeCreateSheetState extends State<ChallengeCreateSheet> {
     final style = StandardText(
       text: '',
       fontSize: 14,
-      color: Colors.black87,
+      color: AppColors.textPrimary,
     ).getTextStyle();
 
     return TextField(

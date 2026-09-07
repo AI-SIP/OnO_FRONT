@@ -118,7 +118,7 @@ class _StudyRoomListScreenState extends State<StudyRoomListScreen> {
                       text: '스터디룸 참여하기',
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
-                      color: Colors.black87,
+                      color: AppColors.textPrimary,
                     ),
                   ],
                 ),
@@ -177,7 +177,8 @@ class _StudyRoomListScreenState extends State<StudyRoomListScreen> {
               child: Icon(icon, size: 18, color: iconColor),
             ),
             const SizedBox(width: 12),
-            StandardText(text: label, fontSize: 15, color: Colors.black87),
+            StandardText(
+                text: label, fontSize: 15, color: AppColors.textPrimary),
             const Spacer(),
             Icon(Icons.chevron_right, size: 18, color: Colors.grey[400]),
           ],
@@ -229,17 +230,31 @@ class _StudyRoomListScreenState extends State<StudyRoomListScreen> {
                   color: themeProvider.primaryColor,
                 ),
               )
-            : provider.rooms.isEmpty
-                ? StudyRoomEmptyState(
-                    themeProvider: themeProvider,
-                    onCreateTap: _openCreate,
-                    onJoinTap: _openJoin,
-                  )
-                : RefreshIndicator(
-                    onRefresh: _refresh,
-                    color: themeProvider.primaryColor,
-                    child: _buildRoomList(provider, themeProvider),
-                  ),
+            : RefreshIndicator(
+                onRefresh: _refresh,
+                color: themeProvider.primaryColor,
+                child: provider.rooms.isEmpty
+                    // 참여 중인 방이 없어도 당겨서 새로고침할 수 있어야 한다.
+                    // 빈 상태는 스크롤되지 않아서 그냥 두면 당길 것이 없다.
+                    // 화면 높이만큼 스크롤 영역을 만들어 준다.
+                    ? LayoutBuilder(
+                        builder: (context, constraints) =>
+                            SingleChildScrollView(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          child: ConstrainedBox(
+                            constraints: BoxConstraints(
+                              minHeight: constraints.maxHeight,
+                            ),
+                            child: StudyRoomEmptyState(
+                              themeProvider: themeProvider,
+                              onCreateTap: _openCreate,
+                              onJoinTap: _openJoin,
+                            ),
+                          ),
+                        ),
+                      )
+                    : _buildRoomList(provider, themeProvider),
+              ),
       ),
     );
   }
@@ -319,7 +334,7 @@ class _StudyRoomListScreenState extends State<StudyRoomListScreen> {
                           child: StandardText(
                             text: room.name,
                             fontSize: titleFontSize,
-                            color: Colors.black87,
+                            color: AppColors.textPrimary,
                             fontWeight: FontWeight.w700,
                             overflow: TextOverflow.ellipsis,
                           ),
