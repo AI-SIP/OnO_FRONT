@@ -7,6 +7,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:ono/Module/Motion/Skeleton.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:ono/Model/Common/PaginatedResponse.dart';
 import 'package:ono/Model/PracticeNote/PracticeNoteThumbnailModel.dart';
@@ -70,7 +71,8 @@ void main() {
     expect(find.text('복습 세트 추가하기'), findsOneWidget);
   });
 
-  testWidgets('첫 로드가 진행 중이면(썸네일 없음+isLoading) 로딩 인디케이터가 보인다', (tester) async {
+  testWidgets('첫 로드가 진행 중이면(썸네일 없음+isLoading) 목록 자리에 스켈레톤이 보인다',
+      (tester) async {
     final completer = Completer<PaginatedResponse<PracticeNoteThumbnails>>();
     when(() => practiceNoteService.getPracticeNoteThumbnailsV2(
           cursor: null,
@@ -89,7 +91,9 @@ void main() {
     );
     await tester.pump();
 
-    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    // 화면 가운데 스피너 대신 실제 목록과 같은 모양의 회색 덩어리를 놓는다.
+    expect(find.byType(SkeletonList), findsOneWidget);
+    expect(find.byType(CircularProgressIndicator), findsNothing);
     expect(find.text('복습 세트 추가하기'), findsNothing);
 
     completer.complete(_page([_thumb(1)]));

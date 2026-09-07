@@ -15,6 +15,8 @@ import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/PracticeNoteProvider.dart';
 import '../ProblemDetail/ProblemDetailScreen.dart';
 import 'PracticeProblemSelectionScreen.dart';
+import '../../Module/Motion/PressableScale.dart';
+import '../../Module/Motion/TossPageRoute.dart';
 
 class PracticeDetailScreen extends StatelessWidget {
   final PracticeNoteDetailModel practice;
@@ -157,7 +159,7 @@ class PracticeDetailScreen extends StatelessWidget {
                         Navigator.pop(context);
                         Navigator.push(
                           context,
-                          MaterialPageRoute(
+                          TossPageRoute(
                             builder: (context) =>
                                 PracticeProblemSelectionScreen(
                               practiceModel: practice,
@@ -200,9 +202,8 @@ class PracticeDetailScreen extends StatelessWidget {
     required VoidCallback onTap,
     required ThemeHandler themeProvider,
   }) {
-    return InkWell(
+    return PressableScale(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
@@ -373,7 +374,7 @@ class PracticeDetailScreen extends StatelessWidget {
                 onPressed: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(
+                    TossPageRoute(
                       builder: (context) => PracticeProblemSelectionScreen(
                         practiceModel: practice,
                       ),
@@ -441,7 +442,7 @@ class PracticeDetailScreen extends StatelessWidget {
 
       Navigator.push(
         context,
-        MaterialPageRoute(
+        TossPageRoute(
           builder: (context) => ProblemDetailScreen(
             problemId: practiceProvider.currentProblems.first.problemId,
             isPractice: true,

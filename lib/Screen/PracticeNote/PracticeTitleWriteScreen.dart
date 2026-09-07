@@ -15,6 +15,8 @@ import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/PracticeNoteProvider.dart';
 import '../../Util/AppErrorReporter.dart';
+import '../../Module/Motion/AppHaptic.dart';
+import '../../Module/Motion/PressableScale.dart';
 
 class PracticeTitleWriteScreen extends StatefulWidget {
   final PracticeNoteRegisterModel? practiceRegisterModel;
@@ -581,7 +583,8 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
                             final dayText =
                                 ['월', '화', '수', '목', '금', '토', '일'][index];
                             final isSelected = _selectedWeekdays.contains(day);
-                            return InkWell(
+                            return PressableScale(
+                              haptic: HapticLevel.selection,
                               onTap: () {
                                 setState(() {
                                   if (isSelected) {
@@ -591,7 +594,6 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
                                   }
                                 });
                               },
-                              borderRadius: BorderRadius.circular(20),
                               child: Container(
                                 width: 40,
                                 height: 40,
@@ -631,9 +633,8 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
                         fontWeight: FontWeight.w500,
                       ),
                       const SizedBox(height: 12),
-                      InkWell(
+                      PressableScale(
                         onTap: () => _showTimePickerBottomSheet(context),
-                        borderRadius: BorderRadius.circular(8),
                         child: Container(
                           padding: const EdgeInsets.symmetric(
                               horizontal: 16, vertical: 12),
@@ -687,9 +688,8 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
     required VoidCallback onTap,
     required ThemeHandler theme,
   }) {
-    return InkWell(
+    return PressableScale(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 10),
         decoration: BoxDecoration(

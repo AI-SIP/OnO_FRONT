@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/PracticeNoteProvider.dart';
+import '../../Module/Motion/TossPageRoute.dart';
 
 class PracticeNavigationButtons extends StatefulWidget {
   final BuildContext context;
@@ -197,7 +198,7 @@ class _PracticeNavigationButtonsState extends State<PracticeNavigationButtons> {
         : 0;
 
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute(
+      TossPageRoute(
         builder: (context) => PracticeCompletionScreen(
           practiceId: practiceId,
           totalProblems: totalProblems,

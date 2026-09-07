@@ -14,6 +14,12 @@ import '../../Util/AppSnackBar.dart';
 import '../Tutorial/TutorialTargets.dart';
 import 'PracticeDetailScreen.dart';
 import 'PracticeProblemSelectionScreen.dart';
+import '../../Module/Motion/AppMotion.dart';
+import '../../Module/Motion/AppearTransition.dart';
+import '../../Module/Motion/AppHaptic.dart';
+import '../../Module/Motion/PressableScale.dart';
+import '../../Module/Motion/Skeleton.dart';
+import '../../Module/Motion/TossPageRoute.dart';
 
 class PracticeThumbnailScreen extends StatefulWidget {
   final TutorialTargets? tutorialTargets;
@@ -263,9 +269,8 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
     Color? titleColor,
     required VoidCallback onTap,
   }) {
-    return InkWell(
+    return PressableScale(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
@@ -495,7 +500,12 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
   }
 
   Widget _buildLoadingIndicator() {
-    return const Center(child: CircularProgressIndicator());
+    return const SkeletonList(
+      itemCount: 4,
+      itemHeight: 96,
+      spacing: 16,
+      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+    );
   }
 
   Widget _buildEmptyState(ThemeHandler themeProvider) {
@@ -547,11 +557,19 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
     );
   }
 
+  /// 목록에서 하나씩 들어오게 할 항목 수. 첫 화면에 보이는 만큼이다.
+  static const int _staggeredItemLimit = 8;
+
   Widget _buildPracticeListView(
       ProblemPracticeProvider provider, ThemeHandler themeProvider) {
     final thumbnails = provider.practiceThumbnails;
     final isLoadingMore = provider.isLoading;
     final hasMore = provider.hasNext;
+
+    // 처음 불러오는 중이면 화면 가운데 스피너 대신 목록 모양을 보여준다.
+    if (thumbnails.isEmpty && isLoadingMore) {
+      return _buildLoadingIndicator();
+    }
 
     return ListView.builder(
       controller: _scrollController,
@@ -559,7 +577,8 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
       padding: const EdgeInsets.symmetric(vertical: 20),
       itemCount: thumbnails.length + (isLoadingMore || hasMore ? 1 : 0),
       itemBuilder: (context, index) {
-        // 로딩 인디케이터
+        // 더 불러오는 중임을 알리는 자리. 목록 아래에 잠깐 보이는 것이라
+        // 스켈레톤보다 작은 표시가 낫다.
         if (index == thumbnails.length) {
           return const Padding(
             padding: EdgeInsets.all(16.0),
@@ -568,7 +587,12 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
         }
 
         final practice = thumbnails[index];
-        return _buildPracticeItem(practice, themeProvider);
+        // 첫 화면에 보이는 것만 하나씩 들어온다.
+        return AppearTransition(
+          enabled: index < _staggeredItemLimit,
+          delay: AppMotion.stagger * index,
+          child: _buildPracticeItem(practice, themeProvider),
+        );
       },
     );
   }
@@ -577,7 +601,8 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
       PracticeNoteThumbnails practice, ThemeHandler themeProvider) {
     final isSelected = _selectedPracticeIds.contains(practice.practiceId);
 
-    return GestureDetector(
+    return PressableScale(
+      haptic: HapticLevel.none,
       onTap: () {
         if (_isSelectionMode) {
           setState(() {
@@ -621,7 +646,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
 
     final result = await Navigator.push<bool>(
       context,
-      MaterialPageRoute(
+      TossPageRoute(
         builder: (context) => PracticeDetailScreen(
             practice: practiceProvider.currentPracticeNote!),
       ),
@@ -821,7 +846,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
   Future<void> _navigateToPracticeCreate() async {
     await Navigator.push(
       context,
-      MaterialPageRoute(
+      TossPageRoute(
         builder: (context) => const PracticeProblemSelectionScreen(),
       ),
     );

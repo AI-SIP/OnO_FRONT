@@ -10,6 +10,8 @@ import '../../Module/Text/mobile_font_size.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/PracticeNoteProvider.dart';
+import '../../Module/Motion/AppHaptic.dart';
+import '../../Module/Motion/PressableScale.dart';
 
 class PracticeCompletionScreen extends StatefulWidget {
   final int practiceId;
@@ -144,13 +146,13 @@ class _PracticeCompletionScreenState extends State<PracticeCompletionScreen> {
               if (emoji == null) return const SizedBox.shrink();
 
               final isSelected = _selectedMoodKey == emojiKey;
-              return InkWell(
+              return PressableScale(
+                haptic: HapticLevel.selection,
                 onTap: () {
                   setState(() {
                     _selectedMoodKey = isSelected ? null : emojiKey;
                   });
                 },
-                borderRadius: BorderRadius.circular(12),
                 child: Container(
                   width: 70,
                   padding: const EdgeInsets.symmetric(vertical: 8),
@@ -191,7 +193,7 @@ class _PracticeCompletionScreenState extends State<PracticeCompletionScreen> {
   }
 
   Widget _buildMoreMoodButton(ThemeHandler themeProvider) {
-    return InkWell(
+    return PressableScale(
       onTap: () {
         OnoEmojiPicker.show(
           context,
@@ -199,7 +201,6 @@ class _PracticeCompletionScreenState extends State<PracticeCompletionScreen> {
           onSelected: (emoji) => setState(() => _selectedMoodKey = emoji.key),
         );
       },
-      borderRadius: BorderRadius.circular(12),
       child: Container(
         width: 70,
         decoration: BoxDecoration(
@@ -248,7 +249,8 @@ class _PracticeCompletionScreenState extends State<PracticeCompletionScreen> {
               return;
             }
             if (!mounted) return;
-            FirebaseAnalytics.instance.logEvent(name: 'practice_session_completed');
+            FirebaseAnalytics.instance
+                .logEvent(name: 'practice_session_completed');
             // 2번 pop: PracticeCompletionScreen -> PracticeDetailScreen -> PracticeThumbnailScreen
             // 두 번째 pop에서 true를 반환하여 썸네일 업데이트 신호 전달
             if (navigator.canPop()) {

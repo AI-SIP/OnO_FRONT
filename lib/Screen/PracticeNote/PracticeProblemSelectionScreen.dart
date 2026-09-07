@@ -22,6 +22,9 @@ import '../../Provider/FoldersProvider.dart';
 import '../../Provider/ProblemsProvider.dart';
 import '../../Util/AppErrorReporter.dart';
 import '../../Util/AppSnackBar.dart';
+import '../../Module/Motion/AppHaptic.dart';
+import '../../Module/Motion/PressableScale.dart';
+import '../../Module/Motion/TossPageRoute.dart';
 
 enum _PracticeSearchMode { folder, tag, title }
 
@@ -605,9 +608,9 @@ class _PracticeProblemSelectionScreenState
     }) {
       final selected = _searchMode == mode;
       return Expanded(
-        child: InkWell(
+        child: PressableScale(
+          haptic: HapticLevel.selection,
           onTap: () => _switchSearchMode(mode),
-          borderRadius: BorderRadius.circular(10),
           child: Container(
             height: 40,
             alignment: Alignment.center,
@@ -715,9 +718,9 @@ class _PracticeProblemSelectionScreenState
               final selected = _selectedTagId == tag.tagId;
               return Padding(
                 padding: const EdgeInsets.only(right: 8),
-                child: InkWell(
+                child: PressableScale(
+                  haptic: HapticLevel.selection,
                   onTap: () => _loadTagProblems(tag.tagId, isInitial: true),
-                  borderRadius: BorderRadius.circular(8),
                   child: Container(
                     padding:
                         const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
@@ -825,7 +828,8 @@ class _PracticeProblemSelectionScreenState
             }
 
             final folder = allFolders[index];
-            return GestureDetector(
+            return PressableScale(
+              haptic: HapticLevel.selection,
               onTap: () async {
                 setState(() {
                   selectedFolderId = folder.folderId;
@@ -913,7 +917,8 @@ class _PracticeProblemSelectionScreenState
           final displayName =
               folder.folderId == rootFolderId ? '책장' : folder.folderName;
 
-          return InkWell(
+          return PressableScale(
+            haptic: HapticLevel.selection,
             onTap: () async {
               if (selectedFolderId == folder.folderId) return;
               setState(() => selectedFolderId = folder.folderId);
@@ -1003,7 +1008,8 @@ class _PracticeProblemSelectionScreenState
                     final isSelected =
                         _selectedProblemIds.contains(problem.problemId);
 
-                    return GestureDetector(
+                    return PressableScale(
+                      haptic: HapticLevel.selection,
                       onTap: () {
                         setState(() {
                           if (isSelected) {
@@ -1182,7 +1188,7 @@ class _PracticeProblemSelectionScreenState
                     // 다음 화면으로 updateModel 넘기기
                     Navigator.push(
                       context,
-                      MaterialPageRoute(
+                      TossPageRoute(
                         builder: (context) => PracticeTitleWriteScreen(
                           practiceNoteUpdateModel: updateModel,
                           practiceNoteDetailModel: widget.practiceModel!,
@@ -1198,7 +1204,7 @@ class _PracticeProblemSelectionScreenState
                     );
                     Navigator.push(
                       context,
-                      MaterialPageRoute(
+                      TossPageRoute(
                         builder: (context) => PracticeTitleWriteScreen(
                           practiceRegisterModel: registerModel,
                         ),
