@@ -21,6 +21,12 @@ import '../../Module/Image/DisplayImage.dart';
 import '../../Module/Problem/ProblemThumbnailCard.dart';
 import '../../Module/Text/mobile_font_size.dart';
 import '../../Module/Text/StandardText.dart';
+import '../../Module/Motion/AppHaptic.dart';
+import '../../Module/Motion/AppMotion.dart';
+import '../../Module/Motion/AppearTransition.dart';
+import '../../Module/Motion/PressableScale.dart';
+import '../../Module/Motion/Skeleton.dart';
+import '../../Module/Motion/TossPageRoute.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Module/Util/FolderPickerDialog.dart';
 import '../../Provider/ReviewDueProvider.dart';
@@ -572,7 +578,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                   onPressed: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(
+                      TossPageRoute(
                         builder: (_) => const TagProblemSearchScreen(),
                       ),
                     );
@@ -603,6 +609,9 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     );
   }
 
+  /// 목록에서 하나씩 들어오게 할 항목 수. 첫 화면에 보이는 만큼이다.
+  static const int _staggeredItemLimit = 8;
+
   Widget _buildQuickCreateFab(ThemeHandler themeProvider) {
     return Column(
       key: widget.tutorialTargets?.directoryCreateFabKey,
@@ -610,7 +619,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
         AnimatedSwitcher(
-          duration: const Duration(milliseconds: 180),
+          duration: AppMotion.fast,
           child: _isQuickCreateOpen
               ? Padding(
                   padding: const EdgeInsets.only(bottom: 12),
@@ -654,9 +663,9 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
               : const SizedBox.shrink(),
         ),
         AnimatedSwitcher(
-          duration: const Duration(milliseconds: 220),
-          switchInCurve: Curves.easeOutCubic,
-          switchOutCurve: Curves.easeInCubic,
+          duration: AppMotion.normal,
+          switchInCurve: AppMotion.enter,
+          switchOutCurve: AppMotion.exit,
           layoutBuilder: (currentChild, previousChildren) {
             return Stack(
               alignment: Alignment.centerRight,
@@ -728,42 +737,38 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     required ThemeHandler themeProvider,
     required Future<void> Function() onTap,
   }) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.grey[200]!, width: 1),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x1A000000),
-                blurRadius: 10,
-                offset: Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                icon,
-                size: 18,
-                color: themeProvider.primaryColor,
-              ),
-              const SizedBox(width: 8),
-              StandardText(
-                text: label,
-                fontSize: 14,
-                color: Colors.black87,
-                fontWeight: FontWeight.w600,
-              ),
-            ],
-          ),
+    return PressableScale(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey[200]!, width: 1),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x1A000000),
+              blurRadius: 10,
+              offset: Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              size: 18,
+              color: themeProvider.primaryColor,
+            ),
+            const SizedBox(width: 8),
+            StandardText(
+              text: label,
+              fontSize: 14,
+              color: Colors.black87,
+              fontWeight: FontWeight.w600,
+            ),
+          ],
         ),
       ),
     );
@@ -801,7 +806,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
     final result = await Navigator.push<bool>(
       context,
-      MaterialPageRoute(
+      TossPageRoute(
         builder: (context) => ProblemRegisterScreen(
           problemModel: null,
           isEditMode: false,
@@ -830,7 +835,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
     final result = await Navigator.push<bool>(
       context,
-      MaterialPageRoute(
+      TossPageRoute(
         builder: (context) => MultiProblemRegisterScreen(
           initialFolderId: folderId,
         ),
@@ -986,9 +991,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     Color? titleColor,
     required VoidCallback onTap,
   }) {
-    return InkWell(
+    return PressableScale(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
@@ -1261,8 +1265,12 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
                   // 초기 로딩 중이면 로딩 인디케이터 표시
                   if (_isInitialLoading) {
-                    return const Center(
-                      child: CircularProgressIndicator(),
+                    return const SkeletonList(
+                      itemCount: 5,
+                      itemHeight: 96,
+                      spacing: 16,
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     );
                   }
 
@@ -1324,15 +1332,21 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                         );
                       }
 
-                      if (index < currentSubfolders.length) {
-                        var subfolder = currentSubfolders[index];
-                        return _buildFolderTile(
-                            subfolder, themeProvider, index);
-                      } else {
-                        var problem =
-                            currentProblems[index - currentSubfolders.length];
-                        return _buildProblemTile(problem, themeProvider);
-                      }
+                      final tile = index < currentSubfolders.length
+                          ? _buildFolderTile(
+                              currentSubfolders[index], themeProvider, index)
+                          : _buildProblemTile(
+                              currentProblems[index - currentSubfolders.length],
+                              themeProvider);
+
+                      // 첫 화면에 보이는 것만 하나씩 들어온다. 아래쪽까지
+                      // 지연을 매기면 스크롤해 내려갔을 때 항목이 뒤늦게
+                      // 나타나서 오히려 거슬린다.
+                      return AppearTransition(
+                        enabled: index < _staggeredItemLimit,
+                        delay: AppMotion.stagger * index,
+                        child: tile,
+                      );
                     },
                   );
                 },
@@ -1348,7 +1362,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     final isSelected = _selectedFolderIds.contains(folder.folderId);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0), // 아이템 간 간격 추가
-      child: GestureDetector(
+      child: PressableScale(
+        haptic: HapticLevel.none,
         onTap: () {
           // 폴더를 클릭했을 때 해당 폴더로 이동
           FirebaseAnalytics.instance
@@ -1367,7 +1382,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
           } else {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) {
+              TossPageRoute(builder: (context) {
                 return DirectoryScreen(folderId: folder.folderId);
               }),
             ).then((_) {
@@ -1562,7 +1577,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0), // 아이템 간 간격 추가
-      child: GestureDetector(
+      child: PressableScale(
+        haptic: HapticLevel.none,
         onTap: () {
           FirebaseAnalytics.instance
               .logEvent(name: 'move_to_problem', parameters: {
@@ -2143,7 +2159,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   void navigateToProblemDetail(BuildContext context, int problemId) {
     Navigator.push(
       context,
-      MaterialPageRoute(
+      TossPageRoute(
         builder: (context) => ProblemDetailScreen(problemId: problemId),
       ),
     ).then((value) async {
@@ -2169,14 +2185,13 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
-      child: InkWell(
+      child: PressableScale(
         onTap: () {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (_) => const ReviewDueScreen()),
+            TossPageRoute(builder: (_) => const ReviewDueScreen()),
           );
         },
-        borderRadius: BorderRadius.circular(15),
         child: Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
