@@ -10,6 +10,8 @@ import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/TutorialProvider.dart';
 import 'TutorialStep.dart';
 import 'TutorialTargets.dart';
+import '../../Module/Motion/AppMotion.dart';
+import '../../Module/Motion/StepProgressBar.dart';
 
 class TutorialOverlay extends StatefulWidget {
   final TutorialTargets targets;
@@ -24,8 +26,9 @@ class TutorialOverlay extends StatefulWidget {
 }
 
 class _TutorialOverlayState extends State<TutorialOverlay> {
-  static const Duration _motionDuration = Duration(milliseconds: 280);
-  static const Curve _motionCurve = Curves.easeOutCubic;
+  // 다른 화면과 같은 값을 쓴다. 튜토리얼만 따로 놀지 않게 한다.
+  static const Duration _motionDuration = AppMotion.normal;
+  static const Curve _motionCurve = AppMotion.enter;
   static const String _guideFrogAsset = 'assets/FrogCharacter/FROG_LEVEL15.png';
   static const double _speechBorderWidth = 1.0;
 
@@ -422,9 +425,9 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
             constraints: BoxConstraints(maxHeight: cardMaxHeight),
             child: SingleChildScrollView(
               child: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 180),
-                switchInCurve: Curves.easeOut,
-                switchOutCurve: Curves.easeIn,
+                duration: AppMotion.fast,
+                switchInCurve: AppMotion.enter,
+                switchOutCurve: AppMotion.exit,
                 transitionBuilder: (child, animation) {
                   return FadeTransition(
                     opacity: animation,
@@ -485,6 +488,16 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
                       '${tutorialProvider.currentStepIndex + 1} / ${tutorialSteps.length}',
                   fontSize: progressSize,
                   color: themeProvider.primaryColor,
+                ),
+                const SizedBox(height: 8),
+                // 숫자만으로는 얼마나 남았는지 잘 안 들어와서 막대를 함께 둔다.
+                StepProgressBar(
+                  currentStep: tutorialProvider.currentStepIndex + 1,
+                  totalSteps: tutorialSteps.length,
+                  color: themeProvider.primaryColor,
+                  backgroundColor:
+                      themeProvider.primaryColor.withValues(alpha: 0.15),
+                  height: 3,
                 ),
                 const SizedBox(height: 12),
                 StandardText(
