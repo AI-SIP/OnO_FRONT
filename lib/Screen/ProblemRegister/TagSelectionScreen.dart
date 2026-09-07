@@ -243,7 +243,6 @@ class _TagSelectionScreenState extends State<TagSelectionScreen> {
   }
 
   void _showDeleteTagSheet() {
-    final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
     final selectedDeleteTagIds = <int>{};
     bool isDeleting = false;
 

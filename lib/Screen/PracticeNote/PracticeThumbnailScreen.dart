@@ -821,12 +821,6 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
     return DateFormat('yyyy/MM/dd').format(dateTime);
   }
 
-  Future<void> _fetchAllPracticeContents() async {
-    final provider =
-        Provider.of<ProblemPracticeProvider>(context, listen: false);
-    await provider.fetchAllPracticeContents();
-  }
-
   Future<void> _refreshPracticeThumbnails() async {
     final provider =
         Provider.of<ProblemPracticeProvider>(context, listen: false);

@@ -195,7 +195,7 @@ class _PracticeNavigationButtonsState extends State<PracticeNavigationButtons> {
     final matchingPractices = widget.practiceProvider.practices
         .where((practice) => practice.practiceId == practiceId);
     final practiceRound = matchingPractices.isNotEmpty
-        ? (matchingPractices.first.practiceCount ?? 0)
+        ? matchingPractices.first.practiceCount
         : 0;
 
     Navigator.of(context).pushReplacement(

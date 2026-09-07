@@ -60,6 +60,8 @@ class _ScreenEnterTransitionState extends State<ScreenEnterTransition>
 
   @override
   Widget build(BuildContext context) {
+    if (AppMotion.isReduced(context)) return widget.child;
+
     return AnimatedBuilder(
       animation: _controller,
       child: widget.child,

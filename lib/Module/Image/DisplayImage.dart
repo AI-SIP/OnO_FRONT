@@ -1,9 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:provider/provider.dart';
 
-import '../Theme/ThemeHandler.dart';
 import '../Design/AppRadius.dart';
 
 class DisplayImage extends StatelessWidget {
@@ -19,8 +17,6 @@ class DisplayImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final themeProvider = Provider.of<ThemeHandler>(context);
-
     return ClipRRect(
       borderRadius: BorderRadius.circular(AppRadius.medium), // 테두리 radius 설정
       child: Padding(

@@ -412,79 +412,6 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
     );
   }
 
-  Widget _buildProblemSectionHeaderCard(
-      String title, IconData icon, ThemeHandler themeProvider,
-      {Widget? trailing}) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(AppRadius.large),
-        border: Border.all(
-          color: themeProvider.primaryColor.withOpacity(0.18),
-          width: 1.2,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8.0),
-            decoration: BoxDecoration(
-              color: themeProvider.primaryColor.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(AppRadius.medium),
-            ),
-            child: Icon(
-              icon,
-              color: themeProvider.primaryColor,
-              size: 18,
-            ),
-          ),
-          const SizedBox(width: 10),
-          StandardText(
-            text: title,
-            fontSize: MobileFontSize.reduced(context, 14),
-            fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
-          ),
-          const Spacer(),
-          if (trailing != null) trailing,
-        ],
-      ),
-    );
-  }
-
-  Widget _buildProblemImagePanel(ThemeHandler themeProvider,
-      {required Widget child}) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(14.0),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(AppRadius.large),
-        border: Border.all(
-          color: themeProvider.primaryColor.withOpacity(0.14),
-          width: 1.1,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.03),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: child,
-    );
-  }
-
   Widget _buildSectionCard(
     ThemeHandler themeProvider, {
     required String title,
@@ -679,55 +606,6 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
         ),
       );
     }
-  }
-
-  Widget _buildSectionTitle(
-      String title, IconData icon, ThemeHandler themeProvider,
-      {Widget? trailing}) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 12.0),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(AppRadius.medium),
-        border: Border.all(
-          color: themeProvider.primaryColor.withOpacity(0.14),
-          width: 1,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.02),
-            blurRadius: 6,
-            offset: const Offset(0, 1),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(6.0),
-            decoration: BoxDecoration(
-              color: themeProvider.primaryColor.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(6.0),
-            ),
-            child: Icon(
-              icon,
-              color: themeProvider.primaryColor,
-              size: 18,
-            ),
-          ),
-          const SizedBox(width: 8),
-          StandardText(
-            text: title,
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-            color: AppColors.textPrimary,
-          ),
-          const Spacer(),
-          if (trailing != null) trailing,
-        ],
-      ),
-    );
   }
 
   Widget _buildReviewHistoryTab(ThemeHandler themeProvider, bool isWide) {

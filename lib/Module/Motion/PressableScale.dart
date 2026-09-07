@@ -122,8 +122,9 @@ class _PressableScaleState extends State<PressableScale> {
 
   @override
   Widget build(BuildContext context) {
+    final reduced = AppMotion.isReduced(context);
     final scaled = AnimatedScale(
-      scale: _pressed ? widget.scale : 1.0,
+      scale: _pressed && !reduced ? widget.scale : 1.0,
       duration: AppMotion.press,
       curve: AppMotion.standard,
       child: widget.child,

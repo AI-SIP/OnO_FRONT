@@ -9,7 +9,6 @@ import '../../../Module/Text/HandWriteText.dart';
 import '../../../Module/Text/mobile_font_size.dart';
 import '../../../Module/Text/StandardText.dart';
 import '../../../Module/Text/UnderlinedText.dart';
-import '../../../Module/Theme/ThemeHandler.dart';
 import '../../../Provider/ProblemsProvider.dart';
 import '../../../Module/Motion/AppHaptic.dart';
 import '../../../Module/Motion/PressableScale.dart';
@@ -55,8 +54,6 @@ Widget buildRepeatSection(
               onLongPress: () async {
                 final problemsProvider =
                     Provider.of<ProblemsProvider>(ctx, listen: false);
-                final themeProvider =
-                    Provider.of<ThemeHandler>(ctx, listen: false);
                 final should = await showTossDialog<bool>(
                     context: ctx,
                     builder: (_) => Dialog(

@@ -117,7 +117,8 @@ class _AppearTransitionState extends State<AppearTransition>
 
   @override
   Widget build(BuildContext context) {
-    if (!widget.enabled) return widget.child;
+    // 기기 설정에서 애니메이션을 끈 사용자에게는 움직임 없이 결과만 보인다.
+    if (!widget.enabled || AppMotion.isReduced(context)) return widget.child;
 
     return TweenAnimationBuilder<double>(
       key: ValueKey<int>(replaySeed),

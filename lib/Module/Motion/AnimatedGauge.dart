@@ -94,6 +94,10 @@ class _AnimatedGaugeValueState extends State<AnimatedGaugeValue>
 
   @override
   Widget build(BuildContext context) {
+    if (AppMotion.isReduced(context)) {
+      return widget.builder(context, widget.value);
+    }
+
     return TweenAnimationBuilder<double>(
       // key 가 바뀌면 위젯이 새로 만들어져 begin 부터 다시 그린다. 값만
       // 0 으로 되돌리면 되돌아가는 과정까지 애니메이션으로 보인다.

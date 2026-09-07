@@ -18,7 +18,6 @@ import 'package:ono/Util/AppNavigator.dart';
 import 'package:ono/Util/NotificationService.dart';
 
 import '../Exception/ApiException.dart';
-import '../Module/Text/StandardText.dart';
 import '../Screen/User/LoginScreen.dart';
 import '../Service/Api/HttpService.dart';
 import '../Service/SocialLogin/AppleAuthService.dart';
@@ -90,7 +89,7 @@ class UserProvider with ChangeNotifier {
       final response = await userService.signInWithMember(userRegisterModel);
       debugPrint('[signInWithMember] response received');
 
-      await saveUserLoginInfo(userRegisterModel?.platform);
+      await saveUserLoginInfo(userRegisterModel.platform);
       bool isRegister = await saveUserToken(response: response);
       debugPrint('[signInWithMember] isRegister: $isRegister');
 

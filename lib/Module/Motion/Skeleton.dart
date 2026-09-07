@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'AppMotion.dart';
+
 /// 내용을 불러오는 동안 그 자리에 놓는 회색 덩어리다.
 ///
 /// 화면 가운데에서 도는 스피너는 무엇을 기다리는지 알려주지 않고, 다 불러온
@@ -85,7 +87,7 @@ class _SkeletonBoxState extends State<SkeletonBox>
     final highlight = widget.highlightColor ?? Colors.grey[100]!;
     final radius = BorderRadius.circular(widget.borderRadius);
 
-    if (!widget.animate) {
+    if (!widget.animate || AppMotion.isReduced(context)) {
       return Container(
         width: widget.width,
         height: widget.height,

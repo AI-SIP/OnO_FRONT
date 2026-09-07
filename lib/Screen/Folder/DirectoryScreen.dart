@@ -316,21 +316,6 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     }
   }
 
-  // Provider 캐시에 하위 폴더 저장 (첫 페이지용)
-  Future<void> _saveSubfoldersToProviderCache(
-    int folderId,
-    List<FolderThumbnailModel> subfolders,
-    int? nextCursor,
-    bool hasNext,
-  ) async {
-    // 화면이 dispose 된 뒤 context 에 접근하면 State.context 의 null check 로 죽는다 (FLUTTER-125/126/15X/15Y)
-    if (!mounted) return;
-    final foldersProvider =
-        Provider.of<FoldersProvider>(context, listen: false);
-    foldersProvider.saveSubfoldersToCache(
-        folderId, subfolders, nextCursor, hasNext);
-  }
-
   // Provider 캐시에 하위 폴더 누적 저장 (모든 페이지용)
   Future<void> _appendSubfoldersToProviderCache(
     int folderId,
@@ -343,20 +328,6 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         Provider.of<FoldersProvider>(context, listen: false);
     foldersProvider.saveSubfoldersToCache(
         folderId, allSubfolders, nextCursor, hasNext);
-  }
-
-  // Provider 캐시에 문제 저장 (첫 페이지용)
-  Future<void> _saveProblemsToProviderCache(
-    int folderId,
-    List<ProblemModel> problems,
-    int? nextCursor,
-    bool hasNext,
-  ) async {
-    if (!mounted) return;
-    final foldersProvider =
-        Provider.of<FoldersProvider>(context, listen: false);
-    foldersProvider.saveProblemsToCache(
-        folderId, problems, nextCursor, hasNext);
   }
 
   // Provider 캐시에 문제 누적 저장 (모든 페이지용)

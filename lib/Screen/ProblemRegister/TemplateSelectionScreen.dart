@@ -11,7 +11,6 @@ import '../../Model/Common/LoginStatus.dart';
 import '../../Model/Problem/ProblemModel.dart';
 import '../../Model/Problem/TemplateType.dart';
 import '../../Module/Dialog/SnackBarDialog.dart';
-import '../../Module/Image/ColorPicker/ImageColorPickerHandler.dart';
 import '../../Module/Image/ImagePickerHandler.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
@@ -334,7 +333,6 @@ class _TemplateSelectionScreenState extends State<TemplateSelectionScreen> {
 
         if (templateType == TemplateType.clean ||
             templateType == TemplateType.special) {
-          final colorPickerHandler = ImageColorPickerHandler();
           final coordinatePickerHandler = ImageCoordinatePickerHandler();
           coordinatePickerResult = await coordinatePickerHandler
               .showCoordinatePicker(context, pickedFile.path);

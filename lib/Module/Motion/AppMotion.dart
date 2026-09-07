@@ -72,4 +72,14 @@ abstract final class AppMotion {
 
   /// 목록 항목이 나타날 때 아래에서 올라오는 거리.
   static const double enterOffset = 8.0;
+
+  // ── 접근성 ────────────────────────────────────────────────
+
+  /// 기기 설정에서 애니메이션을 껐는지.
+  ///
+  /// iOS 의 "동작 줄이기", 안드로이드의 "애니메이션 제거" 를 켠 사용자에게는
+  /// 움직임을 빼야 한다. 모션 위젯이 build 안에서 이걸 보고 스스로 끄므로
+  /// 화면 코드가 따로 신경 쓸 일이 없다.
+  static bool isReduced(BuildContext context) =>
+      MediaQuery.maybeDisableAnimationsOf(context) ?? false;
 }

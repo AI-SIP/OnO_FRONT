@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../Util/AppNavigator.dart';
 import '../Motion/AppMotion.dart';
+import '../Motion/SelectionPop.dart';
 import '../Text/StandardText.dart';
 import 'AppColors.dart';
 import 'AppRadius.dart';
@@ -200,7 +201,13 @@ class _ToastViewState extends State<_ToastView>
                   ),
                   child: Row(
                     children: [
-                      Icon(style.icon, size: 20, color: style.accent),
+                      // 아이콘이 한 박자 늦게 튀어오르면 방금 끝난 일이라는
+                      // 것이 눈에 들어온다.
+                      SelectionPop(
+                        selected: true,
+                        peak: 1.35,
+                        child: Icon(style.icon, size: 20, color: style.accent),
+                      ),
                       const SizedBox(width: AppSpacing.md),
                       Expanded(
                         child: StandardText(

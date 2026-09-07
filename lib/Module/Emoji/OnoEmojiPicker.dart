@@ -234,7 +234,6 @@ class _EmojiCategoryHeader extends StatelessWidget {
   final Color color;
 
   const _EmojiCategoryHeader({
-    super.key,
     required this.title,
     required this.description,
     required this.color,

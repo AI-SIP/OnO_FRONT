@@ -1,5 +1,3 @@
-import 'package:intl/intl.dart';
-
 class PracticeNoteThumbnails {
   final int practiceId;
   final String practiceTitle;
@@ -25,12 +23,6 @@ class PracticeNoteThumbnails {
           : null,
       lastSessionMoodEmojiKey: json['lastSessionMoodEmojiKey']?.toString(),
     );
-  }
-
-  // 날짜 포맷팅 함수
-  String? _formatDateTime(DateTime? dateTime) {
-    if (dateTime == null) return null;
-    return DateFormat('yyyy-MM-dd').format(dateTime);
   }
 
   void addPracticeCount() {

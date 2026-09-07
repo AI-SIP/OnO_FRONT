@@ -65,6 +65,8 @@ class _SelectionPopState extends State<SelectionPop>
 
   @override
   Widget build(BuildContext context) {
+    if (AppMotion.isReduced(context)) return widget.child;
+
     return ScaleTransition(scale: _scale, child: widget.child);
   }
 }

@@ -118,6 +118,4 @@ class ProblemModel {
       tags: tags,
     );
   }
-
-  String? _toIso(DateTime? dt) => dt?.toIso8601String();
 }

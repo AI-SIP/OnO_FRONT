@@ -11,6 +11,7 @@ import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/PracticeNoteProvider.dart';
 import '../../Module/Motion/AppHaptic.dart';
+import '../../Module/Motion/SuccessCheck.dart';
 import '../../Module/Motion/PressableScale.dart';
 import '../../Module/Motion/AnimatedCountText.dart';
 import '../../Module/Motion/AppMotion.dart';
@@ -104,9 +105,21 @@ class _PracticeCompletionScreenState extends State<PracticeCompletionScreen> {
                 builder: (context, scale, child) =>
                     Transform.scale(scale: scale, child: child),
                 child: Center(
-                  child: SvgPicture.asset(
-                    'assets/Icon/BigGreenFrog.svg',
-                    height: screenHeight * 0.2,
+                  child: Stack(
+                    alignment: Alignment.bottomRight,
+                    children: [
+                      SvgPicture.asset(
+                        'assets/Icon/BigGreenFrog.svg',
+                        height: screenHeight * 0.2,
+                      ),
+                      // 화면만 바뀌면 끝났다는 느낌이 없어서, 캐릭터 옆에
+                      // 확인 표시가 그어지게 했다.
+                      SuccessCheck(
+                        size: screenHeight * 0.06,
+                        color: themeProvider.primaryColor,
+                        backgroundColor: Colors.white,
+                      ),
+                    ],
                   ),
                 ),
               ),

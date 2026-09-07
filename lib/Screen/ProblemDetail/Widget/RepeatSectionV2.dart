@@ -905,15 +905,6 @@ class _ProblemSolveCard extends StatelessWidget {
     );
   }
 
-  // 수정 핸들러
-  void _handleEdit(BuildContext context, ThemeHandler themeProvider) {
-    SnackBarDialog.showSnackBar(
-      context: context,
-      message: '수정 기능은 준비 중입니다.',
-      backgroundColor: themeProvider.primaryColor,
-    );
-  }
-
   // 삭제 핸들러
   Future<void> _handleDelete(
       BuildContext context, ThemeHandler themeProvider) async {

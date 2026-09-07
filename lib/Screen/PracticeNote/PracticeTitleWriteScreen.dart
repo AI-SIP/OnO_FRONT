@@ -322,16 +322,6 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
     );
   }
 
-  Widget _buildTitleText() {
-    return StandardText(
-      text: widget.practiceNoteUpdateModel == null
-          ? "복습 세트의 이름을 입력해주세요"
-          : "수정할 이름을 입력해주세요",
-      fontSize: 18,
-      color: Colors.black,
-    );
-  }
-
   Widget _buildTextField(
       TextStyle standardTextStyle, ThemeHandler themeProvider) {
     return Column(
@@ -835,44 +825,6 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
           ),
         );
       },
-    );
-  }
-
-  Widget _buildNumberInput({
-    required String label,
-    required int value,
-    required ValueChanged<int> onChanged,
-    required ThemeHandler themeProvider,
-  }) {
-    return SizedBox(
-      width: double.infinity, // 폭을 최대한으로 늘립니다.
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween, // 양 끝 정렬
-        children: [
-          StandardText(
-            text: label,
-            fontSize: 16,
-            color: themeProvider.primaryColor,
-          ),
-          Row(
-            children: [
-              IconButton(
-                icon: const Icon(Icons.remove, color: Colors.black),
-                onPressed: value > 1 ? () => onChanged(value - 1) : null,
-              ),
-              StandardText(
-                text: '$value',
-                fontSize: 16,
-                color: Colors.black,
-              ),
-              IconButton(
-                icon: const Icon(Icons.add, color: Colors.black),
-                onPressed: () => onChanged(value + 1),
-              ),
-            ],
-          ),
-        ],
-      ),
     );
   }
 }

@@ -91,8 +91,6 @@ class _UserGuideScreenState extends State<UserGuideScreen> {
     double screenHeight = MediaQuery.of(context).size.height;
     double imageWidth = screenHeight * 0.35;
     double imageHeight = screenHeight * 0.2; // 화면 높이에 비례하여 이미지 크기 설정
-    double titleFontSize = screenHeight * 0.03; // 텍스트 크기 비례 설정
-    double descriptionFontSize = screenHeight * 0.02;
 
     return SingleChildScrollView(
       // SingleChildScrollView 추가

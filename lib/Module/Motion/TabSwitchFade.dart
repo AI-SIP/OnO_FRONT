@@ -81,6 +81,8 @@ class _TabSwitchFadeState extends State<TabSwitchFade>
   Widget build(BuildContext context) {
     // 흐려졌다 돌아오기만 하면 탭이 바뀐 것이 잘 안 느껴진다. 화면을 여는
     // 것과 같은 결로, 살짝 작은 상태에서 제 크기로 자리 잡게 한다.
+    if (AppMotion.isReduced(context)) return widget.child;
+
     return AnimatedBuilder(
       animation: _controller,
       child: widget.child,
