@@ -2031,7 +2031,7 @@ class _MultiProblemRegisterScreenState
                   children: [
                     // 다른 로딩과 같은 모양을 쓴다.
                     AppLoadingView(
-                      message: '이미지를 등록하고 있어요',
+                      message: '오답노트를 등록하고 있어요',
                       detail: '$value / $total',
                       progress: progressValue,
                       color: themeProvider.primaryColor,
