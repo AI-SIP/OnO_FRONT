@@ -361,6 +361,43 @@ void main() {
     });
   });
 
+  group('Analytics 유저 식별 (이슈 #164)', () {
+    test('유저 정보를 받아오면 Analytics 에 유저 번호와 학습 단계가 나간다', () async {
+      storageData['loginMethod'] = 'kakao';
+      when(() => userService.fetchUserInfo(showErrorSnackBar: true))
+          .thenAnswer((_) async => _userInfo());
+
+      await provider.fetchUserInfo();
+      // identify 는 fire-and-forget 이라 마이크로태스크를 한 번 비워야 한다.
+      await Future<void>.delayed(Duration.zero);
+
+      expect(analyticsRecorder.userId, '1');
+      expect(analyticsRecorder.userProperties['login_method'], 'kakao');
+      expect(
+        analyticsRecorder.userProperties['notification_enabled'],
+        isNotNull,
+      );
+    });
+
+    test('로그아웃하면 앞 사람의 유저 속성이 남지 않는다', () async {
+      storageData['loginMethod'] = 'google';
+      when(() => userService.fetchUserInfo(showErrorSnackBar: true))
+          .thenAnswer((_) async => _userInfo());
+      await provider.fetchUserInfo();
+      await Future<void>.delayed(Duration.zero);
+      expect(analyticsRecorder.userId, '1');
+
+      await provider.resetUserInfo();
+      await Future<void>.delayed(Duration.zero);
+
+      expect(analyticsRecorder.userId, isNull);
+      expect(
+        analyticsRecorder.userProperties.values.where((v) => v != null),
+        isEmpty,
+      );
+    });
+  });
+
   group('changeIsFirstLogin', () {
     test('한 번 호출하면 false 로 바뀌고 되돌릴 방법이 없다', () {
       provider.changeIsFirstLogin();

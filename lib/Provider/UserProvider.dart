@@ -14,6 +14,7 @@ import 'package:ono/Service/Api/Problem/ProblemService.dart';
 import 'package:ono/Service/Api/User/UserService.dart';
 import 'package:ono/Service/SocialLogin/KakaoAuthService.dart';
 import 'package:ono/Util/AppErrorReporter.dart';
+import 'package:ono/Util/AppAnalytics.dart';
 import 'package:ono/Util/AppNavigator.dart';
 import 'package:ono/Util/NotificationService.dart';
 
@@ -273,6 +274,14 @@ class UserProvider with ChangeNotifier {
     userInfoModel = await userService.fetchUserInfo(
       showErrorSnackBar: showErrorSnackBar,
     );
+    // 유저 정보를 새로 받아올 때마다 Analytics 쪽 유저 속성도 맞춘다.
+    // 로그인 직후, 자동 로그인, 프로필 수정 뒤가 모두 여기를 지난다.
+    unawaited(
+      AppAnalytics.identify(
+        userInfoModel,
+        loginMethod: await storage.read(key: 'loginMethod'),
+      ),
+    );
     notifyListeners();
   }
 
@@ -452,6 +461,10 @@ class UserProvider with ChangeNotifier {
     _loginStatus = LoginStatus.logout;
     _isFirstLogin = true;
     userInfoModel = null;
+
+    // 지우지 않으면 같은 기기에서 다른 계정으로 로그인했을 때 앞 사람의
+    // 유저 속성이 그대로 남아 통계가 섞인다.
+    unawaited(AppAnalytics.clear());
 
     await storage.delete(key: "accessToken");
     await storage.delete(key: "refreshToken");
