@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:ono/Module/Design/AppToast.dart';
+import 'package:ono/Util/AppNavigator.dart';
 import 'package:ono/Exception/ApiException.dart';
 import 'package:ono/Util/ApiHelper.dart';
 
@@ -25,10 +27,15 @@ void main() {
     dotenv.testLoad(fileInput: 'TEST_ENV=1');
   });
 
+  // 알림이 SnackBar 에서 Overlay 를 쓰는 AppToast 로 바뀌었다. 떠 있는 채로
+  // 테스트가 끝나면 자동으로 닫는 타이머가 남아 다음 테스트를 깨뜨린다.
+  tearDown(AppToast.dismiss);
+
   Future<BuildContext> pumpScaffold(WidgetTester tester) async {
     late BuildContext capturedContext;
     await tester.pumpWidget(
       MaterialApp(
+        navigatorKey: AppNavigator.navigatorKey,
         home: Scaffold(
           body: Builder(
             builder: (context) {
@@ -43,7 +50,7 @@ void main() {
   }
 
   group('ApiHelper.call', () {
-    testWidgets('성공하면 결과를 반환하고 successMessage 스낵바를 띄운다', (tester) async {
+    testWidgets('성공하면 결과를 반환하고 successMessage 토스트를 띄운다', (tester) async {
       final context = await pumpScaffold(tester);
 
       final result = await ApiHelper.call<int>(
@@ -57,7 +64,7 @@ void main() {
       expect(find.text('성공했습니다'), findsOneWidget);
     });
 
-    testWidgets('successMessage 가 없으면 성공해도 스낵바를 띄우지 않는다', (tester) async {
+    testWidgets('successMessage 가 없으면 성공해도 토스트를 띄우지 않는다', (tester) async {
       final context = await pumpScaffold(tester);
 
       final result = await ApiHelper.call<int>(context, () async => 1);
@@ -65,9 +72,11 @@ void main() {
 
       expect(result, 1);
       expect(find.byType(SnackBar), findsNothing);
+      expect(find.byIcon(Icons.check_circle), findsNothing);
+      expect(find.byIcon(Icons.error), findsNothing);
     });
 
-    testWidgets('실패하면 null 을 반환하고 에러 메시지를 스낵바로 띄운다', (tester) async {
+    testWidgets('실패하면 null 을 반환하고 에러 메시지를 토스트로 띄운다', (tester) async {
       final context = await pumpScaffold(tester);
 
       final result = await ApiHelper.call<int>(
@@ -82,7 +91,7 @@ void main() {
       expect(find.text('서버 점검 중입니다.'), findsOneWidget);
     });
 
-    testWidgets('showErrorSnackBar 를 false 로 주면 실패해도 스낵바를 띄우지 않는다',
+    testWidgets('showErrorSnackBar 를 false 로 주면 실패해도 토스트를 띄우지 않는다',
         (tester) async {
       final context = await pumpScaffold(tester);
 
@@ -96,6 +105,8 @@ void main() {
 
       expect(result, isNull);
       expect(find.byType(SnackBar), findsNothing);
+      expect(find.byIcon(Icons.check_circle), findsNothing);
+      expect(find.byIcon(Icons.error), findsNothing);
     });
 
     testWidgets('실패 시 onError 콜백에 발생한 예외가 그대로 전달된다', (tester) async {
@@ -168,7 +179,7 @@ void main() {
   });
 
   group('ApiHelper.callAndThrow', () {
-    testWidgets('성공하면 결과를 반환하고 successMessage 스낵바를 띄운다', (tester) async {
+    testWidgets('성공하면 결과를 반환하고 successMessage 토스트를 띄운다', (tester) async {
       final context = await pumpScaffold(tester);
 
       final result = await ApiHelper.callAndThrow<int>(
@@ -182,7 +193,7 @@ void main() {
       expect(find.text('완료'), findsOneWidget);
     });
 
-    testWidgets('실패하면 에러 스낵바를 띄우고 예외를 다시 던진다', (tester) async {
+    testWidgets('실패하면 에러 토스트를 띄우고 예외를 다시 던진다', (tester) async {
       final context = await pumpScaffold(tester);
 
       await expectLater(

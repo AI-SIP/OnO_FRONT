@@ -25,6 +25,7 @@ import '../Service/SocialLogin/AppleAuthService.dart';
 import '../Service/SocialLogin/GoogleAuthService.dart';
 import 'ProblemsProvider.dart';
 import 'TokenProvider.dart';
+import '../Module/Design/AppToast.dart';
 
 class UserProvider with ChangeNotifier {
   final storage = const FlutterSecureStorage();
@@ -198,16 +199,7 @@ class UserProvider with ChangeNotifier {
 
     LoadingDialog.hide(context);
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: StandardText(
-          text: _mapLoginErrorMessage(error),
-          color: Colors.white,
-          fontSize: 14,
-        ),
-        backgroundColor: Colors.red,
-      ),
-    );
+    AppToast.error(_mapLoginErrorMessage(error));
   }
 
   String _mapLoginErrorMessage(Object error) {

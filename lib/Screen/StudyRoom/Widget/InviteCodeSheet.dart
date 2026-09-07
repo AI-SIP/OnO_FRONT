@@ -9,6 +9,7 @@ import '../../../Module/Text/StandardText.dart';
 import '../../../Module/Theme/ThemeHandler.dart';
 import '../../../Module/Design/AppRadius.dart';
 import '../../../Module/Design/AppColors.dart';
+import '../../../Module/Design/AppToast.dart';
 
 class InviteCodeSheet extends StatelessWidget {
   final InviteCodeModel inviteCode;
@@ -202,16 +203,11 @@ class InviteCodeSheet extends StatelessWidget {
   void _copyCode(BuildContext context) {
     Clipboard.setData(ClipboardData(text: inviteCode.code));
     FirebaseAnalytics.instance.logEvent(name: 'invite_code_copied');
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const StandardText(
-          text: '초대 코드가 복사되었어요!',
-          fontSize: 14,
-          color: Colors.white,
-        ),
-        backgroundColor: Colors.black87,
-        duration: const Duration(seconds: 2),
-      ),
+    AppToast.show(
+      message: '초대 코드가 복사되었어요!',
+      type: ToastType.success,
+      context: context,
+      duration: const Duration(seconds: 2),
     );
   }
 

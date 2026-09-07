@@ -145,20 +145,21 @@ class SkeletonList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
+    // Column 으로 쌓으면 줄 높이 합이 화면보다 클 때 그대로 넘친다. 작은
+    // 폰에서 다섯 줄만 놓아도 넘쳤다. 스크롤되는 목록으로 두면 화면에
+    // 들어가는 만큼만 그린다.
+    //
+    // 당겨서 새로고침 안에 놓이는 일이 많아서 AlwaysScrollableScrollPhysics
+    // 를 준다. 내용이 짧아도 당길 수 있어야 한다.
+    return ListView.separated(
       padding: padding,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          for (var i = 0; i < itemCount; i++) ...[
-            if (i > 0) SizedBox(height: spacing),
-            SkeletonBox(
-              height: itemHeight,
-              borderRadius: borderRadius,
-              animate: animate,
-            ),
-          ],
-        ],
+      physics: const AlwaysScrollableScrollPhysics(),
+      itemCount: itemCount,
+      separatorBuilder: (context, index) => SizedBox(height: spacing),
+      itemBuilder: (context, index) => SkeletonBox(
+        height: itemHeight,
+        borderRadius: borderRadius,
+        animate: animate,
       ),
     );
   }

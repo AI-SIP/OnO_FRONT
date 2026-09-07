@@ -17,6 +17,7 @@ import '../../Module/Motion/AppMotion.dart';
 import '../../Module/Motion/AppearTransition.dart';
 import '../../Module/Design/AppColors.dart';
 import '../../Module/Design/AppRadius.dart';
+import '../../Module/Design/AppToast.dart';
 
 class PracticeCompletionScreen extends StatefulWidget {
   final int practiceId;
@@ -255,7 +256,6 @@ class _PracticeCompletionScreenState extends State<PracticeCompletionScreen> {
         child: ElevatedButton(
           onPressed: () async {
             final navigator = Navigator.of(context);
-            final messenger = ScaffoldMessenger.of(context);
             try {
               await practiceProvider.addPracticeCount(
                 widget.practiceId,
@@ -263,17 +263,7 @@ class _PracticeCompletionScreenState extends State<PracticeCompletionScreen> {
               );
             } catch (_) {
               if (!mounted) return;
-              messenger.showSnackBar(
-                const SnackBar(
-                  content: StandardText(
-                    text: '복습 완료를 저장하지 못했어요.',
-                    fontSize: 14,
-                    color: Colors.white,
-                  ),
-                  backgroundColor: Colors.red,
-                  duration: Duration(seconds: 2),
-                ),
-              );
+              AppToast.error('복습 완료를 저장하지 못했어요.');
               return;
             }
             if (!mounted) return;
@@ -287,17 +277,7 @@ class _PracticeCompletionScreenState extends State<PracticeCompletionScreen> {
             if (navigator.canPop()) {
               navigator.pop(true); // PracticeDetailScreen 닫으면서 true 반환
             }
-            messenger.showSnackBar(
-              SnackBar(
-                content: const StandardText(
-                  text: '복습을 완료했습니다!',
-                  fontSize: 14,
-                  color: Colors.white,
-                ),
-                backgroundColor: themeProvider.primaryColor,
-                duration: const Duration(seconds: 2),
-              ),
-            );
+            AppToast.success('복습을 완료했습니다!');
           },
           style: ElevatedButton.styleFrom(
             backgroundColor: themeProvider.primaryColor,

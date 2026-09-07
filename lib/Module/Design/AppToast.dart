@@ -57,9 +57,13 @@ class AppToast {
     _lastMessage = message;
     _lastShownAt = now;
 
-    final overlay = context != null
-        ? Overlay.maybeOf(context, rootOverlay: true)
-        : AppNavigator.navigatorKey.currentState?.overlay;
+    // context 로 먼저 찾되, 못 찾으면 앱 전체의 Overlay 로 되돌아간다.
+    // 삭제처럼 화면을 닫으면서 알리는 경우 context 가 이미 죽어 있어서,
+    // context 만 믿으면 알림이 아무것도 뜨지 않는다.
+    final overlay = (context != null
+            ? Overlay.maybeOf(context, rootOverlay: true)
+            : null) ??
+        AppNavigator.navigatorKey.currentState?.overlay;
     if (overlay == null) return;
 
     dismiss();

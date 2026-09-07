@@ -31,6 +31,7 @@ import 'Widget/UserLevelCard.dart';
 import '../../Module/Motion/TossDialog.dart';
 import '../../Module/Design/AppRadius.dart';
 import '../../Module/Design/AppColors.dart';
+import '../../Module/Design/AppToast.dart';
 
 class SettingScreen extends StatefulWidget {
   final TutorialTargets? tutorialTargets;
@@ -602,16 +603,7 @@ class _MyPageSettingsScreenState extends State<_MyPageSettingsScreen> {
   void _showProfileSnackBar(String message) {
     // 업로드 중 화면을 벗어나면 dispose 된 State 의 context 에 접근해 죽는다 (FLUTTER-15K)
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: StandardText(
-          text: message,
-          fontSize: 14,
-          color: Colors.white,
-        ),
-        backgroundColor: Colors.red,
-      ),
-    );
+    AppToast.error(message);
   }
 
   Widget _buildProfileSection({
@@ -811,16 +803,7 @@ class _MyPageSettingsScreenState extends State<_MyPageSettingsScreen> {
                           .updateNotificationSettings(value);
                     } catch (_) {
                       if (!context.mounted) return;
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: StandardText(
-                            text: '알림 설정 변경에 실패했습니다. 다시 시도해주세요.',
-                            fontSize: 14,
-                            color: Colors.white,
-                          ),
-                          backgroundColor: Colors.red,
-                        ),
-                      );
+                      AppToast.error('알림 설정 변경에 실패했습니다. 다시 시도해주세요.');
                     }
                   },
                 ),

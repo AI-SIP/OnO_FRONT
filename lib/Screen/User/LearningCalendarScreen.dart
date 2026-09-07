@@ -19,6 +19,7 @@ import '../../Module/Motion/AppMotion.dart';
 import '../../Module/Motion/AppearTransition.dart';
 import '../../Module/Design/AppColors.dart';
 import '../../Module/Design/AppRadius.dart';
+import '../../Module/Design/AppToast.dart';
 
 class LearningCalendarScreen extends StatefulWidget {
   const LearningCalendarScreen({super.key});
@@ -93,11 +94,11 @@ class _LearningCalendarScreenState extends State<LearningCalendarScreen> {
     }
     if (!mounted) return;
     FirebaseAnalytics.instance.logEvent(name: 'calendar_diary_saved');
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('다이어리가 저장되었어요.'),
-        duration: Duration(seconds: 2),
-      ),
+    AppToast.show(
+      message: '다이어리가 저장되었어요.',
+      type: ToastType.success,
+      context: context,
+      duration: const Duration(seconds: 2),
     );
   }
 

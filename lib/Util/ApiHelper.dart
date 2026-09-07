@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../Exception/ApiException.dart';
 import 'AppErrorReporter.dart';
 import '../Module/Motion/TossDialog.dart';
+import '../Module/Design/AppToast.dart';
 
 /// API 호출을 위한 공통 헬퍼 클래스
 /// 모든 API 호출에서 일관된 에러 처리와 사용자 피드백을 제공합니다.
@@ -37,12 +38,11 @@ class ApiHelper {
 
       // 성공 메시지 표시
       if (successMessage != null && context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(successMessage),
-            backgroundColor: Colors.green,
-            duration: const Duration(seconds: 2),
-          ),
+        AppToast.show(
+          message: successMessage,
+          type: ToastType.success,
+          context: context,
+          duration: const Duration(seconds: 2),
         );
       }
 
@@ -102,12 +102,11 @@ class ApiHelper {
 
       // 성공 메시지 표시
       if (successMessage != null && context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(successMessage),
-            backgroundColor: Colors.green,
-            duration: const Duration(seconds: 2),
-          ),
+        AppToast.show(
+          message: successMessage,
+          type: ToastType.success,
+          context: context,
+          duration: const Duration(seconds: 2),
         );
       }
 
@@ -220,12 +219,14 @@ class ApiHelper {
 
     if (showErrorSnackBar && messenger != null) {
       final presentation = _errorPresentation(error);
-      messenger.showSnackBar(
-        SnackBar(
-          content: Text(presentation.message),
-          backgroundColor: presentation.backgroundColor,
-          duration: const Duration(seconds: 3),
-        ),
+      // 알림은 위에서 내려오는 토스트로 통일했다. messenger 는 화면이 아직
+      // 살아 있는지 확인하는 용도로만 남는다.
+      AppToast.show(
+        message: presentation.message,
+        type: presentation.backgroundColor == Colors.orange
+            ? ToastType.info
+            : ToastType.error,
+        duration: const Duration(seconds: 3),
       );
     }
   }
