@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 
 import 'AppMotion.dart';
+import 'ScreenEnterTransition.dart';
 
 /// 앱의 모든 화면 전환에 쓰는 라우트다.
 ///
@@ -32,7 +33,11 @@ class TossPageRoute<T> extends PageRoute<T>
   });
 
   @override
-  Widget buildContent(BuildContext context) => builder(context);
+  Widget buildContent(BuildContext context) {
+    // 밀려 들어오는 것만으로는 도착한 뒤가 정지 화면처럼 보인다. 내용이
+    // 아주 살짝 커지며 자리를 잡게 해서 떴다는 느낌을 준다.
+    return ScreenEnterTransition(child: builder(context));
+  }
 
   /// 뒤로가기 제스처 중에 뜨는 이전 화면 제목이다. 앱에서 쓰지 않는다.
   @override

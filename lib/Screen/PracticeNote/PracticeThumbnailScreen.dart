@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
-import 'package:ono/Module/Dialog/LoadingDialog.dart';
 import 'package:provider/provider.dart';
 
 import '../../Model/PracticeNote/PracticeNoteThumbnailModel.dart';
@@ -643,12 +642,13 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
   void _navigateToPracticeDetail(int practiceId) async {
     final practiceProvider =
         Provider.of<ProblemPracticeProvider>(context, listen: false);
-    LoadingDialog.show(context, '복습 세트 로딩 중...');
 
-    // 상세 정보 조회 및 이동
+    // 로딩 다이얼로그를 띄우지 않는다. 떴다 사라진 다음 화면이 넘어가서
+    // 한 번 눌렀는데 두 번 바뀌는 것처럼 보였다. 누른 항목이 줄어드는 것으로
+    // 눌린 것은 이미 알 수 있고, 열린 화면은 자기 자리를 잡으며 나타난다.
     await practiceProvider.fetchPracticeNote(practiceId);
     await practiceProvider.moveToPractice(practiceId);
-    LoadingDialog.hide(context);
+    if (!mounted) return;
 
     final result = await Navigator.push<bool>(
       context,
