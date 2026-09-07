@@ -58,11 +58,10 @@ jobs:
         # 규칙(file_names) 같은 기존 info 가 500개 넘게 쌓여 있어서 종료 코드를
         # 그대로 쓰면 첫 실행부터 상시 빨간불이 된다. 그래서 출력을 직접 판정한다.
         #
-        # warning 23개는 develop 에도 그대로 있는 기존 문제(unused_element 등)라
-        # 지금 0으로 만드는 것은 이 PR 범위 밖이다. 대신 기준선을 박아 두고
-        # 새 warning 이 늘어나면 실패시킨다. 기존 것을 정리할 때마다 이 숫자를 내린다.
+        # 남아 있던 warning 23개는 PR #184 에서 전부 정리했다. 이제 기준선이
+        # 0 이라 warning 이 하나라도 새로 생기면 실패한다.
         env:
-          ALLOWED_WARNINGS: '23'
+          ALLOWED_WARNINGS: '0'
         run: |
           flutter analyze --no-fatal-infos --no-fatal-warnings > analyze.log 2>&1 || true
           cat analyze.log
