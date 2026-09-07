@@ -12,6 +12,8 @@ import '../../Service/Api/StudyCalendar/StudyCalendarService.dart';
 import '../../Util/AppSnackBar.dart';
 import '../../Module/Motion/AppHaptic.dart';
 import '../../Module/Motion/PressableScale.dart';
+import '../../Module/Motion/AnimatedGauge.dart';
+import '../../Module/Motion/Skeleton.dart';
 
 class LearningCalendarScreen extends StatefulWidget {
   const LearningCalendarScreen({super.key});
@@ -166,7 +168,12 @@ class _LearningCalendarScreenState extends State<LearningCalendarScreen> {
         iconTheme: const IconThemeData(color: Colors.black87),
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const SkeletonList(
+              itemCount: 3,
+              itemHeight: 180,
+              spacing: 16,
+              padding: EdgeInsets.fromLTRB(16, 16, 16, 16),
+            )
           : SingleChildScrollView(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -678,18 +685,12 @@ class _LearningCalendarScreenState extends State<LearningCalendarScreen> {
             ],
           ),
           const SizedBox(height: 8),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: LinearProgressIndicator(
-              value: studyDays != null
-                  ? (studyDays / daysInMonth).clamp(0.0, 1.0)
-                  : 0.0,
-              backgroundColor: Colors.grey[200],
-              valueColor: AlwaysStoppedAnimation<Color>(
-                themeProvider.primaryColor.withOpacity(0.7),
-              ),
-              minHeight: 10,
-            ),
+          AnimatedLinearGauge(
+            value: studyDays != null ? studyDays / daysInMonth : 0.0,
+            color: themeProvider.primaryColor.withOpacity(0.7),
+            backgroundColor: Colors.grey[200],
+            height: 10,
+            borderRadius: 8,
           ),
         ],
       ),

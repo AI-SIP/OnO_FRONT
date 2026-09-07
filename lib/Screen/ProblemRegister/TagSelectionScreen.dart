@@ -9,6 +9,7 @@ import '../../Service/Api/Tag/TagService.dart';
 import '../../Module/Motion/AppHaptic.dart';
 import '../../Module/Motion/AppMotion.dart';
 import '../../Module/Motion/PressableScale.dart';
+import '../../Module/Motion/Skeleton.dart';
 
 class TagSelectionResult {
   final List<int> selectedTagIds;
@@ -815,7 +816,7 @@ class _TagSelectionScreenState extends State<TagSelectionScreen> {
                 border: Border.all(color: Colors.grey[200]!, width: 1),
               ),
               child: _isLoading
-                  ? const Center(child: CircularProgressIndicator())
+                  ? const SkeletonList(itemCount: 5, itemHeight: 48, spacing: 8)
                   : _tags.isEmpty
                       ? const Center(
                           child: StandardText(text: '생성된 태그가 없습니다.'),

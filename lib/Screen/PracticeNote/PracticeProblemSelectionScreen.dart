@@ -25,6 +25,7 @@ import '../../Util/AppSnackBar.dart';
 import '../../Module/Motion/AppHaptic.dart';
 import '../../Module/Motion/PressableScale.dart';
 import '../../Module/Motion/TossPageRoute.dart';
+import '../../Module/Motion/Skeleton.dart';
 
 enum _PracticeSearchMode { folder, tag, title }
 
@@ -989,7 +990,7 @@ class _PracticeProblemSelectionScreenState
     final list = Padding(
       padding: padding,
       child: _isLoadingProblems && _currentFolderProblems.isEmpty
-          ? const Center(child: CircularProgressIndicator())
+          ? const SkeletonList(itemCount: 4, itemHeight: 88, spacing: 12)
           : _currentFolderProblems.isNotEmpty
               ? ListView.builder(
                   controller: _problemScrollController,
