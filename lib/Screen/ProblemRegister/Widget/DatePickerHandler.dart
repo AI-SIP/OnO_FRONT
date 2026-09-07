@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../../../Module/Text/mobile_font_size.dart';
 import '../../../Module/Text/StandardText.dart';
+import '../../../Module/Motion/AppHaptic.dart';
+import '../../../Module/Motion/PressableScale.dart';
 
 class DatePickerHandler extends StatefulWidget {
   final DateTime initialDate;
@@ -173,9 +175,10 @@ class _DatePickerHandlerState extends State<DatePickerHandler> {
         final isSelected = DateUtils.isSameDay(date, widget.initialDate);
         final isToday = DateUtils.isSameDay(date, DateTime.now());
 
-        return InkWell(
+        return PressableScale(
+          haptic: HapticLevel.selection,
+          enabled: selectable,
           onTap: selectable ? () => widget.onDateSelected(date) : null,
-          borderRadius: BorderRadius.circular(10),
           child: Container(
             decoration: BoxDecoration(
               color: isSelected

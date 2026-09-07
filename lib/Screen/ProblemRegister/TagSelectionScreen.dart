@@ -6,6 +6,9 @@ import '../../Model/Tag/TagModel.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Service/Api/Tag/TagService.dart';
+import '../../Module/Motion/AppHaptic.dart';
+import '../../Module/Motion/AppMotion.dart';
+import '../../Module/Motion/PressableScale.dart';
 
 class TagSelectionResult {
   final List<int> selectedTagIds;
@@ -192,9 +195,8 @@ class _TagSelectionScreenState extends State<TagSelectionScreen> {
     Color? titleColor,
     required VoidCallback onTap,
   }) {
-    return InkWell(
+    return PressableScale(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
@@ -309,7 +311,9 @@ class _TagSelectionScreenState extends State<TagSelectionScreen> {
                                   final isSelectedForDelete =
                                       selectedDeleteTagIds.contains(tag.tagId);
 
-                                  return InkWell(
+                                  return PressableScale(
+                                    haptic: HapticLevel.selection,
+                                    enabled: !isDeleting,
                                     onTap: isDeleting
                                         ? null
                                         : () {
@@ -825,10 +829,11 @@ class _TagSelectionScreenState extends State<TagSelectionScreen> {
                             final isSelected =
                                 _selectedTagIds.contains(tag.tagId);
 
-                            return InkWell(
+                            return PressableScale(
+                              haptic: HapticLevel.selection,
                               onTap: () => _toggleTag(tag.tagId, !isSelected),
                               child: AnimatedContainer(
-                                duration: const Duration(milliseconds: 150),
+                                duration: AppMotion.fast,
                                 margin: const EdgeInsets.fromLTRB(10, 8, 10, 0),
                                 padding: const EdgeInsets.symmetric(
                                     horizontal: 12, vertical: 12),

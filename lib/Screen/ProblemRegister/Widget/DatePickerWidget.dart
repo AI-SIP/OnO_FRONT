@@ -6,6 +6,7 @@ import '../../../Module/Text/mobile_font_size.dart';
 import '../../../Module/Text/StandardText.dart';
 import '../../../Module/Theme/ThemeHandler.dart';
 import 'DatePickerHandler.dart';
+import '../../../Module/Motion/PressableScale.dart';
 
 class DatePickerWidget extends StatelessWidget {
   final DateTime selectedDate;
@@ -54,7 +55,7 @@ class DatePickerWidget extends StatelessWidget {
           ),
           SizedBox(
             width: selectorWidth,
-            child: GestureDetector(
+            child: PressableScale(
               onTap: () async {
                 FirebaseAnalytics.instance.logEvent(name: 'date_select');
                 final d = await showModalBottomSheet<DateTime>(

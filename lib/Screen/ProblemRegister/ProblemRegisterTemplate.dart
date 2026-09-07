@@ -29,6 +29,9 @@ import 'TagSelectionScreen.dart';
 import 'Widget/DatePickerWidget.dart';
 import 'Widget/ImageGridWidget.dart';
 import 'Widget/LabeledTextField.dart';
+import '../../Module/Motion/AppHaptic.dart';
+import '../../Module/Motion/PressableScale.dart';
+import '../../Module/Motion/TossPageRoute.dart';
 
 class ProblemRegisterTemplate extends StatefulWidget {
   final ProblemModel? problemModel;
@@ -559,7 +562,7 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
 
   Future<void> _openTagSelectionScreen() async {
     final result = await Navigator.of(context).push<TagSelectionResult>(
-      MaterialPageRoute(
+      TossPageRoute(
         builder: (_) => TagSelectionScreen(
           initialTags: List<TagModel>.from(_availableTags),
           initialSelectedTagIds: Set<int>.from(_selectedTagIds),
@@ -694,7 +697,8 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
                                 Positioned(
                                   top: -5,
                                   right: -5,
-                                  child: GestureDetector(
+                                  child: PressableScale(
+                                    scale: 0.85,
                                     onTap: () => _removeSelectedTag(tag.tagId),
                                     child: Container(
                                       width: 15,
@@ -768,9 +772,9 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
                                   _selectedTagIds.contains(tag.tagId);
                               return Material(
                                 color: Colors.transparent,
-                                child: InkWell(
+                                child: PressableScale(
+                                  haptic: HapticLevel.selection,
                                   onTap: () => _applyRecommendedTag(tag),
-                                  borderRadius: BorderRadius.circular(8),
                                   child: Container(
                                     padding: const EdgeInsets.symmetric(
                                         horizontal: 11, vertical: 6),

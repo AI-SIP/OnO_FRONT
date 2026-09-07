@@ -16,6 +16,8 @@ import '../../Module/Image/ImagePickerHandler.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/UserProvider.dart';
+import '../../Module/Motion/AppHaptic.dart';
+import '../../Module/Motion/PressableScale.dart';
 
 class TemplateSelectionScreen extends StatefulWidget {
   const TemplateSelectionScreen({super.key});
@@ -82,7 +84,8 @@ class _TemplateSelectionScreenState extends State<TemplateSelectionScreen> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: List.generate(TemplateType.values.length, (index) {
-        return GestureDetector(
+        return PressableScale(
+          haptic: HapticLevel.selection,
           onTap: () {
             setState(() {
               _selectedIndex = index;

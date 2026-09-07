@@ -12,6 +12,12 @@ import '../../Module/Image/ImagePickerHandler.dart';
 import '../../Module/Text/mobile_font_size.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Util/FolderPickerDialog.dart';
+import '../../Module/Motion/AnimatedGauge.dart';
+import '../../Module/Motion/AppHaptic.dart';
+import '../../Module/Motion/AppMotion.dart';
+import '../../Module/Motion/PressableScale.dart';
+import '../../Module/Motion/StepProgressBar.dart';
+import '../../Module/Motion/TossPageRoute.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Module/Util/FolderPickerWidget.dart';
 import '../../Provider/FoldersProvider.dart';
@@ -194,6 +200,16 @@ class _MultiProblemRegisterScreenState
         fontWeight: FontWeight.w600,
       ),
       centerTitle: true,
+      // 이미지를 고르고 내용을 확인하는 두 단계다. 지금 어디인지 보여준다.
+      bottom: PreferredSize(
+        preferredSize: const Size.fromHeight(3),
+        child: StepProgressBar(
+          currentStep: _step == _BatchRegisterStep.selectImages ? 1 : 2,
+          totalSteps: 2,
+          color: themeProvider.primaryColor,
+          height: 3,
+        ),
+      ),
     );
   }
 
@@ -472,9 +488,9 @@ class _MultiProblemRegisterScreenState
           Positioned(
             right: 6,
             top: 6,
-            child: InkWell(
+            child: PressableScale(
               onTap: _isSubmitting ? null : () => _removeProblemImage(index),
-              borderRadius: BorderRadius.circular(999),
+              scale: 0.88,
               child: Container(
                 width: 30,
                 height: 30,
@@ -499,9 +515,9 @@ class _MultiProblemRegisterScreenState
     final canAddMoreImages =
         !_isSubmitting && _problemImages.length < _maxBatchProblemCount;
 
-    return InkWell(
+    return PressableScale(
       onTap: canAddMoreImages ? _pickProblemImages : null,
-      borderRadius: BorderRadius.circular(12),
+      enabled: canAddMoreImages,
       child: Container(
         decoration: BoxDecoration(
           color: Colors.white,
@@ -1077,13 +1093,13 @@ class _MultiProblemRegisterScreenState
   }
 
   Widget _buildPracticeSetOption(ThemeHandler themeProvider) {
-    return InkWell(
+    return PressableScale(
+      haptic: HapticLevel.selection,
       onTap: _isSubmitting
           ? null
           : () => setState(() {
                 _createPracticeSet = !_createPracticeSet;
               }),
-      borderRadius: BorderRadius.circular(12),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
@@ -1303,7 +1319,8 @@ class _MultiProblemRegisterScreenState
                           Positioned(
                             top: -5,
                             right: -5,
-                            child: GestureDetector(
+                            child: PressableScale(
+                              scale: 0.85,
                               onTap: _isSubmitting
                                   ? null
                                   : () => onRemove(tag.tagId),
@@ -1361,56 +1378,53 @@ class _MultiProblemRegisterScreenState
               runSpacing: 8,
               children: _recommendedTags.map((tag) {
                 final isSelected = selectedTagIds.contains(tag.tagId);
-                return Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    onTap: _isSubmitting
-                        ? null
-                        : () => _applyRecommendedTag(
-                              tag,
-                              selectedTagIds,
-                              onChanged: onChanged,
-                            ),
-                    borderRadius: BorderRadius.circular(8),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 11,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
+                return PressableScale(
+                  haptic: HapticLevel.selection,
+                  onTap: _isSubmitting
+                      ? null
+                      : () => _applyRecommendedTag(
+                            tag,
+                            selectedTagIds,
+                            onChanged: onChanged,
+                          ),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 11,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? themeProvider.primaryColor
+                          : Colors.white,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
                         color: isSelected
                             ? themeProvider.primaryColor
-                            : Colors.white,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: isSelected
-                              ? themeProvider.primaryColor
-                              : themeProvider.primaryColor
-                                  .withValues(alpha: 0.35),
-                          width: isSelected ? 1.4 : 1,
-                        ),
+                            : themeProvider.primaryColor
+                                .withValues(alpha: 0.35),
+                        width: isSelected ? 1.4 : 1,
                       ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          if (isSelected) ...[
-                            const Icon(
-                              Icons.check,
-                              size: 13,
-                              color: Colors.white,
-                            ),
-                            const SizedBox(width: 4),
-                          ],
-                          StandardText(
-                            text: '#${tag.name}',
-                            fontSize: 12,
-                            color: isSelected
-                                ? Colors.white
-                                : themeProvider.primaryColor,
-                            fontWeight: FontWeight.w500,
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (isSelected) ...[
+                          const Icon(
+                            Icons.check,
+                            size: 13,
+                            color: Colors.white,
                           ),
+                          const SizedBox(width: 4),
                         ],
-                      ),
+                        StandardText(
+                          text: '#${tag.name}',
+                          fontSize: 12,
+                          color: isSelected
+                              ? Colors.white
+                              : themeProvider.primaryColor,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ],
                     ),
                   ),
                 );
@@ -1538,7 +1552,7 @@ class _MultiProblemRegisterScreenState
   }) async {
     final result = await Navigator.push<TagSelectionResult>(
       context,
-      MaterialPageRoute(
+      TossPageRoute(
         builder: (_) => TagSelectionScreen(
           initialTags: _availableTags,
           initialSelectedTagIds: draft == null ? _selectedTagIds : draft.tagIds,
@@ -1607,7 +1621,7 @@ class _MultiProblemRegisterScreenState
     var currentIndex = index;
 
     await Navigator.of(context).push(
-      MaterialPageRoute<void>(
+      TossPageRoute<void>(
         builder: (_) {
           return StatefulBuilder(
             builder: (editorContext, editorSetState) {
@@ -1853,6 +1867,8 @@ class _MultiProblemRegisterScreenState
     }
     Provider.of<ScreenIndexProvider>(context, listen: false)
         .setSelectedIndex(0);
+    // 작성이 끝나는 자리라 진동을 준다.
+    AppHaptic.primary();
     SnackBarDialog.showSnackBar(
       context: context,
       message: _createPracticeSet && !practiceSetCreated
@@ -2049,17 +2065,16 @@ class _MultiProblemRegisterScreenState
                       color: Colors.grey[600]!,
                     ),
                     const SizedBox(height: 16),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(999),
-                      child: LinearProgressIndicator(
-                        value: progressValue,
-                        minHeight: 7,
-                        backgroundColor:
-                            themeProvider.primaryColor.withValues(alpha: 0.12),
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          themeProvider.primaryColor,
-                        ),
-                      ),
+                    AnimatedLinearGauge(
+                      value: progressValue,
+                      color: themeProvider.primaryColor,
+                      backgroundColor:
+                          themeProvider.primaryColor.withValues(alpha: 0.12),
+                      height: 7,
+                      borderRadius: 999,
+                      // 올라간 만큼만 따라가면 되므로 짧게 움직인다.
+                      duration: AppMotion.normal,
+                      curve: AppMotion.standard,
                     ),
                   ],
                 );
