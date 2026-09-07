@@ -320,12 +320,61 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
           StandardText(
             text: _buildSummarySubtitle(comparison),
             fontSize: 13,
-            color: AppColors.textPrimary,
+            color: AppColors.textSecondary,
             fontWeight: FontWeight.w600,
             fontFamily: 'PretendardLight',
           ),
+          const SizedBox(height: AppSpacing.lg),
+          // 이 기간을 한 줄로 요약한다. 아래 카드를 다 읽지 않아도
+          // 무엇을 얼마나 했는지 먼저 눈에 들어오게 한다.
+          Row(
+            children: [
+              _buildSummaryFigure(
+                  '작성', '${data.noteWriteCount}', themeProvider),
+              _buildSummaryDivider(),
+              _buildSummaryFigure('복습', '${data.reviewCount}', themeProvider),
+              _buildSummaryDivider(),
+              _buildSummaryFigure(
+                '정답률',
+                '${data.averageAccuracy.toStringAsFixed(0)}%',
+                themeProvider,
+              ),
+            ],
+          ),
         ],
       ),
+    );
+  }
+
+  /// 요약 카드 안에 나란히 놓는 수치 하나.
+  Widget _buildSummaryFigure(
+      String label, String value, ThemeHandler themeProvider) {
+    return Expanded(
+      child: Column(
+        children: [
+          StandardText(
+            text: value,
+            fontSize: 20,
+            color: themeProvider.primaryColor,
+            fontFamily: 'PretendardBold',
+          ),
+          const SizedBox(height: 2),
+          StandardText(
+            text: label,
+            fontSize: 11,
+            color: AppColors.textTertiary,
+            fontWeight: FontWeight.w600,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSummaryDivider() {
+    return Container(
+      width: 1,
+      height: 28,
+      color: AppColors.border,
     );
   }
 
@@ -486,6 +535,7 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
                 '작성한 오답 노트',
                 '${data.noteWriteCount}개',
                 Icons.edit_note_rounded,
+                const Color(0xFF9B7EDE),
               ),
             ),
             const SizedBox(width: 10),
@@ -495,6 +545,7 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
                 '복습 세트 열람',
                 '${data.notePracticeCount}회',
                 Icons.menu_book_rounded,
+                const Color(0xFF4A90D9),
               ),
             ),
           ],
@@ -508,6 +559,7 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
                 '오답노트 복습',
                 '${data.reviewCount}회',
                 Icons.repeat,
+                const Color(0xFF3DBE8B),
               ),
             ),
             const SizedBox(width: 10),
@@ -517,6 +569,7 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
                 '평균 정답률',
                 '${data.averageAccuracy.toStringAsFixed(1)}%',
                 Icons.check_circle_outline,
+                const Color(0xFF2FA97C),
               ),
             ),
           ],
@@ -530,6 +583,7 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
                 '연속 학습일',
                 '${data.consecutiveLearningDays}일',
                 Icons.local_fire_department_outlined,
+                const Color(0xFFF2764B),
               ),
             ),
             const SizedBox(width: 10),
@@ -539,10 +593,43 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
                 '평균 학습 시간',
                 '${data.averageStudyTimeMinutes.toStringAsFixed(1)}분',
                 Icons.schedule,
+                const Color(0xFFE0736F),
               ),
             ),
           ],
         ),
+      ],
+    );
+  }
+
+  /// "12개", "0.0%", "3.5분" 처럼 숫자 뒤에 단위가 붙은 값을 갈라 그린다.
+  ///
+  /// 통째로 키우면 글자가 커서 부담스럽고, 통째로 줄이면 무엇이 중요한 값인지
+  /// 안 보인다. 숫자만 키우고 단위는 작고 옅게 두면 시선이 숫자에 먼저 간다.
+  Widget _buildStatValue(String value) {
+    final match = RegExp(r'^([\d.,]+)(.*)$').firstMatch(value);
+    final number = match?.group(1) ?? value;
+    final unit = match?.group(2) ?? '';
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.baseline,
+      textBaseline: TextBaseline.alphabetic,
+      children: [
+        StandardText(
+          text: number,
+          fontSize: 22,
+          color: AppColors.textPrimary,
+          fontFamily: 'PretendardBold',
+        ),
+        if (unit.isNotEmpty) ...[
+          const SizedBox(width: 2),
+          StandardText(
+            text: unit,
+            fontSize: 13,
+            color: AppColors.textTertiary,
+            fontWeight: FontWeight.w600,
+          ),
+        ],
       ],
     );
   }
@@ -552,9 +639,10 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
     String label,
     String value,
     IconData icon,
+    Color accent,
   ) {
     return Container(
-      height: 108,
+      height: 98,
       padding: const EdgeInsets.fromLTRB(
           AppSpacing.lg, AppSpacing.lg, AppSpacing.lg, AppSpacing.md),
       decoration: BoxDecoration(
@@ -572,28 +660,28 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              StandardText(
-                text: label,
-                fontSize: 13,
-                color: AppColors.textTertiary,
-                fontWeight: FontWeight.w600,
-                fontFamily: 'PretendardBold',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-              Icon(icon, size: 16, color: themeProvider.primaryColor),
-            ],
+          // 아이콘을 맨몸으로 두면 존재감이 없다. 지표마다 다른 색을 옅게 깔아
+          // 여섯 칸이 그냥 나열된 것처럼 보이지 않게 한다.
+          Container(
+            padding: const EdgeInsets.all(7),
+            decoration: BoxDecoration(
+              color: accent.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(AppRadius.small),
+            ),
+            child: Icon(icon, size: 16, color: accent),
           ),
           const Spacer(),
           StandardText(
-            text: value,
-            fontSize: 26,
-            color: AppColors.textPrimary,
+            text: label,
+            fontSize: 12,
+            color: AppColors.textTertiary,
+            fontWeight: FontWeight.w600,
             fontFamily: 'PretendardBold',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
+          const SizedBox(height: 2),
+          _buildStatValue(value),
         ],
       ),
     );
