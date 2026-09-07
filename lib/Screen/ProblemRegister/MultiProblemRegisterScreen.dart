@@ -33,6 +33,7 @@ import 'TagSelectionScreen.dart';
 import 'Widget/DatePickerWidget.dart';
 import 'Widget/ImageGridWidget.dart';
 import 'Widget/LabeledTextField.dart';
+import '../../Module/Motion/TossDialog.dart';
 
 enum _BatchRegisterStep {
   selectImages,
@@ -2005,7 +2006,7 @@ class _MultiProblemRegisterScreenState
   }
 
   void _showProgressDialog(ValueNotifier<int> progress, int total) {
-    showDialog(
+    showTossDialog(
       context: context,
       barrierDismissible: false,
       builder: (dialogContext) {

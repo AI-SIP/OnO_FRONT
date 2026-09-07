@@ -7,6 +7,7 @@ import '../Theme/ThemeHandler.dart';
 import '../Theme/ThemeLockManager.dart';
 import '../Motion/AppHaptic.dart';
 import '../Motion/PressableScale.dart';
+import '../Motion/TossDialog.dart';
 
 class ThemeDialog extends StatefulWidget {
   @override
@@ -242,7 +243,7 @@ class _ThemeDialogState extends State<ThemeDialog> {
           final themeProvider =
               Provider.of<ThemeHandler>(context, listen: false);
 
-          showDialog(
+          showTossDialog(
             context: context,
             builder: (BuildContext dialogContext) {
               return Dialog(

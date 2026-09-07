@@ -21,6 +21,8 @@ import 'Widget/SharedProblemTab.dart';
 import 'Widget/WeeklyReportSheet.dart';
 import '../../Module/Motion/PressableScale.dart';
 import '../../Module/Motion/TossPageRoute.dart';
+import '../../Module/Motion/TossDialog.dart';
+import '../../Module/Motion/AppMotion.dart';
 
 class StudyRoomDetailScreen extends StatefulWidget {
   final int roomId;
@@ -192,7 +194,7 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
     required String confirmLabel,
     required Color confirmColor,
   }) {
-    return showDialog<bool>(
+    return showTossDialog<bool>(
       context: context,
       builder: (_) => Dialog(
         backgroundColor: Colors.white,
@@ -958,6 +960,7 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
     ThemeHandler themeProvider,
   ) {
     showModalBottomSheet(
+      sheetAnimationStyle: AppMotion.sheetStyle,
       context: context,
       useRootNavigator: true,
       backgroundColor: Colors.transparent,

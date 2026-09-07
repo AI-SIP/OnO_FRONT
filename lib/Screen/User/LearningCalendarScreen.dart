@@ -14,6 +14,7 @@ import '../../Module/Motion/AppHaptic.dart';
 import '../../Module/Motion/PressableScale.dart';
 import '../../Module/Motion/AnimatedGauge.dart';
 import '../../Module/Motion/Skeleton.dart';
+import '../../Module/Motion/TossDialog.dart';
 
 class LearningCalendarScreen extends StatefulWidget {
   const LearningCalendarScreen({super.key});
@@ -244,7 +245,7 @@ class _LearningCalendarScreenState extends State<LearningCalendarScreen> {
     int pickerYear = _year;
     final now = DateTime.now();
 
-    showDialog(
+    showTossDialog(
       context: context,
       builder: (ctx) {
         return StatefulBuilder(

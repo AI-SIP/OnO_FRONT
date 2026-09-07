@@ -7,6 +7,7 @@ import '../Text/StandardText.dart';
 import '../Theme/ThemeHandler.dart';
 import 'FolderPickerDialog.dart';
 import '../Motion/PressableScale.dart';
+import '../Motion/TossDialog.dart';
 
 class FolderPickerWidget extends StatefulWidget {
   final int? selectedId;
@@ -19,7 +20,7 @@ class FolderPickerWidget extends StatefulWidget {
   }) : super(key: key);
 
   static Future<int?> showPicker(BuildContext ctx, int? current) {
-    return showDialog<int>(
+    return showTossDialog<int>(
       context: ctx,
       builder: (_) => FolderPickerDialog(initialFolderId: current),
     );

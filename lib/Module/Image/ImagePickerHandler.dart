@@ -9,6 +9,7 @@ import '../Text/mobile_font_size.dart';
 import '../Text/StandardText.dart';
 import '../Theme/ThemeHandler.dart';
 import '../Motion/PressableScale.dart';
+import '../Motion/AppMotion.dart';
 
 class ImagePickerHandler {
   final ImagePicker _picker = ImagePicker();
@@ -107,6 +108,7 @@ class ImagePickerHandler {
       {Function(List<XFile>)? onMultipleImagesPicked}) {
     final openTime = DateTime.now();
     showModalBottomSheet(
+      sheetAnimationStyle: AppMotion.sheetStyle,
       backgroundColor: Colors.transparent,
       context: context,
       isDismissible: false,

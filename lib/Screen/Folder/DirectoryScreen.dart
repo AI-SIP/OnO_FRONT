@@ -38,6 +38,7 @@ import '../ProblemRegister/ProblemRegisterScreen.dart';
 import '../ProblemSearch/TagProblemSearchScreen.dart';
 import '../ReviewDue/ReviewDueScreen.dart';
 import '../Tutorial/TutorialTargets.dart';
+import '../../Module/Motion/TossDialog.dart';
 
 class DirectoryScreen extends StatefulWidget {
   final int? folderId; // 이 화면이 표시할 폴더 ID
@@ -855,6 +856,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
     final openTime = DateTime.now();
     showModalBottomSheet(
+      sheetAnimationStyle: AppMotion.sheetStyle,
       backgroundColor: Colors.transparent,
       context: context,
       isDismissible: false,
@@ -1068,7 +1070,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
   // 폴더 이동 다이얼로그 출력
   Future<void> _showMoveFolderDialog() async {
-    await showDialog<int?>(
+    await showTossDialog<int?>(
       context: context,
       builder: (context) => FolderPickerDialog(
         initialFolderId: _currentFolder?.folderId,
@@ -1101,7 +1103,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     final standardTextStyle = const StandardText(text: '').getTextStyle();
     final openTime = DateTime.now();
 
-    await showDialog(
+    await showTossDialog(
       context: context,
       barrierDismissible: false,
       builder: (dialogContext) {
@@ -1937,7 +1939,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
   }
 
   void _confirmDelete() {
-    showDialog(
+    showTossDialog(
       context: context,
       builder: (dialogContext) => _buildPhoneWidthDialog(
         Dialog(

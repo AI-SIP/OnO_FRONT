@@ -20,6 +20,7 @@ import '../../Module/Motion/AppHaptic.dart';
 import '../../Module/Motion/PressableScale.dart';
 import '../../Module/Motion/Skeleton.dart';
 import '../../Module/Motion/TossPageRoute.dart';
+import '../../Module/Motion/TossDialog.dart';
 
 class PracticeThumbnailScreen extends StatefulWidget {
   final TutorialTargets? tutorialTargets;
@@ -162,6 +163,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
 
     final openTime = DateTime.now();
     showModalBottomSheet(
+      sheetAnimationStyle: AppMotion.sheetStyle,
       backgroundColor: Colors.transparent,
       context: context,
       isDismissible: false,
@@ -377,7 +379,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
   Future<void> _showDeletePracticeDialog(List<int> deletePracticeIds) async {
     final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
 
-    return showDialog(
+    return showTossDialog(
       context: context,
       builder: (context) {
         return Dialog(

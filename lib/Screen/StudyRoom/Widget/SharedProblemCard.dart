@@ -14,6 +14,7 @@ import 'FeedReactionBar.dart';
 import '../../../Module/Motion/AppHaptic.dart';
 import '../../../Module/Motion/PressableScale.dart';
 import '../../../Module/Motion/TossPageRoute.dart';
+import '../../../Module/Motion/TossDialog.dart';
 
 class SharedProblemCard extends StatefulWidget {
   final SharedProblemModel problem;
@@ -60,7 +61,7 @@ class _SharedProblemCardState extends State<SharedProblemCard> {
     StudyRoomProvider provider,
     ThemeHandler themeProvider,
   ) async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showTossDialog<bool>(
       context: context,
       builder: (_) => Dialog(
         backgroundColor: Colors.white,
@@ -171,7 +172,7 @@ class _SharedProblemCardState extends State<SharedProblemCard> {
     ThemeHandler themeProvider,
   ) {
     final primary = themeProvider.primaryColor;
-    showDialog<void>(
+    showTossDialog<void>(
       context: context,
       builder: (dialogContext) => Dialog(
         backgroundColor: Colors.white,

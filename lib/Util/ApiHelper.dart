@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../Exception/ApiException.dart';
 import 'AppErrorReporter.dart';
+import '../Module/Motion/TossDialog.dart';
 
 /// API 호출을 위한 공통 헬퍼 클래스
 /// 모든 API 호출에서 일관된 에러 처리와 사용자 피드백을 제공합니다.
@@ -152,7 +153,7 @@ class ApiHelper {
     bool sendToDiscord = true,
   }) async {
     // 로딩 다이얼로그 표시
-    showDialog(
+    showTossDialog(
       context: context,
       barrierDismissible: false,
       builder: (context) => PopScope(

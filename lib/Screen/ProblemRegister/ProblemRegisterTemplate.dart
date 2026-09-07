@@ -32,6 +32,7 @@ import 'Widget/LabeledTextField.dart';
 import '../../Module/Motion/AppHaptic.dart';
 import '../../Module/Motion/PressableScale.dart';
 import '../../Module/Motion/TossPageRoute.dart';
+import '../../Module/Motion/TossDialog.dart';
 
 class ProblemRegisterTemplate extends StatefulWidget {
   final ProblemModel? problemModel;
@@ -933,7 +934,7 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
   void _showTitleRequiredDialog(BuildContext context) {
     final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
 
-    showDialog(
+    showTossDialog(
       context: context,
       builder: (BuildContext context) {
         return Dialog(
@@ -1010,7 +1011,7 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
   void _showProblemImageRequiredDialog(BuildContext context) {
     final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
 
-    showDialog(
+    showTossDialog(
       context: context,
       builder: (BuildContext context) {
         return Dialog(

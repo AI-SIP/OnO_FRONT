@@ -21,6 +21,8 @@ import 'ProblemDetailTemplate.dart';
 import '../../Module/Motion/AppHaptic.dart';
 import '../../Module/Motion/PressableScale.dart';
 import '../../Module/Motion/TossPageRoute.dart';
+import '../../Module/Motion/TossDialog.dart';
+import '../../Module/Motion/AppMotion.dart';
 
 class ProblemDetailScreen extends StatefulWidget {
   final int problemId;
@@ -337,6 +339,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
 
     final openTime = DateTime.now();
     showModalBottomSheet(
+      sheetAnimationStyle: AppMotion.sheetStyle,
       backgroundColor: Colors.transparent,
       context: context,
       isDismissible: false,
@@ -539,6 +542,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
     final openTime = DateTime.now();
 
     showModalBottomSheet(
+      sheetAnimationStyle: AppMotion.sheetStyle,
       backgroundColor: Colors.transparent,
       context: context,
       isScrollControlled: true,
@@ -856,7 +860,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
 
   Future<void> _showDeleteProblemDialog(
       int problemId, ThemeHandler themeProvider) async {
-    return showDialog(
+    return showTossDialog(
       context: context,
       builder: (dialogContext) {
         return Dialog(

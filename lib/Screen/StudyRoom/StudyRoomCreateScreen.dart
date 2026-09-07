@@ -9,6 +9,7 @@ import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/StudyRoomProvider.dart';
 import '../../Util/AppSnackBar.dart';
 import 'Widget/StudyRoomThumbnail.dart';
+import '../../Module/Motion/TossDialog.dart';
 
 class StudyRoomCreateScreen extends StatefulWidget {
   const StudyRoomCreateScreen({super.key});
@@ -31,7 +32,7 @@ class _StudyRoomCreateScreenState extends State<StudyRoomCreateScreen> {
 
   Future<void> _showValidationDialog(String message) {
     final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
-    return showDialog<void>(
+    return showTossDialog<void>(
       context: context,
       builder: (_) => Dialog(
         backgroundColor: Colors.white,

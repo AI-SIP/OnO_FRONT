@@ -26,6 +26,7 @@ import '../../Module/Motion/AppHaptic.dart';
 import '../../Module/Motion/PressableScale.dart';
 import '../../Module/Motion/TossPageRoute.dart';
 import '../../Module/Motion/Skeleton.dart';
+import '../../Module/Motion/TossDialog.dart';
 
 enum _PracticeSearchMode { folder, tag, title }
 
@@ -1258,7 +1259,7 @@ class _PracticeProblemSelectionScreenState
   void _showSelectProblemDialog(BuildContext context) {
     final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
 
-    showDialog(
+    showTossDialog(
       context: context,
       builder: (BuildContext dialogContext) {
         return Dialog(

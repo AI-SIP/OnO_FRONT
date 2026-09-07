@@ -20,6 +20,7 @@ import '../../../Service/Api/Problem/ProblemSolveService.dart';
 import '../../../Module/Motion/AppHaptic.dart';
 import '../../../Module/Motion/PressableScale.dart';
 import '../../../Module/Motion/TossPageRoute.dart';
+import '../../../Module/Motion/TossDialog.dart';
 
 class RepeatSectionV2 extends StatefulWidget {
   final ProblemModel problem;
@@ -647,7 +648,7 @@ class _ProblemSolveCard extends StatelessWidget {
 
   void _showOptionsDialog(
       BuildContext parentContext, ThemeHandler themeProvider) {
-    showDialog(
+    showTossDialog(
       context: parentContext,
       builder: (dialogContext) => Dialog(
         backgroundColor: Colors.white,
@@ -779,7 +780,7 @@ class _ProblemSolveCard extends StatelessWidget {
 
   void _showDeleteConfirmDialog(
       BuildContext parentContext, ThemeHandler themeProvider) {
-    showDialog(
+    showTossDialog(
       context: parentContext,
       builder: (dialogContext) => Dialog(
         backgroundColor: Colors.white,

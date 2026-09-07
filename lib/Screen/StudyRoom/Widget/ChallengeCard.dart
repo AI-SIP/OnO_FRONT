@@ -7,6 +7,7 @@ import '../../../Module/Theme/ThemeHandler.dart';
 import '../../../Provider/StudyRoomProvider.dart';
 import 'ChallengeProgressBar.dart';
 import '../../../Module/Motion/PressableScale.dart';
+import '../../../Module/Motion/TossDialog.dart';
 
 class ChallengeCard extends StatelessWidget {
   final ChallengeModel challenge;
@@ -218,7 +219,7 @@ class ChallengeCard extends StatelessWidget {
 
   Future<void> _confirmDelete(
       BuildContext context, StudyRoomProvider provider) async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showTossDialog<bool>(
       context: context,
       builder: (_) => Dialog(
         backgroundColor: Colors.white,

@@ -10,6 +10,7 @@ import '../../Module/Motion/AppHaptic.dart';
 import '../../Module/Motion/AppMotion.dart';
 import '../../Module/Motion/PressableScale.dart';
 import '../../Module/Motion/Skeleton.dart';
+import '../../Module/Motion/TossDialog.dart';
 
 class TagSelectionResult {
   final List<int> selectedTagIds;
@@ -108,6 +109,7 @@ class _TagSelectionScreenState extends State<TagSelectionScreen> {
   void _showActionDialog() {
     final openTime = DateTime.now();
     showModalBottomSheet(
+      sheetAnimationStyle: AppMotion.sheetStyle,
       backgroundColor: Colors.transparent,
       context: context,
       isDismissible: false,
@@ -244,6 +246,7 @@ class _TagSelectionScreenState extends State<TagSelectionScreen> {
     bool isDeleting = false;
 
     showModalBottomSheet(
+      sheetAnimationStyle: AppMotion.sheetStyle,
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
@@ -465,7 +468,7 @@ class _TagSelectionScreenState extends State<TagSelectionScreen> {
   }
 
   Future<bool> _showBulkDeleteConfirmDialog(int count) async {
-    final result = await showDialog<bool>(
+    final result = await showTossDialog<bool>(
       context: context,
       builder: (BuildContext context) {
         return Dialog(
@@ -583,7 +586,7 @@ class _TagSelectionScreenState extends State<TagSelectionScreen> {
   void _showLimitExceededDialog(BuildContext context) {
     final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
 
-    showDialog(
+    showTossDialog(
       context: context,
       builder: (BuildContext context) {
         return Dialog(

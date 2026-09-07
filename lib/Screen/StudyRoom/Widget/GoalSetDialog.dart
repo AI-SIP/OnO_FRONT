@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 
 import '../../../Module/Text/StandardText.dart';
 import '../../../Module/Theme/ThemeHandler.dart';
+import '../../../Module/Motion/TossDialog.dart';
 
 class GoalSetDialog extends StatefulWidget {
   final ThemeHandler themeProvider;
@@ -19,7 +20,7 @@ class GoalSetDialog extends StatefulWidget {
     ThemeHandler themeProvider, {
     int? currentGoal,
   }) {
-    return showDialog<int>(
+    return showTossDialog<int>(
       context: context,
       builder: (_) => GoalSetDialog(
         themeProvider: themeProvider,

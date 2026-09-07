@@ -10,6 +10,7 @@ import '../Text/mobile_font_size.dart';
 import '../Text/StandardText.dart';
 import '../Theme/ThemeHandler.dart';
 import '../Motion/PressableScale.dart';
+import '../Motion/TossDialog.dart';
 
 // 트리 노드 상태를 관리하는 클래스
 class FolderTreeNode {
@@ -604,7 +605,7 @@ class _FolderPickerDialogState extends State<FolderPickerDialog> {
     final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
     final standardTextStyle = const StandardText(text: '').getTextStyle();
 
-    await showDialog(
+    await showTossDialog(
       context: context,
       builder: (context) {
         return Dialog(

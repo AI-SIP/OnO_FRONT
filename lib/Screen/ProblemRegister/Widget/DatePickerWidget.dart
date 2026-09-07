@@ -7,6 +7,7 @@ import '../../../Module/Text/StandardText.dart';
 import '../../../Module/Theme/ThemeHandler.dart';
 import 'DatePickerHandler.dart';
 import '../../../Module/Motion/PressableScale.dart';
+import '../../../Module/Motion/AppMotion.dart';
 
 class DatePickerWidget extends StatelessWidget {
   final DateTime selectedDate;
@@ -59,6 +60,7 @@ class DatePickerWidget extends StatelessWidget {
               onTap: () async {
                 FirebaseAnalytics.instance.logEvent(name: 'date_select');
                 final d = await showModalBottomSheet<DateTime>(
+                  sheetAnimationStyle: AppMotion.sheetStyle,
                   context: context,
                   isScrollControlled: true,
                   builder: (_) => DatePickerHandler(

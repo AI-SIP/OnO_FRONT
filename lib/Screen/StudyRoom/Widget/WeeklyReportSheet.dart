@@ -5,6 +5,7 @@ import '../../../Model/StudyRoom/WeeklyReportModel.dart';
 import '../../../Module/Text/StandardText.dart';
 import '../../../Module/Theme/ThemeHandler.dart';
 import '../../../Module/User/ProfileAvatar.dart';
+import '../../../Module/Motion/AppMotion.dart';
 
 class WeeklyReportSheet extends StatelessWidget {
   final WeeklyReportModel report;
@@ -24,6 +25,7 @@ class WeeklyReportSheet extends StatelessWidget {
   }) {
     FirebaseAnalytics.instance.logEvent(name: 'weekly_report_viewed');
     return showModalBottomSheet(
+      sheetAnimationStyle: AppMotion.sheetStyle,
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,

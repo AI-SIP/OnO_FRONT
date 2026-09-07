@@ -7,6 +7,7 @@ import 'OnoEmojiCatalog.dart';
 import 'OnoEmojiCategory.dart';
 import 'OnoEmojiImage.dart';
 import '../Motion/PressableScale.dart';
+import '../Motion/AppMotion.dart';
 
 class OnoEmojiPicker extends StatefulWidget {
   final List<OnoEmojiCategory> categories;
@@ -28,6 +29,7 @@ class OnoEmojiPicker extends StatefulWidget {
   }) {
     final availableCategories = categories ?? OnoEmojiCategory.values;
     return showModalBottomSheet<void>(
+      sheetAnimationStyle: AppMotion.sheetStyle,
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,

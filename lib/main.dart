@@ -32,6 +32,8 @@ import 'Util/AppErrorReporter.dart';
 import 'Util/AppNavigator.dart';
 import 'Util/AppSnackBar.dart';
 import 'Util/NotificationService.dart';
+import 'Module/Motion/AppScrollBehavior.dart';
+import 'Module/Motion/TabSwitchFade.dart';
 import 'Module/Motion/TossPageRoute.dart';
 
 Future<void> main() async {
@@ -155,6 +157,7 @@ class MyApp extends StatelessWidget {
       scaffoldMessengerKey: AppSnackBar.messengerKey,
       navigatorKey: AppNavigator.navigatorKey,
       navigatorObservers: <NavigatorObserver>[observer],
+      scrollBehavior: const AppScrollBehavior(),
       home: SplashScreen(),
       debugShowCheckedModeBanner: false,
       onGenerateRoute: (settings) {
@@ -188,6 +191,13 @@ class MyApp extends StatelessWidget {
       colorScheme: ColorScheme.fromSeed(seedColor: themeHandler.primaryColor),
       primaryColor: themeHandler.primaryColor,
       useMaterial3: true,
+      // 물결 효과를 앱 전체에서 끈다. 눌림은 PressableScale 의 축소로
+      // 표현하는데, 아직 남아 있는 TextButton 과 IconButton 이 물결을
+      // 그리면 같은 앱 안에서 두 가지 반응이 섞인다.
+      splashFactory: NoSplash.splashFactory,
+      splashColor: Colors.transparent,
+      highlightColor: Colors.transparent,
+      hoverColor: Colors.transparent,
       dialogTheme: const DialogThemeData(
         constraints: BoxConstraints(maxWidth: 420),
       ),
@@ -267,9 +277,12 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
     return Stack(
       children: [
         Scaffold(
-          body: IndexedStack(
+          body: TabSwitchFade(
             index: screenIndexProvider.screenIndex,
-            children: widgetOptions,
+            child: IndexedStack(
+              index: screenIndexProvider.screenIndex,
+              children: widgetOptions,
+            ),
           ),
           bottomNavigationBar: _buildBottomNavigationBar(context),
         ),

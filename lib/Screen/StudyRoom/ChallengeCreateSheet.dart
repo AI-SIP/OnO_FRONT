@@ -10,12 +10,15 @@ import '../../Exception/ApiException.dart';
 import '../ProblemRegister/Widget/DatePickerHandler.dart';
 import '../../Module/Motion/PressableScale.dart';
 import '../../Module/Motion/AppHaptic.dart';
+import '../../Module/Motion/TossDialog.dart';
+import '../../Module/Motion/AppMotion.dart';
 
 class ChallengeCreateSheet extends StatefulWidget {
   const ChallengeCreateSheet({super.key});
 
   static Future<void> show(BuildContext context) {
     return showModalBottomSheet(
+      sheetAnimationStyle: AppMotion.sheetStyle,
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
@@ -71,7 +74,7 @@ class _ChallengeCreateSheetState extends State<ChallengeCreateSheet> {
     String message,
   ) {
     final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
-    return showDialog<void>(
+    return showTossDialog<void>(
       context: context,
       builder: (dialogContext) => Dialog(
         backgroundColor: Colors.white,
@@ -390,6 +393,7 @@ class _ChallengeCreateSheetState extends State<ChallengeCreateSheet> {
   Future<void> _pickEndAt(BuildContext context) async {
     final today = _dateOnly(DateTime.now());
     final picked = await showModalBottomSheet<DateTime>(
+      sheetAnimationStyle: AppMotion.sheetStyle,
       context: context,
       isScrollControlled: true,
       builder: (_) => DatePickerHandler(

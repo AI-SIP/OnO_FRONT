@@ -18,6 +18,7 @@ import '../../Util/AppSnackBar.dart';
 import '../../Exception/ApiException.dart';
 import '../../Module/Motion/AppHaptic.dart';
 import '../../Module/Motion/PressableScale.dart';
+import '../../Module/Motion/TossDialog.dart';
 
 class ProblemPickerScreen extends StatefulWidget {
   final int roomId;
@@ -160,7 +161,7 @@ class _ProblemPickerScreenState extends State<ProblemPickerScreen> {
   Future<void> _showAlreadySharedDialog() async {
     if (!mounted) return;
     final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
-    await showDialog<void>(
+    await showTossDialog<void>(
       context: context,
       builder: (_) => Dialog(
         backgroundColor: Colors.white,
@@ -241,7 +242,7 @@ class _ProblemPickerScreenState extends State<ProblemPickerScreen> {
     final problemTitle = problem.reference?.trim().isNotEmpty == true
         ? problem.reference!
         : '제목 없는 문제';
-    return showDialog<String>(
+    return showTossDialog<String>(
       context: context,
       builder: (_) => Dialog(
         backgroundColor: Colors.white,

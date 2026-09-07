@@ -17,6 +17,8 @@ import '../ProblemDetail/ProblemDetailScreen.dart';
 import 'PracticeProblemSelectionScreen.dart';
 import '../../Module/Motion/PressableScale.dart';
 import '../../Module/Motion/TossPageRoute.dart';
+import '../../Module/Motion/TossDialog.dart';
+import '../../Module/Motion/AppMotion.dart';
 
 class PracticeDetailScreen extends StatelessWidget {
   final PracticeNoteDetailModel practice;
@@ -84,6 +86,7 @@ class PracticeDetailScreen extends StatelessWidget {
 
     final openTime = DateTime.now();
     showModalBottomSheet(
+      sheetAnimationStyle: AppMotion.sheetStyle,
       backgroundColor: Colors.transparent,
       context: context,
       isDismissible: false,
@@ -471,6 +474,7 @@ class PracticeDetailScreen extends StatelessWidget {
 
     final openTime = DateTime.now();
     showModalBottomSheet(
+      sheetAnimationStyle: AppMotion.sheetStyle,
       backgroundColor: Colors.transparent,
       context: context,
       isDismissible: false,
@@ -575,7 +579,7 @@ class PracticeDetailScreen extends StatelessWidget {
   }
 
   Future<void> _showDeletePracticeDialog(BuildContext context) async {
-    return showDialog(
+    return showTossDialog(
       context: context,
       builder: (context) {
         return Dialog(

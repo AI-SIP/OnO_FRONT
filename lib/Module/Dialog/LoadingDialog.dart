@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 
 import '../Text/HandWriteText.dart';
+import '../Motion/TossDialog.dart';
 
 class LoadingDialog {
   static bool _isShowing = false;
@@ -12,7 +13,7 @@ class LoadingDialog {
     }
 
     _isShowing = true;
-    showDialog(
+    showTossDialog(
       context: context,
       barrierDismissible: false,
       builder: (BuildContext context) {

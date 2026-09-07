@@ -28,6 +28,7 @@ import 'Widget/SettingMenuButtons.dart';
 import 'Widget/ThemeChangeButton.dart';
 import 'Widget/StreakCard.dart';
 import 'Widget/UserLevelCard.dart';
+import '../../Module/Motion/TossDialog.dart';
 
 class SettingScreen extends StatefulWidget {
   final TutorialTargets? tutorialTargets;
@@ -580,7 +581,7 @@ class _MyPageSettingsScreenState extends State<_MyPageSettingsScreen> {
     final userProvider = Provider.of<UserProvider>(context, listen: false);
     final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
 
-    await showDialog<void>(
+    await showTossDialog<void>(
       context: context,
       builder: (dialogContext) => _NameChangeDialog(
         currentName: currentName,
@@ -762,7 +763,7 @@ class _MyPageSettingsScreenState extends State<_MyPageSettingsScreen> {
                 ThemeChangeButton(
                   themeProvider: themeProvider,
                   onTap: () {
-                    showDialog(
+                    showTossDialog(
                       context: context,
                       builder: (BuildContext context) {
                         return ThemeDialog();
@@ -1091,7 +1092,7 @@ Widget _buildTutorialReplaySection({
 
 void _showConfirmationDialog(BuildContext context, String title, String message,
     VoidCallback onConfirm) {
-  showDialog(
+  showTossDialog(
     context: context,
     builder: (BuildContext context) {
       return Dialog(

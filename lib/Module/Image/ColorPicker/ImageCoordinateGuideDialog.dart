@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 
 import '../../Text/StandardText.dart';
+import '../../Motion/TossDialog.dart';
 
 class ImageCoordinateGuideDialog {
   static Future<void> show(BuildContext context) async {
-    await showDialog(
+    await showTossDialog(
       context: context,
       builder: (context) {
         final screenHeight = MediaQuery.of(context).size.height;

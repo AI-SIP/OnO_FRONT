@@ -14,6 +14,7 @@ import '../../../Provider/ProblemsProvider.dart';
 import '../../../Module/Motion/AppHaptic.dart';
 import '../../../Module/Motion/PressableScale.dart';
 import '../../../Module/Motion/TossPageRoute.dart';
+import '../../../Module/Motion/TossDialog.dart';
 
 Widget buildRepeatSection(
     BuildContext ctx, ProblemModel problem, Color iconColor) {
@@ -54,7 +55,7 @@ Widget buildRepeatSection(
                     Provider.of<ProblemsProvider>(ctx, listen: false);
                 final themeProvider =
                     Provider.of<ThemeHandler>(ctx, listen: false);
-                final should = await showDialog<bool>(
+                final should = await showTossDialog<bool>(
                     context: ctx,
                     builder: (_) => Dialog(
                           backgroundColor: Colors.white,

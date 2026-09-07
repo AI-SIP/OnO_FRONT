@@ -16,6 +16,7 @@ import 'Widget/StudyRoomEmptyState.dart';
 import 'Widget/StudyRoomThumbnail.dart';
 import '../../Module/Motion/TossPageRoute.dart';
 import '../../Module/Motion/PressableScale.dart';
+import '../../Module/Motion/AppMotion.dart';
 
 class StudyRoomListScreen extends StatefulWidget {
   final TutorialTargets? tutorialTargets;
@@ -69,6 +70,7 @@ class _StudyRoomListScreenState extends State<StudyRoomListScreen> {
 
   void _showAddMenu(ThemeHandler themeProvider) {
     showModalBottomSheet(
+      sheetAnimationStyle: AppMotion.sheetStyle,
       context: context,
       useRootNavigator: true,
       backgroundColor: Colors.transparent,

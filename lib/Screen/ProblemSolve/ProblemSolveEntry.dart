@@ -7,6 +7,7 @@ import 'ProblemSolveCanvasScreen.dart';
 import 'ProblemSolveRegisterScreen.dart';
 import '../../Module/Motion/TossPageRoute.dart';
 import '../../Module/Motion/PressableScale.dart';
+import '../../Module/Motion/AppMotion.dart';
 
 class ProblemSolveEntry {
   static Future<bool?> open({
@@ -17,6 +18,7 @@ class ProblemSolveEntry {
     required ThemeHandler themeProvider,
   }) async {
     final mode = await showModalBottomSheet<_ProblemSolveMode>(
+      sheetAnimationStyle: AppMotion.sheetStyle,
       context: context,
       backgroundColor: Colors.transparent,
       builder: (sheetContext) => _ProblemSolveModeSheet(

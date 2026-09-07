@@ -18,6 +18,7 @@ import '../Image/ImagePickerHandler.dart';
 import '../Text/StandardText.dart';
 import '../Theme/ThemeHandler.dart';
 import '../Motion/PressableScale.dart';
+import '../Motion/TossDialog.dart';
 
 class FolderNavigationButtons extends StatefulWidget {
   final BuildContext context;
@@ -176,7 +177,7 @@ class _FolderNavigationButtonsState extends State<FolderNavigationButtons> {
     final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
     bool isLoading = false; // 로딩 상태 변수 외부로 이동
 
-    showDialog(
+    showTossDialog(
       context: context,
       builder: (BuildContext context) {
         return StatefulBuilder(

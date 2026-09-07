@@ -11,6 +11,7 @@ import '../../Module/Theme/GridPainter.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/UserProvider.dart';
 import '../../main.dart';
+import '../../Module/Motion/TossDialog.dart';
 
 class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});
@@ -152,7 +153,7 @@ class LoginScreen extends StatelessWidget {
   void _showGuestLoginDialog(BuildContext context) {
     final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
 
-    showDialog(
+    showTossDialog(
       context: context,
       builder: (ctx) => Dialog(
         backgroundColor: Colors.white,

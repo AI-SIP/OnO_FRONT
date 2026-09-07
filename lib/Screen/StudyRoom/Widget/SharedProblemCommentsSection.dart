@@ -10,6 +10,7 @@ import '../../../Provider/StudyRoomProvider.dart';
 import '../../../Util/AppSnackBar.dart';
 import 'FeedReactionBar.dart';
 import '../../../Module/Motion/PressableScale.dart';
+import '../../../Module/Motion/TossDialog.dart';
 
 class SharedProblemCommentsSection extends StatefulWidget {
   final int sharedProblemId;
@@ -123,7 +124,7 @@ class _SharedProblemCommentsSectionState
     final controller = TextEditingController(text: initialText);
     final primary = widget.themeProvider.primaryColor;
     try {
-      return await showDialog<String>(
+      return await showTossDialog<String>(
         context: context,
         builder: (dialogContext) => Dialog(
           backgroundColor: Colors.white,
@@ -249,7 +250,7 @@ class _SharedProblemCommentsSectionState
 
   Future<void> _deleteComment(SharedProblemCommentModel comment) async {
     if (!mounted) return;
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showTossDialog<bool>(
       context: context,
       builder: (dialogContext) => Dialog(
         backgroundColor: Colors.white,
@@ -366,7 +367,7 @@ class _SharedProblemCommentsSectionState
   void _showCommentActions(SharedProblemCommentModel comment) {
     if (!mounted) return;
     final primary = widget.themeProvider.primaryColor;
-    showDialog<void>(
+    showTossDialog<void>(
       context: context,
       builder: (dialogContext) => Dialog(
         backgroundColor: Colors.white,

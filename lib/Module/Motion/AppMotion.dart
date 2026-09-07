@@ -51,6 +51,20 @@ abstract final class AppMotion {
   /// 화면 밖으로 나가는 것. 천천히 시작해서 빠르게 사라진다.
   static const Curve exit = Cubic(0.3, 0.0, 0.8, 0.15);
 
+  // ── 미리 묶어 둔 것 ───────────────────────────────────────
+
+  /// 바텀시트가 올라오고 내려가는 방식.
+  ///
+  /// showModalBottomSheet 를 직접 부르는 곳에 이것만 넘기면 구조를 건드리지
+  /// 않고 속도와 커브를 맞출 수 있다. 새로 만드는 시트는 showTossSheet 을
+  /// 쓰는 쪽이 손잡이와 모서리까지 같이 맞춰져서 낫다.
+  static const AnimationStyle sheetStyle = AnimationStyle(
+    duration: sheet,
+    curve: enter,
+    reverseDuration: normal,
+    reverseCurve: exit,
+  );
+
   // ── 그 밖의 값 ────────────────────────────────────────────
 
   /// 눌렀을 때 줄어드는 비율. 카드처럼 큰 것에도 버튼에도 이 값을 쓴다.

@@ -10,6 +10,7 @@ import '../../Util/AppSnackBar.dart';
 import '../ProblemDetail/Widget/ImageGallerySection.dart';
 import 'Widget/FeedReactionBar.dart';
 import 'Widget/SharedProblemCommentsSection.dart';
+import '../../Module/Motion/TossDialog.dart';
 
 class SharedProblemDetailScreen extends StatefulWidget {
   final SharedProblemModel problem;
@@ -55,7 +56,7 @@ class _SharedProblemDetailScreenState extends State<SharedProblemDetailScreen> {
     StudyRoomProvider provider,
     ThemeHandler themeProvider,
   ) async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showTossDialog<bool>(
       context: context,
       builder: (_) => Dialog(
         backgroundColor: Colors.white,
@@ -168,7 +169,7 @@ class _SharedProblemDetailScreenState extends State<SharedProblemDetailScreen> {
     ThemeHandler themeProvider,
   ) {
     final primary = themeProvider.primaryColor;
-    showDialog<void>(
+    showTossDialog<void>(
       context: context,
       builder: (dialogContext) => Dialog(
         backgroundColor: Colors.white,

@@ -17,6 +17,8 @@ import '../../Provider/PracticeNoteProvider.dart';
 import '../../Util/AppErrorReporter.dart';
 import '../../Module/Motion/AppHaptic.dart';
 import '../../Module/Motion/PressableScale.dart';
+import '../../Module/Motion/TossDialog.dart';
+import '../../Module/Motion/AppMotion.dart';
 
 class PracticeTitleWriteScreen extends StatefulWidget {
   final PracticeNoteRegisterModel? practiceRegisterModel;
@@ -179,7 +181,7 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
   void _showTitleRequiredDialog(BuildContext context) {
     final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
 
-    showDialog(
+    showTossDialog(
       context: context,
       builder: (BuildContext context) {
         return Dialog(
@@ -716,6 +718,7 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
     final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
     final openTime = DateTime.now();
     showModalBottomSheet(
+      sheetAnimationStyle: AppMotion.sheetStyle,
       context: context,
       backgroundColor: Colors.transparent,
       isDismissible: false,

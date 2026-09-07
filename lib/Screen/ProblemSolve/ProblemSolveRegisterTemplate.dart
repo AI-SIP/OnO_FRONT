@@ -16,6 +16,7 @@ import '../ProblemRegister/Widget/ImageGridWidget.dart';
 import '../../Module/Motion/AppHaptic.dart';
 import '../../Module/Motion/PressableScale.dart';
 import '../../Module/Motion/TossPageRoute.dart';
+import '../../Module/Motion/TossDialog.dart';
 
 class ProblemSolveRegisterTemplate extends StatefulWidget {
   final int problemId;
@@ -573,7 +574,7 @@ class ProblemSolveRegisterTemplateState
     final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
     final standardTextStyle = const StandardText(text: '').getTextStyle();
 
-    await showDialog(
+    await showTossDialog(
       context: context,
       builder: (dialogContext) {
         return Dialog(
