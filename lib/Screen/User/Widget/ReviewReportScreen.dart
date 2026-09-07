@@ -22,14 +22,18 @@ import '../../../Module/Design/AppSpacing.dart';
 enum ReportPeriod { weekly, monthly, total }
 
 class ReviewReportScreen extends StatefulWidget {
-  const ReviewReportScreen({super.key});
+  /// 테스트에서 가짜 서비스를 넣기 위한 것이다. 앱에서는 넘기지 않는다.
+  final LearningReportService? reportService;
+
+  const ReviewReportScreen({super.key, this.reportService});
 
   @override
   State<ReviewReportScreen> createState() => _ReviewReportScreenState();
 }
 
 class _ReviewReportScreenState extends State<ReviewReportScreen> {
-  final LearningReportService _reportService = LearningReportService();
+  late final LearningReportService _reportService =
+      widget.reportService ?? LearningReportService();
 
   ReportPeriod _selectedPeriod = ReportPeriod.weekly;
   LearningReportResponseModel? _report;
@@ -531,76 +535,91 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
   Widget _buildStatsGrid(ThemeHandler themeProvider, _ReportViewData data) {
     return Column(
       children: [
-        Row(
-          children: [
-            Expanded(
-              child: _buildStatCard(
-                themeProvider,
-                '작성한 오답 노트',
-                '${data.noteWriteCount}개',
-                Icons.edit_note_rounded,
-                const Color(0xFF9B7EDE),
+        IntrinsicHeight(
+          child: Row(
+            // 두 카드의 높이를 서로 맞춘다. 늘어날 수 있게 바꾸면서 한쪽만
+            // 커지면 줄이 어긋나 보인다.
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                child: _buildStatCard(
+                  themeProvider,
+                  '작성한 오답 노트',
+                  '${data.noteWriteCount}개',
+                  Icons.edit_note_rounded,
+                  const Color(0xFF9B7EDE),
+                ),
               ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: _buildStatCard(
-                themeProvider,
-                '복습 세트 열람',
-                '${data.notePracticeCount}회',
-                Icons.menu_book_rounded,
-                const Color(0xFF4A90D9),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _buildStatCard(
+                  themeProvider,
+                  '복습 세트 열람',
+                  '${data.notePracticeCount}회',
+                  Icons.menu_book_rounded,
+                  const Color(0xFF4A90D9),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
         const SizedBox(height: 10),
-        Row(
-          children: [
-            Expanded(
-              child: _buildStatCard(
-                themeProvider,
-                '오답노트 복습',
-                '${data.reviewCount}회',
-                Icons.repeat,
-                const Color(0xFF3DBE8B),
+        IntrinsicHeight(
+          child: Row(
+            // 두 카드의 높이를 서로 맞춘다. 늘어날 수 있게 바꾸면서 한쪽만
+            // 커지면 줄이 어긋나 보인다.
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                child: _buildStatCard(
+                  themeProvider,
+                  '오답노트 복습',
+                  '${data.reviewCount}회',
+                  Icons.repeat,
+                  const Color(0xFF3DBE8B),
+                ),
               ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: _buildStatCard(
-                themeProvider,
-                '평균 정답률',
-                '${data.averageAccuracy.toStringAsFixed(1)}%',
-                Icons.check_circle_outline,
-                const Color(0xFF2FA97C),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _buildStatCard(
+                  themeProvider,
+                  '평균 정답률',
+                  '${data.averageAccuracy.toStringAsFixed(1)}%',
+                  Icons.check_circle_outline,
+                  const Color(0xFF2FA97C),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
         const SizedBox(height: 10),
-        Row(
-          children: [
-            Expanded(
-              child: _buildStatCard(
-                themeProvider,
-                '연속 학습일',
-                '${data.consecutiveLearningDays}일',
-                Icons.local_fire_department_outlined,
-                const Color(0xFFF2764B),
+        IntrinsicHeight(
+          child: Row(
+            // 두 카드의 높이를 서로 맞춘다. 늘어날 수 있게 바꾸면서 한쪽만
+            // 커지면 줄이 어긋나 보인다.
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                child: _buildStatCard(
+                  themeProvider,
+                  '연속 학습일',
+                  '${data.consecutiveLearningDays}일',
+                  Icons.local_fire_department_outlined,
+                  const Color(0xFFF2764B),
+                ),
               ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: _buildStatCard(
-                themeProvider,
-                '평균 학습 시간',
-                '${data.averageStudyTimeMinutes.toStringAsFixed(1)}분',
-                Icons.schedule,
-                const Color(0xFFE0736F),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _buildStatCard(
+                  themeProvider,
+                  '평균 학습 시간',
+                  '${data.averageStudyTimeMinutes.toStringAsFixed(1)}분',
+                  Icons.schedule,
+                  const Color(0xFFE0736F),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ],
     );
@@ -615,26 +634,32 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
     final number = match?.group(1) ?? value;
     final unit = match?.group(2) ?? '';
 
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.baseline,
-      textBaseline: TextBaseline.alphabetic,
-      children: [
-        StandardText(
-          text: number,
-          fontSize: 22,
-          color: AppColors.textPrimary,
-          fontFamily: 'PretendardBold',
-        ),
-        if (unit.isNotEmpty) ...[
-          const SizedBox(width: 2),
+    // 글자를 키우면 숫자와 단위가 카드 폭을 넘어간다. 줄바꿈할 수 있는
+    // 문장이 아니라 한 덩어리라, 넘칠 때는 줄이는 쪽이 자연스럽다.
+    return FittedBox(
+      fit: BoxFit.scaleDown,
+      alignment: Alignment.centerLeft,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.baseline,
+        textBaseline: TextBaseline.alphabetic,
+        children: [
           StandardText(
-            text: unit,
-            fontSize: 13,
-            color: AppColors.textTertiary,
-            fontWeight: FontWeight.w600,
+            text: number,
+            fontSize: 22,
+            color: AppColors.textPrimary,
+            fontFamily: 'PretendardBold',
           ),
+          if (unit.isNotEmpty) ...[
+            const SizedBox(width: 2),
+            StandardText(
+              text: unit,
+              fontSize: 13,
+              color: AppColors.textTertiary,
+              fontWeight: FontWeight.w600,
+            ),
+          ],
         ],
-      ],
+      ),
     );
   }
 
@@ -646,7 +671,10 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
     Color accent,
   ) {
     return Container(
-      height: 104,
+      // 고정 높이(104)로 두면 기기 글자 크기를 키운 사용자에게서 라벨과 숫자가
+      // 카드 밖으로 넘친다. 최소 높이만 잡고 내용이 크면 늘어나게 둔다.
+      // 같은 줄의 두 카드는 IntrinsicHeight 로 높이를 맞춘다.
+      constraints: const BoxConstraints(minHeight: 104),
       padding: const EdgeInsets.fromLTRB(
           AppSpacing.lg, AppSpacing.lg, AppSpacing.lg, AppSpacing.md),
       decoration: BoxDecoration(

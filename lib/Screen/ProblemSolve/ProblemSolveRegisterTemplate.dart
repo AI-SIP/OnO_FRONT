@@ -22,6 +22,7 @@ import '../../Module/Motion/TossPageRoute.dart';
 import '../../Module/Motion/TossDialog.dart';
 import '../../Module/Design/AppColors.dart';
 import '../../Module/Design/AppRadius.dart';
+import '../../Module/Design/AppSpacing.dart';
 
 class ProblemSolveRegisterTemplate extends StatefulWidget {
   final int problemId;
@@ -224,10 +225,14 @@ class ProblemSolveRegisterTemplateState
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _buildSectionTitle(
-                icon: Icons.check_circle_outline,
-                title: '이번 복습 결과',
-                themeProvider: themeProvider,
+              // 이 Row 는 spaceBetween 이라 자식 폭이 무한대로 내려간다.
+              // 제목 쪽을 묶어 줘야 안에서 Expanded 를 쓸 수 있다.
+              Expanded(
+                child: _buildSectionTitle(
+                  icon: Icons.check_circle_outline,
+                  title: '이번 복습 결과',
+                  themeProvider: themeProvider,
+                ),
               ),
               if (_answerImageUrls.isNotEmpty)
                 TextButton.icon(
@@ -443,41 +448,55 @@ class ProblemSolveRegisterTemplateState
             ),
             child: Row(
               children: [
-                PressableScale(
-                  onTap: _showTimeInputDialog,
-                  child: Container(
-                    color: Colors.transparent,
-                    child: StandardText(
-                      text: _timeSpentSeconds > 0
-                          ? _formatTimeSpent(_timeSpentSeconds)
-                          : '직접 입력',
-                      fontSize: 14,
-                      color: _timeSpentSeconds > 0
-                          ? Colors.black87
-                          : Colors.grey[400]!,
+                // 시간 글자가 길어지면 칩이 밀려 나가므로 줄어들 수 있게 둔다.
+                Flexible(
+                  child: PressableScale(
+                    onTap: _showTimeInputDialog,
+                    child: Container(
+                      color: Colors.transparent,
+                      child: StandardText(
+                        text: _timeSpentSeconds > 0
+                            ? _formatTimeSpent(_timeSpentSeconds)
+                            : '직접 입력',
+                        fontSize: 14,
+                        color: _timeSpentSeconds > 0
+                            ? Colors.black87
+                            : Colors.grey[400]!,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
                   ),
                 ),
-                const Spacer(),
-                _buildAdjustChip('-1분', themeProvider, () {
-                  setState(() {
-                    _timeSpentSeconds -= 60;
-                    if (_timeSpentSeconds < 0) _timeSpentSeconds = 0;
-                  });
-                }),
-                const SizedBox(width: 4),
-                _buildAdjustChip('+1분', themeProvider,
-                    () => setState(() => _timeSpentSeconds += 60)),
-                const SizedBox(width: 8),
-                _buildAdjustChip('-10초', themeProvider, () {
-                  setState(() {
-                    _timeSpentSeconds -= 10;
-                    if (_timeSpentSeconds < 0) _timeSpentSeconds = 0;
-                  });
-                }),
-                const SizedBox(width: 4),
-                _buildAdjustChip('+10초', themeProvider,
-                    () => setState(() => _timeSpentSeconds += 10)),
+                const SizedBox(width: AppSpacing.sm),
+                // 좁은 폰에서 조절 칩 넷이 한 줄에 다 안 들어가 오른쪽으로
+                // 넘쳤다. 남는 자리를 칩 묶음이 가져가고, 모자라면 아랫줄로
+                // 내린다.
+                Expanded(
+                  child: Wrap(
+                    alignment: WrapAlignment.end,
+                    spacing: 4,
+                    runSpacing: 6,
+                    children: [
+                      _buildAdjustChip('-1분', themeProvider, () {
+                        setState(() {
+                          _timeSpentSeconds -= 60;
+                          if (_timeSpentSeconds < 0) _timeSpentSeconds = 0;
+                        });
+                      }),
+                      _buildAdjustChip('+1분', themeProvider,
+                          () => setState(() => _timeSpentSeconds += 60)),
+                      _buildAdjustChip('-10초', themeProvider, () {
+                        setState(() {
+                          _timeSpentSeconds -= 10;
+                          if (_timeSpentSeconds < 0) _timeSpentSeconds = 0;
+                        });
+                      }),
+                      _buildAdjustChip('+10초', themeProvider,
+                          () => setState(() => _timeSpentSeconds += 10)),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),
@@ -757,11 +776,15 @@ class ProblemSolveRegisterTemplateState
           ),
         ),
         const SizedBox(width: 8),
-        StandardText(
-          text: title,
-          fontSize: 16,
-          fontWeight: FontWeight.w500,
-          color: AppColors.textPrimary,
+        // 글자를 키우면 긴 제목이 오른쪽으로 넘친다. 남는 폭 안에서만
+        // 그리도록 묶는다.
+        Expanded(
+          child: StandardText(
+            text: title,
+            fontSize: 16,
+            fontWeight: FontWeight.w500,
+            color: AppColors.textPrimary,
+          ),
         ),
       ],
     );
