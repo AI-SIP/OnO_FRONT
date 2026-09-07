@@ -31,12 +31,16 @@ Future<T?> showTossSheet<T>({
   /// 아래로 끌어서 닫을 수 있는지.
   bool enableDrag = true,
   bool isScrollControlled = true,
+
+  /// 화면 위에 또 다른 Navigator 가 있을 때 가장 바깥 것에 띄운다.
+  bool useRootNavigator = false,
   Color? backgroundColor,
   double borderRadius = 24.0,
 }) {
   return showModalBottomSheet<T>(
     context: context,
     isScrollControlled: isScrollControlled,
+    useRootNavigator: useRootNavigator,
     isDismissible: isDismissible,
     enableDrag: enableDrag,
     useSafeArea: true,

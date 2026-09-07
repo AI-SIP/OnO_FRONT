@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import 'AppMotion.dart';
+import 'MotionReplayScope.dart';
 
 /// 0 에서 목표값까지 차오르는 값을 만들어 [builder] 에 넘긴다.
 ///
@@ -42,7 +43,8 @@ class AnimatedGaugeValue extends StatefulWidget {
   State<AnimatedGaugeValue> createState() => _AnimatedGaugeValueState();
 }
 
-class _AnimatedGaugeValueState extends State<AnimatedGaugeValue> {
+class _AnimatedGaugeValueState extends State<AnimatedGaugeValue>
+    with MotionReplayMixin<AnimatedGaugeValue> {
   /// [delay] 가 지나기 전에는 0 에 머문다.
   bool _started = false;
   Timer? _timer;
@@ -54,7 +56,31 @@ class _AnimatedGaugeValueState extends State<AnimatedGaugeValue> {
       _started = true;
       return;
     }
+    _startAfterDelay();
+  }
+
+  void _startAfterDelay() {
     _timer = Timer(widget.delay, () {
+      if (!mounted) return;
+      setState(() => _started = true);
+    });
+  }
+
+  /// 화면이 다시 보일 때 0 부터 다시 차오르게 한다.
+  ///
+  /// 여기서는 setState 를 부르지 않는다. 이 메서드는 build 직전에 불리므로
+  /// 값만 되돌려 두면 뒤따르는 build 가 반영한다.
+  @override
+  void onMotionReplay() {
+    _timer?.cancel();
+    _started = false;
+
+    if (widget.delay != Duration.zero) {
+      _startAfterDelay();
+      return;
+    }
+    // 지연이 없어도 한 프레임은 0 으로 그려야 차오르는 것이 보인다.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       setState(() => _started = true);
     });
@@ -69,6 +95,9 @@ class _AnimatedGaugeValueState extends State<AnimatedGaugeValue> {
   @override
   Widget build(BuildContext context) {
     return TweenAnimationBuilder<double>(
+      // key 가 바뀌면 위젯이 새로 만들어져 begin 부터 다시 그린다. 값만
+      // 0 으로 되돌리면 되돌아가는 과정까지 애니메이션으로 보인다.
+      key: ValueKey<int>(replaySeed),
       tween: Tween<double>(begin: 0.0, end: _started ? widget.value : 0.0),
       duration: widget.duration,
       curve: widget.curve,

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import 'AppMotion.dart';
+import 'MotionReplayScope.dart';
 
 /// 화면에 처음 그려질 때 옅게 나타나면서 살짝 올라온다.
 ///
@@ -68,7 +69,8 @@ class AppearTransition extends StatefulWidget {
   State<AppearTransition> createState() => _AppearTransitionState();
 }
 
-class _AppearTransitionState extends State<AppearTransition> {
+class _AppearTransitionState extends State<AppearTransition>
+    with MotionReplayMixin<AppearTransition> {
   bool _started = false;
   Timer? _timer;
 
@@ -79,7 +81,29 @@ class _AppearTransitionState extends State<AppearTransition> {
       _started = true;
       return;
     }
+    _startAfterDelay();
+  }
+
+  void _startAfterDelay() {
     _timer = Timer(widget.delay, () {
+      if (!mounted) return;
+      setState(() => _started = true);
+    });
+  }
+
+  /// 화면이 다시 보일 때 처음부터 다시 나타나게 한다. build 직전에 불리므로
+  /// setState 를 부르지 않고 값만 되돌린다.
+  @override
+  void onMotionReplay() {
+    if (!widget.enabled) return;
+    _timer?.cancel();
+    _started = false;
+
+    if (widget.delay != Duration.zero) {
+      _startAfterDelay();
+      return;
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       setState(() => _started = true);
     });
@@ -96,6 +120,7 @@ class _AppearTransitionState extends State<AppearTransition> {
     if (!widget.enabled) return widget.child;
 
     return TweenAnimationBuilder<double>(
+      key: ValueKey<int>(replaySeed),
       tween: Tween<double>(begin: 0.0, end: _started ? 1.0 : 0.0),
       duration: widget.duration,
       curve: widget.curve,

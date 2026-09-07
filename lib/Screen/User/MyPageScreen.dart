@@ -17,6 +17,11 @@ import '../../Provider/UserProvider.dart';
 import '../../Service/Api/FileUpload/FileUploadService.dart';
 import '../Tutorial/TutorialTargets.dart';
 import 'LoginScreen.dart';
+import '../../Module/Motion/AppearTransition.dart';
+import '../../Module/Motion/MotionReplayScope.dart';
+import '../../Module/Motion/PressableScale.dart';
+import '../../Module/Motion/TossBottomSheet.dart';
+import '../../Module/Motion/TossPageRoute.dart';
 import 'Widget/AccountActionButtons.dart';
 import 'Widget/ReviewReportScreen.dart';
 import 'Widget/SettingMenuButtons.dart';
@@ -37,15 +42,41 @@ class SettingScreen extends StatefulWidget {
 }
 
 class _SettingScreenState extends State<SettingScreen> {
+  /// 마이 페이지가 홈의 몇 번째 탭인지. main.dart 의 widgetOptions 순서를 따른다.
+  static const int _myPageTabIndex = 3;
+
+  /// 카드가 하나씩 들어오는 간격.
+  static const Duration _cardGap = Duration(milliseconds: 80);
+
+  /// 이 탭에 몇 번째로 들어왔는지.
+  ///
+  /// 홈이 탭 넷을 IndexedStack 으로 들고 있어서 앱을 켜는 순간 이 화면까지
+  /// 함께 만들어진다. 그대로 두면 게이지가 탭을 누르기도 전에 다 차 있으므로,
+  /// 들어올 때마다 이 값을 올려 게이지와 카드를 처음부터 다시 재생한다.
+  int _visitSequence = 0;
+  bool _wasSelected = false;
+
   @override
   void initState() {
     super.initState();
+  }
+
+  /// build 안에서 부른다. setState 를 부르지 않고 값만 갱신하므로 이번 build
+  /// 에 그대로 반영된다.
+  void _syncVisitSequence(int screenIndex) {
+    final isSelected = screenIndex == _myPageTabIndex;
+    if (isSelected == _wasSelected) return;
+    _wasSelected = isSelected;
+    if (isSelected) _visitSequence++;
   }
 
   @override
   Widget build(BuildContext context) {
     final userProvider = Provider.of<UserProvider>(context);
     final themeProvider = Provider.of<ThemeHandler>(context);
+    _syncVisitSequence(
+      Provider.of<ScreenIndexProvider>(context).screenIndex,
+    );
     final mediaQuery = MediaQuery.of(context);
     final screenHeight = mediaQuery.size.height;
     final screenWidth = mediaQuery.size.width;
@@ -67,7 +98,7 @@ class _SettingScreenState extends State<SettingScreen> {
               icon: Icon(Icons.settings, color: themeProvider.primaryColor),
               onPressed: () {
                 Navigator.of(context).push(
-                  MaterialPageRoute(
+                  TossPageRoute(
                     builder: (context) => const _MyPageSettingsScreen(),
                   ),
                 );
@@ -80,63 +111,78 @@ class _SettingScreenState extends State<SettingScreen> {
       backgroundColor: Colors.white,
       body: !(userProvider.isLoggedIn == LoginStatus.login)
           ? _buildLoginPrompt(themeProvider)
-          : RefreshIndicator(
-              onRefresh: _refreshData,
-              color: themeProvider.primaryColor,
-              child: ListView(
-                clipBehavior: Clip.none,
-                padding: EdgeInsets.only(
-                    bottom: screenHeight * 0.01, top: screenHeight * 0.02),
-                children: [
-                  if (isTabletLandscape)
-                    Padding(
-                      padding:
-                          EdgeInsets.symmetric(horizontal: screenWidth * 0.04),
-                      child: IntrinsicHeight(
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            Expanded(
-                              child: UserLevelCard(
-                                key: widget.tutorialTargets?.levelCardKey,
-                                userInfo: userProvider.userInfoModel,
-                                themeProvider: themeProvider,
-                                userName:
-                                    userProvider.userInfoModel?.name ?? '이름 없음',
-                                horizontalMarginFactor: 0,
-                              ),
+          : MotionReplayScope(
+              token: _visitSequence,
+              child: RefreshIndicator(
+                onRefresh: _refreshData,
+                color: themeProvider.primaryColor,
+                child: ListView(
+                  clipBehavior: Clip.none,
+                  padding: EdgeInsets.only(
+                      bottom: screenHeight * 0.01, top: screenHeight * 0.02),
+                  children: [
+                    if (isTabletLandscape)
+                      AppearTransition(
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(
+                              horizontal: screenWidth * 0.04),
+                          child: IntrinsicHeight(
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                Expanded(
+                                  child: UserLevelCard(
+                                    key: widget.tutorialTargets?.levelCardKey,
+                                    userInfo: userProvider.userInfoModel,
+                                    themeProvider: themeProvider,
+                                    userName:
+                                        userProvider.userInfoModel?.name ??
+                                            '이름 없음',
+                                    horizontalMarginFactor: 0,
+                                  ),
+                                ),
+                                SizedBox(width: screenWidth * 0.02),
+                                Expanded(
+                                  child: StreakCard(
+                                    key:
+                                        widget.tutorialTargets?.calendarCardKey,
+                                    themeProvider: themeProvider,
+                                    horizontalMarginFactor: 0,
+                                  ),
+                                ),
+                              ],
                             ),
-                            SizedBox(width: screenWidth * 0.02),
-                            Expanded(
-                              child: StreakCard(
-                                key: widget.tutorialTargets?.calendarCardKey,
-                                themeProvider: themeProvider,
-                                horizontalMarginFactor: 0,
-                              ),
-                            ),
-                          ],
+                          ),
+                        ),
+                      )
+                    else ...[
+                      AppearTransition(
+                        child: UserLevelCard(
+                          key: widget.tutorialTargets?.levelCardKey,
+                          userInfo: userProvider.userInfoModel,
+                          themeProvider: themeProvider,
+                          userName: userProvider.userInfoModel?.name ?? '이름 없음',
                         ),
                       ),
-                    )
-                  else ...[
-                    UserLevelCard(
-                      key: widget.tutorialTargets?.levelCardKey,
-                      userInfo: userProvider.userInfoModel,
-                      themeProvider: themeProvider,
-                      userName: userProvider.userInfoModel?.name ?? '이름 없음',
-                    ),
-                  ],
-                  if (!isTabletLandscape) ...[
+                    ],
+                    if (!isTabletLandscape) ...[
+                      SizedBox(height: screenHeight * 0.01),
+                      AppearTransition(
+                        delay: _cardGap,
+                        child: StreakCard(
+                          key: widget.tutorialTargets?.calendarCardKey,
+                          themeProvider: themeProvider,
+                        ),
+                      ),
+                    ],
                     SizedBox(height: screenHeight * 0.01),
-                    StreakCard(
-                      key: widget.tutorialTargets?.calendarCardKey,
-                      themeProvider: themeProvider,
+                    AppearTransition(
+                      delay: _cardGap * 2,
+                      child: _buildReviewReportButton(themeProvider),
                     ),
+                    SizedBox(height: screenHeight * 0.01),
                   ],
-                  SizedBox(height: screenHeight * 0.01),
-                  _buildReviewReportButton(themeProvider),
-                  SizedBox(height: screenHeight * 0.01),
-                ],
+                ),
               ),
             ),
     );
@@ -174,15 +220,14 @@ class _SettingScreenState extends State<SettingScreen> {
         horizontal: screenWidth * horizontalMarginFactor,
         vertical: screenHeight * 0.005,
       ),
-      child: InkWell(
+      child: PressableScale(
         onTap: () {
           Navigator.of(context).push(
-            MaterialPageRoute(
+            TossPageRoute(
               builder: (context) => const ReviewReportScreen(),
             ),
           );
         },
-        borderRadius: BorderRadius.circular(15),
         child: Container(
           padding: EdgeInsets.fromLTRB(
             screenHeight * 0.018,
@@ -415,63 +460,44 @@ class _MyPageSettingsScreenState extends State<_MyPageSettingsScreen> {
     if (_isUploadingProfileImage) return;
     final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
 
-    await showModalBottomSheet<void>(
+    // 손잡이와 모서리, 올라오는 속도는 showTossSheet 이 맞춘다.
+    await showTossSheet<void>(
       context: context,
       useRootNavigator: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => Container(
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(20),
-            topRight: Radius.circular(20),
-          ),
-        ),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 40,
-                  height: 4,
-                  margin: const EdgeInsets.only(bottom: 20),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[300],
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-                const StandardText(
-                  text: '프로필 사진 변경',
-                  fontSize: 16,
-                  color: Colors.black87,
-                  fontWeight: FontWeight.w700,
-                ),
-                const SizedBox(height: 16),
-                _buildSheetOption(
-                  icon: Icons.photo_library_outlined,
-                  label: '갤러리에서 선택',
-                  color: themeProvider.primaryColor,
-                  onTap: () {
-                    Navigator.pop(context);
-                    _pickFromGallery();
-                  },
-                ),
-                const SizedBox(height: 8),
-                _buildSheetOption(
-                  icon: Icons.person_outline,
-                  label: '기본 이미지로 변경',
-                  color: Colors.grey[600]!,
-                  onTap: () {
-                    Navigator.pop(context);
-                    _resetToDefaultImage();
-                  },
-                ),
-                const SizedBox(height: 8),
-              ],
+      isScrollControlled: false,
+      builder: (_) => Padding(
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const StandardText(
+              text: '프로필 사진 변경',
+              fontSize: 16,
+              color: Colors.black87,
+              fontWeight: FontWeight.w700,
             ),
-          ),
+            const SizedBox(height: 16),
+            _buildSheetOption(
+              icon: Icons.photo_library_outlined,
+              label: '갤러리에서 선택',
+              color: themeProvider.primaryColor,
+              onTap: () {
+                Navigator.pop(context);
+                _pickFromGallery();
+              },
+            ),
+            const SizedBox(height: 8),
+            _buildSheetOption(
+              icon: Icons.person_outline,
+              label: '기본 이미지로 변경',
+              color: Colors.grey[600]!,
+              onTap: () {
+                Navigator.pop(context);
+                _resetToDefaultImage();
+              },
+            ),
+            const SizedBox(height: 8),
+          ],
         ),
       ),
     );
@@ -483,9 +509,8 @@ class _MyPageSettingsScreenState extends State<_MyPageSettingsScreen> {
     required Color color,
     required VoidCallback onTap,
   }) {
-    return InkWell(
+    return PressableScale(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -629,35 +654,32 @@ class _MyPageSettingsScreenState extends State<_MyPageSettingsScreen> {
                   Positioned(
                     right: -2,
                     bottom: -2,
-                    child: Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        onTap: _isUploadingProfileImage
-                            ? null
-                            : _showProfileImageOptions,
-                        customBorder: const CircleBorder(),
-                        child: Container(
-                          width: 26,
-                          height: 26,
-                          decoration: BoxDecoration(
-                            color: themeProvider.primaryColor,
-                            shape: BoxShape.circle,
-                            border: Border.all(color: Colors.white, width: 2),
-                          ),
-                          child: _isUploadingProfileImage
-                              ? const Padding(
-                                  padding: EdgeInsets.all(6),
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: Colors.white,
-                                  ),
-                                )
-                              : const Icon(
-                                  Icons.photo_camera_outlined,
-                                  size: 14,
+                    child: PressableScale(
+                      onTap: _isUploadingProfileImage
+                          ? null
+                          : _showProfileImageOptions,
+                      scale: 0.92,
+                      child: Container(
+                        width: 26,
+                        height: 26,
+                        decoration: BoxDecoration(
+                          color: themeProvider.primaryColor,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white, width: 2),
+                        ),
+                        child: _isUploadingProfileImage
+                            ? const Padding(
+                                padding: EdgeInsets.all(6),
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
                                   color: Colors.white,
                                 ),
-                        ),
+                              )
+                            : const Icon(
+                                Icons.photo_camera_outlined,
+                                size: 14,
+                                color: Colors.white,
+                              ),
                       ),
                     ),
                   ),
@@ -813,8 +835,7 @@ class _MyPageSettingsScreenState extends State<_MyPageSettingsScreen> {
 
                   if (!context.mounted) return;
                   Navigator.of(context).pushAndRemoveUntil(
-                    MaterialPageRoute(
-                        builder: (context) => const LoginScreen()),
+                    TossPageRoute(builder: (context) => const LoginScreen()),
                     (route) => false,
                   );
                 },
@@ -829,8 +850,7 @@ class _MyPageSettingsScreenState extends State<_MyPageSettingsScreen> {
 
                   if (!context.mounted) return;
                   Navigator.of(context).pushAndRemoveUntil(
-                    MaterialPageRoute(
-                        builder: (context) => const LoginScreen()),
+                    TossPageRoute(builder: (context) => const LoginScreen()),
                     (route) => false,
                   );
                 },
@@ -1024,9 +1044,8 @@ Widget _buildTutorialReplaySection({
         width: 1,
       ),
     ),
-    child: InkWell(
+    child: PressableScale(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
       child: Padding(
         padding: EdgeInsets.symmetric(
           vertical: screenHeight * 0.008,

@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../Model/StudyCalendar/StudyCalendarModel.dart';
+import '../../../Module/Motion/AnimatedCountText.dart';
+import '../../../Module/Motion/PressableScale.dart';
+import '../../../Module/Motion/Skeleton.dart';
 import '../../../Module/Text/StandardText.dart';
 import '../../../Module/Theme/ThemeHandler.dart';
 import '../../../Service/Api/StudyCalendar/StudyCalendarService.dart';
@@ -206,22 +209,16 @@ class _StreakCardState extends State<StreakCard> {
 
   Widget _buildStreakBanner(Color primaryColor, {bool isTablet = false}) {
     if (_isCalendarLoading) {
-      return SizedBox(
+      return SkeletonBox(
         height: isTablet ? 80.0 : 64.0,
-        child: Center(
-          child: CircularProgressIndicator(
-            color: primaryColor,
-            strokeWidth: 2,
-          ),
-        ),
+        borderRadius: 10,
       );
     }
 
     final currentStreak = _calendarData?.currentStreak;
 
-    return InkWell(
+    return PressableScale(
       onTap: _openCalendarDetail,
-      borderRadius: BorderRadius.circular(10),
       child: Container(
         padding: EdgeInsets.symmetric(
           horizontal: isTablet ? 16.0 : 12.0,
@@ -234,12 +231,20 @@ class _StreakCardState extends State<StreakCard> {
         child: Row(
           children: [
             const SizedBox(width: 6),
-            StandardText(
-              text: currentStreak != null ? '$currentStreak' : '--',
-              fontSize: isTablet ? 28.0 : 21.0,
-              fontWeight: FontWeight.w700,
-              color: primaryColor,
-            ),
+            if (currentStreak != null)
+              AnimatedCountText(
+                value: currentStreak,
+                fontSize: isTablet ? 28.0 : 21.0,
+                fontWeight: FontWeight.w700,
+                color: primaryColor,
+              )
+            else
+              StandardText(
+                text: '--',
+                fontSize: isTablet ? 28.0 : 21.0,
+                fontWeight: FontWeight.w700,
+                color: primaryColor,
+              ),
             const SizedBox(width: 4),
             StandardText(
               text: '일 연속 학습중',
