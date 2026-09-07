@@ -177,6 +177,7 @@ void main() {
         'reflection': '이번엔 잘 풀었다',
         'improvements': ['FASTER_SOLVING'],
         'timeSpentSeconds': 120,
+        'moodEmojiKey': 'excited_happy',
         'migratedFromLegacy': false,
         'imageUrls': ['https://cdn.test/1.png'],
         'createdAt': '2026-01-10T09:05:00.000Z',
@@ -186,6 +187,49 @@ void main() {
       final roundTripped = ProblemSolveModel.fromJson(original).toJson();
 
       expect(roundTripped, original);
+    });
+
+    test('회차마다 기분 이모지가 따로 붙는다', () {
+      // 복습 세트의 lastSessionMoodEmojiKey 처럼 마지막 하나만 덮어쓰는
+      // 방식이 아니다. 같은 문제를 세 번 복습하면 이모지도 세 개가 남는다.
+      final solves = [
+        {'moodEmojiKey': 'stressed_bomb'},
+        {'moodEmojiKey': 'excited_happy'},
+        {'moodEmojiKey': null},
+      ].map((extra) => ProblemSolveModel.fromJson({
+            'problemSolveId': 10,
+            'problemId': 7,
+            'userId': 1,
+            'practicedAt': '2026-01-10T09:00:00.000Z',
+            'answerStatus': 'CORRECT',
+            'improvements': <String>[],
+            'imageUrls': <String>[],
+            'createdAt': '2026-01-10T09:05:00.000Z',
+            'updatedAt': '2026-01-10T09:05:00.000Z',
+            ...extra,
+          }));
+
+      expect(
+        solves.map((s) => s.moodEmojiKey),
+        ['stressed_bomb', 'excited_happy', null],
+      );
+    });
+
+    test('moodEmojiKey 가 응답에 없으면 null 이다', () {
+      // 백엔드 배포 전에는 이 필드가 안 내려온다. 그래도 파싱은 되어야 한다.
+      final model = ProblemSolveModel.fromJson({
+        'problemSolveId': 10,
+        'problemId': 7,
+        'userId': 1,
+        'practicedAt': '2026-01-10T09:00:00.000Z',
+        'answerStatus': 'CORRECT',
+        'improvements': <String>[],
+        'imageUrls': <String>[],
+        'createdAt': '2026-01-10T09:05:00.000Z',
+        'updatedAt': '2026-01-10T09:05:00.000Z',
+      });
+
+      expect(model.moodEmojiKey, isNull);
     });
   });
 }

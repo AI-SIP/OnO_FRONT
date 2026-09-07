@@ -258,6 +258,64 @@ void main() {
       expect(body['timeSpentSeconds'], 90);
       expect(id, 55);
     });
+
+    test('기분 이모지를 고르면 키가 함께 나간다 (이슈 #185)', () async {
+      final http = TestHttpClient.respondJson(apiEnvelope(56));
+
+      await buildService(http).createProblemSolve(
+        ProblemSolveRegisterDto(
+          problemId: 7,
+          practicedAt: DateTime.utc(2026, 8, 1, 9),
+          answerStatus: AnswerStatus.WRONG,
+          improvements: const [],
+          moodEmojiKey: 'stressed_bomb',
+        ),
+      );
+
+      expect(http.lastRequest.jsonBody!['moodEmojiKey'], 'stressed_bomb');
+    });
+
+    test('기분을 안 고르면 null 로 나가고 서버가 null 로 저장한다', () async {
+      final http = TestHttpClient.respondJson(apiEnvelope(57));
+
+      await buildService(http).createProblemSolve(
+        ProblemSolveRegisterDto(
+          problemId: 7,
+          practicedAt: DateTime.utc(2026, 8, 1, 9),
+          answerStatus: AnswerStatus.CORRECT,
+          improvements: const [],
+        ),
+      );
+
+      final body = http.lastRequest.jsonBody!;
+      expect(body.containsKey('moodEmojiKey'), isTrue);
+      expect(body['moodEmojiKey'], isNull);
+    });
+
+    test('서버가 모르는 이모지라고 하면(400, errorCode 11001) 예외로 올라온다', () async {
+      // 유니코드 이모지 문자를 그대로 보내면 여기 걸린다. 키 문자열을
+      // 보내야 한다.
+      final http = TestHttpClient.respondWith(
+        errorResponse(
+          statusCode: 400,
+          errorCode: 11001,
+          message: '지원하지 않는 이모지입니다.',
+        ),
+      );
+
+      await expectLater(
+        buildService(http).createProblemSolve(
+          ProblemSolveRegisterDto(
+            problemId: 7,
+            practicedAt: DateTime.utc(2026, 8, 1, 9),
+            answerStatus: AnswerStatus.CORRECT,
+            improvements: const [],
+            moodEmojiKey: '🙂',
+          ),
+        ),
+        throwsA(isA<BadRequestException>()),
+      );
+    });
   });
 
   group('uploadProblemSolveImages', () {
@@ -293,6 +351,24 @@ void main() {
   });
 
   group('updateProblemSolve', () {
+    test('수정 요청에 기분 이모지가 항상 실린다 (이슈 #185)', () async {
+      // PATCH 는 부분 수정이 아니라 전체 교체다. 빼고 보내면 서버가 null 로
+      // 덮어써서 이모지가 지워진다.
+      final http = TestHttpClient.respondJson(apiEnvelope(null));
+
+      await buildService(http).updateProblemSolve(
+        ProblemSolveUpdateDto(
+          problemSolveId: 33,
+          answerStatus: AnswerStatus.CORRECT,
+          improvements: const [],
+          moodEmojiKey: 'excited_happy',
+        ),
+      );
+
+      expect(http.lastRequest.method, 'PATCH');
+      expect(http.lastRequest.jsonBody!['moodEmojiKey'], 'excited_happy');
+    });
+
     test('PATCH /api/problem-solves 로 복습 기록을 수정한다', () async {
       final http = TestHttpClient.respondWith(emptyResponse());
 
