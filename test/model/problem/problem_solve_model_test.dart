@@ -231,5 +231,31 @@ void main() {
 
       expect(model.moodEmojiKey, isNull);
     });
+
+    test('서버가 날짜를 공백으로 주든 T 로 주든 똑같이 읽는다', () {
+      // 지금 백엔드는 요청은 ISO(`T`)로 받고 응답은 공백 구분으로 내려준다
+      // (등록 DTO 에는 @JsonFormat 이 없고 응답 DTO 에만 있다).
+      // 나중에 형식을 한쪽으로 맞추더라도 앱이 깨지지 않아야 한다.
+      Map<String, dynamic> withDates(String practicedAt) => {
+            'problemSolveId': 10,
+            'problemId': 7,
+            'userId': 1,
+            'practicedAt': practicedAt,
+            'answerStatus': 'CORRECT',
+            'improvements': <String>[],
+            'imageUrls': <String>[],
+            'createdAt': practicedAt,
+            'updatedAt': practicedAt,
+          };
+
+      final spaced =
+          ProblemSolveModel.fromJson(withDates('2026-01-10 09:00:00'));
+      final isoT = ProblemSolveModel.fromJson(withDates('2026-01-10T09:00:00'));
+
+      expect(spaced.practicedAt, DateTime(2026, 1, 10, 9));
+      expect(isoT.practicedAt, spaced.practicedAt);
+      expect(isoT.createdAt, spaced.createdAt);
+      expect(isoT.updatedAt, spaced.updatedAt);
+    });
   });
 }
