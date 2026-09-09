@@ -30,10 +30,9 @@ class TodayMissionCard extends StatelessWidget {
 
     final total = missionProvider.dailyTotalCount;
     final completed = missionProvider.dailyCompletedCount;
-    // 진행도와 배지가 같은 집합을 세야 한다. 배너가 "오늘의 미션"이니 둘 다
-    // 일일 기준이다. 진행도는 일일인데 배지가 주간까지 세면 "0/0" 옆에
-    // "받기 2" 가 붙는다.
-    final unclaimed = missionProvider.dailyUnclaimedCount;
+    // 진행도(n/m)는 오늘 것만 센다. 배지는 거기에 지난 미션을 더한다.
+    // 기간을 넘긴 미수령 보상이 배지에 안 잡히면 있는 줄도 모르고 지나간다.
+    final unclaimed = missionProvider.bannerUnclaimedCount;
     final ratio = total > 0 ? (completed / total).clamp(0.0, 1.0) : 0.0;
 
     return Padding(

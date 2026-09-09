@@ -13,6 +13,7 @@ import '../../Provider/MissionProvider.dart';
 import '../../Provider/UserProvider.dart';
 import 'MissionIcon.dart';
 import 'MissionLevelUpDialog.dart';
+import 'MissionPeriodLabel.dart';
 
 /// 일일 미션과 주간 미션을 보여 주고 보상을 받는 화면이다.
 ///
@@ -177,21 +178,33 @@ class _MissionScreenState extends State<MissionScreen>
       body: TabBarView(
         controller: _tabController,
         children: [
-          _buildMissionList(missionProvider.dailyMissions, themeProvider),
+          _buildMissionList(
+            missionProvider.dailyMissions,
+            themeProvider,
+            expired: missionProvider.expiredMissions,
+          ),
           _buildMissionList(missionProvider.weeklyMissions, themeProvider),
         ],
       ),
     );
   }
 
+  /// 한 탭의 목록을 그린다.
+  ///
+  /// 일일 탭에는 [expired] — 기간이 지났지만 아직 받을 수 있는 미션 — 를 맨
+  /// 위에 따로 얹는다. 탭을 새로 만들지 않는 이유는, 지난 미션은 받고 나면
+  /// 사라지는 임시 목록이라 탭 자리를 늘 차지할 것이 아니기 때문이다.
   Widget _buildMissionList(
     List<MissionModel> missions,
-    ThemeHandler themeProvider,
-  ) {
+    ThemeHandler themeProvider, {
+    List<MissionModel> expired = const [],
+  }) {
+    final hasAnything = missions.isNotEmpty || expired.isNotEmpty;
+
     return RefreshIndicator(
       color: themeProvider.primaryColor,
       onRefresh: _refresh,
-      child: missions.isEmpty
+      child: !hasAnything
           ? ListView(
               physics: const AlwaysScrollableScrollPhysics(),
               padding: const EdgeInsets.fromLTRB(
@@ -210,7 +223,7 @@ class _MissionScreenState extends State<MissionScreen>
                 ),
               ],
             )
-          : ListView.separated(
+          : ListView(
               physics: const AlwaysScrollableScrollPhysics(),
               padding: const EdgeInsets.fromLTRB(
                 AppSpacing.lg,
@@ -218,14 +231,75 @@ class _MissionScreenState extends State<MissionScreen>
                 AppSpacing.lg,
                 AppSpacing.xxxl,
               ),
-              itemCount: missions.length,
-              separatorBuilder: (_, __) =>
-                  const SizedBox(height: AppSpacing.md),
-              itemBuilder: (context, index) => MissionTile(
-                mission: missions[index],
-                onClaim: () => _claim(missions[index]),
-              ),
+              children: [
+                if (expired.isNotEmpty) ...[
+                  const _MissionSectionHeader(
+                    title: '지난 미션',
+                    description: '기간은 지났지만 아직 받을 수 있어요.',
+                  ),
+                  ..._tiles(expired, showPeriod: true),
+                  if (missions.isNotEmpty)
+                    const _MissionSectionHeader(title: '오늘의 미션'),
+                ],
+                ..._tiles(missions),
+              ],
             ),
+    );
+  }
+
+  List<Widget> _tiles(
+    List<MissionModel> missions, {
+    bool showPeriod = false,
+  }) {
+    return [
+      for (final mission in missions)
+        Padding(
+          padding: const EdgeInsets.only(bottom: AppSpacing.md),
+          child: MissionTile(
+            mission: mission,
+            showPeriod: showPeriod,
+            onClaim: () => _claim(mission),
+          ),
+        ),
+    ];
+  }
+}
+
+/// 목록 안의 구분 제목이다.
+class _MissionSectionHeader extends StatelessWidget {
+  final String title;
+  final String? description;
+
+  const _MissionSectionHeader({required this.title, this.description});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(
+        top: AppSpacing.xs,
+        bottom: AppSpacing.md,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          StandardText(
+            text: title,
+            fontSize: 14,
+            color: AppColors.textPrimary,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          if (description != null)
+            StandardText(
+              text: description!,
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: AppColors.textTertiary,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+        ],
+      ),
     );
   }
 }
@@ -235,10 +309,14 @@ class MissionTile extends StatelessWidget {
   final MissionModel mission;
   final VoidCallback onClaim;
 
+  /// 어느 기간의 미션인지 함께 보여 줄지. 지난 미션 목록에서만 켠다.
+  final bool showPeriod;
+
   const MissionTile({
     super.key,
     required this.mission,
     required this.onClaim,
+    this.showPeriod = false,
   });
 
   @override
@@ -266,6 +344,14 @@ class MissionTile extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                if (showPeriod)
+                  StandardText(
+                    text: MissionPeriodLabel.of(mission.periodKey),
+                    fontSize: 11,
+                    color: themeProvider.primaryColor,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 StandardText(
                   text: mission.title,
                   fontSize: 14,

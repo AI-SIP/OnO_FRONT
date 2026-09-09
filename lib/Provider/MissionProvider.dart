@@ -50,6 +50,10 @@ class MissionProvider with ChangeNotifier {
 
   List<MissionModel> get weeklyMissions => _board?.weekly.missions ?? const [];
 
+  /// 지난 기간에 완료했지만 아직 안 받은 미션들.
+  List<MissionModel> get expiredMissions =>
+      _board?.expired.missions ?? const [];
+
   int get dailyCompletedCount => _board?.daily.completedCount ?? 0;
 
   int get dailyTotalCount => _board?.daily.missions.length ?? 0;
@@ -58,17 +62,28 @@ class MissionProvider with ChangeNotifier {
   int get unclaimedCount => _board?.claimableCount ?? 0;
 
   /// 일일 미션 중에서 지금 받을 수 있는 보상의 수.
-  ///
-  /// 홈 배너는 "오늘의 미션"이라 진행도도 배지도 일일만 센다. 진행도는 일일,
-  /// 배지는 일일+주간이면 `0/0` 인데 `받기 2` 가 붙는 조합이 생긴다.
   int get dailyUnclaimedCount => _board?.daily.claimableCount ?? 0;
+
+  /// 지난 미션 중에서 지금 받을 수 있는 보상의 수.
+  int get expiredUnclaimedCount => _board?.expired.claimableCount ?? 0;
+
+  /// 홈 배너의 `받기 N` 배지가 세는 수.
+  ///
+  /// 진행도(`n/m`)는 오늘 것만 세지만 배지는 지난 미션까지 센다. 기간을 넘긴
+  /// 보상은 배지에 안 잡히면 사용자가 있는 줄도 모르고 지나간다. 주간은
+  /// 오늘의 진행도와 무관하므로 여기서 세지 않는다.
+  int get bannerUnclaimedCount => dailyUnclaimedCount + expiredUnclaimedCount;
 
   bool isClaiming(int? progressId) =>
       progressId != null && _claimingProgressIds.contains(progressId);
 
   /// 일일과 주간을 통틀어 이 진행도의 미션을 찾는다. 없으면 null 이다.
   MissionModel? missionByProgressId(int progressId) {
-    for (final mission in [...dailyMissions, ...weeklyMissions]) {
+    for (final mission in [
+      ...dailyMissions,
+      ...weeklyMissions,
+      ...expiredMissions,
+    ]) {
       if (mission.progressId == progressId) return mission;
     }
     return null;
@@ -145,6 +160,7 @@ class MissionProvider with ChangeNotifier {
     for (final mission in [
       ...board.daily.missions,
       ...board.weekly.missions,
+      ...board.expired.missions,
     ]) {
       if (mission.progressId == progressId) return mission;
     }
