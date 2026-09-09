@@ -18,6 +18,7 @@ import '../../Module/Theme/ThemeHandler.dart';
 import '../../Module/Util/FolderPickerDialog.dart';
 import '../../Module/Util/FolderPickerWidget.dart';
 import '../../Provider/FoldersProvider.dart';
+import '../../Provider/MissionProvider.dart';
 import '../../Provider/ProblemsProvider.dart';
 import '../../Provider/ScreenIndexProvider.dart';
 import '../../Provider/UserProvider.dart';
@@ -925,6 +926,13 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
     FirebaseAnalytics.instance.logEvent(
       name: widget.isEditMode ? 'problem_updated' : 'problem_created',
     );
+
+    // 1차에서는 행동 응답에 미션 진행도가 실려 오지 않는다. 등록이 끝난 뒤
+    // 다시 조회해야 오답노트 미션이 바로 반영된다.
+    unawaited(
+      Provider.of<MissionProvider>(context, listen: false).fetchMissions(),
+    );
+
     showSuccessDialog(context);
 
     if (shouldPop) {

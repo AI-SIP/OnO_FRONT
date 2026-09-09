@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -9,6 +11,7 @@ import '../../Module/Emoji/OnoEmojiPicker.dart';
 import '../../Module/Text/mobile_font_size.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
+import '../../Provider/MissionProvider.dart';
 import '../../Provider/PracticeNoteProvider.dart';
 import '../../Module/Motion/AppHaptic.dart';
 import '../../Module/Motion/SuccessCheck.dart';
@@ -269,6 +272,8 @@ class _PracticeCompletionScreenState extends State<PracticeCompletionScreen> {
         child: ElevatedButton(
           onPressed: () async {
             final navigator = Navigator.of(context);
+            final missionProvider =
+                Provider.of<MissionProvider>(context, listen: false);
             try {
               await practiceProvider.addPracticeCount(
                 widget.practiceId,
@@ -282,6 +287,10 @@ class _PracticeCompletionScreenState extends State<PracticeCompletionScreen> {
             if (!mounted) return;
             FirebaseAnalytics.instance
                 .logEvent(name: 'practice_session_completed');
+
+            // 1차에서는 행동 응답에 미션 진행도가 실려 오지 않는다. 세트를
+            // 끝낸 뒤 다시 조회해야 미션이 바로 반영된다.
+            unawaited(missionProvider.fetchMissions());
             // 2번 pop: PracticeCompletionScreen -> PracticeDetailScreen -> PracticeThumbnailScreen
             // 두 번째 pop에서 true를 반환하여 썸네일 업데이트 신호 전달
             if (navigator.canPop()) {
