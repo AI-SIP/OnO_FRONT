@@ -53,6 +53,12 @@ class ErrorMessageMapper {
         return ErrorMessages.missionTypeNotFound;
       case 7002:
         return ErrorMessages.missionUserNotFound;
+      case 7010:
+        return ErrorMessages.missionProgressNotFound;
+      case 7011:
+        return ErrorMessages.missionNotCompleted;
+      case 7012:
+        return ErrorMessages.missionAlreadyClaimed;
       case 8001:
         return ErrorMessages.fcmTokenNotFound;
       case 8002:

@@ -16,6 +16,7 @@ import 'package:provider/provider.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
 import 'Config/AppConfig.dart';
+import 'Provider/MissionProvider.dart';
 import 'Provider/PracticeNoteProvider.dart';
 import 'Provider/ProblemsProvider.dart';
 import 'Provider/ReviewDueProvider.dart';
@@ -137,6 +138,7 @@ Future<void> _bootstrapApp() async {
         ),
         ChangeNotifierProvider(create: (_) => ScreenIndexProvider()),
         ChangeNotifierProvider(create: (_) => ReviewDueProvider()),
+        ChangeNotifierProvider(create: (_) => MissionProvider()),
         ChangeNotifierProvider(create: (_) => TutorialProvider()),
         ChangeNotifierProvider(create: (_) => StudyRoomProvider()),
       ],
@@ -329,7 +331,11 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) async {
     if (state == AppLifecycleState.resumed) {
       final userProvider = Provider.of<UserProvider>(context, listen: false);
+      final missionProvider =
+          Provider.of<MissionProvider>(context, listen: false);
       await userProvider.maintainSessionOnResume();
+      // 앱을 다시 켰을 때 날짜가 넘어가 있을 수 있다. 미션을 다시 읽는다.
+      await missionProvider.fetchMissions();
     }
   }
 
