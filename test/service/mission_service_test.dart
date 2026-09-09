@@ -6,6 +6,7 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ono/Constants/ErrorMessages.dart';
+import 'package:ono/Model/Mission/MissionClaimResultModel.dart';
 import 'package:ono/Model/Mission/MissionModel.dart';
 import 'package:ono/Service/Api/HttpService.dart';
 import 'package:ono/Service/Api/Mission/MissionService.dart';
@@ -121,7 +122,7 @@ void main() {
       expect(result.leveledUp, isTrue);
     });
 
-    test('이미 받은 미션(7012)이면 null 과 함께 문구를 알려준다', () async {
+    test('이미 받은 미션(7012)은 거절로 표시하고 문구를 알려준다', () async {
       final http = TestHttpClient.respondWith(
         errorResponse(
           statusCode: 400,
@@ -130,14 +131,18 @@ void main() {
         ),
       );
 
-      String? failure;
+      MissionClaimFailure? failure;
       final result = await buildService(http).claim(
         1024,
-        onFailure: (message) => failure = message,
+        onFailure: (f) => failure = f,
       );
 
       expect(result, isNull);
       expect(failure, isNotNull);
+      expect(failure!.kind, MissionClaimFailureKind.rejected);
+      expect(failure!.errorCode, 7012);
+      // 화면이 이걸 보고 오류를 띄우지 않고 조용히 다시 조회한다.
+      expect(failure!.isAlreadyClaimed, isTrue);
     });
 
     test('아직 완료하지 않은 미션(7011)도 예외를 던지지 않는다', () async {
@@ -145,29 +150,69 @@ void main() {
         errorResponse(statusCode: 400, errorCode: 7011),
       );
 
-      String? failure;
+      MissionClaimFailure? failure;
       final result = await buildService(http).claim(
         1024,
-        onFailure: (message) => failure = message,
+        onFailure: (f) => failure = f,
       );
 
       expect(result, isNull);
-      expect(failure, ErrorMessages.missionNotCompleted);
+      expect(failure!.kind, MissionClaimFailureKind.rejected);
+      expect(failure!.message, ErrorMessages.missionNotCompleted);
+      expect(failure!.isAlreadyClaimed, isFalse);
     });
 
-    test('진행도를 찾을 수 없으면(7010) null 이다', () async {
+    test('진행도를 찾을 수 없으면(7010) 거절이다', () async {
       final http = TestHttpClient.respondWith(
         errorResponse(statusCode: 404, errorCode: 7010),
       );
 
-      String? failure;
+      MissionClaimFailure? failure;
       final result = await buildService(http).claim(
         99,
-        onFailure: (message) => failure = message,
+        onFailure: (f) => failure = f,
       );
 
       expect(result, isNull);
-      expect(failure, ErrorMessages.missionProgressNotFound);
+      expect(failure!.kind, MissionClaimFailureKind.rejected);
+      expect(failure!.message, ErrorMessages.missionProgressNotFound);
+    });
+
+    test('서버가 500 이면 결과를 모르는 것으로 둔다', () async {
+      // 서버가 XP 를 주고 나서 터졌을 수도 있다. 실패로 단정하면 안 된다.
+      final http = TestHttpClient.respondWith(
+        errorResponse(statusCode: 500, message: '서버 오류'),
+      );
+
+      MissionClaimFailure? failure;
+      await buildService(http).claim(1024, onFailure: (f) => failure = f);
+
+      expect(failure!.kind, MissionClaimFailureKind.unknown);
+      expect(failure!.isUnknown, isTrue);
+    });
+
+    test('응답을 받는 중 연결이 끊기면 결과를 모르는 것으로 둔다', () async {
+      final http = TestHttpClient.throwing(const SocketException('offline'));
+
+      MissionClaimFailure? failure;
+      await buildService(http).claim(1024, onFailure: (f) => failure = f);
+
+      expect(failure!.kind, MissionClaimFailureKind.unknown);
+    });
+
+    test('2xx 인데 본문을 읽지 못하면 결과를 모르는 것으로 둔다', () async {
+      // 서버는 이미 보상을 줬다. 여기서 실패라고 알리면 사용자가 두 번 누른다.
+      final http =
+          TestHttpClient.respondJson(apiEnvelope({'unexpected': true}));
+
+      MissionClaimFailure? failure;
+      final result = await buildService(http).claim(
+        1024,
+        onFailure: (f) => failure = f,
+      );
+
+      expect(result, isNull);
+      expect(failure!.kind, MissionClaimFailureKind.unknown);
     });
 
     test('네트워크가 끊겨도 null 을 돌려준다', () async {

@@ -121,6 +121,39 @@ void main() {
     expect(find.textContaining('받기'), findsNothing);
   });
 
+  testWidgets('주간에만 받을 것이 있으면 배지를 띄우지 않는다', (tester) async {
+    // 진행도는 일일만 세는데 배지가 주간까지 세면 "0/1" 옆에 "받기 2" 가
+    // 붙는다. 배너가 "오늘의 미션"이니 둘 다 일일 기준이어야 한다.
+    await pumpCard(
+      tester,
+      MissionBoardModel(
+        daily: MissionGroupModel(
+          periodKey: '2026-09-09',
+          missions: [buildMission(code: 'DAILY_NOTE_WRITE', progressId: 1)],
+        ),
+        weekly: MissionGroupModel(
+          periodKey: '2026-W37',
+          missions: [
+            buildMission(
+              code: 'WEEKLY_NOTE_10',
+              progressId: 9001,
+              completed: true,
+            ),
+            buildMission(
+              code: 'WEEKLY_SET_3',
+              progressId: 9002,
+              completed: true,
+            ),
+          ],
+        ),
+      ),
+    );
+
+    expect(find.text('오늘의 미션'), findsOneWidget);
+    expect(find.text('0/1'), findsOneWidget);
+    expect(find.textContaining('받기'), findsNothing);
+  });
+
   testWidgets('태블릿 폭에서도 넘치지 않는다', (tester) async {
     await pumpCard(tester, buildBoard(), surfaceSize: OnoSurface.tablet);
 

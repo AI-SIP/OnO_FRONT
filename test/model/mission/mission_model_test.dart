@@ -89,6 +89,49 @@ void main() {
       expect(mission!.isClaimable, isFalse);
     });
 
+    test('참/거짓이 0/1 로 와도 읽는다 (미션 하나 때문에 보드가 날아가면 안 된다)', () {
+      final json = dailyMissionJson()
+        ..['completed'] = 1
+        ..['claimed'] = 0;
+
+      final mission = MissionModel.fromJsonOrNull(json);
+
+      expect(mission, isNotNull);
+      expect(mission!.completed, isTrue);
+      expect(mission.claimed, isFalse);
+      expect(mission.isClaimable, isTrue);
+    });
+
+    test('숫자 자리에 문자열이, 문자 자리에 숫자가 와도 읽는다', () {
+      final json = dailyMissionJson()
+        ..['current'] = '1'
+        ..['target'] = 1.0
+        ..['title'] = 7;
+
+      final mission = MissionModel.fromJsonOrNull(json);
+
+      expect(mission, isNotNull);
+      expect(mission!.current, 1);
+      expect(mission.target, 1);
+      expect(mission.title, '7');
+    });
+
+    test('iconKey 가 없으면 기본 키로 떨어진다', () {
+      final json = dailyMissionJson()..remove('iconKey');
+
+      expect(
+        MissionModel.fromJsonOrNull(json)!.iconKey,
+        MissionModel.fallbackIconKey,
+      );
+    });
+
+    test('읽을 수 없는 모양이 와도 던지지 않고 그 미션만 버린다', () {
+      final json = dailyMissionJson()..['category'] = {'nested': 'map'};
+
+      expect(() => MissionModel.fromJsonOrNull(json), returnsNormally);
+      expect(MissionModel.fromJsonOrNull(json), isNull);
+    });
+
     test('진행률은 0 과 1 사이로 잘린다', () {
       final partial = MissionModel.fromJsonOrNull(
         dailyMissionJson(current: 0, completed: false),
@@ -116,6 +159,32 @@ void main() {
       expect(group.missions.length, 2);
       expect(group.completedCount, 1);
       expect(group.claimableCount, 1);
+    });
+
+    test('필드 타입이 어긋난 미션이 섞여도 나머지는 살아남는다', () {
+      final broken = dailyMissionJson()..['category'] = ['DAILY'];
+      final group = MissionGroupModel.fromJson(<String, dynamic>{
+        'periodKey': '2026-09-09',
+        'missions': [
+          broken,
+          dailyMissionJson()..['completed'] = 1,
+          'not a map',
+          null,
+        ],
+      });
+
+      expect(group.missions.length, 1);
+      expect(group.missions.single.completed, isTrue);
+    });
+
+    test('periodKey 가 문자열이 아니어도 묶음은 살아남는다', () {
+      final group = MissionGroupModel.fromJson(<String, dynamic>{
+        'periodKey': 20260909,
+        'missions': [dailyMissionJson()],
+      });
+
+      expect(group.periodKey, '');
+      expect(group.missions, hasLength(1));
     });
 
     test('missions 가 없거나 모양이 다르면 빈 묶음이다', () {
@@ -151,6 +220,23 @@ void main() {
       expect(board.weekly.missions, isEmpty);
       expect(board.isEmpty, isFalse);
       expect(board.claimableCount, 1);
+    });
+
+    test('미션 하나가 깨져도 보드 전체가 날아가지 않는다', () {
+      final board = MissionBoardModel.fromJson(<String, dynamic>{
+        'daily': {
+          'periodKey': '2026-09-09',
+          'missions': [
+            dailyMissionJson()..['rewardType'] = 99,
+            dailyMissionJson(progressId: 2048, completed: false, current: 0),
+          ],
+        },
+        'weekly': {'periodKey': '2026-W37', 'missions': []},
+      });
+
+      expect(board.isEmpty, isFalse);
+      expect(board.daily.missions, hasLength(1));
+      expect(board.daily.missions.single.progressId, 2048);
     });
 
     test('양쪽이 모두 비면 isEmpty 다 (배너와 화면을 숨기는 조건)', () {

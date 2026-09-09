@@ -62,7 +62,7 @@ void main() {
 
   setUpAll(() {
     setUpProviderTestEnv();
-    registerFallbackValue((String _) {});
+    registerFallbackValue((MissionClaimFailure _) {});
   });
 
   late MockMissionService missionService;
@@ -145,17 +145,81 @@ void main() {
       expect(provider.board, isNull);
     });
 
-    test('이미 로딩 중이면 재진입하지 않는다 (동시 호출 가드)', () async {
+    test('조회 중에 또 부르면 요청은 겹치지 않지만 호출이 버려지지도 않는다', () async {
+      // 받기 실패 뒤의 복구 조회가 여기로 들어온다. 그냥 return 해 버리면
+      // 호출자의 await 가 갱신 없이 끝나고, 이미 받은 미션에 '받기' 버튼이
+      // 그대로 남는다.
       var callCount = 0;
+      var inFlight = 0;
+      var maxInFlight = 0;
       when(() => missionService.getMissions()).thenAnswer((_) async {
         callCount++;
+        inFlight++;
+        maxInFlight = inFlight > maxInFlight ? inFlight : maxInFlight;
         await Future<void>.delayed(const Duration(milliseconds: 20));
+        inFlight--;
         return buildBoard();
       });
 
-      await Future.wait([provider.fetchMissions(), provider.fetchMissions()]);
+      final results = await Future.wait(
+        [provider.fetchMissions(), provider.fetchMissions()],
+      );
 
-      expect(callCount, 1);
+      expect(callCount, 2, reason: '두 번째 호출이 버려지면 복구 조회가 사라진다');
+      expect(maxInFlight, 1, reason: '요청이 겹치면 안 된다');
+      expect(results, everyElement(isTrue));
+    });
+
+    test('조회가 끝난 뒤에야 뒤따르는 호출의 future 가 끝난다', () async {
+      var call = 0;
+      when(() => missionService.getMissions()).thenAnswer((_) async {
+        call++;
+        await Future<void>.delayed(const Duration(milliseconds: 10));
+        // 두 번째 조회에서만 받음으로 바뀐다.
+        return buildBoard(daily: [buildMission(claimed: call >= 2)]);
+      });
+
+      final first = provider.fetchMissions();
+      final second = provider.fetchMissions();
+      await first;
+      await second;
+
+      expect(provider.dailyMissions.single.claimed, isTrue);
+    });
+
+    test('서버가 답하면 true, 못 받으면 false 를 돌려준다', () async {
+      stubGetMissions(buildBoard());
+      expect(await provider.fetchMissions(), isTrue);
+
+      stubGetMissions(null);
+      expect(await provider.fetchMissions(), isFalse);
+    });
+
+    test('일일 배지와 진행도는 같은 집합을 센다', () async {
+      stubGetMissions(
+        MissionBoardModel(
+          daily: MissionGroupModel(
+            periodKey: '2026-09-09',
+            missions: [buildMission(completed: false, current: 0)],
+          ),
+          weekly: MissionGroupModel(
+            periodKey: '2026-W37',
+            missions: [
+              buildMission(progressId: 9001, code: 'WEEKLY_NOTE_10'),
+              buildMission(progressId: 9002, code: 'WEEKLY_SET_3'),
+            ],
+          ),
+        ),
+      );
+
+      await provider.fetchMissions();
+
+      expect(provider.dailyTotalCount, 1);
+      expect(provider.dailyCompletedCount, 0);
+      // 홈 배너가 쓰는 값. 일일에 받을 것이 없으면 배지도 없어야 한다.
+      expect(provider.dailyUnclaimedCount, 0);
+      // 미션 화면 전체 기준은 그대로 둘을 합쳐 센다.
+      expect(provider.unclaimedCount, 2);
     });
   });
 
@@ -165,6 +229,18 @@ void main() {
             any(),
             onFailure: any(named: 'onFailure'),
           )).thenAnswer((_) async => result);
+    }
+
+    void stubClaimFailure(MissionClaimFailure failure) {
+      when(() => missionService.claim(
+            any(),
+            onFailure: any(named: 'onFailure'),
+          )).thenAnswer((invocation) async {
+        final onFailure = invocation.namedArguments[#onFailure] as void
+            Function(MissionClaimFailure)?;
+        onFailure?.call(failure);
+        return null;
+      });
     }
 
     test('성공하면 그 미션만 claimed 로 바뀐다', () async {
@@ -235,26 +311,75 @@ void main() {
       expect(provider.isClaiming(1024), isFalse);
     });
 
-    test('실패하면 상태를 바꾸지 않고 문구만 남긴다', () async {
+    test('실패하면 상태를 바꾸지 않고 실패 내용만 남긴다', () async {
       stubGetMissions(buildBoard());
       await provider.fetchMissions();
-      when(() => missionService.claim(
-            any(),
-            onFailure: any(named: 'onFailure'),
-          )).thenAnswer((invocation) async {
-        final onFailure =
-            invocation.namedArguments[#onFailure] as void Function(String)?;
-        onFailure?.call('이미 보상을 받은 미션이에요.');
-        return null;
-      });
+      stubClaimFailure(const MissionClaimFailure(
+        kind: MissionClaimFailureKind.rejected,
+        errorCode: 7012,
+        message: '이미 보상을 받은 미션이에요.',
+      ));
 
       final result = await provider.claim(1024);
 
       expect(result, isNull);
       expect(provider.dailyMissions[0].claimed, isFalse);
-      expect(provider.consumeClaimError(), '이미 보상을 받은 미션이에요.');
+
+      final failure = provider.consumeClaimFailure();
+      expect(failure, isNotNull);
+      expect(failure!.message, '이미 보상을 받은 미션이에요.');
+      expect(failure.isAlreadyClaimed, isTrue);
+      expect(failure.isUnknown, isFalse);
       // 한 번 꺼내면 비워진다. 같은 문구가 두 번 뜨지 않는다.
-      expect(provider.consumeClaimError(), isNull);
+      expect(provider.consumeClaimFailure(), isNull);
+    });
+
+    test('받기 응답을 기다리는 사이에 조회가 끼어들어도 받음이 되돌아가지 않는다', () async {
+      // 받기 응답이 느릴 때 당겨서 새로고침하면, 새 GET 이 claim 커밋 전
+      // 상태를 읽어 온다. 그대로 덮으면 버튼이 '받기' 로 되돌아가고 다시
+      // 누르면 이미 받았다는 오류가 뜬다.
+      stubGetMissions(buildBoard());
+      await provider.fetchMissions();
+
+      stubClaim(const MissionClaimResultModel(
+        progressId: 1024,
+        rewardType: MissionRewardType.xp,
+        rewardValue: 10,
+        totalStudyLevel: 7,
+        leveledUp: false,
+      ));
+      await provider.claim(1024);
+      expect(provider.dailyMissions[0].claimed, isTrue);
+
+      // 서버는 아직 claim 을 반영하지 못한 상태를 내려준다.
+      stubGetMissions(buildBoard());
+      await provider.fetchMissions();
+
+      expect(provider.dailyMissions[0].claimed, isTrue);
+      expect(provider.unclaimedCount, 0);
+    });
+
+    test('서버가 받음으로 따라잡으면 그 뒤부터는 서버를 그대로 따른다', () async {
+      stubGetMissions(buildBoard());
+      await provider.fetchMissions();
+      stubClaim(const MissionClaimResultModel(
+        progressId: 1024,
+        rewardType: MissionRewardType.xp,
+        rewardValue: 10,
+        totalStudyLevel: 7,
+        leveledUp: false,
+      ));
+      await provider.claim(1024);
+
+      // 서버가 받음으로 내려준다.
+      stubGetMissions(buildBoard(daily: [buildMission(claimed: true)]));
+      await provider.fetchMissions();
+      expect(provider.dailyMissions[0].claimed, isTrue);
+
+      // 기간이 넘어가 같은 미션이 새 진행도로 돌아와도 앞 기억이 남지 않는다.
+      stubGetMissions(buildBoard(daily: [buildMission()]));
+      await provider.fetchMissions();
+      expect(provider.dailyMissions[0].claimed, isFalse);
     });
 
     test('예외가 나도 삼키고 null 을 돌려준다', () async {

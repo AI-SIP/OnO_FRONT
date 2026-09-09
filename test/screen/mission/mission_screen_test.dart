@@ -5,6 +5,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:ono/Constants/ErrorMessages.dart';
 import 'package:ono/Model/Mission/MissionClaimResultModel.dart';
 import 'package:ono/Model/Mission/MissionGroupModel.dart';
 import 'package:ono/Model/Mission/MissionModel.dart';
@@ -47,12 +48,12 @@ void main() {
   setUpOnoWidgetTest();
 
   setUpAll(() {
-    registerFallbackValue((String _) {});
+    registerFallbackValue((MissionClaimFailure _) {});
   });
 
   tearDown(AppToast.dismiss);
 
-  MissionBoardModel boardWithThreeStates() {
+  MissionBoardModel boardWithThreeStates({bool secondClaimed = false}) {
     return MissionBoardModel(
       daily: MissionGroupModel(
         periodKey: '2026-09-09',
@@ -70,6 +71,7 @@ void main() {
             current: 1,
             target: 1,
             completed: true,
+            claimed: secondClaimed,
           ),
           buildMission(
             code: 'DAILY_ATTEND',
@@ -261,6 +263,174 @@ void main() {
       await tester.tap(find.text('확인'));
       await tester.pumpAndSettle();
       expect(find.text('레벨이 올랐어요!'), findsNothing);
+    });
+
+    testWidgets('이미 받은 미션(7012)이면 오류를 띄우지 않고 화면만 맞춘다', (tester) async {
+      // 서버 기준으로는 이미 받은 상태다. 사용자에게는 실패가 아니다.
+      final missionService = MockMissionService();
+      var serverClaimed = false;
+      when(() => missionService.getMissions()).thenAnswer(
+        (_) async => boardWithThreeStates(secondClaimed: serverClaimed),
+      );
+      when(() => missionService.claim(
+            any(),
+            onFailure: any(named: 'onFailure'),
+          )).thenAnswer((invocation) async {
+        serverClaimed = true;
+        final onFailure = invocation.namedArguments[#onFailure] as void
+            Function(MissionClaimFailure)?;
+        onFailure?.call(const MissionClaimFailure(
+          kind: MissionClaimFailureKind.rejected,
+          errorCode: 7012,
+          message: ErrorMessages.missionAlreadyClaimed,
+        ));
+        return null;
+      });
+
+      await pumpMissionScreen(
+        tester,
+        missionService: missionService,
+        userProvider: buildUserProvider(),
+      );
+
+      await tester.tap(find.text('받기'));
+      await tester.pumpAndSettle();
+
+      expect(find.text(ErrorMessages.missionAlreadyClaimed), findsNothing);
+      expect(find.text('받기'), findsNothing);
+      expect(find.text('받음'), findsNWidgets(2));
+    });
+
+    testWidgets('아직 완료하지 않은 미션(7011)이면 이유를 알린다', (tester) async {
+      final missionService = MockMissionService();
+      when(() => missionService.getMissions())
+          .thenAnswer((_) async => boardWithThreeStates());
+      when(() => missionService.claim(
+            any(),
+            onFailure: any(named: 'onFailure'),
+          )).thenAnswer((invocation) async {
+        final onFailure = invocation.namedArguments[#onFailure] as void
+            Function(MissionClaimFailure)?;
+        onFailure?.call(const MissionClaimFailure(
+          kind: MissionClaimFailureKind.rejected,
+          errorCode: 7011,
+          message: ErrorMessages.missionNotCompleted,
+        ));
+        return null;
+      });
+
+      await pumpMissionScreen(
+        tester,
+        missionService: missionService,
+        userProvider: buildUserProvider(),
+      );
+
+      await tester.tap(find.text('받기'));
+      await tester.pumpAndSettle();
+
+      expect(find.text(ErrorMessages.missionNotCompleted), findsOneWidget);
+    });
+
+    testWidgets('답을 못 받았어도 서버가 줬으면 받은 것으로 알린다', (tester) async {
+      // 응답을 받는 중 연결이 끊긴 경우다. 서버는 이미 XP 를 줬는데 실패라고
+      // 알리면 사용자가 두 번 누른다.
+      final missionService = MockMissionService();
+      var serverClaimed = false;
+      when(() => missionService.getMissions()).thenAnswer(
+        (_) async => boardWithThreeStates(secondClaimed: serverClaimed),
+      );
+      when(() => missionService.claim(
+            any(),
+            onFailure: any(named: 'onFailure'),
+          )).thenAnswer((invocation) async {
+        serverClaimed = true;
+        final onFailure = invocation.namedArguments[#onFailure] as void
+            Function(MissionClaimFailure)?;
+        onFailure?.call(const MissionClaimFailure(
+          kind: MissionClaimFailureKind.unknown,
+          message: ErrorMessages.network,
+        ));
+        return null;
+      });
+
+      await pumpMissionScreen(
+        tester,
+        missionService: missionService,
+        userProvider: buildUserProvider(),
+      );
+
+      await tester.tap(find.text('받기'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('+10 XP'), findsWidgets);
+      expect(find.text(ErrorMessages.network), findsNothing);
+      expect(find.text('받음'), findsNWidgets(2));
+    });
+
+    testWidgets('결과도 확인하지 못하면 중립적인 안내만 남긴다', (tester) async {
+      final missionService = MockMissionService();
+      var answered = true;
+      when(() => missionService.getMissions()).thenAnswer(
+        (_) async => answered ? boardWithThreeStates() : null,
+      );
+      when(() => missionService.claim(
+            any(),
+            onFailure: any(named: 'onFailure'),
+          )).thenAnswer((invocation) async {
+        answered = false; // 이제 조회도 답하지 않는다
+        final onFailure = invocation.namedArguments[#onFailure] as void
+            Function(MissionClaimFailure)?;
+        onFailure?.call(const MissionClaimFailure(
+          kind: MissionClaimFailureKind.unknown,
+          message: ErrorMessages.network,
+        ));
+        return null;
+      });
+
+      await pumpMissionScreen(
+        tester,
+        missionService: missionService,
+        userProvider: buildUserProvider(),
+      );
+
+      await tester.tap(find.text('받기'));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text('보상을 받았는지 확인하지 못했어요. 잠시 후 다시 확인해 주세요.'),
+        findsOneWidget,
+      );
+      expect(find.text(ErrorMessages.network), findsNothing);
+    });
+
+    testWidgets('다시 조회해도 안 받은 상태면 그때는 실패로 알린다', (tester) async {
+      final missionService = MockMissionService();
+      when(() => missionService.getMissions())
+          .thenAnswer((_) async => boardWithThreeStates());
+      when(() => missionService.claim(
+            any(),
+            onFailure: any(named: 'onFailure'),
+          )).thenAnswer((invocation) async {
+        final onFailure = invocation.namedArguments[#onFailure] as void
+            Function(MissionClaimFailure)?;
+        onFailure?.call(const MissionClaimFailure(
+          kind: MissionClaimFailureKind.unknown,
+          message: ErrorMessages.network,
+        ));
+        return null;
+      });
+
+      await pumpMissionScreen(
+        tester,
+        missionService: missionService,
+        userProvider: buildUserProvider(),
+      );
+
+      await tester.tap(find.text('받기'));
+      await tester.pumpAndSettle();
+
+      expect(find.text(ErrorMessages.network), findsOneWidget);
+      expect(find.text('받기'), findsOneWidget);
     });
 
     testWidgets('받는 동안에는 버튼이 잠긴다', (tester) async {
