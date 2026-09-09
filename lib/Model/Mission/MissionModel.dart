@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 /// 미션이 하루짜리인지 한 주짜리인지.
 ///
 /// 서버가 내려주는 문자열을 그대로 쓴다. 나중에 서버에 종류가 늘어날 수
@@ -47,6 +49,9 @@ enum MissionRewardType {
 /// 받기는 이 값이 있어야 부를 수 있으므로 nullable 로 둔다. 서버 계약상
 /// 완료된 미션에는 반드시 들어 있다.
 class MissionModel {
+  /// 아이콘 키가 없을 때 쓰는 값. 화면은 이 키를 기본 아이콘으로 그린다.
+  static const String fallbackIconKey = 'default';
+
   final int? progressId;
   final String code;
   final String title;
@@ -81,32 +86,41 @@ class MissionModel {
   ///
   /// 모르는 [category] 나 [rewardType] 이 오면 그 미션만 버린다. 예외를 던지면
   /// 서버가 미션을 하나 추가한 순간 구버전 앱의 미션 화면이 통째로 비어 버린다.
+  ///
+  /// 값의 타입이 계약과 달라도(`completed` 가 `0/1` 로 온다든지) 마찬가지다.
+  /// 아래 읽기 함수들이 웬만한 모양을 받아 주고, 그래도 터지면 try 가 받아서
+  /// **그 미션 하나만** 버린다. 목록 전체나 보드가 날아가면 안 된다.
   static MissionModel? fromJsonOrNull(Object? json) {
     if (json is! Map<String, dynamic>) return null;
 
-    final category = MissionCategory.from(json['category'] as String?);
-    if (category == null) return null;
+    try {
+      final category = MissionCategory.from(_asString(json['category']));
+      if (category == null) return null;
 
-    final rewardType = MissionRewardType.from(json['rewardType'] as String?);
-    if (rewardType == null) return null;
+      final rewardType = MissionRewardType.from(_asString(json['rewardType']));
+      if (rewardType == null) return null;
 
-    final code = (json['code'] as String?) ?? '';
-    if (code.isEmpty) return null;
+      final code = _asString(json['code']) ?? '';
+      if (code.isEmpty) return null;
 
-    return MissionModel(
-      progressId: _asInt(json['progressId']),
-      code: code,
-      title: (json['title'] as String?) ?? '',
-      description: (json['description'] as String?) ?? '',
-      iconKey: (json['iconKey'] as String?) ?? 'default',
-      category: category,
-      current: _asInt(json['current']) ?? 0,
-      target: _asInt(json['target']) ?? 0,
-      completed: (json['completed'] as bool?) ?? false,
-      claimed: (json['claimed'] as bool?) ?? false,
-      rewardType: rewardType,
-      rewardValue: _asInt(json['rewardValue']) ?? 0,
-    );
+      return MissionModel(
+        progressId: _asInt(json['progressId']),
+        code: code,
+        title: _asString(json['title']) ?? '',
+        description: _asString(json['description']) ?? '',
+        iconKey: _asString(json['iconKey']) ?? MissionModel.fallbackIconKey,
+        category: category,
+        current: _asInt(json['current']) ?? 0,
+        target: _asInt(json['target']) ?? 0,
+        completed: _asBool(json['completed']) ?? false,
+        claimed: _asBool(json['claimed']) ?? false,
+        rewardType: rewardType,
+        rewardValue: _asInt(json['rewardValue']) ?? 0,
+      );
+    } catch (error) {
+      debugPrint('[MissionModel] 미션 하나를 읽지 못해 건너뛴다: $error');
+      return null;
+    }
   }
 
   /// 0 과 1 사이의 진행률. 진행바 길이에 쓴다.
@@ -140,6 +154,26 @@ class MissionModel {
     if (value is int) return value;
     if (value is num) return value.toInt();
     if (value is String) return int.tryParse(value);
+    return null;
+  }
+
+  /// 문자열 자리에 숫자가 와도 글자로 읽는다.
+  static String? _asString(Object? value) {
+    if (value == null) return null;
+    if (value is String) return value;
+    if (value is num || value is bool) return value.toString();
+    return null;
+  }
+
+  /// 참/거짓 자리에 `0/1` 이나 `"true"` 가 와도 읽는다.
+  static bool? _asBool(Object? value) {
+    if (value is bool) return value;
+    if (value is num) return value != 0;
+    if (value is String) {
+      final normalized = value.toLowerCase();
+      if (normalized == 'true' || normalized == '1') return true;
+      if (normalized == 'false' || normalized == '0') return false;
+    }
     return null;
   }
 }

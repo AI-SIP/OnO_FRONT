@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../Model/Mission/MissionModel.dart';
 import '../../Module/Design/AppRadius.dart';
 
 /// 미션 아이콘을 고르는 곳이다. **아이콘 결정은 전부 이 파일에 모아 둔다.**
@@ -13,8 +14,8 @@ import '../../Module/Design/AppRadius.dart';
 /// `SvgPicture.asset('assets/MissionIcon/$iconKey.svg', colorFilter: ...)` 로
 /// 바꾸면 된다. 화면 코드는 손대지 않아도 된다.
 abstract final class MissionIconKeys {
-  /// 모르는 키가 왔을 때 쓰는 폴백.
-  static const String fallback = 'default';
+  /// 모르는 키가 왔을 때 쓰는 폴백. 모델이 쓰는 기본값과 같아야 한다.
+  static const String fallback = MissionModel.fallbackIconKey;
 }
 
 /// 키 하나에 아이콘 하나. 에셋 정의서의 19종과 키를 맞춰 둔다.

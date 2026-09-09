@@ -28,8 +28,9 @@ class MissionGroupModel {
             .toList()
         : <MissionModel>[];
 
+    final periodKey = json['periodKey'];
     return MissionGroupModel(
-      periodKey: (json['periodKey'] as String?) ?? '',
+      periodKey: periodKey is String ? periodKey : '',
       missions: missions,
     );
   }
