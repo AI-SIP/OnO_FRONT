@@ -67,6 +67,12 @@ class MissionModel {
   final MissionRewardType rewardType;
   final int rewardValue;
 
+  /// 이 진행도가 속한 기간의 키. 일일은 `2026-09-09`, 주간은 `2026-W37` 이다.
+  ///
+  /// 지난 미션 목록은 여러 기간이 섞여 오기 때문에 미션마다 붙는다. 일일과
+  /// 주간 묶음에서는 묶음 쪽 키와 같아서 서버가 생략할 수 있다.
+  final String? periodKey;
+
   const MissionModel({
     required this.progressId,
     required this.code,
@@ -80,6 +86,7 @@ class MissionModel {
     required this.claimed,
     required this.rewardType,
     required this.rewardValue,
+    this.periodKey,
   });
 
   /// 읽을 수 없는 미션이면 null 을 돌려준다.
@@ -116,6 +123,7 @@ class MissionModel {
         claimed: _asBool(json['claimed']) ?? false,
         rewardType: rewardType,
         rewardValue: _asInt(json['rewardValue']) ?? 0,
+        periodKey: _asString(json['periodKey']),
       );
     } catch (error) {
       debugPrint('[MissionModel] 미션 하나를 읽지 못해 건너뛴다: $error');
@@ -146,6 +154,7 @@ class MissionModel {
       claimed: claimed ?? this.claimed,
       rewardType: rewardType,
       rewardValue: rewardValue,
+      periodKey: periodKey,
     );
   }
 
