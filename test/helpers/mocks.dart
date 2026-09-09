@@ -5,6 +5,7 @@ import 'package:ono/Service/Api/FileUpload/FileUploadService.dart';
 import 'package:ono/Service/Api/Folder/FolderService.dart';
 import 'package:ono/Service/Api/HttpService.dart';
 import 'package:ono/Service/Api/LearningReport/LearningReportService.dart';
+import 'package:ono/Service/Api/Mission/MissionService.dart';
 import 'package:ono/Service/Api/PracticeNote/PracticeNoteService.dart';
 import 'package:ono/Service/Api/Problem/ProblemService.dart';
 import 'package:ono/Service/Api/Problem/ProblemSolveService.dart';
@@ -38,6 +39,8 @@ class MockStudyRoomService extends Mock implements StudyRoomService {}
 class MockStudyCalendarService extends Mock implements StudyCalendarService {}
 
 class MockLearningReportService extends Mock implements LearningReportService {}
+
+class MockMissionService extends Mock implements MissionService {}
 
 class MockTagService extends Mock implements TagService {}
 

@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ono/Module/Theme/ThemeHandler.dart';
 import 'package:ono/Provider/FoldersProvider.dart';
+import 'package:ono/Provider/MissionProvider.dart';
 import 'package:ono/Provider/PracticeNoteProvider.dart';
 import 'package:ono/Provider/ProblemsProvider.dart';
 import 'package:ono/Provider/ReviewDueProvider.dart';
@@ -82,6 +83,7 @@ Future<void> pumpOnoWidget(
   UserProvider? userProvider,
   StudyRoomProvider? studyRoomProvider,
   ReviewDueProvider? reviewDueProvider,
+  MissionProvider? missionProvider,
   TutorialProvider? tutorialProvider,
   ScreenIndexProvider? screenIndexProvider,
   ThemeHandler? themeHandler,
@@ -118,6 +120,9 @@ Future<void> pumpOnoWidget(
         ),
         ChangeNotifierProvider<ReviewDueProvider>.value(
           value: reviewDueProvider ?? ReviewDueProvider(),
+        ),
+        ChangeNotifierProvider<MissionProvider>.value(
+          value: missionProvider ?? MissionProvider(),
         ),
         ChangeNotifierProvider<TutorialProvider>.value(
           value: tutorialProvider ?? TutorialProvider(),
