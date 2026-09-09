@@ -67,11 +67,7 @@ class _MissionScreenState extends State<MissionScreen>
     if (!mounted) return;
 
     if (result == null) {
-      final message = missionProvider.consumeClaimError();
-      if (message != null) AppToast.error(message);
-      // 이미 받았거나 아직 완료가 아니라면 앱이 들고 있는 상태가 서버와
-      // 어긋난 것이다. 다시 조회해서 맞춘다.
-      await missionProvider.fetchMissions();
+      await _handleClaimFailure(progressId, missionProvider);
       return;
     }
 
@@ -91,9 +87,60 @@ class _MissionScreenState extends State<MissionScreen>
     }
   }
 
+  /// 받기가 뜻대로 되지 않았을 때 무엇을 알릴지 정한다.
+  ///
+  /// 실패라고 단정할 수 있을 때만 오류를 띄운다.
+  ///
+  /// - 이미 받음(7010 이 아닌 7012): 서버 기준으로는 받은 상태다. 실패가
+  ///   아니므로 조용히 화면만 맞춘다
+  /// - 서버가 거절: 이유를 그대로 알린다 (아직 완료하지 않음 등)
+  /// - 결과를 모름(연결 끊김, 시간 초과, 5xx, 응답을 읽지 못함): 서버가 이미
+  ///   XP 를 줬을 수 있다. 다시 조회해서 진실을 확인하고, 확인도 못 하면
+  ///   중립적인 안내만 남긴다
+  Future<void> _handleClaimFailure(
+    int progressId,
+    MissionProvider missionProvider,
+  ) async {
+    final failure = missionProvider.consumeClaimFailure();
+
+    if (failure == null || failure.isAlreadyClaimed) {
+      await missionProvider.fetchMissions();
+      return;
+    }
+
+    if (!failure.isUnknown) {
+      AppToast.error(failure.message);
+      await missionProvider.fetchMissions();
+      return;
+    }
+
+    final refreshed = await missionProvider.fetchMissions();
+    if (!mounted) return;
+
+    final mission = missionProvider.missionByProgressId(progressId);
+    if (refreshed && mission != null && mission.claimed) {
+      // 서버는 줬는데 답을 못 받았던 것이다. 받은 것으로 알린다.
+      AppToast.success(_rewardText(mission.rewardType, mission.rewardValue));
+      return;
+    }
+    if (refreshed) {
+      // 조회는 됐는데 여전히 안 받은 상태다. 이번엔 정말 실패다.
+      AppToast.error(failure.message);
+      return;
+    }
+    AppToast.info(_claimUnknownMessage);
+  }
+
+  static const String _claimUnknownMessage =
+      '보상을 받았는지 확인하지 못했어요. 잠시 후 다시 확인해 주세요.';
+
   String _rewardMessage(MissionClaimResultModel result) {
-    if (result.rewardType == MissionRewardType.xp) {
-      return '+${result.rewardValue} XP';
+    return _rewardText(result.rewardType, result.rewardValue);
+  }
+
+  String _rewardText(MissionRewardType? rewardType, int rewardValue) {
+    if (rewardType == MissionRewardType.xp) {
+      return '+$rewardValue XP';
     }
     // 모르는 보상 종류가 와도 받은 것은 받은 것이다. 일반 문구로 알린다.
     return '보상을 받았어요';
