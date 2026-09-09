@@ -239,6 +239,74 @@ void main() {
       expect(board.daily.missions.single.progressId, 2048);
     });
 
+    test('expired 키가 없으면 빈 묶음으로 둔다 (백엔드가 아직 안 나갔을 수 있다)', () {
+      final board = buildBoard();
+
+      expect(board.expired.missions, isEmpty);
+      expect(board.expired.periodKey, '');
+      expect(board.isEmpty, isFalse);
+    });
+
+    test('expired 가 빈 배열로 와도 정상이다', () {
+      final board = MissionBoardModel.fromJson(<String, dynamic>{
+        'daily': {
+          'periodKey': '2026-09-09',
+          'missions': [dailyMissionJson()]
+        },
+        'weekly': {'periodKey': '2026-W37', 'missions': []},
+        'expired': {'periodKey': null, 'missions': []},
+      });
+
+      expect(board.expired.missions, isEmpty);
+      expect(board.claimableCount, 1);
+    });
+
+    test('expired 가 오면 미션마다 원래 기간 키를 들고 온다', () {
+      final board = MissionBoardModel.fromJson(<String, dynamic>{
+        'daily': {'periodKey': '2026-09-09', 'missions': []},
+        'weekly': {'periodKey': '2026-W37', 'missions': []},
+        'expired': {
+          'periodKey': null,
+          'missions': [
+            dailyMissionJson(progressId: 555)..['periodKey'] = '2026-W36',
+            dailyMissionJson(progressId: 556)..['periodKey'] = '2026-09-08',
+          ],
+        },
+      });
+
+      // 묶음 키는 null 로 와도 깨지지 않는다. 기간은 미션마다 붙어 온다.
+      expect(board.expired.periodKey, '');
+      expect(board.expired.missions, hasLength(2));
+      expect(board.expired.missions[0].periodKey, '2026-W36');
+      expect(board.expired.missions[1].periodKey, '2026-09-08');
+      // 지난 미션만 남아도 화면을 보여 줘야 한다. 받을 수 있는 보상이다.
+      expect(board.isEmpty, isFalse);
+      expect(board.claimableCount, 2);
+    });
+
+    test('미션에 periodKey 가 없어도 파싱된다', () {
+      final mission = MissionModel.fromJsonOrNull(dailyMissionJson());
+
+      expect(mission, isNotNull);
+      expect(mission!.periodKey, isNull);
+    });
+
+    test('지난 미션도 markClaimed 로 받음이 된다', () {
+      final board = MissionBoardModel.fromJson(<String, dynamic>{
+        'daily': {'periodKey': '2026-09-09', 'missions': []},
+        'weekly': {'periodKey': '2026-W37', 'missions': []},
+        'expired': {
+          'periodKey': null,
+          'missions': [
+            dailyMissionJson(progressId: 555)..['periodKey'] = '2026-W36',
+          ],
+        },
+      }).markClaimed(555);
+
+      expect(board.expired.missions.single.claimed, isTrue);
+      expect(board.claimableCount, 0);
+    });
+
     test('양쪽이 모두 비면 isEmpty 다 (배너와 화면을 숨기는 조건)', () {
       final board = MissionBoardModel.fromJson(<String, dynamic>{});
 

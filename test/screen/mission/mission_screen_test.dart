@@ -27,6 +27,7 @@ MissionModel buildMission({
   int target = 3,
   bool completed = false,
   bool claimed = false,
+  String? periodKey,
 }) {
   return MissionModel(
     progressId: progressId,
@@ -41,6 +42,7 @@ MissionModel buildMission({
     claimed: claimed,
     rewardType: MissionRewardType.xp,
     rewardValue: 10,
+    periodKey: periodKey,
   );
 }
 
@@ -182,6 +184,142 @@ void main() {
         ),
       );
       expect(button.onPressed, isNull);
+    });
+  });
+
+  group('지난 미션 섹션', () {
+    MissionBoardModel boardWithExpired({
+      List<MissionModel> expired = const [],
+    }) {
+      return MissionBoardModel(
+        daily: MissionGroupModel(
+          periodKey: '2026-09-09',
+          missions: [
+            buildMission(
+              code: 'DAILY_NOTE_WRITE',
+              title: '오늘의 오답',
+              progressId: 2,
+              current: 1,
+              target: 1,
+              completed: true,
+            ),
+          ],
+        ),
+        weekly: const MissionGroupModel(periodKey: '2026-W37', missions: []),
+        expired: MissionGroupModel(periodKey: '', missions: expired),
+      );
+    }
+
+    testWidgets('지난 미션이 없으면 섹션이 아예 없다', (tester) async {
+      final missionService = MockMissionService();
+      when(() => missionService.getMissions())
+          .thenAnswer((_) async => boardWithExpired());
+
+      await pumpMissionScreen(tester, missionService: missionService);
+
+      expect(find.text('지난 미션'), findsNothing);
+      expect(find.text('오늘의 오답'), findsOneWidget);
+    });
+
+    testWidgets('지난 미션이 있으면 일일 탭 맨 위에 섹션으로 붙는다', (tester) async {
+      final missionService = MockMissionService();
+      when(() => missionService.getMissions()).thenAnswer(
+        (_) async => boardWithExpired(
+          expired: [
+            buildMission(
+              code: 'WEEKLY_REVIEW_30',
+              title: '서른 번의 복습',
+              progressId: 777,
+              current: 30,
+              target: 30,
+              completed: true,
+              periodKey: '2026-W36',
+            ),
+          ],
+        ),
+      );
+
+      await pumpMissionScreen(tester, missionService: missionService);
+
+      expect(find.text('지난 미션'), findsOneWidget);
+      expect(find.text('서른 번의 복습'), findsOneWidget);
+      // 서버 키를 그대로 보여 주지 않는다.
+      expect(find.text('2026-W36'), findsNothing);
+      expect(find.textContaining('주'), findsWidgets);
+
+      // 지난 미션이 오늘 것보다 위에 있다.
+      final expiredY = tester.getTopLeft(find.text('서른 번의 복습')).dy;
+      final todayY = tester.getTopLeft(find.text('오늘의 오답')).dy;
+      expect(expiredY, lessThan(todayY));
+    });
+
+    testWidgets('지난 미션도 새 탭 없이 같은 두 탭 안에 있다', (tester) async {
+      final missionService = MockMissionService();
+      when(() => missionService.getMissions()).thenAnswer(
+        (_) async => boardWithExpired(
+          expired: [
+            buildMission(
+              code: 'WEEKLY_REVIEW_30',
+              title: '서른 번의 복습',
+              progressId: 777,
+              completed: true,
+              periodKey: '2026-W36',
+            ),
+          ],
+        ),
+      );
+
+      await pumpMissionScreen(tester, missionService: missionService);
+
+      expect(find.byType(Tab), findsNWidgets(2));
+      expect(find.text('일일'), findsOneWidget);
+      expect(find.text('주간'), findsOneWidget);
+    });
+
+    testWidgets('지난 미션도 받기가 된다', (tester) async {
+      final missionService = MockMissionService();
+      when(() => missionService.getMissions()).thenAnswer(
+        (_) async => boardWithExpired(
+          expired: [
+            buildMission(
+              code: 'WEEKLY_REVIEW_30',
+              title: '서른 번의 복습',
+              progressId: 777,
+              current: 30,
+              target: 30,
+              completed: true,
+              periodKey: '2026-W36',
+            ),
+          ],
+        ),
+      );
+      when(() => missionService.claim(
+            777,
+            onFailure: any(named: 'onFailure'),
+          )).thenAnswer(
+        (_) async => const MissionClaimResultModel(
+          progressId: 777,
+          rewardType: MissionRewardType.xp,
+          rewardValue: 100,
+          totalStudyLevel: 8,
+          leveledUp: false,
+        ),
+      );
+
+      await pumpMissionScreen(
+        tester,
+        missionService: missionService,
+        userProvider: buildUserProvider(),
+      );
+
+      // 지난 미션 줄의 받기 버튼을 누른다.
+      await tester.tap(find.text('받기').first);
+      await tester.pumpAndSettle();
+
+      expect(find.text('+100 XP'), findsWidgets);
+      verify(() =>
+              missionService.claim(777, onFailure: any(named: 'onFailure')))
+          .called(1);
     });
   });
 

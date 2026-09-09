@@ -37,7 +37,10 @@ MissionModel buildMission({
   );
 }
 
-MissionBoardModel buildBoard({List<MissionModel>? daily}) {
+MissionBoardModel buildBoard({
+  List<MissionModel>? daily,
+  List<MissionModel> expired = const [],
+}) {
   return MissionBoardModel(
     daily: MissionGroupModel(
       periodKey: '2026-09-09',
@@ -54,6 +57,7 @@ MissionBoardModel buildBoard({List<MissionModel>? daily}) {
           ],
     ),
     weekly: const MissionGroupModel(periodKey: '2026-W37', missions: []),
+    expired: MissionGroupModel(periodKey: '', missions: expired),
   );
 }
 
@@ -220,6 +224,87 @@ void main() {
       expect(provider.dailyUnclaimedCount, 0);
       // 미션 화면 전체 기준은 그대로 둘을 합쳐 센다.
       expect(provider.unclaimedCount, 2);
+    });
+  });
+
+  group('지난 미션', () {
+    MissionModel expiredMission({int progressId = 777}) => buildMission(
+          progressId: progressId,
+          code: 'WEEKLY_REVIEW_30',
+        );
+
+    test('진행도(n/m)에는 안 들어가고 배지에는 들어간다', () async {
+      // 기간을 넘긴 미수령 보상이 배지에 안 잡히면 있는 줄도 모르고 지나간다.
+      stubGetMissions(buildBoard(
+        daily: [buildMission(completed: false, current: 0)],
+        expired: [expiredMission()],
+      ));
+
+      await provider.fetchMissions();
+
+      expect(provider.dailyTotalCount, 1);
+      expect(provider.dailyCompletedCount, 0);
+      expect(provider.dailyUnclaimedCount, 0);
+      expect(provider.expiredUnclaimedCount, 1);
+      expect(provider.bannerUnclaimedCount, 1);
+      expect(provider.expiredMissions, hasLength(1));
+    });
+
+    test('지난 미션도 받으면 그 미션만 받음이 된다', () async {
+      stubGetMissions(buildBoard(expired: [expiredMission()]));
+      await provider.fetchMissions();
+      when(() => missionService.claim(
+            any(),
+            onFailure: any(named: 'onFailure'),
+          )).thenAnswer(
+        (_) async => const MissionClaimResultModel(
+          progressId: 777,
+          rewardType: MissionRewardType.xp,
+          rewardValue: 100,
+          totalStudyLevel: 8,
+          leveledUp: false,
+        ),
+      );
+
+      final result = await provider.claim(777);
+
+      expect(result, isNotNull);
+      expect(provider.expiredMissions.single.claimed, isTrue);
+      expect(provider.bannerUnclaimedCount, 1); // 일일 하나만 남는다
+      expect(provider.missionByProgressId(777), isNotNull);
+    });
+
+    test('받은 뒤 조회가 커밋 전 상태를 내려줘도 받음이 유지된다', () async {
+      stubGetMissions(buildBoard(expired: [expiredMission()]));
+      await provider.fetchMissions();
+      when(() => missionService.claim(
+            any(),
+            onFailure: any(named: 'onFailure'),
+          )).thenAnswer(
+        (_) async => const MissionClaimResultModel(
+          progressId: 777,
+          rewardType: MissionRewardType.xp,
+          rewardValue: 100,
+          totalStudyLevel: 8,
+          leveledUp: false,
+        ),
+      );
+      await provider.claim(777);
+
+      await provider.fetchMissions();
+
+      expect(provider.expiredMissions.single.claimed, isTrue);
+    });
+
+    test('계정을 바꾸면 지난 미션도 함께 비운다', () async {
+      stubGetMissions(buildBoard(expired: [expiredMission()]));
+      await provider.fetchMissions();
+      expect(provider.expiredMissions, isNotEmpty);
+
+      provider.clear();
+
+      expect(provider.expiredMissions, isEmpty);
+      expect(provider.bannerUnclaimedCount, 0);
     });
   });
 

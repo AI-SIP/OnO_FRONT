@@ -66,6 +66,47 @@ void main() {
       expect(board.weekly.missions, isEmpty);
     });
 
+    test('expired 그룹이 오면 함께 읽는다', () async {
+      final payload = boardPayload()
+        ..['expired'] = {
+          'periodKey': null,
+          'missions': [
+            {
+              'progressId': 777,
+              'code': 'WEEKLY_REVIEW_30',
+              'title': '서른 번의 복습',
+              'description': '복습 30회',
+              'iconKey': 'review',
+              'category': 'WEEKLY',
+              'periodKey': '2026-W36',
+              'current': 30,
+              'target': 30,
+              'completed': true,
+              'claimed': false,
+              'rewardType': 'XP',
+              'rewardValue': 100,
+            },
+          ],
+        };
+      final http = TestHttpClient.respondJson(apiEnvelope(payload));
+
+      final board = await buildService(http).getMissions();
+
+      expect(board!.expired.missions, hasLength(1));
+      expect(board.expired.missions.single.periodKey, '2026-W36');
+      expect(board.expired.missions.single.isClaimable, isTrue);
+    });
+
+    test('expired 가 없는 예전 응답도 그대로 읽는다', () async {
+      final http = TestHttpClient.respondJson(apiEnvelope(boardPayload()));
+
+      final board = await buildService(http).getMissions();
+
+      expect(board, isNotNull);
+      expect(board!.expired.missions, isEmpty);
+      expect(board.daily.missions, hasLength(1));
+    });
+
     test('API 가 아직 배포 전이라 404 가 와도 null 을 돌려준다', () async {
       final http = TestHttpClient.respondWith(
         errorResponse(statusCode: 404, message: 'Not Found'),
