@@ -9,6 +9,7 @@ import 'package:ono/Model/User/UserInfoModel.dart';
 import 'package:ono/Model/User/UserRegisterModel.dart';
 import 'package:ono/Module/Dialog/LoadingDialog.dart';
 import 'package:ono/Provider/FoldersProvider.dart';
+import 'package:ono/Provider/MissionProvider.dart';
 import 'package:ono/Provider/PracticeNoteProvider.dart';
 import 'package:ono/Service/Api/Problem/ProblemService.dart';
 import 'package:ono/Service/Api/User/UserService.dart';
@@ -32,6 +33,9 @@ class UserProvider with ChangeNotifier {
   final ProblemsProvider problemsProvider;
   final FoldersProvider foldersProvider;
   final ProblemPracticeProvider practiceProvider;
+
+  /// 로그아웃 때 함께 비운다. 앱 밖(테스트 등)에서는 없을 수 있다.
+  final MissionProvider? missionProvider;
   final TokenProvider tokenProvider;
   final HttpService httpService;
   final UserService userService;
@@ -45,6 +49,7 @@ class UserProvider with ChangeNotifier {
     this.problemsProvider,
     this.foldersProvider,
     this.practiceProvider, {
+    this.missionProvider,
     TokenProvider? tokenProvider,
     HttpService? httpService,
     UserService? userService,
@@ -473,6 +478,9 @@ class UserProvider with ChangeNotifier {
     problemsProvider.clear();
     foldersProvider.clear();
     practiceProvider.clear();
+    // 비우지 않으면 다른 계정으로 로그인한 첫 화면에 앞 사람의 미션 진행도와
+    // 받기 배지가 그대로 뜬다.
+    missionProvider?.clear();
     notifyListeners();
   }
 
