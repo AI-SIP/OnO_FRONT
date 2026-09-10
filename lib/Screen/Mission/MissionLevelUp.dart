@@ -9,7 +9,9 @@ import '../../Module/Design/AppSpacing.dart';
 import '../../Module/Motion/AnimatedCountText.dart';
 import '../../Module/Motion/AppHaptic.dart';
 import '../../Module/Motion/AppMotion.dart';
+import '../../Module/Dialog/ThemeDialog.dart';
 import '../../Module/Motion/PressableScale.dart';
+import '../../Module/Motion/TossDialog.dart';
 import '../../Model/User/UserInfoModel.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
@@ -56,13 +58,14 @@ Set<int> unlockedThemeIndexes(UserInfoModel? userInfo) {
   };
 }
 
-/// [before] 에 없고 [after] 에 있는 테마의 이름들. 없으면 빈 목록이다.
-List<String> newlyUnlockedThemeNames(Set<int> before, Set<int> after) {
+/// [before] 에 없고 [after] 에 있는 테마 번호들. 없으면 빈 목록이다.
+///
+/// 번호를 그대로 돌려준다. 화면이 색과 이름을 함께 보여 주기 때문이다.
+List<int> newlyUnlockedThemeIndexes(Set<int> before, Set<int> after) {
   final added = after.difference(before).toList()..sort();
   return [
     for (final index in added)
-      if (index < ThemeLockManager.themeNames.length)
-        ThemeLockManager.themeNames[index],
+      if (index >= 0 && index < ThemeLockManager.themeNames.length) index,
   ];
 }
 
@@ -74,7 +77,10 @@ List<String> newlyUnlockedThemeNames(Set<int> before, Set<int> after) {
 Future<void> showMissionLevelUp(
   BuildContext context, {
   int? level,
-  List<String> unlockedThemeNames = const [],
+
+  /// 이 레벨업 직전의 종합 레벨. 개구리가 실제로 바뀌는지 판단하는 데 쓴다.
+  int? previousLevel,
+  List<int> unlockedThemeIndexes = const [],
 }) {
   AppHaptic.primary();
   return showGeneralDialog<void>(
@@ -88,7 +94,8 @@ Future<void> showMissionLevelUp(
     pageBuilder: (context, animation, secondaryAnimation) =>
         _MissionLevelUpView(
       level: level,
-      unlockedThemeNames: unlockedThemeNames,
+      previousLevel: previousLevel,
+      unlockedThemeIndexes: unlockedThemeIndexes,
     ),
     transitionBuilder: (context, animation, secondaryAnimation, child) {
       final curved = CurvedAnimation(
@@ -103,11 +110,13 @@ Future<void> showMissionLevelUp(
 
 class _MissionLevelUpView extends StatefulWidget {
   final int? level;
-  final List<String> unlockedThemeNames;
+  final int? previousLevel;
+  final List<int> unlockedThemeIndexes;
 
   const _MissionLevelUpView({
     this.level,
-    this.unlockedThemeNames = const [],
+    this.previousLevel,
+    this.unlockedThemeIndexes = const [],
   });
 
   @override
@@ -147,6 +156,16 @@ class _MissionLevelUpViewState extends State<_MissionLevelUpView>
   }
 
   int get _level => widget.level ?? 1;
+
+  int get _previousLevel =>
+      widget.previousLevel ?? (_level > 1 ? _level - 1 : _level);
+
+  /// 이번 레벨업으로 개구리 그림이 실제로 바뀌는지.
+  ///
+  /// 에셋이 홀수 여덟 장이라 Lv.7 에서 Lv.8 로 올라도 그림은 그대로다. 그때
+  /// 진화 연출을 하면 같은 그림 두 장을 놓고 바뀌었다고 하는 셈이라, 숫자와
+  /// 게이지만 조용히 보여 준다.
+  bool get _evolves => FrogCharacter.evolvesBetween(_previousLevel, _level);
 
   @override
   Widget build(BuildContext context) {
@@ -189,9 +208,9 @@ class _MissionLevelUpViewState extends State<_MissionLevelUpView>
                     textAlign: TextAlign.center,
                     maxLines: 2,
                   ),
-                  if (widget.unlockedThemeNames.isNotEmpty) ...[
+                  if (widget.unlockedThemeIndexes.isNotEmpty) ...[
                     const SizedBox(height: AppSpacing.xl),
-                    _buildUnlocked(),
+                    _buildUnlocked(themeProvider.primaryColor),
                   ],
                   const SizedBox(height: AppSpacing.xxxl),
                   _buildConfirm(themeProvider.primaryColor),
@@ -213,7 +232,13 @@ class _MissionLevelUpViewState extends State<_MissionLevelUpView>
           220.0,
         );
 
-        final frog = FrogCharacter(level: _level, size: size * 0.72);
+        final frog = _EvolvingFrog(
+          previousLevel: _previousLevel,
+          level: _level,
+          size: size * 0.72,
+          progress: _enter,
+          evolves: _evolves && !reduced,
+        );
 
         // 뒤에서 부드럽게 퍼지는 원형 빛. 회전하지 않는다.
         final glow = SizedBox.square(
@@ -326,33 +351,54 @@ class _MissionLevelUpViewState extends State<_MissionLevelUpView>
     );
   }
 
-  /// 이번에 열린 것. 없으면 이 영역은 통째로 없다.
-  Widget _buildUnlocked() {
+  /// 이번에 열린 테마. 없으면 이 영역은 통째로 없다.
+  ///
+  /// 색 동그라미와 이름을 같이 둔다. 이름만 있으면 무슨 색인지 모르고, 색만
+  /// 있으면 무엇을 얻었는지 모른다.
+  Widget _buildUnlocked(Color primary) {
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.lg,
-        vertical: AppSpacing.md,
-      ),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
         color: AppColors.surfaceMuted,
         borderRadius: BorderRadius.circular(AppRadius.large),
       ),
-      child: Row(
+      child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(
-            Icons.lock_open,
-            size: 16,
+          const StandardText(
+            text: '새 테마가 열렸어요',
+            fontSize: 13,
             color: AppColors.textSecondary,
+            textAlign: TextAlign.center,
+            maxLines: 1,
           ),
-          const SizedBox(width: AppSpacing.sm),
-          Flexible(
-            child: StandardText(
-              text: _unlockedLabel,
-              fontSize: 13,
-              color: AppColors.textSecondary,
-              textAlign: TextAlign.center,
-              maxLines: 3,
+          const SizedBox(height: AppSpacing.md),
+          Wrap(
+            alignment: WrapAlignment.center,
+            spacing: AppSpacing.lg,
+            runSpacing: AppSpacing.md,
+            children: [
+              for (final index in widget.unlockedThemeIndexes)
+                _UnlockedTheme(index: index),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.md),
+          PressableScale(
+            onTap: _openThemeDialog,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  StandardText(
+                    text: '바로 적용해보기',
+                    fontSize: 13,
+                    color: primary,
+                    maxLines: 1,
+                  ),
+                  Icon(Icons.chevron_right, size: 16, color: primary),
+                ],
+              ),
             ),
           ),
         ],
@@ -360,11 +406,14 @@ class _MissionLevelUpViewState extends State<_MissionLevelUpView>
     );
   }
 
-  String get _unlockedLabel {
-    final names = widget.unlockedThemeNames;
-    final head = '새 테마 「${names.first}」';
-    if (names.length == 1) return '$head 해금';
-    return '$head 외 ${names.length - 1}개 해금';
+  /// 테마 고르는 창을 띄운다. 레벨업 화면은 닫고 넘어간다.
+  void _openThemeDialog() {
+    final navigator = Navigator.of(context);
+    navigator.pop();
+    showTossDialog(
+      context: navigator.context,
+      builder: (_) => ThemeDialog(),
+    );
   }
 
   Widget _buildConfirm(Color primary) {
@@ -431,4 +480,142 @@ class _RipplePainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant _RipplePainter oldDelegate) =>
       oldDelegate.progress != progress || oldDelegate.color != color;
+}
+
+/// 레벨업 전후의 개구리를 이어 보여 준다.
+///
+/// 이전 개구리가 빛에 감싸여 하얗게 지워지고, 그 자리에서 새 개구리가 튀어
+/// 오른다. 포켓몬 진화처럼 **무엇이 무엇으로 바뀌었는지**가 보여야 한다.
+///
+/// [evolves] 가 false 면 그냥 지금 개구리만 그린다. 에셋이 홀수 여덟 장이라
+/// 레벨이 올라도 그림이 그대로인 구간이 있는데, 그때 같은 그림 두 장을 놓고
+/// 바뀌었다고 하면 안 된다.
+class _EvolvingFrog extends StatelessWidget {
+  final int previousLevel;
+  final int level;
+  final double size;
+  final Animation<double> progress;
+  final bool evolves;
+
+  const _EvolvingFrog({
+    required this.previousLevel,
+    required this.level,
+    required this.size,
+    required this.progress,
+    required this.evolves,
+  });
+
+  /// 언제 무엇을 보여 줄지.
+  ///
+  /// 겹치는 구간이 있어야 한 장이 사라진 빈 화면이 생기지 않는다. 이전
+  /// 개구리가 하얗게 타오르는 동안 새 개구리가 그 안에서 올라온다.
+  static const double _fadeOutEnd = 0.55;
+  static const double _fadeInStart = 0.35;
+
+  @override
+  Widget build(BuildContext context) {
+    if (!evolves) {
+      return _frogImage(FrogCharacter.assetPathOf(level), size);
+    }
+
+    return AnimatedBuilder(
+      animation: progress,
+      builder: (context, _) {
+        final t = progress.value;
+
+        // 1) 이전 개구리가 하얗게 타오르며 사라진다.
+        final outT = (t / _fadeOutEnd).clamp(0.0, 1.0);
+        // 2) 새 개구리가 그 자리에서 커지며 나타난다.
+        final inT = ((t - _fadeInStart) / (1 - _fadeInStart)).clamp(0.0, 1.0);
+
+        return Stack(
+          alignment: Alignment.center,
+          children: [
+            if (outT < 1)
+              Opacity(
+                opacity: 1 - outT,
+                child: ColorFiltered(
+                  // 실루엣이 되었다가 사라진다.
+                  colorFilter: ColorFilter.mode(
+                    Colors.white.withValues(alpha: outT),
+                    BlendMode.srcATop,
+                  ),
+                  child: Transform.scale(
+                    scale: 1 + 0.12 * outT,
+                    child: _frogImage(
+                      FrogCharacter.assetPathOf(previousLevel),
+                      size,
+                    ),
+                  ),
+                ),
+              ),
+            if (inT > 0)
+              Opacity(
+                opacity: inT,
+                child: Transform.scale(
+                  // 나타나면서 한 번 크게 튀어오른다.
+                  scale: _popScale(inT),
+                  child: _frogImage(FrogCharacter.assetPathOf(level), size),
+                ),
+              ),
+          ],
+        );
+      },
+    );
+  }
+
+  /// 0.8 에서 1.12 까지 넘겼다가 1 로 돌아온다.
+  static double _popScale(double t) {
+    if (t < 0.6) return 0.8 + (1.12 - 0.8) * (t / 0.6);
+    return 1.12 - 0.12 * ((t - 0.6) / 0.4);
+  }
+
+  static Widget _frogImage(String assetPath, double size) {
+    return Image.asset(
+      assetPath,
+      width: size,
+      height: size,
+      fit: BoxFit.contain,
+      errorBuilder: (_, __, ___) => SizedBox.square(dimension: size),
+    );
+  }
+}
+
+/// 열린 테마 하나. 색 동그라미와 이름이다.
+class _UnlockedTheme extends StatelessWidget {
+  final int index;
+
+  const _UnlockedTheme({required this.index});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 28,
+          height: 28,
+          decoration: BoxDecoration(
+            color: ThemeLockManager.getThemeColor(index),
+            shape: BoxShape.circle,
+            border: Border.all(color: Colors.white, width: 2),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.12),
+                blurRadius: 6,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: AppSpacing.xs),
+        StandardText(
+          text: ThemeLockManager.getThemeName(index),
+          fontSize: 11,
+          color: AppColors.textSecondary,
+          maxLines: 1,
+        ),
+      ],
+    );
+  }
 }
