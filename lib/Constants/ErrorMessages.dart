@@ -25,25 +25,38 @@ class ErrorMessages {
   static const String invalidAccessToken = '유효하지 않은 엑세스 토큰입니다.';
 
   static const String fileUploadFailed = '파일 업로드 중 문제가 발생했습니다.';
+  static const String fileNotFound = '파일을 찾을 수 없습니다.';
+  static const String invalidImageFile = '이미지 파일 형식이 올바르지 않습니다.';
+  static const String fileSizeExceeded = '이미지 용량이 너무 큽니다. 더 작은 이미지를 올려주세요.';
+  static const String uploadRateLimitExceeded = '하루에 올릴 수 있는 이미지 개수를 초과했습니다.';
 
   static const String userNotFound = '사용자를 찾을 수 없습니다.';
+  static const String invalidUserIdentifier = '유효하지 않은 사용자 정보입니다.';
 
   static const String problemNotFound = '문제를 찾을 수 없습니다.';
   static const String problemUserUnmatched = '문제 작성자가 아닙니다.';
   static const String problemSolveImageAlreadyRegistered =
       '이미 오늘의 복습을 완료한 문제입니다.';
   static const String problemAnalysisNotFound = '문제 분석 결과를 찾을 수 없습니다.';
+  static const String analysisRateLimitExceeded =
+      '오늘 사용할 수 있는 AI 분석 횟수를 모두 썼어요. 내일 다시 시도해주세요.';
+  static const String problemMemoTooLong = '메모는 1000자를 넘을 수 없습니다.';
+  static const String problemReferenceTooLong = '제목은 255자를 넘을 수 없습니다.';
+  static const String problemFolderIdRequired = '폴더를 선택해주세요.';
 
   static const String problemSolveNotFound = '복습 기록을 찾을 수 없습니다.';
   static const String problemSolveUserUnmatched = '해당 복습 기록에 대한 권한이 없습니다.';
+  static const String problemSolveInvalidInput = '복습 기록 입력값을 확인해주세요.';
 
   static const String folderNotFound = '폴더를 찾을 수 없습니다.';
   static const String folderUserUnmatched = '폴더를 소유한 유저가 아닙니다.';
   static const String rootFolderNotExist = '루트 폴더가 존재하지 않습니다.';
   static const String rootFolderCannotRemove = '루트 폴더는 삭제할 수 없습니다.';
   static const String rootFolderCannotUpdate = '책장 이름은 변경할 수 없습니다.';
+  static const String invalidParentFolder = '폴더를 자기 자신이나 하위 폴더로 옮길 수 없습니다.';
 
   static const String practiceNoteNotFound = '복습 세트를 찾을 수 없습니다.';
+  static const String practiceNoteUserUnmatched = '해당 복습 세트에 대한 권한이 없습니다.';
 
   static const String missionTypeNotFound = '잘못된 미션 종류입니다.';
   static const String missionUserNotFound = '해당하는 유저가 존재하지 않습니다.';
@@ -76,4 +89,22 @@ class ErrorMessages {
   static const String weeklyReportNotFound = '주간 리포트를 찾을 수 없습니다.';
   static const String invalidReactionEmoji = '사용할 수 없는 반응입니다.';
   static const String invalidStudyRoomRequest = '스터디룸 입력값을 확인해주세요.';
+  static const String sharedProblemCommentNotFound = '댓글을 찾을 수 없습니다.';
+  static const String invalidSharedProblemComment = '댓글 내용을 확인해주세요.';
+  static const String sharedProblemCommentForbidden = '댓글에 대한 권한이 없습니다.';
+  static const String alreadySharedProblem = '이미 공유된 문제입니다.';
+
+  static const String invalidEmojiKey = '지원하지 않는 이모지입니다.';
+
+  static const String calendarRecordNotFound = '해당 날짜의 학습 기록이 없습니다.';
+  static const String invalidDateFormat = '날짜 형식이 올바르지 않습니다.';
+
+  static const String feedbackNotFound = '피드백을 찾을 수 없습니다.';
+
+  static const String noticeNotFound = '공지를 찾을 수 없습니다.';
+  static const String noticeTitleInvalid = '공지 제목은 1자 이상 100자 이하여야 합니다.';
+  static const String noticeContentInvalid = '공지 내용은 1자 이상 500자 이하여야 합니다.';
+  static const String noticeDurationInvalid =
+      '공지 노출 시간은 1시간 이상 168시간 이하여야 합니다.';
+  static const String noticeTypeRequired = '공지 유형을 지정해야 합니다.';
 }

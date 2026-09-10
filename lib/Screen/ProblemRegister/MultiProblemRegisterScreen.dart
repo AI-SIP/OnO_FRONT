@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../Model/PracticeNote/PracticeNoteRegisterModel.dart';
+import '../../Model/Problem/ProblemRegisterModel.dart';
 import '../../Model/Tag/TagModel.dart';
 import '../../Module/Dialog/SnackBarDialog.dart';
 import '../../Module/Image/ImagePickerHandler.dart';
@@ -715,6 +716,7 @@ class _MultiProblemRegisterScreenState
             hintText: '제목을 입력해 주세요',
             icon: Icons.title,
             controller: draft.titleController,
+            maxLength: ProblemRegisterModel.referenceMaxLength,
             showClearButton: true,
           ),
           const SizedBox(height: 14),
@@ -736,6 +738,7 @@ class _MultiProblemRegisterScreenState
             icon: Icons.note_alt_outlined,
             controller: draft.memoController,
             maxLines: 4,
+            maxLength: ProblemRegisterModel.memoMaxLength,
             showClearButton: true,
           ),
         ],
@@ -1932,8 +1935,8 @@ class _MultiProblemRegisterScreenState
     );
 
     return _BatchProblemUploadResult(
-      memo: draft.memoController.text.trim(),
-      reference: _resolveDraftTitle(draft),
+      memo: ProblemRegisterModel.clampMemo(draft.memoController.text.trim()),
+      reference: ProblemRegisterModel.clampReference(_resolveDraftTitle(draft)),
       folderId: draft.folderId,
       solvedAt: draft.solvedAt,
       problemImageUrls: problemImageUrls,
