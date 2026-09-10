@@ -492,7 +492,14 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         ? _buildLoginPrompt(themeProvider)
         : RefreshIndicator(
             onRefresh: () async {
+              // 홈에서 당겨 새로고침하면 미션도 같이 다시 읽는다. 프로바이더는
+              // await 전에 잡아 둔다. 새로고침이 끝난 뒤의 context 는 이미
+              // 사라졌을 수 있다.
+              final missionProvider = widget.folderId == null
+                  ? Provider.of<MissionProvider>(context, listen: false)
+                  : null;
               await fetchFoldersAndProblems();
+              await missionProvider?.fetchMissions();
             },
             child: Padding(
               padding: const EdgeInsets.all(20),
