@@ -72,33 +72,24 @@ void main() {
             (widget.bytesLoader as SvgAssetLoader).assetName == path,
       );
 
-  Finder imageAsset(String path) => find.byWidgetPredicate(
-        (widget) =>
-            widget is Image &&
-            widget.image is AssetImage &&
-            (widget.image as AssetImage).assetName == path,
-      );
-
-  testWidgets('스플래시에서 넘어온 개구리가 보인다', (tester) async {
+  testWidgets('개구리가 보인다', (tester) async {
     await pumpOnoWidget(
       tester,
       const LoginScreen(),
       userProvider: userProvider,
     );
 
-    expect(imageAsset(OnboardingBrand.frogAsset), findsOneWidget);
+    expect(svgAsset(OnboardingBrand.frogAsset), findsOneWidget);
   });
 
-  testWidgets('손글씨 문구는 로그인 화면에 두지 않는다', (tester) async {
-    // 스플래시에서 이미 보여준 문장이다. 개구리가 이어져 넘어오기 때문에
-    // 같은 문장이 연달아 두 번 나오면 눈에 걸린다.
+  testWidgets('개구리 아래에 손글씨 문구가 보인다', (tester) async {
     await pumpOnoWidget(
       tester,
       const LoginScreen(),
       userProvider: userProvider,
     );
 
-    expect(find.textContaining('나만의 진정한 오답노트'), findsNothing);
+    expect(find.text(OnboardingBrand.phrase), findsOneWidget);
   });
 
   testWidgets('로그아웃 상태면 구글과 카카오 로그인 버튼이 보인다', (tester) async {

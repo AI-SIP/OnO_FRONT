@@ -14,6 +14,7 @@ import '../../Module/Motion/PressableScale.dart';
 import '../../Module/Motion/TossDialog.dart';
 import '../../Module/Motion/TossPageRoute.dart';
 import '../../Module/Text/StandardText.dart';
+import '../../Module/Text/HandWriteText.dart';
 import '../../Module/Theme/GridPainter.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/UserProvider.dart';
@@ -22,8 +23,7 @@ import 'OnboardingBrand.dart';
 
 /// 로그인 화면이다.
 ///
-/// 스플래시에서 개구리가 그대로 넘어오고, 그 아래로 로그인 수단이 차례로
-/// 올라온다. 문구는 스플래시에서 이미 보여줬으므로 여기에는 두지 않는다.
+/// 개구리와 문구, 로그인 수단이 차례로 올라온다.
 class LoginScreen extends StatefulWidget {
   /// 로그인이 끝나면 갈 화면.
   ///
@@ -97,7 +97,12 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         child: Column(
                           children: [
-                            Expanded(child: _frog()),
+                            Expanded(
+                              child: _frog(
+                                context,
+                                themeProvider.primaryColor,
+                              ),
+                            ),
                             _loginActions(),
                             const SizedBox(height: AppSpacing.xxxl),
                           ],
@@ -114,19 +119,41 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  /// 스플래시에서 넘어오는 개구리다.
+  /// 개구리와 그 아래 문구다.
   ///
-  /// 여기서 따로 나타나는 연출을 붙이지 않는다. [Hero] 가 날아와 자리를 잡는
-  /// 것이 이미 등장 연출이라, 위에 하나를 더 얹으면 두 번 움직인다.
-  Widget _frog() {
-    return Center(
-      child: Hero(
-        tag: OnboardingBrand.frogHeroTag,
-        child: Image.asset(
-          OnboardingBrand.frogAsset,
-          height: 160,
-          fit: BoxFit.contain,
-        ),
+  /// 문구는 스플래시에서 이미 써 보여줬으므로 여기서는 다시 쓰지 않고 떠오르기만
+  /// 한다.
+  Widget _frog(BuildContext context, Color color) {
+    final isTablet = MediaQuery.of(context).size.shortestSide >= 600;
+
+    return Align(
+      // 가운데에 두면 위쪽 여백이 허전하고 버튼 묶음과도 붙어 보인다. 조금
+      // 내려서 화면 위아래 무게를 맞춘다.
+      alignment: const Alignment(0, 0.3),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // 스플래시에서 날아온다. 여기서 따로 나타나는 연출을 붙이지 않는다.
+          // [Hero] 가 자리를 잡는 것이 이미 등장 연출이라, 위에 하나를 더
+          // 얹으면 두 번 움직인다.
+          Hero(
+            tag: OnboardingBrand.frogHeroTag,
+            child: SvgPicture.asset(
+              OnboardingBrand.frogAsset,
+              height: isTablet ? 200 : 160,
+              fit: BoxFit.contain,
+            ),
+          ),
+          SizedBox(height: isTablet ? 56 : 44),
+          AppearTransition(
+            delay: _buttonsDelay,
+            child: HandWriteText(
+              text: OnboardingBrand.phrase,
+              fontSize: isTablet ? 34 : 28,
+              color: color,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -219,25 +246,25 @@ class _LoginScreenState extends State<LoginScreen> {
 
   /// 게스트로 시작하는 버튼이다.
   ///
-  /// 예전에는 회색 작은 글씨라 눌러도 되는 것인지 알기 어려웠다.
+  /// 일부러 눈에 안 띄게 둔다. 게스트로 시작하면 기기를 바꿀 때 오답노트를
+  /// 가져갈 수 없고 로그아웃하면 그동안 쌓은 것이 사라진다. 소셜 로그인과
+  /// 나란히 놓고 똑같이 강조하면 그 차이를 모른 채로 고르게 된다.
+  ///
+  /// 대신 누르는 영역은 글자보다 넓게 잡아 둔다. 눈에 덜 띄는 것과 누르기
+  /// 어려운 것은 다르다.
   Widget _guestButton() {
-    return Padding(
-      padding: const EdgeInsets.only(top: AppSpacing.xs),
-      child: PressableScale(
-        onTap: () => _showGuestLoginDialog(context),
-        child: Container(
-          width: double.infinity,
-          padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
-          decoration: BoxDecoration(
-            color: AppColors.surfaceMuted,
-            borderRadius: BorderRadius.circular(AppRadius.full),
-          ),
-          child: const StandardText(
-            text: '게스트로 시작하기',
-            fontSize: 14,
-            color: AppColors.textSecondary,
-            textAlign: TextAlign.center,
-          ),
+    return PressableScale(
+      onTap: () => _showGuestLoginDialog(context),
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
+        alignment: Alignment.center,
+        child: const StandardText(
+          text: '게스트로 시작하기',
+          fontSize: 13,
+          color: AppColors.textDisabled,
+          textAlign: TextAlign.center,
         ),
       ),
     );
