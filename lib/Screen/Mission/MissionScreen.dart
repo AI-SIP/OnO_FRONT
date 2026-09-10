@@ -332,7 +332,15 @@ class _MissionScreenState extends State<MissionScreen> {
                             count: missionProvider.expiredUnclaimedCount,
                             onTap: () {
                               AppHaptic.secondary();
-                              showExpiredMissionSheet(context, onClaim: _claim);
+                              showExpiredMissionSheet(
+                                context,
+                                onClaim: _claim,
+                                // 목록과 같은 것을 넘긴다. 시트에서 받아도
+                                // 실패하면 카드가 흔들리고 코인도 날아간다.
+                                rewardKeyOf: _rewardKeyFor,
+                                shakeTickOf: (mission) =>
+                                    _shakeTicks[mission.progressId] ?? 0,
+                              );
                             },
                           ),
                         ),

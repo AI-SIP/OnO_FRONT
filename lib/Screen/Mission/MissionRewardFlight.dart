@@ -110,6 +110,12 @@ class _FlyingCoinState extends State<_FlyingCoin>
     duration: const Duration(milliseconds: 620),
   );
 
+  /// 빌더 안에서 만들면 프레임마다 새로 생기고 리스너가 쌓인다.
+  late final Animation<double> _curved = CurvedAnimation(
+    parent: _controller,
+    curve: AppMotion.emphasized,
+  );
+
   @override
   void initState() {
     super.initState();
@@ -136,15 +142,10 @@ class _FlyingCoinState extends State<_FlyingCoin>
 
   @override
   Widget build(BuildContext context) {
-    final curved = CurvedAnimation(
-      parent: _controller,
-      curve: AppMotion.emphasized,
-    );
-
     return AnimatedBuilder(
-      animation: curved,
+      animation: _curved,
       builder: (context, child) {
-        final t = curved.value;
+        final t = _curved.value;
         final position = _positionAt(t);
         // 카운터에 가까워질수록 작아지며 합쳐진다.
         final scale = 1.0 - 0.45 * t;

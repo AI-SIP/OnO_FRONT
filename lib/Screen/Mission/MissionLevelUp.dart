@@ -97,14 +97,9 @@ Future<void> showMissionLevelUp(
       previousLevel: previousLevel,
       unlockedThemeIndexes: unlockedThemeIndexes,
     ),
-    transitionBuilder: (context, animation, secondaryAnimation, child) {
-      final curved = CurvedAnimation(
-        parent: animation,
-        curve: AppMotion.enter,
-        reverseCurve: AppMotion.exit,
-      );
-      return FadeTransition(opacity: curved, child: child);
-    },
+    // 빌더 안에서 CurvedAnimation 을 만들면 프레임마다 새로 생긴다.
+    transitionBuilder: (context, animation, secondaryAnimation, child) =>
+        FadeTransition(opacity: animation, child: child),
   );
 }
 
@@ -139,6 +134,12 @@ class _MissionLevelUpViewState extends State<_MissionLevelUpView>
   late final AnimationController _ripple = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 1800),
+  );
+
+  /// 빌더 안에서 만들면 프레임마다 새로 생기고 리스너가 쌓인다.
+  late final Animation<double> _entered = CurvedAnimation(
+    parent: _enter,
+    curve: AppMotion.emphasized,
   );
 
   @override
@@ -246,10 +247,7 @@ class _MissionLevelUpViewState extends State<_MissionLevelUpView>
           child: AnimatedBuilder(
             animation: _enter,
             builder: (context, _) {
-              final t = CurvedAnimation(
-                parent: _enter,
-                curve: AppMotion.emphasized,
-              ).value;
+              final t = _entered.value;
               return Opacity(
                 opacity: reduced ? 1 : t,
                 child: Transform.scale(
@@ -295,11 +293,9 @@ class _MissionLevelUpViewState extends State<_MissionLevelUpView>
         if (reduced) return content;
 
         return AnimatedBuilder(
-          animation: _enter,
+          animation: _entered,
           builder: (context, child) => Transform.scale(
-            scale: Tween<double>(begin: 0.6, end: 1.0)
-                .chain(CurveTween(curve: AppMotion.emphasized))
-                .evaluate(_enter),
+            scale: 0.6 + 0.4 * _entered.value,
             child: child,
           ),
           child: content,
@@ -309,8 +305,11 @@ class _MissionLevelUpViewState extends State<_MissionLevelUpView>
   }
 
   /// `Lv.1 → Lv.2`. 새 레벨만 숫자가 올라간다.
+  ///
+  /// 이전 레벨은 받기 직전에 들고 온 값이다. 한 번에 두 레벨이 오르면 글자와
+  /// 개구리가 서로 다른 말을 하게 되므로 여기서도 같은 값을 쓴다.
   Widget _buildLevelRow(Color primary, bool reduced) {
-    final previous = _level > 1 ? _level - 1 : _level;
+    final previous = _previousLevel;
 
     return Row(
       mainAxisSize: MainAxisSize.min,

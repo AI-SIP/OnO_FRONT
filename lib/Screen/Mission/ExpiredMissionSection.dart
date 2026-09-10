@@ -69,25 +69,49 @@ class ExpiredMissionBanner extends StatelessWidget {
 }
 
 /// 지난 미션만 모아 보여 주는 시트를 띄운다.
+///
+/// [rewardKeyOf] 와 [shakeTickOf] 는 목록에 쓰는 것과 같은 것을 넘긴다. 시트
+/// 안에서 받아도 실패하면 카드가 흔들리고, 응답을 못 받은 복구 경로에서 코인이
+/// 날아갈 자리도 잡힌다.
 Future<void> showExpiredMissionSheet(
   BuildContext context, {
   required void Function(MissionModel mission) onClaim,
+  GlobalKey? Function(MissionModel mission)? rewardKeyOf,
+  int Function(MissionModel mission)? shakeTickOf,
 }) {
   return showTossSheet<void>(
     context: context,
-    builder: (sheetContext) => _ExpiredMissionSheet(onClaim: onClaim),
+    builder: (sheetContext) => _ExpiredMissionSheet(
+      onClaim: onClaim,
+      rewardKeyOf: rewardKeyOf,
+      shakeTickOf: shakeTickOf,
+    ),
   );
 }
 
 class _ExpiredMissionSheet extends StatelessWidget {
   final void Function(MissionModel mission) onClaim;
+  final GlobalKey? Function(MissionModel mission)? rewardKeyOf;
+  final int Function(MissionModel mission)? shakeTickOf;
 
-  const _ExpiredMissionSheet({required this.onClaim});
+  const _ExpiredMissionSheet({
+    required this.onClaim,
+    this.rewardKeyOf,
+    this.shakeTickOf,
+  });
 
   @override
   Widget build(BuildContext context) {
     final missionProvider = Provider.of<MissionProvider>(context);
     final missions = missionProvider.expiredMissions;
+
+    // 다 받으면 빈 시트가 남는다. 볼 것이 없으면 스스로 닫는다.
+    if (missions.isEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final route = ModalRoute.of(context);
+        if (route != null && route.isCurrent) Navigator.of(context).pop();
+      });
+    }
 
     return SafeArea(
       top: false,
@@ -129,6 +153,8 @@ class _ExpiredMissionSheet extends StatelessWidget {
                     mission: mission,
                     isClaiming: missionProvider.isClaiming(mission.progressId),
                     showPeriod: true,
+                    rewardKey: rewardKeyOf?.call(mission),
+                    shakeTick: shakeTickOf?.call(mission) ?? 0,
                     onClaim: () => onClaim(mission),
                   );
                 },
