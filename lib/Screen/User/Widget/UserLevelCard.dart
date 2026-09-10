@@ -8,6 +8,10 @@ import '../../../Module/Theme/ThemeHandler.dart';
 import 'FrogCharacter.dart';
 import '../../../Module/Design/AppRadius.dart';
 import '../../../Module/Design/AppColors.dart';
+import '../../../Module/Design/AppSpacing.dart';
+import '../../../Module/Motion/PressableScale.dart';
+import '../../../Module/Motion/TossPageRoute.dart';
+import '../../Mission/MissionScreen.dart';
 
 class UserLevelCard extends StatelessWidget {
   final UserInfoModel? userInfo;
@@ -43,6 +47,47 @@ class UserLevelCard extends StatelessWidget {
   int _getNextLevelThreshold() {
     if (userInfo == null) return 40;
     return userInfo!.totalStudyNextLevelThreshold;
+  }
+
+  /// 미션 화면으로 간다.
+  ///
+  /// 마이페이지의 레벨과 미션 보상 XP 는 같은 값이다. 두 화면이 이어져 있다는
+  /// 것이 눌러 보면 드러나게 한다.
+  void _openMissions(BuildContext context) {
+    Navigator.push(
+      context,
+      TossPageRoute(builder: (_) => const MissionScreen()),
+    );
+  }
+
+  /// 카드가 누를 수 있는 것임을 알리는 줄이다.
+  ///
+  /// 카드 전체를 누르게 하면 개구리를 눌렀을 때 말풍선과 화면 이동이 함께
+  /// 일어난다. 그래서 이 줄과 레벨 도넛만 누름을 받는다.
+  Widget _buildMissionLink(BuildContext context, {required bool isTablet}) {
+    return PressableScale(
+      onTap: () => _openMissions(context),
+      child: Padding(
+        padding: const EdgeInsets.only(top: AppSpacing.sm),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            StandardText(
+              text: '미션 보고 경험치 받기',
+              fontSize: isTablet ? 14 : 12,
+              color: themeProvider.primaryColor,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            Icon(
+              Icons.chevron_right,
+              size: isTablet ? 20 : 16,
+              color: themeProvider.primaryColor,
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
@@ -91,13 +136,18 @@ class UserLevelCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Expanded(
-                child: _buildLevelDonut(
-                  currentLevel,
-                  currentPoint,
-                  requiredPoint,
-                  progress,
-                  donutSize: donutSize,
-                  isTablet: isTablet,
+                // 개구리는 눌러야 말풍선이 뜬다. 그쪽까지 누름을 가로채면 기존
+                // 동작이 죽으므로 레벨 도넛 쪽만 미션 화면으로 이어 준다.
+                child: PressableScale(
+                  onTap: () => _openMissions(context),
+                  child: _buildLevelDonut(
+                    currentLevel,
+                    currentPoint,
+                    requiredPoint,
+                    progress,
+                    donutSize: donutSize,
+                    isTablet: isTablet,
+                  ),
                 ),
               ),
               Expanded(
@@ -111,6 +161,7 @@ class UserLevelCard extends StatelessWidget {
               ),
             ],
           ),
+          _buildMissionLink(context, isTablet: isTablet),
           if (userInfo != null) ...[
             SizedBox(
                 height: isTabletLandscape
