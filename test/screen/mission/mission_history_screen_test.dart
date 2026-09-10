@@ -201,7 +201,7 @@ void main() {
 
       await pumpHistory(tester);
 
-      expect(find.text('아직 받은 보상이 없어요.'), findsOneWidget);
+      expect(find.text('아직 받은 보상이 없어요'), findsOneWidget);
       expect(find.text('0 XP'), findsOneWidget);
     });
 
@@ -211,7 +211,7 @@ void main() {
       await pumpHistory(tester);
 
       expect(tester.takeException(), isNull);
-      expect(find.text('아직 받은 보상이 없어요.'), findsOneWidget);
+      expect(find.text('아직 받은 보상이 없어요'), findsOneWidget);
     });
 
     testWidgets('실패한 뒤에는 스크롤해도 다시 조르지 않는다', (tester) async {

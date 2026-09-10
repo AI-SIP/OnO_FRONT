@@ -28,6 +28,7 @@ import 'package:ono/Screen/Mission/MissionHistoryScreen.dart';
 import 'package:ono/Module/Theme/ThemeHandler.dart';
 import 'package:ono/Screen/Mission/MissionIcon.dart';
 import 'package:ono/Screen/Mission/MissionPalette.dart';
+import 'package:ono/Screen/Mission/MissionSegments.dart';
 import 'package:ono/Screen/Mission/MissionHeroCard.dart';
 import 'package:ono/Screen/Mission/MissionRewardCelebration.dart';
 import 'package:ono/Screen/Mission/MissionLevelUp.dart';
@@ -343,6 +344,61 @@ void main() {
       await tester.pumpAndSettle();
     });
 
+    testWidgets('탭을 바꿔도 선택된 세그먼트가 흰 알약과 테마색을 유지한다', (tester) async {
+      // 두 번 놓친 자리다. 칸 두 개가 각자 흰 배경을 켜고 끄면 그 사이에
+      // 양쪽이 회색으로 보인다. 흰 알약은 하나뿐이고 좌우로 미끄러져야 한다.
+      await pumpTwoTabs(tester);
+
+      Color labelColor(String text) {
+        return tester.widget<Text>(find.text(text)).style!.color!;
+      }
+
+      final theme = ThemeHandler().primaryColor;
+      expect(labelColor('일일'), theme);
+      expect(find.byKey(MissionSegments.pillKey), findsOneWidget);
+
+      await tester.tap(find.text('주간'));
+
+      // 전환 도중에도 알약은 사라지지 않는다.
+      for (final step in [1, 60, 120, 200]) {
+        await tester.pump(Duration(milliseconds: step));
+        expect(
+          find.byKey(MissionSegments.pillKey),
+          findsOneWidget,
+          reason: '$step ms 에 선택된 알약이 사라졌다',
+        );
+      }
+
+      await tester.pumpAndSettle();
+      expect(labelColor('주간'), theme);
+    });
+
+    testWidgets('탭을 바꿔도 세그먼트가 새로 만들어지지 않는다', (tester) async {
+      // 다시 만들어지면 등장 연출과 알약 위치가 처음부터 시작해 깜빡인다.
+      await pumpTwoTabs(tester);
+
+      final before = tester.element(find.byType(MissionSegments));
+
+      await tester.tap(find.text('주간'));
+      await tester.pumpAndSettle();
+
+      expect(identical(before, tester.element(find.byType(MissionSegments))),
+          isTrue);
+    });
+
+    testWidgets('세그먼트는 등장 연출로 감싸지 않는다', (tester) async {
+      await pumpTwoTabs(tester);
+
+      expect(
+        find.ancestor(
+          of: find.byType(MissionSegments),
+          matching: find.byType(AppearTransition),
+        ),
+        findsNothing,
+        reason: '감싸면 그 안쪽이 다시 만들어질 때 알약이 잠깐 사라진다',
+      );
+    });
+
     testWidgets('등장 연출은 처음 한 번만 돈다', (tester) async {
       // 탭을 옮길 때마다 줄이 하나씩 다시 올라오면 그건 연출이 아니라
       // 깜빡임이다.
@@ -567,7 +623,7 @@ void main() {
 
       await pumpMissionScreen(tester, missionService: missionService);
 
-      expect(find.text('아직 볼 수 있는 미션이 없어요.'), findsWidgets);
+      expect(find.text('아직 미션이 없어요'), findsWidgets);
       expect(find.text('받기'), findsNothing);
     });
   });
@@ -788,7 +844,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(
-        find.text('보상을 받았는지 확인하지 못했어요. 잠시 후 다시 확인해 주세요.'),
+        find.text('보상을 받았는지 확인하지 못했어요'),
         findsOneWidget,
       );
       expect(find.text(ErrorMessages.network), findsNothing);
