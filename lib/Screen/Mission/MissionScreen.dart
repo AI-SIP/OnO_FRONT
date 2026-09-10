@@ -312,12 +312,6 @@ class _MissionScreenState extends State<MissionScreen> {
                           dailyMissions: missionProvider.dailyMissions,
                           level:
                               userProvider.userInfoModel?.totalStudyLevel ?? 1,
-                          currentPoint: userProvider
-                                  .userInfoModel?.totalStudyCurrentPoint ??
-                              0,
-                          nextLevelThreshold: userProvider.userInfoModel
-                                  ?.totalStudyNextLevelThreshold ??
-                              0,
                           primaryColor: themeProvider.primaryColor,
                           counterKey: _counterKey,
                           pendingXp: _pendingXp,

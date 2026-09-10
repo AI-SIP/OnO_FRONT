@@ -41,13 +41,6 @@ class MissionHeroCard extends StatefulWidget {
   /// 마이페이지와 같은 레벨의 개구리를 띄운다.
   final int level;
 
-  /// 지금 레벨에서 쌓은 점수와 다음 레벨까지 필요한 점수.
-  ///
-  /// 마이페이지 레벨 카드와 **같은 값, 같은 색**이어야 한다. 미션 보상으로
-  /// 오르는 것이 저 레벨이라, 두 화면이 어긋나면 무엇이 오르는지 알 수 없다.
-  final int currentPoint;
-  final int nextLevelThreshold;
-
   final Color primaryColor;
 
   /// 코인이 날아와 닿을 자리. XP 카운터에 달린다.
@@ -70,8 +63,6 @@ class MissionHeroCard extends StatefulWidget {
     required this.dailyMissions,
     required this.level,
     required this.primaryColor,
-    this.currentPoint = 0,
-    this.nextLevelThreshold = 0,
     this.counterKey,
     this.pendingXp = 0,
     this.arrivalTick = 0,
@@ -139,8 +130,8 @@ class _MissionHeroCardState extends State<MissionHeroCard>
       builder: (context, constraints) {
         // 폰과 태블릿에서 같은 비율로 보이게 폭에 맞춰 잡는다.
         final gaugeSize = math.min(
-          math.max(constraints.maxWidth * 0.32, 92.0),
-          132.0,
+          math.max(constraints.maxWidth * 0.30, 88.0),
+          120.0,
         );
 
         return Container(
@@ -157,19 +148,13 @@ class _MissionHeroCardState extends State<MissionHeroCard>
               ),
             ],
           ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
+          child: Row(
             children: [
-              Row(
-                children: [
-                  _buildFrogRing(gaugeSize, ratio),
-                  // 개구리와 오른쪽 글상자가 붙어 보이지 않게 벌린다.
-                  const SizedBox(width: AppSpacing.xl),
-                  Expanded(child: _buildSummary()),
-                ],
-              ),
-              const SizedBox(height: AppSpacing.lg),
-              _buildLevelRow(),
+              _buildFrogRing(gaugeSize, ratio),
+              // 링과 오른쪽 글상자가 확실히 떨어져 보이게 벌린다. 좁혀 두면
+              // 둘이 한 덩어리로 읽혀서 어느 쪽이 무엇인지 눈에 안 들어온다.
+              const SizedBox(width: AppSpacing.xxxl),
+              Expanded(child: _buildSummary()),
             ],
           ),
         );
@@ -214,61 +199,35 @@ class _MissionHeroCardState extends State<MissionHeroCard>
           overflow: TextOverflow.ellipsis,
         ),
         const SizedBox(height: AppSpacing.xs),
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.baseline,
-          textBaseline: TextBaseline.alphabetic,
-          children: [
-            AnimatedCountText(
-              value: _completed,
-              fontSize: 28,
-              color: widget.primaryColor,
-            ),
-            StandardText(
-              text: ' / $_total',
-              fontSize: 16,
-              color: AppColors.textTertiary,
-            ),
-          ],
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        _buildXpCounter(),
-      ],
-    );
-  }
-
-  /// 마이페이지와 같은 종합 레벨과 경험치 바다.
-  ///
-  /// 미션을 받으면 오르는 것이 이 레벨이다. 미션 화면에 이게 없으면 보상이
-  /// 어디에 쌓이는지 알 수 없다.
-  Widget _buildLevelRow() {
-    final threshold = widget.nextLevelThreshold;
-    final point = widget.currentPoint;
-    final ratio = threshold > 0 ? (point / threshold).clamp(0.0, 1.0) : 0.0;
-
-    return Row(
-      children: [
-        StandardText(
-          text: 'Lv.${widget.level}',
-          fontSize: 14,
-          color: widget.primaryColor,
-          maxLines: 1,
-        ),
-        const SizedBox(width: AppSpacing.md),
-        Expanded(
-          child: AnimatedLinearGauge(
-            value: ratio.toDouble(),
-            color: widget.primaryColor,
-            backgroundColor: AppColors.surfaceMuted,
-            height: 6,
-            borderRadius: AppRadius.full,
+        // 글자를 키우면 28pt 숫자가 남은 폭을 넘는다. 넘치게 두는 대신 줄인다.
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          alignment: Alignment.centerLeft,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.baseline,
+            textBaseline: TextBaseline.alphabetic,
+            children: [
+              AnimatedCountText(
+                value: _completed,
+                fontSize: 28,
+                color: widget.primaryColor,
+              ),
+              StandardText(
+                text: ' / $_total',
+                fontSize: 16,
+                color: AppColors.textTertiary,
+              ),
+            ],
           ),
         ),
-        const SizedBox(width: AppSpacing.sm),
-        StandardText(
-          text: '$point/$threshold',
-          fontSize: 11,
-          color: AppColors.textTertiary,
-          maxLines: 1,
+        const SizedBox(height: AppSpacing.sm),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: _buildXpCounter(),
+          ),
         ),
       ],
     );
@@ -282,6 +241,9 @@ class _MissionHeroCardState extends State<MissionHeroCard>
   }
 
   /// 오늘 받은 XP. 받을 때마다 여기로 코인이 날아와 숫자가 올라간다.
+  ///
+  /// 글자를 키운 기기에서는 칩이 남은 폭보다 길어질 수 있다. 넘치게 두는 대신
+  /// 줄여서 앉힌다.
   Widget _buildXpCounter() {
     final earned = (todayEarnedXp(widget.dailyMissions) - widget.pendingXp)
         .clamp(0, 1 << 30);
