@@ -21,6 +21,7 @@ import 'package:ono/Provider/FoldersProvider.dart';
 import 'package:ono/Provider/PracticeNoteProvider.dart';
 import 'package:ono/Provider/UserProvider.dart';
 import 'package:ono/Module/Design/AppColors.dart';
+import 'package:ono/Module/Motion/AnimatedGauge.dart';
 import 'package:ono/Module/Motion/AppearTransition.dart';
 import 'package:ono/Model/Mission/MissionHistoryModel.dart';
 import 'package:ono/Screen/Mission/MissionCard.dart';
@@ -595,6 +596,76 @@ void main() {
       verify(() =>
               missionService.claim(777, onFailure: any(named: 'onFailure')))
           .called(1);
+    });
+  });
+
+  group('히어로', () {
+    testWidgets('종합 레벨과 경험치 바는 두지 않는다', (tester) async {
+      // 미션 화면에 레벨 게이지까지 두니 복잡해졌다. 레벨은 마이페이지에서 본다.
+      final missionService = MockMissionService();
+      when(() => missionService.getMissions())
+          .thenAnswer((_) async => boardWithThreeStates());
+
+      await pumpMissionScreen(tester, missionService: missionService);
+
+      final hero = find.byType(MissionHeroCard);
+      expect(hero, findsOneWidget);
+      expect(
+        find.descendant(of: hero, matching: find.textContaining('Lv.')),
+        findsNothing,
+      );
+      // 오늘 진행도와 오늘 받은 XP 는 그대로 있다.
+      expect(find.text('받을 보상이 있어요'), findsOneWidget);
+      expect(_heroXpText(tester), '+10 XP');
+    });
+
+    testWidgets('링 게이지와 오른쪽 글상자가 확실히 떨어져 있다', (tester) async {
+      final missionService = MockMissionService();
+      when(() => missionService.getMissions())
+          .thenAnswer((_) async => boardWithThreeStates());
+
+      await pumpMissionScreen(tester, missionService: missionService);
+
+      final ring = find.descendant(
+        of: find.byType(MissionHeroCard),
+        matching: find.byType(AnimatedCircularGauge),
+      );
+      final headline = find.descendant(
+        of: find.byType(MissionHeroCard),
+        matching: find.text('받을 보상이 있어요'),
+      );
+
+      final gap =
+          tester.getTopLeft(headline).dx - tester.getBottomRight(ring).dx;
+      expect(
+        gap,
+        greaterThanOrEqualTo(28),
+        reason: '좁으면 링과 글상자가 한 덩어리로 읽힌다',
+      );
+    });
+
+    testWidgets('좁은 화면에서 글자를 키워도 넘치지 않는다', (tester) async {
+      final missionService = MockMissionService();
+      when(() => missionService.getMissions())
+          .thenAnswer((_) async => boardWithThreeStates());
+
+      disableAnimationsForTest(tester);
+      final missionProvider = MissionProvider(missionService: missionService);
+      await pumpOnoWidget(
+        tester,
+        // 통째로 갈아 끼우면 연출을 끈 설정까지 지워져서 펄스가 다시 돈다.
+        Builder(
+          builder: (context) => MediaQuery(
+            data: MediaQuery.of(context)
+                .copyWith(textScaler: const TextScaler.linear(1.6)),
+            child: const MissionScreen(),
+          ),
+        ),
+        missionProvider: missionProvider,
+        surfaceSize: OnoSurface.smallPhone,
+      );
+
+      expect(tester.takeException(), isNull);
     });
   });
 
