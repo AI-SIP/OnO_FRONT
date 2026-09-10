@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:provider/provider.dart';
 
 import '../../Model/Common/LoginStatus.dart';
@@ -15,8 +16,13 @@ import 'OnboardingBrand.dart';
 
 /// 앱을 켜면 제일 먼저 뜨는 화면이다.
 ///
-/// 개구리가 위에서 떨어져 자리를 잡고 그 아래로 문구가 써진다. 그동안 뒤에서
-/// 자동 로그인을 하고, 연출과 자동 로그인 중 늦은 쪽이 끝나면 넘어간다.
+/// 공책 줄 위에 개구리가 앉아 있고, 그 아래로 연필이 문구 한 줄을 적는다.
+/// 그동안 뒤에서 자동 로그인을 하고, 글씨와 자동 로그인 중 늦은 쪽이 끝나면
+/// 넘어간다.
+///
+/// 개구리는 앱 아이콘과 같은 그림이다. 사용자가 방금 누른 것이 그대로 나와야
+/// 연 앱이 맞다는 것이 바로 읽힌다. 로그인 화면도 같은 그림을 쓰고 있어서
+/// [Hero] 로 이어 붙였다.
 ///
 /// 예전에는 자동 로그인이 끝난 **뒤에** 1.5초를 더 기다리고, 그러고 나서
 /// 500ms 간격으로 상태를 다시 보는 방식이었다. 저장된 토큰으로 300ms 만에
@@ -37,20 +43,38 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
-  /// 개구리가 떨어져 자리를 잡는 데 걸리는 시간.
-  static const Duration _frogDrop = Duration(milliseconds: 380);
-
-  /// 개구리가 자리를 잡을 때쯤부터 글씨를 쓰기 시작한다.
-  static const Duration _writeDelay = Duration(milliseconds: 260);
+  /// 화면이 뜨고 나서 글씨를 쓰기 시작할 때까지 기다리는 시간.
+  ///
+  /// 뜨자마자 쓰기 시작하면 앱이 켜지는 순간과 겹쳐서 앞부분을 놓친다.
+  static const Duration _writeDelay = Duration(milliseconds: 380);
 
   /// 밑줄까지 포함해 글씨를 다 쓰는 데 걸리는 시간.
-  static const Duration _writeDuration = Duration(milliseconds: 640);
+  ///
+  /// 처음에는 640ms 로 뒀는데 글씨 쓰는 구간이 460ms 밖에 안 되어서, 열일곱
+  /// 자짜리 문구가 눈으로 따라갈 수 없는 속도로 지나갔다. 손으로 쓰는 속도에
+  /// 맞춰 늘렸다.
+  static const Duration _writeDuration = Duration(milliseconds: 1500);
 
-  /// 글씨를 다 썼을 때 완료된다. 움직임을 끈 기기에서는 첫 프레임 뒤에 바로
-  /// 완료되므로 그런 기기는 자동 로그인이 끝나는 대로 넘어간다.
+  /// 글씨를 다 쓰고 나서 화면에 머무는 시간.
+  ///
+  /// 마지막 획이 끝나자마자 넘어가면 방금 적은 것을 읽을 새가 없이 화면이
+  /// 바뀌어서 쫓기는 느낌이 든다.
+  static const Duration _afterWriteHold = Duration(milliseconds: 650);
+
+  /// 글씨를 다 쓰고 [_afterWriteHold] 까지 지났을 때 완료된다. 움직임을 끈
+  /// 기기에서는 첫 프레임 뒤에 바로 완료되므로 그런 기기는 자동 로그인이
+  /// 끝나는 대로 넘어간다.
   final Completer<void> _writingDone = Completer<void>();
 
+  Timer? _holdTimer;
+
   bool _navigated = false;
+
+  @override
+  void dispose() {
+    _holdTimer?.cancel();
+    super.dispose();
+  }
 
   @override
   void initState() {
@@ -101,69 +125,112 @@ class _SplashScreenState extends State<SplashScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: OnboardingBrand.background,
-      body: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _DroppingFrog(
-              duration: _frogDrop,
-              child: Hero(
-                tag: OnboardingBrand.frogHeroTag,
-                child: Image.asset(
-                  OnboardingBrand.frogAsset,
-                  height: 180,
-                  fit: BoxFit.contain,
+      body: Stack(
+        children: [
+          const Positioned.fill(child: _NotebookLines()),
+          // 사용자가 방금 누른 앱 아이콘이 이 개구리다. 첫 화면에 그대로 나와야
+          // 연 앱이 맞다는 것이 바로 읽힌다. 로그인 화면의 개구리와 같은
+          // 그림이라 [Hero] 로 이어 붙여 두었다.
+          Align(
+            alignment: const Alignment(0, -0.34),
+            child: Hero(
+              tag: OnboardingBrand.frogHeroTag,
+              child: SvgPicture.asset(
+                OnboardingBrand.frogAsset,
+                height: 132,
+                fit: BoxFit.contain,
+              ),
+            ),
+          ),
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 40),
+              child: FittedBox(
+                // 문구가 길어지거나 화면이 좁으면 줄바꿈 없이 줄어든다. 손글씨는
+                // 한 줄일 때만 왼쪽부터 적히는 것으로 보인다.
+                fit: BoxFit.scaleDown,
+                child: HandwritingReveal(
+                  text: OnboardingBrand.phrase,
+                  color: OnboardingBrand.ink,
+                  fontSize: 30,
+                  delay: _writeDelay,
+                  duration: _writeDuration,
+                  pencil: true,
+                  underline: true,
+                  underlineColor: OnboardingBrand.underline,
+                  onCompleted: () {
+                    // 움직임을 끈 기기에서는 글씨가 처음부터 완성돼 있으므로
+                    // 읽으라고 잡아 둘 이유가 없다.
+                    if (AppMotion.isReduced(context)) {
+                      if (!_writingDone.isCompleted) _writingDone.complete();
+                      return;
+                    }
+                    _holdTimer = Timer(_afterWriteHold, () {
+                      if (!mounted) return;
+                      if (!_writingDone.isCompleted) _writingDone.complete();
+                    });
+                  },
                 ),
               ),
             ),
-            const SizedBox(height: 24),
-            HandwritingReveal(
-              text: OnboardingBrand.phrase,
-              color: Colors.white,
-              fontSize: 26,
-              delay: _writeDelay,
-              duration: _writeDuration,
-              penTip: true,
-              underline: true,
-              onCompleted: () {
-                if (!_writingDone.isCompleted) _writingDone.complete();
-              },
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 }
 
-/// 위에서 떨어져 자리를 잡는다.
+/// 뒤에 깔리는 공책 줄이다.
 ///
-/// 그냥 나타나기만 하면 아직 아무것도 시작하지 않은 정지 화면처럼 보인다.
-/// 한 번 움직여 주면 앱이 켜지는 중이라는 것이 보인다.
-class _DroppingFrog extends StatelessWidget {
-  final Widget child;
-  final Duration duration;
-
-  const _DroppingFrog({required this.child, required this.duration});
+/// 흰 화면에 문구 한 줄만 두었더니 종이가 아니라 빈 화면처럼 보였다. 줄을
+/// 깔면 공책에 적는 화면이 되고, 다음에 오는 로그인 화면의 공책 배경과도
+/// 이어진다.
+///
+/// 글씨가 놓이는 가운데는 비운다. 줄이 글자를 가로지르면 읽기 어렵고, 마침
+/// 그 빈 자리가 지금 적고 있는 줄이 된다.
+class _NotebookLines extends StatelessWidget {
+  const _NotebookLines();
 
   @override
   Widget build(BuildContext context) {
-    if (AppMotion.isReduced(context)) return child;
-
-    return TweenAnimationBuilder<double>(
-      tween: Tween<double>(begin: 0.0, end: 1.0),
-      duration: duration,
-      curve: AppMotion.emphasized,
-      child: child,
-      builder: (context, progress, child) {
-        return Opacity(
-          opacity: progress.clamp(0.0, 1.0),
-          child: Transform.translate(
-            offset: Offset(0, -28 * (1 - progress)),
-            child: child,
-          ),
-        );
-      },
+    return CustomPaint(
+      painter: _NotebookLinesPainter(color: OnboardingBrand.rule),
     );
   }
+}
+
+class _NotebookLinesPainter extends CustomPainter {
+  final Color color;
+
+  _NotebookLinesPainter({required this.color});
+
+  /// 줄 간격.
+  static const double _spacing = 46;
+
+  /// 글씨가 놓이는 가운데를 비우는 높이. 위아래로 이만큼씩 줄을 걸러 낸다.
+  static const double _gap = 52;
+
+  /// 좌우로 들여 긋는 폭. 화면 끝까지 그으면 종이가 아니라 표처럼 보인다.
+  static const double _margin = 28;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = 1;
+
+    final center = size.height / 2;
+
+    for (double y = center % _spacing; y <= size.height; y += _spacing) {
+      if ((y - center).abs() < _gap) continue;
+      canvas.drawLine(
+        Offset(_margin, y),
+        Offset(size.width - _margin, y),
+        paint,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _NotebookLinesPainter old) => old.color != color;
 }

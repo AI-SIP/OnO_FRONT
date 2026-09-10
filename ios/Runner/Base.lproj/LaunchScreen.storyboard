@@ -2,16 +2,15 @@
 <!--
     앱 아이콘을 누른 순간부터 Flutter 가 첫 프레임을 그릴 때까지 보이는 화면이다.
 
-    원래는 LaunchImage 라는 이미지를 가운데 놓고 바탕을 흰색으로 두었는데,
-    Assets.xcassets 안에 그 이미지셋이 없어서 실제로는 흰 화면만 떴다. 그다음
-    뜨는 연두색 스플래시와 어긋나서 앱을 켤 때 색이 한 번 튀었다.
+    원래는 LaunchImage 라는 이미지를 가운데 놓았는데, Assets.xcassets 안에 그
+    이미지셋이 없어서 실제로는 아무것도 그려지지 않았다. 참조만 남아 있던 셈이라
+    지웠다.
 
-    개구리는 여기서 그리지 않는다. Flutter 스플래시가 개구리를 위에서 떨어뜨리며
-    자리를 잡게 하는데, 같은 그림을 여기서 먼저 그려 두면 그 순간 개구리가 한 번
-    튀어 보인다. 바탕색만 스플래시와 맞춘다.
+    그림은 여기서 그리지 않는다. 앱이 뜨자마자 Flutter 스플래시가 문구를 적기
+    시작하는데, 여기에 무언가를 먼저 그려 두면 그것이 사라지면서 한 번 튄다.
+    바탕색만 스플래시와 맞춘다.
 
     색은 lib/Screen/Onboarding/SplashScreen.dart 의 배경색과 같아야 한다.
-    #CBEAB7 = (203, 234, 183)
 -->
 <document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="12121" systemVersion="16G29" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" launchScreen="YES" colorMatched="YES" initialViewController="01J-lp-oVM">
     <dependencies>
@@ -29,7 +28,7 @@
                     </layoutGuides>
                     <view key="view" contentMode="scaleToFill" id="Ze5-6b-2t3">
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                        <color key="backgroundColor" red="0.79607843137254897" green="0.91764705882352937" blue="0.71764705882352942" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                        <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                     </view>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="iYj-Kq-Ea1" userLabel="First Responder" sceneMemberID="firstResponder"/>

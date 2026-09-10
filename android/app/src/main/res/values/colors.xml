@@ -5,5 +5,5 @@
         lib/Screen/Onboarding/SplashScreen.dart 의 배경색과 반드시 같아야 한다.
         다르면 앱을 켤 때 색이 한 번 튄다.
     -->
-    <color name="launch_background">#FFCBEAB7</color>
+    <color name="launch_background">#FFFFFFFF</color>
 </resources>
