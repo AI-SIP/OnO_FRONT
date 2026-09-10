@@ -41,11 +41,12 @@ void main() {
     missionService = MockMissionService();
   });
 
-  Future<void> pumpHistory(WidgetTester tester) async {
+  Future<void> pumpHistory(WidgetTester tester, {bool settle = true}) async {
     disableAnimationsForTest(tester);
     await pumpOnoWidget(
       tester,
       MissionHistoryScreen(missionService: missionService),
+      settle: settle,
     );
   }
 
@@ -195,6 +196,68 @@ void main() {
     });
   });
 
+  group('요청이 겹칠 때', () {
+    testWidgets('먼저 나간 요청이 늦게 도착해도 새로고침한 목록을 덮지 않는다', (tester) async {
+      // 요청이 날아가 있는 동안 새로고침하면 목록이 비워진다. 그 뒤 늦게
+      // 도착한 옛 응답이 빈 목록에 붙고 커서까지 옛것으로 덮이면, 새로 읽은
+      // 페이지가 통째로 사라지고 스크롤해도 복구되지 않는다.
+      var calls = 0;
+      when(() => missionService.getHistory(cursor: null)).thenAnswer((_) async {
+        calls++;
+        if (calls == 1) {
+          // 첫 요청은 늦게 온다. 그 사이에 새로고침이 끼어든다.
+          await Future<void>.delayed(const Duration(milliseconds: 500));
+          return MissionHistoryPageModel(
+            content: [
+              buildItem(progressId: 1, claimedAt: today, title: '늦게 온 페이지'),
+            ],
+            nextCursor: 998,
+            hasNext: true,
+            totalClaimedXp: 999,
+            totalClaimedCount: 99,
+          );
+        }
+        return MissionHistoryPageModel(
+          content: [
+            buildItem(progressId: 2, claimedAt: today, title: '새로 읽은 페이지'),
+          ],
+          nextCursor: null,
+          hasNext: false,
+          totalClaimedXp: 500,
+          totalClaimedCount: 12,
+        );
+      });
+
+      // 첫 응답을 기다리지 않는다. 기다리면 겹치는 순간이 사라진다.
+      await pumpHistory(tester, settle: false);
+      await tester.pump(const Duration(milliseconds: 50));
+
+      // 첫 요청이 아직 날아가 있는 동안 당겨서 새로고침한다.
+      await tester.fling(find.byType(ListView), const Offset(0, 300), 1000);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+
+      // 늦게 온 첫 응답이 도착할 시간을 준다.
+      await tester.pump(const Duration(milliseconds: 800));
+      await tester.pumpAndSettle();
+
+      expect(calls, 2);
+      expect(
+        find.text('새로 읽은 페이지'),
+        findsOneWidget,
+        reason: '새로고침으로 읽은 것이 남아 있어야 한다',
+      );
+      expect(
+        find.text('늦게 온 페이지'),
+        findsNothing,
+        reason: '지난 세대의 응답은 버려야 한다',
+      );
+      // 합계도 새로 읽은 것이어야 한다.
+      expect(find.text('500 XP'), findsOneWidget);
+      expect(find.text('999 XP'), findsNothing);
+    });
+  });
+
   group('빈 목록과 실패', () {
     testWidgets('받은 게 없으면 조용한 안내만 남는다', (tester) async {
       stubPage(MissionHistoryPageModel.empty);
@@ -205,13 +268,43 @@ void main() {
       expect(find.text('0 XP'), findsOneWidget);
     });
 
-    testWidgets('조회에 실패해도 오류를 띄우지 않는다', (tester) async {
+    testWidgets('조회에 실패하면 빈 상태가 아니라 다시 시도를 보여 준다', (tester) async {
+      // 실패한 것을 "받은 보상이 없다"로 보여 주면 보상이 있는데도 없다고
+      // 말하는 셈이라, 사용자가 그대로 믿고 나가 버린다.
       stubPage(null);
 
       await pumpHistory(tester);
 
       expect(tester.takeException(), isNull);
-      expect(find.text('아직 받은 보상이 없어요'), findsOneWidget);
+      expect(find.text('아직 받은 보상이 없어요'), findsNothing);
+      expect(find.text('보상 기록을 불러오지 못했어요'), findsOneWidget);
+      expect(find.text('다시 시도'), findsOneWidget);
+    });
+
+    testWidgets('다시 시도를 누르면 한 번 더 읽는다', (tester) async {
+      // 첫 번째는 실패, 두 번째는 성공한다.
+      var calls = 0;
+      when(() => missionService.getHistory(cursor: null)).thenAnswer((_) async {
+        calls++;
+        if (calls == 1) return null;
+        return MissionHistoryPageModel(
+          content: [buildItem(progressId: 1, claimedAt: today)],
+          nextCursor: null,
+          hasNext: false,
+          totalClaimedXp: 10,
+          totalClaimedCount: 1,
+        );
+      });
+
+      await pumpHistory(tester);
+      expect(find.text('다시 시도'), findsOneWidget);
+
+      await tester.tap(find.text('다시 시도'));
+      await tester.pumpAndSettle();
+
+      expect(calls, 2);
+      expect(find.text('오늘의 오답'), findsOneWidget);
+      expect(find.text('보상 기록을 불러오지 못했어요'), findsNothing);
     });
 
     testWidgets('실패한 뒤에는 스크롤해도 다시 조르지 않는다', (tester) async {

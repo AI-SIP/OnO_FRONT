@@ -644,6 +644,42 @@ void main() {
       );
     });
 
+    // 검증에서 320dp 는 기본 배율에서도, 390dp 는 배율 1.15 부터 넘쳤다.
+    // 가장 흔한 폭에서 글자 한 칸만 키워도 노란 줄무늬가 보이던 자리다.
+    for (final size in [OnoSurface.smallPhone, OnoSurface.phone]) {
+      for (final scale in [1.0, 1.15, 1.3, 1.6, 2.0]) {
+        testWidgets(
+          '${size.width.toInt()}dp 글자 ${scale}배에서 넘치지 않는다',
+          (tester) async {
+            final missionService = MockMissionService();
+            when(() => missionService.getMissions())
+                .thenAnswer((_) async => boardWithThreeStates());
+
+            disableAnimationsForTest(tester);
+            await pumpOnoWidget(
+              tester,
+              Builder(
+                builder: (context) => MediaQuery(
+                  // 통째로 갈아 끼우면 연출을 끈 설정까지 지워진다.
+                  data: MediaQuery.of(context)
+                      .copyWith(textScaler: TextScaler.linear(scale)),
+                  child: const MissionScreen(),
+                ),
+              ),
+              missionProvider: MissionProvider(missionService: missionService),
+              surfaceSize: size,
+            );
+
+            expect(
+              tester.takeException(),
+              isNull,
+              reason: '${size.width.toInt()}dp × $scale 에서 넘쳤다',
+            );
+          },
+        );
+      }
+    }
+
     testWidgets('좁은 화면에서 글자를 키워도 넘치지 않는다', (tester) async {
       final missionService = MockMissionService();
       when(() => missionService.getMissions())
@@ -949,6 +985,93 @@ void main() {
 
       expect(find.text(ErrorMessages.network), findsOneWidget);
       expect(find.text('받기'), findsOneWidget);
+    });
+
+    testWidgets('보상 카드가 떠 있을 때 뒤로가기를 눌러도 미션 화면은 남는다', (tester) async {
+      // 자동 닫기 타이머가 살아남아 pop 을 한 번 더 부르면 그 두 번째 pop 이
+      // 미션 화면을 닫아 홈으로 튕긴다. 실제로 재현됐던 자리다.
+      final missionService = MockMissionService();
+      when(() => missionService.getMissions())
+          .thenAnswer((_) async => boardWithThreeStates());
+      when(() => missionService.claim(
+            any(),
+            onFailure: any(named: 'onFailure'),
+          )).thenAnswer(
+        (_) async => const MissionClaimResultModel(
+          progressId: 2,
+          rewardType: MissionRewardType.xp,
+          rewardValue: 10,
+          totalStudyLevel: 7,
+          leveledUp: false,
+        ),
+      );
+
+      await pumpMissionScreen(
+        tester,
+        missionService: missionService,
+        userProvider: buildUserProvider(),
+      );
+
+      await tester.tap(find.text('받기'));
+      await tester.pump();
+
+      // 자동 닫기(1.1초) 직전까지 흘린 뒤 밖에서 닫는다(시스템 뒤로가기).
+      // 닫히는 애니메이션이 도는 동안에도 위젯은 아직 살아 있어서, 그 사이에
+      // 타이머가 터지면 pop 이 한 번 더 나간다. 그 두 번째 pop 이 미션 화면을
+      // 닫는다.
+      await tester.pump(const Duration(milliseconds: 1000));
+      expect(find.byKey(missionRewardCelebrationKey), findsOneWidget);
+
+      final navigator = tester.state<NavigatorState>(find.byType(Navigator));
+      navigator.pop();
+      await tester.pump(const Duration(milliseconds: 150));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(missionRewardCelebrationKey), findsNothing);
+
+      await tester.pump(const Duration(milliseconds: 1500));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.byType(MissionScreen),
+        findsOneWidget,
+        reason: '보상 카드만 닫혀야 한다. 미션 화면까지 닫히면 홈으로 튕긴다',
+      );
+    });
+
+    testWidgets('바깥을 눌러 닫아도 미션 화면은 남는다', (tester) async {
+      final missionService = MockMissionService();
+      when(() => missionService.getMissions())
+          .thenAnswer((_) async => boardWithThreeStates());
+      when(() => missionService.claim(
+            any(),
+            onFailure: any(named: 'onFailure'),
+          )).thenAnswer(
+        (_) async => const MissionClaimResultModel(
+          progressId: 2,
+          rewardType: MissionRewardType.xp,
+          rewardValue: 10,
+          totalStudyLevel: 7,
+          leveledUp: false,
+        ),
+      );
+
+      await pumpMissionScreen(
+        tester,
+        missionService: missionService,
+        userProvider: buildUserProvider(),
+      );
+
+      await tester.tap(find.text('받기'));
+      await tester.pumpAndSettle();
+
+      // 카드 밖(맨 위)을 누른다.
+      await tester.tapAt(const Offset(10, 10));
+      await tester.pumpAndSettle();
+      await tester.pump(const Duration(milliseconds: 1500));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(MissionScreen), findsOneWidget);
     });
 
     testWidgets('실패하면 코인을 날리지 않고 카드가 흔들린다', (tester) async {
