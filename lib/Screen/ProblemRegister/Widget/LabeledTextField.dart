@@ -13,6 +13,7 @@ class LabeledTextField extends StatelessWidget {
   final IconData? icon;
   final TextEditingController controller;
   final int maxLines;
+  final int? maxLength;
   final bool showClearButton;
   final ValueChanged<String>? onChanged;
 
@@ -23,6 +24,7 @@ class LabeledTextField extends StatelessWidget {
     this.icon,
     required this.controller,
     this.maxLines = 1,
+    this.maxLength,
     this.showClearButton = false,
     this.onChanged,
   });
@@ -123,8 +125,13 @@ class LabeledTextField extends StatelessWidget {
                     horizontal: 16,
                     vertical: maxLines > 1 ? 16 : 14,
                   ),
+                  counterStyle: standardTextStyle.copyWith(
+                    color: Colors.grey[500],
+                    fontSize: 12,
+                  ),
                 ),
                 maxLines: maxLines,
+                maxLength: maxLength,
               ),
             ],
           ),

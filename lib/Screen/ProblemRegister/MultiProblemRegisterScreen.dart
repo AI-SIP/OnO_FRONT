@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../Model/PracticeNote/PracticeNoteRegisterModel.dart';
+import '../../Model/Problem/ProblemRegisterModel.dart';
 import '../../Model/Tag/TagModel.dart';
 import '../../Module/Dialog/SnackBarDialog.dart';
 import '../../Module/Image/ImagePickerHandler.dart';
@@ -736,6 +737,7 @@ class _MultiProblemRegisterScreenState
             icon: Icons.note_alt_outlined,
             controller: draft.memoController,
             maxLines: 4,
+            maxLength: ProblemRegisterModel.memoMaxLength,
             showClearButton: true,
           ),
         ],

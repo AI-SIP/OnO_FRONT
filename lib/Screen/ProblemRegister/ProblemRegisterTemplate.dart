@@ -184,6 +184,7 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
               icon: Icons.edit,
               hintText: '기록하고 싶은 내용을 간단하게 작성해주세요!',
               maxLines: 3,
+              maxLength: ProblemRegisterModel.memoMaxLength,
             ),
           ],
         ));

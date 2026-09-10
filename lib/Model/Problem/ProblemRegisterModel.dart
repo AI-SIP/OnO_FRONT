@@ -1,6 +1,9 @@
 import 'ProblemImageDataRegisterModel.dart';
 
 class ProblemRegisterModel {
+  /// 서버 problem.memo 컬럼 길이. 넘겨 보내면 DB 에서 잘리며 500 이 떨어진다.
+  static const int memoMaxLength = 1000;
+
   int? problemId;
   String? memo;
   String? reference;

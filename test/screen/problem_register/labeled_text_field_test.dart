@@ -116,6 +116,43 @@ void main() {
     expect(field.maxLines, 3);
   });
 
+  testWidgets('maxLength 를 넘겨주면 그 길이에서 입력이 잘린다', (tester) async {
+    final controller = TextEditingController();
+    await pumpOnoWidget(
+      tester,
+      _wrap(LabeledTextField(
+        label: '메모',
+        hintText: '힌트',
+        controller: controller,
+        maxLines: 3,
+        maxLength: 1000,
+      )),
+    );
+
+    await tester.enterText(find.byType(TextField), '가' * 1001);
+    await tester.pump();
+
+    // 잘리지 않으면 서버 memo 컬럼(1000자)에서 Data truncation 이 나 500 이 떨어진다.
+    expect(controller.text.length, 1000);
+  });
+
+  testWidgets('maxLength 를 주지 않으면 길이를 제한하지 않는다', (tester) async {
+    final controller = TextEditingController();
+    await pumpOnoWidget(
+      tester,
+      _wrap(LabeledTextField(
+        label: '제목',
+        hintText: '힌트',
+        controller: controller,
+      )),
+    );
+
+    await tester.enterText(find.byType(TextField), '가' * 1001);
+    await tester.pump();
+
+    expect(controller.text.length, 1001);
+  });
+
   testWidgets('태블릿 폭에서도 예외 없이 그려진다', (tester) async {
     final controller = TextEditingController();
     await pumpOnoWidget(
