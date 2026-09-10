@@ -11,6 +11,7 @@ import '../../../Module/Design/AppColors.dart';
 import '../../../Module/Design/AppSpacing.dart';
 import '../../../Module/Motion/PressableScale.dart';
 import '../../../Module/Motion/TossPageRoute.dart';
+import '../../Mission/MissionPalette.dart';
 import '../../Mission/MissionScreen.dart';
 
 class UserLevelCard extends StatelessWidget {
@@ -60,28 +61,32 @@ class UserLevelCard extends StatelessWidget {
     );
   }
 
-  /// 카드가 누를 수 있는 것임을 알리는 줄이다.
+  /// 활동별 경험치 위에 붙는 작은 길잡이다.
   ///
-  /// 카드 전체를 누르게 하면 개구리를 눌렀을 때 말풍선과 화면 이동이 함께
-  /// 일어난다. 그래서 이 줄과 레벨 도넛만 누름을 받는다.
+  /// 아래 네 줄이 미션으로 오르는 경험치라서 그 바로 위에 둔다. 카드 전체를
+  /// 누르게 하지 않는 이유는 개구리에 눌러서 말풍선을 띄우는 기존 동작이 있어서,
+  /// 카드가 누름을 가로채면 말풍선과 화면 이동이 함께 일어나기 때문이다.
   Widget _buildMissionLink(BuildContext context, {required bool isTablet}) {
     return PressableScale(
       onTap: () => _openMissions(context),
       child: Padding(
-        padding: const EdgeInsets.only(top: AppSpacing.sm),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.xs,
+          vertical: AppSpacing.xs,
+        ),
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           children: [
             StandardText(
-              text: '미션 보고 경험치 받기',
-              fontSize: isTablet ? 14 : 12,
+              text: '미션 보기',
+              fontSize: isTablet ? 13 : 12,
               color: themeProvider.primaryColor,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
             Icon(
               Icons.chevron_right,
-              size: isTablet ? 20 : 16,
+              size: isTablet ? 18 : 15,
               color: themeProvider.primaryColor,
             ),
           ],
@@ -161,7 +166,6 @@ class UserLevelCard extends StatelessWidget {
               ),
             ],
           ),
-          _buildMissionLink(context, isTablet: isTablet),
           if (userInfo != null) ...[
             SizedBox(
                 height: isTabletLandscape
@@ -170,14 +174,22 @@ class UserLevelCard extends StatelessWidget {
             Divider(height: 1, color: Colors.grey[200]),
             SizedBox(
                 height: isTabletLandscape
-                    ? screenHeight * 0.028
-                    : screenHeight * 0.016),
+                    ? screenHeight * 0.020
+                    : screenHeight * 0.012),
+            Align(
+              alignment: Alignment.centerRight,
+              child: _buildMissionLink(context, isTablet: isTablet),
+            ),
+            SizedBox(
+                height: isTabletLandscape
+                    ? screenHeight * 0.016
+                    : screenHeight * 0.008),
             _buildActivityRow(
               icon: Icons.waving_hand_rounded,
               category: '출석',
               level: userInfo!.attendanceLevel,
               point: userInfo!.attendancePoint,
-              color: Colors.pink[300]!,
+              color: MissionPalette.of(MissionKind.attendance).accent,
               isTablet: isTablet,
               delay: _activityDelay(0),
             ),
@@ -190,7 +202,7 @@ class UserLevelCard extends StatelessWidget {
               category: '오답노트 작성',
               level: userInfo!.noteWriteLevel,
               point: userInfo!.noteWritePoint,
-              color: Colors.purple[300]!,
+              color: MissionPalette.of(MissionKind.noteWrite).accent,
               isTablet: isTablet,
               delay: _activityDelay(1),
             ),
@@ -203,7 +215,7 @@ class UserLevelCard extends StatelessWidget {
               category: '문제 복습',
               level: userInfo!.problemPracticeLevel,
               point: userInfo!.problemPracticePoint,
-              color: Colors.green[400]!,
+              color: MissionPalette.of(MissionKind.problemPractice).accent,
               isTablet: isTablet,
               delay: _activityDelay(2),
             ),
@@ -216,7 +228,7 @@ class UserLevelCard extends StatelessWidget {
               category: '복습 세트 복습',
               level: userInfo!.notePracticeLevel,
               point: userInfo!.notePracticePoint,
-              color: Colors.blue[300]!,
+              color: MissionPalette.of(MissionKind.notePractice).accent,
               isTablet: isTablet,
               delay: _activityDelay(3),
             ),
