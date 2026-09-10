@@ -168,6 +168,7 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
               hintText: '오답노트의 제목을 작성해주세요!',
               icon: Icons.info,
               controller: _titleCtrl,
+              maxLength: ProblemRegisterModel.referenceMaxLength,
               showClearButton: true,
               onChanged: (_) {
                 if (!_isApplyingDefaultTitle) {
@@ -1111,8 +1112,8 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
     final problemService = ProblemService();
     final registeredProblemId = await problemService.registerProblemV2(
       problemId: null,
-      memo: _memoCtrl.text,
-      reference: _titleCtrl.text,
+      memo: ProblemRegisterModel.clampMemo(_memoCtrl.text),
+      reference: ProblemRegisterModel.clampReference(_titleCtrl.text),
       solvedAt: _selectedDate,
       folderId: _selectedFolderId,
       problemImageUrls: _existingProblemImageUrls,
@@ -1178,8 +1179,8 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
     // 문제 기본 정보 업데이트
     final problemRegisterModel = ProblemRegisterModel(
       problemId: problemId,
-      memo: _memoCtrl.text,
-      reference: _titleCtrl.text,
+      memo: ProblemRegisterModel.clampMemo(_memoCtrl.text),
+      reference: ProblemRegisterModel.clampReference(_titleCtrl.text),
       solvedAt: _selectedDate,
       folderId: _selectedFolderId,
       imageDataDtoList: [],

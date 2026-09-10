@@ -716,6 +716,7 @@ class _MultiProblemRegisterScreenState
             hintText: '제목을 입력해 주세요',
             icon: Icons.title,
             controller: draft.titleController,
+            maxLength: ProblemRegisterModel.referenceMaxLength,
             showClearButton: true,
           ),
           const SizedBox(height: 14),
@@ -1934,8 +1935,8 @@ class _MultiProblemRegisterScreenState
     );
 
     return _BatchProblemUploadResult(
-      memo: draft.memoController.text.trim(),
-      reference: _resolveDraftTitle(draft),
+      memo: ProblemRegisterModel.clampMemo(draft.memoController.text.trim()),
+      reference: ProblemRegisterModel.clampReference(_resolveDraftTitle(draft)),
       folderId: draft.folderId,
       solvedAt: draft.solvedAt,
       problemImageUrls: problemImageUrls,
