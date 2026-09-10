@@ -97,10 +97,15 @@ void main() {
       );
     });
 
-    test('모든 갈래에 색이 있다', () {
+    test('바탕과 강조가 서로 다른 색이다', () {
+      // 같으면 아이콘이 타일에 묻힌다.
       for (final kind in MissionKind.values) {
-        expect(MissionPalette.of(kind).surface, isNotNull);
-        expect(MissionPalette.of(kind).accent, isNotNull);
+        final colors = MissionPalette.of(kind);
+        expect(
+          colors.surface.toARGB32(),
+          isNot(colors.accent.toARGB32()),
+          reason: '$kind 의 바탕과 아이콘이 같은 색이다',
+        );
       }
     });
 

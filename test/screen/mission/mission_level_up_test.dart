@@ -183,6 +183,52 @@ void main() {
       expect(find.text('바로 적용해보기'), findsOneWidget);
     });
 
+    for (final size in [OnoSurface.smallPhone, OnoSurface.tablet]) {
+      for (final scale in [1.0, 1.6]) {
+        testWidgets(
+          '${size.width.toInt()}dp 글자 ${scale}배에서 넘치지 않는다',
+          (tester) async {
+            disableAnimationsForTest(tester);
+            await pumpOnoWidget(
+              tester,
+              Builder(
+                builder: (context) => MediaQuery(
+                  data: MediaQuery.of(context)
+                      .copyWith(textScaler: TextScaler.linear(scale)),
+                  child: Builder(
+                    builder: (inner) => Scaffold(
+                      body: Center(
+                        child: TextButton(
+                          onPressed: () => showMissionLevelUp(
+                            inner,
+                            level: 6,
+                            previousLevel: 5,
+                            unlockedThemeIndexes: const [8, 9],
+                          ),
+                          child: const Text('열기'),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              surfaceSize: size,
+            );
+            await tester.tap(find.text('열기'));
+            await tester.pumpAndSettle();
+
+            expect(
+              tester.takeException(),
+              isNull,
+              reason: '${size.width.toInt()}dp × $scale 에서 넘쳤다',
+            );
+            expect(find.text('계속하기'), findsOneWidget);
+            expect(find.text('새 테마가 열렸어요'), findsOneWidget);
+          },
+        );
+      }
+    }
+
     testWidgets('해금된 테마가 없으면 그 자리는 통째로 없다', (tester) async {
       await pumpLevelUp(tester, level: 6, previousLevel: 5);
 

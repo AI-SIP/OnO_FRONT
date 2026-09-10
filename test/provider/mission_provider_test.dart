@@ -84,6 +84,25 @@ void main() {
     when(() => missionService.getMissions()).thenAnswer((_) async => board);
   }
 
+  void stubClaim(MissionClaimResultModel? result) {
+    when(() => missionService.claim(
+          any(),
+          onFailure: any(named: 'onFailure'),
+        )).thenAnswer((_) async => result);
+  }
+
+  void stubClaimFailure(MissionClaimFailure failure) {
+    when(() => missionService.claim(
+          any(),
+          onFailure: any(named: 'onFailure'),
+        )).thenAnswer((invocation) async {
+      final onFailure = invocation.namedArguments[#onFailure] as void Function(
+          MissionClaimFailure)?;
+      onFailure?.call(failure);
+      return null;
+    });
+  }
+
   group('초기 상태', () {
     test('아무 것도 안 했을 때 배너를 그리지 않는다', () {
       expect(provider.board, isNull);
@@ -309,25 +328,6 @@ void main() {
   });
 
   group('claim', () {
-    void stubClaim(MissionClaimResultModel? result) {
-      when(() => missionService.claim(
-            any(),
-            onFailure: any(named: 'onFailure'),
-          )).thenAnswer((_) async => result);
-    }
-
-    void stubClaimFailure(MissionClaimFailure failure) {
-      when(() => missionService.claim(
-            any(),
-            onFailure: any(named: 'onFailure'),
-          )).thenAnswer((invocation) async {
-        final onFailure = invocation.namedArguments[#onFailure] as void
-            Function(MissionClaimFailure)?;
-        onFailure?.call(failure);
-        return null;
-      });
-    }
-
     test('성공하면 그 미션만 claimed 로 바뀐다', () async {
       stubGetMissions(buildBoard());
       await provider.fetchMissions();
@@ -481,6 +481,61 @@ void main() {
   });
 
   group('clear', () {
+    test('앞 계정에서 받은 기억까지 지운다', () async {
+      // 지우지 않으면 A 가 받은 progressId 를 B 의 보드에서도 받음으로 덮는다.
+      // 같은 번호가 B 에게도 오면 받기 버튼이 사라져 보상을 못 받는다.
+      stubGetMissions(buildBoard());
+      await provider.fetchMissions();
+      when(() => missionService.claim(
+            any(),
+            onFailure: any(named: 'onFailure'),
+          )).thenAnswer(
+        (_) async => const MissionClaimResultModel(
+          progressId: 1024,
+          rewardType: MissionRewardType.xp,
+          rewardValue: 10,
+          totalStudyLevel: 7,
+          leveledUp: false,
+        ),
+      );
+      await provider.claim(1024);
+      expect(provider.dailyMissions[0].claimed, isTrue);
+
+      provider.clear();
+
+      // 다른 계정이 같은 번호의 미션을 아직 안 받은 채로 들고 온다.
+      stubGetMissions(buildBoard(daily: [buildMission()]));
+      await provider.fetchMissions();
+
+      expect(
+        provider.dailyMissions.single.claimed,
+        isFalse,
+        reason: '앞 사람의 받음이 남으면 다음 사람이 보상을 못 받는다',
+      );
+      expect(provider.unclaimedCount, 1);
+    });
+
+    test('앞 계정의 받기 실패 문구도 지운다', () async {
+      stubGetMissions(buildBoard());
+      await provider.fetchMissions();
+      stubClaimFailure(const MissionClaimFailure(
+        kind: MissionClaimFailureKind.rejected,
+        errorCode: 7011,
+        message: '아직 완료하지 않은 미션이에요.',
+      ));
+      await provider.claim(1024);
+      expect(provider.lastClaimFailure, isNotNull);
+
+      provider.clear();
+
+      expect(
+        provider.lastClaimFailure,
+        isNull,
+        reason: '다음 사람 화면에 앞 사람의 실패 문구가 뜨면 안 된다',
+      );
+      expect(provider.consumeClaimFailure(), isNull);
+    });
+
     test('들고 있던 미션을 비운다', () async {
       stubGetMissions(buildBoard());
       await provider.fetchMissions();

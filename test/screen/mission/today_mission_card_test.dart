@@ -227,9 +227,14 @@ void main() {
 
     await pumpOnoWidget(
       tester,
-      const MediaQuery(
-        data: MediaQueryData(textScaler: TextScaler.linear(1.6)),
-        child: Scaffold(body: TodayMissionCard()),
+      // 통째로 갈아 끼우면 연출을 끈 설정까지 지워진다. 지금은 안 깨지지만
+      // 이 카드에 끝나지 않는 연출이 하나만 붙어도 pumpAndSettle 이 멈춘다.
+      Builder(
+        builder: (context) => MediaQuery(
+          data: MediaQuery.of(context)
+              .copyWith(textScaler: const TextScaler.linear(1.6)),
+          child: const Scaffold(body: TodayMissionCard()),
+        ),
       ),
       missionProvider: provider,
       surfaceSize: OnoSurface.smallPhone,

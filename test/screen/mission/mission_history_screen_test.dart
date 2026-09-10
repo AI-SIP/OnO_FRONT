@@ -32,6 +32,12 @@ MissionHistoryItemModel buildItem({
   );
 }
 
+// 고정 시각이다. 날짜 계산에 Duration 을 쓰지 않는다. 서머타임이 있는 지역에서는
+// 하루가 24시간이 아니라 시각이 한 시간 밀려 `오후 2:33` 단언이 깨진다.
+final _now = DateTime(2026, 9, 10, 15, 0);
+final _today = DateTime(2026, 9, 10, 14, 33);
+final _yesterday = DateTime(2026, 9, 9, 14, 33);
+
 void main() {
   setUpOnoWidgetTest();
 
@@ -45,7 +51,12 @@ void main() {
     disableAnimationsForTest(tester);
     await pumpOnoWidget(
       tester,
-      MissionHistoryScreen(missionService: missionService),
+      MissionHistoryScreen(
+        missionService: missionService,
+        // 시계를 고정한다. 실제 시각에 매이면 자정을 넘기는 순간이나 서머타임이
+        // 있는 지역에서만 어긋나는 실패가 난다.
+        clock: () => _now,
+      ),
       settle: settle,
     );
   }
@@ -58,15 +69,11 @@ void main() {
         .thenAnswer((_) async => page);
   }
 
-  final now = DateTime.now();
-  final today = DateTime(now.year, now.month, now.day, 14, 33);
-  final yesterday = today.subtract(const Duration(days: 1));
-
   group('첫 페이지', () {
     testWidgets('합계와 목록을 보여 준다', (tester) async {
       stubPage(
         MissionHistoryPageModel(
-          content: [buildItem(progressId: 1, claimedAt: today)],
+          content: [buildItem(progressId: 1, claimedAt: _today)],
           nextCursor: null,
           hasNext: false,
           totalClaimedXp: 1250,
@@ -83,22 +90,12 @@ void main() {
       expect(find.text('+10 XP'), findsOneWidget);
     });
 
-    test('합계가 없으면 읽은 것으로 센다', () {
-      // 서버가 합계를 빼고 주더라도 화면이 비지 않아야 한다.
-      const page = MissionHistoryPageModel(
-        content: [],
-        nextCursor: null,
-        hasNext: false,
-      );
-      expect(page.totalClaimedXp, isNull);
-    });
-
     testWidgets('합계가 없으면 목록에서 더해 보여 준다', (tester) async {
       stubPage(
         MissionHistoryPageModel(
           content: [
-            buildItem(progressId: 1, claimedAt: today, rewardValue: 10),
-            buildItem(progressId: 2, claimedAt: today, rewardValue: 15),
+            buildItem(progressId: 1, claimedAt: _today, rewardValue: 10),
+            buildItem(progressId: 2, claimedAt: _today, rewardValue: 15),
           ],
           nextCursor: null,
           hasNext: false,
@@ -115,8 +112,8 @@ void main() {
       stubPage(
         MissionHistoryPageModel(
           content: [
-            buildItem(progressId: 1, claimedAt: today),
-            buildItem(progressId: 2, claimedAt: yesterday, title: '출석'),
+            buildItem(progressId: 1, claimedAt: _today),
+            buildItem(progressId: 2, claimedAt: _yesterday, title: '출석'),
           ],
           nextCursor: null,
           hasNext: false,
@@ -140,7 +137,7 @@ void main() {
             for (var i = 0; i < 8; i++)
               buildItem(
                 progressId: i,
-                claimedAt: today,
+                claimedAt: _today,
                 title: '첫 페이지 $i',
               ),
           ],
@@ -153,7 +150,7 @@ void main() {
       stubPage(
         MissionHistoryPageModel(
           content: [
-            buildItem(progressId: 99, claimedAt: today, title: '두 번째 페이지'),
+            buildItem(progressId: 99, claimedAt: _today, title: '두 번째 페이지'),
           ],
           nextCursor: null,
           hasNext: false,
@@ -179,7 +176,7 @@ void main() {
         MissionHistoryPageModel(
           content: [
             for (var i = 0; i < 8; i++)
-              buildItem(progressId: i, claimedAt: today, title: '기록 $i'),
+              buildItem(progressId: i, claimedAt: _today, title: '기록 $i'),
           ],
           nextCursor: null,
           hasNext: false,
@@ -209,7 +206,7 @@ void main() {
           await Future<void>.delayed(const Duration(milliseconds: 500));
           return MissionHistoryPageModel(
             content: [
-              buildItem(progressId: 1, claimedAt: today, title: '늦게 온 페이지'),
+              buildItem(progressId: 1, claimedAt: _today, title: '늦게 온 페이지'),
             ],
             nextCursor: 998,
             hasNext: true,
@@ -219,7 +216,7 @@ void main() {
         }
         return MissionHistoryPageModel(
           content: [
-            buildItem(progressId: 2, claimedAt: today, title: '새로 읽은 페이지'),
+            buildItem(progressId: 2, claimedAt: _today, title: '새로 읽은 페이지'),
           ],
           nextCursor: null,
           hasNext: false,
@@ -288,7 +285,7 @@ void main() {
         calls++;
         if (calls == 1) return null;
         return MissionHistoryPageModel(
-          content: [buildItem(progressId: 1, claimedAt: today)],
+          content: [buildItem(progressId: 1, claimedAt: _today)],
           nextCursor: null,
           hasNext: false,
           totalClaimedXp: 10,
@@ -318,5 +315,59 @@ void main() {
       verifyNever(
           () => missionService.getHistory(cursor: any(named: 'cursor')));
     });
+  });
+
+  group('폰과 태블릿, 큰 글자', () {
+    for (final size in [OnoSurface.smallPhone, OnoSurface.tablet]) {
+      for (final scale in [1.0, 1.6]) {
+        testWidgets(
+          '${size.width.toInt()}dp 글자 ${scale}배에서 넘치지 않는다',
+          (tester) async {
+            stubPage(
+              MissionHistoryPageModel(
+                content: [
+                  buildItem(
+                    progressId: 1,
+                    claimedAt: _today,
+                    title: '아주 긴 미션 제목이 들어오면 어떻게 되는지 보는 줄',
+                    rewardValue: 1200,
+                  ),
+                  buildItem(progressId: 2, claimedAt: _yesterday),
+                ],
+                nextCursor: null,
+                hasNext: false,
+                totalClaimedXp: 123456,
+                totalClaimedCount: 789,
+              ),
+            );
+
+            disableAnimationsForTest(tester);
+            await pumpOnoWidget(
+              tester,
+              Builder(
+                builder: (context) => MediaQuery(
+                  data: MediaQuery.of(context)
+                      .copyWith(textScaler: TextScaler.linear(scale)),
+                  child: MissionHistoryScreen(
+                    missionService: missionService,
+                    clock: () => _now,
+                  ),
+                ),
+              ),
+              surfaceSize: size,
+            );
+
+            expect(
+              tester.takeException(),
+              isNull,
+              reason: '${size.width.toInt()}dp × $scale 에서 넘쳤다',
+            );
+            // 넘치지 않은 것과 그릴 게 없었던 것은 다르다.
+            expect(find.text('지금까지 받은 보상'), findsOneWidget);
+            expect(find.text('오늘'), findsOneWidget);
+          },
+        );
+      }
+    }
   });
 }

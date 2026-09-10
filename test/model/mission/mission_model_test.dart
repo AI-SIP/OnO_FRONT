@@ -2,6 +2,8 @@
 //
 // 계약 JSON 이 그대로 읽히는지와, 서버에 새 값이 생겼을 때 구버전 앱이
 // 죽지 않고 그 줄만 건너뛰는지가 관찰 대상이다.
+import 'dart:collection';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ono/Model/Mission/MissionClaimResultModel.dart';
 import 'package:ono/Model/Mission/MissionGroupModel.dart';
@@ -30,6 +32,36 @@ Map<String, dynamic> dailyMissionJson({
     'rewardType': rewardType,
     'rewardValue': 10,
   };
+}
+
+/// 특정 키를 읽으려 하면 터지는 맵.
+///
+/// 파싱 안전망(try/catch)이 실제로 도는지 보려면 값을 꺼내는 도중에 예외가
+/// 나야 한다. 타입이 어긋나는 정도는 읽기 함수들이 먼저 걸러내서 안전망까지
+/// 닿지 않는다.
+class _ExplodingMap extends MapBase<String, dynamic> {
+  final Map<String, dynamic> _inner;
+  final String explodeOn;
+
+  _ExplodingMap(this._inner, {required this.explodeOn});
+
+  @override
+  dynamic operator [](Object? key) {
+    if (key == explodeOn) throw StateError('읽을 수 없는 값');
+    return _inner[key];
+  }
+
+  @override
+  void operator []=(String key, dynamic value) => _inner[key] = value;
+
+  @override
+  void clear() => _inner.clear();
+
+  @override
+  Iterable<String> get keys => _inner.keys;
+
+  @override
+  dynamic remove(Object? key) => _inner.remove(key);
 }
 
 void main() {
@@ -125,10 +157,18 @@ void main() {
       );
     });
 
-    test('읽을 수 없는 모양이 와도 던지지 않고 그 미션만 버린다', () {
-      final json = dailyMissionJson()..['category'] = {'nested': 'map'};
+    test('읽는 도중 예외가 나도 던지지 않고 그 미션만 버린다', () {
+      // 값을 꺼내는 것 자체가 터지는 경우다. 서버가 예상 못 한 모양을 보내도
+      // 목록 전체가 날아가면 안 된다.
+      final json = _ExplodingMap(dailyMissionJson(), explodeOn: 'rewardValue');
 
       expect(() => MissionModel.fromJsonOrNull(json), returnsNormally);
+      expect(MissionModel.fromJsonOrNull(json), isNull);
+    });
+
+    test('모르는 모양의 값은 그 미션만 조용히 버린다', () {
+      final json = dailyMissionJson()..['category'] = {'nested': 'map'};
+
       expect(MissionModel.fromJsonOrNull(json), isNull);
     });
 

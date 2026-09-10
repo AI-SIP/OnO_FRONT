@@ -32,6 +32,7 @@ import 'package:ono/Screen/Mission/MissionPalette.dart';
 import 'package:ono/Screen/Mission/MissionSegments.dart';
 import 'package:ono/Screen/Mission/MissionHeroCard.dart';
 import 'package:ono/Screen/Mission/MissionRewardCelebration.dart';
+import 'package:ono/Screen/Mission/MissionRewardChip.dart';
 import 'package:ono/Screen/Mission/MissionLevelUp.dart';
 import 'package:ono/Screen/Mission/MissionScreen.dart';
 
@@ -257,8 +258,7 @@ void main() {
       await tester.tap(find.text('주간'));
       await tester.pumpAndSettle();
 
-      // 두 목록을 함께 들고 있으므로 둘 다 트리에는 있다. 지금 보이는 것이
-      // 주간인지는 화면에 그려진 위치로 본다.
+      // 한 번에 한 탭만 그린다. 주간으로 옮기면 주간 것만 트리에 있다.
       expect(find.text('열 권의 노트'), findsOneWidget);
     });
   });
@@ -675,6 +675,11 @@ void main() {
               isNull,
               reason: '${size.width.toInt()}dp × $scale 에서 넘쳤다',
             );
+            // "안 넘쳤다"와 "그릴 게 없었다"는 다르다. 실제로 떠 있는지 본다.
+            expect(find.byType(MissionHeroCard), findsOneWidget);
+            expect(find.byType(MissionSegments), findsOneWidget);
+            expect(find.byType(MissionCard), findsWidgets);
+            expect(find.text('받기'), findsOneWidget);
           },
         );
       }
@@ -702,6 +707,8 @@ void main() {
       );
 
       expect(tester.takeException(), isNull);
+      expect(find.byType(MissionHeroCard), findsOneWidget);
+      expect(find.byType(MissionCard), findsWidgets);
     });
   });
 
@@ -1108,6 +1115,113 @@ void main() {
           .widgetList<MissionCard>(find.byType(MissionCard))
           .where((card) => card.mission.progressId == 2);
       expect(shaken.single.shakeTick, greaterThan(0));
+    });
+
+    testWidgets('연출을 켠 채로 받으면 코인이 날아가고 그 뒤에 숫자가 오른다', (tester) async {
+      // 다른 화면 테스트는 전부 동작 줄이기를 켜 두어서 코인 비행과 정산
+      // 경로가 한 번도 돌지 않았다. 여기서만 연출을 켜고 그 길을 태운다.
+      // 끝나지 않는 펄스가 있어서 pumpAndSettle 을 쓰지 않고 직접 흘려보낸다.
+      final missionService = MockMissionService();
+      when(() => missionService.getMissions())
+          .thenAnswer((_) async => boardWithThreeStates());
+      when(() => missionService.claim(
+            any(),
+            onFailure: any(named: 'onFailure'),
+          )).thenAnswer(
+        (_) async => const MissionClaimResultModel(
+          progressId: 2,
+          rewardType: MissionRewardType.xp,
+          rewardValue: 10,
+          totalStudyLevel: 7,
+          leveledUp: false,
+        ),
+      );
+
+      await pumpOnoWidget(
+        tester,
+        const MissionScreen(),
+        missionProvider: MissionProvider(missionService: missionService),
+        userProvider: buildUserProvider(),
+        settle: false,
+      );
+      // 숫자가 0 에서 올라오는 연출이 끝날 때까지 기다린다.
+      await tester.pump(const Duration(milliseconds: 900));
+
+      // 받기 전에는 출석 10 XP 뿐이다.
+      expect(_heroXpText(tester), '+10 XP');
+
+      await tester.tap(find.text('받기'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+
+      // 보상 카드가 떠 있는 동안에는 아직 숫자가 오르지 않는다. 코인이
+      // 공중에 있는데 숫자가 먼저 오르면 코인이 무엇을 옮기는지 사라진다.
+      expect(find.byKey(missionRewardCelebrationKey), findsOneWidget);
+      expect(_heroXpText(tester), '+10 XP');
+
+      // 카드가 스스로 닫히고 코인이 날아간다.
+      await tester.pump(const Duration(milliseconds: 900));
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(
+        find.byType(MissionRewardToken),
+        findsWidgets,
+        reason: '코인이 화면에 떠서 날아가야 한다',
+      );
+      expect(
+        _heroXpText(tester),
+        '+10 XP',
+        reason: '코인이 닿기 전에는 숫자가 오르지 않는다',
+      );
+
+      // 코인이 닿으면 그때 숫자가 오른다. 롤업이 끝날 때까지 흘려보낸다.
+      await tester.pump(const Duration(milliseconds: 700));
+      await tester.pump(const Duration(milliseconds: 900));
+      await tester.pump(const Duration(milliseconds: 300));
+
+      expect(_heroXpText(tester), '+20 XP');
+      expect(find.text('받기'), findsNothing);
+    });
+
+    testWidgets('연달아 두 번 눌러도 요청은 한 번만 나간다', (tester) async {
+      // 보상이 두 번 나가면 되돌릴 방법이 없다. 화면 쪽 가드와 프로바이더 쪽
+      // 가드가 겹쳐 막는다.
+      final missionService = MockMissionService();
+      when(() => missionService.getMissions())
+          .thenAnswer((_) async => boardWithThreeStates());
+      when(() => missionService.claim(
+            any(),
+            onFailure: any(named: 'onFailure'),
+          )).thenAnswer((_) async {
+        await Future<void>.delayed(const Duration(milliseconds: 400));
+        return const MissionClaimResultModel(
+          progressId: 2,
+          rewardType: MissionRewardType.xp,
+          rewardValue: 10,
+          totalStudyLevel: 7,
+          leveledUp: false,
+        );
+      });
+
+      await pumpMissionScreen(
+        tester,
+        missionService: missionService,
+        userProvider: buildUserProvider(),
+      );
+
+      // 버튼은 누른 뒤 글자가 사라지므로 자리를 잡아 두고 그 자리를 두 번 누른다.
+      final spot = tester.getCenter(find.text('받기'));
+      await tester.tapAt(spot);
+      await tester.pump();
+      await tester.tapAt(spot);
+      await tester.pump(const Duration(milliseconds: 100));
+      await tester.tapAt(spot);
+      await tester.pump(const Duration(milliseconds: 600));
+
+      verify(() => missionService.claim(2, onFailure: any(named: 'onFailure')))
+          .called(1);
+
+      await tester.pump(const Duration(milliseconds: 1500));
+      await tester.pumpAndSettle();
     });
 
     testWidgets('받는 동안에는 버튼이 잠긴다', (tester) async {
