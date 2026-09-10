@@ -109,7 +109,7 @@ class _ExpiredMissionSheet extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.xs),
             const StandardText(
-              text: '기간은 지났지만 아직 받을 수 있어요.',
+              text: '기간이 지났어도 보상은 그대로예요',
               fontSize: 12,
               fontWeight: FontWeight.w500,
               color: AppColors.textTertiary,

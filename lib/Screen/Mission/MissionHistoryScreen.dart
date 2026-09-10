@@ -227,7 +227,7 @@ class _MissionHistoryScreenState extends State<MissionHistoryScreen> {
         Padding(
           padding: EdgeInsets.only(top: AppSpacing.xxxl),
           child: StandardText(
-            text: '아직 받은 보상이 없어요.',
+            text: '아직 받은 보상이 없어요',
             fontSize: 14,
             color: AppColors.textTertiary,
             textAlign: TextAlign.center,
