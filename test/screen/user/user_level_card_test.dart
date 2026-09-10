@@ -8,6 +8,22 @@ import 'package:ono/Screen/User/Widget/UserLevelCard.dart';
 
 import '../../helpers/helpers.dart';
 
+UserInfoModel _userInfo() {
+  return UserInfoModel(
+    totalStudyLevel: 3,
+    totalStudyCurrentPoint: 15,
+    totalStudyNextLevelThreshold: 40,
+    attendanceLevel: 2,
+    attendancePoint: 5,
+    noteWriteLevel: 4,
+    noteWritePoint: 20,
+    problemPracticeLevel: 1,
+    problemPracticePoint: 0,
+    notePracticeLevel: 6,
+    notePracticePoint: 30,
+  );
+}
+
 void main() {
   setUpOnoWidgetTest();
 
@@ -133,19 +149,23 @@ void main() {
   });
 
   group('미션 화면으로 가는 길', () {
-    testWidgets('레벨 카드에 미션으로 가는 줄이 보인다', (tester) async {
-      await pumpUserLevelCard(tester, userInfo: null);
+    testWidgets('활동별 경험치 위에 미션 보기가 있다', (tester) async {
+      // 아래 네 줄이 미션으로 오르는 경험치라서 그 바로 위에 둔다.
+      await pumpUserLevelCard(tester, userInfo: _userInfo());
 
-      // 정보 카드처럼만 보이면 누를 수 있다는 것을 알 수 없다.
-      expect(find.text('미션 보고 경험치 받기'), findsOneWidget);
+      expect(find.text('미션 보기'), findsOneWidget);
       expect(find.byIcon(Icons.chevron_right), findsWidgets);
+
+      final linkY = tester.getTopLeft(find.text('미션 보기')).dy;
+      final firstActivityY = tester.getTopLeft(find.text('출석')).dy;
+      expect(linkY, lessThan(firstActivityY));
     });
 
     testWidgets('그 줄을 누르면 미션 화면으로 간다', (tester) async {
       disableAnimationsForTest(tester);
-      await pumpUserLevelCard(tester, userInfo: null);
+      await pumpUserLevelCard(tester, userInfo: _userInfo());
 
-      await tester.tap(find.text('미션 보고 경험치 받기'));
+      await tester.tap(find.text('미션 보기'));
       await tester.pumpAndSettle();
 
       expect(find.byType(MissionScreen), findsOneWidget);

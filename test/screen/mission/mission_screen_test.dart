@@ -21,12 +21,13 @@ import 'package:ono/Provider/FoldersProvider.dart';
 import 'package:ono/Provider/PracticeNoteProvider.dart';
 import 'package:ono/Provider/UserProvider.dart';
 import 'package:ono/Module/Design/AppColors.dart';
-import 'package:ono/Module/Design/AppRewardColors.dart';
 import 'package:ono/Module/Motion/AppearTransition.dart';
 import 'package:ono/Model/Mission/MissionHistoryModel.dart';
 import 'package:ono/Screen/Mission/MissionCard.dart';
 import 'package:ono/Screen/Mission/MissionHistoryScreen.dart';
+import 'package:ono/Module/Theme/ThemeHandler.dart';
 import 'package:ono/Screen/Mission/MissionIcon.dart';
+import 'package:ono/Screen/Mission/MissionPalette.dart';
 import 'package:ono/Screen/Mission/MissionHeroCard.dart';
 import 'package:ono/Screen/Mission/MissionRewardCelebration.dart';
 import 'package:ono/Screen/Mission/MissionLevelUp.dart';
@@ -186,7 +187,8 @@ void main() {
 
       final claimable = tester.getTopLeft(find.text('오늘의 오답')).dy;
       final inProgress = tester.getTopLeft(find.text('세 문제만')).dy;
-      final claimed = tester.getTopLeft(find.text('출석')).dy;
+      // 능력치 라벨도 '출석' 이라 제목 쪽(먼저 그려지는 것)만 본다.
+      final claimed = tester.getTopLeft(find.text('출석').first).dy;
 
       expect(claimable, lessThan(inProgress));
       expect(inProgress, lessThan(claimed));
@@ -392,21 +394,24 @@ void main() {
       return (container.decoration! as BoxDecoration).color!;
     }
 
-    testWidgets('받을 수 있는 카드만 금색으로 떠오른다', (tester) async {
-      // 받을 수 있는 것이 흰 카드면 목록에서 눈에 띄지 않는다. 보상이
-      // 금색이니 "지금 받을 수 있다"도 금색이어야 결이 맞는다.
+    testWidgets('받을 수 있는 카드만 테마색을 옅게 깔고 떠오른다', (tester) async {
+      // 받을 수 있는 것이 흰 카드면 목록에서 눈에 띄지 않는다. 예전에는 금색을
+      // 썼는데 앱 어디에도 없는 색이라 겉돌았다.
       final missionService = MockMissionService();
       when(() => missionService.getMissions())
           .thenAnswer((_) async => boardWithThreeStates());
 
       await pumpMissionScreen(tester, missionService: missionService);
 
-      expect(cardColor(tester, '오늘의 오답'), AppRewardColors.coinSurface);
+      expect(
+        cardColor(tester, '오늘의 오답'),
+        MissionPalette.claimableSurface(ThemeHandler().primaryColor),
+      );
       expect(cardColor(tester, '세 문제만'), Colors.white);
       expect(cardColor(tester, '출석'), Colors.white);
     });
 
-    testWidgets('아이콘 타일 색이 미션 갈래를 따른다', (tester) async {
+    testWidgets('아이콘 색이 오르는 능력치를 따른다', (tester) async {
       final missionService = MockMissionService();
       when(() => missionService.getMissions())
           .thenAnswer((_) async => boardWithThreeStates());
@@ -419,8 +424,12 @@ void main() {
       expect(
         colors.length,
         greaterThan(1),
-        reason: '전부 같은 색이면 목록이 밋밋하다',
+        reason: '전부 같은 색이면 목록이 밋밋하고 색이 뜻을 잃는다',
       );
+
+      // 색이 뜻하는 능력치를 말로도 알린다.
+      expect(find.text('오답노트'), findsWidgets);
+      expect(find.text('문제 복습'), findsWidgets);
     });
   });
 
