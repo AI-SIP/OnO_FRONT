@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ono/Module/Theme/ThemeHandler.dart';
 import 'package:ono/Provider/FoldersProvider.dart';
+import 'package:ono/Provider/MissionProvider.dart';
 import 'package:ono/Provider/PracticeNoteProvider.dart';
 import 'package:ono/Provider/ProblemsProvider.dart';
 import 'package:ono/Provider/ReviewDueProvider.dart';
@@ -82,6 +83,7 @@ Future<void> pumpOnoWidget(
   UserProvider? userProvider,
   StudyRoomProvider? studyRoomProvider,
   ReviewDueProvider? reviewDueProvider,
+  MissionProvider? missionProvider,
   TutorialProvider? tutorialProvider,
   ScreenIndexProvider? screenIndexProvider,
   ThemeHandler? themeHandler,
@@ -118,6 +120,9 @@ Future<void> pumpOnoWidget(
         ),
         ChangeNotifierProvider<ReviewDueProvider>.value(
           value: reviewDueProvider ?? ReviewDueProvider(),
+        ),
+        ChangeNotifierProvider<MissionProvider>.value(
+          value: missionProvider ?? MissionProvider(),
         ),
         ChangeNotifierProvider<TutorialProvider>.value(
           value: tutorialProvider ?? TutorialProvider(),
@@ -158,6 +163,22 @@ Future<void> pumpOnoWidget(
   } else {
     await tester.pump();
   }
+}
+
+/// 기기에서 "동작 줄이기"를 켠 것처럼 만든다.
+///
+/// 미션 화면처럼 **끝나지 않는 연출**(받을 수 있는 카드의 펄스, 개구리의
+/// 들썩임)이 있는 화면은 이걸 켜지 않으면 `pumpAndSettle` 이 영영 끝나지
+/// 않는다. 접근성 설정을 흉내 내는 것이라 화면 코드에 테스트용 갈래를 만들지
+/// 않아도 되고, `MediaQuery` 로 내려가므로 `Navigator` 로 띄운 화면에도 적용된다.
+///
+/// `pumpOnoWidget` 보다 먼저 부른다.
+void disableAnimationsForTest(WidgetTester tester) {
+  tester.binding.platformDispatcher.accessibilityFeaturesTestValue =
+      const FakeAccessibilityFeatures(disableAnimations: true);
+  addTearDown(
+    tester.binding.platformDispatcher.clearAccessibilityFeaturesTestValue,
+  );
 }
 
 /// 테스트 화면 크기를 바꾼다. 테스트가 끝나면 자동으로 되돌린다.

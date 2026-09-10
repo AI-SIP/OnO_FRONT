@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:firebase_analytics/firebase_analytics.dart';
@@ -11,6 +12,7 @@ import '../../Model/Problem/AnswerStatus.dart';
 import '../../Model/Problem/ProblemSolveRegisterDto.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
+import '../../Provider/MissionProvider.dart';
 import '../../Provider/PracticeNoteProvider.dart';
 import '../../Provider/ProblemsProvider.dart';
 import '../../Provider/UserProvider.dart';
@@ -121,6 +123,8 @@ class _ProblemSolveRegisterScreenState
     final practiceProvider =
         Provider.of<ProblemPracticeProvider>(context, listen: false);
     final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final missionProvider =
+        Provider.of<MissionProvider>(context, listen: false);
     final problemSolveService = ProblemSolveService();
 
     // 템플릿에서 데이터 가져오기
@@ -172,6 +176,15 @@ class _ProblemSolveRegisterScreenState
 
       // 5. 유저 정보 갱신 (경험치 업데이트)
       await userProvider.fetchUserInfo();
+
+      // 6. 미션 진행도 갱신
+      // 1차에서는 행동 응답에 진행도가 실려 오지 않아서, 복습을 기록한 뒤
+      // 다시 조회해야 미션이 바로 반영된다.
+      //
+      // 기다리지 않는다. 서버에 아직 미션 API 가 없어서 이 요청은 반드시
+      // 실패하는데, 기다리면 저장이 끝난 뒤에도 GET 타임아웃(30초)만큼
+      // 로딩이 더 떠 있는다. 미션은 늦게 맞아도 되지만 저장은 그렇지 않다.
+      unawaited(missionProvider.fetchMissions());
 
       LoadingDialog.hide(context);
 

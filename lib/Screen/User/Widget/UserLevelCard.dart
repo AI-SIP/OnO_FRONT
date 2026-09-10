@@ -8,6 +8,11 @@ import '../../../Module/Theme/ThemeHandler.dart';
 import 'FrogCharacter.dart';
 import '../../../Module/Design/AppRadius.dart';
 import '../../../Module/Design/AppColors.dart';
+import '../../../Module/Design/AppSpacing.dart';
+import '../../../Module/Motion/PressableScale.dart';
+import '../../../Module/Motion/TossPageRoute.dart';
+import '../../Mission/MissionPalette.dart';
+import '../../Mission/MissionScreen.dart';
 
 class UserLevelCard extends StatelessWidget {
   final UserInfoModel? userInfo;
@@ -43,6 +48,51 @@ class UserLevelCard extends StatelessWidget {
   int _getNextLevelThreshold() {
     if (userInfo == null) return 40;
     return userInfo!.totalStudyNextLevelThreshold;
+  }
+
+  /// 미션 화면으로 간다.
+  ///
+  /// 마이페이지의 레벨과 미션 보상 XP 는 같은 값이다. 두 화면이 이어져 있다는
+  /// 것이 눌러 보면 드러나게 한다.
+  void _openMissions(BuildContext context) {
+    Navigator.push(
+      context,
+      TossPageRoute(builder: (_) => const MissionScreen()),
+    );
+  }
+
+  /// 활동별 경험치 위에 붙는 작은 길잡이다.
+  ///
+  /// 아래 네 줄이 미션으로 오르는 경험치라서 그 바로 위에 둔다. 카드 전체를
+  /// 누르게 하지 않는 이유는 개구리에 눌러서 말풍선을 띄우는 기존 동작이 있어서,
+  /// 카드가 누름을 가로채면 말풍선과 화면 이동이 함께 일어나기 때문이다.
+  Widget _buildMissionLink(BuildContext context, {required bool isTablet}) {
+    return PressableScale(
+      onTap: () => _openMissions(context),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.xs,
+          vertical: AppSpacing.xs,
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            StandardText(
+              text: '미션 보기',
+              fontSize: isTablet ? 13 : 12,
+              color: themeProvider.primaryColor,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            Icon(
+              Icons.chevron_right,
+              size: isTablet ? 18 : 15,
+              color: themeProvider.primaryColor,
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
@@ -91,13 +141,18 @@ class UserLevelCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Expanded(
-                child: _buildLevelDonut(
-                  currentLevel,
-                  currentPoint,
-                  requiredPoint,
-                  progress,
-                  donutSize: donutSize,
-                  isTablet: isTablet,
+                // 개구리는 눌러야 말풍선이 뜬다. 그쪽까지 누름을 가로채면 기존
+                // 동작이 죽으므로 레벨 도넛 쪽만 미션 화면으로 이어 준다.
+                child: PressableScale(
+                  onTap: () => _openMissions(context),
+                  child: _buildLevelDonut(
+                    currentLevel,
+                    currentPoint,
+                    requiredPoint,
+                    progress,
+                    donutSize: donutSize,
+                    isTablet: isTablet,
+                  ),
                 ),
               ),
               Expanded(
@@ -119,14 +174,22 @@ class UserLevelCard extends StatelessWidget {
             Divider(height: 1, color: Colors.grey[200]),
             SizedBox(
                 height: isTabletLandscape
-                    ? screenHeight * 0.028
-                    : screenHeight * 0.016),
+                    ? screenHeight * 0.020
+                    : screenHeight * 0.012),
+            Align(
+              alignment: Alignment.centerRight,
+              child: _buildMissionLink(context, isTablet: isTablet),
+            ),
+            SizedBox(
+                height: isTabletLandscape
+                    ? screenHeight * 0.016
+                    : screenHeight * 0.008),
             _buildActivityRow(
               icon: Icons.waving_hand_rounded,
               category: '출석',
               level: userInfo!.attendanceLevel,
               point: userInfo!.attendancePoint,
-              color: Colors.pink[300]!,
+              color: MissionPalette.of(MissionKind.attendance).accent,
               isTablet: isTablet,
               delay: _activityDelay(0),
             ),
@@ -139,7 +202,7 @@ class UserLevelCard extends StatelessWidget {
               category: '오답노트 작성',
               level: userInfo!.noteWriteLevel,
               point: userInfo!.noteWritePoint,
-              color: Colors.purple[300]!,
+              color: MissionPalette.of(MissionKind.noteWrite).accent,
               isTablet: isTablet,
               delay: _activityDelay(1),
             ),
@@ -152,7 +215,7 @@ class UserLevelCard extends StatelessWidget {
               category: '문제 복습',
               level: userInfo!.problemPracticeLevel,
               point: userInfo!.problemPracticePoint,
-              color: Colors.green[400]!,
+              color: MissionPalette.of(MissionKind.problemPractice).accent,
               isTablet: isTablet,
               delay: _activityDelay(2),
             ),
@@ -165,7 +228,7 @@ class UserLevelCard extends StatelessWidget {
               category: '복습 세트 복습',
               level: userInfo!.notePracticeLevel,
               point: userInfo!.notePracticePoint,
-              color: Colors.blue[300]!,
+              color: MissionPalette.of(MissionKind.notePractice).accent,
               isTablet: isTablet,
               delay: _activityDelay(3),
             ),

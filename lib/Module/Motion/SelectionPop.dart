@@ -29,25 +29,33 @@ class SelectionPop extends StatefulWidget {
 
 class _SelectionPopState extends State<SelectionPop>
     with SingleTickerProviderStateMixin {
-  late final AnimationController _controller = AnimationController(
-    vsync: this,
-    duration: AppMotion.page,
-  );
+  // 늦게(late) 만들지 않고 initState 에서 바로 만든다. 늦게 만들면 "동작
+  // 줄이기"를 켠 기기에서 build 가 컨트롤러를 건드리지 않은 채 끝나고,
+  // dispose 가 그제서야 컨트롤러를 만들면서 이미 트리에서 빠진 위젯의 조상을
+  // 찾다가 죽는다. (알림이 뜨고 사라질 때마다 났다)
+  late final AnimationController _controller;
+  late final Animation<double> _scale;
 
-  /// 되돌아오는 구간에 시간을 더 준다. 앞뒤가 같으면 튕겼다기보다 깜빡인
-  /// 것처럼 보인다.
-  late final Animation<double> _scale = TweenSequence<double>([
-    TweenSequenceItem(
-      tween: Tween<double>(begin: 1.0, end: widget.peak)
-          .chain(CurveTween(curve: AppMotion.enter)),
-      weight: 40,
-    ),
-    TweenSequenceItem(
-      tween: Tween<double>(begin: widget.peak, end: 1.0)
-          .chain(CurveTween(curve: AppMotion.emphasized)),
-      weight: 60,
-    ),
-  ]).animate(_controller);
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(vsync: this, duration: AppMotion.page);
+
+    /// 되돌아오는 구간에 시간을 더 준다. 앞뒤가 같으면 튕겼다기보다 깜빡인
+    /// 것처럼 보인다.
+    _scale = TweenSequence<double>([
+      TweenSequenceItem(
+        tween: Tween<double>(begin: 1.0, end: widget.peak)
+            .chain(CurveTween(curve: AppMotion.enter)),
+        weight: 40,
+      ),
+      TweenSequenceItem(
+        tween: Tween<double>(begin: widget.peak, end: 1.0)
+            .chain(CurveTween(curve: AppMotion.emphasized)),
+        weight: 60,
+      ),
+    ]).animate(_controller);
+  }
 
   @override
   void didUpdateWidget(covariant SelectionPop oldWidget) {

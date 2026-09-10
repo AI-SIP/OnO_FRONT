@@ -29,6 +29,7 @@ import '../../Module/Motion/Skeleton.dart';
 import '../../Module/Motion/TossPageRoute.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Module/Util/FolderPickerDialog.dart';
+import '../../Provider/MissionProvider.dart';
 import '../../Provider/ReviewDueProvider.dart';
 import '../../Provider/UserProvider.dart';
 import '../../Util/AppErrorReporter.dart';
@@ -36,6 +37,7 @@ import '../ProblemDetail/ProblemDetailScreen.dart';
 import '../ProblemRegister/MultiProblemRegisterScreen.dart';
 import '../ProblemRegister/ProblemRegisterScreen.dart';
 import '../ProblemSearch/TagProblemSearchScreen.dart';
+import '../Mission/TodayMissionCard.dart';
 import '../ReviewDue/ReviewDueScreen.dart';
 import '../Tutorial/TutorialTargets.dart';
 import '../../Module/Motion/TossDialog.dart';
@@ -102,8 +104,10 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       // 이 화면의 폴더 데이터 로드
       await _loadFolderData();
 
+      if (!mounted) return;
       if (widget.folderId == null) {
         Provider.of<ReviewDueProvider>(context, listen: false).fetchReviewDue();
+        Provider.of<MissionProvider>(context, listen: false).fetchMissions();
       }
     });
   }
@@ -488,12 +492,21 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         ? _buildLoginPrompt(themeProvider)
         : RefreshIndicator(
             onRefresh: () async {
+              // 홈에서 당겨 새로고침하면 미션도 같이 다시 읽는다. 프로바이더는
+              // await 전에 잡아 둔다. 새로고침이 끝난 뒤의 context 는 이미
+              // 사라졌을 수 있다.
+              final missionProvider = widget.folderId == null
+                  ? Provider.of<MissionProvider>(context, listen: false)
+                  : null;
               await fetchFoldersAndProblems();
+              await missionProvider?.fetchMissions();
             },
             child: Padding(
               padding: const EdgeInsets.all(20),
               child: Column(
                 children: [
+                  // 미션 조회에 실패했거나 미션이 없으면 카드가 스스로 숨는다.
+                  if (widget.folderId == null) const TodayMissionCard(),
                   if (widget.folderId == null && reviewDueProvider.dueCount > 0)
                     _buildReviewDueBadge(
                         context, reviewDueProvider, themeProvider),

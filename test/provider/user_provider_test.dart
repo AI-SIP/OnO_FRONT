@@ -21,7 +21,10 @@ import 'package:ono/Model/Folder/FolderThumbnailModel.dart';
 import 'package:ono/Model/PracticeNote/PracticeNoteThumbnailModel.dart';
 import 'package:ono/Model/Problem/ProblemModel.dart';
 import 'package:ono/Model/User/UserInfoModel.dart';
+import 'package:ono/Model/Mission/MissionGroupModel.dart';
+import 'package:ono/Model/Mission/MissionModel.dart';
 import 'package:ono/Provider/FoldersProvider.dart';
+import 'package:ono/Provider/MissionProvider.dart';
 import 'package:ono/Provider/PracticeNoteProvider.dart';
 import 'package:ono/Provider/TokenProvider.dart';
 import 'package:ono/Provider/UserProvider.dart';
@@ -93,6 +96,8 @@ void main() {
   late FoldersProvider foldersProvider;
   late MockFolderService folderService;
   late ProblemPracticeProvider practiceProvider;
+  late MockMissionService missionService;
+  late MissionProvider missionProvider;
   late MockPracticeNoteService practiceNoteService;
   late _MockAppleAuthService appleAuthService;
   late _MockGoogleAuthService googleAuthService;
@@ -121,10 +126,13 @@ void main() {
     googleAuthService = _MockGoogleAuthService();
     kakaoAuthService = _MockKakaoAuthService();
 
+    missionService = MockMissionService();
+    missionProvider = MissionProvider(missionService: missionService);
     provider = UserProvider(
       problemsProvider,
       foldersProvider,
       practiceProvider,
+      missionProvider: missionProvider,
       tokenProvider: tokenProvider,
       userService: userService,
       problemService: problemService,
@@ -346,6 +354,43 @@ void main() {
   });
 
   group('resetUserInfo', () {
+    /// 로그아웃 정리에 미션이 빠져 있으면, 같은 기기에서 다른 계정으로
+    /// 로그인한 첫 화면에 앞 사람의 진행도와 받기 배지가 그대로 뜬다.
+    test('앞 계정의 미션도 함께 비운다', () async {
+      when(() => missionService.getMissions()).thenAnswer(
+        (_) async => const MissionBoardModel(
+          daily: MissionGroupModel(
+            periodKey: '2026-09-09',
+            missions: [
+              MissionModel(
+                progressId: 1,
+                code: 'DAILY_ATTEND',
+                title: '출석',
+                description: '오늘 앱 켜기',
+                iconKey: 'attendance',
+                category: MissionCategory.daily,
+                current: 1,
+                target: 1,
+                completed: true,
+                claimed: false,
+                rewardType: MissionRewardType.xp,
+                rewardValue: 10,
+              ),
+            ],
+          ),
+          weekly: MissionGroupModel(periodKey: '2026-W37', missions: []),
+        ),
+      );
+      await missionProvider.fetchMissions();
+      expect(missionProvider.hasMissions, isTrue);
+
+      await provider.resetUserInfo();
+
+      expect(missionProvider.board, isNull);
+      expect(missionProvider.hasMissions, isFalse);
+      expect(missionProvider.unclaimedCount, 0);
+    });
+
     test('로그인 상태와 하위 Provider 캐시를 모두 초기화한다', () async {
       when(() => folderService.fetchFolder(1, showErrorSnackBar: true))
           .thenAnswer((_) async => _folder(1));

@@ -3,9 +3,26 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:ono/Model/User/UserInfoModel.dart';
 import 'package:ono/Module/Theme/ThemeHandler.dart';
 import 'package:ono/Screen/User/Widget/FrogCharacter.dart';
+import 'package:ono/Screen/Mission/MissionScreen.dart';
 import 'package:ono/Screen/User/Widget/UserLevelCard.dart';
 
 import '../../helpers/helpers.dart';
+
+UserInfoModel _userInfo() {
+  return UserInfoModel(
+    totalStudyLevel: 3,
+    totalStudyCurrentPoint: 15,
+    totalStudyNextLevelThreshold: 40,
+    attendanceLevel: 2,
+    attendancePoint: 5,
+    noteWriteLevel: 4,
+    noteWritePoint: 20,
+    problemPracticeLevel: 1,
+    problemPracticePoint: 0,
+    notePracticeLevel: 6,
+    notePracticePoint: 30,
+  );
+}
 
 void main() {
   setUpOnoWidgetTest();
@@ -129,5 +146,55 @@ void main() {
     );
 
     expect(tester.takeException(), isNull);
+  });
+
+  group('미션 화면으로 가는 길', () {
+    testWidgets('활동별 경험치 위에 미션 보기가 있다', (tester) async {
+      // 아래 네 줄이 미션으로 오르는 경험치라서 그 바로 위에 둔다.
+      await pumpUserLevelCard(tester, userInfo: _userInfo());
+
+      expect(find.text('미션 보기'), findsOneWidget);
+      expect(find.byIcon(Icons.chevron_right), findsWidgets);
+
+      final linkY = tester.getTopLeft(find.text('미션 보기')).dy;
+      final firstActivityY = tester.getTopLeft(find.text('출석')).dy;
+      expect(linkY, lessThan(firstActivityY));
+    });
+
+    testWidgets('그 줄을 누르면 미션 화면으로 간다', (tester) async {
+      disableAnimationsForTest(tester);
+      await pumpUserLevelCard(tester, userInfo: _userInfo());
+
+      await tester.tap(find.text('미션 보기'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(MissionScreen), findsOneWidget);
+    });
+
+    testWidgets('레벨 도넛을 눌러도 미션 화면으로 간다', (tester) async {
+      disableAnimationsForTest(tester);
+      await pumpUserLevelCard(tester, userInfo: null);
+
+      await tester.tap(find.text('학습 레벨'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(MissionScreen), findsOneWidget);
+    });
+
+    testWidgets('개구리를 누르면 말풍선이 뜨고 화면은 그대로다', (tester) async {
+      // 카드 전체를 누르게 하면 개구리의 격려 말풍선과 화면 이동이 함께
+      // 일어난다. 개구리 쪽은 예전 그대로여야 한다.
+      disableAnimationsForTest(tester);
+      await pumpUserLevelCard(tester, userInfo: null);
+
+      await tester.tap(find.byType(FrogCharacter));
+      await tester.pump(const Duration(milliseconds: 400));
+
+      expect(find.byType(MissionScreen), findsNothing);
+
+      // 말풍선은 2초 뒤 스스로 사라진다. 타이머를 흘려보낸다.
+      await tester.pump(const Duration(seconds: 3));
+      await tester.pumpAndSettle();
+    });
   });
 }

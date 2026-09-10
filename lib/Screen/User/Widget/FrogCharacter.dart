@@ -18,6 +18,29 @@ class FrogCharacter extends StatefulWidget {
     this.size = 180,
   });
 
+  /// 그 레벨의 개구리 그림 경로.
+  ///
+  /// 레벨업 연출이 "무엇이 무엇으로 바뀌었는지"를 보여 주려면 전후 두 장을
+  /// 밖에서 그려야 해서 열어 둔다. 지금 에셋이 홀수 여덟 장이라 레벨이 올라도
+  /// 그림은 그대로인 구간이 있다. 그 판단도 이 경로로 한다.
+  static String assetPathOf(int level) {
+    if (level >= 15) return 'assets/FrogCharacter/FROG_LEVEL15.png';
+    if (level >= 13) return 'assets/FrogCharacter/FROG_LEVEL13.png';
+    if (level >= 11) return 'assets/FrogCharacter/FROG_LEVEL11.png';
+    if (level >= 9) return 'assets/FrogCharacter/FROG_LEVEL9.png';
+    if (level >= 7) return 'assets/FrogCharacter/FROG_LEVEL7.png';
+    if (level >= 5) return 'assets/FrogCharacter/FROG_LEVEL5.png';
+    if (level >= 3) return 'assets/FrogCharacter/FROG_LEVEL3.png';
+    return 'assets/FrogCharacter/FROG_LEVEL1.png';
+  }
+
+  /// [from] 에서 [to] 로 오를 때 그림이 실제로 바뀌는지.
+  ///
+  /// 바뀌지 않는데 진화 연출을 보여 주면 같은 그림 두 장을 놓고 "바뀌었다"고
+  /// 하는 셈이 된다.
+  static bool evolvesBetween(int from, int to) =>
+      assetPathOf(from) != assetPathOf(to);
+
   @override
   State<FrogCharacter> createState() => _FrogCharacterState();
 }
@@ -67,17 +90,7 @@ class _FrogCharacterState extends State<FrogCharacter>
     super.dispose();
   }
 
-  String _getFrogImagePath(int level) {
-    if (level >= 15) return 'assets/FrogCharacter/FROG_LEVEL15.png';
-    if (level >= 13) return 'assets/FrogCharacter/FROG_LEVEL13.png';
-    if (level >= 11) return 'assets/FrogCharacter/FROG_LEVEL11.png';
-    if (level >= 9) return 'assets/FrogCharacter/FROG_LEVEL9.png';
-    if (level >= 7) return 'assets/FrogCharacter/FROG_LEVEL7.png';
-    if (level >= 5) return 'assets/FrogCharacter/FROG_LEVEL5.png';
-    if (level >= 3) return 'assets/FrogCharacter/FROG_LEVEL3.png';
-    if (level >= 1) return 'assets/FrogCharacter/FROG_LEVEL1.png';
-    return 'assets/FrogCharacter/FROG_LEVEL1.png';
-  }
+  String _getFrogImagePath(int level) => FrogCharacter.assetPathOf(level);
 
   void _onCharacterTap() {
     // 애니메이션 실행

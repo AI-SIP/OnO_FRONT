@@ -1,0 +1,168 @@
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import '../../Model/Mission/MissionModel.dart';
+import '../../Module/Design/AppColors.dart';
+import '../../Module/Design/AppRadius.dart';
+import '../../Module/Design/AppSpacing.dart';
+import '../../Module/Motion/PressableScale.dart';
+import '../../Module/Motion/TossBottomSheet.dart';
+import '../../Module/Text/StandardText.dart';
+import '../../Module/Theme/ThemeHandler.dart';
+import '../../Provider/MissionProvider.dart';
+import 'MissionCard.dart';
+import 'MissionRewardChip.dart';
+
+/// 지난 기간의 미수령 보상을 알리는 접힌 배너다.
+///
+/// 전에는 지난 미션을 일일 탭 맨 위에 펼쳐 놓았는데 두 가지가 어그러졌다.
+/// 어제 것과 오늘 것이 같은 제목으로 두 번 보였고, 지난주 **주간** 미션이
+/// **일일** 탭에 앉아 있었다. 한 줄로 접어서 탭 밖으로 꺼내면 둘 다 없어진다.
+class ExpiredMissionBanner extends StatelessWidget {
+  final int count;
+  final VoidCallback onTap;
+
+  const ExpiredMissionBanner({
+    super.key,
+    required this.count,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final primary = Provider.of<ThemeHandler>(context).primaryColor;
+
+    return PressableScale(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.lg,
+          vertical: AppSpacing.md,
+        ),
+        decoration: BoxDecoration(
+          color: Color.alphaBlend(
+            primary.withValues(alpha: 0.10),
+            Colors.white,
+          ),
+          borderRadius: BorderRadius.circular(AppRadius.large),
+        ),
+        child: Row(
+          children: [
+            MissionRewardToken(size: 18, color: primary),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: StandardText(
+                text: '받지 않은 보상 $count개',
+                fontSize: 13,
+                color: primary,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            Icon(Icons.chevron_right, size: 20, color: primary),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// 지난 미션만 모아 보여 주는 시트를 띄운다.
+///
+/// [rewardKeyOf] 와 [shakeTickOf] 는 목록에 쓰는 것과 같은 것을 넘긴다. 시트
+/// 안에서 받아도 실패하면 카드가 흔들리고, 응답을 못 받은 복구 경로에서 코인이
+/// 날아갈 자리도 잡힌다.
+Future<void> showExpiredMissionSheet(
+  BuildContext context, {
+  required void Function(MissionModel mission) onClaim,
+  GlobalKey? Function(MissionModel mission)? rewardKeyOf,
+  int Function(MissionModel mission)? shakeTickOf,
+}) {
+  return showTossSheet<void>(
+    context: context,
+    builder: (sheetContext) => _ExpiredMissionSheet(
+      onClaim: onClaim,
+      rewardKeyOf: rewardKeyOf,
+      shakeTickOf: shakeTickOf,
+    ),
+  );
+}
+
+class _ExpiredMissionSheet extends StatelessWidget {
+  final void Function(MissionModel mission) onClaim;
+  final GlobalKey? Function(MissionModel mission)? rewardKeyOf;
+  final int Function(MissionModel mission)? shakeTickOf;
+
+  const _ExpiredMissionSheet({
+    required this.onClaim,
+    this.rewardKeyOf,
+    this.shakeTickOf,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final missionProvider = Provider.of<MissionProvider>(context);
+    final missions = missionProvider.expiredMissions;
+
+    // 다 받으면 빈 시트가 남는다. 볼 것이 없으면 스스로 닫는다.
+    if (missions.isEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final route = ModalRoute.of(context);
+        if (route != null && route.isCurrent) Navigator.of(context).pop();
+      });
+    }
+
+    return SafeArea(
+      top: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.lg,
+          AppSpacing.sm,
+          AppSpacing.lg,
+          AppSpacing.xl,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const StandardText(
+              text: '지난 미션',
+              fontSize: 17,
+              color: AppColors.textPrimary,
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            const StandardText(
+              text: '기간이 지났어도 보상은 그대로예요',
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: AppColors.textTertiary,
+              maxLines: 2,
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            // 내용이 길면 시트 안에서만 스크롤된다. 화면을 다 덮지 않는다.
+            Flexible(
+              child: ListView.separated(
+                shrinkWrap: true,
+                itemCount: missions.length,
+                separatorBuilder: (_, __) =>
+                    const SizedBox(height: AppSpacing.md),
+                itemBuilder: (context, index) {
+                  final mission = missions[index];
+                  return MissionCard(
+                    mission: mission,
+                    isClaiming: missionProvider.isClaiming(mission.progressId),
+                    showPeriod: true,
+                    rewardKey: rewardKeyOf?.call(mission),
+                    shakeTick: shakeTickOf?.call(mission) ?? 0,
+                    onClaim: () => onClaim(mission),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

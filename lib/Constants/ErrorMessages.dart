@@ -47,6 +47,9 @@ class ErrorMessages {
 
   static const String missionTypeNotFound = '잘못된 미션 종류입니다.';
   static const String missionUserNotFound = '해당하는 유저가 존재하지 않습니다.';
+  static const String missionProgressNotFound = '미션 정보를 찾을 수 없습니다.';
+  static const String missionNotCompleted = '아직 완료하지 않은 미션이에요.';
+  static const String missionAlreadyClaimed = '이미 보상을 받은 미션이에요.';
 
   static const String fcmTokenNotFound = 'Fcm Token을 찾을 수 없습니다.';
   static const String fcmSendFailed = 'Fcm 메시지 전송에 실패했습니다.';

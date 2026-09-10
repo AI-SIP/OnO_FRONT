@@ -6,6 +6,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart';
+import 'package:ono/Model/Common/LoginStatus.dart';
 import 'package:ono/Module/Text/StandardText.dart';
 import 'package:ono/Module/Theme/ThemeHandler.dart';
 import 'package:ono/Provider/FoldersProvider.dart';
@@ -16,6 +17,7 @@ import 'package:provider/provider.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
 import 'Config/AppConfig.dart';
+import 'Provider/MissionProvider.dart';
 import 'Provider/PracticeNoteProvider.dart';
 import 'Provider/ProblemsProvider.dart';
 import 'Provider/ReviewDueProvider.dart';
@@ -125,11 +127,17 @@ Future<void> _bootstrapApp() async {
             ),
           ),
         ),
+        // UserProvider 가 로그아웃 때 함께 비우므로 그보다 먼저 만든다.
+        ChangeNotifierProvider(create: (_) => MissionProvider()),
         ChangeNotifierProvider(
           create: (context) => UserProvider(
             Provider.of<ProblemsProvider>(context, listen: false),
             Provider.of<FoldersProvider>(context, listen: false),
             Provider.of<ProblemPracticeProvider>(context, listen: false),
+            missionProvider: Provider.of<MissionProvider>(
+              context,
+              listen: false,
+            ),
           ),
         ),
         ChangeNotifierProvider(
@@ -329,7 +337,15 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) async {
     if (state == AppLifecycleState.resumed) {
       final userProvider = Provider.of<UserProvider>(context, listen: false);
+      final missionProvider =
+          Provider.of<MissionProvider>(context, listen: false);
       await userProvider.maintainSessionOnResume();
+      // 앱을 다시 켰을 때 날짜가 넘어가 있을 수 있다. 미션을 다시 읽는다.
+      // 로그아웃 상태에서는 부르지 않는다. 토큰이 없는 채로 요청을 보내면
+      // 인증 실패 처리를 괜히 건드린다.
+      if (userProvider.isLoggedIn == LoginStatus.login) {
+        await missionProvider.fetchMissions();
+      }
     }
   }
 
