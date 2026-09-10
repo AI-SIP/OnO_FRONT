@@ -45,6 +45,7 @@ void main() {
     MissionBoardModel? board, {
     Size surfaceSize = OnoSurface.phone,
   }) async {
+    disableAnimationsForTest(tester);
     final missionService = MockMissionService();
     when(() => missionService.getMissions()).thenAnswer((_) async => board);
     final provider = MissionProvider(missionService: missionService);
@@ -217,6 +218,7 @@ void main() {
   });
 
   testWidgets('글자를 크게 키워도 넘치지 않는다', (tester) async {
+    disableAnimationsForTest(tester);
     final missionService = MockMissionService();
     when(() => missionService.getMissions())
         .thenAnswer((_) async => buildBoard());
