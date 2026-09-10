@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 import '../../Model/Mission/MissionModel.dart';
 import '../../Module/Design/AppColors.dart';
 import '../../Module/Design/AppRadius.dart';
-import '../../Module/Design/AppRewardColors.dart';
 import '../../Module/Design/AppSpacing.dart';
 import '../../Module/Motion/AnimatedGauge.dart';
 import '../../Module/Motion/PressableScale.dart';
@@ -15,6 +14,7 @@ import '../../Provider/MissionProvider.dart';
 import 'MissionIcon.dart';
 import 'MissionPalette.dart';
 import 'MissionRewardChip.dart';
+import 'MissionTag.dart';
 import 'MissionScreen.dart';
 
 /// 홈 맨 위에 붙는 오늘의 미션 배너다.
@@ -107,7 +107,14 @@ class TodayMissionCard extends StatelessWidget {
                         ),
                         if (unclaimed > 0) ...[
                           const SizedBox(width: AppSpacing.sm),
-                          _ClaimableBadge(count: unclaimed),
+                          MissionTag(
+                            text: '받기 $unclaimed',
+                            color: themeProvider.primaryColor,
+                            leading: MissionRewardToken(
+                              size: MissionTag.fontSize * 1.1,
+                              color: themeProvider.primaryColor,
+                            ),
+                          ),
                         ],
                       ],
                     ),
@@ -144,41 +151,5 @@ class TodayMissionCard extends StatelessWidget {
       if (!mission.completed) return mission;
     }
     return missions.first;
-  }
-}
-
-/// 받을 보상이 몇 개 남았는지 알리는 금색 배지.
-///
-/// 테마색이 아니라 금색이다. 보상의 색은 테마와 무관하게 고정한다.
-class _ClaimableBadge extends StatelessWidget {
-  final int count;
-
-  const _ClaimableBadge({required this.count});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-      decoration: BoxDecoration(
-        color: AppRewardColors.coinSurface,
-        borderRadius: BorderRadius.circular(AppRadius.full),
-        border: Border.all(
-          color: AppRewardColors.coin.withValues(alpha: 0.5),
-        ),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const MissionCoin(size: 12),
-          const SizedBox(width: 4),
-          StandardText(
-            text: '받기 $count',
-            fontSize: 10,
-            fontWeight: FontWeight.w700,
-            color: AppRewardColors.onCoin,
-          ),
-        ],
-      ),
-    );
   }
 }

@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import '../../Model/Mission/MissionModel.dart';
 import '../../Module/Design/AppColors.dart';
 import '../../Module/Design/AppRadius.dart';
-import '../../Module/Design/AppRewardColors.dart';
 import '../../Module/Design/AppSpacing.dart';
 import '../../Module/Motion/AnimatedCountText.dart';
 import '../../Module/Motion/AnimatedGauge.dart';
@@ -15,6 +14,7 @@ import '../../Module/Motion/PressableScale.dart';
 import '../../Module/Text/StandardText.dart';
 import '../User/Widget/FrogCharacter.dart';
 import 'MissionRewardChip.dart';
+import 'MissionTag.dart';
 
 /// 오늘 받은 XP 를 센다.
 ///
@@ -244,36 +244,37 @@ class _MissionHeroCardState extends State<MissionHeroCard>
             vertical: AppSpacing.sm,
           ),
           decoration: BoxDecoration(
-            color: AppRewardColors.coinSurface,
-            borderRadius: BorderRadius.circular(AppRadius.full),
-            border: Border.all(
-              color: AppRewardColors.coin.withValues(alpha: 0.45),
+            // 테두리 없이 옅은 바탕만. 다른 라벨과 같은 결이다.
+            color: Color.alphaBlend(
+              widget.primaryColor.withValues(alpha: 0.14),
+              Colors.white,
             ),
+            borderRadius: BorderRadius.circular(AppRadius.full),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const MissionCoin(size: 18),
+              MissionRewardToken(size: 16, color: widget.primaryColor),
               const SizedBox(width: AppSpacing.sm),
-              const StandardText(
+              StandardText(
                 text: '오늘',
                 fontSize: 12,
-                color: AppRewardColors.onCoin,
+                color: widget.primaryColor,
               ),
               const SizedBox(width: AppSpacing.xs),
               AnimatedCountText(
                 value: earned,
                 formatter: (value) => '+${value.round()} XP',
                 fontSize: 14,
-                color: AppRewardColors.onCoin,
+                color: widget.primaryColor,
               ),
               // 누를 수 있다는 것이 보여야 한다.
               if (widget.onCounterTap != null) ...[
                 const SizedBox(width: AppSpacing.xs),
-                const Icon(
+                Icon(
                   Icons.chevron_right,
                   size: 16,
-                  color: AppRewardColors.onCoin,
+                  color: widget.primaryColor,
                 ),
               ],
             ],

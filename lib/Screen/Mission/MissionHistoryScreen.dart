@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 import '../../Model/Mission/MissionHistoryModel.dart';
 import '../../Module/Design/AppColors.dart';
 import '../../Module/Design/AppRadius.dart';
-import '../../Module/Design/AppRewardColors.dart';
 import '../../Module/Design/AppSpacing.dart';
 import '../../Module/Motion/AnimatedCountText.dart';
 import '../../Module/Motion/AppearTransition.dart';
@@ -144,7 +143,7 @@ class _MissionHistoryScreenState extends State<MissionHistoryScreen> {
             AppSpacing.xxxl,
           ),
           children: [
-            _buildSummary(),
+            _buildSummary(themeProvider.primaryColor),
             const SizedBox(height: AppSpacing.lg),
             ..._buildBody(),
           ],
@@ -154,7 +153,7 @@ class _MissionHistoryScreenState extends State<MissionHistoryScreen> {
   }
 
   /// 맨 위의 합계. 서버가 합계를 주지 않으면 지금 읽은 것으로 센다.
-  Widget _buildSummary() {
+  Widget _buildSummary(Color primary) {
     final xp =
         _totalXp ?? _items.fold<int>(0, (sum, item) => sum + item.rewardValue);
     final count = _totalCount ?? _items.length;
@@ -162,25 +161,25 @@ class _MissionHistoryScreenState extends State<MissionHistoryScreen> {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.xl),
       decoration: BoxDecoration(
-        color: AppRewardColors.coinSurface,
-        borderRadius: BorderRadius.circular(AppRadius.xlarge),
-        border: Border.all(
-          color: AppRewardColors.coin.withValues(alpha: 0.4),
+        color: Color.alphaBlend(
+          primary.withValues(alpha: 0.10),
+          Colors.white,
         ),
+        borderRadius: BorderRadius.circular(AppRadius.xlarge),
       ),
       child: Row(
         children: [
-          const MissionCoin(size: 40),
+          MissionRewardToken(size: 40, color: primary),
           const SizedBox(width: AppSpacing.lg),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const StandardText(
+                StandardText(
                   text: '지금까지 받은 보상',
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
-                  color: AppRewardColors.onCoin,
+                  color: primary,
                   maxLines: 1,
                 ),
                 const SizedBox(height: AppSpacing.xs),
@@ -192,7 +191,7 @@ class _MissionHistoryScreenState extends State<MissionHistoryScreen> {
                       value: xp,
                       formatter: (value) => '${value.round()} XP',
                       fontSize: 26,
-                      color: AppRewardColors.onCoin,
+                      color: primary,
                     ),
                     Padding(
                       padding: const EdgeInsets.only(bottom: 4),
@@ -335,7 +334,6 @@ class _MissionHistoryRow extends StatelessWidget {
           MissionRewardChip(
             rewardType: item.rewardType,
             amount: item.rewardValue,
-            fontSize: 11,
           ),
         ],
       ),

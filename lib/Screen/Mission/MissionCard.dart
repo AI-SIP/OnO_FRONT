@@ -1,11 +1,11 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../../Model/Mission/MissionModel.dart';
 import '../../Module/Design/AppColors.dart';
 import '../../Module/Design/AppRadius.dart';
-import '../../Module/Design/AppRewardColors.dart';
 import '../../Module/Design/AppSpacing.dart';
 import '../../Module/Motion/AnimatedGauge.dart';
 import '../../Module/Motion/AppHaptic.dart';
@@ -14,17 +14,19 @@ import '../../Module/Motion/PressableScale.dart';
 import '../../Module/Motion/SelectionPop.dart';
 import '../../Module/Motion/StepProgressBar.dart';
 import '../../Module/Text/StandardText.dart';
+import '../../Module/Theme/ThemeHandler.dart';
 import 'MissionIcon.dart';
 import 'MissionPalette.dart';
 import 'MissionPeriodLabel.dart';
 import 'MissionRewardChip.dart';
+import 'MissionTag.dart';
 
 /// 미션 한 장이 가질 수 있는 세 가지 무게.
 ///
 /// 라벨만 바뀌는 것이 아니라 **카드의 무게 자체가 달라야** 눈이 받을 수 있는
 /// 것에 먼저 간다. 게시판이 아니라 게임으로 읽히는 것은 여기서 갈린다.
 enum MissionCardState {
-  /// 완료했고 아직 안 받음. 옅은 금색으로 채우고 떠 있게 한다.
+  /// 완료했고 아직 안 받음. 테마색을 옅게 깔고 떠 있게 한다.
   claimable,
 
   /// 진행 중. 흰 카드에 테두리만. 버튼도 두지 않는다.
@@ -42,9 +44,9 @@ enum MissionCardState {
 
 /// 미션 한 장이다.
 ///
-/// 아이콘 타일과 진행바 색은 미션의 갈래를 따른다([MissionPalette]). 받을 수
-/// 있는 카드만 금색으로 떠오른다. 보상이 금색이니 "지금 받을 수 있다"도 금색인
-/// 것이 결이 맞고, 테마색 24종 중 무엇을 골랐든 이 카드는 똑같이 눈에 띈다.
+/// 아이콘 타일과 진행바 색은 이 미션이 올리는 능력치를 따른다([MissionPalette]).
+/// 마이페이지의 활동별 레벨과 같은 색이라, 카드 색만 보고 어떤 경험치가
+/// 오르는지 알 수 있다. 받을 수 있는 카드만 테마색을 옅게 깔고 떠오른다.
 ///
 /// 목표가 작으면(5 이하) 진행도를 칸으로 보여 준다. `2/3` 이 점 세 개로 보이면
 /// 숫자를 읽지 않아도 알 수 있다. 목표가 크면(복습 30회) 칸이 너무 잘게
@@ -134,12 +136,13 @@ class _MissionCardState extends State<MissionCard>
   @override
   Widget build(BuildContext context) {
     final state = MissionCardState.of(widget.mission);
+    final primary = Provider.of<ThemeHandler>(context).primaryColor;
     final colors = MissionPalette.colorsOf(
       code: widget.mission.code,
       iconKey: widget.mission.iconKey,
     );
 
-    Widget card = _buildCard(state, colors);
+    Widget card = _buildCard(state, colors, primary);
 
     if (state == MissionCardState.claimable && !_reduced) {
       // 아주 옅게만 움직인다. 목록이 통째로 들썩이면 읽기가 어려워진다.
@@ -166,26 +169,31 @@ class _MissionCardState extends State<MissionCard>
     );
   }
 
-  Widget _buildCard(MissionCardState state, MissionKindColors colors) {
+  Widget _buildCard(
+    MissionCardState state,
+    MissionKindColors colors,
+    Color primary,
+  ) {
     final claimable = state == MissionCardState.claimable;
     final dimmed = state == MissionCardState.claimed;
 
     final content = Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
-        // 받을 수 있는 것만 금색으로 떠오른다.
-        color: claimable ? AppRewardColors.coinSurface : Colors.white,
+        // 받을 수 있는 것만 테마색을 옅게 깔고 떠오른다.
+        color:
+            claimable ? MissionPalette.claimableSurface(primary) : Colors.white,
         borderRadius: BorderRadius.circular(AppRadius.large),
         border: Border.all(
           color: claimable
-              ? AppRewardColors.coin.withValues(alpha: 0.55)
+              ? MissionPalette.claimableBorder(primary)
               : AppColors.border,
           width: claimable ? 1.4 : 1,
         ),
         boxShadow: claimable
             ? [
                 BoxShadow(
-                  color: AppRewardColors.coin.withValues(alpha: 0.28),
+                  color: primary.withValues(alpha: 0.18),
                   blurRadius: 16,
                   offset: const Offset(0, 5),
                 ),
@@ -199,7 +207,7 @@ class _MissionCardState extends State<MissionCard>
           const SizedBox(width: AppSpacing.md),
           Expanded(child: _buildBody(colors, dimmed)),
           const SizedBox(width: AppSpacing.md),
-          _buildTrailing(state),
+          _buildTrailing(state, primary),
         ],
       ),
     );
@@ -235,14 +243,14 @@ class _MissionCardState extends State<MissionCard>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (widget.showPeriod)
-          StandardText(
+        if (widget.showPeriod) ...[
+          MissionTag(
             text: MissionPeriodLabel.of(widget.mission.periodKey),
-            fontSize: 11,
-            color: dimmed ? AppColors.textDisabled : colors.accent,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
+            color: colors.accent,
+            dimmed: dimmed,
           ),
+          const SizedBox(height: AppSpacing.xs),
+        ],
         StandardText(
           text: widget.mission.title,
           fontSize: 15,
@@ -263,22 +271,38 @@ class _MissionCardState extends State<MissionCard>
           _buildProgress(colors),
           const SizedBox(height: AppSpacing.sm),
         ],
-        Align(
-          alignment: Alignment.centerLeft,
-          child: KeyedSubtree(
-            key: widget.rewardKey,
-            child: MissionRewardChip(
-              rewardType: widget.mission.rewardType,
-              amount: widget.mission.rewardValue,
-              dimmed: dimmed,
+        // 어떤 경험치가 오르는지 말로도 알린다. 색만으로는 처음 보는 사람이
+        // 알 수 없다.
+        Wrap(
+          spacing: AppSpacing.xs,
+          runSpacing: AppSpacing.xs,
+          children: [
+            KeyedSubtree(
+              key: widget.rewardKey,
+              child: MissionRewardChip(
+                rewardType: widget.mission.rewardType,
+                amount: widget.mission.rewardValue,
+                dimmed: dimmed,
+              ),
             ),
-          ),
+            if (_abilityLabel.isNotEmpty)
+              MissionTag(
+                text: _abilityLabel,
+                color: colors.accent,
+                dimmed: dimmed,
+              ),
+          ],
         ),
       ],
     );
   }
 
-  /// 목표가 작으면 칸으로, 크면 막대로 보여 준다. 색은 미션의 갈래를 따른다.
+  String get _abilityLabel => MissionPalette.labelOf(
+        code: widget.mission.code,
+        iconKey: widget.mission.iconKey,
+      );
+
+  /// 목표가 작으면 칸으로, 크면 막대로 보여 준다. 색은 능력치를 따른다.
   Widget _buildProgress(MissionKindColors colors) {
     final mission = widget.mission;
 
@@ -300,7 +324,7 @@ class _MissionCardState extends State<MissionCard>
     );
   }
 
-  Widget _buildTrailing(MissionCardState state) {
+  Widget _buildTrailing(MissionCardState state, Color primary) {
     // 어느 상태든 같은 폭을 차지하게 둔다. 진행바 끝이 줄마다 어긋나던 것이
     // 여기서 정리된다.
     return ConstrainedBox(
@@ -309,6 +333,7 @@ class _MissionCardState extends State<MissionCard>
         alignment: Alignment.centerRight,
         child: switch (state) {
           MissionCardState.claimable => _ClaimButton(
+              color: primary,
               isClaiming: widget.isClaiming,
               onTap: () {
                 // 네트워크를 기다리지 않는다. 누른 즉시 손에 답이 온다.
@@ -318,31 +343,30 @@ class _MissionCardState extends State<MissionCard>
             ),
           // 진행 중에는 버튼을 두지 않는다. 지금 할 수 있는 것이 없는데 버튼이
           // 있으면 눌러 보게 되고, 눌리지 않으면 고장으로 읽힌다.
-          MissionCardState.inProgress => StandardText(
-              text: '${widget.mission.current}/${widget.mission.target}',
-              fontSize: 13,
-              color: AppColors.textSecondary,
-              maxLines: 1,
+          MissionCardState.inProgress => MissionTag.neutral(
+              '${widget.mission.current}/${widget.mission.target}',
             ),
-          MissionCardState.claimed => const StandardText(
-              text: '받음',
-              fontSize: 12,
-              // 연회색 바탕에 연회색 글자라 읽히지 않던 것을 한 단계 진하게.
-              color: AppColors.textSecondary,
-              maxLines: 1,
-            ),
+          MissionCardState.claimed => MissionTag.neutral('받음'),
         },
       ),
     );
   }
 }
 
-/// 받기 버튼. 금색으로 채워 카드 안에서 가장 먼저 눈에 들어오게 한다.
+/// 받기 버튼.
+///
+/// 앱의 다른 버튼(추가 FAB)과 같은 결이다. 테마색으로 채우고 흰 글자만 얹는다.
+/// 테두리와 그림자를 겹쳐 두면 작은 버튼이 무거워 보인다.
 class _ClaimButton extends StatelessWidget {
+  final Color color;
   final bool isClaiming;
   final VoidCallback onTap;
 
-  const _ClaimButton({required this.isClaiming, required this.onTap});
+  const _ClaimButton({
+    required this.color,
+    required this.isClaiming,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -356,11 +380,7 @@ class _ClaimButton extends StatelessWidget {
           vertical: AppSpacing.sm,
         ),
         decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [AppRewardColors.coinLight, AppRewardColors.coin],
-          ),
+          color: color,
           borderRadius: BorderRadius.circular(AppRadius.full),
         ),
         child: isClaiming
@@ -368,13 +388,13 @@ class _ClaimButton extends StatelessWidget {
                 dimension: 16,
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
-                  color: AppRewardColors.onCoin,
+                  color: Colors.white,
                 ),
               )
             : const StandardText(
                 text: '받기',
                 fontSize: 14,
-                color: AppRewardColors.onCoin,
+                color: Colors.white,
                 maxLines: 1,
               ),
       ),

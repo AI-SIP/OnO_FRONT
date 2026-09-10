@@ -4,11 +4,11 @@ import 'package:provider/provider.dart';
 import '../../Model/Mission/MissionModel.dart';
 import '../../Module/Design/AppColors.dart';
 import '../../Module/Design/AppRadius.dart';
-import '../../Module/Design/AppRewardColors.dart';
 import '../../Module/Design/AppSpacing.dart';
 import '../../Module/Motion/PressableScale.dart';
 import '../../Module/Motion/TossBottomSheet.dart';
 import '../../Module/Text/StandardText.dart';
+import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/MissionProvider.dart';
 import 'MissionCard.dart';
 import 'MissionRewardChip.dart';
@@ -30,6 +30,8 @@ class ExpiredMissionBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final primary = Provider.of<ThemeHandler>(context).primaryColor;
+
     return PressableScale(
       onTap: onTap,
       child: Container(
@@ -38,31 +40,27 @@ class ExpiredMissionBanner extends StatelessWidget {
           vertical: AppSpacing.md,
         ),
         decoration: BoxDecoration(
-          color: AppRewardColors.coinSurface,
-          borderRadius: BorderRadius.circular(AppRadius.large),
-          border: Border.all(
-            color: AppRewardColors.coin.withValues(alpha: 0.45),
+          color: Color.alphaBlend(
+            primary.withValues(alpha: 0.10),
+            Colors.white,
           ),
+          borderRadius: BorderRadius.circular(AppRadius.large),
         ),
         child: Row(
           children: [
-            const MissionCoin(size: 20),
+            MissionRewardToken(size: 18, color: primary),
             const SizedBox(width: AppSpacing.md),
             Expanded(
               child: StandardText(
                 text: '받지 않은 보상 $count개',
                 fontSize: 13,
-                color: AppRewardColors.onCoin,
+                color: primary,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
             ),
             const SizedBox(width: AppSpacing.sm),
-            const Icon(
-              Icons.chevron_right,
-              size: 20,
-              color: AppRewardColors.onCoin,
-            ),
+            Icon(Icons.chevron_right, size: 20, color: primary),
           ],
         ),
       ),

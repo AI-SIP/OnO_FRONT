@@ -1,75 +1,78 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../../Model/Mission/MissionModel.dart';
-import '../../Module/Design/AppRadius.dart';
-import '../../Module/Design/AppRewardColors.dart';
-import '../../Module/Text/StandardText.dart';
+import '../../Module/Theme/ThemeHandler.dart';
+import 'MissionTag.dart';
 
-/// 금색 코인 하나. 칩 안에도, 날아가는 연출에도 같은 것을 쓴다.
+/// 보상을 나타내는 작은 표시다.
 ///
-/// 이미지가 아니라 그라데이션 원이다. 에셋이 없어도 되고, 어떤 크기로도
-/// 또렷하다.
-class MissionCoin extends StatelessWidget {
+/// 예전에는 금색 코인이었는데 누런 금색이 앱 어디에도 없는 색이라 겉돌았다.
+/// **보상 색을 따로 만들지 않고 사용자가 고른 테마색을 쓴다.** 테마가 24종이라
+/// 사람마다 보상의 색은 달라지지만, 적어도 자기 앱 안에서는 늘 같은 색이다.
+class MissionRewardToken extends StatelessWidget {
   final double size;
 
-  const MissionCoin({super.key, this.size = 16});
+  /// 색을 직접 정할 때. 주지 않으면 테마색이다.
+  final Color? color;
+
+  const MissionRewardToken({super.key, this.size = 16, this.color});
 
   @override
   Widget build(BuildContext context) {
+    final tint = color ?? Provider.of<ThemeHandler>(context).primaryColor;
+
     return Container(
       width: size,
       height: size,
-      decoration: const BoxDecoration(
-        shape: BoxShape.circle,
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [AppRewardColors.coinLight, AppRewardColors.coin],
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Color(0x33C98A06),
-            blurRadius: 4,
-            offset: Offset(0, 1),
+      decoration: BoxDecoration(color: tint, shape: BoxShape.circle),
+      child: Center(child: _TokenLabel(size: size)),
+    );
+  }
+}
+
+/// 토큰 안의 `XP` 글자. 토큰 크기에 맞춰 줄어든다.
+class _TokenLabel extends StatelessWidget {
+  final double size;
+
+  const _TokenLabel({required this.size});
+
+  @override
+  Widget build(BuildContext context) {
+    return FittedBox(
+      child: Padding(
+        padding: EdgeInsets.all(size * 0.18),
+        child: Text(
+          'XP',
+          style: TextStyle(
+            fontFamily: 'PretendardBold',
+            fontSize: size * 0.4,
+            color: Colors.white,
+            height: 1,
           ),
-        ],
-      ),
-      child: Center(
-        child: StandardText(
-          text: 'XP',
-          // 코인이 작아지면 글자도 같이 줄어야 원 밖으로 나가지 않는다.
-          fontSize: size * 0.34,
-          color: AppRewardColors.onCoin,
-          textAlign: TextAlign.center,
         ),
       ),
     );
   }
 }
 
-/// 보상을 보여 주는 금색 칩이다.
-///
-/// XP 를 회색 작은 글씨로 두면 보상이 보상으로 안 보인다. 코인과 금색 바탕을
-/// 줘서 화면에서 이것만 색이 다르게 만든다.
+/// 보상 칩. 다른 작은 라벨과 모양이 같고 색만 다르다.
 class MissionRewardChip extends StatelessWidget {
   final MissionRewardType? rewardType;
   final int amount;
 
-  /// 이미 받은 보상. 채도를 낮춰 조용하게 둔다.
+  /// 이미 받은 보상. 조용하게 둔다.
   final bool dimmed;
 
-  /// 채운 카드(받을 수 있는 미션) 위에 얹을 때. 바탕이 진해서 칩을 밝게 든다.
-  final bool onFilled;
-
-  final double fontSize;
+  /// 색을 직접 정할 때. 주지 않으면 테마색이다.
+  final Color? color;
 
   const MissionRewardChip({
     super.key,
     required this.rewardType,
     required this.amount,
     this.dimmed = false,
-    this.onFilled = false,
-    this.fontSize = 12,
+    this.color,
   });
 
   /// 보상 종류를 모르면 액수를 앞세우지 않는다. 새 보상이 생겨도 말이 되게.
@@ -77,44 +80,13 @@ class MissionRewardChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final background = onFilled
-        ? Colors.white.withValues(alpha: 0.22)
-        : AppRewardColors.coinSurface;
+    final tint = color ?? Provider.of<ThemeHandler>(context).primaryColor;
 
-    return Opacity(
-      opacity: dimmed ? 0.5 : 1.0,
-      child: Container(
-        padding: EdgeInsets.symmetric(
-          horizontal: fontSize * 0.7,
-          vertical: fontSize * 0.28,
-        ),
-        decoration: BoxDecoration(
-          color: background,
-          borderRadius: BorderRadius.circular(AppRadius.full),
-          border: Border.all(
-            color: onFilled
-                ? Colors.white.withValues(alpha: 0.5)
-                : AppRewardColors.coin.withValues(alpha: 0.45),
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            MissionCoin(size: fontSize * 1.2),
-            SizedBox(width: fontSize * 0.4),
-            // 글자를 키운 기기에서도 칩이 줄을 밀어내지 않게 한 줄로 줄인다.
-            Flexible(
-              child: StandardText(
-                text: label,
-                fontSize: fontSize,
-                color: onFilled ? Colors.white : AppRewardColors.onCoin,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          ],
-        ),
-      ),
+    return MissionTag(
+      text: label,
+      color: tint,
+      dimmed: dimmed,
+      leading: MissionRewardToken(size: MissionTag.fontSize * 1.1, color: tint),
     );
   }
 }

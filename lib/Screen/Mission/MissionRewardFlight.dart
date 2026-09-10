@@ -1,8 +1,10 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../../Module/Motion/AppMotion.dart';
+import '../../Module/Theme/ThemeHandler.dart';
 import 'MissionRewardChip.dart';
 
 /// 받은 보상 코인이 상단 카운터로 날아가는 연출이다.
@@ -21,6 +23,7 @@ abstract final class MissionRewardFlight {
     required BuildContext context,
     required GlobalKey from,
     required GlobalKey to,
+    Color? color,
     VoidCallback? onArrived,
   }) {
     if (AppMotion.isReduced(context)) return false;
@@ -36,6 +39,7 @@ abstract final class MissionRewardFlight {
       context: context,
       start: start,
       to: to,
+      color: color,
       onArrived: onArrived,
     );
   }
@@ -48,6 +52,7 @@ abstract final class MissionRewardFlight {
     required BuildContext context,
     required Offset start,
     required GlobalKey to,
+    Color? color,
     VoidCallback? onArrived,
   }) {
     if (AppMotion.isReduced(context)) return false;
@@ -63,6 +68,8 @@ abstract final class MissionRewardFlight {
       builder: (context) => _FlyingCoin(
         start: start,
         end: end,
+        color: color ??
+            Provider.of<ThemeHandler>(context, listen: false).primaryColor,
         onCompleted: () {
           onArrived?.call();
           // 그리는 도중에 걷어내면 안 되므로 프레임이 끝난 뒤에 지운다.
@@ -80,11 +87,13 @@ abstract final class MissionRewardFlight {
 class _FlyingCoin extends StatefulWidget {
   final Offset start;
   final Offset end;
+  final Color color;
   final VoidCallback onCompleted;
 
   const _FlyingCoin({
     required this.start,
     required this.end,
+    required this.color,
     required this.onCompleted,
   });
 
@@ -151,7 +160,7 @@ class _FlyingCoinState extends State<_FlyingCoin>
           ),
         );
       },
-      child: const MissionCoin(size: _coinSize),
+      child: MissionRewardToken(size: _coinSize, color: widget.color),
     );
   }
 }

@@ -7,7 +7,6 @@ import 'package:provider/provider.dart';
 import '../../Model/Mission/MissionModel.dart';
 import '../../Module/Design/AppColors.dart';
 import '../../Module/Design/AppRadius.dart';
-import '../../Module/Design/AppRewardColors.dart';
 import '../../Module/Design/AppSpacing.dart';
 import '../../Module/Motion/AppMotion.dart';
 import '../../Module/Text/StandardText.dart';
@@ -146,12 +145,9 @@ class _MissionRewardCelebrationState extends State<_MissionRewardCelebration>
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(AppRadius.xlarge),
-        border: Border.all(
-          color: AppRewardColors.coin.withValues(alpha: 0.35),
-        ),
         boxShadow: [
           BoxShadow(
-            color: AppRewardColors.coin.withValues(alpha: 0.22),
+            color: primary.withValues(alpha: 0.18),
             blurRadius: 28,
             offset: const Offset(0, 10),
           ),
@@ -166,7 +162,7 @@ class _MissionRewardCelebrationState extends State<_MissionRewardCelebration>
           StandardText(
             text: _amountLabel,
             fontSize: 34,
-            color: AppRewardColors.onCoin,
+            color: primary,
             textAlign: TextAlign.center,
             maxLines: 1,
           ),
@@ -228,12 +224,14 @@ class _MissionRewardCelebrationState extends State<_MissionRewardCelebration>
                 size: const Size.square(size * 1.6),
                 painter: _SparklePainter(
                   progress: _enter.value,
-                  color: AppRewardColors.coin,
-                  accent: primary,
+                  color: primary,
                 ),
               ),
             ),
-          KeyedSubtree(key: _coinKey, child: const MissionCoin(size: size)),
+          KeyedSubtree(
+            key: _coinKey,
+            child: MissionRewardToken(size: size, color: primary),
+          ),
         ],
       ),
     );
@@ -245,13 +243,8 @@ class _SparklePainter extends CustomPainter {
   /// 0 에서 1. 퍼져 나간 정도.
   final double progress;
   final Color color;
-  final Color accent;
 
-  const _SparklePainter({
-    required this.progress,
-    required this.color,
-    required this.accent,
-  });
+  const _SparklePainter({required this.progress, required this.color});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -271,14 +264,12 @@ class _SparklePainter extends CustomPainter {
         center.dy + math.sin(angle) * distance,
       );
       final paint = Paint()
-        ..color = (i.isEven ? color : accent).withValues(alpha: 0.9 * fade);
+        ..color = color.withValues(alpha: (i.isEven ? 0.9 : 0.5) * fade);
       canvas.drawCircle(offset, 3.5 * fade + 1, paint);
     }
   }
 
   @override
   bool shouldRepaint(covariant _SparklePainter oldDelegate) =>
-      oldDelegate.progress != progress ||
-      oldDelegate.color != color ||
-      oldDelegate.accent != accent;
+      oldDelegate.progress != progress || oldDelegate.color != color;
 }
