@@ -6,7 +6,7 @@ import '../../Module/Design/AppColors.dart';
 import '../../Module/Design/AppRadius.dart';
 import '../../Module/Design/AppSpacing.dart';
 import '../../Module/Motion/AnimatedCountText.dart';
-import '../../Module/Motion/AppearTransition.dart';
+import '../../Module/Motion/PressableScale.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Service/Api/Mission/MissionService.dart';
@@ -51,6 +51,19 @@ class _MissionHistoryScreenState extends State<MissionHistoryScreen> {
   /// 첫 조회가 끝났는지. 끝나기 전에는 빈 상태 문구를 띄우지 않는다.
   bool _loadedOnce = false;
 
+  /// 마지막 조회가 실패했는지.
+  ///
+  /// 실패와 "받은 게 없음"은 다르다. 실패한 것을 빈 상태로 보여 주면 보상이
+  /// 있는데도 없다고 말하는 셈이라, 사용자가 그대로 믿고 나가 버린다.
+  bool _lastLoadFailed = false;
+
+  /// 요청 세대. 새로고침할 때마다 오른다.
+  ///
+  /// 2페이지 요청이 날아가 있는 동안 새로고침하면, 뒤늦게 도착한 그 응답이
+  /// 비워진 목록에 붙고 커서까지 2페이지 것으로 덮어써서 1페이지가 통째로
+  /// 사라진다. 떠날 때의 세대와 돌아왔을 때의 세대가 다르면 버린다.
+  int _generation = 0;
+
   @override
   void initState() {
     super.initState();
@@ -81,19 +94,28 @@ class _MissionHistoryScreenState extends State<MissionHistoryScreen> {
     if (_isLoading || !_hasNext) return;
     setState(() => _isLoading = true);
 
-    final page = await _missionService.getHistory(cursor: _nextCursor);
+    final generation = _generation;
+    final cursor = _nextCursor;
+    final page = await _missionService.getHistory(cursor: cursor);
     if (!mounted) return;
+
+    // 떠나 있는 사이에 새로고침이 있었다면 이 응답은 지난 세대의 것이다.
+    // 붙이면 비워진 목록에 옛 페이지가 얹히고 커서도 어긋난다.
+    if (generation != _generation) return;
 
     setState(() {
       _isLoading = false;
       _loadedOnce = true;
 
       if (page == null) {
-        // 조회에 실패하면 더 조르지 않는다. 오류도 띄우지 않는다.
+        // 조회에 실패하면 스크롤할 때마다 다시 조르지 않는다. 대신 실패했다는
+        // 것을 기억해서 사용자가 다시 시도할 수 있게 한다.
         _hasNext = false;
+        _lastLoadFailed = true;
         return;
       }
 
+      _lastLoadFailed = false;
       _items.addAll(page.content);
       _totalXp ??= page.totalClaimedXp;
       _totalCount ??= page.totalClaimedCount;
@@ -104,12 +126,27 @@ class _MissionHistoryScreenState extends State<MissionHistoryScreen> {
 
   Future<void> _refresh() async {
     setState(() {
+      // 세대를 올려 나가 있는 요청의 응답을 무효로 만든다.
+      _generation++;
       _items.clear();
       _totalXp = null;
       _totalCount = null;
       _nextCursor = null;
       _hasNext = true;
       _loadedOnce = false;
+      _lastLoadFailed = false;
+      // 나가 있는 요청은 버릴 것이므로 잠금도 함께 푼다. 안 그러면 새 조회가
+      // 로딩 가드에 걸려 아무것도 하지 않는다.
+      _isLoading = false;
+    });
+    await _loadMore();
+  }
+
+  /// 실패한 뒤 다시 시도한다.
+  Future<void> _retry() async {
+    setState(() {
+      _hasNext = true;
+      _lastLoadFailed = false;
     });
     await _loadMore();
   }
@@ -133,22 +170,74 @@ class _MissionHistoryScreenState extends State<MissionHistoryScreen> {
       body: RefreshIndicator(
         color: themeProvider.primaryColor,
         onRefresh: _refresh,
-        child: ListView(
-          controller: _scrollController,
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(
-            AppSpacing.lg,
-            AppSpacing.sm,
-            AppSpacing.lg,
-            AppSpacing.xxxl,
-          ),
-          children: [
-            _buildSummary(themeProvider.primaryColor),
-            const SizedBox(height: AppSpacing.lg),
-            ..._buildBody(),
-          ],
+        child: Builder(
+          builder: (context) {
+            final entries = _buildEntries();
+            // 0 번은 합계, 마지막 한 칸은 더 읽는 중 표시나 빈 상태다.
+            final itemCount = entries.length + 2;
+
+            return ListView.builder(
+              controller: _scrollController,
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.lg,
+                AppSpacing.sm,
+                AppSpacing.lg,
+                AppSpacing.xxxl,
+              ),
+              // 읽은 줄이 전부 트리에 남지 않게 한다. 무한 스크롤이라 줄마다
+              // 그림이 하나씩 붙는데, 통째로 들고 있으면 계속 무거워진다.
+              itemCount: itemCount,
+              itemBuilder: (context, index) {
+                if (index == 0) {
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: AppSpacing.lg),
+                    child: _buildSummary(themeProvider.primaryColor),
+                  );
+                }
+
+                if (index == itemCount - 1) {
+                  if (entries.isEmpty) {
+                    return _buildEmpty(themeProvider.primaryColor);
+                  }
+                  if (_isLoading) {
+                    return const Padding(
+                      padding: EdgeInsets.symmetric(vertical: AppSpacing.lg),
+                      child: Center(child: CircularProgressIndicator()),
+                    );
+                  }
+                  return const SizedBox.shrink();
+                }
+
+                return _buildEntry(entries[index - 1]);
+              },
+            );
+          },
         ),
       ),
+    );
+  }
+
+  Widget _buildEntry(_HistoryEntry entry) {
+    final item = entry.item;
+    if (item == null) {
+      return Padding(
+        padding: const EdgeInsets.only(
+          top: AppSpacing.sm,
+          bottom: AppSpacing.sm,
+        ),
+        child: StandardText(
+          text: entry.label,
+          fontSize: 13,
+          color: AppColors.textSecondary,
+          maxLines: 1,
+        ),
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+      child: _MissionHistoryRow(item: item),
     );
   }
 
@@ -212,70 +301,83 @@ class _MissionHistoryScreenState extends State<MissionHistoryScreen> {
     );
   }
 
-  List<Widget> _buildBody() {
-    if (_items.isEmpty) {
-      if (!_loadedOnce) {
-        return const [
-          Padding(
-            padding: EdgeInsets.only(top: AppSpacing.xxxl),
-            child: Center(child: CircularProgressIndicator()),
-          ),
-        ];
-      }
-      // 오류처럼 보이지 않게 둔다. 아직 받은 것이 없을 뿐이다.
-      return const [
-        Padding(
-          padding: EdgeInsets.only(top: AppSpacing.xxxl),
-          child: StandardText(
-            text: '아직 받은 보상이 없어요',
-            fontSize: 14,
-            color: AppColors.textTertiary,
-            textAlign: TextAlign.center,
-            maxLines: 2,
-          ),
-        ),
-      ];
-    }
-
-    final rows = <Widget>[];
+  /// 화면에 놓을 줄들을 미리 계산한다.
+  ///
+  /// 날짜 머리글과 보상 줄이 섞여 있어서 인덱스만으로는 무엇을 그릴지 알 수
+  /// 없다. 목록이 바뀔 때만 다시 만든다.
+  List<_HistoryEntry> _buildEntries() {
+    final entries = <_HistoryEntry>[];
     String? lastLabel;
     for (final item in _items) {
       final label = MissionPeriodLabel.ofDate(item.claimedAt);
       if (label != lastLabel) {
         lastLabel = label;
-        rows.add(
-          Padding(
-            padding: EdgeInsets.only(
-              top: rows.isEmpty ? 0 : AppSpacing.lg,
-              bottom: AppSpacing.sm,
-            ),
-            child: StandardText(
-              text: label,
-              fontSize: 13,
-              color: AppColors.textSecondary,
-              maxLines: 1,
-            ),
-          ),
-        );
+        entries.add(_HistoryEntry.header(label));
       }
-      rows.add(
-        Padding(
-          padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-          child: _MissionHistoryRow(item: item),
+      entries.add(_HistoryEntry.item(item));
+    }
+    return entries;
+  }
+
+  /// 목록이 비었을 때 무엇을 보여 줄지.
+  ///
+  /// 실패와 "받은 게 없음"을 가른다. 실패한 것을 빈 상태로 보여 주면 보상이
+  /// 있는데도 없다고 말하는 셈이다.
+  Widget _buildEmpty(Color primary) {
+    if (!_loadedOnce) {
+      return const Padding(
+        padding: EdgeInsets.only(top: AppSpacing.xxxl),
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (_lastLoadFailed) {
+      return Padding(
+        padding: const EdgeInsets.only(top: AppSpacing.xxxl),
+        child: Column(
+          children: [
+            const StandardText(
+              text: '보상 기록을 불러오지 못했어요',
+              fontSize: 14,
+              color: AppColors.textTertiary,
+              textAlign: TextAlign.center,
+              maxLines: 2,
+            ),
+            const SizedBox(height: AppSpacing.md),
+            PressableScale(
+              onTap: _retry,
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.xl,
+                  vertical: AppSpacing.sm,
+                ),
+                decoration: BoxDecoration(
+                  color: primary,
+                  borderRadius: BorderRadius.circular(AppRadius.full),
+                ),
+                child: const StandardText(
+                  text: '다시 시도',
+                  fontSize: 13,
+                  color: Colors.white,
+                  maxLines: 1,
+                ),
+              ),
+            ),
+          ],
         ),
       );
     }
 
-    if (_isLoading) {
-      rows.add(
-        const Padding(
-          padding: EdgeInsets.symmetric(vertical: AppSpacing.lg),
-          child: Center(child: CircularProgressIndicator()),
-        ),
-      );
-    }
-
-    return AppearTransition.stagger(rows);
+    return const Padding(
+      padding: EdgeInsets.only(top: AppSpacing.xxxl),
+      child: StandardText(
+        text: '아직 받은 보상이 없어요',
+        fontSize: 14,
+        color: AppColors.textTertiary,
+        textAlign: TextAlign.center,
+        maxLines: 2,
+      ),
+    );
   }
 }
 
@@ -347,4 +449,14 @@ class _MissionHistoryRow extends StatelessWidget {
     final minute = time.minute.toString().padLeft(2, '0');
     return '${isMorning ? '오전' : '오후'} $hour12:$minute';
   }
+}
+
+/// 목록의 한 줄. 날짜 머리글이거나 보상 한 건이다.
+class _HistoryEntry {
+  final String label;
+  final MissionHistoryItemModel? item;
+
+  const _HistoryEntry.header(this.label) : item = null;
+
+  _HistoryEntry.item(MissionHistoryItemModel this.item) : label = '';
 }
