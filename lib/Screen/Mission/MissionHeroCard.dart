@@ -14,7 +14,6 @@ import '../../Module/Motion/PressableScale.dart';
 import '../../Module/Text/StandardText.dart';
 import '../User/Widget/FrogCharacter.dart';
 import 'MissionRewardChip.dart';
-import 'MissionTag.dart';
 
 /// 오늘 받은 XP 를 센다.
 ///
