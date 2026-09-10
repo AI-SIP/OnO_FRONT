@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:ono/Model/User/UserInfoModel.dart';
 import 'package:ono/Module/Theme/ThemeHandler.dart';
 import 'package:ono/Screen/User/Widget/FrogCharacter.dart';
+import 'package:ono/Screen/Mission/MissionScreen.dart';
 import 'package:ono/Screen/User/Widget/UserLevelCard.dart';
 
 import '../../helpers/helpers.dart';
@@ -129,5 +130,51 @@ void main() {
     );
 
     expect(tester.takeException(), isNull);
+  });
+
+  group('미션 화면으로 가는 길', () {
+    testWidgets('레벨 카드에 미션으로 가는 줄이 보인다', (tester) async {
+      await pumpUserLevelCard(tester, userInfo: null);
+
+      // 정보 카드처럼만 보이면 누를 수 있다는 것을 알 수 없다.
+      expect(find.text('미션 보고 경험치 받기'), findsOneWidget);
+      expect(find.byIcon(Icons.chevron_right), findsWidgets);
+    });
+
+    testWidgets('그 줄을 누르면 미션 화면으로 간다', (tester) async {
+      disableAnimationsForTest(tester);
+      await pumpUserLevelCard(tester, userInfo: null);
+
+      await tester.tap(find.text('미션 보고 경험치 받기'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(MissionScreen), findsOneWidget);
+    });
+
+    testWidgets('레벨 도넛을 눌러도 미션 화면으로 간다', (tester) async {
+      disableAnimationsForTest(tester);
+      await pumpUserLevelCard(tester, userInfo: null);
+
+      await tester.tap(find.text('학습 레벨'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(MissionScreen), findsOneWidget);
+    });
+
+    testWidgets('개구리를 누르면 말풍선이 뜨고 화면은 그대로다', (tester) async {
+      // 카드 전체를 누르게 하면 개구리의 격려 말풍선과 화면 이동이 함께
+      // 일어난다. 개구리 쪽은 예전 그대로여야 한다.
+      disableAnimationsForTest(tester);
+      await pumpUserLevelCard(tester, userInfo: null);
+
+      await tester.tap(find.byType(FrogCharacter));
+      await tester.pump(const Duration(milliseconds: 400));
+
+      expect(find.byType(MissionScreen), findsNothing);
+
+      // 말풍선은 2초 뒤 스스로 사라진다. 타이머를 흘려보낸다.
+      await tester.pump(const Duration(seconds: 3));
+      await tester.pumpAndSettle();
+    });
   });
 }

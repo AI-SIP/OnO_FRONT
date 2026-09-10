@@ -23,7 +23,9 @@ import 'package:ono/Provider/UserProvider.dart';
 import 'package:ono/Module/Design/AppColors.dart';
 import 'package:ono/Module/Design/AppRewardColors.dart';
 import 'package:ono/Module/Motion/AppearTransition.dart';
+import 'package:ono/Model/Mission/MissionHistoryModel.dart';
 import 'package:ono/Screen/Mission/MissionCard.dart';
+import 'package:ono/Screen/Mission/MissionHistoryScreen.dart';
 import 'package:ono/Screen/Mission/MissionIcon.dart';
 import 'package:ono/Screen/Mission/MissionHeroCard.dart';
 import 'package:ono/Screen/Mission/MissionRewardCelebration.dart';
@@ -528,6 +530,24 @@ void main() {
       verify(() =>
               missionService.claim(777, onFailure: any(named: 'onFailure')))
           .called(1);
+    });
+  });
+
+  group('받은 보상 기록', () {
+    testWidgets('오늘 XP 칩을 누르면 기록 화면으로 간다', (tester) async {
+      final missionService = MockMissionService();
+      when(() => missionService.getMissions())
+          .thenAnswer((_) async => boardWithThreeStates());
+      when(() => missionService.getHistory(cursor: any(named: 'cursor')))
+          .thenAnswer((_) async => MissionHistoryPageModel.empty);
+
+      await pumpMissionScreen(tester, missionService: missionService);
+
+      await tester.tap(find.text('+10 XP').first);
+      await tester.pumpAndSettle();
+
+      expect(find.byType(MissionHistoryScreen), findsOneWidget);
+      expect(find.text('지금까지 받은 보상'), findsOneWidget);
     });
   });
 

@@ -139,6 +139,77 @@ void main() {
     });
   });
 
+  group('getHistory', () {
+    Map<String, dynamic> historyPayload({
+      bool withTotals = true,
+      int? nextCursor = 998,
+      bool hasNext = true,
+    }) =>
+        {
+          'content': [
+            {
+              'progressId': 1024,
+              'code': 'WEEKLY_NOTE_10',
+              'title': '열 권의 노트',
+              'iconKey': 'writing_wink',
+              'category': 'WEEKLY',
+              'periodKey': '2026-W37',
+              'rewardType': 'XP',
+              'rewardValue': 80,
+              'claimedAt': '2026-09-10T14:33:47',
+            },
+          ],
+          'nextCursor': nextCursor,
+          'hasNext': hasNext,
+          'size': 20,
+          if (withTotals) 'totalClaimedXp': 1250,
+          if (withTotals) 'totalClaimedCount': 37,
+        };
+
+    test('GET /api/missions/history 로 첫 페이지를 조회한다', () async {
+      final http = TestHttpClient.respondJson(apiEnvelope(historyPayload()));
+
+      final page = await buildService(http).getHistory();
+
+      expect(http.lastRequest.method, 'GET');
+      expect(http.lastRequest.url.path, '/api/missions/history');
+      expect(http.lastRequest.queryParameters['size'], '20');
+      // 첫 페이지에는 커서를 보내지 않는다.
+      expect(http.lastRequest.queryParameters.containsKey('cursor'), isFalse);
+      expect(page, isNotNull);
+      expect(page!.content.single.title, '열 권의 노트');
+      expect(page.totalClaimedXp, 1250);
+      expect(page.totalClaimedCount, 37);
+    });
+
+    test('커서를 주면 다음 페이지를 부른다', () async {
+      final http = TestHttpClient.respondJson(
+        apiEnvelope(historyPayload(
+            withTotals: false, nextCursor: null, hasNext: false)),
+      );
+
+      final page = await buildService(http).getHistory(cursor: 998);
+
+      expect(http.lastRequest.queryParameters['cursor'], '998');
+      expect(page!.totalClaimedXp, isNull);
+      expect(page.isLastPage, isTrue);
+    });
+
+    test('API 가 아직 배포 전이라 404 가 와도 null 을 돌려준다', () async {
+      final http = TestHttpClient.respondWith(
+        errorResponse(statusCode: 404, message: 'Not Found'),
+      );
+
+      expect(await buildService(http).getHistory(), isNull);
+    });
+
+    test('네트워크가 끊겨도 예외를 던지지 않는다', () async {
+      final http = TestHttpClient.throwing(const SocketException('offline'));
+
+      expect(await buildService(http).getHistory(), isNull);
+    });
+  });
+
   group('claim', () {
     test('POST /api/missions/{progressId}/claim 으로 보상을 받는다', () async {
       final http = TestHttpClient.respondJson(apiEnvelope({
