@@ -23,6 +23,7 @@ import 'MissionHistoryScreen.dart';
 import 'MissionLevelUp.dart';
 import 'MissionRewardCelebration.dart';
 import 'MissionRewardFlight.dart';
+import 'MissionSegments.dart';
 
 /// 일일 미션과 주간 미션을 보여 주고 보상을 받는 화면이다.
 ///
@@ -110,6 +111,8 @@ class _MissionScreenState extends State<MissionScreen> {
     // 받기 전에 열려 있던 테마를 찍어 둔다. 서버가 해금 정보를 내려주지 않아서
     // 받은 뒤와 비교해 이번에 열린 것을 알아낸다.
     final unlockedBefore = unlockedThemeIndexes(userProvider.userInfoModel);
+    // 레벨업 전의 종합 레벨. 개구리 그림이 실제로 바뀌는지 판단하는 데 쓴다.
+    final levelBefore = userProvider.userInfoModel?.totalStudyLevel;
 
     final result = await missionProvider.claim(progressId);
     if (!mounted) return;
@@ -145,7 +148,8 @@ class _MissionScreenState extends State<MissionScreen> {
         await showMissionLevelUp(
           context,
           level: result.totalStudyLevel,
-          unlockedThemeNames: newlyUnlockedThemeNames(
+          previousLevel: levelBefore,
+          unlockedThemeIndexes: newlyUnlockedThemeIndexes(
             unlockedBefore,
             unlockedThemeIndexes(userProvider.userInfoModel),
           ),
@@ -270,8 +274,7 @@ class _MissionScreenState extends State<MissionScreen> {
     AppToast.info(_claimUnknownMessage);
   }
 
-  static const String _claimUnknownMessage =
-      '보상을 받았는지 확인하지 못했어요. 잠시 후 다시 확인해 주세요.';
+  static const String _claimUnknownMessage = '보상을 받았는지 확인하지 못했어요';
 
   @override
   Widget build(BuildContext context) {
@@ -309,6 +312,12 @@ class _MissionScreenState extends State<MissionScreen> {
                           dailyMissions: missionProvider.dailyMissions,
                           level:
                               userProvider.userInfoModel?.totalStudyLevel ?? 1,
+                          currentPoint: userProvider
+                                  .userInfoModel?.totalStudyCurrentPoint ??
+                              0,
+                          nextLevelThreshold: userProvider.userInfoModel
+                                  ?.totalStudyNextLevelThreshold ??
+                              0,
                           primaryColor: themeProvider.primaryColor,
                           counterKey: _counterKey,
                           pendingXp: _pendingXp,
@@ -335,17 +344,17 @@ class _MissionScreenState extends State<MissionScreen> {
                         ),
                       ],
                       const SizedBox(height: AppSpacing.md),
-                      AppearTransition(
-                        delay: AppMotion.stagger * 2,
-                        child: _MissionSegments(
-                          index: _tabIndex,
-                          color: themeProvider.primaryColor,
-                          onChanged: (index) => setState(() {
-                            _tabIndex = index;
-                            // 탭을 옮긴 뒤로는 목록이 하나씩 올라오지 않는다.
-                            _entryPlayed = true;
-                          }),
-                        ),
+                      // 등장 연출로 감싸지 않는다. 감싸면 그 안쪽이 다시
+                      // 만들어질 때 선택된 알약이 잠깐 사라진다.
+                      MissionSegments(
+                        key: const ValueKey('mission_segments'),
+                        index: _tabIndex,
+                        color: themeProvider.primaryColor,
+                        onChanged: (index) => setState(() {
+                          _tabIndex = index;
+                          // 탭을 옮긴 뒤로는 목록이 하나씩 올라오지 않는다.
+                          _entryPlayed = true;
+                        }),
                       ),
                     ],
                   ),
@@ -403,7 +412,7 @@ class _MissionScreenState extends State<MissionScreen> {
         ),
         children: const [
           StandardText(
-            text: '아직 볼 수 있는 미션이 없어요.',
+            text: '아직 미션이 없어요',
             fontSize: 14,
             color: AppColors.textTertiary,
             textAlign: TextAlign.center,
@@ -441,7 +450,7 @@ class _MissionScreenState extends State<MissionScreen> {
               ),
               children: const [
                 StandardText(
-                  text: '아직 볼 수 있는 미션이 없어요.',
+                  text: '아직 미션이 없어요',
                   fontSize: 14,
                   color: AppColors.textTertiary,
                   textAlign: TextAlign.center,
@@ -485,98 +494,5 @@ class _MissionScreenState extends State<MissionScreen> {
       MissionCardState.inProgress => 1,
       MissionCardState.claimed => 2,
     };
-  }
-}
-
-/// 일일과 주간을 고르는 세그먼트다.
-///
-/// 밑줄 탭 대신 알약 하나가 미끄러지게 둔다. 목록 위에 얹히는 것이라
-/// 화면을 가로지르는 선이 하나 줄어든다.
-class _MissionSegments extends StatelessWidget {
-  final int index;
-  final Color color;
-  final ValueChanged<int> onChanged;
-
-  const _MissionSegments({
-    required this.index,
-    required this.color,
-    required this.onChanged,
-  });
-
-  static const List<String> _labels = ['일일', '주간'];
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceMuted,
-        borderRadius: BorderRadius.circular(AppRadius.full),
-      ),
-      child: Row(
-        children: [
-          for (var i = 0; i < _labels.length; i++)
-            Expanded(
-              child: _Segment(
-                label: _labels[i],
-                selected: index == i,
-                color: color,
-                onTap: () {
-                  if (index == i) return;
-                  AppHaptic.selection();
-                  onChanged(i);
-                },
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-}
-
-class _Segment extends StatelessWidget {
-  final String label;
-  final bool selected;
-  final Color color;
-  final VoidCallback onTap;
-
-  const _Segment({
-    required this.label,
-    required this.selected,
-    required this.color,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return PressableScale(
-      onTap: onTap,
-      haptic: HapticLevel.none,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        curve: Curves.easeOut,
-        padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
-        decoration: BoxDecoration(
-          color: selected ? Colors.white : Colors.transparent,
-          borderRadius: BorderRadius.circular(AppRadius.full),
-          boxShadow: selected
-              ? [
-                  BoxShadow(
-                    color: color.withValues(alpha: 0.16),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ]
-              : null,
-        ),
-        child: StandardText(
-          text: label,
-          fontSize: 14,
-          color: selected ? color : AppColors.textTertiary,
-          textAlign: TextAlign.center,
-          maxLines: 1,
-        ),
-      ),
-    );
   }
 }
