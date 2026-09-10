@@ -20,7 +20,8 @@ import 'package:ono/Util/AppNavigator.dart';
 import 'package:ono/Util/NotificationService.dart';
 
 import '../Exception/ApiException.dart';
-import '../Screen/User/LoginScreen.dart';
+import '../Screen/Onboarding/LoginScreen.dart';
+import '../Module/Motion/TossPageRoute.dart';
 import '../Service/Api/HttpService.dart';
 import '../Service/SocialLogin/AppleAuthService.dart';
 import '../Service/SocialLogin/GoogleAuthService.dart';
@@ -540,7 +541,7 @@ class UserProvider with ChangeNotifier {
       }
 
       navigator.pushAndRemoveUntil(
-        MaterialPageRoute(builder: (_) => const LoginScreen()),
+        TossPageRoute(builder: (_) => const LoginScreen()),
         (route) => false,
       );
     });
