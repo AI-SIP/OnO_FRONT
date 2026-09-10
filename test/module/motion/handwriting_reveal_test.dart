@@ -143,7 +143,7 @@ void main() {
     expect(completed, isTrue);
   });
 
-  testWidgets('펜촉을 켜면 다 쓴 뒤에는 남지 않는다', (tester) async {
+  testWidgets('연필을 켜면 다 쓴 뒤에는 남지 않는다', (tester) async {
     await pumpOnoWidget(
       tester,
       Scaffold(
@@ -152,7 +152,7 @@ void main() {
             text: _phrase,
             color: Colors.black,
             duration: _duration,
-            penTip: true,
+            pencil: true,
           ),
         ),
       ),
