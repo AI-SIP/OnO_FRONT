@@ -26,7 +26,19 @@ class MissionHistoryScreen extends StatefulWidget {
   /// 테스트에서 가짜를 끼우기 위한 자리. 앱에서는 비워 둔다.
   final MissionService? missionService;
 
-  const MissionHistoryScreen({super.key, this.missionService});
+  /// 지금 시각을 읽는 방법.
+  ///
+  /// 날짜 머리글이 `오늘`/`어제`로 갈리는데, 그 판단이 `DateTime.now()` 에
+  /// 직접 붙어 있으면 테스트가 실제 시계에 매인다. 자정을 넘기는 순간이나
+  /// 서머타임이 있는 지역에서만 어긋나는 종류의 실패가 난다. 시계를 밖에서
+  /// 넣을 수 있게 열어 둔다. 앱에서는 비워 두면 된다.
+  final DateTime Function()? clock;
+
+  const MissionHistoryScreen({
+    super.key,
+    this.missionService,
+    this.clock,
+  });
 
   @override
   State<MissionHistoryScreen> createState() => _MissionHistoryScreenState();
@@ -77,6 +89,8 @@ class _MissionHistoryScreenState extends State<MissionHistoryScreen> {
     _scrollController.dispose();
     super.dispose();
   }
+
+  DateTime _now() => widget.clock?.call() ?? DateTime.now();
 
   void _onScroll() {
     if (!_scrollController.hasClients) return;
@@ -309,7 +323,7 @@ class _MissionHistoryScreenState extends State<MissionHistoryScreen> {
     final entries = <_HistoryEntry>[];
     String? lastLabel;
     for (final item in _items) {
-      final label = MissionPeriodLabel.ofDate(item.claimedAt);
+      final label = MissionPeriodLabel.ofDate(item.claimedAt, now: _now());
       if (label != lastLabel) {
         lastLabel = label;
         entries.add(_HistoryEntry.header(label));
