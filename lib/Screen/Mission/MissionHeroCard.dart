@@ -41,6 +41,13 @@ class MissionHeroCard extends StatefulWidget {
   /// 마이페이지와 같은 레벨의 개구리를 띄운다.
   final int level;
 
+  /// 지금 레벨에서 쌓은 점수와 다음 레벨까지 필요한 점수.
+  ///
+  /// 마이페이지 레벨 카드와 **같은 값, 같은 색**이어야 한다. 미션 보상으로
+  /// 오르는 것이 저 레벨이라, 두 화면이 어긋나면 무엇이 오르는지 알 수 없다.
+  final int currentPoint;
+  final int nextLevelThreshold;
+
   final Color primaryColor;
 
   /// 코인이 날아와 닿을 자리. XP 카운터에 달린다.
@@ -63,6 +70,8 @@ class MissionHeroCard extends StatefulWidget {
     required this.dailyMissions,
     required this.level,
     required this.primaryColor,
+    this.currentPoint = 0,
+    this.nextLevelThreshold = 0,
     this.counterKey,
     this.pendingXp = 0,
     this.arrivalTick = 0,
@@ -148,11 +157,19 @@ class _MissionHeroCardState extends State<MissionHeroCard>
               ),
             ],
           ),
-          child: Row(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              _buildFrogRing(gaugeSize, ratio),
-              const SizedBox(width: AppSpacing.lg),
-              Expanded(child: _buildSummary()),
+              Row(
+                children: [
+                  _buildFrogRing(gaugeSize, ratio),
+                  // 개구리와 오른쪽 글상자가 붙어 보이지 않게 벌린다.
+                  const SizedBox(width: AppSpacing.xl),
+                  Expanded(child: _buildSummary()),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.lg),
+              _buildLevelRow(),
             ],
           ),
         );
@@ -219,10 +236,48 @@ class _MissionHeroCardState extends State<MissionHeroCard>
     );
   }
 
+  /// 마이페이지와 같은 종합 레벨과 경험치 바다.
+  ///
+  /// 미션을 받으면 오르는 것이 이 레벨이다. 미션 화면에 이게 없으면 보상이
+  /// 어디에 쌓이는지 알 수 없다.
+  Widget _buildLevelRow() {
+    final threshold = widget.nextLevelThreshold;
+    final point = widget.currentPoint;
+    final ratio = threshold > 0 ? (point / threshold).clamp(0.0, 1.0) : 0.0;
+
+    return Row(
+      children: [
+        StandardText(
+          text: 'Lv.${widget.level}',
+          fontSize: 14,
+          color: widget.primaryColor,
+          maxLines: 1,
+        ),
+        const SizedBox(width: AppSpacing.md),
+        Expanded(
+          child: AnimatedLinearGauge(
+            value: ratio.toDouble(),
+            color: widget.primaryColor,
+            backgroundColor: AppColors.surfaceMuted,
+            height: 6,
+            borderRadius: AppRadius.full,
+          ),
+        ),
+        const SizedBox(width: AppSpacing.sm),
+        StandardText(
+          text: '$point/$threshold',
+          fontSize: 11,
+          color: AppColors.textTertiary,
+          maxLines: 1,
+        ),
+      ],
+    );
+  }
+
   String get _headline {
     if (_total == 0) return '오늘의 미션';
     if (_claimable > 0) return '받을 보상이 있어요';
-    if (_allDone) return '오늘 것을 다 했어요';
+    if (_allDone) return '오늘 미션을 다 했어요';
     return '오늘의 미션';
   }
 
