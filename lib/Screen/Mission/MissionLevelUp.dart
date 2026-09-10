@@ -5,7 +5,6 @@ import 'package:provider/provider.dart';
 
 import '../../Module/Design/AppColors.dart';
 import '../../Module/Design/AppRadius.dart';
-import '../../Module/Design/AppRewardColors.dart';
 import '../../Module/Design/AppSpacing.dart';
 import '../../Module/Motion/AnimatedCountText.dart';
 import '../../Module/Motion/AppHaptic.dart';
@@ -123,26 +122,27 @@ class _MissionLevelUpViewState extends State<_MissionLevelUpView>
     duration: const Duration(milliseconds: 700),
   );
 
-  /// 뒤에서 도는 빛. 한 바퀴만 돈다.
+  /// 개구리를 감싸고 밖으로 번지는 파문.
   ///
-  /// 끝없이 돌리지 않는 이유가 있다. 사라지지 않는 애니메이션은 화면이 언제
-  /// 조용해지는지를 없애고, 테스트에서도 영영 안정되지 않는다.
-  late final AnimationController _rays = AnimationController(
+  /// 예전에는 광선이 돌았는데 풍차처럼 보였다. **회전을 쓰지 않는다.** 돌리면
+  /// 풍차나 로딩 스피너가 된다. 축하는 크고 화려한 것이 아니라 부드럽고 밝은
+  /// 쪽이다. 두 번만 번지고 멎는다.
+  late final AnimationController _ripple = AnimationController(
     vsync: this,
-    duration: const Duration(seconds: 6),
+    duration: const Duration(milliseconds: 1800),
   );
 
   @override
   void initState() {
     super.initState();
     _enter.forward();
-    _rays.forward();
+    _ripple.forward();
   }
 
   @override
   void dispose() {
     _enter.dispose();
-    _rays.dispose();
+    _ripple.dispose();
     super.dispose();
   }
 
@@ -215,23 +215,56 @@ class _MissionLevelUpViewState extends State<_MissionLevelUpView>
 
         final frog = FrogCharacter(level: _level, size: size * 0.72);
 
-        final rays = SizedBox.square(
-          dimension: size,
+        // 뒤에서 부드럽게 퍼지는 원형 빛. 회전하지 않는다.
+        final glow = SizedBox.square(
+          dimension: size * 1.5,
           child: AnimatedBuilder(
-            animation: _rays,
-            builder: (context, _) => CustomPaint(
-              painter: _RayPainter(
-                color: AppRewardColors.coin,
-                accent: primary,
-                turns: reduced ? 0 : _rays.value,
-              ),
-            ),
+            animation: _enter,
+            builder: (context, _) {
+              final t = CurvedAnimation(
+                parent: _enter,
+                curve: AppMotion.emphasized,
+              ).value;
+              return Opacity(
+                opacity: reduced ? 1 : t,
+                child: Transform.scale(
+                  scale: reduced ? 1 : 0.7 + 0.3 * t,
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: RadialGradient(
+                        colors: [
+                          primary.withValues(alpha: 0.30),
+                          primary.withValues(alpha: 0.0),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            },
           ),
         );
 
+        // 얇은 원 두 개가 밖으로 번지며 사라진다.
+        final ripples = reduced
+            ? const SizedBox.shrink()
+            : SizedBox.square(
+                dimension: size * 1.5,
+                child: AnimatedBuilder(
+                  animation: _ripple,
+                  builder: (context, _) => CustomPaint(
+                    painter: _RipplePainter(
+                      progress: _ripple.value,
+                      color: primary,
+                    ),
+                  ),
+                ),
+              );
+
         final content = Stack(
           alignment: Alignment.center,
-          children: [rays, frog],
+          children: [glow, ripples, frog],
         );
 
         if (reduced) return content;
@@ -301,11 +334,8 @@ class _MissionLevelUpViewState extends State<_MissionLevelUpView>
         vertical: AppSpacing.md,
       ),
       decoration: BoxDecoration(
-        color: AppRewardColors.coinSurface,
+        color: AppColors.surfaceMuted,
         borderRadius: BorderRadius.circular(AppRadius.large),
-        border: Border.all(
-          color: AppRewardColors.coin.withValues(alpha: 0.45),
-        ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -313,14 +343,14 @@ class _MissionLevelUpViewState extends State<_MissionLevelUpView>
           const Icon(
             Icons.lock_open,
             size: 16,
-            color: AppRewardColors.onCoin,
+            color: AppColors.textSecondary,
           ),
           const SizedBox(width: AppSpacing.sm),
           Flexible(
             child: StandardText(
               text: _unlockedLabel,
               fontSize: 13,
-              color: AppRewardColors.onCoin,
+              color: AppColors.textSecondary,
               textAlign: TextAlign.center,
               maxLines: 3,
             ),
@@ -366,53 +396,39 @@ class _MissionLevelUpViewState extends State<_MissionLevelUpView>
   }
 }
 
-/// 개구리 뒤에서 도는 빛줄기다.
-class _RayPainter extends CustomPainter {
+/// 개구리를 감싸고 밖으로 번지는 얇은 원들이다.
+///
+/// 회전이 없다. 커지면서 옅어지기만 한다.
+class _RipplePainter extends CustomPainter {
+  /// 0 에서 1. 번져 나간 정도.
+  final double progress;
   final Color color;
-  final Color accent;
 
-  /// 0 에서 1 사이. 한 바퀴를 얼마나 돌았는지.
-  final double turns;
+  const _RipplePainter({required this.progress, required this.color});
 
-  const _RayPainter({
-    required this.color,
-    required this.accent,
-    required this.turns,
-  });
+  /// 두 원이 시차를 두고 번진다. 하나씩이면 심심하고 셋이면 어수선하다.
+  static const List<double> _delays = [0.0, 0.35];
 
   @override
   void paint(Canvas canvas, Size size) {
     final center = size.center(Offset.zero);
-    final radius = size.shortestSide / 2;
+    final maxRadius = size.shortestSide / 2;
 
-    canvas.save();
-    canvas.translate(center.dx, center.dy);
-    canvas.rotate(turns * 2 * math.pi);
+    for (final delay in _delays) {
+      final t = ((progress - delay) / (1 - delay)).clamp(0.0, 1.0);
+      if (t <= 0 || t >= 1) continue;
 
-    const count = 12;
-    for (var i = 0; i < count; i++) {
       final paint = Paint()
-        // 밝은 바탕이라 옅게 깐다. 진하면 종이에 그은 선처럼 보인다.
-        ..color = (i.isEven ? color : accent).withValues(alpha: 0.22)
-        ..style = PaintingStyle.fill;
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.6
+        // 번질수록 옅어진다.
+        ..color = color.withValues(alpha: 0.35 * (1 - t));
 
-      final path = Path()
-        ..moveTo(0, 0)
-        ..lineTo(radius * 1.5, -radius * 0.12)
-        ..lineTo(radius * 1.5, radius * 0.12)
-        ..close();
-
-      canvas.save();
-      canvas.rotate(i * 2 * math.pi / count);
-      canvas.drawPath(path, paint);
-      canvas.restore();
+      canvas.drawCircle(center, maxRadius * (0.5 + 0.5 * t), paint);
     }
-    canvas.restore();
   }
 
   @override
-  bool shouldRepaint(covariant _RayPainter oldDelegate) =>
-      oldDelegate.turns != turns ||
-      oldDelegate.color != color ||
-      oldDelegate.accent != accent;
+  bool shouldRepaint(covariant _RipplePainter oldDelegate) =>
+      oldDelegate.progress != progress || oldDelegate.color != color;
 }
