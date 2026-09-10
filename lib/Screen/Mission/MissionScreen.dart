@@ -11,6 +11,7 @@ import '../../Module/Motion/AppearTransition.dart';
 import '../../Module/Motion/AppHaptic.dart';
 import '../../Module/Motion/AppMotion.dart';
 import '../../Module/Motion/PressableScale.dart';
+import '../../Module/Motion/TossPageRoute.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/MissionProvider.dart';
@@ -18,6 +19,7 @@ import '../../Provider/UserProvider.dart';
 import 'ExpiredMissionSection.dart';
 import 'MissionCard.dart';
 import 'MissionHeroCard.dart';
+import 'MissionHistoryScreen.dart';
 import 'MissionLevelUp.dart';
 import 'MissionRewardCelebration.dart';
 import 'MissionRewardFlight.dart';
@@ -311,6 +313,12 @@ class _MissionScreenState extends State<MissionScreen> {
                           counterKey: _counterKey,
                           pendingXp: _pendingXp,
                           arrivalTick: _arrivalTick,
+                          onCounterTap: () => Navigator.push(
+                            context,
+                            TossPageRoute(
+                              builder: (_) => const MissionHistoryScreen(),
+                            ),
+                          ),
                         ),
                       ),
                       if (missionProvider.expiredUnclaimedCount > 0) ...[

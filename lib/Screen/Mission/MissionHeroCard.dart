@@ -9,7 +9,9 @@ import '../../Module/Design/AppRewardColors.dart';
 import '../../Module/Design/AppSpacing.dart';
 import '../../Module/Motion/AnimatedCountText.dart';
 import '../../Module/Motion/AnimatedGauge.dart';
+import '../../Module/Motion/AppHaptic.dart';
 import '../../Module/Motion/AppMotion.dart';
+import '../../Module/Motion/PressableScale.dart';
 import '../../Module/Text/StandardText.dart';
 import '../User/Widget/FrogCharacter.dart';
 import 'MissionRewardChip.dart';
@@ -53,6 +55,9 @@ class MissionHeroCard extends StatefulWidget {
   /// 코인이 닿을 때마다 1 씩 는다. 칩이 한 번 튀는 신호다.
   final int arrivalTick;
 
+  /// XP 칩을 눌렀을 때. 지금까지 받은 보상을 보여 주는 화면으로 간다.
+  final VoidCallback? onCounterTap;
+
   const MissionHeroCard({
     super.key,
     required this.dailyMissions,
@@ -61,6 +66,7 @@ class MissionHeroCard extends StatefulWidget {
     this.counterKey,
     this.pendingXp = 0,
     this.arrivalTick = 0,
+    this.onCounterTap,
   });
 
   @override
@@ -228,37 +234,50 @@ class _MissionHeroCardState extends State<MissionHeroCard>
     return _ArrivalPop(
       tick: widget.arrivalTick,
       enabled: !_reduced,
-      child: Container(
-        key: widget.counterKey,
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.md,
-          vertical: AppSpacing.sm,
-        ),
-        decoration: BoxDecoration(
-          color: AppRewardColors.coinSurface,
-          borderRadius: BorderRadius.circular(AppRadius.full),
-          border: Border.all(
-            color: AppRewardColors.coin.withValues(alpha: 0.45),
+      child: PressableScale(
+        onTap: widget.onCounterTap,
+        haptic: HapticLevel.secondary,
+        child: Container(
+          key: widget.counterKey,
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.md,
+            vertical: AppSpacing.sm,
           ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const MissionCoin(size: 18),
-            const SizedBox(width: AppSpacing.sm),
-            const StandardText(
-              text: '오늘',
-              fontSize: 12,
-              color: AppRewardColors.onCoin,
+          decoration: BoxDecoration(
+            color: AppRewardColors.coinSurface,
+            borderRadius: BorderRadius.circular(AppRadius.full),
+            border: Border.all(
+              color: AppRewardColors.coin.withValues(alpha: 0.45),
             ),
-            const SizedBox(width: AppSpacing.xs),
-            AnimatedCountText(
-              value: earned,
-              formatter: (value) => '+${value.round()} XP',
-              fontSize: 14,
-              color: AppRewardColors.onCoin,
-            ),
-          ],
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const MissionCoin(size: 18),
+              const SizedBox(width: AppSpacing.sm),
+              const StandardText(
+                text: '오늘',
+                fontSize: 12,
+                color: AppRewardColors.onCoin,
+              ),
+              const SizedBox(width: AppSpacing.xs),
+              AnimatedCountText(
+                value: earned,
+                formatter: (value) => '+${value.round()} XP',
+                fontSize: 14,
+                color: AppRewardColors.onCoin,
+              ),
+              // 누를 수 있다는 것이 보여야 한다.
+              if (widget.onCounterTap != null) ...[
+                const SizedBox(width: AppSpacing.xs),
+                const Icon(
+                  Icons.chevron_right,
+                  size: 16,
+                  color: AppRewardColors.onCoin,
+                ),
+              ],
+            ],
+          ),
         ),
       ),
     );
