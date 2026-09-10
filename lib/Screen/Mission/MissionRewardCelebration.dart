@@ -43,10 +43,9 @@ Future<Offset?> showMissionRewardCelebration(
       amount: amount,
     ),
     transitionBuilder: (context, animation, secondaryAnimation, child) {
-      return FadeTransition(
-        opacity: CurvedAnimation(parent: animation, curve: AppMotion.enter),
-        child: child,
-      );
+      // 라우트 애니메이션은 한 번만 감싼다. 빌더 안에서 만들면 프레임마다
+      // CurvedAnimation 이 새로 생기고 리스너가 쌓인다.
+      return FadeTransition(opacity: animation, child: child);
     },
   );
 }
@@ -75,6 +74,12 @@ class _MissionRewardCelebrationState extends State<_MissionRewardCelebration>
     duration: AppMotion.slow,
   );
 
+  /// 빌더 안에서 만들면 프레임마다 새로 생기고 리스너가 쌓인다.
+  late final Animation<double> _entered = CurvedAnimation(
+    parent: _enter,
+    curve: AppMotion.emphasized,
+  );
+
   /// 코인의 자리를 재는 데 쓴다. 닫을 때 이 자리를 돌려준다.
   final GlobalKey _coinKey = GlobalKey();
 
@@ -99,8 +104,22 @@ class _MissionRewardCelebrationState extends State<_MissionRewardCelebration>
   }
 
   /// 코인이 지금 화면 어디에 있는지 재서 들고 나간다.
+  ///
+  /// **밖에서 이미 닫혔으면 아무것도 하지 않는다.** 시스템 뒤로가기나 바깥을
+  /// 눌러 라우트가 사라진 뒤에도 이 함수가 불릴 수 있는데(자동 닫기 타이머,
+  /// 닫히는 중에 들어온 탭), 그때 pop 을 부르면 **그 아래 미션 화면이 닫혀**
+  /// 홈으로 튕긴다. 우리 라우트가 아직 맨 위에 있을 때만 닫는다.
   void _close() {
     if (_closing || !mounted) return;
+
+    final route = ModalRoute.of(context);
+    if (route == null || !route.isCurrent) {
+      // 이미 닫혔거나 위에 다른 것이 떠 있다. 타이머만 걷는다.
+      _closing = true;
+      _timer?.cancel();
+      return;
+    }
+
     _closing = true;
     _timer?.cancel();
 
@@ -186,11 +205,7 @@ class _MissionRewardCelebrationState extends State<_MissionRewardCelebration>
     return AnimatedBuilder(
       animation: _enter,
       builder: (context, child) {
-        final t = CurvedAnimation(
-          parent: _enter,
-          curve: AppMotion.emphasized,
-        ).value;
-        return Transform.scale(scale: 0.7 + 0.3 * t, child: child);
+        return Transform.scale(scale: 0.7 + 0.3 * _entered.value, child: child);
       },
       child: card,
     );
