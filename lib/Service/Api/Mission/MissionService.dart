@@ -4,6 +4,7 @@ import 'package:ono/Constants/ErrorMessages.dart';
 import 'package:ono/Exception/ApiException.dart';
 import 'package:ono/Model/Mission/MissionClaimResultModel.dart';
 import 'package:ono/Model/Mission/MissionGroupModel.dart';
+import 'package:ono/Model/Mission/MissionHistoryModel.dart';
 import 'package:ono/Service/Api/HttpService.dart';
 
 class MissionService {
@@ -31,6 +32,35 @@ class MissionService {
       return MissionBoardModel.fromJson(data);
     } catch (error) {
       debugPrint('[MissionService] 미션 조회 실패: $error');
+      return null;
+    }
+  }
+
+  /// 지금까지 받은 보상을 페이지로 가져온다. 실패하면 null 이다.
+  ///
+  /// 조회와 같은 정책이다. 백엔드에 아직 이 API 가 없어 404 가 떨어지는 동안에도
+  /// 오류를 띄우지 않는다. 화면은 null 을 받으면 진입점을 숨기거나 빈 상태로 둔다.
+  ///
+  /// [cursor] 를 주지 않으면 첫 페이지다. 합계는 첫 페이지에만 실려 온다.
+  Future<MissionHistoryPageModel?> getHistory({
+    int? cursor,
+    int size = 20,
+  }) async {
+    try {
+      final data = await _httpService.sendRequest(
+        method: 'GET',
+        url: '$_baseUrl/history',
+        queryParams: {
+          if (cursor != null) 'cursor': cursor.toString(),
+          'size': size.toString(),
+        },
+        showErrorSnackBar: false,
+      );
+
+      if (data is! Map<String, dynamic>) return null;
+      return MissionHistoryPageModel.fromJson(data);
+    } catch (error) {
+      debugPrint('[MissionService] 보상 기록 조회 실패: $error');
       return null;
     }
   }

@@ -9,6 +9,14 @@ abstract final class MissionPeriodLabel {
   /// 기간을 알 수 없을 때 쓰는 말.
   static const String unknown = '지난 미션';
 
+  /// 날짜 하나를 [now] 기준의 문구로 바꾼다.
+  ///
+  /// 보상 기록을 날짜별로 묶을 때 쓴다. 기간 키와 같은 규칙으로 말해야 두
+  /// 화면의 말이 어긋나지 않는다.
+  static String ofDate(DateTime date, {DateTime? now}) {
+    return _dailyLabel(_dateOnly(date), _dateOnly(now ?? DateTime.now()));
+  }
+
   /// [periodKey] 를 [now] 기준의 문구로 바꾼다.
   ///
   /// - `2026-09-08` → `어제` 또는 `9월 8일`
