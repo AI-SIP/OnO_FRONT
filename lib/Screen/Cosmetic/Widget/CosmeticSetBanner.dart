@@ -41,13 +41,19 @@ class CosmeticSetBanner extends StatelessWidget {
   /// 한 벌이 다 있는지. 하나라도 모자라면 입을 수 없다.
   bool get _owned => members.every((item) => item.owned);
 
+  /// 이 한 벌에서 지금 가진 개수.
+  int get _ownedCount => members.where((item) => item.owned).length;
+
   /// 아직 못 여는 이유를 짧게 적는다.
   ///
   /// 가장 늦게 열리는 것이 한 벌 전체의 조건이다. 하나라도 미션 보상이면
   /// 레벨로는 끝내 열리지 않으므로 그쪽을 먼저 말한다.
+  ///
+  /// 몇 개 중 몇 개인지는 [_buildProgress] 가 앞에서 따로 말한다. 여기에
+  /// 같이 넣으면 좁은 폰에서 뒤가 잘려 나가는 쪽이 그 숫자가 된다.
   String get _hint {
     if (equipped) return '지금 이 한 벌을 입고 있어요';
-    if (_owned) return '${members.length}가지를 한 번에 입어요';
+    if (_owned) return '한 번에 입어요';
 
     var required = 0;
     for (final item in members) {
@@ -100,13 +106,7 @@ class CosmeticSetBanner extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  StandardText(
-                    text: _hint,
-                    fontSize: 11,
-                    color: AppColors.textTertiary,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
+                  _buildProgress(),
                 ],
               ),
             ),
@@ -115,6 +115,34 @@ class CosmeticSetBanner extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+
+  /// 한 벌을 얼마나 모았는지와, 아직 못 여는 이유.
+  ///
+  /// **숫자가 먼저 온다.** 세트는 자리가 흩어져 있어서 몇 개를 모았는지가
+  /// 격자에서는 안 보인다. 여기가 아니면 셀 데가 없다. 좁은 폰에서는 뒤쪽
+  /// 설명이 잘리는데, 잘려도 되는 쪽이 설명이다.
+  Widget _buildProgress() {
+    return Row(
+      children: [
+        StandardText(
+          text: '$_ownedCount / ${members.length}',
+          fontSize: 11,
+          fontWeight: FontWeight.w700,
+          color: _owned ? color : AppColors.textSecondary,
+          maxLines: 1,
+        ),
+        Expanded(
+          child: StandardText(
+            text: ' · $_hint',
+            fontSize: 11,
+            color: AppColors.textTertiary,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ],
     );
   }
 
@@ -128,9 +156,9 @@ class CosmeticSetBanner extends StatelessWidget {
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(AppRadius.small),
-        child: Opacity(
-          opacity: item.owned ? 1 : 0.45,
-          child: CosmeticPartPreview(imageUrl: item.imageUrl),
+        child: CosmeticPartPreview(
+          imageUrl: item.imageUrl,
+          locked: !item.owned,
         ),
       ),
     );
