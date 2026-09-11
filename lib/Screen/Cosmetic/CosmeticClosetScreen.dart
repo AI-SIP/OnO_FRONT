@@ -16,11 +16,11 @@ import '../../Module/Motion/TossPageRoute.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/CosmeticProvider.dart';
-import '../User/Widget/FrogCharacter.dart';
 import 'CosmeticCombinationPreviewScreen.dart';
 import 'Widget/CosmeticItemTile.dart';
 import 'Widget/CosmeticSetBanner.dart';
 import 'Widget/CosmeticSlotTabs.dart';
+import 'Widget/CosmeticStage.dart';
 
 /// 개구리 옷장이다.
 ///
@@ -213,7 +213,8 @@ class _CosmeticClosetScreenState extends State<CosmeticClosetScreen> {
                             themeProvider,
                             frogSize,
                           ),
-                          const SizedBox(height: AppSpacing.md),
+                          _buildLevelSlider(cosmetic, themeProvider),
+                          const SizedBox(height: AppSpacing.sm),
                           CosmeticSlotTabs(
                             slots: slots,
                             index: slotIndex,
@@ -243,12 +244,14 @@ class _CosmeticClosetScreenState extends State<CosmeticClosetScreen> {
     );
   }
 
-  /// 개구리가 서는 자리.
+  /// 개구리가 서는 자리. 이 화면의 주인공이다.
   ///
-  /// 파츠에는 투명한 데가 많아서 흰 바탕에 그냥 두면 개구리가 허공에 뜬 것처럼
-  /// 보인다. 사용자가 고른 테마색을 아주 옅게 깔아 무대를 만든다. 금색 같은
-  /// 별도의 장식색을 쓰지 않는 이유는, 그러면 이 화면만 앱에서 겉돌기
-  /// 때문이다.
+  /// 바탕은 위가 밝고 아래로 갈수록 테마색이 도는 세로 그라데이션이다. 위에서
+  /// 빛이 들어오고 아래가 바닥인 무대의 결이라, 그 위에 선 개구리가 조각이
+  /// 아니라 장면으로 읽힌다. 빛무리와 바닥 그림자는
+  /// [CosmeticStageFrog] 가 그린다.
+  ///
+  /// 금색 같은 별도의 장식색을 쓰지 않는다. 그러면 이 화면만 앱에서 겉돈다.
   Widget _buildStage(
     CosmeticProvider cosmetic,
     ThemeHandler themeProvider,
@@ -257,18 +260,34 @@ class _CosmeticClosetScreenState extends State<CosmeticClosetScreen> {
     final color = themeProvider.primaryColor;
 
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.md,
+        AppSpacing.md,
+        AppSpacing.md,
+        AppSpacing.sm,
+      ),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
           colors: [
-            Color.alphaBlend(color.withValues(alpha: 0.14), Colors.white),
-            Colors.white,
+            Color.alphaBlend(color.withValues(alpha: 0.05), Colors.white),
+            Color.alphaBlend(color.withValues(alpha: 0.13), Colors.white),
+            Color.alphaBlend(color.withValues(alpha: 0.20), Colors.white),
           ],
+          stops: const [0.0, 0.55, 1.0],
         ),
         borderRadius: BorderRadius.circular(AppRadius.xlarge),
-        border: Border.all(color: color.withValues(alpha: 0.12)),
+        border: Border.all(color: color.withValues(alpha: 0.14)),
+        // 무대가 바닥에서 살짝 떠 보이게 한다. 카드가 아니라 장면이라는
+        // 신호라서 테마색 그림자를 옅게 쓴다.
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: 0.10),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
       child: Column(
         children: [
@@ -279,19 +298,13 @@ class _CosmeticClosetScreenState extends State<CosmeticClosetScreen> {
             child: _buildResetButton(cosmetic, color),
           ),
           const SizedBox(height: AppSpacing.xs),
-          _EquipPulse(
-            tick: _equipTick,
-            // 격려 말풍선은 이제 여기서만 뜬다. 마이페이지와 미션의 개구리는
-            // 누르면 이 화면으로 오는 문이라서 말풍선을 띄우지 않는다. 대신
-            // 꾸미러 온 자리에서 개구리가 한마디 하는 쪽이 더 어울린다.
-            child: FrogCharacter(
-              layers: cosmetic.layers,
-              size: frogSize,
-              borderRadius: AppRadius.large,
-              showEncouragement: true,
-            ),
+          CosmeticStageFrog(
+            layers: cosmetic.layers,
+            size: frogSize,
+            color: color,
+            equipTick: _equipTick,
           ),
-          _buildLevelSlider(cosmetic, themeProvider),
+          const SizedBox(height: AppSpacing.sm),
         ],
       ),
     );
@@ -355,6 +368,7 @@ class _CosmeticClosetScreenState extends State<CosmeticClosetScreen> {
   ) {
     return Row(
       children: [
+        const SizedBox(width: AppSpacing.xs),
         StandardText(
           text: 'Lv.${cosmetic.level}',
           fontSize: 14,
@@ -535,65 +549,5 @@ class _CosmeticClosetScreenState extends State<CosmeticClosetScreen> {
         maxLines: 2,
       ),
     );
-  }
-}
-
-/// 갈아입을 때마다 개구리가 한 번 들썩인다.
-///
-/// 파츠가 소리 없이 바뀌면 눌린 것이 화면에 반영됐는지 애매하다. 아주 살짝
-/// 커졌다 돌아오면 방금 그 자리에서 일어난 일이라는 것이 손끝과 이어진다.
-class _EquipPulse extends StatefulWidget {
-  /// 이 값이 바뀔 때마다 한 번 재생한다.
-  final int tick;
-
-  final Widget child;
-
-  const _EquipPulse({required this.tick, required this.child});
-
-  @override
-  State<_EquipPulse> createState() => _EquipPulseState();
-}
-
-class _EquipPulseState extends State<_EquipPulse>
-    with SingleTickerProviderStateMixin {
-  // 늦게 만들지 않는다. "동작 줄이기"를 켠 기기에서 build 가 컨트롤러를
-  // 건드리지 않고 끝나면, dispose 가 그제서야 만들면서 죽는다.
-  late final AnimationController _controller;
-  late final Animation<double> _scale;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(vsync: this, duration: AppMotion.normal);
-    _scale = TweenSequence<double>([
-      TweenSequenceItem(
-        tween: Tween<double>(begin: 1.0, end: 1.05)
-            .chain(CurveTween(curve: AppMotion.enter)),
-        weight: 40,
-      ),
-      TweenSequenceItem(
-        tween: Tween<double>(begin: 1.05, end: 1.0)
-            .chain(CurveTween(curve: AppMotion.emphasized)),
-        weight: 60,
-      ),
-    ]).animate(_controller);
-  }
-
-  @override
-  void didUpdateWidget(covariant _EquipPulse oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.tick != widget.tick) _controller.forward(from: 0);
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (AppMotion.isReduced(context)) return widget.child;
-    return ScaleTransition(scale: _scale, child: widget.child);
   }
 }
