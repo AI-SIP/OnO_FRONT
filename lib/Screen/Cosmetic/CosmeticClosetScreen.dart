@@ -10,11 +10,13 @@ import '../../Module/Design/AppToast.dart';
 import '../../Module/Motion/AppearTransition.dart';
 import '../../Module/Motion/AppHaptic.dart';
 import '../../Module/Motion/AppMotion.dart';
+import '../../Module/Motion/PressableScale.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/CosmeticProvider.dart';
 import '../User/Widget/FrogCharacter.dart';
 import 'Widget/CosmeticItemTile.dart';
+import 'Widget/CosmeticSetBanner.dart';
 import 'Widget/CosmeticSlotTabs.dart';
 
 /// 개구리 옷장이다.
@@ -82,6 +84,31 @@ class _CosmeticClosetScreenState extends State<CosmeticClosetScreen> {
     final message = cosmetic.consumeFailure();
     if (message == null) return;
     AppToast.info(message);
+  }
+
+  /// 한 벌을 통째로 건다.
+  ///
+  /// 세트에 못 가진 것이 섞여 있으면 [CosmeticProvider.equipSet] 이 하나도
+  /// 걸지 않는다. 절반만 입혀 두면 무엇이 모자란지 알 수 없기 때문이다.
+  void _onSetTap(CosmeticProvider cosmetic, String setId) {
+    cosmetic.equipSet(setId);
+
+    final message = cosmetic.consumeFailure();
+    if (message != null) {
+      AppHaptic.secondary();
+      AppToast.info(message);
+      return;
+    }
+
+    AppHaptic.primary();
+    _pulse();
+  }
+
+  /// 지금 레벨의 기본 차림으로 되돌린다.
+  void _onResetTap(CosmeticProvider cosmetic) {
+    AppHaptic.selection();
+    cosmetic.resetToPreset();
+    _pulse();
   }
 
   void _pulse() {
@@ -192,14 +219,61 @@ class _CosmeticClosetScreenState extends State<CosmeticClosetScreen> {
         borderRadius: BorderRadius.circular(AppRadius.xlarge),
         border: Border.all(color: color.withValues(alpha: 0.12)),
       ),
-      child: Center(
-        child: _EquipPulse(
-          tick: _equipTick,
-          child: FrogCharacter(
-            layers: cosmetic.layers,
-            size: frogSize,
-            borderRadius: AppRadius.large,
+      child: Stack(
+        children: [
+          Center(
+            child: _EquipPulse(
+              tick: _equipTick,
+              child: FrogCharacter(
+                layers: cosmetic.layers,
+                size: frogSize,
+                borderRadius: AppRadius.large,
+              ),
+            ),
           ),
+          Positioned(
+            top: 0,
+            right: 0,
+            child: _buildResetButton(cosmetic, color),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 이것저것 입혀 보다 엉망이 됐을 때 돌아올 자리.
+  ///
+  /// 지금 레벨에서 자동으로 입게 되는 차림으로 되돌린다. 개구리 옆에 두는
+  /// 이유는, 되돌린 결과가 바로 그 자리에서 보여야 무엇이 일어났는지 알기
+  /// 때문이다.
+  Widget _buildResetButton(CosmeticProvider cosmetic, Color color) {
+    return PressableScale(
+      onTap: () => _onResetTap(cosmetic),
+      haptic: HapticLevel.none,
+      scale: 0.92,
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.xs,
+        ),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.85),
+          borderRadius: BorderRadius.circular(AppRadius.full),
+          border: Border.all(color: color.withValues(alpha: 0.20)),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.refresh_rounded, size: 14, color: color),
+            const SizedBox(width: AppSpacing.xs),
+            StandardText(
+              text: '기본으로',
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: color,
+              maxLines: 1,
+            ),
+          ],
         ),
       ),
     );
@@ -306,27 +380,78 @@ class _CosmeticClosetScreenState extends State<CosmeticClosetScreen> {
         ),
     ];
 
+    // 이 자리에 한 벌로 묶인 것이 있으면 격자 위에 세트 줄을 얹는다.
+    final setId = _setIdOf(items);
+    final members = setId == null
+        ? const <CosmeticItemModel>[]
+        : cosmetic.itemsOfSet(setId);
+
     return LayoutBuilder(
       builder: (context, constraints) {
         // 칸 하나가 120 언저리가 되게 나눈다. 폰은 셋, 태블릿은 여섯까지.
         final columns = (constraints.maxWidth / 118).floor().clamp(3, 6);
 
-        return GridView.count(
-          padding: const EdgeInsets.fromLTRB(
-            AppSpacing.screenHorizontal,
-            AppSpacing.xs,
-            AppSpacing.screenHorizontal,
-            AppSpacing.xxl,
-          ),
-          crossAxisCount: columns,
-          mainAxisSpacing: AppSpacing.md,
-          crossAxisSpacing: AppSpacing.md,
-          // 정사각 그림 아래에 이름 한 줄이 들어갈 만큼만 더 길다.
-          childAspectRatio: 0.82,
-          children: AppearTransition.stagger(tiles, maxStaggered: 6),
+        return CustomScrollView(
+          slivers: [
+            if (setId != null && members.isNotEmpty)
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.screenHorizontal,
+                  AppSpacing.xs,
+                  AppSpacing.screenHorizontal,
+                  AppSpacing.md,
+                ),
+                sliver: SliverToBoxAdapter(
+                  child: AppearTransition(
+                    child: CosmeticSetBanner(
+                      members: members,
+                      equipped: _isSetEquipped(cosmetic, members),
+                      color: color,
+                      onTap: () => _onSetTap(cosmetic, setId),
+                    ),
+                  ),
+                ),
+              ),
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.screenHorizontal,
+                AppSpacing.xs,
+                AppSpacing.screenHorizontal,
+                AppSpacing.xxl,
+              ),
+              sliver: SliverGrid.count(
+                crossAxisCount: columns,
+                mainAxisSpacing: AppSpacing.md,
+                crossAxisSpacing: AppSpacing.md,
+                // 정사각 그림 아래에 이름 한 줄이 들어갈 만큼만 더 길다.
+                childAspectRatio: 0.82,
+                children: AppearTransition.stagger(tiles, maxStaggered: 6),
+              ),
+            ),
+          ],
         );
       },
     );
+  }
+
+  /// 이 자리의 아이템 중 한 벌로 묶인 것이 있으면 그 세트 키.
+  String? _setIdOf(List<CosmeticItemModel> items) {
+    for (final item in items) {
+      final setId = item.setId;
+      if (setId != null) return setId;
+    }
+    return null;
+  }
+
+  /// 세트가 통째로 걸려 있는지.
+  bool _isSetEquipped(
+    CosmeticProvider cosmetic,
+    List<CosmeticItemModel> members,
+  ) {
+    for (final item in members) {
+      if (cosmetic.equippedItemKeyOf(item.slot) != item.itemKey) return false;
+    }
+    return members.isNotEmpty;
   }
 
   /// 개구리 **뒤에** 깔리는 자리인지.
