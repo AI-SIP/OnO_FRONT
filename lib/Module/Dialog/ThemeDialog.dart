@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 
 import '../../Model/User/UserInfoModel.dart';
 import '../../Provider/UserProvider.dart';
-import '../../Screen/Mission/MissionIcon.dart';
 import '../../Screen/Mission/MissionPalette.dart';
 import '../Design/AppColors.dart';
 import '../Design/AppRadius.dart';
@@ -20,18 +19,17 @@ import '../Theme/ThemeLockManager.dart';
 /// 격자의 열 하나가 능력치 하나다.
 ///
 /// 색과 아이콘을 새로 만들지 않고 미션·캐릭터 화면이 쓰는 것을 그대로 가져온다.
-/// 같은 능력치가 화면마다 다른 색이면 색이 정보를 잃는다.
+/// 같은 능력치가 화면마다 다른 색이면 색이 정보를 잃는다. 아이콘도 옷장 탭
+/// 스탯창의 눈금판과 같은 것([MissionPalette.iconOfKind])을 쓴다.
 class _ThemeLane {
   /// [ThemeLockManager.getCategoryIndex] 가 돌려주는 열 번호.
   final int categoryIndex;
 
   final MissionKind kind;
-  final String iconKey;
 
   const _ThemeLane({
     required this.categoryIndex,
     required this.kind,
-    required this.iconKey,
   });
 
   MissionKindColors get colors => MissionPalette.of(kind);
@@ -48,22 +46,18 @@ const List<_ThemeLane> _themeLanes = <_ThemeLane>[
   _ThemeLane(
     categoryIndex: 0,
     kind: MissionKind.attendance,
-    iconKey: 'attendance',
   ),
   _ThemeLane(
     categoryIndex: 1,
     kind: MissionKind.noteWrite,
-    iconKey: 'note_write',
   ),
   _ThemeLane(
     categoryIndex: 2,
     kind: MissionKind.problemPractice,
-    iconKey: 'review',
   ),
   _ThemeLane(
     categoryIndex: 3,
     kind: MissionKind.notePractice,
-    iconKey: 'practice_set',
   ),
 ];
 
@@ -108,6 +102,25 @@ class _ThemeDialogState extends State<ThemeDialog> {
 
   /// 트랙 안쪽 여백. 동그라미가 트랙 벽에 닿지 않게 한다.
   static const double _laneInset = 5;
+
+  /// 트랙 위아래 끝의 여백.
+  ///
+  /// 칸마다 똑같은 높이를 주면 첫 동그라미와 마지막 동그라미가 트랙 모서리에
+  /// 6px 밖에 안 떨어진다. 끼워 넣은 것처럼 답답해 보여서 위아래 끝 칸만 이만큼
+  /// 키우고, 늘어난 자리를 **바깥쪽에만** 준다(안쪽에 반씩 나눠 주면 첫째와
+  /// 둘째 사이만 벌어져 간격이 들쭉날쭉해진다). 칸의 색칠은 늘어난 높이까지
+  /// 그대로 차므로 "색이 끝나는 자리가 지금 서 있는 곳"은 흐트러지지 않는다.
+  ///
+  /// 늘어난 만큼은 칸과 칸 사이를 좁혀 되돌린다. 24칸이 390pt 폰과 태블릿에서
+  /// 스크롤 없이 들어가야 하는 조건이 있어서 트랙 전체 높이는 그대로여야
+  /// 한다. 여섯 칸에서 4px 씩 줄이면 24px 이 남고, 그것을 위아래 12px 로 나눠
+  /// 준다. 결과적으로 트랙 끝의 여백은 6 에서 16 으로 늘고 동그라미 사이는
+  /// 12 에서 8 로 좁는다. 캡슐 안에 든 것은 원래 그 비율로 보이는 편이
+  /// 자연스럽다.
+  static const double _laneEndPad = AppSpacing.md;
+
+  /// 칸과 칸 사이. [_laneEndPad] 만큼 끝을 벌리느라 좁혔다.
+  static const double _cellGap = AppSpacing.sm;
 
   /// 적용을 누르고 창이 닫히기까지의 사이.
   ///
@@ -410,7 +423,7 @@ class _ThemeDialogState extends State<ThemeDialog> {
             _laneGap * (_themeLanes.length - 1);
         final laneWidth = trackWidth / _themeLanes.length;
         final swatchSize = (laneWidth - _laneInset * 2).clamp(26.0, 46.0);
-        final cellHeight = swatchSize + AppSpacing.md;
+        final cellHeight = swatchSize + _cellGap;
 
         return SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(
@@ -453,19 +466,24 @@ class _ThemeDialogState extends State<ThemeDialog> {
         children: [
           for (var row = 0; row < ThemeLockManager.tierCount; row++)
             SizedBox(
-              height: cellHeight,
-              child: Align(
-                alignment: Alignment.centerRight,
-                child: Padding(
-                  padding: const EdgeInsets.only(right: AppSpacing.sm),
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    alignment: Alignment.centerRight,
-                    child: StandardText(
-                      text: ThemeLockManager.getTierLabel(row),
-                      fontSize: 10,
-                      color: AppColors.textTertiary,
-                      maxLines: 1,
+              // 트랙의 칸 높이와 같아야 단계 이름이 동그라미와 나란히 선다.
+              // 늘어난 자리를 어느 쪽에 주는지까지 같아야 한다.
+              height: _cellHeightAt(row, cellHeight),
+              child: Padding(
+                padding: _cellPaddingAt(row),
+                child: Align(
+                  alignment: Alignment.centerRight,
+                  child: Padding(
+                    padding: const EdgeInsets.only(right: AppSpacing.sm),
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerRight,
+                      child: StandardText(
+                        text: ThemeLockManager.getTierLabel(row),
+                        fontSize: 10,
+                        color: AppColors.textTertiary,
+                        maxLines: 1,
+                      ),
                     ),
                   ),
                 ),
@@ -501,7 +519,8 @@ class _ThemeDialogState extends State<ThemeDialog> {
                 index: ThemeLockManager.themeIndexAt(row, lane.categoryIndex),
                 lane: lane,
                 userInfo: userInfo,
-                height: cellHeight,
+                height: _cellHeightAt(row, cellHeight),
+                padding: _cellPaddingAt(row),
                 swatchSize: swatchSize,
                 duration: duration,
                 isSelected: _selectedIndex ==
@@ -516,6 +535,23 @@ class _ThemeDialogState extends State<ThemeDialog> {
         ),
       ),
     );
+  }
+
+  /// 이 줄의 칸 높이. 첫 줄과 마지막 줄만 [_laneEndPad] 만큼 더 높다.
+  ///
+  /// 트랙과 단계 이름 거터가 같은 식을 써야 둘이 어긋나지 않는다.
+  static double _cellHeightAt(int row, double cellHeight) =>
+      cellHeight + _cellPaddingAt(row).vertical;
+
+  /// 이 줄에서 늘어난 자리를 어느 쪽에 줄지.
+  ///
+  /// 첫 줄은 위로만, 마지막 줄은 아래로만 준다. 가운데 줄들은 없다.
+  static EdgeInsets _cellPaddingAt(int row) {
+    if (row == 0) return const EdgeInsets.only(top: _laneEndPad);
+    if (row == ThemeLockManager.tierCount - 1) {
+      return const EdgeInsets.only(bottom: _laneEndPad);
+    }
+    return EdgeInsets.zero;
   }
 
   /// 이 트랙에서 가장 먼저 잠긴 칸. 없으면 다 연 것이다.
@@ -660,7 +696,11 @@ class _LaneHeader extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        MissionIcon(iconKey: lane.iconKey, color: colors.accent, size: 20),
+        Icon(
+          MissionPalette.iconOfKind(lane.kind),
+          color: colors.accent,
+          size: 20,
+        ),
         const SizedBox(height: AppSpacing.xs),
         FittedBox(
           fit: BoxFit.scaleDown,
@@ -705,6 +745,13 @@ class _ThemeCell extends StatelessWidget {
   final _ThemeLane lane;
   final UserInfoModel? userInfo;
   final double height;
+
+  /// 늘어난 자리를 어느 쪽에 줄지. 트랙 끝 칸만 값이 있다.
+  ///
+  /// 색칠은 [height] 전체를 채우고 동그라미만 이 여백만큼 안쪽으로 들어간다.
+  /// 그래야 끝이 벌어지면서도 색이 끊기지 않는다.
+  final EdgeInsets padding;
+
   final double swatchSize;
   final Duration duration;
   final bool isSelected;
@@ -722,6 +769,7 @@ class _ThemeCell extends StatelessWidget {
     required this.lane,
     required this.userInfo,
     required this.height,
+    required this.padding,
     required this.swatchSize,
     required this.duration,
     required this.isSelected,
@@ -755,6 +803,7 @@ class _ThemeCell extends StatelessWidget {
           height: height,
           width: double.infinity,
           alignment: Alignment.center,
+          padding: padding,
           // 올라온 구간만 능력치 색으로 칠한다. 색이 끝나는 자리가 지금 서
           // 있는 곳이고, 그 경계가 이 화면에서 가장 중요한 정보다.
           color: isUnlocked ? colors.surface : Colors.transparent,

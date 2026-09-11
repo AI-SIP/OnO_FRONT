@@ -263,6 +263,47 @@ void main() {
     });
   });
 
+  group('트랙 여백', () {
+    /// 색 트랙을 담고 있는 세로 스크롤. 24칸이 여기에 들어간다.
+    ///
+    /// 창 안에 다른 스크롤이 섞여 있어도 `ThemeDialog` 아래 것 중 세로로
+    /// 움직이는 첫 번째가 트랙이다.
+    ScrollPosition trackPosition(WidgetTester tester) {
+      final states = tester.stateList<ScrollableState>(
+        find.descendant(
+          of: find.byType(ThemeDialog),
+          matching: find.byType(Scrollable),
+        ),
+      );
+      return states
+          .firstWhere((state) => state.position.axis == Axis.vertical)
+          .position;
+    }
+
+    for (final entry in <String, Size>{
+      '390pt 폰': OnoSurface.phone,
+      '태블릿': OnoSurface.tablet,
+    }.entries) {
+      testWidgets('${entry.key} 에서 24칸이 스크롤 없이 들어간다', (tester) async {
+        // 트랙 끝 여백을 늘리면서 칸 사이를 그만큼 좁혔다. 한쪽만 건드리면
+        // 여기서 걸린다. 스크롤이 생기면 색 스물넷을 한눈에 못 본다.
+        await pumpThemeDialog(tester, surfaceSize: entry.value);
+
+        expect(trackPosition(tester).maxScrollExtent, 0);
+      });
+    }
+
+    testWidgets('첫 동그라미가 트랙 위 모서리에 붙지 않는다', (tester) async {
+      await pumpThemeDialog(tester, surfaceSize: OnoSurface.phone);
+
+      final first = tester.getRect(find.byKey(ThemeDialog.cellKey(0)));
+      final second = tester.getRect(find.byKey(ThemeDialog.cellKey(4)));
+
+      // 첫 칸이 가운데 칸보다 높다. 늘어난 자리가 바깥쪽에 붙어 있다는 뜻이다.
+      expect(first.height, greaterThan(second.height));
+    });
+  });
+
   group('좁은 화면과 큰 글자', () {
     testWidgets('작은 폰에서도 넘치지 않는다', (tester) async {
       await pumpThemeDialog(tester, surfaceSize: OnoSurface.smallPhone);
