@@ -71,6 +71,23 @@ abstract final class MissionPalette {
     ),
   };
 
+  /// 능력치 아이콘이다.
+  ///
+  /// **미션 카드의 그림([MissionIcon])과는 다른 자리에 쓴다.** 미션 카드는
+  /// 직접 그린 이모지를 쓰고, 여기 것은 `능력치 그 자체`를 가리키는 자리
+  /// (스탯창, 테마 트랙 머리, 꾸미기 디버그 패널)에 쓴다. 이모지는 크게
+  /// 그려야 읽히는데 그 자리들은 20px 남짓이라 뭉개진다.
+  ///
+  /// 넷 다 마이페이지 레벨 카드가 쓰던 아이콘 그대로다. 같은 능력치가 화면마다
+  /// 다른 그림이면 그림이 정보를 잃는다.
+  static const Map<MissionKind, IconData> _icons = {
+    MissionKind.attendance: Icons.waving_hand_rounded,
+    MissionKind.noteWrite: Icons.edit_note,
+    MissionKind.problemPractice: Icons.chrome_reader_mode_outlined,
+    MissionKind.notePractice: Icons.history,
+    MissionKind.etc: Icons.flag_outlined,
+  };
+
   /// 능력치 이름. 카드에 작게 붙여 색이 무엇을 뜻하는지 말로도 알린다.
   static const Map<MissionKind, String> _labels = {
     MissionKind.attendance: '출석',
@@ -103,6 +120,9 @@ abstract final class MissionPalette {
   }
 
   static String labelOfKind(MissionKind kind) => _labels[kind]!;
+
+  /// 이 능력치를 가리키는 아이콘.
+  static IconData iconOfKind(MissionKind kind) => _icons[kind]!;
 
   /// 받을 수 있는 카드의 바탕. 사용자가 고른 테마색을 아주 옅게 깐다.
   ///

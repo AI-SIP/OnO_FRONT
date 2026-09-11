@@ -10,6 +10,7 @@ import '../../../Module/Motion/AppMotion.dart';
 import '../../../Module/Motion/PressableScale.dart';
 import '../../../Module/Motion/SelectionPop.dart';
 import '../../../Module/Text/StandardText.dart';
+import 'CosmeticAbilityStyle.dart';
 
 /// 아이템 한 장을 개구리 위에 얹어 보여 주는 그림이다.
 ///
@@ -111,7 +112,7 @@ class CosmeticPartPreview extends StatelessWidget {
 ///
 /// - **장착 중**: 테마색 테두리와 옅은 바탕, 오른쪽 위에 체크
 /// - **보유**: 흰 바탕에 옅은 테두리
-/// - **미보유**: 흑백으로 죽이고 아래에 `Lv.14` 또는 `미션 보상` 배지
+/// - **미보유**: 흑백으로 죽이고 아래에 `출석 Lv.9` 처럼 조건 배지
 class CosmeticItemTile extends StatelessWidget {
   final CosmeticItemModel item;
 
@@ -265,10 +266,17 @@ class CosmeticItemTile extends StatelessWidget {
   }
 }
 
-/// 아직 못 쓰는 아이템에 왜 못 쓰는지를 한 조각으로 알린다.
+/// 아직 못 쓰는 아이템에 **무엇을 얼마나 올려야 열리는지**를 한 조각으로
+/// 알린다. `출석 Lv.9` 처럼 쓰고, 총 학습 레벨로 열리는 것은 `총 학습 Lv.14`
+/// 라고 쓴다.
 ///
-/// 레벨로 열리는 것은 몇 레벨부터인지 숫자로, 미션 보상은 말로 적는다. 미션
-/// 보상에 `Lv.0` 같은 없는 숫자를 쓰면 안 된다.
+/// 예전에는 `Lv.14` 만 적었다. 해금 기준이 총 학습 레벨 하나였을 때는 그것으로
+/// 충분했지만, 능력치가 넷으로 갈린 뒤로는 **무엇의 14 인지 알 수 없다.**
+/// 출석을 올려야 열리는 배경을 두고 복습만 하며 기다리게 된다.
+///
+/// **바탕을 그 능력치 색으로 물들인다.** 이름을 읽기 전에 색이 먼저 말한다.
+/// 스탯창에서 핑크로 차오르던 눈금판이 출석이었으니, 핑크 배지가 붙은 칸은
+/// 출석을 올리면 열린다. 색은 [CosmeticAbilityStyle] 이 정한다.
 ///
 /// 격자 칸과 다음 해금 예고가 같은 배지를 쓴다. 같은 것을 두 군데서 다르게
 /// 그리면 색이 정보를 잃는다.
@@ -284,16 +292,9 @@ class CosmeticLockBadge extends StatelessWidget {
     this.fontSize = 10,
   });
 
-  /// 미션 보상 배지 색. 미션 화면의 오답노트 갈래와 같은 보라다.
-  ///
-  /// 레벨로 열리는 것과 미션으로 받는 것은 얻는 길이 다르다. 색을 갈라 두면
-  /// 격자를 훑을 때 "이건 미션 쪽"이 한눈에 걸린다.
-  static const Color missionReward = Color(0xFFBA68C8);
-
   @override
   Widget build(BuildContext context) {
-    final byLevel = item.unlocksByLevel;
-    final text = byLevel ? 'Lv.${item.requiredLevel}' : '미션 보상';
+    final accent = CosmeticAbilityStyle.colorsOf(item.requiredAbility).accent;
 
     return Container(
       padding: EdgeInsets.symmetric(
@@ -301,17 +302,21 @@ class CosmeticLockBadge extends StatelessWidget {
         vertical: fontSize > 10 ? 2 : 0,
       ),
       decoration: BoxDecoration(
-        color: byLevel ? AppColors.textSecondary : missionReward,
+        color: accent,
         borderRadius: BorderRadius.circular(AppRadius.full),
       ),
-      child: StandardText(
-        text: text,
-        fontSize: fontSize,
-        fontWeight: FontWeight.w700,
-        color: Colors.white,
-        textAlign: TextAlign.center,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
+      // 능력치 이름이 붙어 길어졌다. 좁은 칸에서는 줄여서 앉힌다. 잘라 내면
+      // `문제 복습 Lv.15` 가 `문제 복…` 이 되어 조건이 사라진다.
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        child: StandardText(
+          text: CosmeticAbilityStyle.requirementOf(item),
+          fontSize: fontSize,
+          fontWeight: FontWeight.w700,
+          color: Colors.white,
+          textAlign: TextAlign.center,
+          maxLines: 1,
+        ),
       ),
     );
   }
