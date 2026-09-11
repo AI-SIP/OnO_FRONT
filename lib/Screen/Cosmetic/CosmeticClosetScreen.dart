@@ -365,9 +365,10 @@ class _CosmeticClosetScreenState extends State<CosmeticClosetScreen> {
     final byWidth = constraints.maxWidth * 0.50;
     final byHeight = constraints.maxHeight * 0.28;
     final smaller = byWidth < byHeight ? byWidth : byHeight;
-    // 태블릿에서는 폭이 남아도 280 에서 멈춘다. 더 키우면 아이템 격자가
-    // 첫 화면에서 사라진다.
-    return smaller.clamp(96.0, 280.0);
+    // 태블릿에서는 폭이 남아도 여기서 멈춘다. 더 키우면 아이템 격자가 첫
+    // 화면에서 사라진다. 무대가 주인공이 되면서 280 으로는 넓은 무대 한가운데
+    // 작은 조각이 놓인 것처럼 보여 한 단계 키웠다.
+    return smaller.clamp(96.0, 340.0);
   }
 
   /// 레벨을 직접 옮겨 보는 슬라이더.
