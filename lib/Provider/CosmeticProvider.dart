@@ -16,7 +16,9 @@ import '../Screen/Cosmetic/Mock/CosmeticMockData.dart';
 /// [equipped] 만 보고 있어서 그 위쪽은 바뀌지 않는다.
 class CosmeticProvider with ChangeNotifier {
   CosmeticProvider({int mockLevel = CosmeticMockData.maxLevel})
-      : _level = _clampLevel(mockLevel);
+      : _level = _clampLevel(mockLevel) {
+    _equipped = _presetFor(_level);
+  }
 
   /// 카탈로그. 더미라서 한 번 만들어 두고 계속 쓴다.
   final CosmeticLoadoutModel _catalog = CosmeticMockData.loadout;
@@ -26,6 +28,13 @@ class CosmeticProvider with ChangeNotifier {
 
   /// 지금 걸려 있는 것. 슬롯 키 → 아이템 키.
   Map<String, String> _equipped = const {};
+
+  /// 사람이 한 번이라도 직접 갈아입었는지.
+  ///
+  /// 아직 안 만졌으면 첫 차림을 계속 다시 맞춘다. 슬라이더를 훑을 때 그 레벨의
+  /// 사람이 처음 보게 될 모습이 나와야 하기 때문이다. 한 번 만진 뒤에는 고른
+  /// 것을 덮지 않고 레벨이 모자라져 못 쓰게 된 것만 내린다.
+  bool _touched = false;
 
   /// 마지막 실패 문구. 화면이 읽고 나면 [consumeFailure] 로 비운다.
   String? _lastFailureMessage;
@@ -64,11 +73,9 @@ class CosmeticProvider with ChangeNotifier {
   /// 개구리를 그릴 층들. 뒤에서 앞 순서다. [FrogCharacter] 에 그대로 넘긴다.
   List<CosmeticLayerModel> get layers => loadout.resolveLayers();
 
-  /// 그 레벨까지 열린 것을 자리마다 하나씩 다 걸친 모습.
+  /// 그 레벨의 **첫 차림**. 자리마다 가장 늦게 열린 것을 하나씩 걸친 모습이다.
   ///
-  /// **아무도 이렇게 입지 않는다.** 자리를 전부 채운 모습이라 겹침이 이상한
-  /// 짝을 찾기에는 좋아서 조합 검수 화면만 쓴다. 실제 차림은 사람이 고른
-  /// [equipped] 뿐이고, 이 앱이 알아서 입혀 주는 것은 없다.
+  /// 옷장을 한 번도 안 연 사람이 보는 모습이고, 조합 검수 화면도 이걸 쓴다.
   List<CosmeticLayerModel> layersAtLevel(int level) {
     final clamped = _clampLevel(level);
     return _loadoutAt(clamped, _presetFor(clamped)).resolveLayers();
@@ -132,7 +139,7 @@ class CosmeticProvider with ChangeNotifier {
     if (next == _level) return;
 
     _level = next;
-    _equipped = _pruneLocked(_equipped, next);
+    _equipped = _touched ? _pruneLocked(_equipped, next) : _presetFor(next);
     notifyListeners();
   }
 
@@ -162,6 +169,7 @@ class CosmeticProvider with ChangeNotifier {
       return;
     }
 
+    _touched = true;
     _equipped = _applyEquip(_equipped, slot: slot, itemKey: itemKey);
     _lastFailureMessage = null;
     notifyListeners();
@@ -171,6 +179,7 @@ class CosmeticProvider with ChangeNotifier {
   void unequip(String slot) {
     if (!_equipped.containsKey(slot)) return;
 
+    _touched = true;
     _equipped = _applyEquip(_equipped, slot: slot, itemKey: null);
     _lastFailureMessage = null;
     notifyListeners();
@@ -201,6 +210,7 @@ class CosmeticProvider with ChangeNotifier {
       next = _applyEquip(next, slot: item.slot, itemKey: item.itemKey);
     }
 
+    _touched = true;
     _equipped = next;
     _lastFailureMessage = null;
     notifyListeners();
@@ -208,6 +218,7 @@ class CosmeticProvider with ChangeNotifier {
 
   /// 지금 레벨의 기본 차림으로 되돌린다.
   void unequipAll() {
+    _touched = true;
     _equipped = const {};
     _lastFailureMessage = null;
     notifyListeners();
@@ -223,7 +234,8 @@ class CosmeticProvider with ChangeNotifier {
   /// 들고 있는 것을 전부 비운다. 로그아웃 때 부른다.
   void clear() {
     _level = CosmeticMockData.maxLevel;
-    _equipped = const {};
+    _touched = false;
+    _equipped = _presetFor(_level);
     _lastFailureMessage = null;
     notifyListeners();
   }
@@ -248,6 +260,13 @@ class CosmeticProvider with ChangeNotifier {
   ///
   /// 슬롯마다 **열려 있는 것 중 가장 늦게 열린 것**을 입는다. 레벨을 올릴수록
   /// 새로 얻은 것이 바로 보이는 쪽이 해금이 쌓이는 느낌을 준다.
+  /// 옷장을 한 번도 안 연 사람에게 입혀 줄 한 벌.
+  ///
+  /// 자리마다 **가장 늦게 열리는 것**을 고른다. 늦게 열릴수록 그 사람이
+  /// 여기까지 왔다는 표시라서, 레벨이 높은 사람이 맨 개구리로 보이지 않는다.
+  ///
+  /// **처음 만들 때 한 번만 쓴다.** 레벨이 바뀌어도 다시 계산하지 않는다.
+  /// 매번 다시 맞추면 사람이 골라 둔 것을 앱이 덮어쓰게 된다.
   Map<String, String> _presetFor(int level) {
     final picked = <String, CosmeticItemModel>{};
 

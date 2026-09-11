@@ -7,19 +7,25 @@ import 'package:ono/Provider/CosmeticProvider.dart';
 import 'package:ono/Screen/Cosmetic/Mock/CosmeticMockData.dart';
 
 void main() {
-  group('처음 상태', () {
-    // 알아서 입혀 주는 차림이 없다. 자리마다 열린 것을 다 걸치면 목도리가
-    // 가방을 덮고 학사복 위에 또 목도리가 얹혀 잡동사니가 된다. 무엇을 입을지는
-    // 사람이 고른다.
-    test('레벨이 높아도 맨몸으로 시작한다', () {
+  group('첫 차림', () {
+    // 옷장을 한 번도 안 연 사람에게 입혀 주는 한 벌이다. 자리마다 가장 늦게
+    // 열린 것을 고른다. 레벨이 높은 사람이 맨 개구리로 보이지 않게 하려는 것이다.
+    test('자리마다 가장 늦게 열린 것을 입는다', () {
       final provider = CosmeticProvider(mockLevel: 15);
 
-      expect(provider.equipped, isEmpty);
-      expect(provider.layers, hasLength(1));
-      expect(provider.layers.single.isBase, isTrue);
+      expect(provider.equipped, {
+        'BACKGROUND': 'bg_night', // Lv.13
+        'BAG': 'bag_mini_backpack', // Lv.8
+        'OUTFIT': 'outfit_graduate', // Lv.15
+        'NECK': 'scarf', // Lv.5
+        'FACE': 'glasses_sun', // Lv.11
+        'HEAD': 'hat_graduate', // Lv.15
+        'HAND': 'prop_diploma', // Lv.15
+        // BADGE 는 레벨로 열리는 것이 없어서 빈다.
+      });
     });
 
-    test('Lv.1 도 마찬가지다', () {
+    test('Lv.1 은 아직 열린 것이 없어서 개구리 한 장뿐이다', () {
       final provider = CosmeticProvider(mockLevel: 1);
 
       expect(provider.equipped, isEmpty);
@@ -34,15 +40,20 @@ void main() {
   });
 
   group('setMockLevel', () {
-    test('레벨을 옮겨도 입혀 주지 않는다', () {
-      final provider = CosmeticProvider(mockLevel: 1);
+    test('아직 안 갈아입었으면 그 레벨의 첫 차림으로 다시 맞춘다', () {
+      final provider = CosmeticProvider(mockLevel: 15);
 
-      provider.setMockLevel(15);
+      provider.setMockLevel(6);
 
-      expect(provider.equipped, isEmpty);
+      expect(provider.equipped, {
+        'BACKGROUND': 'bg_spring', // Lv.3
+        'NECK': 'scarf', // Lv.5
+        'FACE': 'glasses_round', // Lv.4
+        'HEAD': 'hat_beanie', // Lv.6
+      });
     });
 
-    test('고른 것을 덮지 않는다', () {
+    test('한 번 갈아입은 뒤에는 고른 것을 덮지 않는다', () {
       final provider = CosmeticProvider(mockLevel: 15);
       provider.equip('HEAD', 'headband_sprout');
 
@@ -115,8 +126,6 @@ void main() {
 
     test('unequip 은 그 자리만 비운다', () {
       final provider = CosmeticProvider(mockLevel: 15);
-      provider.equip('HEAD', 'hat_graduate');
-      provider.equip('OUTFIT', 'outfit_graduate');
 
       provider.unequip('HEAD');
 

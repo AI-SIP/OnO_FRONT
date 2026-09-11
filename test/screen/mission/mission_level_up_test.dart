@@ -245,9 +245,9 @@ void main() {
       Map<String, String> wearing = const {},
     }) async {
       if (reduceMotion) disableAnimationsForTest(tester);
-      // 알아서 입혀 주는 차림이 없어서, 오르기 전에 무엇을 입고 있었는지는
-      // 이렇게 직접 걸쳐 준다.
-      final cosmetic = CosmeticProvider(mockLevel: level);
+      // 연출은 오르기 전 차림에서 시작한다. 그래서 프로바이더도 오르기 전
+      // 레벨로 세운다. [wearing] 으로 그 위에 따로 걸칠 수 있다.
+      final cosmetic = CosmeticProvider(mockLevel: previousLevel ?? level);
       wearing.forEach(cosmetic.equip);
       await pumpOnoWidget(
         tester,
@@ -322,7 +322,6 @@ void main() {
         previousLevel: 14,
         reduceMotion: false,
         settle: false,
-        wearing: const {'HEAD': 'hat_crown'},
       );
 
       // 연출은 한순간에 지나가서 마지막 프레임만 보면 다 입은 모습뿐이다.
