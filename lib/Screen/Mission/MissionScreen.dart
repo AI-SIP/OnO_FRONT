@@ -16,6 +16,7 @@ import '../../Provider/MissionProvider.dart';
 import '../../Provider/UserProvider.dart';
 import 'ExpiredMissionSection.dart';
 import 'MissionCard.dart';
+import '../Cosmetic/CosmeticClosetScreen.dart';
 import 'MissionHeroCard.dart';
 import 'MissionHistoryScreen.dart';
 import 'MissionLevelUp.dart';
@@ -318,6 +319,12 @@ class _MissionScreenState extends State<MissionScreen> {
                             context,
                             TossPageRoute(
                               builder: (_) => const MissionHistoryScreen(),
+                            ),
+                          ),
+                          onFrogTap: () => Navigator.push(
+                            context,
+                            TossPageRoute(
+                              builder: (_) => const CosmeticClosetScreen(),
                             ),
                           ),
                         ),

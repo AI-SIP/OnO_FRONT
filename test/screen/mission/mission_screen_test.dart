@@ -24,6 +24,7 @@ import 'package:ono/Module/Design/AppColors.dart';
 import 'package:ono/Module/Motion/AnimatedGauge.dart';
 import 'package:ono/Module/Motion/AppearTransition.dart';
 import 'package:ono/Model/Mission/MissionHistoryModel.dart';
+import 'package:ono/Screen/Cosmetic/CosmeticClosetScreen.dart';
 import 'package:ono/Screen/Mission/MissionCard.dart';
 import 'package:ono/Screen/Mission/MissionHistoryScreen.dart';
 import 'package:ono/Module/Theme/ThemeHandler.dart';
@@ -35,6 +36,7 @@ import 'package:ono/Screen/Mission/MissionRewardCelebration.dart';
 import 'package:ono/Screen/Mission/MissionRewardChip.dart';
 import 'package:ono/Screen/Mission/MissionLevelUp.dart';
 import 'package:ono/Screen/Mission/MissionScreen.dart';
+import 'package:ono/Screen/User/Widget/FrogCharacter.dart';
 
 import '../../helpers/helpers.dart';
 
@@ -600,6 +602,26 @@ void main() {
   });
 
   group('히어로', () {
+    testWidgets('개구리를 누르면 옷장으로 간다', (tester) async {
+      // 마이페이지와 같은 약속이다. 이 앱에서 개구리를 누르면 늘 꾸미러 가는
+      // 문이 열린다.
+      final missionService = MockMissionService();
+      when(() => missionService.getMissions())
+          .thenAnswer((_) async => boardWithThreeStates());
+
+      await pumpMissionScreen(tester, missionService: missionService);
+
+      await tester.tap(
+        find.descendant(
+          of: find.byType(MissionHeroCard),
+          matching: find.byType(FrogCharacter),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byType(CosmeticClosetScreen), findsOneWidget);
+    });
+
     testWidgets('종합 레벨과 경험치 바는 두지 않는다', (tester) async {
       // 미션 화면에 레벨 게이지까지 두니 복잡해졌다. 레벨은 마이페이지에서 본다.
       final missionService = MockMissionService();

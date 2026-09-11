@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ono/Model/User/UserInfoModel.dart';
 import 'package:ono/Module/Theme/ThemeHandler.dart';
+import 'package:ono/Screen/Cosmetic/CosmeticClosetScreen.dart';
 import 'package:ono/Screen/User/Widget/FrogCharacter.dart';
 import 'package:ono/Screen/Mission/MissionScreen.dart';
 import 'package:ono/Screen/User/Widget/UserLevelCard.dart';
@@ -148,7 +149,7 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  group('미션 화면으로 가는 길', () {
+  group('다른 화면으로 가는 길', () {
     testWidgets('활동별 경험치 위에 미션 보기가 있다', (tester) async {
       // 아래 네 줄이 미션으로 오르는 경험치라서 그 바로 위에 둔다.
       await pumpUserLevelCard(tester, userInfo: _userInfo());
@@ -181,20 +182,41 @@ void main() {
       expect(find.byType(MissionScreen), findsOneWidget);
     });
 
-    testWidgets('개구리를 누르면 말풍선이 뜨고 화면은 그대로다', (tester) async {
-      // 카드 전체를 누르게 하면 개구리의 격려 말풍선과 화면 이동이 함께
-      // 일어난다. 개구리 쪽은 예전 그대로여야 한다.
+    testWidgets('개구리를 누르면 옷장으로 간다', (tester) async {
+      // 꾸미러 가는 문이 개구리 자신이다. 작은 글자 링크 하나만 있던 때보다
+      // 훨씬 잘 보인다. 왼쪽 도넛은 미션이라 둘이 겹치지 않는다.
       disableAnimationsForTest(tester);
+      await withMockedNetworkImages(() async {
+        await pumpUserLevelCard(tester, userInfo: null);
+
+        await tester.tap(find.byType(FrogCharacter));
+        await tester.pumpAndSettle();
+      });
+
+      expect(find.byType(CosmeticClosetScreen), findsOneWidget);
+      expect(find.byType(MissionScreen), findsNothing);
+    });
+
+    testWidgets('마이페이지 개구리는 격려 말풍선을 띄우지 않는다', (tester) async {
+      // 말풍선은 옷장 무대로 자리를 옮겼다. 여기서 둘 다 일어나면 누름 하나가
+      // 두 가지 일을 하게 된다.
       await pumpUserLevelCard(tester, userInfo: null);
 
-      await tester.tap(find.byType(FrogCharacter));
-      await tester.pump(const Duration(milliseconds: 400));
+      final frog = tester.widget<FrogCharacter>(find.byType(FrogCharacter));
+      expect(frog.showEncouragement, isFalse);
+      expect(frog.onTap, isNotNull);
+    });
 
-      expect(find.byType(MissionScreen), findsNothing);
+    testWidgets('개구리 꾸미기 링크도 옷장으로 간다', (tester) async {
+      disableAnimationsForTest(tester);
+      await withMockedNetworkImages(() async {
+        await pumpUserLevelCard(tester, userInfo: _userInfo());
 
-      // 말풍선은 2초 뒤 스스로 사라진다. 타이머를 흘려보낸다.
-      await tester.pump(const Duration(seconds: 3));
-      await tester.pumpAndSettle();
+        await tester.tap(find.text('개구리 꾸미기'));
+        await tester.pumpAndSettle();
+      });
+
+      expect(find.byType(CosmeticClosetScreen), findsOneWidget);
     });
   });
 }

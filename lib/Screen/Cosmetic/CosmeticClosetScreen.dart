@@ -281,10 +281,14 @@ class _CosmeticClosetScreenState extends State<CosmeticClosetScreen> {
           const SizedBox(height: AppSpacing.xs),
           _EquipPulse(
             tick: _equipTick,
+            // 격려 말풍선은 이제 여기서만 뜬다. 마이페이지와 미션의 개구리는
+            // 누르면 이 화면으로 오는 문이라서 말풍선을 띄우지 않는다. 대신
+            // 꾸미러 온 자리에서 개구리가 한마디 하는 쪽이 더 어울린다.
             child: FrogCharacter(
               layers: cosmetic.layers,
               size: frogSize,
               borderRadius: AppRadius.large,
+              showEncouragement: true,
             ),
           ),
           _buildLevelSlider(cosmetic, themeProvider),

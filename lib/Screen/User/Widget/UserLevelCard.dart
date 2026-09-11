@@ -66,8 +66,9 @@ class UserLevelCard extends StatelessWidget {
 
   /// 개구리 옷장으로 간다.
   ///
-  /// 개구리를 직접 누르면 격려 말풍선이 떠야 해서 그쪽에 화면 이동을 걸 수
-  /// 없다. 누르면 무엇이 일어날지 글로 적어 둔 링크를 따로 둔다.
+  /// **개구리를 직접 누르는 것이 첫 번째 길이다.** 꾸미러 가는 문이 개구리
+  /// 자신인 쪽이 가장 자연스럽다. 격려 말풍선은 옷장 무대의 개구리로 자리를
+  /// 옮겼다. 여기 링크는 그 길이 있다는 것을 글로도 알리는 두 번째 길이다.
   void _openCloset(BuildContext context) {
     Navigator.push(
       context,
@@ -78,8 +79,8 @@ class UserLevelCard extends StatelessWidget {
   /// 활동별 경험치 위에 붙는 작은 길잡이다.
   ///
   /// 아래 네 줄이 미션으로 오르는 경험치라서 그 바로 위에 둔다. 카드 전체를
-  /// 누르게 하지 않는 이유는 개구리에 눌러서 말풍선을 띄우는 기존 동작이 있어서,
-  /// 카드가 누름을 가로채면 말풍선과 화면 이동이 함께 일어나기 때문이다.
+  /// 누르게 하지 않는 이유는 왼쪽 도넛과 오른쪽 개구리가 서로 다른 화면으로
+  /// 가기 때문이다. 카드가 누름을 가로채면 둘 다 죽는다.
   Widget _buildMissionLink(BuildContext context, {required bool isTablet}) {
     // 좁은 폰에서 두 링크가 한 줄에 다 안 들어가면 아래로 접히게 한다.
     return Wrap(
@@ -179,8 +180,8 @@ class UserLevelCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Expanded(
-                // 개구리는 눌러야 말풍선이 뜬다. 그쪽까지 누름을 가로채면 기존
-                // 동작이 죽으므로 레벨 도넛 쪽만 미션 화면으로 이어 준다.
+                // 왼쪽 도넛은 미션, 오른쪽 개구리는 옷장이다. 카드 전체를
+                // 누르게 하면 둘 중 하나만 남는다.
                 child: PressableScale(
                   onTap: () => _openMissions(context),
                   child: _buildLevelDonut(
@@ -198,9 +199,15 @@ class UserLevelCard extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     SizedBox(height: frogTopSpace),
+                    // 개구리를 누르면 바로 옷장으로 간다. 꾸미러 가는 문이
+                    // 개구리 자신인 쪽이 작은 글자 링크보다 훨씬 잘 보인다.
+                    // 격려 말풍선은 옷장 무대로 옮겨서, 여기서는 누름 하나가
+                    // 한 가지 일만 하게 한다.
                     FrogCharacter(
                       layers: context.watch<CosmeticProvider>().layers,
                       size: frogSize,
+                      showEncouragement: false,
+                      onTap: () => _openCloset(context),
                     ),
                   ],
                 ),
