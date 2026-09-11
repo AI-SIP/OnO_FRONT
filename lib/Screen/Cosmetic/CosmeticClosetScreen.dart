@@ -119,7 +119,7 @@ class _CosmeticClosetScreenState extends State<CosmeticClosetScreen> {
         elevation: 0,
         centerTitle: true,
         title: StandardText(
-          text: '옷장',
+          text: '꾸미기',
           fontSize: 18,
           color: themeProvider.primaryColor,
         ),
