@@ -17,6 +17,7 @@ import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/CosmeticProvider.dart';
 import 'CosmeticCombinationPreviewScreen.dart';
+import 'Widget/CosmeticCollectionMeter.dart';
 import 'Widget/CosmeticItemTile.dart';
 import 'Widget/CosmeticSetBanner.dart';
 import 'Widget/CosmeticSlotTabs.dart';
@@ -291,11 +292,21 @@ class _CosmeticClosetScreenState extends State<CosmeticClosetScreen> {
       ),
       child: Column(
         children: [
-          // 되돌리기는 개구리 위에 겹치지 않게 한 줄을 따로 쓴다. 겹쳐 두면
-          // 배경을 입은 개구리의 모서리를 가린다.
-          Align(
-            alignment: Alignment.centerRight,
-            child: _buildResetButton(cosmetic, color),
+          // 수집률과 되돌리기는 개구리 위에 겹치지 않게 한 줄을 따로 쓴다.
+          // 겹쳐 두면 배경을 입은 개구리의 모서리를 가린다.
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Expanded(
+                child: CosmeticCollectionMeter(
+                  owned: cosmetic.items.where((item) => item.owned).length,
+                  total: cosmetic.items.length,
+                  color: color,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              _buildResetButton(cosmetic, color),
+            ],
           ),
           const SizedBox(height: AppSpacing.xs),
           CosmeticStageFrog(

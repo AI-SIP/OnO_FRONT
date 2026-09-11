@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ono/Provider/CosmeticProvider.dart';
 import 'package:ono/Screen/Cosmetic/CosmeticClosetScreen.dart';
+import 'package:ono/Screen/Cosmetic/Widget/CosmeticCollectionMeter.dart';
 import 'package:ono/Screen/Cosmetic/Widget/CosmeticStage.dart';
 import 'package:ono/Screen/User/Widget/FrogCharacter.dart';
 
@@ -71,6 +72,38 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(cosmetic.equipped, isEmpty);
+    });
+  });
+
+  group('수집률', () {
+    testWidgets('무대 맨 위에서 몇 개 중 몇 개인지 알려 준다', (tester) async {
+      // Lv.12 까지 열리는 것은 Lv.2 부터 Lv.12 까지 열한 가지다. 나머지는
+      // 더 높은 레벨이거나 미션 보상이다.
+      await pumpCloset(tester, level: 12);
+
+      expect(find.byType(CosmeticCollectionMeter), findsOneWidget);
+      expect(find.text('모은 치장'), findsOneWidget);
+      expect(find.text('11'), findsOneWidget);
+      expect(find.text(' / 40'), findsOneWidget);
+    });
+
+    testWidgets('레벨을 올리면 모은 개수가 는다', (tester) async {
+      final cosmetic = await pumpCloset(tester, level: 12);
+
+      cosmetic.setMockLevel(15);
+      await tester.pumpAndSettle();
+
+      // 열한 가지에 밤하늘(13)과 왕관(14)과 학사 세트 셋(15)을 더해
+      // 열여섯이다. 레벨로 열리는 것은 여기까지고 나머지 스물넷은 미션 보상이다.
+      expect(find.text('16'), findsOneWidget);
+    });
+
+    testWidgets('수집률은 무대 안, 개구리보다 위에 있다', (tester) async {
+      await pumpCloset(tester);
+
+      final meterY = tester.getTopLeft(find.byType(CosmeticCollectionMeter)).dy;
+      final frogY = tester.getTopLeft(find.byType(CosmeticStageFrog)).dy;
+      expect(meterY, lessThan(frogY));
     });
   });
 
