@@ -33,12 +33,26 @@ class CosmeticStageFrog extends StatelessWidget {
   /// 갈아입은 횟수. 이 값이 바뀔 때마다 개구리가 한 번 들썩인다.
   final int equipTick;
 
+  /// 개구리를 눌렀을 때. null 이면 누름이 아무 데도 가지 않는다.
+  ///
+  /// 옷장에서는 이미 꾸미는 자리에 와 있어서 갈 데가 없다. 캐릭터 탭처럼
+  /// 무대만 빌려 쓰는 화면이 옷장으로 가는 문으로 쓴다.
+  final VoidCallback? onTap;
+
+  /// 눌렀을 때 격려 말풍선을 띄울지.
+  ///
+  /// 옷장 무대에서만 켠다. 누름이 옷장으로 가는 문인 자리에서는 한 번 누를
+  /// 때 두 가지 일이 일어나면 안 된다.
+  final bool showEncouragement;
+
   const CosmeticStageFrog({
     super.key,
     required this.layers,
     required this.size,
     required this.color,
     required this.equipTick,
+    this.onTap,
+    this.showEncouragement = true,
   });
 
   /// 바닥 타원의 높이. 개구리 크기를 따라간다.
@@ -75,7 +89,8 @@ class CosmeticStageFrog extends StatelessWidget {
               layers: layers,
               size: size,
               borderRadius: AppRadius.large,
-              showEncouragement: true,
+              showEncouragement: showEncouragement,
+              onTap: onTap,
             ),
           ),
         ],

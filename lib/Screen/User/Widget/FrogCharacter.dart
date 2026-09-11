@@ -292,3 +292,76 @@ class _SpeechBubbleTailPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
+
+/// 개구리 얼굴만 동그랗게 잘라 보여 준다.
+///
+/// 개구리는 전신 그림인데 프로필 사진과 하단 탭 아이콘은 작은 원이다. 512
+/// 사각형을 그대로 원에 우겨 넣으면 머리가 원 위쪽에 조그맣게 박히고 아래
+/// 절반은 발이 차지한다. 그래서 **얼굴이 있는 자리만 잘라 확대**한다.
+///
+/// [assets/Cosmetic/BASE_HEAD.png] 한 장을 쓰는 방법도 있지만 그러면 배경도
+/// 목도리도 옷깃도 사라지고 모자와 안경만 남는다. 꾸민 것이 프로필에 안
+/// 보이면 꾸밀 이유가 없어지므로, 입은 그대로를 그린 뒤 얼굴 언저리를
+/// 도려내는 쪽을 택했다. 배경 파츠는 원을 가득 채우는 배경이 되고, 목도리와
+/// 옷깃은 턱 아래에 걸린다.
+///
+/// 잘라 낼 자리는 파츠 그림들의 실제 위치에서 왔다. 개구리 머리는 512 안에서
+/// 가로 112~399, 세로 87~284 에 있고 모자는 25 까지 올라간다. 그 범위를
+/// 품는 정사각형이 아래 세 상수다.
+class FrogHeadAvatar extends StatelessWidget {
+  /// 겹쳐 그릴 층들. `CosmeticProvider.layers` 를 그대로 넘긴다.
+  final List<CosmeticLayerModel> layers;
+
+  /// 원 하나의 지름.
+  final double size;
+
+  const FrogHeadAvatar({
+    super.key,
+    required this.layers,
+    required this.size,
+  });
+
+  /// 잘라 낼 정사각형의 한 변. 512 사각형에 대한 비율이다.
+  ///
+  /// 0.64 까지 좁혀 보면 얼굴은 커지지만 학사모 술과 왕관 꼭대기가 원 밖으로
+  /// 밀린다. 모자를 다 품으면서 얼굴이 가장 큰 값이 0.70 이다.
+  static const double _cropSide = 0.70;
+
+  /// 잘라 낼 정사각형의 왼쪽 위 모서리. 512 사각형에 대한 비율이다.
+  ///
+  /// 가로는 가운데(0.15 + 0.70 / 2 = 0.50), 세로는 맨 위에 붙인다. 모자가
+  /// 그림 맨 위까지 올라오는 것이 있어서 위쪽으로는 뺄 여유가 없다.
+  static const double _cropLeft = 0.15;
+  static const double _cropTop = 0.0;
+
+  @override
+  Widget build(BuildContext context) {
+    // 잘라 낸 조각이 [size] 가 되려면 개구리를 이만큼 키워야 한다.
+    final full = size / _cropSide;
+
+    return SizedBox(
+      width: size,
+      height: size,
+      child: ClipOval(
+        child: Stack(
+          clipBehavior: Clip.hardEdge,
+          children: [
+            Positioned(
+              left: -_cropLeft * full,
+              top: -_cropTop * full,
+              width: full,
+              height: full,
+              // 이미 원으로 자르고 있다. 여기서 또 둥글리면 배경 파츠의
+              // 모서리가 원 안쪽에서 한 번 더 깎인다.
+              child: FrogLayerStack(
+                layers: layers,
+                size: full,
+                borderRadius: 0,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
