@@ -1,10 +1,17 @@
-// 옷장 화면 위젯 테스트.
+// 꾸미기 화면 위젯 테스트.
 //
 // 무대(개구리가 서 있는 자리)와 아이템 격자가 한 화면에 붙박이로 같이 있어서
 // 세로가 빡빡하다. 작은 폰과 태블릿에서 넘치지 않는지, 무대가 제 자리에
 // 그려지는지를 여기서 잠근다.
+//
+// 이 화면은 **시착**이다. 아이템을 눌러도 그 자리에서 확정되지 않고 저장을
+// 눌러야 [CosmeticProvider] 로 넘어간다. 하단 탭 아이콘과 프로필 사진이
+// 프로바이더를 보고 있어서, 입어 보는 중에 그것들까지 바뀌면 안 된다. 아래
+// `시착` 그룹이 그 경계를 잠근다.
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:ono/Model/Cosmetic/CosmeticLoadoutModel.dart';
+import 'package:ono/Module/Motion/TossPageRoute.dart';
 import 'package:ono/Provider/CosmeticProvider.dart';
 import 'package:ono/Screen/Cosmetic/CosmeticClosetScreen.dart';
 import 'package:ono/Screen/Cosmetic/Widget/CosmeticCollectionMeter.dart';
@@ -14,6 +21,28 @@ import 'package:ono/Screen/Cosmetic/Widget/CosmeticStage.dart';
 import 'package:ono/Screen/User/Widget/FrogCharacter.dart';
 
 import '../../helpers/helpers.dart';
+
+/// 꾸미기 화면을 `Navigator.push` 로 띄우기 위한 앞 화면.
+///
+/// 뒤로 가기를 눌렀을 때를 보려면 되돌아갈 자리가 있어야 한다.
+class _Host extends StatelessWidget {
+  const _Host();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Center(
+        child: TextButton(
+          onPressed: () => Navigator.push(
+            context,
+            TossPageRoute(builder: (_) => const CosmeticClosetScreen()),
+          ),
+          child: const Text('열기'),
+        ),
+      ),
+    );
+  }
+}
 
 void main() {
   setUpOnoWidgetTest();
@@ -38,6 +67,37 @@ void main() {
     return cosmetic;
   }
 
+  /// 앞 화면을 거쳐 띄운다. 뒤로 가기를 보는 테스트가 쓴다.
+  Future<CosmeticProvider> pushCloset(WidgetTester tester) async {
+    disableAnimationsForTest(tester);
+    final cosmetic = CosmeticProvider(mockLevel: 12);
+
+    await withMockedNetworkImages(() async {
+      await pumpOnoWidget(
+        tester,
+        const _Host(),
+        cosmeticProvider: cosmetic,
+      );
+      await tester.tap(find.text('열기'));
+      await tester.pumpAndSettle();
+    });
+
+    return cosmetic;
+  }
+
+  /// 무대에 선 개구리가 지금 입고 있는 층들.
+  List<CosmeticLayerModel> stageLayers(WidgetTester tester) {
+    return tester
+        .widget<CosmeticStageFrog>(find.byType(CosmeticStageFrog))
+        .layers;
+  }
+
+  /// 알림이 스스로 닫힐 때까지 태워 보낸다. 안 그러면 타이머가 남는다.
+  Future<void> settleToast(WidgetTester tester) async {
+    await tester.pump(const Duration(seconds: 4));
+    await tester.pumpAndSettle();
+  }
+
   group('무대', () {
     testWidgets('개구리가 무대 위에 선다', (tester) async {
       await pumpCloset(tester);
@@ -53,8 +113,6 @@ void main() {
     });
 
     testWidgets('무대의 개구리는 격려 말풍선을 띄운다', (tester) async {
-      // 마이페이지와 미션의 개구리에서 옮겨 온 기능이다. 꾸미러 온 자리에서만
-      // 한마디 한다.
       await pumpCloset(tester);
 
       final frog = tester.widget<FrogCharacter>(
@@ -65,15 +123,160 @@ void main() {
       );
       expect(frog.showEncouragement, isTrue);
     });
+  });
 
-    testWidgets('전부 벗기를 누르면 걸친 것이 없어진다', (tester) async {
+  group('시착', () {
+    testWidgets('처음 들어오면 저장할 것이 없어 저장 줄이 안 뜬다', (tester) async {
+      await pumpCloset(tester);
+
+      expect(find.text('저장'), findsNothing);
+      expect(find.text('되돌리기'), findsNothing);
+    });
+
+    testWidgets('아이템을 걸쳐도 프로바이더는 그대로다', (tester) async {
+      // 여기서 프로바이더가 바뀌면 하단 탭 아이콘과 프로필 사진이 아직 정하지도
+      // 않은 차림으로 같이 바뀐다.
+      final cosmetic = await pumpCloset(tester);
+      final before = Map<String, String>.from(cosmetic.equipped);
+
+      await tester.tap(find.text('봄'));
+      await tester.pumpAndSettle();
+
+      expect(cosmetic.equipped, before);
+    });
+
+    testWidgets('걸쳐 본 것이 무대의 개구리에는 바로 보인다', (tester) async {
+      // 바로 안 보이면 써 보는 의미가 없다.
+      await pumpCloset(tester);
+      final before = stageLayers(tester);
+
+      await tester.tap(find.text('봄'));
+      await tester.pumpAndSettle();
+
+      expect(stageLayers(tester), isNot(before));
+    });
+
+    testWidgets('걸쳐 보면 저장 줄이 올라온다', (tester) async {
+      await pumpCloset(tester);
+
+      await tester.tap(find.text('봄'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('저장'), findsOneWidget);
+      expect(find.text('되돌리기'), findsOneWidget);
+    });
+
+    testWidgets('저장을 눌러야 프로바이더에 반영된다', (tester) async {
+      final cosmetic = await pumpCloset(tester);
+
+      await tester.tap(find.text('봄'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('저장'));
+      await tester.pumpAndSettle();
+
+      final slot = cosmetic.slots.first.slot;
+      expect(cosmetic.equippedItemKeyOf(slot), isNotNull);
+      expect(cosmetic.itemOf(cosmetic.equippedItemKeyOf(slot))?.nameKo, '봄');
+
+      // 저장하고 나면 저장 줄이 다시 사라진다.
+      expect(find.text('저장'), findsNothing);
+
+      await settleToast(tester);
+    });
+
+    testWidgets('되돌리기를 누르면 원래 차림으로 돌아간다', (tester) async {
+      final cosmetic = await pumpCloset(tester);
+      final before = Map<String, String>.from(cosmetic.equipped);
+
+      await tester.tap(find.text('봄'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('되돌리기'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('저장'), findsNothing);
+      expect(cosmetic.equipped, before);
+    });
+
+    testWidgets('전부 벗기도 시착이라 저장해야 진짜 벗겨진다', (tester) async {
       final cosmetic = await pumpCloset(tester);
       expect(cosmetic.equipped, isNotEmpty);
 
       await tester.tap(find.text('전부 벗기'));
       await tester.pumpAndSettle();
 
+      // 아직 프로바이더는 그대로다. 개구리만 벗었다.
+      expect(cosmetic.equipped, isNotEmpty);
+      expect(find.text('저장'), findsOneWidget);
+
+      await tester.tap(find.text('저장'));
+      await tester.pumpAndSettle();
+
       expect(cosmetic.equipped, isEmpty);
+
+      await settleToast(tester);
+    });
+
+    testWidgets('못 가진 것을 눌러도 걸쳐지지 않고 이유만 알려 준다', (tester) async {
+      // Lv.12 의 배경 자리에서 밤하늘은 Lv.13 부터다.
+      await pumpCloset(tester, level: 12);
+
+      // 밤하늘은 예고 카드에도 적혀 있다. 격자의 칸 쪽을 누른다.
+      await tester.tap(find.descendant(
+        of: find.byType(CosmeticItemTile),
+        matching: find.text('밤하늘'),
+      ));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Lv.13 부터 쓸 수 있어요.'), findsOneWidget);
+      // 못 가진 것을 눌렀다고 저장할 것이 생기면 안 된다.
+      expect(find.text('저장'), findsNothing);
+
+      await settleToast(tester);
+    });
+  });
+
+  group('저장하지 않고 나가기', () {
+    testWidgets('바뀐 것이 없으면 그냥 나간다', (tester) async {
+      await pushCloset(tester);
+
+      await tester.tap(find.byType(BackButton));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(CosmeticClosetScreen), findsNothing);
+    });
+
+    testWidgets('바뀐 것이 있으면 물어본다', (tester) async {
+      await pushCloset(tester);
+
+      await tester.tap(find.text('봄'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byType(BackButton));
+      await tester.pumpAndSettle();
+
+      expect(find.text('저장하지 않고 나갈까요?'), findsOneWidget);
+      // 아직 화면은 그대로다.
+      expect(find.byType(CosmeticClosetScreen), findsOneWidget);
+
+      await tester.tap(find.text('계속 꾸미기'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(CosmeticClosetScreen), findsOneWidget);
+      expect(find.text('저장'), findsOneWidget);
+    });
+
+    testWidgets('나가기를 고르면 입어 본 것이 사라진다', (tester) async {
+      final cosmetic = await pushCloset(tester);
+      final before = Map<String, String>.from(cosmetic.equipped);
+
+      await tester.tap(find.text('봄'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byType(BackButton));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('나가기'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(CosmeticClosetScreen), findsNothing);
+      expect(cosmetic.equipped, before);
     });
   });
 

@@ -12,6 +12,7 @@ import '../../Module/Motion/AppearTransition.dart';
 import '../../Module/Motion/AppHaptic.dart';
 import '../../Module/Motion/AppMotion.dart';
 import '../../Module/Motion/PressableScale.dart';
+import '../../Module/Motion/TossDialog.dart';
 import '../../Module/Motion/TossPageRoute.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
@@ -23,12 +24,21 @@ import 'Widget/CosmeticNextUnlockCard.dart';
 import 'Widget/CosmeticSlotTabs.dart';
 import 'Widget/CosmeticStage.dart';
 
-/// 개구리 옷장이다.
+/// 개구리를 꾸미는 화면이다.
 ///
-/// 화면은 두 층이다. 위에는 지금 차림 그대로의 개구리와 레벨 슬라이더가
-/// **붙박이로** 있고, 아래에서 자리를 골라 아이템을 갈아 끼운다. 무엇을 눌러도
-/// 위쪽 개구리가 바로 바뀌는 것이 이 화면의 전부라서, 개구리는 스크롤을 따라
-/// 사라지지 않는다.
+/// 화면은 두 층이다. 위에는 개구리와 레벨 슬라이더가 **붙박이로** 있고,
+/// 아래에서 자리를 골라 아이템을 갈아 끼운다. 무엇을 눌러도 위쪽 개구리가
+/// 바로 바뀌는 것이 이 화면의 전부라서, 개구리는 스크롤을 따라 사라지지
+/// 않는다.
+///
+/// **시착하는 화면이다.** 아이템을 눌러도 그 자리에서 확정되지 않는다. 고른
+/// 것은 이 화면이 [_fitting] 에 들고 있다가 **저장**을 눌러야
+/// [CosmeticProvider] 로 넘어간다. 그냥 나가면 원래 차림으로 돌아가고, 바뀐
+/// 것이 있는데 나가려 하면 한 번 물어본다.
+///
+/// 시착 중인 차림을 프로바이더에 넣지 않는 데는 이유가 있다. 하단 탭 아이콘과
+/// 프로필 사진이 프로바이더의 개구리를 보고 있어서, 입어 보는 중에 그것들까지
+/// 따라 바뀌면 아직 정하지도 않은 차림이 앱 전체에 퍼진다.
 ///
 /// 서버를 타지 않는다. 카탈로그도 장착 상태도 [CosmeticProvider] 가 더미로
 /// 들고 있다.
@@ -46,12 +56,28 @@ class _CosmeticClosetScreenState extends State<CosmeticClosetScreen> {
   /// 갈아입은 횟수. 개구리를 한 번 들썩이게 하는 신호로만 쓴다.
   int _equipTick = 0;
 
+  /// 지금 입어 보고 있는 차림. 슬롯 키 → 아이템 키.
+  ///
+  /// null 이면 아직 아무것도 안 만졌다는 뜻이라 프로바이더의 차림을 그대로
+  /// 따른다. 저장하거나 되돌리면 다시 null 이 된다.
+  Map<String, String>? _fitting;
+
+  /// 화면에 그릴 차림. 못 쓰게 된 것은 매번 걷어 낸다.
+  ///
+  /// 시착하는 동안 레벨 슬라이더를 내리거나 전체 해금을 끄면 방금 입어 본 것이
+  /// 못 가진 것이 된다. 그 판정은 프로바이더가 한다.
+  Map<String, String> _fittingOf(CosmeticProvider cosmetic) =>
+      cosmetic.usableOf(_fitting ?? cosmetic.equipped);
+
+  /// 저장할 것이 있는지. 없으면 저장 줄을 아예 띄우지 않는다.
+  bool _isDirty(CosmeticProvider cosmetic) =>
+      !mapEquals(_fittingOf(cosmetic), cosmetic.equipped);
+
   /// 아이템 칸을 눌렀을 때.
   ///
-  /// 가진 것이면 걸고, 이미 걸려 있던 것을 다시 누르면 벗는다. 못 가진 것도
-  /// 눌리기는 한다. [CosmeticProvider.equip] 이 막아 주고 왜 안 되는지를
-  /// 문구로 남기므로, 그것을 꺼내 알림으로 띄운다. 알림은 화면 위를 덮지 않아서
-  /// 계속 다른 것을 눌러 볼 수 있다.
+  /// 가진 것이면 걸치고, 이미 걸쳐 둔 것을 다시 누르면 벗는다. 못 가진 것도
+  /// 눌리기는 한다. 왜 안 되는지를 프로바이더에 물어 알림으로 띄운다. 알림은
+  /// 화면 위를 덮지 않아서 계속 다른 것을 눌러 볼 수 있다.
   void _onItemTap(
     CosmeticProvider cosmetic,
     CosmeticSlotModel slot,
@@ -59,47 +85,76 @@ class _CosmeticClosetScreenState extends State<CosmeticClosetScreen> {
   ) {
     if (!item.owned) {
       AppHaptic.secondary();
-      cosmetic.equip(slot.slot, item.itemKey);
-      _showFailure(cosmetic);
+      final reason = cosmetic.lockReasonOf(item.itemKey);
+      if (reason != null) AppToast.info(reason);
       return;
     }
 
     AppHaptic.selection();
-    if (cosmetic.equippedItemKeyOf(slot.slot) == item.itemKey) {
-      cosmetic.unequip(slot.slot);
-    } else {
-      cosmetic.equip(slot.slot, item.itemKey);
-    }
-    _pulse();
+    final current = _fittingOf(cosmetic);
+    final worn = current[slot.slot] == item.itemKey;
+    _wear(
+      cosmetic.previewEquip(
+        current,
+        slot: slot.slot,
+        itemKey: worn ? null : item.itemKey,
+      ),
+    );
   }
 
   /// 자리를 비운다. 이미 비어 있으면 아무 일도 하지 않는다.
   void _onEmptyTap(CosmeticProvider cosmetic, CosmeticSlotModel slot) {
-    if (cosmetic.equippedItemKeyOf(slot.slot) == null) return;
+    final current = _fittingOf(cosmetic);
+    if (current[slot.slot] == null) return;
 
     AppHaptic.selection();
-    cosmetic.unequip(slot.slot);
-    _pulse();
+    _wear(cosmetic.previewEquip(current, slot: slot.slot, itemKey: null));
   }
 
-  /// 못 쓰는 이유를 한 번 꺼내 알린다. 실수가 아니라 안내라서 빨간 알림이
-  /// 아니다.
-  void _showFailure(CosmeticProvider cosmetic) {
-    final message = cosmetic.consumeFailure();
-    if (message == null) return;
-    AppToast.info(message);
-  }
-
-  /// 걸친 것을 전부 벗는다.
+  /// 걸친 것을 전부 벗는다. 이것도 시착이라 저장해야 진짜로 벗겨진다.
   void _onResetTap(CosmeticProvider cosmetic) {
+    if (_fittingOf(cosmetic).isEmpty) return;
+
     AppHaptic.selection();
-    cosmetic.unequipAll();
-    _pulse();
+    _wear(const {});
   }
 
-  void _pulse() {
+  /// 시착 차림을 갈아 끼우고 개구리를 한 번 들썩이게 한다.
+  void _wear(Map<String, String> next) {
     if (!mounted) return;
-    setState(() => _equipTick++);
+    setState(() {
+      _fitting = next;
+      _equipTick++;
+    });
+  }
+
+  /// 저장한다. 여기서야 하단 탭 아이콘과 프로필 사진까지 바뀐다.
+  void _onSaveTap(CosmeticProvider cosmetic) {
+    AppHaptic.primary();
+    cosmetic.save(_fittingOf(cosmetic));
+    setState(() => _fitting = null);
+    AppToast.success('새 차림으로 갈아입었어요.');
+  }
+
+  /// 입어 본 것을 버리고 원래 차림으로 돌아간다.
+  void _onRevertTap() {
+    AppHaptic.selection();
+    setState(() {
+      _fitting = null;
+      _equipTick++;
+    });
+  }
+
+  /// 저장하지 않고 나가려 할 때 한 번 물어본다.
+  ///
+  /// 여러 개를 걸쳐 보고 나서 뒤로 가기를 누르면 그동안 고른 것이 통째로
+  /// 사라진다. 되돌릴 수 없는 일이라 한 번 막는다.
+  Future<bool> _confirmDiscard(Color color) async {
+    final leave = await showTossDialog<bool>(
+      context: context,
+      builder: (dialogContext) => _DiscardDialog(color: color),
+    );
+    return leave ?? false;
   }
 
   @override
@@ -110,7 +165,36 @@ class _CosmeticClosetScreenState extends State<CosmeticClosetScreen> {
 
     final slots = cosmetic.slots;
     final slotIndex = slots.isEmpty ? 0 : _slotIndex.clamp(0, slots.length - 1);
+    final fitting = _fittingOf(cosmetic);
+    final dirty = _isDirty(cosmetic);
 
+    return PopScope(
+      canPop: !dirty,
+      onPopInvokedWithResult: (didPop, _) async {
+        if (didPop) return;
+        final leave = await _confirmDiscard(themeProvider.primaryColor);
+        if (!leave || !mounted) return;
+        Navigator.of(context).pop();
+      },
+      child: _buildScaffold(
+        themeProvider: themeProvider,
+        cosmetic: cosmetic,
+        slots: slots,
+        slotIndex: slotIndex,
+        fitting: fitting,
+        dirty: dirty,
+      ),
+    );
+  }
+
+  Widget _buildScaffold({
+    required ThemeHandler themeProvider,
+    required CosmeticProvider cosmetic,
+    required List<CosmeticSlotModel> slots,
+    required int slotIndex,
+    required Map<String, String> fitting,
+    required bool dirty,
+  }) {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -195,6 +279,7 @@ class _CosmeticClosetScreenState extends State<CosmeticClosetScreen> {
                             cosmetic,
                             themeProvider,
                             frogSize,
+                            fitting,
                           ),
                           _buildLevelSlider(cosmetic, themeProvider),
                           const SizedBox(height: AppSpacing.sm),
@@ -215,6 +300,7 @@ class _CosmeticClosetScreenState extends State<CosmeticClosetScreen> {
                               cosmetic,
                               slots[slotIndex],
                               themeProvider.primaryColor,
+                              fitting,
                             ),
                     ),
                   ],
@@ -222,6 +308,102 @@ class _CosmeticClosetScreenState extends State<CosmeticClosetScreen> {
               ),
             );
           },
+        ),
+      ),
+      // 저장할 것이 있을 때만 아래에서 줄 하나가 올라온다. 늘 자리를 차지하고
+      // 있으면 아이템 격자가 그만큼 좁아지고, 눌러도 아무 일이 없는 버튼을
+      // 계속 보게 된다.
+      bottomNavigationBar: AnimatedSize(
+        duration: AppMotion.normal,
+        curve: AppMotion.emphasized,
+        alignment: Alignment.topCenter,
+        child: dirty
+            ? _buildSaveBar(cosmetic, themeProvider.primaryColor)
+            : const SizedBox(width: double.infinity),
+      ),
+    );
+  }
+
+  /// 입어 본 것을 확정하거나 버리는 줄.
+  Widget _buildSaveBar(CosmeticProvider cosmetic, Color color) {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        border: Border(top: BorderSide(color: AppColors.border)),
+      ),
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.screenHorizontal,
+            AppSpacing.md,
+            AppSpacing.screenHorizontal,
+            AppSpacing.md,
+          ),
+          child: Row(
+            children: [
+              PressableScale(
+                onTap: _onRevertTap,
+                haptic: HapticLevel.none,
+                scale: 0.94,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.md,
+                    vertical: AppSpacing.md,
+                  ),
+                  child: StandardText(
+                    text: '되돌리기',
+                    fontSize: 14,
+                    color: AppColors.textSecondary,
+                    maxLines: 1,
+                  ),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: PressableScale(
+                  onTap: () => _onSaveTap(cosmetic),
+                  haptic: HapticLevel.none,
+                  scale: 0.97,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.md,
+                      vertical: AppSpacing.md,
+                    ),
+                    decoration: BoxDecoration(
+                      color: color,
+                      borderRadius: BorderRadius.circular(AppRadius.large),
+                      boxShadow: [
+                        BoxShadow(
+                          color: color.withValues(alpha: 0.28),
+                          blurRadius: 12,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: const FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.check_rounded,
+                              size: 18, color: Colors.white),
+                          SizedBox(width: AppSpacing.sm),
+                          StandardText(
+                            text: '저장',
+                            fontSize: 15,
+                            color: Colors.white,
+                            fontWeight: FontWeight.w700,
+                            maxLines: 1,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -239,6 +421,7 @@ class _CosmeticClosetScreenState extends State<CosmeticClosetScreen> {
     CosmeticProvider cosmetic,
     ThemeHandler themeProvider,
     double frogSize,
+    Map<String, String> fitting,
   ) {
     final color = themeProvider.primaryColor;
 
@@ -295,7 +478,9 @@ class _CosmeticClosetScreenState extends State<CosmeticClosetScreen> {
           // 무대 위 주인공으로 갈라 놓는다.
           const SizedBox(height: AppSpacing.xl),
           CosmeticStageFrog(
-            layers: cosmetic.layers,
+            // 저장하기 전에도 개구리는 바로 갈아입는다. 그래야 써 보는
+            // 의미가 있다. 바뀌지 않는 것은 하단 탭과 프로필의 개구리다.
+            layers: cosmetic.layersOf(fitting),
             size: frogSize,
             color: color,
             equipTick: _equipTick,
@@ -402,6 +587,7 @@ class _CosmeticClosetScreenState extends State<CosmeticClosetScreen> {
     CosmeticProvider cosmetic,
     CosmeticSlotModel slot,
     Color color,
+    Map<String, String> fitting,
   ) {
     return AnimatedSwitcher(
       duration: AppMotion.fast,
@@ -419,7 +605,7 @@ class _CosmeticClosetScreenState extends State<CosmeticClosetScreen> {
       ),
       child: KeyedSubtree(
         key: ValueKey<String>(slot.slot),
-        child: _buildGrid(cosmetic, slot, color),
+        child: _buildGrid(cosmetic, slot, color, fitting),
       ),
     );
   }
@@ -428,9 +614,12 @@ class _CosmeticClosetScreenState extends State<CosmeticClosetScreen> {
     CosmeticProvider cosmetic,
     CosmeticSlotModel slot,
     Color color,
+    Map<String, String> fitting,
   ) {
     final items = cosmetic.itemsOfSlot(slot.slot);
-    final equippedKey = cosmetic.equippedItemKeyOf(slot.slot);
+    // 격자의 체크 표시는 **지금 입어 보고 있는 것**을 따른다. 저장한 차림이
+    // 아니라 눈앞의 개구리와 같은 것을 가리켜야 한다.
+    final equippedKey = fitting[slot.slot];
     final backdrop = _isBackdrop(cosmetic.slots, slot);
     // 이번 레벨에 열린 것들. 마흔 칸을 눈으로 훑어 무엇이 늘었는지 찾게 하면
     // 안 된다.
@@ -525,6 +714,115 @@ class _CosmeticClosetScreenState extends State<CosmeticClosetScreen> {
         color: AppColors.textTertiary,
         textAlign: TextAlign.center,
         maxLines: 2,
+      ),
+    );
+  }
+}
+
+/// 저장하지 않고 나가려 할 때 뜨는 확인 창.
+///
+/// 스터디룸의 확인 창과 같은 틀이다. 여러 개를 걸쳐 보고 나서 뒤로 가기를
+/// 누르면 그동안 고른 것이 통째로 사라지는데, 되돌릴 수 없는 일이라 한 번
+/// 막는다. 겁주는 일이 아니라서 빨간색을 쓰지 않는다.
+class _DiscardDialog extends StatelessWidget {
+  final Color color;
+
+  const _DiscardDialog({required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      backgroundColor: AppColors.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadius.large),
+        side: const BorderSide(color: AppColors.border),
+      ),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 340),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 18),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(AppSpacing.sm),
+                    decoration: BoxDecoration(
+                      color: color.withValues(alpha: 0.10),
+                      borderRadius: BorderRadius.circular(AppRadius.small),
+                    ),
+                    child:
+                        Icon(Icons.checkroom_rounded, color: color, size: 20),
+                  ),
+                  const SizedBox(width: AppSpacing.md),
+                  const Flexible(
+                    child: StandardText(
+                      text: '저장하지 않고 나갈까요?',
+                      fontSize: 17,
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.w700,
+                      maxLines: 2,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.lg),
+              const StandardText(
+                text: '입어 본 차림은 저장하지 않으면 사라져요.',
+                fontSize: 14,
+                color: AppColors.textSecondary,
+                textAlign: TextAlign.center,
+                fontWeight: FontWeight.normal,
+                fontFamily: 'PretendardLight',
+                maxLines: 3,
+              ),
+              const SizedBox(height: AppSpacing.xl),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextButton(
+                      onPressed: () => Navigator.pop(context, false),
+                      style: TextButton.styleFrom(
+                        backgroundColor: AppColors.surfaceMuted,
+                        padding: const EdgeInsets.symmetric(vertical: 13),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(AppRadius.medium),
+                        ),
+                      ),
+                      child: const StandardText(
+                        text: '계속 꾸미기',
+                        fontSize: 14,
+                        color: AppColors.textSecondary,
+                        maxLines: 1,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(
+                    child: TextButton(
+                      onPressed: () => Navigator.pop(context, true),
+                      style: TextButton.styleFrom(
+                        backgroundColor: color,
+                        padding: const EdgeInsets.symmetric(vertical: 13),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(AppRadius.medium),
+                        ),
+                      ),
+                      child: const StandardText(
+                        text: '나가기',
+                        fontSize: 14,
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                        maxLines: 1,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

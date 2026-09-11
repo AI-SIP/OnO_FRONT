@@ -149,6 +149,48 @@ class CosmeticProvider with ChangeNotifier {
 
   String? get lastFailureMessage => _lastFailureMessage;
 
+  // ── 시착 ────────────────────────────────────────────────────────────
+  //
+  // 꾸미기 화면은 이것저것 걸쳐 보다가 저장을 눌러야 반영되는 시착 방식이다.
+  // **시착 중인 차림은 화면이 들고 있고 프로바이더는 모른다.** 하단 탭 아이콘과
+  // 프로필 사진이 이 프로바이더를 보고 있어서, 입어 보는 동안 그것들까지 같이
+  // 바뀌면 안 되기 때문이다.
+  //
+  // 그래서 아래 넷은 전부 **지금 차림을 건드리지 않는다.** 화면이 들고 있는
+  // 차림 하나를 넘기면 규칙만 빌려 주고 결과를 돌려준다. 규칙(충돌 처리, 잠금
+  // 판정, 잠긴 이유)이 화면으로 새어 나가면 두 군데가 서로 다른 말을 하게 된다.
+
+  /// 이 차림을 그리면 어떤 층이 되는지. [layers] 의 시착판이다.
+  List<CosmeticLayerModel> layersOf(Map<String, String> equipped) =>
+      _loadoutAt(_level, equipped).resolveLayers();
+
+  /// 이 차림에 하나를 걸거나([itemKey] 를 주거나) 벗긴(null) 결과.
+  ///
+  /// 같이 걸 수 없다고 한 것은 함께 내려 준다. 실제로 거는 [equip] 과 같은
+  /// 규칙을 쓴다.
+  Map<String, String> previewEquip(
+    Map<String, String> equipped, {
+    required String slot,
+    String? itemKey,
+  }) {
+    return _applyEquip(equipped, slot: slot, itemKey: itemKey);
+  }
+
+  /// 이 차림에서 지금 레벨에 못 쓰는 것을 걷어 낸 것.
+  ///
+  /// 시착하는 동안 레벨 슬라이더를 내리거나 전체 해금을 끄면 방금 입어 본 것이
+  /// 못 쓰는 것이 된다. 화면은 매번 이걸 통과시킨 차림을 그린다.
+  Map<String, String> usableOf(Map<String, String> equipped) =>
+      _pruneLocked(equipped, _level);
+
+  /// 이 아이템을 아직 못 쓰는 이유. 쓸 수 있으면 null 이다.
+  String? lockReasonOf(String itemKey) {
+    final item = _catalog.itemOf(itemKey);
+    if (item == null) return '지금은 쓸 수 없는 아이템이에요.';
+    if (_ownsAt(item, _level)) return null;
+    return _lockedMessage(item);
+  }
+
   // ── 쓰기 ────────────────────────────────────────────────────────────
 
   /// 더미 레벨을 바꾼다. 시안의 레벨 슬라이더가 부른다.
@@ -242,6 +284,17 @@ class CosmeticProvider with ChangeNotifier {
   void unequipAll() {
     _touched = true;
     _equipped = const {};
+    _lastFailureMessage = null;
+    notifyListeners();
+  }
+
+  /// 시착한 차림을 확정한다. 꾸미기 화면의 **저장** 버튼이 부른다.
+  ///
+  /// 여기서야 비로소 하단 탭 아이콘과 프로필 사진의 개구리가 바뀐다. 그 사이에
+  /// 레벨이 내려가 못 쓰게 된 것이 섞여 있으면 걷어 내고 저장한다.
+  void save(Map<String, String> equipped) {
+    _touched = true;
+    _equipped = _pruneLocked(equipped, _level);
     _lastFailureMessage = null;
     notifyListeners();
   }

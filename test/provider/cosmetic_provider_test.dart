@@ -85,6 +85,82 @@ void main() {
     });
   });
 
+  group('시착', () {
+    // 꾸미기 화면은 저장을 눌러야 반영된다. 그동안 프로바이더가 들고 있는
+    // 차림이 바뀌면 하단 탭 아이콘과 프로필 사진까지 따라 바뀌어 버린다.
+    test('previewEquip 은 넘긴 차림만 바꾸고 프로바이더는 건드리지 않는다', () {
+      final provider = CosmeticProvider(mockLevel: 15);
+      final before = Map<String, String>.from(provider.equipped);
+
+      final next = provider.previewEquip(
+        provider.equipped,
+        slot: 'HEAD',
+        itemKey: 'hat_beanie',
+      );
+
+      expect(next['HEAD'], 'hat_beanie');
+      expect(provider.equipped, before);
+    });
+
+    test('previewEquip 도 같이 걸 수 없는 것은 함께 내린다', () {
+      final provider = CosmeticProvider(mockLevel: 15);
+
+      final next = provider.previewEquip(
+        provider.equipped,
+        slot: 'HEAD',
+        itemKey: 'hat_beanie',
+      );
+
+      // 실제로 거는 equip 과 같은 규칙을 써야 화면과 프로바이더가 다른 말을
+      // 하지 않는다.
+      provider.equip('HEAD', 'hat_beanie');
+      expect(next, provider.equipped);
+    });
+
+    test('layersOf 는 넘긴 차림을 그린다', () {
+      final provider = CosmeticProvider(mockLevel: 15);
+
+      expect(provider.layersOf(const {}), hasLength(1));
+      expect(provider.layersOf(const {}).single.isBase, isTrue);
+      // 프로바이더가 입고 있는 것은 그대로다.
+      expect(provider.layers.length, greaterThan(1));
+    });
+
+    test('usableOf 는 지금 레벨에서 못 쓰는 것을 걷어 낸다', () {
+      final provider = CosmeticProvider(mockLevel: 3);
+
+      final fitting = {'HEAD': 'hat_crown', 'BACKGROUND': 'bg_spring'};
+
+      expect(provider.usableOf(fitting), {'BACKGROUND': 'bg_spring'});
+    });
+
+    test('lockReasonOf 는 못 쓰는 이유를 알려 주고 쓸 수 있으면 null 이다', () {
+      final provider = CosmeticProvider(mockLevel: 3);
+
+      expect(provider.lockReasonOf('hat_crown'), 'Lv.14 부터 쓸 수 있어요.');
+      expect(provider.lockReasonOf('hat_beret'), '미션을 마치면 받을 수 있어요.');
+      expect(provider.lockReasonOf('bg_spring'), isNull);
+      expect(provider.lockReasonOf('없는_아이템'), '지금은 쓸 수 없는 아이템이에요.');
+    });
+
+    test('save 는 시착한 차림을 확정하면서 못 쓰는 것은 걷어 낸다', () {
+      final provider = CosmeticProvider(mockLevel: 3);
+
+      provider.save({'HEAD': 'hat_crown', 'BACKGROUND': 'bg_spring'});
+
+      expect(provider.equipped, {'BACKGROUND': 'bg_spring'});
+    });
+
+    test('save 로 전부 벗길 수도 있다', () {
+      final provider = CosmeticProvider(mockLevel: 15);
+      expect(provider.equipped, isNotEmpty);
+
+      provider.save(const {});
+
+      expect(provider.equipped, isEmpty);
+    });
+  });
+
   group('장착', () {
     test('열린 아이템은 걸린다', () {
       final provider = CosmeticProvider(mockLevel: 15);
