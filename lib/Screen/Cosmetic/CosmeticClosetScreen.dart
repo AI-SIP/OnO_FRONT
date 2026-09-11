@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../Model/Cosmetic/CosmeticSlotModel.dart';
 import '../../Module/Design/AppColors.dart';
 import '../../Module/Design/AppRadius.dart';
 import '../../Module/Design/AppSpacing.dart';
+import '../../Module/Motion/AppearTransition.dart';
+import '../../Module/Motion/AppMotion.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/CosmeticProvider.dart';
 import '../User/Widget/FrogCharacter.dart';
+import 'Widget/CosmeticItemTile.dart';
 import 'Widget/CosmeticSlotTabs.dart';
 
 /// 개구리 옷장이다.
@@ -95,7 +99,15 @@ class _CosmeticClosetScreenState extends State<CosmeticClosetScreen> {
                         ],
                       ),
                     ),
-                    Expanded(child: _buildPlaceholder()),
+                    Expanded(
+                      child: slots.isEmpty
+                          ? _buildEmpty()
+                          : _buildSlotItems(
+                              cosmetic,
+                              slots[slotIndex],
+                              themeProvider.primaryColor,
+                            ),
+                    ),
                   ],
                 ),
               ),
@@ -152,11 +164,96 @@ class _CosmeticClosetScreenState extends State<CosmeticClosetScreen> {
     );
   }
 
-  /// 아이템 격자가 들어올 자리. 지금은 비어 있다는 것만 알린다.
-  Widget _buildPlaceholder() {
+  /// 고른 자리의 아이템들.
+  ///
+  /// 자리를 옮기면 격자가 옅게 갈린다. 자리마다 아이템 수가 달라서 목록을
+  /// 그대로 바꾸면 화면이 툭 끊긴다.
+  Widget _buildSlotItems(
+    CosmeticProvider cosmetic,
+    CosmeticSlotModel slot,
+    Color color,
+  ) {
+    return AnimatedSwitcher(
+      duration: AppMotion.fast,
+      switchInCurve: AppMotion.enter,
+      switchOutCurve: AppMotion.exit,
+      // 페이드만 한다. 크기를 건드리면 격자 가장자리에 틈이 생긴다.
+      transitionBuilder: (child, animation) =>
+          FadeTransition(opacity: animation, child: child),
+      layoutBuilder: (currentChild, previousChildren) => Stack(
+        fit: StackFit.expand,
+        children: [
+          ...previousChildren,
+          if (currentChild != null) currentChild,
+        ],
+      ),
+      child: KeyedSubtree(
+        key: ValueKey<String>(slot.slot),
+        child: _buildGrid(cosmetic, slot, color),
+      ),
+    );
+  }
+
+  Widget _buildGrid(
+    CosmeticProvider cosmetic,
+    CosmeticSlotModel slot,
+    Color color,
+  ) {
+    final items = cosmetic.itemsOfSlot(slot.slot);
+    final equippedKey = cosmetic.equippedItemKeyOf(slot.slot);
+    final backdrop = _isBackdrop(cosmetic.slots, slot);
+
+    final tiles = <Widget>[
+      CosmeticSlotEmptyTile(selected: equippedKey == null, color: color),
+      for (final item in items)
+        CosmeticItemTile(
+          item: item,
+          equipped: item.itemKey == equippedKey,
+          backdrop: backdrop,
+          color: color,
+        ),
+    ];
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // 칸 하나가 120 언저리가 되게 나눈다. 폰은 셋, 태블릿은 여섯까지.
+        final columns = (constraints.maxWidth / 118).floor().clamp(3, 6);
+
+        return GridView.count(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.screenHorizontal,
+            AppSpacing.xs,
+            AppSpacing.screenHorizontal,
+            AppSpacing.xxl,
+          ),
+          crossAxisCount: columns,
+          mainAxisSpacing: AppSpacing.md,
+          crossAxisSpacing: AppSpacing.md,
+          // 정사각 그림 아래에 이름 한 줄이 들어갈 만큼만 더 길다.
+          childAspectRatio: 0.82,
+          children: AppearTransition.stagger(tiles, maxStaggered: 6),
+        );
+      },
+    );
+  }
+
+  /// 개구리 **뒤에** 깔리는 자리인지.
+  ///
+  /// 가장 뒤에 그려지는 자리가 배경이다. 슬롯 키를 박아 두지 않는 이유는
+  /// 자리 이름이 서버가 정하는 값이기 때문이다. 그리는 순서만 보면 된다.
+  bool _isBackdrop(List<CosmeticSlotModel> slots, CosmeticSlotModel slot) {
+    var lowest = slot.layerOrder;
+    for (final entry in slots) {
+      if (entry.layerOrder < lowest) lowest = entry.layerOrder;
+    }
+    return slot.layerOrder == lowest;
+  }
+
+  /// 자리 자체가 하나도 없을 때. 더미에서는 나지 않지만 서버가 붙으면 난다.
+  Widget _buildEmpty() {
     return const Center(
       child: StandardText(
-        text: '아이템 목록은 여기에 들어갑니다.',
+        text: '아직 꾸밀 수 있는 것이 없어요.',
         fontSize: 13,
         color: AppColors.textTertiary,
         textAlign: TextAlign.center,
