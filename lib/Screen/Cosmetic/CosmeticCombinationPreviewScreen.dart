@@ -51,7 +51,8 @@ class CosmeticCombinationPreviewScreen extends StatelessWidget {
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
-            final columns = (constraints.maxWidth / 132).floor().clamp(2, 8);
+            // 한 화면에 많이 담아야 훑을 수 있다. 폰은 셋, 태블릿은 일곱.
+            final columns = (constraints.maxWidth / 110).floor().clamp(3, 8);
 
             return CustomScrollView(
               slivers: [

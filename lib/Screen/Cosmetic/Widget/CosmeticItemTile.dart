@@ -314,8 +314,8 @@ class CosmeticSlotEmptyTile extends StatelessWidget {
                     Center(
                       child: Icon(
                         Icons.do_not_disturb_alt_rounded,
-                        size: 20,
-                        color: selected ? color : AppColors.textDisabled,
+                        size: 24,
+                        color: selected ? color : AppColors.textTertiary,
                       ),
                     ),
                   ],

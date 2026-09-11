@@ -170,7 +170,7 @@ class _CosmeticClosetScreenState extends State<CosmeticClosetScreen> {
             return Center(
               child: ConstrainedBox(
                 // 태블릿에서 격자가 끝없이 넓어지지 않게 가운데로 모은다.
-                constraints: const BoxConstraints(maxWidth: 720),
+                constraints: const BoxConstraints(maxWidth: 640),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
@@ -185,11 +185,9 @@ class _CosmeticClosetScreenState extends State<CosmeticClosetScreen> {
                         children: [
                           _buildStage(
                             cosmetic,
-                            themeProvider.primaryColor,
+                            themeProvider,
                             frogSize,
                           ),
-                          const SizedBox(height: AppSpacing.md),
-                          _buildLevelSlider(cosmetic, themeProvider),
                           const SizedBox(height: AppSpacing.md),
                           CosmeticSlotTabs(
                             slots: slots,
@@ -226,7 +224,13 @@ class _CosmeticClosetScreenState extends State<CosmeticClosetScreen> {
   /// 보인다. 사용자가 고른 테마색을 아주 옅게 깔아 무대를 만든다. 금색 같은
   /// 별도의 장식색을 쓰지 않는 이유는, 그러면 이 화면만 앱에서 겉돌기
   /// 때문이다.
-  Widget _buildStage(CosmeticProvider cosmetic, Color color, double frogSize) {
+  Widget _buildStage(
+    CosmeticProvider cosmetic,
+    ThemeHandler themeProvider,
+    double frogSize,
+  ) {
+    final color = themeProvider.primaryColor;
+
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
@@ -241,23 +245,24 @@ class _CosmeticClosetScreenState extends State<CosmeticClosetScreen> {
         borderRadius: BorderRadius.circular(AppRadius.xlarge),
         border: Border.all(color: color.withValues(alpha: 0.12)),
       ),
-      child: Stack(
+      child: Column(
         children: [
-          Center(
-            child: _EquipPulse(
-              tick: _equipTick,
-              child: FrogCharacter(
-                layers: cosmetic.layers,
-                size: frogSize,
-                borderRadius: AppRadius.large,
-              ),
-            ),
-          ),
-          Positioned(
-            top: 0,
-            right: 0,
+          // 되돌리기는 개구리 위에 겹치지 않게 한 줄을 따로 쓴다. 겹쳐 두면
+          // 배경을 입은 개구리의 모서리를 가린다.
+          Align(
+            alignment: Alignment.centerRight,
             child: _buildResetButton(cosmetic, color),
           ),
+          const SizedBox(height: AppSpacing.xs),
+          _EquipPulse(
+            tick: _equipTick,
+            child: FrogCharacter(
+              layers: cosmetic.layers,
+              size: frogSize,
+              borderRadius: AppRadius.large,
+            ),
+          ),
+          _buildLevelSlider(cosmetic, themeProvider),
         ],
       ),
     );
@@ -303,10 +308,12 @@ class _CosmeticClosetScreenState extends State<CosmeticClosetScreen> {
 
   /// 개구리 한 변의 길이. 좁은 쪽과 낮은 쪽 중 더 빡빡한 쪽을 따른다.
   double _frogSizeFor(BoxConstraints constraints) {
-    final byWidth = constraints.maxWidth * 0.46;
-    final byHeight = constraints.maxHeight * 0.30;
+    final byWidth = constraints.maxWidth * 0.50;
+    final byHeight = constraints.maxHeight * 0.28;
     final smaller = byWidth < byHeight ? byWidth : byHeight;
-    return smaller.clamp(96.0, 240.0);
+    // 태블릿에서는 폭이 남아도 280 에서 멈춘다. 더 키우면 아이템 격자가
+    // 첫 화면에서 사라진다.
+    return smaller.clamp(96.0, 280.0);
   }
 
   /// 레벨을 직접 옮겨 보는 슬라이더.

@@ -41,12 +41,16 @@ class CosmeticSlotTabs extends StatefulWidget {
   /// 미끄러지는 흰 알약을 테스트에서 찾는 키.
   static const Key pillKey = Key('cosmetic_slot_pill');
 
+  /// 자리 이름의 크기. 여덟 칸이 보통 폰의 한 줄에 들어가야 해서 본문보다
+  /// 한 단계 작다.
+  static const double _fontSize = 13.0;
+
   /// 칸 안쪽 좌우 여백. 글자 너비에 이만큼 더한 것이 칸 너비다.
-  static const double _labelPadding = 15.0;
+  static const double _labelPadding = 10.0;
 
   /// 칸 하나의 가장 좁은 너비. 한 글자짜리 이름(`옷`, `손`)이 점처럼 보이지
   /// 않게 바닥을 둔다.
-  static const double _minTabWidth = 52.0;
+  static const double _minTabWidth = 40.0;
 
   @override
   State<CosmeticSlotTabs> createState() => _CosmeticSlotTabsState();
@@ -121,7 +125,7 @@ class _CosmeticSlotTabsState extends State<CosmeticSlotTabs> {
     final reduced = AppMotion.isReduced(context);
     const labelStyle = TextStyle(
       fontFamily: 'PretendardBold',
-      fontSize: 14,
+      fontSize: CosmeticSlotTabs._fontSize,
       fontWeight: FontWeight.bold,
       height: 1.8,
     );
@@ -209,7 +213,7 @@ class _CosmeticSlotTabsState extends State<CosmeticSlotTabs> {
                             padding: const EdgeInsets.symmetric(vertical: 6),
                             child: StandardText(
                               text: widget.slots[i].nameKo,
-                              fontSize: 14,
+                              fontSize: CosmeticSlotTabs._fontSize,
                               color: index == i
                                   ? widget.color
                                   : AppColors.textTertiary,
