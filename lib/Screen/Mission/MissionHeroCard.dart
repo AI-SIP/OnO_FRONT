@@ -1,7 +1,9 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import '../../Model/Cosmetic/CosmeticLoadoutModel.dart';
 import '../../Model/Mission/MissionModel.dart';
 import '../../Module/Design/AppColors.dart';
 import '../../Module/Design/AppRadius.dart';
@@ -12,6 +14,7 @@ import '../../Module/Motion/AppHaptic.dart';
 import '../../Module/Motion/AppMotion.dart';
 import '../../Module/Motion/PressableScale.dart';
 import '../../Module/Text/StandardText.dart';
+import '../../Provider/CosmeticProvider.dart';
 import '../User/Widget/FrogCharacter.dart';
 import 'MissionRewardChip.dart';
 
@@ -124,6 +127,9 @@ class _MissionHeroCardState extends State<MissionHeroCard>
   @override
   Widget build(BuildContext context) {
     final ratio = _total > 0 ? _completed / _total : 0.0;
+    // LayoutBuilder 안쪽은 레이아웃 중에 돌아서 Provider 를 구독할 수 없다.
+    // 여기서 한 번 읽어 내려 준다.
+    final frogLayers = context.watch<CosmeticProvider>().layers;
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -149,7 +155,7 @@ class _MissionHeroCardState extends State<MissionHeroCard>
           ),
           child: Row(
             children: [
-              _buildFrogRing(gaugeSize, ratio),
+              _buildFrogRing(gaugeSize, ratio, frogLayers),
               // 링과 오른쪽 글상자가 확실히 떨어져 보이게 벌린다. 좁혀 두면
               // 둘이 한 덩어리로 읽혀서 어느 쪽이 무엇인지 눈에 안 들어온다.
               const SizedBox(width: AppSpacing.xxxl),
@@ -161,8 +167,12 @@ class _MissionHeroCardState extends State<MissionHeroCard>
     );
   }
 
-  Widget _buildFrogRing(double size, double ratio) {
-    final frog = FrogCharacter(level: widget.level, size: size * 0.62);
+  Widget _buildFrogRing(
+    double size,
+    double ratio,
+    List<CosmeticLayerModel> frogLayers,
+  ) {
+    final frog = FrogCharacter(layers: frogLayers, size: size * 0.62);
 
     return AnimatedCircularGauge(
       value: ratio,

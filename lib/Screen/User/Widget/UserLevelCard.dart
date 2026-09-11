@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../../../Model/User/UserInfoModel.dart';
+import '../../../Provider/CosmeticProvider.dart';
 import '../../../Module/Motion/AnimatedCountText.dart';
 import '../../../Module/Motion/AnimatedGauge.dart';
 import '../../../Module/Text/StandardText.dart';
@@ -11,6 +13,7 @@ import '../../../Module/Design/AppColors.dart';
 import '../../../Module/Design/AppSpacing.dart';
 import '../../../Module/Motion/PressableScale.dart';
 import '../../../Module/Motion/TossPageRoute.dart';
+import '../../Cosmetic/CosmeticClosetScreen.dart';
 import '../../Mission/MissionPalette.dart';
 import '../../Mission/MissionScreen.dart';
 
@@ -61,14 +64,49 @@ class UserLevelCard extends StatelessWidget {
     );
   }
 
+  /// 개구리 옷장으로 간다.
+  ///
+  /// 개구리를 직접 누르면 격려 말풍선이 떠야 해서 그쪽에 화면 이동을 걸 수
+  /// 없다. 누르면 무엇이 일어날지 글로 적어 둔 링크를 따로 둔다.
+  void _openCloset(BuildContext context) {
+    Navigator.push(
+      context,
+      TossPageRoute(builder: (_) => const CosmeticClosetScreen()),
+    );
+  }
+
   /// 활동별 경험치 위에 붙는 작은 길잡이다.
   ///
   /// 아래 네 줄이 미션으로 오르는 경험치라서 그 바로 위에 둔다. 카드 전체를
   /// 누르게 하지 않는 이유는 개구리에 눌러서 말풍선을 띄우는 기존 동작이 있어서,
   /// 카드가 누름을 가로채면 말풍선과 화면 이동이 함께 일어나기 때문이다.
   Widget _buildMissionLink(BuildContext context, {required bool isTablet}) {
+    // 좁은 폰에서 두 링크가 한 줄에 다 안 들어가면 아래로 접히게 한다.
+    return Wrap(
+      alignment: WrapAlignment.end,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: [
+        _buildCardLink(
+          label: '개구리 꾸미기',
+          onTap: () => _openCloset(context),
+          isTablet: isTablet,
+        ),
+        _buildCardLink(
+          label: '미션 보기',
+          onTap: () => _openMissions(context),
+          isTablet: isTablet,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCardLink({
+    required String label,
+    required VoidCallback onTap,
+    required bool isTablet,
+  }) {
     return PressableScale(
-      onTap: () => _openMissions(context),
+      onTap: onTap,
       child: Padding(
         padding: const EdgeInsets.symmetric(
           horizontal: AppSpacing.xs,
@@ -78,7 +116,7 @@ class UserLevelCard extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             StandardText(
-              text: '미션 보기',
+              text: label,
               fontSize: isTablet ? 13 : 12,
               color: themeProvider.primaryColor,
               maxLines: 1,
@@ -160,7 +198,10 @@ class UserLevelCard extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     SizedBox(height: frogTopSpace),
-                    FrogCharacter(level: currentLevel, size: frogSize),
+                    FrogCharacter(
+                      layers: context.watch<CosmeticProvider>().layers,
+                      size: frogSize,
+                    ),
                   ],
                 ),
               ),

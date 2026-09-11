@@ -8,6 +8,8 @@ import 'package:provider/provider.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/TutorialProvider.dart';
+import '../Cosmetic/Mock/CosmeticMockData.dart';
+import '../User/Widget/FrogCharacter.dart';
 import 'TutorialStep.dart';
 import 'TutorialTargets.dart';
 import '../../Module/Motion/AppMotion.dart';
@@ -32,7 +34,6 @@ class _TutorialOverlayState extends State<TutorialOverlay>
   // 다른 화면과 같은 값을 쓴다. 튜토리얼만 따로 놀지 않게 한다.
   static const Duration _motionDuration = AppMotion.normal;
   static const Curve _motionCurve = AppMotion.enter;
-  static const String _guideFrogAsset = 'assets/FrogCharacter/FROG_LEVEL15.png';
   static const double _speechBorderWidth = 1.0;
 
   Rect? _targetRect;
@@ -738,11 +739,11 @@ class _TutorialOverlayState extends State<TutorialOverlay>
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Image.asset(
-          _guideFrogAsset,
-          width: frogSize,
-          height: frogSize,
-          fit: BoxFit.contain,
+        // 안내 개구리는 사용자가 무엇을 입혀 뒀든 늘 같은 모습이어야 해서,
+        // 지금 차림 대신 학사 세트를 입은 고정 한 벌을 쓴다.
+        FrogLayerStack(
+          layers: CosmeticMockData.graduateLayers,
+          size: frogSize,
         ),
         const SizedBox(width: 4),
         Expanded(
