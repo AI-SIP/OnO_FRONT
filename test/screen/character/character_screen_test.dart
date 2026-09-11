@@ -17,6 +17,7 @@ import 'package:ono/Model/Common/LoginStatus.dart';
 import 'package:ono/Model/Mission/MissionGroupModel.dart';
 import 'package:ono/Model/Mission/MissionModel.dart';
 import 'package:ono/Model/User/UserInfoModel.dart';
+import 'package:ono/Model/Cosmetic/CosmeticAbilityLevels.dart';
 import 'package:ono/Provider/CosmeticProvider.dart';
 import 'package:ono/Provider/MissionProvider.dart';
 import 'package:ono/Provider/UserProvider.dart';
@@ -122,6 +123,7 @@ void main() {
     WidgetTester tester, {
     MissionBoardModel? missionBoard,
     UserInfoModel? info,
+    CosmeticProvider? cosmetic,
     Size surfaceSize = OnoSurface.phone,
     double textScale = 1.0,
   }) async {
@@ -143,7 +145,8 @@ void main() {
         ),
         missionProvider: missionProvider,
         userProvider: userProvider(info: info),
-        cosmeticProvider: CosmeticProvider(mockLevel: 12),
+        cosmeticProvider: cosmetic ??
+            CosmeticProvider(mockLevels: CosmeticAbilityLevels.uniform(12)),
         surfaceSize: surfaceSize,
       );
     });
@@ -198,8 +201,10 @@ void main() {
       expect(find.text('24 / 60 XP'), findsOneWidget);
     });
 
-    testWidgets('레벨은 개구리보다 위, 경험치 바는 개구리보다 아래다', (tester) async {
-      // 숫자가 개구리 위아래를 감싸야 개구리가 주인공으로 남는다.
+    testWidgets('레벨과 경험치가 개구리 위 한 줄에 같이 앉는다', (tester) async {
+      // 예전에는 레벨이 개구리 머리 위, 경험치 바가 발치에 있어서 둘을 같이
+      // 보려면 눈이 화면 위아래를 왔다 갔다 해야 했다. 한 가지를 말하는 값
+      // 둘이라 나란히 둔다.
       await pumpCharacter(tester);
 
       final levelY = tester.getTopLeft(find.text('Lv.7')).dy;
@@ -207,7 +212,9 @@ void main() {
       final expY = tester.getTopLeft(find.text('다음 레벨까지')).dy;
 
       expect(levelY, lessThan(frogY));
-      expect(frogY, lessThan(expY));
+      expect(expY, lessThan(frogY));
+      // 같은 줄이다. 위아래로 갈라져 있으면 안 된다.
+      expect((levelY - expY).abs(), lessThan(24));
     });
   });
 
@@ -236,15 +243,83 @@ void main() {
       expect(find.text('6 / 10'), findsOneWidget);
     });
 
-    testWidgets('능력치는 경험치 바 아래, 버튼 위에 온다', (tester) async {
+    testWidgets('능력치는 무대 아래, 버튼 위에 온다', (tester) async {
       await pumpCharacter(tester);
 
-      final expY = tester.getTopLeft(find.text('다음 레벨까지')).dy;
+      final frogY = tester.getTopLeft(find.byType(CosmeticStageFrog)).dy;
       final statY = tester.getTopLeft(find.byType(AbilityStatPanel)).dy;
       final buttonY = tester.getTopLeft(find.text('꾸미기')).dy;
 
-      expect(expY, lessThan(statY));
+      expect(frogY, lessThan(statY));
       expect(statY, lessThan(buttonY));
+    });
+
+    testWidgets('능력치 아이콘은 마이페이지가 쓰던 그 아이콘이다', (tester) async {
+      // 한때 미션 카드의 이모지를 빌려 썼는데, 이모지는 크게 그려야 읽히고
+      // 이 자리는 15px 라서 뭉갰다. 넷 다 예전 레벨 카드의 아이콘으로 돌린다.
+      await pumpCharacter(tester);
+
+      for (final icon in [
+        Icons.waving_hand_rounded,
+        Icons.edit_note,
+        Icons.chrome_reader_mode_outlined,
+        Icons.history,
+      ]) {
+        expect(
+          find.descendant(
+            of: find.byType(AbilityStatPanel),
+            matching: find.byIcon(icon),
+          ),
+          findsOneWidget,
+          reason: '$icon',
+        );
+      }
+    });
+
+    testWidgets('능력치를 누르면 올리는 법이 뜬다', (tester) async {
+      // 눈금판은 지금 어디에 서 있는지만 말해 준다. 무엇을 해야 저 고리가
+      // 차는지는 여기서 알려 준다.
+      await pumpCharacter(tester);
+
+      await tester.tap(find.byIcon(Icons.waving_hand_rounded));
+      await tester.pumpAndSettle();
+
+      expect(find.text('출석 올리는 법'), findsOneWidget);
+      expect(find.text('하루에 한 번 앱을 열면'), findsOneWidget);
+      expect(find.text('+15점'), findsOneWidget);
+      expect(find.text('하루 한 번까지'), findsOneWidget);
+    });
+
+    testWidgets('능력치마다 다른 규칙을 말한다', (tester) async {
+      await pumpCharacter(tester);
+
+      await tester.tap(find.byIcon(Icons.edit_note));
+      await tester.pumpAndSettle();
+
+      expect(find.text('오답노트 올리는 법'), findsOneWidget);
+      // 서버의 MissionType 과 MissionLogService 가 정한 값이다.
+      expect(find.text('+10점'), findsOneWidget);
+      expect(find.text('하루 세 개까지'), findsOneWidget);
+    });
+
+    testWidgets('꾸미기 화면에서 더미 레벨을 옮기면 눈금판도 따라간다', (tester) async {
+      // 두 화면이 같은 능력치를 다른 레벨로 말하면 어느 쪽이 진짜인지 알 수 없다.
+      final cosmetic =
+          CosmeticProvider(mockLevels: CosmeticAbilityLevels.uniform(12));
+      cosmetic.setMockLevel(CosmeticAbility.attendance, 9);
+
+      await pumpCharacter(tester, cosmetic: cosmetic);
+
+      // 서버가 준 출석은 Lv.3 이지만 더미를 만진 뒤로는 더미를 따른다.
+      expect(find.text('Lv.9'), findsOneWidget);
+      expect(find.text('Lv.3'), findsNothing);
+    });
+
+    testWidgets('더미 레벨을 한 번도 안 옮겼으면 서버가 준 레벨을 그린다', (tester) async {
+      await pumpCharacter(tester);
+
+      expect(find.text('Lv.3'), findsOneWidget);
+      expect(find.text('Lv.12'), findsNothing);
     });
 
     testWidgets('사용자 정보가 아직 없어도 스탯창 자리는 그대로 있다', (tester) async {

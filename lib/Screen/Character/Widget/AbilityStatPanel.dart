@@ -2,15 +2,19 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import '../../../Model/Cosmetic/CosmeticAbilityLevels.dart';
 import '../../../Model/User/UserInfoModel.dart';
 import '../../../Module/Design/AppColors.dart';
 import '../../../Module/Design/AppRadius.dart';
 import '../../../Module/Design/AppSpacing.dart';
 import '../../../Module/Motion/AnimatedCountText.dart';
 import '../../../Module/Motion/AnimatedGauge.dart';
+import '../../../Module/Motion/AppHaptic.dart';
+import '../../../Module/Motion/PressableScale.dart';
+import '../../../Module/Motion/TossBottomSheet.dart';
 import '../../../Module/Text/StandardText.dart';
-import '../../Mission/MissionIcon.dart';
 import '../../Mission/MissionPalette.dart';
+import 'AbilityGuideSheet.dart';
 
 /// 능력치 넷을 눈금판 네 개로 세운 **스탯창**이다.
 ///
@@ -30,15 +34,28 @@ import '../../Mission/MissionPalette.dart';
 /// 둘이 **스크롤 없이** 한 화면에 들어가야 해서 세로가 빡빡하다. 눈금판을
 /// 가로로 늘어놓으면 능력치 넷이 100 남짓한 높이에 다 들어간다.
 ///
-/// 색은 [MissionPalette] 에서 가져온다. 미션 카드의 아이콘 색과 같은 색이라,
-/// 방금 받은 미션이 어느 눈금판을 올렸는지 색만 보고 알 수 있다. 아이콘도
-/// 미션과 같은 것([MissionIcon])을 쓴다.
+/// 색과 아이콘은 [MissionPalette] 에서 가져온다. 미션 카드의 색과 같은 색이라,
+/// 방금 받은 미션이 어느 눈금판을 올렸는지 색만 보고 알 수 있다.
+///
+/// **눈금판을 누르면 그 능력치를 어떻게 올리는지 알려 준다.** 색과 숫자는
+/// 지금 어디에 서 있는지를 말해 주지만, 무엇을 해야 저 고리가 차는지는 말해
+/// 주지 않는다. 미션 화면까지 가서 목록을 훑어야 짐작할 수 있었다.
+/// [AbilityGuideSheet] 가 적립 규칙을 그 자리에서 펼친다.
 class AbilityStatPanel extends StatelessWidget {
   /// 능력치의 출처. 아직 못 받았으면 전부 1레벨 0점으로 그린다. 값이 늦게
   /// 와도 카드 높이가 바뀌지 않아야 아래 버튼이 들썩이지 않는다.
   final UserInfoModel? userInfo;
 
-  const AbilityStatPanel({super.key, this.userInfo});
+  /// **디버그 전용.** 레벨만 이 값으로 덮어 그린다.
+  ///
+  /// 꾸미기 화면의 디버그 패널에서 능력치 레벨을 옮기면 이 눈금판도 같이
+  /// 움직여야 한다. 두 화면이 같은 능력치를 다른 레벨로 말하면 어느 쪽이
+  /// 진짜인지 알 수 없다. 경험치는 더미에 없어서 [userInfo] 의 것을 그대로
+  /// 둔다. 필요량은 레벨을 따라가므로 덮어쓴 동안에는 `24 / 100` 처럼 진짜
+  /// 값과 더미 필요량이 섞인 줄이 나온다. 디버그에서만 보이는 줄이다.
+  final CosmeticAbilityLevels? levelOverrides;
+
+  const AbilityStatPanel({super.key, this.userInfo, this.levelOverrides});
 
   /// 눈금판이 왼쪽부터 하나씩 차오르도록 매기는 간격이다. 넷이 한꺼번에
   /// 움직이면 산만하고, 너무 벌리면 마지막 것이 늦게 끝난다.
@@ -52,33 +69,40 @@ class AbilityStatPanel extends StatelessWidget {
   /// 눈금판 사이의 틈.
   static const double _dialGap = 6.0;
 
+  /// 이 능력치를 어떻게 올리는지 펼친다.
+  void _openGuide(BuildContext context, MissionKind kind) {
+    AppHaptic.selection();
+    showTossSheet<void>(
+      context: context,
+      builder: (_) => AbilityGuideSheet(kind: kind),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final info = userInfo;
 
+    final overrides = levelOverrides;
+
     final stats = <_Ability>[
       _Ability(
         kind: MissionKind.attendance,
-        iconKey: 'attendance',
-        level: info?.attendanceLevel ?? 1,
+        level: overrides?.attendance ?? info?.attendanceLevel ?? 1,
         point: info?.attendancePoint ?? 0,
       ),
       _Ability(
         kind: MissionKind.noteWrite,
-        iconKey: 'note_write',
-        level: info?.noteWriteLevel ?? 1,
+        level: overrides?.noteWrite ?? info?.noteWriteLevel ?? 1,
         point: info?.noteWritePoint ?? 0,
       ),
       _Ability(
         kind: MissionKind.problemPractice,
-        iconKey: 'review',
-        level: info?.problemPracticeLevel ?? 1,
+        level: overrides?.problemPractice ?? info?.problemPracticeLevel ?? 1,
         point: info?.problemPracticePoint ?? 0,
       ),
       _Ability(
         kind: MissionKind.notePractice,
-        iconKey: 'practice_set',
-        level: info?.notePracticeLevel ?? 1,
+        level: overrides?.notePractice ?? info?.notePracticeLevel ?? 1,
         point: info?.notePracticePoint ?? 0,
       ),
     ];
@@ -111,6 +135,7 @@ class AbilityStatPanel extends StatelessWidget {
                     ability: stats[index],
                     dialSize: dial,
                     delay: _start + _gap * index,
+                    onTap: () => _openGuide(context, stats[index].kind),
                   ),
                 ),
               ],
@@ -126,15 +151,11 @@ class AbilityStatPanel extends StatelessWidget {
 class _Ability {
   final MissionKind kind;
 
-  /// [MissionIcon] 이 알아듣는 키. 미션 카드와 같은 그림을 쓴다.
-  final String iconKey;
-
   final int level;
   final int point;
 
   const _Ability({
     required this.kind,
-    required this.iconKey,
     required this.level,
     required this.point,
   });
@@ -163,10 +184,14 @@ class _AbilityDial extends StatelessWidget {
   final double dialSize;
   final Duration delay;
 
+  /// 누르면 올리는 법을 펼친다.
+  final VoidCallback onTap;
+
   const _AbilityDial({
     required this.ability,
     required this.dialSize,
     required this.delay,
+    required this.onTap,
   });
 
   /// 고리의 두께. 지름을 따라가되 너무 얇거나 두꺼워지지 않게 막는다.
@@ -177,76 +202,87 @@ class _AbilityDial extends StatelessWidget {
     final colors = MissionPalette.of(ability.kind);
     final accent = colors.accent;
 
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Center(
-          child: SizedBox(
-            width: dialSize,
-            height: dialSize,
-            child: Stack(
-              alignment: Alignment.center,
+    // 누를 수 있는 자리를 눈금판 하나 통째로 잡는다. 고리만 누르게 하면
+    // 손가락보다 얇아서 잘 안 눌린다.
+    return PressableScale(
+      onTap: onTap,
+      haptic: HapticLevel.none,
+      scale: 0.95,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Center(
+            child: SizedBox(
+              width: dialSize,
+              height: dialSize,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  AnimatedGaugeValue(
+                    value: ability.progress,
+                    delay: delay,
+                    builder: (context, current) => CustomPaint(
+                      size: Size.square(dialSize),
+                      painter: _DialPainter(
+                        progress: current,
+                        color: accent,
+                        trackColor: colors.surface,
+                        stroke: _stroke,
+                      ),
+                    ),
+                  ),
+                  // 고리 안쪽에만 글자를 둔다. 테두리까지 물고 들어가면
+                  // 숫자가 고리에 걸려 읽히지 않는다.
+                  Padding(
+                    padding: EdgeInsets.all(_stroke + 3),
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: AnimatedCountText(
+                        value: ability.level,
+                        formatter: (value) => 'Lv.${value.round()}',
+                        fontSize: 13,
+                        color: accent,
+                        delay: delay,
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                AnimatedGaugeValue(
-                  value: ability.progress,
-                  delay: delay,
-                  builder: (context, current) => CustomPaint(
-                    size: Size.square(dialSize),
-                    painter: _DialPainter(
-                      progress: current,
-                      color: accent,
-                      trackColor: colors.surface,
-                      stroke: _stroke,
-                    ),
-                  ),
+                Icon(
+                  MissionPalette.iconOfKind(ability.kind),
+                  color: accent,
+                  size: 15,
                 ),
-                // 고리 안쪽에만 글자를 둔다. 테두리까지 물고 들어가면
-                // 숫자가 고리에 걸려 읽히지 않는다.
-                Padding(
-                  padding: EdgeInsets.all(_stroke + 3),
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    child: AnimatedCountText(
-                      value: ability.level,
-                      formatter: (value) => 'Lv.${value.round()}',
-                      fontSize: 13,
-                      color: accent,
-                      delay: delay,
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
+                const SizedBox(width: 3),
+                StandardText(
+                  text: MissionPalette.labelOfKind(ability.kind),
+                  fontSize: 11,
+                  color: AppColors.textSecondary,
+                  maxLines: 1,
                 ),
               ],
             ),
           ),
-        ),
-        const SizedBox(height: AppSpacing.xs),
-        FittedBox(
-          fit: BoxFit.scaleDown,
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              MissionIcon(iconKey: ability.iconKey, color: accent, size: 15),
-              const SizedBox(width: 3),
-              StandardText(
-                text: MissionPalette.labelOfKind(ability.kind),
-                fontSize: 11,
-                color: AppColors.textSecondary,
-                maxLines: 1,
-              ),
-            ],
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: StandardText(
+              text: '${ability.point} / ${ability.requiredPoint}',
+              fontSize: 10,
+              color: AppColors.textTertiary,
+              maxLines: 1,
+            ),
           ),
-        ),
-        FittedBox(
-          fit: BoxFit.scaleDown,
-          child: StandardText(
-            text: '${ability.point} / ${ability.requiredPoint}',
-            fontSize: 10,
-            color: AppColors.textTertiary,
-            maxLines: 1,
-          ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

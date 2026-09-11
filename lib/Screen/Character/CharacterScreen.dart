@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -27,8 +28,8 @@ import 'Widget/AbilityStatPanel.dart';
 ///
 /// 화면은 **스크롤이 없다.** 셋이 위에서 아래로 붙박이로 앉는다.
 ///
-/// - **무대**: 꾸민 개구리가 크게 서 있고, 총 학습 레벨이 그 위에, 다음
-///   레벨까지의 경험치가 발치에 붙는다.
+/// - **무대**: 위쪽에 총 학습 레벨과 다음 레벨까지의 경험치가 한 줄로 붙고,
+///   그 아래에 꾸민 개구리가 크게 선다.
 /// - **스탯창**([AbilityStatPanel]): 능력치 넷의 레벨과 남은 경험치.
 /// - **버튼 둘**: 미션과 꾸미기.
 ///
@@ -99,6 +100,7 @@ class _CharacterScreenState extends State<CharacterScreen> {
     final themeProvider = Provider.of<ThemeHandler>(context);
     final missionProvider = Provider.of<MissionProvider>(context);
     final userInfo = Provider.of<UserProvider>(context).userInfoModel;
+    final cosmetic = Provider.of<CosmeticProvider>(context);
     _syncVisitSequence(
       Provider.of<ScreenIndexProvider>(context).screenIndex,
     );
@@ -138,7 +140,15 @@ class _CharacterScreenState extends State<CharacterScreen> {
                       children: [
                         AppearTransition(
                           delay: AppMotion.stagger * 2,
-                          child: AbilityStatPanel(userInfo: userInfo),
+                          child: AbilityStatPanel(
+                            userInfo: userInfo,
+                            // 꾸미기 화면의 디버그 패널에서 레벨을 옮기면
+                            // 여기 눈금판도 같이 움직인다. 한 번도 안 옮겼으면
+                            // 서버가 준 진짜 레벨을 그대로 보여 준다.
+                            levelOverrides: kDebugMode && cosmetic.levelsTouched
+                                ? cosmetic.levels
+                                : null,
+                          ),
                         ),
                         const SizedBox(height: AppSpacing.md),
                         AppearTransition(
@@ -230,7 +240,7 @@ class _CharacterStage extends StatelessWidget {
               ),
               child: Column(
                 children: [
-                  _buildLevelChip(level, color),
+                  _buildLevelHeader(level, point, threshold, progress, color),
                   const SizedBox(height: AppSpacing.sm),
                   Expanded(
                     child: LayoutBuilder(
@@ -249,8 +259,7 @@ class _CharacterStage extends StatelessWidget {
                       ),
                     ),
                   ),
-                  const SizedBox(height: AppSpacing.md),
-                  _buildExpBar(point, threshold, progress, color),
+                  const SizedBox(height: AppSpacing.sm),
                 ],
               ),
             ),
@@ -260,70 +269,84 @@ class _CharacterStage extends StatelessWidget {
     );
   }
 
-  /// 총 학습 레벨. 개구리 머리 위에 다는 이름표다.
+  /// 총 학습 레벨과 다음 레벨까지의 경험치를 **한 줄에 같이** 놓는다.
   ///
-  /// 능력치 넷은 아래 스탯창이 맡는다. 여기 있는 것은 그 넷을 합친 값
-  /// 하나뿐이라, 가운데에 하나만 놓아 무대의 제목처럼 읽히게 한다.
-  Widget _buildLevelChip(int level, Color color) {
-    return Center(
-      // 글자를 키운 기기에서 칩이 남은 폭보다 길어진다. 넘치게 두는 대신
-      // 줄여서 앉힌다.
-      child: FittedBox(
-        fit: BoxFit.scaleDown,
-        child: Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.md,
-            vertical: AppSpacing.sm - 2,
-          ),
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.85),
-            borderRadius: BorderRadius.circular(AppRadius.full),
-            border: Border.all(color: color.withValues(alpha: 0.20)),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.local_florist_rounded, size: 14, color: color),
-              const SizedBox(width: AppSpacing.xs),
-              const StandardText(
-                text: '학습 레벨',
-                fontSize: 11,
-                color: AppColors.textSecondary,
-                maxLines: 1,
+  /// 예전에는 레벨 이름표가 개구리 머리 위에, 경험치 바가 발치에 있었다.
+  /// 숫자가 개구리를 위아래로 감싸는 모양은 보기에는 좋았지만, **둘을 같이
+  /// 보려면 눈이 화면 위아래를 왔다 갔다 해야 했다.** 정작 이 둘은 한 가지를
+  /// 말하는 값이다. 지금 레벨과 그 레벨을 얼마나 지났는지다.
+  ///
+  /// 왼쪽에 레벨, 오른쪽에 남은 경험치와 막대를 둔다. 왼쪽을 읽고 오른쪽으로
+  /// 눈을 옮기면 `Lv.7 · 24 / 60` 한 문장이 된다. 발치가 비면서 개구리도
+  /// 그만큼 커졌다.
+  ///
+  /// 글자를 키운 기기에서는 양쪽이 다 칸보다 넓어진다. 넘치게 두는 대신
+  /// 각자 줄여서 앉힌다.
+  Widget _buildLevelHeader(
+    int level,
+    int point,
+    int threshold,
+    double progress,
+    Color color,
+  ) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.sm,
+      ),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.85),
+        borderRadius: BorderRadius.circular(AppRadius.large),
+        border: Border.all(color: color.withValues(alpha: 0.20)),
+      ),
+      child: Row(
+        children: [
+          Flexible(
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.local_florist_rounded, size: 14, color: color),
+                  const SizedBox(width: AppSpacing.xs),
+                  const StandardText(
+                    text: '학습 레벨',
+                    fontSize: 11,
+                    color: AppColors.textSecondary,
+                    maxLines: 1,
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  AnimatedCountText(
+                    value: level,
+                    formatter: (value) => 'Lv.${value.round()}',
+                    fontSize: 15,
+                    color: color,
+                  ),
+                ],
               ),
-              const SizedBox(width: AppSpacing.sm),
-              AnimatedCountText(
-                value: level,
-                formatter: (value) => 'Lv.${value.round()}',
-                fontSize: 15,
-                color: color,
-              ),
-            ],
+            ),
           ),
-        ),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(child: _buildExpMeter(point, threshold, progress, color)),
+        ],
       ),
     );
   }
 
-  /// 다음 레벨까지의 경험치.
-  ///
-  /// 개구리 발치에 둔다. 숫자가 개구리 위에 있으면 숫자가 주인공이 된다.
-  Widget _buildExpBar(int point, int threshold, double progress, Color color) {
+  /// 다음 레벨까지의 경험치. 이름표 오른쪽에 붙는다.
+  Widget _buildExpMeter(
+    int point,
+    int threshold,
+    double progress,
+    Color color,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisSize: MainAxisSize.min,
       children: [
-        AnimatedLinearGauge(
-          value: progress,
-          color: color,
-          // 무대 바탕이 이미 테마색으로 물들어 있다. 회색을 깔면 그 자리만
-          // 탁해진다. 같은 테마색을 한 단계 진하게 깔아 파인 자리로 만든다.
-          backgroundColor: color.withValues(alpha: 0.18),
-          height: 8,
-          borderRadius: AppRadius.full,
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        // 글자를 키운 작은 폰에서는 이 한 줄이 화면 폭을 넘는다. 양쪽 끝에
-        // 붙여 두는 모양은 지키면서 각자 줄어들게 한다.
+        // 좁은 폰에서 이 한 줄이 남은 폭을 넘는다. 양쪽 끝에 붙여 두는 모양은
+        // 지키면서 각자 줄어들게 한다.
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -353,6 +376,16 @@ class _CharacterStage extends StatelessWidget {
               ),
             ),
           ],
+        ),
+        const SizedBox(height: AppSpacing.xs),
+        AnimatedLinearGauge(
+          value: progress,
+          color: color,
+          // 이름표 바탕이 흰색이라 회색 트랙은 잘 안 보인다. 같은 테마색을
+          // 옅게 깔아 파인 자리로 만든다.
+          backgroundColor: color.withValues(alpha: 0.18),
+          height: 6,
+          borderRadius: AppRadius.full,
         ),
       ],
     );
