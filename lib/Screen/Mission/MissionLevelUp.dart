@@ -16,7 +16,7 @@ import '../../Model/User/UserInfoModel.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Module/Theme/ThemeLockManager.dart';
-import '../User/Widget/FrogCharacter.dart';
+import 'LegacyFrogAsset.dart';
 
 /// 레벨대별 한 줄이다.
 ///
@@ -166,7 +166,7 @@ class _MissionLevelUpViewState extends State<_MissionLevelUpView>
   /// 에셋이 홀수 여덟 장이라 Lv.7 에서 Lv.8 로 올라도 그림은 그대로다. 그때
   /// 진화 연출을 하면 같은 그림 두 장을 놓고 바뀌었다고 하는 셈이라, 숫자와
   /// 게이지만 조용히 보여 준다.
-  bool get _evolves => FrogCharacter.evolvesBetween(_previousLevel, _level);
+  bool get _evolves => LegacyFrogAsset.evolvesBetween(_previousLevel, _level);
 
   @override
   Widget build(BuildContext context) {
@@ -514,7 +514,7 @@ class _EvolvingFrog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (!evolves) {
-      return _frogImage(FrogCharacter.assetPathOf(level), size);
+      return _frogImage(LegacyFrogAsset.pathOf(level), size);
     }
 
     return AnimatedBuilder(
@@ -542,7 +542,7 @@ class _EvolvingFrog extends StatelessWidget {
                   child: Transform.scale(
                     scale: 1 + 0.12 * outT,
                     child: _frogImage(
-                      FrogCharacter.assetPathOf(previousLevel),
+                      LegacyFrogAsset.pathOf(previousLevel),
                       size,
                     ),
                   ),
@@ -554,7 +554,7 @@ class _EvolvingFrog extends StatelessWidget {
                 child: Transform.scale(
                   // 나타나면서 한 번 크게 튀어오른다.
                   scale: _popScale(inT),
-                  child: _frogImage(FrogCharacter.assetPathOf(level), size),
+                  child: _frogImage(LegacyFrogAsset.pathOf(level), size),
                 ),
               ),
           ],

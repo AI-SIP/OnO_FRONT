@@ -6,7 +6,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ono/Screen/Mission/MissionLevelUp.dart';
-import 'package:ono/Screen/User/Widget/FrogCharacter.dart';
+import 'package:ono/Screen/Mission/LegacyFrogAsset.dart';
 
 import '../../helpers/helpers.dart';
 
@@ -16,35 +16,35 @@ void main() {
   group('개구리 그림', () {
     test('레벨이 오르면 그 레벨의 그림을 준다', () {
       expect(
-        FrogCharacter.assetPathOf(1),
+        LegacyFrogAsset.pathOf(1),
         'assets/FrogCharacter/FROG_LEVEL1.png',
       );
       expect(
-        FrogCharacter.assetPathOf(9),
+        LegacyFrogAsset.pathOf(9),
         'assets/FrogCharacter/FROG_LEVEL9.png',
       );
       expect(
-        FrogCharacter.assetPathOf(15),
+        LegacyFrogAsset.pathOf(15),
         'assets/FrogCharacter/FROG_LEVEL15.png',
       );
       // 표를 벗어난 값도 그림은 있어야 한다.
       expect(
-        FrogCharacter.assetPathOf(0),
+        LegacyFrogAsset.pathOf(0),
         'assets/FrogCharacter/FROG_LEVEL1.png',
       );
       expect(
-        FrogCharacter.assetPathOf(99),
+        LegacyFrogAsset.pathOf(99),
         'assets/FrogCharacter/FROG_LEVEL15.png',
       );
     });
 
     test('그림이 실제로 바뀌는 구간만 진화로 본다', () {
       // 에셋이 홀수 여덟 장이라 짝수 레벨로 오를 때는 그림이 그대로다.
-      expect(FrogCharacter.evolvesBetween(2, 3), isTrue);
-      expect(FrogCharacter.evolvesBetween(7, 8), isFalse);
-      expect(FrogCharacter.evolvesBetween(8, 9), isTrue);
-      expect(FrogCharacter.evolvesBetween(14, 15), isTrue);
-      expect(FrogCharacter.evolvesBetween(15, 15), isFalse);
+      expect(LegacyFrogAsset.evolvesBetween(2, 3), isTrue);
+      expect(LegacyFrogAsset.evolvesBetween(7, 8), isFalse);
+      expect(LegacyFrogAsset.evolvesBetween(8, 9), isTrue);
+      expect(LegacyFrogAsset.evolvesBetween(14, 15), isTrue);
+      expect(LegacyFrogAsset.evolvesBetween(15, 15), isFalse);
     });
   });
 
@@ -142,8 +142,8 @@ void main() {
         seen.addAll(drawnFrogs(tester));
       }
 
-      expect(seen.contains(FrogCharacter.assetPathOf(8)), isTrue);
-      expect(seen.contains(FrogCharacter.assetPathOf(9)), isTrue);
+      expect(seen.contains(LegacyFrogAsset.pathOf(8)), isTrue);
+      expect(seen.contains(LegacyFrogAsset.pathOf(9)), isTrue);
 
       await tester.pumpAndSettle();
     });
@@ -164,7 +164,7 @@ void main() {
         seen.addAll(drawnFrogs(tester));
       }
 
-      expect(seen, {FrogCharacter.assetPathOf(8)});
+      expect(seen, {LegacyFrogAsset.pathOf(8)});
 
       await tester.pumpAndSettle();
     });
@@ -172,7 +172,7 @@ void main() {
     testWidgets('연출을 끈 기기에서는 지금 개구리만 그린다', (tester) async {
       await pumpLevelUp(tester, level: 9, previousLevel: 8);
 
-      expect(drawnFrogs(tester), {FrogCharacter.assetPathOf(9)});
+      expect(drawnFrogs(tester), {LegacyFrogAsset.pathOf(9)});
     });
 
     testWidgets('해금된 테마가 있으면 색과 이름을 보여 준다', (tester) async {

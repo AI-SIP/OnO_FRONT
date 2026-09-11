@@ -2,44 +2,118 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 
+import '../../../Model/Cosmetic/CosmeticLoadoutModel.dart';
 import '../../../Module/Text/StandardText.dart';
 import '../../../Module/Design/AppRadius.dart';
 import '../../../Module/Design/AppColors.dart';
 
+/// 개구리를 층층이 겹쳐 그리는 것만 하는 위젯이다.
+///
+/// 파츠가 전부 같은 512×512 좌표계로 그려져 있어서, 같은 크기의 사각형에
+/// 포개기만 하면 자리가 맞는다. 오프셋을 따로 계산하지 않는다.
+///
+/// 누름이나 말풍선은 여기에 없다. 그게 필요하면 [FrogCharacter] 를 쓴다.
+/// 레벨업 연출처럼 개구리 두 장을 겹쳐 놓고 직접 움직여야 하는 곳은 이쪽이
+/// 편하다.
+class FrogLayerStack extends StatelessWidget {
+  /// 뒤에서 앞 순서로 겹쳐 그릴 층들. `CosmeticProvider.layers` 를 그대로 넘긴다.
+  ///
+  /// 비어 있으면 개구리 본체 한 장만 그린다. 치장을 아직 모르는 화면도 개구리
+  /// 자리가 비어 있으면 안 된다.
+  final List<CosmeticLayerModel> layers;
+
+  /// 한 변의 길이. 정사각형이다.
+  final double size;
+
+  /// 모서리 둥글기.
+  ///
+  /// 배경 파츠는 투명한 데가 없는 정사각형이라 그냥 깔면 각진 판이 된다.
+  /// 카드처럼 보이도록 잘라 낸다. 배경을 안 걸었으면 잘라도 보이는 변화가 없다.
+  final double borderRadius;
+
+  const FrogLayerStack({
+    super.key,
+    this.layers = const [],
+    this.size = 180,
+    this.borderRadius = AppRadius.large,
+  });
+
+  /// 실제로 그릴 층들. 비어 있으면 개구리 본체 한 장으로 메운다.
+  List<CosmeticLayerModel> get _resolved => layers.isEmpty
+      ? const [
+          CosmeticLayerModel(
+            imageUrl: CosmeticLoadoutModel.defaultBaseImageUrl,
+            layerOrder: 0,
+          ),
+        ]
+      : layers;
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(borderRadius),
+      child: SizedBox(
+        width: size,
+        height: size,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            for (final layer in _resolved) _buildLayer(layer),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLayer(CosmeticLayerModel layer) {
+    final url = layer.imageUrl;
+    if (url.isEmpty) return const SizedBox.shrink();
+
+    final isNetwork = url.startsWith('http');
+
+    return Image(
+      key: ValueKey(layer.itemKey ?? 'BASE'),
+      image: isNetwork
+          ? NetworkImage(url) as ImageProvider<Object>
+          : AssetImage(url),
+      width: size,
+      height: size,
+      fit: BoxFit.contain,
+      // 그림 한 장을 못 읽었다고 개구리가 통째로 깨지면 안 된다. 그 층만 비운다.
+      errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
+    );
+  }
+}
+
+/// 마이페이지와 미션 화면에 서 있는 개구리다.
+///
+/// 누르면 살짝 커지면서 격려 한마디를 띄운다. 그림은 [FrogLayerStack] 이
+/// 그린다.
 class FrogCharacter extends StatefulWidget {
-  final int level;
+  /// 겹쳐 그릴 층들. `CosmeticProvider.layers` 를 그대로 넘긴다.
+  ///
+  /// 비어 있으면 개구리 본체 한 장만 그린다.
+  final List<CosmeticLayerModel> layers;
+
   final VoidCallback? onTap;
   final double size;
 
+  /// 눌렀을 때 격려 말풍선을 띄울지.
+  ///
+  /// 튜토리얼 안내처럼 개구리가 장식으로만 서 있는 자리에서는 끈다.
+  final bool showEncouragement;
+
+  /// 모서리 둥글기. [FrogLayerStack.borderRadius] 로 그대로 간다.
+  final double borderRadius;
+
   const FrogCharacter({
     super.key,
-    required this.level,
+    this.layers = const [],
     this.onTap,
     this.size = 180,
+    this.showEncouragement = true,
+    this.borderRadius = AppRadius.large,
   });
-
-  /// 그 레벨의 개구리 그림 경로.
-  ///
-  /// 레벨업 연출이 "무엇이 무엇으로 바뀌었는지"를 보여 주려면 전후 두 장을
-  /// 밖에서 그려야 해서 열어 둔다. 지금 에셋이 홀수 여덟 장이라 레벨이 올라도
-  /// 그림은 그대로인 구간이 있다. 그 판단도 이 경로로 한다.
-  static String assetPathOf(int level) {
-    if (level >= 15) return 'assets/FrogCharacter/FROG_LEVEL15.png';
-    if (level >= 13) return 'assets/FrogCharacter/FROG_LEVEL13.png';
-    if (level >= 11) return 'assets/FrogCharacter/FROG_LEVEL11.png';
-    if (level >= 9) return 'assets/FrogCharacter/FROG_LEVEL9.png';
-    if (level >= 7) return 'assets/FrogCharacter/FROG_LEVEL7.png';
-    if (level >= 5) return 'assets/FrogCharacter/FROG_LEVEL5.png';
-    if (level >= 3) return 'assets/FrogCharacter/FROG_LEVEL3.png';
-    return 'assets/FrogCharacter/FROG_LEVEL1.png';
-  }
-
-  /// [from] 에서 [to] 로 오를 때 그림이 실제로 바뀌는지.
-  ///
-  /// 바뀌지 않는데 진화 연출을 보여 주면 같은 그림 두 장을 놓고 "바뀌었다"고
-  /// 하는 셈이 된다.
-  static bool evolvesBetween(int from, int to) =>
-      assetPathOf(from) != assetPathOf(to);
 
   @override
   State<FrogCharacter> createState() => _FrogCharacterState();
@@ -90,29 +164,29 @@ class _FrogCharacterState extends State<FrogCharacter>
     super.dispose();
   }
 
-  String _getFrogImagePath(int level) => FrogCharacter.assetPathOf(level);
-
   void _onCharacterTap() {
     // 애니메이션 실행
     _animationController.forward().then((_) {
       _animationController.reverse();
     });
 
-    // 랜덤 메시지 표시
-    setState(() {
-      _displayMessage = _encouragementMessages[
-          Random().nextInt(_encouragementMessages.length)];
-      _showMessage = true;
-    });
+    if (widget.showEncouragement) {
+      // 랜덤 메시지 표시
+      setState(() {
+        _displayMessage = _encouragementMessages[
+            Random().nextInt(_encouragementMessages.length)];
+        _showMessage = true;
+      });
 
-    // 2초 후 메시지 숨김
-    Future.delayed(const Duration(seconds: 2), () {
-      if (mounted) {
-        setState(() {
-          _showMessage = false;
-        });
-      }
-    });
+      // 2초 후 메시지 숨김
+      Future.delayed(const Duration(seconds: 2), () {
+        if (mounted) {
+          setState(() {
+            _showMessage = false;
+          });
+        }
+      });
+    }
 
     widget.onTap?.call();
   }
@@ -134,11 +208,10 @@ class _FrogCharacterState extends State<FrogCharacter>
                 child: child,
               );
             },
-            child: Image.asset(
-              _getFrogImagePath(widget.level),
-              width: widget.size,
-              height: widget.size,
-              fit: BoxFit.contain,
+            child: FrogLayerStack(
+              layers: widget.layers,
+              size: widget.size,
+              borderRadius: widget.borderRadius,
             ),
           ),
           // 격려 메시지
@@ -163,7 +236,7 @@ class _FrogCharacterState extends State<FrogCharacter>
                         borderRadius: BorderRadius.circular(AppRadius.xlarge),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
+                            color: Colors.black.withValues(alpha: 0.1),
                             blurRadius: 8,
                             offset: const Offset(0, 2),
                           ),
@@ -208,7 +281,7 @@ class _SpeechBubbleTailPainter extends CustomPainter {
     // 그림자 효과
     canvas.drawShadow(
       path,
-      Colors.black.withOpacity(0.1),
+      Colors.black.withValues(alpha: 0.1),
       2.0,
       false,
     );
