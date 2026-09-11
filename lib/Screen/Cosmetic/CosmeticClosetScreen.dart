@@ -172,9 +172,12 @@ class _CosmeticClosetScreenState extends State<CosmeticClosetScreen> {
       canPop: !dirty,
       onPopInvokedWithResult: (didPop, _) async {
         if (didPop) return;
+        // 창을 띄우고 나서 돌아오면 context 가 이미 죽어 있을 수 있다.
+        // 돌아갈 길은 물어보기 전에 잡아 둔다.
+        final navigator = Navigator.of(context);
         final leave = await _confirmDiscard(themeProvider.primaryColor);
-        if (!leave || !mounted) return;
-        Navigator.of(context).pop();
+        if (!leave) return;
+        navigator.pop();
       },
       child: _buildScaffold(
         themeProvider: themeProvider,
@@ -327,7 +330,7 @@ class _CosmeticClosetScreenState extends State<CosmeticClosetScreen> {
   /// 입어 본 것을 확정하거나 버리는 줄.
   Widget _buildSaveBar(CosmeticProvider cosmetic, Color color) {
     return Container(
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: AppColors.surface,
         border: Border(top: BorderSide(color: AppColors.border)),
       ),
@@ -346,8 +349,8 @@ class _CosmeticClosetScreenState extends State<CosmeticClosetScreen> {
                 onTap: _onRevertTap,
                 haptic: HapticLevel.none,
                 scale: 0.94,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
+                child: const Padding(
+                  padding: EdgeInsets.symmetric(
                     horizontal: AppSpacing.md,
                     vertical: AppSpacing.md,
                   ),
