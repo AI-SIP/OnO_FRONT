@@ -207,12 +207,12 @@ void main() {
       expect(frog.onTap, isNotNull);
     });
 
-    testWidgets('개구리 꾸미기 링크도 옷장으로 간다', (tester) async {
+    testWidgets('옷장 링크도 옷장으로 간다', (tester) async {
       disableAnimationsForTest(tester);
       await withMockedNetworkImages(() async {
         await pumpUserLevelCard(tester, userInfo: _userInfo());
 
-        await tester.tap(find.text('개구리 꾸미기'));
+        await tester.tap(find.text('옷장'));
         await tester.pumpAndSettle();
       });
 

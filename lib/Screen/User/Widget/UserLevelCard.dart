@@ -88,7 +88,7 @@ class UserLevelCard extends StatelessWidget {
       crossAxisAlignment: WrapCrossAlignment.center,
       children: [
         _buildCardLink(
-          label: '개구리 꾸미기',
+          label: '옷장',
           onTap: () => _openCloset(context),
           isTablet: isTablet,
         ),
