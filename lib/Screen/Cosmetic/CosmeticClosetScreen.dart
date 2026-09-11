@@ -19,6 +19,7 @@ import '../../Provider/CosmeticProvider.dart';
 import 'CosmeticCombinationPreviewScreen.dart';
 import 'Widget/CosmeticCollectionMeter.dart';
 import 'Widget/CosmeticItemTile.dart';
+import 'Widget/CosmeticNextUnlockCard.dart';
 import 'Widget/CosmeticSetBanner.dart';
 import 'Widget/CosmeticSlotTabs.dart';
 import 'Widget/CosmeticStage.dart';
@@ -476,6 +477,26 @@ class _CosmeticClosetScreenState extends State<CosmeticClosetScreen> {
 
         return CustomScrollView(
           slivers: [
+            // 격자보다 먼저 온다. 잠긴 칸을 훑기 전에 "다음은 이것"이 눈에
+            // 들어와야 격자가 모으는 중인 목록으로 읽힌다.
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.screenHorizontal,
+                AppSpacing.xs,
+                AppSpacing.screenHorizontal,
+                AppSpacing.md,
+              ),
+              sliver: SliverToBoxAdapter(
+                child: AppearTransition(
+                  child: CosmeticNextUnlockCard(
+                    items: items,
+                    slotName: slot.nameKo,
+                    backdrop: backdrop,
+                    color: color,
+                  ),
+                ),
+              ),
+            ),
             if (setId != null && members.isNotEmpty)
               SliverPadding(
                 padding: const EdgeInsets.fromLTRB(

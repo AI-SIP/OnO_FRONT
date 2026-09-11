@@ -8,6 +8,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:ono/Provider/CosmeticProvider.dart';
 import 'package:ono/Screen/Cosmetic/CosmeticClosetScreen.dart';
 import 'package:ono/Screen/Cosmetic/Widget/CosmeticCollectionMeter.dart';
+import 'package:ono/Screen/Cosmetic/Widget/CosmeticItemTile.dart';
+import 'package:ono/Screen/Cosmetic/Widget/CosmeticNextUnlockCard.dart';
 import 'package:ono/Screen/Cosmetic/Widget/CosmeticStage.dart';
 import 'package:ono/Screen/User/Widget/FrogCharacter.dart';
 
@@ -104,6 +106,64 @@ void main() {
       final meterY = tester.getTopLeft(find.byType(CosmeticCollectionMeter)).dy;
       final frogY = tester.getTopLeft(find.byType(CosmeticStageFrog)).dy;
       expect(meterY, lessThan(frogY));
+    });
+  });
+
+  group('다음 해금 예고', () {
+    Finder inCard(Finder matching) => find.descendant(
+          of: find.byType(CosmeticNextUnlockCard),
+          matching: matching,
+        );
+
+    testWidgets('격자보다 먼저, 다음에 열릴 것 하나를 크게 보여 준다', (tester) async {
+      // 첫 자리는 배경이다. Lv.12 에서 봄(3)과 공부방(7)을 가졌고 다음은
+      // Lv.13 의 밤하늘이다.
+      await pumpCloset(tester, level: 12);
+
+      expect(find.byType(CosmeticNextUnlockCard), findsOneWidget);
+      expect(inCard(find.text('다음에 열려요')), findsOneWidget);
+      expect(inCard(find.text('밤하늘')), findsOneWidget);
+      expect(inCard(find.text('Lv.13')), findsOneWidget);
+    });
+
+    testWidgets('자리별 진행도를 같이 얹는다', (tester) async {
+      // 탭 여덟 개에 숫자를 하나씩 달면 줄이 시끄러워진다. 고른 자리의 것만
+      // 이 카드에서 말한다.
+      await pumpCloset(tester, level: 12);
+
+      expect(inCard(find.text('배경 2 / 8')), findsOneWidget);
+    });
+
+    testWidgets('예고 카드가 격자보다 위에 있다', (tester) async {
+      await pumpCloset(tester, level: 12);
+
+      final cardY = tester.getTopLeft(find.byType(CosmeticNextUnlockCard)).dy;
+      final tileY = tester.getTopLeft(find.byType(CosmeticSlotEmptyTile)).dy;
+      expect(cardY, lessThan(tileY));
+    });
+
+    testWidgets('레벨로 열릴 것이 없으면 미션 보상을 예고한다', (tester) async {
+      // Lv.15 의 머리 자리는 레벨로 열리는 다섯 가지를 다 가졌다. 남은 것은
+      // 미션 보상 셋이라 그쪽을 말한다.
+      await pumpCloset(tester, level: 15);
+
+      await tester.tap(find.text('머리'));
+      await tester.pumpAndSettle();
+
+      expect(inCard(find.text('베레모')), findsOneWidget);
+      expect(inCard(find.text('미션 보상')), findsOneWidget);
+    });
+
+    testWidgets('그 자리를 다 모으면 다 모았다고 말한다', (tester) async {
+      final cosmetic = await pumpCloset(tester, level: 15);
+
+      cosmetic.setUnlockAll(true);
+      await tester.pumpAndSettle();
+
+      // 카드가 사라지지 않는다. 탭을 옮길 때마다 격자가 위아래로 튀면 안 된다.
+      expect(find.byType(CosmeticNextUnlockCard), findsOneWidget);
+      expect(inCard(find.text('다 모았어요')), findsOneWidget);
+      expect(inCard(find.text('배경 8 / 8')), findsOneWidget);
     });
   });
 

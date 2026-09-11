@@ -34,15 +34,31 @@ class CosmeticPartPreview extends StatelessWidget {
   /// 개구리를 위에 얹어서 "이 그림은 뒤에 깔린다"는 것을 보여 준다.
   final bool backdrop;
 
+  /// 아직 못 가진 것인지.
+  ///
+  /// 색을 빼고 옅게 둔다. 흐리게만 하면 옆 칸과 구분이 잘 안 되는데, 색이
+  /// 빠지면 멀리서도 갈라진다. **감추지는 않는다.** 무엇이 있는지 보여야
+  /// 갖고 싶어진다.
+  final bool locked;
+
   const CosmeticPartPreview({
     super.key,
     required this.imageUrl,
     this.backdrop = false,
+    this.locked = false,
   });
 
   /// 옅게 깔거나 얹는 개구리의 진하기.
   static const double _ghostOnFront = 0.55;
   static const double _ghostBehind = 0.22;
+
+  /// 아직 못 가진 것을 흑백으로 만드는 행렬이다.
+  static const List<double> _grayscale = <double>[
+    0.2126, 0.7152, 0.0722, 0, 0, //
+    0.2126, 0.7152, 0.0722, 0, 0, //
+    0.2126, 0.7152, 0.0722, 0, 0, //
+    0, 0, 0, 1, 0, //
+  ];
 
   static ImageProvider<Object> _providerOf(String url) => url.startsWith('http')
       ? NetworkImage(url) as ImageProvider<Object>
@@ -64,7 +80,7 @@ class CosmeticPartPreview extends StatelessWidget {
   Widget build(BuildContext context) {
     const ghost = CosmeticLoadoutModel.defaultBaseImageUrl;
 
-    return Stack(
+    final stack = Stack(
       fit: StackFit.expand,
       children: backdrop
           ? [
@@ -75,6 +91,16 @@ class CosmeticPartPreview extends StatelessWidget {
               _image(ghost, opacity: _ghostBehind, fit: BoxFit.contain),
               _image(imageUrl, fit: BoxFit.contain),
             ],
+    );
+
+    if (!locked) return stack;
+
+    return Opacity(
+      opacity: 0.55,
+      child: ColorFiltered(
+        colorFilter: const ColorFilter.matrix(_grayscale),
+        child: stack,
+      ),
     );
   }
 }
@@ -109,14 +135,6 @@ class CosmeticItemTile extends StatelessWidget {
     this.onTap,
   });
 
-  /// 아직 못 가진 것을 흑백으로 만드는 행렬이다.
-  static const List<double> _grayscale = <double>[
-    0.2126, 0.7152, 0.0722, 0, 0, //
-    0.2126, 0.7152, 0.0722, 0, 0, //
-    0.2126, 0.7152, 0.0722, 0, 0, //
-    0, 0, 0, 1, 0, //
-  ];
-
   bool get _owned => item.owned;
 
   @override
@@ -150,6 +168,7 @@ class CosmeticItemTile extends StatelessWidget {
     final preview = CosmeticPartPreview(
       imageUrl: item.imageUrl,
       backdrop: backdrop,
+      locked: !_owned,
     );
 
     return AnimatedContainer(
@@ -172,24 +191,14 @@ class CosmeticItemTile extends StatelessWidget {
           children: [
             Padding(
               padding: const EdgeInsets.all(2),
-              child: _owned
-                  ? preview
-                  // 못 가진 것은 색을 빼고 옅게 둔다. 흐리게만 하면 옆 칸과
-                  // 구분이 잘 안 되는데, 색이 빠지면 멀리서도 갈라진다.
-                  : Opacity(
-                      opacity: 0.55,
-                      child: ColorFiltered(
-                        colorFilter: const ColorFilter.matrix(_grayscale),
-                        child: preview,
-                      ),
-                    ),
+              child: preview,
             ),
             if (!_owned)
               Positioned(
                 left: AppSpacing.xs,
                 right: AppSpacing.xs,
                 bottom: AppSpacing.xs,
-                child: Center(child: _buildLockBadge()),
+                child: Center(child: CosmeticLockBadge(item: item)),
               ),
             // 체크는 늘 자리에 두고 켜고 끈다. 입는 순간에만 만들면 튀어오르는
             // 연출이 제 시점을 놓친다.
@@ -221,24 +230,50 @@ class CosmeticItemTile extends StatelessWidget {
       ),
     );
   }
+}
 
-  /// 왜 못 쓰는지 한 조각으로 알린다.
+/// 아직 못 쓰는 아이템에 왜 못 쓰는지를 한 조각으로 알린다.
+///
+/// 레벨로 열리는 것은 몇 레벨부터인지 숫자로, 미션 보상은 말로 적는다. 미션
+/// 보상에 `Lv.0` 같은 없는 숫자를 쓰면 안 된다.
+///
+/// 격자 칸과 다음 해금 예고가 같은 배지를 쓴다. 같은 것을 두 군데서 다르게
+/// 그리면 색이 정보를 잃는다.
+class CosmeticLockBadge extends StatelessWidget {
+  final CosmeticItemModel item;
+
+  /// 글자 크기. 예고 카드처럼 더 큰 자리에서는 키운다.
+  final double fontSize;
+
+  const CosmeticLockBadge({
+    super.key,
+    required this.item,
+    this.fontSize = 10,
+  });
+
+  /// 미션 보상 배지 색. 미션 화면의 오답노트 갈래와 같은 보라다.
   ///
-  /// 레벨로 열리는 것은 몇 레벨부터인지 숫자로, 미션 보상은 말로 적는다.
-  /// 미션 보상에 `Lv.0` 같은 없는 숫자를 쓰면 안 된다.
-  Widget _buildLockBadge() {
+  /// 레벨로 열리는 것과 미션으로 받는 것은 얻는 길이 다르다. 색을 갈라 두면
+  /// 격자를 훑을 때 "이건 미션 쪽"이 한눈에 걸린다.
+  static const Color missionReward = Color(0xFFBA68C8);
+
+  @override
+  Widget build(BuildContext context) {
     final byLevel = item.unlocksByLevel;
     final text = byLevel ? 'Lv.${item.requiredLevel}' : '미션 보상';
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+      padding: EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm,
+        vertical: fontSize > 10 ? 2 : 0,
+      ),
       decoration: BoxDecoration(
-        color: byLevel ? AppColors.textSecondary : _missionReward,
+        color: byLevel ? AppColors.textSecondary : missionReward,
         borderRadius: BorderRadius.circular(AppRadius.full),
       ),
       child: StandardText(
         text: text,
-        fontSize: 10,
+        fontSize: fontSize,
         fontWeight: FontWeight.w700,
         color: Colors.white,
         textAlign: TextAlign.center,
@@ -247,12 +282,6 @@ class CosmeticItemTile extends StatelessWidget {
       ),
     );
   }
-
-  /// 미션 보상 배지 색. 미션 화면의 오답노트 갈래와 같은 보라다.
-  ///
-  /// 레벨로 열리는 것과 미션으로 받는 것은 얻는 길이 다르다. 색을 갈라 두면
-  /// 격자를 훑을 때 "이건 미션 쪽"이 한눈에 걸린다.
-  static const Color _missionReward = Color(0xFFBA68C8);
 }
 
 /// 이 자리를 비워 두는 칸이다.
