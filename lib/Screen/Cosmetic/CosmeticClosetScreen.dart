@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../Model/Cosmetic/CosmeticItemModel.dart';
 import '../../Model/Cosmetic/CosmeticSlotModel.dart';
 import '../../Module/Design/AppColors.dart';
 import '../../Module/Design/AppRadius.dart';
 import '../../Module/Design/AppSpacing.dart';
+import '../../Module/Design/AppToast.dart';
 import '../../Module/Motion/AppearTransition.dart';
+import '../../Module/Motion/AppHaptic.dart';
 import '../../Module/Motion/AppMotion.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
@@ -33,6 +36,58 @@ class CosmeticClosetScreen extends StatefulWidget {
 class _CosmeticClosetScreenState extends State<CosmeticClosetScreen> {
   /// 지금 보고 있는 자리. [CosmeticProvider.slots] 의 순번이다.
   int _slotIndex = 0;
+
+  /// 갈아입은 횟수. 개구리를 한 번 들썩이게 하는 신호로만 쓴다.
+  int _equipTick = 0;
+
+  /// 아이템 칸을 눌렀을 때.
+  ///
+  /// 가진 것이면 걸고, 이미 걸려 있던 것을 다시 누르면 벗는다. 못 가진 것도
+  /// 눌리기는 한다. [CosmeticProvider.equip] 이 막아 주고 왜 안 되는지를
+  /// 문구로 남기므로, 그것을 꺼내 알림으로 띄운다. 알림은 화면 위를 덮지 않아서
+  /// 계속 다른 것을 눌러 볼 수 있다.
+  void _onItemTap(
+    CosmeticProvider cosmetic,
+    CosmeticSlotModel slot,
+    CosmeticItemModel item,
+  ) {
+    if (!item.owned) {
+      AppHaptic.secondary();
+      cosmetic.equip(slot.slot, item.itemKey);
+      _showFailure(cosmetic);
+      return;
+    }
+
+    AppHaptic.selection();
+    if (cosmetic.equippedItemKeyOf(slot.slot) == item.itemKey) {
+      cosmetic.unequip(slot.slot);
+    } else {
+      cosmetic.equip(slot.slot, item.itemKey);
+    }
+    _pulse();
+  }
+
+  /// 자리를 비운다. 이미 비어 있으면 아무 일도 하지 않는다.
+  void _onEmptyTap(CosmeticProvider cosmetic, CosmeticSlotModel slot) {
+    if (cosmetic.equippedItemKeyOf(slot.slot) == null) return;
+
+    AppHaptic.selection();
+    cosmetic.unequip(slot.slot);
+    _pulse();
+  }
+
+  /// 못 쓰는 이유를 한 번 꺼내 알린다. 실수가 아니라 안내라서 빨간 알림이
+  /// 아니다.
+  void _showFailure(CosmeticProvider cosmetic) {
+    final message = cosmetic.consumeFailure();
+    if (message == null) return;
+    AppToast.info(message);
+  }
+
+  void _pulse() {
+    if (!mounted) return;
+    setState(() => _equipTick++);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -79,12 +134,10 @@ class _CosmeticClosetScreenState extends State<CosmeticClosetScreen> {
                       ),
                       child: Column(
                         children: [
-                          Center(
-                            child: FrogCharacter(
-                              layers: cosmetic.layers,
-                              size: frogSize,
-                              borderRadius: AppRadius.xlarge,
-                            ),
+                          _buildStage(
+                            cosmetic,
+                            themeProvider.primaryColor,
+                            frogSize,
                           ),
                           const SizedBox(height: AppSpacing.md),
                           _buildLevelSlider(cosmetic, themeProvider),
@@ -113,6 +166,40 @@ class _CosmeticClosetScreenState extends State<CosmeticClosetScreen> {
               ),
             );
           },
+        ),
+      ),
+    );
+  }
+
+  /// 개구리가 서는 자리.
+  ///
+  /// 파츠에는 투명한 데가 많아서 흰 바탕에 그냥 두면 개구리가 허공에 뜬 것처럼
+  /// 보인다. 사용자가 고른 테마색을 아주 옅게 깔아 무대를 만든다. 금색 같은
+  /// 별도의 장식색을 쓰지 않는 이유는, 그러면 이 화면만 앱에서 겉돌기
+  /// 때문이다.
+  Widget _buildStage(CosmeticProvider cosmetic, Color color, double frogSize) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color.alphaBlend(color.withValues(alpha: 0.14), Colors.white),
+            Colors.white,
+          ],
+        ),
+        borderRadius: BorderRadius.circular(AppRadius.xlarge),
+        border: Border.all(color: color.withValues(alpha: 0.12)),
+      ),
+      child: Center(
+        child: _EquipPulse(
+          tick: _equipTick,
+          child: FrogCharacter(
+            layers: cosmetic.layers,
+            size: frogSize,
+            borderRadius: AppRadius.large,
+          ),
         ),
       ),
     );
@@ -204,13 +291,18 @@ class _CosmeticClosetScreenState extends State<CosmeticClosetScreen> {
     final backdrop = _isBackdrop(cosmetic.slots, slot);
 
     final tiles = <Widget>[
-      CosmeticSlotEmptyTile(selected: equippedKey == null, color: color),
+      CosmeticSlotEmptyTile(
+        selected: equippedKey == null,
+        color: color,
+        onTap: () => _onEmptyTap(cosmetic, slot),
+      ),
       for (final item in items)
         CosmeticItemTile(
           item: item,
           equipped: item.itemKey == equippedKey,
           backdrop: backdrop,
           color: color,
+          onTap: () => _onItemTap(cosmetic, slot, item),
         ),
     ];
 
@@ -260,5 +352,65 @@ class _CosmeticClosetScreenState extends State<CosmeticClosetScreen> {
         maxLines: 2,
       ),
     );
+  }
+}
+
+/// 갈아입을 때마다 개구리가 한 번 들썩인다.
+///
+/// 파츠가 소리 없이 바뀌면 눌린 것이 화면에 반영됐는지 애매하다. 아주 살짝
+/// 커졌다 돌아오면 방금 그 자리에서 일어난 일이라는 것이 손끝과 이어진다.
+class _EquipPulse extends StatefulWidget {
+  /// 이 값이 바뀔 때마다 한 번 재생한다.
+  final int tick;
+
+  final Widget child;
+
+  const _EquipPulse({required this.tick, required this.child});
+
+  @override
+  State<_EquipPulse> createState() => _EquipPulseState();
+}
+
+class _EquipPulseState extends State<_EquipPulse>
+    with SingleTickerProviderStateMixin {
+  // 늦게 만들지 않는다. "동작 줄이기"를 켠 기기에서 build 가 컨트롤러를
+  // 건드리지 않고 끝나면, dispose 가 그제서야 만들면서 죽는다.
+  late final AnimationController _controller;
+  late final Animation<double> _scale;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(vsync: this, duration: AppMotion.normal);
+    _scale = TweenSequence<double>([
+      TweenSequenceItem(
+        tween: Tween<double>(begin: 1.0, end: 1.05)
+            .chain(CurveTween(curve: AppMotion.enter)),
+        weight: 40,
+      ),
+      TweenSequenceItem(
+        tween: Tween<double>(begin: 1.05, end: 1.0)
+            .chain(CurveTween(curve: AppMotion.emphasized)),
+        weight: 60,
+      ),
+    ]).animate(_controller);
+  }
+
+  @override
+  void didUpdateWidget(covariant _EquipPulse oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.tick != widget.tick) _controller.forward(from: 0);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (AppMotion.isReduced(context)) return widget.child;
+    return ScaleTransition(scale: _scale, child: widget.child);
   }
 }
