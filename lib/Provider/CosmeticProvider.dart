@@ -73,6 +73,28 @@ class CosmeticProvider with ChangeNotifier {
   /// 개구리를 그릴 층들. 뒤에서 앞 순서다. [FrogCharacter] 에 그대로 넘긴다.
   List<CosmeticLayerModel> get layers => loadout.resolveLayers();
 
+  /// 배경을 뺀 층들. 개구리만 투명한 바탕에 남는다.
+  ///
+  /// 달력 도장이나 복습 완료 화면처럼 **이미 바탕이 있는 자리**에 쓴다. 거기에
+  /// 배경 파츠까지 깔면 네모난 판이 하나 더 생겨서, 개구리가 아니라 카드가
+  /// 놓인 것처럼 보인다.
+  ///
+  /// 개구리 본체보다 뒤에 그려지는 것(배경, 등짐)을 걷어 낸다. 슬롯 키를 박아
+  /// 두지 않는 이유는 자리 이름이 서버가 정하는 값이기 때문이다. 그리는 순서만
+  /// 보면 된다.
+  List<CosmeticLayerModel> get layersWithoutBackdrop {
+    final all = layers;
+    final baseOrder = all
+        .where((layer) => layer.isBase)
+        .map((layer) => layer.layerOrder)
+        .firstOrNull;
+    if (baseOrder == null) return all;
+    return [
+      for (final layer in all)
+        if (layer.isBase || layer.layerOrder >= baseOrder) layer,
+    ];
+  }
+
   /// 그 레벨의 **첫 차림**. 자리마다 가장 늦게 열린 것을 하나씩 걸친 모습이다.
   ///
   /// 옷장을 한 번도 안 연 사람이 보는 모습이고, 조합 검수 화면도 이걸 쓴다.

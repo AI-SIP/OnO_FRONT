@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
+import '../../Provider/CosmeticProvider.dart';
+import '../User/Widget/FrogCharacter.dart';
 import '../../Model/PracticeNote/PracticeNoteDetailModel.dart';
 import '../../Model/Problem/ProblemModel.dart';
 import '../../Module/Dialog/SnackBarDialog.dart';
@@ -362,10 +363,10 @@ class PracticeDetailScreen extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            SvgPicture.asset(
-              'assets/Icon/BigGreenFrog.svg',
-              width: 110,
-              height: 110,
+            // 빈 자리를 지키는 것도 내가 꾸민 개구리다. 배경 파츠는 뺀다.
+            FrogLayerStack(
+              layers: context.watch<CosmeticProvider>().layersWithoutBackdrop,
+              size: 110,
             ),
             const SizedBox(height: 16),
             const StandardText(

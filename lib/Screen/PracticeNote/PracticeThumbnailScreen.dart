@@ -3,6 +3,8 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
+import '../../Provider/CosmeticProvider.dart';
+import '../User/Widget/FrogCharacter.dart';
 import '../../Model/PracticeNote/PracticeNoteThumbnailModel.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Text/mobile_font_size.dart';
@@ -523,10 +525,10 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               const SizedBox(height: 40),
-              SvgPicture.asset(
-                'assets/Icon/BigGreenFrog.svg',
-                width: 90,
-                height: 90,
+              // 빈 자리를 지키는 것도 내가 꾸민 개구리다. 배경 파츠는 뺀다.
+              FrogLayerStack(
+                layers: context.watch<CosmeticProvider>().layersWithoutBackdrop,
+                size: 90,
               ),
               const SizedBox(height: 40),
               StandardText(

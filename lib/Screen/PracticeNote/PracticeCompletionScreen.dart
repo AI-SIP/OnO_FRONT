@@ -2,9 +2,10 @@ import 'dart:async';
 
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 
+import '../../Provider/CosmeticProvider.dart';
+import '../User/Widget/FrogCharacter.dart';
 import '../../Module/Emoji/OnoEmojiCatalog.dart';
 import '../../Module/Emoji/OnoEmojiImage.dart';
 import '../../Module/Emoji/OnoEmojiPicker.dart';
@@ -111,9 +112,14 @@ class _PracticeCompletionScreenState extends State<PracticeCompletionScreen> {
                   child: Stack(
                     alignment: Alignment.bottomRight,
                     children: [
-                      SvgPicture.asset(
-                        'assets/Icon/BigGreenFrog.svg',
-                        height: screenHeight * 0.2,
+                      // 복습을 끝낸 자리에 서는 것은 내가 꾸민 개구리다.
+                      // 배경 파츠는 뺀다. 흰 화면 한가운데에 네모난 배경이
+                      // 깔리면 개구리가 아니라 카드가 놓인 것처럼 보인다.
+                      FrogLayerStack(
+                        layers: context
+                            .watch<CosmeticProvider>()
+                            .layersWithoutBackdrop,
+                        size: screenHeight * 0.2,
                       ),
                       // 화면만 바뀌면 끝났다는 느낌이 없어서, 캐릭터 옆에
                       // 확인 표시가 그어지게 했다.

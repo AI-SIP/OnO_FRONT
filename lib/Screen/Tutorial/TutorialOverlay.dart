@@ -8,7 +8,7 @@ import 'package:provider/provider.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/TutorialProvider.dart';
-import '../Cosmetic/Mock/CosmeticMockData.dart';
+import '../../Provider/CosmeticProvider.dart';
 import '../User/Widget/FrogCharacter.dart';
 import 'TutorialStep.dart';
 import 'TutorialTargets.dart';
@@ -739,10 +739,12 @@ class _TutorialOverlayState extends State<TutorialOverlay>
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // 안내 개구리는 사용자가 무엇을 입혀 뒀든 늘 같은 모습이어야 해서,
-        // 지금 차림 대신 학사 세트를 입은 고정 한 벌을 쓴다.
+        // 안내를 하는 것도 내가 꾸민 개구리다. 앱을 처음 열었을 때부터
+        // 같은 개구리가 따라다녀야 이 앱의 마스코트로 읽힌다. 배경 파츠는
+        // 뺀다. 말풍선 옆에 네모난 배경이 깔리면 개구리가 아니라 카드가
+        // 놓인 것처럼 보인다.
         FrogLayerStack(
-          layers: CosmeticMockData.graduateLayers,
+          layers: context.watch<CosmeticProvider>().layersWithoutBackdrop,
           size: frogSize,
         ),
         const SizedBox(width: 4),

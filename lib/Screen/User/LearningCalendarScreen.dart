@@ -2,6 +2,9 @@ import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../Model/Cosmetic/CosmeticLoadoutModel.dart';
+import '../../Provider/CosmeticProvider.dart';
+import 'Widget/FrogCharacter.dart';
 import '../../Model/StudyCalendar/StudyCalendarModel.dart';
 import '../../Module/Emoji/OnoEmojiCategory.dart';
 import '../../Module/Emoji/OnoEmojiImage.dart';
@@ -374,6 +377,9 @@ class _LearningCalendarScreenState extends State<LearningCalendarScreen> {
   }
 
   Widget _buildCalendarGrid(ThemeHandler themeProvider) {
+    // 공부한 날마다 찍히는 도장이 내가 꾸민 개구리다. 칸마다 Provider 를
+    // 읽으면 서른 번 넘게 구독하게 되므로 여기서 한 번만 읽어 내려 준다.
+    final frogLayers = context.watch<CosmeticProvider>().layersWithoutBackdrop;
     final mq = MediaQuery.of(context);
     final screenWidth = mq.size.width;
     final isTablet = mq.size.shortestSide >= 600;
@@ -434,6 +440,7 @@ class _LearningCalendarScreenState extends State<LearningCalendarScreen> {
                         intensityLevel: intensity,
                         moodEmojiKey: record?.moodEmojiKey,
                         themeProvider: themeProvider,
+                        frogLayers: frogLayers,
                         onTap: isFuture
                             ? null
                             : () {
@@ -833,6 +840,10 @@ class _CalendarCell extends StatelessWidget {
   final int intensityLevel;
   final String? moodEmojiKey;
   final ThemeHandler themeProvider;
+
+  /// 공부한 날에 찍을 개구리. `CosmeticProvider.layersWithoutBackdrop` 이다.
+  final List<CosmeticLayerModel> frogLayers;
+
   final VoidCallback? onTap;
 
   const _CalendarCell({
@@ -842,6 +853,7 @@ class _CalendarCell extends StatelessWidget {
     required this.intensityLevel,
     this.moodEmojiKey,
     required this.themeProvider,
+    required this.frogLayers,
     this.onTap,
   });
 
@@ -889,13 +901,13 @@ class _CalendarCell extends StatelessWidget {
       return FractionallySizedBox(
         widthFactor: 0.68,
         heightFactor: 0.68,
-        child: Image.asset(
-          'assets/FrogCharacter/FROG_STAMP.png',
-          fit: BoxFit.contain,
-          errorBuilder: (_, __, ___) => const StandardText(
-            text: '🐸',
-            fontSize: 10,
-            color: Colors.white,
+        // 공부한 날에 찍히는 도장도 내가 꾸민 개구리 얼굴이다. 칸이 작아
+        // 전신은 알아볼 수 없어서 얼굴만 잘라 쓴다. 칸에 이미 진하기 색이
+        // 깔려 있으므로 배경 파츠는 뺀다.
+        child: LayoutBuilder(
+          builder: (context, constraints) => FrogHeadAvatar(
+            layers: frogLayers,
+            size: constraints.biggest.shortestSide,
           ),
         ),
       );

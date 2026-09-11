@@ -6,6 +6,8 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ono/Constants/ProfileImageDefaults.dart';
 import 'package:ono/Module/User/ProfileAvatar.dart';
+import 'package:ono/Screen/Cosmetic/Mock/CosmeticMockData.dart';
+import 'package:ono/Screen/User/Widget/FrogCharacter.dart';
 
 import '../../helpers/helpers.dart';
 
@@ -52,5 +54,63 @@ void main() {
     );
 
     expect(find.byType(SvgPicture), findsOneWidget);
+  });
+
+  group('개구리 프로필', () {
+    testWidgets('개구리를 넘기면 기본 이미지 대신 개구리 얼굴이 선다', (tester) async {
+      await withMockedNetworkImages(() async {
+        await pumpOnoWidget(
+          tester,
+          Scaffold(
+            body: Center(
+              child: ProfileAvatar(
+                size: 48,
+                borderColor: Colors.grey,
+                frogLayers: CosmeticMockData.graduateLayers,
+              ),
+            ),
+          ),
+        );
+      });
+
+      expect(find.byType(FrogHeadAvatar), findsOneWidget);
+      expect(find.byType(SvgPicture), findsNothing);
+    });
+
+    testWidgets('안 넘기면 예전 그대로 기본 이미지다', (tester) async {
+      // 스터디룸에서 보는 남의 프로필이 이 경우다. 그 사람이 무엇을 입었는지
+      // 서버가 내려주지 않으므로 내 개구리를 세우면 거짓말이 된다.
+      await pumpOnoWidget(
+        tester,
+        const Scaffold(
+          body: Center(
+            child: ProfileAvatar(size: 48, borderColor: Colors.grey),
+          ),
+        ),
+      );
+
+      expect(find.byType(FrogHeadAvatar), findsNothing);
+      expect(find.byType(SvgPicture), findsOneWidget);
+    });
+
+    testWidgets('사진을 올렸으면 개구리를 넘겨도 사진이 이긴다', (tester) async {
+      await withMockedNetworkImages(() async {
+        await pumpOnoWidget(
+          tester,
+          Scaffold(
+            body: Center(
+              child: ProfileAvatar(
+                imageUrl: 'https://example.com/me.png',
+                size: 48,
+                borderColor: Colors.grey,
+                frogLayers: CosmeticMockData.graduateLayers,
+              ),
+            ),
+          ),
+        );
+      });
+
+      expect(find.byType(Image), findsWidgets);
+    });
   });
 }
