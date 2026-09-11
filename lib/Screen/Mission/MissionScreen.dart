@@ -186,6 +186,9 @@ class _MissionScreenState extends State<MissionScreen> {
       missionTitle: mission.title,
       rewardType: result.rewardType,
       amount: result.rewardValue,
+      // 뒤에 레벨업 화면이 붙는 경우다. 상자가 열린 뒤 머무는 시간을 줄여
+      // 두 연출이 이어 붙어 늘어지지 않게 한다.
+      levelUpFollows: result.leveledUp,
     );
     if (!mounted) return;
 
