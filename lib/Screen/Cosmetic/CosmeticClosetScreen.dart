@@ -20,7 +20,6 @@ import 'CosmeticCombinationPreviewScreen.dart';
 import 'Widget/CosmeticCollectionMeter.dart';
 import 'Widget/CosmeticItemTile.dart';
 import 'Widget/CosmeticNextUnlockCard.dart';
-import 'Widget/CosmeticSetBanner.dart';
 import 'Widget/CosmeticSlotTabs.dart';
 import 'Widget/CosmeticStage.dart';
 
@@ -89,24 +88,6 @@ class _CosmeticClosetScreenState extends State<CosmeticClosetScreen> {
     final message = cosmetic.consumeFailure();
     if (message == null) return;
     AppToast.info(message);
-  }
-
-  /// 한 벌을 통째로 건다.
-  ///
-  /// 세트에 못 가진 것이 섞여 있으면 [CosmeticProvider.equipSet] 이 하나도
-  /// 걸지 않는다. 절반만 입혀 두면 무엇이 모자란지 알 수 없기 때문이다.
-  void _onSetTap(CosmeticProvider cosmetic, String setId) {
-    cosmetic.equipSet(setId);
-
-    final message = cosmetic.consumeFailure();
-    if (message != null) {
-      AppHaptic.secondary();
-      AppToast.info(message);
-      return;
-    }
-
-    AppHaptic.primary();
-    _pulse();
   }
 
   /// 걸친 것을 전부 벗는다.
@@ -309,7 +290,10 @@ class _CosmeticClosetScreenState extends State<CosmeticClosetScreen> {
               _buildResetButton(cosmetic, color),
             ],
           ),
-          const SizedBox(height: AppSpacing.xs),
+          // 게이지 바로 아래에 개구리를 붙여 두면 둘이 한 덩어리로 읽혀서
+          // 무대가 좁아 보인다. 눈에 띄게 벌려 게이지는 머리말, 개구리는
+          // 무대 위 주인공으로 갈라 놓는다.
+          const SizedBox(height: AppSpacing.xl),
           CosmeticStageFrog(
             layers: cosmetic.layers,
             size: frogSize,
@@ -471,12 +455,6 @@ class _CosmeticClosetScreenState extends State<CosmeticClosetScreen> {
         ),
     ];
 
-    // 이 자리에 한 벌로 묶인 것이 있으면 격자 위에 세트 줄을 얹는다.
-    final setId = _setIdOf(items);
-    final members = setId == null
-        ? const <CosmeticItemModel>[]
-        : cosmetic.itemsOfSet(setId);
-
     return LayoutBuilder(
       builder: (context, constraints) {
         // 칸 하나가 120 언저리가 되게 나눈다. 폰은 셋, 태블릿은 여섯까지.
@@ -504,25 +482,6 @@ class _CosmeticClosetScreenState extends State<CosmeticClosetScreen> {
                 ),
               ),
             ),
-            if (setId != null && members.isNotEmpty)
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.screenHorizontal,
-                  AppSpacing.xs,
-                  AppSpacing.screenHorizontal,
-                  AppSpacing.md,
-                ),
-                sliver: SliverToBoxAdapter(
-                  child: AppearTransition(
-                    child: CosmeticSetBanner(
-                      members: members,
-                      equipped: _isSetEquipped(cosmetic, members),
-                      color: color,
-                      onTap: () => _onSetTap(cosmetic, setId),
-                    ),
-                  ),
-                ),
-              ),
             SliverPadding(
               padding: const EdgeInsets.fromLTRB(
                 AppSpacing.screenHorizontal,
@@ -543,26 +502,6 @@ class _CosmeticClosetScreenState extends State<CosmeticClosetScreen> {
         );
       },
     );
-  }
-
-  /// 이 자리의 아이템 중 한 벌로 묶인 것이 있으면 그 세트 키.
-  String? _setIdOf(List<CosmeticItemModel> items) {
-    for (final item in items) {
-      final setId = item.setId;
-      if (setId != null) return setId;
-    }
-    return null;
-  }
-
-  /// 세트가 통째로 걸려 있는지.
-  bool _isSetEquipped(
-    CosmeticProvider cosmetic,
-    List<CosmeticItemModel> members,
-  ) {
-    for (final item in members) {
-      if (cosmetic.equippedItemKeyOf(item.slot) != item.itemKey) return false;
-    }
-    return members.isNotEmpty;
   }
 
   /// 개구리 **뒤에** 깔리는 자리인지.

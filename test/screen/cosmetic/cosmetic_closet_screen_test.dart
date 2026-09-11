@@ -10,7 +10,6 @@ import 'package:ono/Screen/Cosmetic/CosmeticClosetScreen.dart';
 import 'package:ono/Screen/Cosmetic/Widget/CosmeticCollectionMeter.dart';
 import 'package:ono/Screen/Cosmetic/Widget/CosmeticItemTile.dart';
 import 'package:ono/Screen/Cosmetic/Widget/CosmeticNextUnlockCard.dart';
-import 'package:ono/Screen/Cosmetic/Widget/CosmeticSetBanner.dart';
 import 'package:ono/Screen/Cosmetic/Widget/CosmeticStage.dart';
 import 'package:ono/Screen/User/Widget/FrogCharacter.dart';
 
@@ -155,7 +154,7 @@ void main() {
       expect(inCard(find.text('미션 보상')), findsOneWidget);
     });
 
-    testWidgets('그 자리를 다 모으면 다 모았다고 말한다', (tester) async {
+    testWidgets('그 자리를 다 모으면 잘했다는 말 없이 진행도만 남는다', (tester) async {
       final cosmetic = await pumpCloset(tester, level: 15);
 
       cosmetic.setUnlockAll(true);
@@ -163,8 +162,11 @@ void main() {
 
       // 카드가 사라지지 않는다. 탭을 옮길 때마다 격자가 위아래로 튀면 안 된다.
       expect(find.byType(CosmeticNextUnlockCard), findsOneWidget);
-      expect(inCard(find.text('다 모았어요')), findsOneWidget);
       expect(inCard(find.text('배경 9 / 9')), findsOneWidget);
+      // 축하 문구는 두지 않는다. 자리마다 뜨면 금세 잔소리가 된다.
+      expect(find.textContaining('다 모았'), findsNothing);
+      expect(find.textContaining('전부 가졌'), findsNothing);
+      expect(inCard(find.text('다음에 열려요')), findsNothing);
     });
   });
 
@@ -191,39 +193,6 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('NEW'), findsOneWidget);
-    });
-  });
-
-  group('세트 진행도', () {
-    Finder inBanner(Finder matching) => find.descendant(
-          of: find.byType(CosmeticSetBanner),
-          matching: matching,
-        );
-
-    testWidgets('한 벌을 얼마나 모았는지 숫자로 말한다', (tester) async {
-      // 학사 세트는 머리·옷·손 셋으로 흩어져 있어서 격자만 봐서는 몇 개를
-      // 모았는지 셀 데가 없다.
-      await pumpCloset(tester, level: 15);
-
-      await tester.tap(find.text('머리'));
-      await tester.pumpAndSettle();
-
-      expect(find.byType(CosmeticSetBanner), findsOneWidget);
-      expect(inBanner(find.text('3 / 3')), findsOneWidget);
-    });
-
-    testWidgets('못 모은 세트는 개수와 조건을 같이 말한다', (tester) async {
-      // Lv.14 에서는 학사 세트 셋이 모두 Lv.15 라 하나도 없다.
-      await pumpCloset(tester, level: 14);
-
-      await tester.tap(find.text('머리'));
-      await tester.pumpAndSettle();
-
-      expect(inBanner(find.text('0 / 3')), findsOneWidget);
-      expect(
-        inBanner(find.textContaining('Lv.15 부터')),
-        findsOneWidget,
-      );
     });
   });
 
