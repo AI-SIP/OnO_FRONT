@@ -109,7 +109,7 @@ class _MissionScreenState extends State<MissionScreen> {
     // 받기 전에 열려 있던 테마를 찍어 둔다. 서버가 해금 정보를 내려주지 않아서
     // 받은 뒤와 비교해 이번에 열린 것을 알아낸다.
     final unlockedBefore = unlockedThemeIndexes(userProvider.userInfoModel);
-    // 레벨업 전의 종합 레벨. 개구리 그림이 실제로 바뀌는지 판단하는 데 쓴다.
+    // 레벨업 전의 종합 레벨. 이 사이에 열린 치장을 찾아 개구리에 입히는 데 쓴다.
     final levelBefore = userProvider.userInfoModel?.totalStudyLevel;
 
     final result = await missionProvider.claim(progressId);
