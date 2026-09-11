@@ -60,7 +60,7 @@ class MissionHeroCard extends StatefulWidget {
   /// XP 칩을 눌렀을 때. 지금까지 받은 보상을 보여 주는 화면으로 간다.
   final VoidCallback? onCounterTap;
 
-  /// 개구리를 눌렀을 때. 옷장으로 간다.
+  /// 개구리를 눌렀을 때. 꾸미기 화면으로 간다.
   ///
   /// 이 카드가 직접 화면을 밀지 않는다. 히어로는 그림과 숫자만 맡고, 어디로
   /// 가는지는 미션 화면이 정한다.
@@ -179,9 +179,10 @@ class _MissionHeroCardState extends State<MissionHeroCard>
     double ratio,
     List<CosmeticLayerModel> frogLayers,
   ) {
-    // 개구리를 누르면 옷장으로 간다. 마이페이지와 같은 약속이라, 이 앱에서
-    // 개구리를 누르면 늘 꾸미러 가는 문이 열린다. 격려 말풍선은 옷장 무대
-    // 쪽에서만 뜬다.
+    // 개구리를 누르면 꾸미기 화면으로 간다. 마이페이지와 같은 약속이라, 여기
+    // 개구리는 꾸미러 가는 문이다. 누름 하나가 한 가지 일만 해야 해서 격려
+    // 말풍선은 띄우지 않는다. 말풍선은 개구리가 문이 아닌 자리(옷장 탭과
+    // 꾸미기 화면의 무대)에서만 뜬다.
     final frog = FrogCharacter(
       layers: frogLayers,
       size: size * 0.62,
