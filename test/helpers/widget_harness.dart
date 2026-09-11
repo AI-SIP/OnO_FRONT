@@ -6,6 +6,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ono/Module/Theme/ThemeHandler.dart';
+import 'package:ono/Provider/CosmeticProvider.dart';
 import 'package:ono/Provider/FoldersProvider.dart';
 import 'package:ono/Provider/MissionProvider.dart';
 import 'package:ono/Provider/PracticeNoteProvider.dart';
@@ -86,6 +87,7 @@ Future<void> pumpOnoWidget(
   MissionProvider? missionProvider,
   TutorialProvider? tutorialProvider,
   ScreenIndexProvider? screenIndexProvider,
+  CosmeticProvider? cosmeticProvider,
   ThemeHandler? themeHandler,
   Size surfaceSize = OnoSurface.phone,
   List<NavigatorObserver> navigatorObservers = const [],
@@ -129,6 +131,9 @@ Future<void> pumpOnoWidget(
         ),
         ChangeNotifierProvider<StudyRoomProvider>.value(
           value: studyRoomProvider ?? StudyRoomProvider(),
+        ),
+        ChangeNotifierProvider<CosmeticProvider>.value(
+          value: cosmeticProvider ?? CosmeticProvider(),
         ),
       ],
       child: Builder(

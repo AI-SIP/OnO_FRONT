@@ -9,6 +9,7 @@ import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart';
 import 'package:ono/Model/Common/LoginStatus.dart';
 import 'package:ono/Module/Text/StandardText.dart';
 import 'package:ono/Module/Theme/ThemeHandler.dart';
+import 'package:ono/Provider/CosmeticProvider.dart';
 import 'package:ono/Provider/FoldersProvider.dart';
 import 'package:ono/Provider/ScreenIndexProvider.dart';
 import 'package:ono/Screen/ProblemRegister/ProblemRegisterScreen.dart';
@@ -147,6 +148,7 @@ Future<void> _bootstrapApp() async {
         ChangeNotifierProvider(create: (_) => ReviewDueProvider()),
         ChangeNotifierProvider(create: (_) => TutorialProvider()),
         ChangeNotifierProvider(create: (_) => StudyRoomProvider()),
+        ChangeNotifierProvider(create: (_) => CosmeticProvider()),
       ],
       child: const MyApp(),
     ),
