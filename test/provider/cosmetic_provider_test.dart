@@ -7,23 +7,19 @@ import 'package:ono/Provider/CosmeticProvider.dart';
 import 'package:ono/Screen/Cosmetic/Mock/CosmeticMockData.dart';
 
 void main() {
-  group('기본 프리셋', () {
-    test('슬롯마다 열려 있는 것 중 가장 늦게 열린 것을 입는다', () {
+  group('처음 상태', () {
+    // 알아서 입혀 주는 차림이 없다. 자리마다 열린 것을 다 걸치면 목도리가
+    // 가방을 덮고 학사복 위에 또 목도리가 얹혀 잡동사니가 된다. 무엇을 입을지는
+    // 사람이 고른다.
+    test('레벨이 높아도 맨몸으로 시작한다', () {
       final provider = CosmeticProvider(mockLevel: 15);
 
-      expect(provider.equipped, {
-        'BACKGROUND': 'bg_night', // Lv.13 이 가장 늦다
-        'BAG': 'bag_mini_backpack', // Lv.8
-        'OUTFIT': 'outfit_graduate', // Lv.15
-        'NECK': 'scarf', // Lv.5
-        'FACE': 'glasses_sun', // Lv.11
-        'HEAD': 'hat_graduate', // Lv.15
-        'HAND': 'prop_diploma', // Lv.15
-        // BADGE 는 레벨로 열리는 것이 없어서 빈다.
-      });
+      expect(provider.equipped, isEmpty);
+      expect(provider.layers, hasLength(1));
+      expect(provider.layers.single.isBase, isTrue);
     });
 
-    test('Lv.1 은 아직 아무것도 없어서 개구리 한 장뿐이다', () {
+    test('Lv.1 도 마찬가지다', () {
       final provider = CosmeticProvider(mockLevel: 1);
 
       expect(provider.equipped, isEmpty);
@@ -38,20 +34,15 @@ void main() {
   });
 
   group('setMockLevel', () {
-    test('아직 안 갈아입었으면 그 레벨의 기본 차림으로 다시 맞춘다', () {
-      final provider = CosmeticProvider(mockLevel: 15);
+    test('레벨을 옮겨도 입혀 주지 않는다', () {
+      final provider = CosmeticProvider(mockLevel: 1);
 
-      provider.setMockLevel(6);
+      provider.setMockLevel(15);
 
-      expect(provider.equipped, {
-        'BACKGROUND': 'bg_spring', // Lv.3
-        'NECK': 'scarf', // Lv.5
-        'FACE': 'glasses_round', // Lv.4
-        'HEAD': 'hat_beanie', // Lv.6
-      });
+      expect(provider.equipped, isEmpty);
     });
 
-    test('한 번 갈아입은 뒤에는 고른 것을 덮지 않는다', () {
+    test('고른 것을 덮지 않는다', () {
       final provider = CosmeticProvider(mockLevel: 15);
       provider.equip('HEAD', 'headband_sprout');
 
@@ -124,6 +115,8 @@ void main() {
 
     test('unequip 은 그 자리만 비운다', () {
       final provider = CosmeticProvider(mockLevel: 15);
+      provider.equip('HEAD', 'hat_graduate');
+      provider.equip('OUTFIT', 'outfit_graduate');
 
       provider.unequip('HEAD');
 
@@ -133,9 +126,6 @@ void main() {
 
     test('equipSet 은 세트를 통째로 건다', () {
       final provider = CosmeticProvider(mockLevel: 15);
-      provider.unequip('HEAD');
-      provider.unequip('OUTFIT');
-      provider.unequip('HAND');
 
       provider.equipSet('graduate');
 
@@ -153,13 +143,14 @@ void main() {
       expect(provider.consumeFailure(), 'Lv.15 부터 쓸 수 있어요.');
     });
 
-    test('resetToPreset 은 그 레벨의 기본 차림으로 되돌린다', () {
+    test('unequipAll 은 걸친 것을 전부 벗긴다', () {
       final provider = CosmeticProvider(mockLevel: 15);
-      provider.unequip('HEAD');
+      provider.equipSet('graduate');
+      provider.equip('NECK', 'scarf');
 
-      provider.resetToPreset();
+      provider.unequipAll();
 
-      expect(provider.equippedItemKeyOf('HEAD'), 'hat_graduate');
+      expect(provider.equipped, isEmpty);
     });
   });
 

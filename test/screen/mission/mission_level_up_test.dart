@@ -242,10 +242,16 @@ void main() {
       List<int> unlocked = const [],
       bool reduceMotion = true,
       bool settle = true,
+      Map<String, String> wearing = const {},
     }) async {
       if (reduceMotion) disableAnimationsForTest(tester);
+      // 알아서 입혀 주는 차림이 없어서, 오르기 전에 무엇을 입고 있었는지는
+      // 이렇게 직접 걸쳐 준다.
+      final cosmetic = CosmeticProvider(mockLevel: level);
+      wearing.forEach(cosmetic.equip);
       await pumpOnoWidget(
         tester,
+        cosmeticProvider: cosmetic,
         Builder(
           builder: (context) => Scaffold(
             body: Center(
@@ -316,6 +322,7 @@ void main() {
         previousLevel: 14,
         reduceMotion: false,
         settle: false,
+        wearing: const {'HEAD': 'hat_crown'},
       );
 
       // 연출은 한순간에 지나가서 마지막 프레임만 보면 다 입은 모습뿐이다.

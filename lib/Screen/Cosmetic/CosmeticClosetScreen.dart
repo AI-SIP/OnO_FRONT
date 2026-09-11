@@ -107,10 +107,10 @@ class _CosmeticClosetScreenState extends State<CosmeticClosetScreen> {
     _pulse();
   }
 
-  /// 지금 레벨의 기본 차림으로 되돌린다.
+  /// 걸친 것을 전부 벗는다.
   void _onResetTap(CosmeticProvider cosmetic) {
     AppHaptic.selection();
-    cosmetic.resetToPreset();
+    cosmetic.unequipAll();
     _pulse();
   }
 
@@ -319,7 +319,7 @@ class _CosmeticClosetScreenState extends State<CosmeticClosetScreen> {
             Icon(Icons.refresh_rounded, size: 14, color: color),
             const SizedBox(width: AppSpacing.xs),
             StandardText(
-              text: '기본으로',
+              text: '전부 벗기',
               fontSize: 12,
               fontWeight: FontWeight.w700,
               color: color,

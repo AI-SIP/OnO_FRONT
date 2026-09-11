@@ -16,9 +16,7 @@ import '../Screen/Cosmetic/Mock/CosmeticMockData.dart';
 /// [equipped] 만 보고 있어서 그 위쪽은 바뀌지 않는다.
 class CosmeticProvider with ChangeNotifier {
   CosmeticProvider({int mockLevel = CosmeticMockData.maxLevel})
-      : _level = _clampLevel(mockLevel) {
-    _equipped = _presetFor(_level);
-  }
+      : _level = _clampLevel(mockLevel);
 
   /// 카탈로그. 더미라서 한 번 만들어 두고 계속 쓴다.
   final CosmeticLoadoutModel _catalog = CosmeticMockData.loadout;
@@ -29,14 +27,6 @@ class CosmeticProvider with ChangeNotifier {
   /// 지금 걸려 있는 것. 슬롯 키 → 아이템 키.
   Map<String, String> _equipped = const {};
 
-  /// 사람이 한 번이라도 직접 갈아입었는지.
-  ///
-  /// 아직 안 만졌으면 레벨을 옮길 때마다 그 레벨의 기본 차림으로 다시 맞춘다.
-  /// 슬라이더를 훑으면 해금이 쌓이는 것이 개구리에 바로 보여야 하기 때문이다.
-  /// 한 번 만진 뒤에는 사람이 고른 것을 함부로 덮지 않고, 레벨이 모자라져
-  /// 못 쓰게 된 것만 내린다.
-  bool _touched = false;
-
   /// 마지막 실패 문구. 화면이 읽고 나면 [consumeFailure] 로 비운다.
   String? _lastFailureMessage;
 
@@ -46,8 +36,8 @@ class CosmeticProvider with ChangeNotifier {
   /// 미션 보상이라 슬라이더를 끝까지 올려도 걸리지 않는다. 그러면 디자인을
   /// 볼 수 없는 아이템이 절반을 넘는다. 그것만 풀어 주는 스위치다.
   ///
-  /// 기본 차림([_presetFor])은 이 스위치와 무관하게 레벨만 본다. 스위치를
-  /// 켠다고 입고 있던 것이 달라지면 무엇을 보고 있었는지 알 수 없게 된다.
+  /// 켜고 끄는 것으로 입고 있던 것이 달라지지는 않는다. 끌 때 못 가지게 된
+  /// 것만 내린다.
   bool _unlockAll = false;
 
   // ── 읽기 ────────────────────────────────────────────────────────────
@@ -74,14 +64,27 @@ class CosmeticProvider with ChangeNotifier {
   /// 개구리를 그릴 층들. 뒤에서 앞 순서다. [FrogCharacter] 에 그대로 넘긴다.
   List<CosmeticLayerModel> get layers => loadout.resolveLayers();
 
-  /// 그 레벨의 **기본 차림**을 그린 층들.
+  /// 그 레벨까지 열린 것을 자리마다 하나씩 다 걸친 모습.
   ///
-  /// 레벨업 연출처럼 "오르기 전과 뒤"를 나란히 보여 줘야 하는 곳에서 쓴다.
-  /// 지금 사람이 무엇을 입고 있는지와 무관하게, 그 레벨에서 자동으로 입게 되는
-  /// 모습을 돌려준다.
+  /// **아무도 이렇게 입지 않는다.** 자리를 전부 채운 모습이라 겹침이 이상한
+  /// 짝을 찾기에는 좋아서 조합 검수 화면만 쓴다. 실제 차림은 사람이 고른
+  /// [equipped] 뿐이고, 이 앱이 알아서 입혀 주는 것은 없다.
   List<CosmeticLayerModel> layersAtLevel(int level) {
     final clamped = _clampLevel(level);
     return _loadoutAt(clamped, _presetFor(clamped)).resolveLayers();
+  }
+
+  /// **지금 차림 위에** 아이템 몇 개를 더 얹은 층들.
+  ///
+  /// 레벨업 연출이 "방금 열린 것을 입어 보는" 모습을 그릴 때 쓴다. 자동으로
+  /// 입혀 주는 것이 없으니 기준은 그 레벨의 정해진 차림이 아니라 지금 이
+  /// 사람이 입고 있는 모습이어야 한다.
+  List<CosmeticLayerModel> layersWith(Iterable<CosmeticItemModel> extra) {
+    final next = Map<String, String>.from(_equipped);
+    for (final item in extra) {
+      next[item.slot] = item.itemKey;
+    }
+    return _loadoutAt(_level, next).resolveLayers();
   }
 
   /// 이 슬롯에 들어가는 아이템들. 카탈로그 순서를 지킨다.
@@ -129,7 +132,7 @@ class CosmeticProvider with ChangeNotifier {
     if (next == _level) return;
 
     _level = next;
-    _equipped = _touched ? _pruneLocked(_equipped, next) : _presetFor(next);
+    _equipped = _pruneLocked(_equipped, next);
     notifyListeners();
   }
 
@@ -159,7 +162,6 @@ class CosmeticProvider with ChangeNotifier {
       return;
     }
 
-    _touched = true;
     _equipped = _applyEquip(_equipped, slot: slot, itemKey: itemKey);
     _lastFailureMessage = null;
     notifyListeners();
@@ -169,7 +171,6 @@ class CosmeticProvider with ChangeNotifier {
   void unequip(String slot) {
     if (!_equipped.containsKey(slot)) return;
 
-    _touched = true;
     _equipped = _applyEquip(_equipped, slot: slot, itemKey: null);
     _lastFailureMessage = null;
     notifyListeners();
@@ -200,16 +201,14 @@ class CosmeticProvider with ChangeNotifier {
       next = _applyEquip(next, slot: item.slot, itemKey: item.itemKey);
     }
 
-    _touched = true;
     _equipped = next;
     _lastFailureMessage = null;
     notifyListeners();
   }
 
   /// 지금 레벨의 기본 차림으로 되돌린다.
-  void resetToPreset() {
-    _touched = false;
-    _equipped = _presetFor(_level);
+  void unequipAll() {
+    _equipped = const {};
     _lastFailureMessage = null;
     notifyListeners();
   }
@@ -224,8 +223,7 @@ class CosmeticProvider with ChangeNotifier {
   /// 들고 있는 것을 전부 비운다. 로그아웃 때 부른다.
   void clear() {
     _level = CosmeticMockData.maxLevel;
-    _touched = false;
-    _equipped = _presetFor(_level);
+    _equipped = const {};
     _lastFailureMessage = null;
     notifyListeners();
   }

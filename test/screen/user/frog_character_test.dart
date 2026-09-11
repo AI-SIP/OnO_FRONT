@@ -126,6 +126,9 @@ void main() {
 
     test('프로바이더가 준 층도 같은 순서다', () {
       final provider = CosmeticProvider(mockLevel: 15);
+      // 알아서 입혀 주는 것이 없으니 직접 걸친 뒤에 순서를 본다.
+      provider.equip('BACKGROUND', 'bg_night');
+      provider.equip('HAND', 'prop_diploma');
 
       expect(
         [for (final layer in provider.layers) layer.layerOrder],

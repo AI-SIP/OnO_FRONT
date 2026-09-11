@@ -293,8 +293,10 @@ class _MissionLevelUpViewState extends State<_MissionLevelUpView>
       cosmetic.unlockedAt,
     );
     _stages = missionUnlockStages(
-      before: cosmetic.layersAtLevel(_previousLevel),
-      after: cosmetic.layersAtLevel(_level),
+      // 자동으로 입혀 주는 차림이 없어졌다. 그 레벨의 정해진 모습이 아니라
+      // 지금 이 사람이 입고 있는 모습 위에 방금 열린 것을 얹어 보여 준다.
+      before: cosmetic.layers,
+      after: cosmetic.layersWith(_unlocked),
       unlocked: _unlocked,
     );
 
