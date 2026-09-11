@@ -121,6 +121,12 @@ class CosmeticItemTile extends StatelessWidget {
   /// 개구리 뒤에 깔리는 자리인지. [CosmeticPartPreview.backdrop] 으로 간다.
   final bool backdrop;
 
+  /// 이번 레벨에 새로 열린 것인지.
+  ///
+  /// 레벨이 오르면 그 레벨에서 열린 것들에 붙는다. 마흔 칸을 눈으로 훑어
+  /// 무엇이 늘었는지 찾게 하면 안 된다.
+  final bool isNew;
+
   /// 강조색. 사용자가 테마에서 고른 색이다.
   final Color color;
 
@@ -132,6 +138,7 @@ class CosmeticItemTile extends StatelessWidget {
     required this.equipped,
     required this.backdrop,
     required this.color,
+    this.isNew = false,
     this.onTap,
   });
 
@@ -160,6 +167,24 @@ class CosmeticItemTile extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
           ),
         ],
+      ),
+    );
+  }
+
+  /// 이번 레벨에 새로 열린 것에 붙는 표시.
+  Widget _buildNewBadge() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(AppRadius.full),
+      ),
+      child: const StandardText(
+        text: 'NEW',
+        fontSize: 9,
+        fontWeight: FontWeight.w700,
+        color: Colors.white,
+        maxLines: 1,
       ),
     );
   }
@@ -199,6 +224,14 @@ class CosmeticItemTile extends StatelessWidget {
                 right: AppSpacing.xs,
                 bottom: AppSpacing.xs,
                 child: Center(child: CosmeticLockBadge(item: item)),
+              ),
+            // 체크는 오른쪽 위에 있다. NEW 는 왼쪽 위에 둬서 방금 열린 것을
+            // 입어 봐도 둘이 겹치지 않는다.
+            if (_owned && isNew)
+              Positioned(
+                top: AppSpacing.xs,
+                left: AppSpacing.xs,
+                child: _buildNewBadge(),
               ),
             // 체크는 늘 자리에 두고 켜고 끈다. 입는 순간에만 만들면 튀어오르는
             // 연출이 제 시점을 놓친다.

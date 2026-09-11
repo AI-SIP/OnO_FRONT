@@ -447,6 +447,11 @@ class _CosmeticClosetScreenState extends State<CosmeticClosetScreen> {
     final items = cosmetic.itemsOfSlot(slot.slot);
     final equippedKey = cosmetic.equippedItemKeyOf(slot.slot);
     final backdrop = _isBackdrop(cosmetic.slots, slot);
+    // 이번 레벨에 열린 것들. 마흔 칸을 눈으로 훑어 무엇이 늘었는지 찾게 하면
+    // 안 된다.
+    final newKeys = <String>{
+      for (final item in cosmetic.unlockedAt(cosmetic.level)) item.itemKey,
+    };
 
     final tiles = <Widget>[
       CosmeticSlotEmptyTile(
@@ -459,6 +464,7 @@ class _CosmeticClosetScreenState extends State<CosmeticClosetScreen> {
           item: item,
           equipped: item.itemKey == equippedKey,
           backdrop: backdrop,
+          isNew: newKeys.contains(item.itemKey),
           color: color,
           onTap: () => _onItemTap(cosmetic, slot, item),
         ),

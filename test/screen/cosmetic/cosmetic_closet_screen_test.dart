@@ -167,6 +167,32 @@ void main() {
     });
   });
 
+  group('NEW 표시', () {
+    testWidgets('이번 레벨에 열린 것에만 붙는다', (tester) async {
+      // Lv.13 에 열리는 것은 배경의 밤하늘 하나다.
+      await pumpCloset(tester, level: 13);
+
+      expect(find.text('NEW'), findsOneWidget);
+
+      final badgeX = tester.getCenter(find.text('NEW')).dx;
+      final tileX = tester.getCenter(find.text('밤하늘')).dx;
+      // 왼쪽 위에 붙는다. 오른쪽 위는 입고 있다는 체크 자리다.
+      expect(badgeX, lessThan(tileX));
+    });
+
+    testWidgets('이번 레벨에 열린 것이 없는 자리에는 붙지 않는다', (tester) async {
+      // Lv.12 에 열리는 것은 머리의 버킷햇이고 배경에는 없다.
+      await pumpCloset(tester, level: 12);
+
+      expect(find.text('NEW'), findsNothing);
+
+      await tester.tap(find.text('머리'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('NEW'), findsOneWidget);
+    });
+  });
+
   group('크기', () {
     for (final entry in <String, Size>{
       '작은 폰': OnoSurface.smallPhone,
