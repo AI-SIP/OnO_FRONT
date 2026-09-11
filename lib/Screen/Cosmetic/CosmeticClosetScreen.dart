@@ -141,6 +141,31 @@ class _CosmeticClosetScreenState extends State<CosmeticClosetScreen> {
           color: themeProvider.primaryColor,
         ),
         actions: [
+          // 레벨로 열리는 것은 서른다섯 중 열여섯뿐이고 나머지는 미션 보상이라
+          // 슬라이더를 끝까지 올려도 안 걸린다. 시안을 보는 동안은 전부 입어
+          // 볼 수 있어야 해서 잠금을 통째로 푸는 스위치를 둔다. 출시본에는
+          // 이 버튼이 아예 없다.
+          if (kDebugMode)
+            IconButton(
+              icon: Icon(
+                cosmetic.unlockAll
+                    ? Icons.lock_open_rounded
+                    : Icons.lock_outline_rounded,
+                color: cosmetic.unlockAll
+                    ? themeProvider.primaryColor
+                    : AppColors.textSecondary,
+              ),
+              tooltip: cosmetic.unlockAll ? '잠금 되돌리기' : '전부 입어 보기',
+              onPressed: () {
+                final next = !cosmetic.unlockAll;
+                cosmetic.setUnlockAll(next);
+                AppHaptic.selection();
+                AppToast.show(
+                  message: next ? '잠긴 아이템까지 전부 열었어요.' : '레벨대로 다시 잠갔어요.',
+                  context: context,
+                );
+              },
+            ),
           // 조합이 자리 수의 곱으로 늘어나서 옷장에서 하나씩 입혀 보는 것으로는
           // 겹침이 이상한 짝을 찾을 수 없다. 한꺼번에 펼쳐 보는 화면을 개발
           // 중에만 열어 둔다. 출시본에는 이 버튼이 아예 없다.

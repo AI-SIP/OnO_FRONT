@@ -40,6 +40,16 @@ class CosmeticProvider with ChangeNotifier {
   /// 마지막 실패 문구. 화면이 읽고 나면 [consumeFailure] 로 비운다.
   String? _lastFailureMessage;
 
+  /// **디버그 전용.** 켜면 잠긴 것까지 전부 입어 볼 수 있다.
+  ///
+  /// 시안에서 레벨로 열리는 것은 서른다섯 중 열여섯뿐이고, 나머지 열아홉은
+  /// 미션 보상이라 슬라이더를 끝까지 올려도 걸리지 않는다. 그러면 디자인을
+  /// 볼 수 없는 아이템이 절반을 넘는다. 그것만 풀어 주는 스위치다.
+  ///
+  /// 기본 차림([_presetFor])은 이 스위치와 무관하게 레벨만 본다. 스위치를
+  /// 켠다고 입고 있던 것이 달라지면 무엇을 보고 있었는지 알 수 없게 된다.
+  bool _unlockAll = false;
+
   // ── 읽기 ────────────────────────────────────────────────────────────
 
   /// 지금 보고 있는 레벨.
@@ -87,8 +97,17 @@ class CosmeticProvider with ChangeNotifier {
   CosmeticItemModel? itemOf(String? itemKey) => loadout.itemOf(itemKey);
 
   /// 지금 레벨에서 가지고 있는지.
-  bool isOwned(String itemKey) =>
-      _catalog.itemOf(itemKey)?.isUnlockedAt(_level) ?? false;
+  bool isOwned(String itemKey) {
+    final item = _catalog.itemOf(itemKey);
+    return item != null && _ownsAt(item, _level);
+  }
+
+  /// 디버그 전용 전체 해금이 켜져 있는지.
+  bool get unlockAll => _unlockAll;
+
+  /// 그 레벨에서 이 아이템을 쓸 수 있는지. 전체 해금이 켜져 있으면 늘 참이다.
+  bool _ownsAt(CosmeticItemModel item, int level) =>
+      _unlockAll || item.isUnlockedAt(level);
 
   /// 그 레벨에서 **새로** 열리는 아이템들. 레벨업 연출에 쓴다.
   List<CosmeticItemModel> unlockedAt(int level) => [
@@ -114,6 +133,20 @@ class CosmeticProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  /// **디버그 전용.** 잠긴 아이템까지 전부 입어 볼 수 있게 하거나 되돌린다.
+  ///
+  /// 끌 때는 그 사이에 걸어 둔 잠긴 것들을 내린다. 안 내리면 못 가진 것을
+  /// 입고 있는 모습이 남는다.
+  void setUnlockAll(bool value) {
+    if (_unlockAll == value) return;
+
+    _unlockAll = value;
+    if (!value) {
+      _equipped = _pruneLocked(_equipped, _level);
+    }
+    notifyListeners();
+  }
+
   /// 한 자리에 아이템을 건다. 못 가진 것은 걸리지 않는다.
   void equip(String slot, String itemKey) {
     final item = _catalog.itemOf(itemKey);
@@ -121,7 +154,7 @@ class CosmeticProvider with ChangeNotifier {
       _fail('지금은 쓸 수 없는 아이템이에요.');
       return;
     }
-    if (!item.isUnlockedAt(_level)) {
+    if (!_ownsAt(item, _level)) {
       _fail(_lockedMessage(item));
       return;
     }
@@ -155,7 +188,7 @@ class CosmeticProvider with ChangeNotifier {
 
     final locked = [
       for (final item in members)
-        if (!item.isUnlockedAt(_level)) item,
+        if (!_ownsAt(item, _level)) item,
     ];
     if (locked.isNotEmpty) {
       _fail(_lockedMessage(locked.first, others: locked));
@@ -206,7 +239,7 @@ class CosmeticProvider with ChangeNotifier {
       slots: _catalog.slots,
       items: [
         for (final item in _catalog.items)
-          item.copyWith(owned: item.isUnlockedAt(level)),
+          item.copyWith(owned: _ownsAt(item, level)),
       ],
       equipped: Map<String, String>.unmodifiable(equipped),
       baseLayerOrder: _catalog.baseLayerOrder,
@@ -239,7 +272,8 @@ class CosmeticProvider with ChangeNotifier {
   Map<String, String> _pruneLocked(Map<String, String> equipped, int level) {
     final next = <String, String>{};
     equipped.forEach((slot, itemKey) {
-      if (_catalog.itemOf(itemKey)?.isUnlockedAt(level) ?? false) {
+      final item = _catalog.itemOf(itemKey);
+      if (item != null && _ownsAt(item, level)) {
         next[slot] = itemKey;
       }
     });
