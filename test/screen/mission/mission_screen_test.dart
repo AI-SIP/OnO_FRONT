@@ -602,9 +602,10 @@ void main() {
   });
 
   group('히어로', () {
-    testWidgets('개구리를 누르면 옷장으로 간다', (tester) async {
-      // 마이페이지와 같은 약속이다. 이 앱에서 개구리를 누르면 늘 꾸미러 가는
-      // 문이 열린다.
+    testWidgets('개구리를 눌러도 아무 데도 가지 않는다', (tester) async {
+      // 꾸미러 가는 문은 옷장 탭의 꾸미기 버튼 하나로 모았다. 여기 개구리는
+      // 오늘 미션 진행도를 두른 그림이지 문이 아니다. 같은 그림이 화면마다
+      // 다른 일을 하면 누르기 전에 무슨 일이 날지 알 수 없다.
       final missionService = MockMissionService();
       when(() => missionService.getMissions())
           .thenAnswer((_) async => boardWithThreeStates());
@@ -619,7 +620,8 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.byType(CosmeticClosetScreen), findsOneWidget);
+      expect(find.byType(CosmeticClosetScreen), findsNothing);
+      expect(find.byType(MissionHeroCard), findsOneWidget);
     });
 
     testWidgets('종합 레벨과 경험치 바는 두지 않는다', (tester) async {

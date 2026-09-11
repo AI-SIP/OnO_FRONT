@@ -60,12 +60,6 @@ class MissionHeroCard extends StatefulWidget {
   /// XP 칩을 눌렀을 때. 지금까지 받은 보상을 보여 주는 화면으로 간다.
   final VoidCallback? onCounterTap;
 
-  /// 개구리를 눌렀을 때. 꾸미기 화면으로 간다.
-  ///
-  /// 이 카드가 직접 화면을 밀지 않는다. 히어로는 그림과 숫자만 맡고, 어디로
-  /// 가는지는 미션 화면이 정한다.
-  final VoidCallback? onFrogTap;
-
   const MissionHeroCard({
     super.key,
     required this.dailyMissions,
@@ -75,7 +69,6 @@ class MissionHeroCard extends StatefulWidget {
     this.pendingXp = 0,
     this.arrivalTick = 0,
     this.onCounterTap,
-    this.onFrogTap,
   });
 
   @override
@@ -179,15 +172,18 @@ class _MissionHeroCardState extends State<MissionHeroCard>
     double ratio,
     List<CosmeticLayerModel> frogLayers,
   ) {
-    // 개구리를 누르면 꾸미기 화면으로 간다. 마이페이지와 같은 약속이라, 여기
-    // 개구리는 꾸미러 가는 문이다. 누름 하나가 한 가지 일만 해야 해서 격려
-    // 말풍선은 띄우지 않는다. 말풍선은 개구리가 문이 아닌 자리(옷장 탭과
-    // 꾸미기 화면의 무대)에서만 뜬다.
+    // 개구리를 눌러도 아무 데도 가지 않는다. 꾸미러 가는 문은 옷장 탭의
+    // 꾸미기 버튼 하나로 모았다. 여기 개구리는 오늘 미션 진행도를 두른
+    // 그림이지 문이 아니다. 같은 그림이 화면마다 다른 일을 하면, 누르기 전에
+    // 무슨 일이 날지 알 수 없다.
+    //
+    // 격려 말풍선도 띄우지 않는다. 말풍선은 개구리보다 위로 솟는데 이 자리는
+    // 고리 안쪽이라 카드 밖으로 삐져나온다. 한마디 듣는 자리는 개구리가
+    // 주인공인 옷장 탭과 꾸미기 화면의 무대다.
     final frog = FrogCharacter(
       layers: frogLayers,
       size: size * 0.62,
       showEncouragement: false,
-      onTap: widget.onFrogTap,
     );
 
     return AnimatedCircularGauge(
