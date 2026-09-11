@@ -44,6 +44,13 @@ class CosmeticLoadoutModel {
   /// **기본값이지 기준값이 아니다.** 서버가 [baseImageUrl] 을 주면 그쪽을 쓴다.
   static const String defaultBaseImageUrl = 'assets/Cosmetic/BASE.png';
 
+  /// 머리만 있는 개구리.
+  ///
+  /// 전신 의상([CosmeticItemModel.fullBody])을 입었을 때 [defaultBaseImageUrl]
+  /// 대신 깐다. 그 옷에는 소매와 바짓단이 이미 그려져 있어서, 전신 개구리를
+  /// 뒤에 두면 원래 팔다리가 옷 밖으로 삐져나온다.
+  static const String defaultBaseHeadImageUrl = 'assets/Cosmetic/BASE_HEAD.png';
+
   /// 고정 포즈 개구리 그림.
   final String baseImageUrl;
 
@@ -201,6 +208,16 @@ class CosmeticLoadoutModel {
   }) {
     final current = equippedOverride ?? equipped;
 
+    // 전신 의상을 입고 있으면 본체를 머리만 있는 그림으로 바꾼다. 자리마다
+    // 하나씩만 걸리므로 그런 옷은 많아야 하나다.
+    final wearsFullBody = current.values.any(
+      (itemKey) => itemOf(itemKey)?.fullBody ?? false,
+    );
+    final resolvedBaseImageUrl =
+        wearsFullBody && baseImageUrl == defaultBaseImageUrl
+            ? defaultBaseHeadImageUrl
+            : baseImageUrl;
+
     // (층, 같은 층 안에서의 순서) 로 정렬한다. Dart 의 sort 는 안정 정렬이
     // 아니라서 같은 값이 나오면 순서가 흐트러진다. 순번을 직접 매긴다.
     final entries = <_OrderedLayer>[];
@@ -213,7 +230,7 @@ class CosmeticLoadoutModel {
         tieBreak: 1,
         sequence: sequence++,
         layer: CosmeticLayerModel(
-          imageUrl: baseImageUrl,
+          imageUrl: resolvedBaseImageUrl,
           layerOrder: resolvedBaseLayerOrder,
         ),
       ),

@@ -76,6 +76,55 @@ void main() {
     });
   }
 
+  group('전신 의상', () {
+    // 소매와 바짓단이 그려진 옷은 뒤에 전신 개구리를 두면 원래 팔다리가
+    // 옷 밖으로 삐져나온다. 그럴 때는 본체를 머리만 있는 그림으로 바꾼다.
+    test('입으면 본체가 머리만 있는 그림으로 바뀐다', () {
+      final layers = CosmeticMockData.loadout.resolveLayers(
+        equippedOverride: const {'OUTFIT': 'outfit_cardigan'},
+      );
+
+      expect(
+        layers.first.imageUrl,
+        CosmeticLoadoutModel.defaultBaseHeadImageUrl,
+      );
+    });
+
+    test('전신이 아닌 옷은 본체를 그대로 쓴다', () {
+      final layers = CosmeticMockData.loadout.resolveLayers(
+        equippedOverride: const {'OUTFIT': 'outfit_graduate'},
+      );
+
+      expect(layers.first.imageUrl, CosmeticLoadoutModel.defaultBaseImageUrl);
+    });
+
+    test('아무것도 안 입으면 본체를 그대로 쓴다', () {
+      final layers = CosmeticMockData.loadout.resolveLayers(
+        equippedOverride: const {},
+      );
+
+      expect(layers.first.imageUrl, CosmeticLoadoutModel.defaultBaseImageUrl);
+    });
+
+    test('전신 의상에 모자를 같이 써도 본체만 바뀐다', () {
+      final layers = CosmeticMockData.loadout.resolveLayers(
+        equippedOverride: const {
+          'OUTFIT': 'outfit_hoodie',
+          'HEAD': 'hat_beanie',
+        },
+      );
+
+      expect(
+        layers.first.imageUrl,
+        CosmeticLoadoutModel.defaultBaseHeadImageUrl,
+      );
+      expect(
+        [for (final layer in layers) layer.itemKey],
+        [null, 'outfit_hoodie', 'hat_beanie'],
+      );
+    });
+  });
+
   group('레이어 겹치는 순서', () {
     test('layerOrder 오름차순으로 뒤에서 앞 순서로 나온다', () {
       final layers = CosmeticMockData.loadout.resolveLayers(

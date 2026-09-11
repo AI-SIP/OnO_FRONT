@@ -37,6 +37,13 @@ class CosmeticItemModel {
   /// 지금 사용자가 가지고 있는지.
   final bool owned;
 
+  /// 개구리 몸 전체를 덮는 의상인지.
+  ///
+  /// 소매와 바짓단까지 그려져 있어서, 뒤에 전신 개구리를 두면 원래 팔다리가
+  /// 옷 밖으로 삐져나온다. 그래서 이런 옷을 입었을 때는 본체를 머리만 있는
+  /// [CosmeticLoadoutModel.defaultBaseHeadImageUrl] 로 바꿔 깐다.
+  final bool fullBody;
+
   const CosmeticItemModel({
     required this.itemKey,
     required this.slot,
@@ -46,6 +53,7 @@ class CosmeticItemModel {
     required this.setId,
     required this.conflictsWith,
     required this.owned,
+    this.fullBody = false,
   });
 
   /// 한 건을 읽는다. 키나 슬롯이 없으면 쓸 수 없는 줄이라 null 이다.
@@ -70,6 +78,7 @@ class CosmeticItemModel {
       setId: setId is String && setId.isNotEmpty ? setId : null,
       conflictsWith: _asStringList(json['conflictsWith']),
       owned: json['owned'] == true,
+      fullBody: json['fullBody'] == true,
     );
   }
 
@@ -95,6 +104,7 @@ class CosmeticItemModel {
       setId: setId,
       conflictsWith: conflictsWith,
       owned: owned ?? this.owned,
+      fullBody: fullBody,
     );
   }
 

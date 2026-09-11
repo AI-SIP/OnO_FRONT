@@ -87,7 +87,7 @@ class CosmeticMockData {
     _item('hat_beanie', 'HEAD', '비니', level: 6),
     _item('bg_study', 'BACKGROUND', '공부방', level: 7),
     _item('bag_mini_backpack', 'BAG', '미니 백팩', level: 8),
-    _item('outfit_cardigan', 'OUTFIT', '가디건', level: 9),
+    _item('outfit_cardigan', 'OUTFIT', '가디건', level: 9, fullBody: true),
     _item('prop_study', 'HAND', '공부 소품', level: 10),
     _item('glasses_sun', 'FACE', '선글라스', level: 11),
     _item('hat_bucket', 'HEAD', '버킷햇', level: 12),
@@ -104,9 +104,9 @@ class CosmeticMockData {
     _item('bowtie', 'NECK', '나비넥타이'),
     _item('neck_medal', 'NECK', '메달'),
     _item('neck_camera', 'NECK', '카메라'),
-    _item('outfit_school', 'OUTFIT', '교복'),
-    _item('outfit_hoodie', 'OUTFIT', '후드티'),
-    _item('outfit_raincoat', 'OUTFIT', '비옷'),
+    _item('outfit_school', 'OUTFIT', '교복', fullBody: true),
+    _item('outfit_hoodie', 'OUTFIT', '후드티', fullBody: true),
+    _item('outfit_raincoat', 'OUTFIT', '비옷', fullBody: true),
     _item('bag_waist_pouch', 'BAG', '허리 가방'),
     _item('bag_crossbody_satchel', 'BAG', '크로스백'),
     _item('head_earmuffs_winter', 'HEAD', '겨울 귀마개'),
@@ -134,6 +134,7 @@ class CosmeticMockData {
     String nameKo, {
     int? level,
     String? setId,
+    bool fullBody = false,
   }) {
     return {
       'itemKey': itemKey,
@@ -143,6 +144,9 @@ class CosmeticMockData {
       'requiredLevel': level,
       'setId': setId,
       'conflictsWith': const <String>[],
+      // 소매와 바짓단이 그려진 옷이다. 뒤에 전신 개구리를 두면 원래 팔다리가
+      // 옷 밖으로 삐져나와서, 본체를 머리만 있는 그림으로 바꿔 깐다.
+      'fullBody': fullBody,
     };
   }
 }
