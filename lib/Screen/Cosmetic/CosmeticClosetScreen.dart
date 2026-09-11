@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -11,10 +12,12 @@ import '../../Module/Motion/AppearTransition.dart';
 import '../../Module/Motion/AppHaptic.dart';
 import '../../Module/Motion/AppMotion.dart';
 import '../../Module/Motion/PressableScale.dart';
+import '../../Module/Motion/TossPageRoute.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/CosmeticProvider.dart';
 import '../User/Widget/FrogCharacter.dart';
+import 'CosmeticCombinationPreviewScreen.dart';
 import 'Widget/CosmeticItemTile.dart';
 import 'Widget/CosmeticSetBanner.dart';
 import 'Widget/CosmeticSlotTabs.dart';
@@ -137,6 +140,25 @@ class _CosmeticClosetScreenState extends State<CosmeticClosetScreen> {
           fontSize: 18,
           color: themeProvider.primaryColor,
         ),
+        actions: [
+          // 조합이 자리 수의 곱으로 늘어나서 옷장에서 하나씩 입혀 보는 것으로는
+          // 겹침이 이상한 짝을 찾을 수 없다. 한꺼번에 펼쳐 보는 화면을 개발
+          // 중에만 열어 둔다. 출시본에는 이 버튼이 아예 없다.
+          if (kDebugMode)
+            IconButton(
+              icon: Icon(
+                Icons.grid_view_rounded,
+                color: themeProvider.primaryColor,
+              ),
+              tooltip: '조합 검수',
+              onPressed: () => Navigator.push(
+                context,
+                TossPageRoute(
+                  builder: (_) => const CosmeticCombinationPreviewScreen(),
+                ),
+              ),
+            ),
+        ],
       ),
       body: SafeArea(
         child: LayoutBuilder(
