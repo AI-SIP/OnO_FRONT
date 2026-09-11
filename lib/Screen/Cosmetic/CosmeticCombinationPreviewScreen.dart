@@ -174,12 +174,17 @@ class CosmeticCombinationPreviewScreen extends StatelessWidget {
   }
 
   /// 레벨별로 자동으로 입게 되는 차림.
+  ///
+  /// 능력치가 넷으로 갈린 뒤로 "레벨 하나"는 실제 사용자의 모습이 아니다.
+  /// 여기서는 다섯을 같은 값으로 놓고 한 축으로 훑는다. 겹침을 눈으로 잡는
+  /// 화면이라 필요한 것은 모든 조합이 한 번씩 지나가는 것이지, 그 차림이
+  /// 실제로 가능한지가 아니다.
   _ComboSection _levelSection(CosmeticProvider cosmetic) {
     return _ComboSection(
       title: '레벨별 기본 차림',
-      description: '레벨을 올릴 때마다 개구리가 어떻게 달라지는지',
+      description: '다섯 레벨을 같이 올릴 때 개구리가 어떻게 달라지는지',
       combos: [
-        for (var level = 1; level <= cosmetic.maxLevel; level++)
+        for (var level = 1; level <= cosmetic.maxTotalStudyLevel; level++)
           _Combo(
             label: 'Lv.$level',
             layers: cosmetic.layersAtLevel(level),

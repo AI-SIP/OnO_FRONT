@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 
+import '../Model/Cosmetic/CosmeticAbilityLevels.dart';
 import '../Model/Cosmetic/CosmeticItemModel.dart';
 import '../Model/Cosmetic/CosmeticLoadoutModel.dart';
 import '../Model/Cosmetic/CosmeticSlotModel.dart';
@@ -14,24 +15,34 @@ import '../Screen/Cosmetic/Mock/CosmeticMockData.dart';
 /// 나중에 백엔드가 붙으면 [CosmeticMockData.rawResponse] 자리에 실제 응답을
 /// 넣고, 장착 메서드에서 서버 호출을 더하면 된다. 화면은 [layers] 와
 /// [equipped] 만 보고 있어서 그 위쪽은 바뀌지 않는다.
+///
+/// 해금 기준이 총 학습 레벨 하나에서 **능력치별**로 바뀌어서, 이 프로바이더가
+/// 들고 있는 것도 레벨 하나가 아니라 [CosmeticAbilityLevels] 다섯 묶음이다.
 class CosmeticProvider with ChangeNotifier {
-  CosmeticProvider({int mockLevel = CosmeticMockData.maxLevel})
-      : _level = _clampLevel(mockLevel) {
-    _equipped = _presetFor(_level);
+  CosmeticProvider({CosmeticAbilityLevels? mockLevels})
+      : _levels = mockLevels ?? CosmeticMockData.demoLevels {
+    _equipped = _presetFor(_levels);
   }
 
   /// 카탈로그. 더미라서 한 번 만들어 두고 계속 쓴다.
   final CosmeticLoadoutModel _catalog = CosmeticMockData.loadout;
 
-  /// 지금 보고 있는 레벨. 시안에서는 슬라이더로 사람이 직접 바꾼다.
-  int _level;
+  /// 지금 보고 있는 능력치 레벨 다섯. 시안에서는 디버그 패널로 사람이 옮긴다.
+  CosmeticAbilityLevels _levels;
+
+  /// 사람이 디버그 패널에서 레벨을 한 번이라도 옮겼는지.
+  ///
+  /// 옮기기 전까지는 [CosmeticMockData.demoLevels] 라서 "이 사람의 레벨"이라고
+  /// 말할 수 없다. 옷장 탭의 스탯창이 이 값을 보고, 옮긴 뒤에만 더미 레벨을
+  /// 따라간다. 그 전에는 서버가 준 진짜 레벨을 그대로 보여 준다.
+  bool _levelsTouched = false;
 
   /// 지금 걸려 있는 것. 슬롯 키 → 아이템 키.
   Map<String, String> _equipped = const {};
 
   /// 사람이 한 번이라도 직접 갈아입었는지.
   ///
-  /// 아직 안 만졌으면 첫 차림을 계속 다시 맞춘다. 슬라이더를 훑을 때 그 레벨의
+  /// 아직 안 만졌으면 첫 차림을 계속 다시 맞춘다. 레벨을 훑을 때 그 레벨의
   /// 사람이 처음 보게 될 모습이 나와야 하기 때문이다. 한 번 만진 뒤에는 고른
   /// 것을 덮지 않고 레벨이 모자라져 못 쓰게 된 것만 내린다.
   bool _touched = false;
@@ -41,9 +52,9 @@ class CosmeticProvider with ChangeNotifier {
 
   /// **디버그 전용.** 켜면 잠긴 것까지 전부 입어 볼 수 있다.
   ///
-  /// 시안에서 레벨로 열리는 것은 서른다섯 중 열여섯뿐이고, 나머지 열아홉은
-  /// 미션 보상이라 슬라이더를 끝까지 올려도 걸리지 않는다. 그러면 디자인을
-  /// 볼 수 없는 아이템이 절반을 넘는다. 그것만 풀어 주는 스위치다.
+  /// 능력치 넷을 골고루 올려 둔 사람은 드물어서, 시안의 기본 레벨에서는
+  /// 쉰다섯 중 절반쯤만 열린다. 디자인을 봐야 하는 자리에서는 잠긴 것도 입어
+  /// 볼 수 있어야 해서 그것만 풀어 주는 스위치를 둔다.
   ///
   /// 켜고 끄는 것으로 입고 있던 것이 달라지지는 않는다. 끌 때 못 가지게 된
   /// 것만 내린다.
@@ -51,11 +62,14 @@ class CosmeticProvider with ChangeNotifier {
 
   // ── 읽기 ────────────────────────────────────────────────────────────
 
-  /// 지금 보고 있는 레벨.
-  int get level => _level;
+  /// 지금 보고 있는 능력치 레벨 다섯.
+  CosmeticAbilityLevels get levels => _levels;
 
-  /// 더미가 다룰 수 있는 가장 높은 레벨.
-  int get maxLevel => CosmeticMockData.maxLevel;
+  /// 디버그 패널에서 레벨을 옮긴 적이 있는지.
+  bool get levelsTouched => _levelsTouched;
+
+  /// 이 능력치의 지금 레벨. null 이면 총 학습 레벨이다.
+  int levelOf(CosmeticAbility? ability) => _levels.levelOf(ability);
 
   /// 걸 수 있는 자리들. 옷장 탭 순서가 이 순서다.
   List<CosmeticSlotModel> get slots => _catalog.slots;
@@ -68,7 +82,7 @@ class CosmeticProvider with ChangeNotifier {
       Map<String, String>.unmodifiable(_equipped);
 
   /// 지금 차림. `owned` 와 `equipped` 가 지금 상태로 채워져 있다.
-  CosmeticLoadoutModel get loadout => _loadoutAt(_level, _equipped);
+  CosmeticLoadoutModel get loadout => _loadoutAt(_levels, _equipped);
 
   /// 개구리를 그릴 층들. 뒤에서 앞 순서다. [FrogCharacter] 에 그대로 넘긴다.
   List<CosmeticLayerModel> get layers => loadout.resolveLayers();
@@ -95,13 +109,17 @@ class CosmeticProvider with ChangeNotifier {
     ];
   }
 
-  /// 그 레벨의 **첫 차림**. 자리마다 가장 늦게 열린 것을 하나씩 걸친 모습이다.
+  /// 다섯 레벨을 같은 값으로 놓았을 때의 **첫 차림**.
   ///
-  /// 옷장을 한 번도 안 연 사람이 보는 모습이고, 조합 검수 화면도 이걸 쓴다.
-  List<CosmeticLayerModel> layersAtLevel(int level) {
-    final clamped = _clampLevel(level);
-    return _loadoutAt(clamped, _presetFor(clamped)).resolveLayers();
-  }
+  /// 조합 검수 화면과 레벨업 연출이 "레벨을 올릴수록 개구리가 어떻게 달라지나"
+  /// 를 한 축으로 훑을 때 쓴다. 능력치가 갈라진 뒤로 이 한 축은 실제 사용자의
+  /// 모습이 아니라 **눈으로 훑기 위한 단면**이다.
+  List<CosmeticLayerModel> layersAtLevel(int level) =>
+      layersAtLevels(CosmeticAbilityLevels.uniform(level));
+
+  /// 그 레벨들에서의 첫 차림. 자리마다 가장 늦게 열린 것을 하나씩 걸친 모습이다.
+  List<CosmeticLayerModel> layersAtLevels(CosmeticAbilityLevels levels) =>
+      _loadoutAt(levels, _presetFor(levels)).resolveLayers();
 
   /// **지금 차림 위에** 아이템 몇 개를 더 얹은 층들.
   ///
@@ -113,7 +131,7 @@ class CosmeticProvider with ChangeNotifier {
     for (final item in extra) {
       next[item.slot] = item.itemKey;
     }
-    return _loadoutAt(_level, next).resolveLayers();
+    return _loadoutAt(_levels, next).resolveLayers();
   }
 
   /// 이 슬롯에 들어가는 아이템들. 카탈로그 순서를 지킨다.
@@ -131,21 +149,38 @@ class CosmeticProvider with ChangeNotifier {
   /// 지금 레벨에서 가지고 있는지.
   bool isOwned(String itemKey) {
     final item = _catalog.itemOf(itemKey);
-    return item != null && _ownsAt(item, _level);
+    return item != null && _ownsAt(item, _levels);
   }
 
   /// 디버그 전용 전체 해금이 켜져 있는지.
   bool get unlockAll => _unlockAll;
 
-  /// 그 레벨에서 이 아이템을 쓸 수 있는지. 전체 해금이 켜져 있으면 늘 참이다.
-  bool _ownsAt(CosmeticItemModel item, int level) =>
-      _unlockAll || item.isUnlockedAt(level);
+  /// 그 레벨들에서 이 아이템을 쓸 수 있는지. 전체 해금이 켜져 있으면 늘 참이다.
+  bool _ownsAt(CosmeticItemModel item, CosmeticAbilityLevels levels) =>
+      _unlockAll || item.isUnlockedAt(levels);
 
-  /// 그 레벨에서 **새로** 열리는 아이템들. 레벨업 연출에 쓴다.
-  List<CosmeticItemModel> unlockedAt(int level) => [
+  /// **지금 레벨에서 막 열린** 아이템들. 옷장 격자의 `NEW` 표시가 쓴다.
+  ///
+  /// 제 능력치의 레벨과 필요 레벨이 딱 맞는 것들이다. 능력치가 갈라진 뒤로는
+  /// "이번 레벨"이 하나가 아니라 다섯이라, 넷 중 어느 쪽을 올렸든 그쪽에서
+  /// 막 열린 것에 표시가 붙는다.
+  List<CosmeticItemModel> get justUnlocked => [
         for (final item in _catalog.items)
-          if (item.requiredLevel == level) item,
+          if (item.requiredLevel == _levels.levelOf(item.requiredAbility)) item,
       ];
+
+  /// 그 **총 학습 레벨**에서 새로 열리는 아이템들. 레벨업 연출에 쓴다.
+  ///
+  /// 레벨업 축하는 총 학습 레벨이 오를 때 뜬다. 그래서 여기서 세는 것도
+  /// 능력치가 안 붙은(총 학습 기준) 아이템뿐이다. 출석이나 복습으로 열리는
+  /// 것은 그쪽 레벨이 오를 때 열리는 것이라 이 축하의 몫이 아니다.
+  List<CosmeticItemModel> unlockedAtTotalStudyLevel(int level) => [
+        for (final item in _catalog.items)
+          if (item.requiredAbility == null && item.requiredLevel == level) item,
+      ];
+
+  /// 총 학습 레벨의 끝. 레벨업 연출의 게이지 오른쪽 끝이다.
+  int get maxTotalStudyLevel => CosmeticAbilityLevels.maxTotalStudy;
 
   String? get lastFailureMessage => _lastFailureMessage;
 
@@ -162,7 +197,7 @@ class CosmeticProvider with ChangeNotifier {
 
   /// 이 차림을 그리면 어떤 층이 되는지. [layers] 의 시착판이다.
   List<CosmeticLayerModel> layersOf(Map<String, String> equipped) =>
-      _loadoutAt(_level, equipped).resolveLayers();
+      _loadoutAt(_levels, equipped).resolveLayers();
 
   /// 이 차림에 하나를 걸거나([itemKey] 를 주거나) 벗긴(null) 결과.
   ///
@@ -178,31 +213,36 @@ class CosmeticProvider with ChangeNotifier {
 
   /// 이 차림에서 지금 레벨에 못 쓰는 것을 걷어 낸 것.
   ///
-  /// 시착하는 동안 레벨 슬라이더를 내리거나 전체 해금을 끄면 방금 입어 본 것이
-  /// 못 쓰는 것이 된다. 화면은 매번 이걸 통과시킨 차림을 그린다.
+  /// 시착하는 동안 레벨을 내리거나 전체 해금을 끄면 방금 입어 본 것이 못 쓰는
+  /// 것이 된다. 화면은 매번 이걸 통과시킨 차림을 그린다.
   Map<String, String> usableOf(Map<String, String> equipped) =>
-      _pruneLocked(equipped, _level);
+      _pruneLocked(equipped, _levels);
 
   /// 이 아이템을 아직 못 쓰는 이유. 쓸 수 있으면 null 이다.
   String? lockReasonOf(String itemKey) {
     final item = _catalog.itemOf(itemKey);
     if (item == null) return '지금은 쓸 수 없는 아이템이에요.';
-    if (_ownsAt(item, _level)) return null;
+    if (_ownsAt(item, _levels)) return null;
     return _lockedMessage(item);
   }
 
   // ── 쓰기 ────────────────────────────────────────────────────────────
 
-  /// 더미 레벨을 바꾼다. 시안의 레벨 슬라이더가 부른다.
+  /// **디버그 전용.** 능력치 하나의 더미 레벨을 바꾼다. null 이면 총 학습이다.
+  void setMockLevel(CosmeticAbility? ability, int level) {
+    setMockLevels(_levels.withLevel(ability, level));
+  }
+
+  /// **디버그 전용.** 더미 레벨 다섯을 통째로 바꾼다.
   ///
   /// 아직 한 번도 갈아입지 않았으면 그 레벨의 기본 차림으로 다시 맞춘다.
   /// 이미 갈아입었으면 사람이 고른 것을 두되, 레벨이 내려가 못 쓰게 된 것은
   /// 내린다. 못 가진 것을 입고 있는 모습이 더 이상하다.
-  void setMockLevel(int level) {
-    final next = _clampLevel(level);
-    if (next == _level) return;
+  void setMockLevels(CosmeticAbilityLevels next) {
+    _levelsTouched = true;
+    if (next == _levels) return;
 
-    _level = next;
+    _levels = next;
     _equipped = _touched ? _pruneLocked(_equipped, next) : _presetFor(next);
     notifyListeners();
   }
@@ -216,7 +256,7 @@ class CosmeticProvider with ChangeNotifier {
 
     _unlockAll = value;
     if (!value) {
-      _equipped = _pruneLocked(_equipped, _level);
+      _equipped = _pruneLocked(_equipped, _levels);
     }
     notifyListeners();
   }
@@ -228,7 +268,7 @@ class CosmeticProvider with ChangeNotifier {
       _fail('지금은 쓸 수 없는 아이템이에요.');
       return;
     }
-    if (!_ownsAt(item, _level)) {
+    if (!_ownsAt(item, _levels)) {
       _fail(_lockedMessage(item));
       return;
     }
@@ -262,7 +302,7 @@ class CosmeticProvider with ChangeNotifier {
 
     final locked = [
       for (final item in members)
-        if (!_ownsAt(item, _level)) item,
+        if (!_ownsAt(item, _levels)) item,
     ];
     if (locked.isNotEmpty) {
       _fail(_lockedMessage(locked.first, others: locked));
@@ -280,7 +320,7 @@ class CosmeticProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  /// 지금 레벨의 기본 차림으로 되돌린다.
+  /// 걸친 것을 전부 벗는다.
   void unequipAll() {
     _touched = true;
     _equipped = const {};
@@ -294,7 +334,7 @@ class CosmeticProvider with ChangeNotifier {
   /// 레벨이 내려가 못 쓰게 된 것이 섞여 있으면 걷어 내고 저장한다.
   void save(Map<String, String> equipped) {
     _touched = true;
-    _equipped = _pruneLocked(equipped, _level);
+    _equipped = _pruneLocked(equipped, _levels);
     _lastFailureMessage = null;
     notifyListeners();
   }
@@ -308,49 +348,50 @@ class CosmeticProvider with ChangeNotifier {
 
   /// 들고 있는 것을 전부 비운다. 로그아웃 때 부른다.
   void clear() {
-    _level = CosmeticMockData.maxLevel;
+    _levels = CosmeticMockData.demoLevels;
+    _levelsTouched = false;
     _touched = false;
-    _equipped = _presetFor(_level);
+    _equipped = _presetFor(_levels);
     _lastFailureMessage = null;
     notifyListeners();
   }
 
   // ── 안쪽 ────────────────────────────────────────────────────────────
 
-  /// 그 레벨에서의 차림 하나를 만든다. `owned` 를 레벨로 다시 매긴다.
-  CosmeticLoadoutModel _loadoutAt(int level, Map<String, String> equipped) {
+  /// 그 레벨들에서의 차림 하나를 만든다. `owned` 를 레벨로 다시 매긴다.
+  CosmeticLoadoutModel _loadoutAt(
+    CosmeticAbilityLevels levels,
+    Map<String, String> equipped,
+  ) {
     return CosmeticLoadoutModel(
       baseImageUrl: _catalog.baseImageUrl,
       slots: _catalog.slots,
       items: [
         for (final item in _catalog.items)
-          item.copyWith(owned: _ownsAt(item, level)),
+          item.copyWith(owned: _ownsAt(item, levels)),
       ],
       equipped: Map<String, String>.unmodifiable(equipped),
       baseLayerOrder: _catalog.baseLayerOrder,
     );
   }
 
-  /// 그 레벨의 기본 차림.
+  /// 그 레벨들에서의 기본 차림.
   ///
-  /// 슬롯마다 **열려 있는 것 중 가장 늦게 열린 것**을 입는다. 레벨을 올릴수록
-  /// 새로 얻은 것이 바로 보이는 쪽이 해금이 쌓이는 느낌을 준다.
-  /// 옷장을 한 번도 안 연 사람에게 입혀 줄 한 벌.
+  /// 옷장을 한 번도 안 연 사람에게 입혀 줄 한 벌이다. 자리마다 **열려 있는 것
+  /// 중 가장 늦게 열리는 것**을 고른다. 늦게 열릴수록 그 사람이 여기까지 왔다는
+  /// 표시라서, 레벨이 높은 사람이 맨 개구리로 보이지 않는다.
   ///
-  /// 자리마다 **가장 늦게 열리는 것**을 고른다. 늦게 열릴수록 그 사람이
-  /// 여기까지 왔다는 표시라서, 레벨이 높은 사람이 맨 개구리로 보이지 않는다.
-  ///
-  /// **처음 만들 때 한 번만 쓴다.** 레벨이 바뀌어도 다시 계산하지 않는다.
-  /// 매번 다시 맞추면 사람이 골라 둔 것을 앱이 덮어쓰게 된다.
-  Map<String, String> _presetFor(int level) {
+  /// 능력치가 갈라진 뒤로 필요 레벨끼리의 비교는 능력치를 가로지른다. 출석
+  /// Lv.9 와 총 학습 Lv.8 중 어느 쪽이 "더 멀리 온 것"인지는 정할 수 없지만,
+  /// 여기서 정해야 하는 것은 기본 차림 한 벌이라 그 정도면 된다.
+  Map<String, String> _presetFor(CosmeticAbilityLevels levels) {
     final picked = <String, CosmeticItemModel>{};
 
     for (final item in _catalog.items) {
-      if (!item.isUnlockedAt(level)) continue;
+      if (!item.isUnlockedAt(levels)) continue;
 
       final current = picked[item.slot];
-      if (current == null ||
-          (item.requiredLevel ?? 0) > (current.requiredLevel ?? 0)) {
+      if (current == null || item.requiredLevel > current.requiredLevel) {
         picked[item.slot] = item;
       }
     }
@@ -360,12 +401,15 @@ class CosmeticProvider with ChangeNotifier {
     });
   }
 
-  /// 그 레벨에서 못 쓰게 된 것을 내린다.
-  Map<String, String> _pruneLocked(Map<String, String> equipped, int level) {
+  /// 그 레벨들에서 못 쓰게 된 것을 내린다.
+  Map<String, String> _pruneLocked(
+    Map<String, String> equipped,
+    CosmeticAbilityLevels levels,
+  ) {
     final next = <String, String>{};
     equipped.forEach((slot, itemKey) {
       final item = _catalog.itemOf(itemKey);
-      if (item != null && _ownsAt(item, level)) {
+      if (item != null && _ownsAt(item, levels)) {
         next[slot] = itemKey;
       }
     });
@@ -405,30 +449,48 @@ class CosmeticProvider with ChangeNotifier {
 
   /// 아직 못 쓰는 이유를 사람 말로 적는다.
   ///
-  /// 레벨로 열리는 것이면 몇 레벨부터인지, 미션 보상이면 그렇다고 말한다.
-  /// 미션 보상에 "Lv.0 부터"라고 쓰면 없는 규칙을 알려 주는 셈이 된다.
+  /// **무엇을 얼마나 올려야 하는지까지 말한다.** `Lv.9 부터` 만으로는 무엇의
+  /// 9 인지 알 수 없어서, 출석을 올려야 하는 것을 복습만 하며 기다리게 된다.
+  ///
+  /// 세트처럼 여러 개가 한꺼번에 걸리면 **가장 멀리 있는 것**을 말한다. 그것만
+  /// 채우면 나머지는 이미 열려 있다.
   String _lockedMessage(
     CosmeticItemModel item, {
     List<CosmeticItemModel> others = const [],
   }) {
-    var required = item.requiredLevel;
+    var farthest = item;
     for (final other in others) {
-      final level = other.requiredLevel;
-      if (level == null) return '미션을 마치면 받을 수 있어요.';
-      if (required == null || level > required) required = level;
+      if (other.remainingLevelsAt(_levels) >
+          farthest.remainingLevelsAt(_levels)) {
+        farthest = other;
+      }
     }
-    if (required == null) return '미션을 마치면 받을 수 있어요.';
-    return 'Lv.$required 부터 쓸 수 있어요.';
+    return '${cosmeticRequirementLabel(farthest)} 부터 쓸 수 있어요.';
   }
 
   void _fail(String message) {
     _lastFailureMessage = message;
     notifyListeners();
   }
-
-  static int _clampLevel(int level) {
-    if (level < 1) return 1;
-    if (level > CosmeticMockData.maxLevel) return CosmeticMockData.maxLevel;
-    return level;
-  }
 }
+
+/// 이 아이템을 열려면 무엇을 얼마나 올려야 하는지. `출석 Lv.9` 처럼 쓴다.
+///
+/// 프로바이더의 알림 문구와 화면의 잠금 배지가 같은 말을 쓰게 하려고 한 군데에
+/// 둔다. 능력치 이름은 [cosmeticAbilityLabel] 이 정한다.
+String cosmeticRequirementLabel(CosmeticItemModel item) =>
+    '${cosmeticAbilityLabel(item.requiredAbility)} Lv.${item.requiredLevel}';
+
+/// 능력치 이름. null 이면 총 학습 레벨이다.
+///
+/// 미션 화면과 스탯창이 쓰는 이름([MissionPalette]) 과 같아야 해서, 그쪽과
+/// 어긋나지 않는지는 `test/screen/cosmetic/cosmetic_ability_style_test.dart`
+/// 가 잠근다. 여기에 이름을 두는 것은 모델과 프로바이더가 화면 파일을 import
+/// 하지 않게 하려는 것이다.
+String cosmeticAbilityLabel(CosmeticAbility? ability) => switch (ability) {
+      CosmeticAbility.attendance => '출석',
+      CosmeticAbility.noteWrite => '오답노트',
+      CosmeticAbility.problemPractice => '문제 복습',
+      CosmeticAbility.notePractice => '복습 세트',
+      null => '총 학습',
+    };

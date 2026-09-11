@@ -1,3 +1,5 @@
+import 'CosmeticAbilityLevels.dart';
+
 /// 개구리에 입힐 수 있는 치장 아이템 하나다.
 ///
 /// 정의를 앱에 두지 않는다. 아이템은 계속 늘어나기 때문에, 새 아이템이 나올
@@ -21,12 +23,26 @@ class CosmeticItemModel {
 
   /// 이 아이템이 열리는 레벨. 못 가진 아이템에 이 숫자를 보여 준다.
   ///
-  /// **null 이면 레벨로는 열리지 않는다.** 미션 보상처럼 다른 조건으로만 얻는
-  /// 것들이다. 0 으로 깔아 두면 "Lv.0 부터"라는 없는 말을 화면에 쓰게 된다.
-  final int? requiredLevel;
+  /// 어느 능력치의 레벨인지는 [requiredAbility] 가 정한다. 둘은 늘 짝으로
+  /// 읽어야 한다. 이 숫자만 떼어 놓으면 `Lv.9` 가 무엇의 9 인지 알 수 없다.
+  final int requiredLevel;
+
+  /// [requiredLevel] 을 어느 능력치에서 세는지. **null 이면 총 학습 레벨**이다.
+  ///
+  /// 예전에는 해금 기준이 총 학습 레벨 하나였다. 지금은 아이템마다 제 능력치가
+  /// 있어서, 출석만 올린 사람에게는 배경과 효과가 열리고 복습만 한 사람에게는
+  /// 안경과 모자가 열린다.
+  final CosmeticAbility? requiredAbility;
 
   /// 세트로 묶인 아이템이면 그 세트 키. 아니면 null 이다.
   final String? setId;
+
+  /// 세트 이름. [setId] 가 null 이면 이것도 null 이다.
+  ///
+  /// 키를 화면에 쓸 수는 없어서 이름이 따로 온다. 앱이 `graduate` 를 `학사
+  /// 세트` 로 옮기는 표를 들고 있으면 세트가 하나 늘 때마다 앱을 다시 내보내야
+  /// 한다.
+  final String? setNameKo;
 
   /// 같이 걸 수 없는 아이템들의 키.
   ///
@@ -53,6 +69,8 @@ class CosmeticItemModel {
     required this.setId,
     required this.conflictsWith,
     required this.owned,
+    this.requiredAbility,
+    this.setNameKo,
     this.fullBody = false,
   });
 
@@ -66,6 +84,7 @@ class CosmeticItemModel {
     if (slot is! String || slot.isEmpty) return null;
 
     final setId = json['setId'];
+    final setNameKo = json['setNameKo'];
 
     return CosmeticItemModel(
       itemKey: itemKey,
@@ -74,8 +93,18 @@ class CosmeticItemModel {
           ? json['nameKo'] as String
           : itemKey,
       imageUrl: json['imageUrl'] is String ? json['imageUrl'] as String : '',
-      requiredLevel: _asInt(json['requiredLevel']),
+      // 레벨이 없으면 처음부터 열려 있는 것으로 본다. 실제로 가졌는지는
+      // 서버가 `owned` 로 내려주므로, 이 값은 잠긴 칸에 조건을 적는 데만 쓴다.
+      requiredLevel:
+          _asInt(json['requiredLevel']) ?? CosmeticAbilityLevels.minLevel,
+      requiredAbility: CosmeticAbility.fromKeyOrNull(json['requiredAbility']),
       setId: setId is String && setId.isNotEmpty ? setId : null,
+      setNameKo: setId is String &&
+              setId.isNotEmpty &&
+              setNameKo is String &&
+              setNameKo.isNotEmpty
+          ? setNameKo
+          : null,
       conflictsWith: _asStringList(json['conflictsWith']),
       owned: json['owned'] == true,
       fullBody: json['fullBody'] == true,
@@ -85,13 +114,20 @@ class CosmeticItemModel {
   /// 이 아이템을 걸 수 있는지. 가지고 있지 않으면 못 건다.
   bool get isEquippable => owned;
 
-  /// 레벨을 올리면 언젠가 열리는 것인지. 아니면 미션 보상이다.
-  bool get unlocksByLevel => requiredLevel != null;
+  /// 이 레벨들에서 열려 있는지.
+  ///
+  /// 제 능력치의 레벨만 본다. 다른 능력치를 아무리 올려도 이쪽은 안 열린다.
+  bool isUnlockedAt(CosmeticAbilityLevels levels) =>
+      levels.levelOf(requiredAbility) >= requiredLevel;
 
-  /// 이 레벨에서 열려 있는지.
-  bool isUnlockedAt(int level) {
-    final required = requiredLevel;
-    return required != null && required <= level;
+  /// 열리기까지 이 능력치를 몇 레벨 더 올려야 하는지. 이미 열렸으면 0 이다.
+  ///
+  /// **"다음에 열릴 것"을 고르는 기준이다.** 필요 레벨만 비교하면 능력치가
+  /// 섞였을 때 뜻이 어긋난다. 출석 Lv.3 짜리와 복습 Lv.4 짜리가 나란히 있어도
+  /// 내 출석이 Lv.2 이고 복습이 Lv.10 이면 가까운 쪽은 출석이다.
+  int remainingLevelsAt(CosmeticAbilityLevels levels) {
+    final remaining = requiredLevel - levels.levelOf(requiredAbility);
+    return remaining < 0 ? 0 : remaining;
   }
 
   CosmeticItemModel copyWith({bool? owned}) {
@@ -101,7 +137,9 @@ class CosmeticItemModel {
       nameKo: nameKo,
       imageUrl: imageUrl,
       requiredLevel: requiredLevel,
+      requiredAbility: requiredAbility,
       setId: setId,
+      setNameKo: setNameKo,
       conflictsWith: conflictsWith,
       owned: owned ?? this.owned,
       fullBody: fullBody,

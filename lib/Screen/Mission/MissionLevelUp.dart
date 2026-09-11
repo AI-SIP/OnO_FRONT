@@ -78,8 +78,12 @@ List<int> newlyUnlockedThemeIndexes(Set<int> before, Set<int> after) {
 /// 한 번에 두 레벨 넘게 오르는 일이 있어서 구간을 훑는다. Lv.13 에서 Lv.15 로
 /// 뛰면 Lv.14 의 것과 Lv.15 의 것이 모두 이번에 열린 것이다.
 ///
-/// [unlockedAt] 은 `CosmeticProvider.unlockedAt` 을 그대로 넘긴다. 프로바이더를
-/// 직접 받지 않는 것은 이 계산만 따로 확인할 수 있게 하려는 것이다.
+/// [unlockedAt] 은 `CosmeticProvider.unlockedAtTotalStudyLevel` 을 그대로
+/// 넘긴다. 프로바이더를 직접 받지 않는 것은 이 계산만 따로 확인할 수 있게
+/// 하려는 것이다.
+///
+/// **총 학습 레벨 기준이다.** 해금이 능력치별로 갈린 뒤로 출석이나 복습으로
+/// 열리는 것은 그쪽 레벨이 오를 때 열리는 것이라 이 축하의 몫이 아니다.
 List<CosmeticItemModel> missionUnlocksBetween(
   int from,
   int to,
@@ -286,11 +290,11 @@ class _MissionLevelUpViewState extends State<_MissionLevelUpView>
     // 닫힐 때까지 바뀌지 않아서 watch 할 이유가 없고, LayoutBuilder 안에서는
     // watch 가 되지 않는 문제도 같이 피한다.
     final cosmetic = Provider.of<CosmeticProvider>(context, listen: false);
-    _maxLevel = cosmetic.maxLevel;
+    _maxLevel = cosmetic.maxTotalStudyLevel;
     _unlocked = missionUnlocksBetween(
       _previousLevel,
       _level,
-      cosmetic.unlockedAt,
+      cosmetic.unlockedAtTotalStudyLevel,
     );
     _stages = missionUnlockStages(
       // 자동으로 입혀 주는 차림이 없어졌다. 그 레벨의 정해진 모습이 아니라

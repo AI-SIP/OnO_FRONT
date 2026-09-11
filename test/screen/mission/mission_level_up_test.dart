@@ -8,18 +8,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ono/Model/Cosmetic/CosmeticItemModel.dart';
 import 'package:ono/Model/Cosmetic/CosmeticLoadoutModel.dart';
+import 'package:ono/Model/Cosmetic/CosmeticAbilityLevels.dart';
 import 'package:ono/Provider/CosmeticProvider.dart';
 import 'package:ono/Screen/Mission/MissionLevelUp.dart';
 
 import '../../helpers/helpers.dart';
 
-/// 테스트에서 쓰는 아이템 한 건.
+/// 테스트에서 쓰는 아이템 한 건. 총 학습 레벨로 열리는 것이다.
 CosmeticItemModel _item(
   String itemKey,
   String slot, {
   String? nameKo,
   String imageUrl = '',
-  int? level,
+  int level = 1,
 }) {
   return CosmeticItemModel(
     itemKey: itemKey,
@@ -29,7 +30,7 @@ CosmeticItemModel _item(
     requiredLevel: level,
     setId: null,
     conflictsWith: const [],
-    owned: level != null,
+    owned: true,
   );
 }
 
@@ -88,9 +89,10 @@ void main() {
       expect(missionUnlocksBetween(5, 3, unlockedAt), isEmpty);
     });
 
-    test('더미 카탈로그에서 Lv.14 → Lv.15 는 학사 세트 세 개다', () {
+    test('더미 카탈로그에서 총 학습 Lv.19 → Lv.20 은 학사 세트 세 개다', () {
       final provider = CosmeticProvider();
-      final unlocked = missionUnlocksBetween(14, 15, provider.unlockedAt);
+      final unlocked =
+          missionUnlocksBetween(19, 20, provider.unlockedAtTotalStudyLevel);
 
       expect(
         unlocked.map((item) => item.itemKey),
@@ -140,12 +142,13 @@ void main() {
 
     test('마지막 칸은 오른 뒤의 차림과 같다', () {
       final provider = CosmeticProvider();
-      final after = provider.layersAtLevel(15);
+      final after = provider.layersAtLevel(20);
 
       final stages = missionUnlockStages(
-        before: provider.layersAtLevel(14),
+        before: provider.layersAtLevel(19),
         after: after,
-        unlocked: missionUnlocksBetween(14, 15, provider.unlockedAt),
+        unlocked:
+            missionUnlocksBetween(19, 20, provider.unlockedAtTotalStudyLevel),
       );
 
       expect(
@@ -155,12 +158,13 @@ void main() {
     });
 
     test('같은 자리에 있던 것은 내린다', () {
-      // Lv.14 의 왕관이 Lv.15 의 학사모로 바뀐다. 둘이 같이 걸리면 안 된다.
+      // 총 학습 Lv.19 의 왕관이 Lv.20 의 학사모로 바뀐다. 둘이 같이 걸리면 안 된다.
       final provider = CosmeticProvider();
       final stages = missionUnlockStages(
-        before: provider.layersAtLevel(14),
-        after: provider.layersAtLevel(15),
-        unlocked: missionUnlocksBetween(14, 15, provider.unlockedAt),
+        before: provider.layersAtLevel(19),
+        after: provider.layersAtLevel(20),
+        unlocked:
+            missionUnlocksBetween(19, 20, provider.unlockedAtTotalStudyLevel),
       );
 
       expect(_keysOf(stages).first, contains('hat_crown'));
@@ -247,7 +251,9 @@ void main() {
       if (reduceMotion) disableAnimationsForTest(tester);
       // 연출은 오르기 전 차림에서 시작한다. 그래서 프로바이더도 오르기 전
       // 레벨로 세운다. [wearing] 으로 그 위에 따로 걸칠 수 있다.
-      final cosmetic = CosmeticProvider(mockLevel: previousLevel ?? level);
+      final cosmetic = CosmeticProvider(
+        mockLevels: CosmeticAbilityLevels.uniform(previousLevel ?? level),
+      );
       wearing.forEach(cosmetic.equip);
       await pumpOnoWidget(
         tester,
@@ -295,8 +301,8 @@ void main() {
     });
 
     testWidgets('열린 치장의 이름을 보여 준다', (tester) async {
-      // Lv.14 → Lv.15 는 학사 세트 셋이 한꺼번에 열린다. 가장 화려한 경우다.
-      await pumpLevelUp(tester, level: 15, previousLevel: 14);
+      // 총 학습 Lv.19 → Lv.20 은 학사 세트 셋이 한꺼번에 열린다. 가장 화려한 경우다.
+      await pumpLevelUp(tester, level: 20, previousLevel: 19);
 
       expect(find.text('개구리가 바로 입어 봤어요'), findsOneWidget);
       expect(find.text('학사모'), findsOneWidget);
@@ -305,7 +311,7 @@ void main() {
     });
 
     testWidgets('연출을 끈 기기에서는 다 입은 개구리를 바로 보여 준다', (tester) async {
-      await pumpLevelUp(tester, level: 15, previousLevel: 14);
+      await pumpLevelUp(tester, level: 20, previousLevel: 19);
 
       final drawn = drawnLayers(tester);
       expect(drawn, contains('assets/Cosmetic/hat_graduate.png'));
@@ -318,8 +324,8 @@ void main() {
     testWidgets('열린 것이 하나씩 차례로 개구리에 얹힌다', (tester) async {
       await pumpLevelUp(
         tester,
-        level: 15,
-        previousLevel: 14,
+        level: 20,
+        previousLevel: 19,
         reduceMotion: false,
         settle: false,
       );
@@ -362,16 +368,19 @@ void main() {
 
     testWidgets('열린 것이 없으면 이름표 대신 레벨 게이지를 둔다', (tester) async {
       final provider = CosmeticProvider();
-      // 더미 카탈로그에는 Lv.15 위로 열리는 것이 없다. 게이지 양 끝 글자가
-      // 레벨 줄의 글자와 겹치지 않도록 카탈로그 밖 레벨로 올린다.
-      expect(missionUnlocksBetween(16, 17, provider.unlockedAt), isEmpty);
+      // 더미 카탈로그에는 총 학습 Lv.20 위로 열리는 것이 없다. 게이지 양 끝
+      // 글자가 레벨 줄의 글자와 겹치지 않도록 카탈로그 밖 레벨로 올린다.
+      expect(
+        missionUnlocksBetween(21, 22, provider.unlockedAtTotalStudyLevel),
+        isEmpty,
+      );
 
-      await pumpLevelUp(tester, level: 17, previousLevel: 16);
+      await pumpLevelUp(tester, level: 22, previousLevel: 21);
 
       expect(find.text('개구리가 바로 입어 봤어요'), findsNothing);
       // 게이지는 Lv.1 에서 카탈로그의 마지막 레벨까지를 눈금으로 쓴다.
       expect(find.text('Lv.1'), findsOneWidget);
-      expect(find.text('Lv.${provider.maxLevel}'), findsOneWidget);
+      expect(find.text('Lv.${provider.maxTotalStudyLevel}'), findsOneWidget);
     });
 
     testWidgets('해금된 테마가 있으면 색과 이름을 보여 준다', (tester) async {
@@ -401,8 +410,8 @@ void main() {
                           onPressed: () => showMissionLevelUp(
                             inner,
                             // 치장 셋과 테마 둘이 한꺼번에 열리는, 가장 긴 경우다.
-                            level: 15,
-                            previousLevel: 14,
+                            level: 20,
+                            previousLevel: 19,
                             unlockedThemeIndexes: const [8, 9],
                           ),
                           child: const Text('열기'),

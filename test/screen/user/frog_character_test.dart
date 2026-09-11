@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ono/Model/Cosmetic/CosmeticLoadoutModel.dart';
 import 'package:ono/Module/Text/StandardText.dart';
+import 'package:ono/Model/Cosmetic/CosmeticAbilityLevels.dart';
 import 'package:ono/Provider/CosmeticProvider.dart';
 import 'package:ono/Screen/Cosmetic/Mock/CosmeticMockData.dart';
 import 'package:ono/Screen/User/Widget/FrogCharacter.dart';
@@ -174,8 +175,10 @@ void main() {
     });
 
     test('프로바이더가 준 층도 같은 순서다', () {
-      final provider = CosmeticProvider(mockLevel: 15);
-      // 알아서 입혀 주는 것이 없으니 직접 걸친 뒤에 순서를 본다.
+      final provider = CosmeticProvider(mockLevels: CosmeticAbilityLevels.max);
+      // 다 열린 사람은 자리마다 하나씩 입고 있다. 순서만 보려는 것이라
+      // 전부 벗기고 양 끝 둘만 직접 걸친다.
+      provider.unequipAll();
       provider.equip('BACKGROUND', 'bg_night');
       provider.equip('HAND', 'prop_diploma');
 
