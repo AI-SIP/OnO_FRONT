@@ -119,14 +119,14 @@ void main() {
     test('아이템 수만큼 칸이 늘고 하나씩 더 걸린다', () {
       final base = _layer(null, 300);
       final hat = _layer('hat_beanie', 700, slot: 'HEAD');
-      final bag = _layer('bag_mini_backpack', 200, slot: 'BACK');
+      final bag = _layer('bag_mini_backpack', 450, slot: 'BAG');
 
       final stages = missionUnlockStages(
         before: [base],
         after: [bag, base, hat],
         unlocked: [
           _item('hat_beanie', 'HEAD', level: 6),
-          _item('bag_mini_backpack', 'BACK', level: 8),
+          _item('bag_mini_backpack', 'BAG', level: 8),
         ],
       );
 
@@ -134,7 +134,7 @@ void main() {
         [null],
         [null, 'hat_beanie'],
         // 가방은 층이 개구리보다 뒤라 앞에 끼워 넣지 않고 뒤에 깐다.
-        ['bag_mini_backpack', null, 'hat_beanie'],
+        [null, 'bag_mini_backpack', 'hat_beanie'],
       ]);
     });
 

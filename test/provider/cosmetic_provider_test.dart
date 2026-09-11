@@ -13,7 +13,7 @@ void main() {
 
       expect(provider.equipped, {
         'BACKGROUND': 'bg_night', // Lv.13 이 가장 늦다
-        'BACK': 'bag_mini_backpack', // Lv.8
+        'BAG': 'bag_mini_backpack', // Lv.8
         'OUTFIT': 'outfit_graduate', // Lv.15
         'NECK': 'scarf', // Lv.5
         'FACE': 'glasses_sun', // Lv.11

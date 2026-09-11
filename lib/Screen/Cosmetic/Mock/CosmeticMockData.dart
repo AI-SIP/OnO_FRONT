@@ -62,8 +62,11 @@ class CosmeticMockData {
   /// 이 순서가 옷장 탭의 순서이기도 하다.
   static const List<Map<String, Object?>> _slots = [
     {'slot': 'BACKGROUND', 'layerOrder': 100, 'nameKo': '배경'},
-    {'slot': 'BACK', 'layerOrder': 200, 'nameKo': '가방'},
     {'slot': 'OUTFIT', 'layerOrder': 400, 'nameKo': '옷'},
+    // 가방 세 종이 전부 앞으로 메는 그림이라 개구리 뒤(200)에 두면 몸통이 덮어
+    // 끈 조각만 보인다. 옷 위(450)로 올린다. 등에 메는 그림이 생기면 그때
+    // 뒤쪽 자리를 따로 낸다.
+    {'slot': 'BAG', 'layerOrder': 450, 'nameKo': '가방'},
     {'slot': 'NECK', 'layerOrder': 500, 'nameKo': '목'},
     {'slot': 'FACE', 'layerOrder': 600, 'nameKo': '얼굴'},
     {'slot': 'HEAD', 'layerOrder': 700, 'nameKo': '머리'},
@@ -83,7 +86,7 @@ class CosmeticMockData {
     _item('scarf', 'NECK', '목도리', level: 5),
     _item('hat_beanie', 'HEAD', '비니', level: 6),
     _item('bg_study', 'BACKGROUND', '공부방', level: 7),
-    _item('bag_mini_backpack', 'BACK', '미니 백팩', level: 8),
+    _item('bag_mini_backpack', 'BAG', '미니 백팩', level: 8),
     _item('outfit_cardigan', 'OUTFIT', '가디건', level: 9),
     _item('prop_study', 'HAND', '공부 소품', level: 10),
     _item('glasses_sun', 'FACE', '선글라스', level: 11),
@@ -104,8 +107,8 @@ class CosmeticMockData {
     _item('outfit_school', 'OUTFIT', '교복'),
     _item('outfit_hoodie', 'OUTFIT', '후드티'),
     _item('outfit_raincoat', 'OUTFIT', '비옷'),
-    _item('bag_waist_pouch', 'BACK', '허리 가방'),
-    _item('bag_crossbody_satchel', 'BACK', '크로스백'),
+    _item('bag_waist_pouch', 'BAG', '허리 가방'),
+    _item('bag_crossbody_satchel', 'BAG', '크로스백'),
     _item('prop_bouquet', 'HAND', '꽃다발'),
     _item('prop_umbrella', 'HAND', '우산'),
     _item('badge_leaf_star', 'BADGE', '나뭇잎 별'),

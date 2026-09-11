@@ -83,21 +83,21 @@ void main() {
           'HEAD': 'hat_graduate',
           'BACKGROUND': 'bg_night',
           'OUTFIT': 'outfit_graduate',
-          'BACK': 'bag_mini_backpack',
+          'BAG': 'bag_mini_backpack',
         },
       );
 
       expect(
         [for (final layer in layers) layer.layerOrder],
-        [100, 200, 300, 400, 700],
+        [100, 300, 400, 450, 700],
       );
       expect(
         [for (final layer in layers) layer.itemKey],
         [
           'bg_night',
-          'bag_mini_backpack',
           null, // 개구리 본체
           'outfit_graduate',
+          'bag_mini_backpack', // 앞으로 메는 그림이라 옷 위에 온다
           'hat_graduate',
         ],
       );
