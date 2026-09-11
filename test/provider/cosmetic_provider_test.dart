@@ -215,7 +215,7 @@ void main() {
       final items = CosmeticMockData.loadout.items;
 
       expect(items.where((item) => item.unlocksByLevel), hasLength(16));
-      expect(items.where((item) => !item.unlocksByLevel), hasLength(24));
+      expect(items.where((item) => !item.unlocksByLevel), hasLength(39));
     });
   });
 }

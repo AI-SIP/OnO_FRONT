@@ -62,6 +62,8 @@ class CosmeticMockData {
   /// 이 순서가 옷장 탭의 순서이기도 하다.
   static const List<Map<String, Object?>> _slots = [
     {'slot': 'BACKGROUND', 'layerOrder': 100, 'nameKo': '배경'},
+    // 등에 메는 가방이라 개구리 뒤에 깔린다. 앞으로 메는 것은 BAG(450) 이다.
+    {'slot': 'BACK', 'layerOrder': 200, 'nameKo': '등짐'},
     {'slot': 'OUTFIT', 'layerOrder': 400, 'nameKo': '옷'},
     // 가방 세 종이 전부 앞으로 메는 그림이라 개구리 뒤(200)에 두면 몸통이 덮어
     // 끈 조각만 보인다. 옷 위(450)로 올린다. 등에 메는 그림이 생기면 그때
@@ -72,6 +74,8 @@ class CosmeticMockData {
     {'slot': 'HEAD', 'layerOrder': 700, 'nameKo': '머리'},
     {'slot': 'HAND', 'layerOrder': 800, 'nameKo': '손'},
     {'slot': 'BADGE', 'layerOrder': 850, 'nameKo': '뱃지'},
+    // 개구리 앞에 흩날리는 것들. 무엇과도 겹치지 않는다.
+    {'slot': 'EFFECT', 'layerOrder': 900, 'nameKo': '효과'},
   ];
 
   /// 아이템 전부.
@@ -94,7 +98,8 @@ class CosmeticMockData {
     _item('bg_night', 'BACKGROUND', '밤하늘', level: 13),
     _item('hat_crown', 'HEAD', '왕관', level: 14),
     _item('hat_graduate', 'HEAD', '학사모', level: 15, setId: 'graduate'),
-    _item('outfit_graduate', 'OUTFIT', '학사복', level: 15, setId: 'graduate'),
+    _item('outfit_graduate', 'OUTFIT', '학사복',
+        level: 15, setId: 'graduate', fullBody: true),
     _item('prop_diploma', 'HAND', '졸업장', level: 15, setId: 'graduate'),
 
     // ── 레벨로는 열리지 않는 것들(미션 보상) ──
@@ -109,6 +114,21 @@ class CosmeticMockData {
     _item('outfit_raincoat', 'OUTFIT', '비옷', fullBody: true),
     _item('bag_waist_pouch', 'BAG', '허리 가방'),
     _item('bag_crossbody_satchel', 'BAG', '크로스백'),
+    _item('badge_star', 'BADGE', '별 뱃지'),
+    _item('badge_heart', 'BADGE', '하트 뱃지'),
+    _item('badge_flame', 'BADGE', '불꽃 뱃지'),
+    _item('badge_music', 'BADGE', '음표 뱃지'),
+    _item('badge_snowflake', 'BADGE', '눈꽃 뱃지'),
+    _item('effect_sparkle', 'EFFECT', '반짝임'),
+    _item('effect_petals', 'EFFECT', '꽃잎'),
+    _item('effect_snow', 'EFFECT', '눈'),
+    _item('effect_fireflies', 'EFFECT', '반딧불'),
+    _item('bg_summer', 'BACKGROUND', '여름'),
+    _item('back_backpack_navy', 'BACK', '남색 책가방'),
+    _item('back_backpack_canvas', 'BACK', '캔버스 책가방'),
+    _item('face_cheek_stickers', 'FACE', '볼 스티커'),
+    _item('face_eye_patch', 'FACE', '안대'),
+    _item('face_moustache', 'FACE', '콧수염'),
     _item('head_earmuffs_winter', 'HEAD', '겨울 귀마개'),
     _item('neck_scarf_coral', 'NECK', '코랄 목도리'),
     _item('prop_lantern', 'HAND', '랜턴'),

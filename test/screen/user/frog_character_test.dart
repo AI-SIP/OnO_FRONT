@@ -90,9 +90,9 @@ void main() {
       );
     });
 
-    test('전신이 아닌 옷은 본체를 그대로 쓴다', () {
+    test('옷이 아닌 것만 걸치면 본체를 그대로 쓴다', () {
       final layers = CosmeticMockData.loadout.resolveLayers(
-        equippedOverride: const {'OUTFIT': 'outfit_graduate'},
+        equippedOverride: const {'HEAD': 'hat_crown', 'NECK': 'scarf'},
       );
 
       expect(layers.first.imageUrl, CosmeticLoadoutModel.defaultBaseImageUrl);

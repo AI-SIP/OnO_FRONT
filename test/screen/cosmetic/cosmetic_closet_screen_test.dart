@@ -87,7 +87,7 @@ void main() {
       expect(find.byType(CosmeticCollectionMeter), findsOneWidget);
       expect(find.text('모은 치장'), findsOneWidget);
       expect(find.text('11'), findsOneWidget);
-      expect(find.text(' / 40'), findsOneWidget);
+      expect(find.text(' / 55'), findsOneWidget);
     });
 
     testWidgets('레벨을 올리면 모은 개수가 는다', (tester) async {
@@ -97,7 +97,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // 열한 가지에 밤하늘(13)과 왕관(14)과 학사 세트 셋(15)을 더해
-      // 열여섯이다. 레벨로 열리는 것은 여기까지고 나머지 스물넷은 미션 보상이다.
+      // 열여섯이다. 레벨로 열리는 것은 여기까지고 나머지는 미션 보상이다.
       expect(find.text('16'), findsOneWidget);
     });
 
@@ -132,7 +132,7 @@ void main() {
       // 이 카드에서 말한다.
       await pumpCloset(tester, level: 12);
 
-      expect(inCard(find.text('배경 2 / 8')), findsOneWidget);
+      expect(inCard(find.text('배경 2 / 9')), findsOneWidget);
     });
 
     testWidgets('예고 카드가 격자보다 위에 있다', (tester) async {
@@ -164,7 +164,7 @@ void main() {
       // 카드가 사라지지 않는다. 탭을 옮길 때마다 격자가 위아래로 튀면 안 된다.
       expect(find.byType(CosmeticNextUnlockCard), findsOneWidget);
       expect(inCard(find.text('다 모았어요')), findsOneWidget);
-      expect(inCard(find.text('배경 8 / 8')), findsOneWidget);
+      expect(inCard(find.text('배경 9 / 9')), findsOneWidget);
     });
   });
 
