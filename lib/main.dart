@@ -12,7 +12,7 @@ import 'package:ono/Module/Theme/ThemeHandler.dart';
 import 'package:ono/Provider/FoldersProvider.dart';
 import 'package:ono/Provider/ScreenIndexProvider.dart';
 import 'package:ono/Screen/ProblemRegister/ProblemRegisterScreen.dart';
-import 'package:ono/Screen/User/SplashScreen.dart';
+import 'package:ono/Screen/Onboarding/SplashScreen.dart';
 import 'package:provider/provider.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
@@ -170,7 +170,7 @@ class MyApp extends StatelessWidget {
       navigatorKey: AppNavigator.navigatorKey,
       navigatorObservers: <NavigatorObserver>[observer],
       scrollBehavior: const AppScrollBehavior(),
-      home: SplashScreen(),
+      home: const SplashScreen(),
       debugShowCheckedModeBanner: false,
       onGenerateRoute: (settings) {
         if (settings.name == '/problemRegister') {

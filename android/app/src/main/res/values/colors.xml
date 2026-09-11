@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+        앱 아이콘을 누른 순간부터 Flutter 가 첫 프레임을 그릴 때까지 깔리는 색이다.
+        lib/Screen/Onboarding/SplashScreen.dart 의 배경색과 반드시 같아야 한다.
+        다르면 앱을 켤 때 색이 한 번 튄다.
+    -->
+    <color name="launch_background">#FFFFFFFF</color>
+</resources>

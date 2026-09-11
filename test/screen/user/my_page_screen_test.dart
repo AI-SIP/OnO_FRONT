@@ -6,7 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ono/Model/Common/LoginStatus.dart';
 import 'package:ono/Model/User/UserInfoModel.dart';
 import 'package:ono/Provider/UserProvider.dart';
-import 'package:ono/Screen/User/LoginScreen.dart';
+import 'package:ono/Screen/Onboarding/LoginScreen.dart';
 import 'package:ono/Screen/User/MyPageScreen.dart';
 import 'package:ono/Screen/User/Widget/ReviewReportScreen.dart';
 import 'package:ono/Screen/User/Widget/StreakCard.dart';

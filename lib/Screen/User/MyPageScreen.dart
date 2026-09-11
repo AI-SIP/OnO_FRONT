@@ -16,7 +16,7 @@ import '../../Provider/TutorialProvider.dart';
 import '../../Provider/UserProvider.dart';
 import '../../Service/Api/FileUpload/FileUploadService.dart';
 import '../Tutorial/TutorialTargets.dart';
-import 'LoginScreen.dart';
+import '../Onboarding/LoginScreen.dart';
 import '../../Module/Motion/AppearTransition.dart';
 import '../../Module/Motion/MotionReplayScope.dart';
 import '../../Module/Motion/PressableScale.dart';
