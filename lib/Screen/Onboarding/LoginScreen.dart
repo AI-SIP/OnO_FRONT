@@ -138,9 +138,9 @@ class _LoginScreenState extends State<LoginScreen> {
           // 얹으면 두 번 움직인다.
           Hero(
             tag: OnboardingBrand.frogHeroTag,
-            child: SvgPicture.asset(
+            child: Image.asset(
               OnboardingBrand.frogAsset,
-              height: isTablet ? 200 : 160,
+              height: isTablet ? 180 : 144,
               fit: BoxFit.contain,
             ),
           ),

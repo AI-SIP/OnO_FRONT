@@ -42,17 +42,13 @@ abstract final class OnboardingBrand {
 
   /// 스플래시와 로그인이 같이 쓰는 개구리.
   ///
-  /// 앱 아이콘(`ios/Runner/Assets.xcassets/AppIcon.appiconset`)이 이 개구리다.
-  /// 사용자가 누른 그림이 그대로 첫 화면에 나와야 방금 연 앱이 맞다는 것이
-  /// 바로 읽힌다.
+  /// 두 화면이 반드시 같은 그림을 써야 한다. 한때 스플래시에만 다른 그림체를
+  /// 썼다가 뺐는데, 이어지는 것이 아니라 다른 개구리 두 마리를 연달아 보는
+  /// 것처럼 읽혔다. 같은 그림이라 [Hero] 로 이어 붙일 수도 있다.
   ///
-  /// 한때 스플래시에만 새로 그린 3D 개구리를 썼다가 뺐다. 로그인 화면의 이
-  /// 그림과 그림체가 달라서, 이어지는 것이 아니라 다른 개구리 두 마리를 연달아
-  /// 보는 것처럼 읽혔다. 같은 그림을 쓰면 [Hero] 로 이어 붙일 수도 있다.
-  ///
-  /// 새 그림체로 옮기는 것은 레벨별 개구리를 한꺼번에 바꾸는 작업에서 한다.
-  /// 그때 앱 아이콘도 같이 바꿔야 이 화면이 아이콘과 어긋나지 않는다.
-  static const String frogAsset = 'assets/Logo/GreenFrog.svg';
+  /// **앱 아이콘이 아직 예전 선 그림이다.** 사용자가 누른 그림과 첫 화면에
+  /// 뜨는 그림이 어긋나 있으므로, 아이콘도 이 그림으로 바꿔야 한다.
+  static const String frogAsset = 'assets/Logo/FrogIcon.png';
 
   /// 스플래시의 개구리가 로그인 화면의 개구리로 이어지게 묶는 이름.
   static const String frogHeroTag = 'onboarding-frog';

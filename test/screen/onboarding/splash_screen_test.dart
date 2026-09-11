@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:ono/Model/Common/LoginStatus.dart';
@@ -60,9 +59,9 @@ Future<void> _runThroughSplash(WidgetTester tester) async {
 void main() {
   setUpOnoWidgetTest();
 
-  testWidgets('앱 아이콘과 같은 개구리와 문구가 보인다', (tester) async {
-    // 사용자가 방금 누른 앱 아이콘이 이 개구리다. 다른 그림을 쓰면 연 앱이
-    // 맞는지 한 번 더 생각하게 된다. 로그인 화면도 같은 파일을 쓴다.
+  testWidgets('개구리와 문구가 보인다', (tester) async {
+    // 로그인 화면도 같은 파일을 쓴다. 두 화면에 다른 그림을 두면 이어지는
+    // 것이 아니라 다른 개구리 두 마리를 연달아 보는 것처럼 읽힌다.
     await pumpOnoWidget(
       tester,
       _splash(),
@@ -73,10 +72,9 @@ void main() {
     expect(
       find.byWidgetPredicate(
         (widget) =>
-            widget is SvgPicture &&
-            widget.bytesLoader is SvgAssetLoader &&
-            (widget.bytesLoader as SvgAssetLoader).assetName ==
-                OnboardingBrand.frogAsset,
+            widget is Image &&
+            widget.image is AssetImage &&
+            (widget.image as AssetImage).assetName == OnboardingBrand.frogAsset,
       ),
       findsOneWidget,
     );

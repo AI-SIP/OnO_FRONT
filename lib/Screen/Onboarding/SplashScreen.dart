@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:provider/provider.dart';
 
 import '../../Model/Common/LoginStatus.dart';
@@ -43,6 +42,18 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
+  /// 개구리가 앉는 높이. 화면 위에서부터의 비율이다.
+  ///
+  /// 둘 다 가운데 몰아 두었더니 위아래가 허전했다. 위아래로 벌려 화면을
+  /// 나눠 쓰되, 너무 벌리면 둘이 따로 노는 그림이 되어 다시 조금 좁혔다.
+  static const double _frogTop = 0.37;
+
+  /// 글씨가 적히는 높이.
+  static const double _textTop = 0.62;
+
+  /// 개구리 크기.
+  static const double _frogHeight = 140;
+
   /// 화면이 뜨고 나서 글씨를 쓰기 시작할 때까지 기다리는 시간.
   ///
   /// 뜨자마자 쓰기 시작하면 앱이 켜지는 순간과 겹쳐서 앞부분을 놓친다.
@@ -125,56 +136,77 @@ class _SplashScreenState extends State<SplashScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: OnboardingBrand.background,
-      body: Stack(
-        children: [
-          const Positioned.fill(child: _NotebookLines()),
-          // 사용자가 방금 누른 앱 아이콘이 이 개구리다. 첫 화면에 그대로 나와야
-          // 연 앱이 맞다는 것이 바로 읽힌다. 로그인 화면의 개구리와 같은
-          // 그림이라 [Hero] 로 이어 붙여 두었다.
-          Align(
-            alignment: const Alignment(0, -0.34),
-            child: Hero(
-              tag: OnboardingBrand.frogHeroTag,
-              child: SvgPicture.asset(
-                OnboardingBrand.frogAsset,
-                height: 132,
-                fit: BoxFit.contain,
-              ),
-            ),
-          ),
-          Center(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 40),
-              child: FittedBox(
-                // 문구가 길어지거나 화면이 좁으면 줄바꿈 없이 줄어든다. 손글씨는
-                // 한 줄일 때만 왼쪽부터 적히는 것으로 보인다.
-                fit: BoxFit.scaleDown,
-                child: HandwritingReveal(
-                  text: OnboardingBrand.phrase,
-                  color: OnboardingBrand.ink,
-                  fontSize: 30,
-                  delay: _writeDelay,
-                  duration: _writeDuration,
-                  pencil: true,
-                  underline: true,
-                  underlineColor: OnboardingBrand.underline,
-                  onCompleted: () {
-                    // 움직임을 끈 기기에서는 글씨가 처음부터 완성돼 있으므로
-                    // 읽으라고 잡아 둘 이유가 없다.
-                    if (AppMotion.isReduced(context)) {
-                      if (!_writingDone.isCompleted) _writingDone.complete();
-                      return;
-                    }
-                    _holdTimer = Timer(_afterWriteHold, () {
-                      if (!mounted) return;
-                      if (!_writingDone.isCompleted) _writingDone.complete();
-                    });
-                  },
+      // 자리를 화면 높이의 비율로 잡는다. Alignment 로 두면 남는 공간을 기준
+      // 으로 밀려서, 개구리처럼 큰 것은 지정한 비율에서 한참 벗어난다.
+      body: LayoutBuilder(
+        builder: (context, constraints) => Stack(
+          children: [
+            const Positioned.fill(child: _NotebookLines(gapTop: _textTop)),
+            // 사용자가 방금 누른 앱 아이콘이 이 개구리다. 첫 화면에 그대로
+            // 나와야 연 앱이 맞다는 것이 바로 읽힌다. 로그인 화면의 개구리와
+            // 같은 그림이라 [Hero] 로 이어 붙여 두었다.
+            _at(
+              constraints.maxHeight * _frogTop,
+              Hero(
+                tag: OnboardingBrand.frogHeroTag,
+                child: Image.asset(
+                  OnboardingBrand.frogAsset,
+                  height: _frogHeight,
+                  fit: BoxFit.contain,
                 ),
               ),
             ),
-          ),
-        ],
+            _at(
+              constraints.maxHeight * _textTop,
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 40),
+                child: FittedBox(
+                  // 문구가 길어지거나 화면이 좁으면 줄바꿈 없이 줄어든다.
+                  // 손글씨는 한 줄일 때만 왼쪽부터 적히는 것으로 보인다.
+                  fit: BoxFit.scaleDown,
+                  child: HandwritingReveal(
+                    text: OnboardingBrand.phrase,
+                    color: OnboardingBrand.ink,
+                    fontSize: 30,
+                    delay: _writeDelay,
+                    duration: _writeDuration,
+                    pencil: true,
+                    underline: true,
+                    underlineColor: OnboardingBrand.underline,
+                    onCompleted: () {
+                      // 움직임을 끈 기기에서는 글씨가 처음부터 완성돼 있으므로
+                      // 읽으라고 잡아 둘 이유가 없다.
+                      if (AppMotion.isReduced(context)) {
+                        if (!_writingDone.isCompleted) _writingDone.complete();
+                        return;
+                      }
+                      _holdTimer = Timer(_afterWriteHold, () {
+                        if (!mounted) return;
+                        if (!_writingDone.isCompleted) _writingDone.complete();
+                      });
+                    },
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// [child] 의 한가운데가 화면 위에서 [y] 만큼 내려온 자리에 오게 놓는다.
+  ///
+  /// [FractionalTranslation] 은 자식 자신의 크기를 기준으로 밀기 때문에,
+  /// 자식이 얼마나 큰지 몰라도 그 중심을 원하는 높이에 맞출 수 있다.
+  Widget _at(double y, Widget child) {
+    return Positioned(
+      top: y,
+      left: 0,
+      right: 0,
+      child: FractionalTranslation(
+        translation: const Offset(0, -0.5),
+        child: Center(child: child),
       ),
     );
   }
@@ -186,15 +218,21 @@ class _SplashScreenState extends State<SplashScreen> {
 /// 깔면 공책에 적는 화면이 되고, 다음에 오는 로그인 화면의 공책 배경과도
 /// 이어진다.
 ///
-/// 글씨가 놓이는 가운데는 비운다. 줄이 글자를 가로지르면 읽기 어렵고, 마침
+/// 글씨가 놓이는 자리는 비운다. 줄이 글자를 가로지르면 읽기 어렵고, 마침
 /// 그 빈 자리가 지금 적고 있는 줄이 된다.
 class _NotebookLines extends StatelessWidget {
-  const _NotebookLines();
+  /// 줄을 비울 자리. 화면 위에서부터의 비율이다.
+  final double gapTop;
+
+  const _NotebookLines({required this.gapTop});
 
   @override
   Widget build(BuildContext context) {
     return CustomPaint(
-      painter: _NotebookLinesPainter(color: OnboardingBrand.rule),
+      painter: _NotebookLinesPainter(
+        color: OnboardingBrand.rule,
+        gapTop: gapTop,
+      ),
     );
   }
 }
@@ -202,12 +240,15 @@ class _NotebookLines extends StatelessWidget {
 class _NotebookLinesPainter extends CustomPainter {
   final Color color;
 
-  _NotebookLinesPainter({required this.color});
+  /// 화면 위에서부터의 비율이다.
+  final double gapTop;
+
+  _NotebookLinesPainter({required this.color, required this.gapTop});
 
   /// 줄 간격.
   static const double _spacing = 46;
 
-  /// 글씨가 놓이는 가운데를 비우는 높이. 위아래로 이만큼씩 줄을 걸러 낸다.
+  /// 글씨 자리를 비우는 높이. 위아래로 이만큼씩 줄을 걸러 낸다.
   static const double _gap = 52;
 
   /// 좌우로 들여 긋는 폭. 화면 끝까지 그으면 종이가 아니라 표처럼 보인다.
@@ -219,7 +260,9 @@ class _NotebookLinesPainter extends CustomPainter {
       ..color = color
       ..strokeWidth = 1;
 
-    final center = size.height / 2;
+    // 글씨가 놓이는 높이에서 줄 간격을 맞춰 나간다. 그래야 비우는 자리가
+    // 줄과 줄 사이에 정확히 들어간다.
+    final center = size.height * gapTop;
 
     for (double y = center % _spacing; y <= size.height; y += _spacing) {
       if ((y - center).abs() < _gap) continue;
@@ -232,5 +275,6 @@ class _NotebookLinesPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _NotebookLinesPainter old) => old.color != color;
+  bool shouldRepaint(covariant _NotebookLinesPainter old) =>
+      old.color != color || old.gapTop != gapTop;
 }

@@ -79,7 +79,15 @@ void main() {
       userProvider: userProvider,
     );
 
-    expect(svgAsset(OnboardingBrand.frogAsset), findsOneWidget);
+    expect(
+      find.byWidgetPredicate(
+        (widget) =>
+            widget is Image &&
+            widget.image is AssetImage &&
+            (widget.image as AssetImage).assetName == OnboardingBrand.frogAsset,
+      ),
+      findsOneWidget,
+    );
   });
 
   testWidgets('개구리 아래에 손글씨 문구가 보인다', (tester) async {
