@@ -1,14 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../Model/Mission/MissionModel.dart';
-import '../../Model/User/UserInfoModel.dart';
 import '../../Module/Design/AppColors.dart';
 import '../../Module/Design/AppRadius.dart';
 import '../../Module/Design/AppSpacing.dart';
 import '../../Module/Motion/AnimatedCountText.dart';
 import '../../Module/Motion/AnimatedGauge.dart';
-import '../../Module/Motion/AppHaptic.dart';
 import '../../Module/Motion/AppMotion.dart';
 import '../../Module/Motion/AppearTransition.dart';
 import '../../Module/Motion/MotionReplayScope.dart';
@@ -22,31 +19,28 @@ import '../../Provider/ScreenIndexProvider.dart';
 import '../../Provider/UserProvider.dart';
 import '../Cosmetic/CosmeticClosetScreen.dart';
 import '../Cosmetic/Widget/CosmeticStage.dart';
-import '../Mission/MissionCard.dart';
-import '../Mission/MissionClaimScope.dart';
 import '../Mission/MissionScreen.dart';
 import '../Tutorial/TutorialTargets.dart';
 import 'Widget/AbilityStatPanel.dart';
 
-/// 개구리와 성장을 한 화면에 몰아 주는 탭이다.
+/// 개구리와 성장을 한 화면에 몰아 주는 탭이다. 하단 탭에서는 `옷장`이다.
 ///
-/// 그동안 미션과 옷장은 마이페이지 레벨 카드 구석의 작은 글자 링크 뒤에
-/// 숨어 있었다. 이 앱에서 가장 오래 쳐다보게 될 것이 개구리인데, 정작 그
-/// 개구리를 보려면 두 번을 눌러 들어가야 했다. 하단 탭 하나를 내주고 **개구리를
-/// 화면의 주인공으로** 올린다.
+/// 화면은 **스크롤이 없다.** 셋이 위에서 아래로 붙박이로 앉는다.
 ///
-/// 화면은 두 덩어리다.
+/// - **무대**: 꾸민 개구리가 크게 서 있고, 총 학습 레벨이 그 위에, 다음
+///   레벨까지의 경험치가 발치에 붙는다.
+/// - **스탯창**([AbilityStatPanel]): 능력치 넷의 레벨과 남은 경험치.
+/// - **버튼 둘**: 미션과 꾸미기.
 ///
-/// - **무대**: 꾸민 개구리가 크게 서 있고, 레벨과 경험치가 그 위아래에 붙는다.
-///   스크롤과 함께 사라지지 않는다. 보상을 받을 때 코인이 날아가 닿을 자리라서
-///   늘 화면에 있어야 한다. 옷장 무대([CosmeticStageFrog])의 조명과 그림자를
-///   그대로 빌려 쓴다.
-/// - **오늘의 미션**: 미션 화면의 카드([MissionCard])를 그대로 쓰고, 받는
-///   절차도 [MissionClaimScope] 로 같은 것을 쓴다. 여기서 받아도 상자가 열리고
-///   코인이 날아가고 레벨업 화면이 뜬다.
+/// 원래는 무대 아래에 오늘의 미션 목록이 스크롤로 붙어 있었고 능력치 넉 줄은
+/// 그 아래에 있었다. 경험치를 보려면 매번 스크롤을 내려야 했다. 이 탭에서
+/// 가장 자주 궁금한 것이 "내가 얼마나 자랐나"인데 그게 화면 밖에 있었다는
+/// 뜻이다. 목록을 버튼 하나로 접고, 그 자리를 능력치에 내줬다. 미션을 더 볼
+/// 사람은 미션 버튼으로 넘어간다.
 ///
-/// **개구리를 누르면 옷장으로 간다.** 마이페이지와 미션 화면이 쓰던 약속을
-/// 그대로 잇는다. 이 앱에서 개구리를 누르면 늘 꾸미러 가는 문이 열린다.
+/// **개구리를 누르면 격려 한마디를 한다.** 꾸미러 가는 문은 이제 버튼이
+/// 따로 맡아서, 개구리를 누르는 것이 꾸미기 화면으로 가는 지름길일 필요가
+/// 없어졌다.
 class CharacterScreen extends StatefulWidget {
   final TutorialTargets? tutorialTargets;
 
@@ -57,16 +51,13 @@ class CharacterScreen extends StatefulWidget {
 }
 
 class _CharacterScreenState extends State<CharacterScreen> {
-  /// 캐릭터 탭이 홈의 몇 번째인지. main.dart 의 widgetOptions 순서를 따른다.
+  /// 이 탭이 홈의 몇 번째인지. main.dart 의 widgetOptions 순서를 따른다.
   static const int _tabIndex = 2;
-
-  /// 코인이 날아가 닿을 자리(무대의 레벨 칩).
-  final GlobalKey _counterKey = GlobalKey();
 
   /// 이 탭에 몇 번째로 들어왔는지.
   ///
   /// 홈이 탭 다섯을 IndexedStack 으로 들고 있어서 앱을 켜는 순간 이 화면까지
-  /// 함께 만들어진다. 그대로 두면 경험치 바가 탭을 누르기도 전에 다 차 있으므로,
+  /// 함께 만들어진다. 그대로 두면 눈금판이 탭을 누르기도 전에 다 차 있으므로,
   /// 들어올 때마다 이 값을 올려 게이지와 카드를 처음부터 다시 재생한다.
   int _visitSequence = 0;
   bool _wasSelected = false;
@@ -89,20 +80,17 @@ class _CharacterScreenState extends State<CharacterScreen> {
     if (isSelected) _visitSequence++;
   }
 
-  Future<void> _refresh() async {
-    final missionProvider =
-        Provider.of<MissionProvider>(context, listen: false);
-    final userProvider = Provider.of<UserProvider>(context, listen: false);
-    await Future.wait([
-      missionProvider.fetchMissions(),
-      userProvider.fetchUserInfo(showErrorSnackBar: false),
-    ]);
-  }
-
   void _openCloset() {
     Navigator.push(
       context,
       TossPageRoute(builder: (_) => const CosmeticClosetScreen()),
+    );
+  }
+
+  void _openMissions() {
+    Navigator.push(
+      context,
+      TossPageRoute(builder: (_) => const MissionScreen()),
     );
   }
 
@@ -115,165 +103,63 @@ class _CharacterScreenState extends State<CharacterScreen> {
       Provider.of<ScreenIndexProvider>(context).screenIndex,
     );
 
-    final missions = sortedMissionsForList(missionProvider.dailyMissions);
-
     return Scaffold(
       backgroundColor: AppColors.background,
       body: MotionReplayScope(
         token: _visitSequence,
-        child: MissionClaimScope(
-          counterKey: _counterKey,
-          builder: (context, claim) => Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _CharacterStage(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // 무대가 남는 높이를 전부 가져간다. 아래 둘은 필요한 만큼만 쓰고,
+            // 글자를 키운 기기에서 아래가 두꺼워지면 개구리가 그만큼 작아진다.
+            // 넘치는 쪽이 아니라 개구리가 양보하는 쪽이 맞다.
+            Expanded(
+              child: _CharacterStage(
                 key: widget.tutorialTargets?.levelCardKey,
-                counterKey: _counterKey,
-                arrivalTick: claim.arrivalTick,
                 themeProvider: themeProvider,
-                onFrogTap: _openCloset,
-                onClosetTap: _openCloset,
               ),
-              Expanded(
-                child: RefreshIndicator(
-                  color: themeProvider.primaryColor,
-                  onRefresh: _refresh,
-                  child: _buildBody(
-                    missions,
-                    missionProvider,
-                    themeProvider,
-                    claim,
-                    userInfo,
+            ),
+            SafeArea(
+              top: false,
+              child: Center(
+                child: ConstrainedBox(
+                  // 태블릿에서 스탯창이 끝없이 넓어지지 않게 가운데로 모은다.
+                  constraints: const BoxConstraints(maxWidth: 640),
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                      AppSpacing.screenHorizontal,
+                      AppSpacing.lg,
+                      AppSpacing.screenHorizontal,
+                      AppSpacing.md,
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        AppearTransition(
+                          delay: AppMotion.stagger * 2,
+                          child: AbilityStatPanel(userInfo: userInfo),
+                        ),
+                        const SizedBox(height: AppSpacing.md),
+                        AppearTransition(
+                          delay: AppMotion.stagger * 5,
+                          child: _ActionRow(
+                            color: themeProvider.primaryColor,
+                            missionDone: missionProvider.dailyCompletedCount,
+                            missionTotal: missionProvider.dailyTotalCount,
+                            onMissionTap: _openMissions,
+                            onClosetTap: _openCloset,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
-    );
-  }
-
-  /// 무대 아래에서 스크롤되는 부분.
-  ///
-  /// 오늘의 미션이 먼저다. 미션 화면과 같은 카드를 같은 순서로 쓴다. 그 아래에
-  /// 무엇으로 레벨이 올랐는지를 둔다. 순서가 반대면 숫자 넉 줄이 미션을 밀어
-  /// 낸다.
-  Widget _buildBody(
-    List<MissionModel> missions,
-    MissionProvider missionProvider,
-    ThemeHandler themeProvider,
-    MissionClaimHandle claim,
-    UserInfoModel? userInfo,
-  ) {
-    final done = missionProvider.dailyCompletedCount;
-    final total = missionProvider.dailyTotalCount;
-
-    return ListView(
-      physics: const AlwaysScrollableScrollPhysics(),
-      padding: const EdgeInsets.fromLTRB(
-        AppSpacing.lg,
-        AppSpacing.md,
-        AppSpacing.lg,
-        AppSpacing.xxxl,
-      ),
-      children: [
-        _buildSectionHeader(themeProvider, done: done, total: total),
-        const SizedBox(height: AppSpacing.md),
-        if (missions.isEmpty)
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: AppSpacing.xxxl),
-            child: StandardText(
-              text: '아직 미션이 없어요',
-              fontSize: 14,
-              color: AppColors.textTertiary,
-              textAlign: TextAlign.center,
-              maxLines: 2,
-            ),
-          )
-        else
-          ...AppearTransition.stagger(
-            initialDelay: AppMotion.stagger * 2,
-            [
-              for (final mission in missions)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: AppSpacing.md),
-                  child: MissionCard(
-                    mission: mission,
-                    isClaiming: missionProvider.isClaiming(mission.progressId),
-                    rewardKey: claim.rewardKeyOf(mission),
-                    shakeTick: claim.shakeTickOf(mission),
-                    onClaim: () => claim.claim(mission),
-                  ),
-                ),
-            ],
-          ),
-        if (userInfo != null) ...[
-          const SizedBox(height: AppSpacing.sm),
-          AppearTransition(
-            delay: AppMotion.stagger * 6,
-            child: AbilityStatPanel(userInfo: userInfo),
-          ),
-        ],
-      ],
-    );
-  }
-
-  /// `오늘의 미션 2/4` 와 전체 미션으로 가는 길.
-  ///
-  /// 이 탭에는 오늘 것만 둔다. 주간과 지난 미션까지 여기 쌓으면 개구리가
-  /// 목록에 밀려난다. 더 볼 사람만 미션 화면으로 넘어간다.
-  Widget _buildSectionHeader(
-    ThemeHandler themeProvider, {
-    required int done,
-    required int total,
-  }) {
-    return Row(
-      children: [
-        const StandardText(
-          text: '오늘의 미션',
-          fontSize: 16,
-          color: AppColors.textPrimary,
-          fontWeight: FontWeight.w700,
-        ),
-        if (total > 0) ...[
-          const SizedBox(width: AppSpacing.sm),
-          StandardText(
-            text: '$done / $total',
-            fontSize: 13,
-            color: AppColors.textTertiary,
-          ),
-        ],
-        const Spacer(),
-        PressableScale(
-          onTap: () => Navigator.push(
-            context,
-            TossPageRoute(builder: (_) => const MissionScreen()),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.xs,
-              vertical: AppSpacing.xs,
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                StandardText(
-                  text: '전체 보기',
-                  fontSize: 13,
-                  color: themeProvider.primaryColor,
-                  maxLines: 1,
-                ),
-                Icon(
-                  Icons.chevron_right,
-                  size: 16,
-                  color: themeProvider.primaryColor,
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
     );
   }
 }
@@ -288,20 +174,9 @@ class _CharacterScreenState extends State<CharacterScreen> {
 /// 금색 같은 별도의 장식색을 쓰지 않는다. 쓰는 색은 사용자가 테마에서 고른
 /// 색 하나뿐이다. 그래야 이 화면만 앱에서 겉돌지 않는다.
 class _CharacterStage extends StatelessWidget {
-  final GlobalKey counterKey;
-  final int arrivalTick;
   final ThemeHandler themeProvider;
-  final VoidCallback onFrogTap;
-  final VoidCallback onClosetTap;
 
-  const _CharacterStage({
-    super.key,
-    required this.counterKey,
-    required this.arrivalTick,
-    required this.themeProvider,
-    required this.onFrogTap,
-    required this.onClosetTap,
-  });
+  const _CharacterStage({super.key, required this.themeProvider});
 
   @override
   Widget build(BuildContext context) {
@@ -330,7 +205,7 @@ class _CharacterStage extends StatelessWidget {
         borderRadius: const BorderRadius.vertical(
           bottom: Radius.circular(AppRadius.xlarge + 8),
         ),
-        // 무대가 아래 목록에서 살짝 떠 보이게 한다. 카드가 아니라 장면이라는
+        // 무대가 아래 스탯창에서 살짝 떠 보이게 한다. 카드가 아니라 장면이라는
         // 신호라서 테마색 그림자를 옅게 쓴다.
         boxShadow: [
           BoxShadow(
@@ -342,100 +217,42 @@ class _CharacterStage extends StatelessWidget {
       ),
       child: SafeArea(
         bottom: false,
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final frogSize = _frogSizeFor(context, constraints);
-
-            return Center(
-              child: ConstrainedBox(
-                // 태블릿에서 무대가 끝없이 넓어지지 않게 가운데로 모은다.
-                constraints: const BoxConstraints(maxWidth: 640),
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(
-                    AppSpacing.screenHorizontal,
-                    AppSpacing.md,
-                    AppSpacing.screenHorizontal,
-                    AppSpacing.lg,
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Row(
-                        children: [
-                          Expanded(child: _buildLevelChip(level, color)),
-                          const SizedBox(width: AppSpacing.md),
-                          _buildClosetButton(color),
-                        ],
-                      ),
-                      const SizedBox(height: AppSpacing.sm),
-                      CosmeticStageFrog(
-                        layers: cosmetic.layers,
-                        size: frogSize,
-                        color: color,
-                        // 갈아입기는 옷장에서 한다. 여기서는 들썩일 일이 없다.
-                        equipTick: 0,
-                        // 누름 하나가 한 가지 일만 하게 한다. 여기 개구리는
-                        // 옷장으로 가는 문이라 말풍선을 띄우지 않는다.
-                        showEncouragement: false,
-                        onTap: () {
-                          AppHaptic.selection();
-                          onFrogTap();
-                        },
-                      ),
-                      const SizedBox(height: AppSpacing.lg),
-                      _buildExpBar(point, threshold, progress, color),
-                    ],
-                  ),
-                ),
+        child: Center(
+          child: ConstrainedBox(
+            // 태블릿에서 무대가 끝없이 넓어지지 않게 가운데로 모은다.
+            constraints: const BoxConstraints(maxWidth: 640),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.screenHorizontal,
+                AppSpacing.md,
+                AppSpacing.screenHorizontal,
+                AppSpacing.lg,
               ),
-            );
-          },
-        ),
-      ),
-    );
-  }
-
-  /// 레벨 칩. 코인이 날아와 닿는 자리이기도 하다.
-  Widget _buildLevelChip(int level, Color color) {
-    return Align(
-      alignment: Alignment.centerLeft,
-      // 글자를 키운 기기에서 칩이 남은 폭보다 길어진다. 넘치게 두는 대신
-      // 줄여서 앉힌다.
-      child: FittedBox(
-        fit: BoxFit.scaleDown,
-        alignment: Alignment.centerLeft,
-        child: _ArrivalPop(
-          tick: arrivalTick,
-          child: Container(
-            key: counterKey,
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.md,
-              vertical: AppSpacing.sm - 2,
-            ),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.85),
-              borderRadius: BorderRadius.circular(AppRadius.full),
-              border: Border.all(color: color.withValues(alpha: 0.20)),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.local_florist_rounded, size: 14, color: color),
-                const SizedBox(width: AppSpacing.xs),
-                StandardText(
-                  text: '학습 레벨',
-                  fontSize: 11,
-                  color: AppColors.textSecondary,
-                  maxLines: 1,
-                ),
-                const SizedBox(width: AppSpacing.sm),
-                AnimatedCountText(
-                  value: level,
-                  formatter: (value) => 'Lv.${value.round()}',
-                  fontSize: 15,
-                  color: color,
-                ),
-              ],
+              child: Column(
+                children: [
+                  _buildLevelChip(level, color),
+                  const SizedBox(height: AppSpacing.sm),
+                  Expanded(
+                    child: LayoutBuilder(
+                      builder: (context, constraints) => Center(
+                        child: CosmeticStageFrog(
+                          layers: cosmetic.layers,
+                          size: _frogSizeFor(constraints),
+                          color: color,
+                          // 갈아입기는 꾸미기 화면에서 한다. 여기서는 들썩일
+                          // 일이 없다.
+                          equipTick: 0,
+                          // 꾸미러 가는 문은 아래 버튼이 맡는다. 개구리는
+                          // 다시 한마디 하는 자리로 돌아왔다.
+                          showEncouragement: true,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  _buildExpBar(point, threshold, progress, color),
+                ],
+              ),
             ),
           ),
         ),
@@ -443,43 +260,46 @@ class _CharacterStage extends StatelessWidget {
     );
   }
 
-  /// 옷장으로 가는 두 번째 길.
+  /// 총 학습 레벨. 개구리 머리 위에 다는 이름표다.
   ///
-  /// 첫 번째 길은 개구리 자신이다. 그래도 글로 적힌 길이 하나 있어야 처음 온
-  /// 사람이 개구리를 눌러 볼 생각을 한다.
-  Widget _buildClosetButton(Color color) {
-    return PressableScale(
-      onTap: onClosetTap,
-      scale: 0.94,
-      child: Container(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.md,
-          vertical: AppSpacing.sm - 2,
-        ),
-        decoration: BoxDecoration(
-          color: color,
-          borderRadius: BorderRadius.circular(AppRadius.full),
-          boxShadow: [
-            BoxShadow(
-              color: color.withValues(alpha: 0.32),
-              blurRadius: 10,
-              offset: const Offset(0, 3),
-            ),
-          ],
-        ),
-        child: const Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.checkroom_rounded, size: 15, color: Colors.white),
-            SizedBox(width: AppSpacing.xs),
-            StandardText(
-              text: '꾸미기',
-              fontSize: 13,
-              color: Colors.white,
-              fontWeight: FontWeight.w700,
-              maxLines: 1,
-            ),
-          ],
+  /// 능력치 넷은 아래 스탯창이 맡는다. 여기 있는 것은 그 넷을 합친 값
+  /// 하나뿐이라, 가운데에 하나만 놓아 무대의 제목처럼 읽히게 한다.
+  Widget _buildLevelChip(int level, Color color) {
+    return Center(
+      // 글자를 키운 기기에서 칩이 남은 폭보다 길어진다. 넘치게 두는 대신
+      // 줄여서 앉힌다.
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        child: Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.md,
+            vertical: AppSpacing.sm - 2,
+          ),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.85),
+            borderRadius: BorderRadius.circular(AppRadius.full),
+            border: Border.all(color: color.withValues(alpha: 0.20)),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.local_florist_rounded, size: 14, color: color),
+              const SizedBox(width: AppSpacing.xs),
+              const StandardText(
+                text: '학습 레벨',
+                fontSize: 11,
+                color: AppColors.textSecondary,
+                maxLines: 1,
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              AnimatedCountText(
+                value: level,
+                formatter: (value) => 'Lv.${value.round()}',
+                fontSize: 15,
+                color: color,
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -502,20 +322,35 @@ class _CharacterStage extends StatelessWidget {
           borderRadius: AppRadius.full,
         ),
         const SizedBox(height: AppSpacing.sm),
+        // 글자를 키운 작은 폰에서는 이 한 줄이 화면 폭을 넘는다. 양쪽 끝에
+        // 붙여 두는 모양은 지키면서 각자 줄어들게 한다.
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const StandardText(
-              text: '다음 레벨까지',
-              fontSize: 11,
-              color: AppColors.textSecondary,
-              maxLines: 1,
+            const Flexible(
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: StandardText(
+                  text: '다음 레벨까지',
+                  fontSize: 11,
+                  color: AppColors.textSecondary,
+                  maxLines: 1,
+                ),
+              ),
             ),
-            AnimatedCountText(
-              value: point,
-              formatter: (value) => '${value.round()} / $threshold XP',
-              fontSize: 12,
-              color: color,
+            const SizedBox(width: AppSpacing.sm),
+            Flexible(
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerRight,
+                child: AnimatedCountText(
+                  value: point,
+                  formatter: (value) => '${value.round()} / $threshold XP',
+                  fontSize: 12,
+                  color: color,
+                ),
+              ),
             ),
           ],
         ),
@@ -523,75 +358,161 @@ class _CharacterStage extends StatelessWidget {
     );
   }
 
-  /// 개구리 한 변의 길이. 좁은 쪽과 낮은 쪽 중 더 빡빡한 쪽을 따른다.
+  /// 개구리 한 변의 길이. 남은 자리에 들어가는 만큼만 크게 그린다.
   ///
-  /// 무대가 붙박이라 개구리가 크면 아래 미션 카드가 첫 화면에서 사라진다.
-  /// 화면 높이를 기준으로 잡아서 작은 폰에서도 미션 한 장은 보이게 한다.
-  double _frogSizeFor(BuildContext context, BoxConstraints constraints) {
-    final byWidth = constraints.maxWidth * 0.52;
-    final byHeight = MediaQuery.of(context).size.height * 0.26;
+  /// [CosmeticStageFrog] 는 빛무리와 바닥 그림자 때문에 한 변보다 가로로
+  /// 1.18배, 세로로 1.04배 넓게 자리를 쓴다. 그 몫까지 빼고 계산해야 무대가
+  /// 좁아졌을 때 넘치지 않는다. 아래 한계를 두지 않는 것도 같은 이유다.
+  /// 글자를 아주 크게 키우면 개구리가 작아질지언정 화면이 깨지면 안 된다.
+  double _frogSizeFor(BoxConstraints constraints) {
+    final byWidth = constraints.maxWidth / 1.18;
+    final byHeight = constraints.maxHeight / 1.04;
     final smaller = byWidth < byHeight ? byWidth : byHeight;
-    return smaller.clamp(96.0, 300.0);
+    return smaller.clamp(0.0, 300.0);
   }
 }
 
-/// [tick] 이 바뀔 때마다 한 번 커졌다 돌아온다.
+/// 미션과 꾸미기로 가는 버튼 두 개.
 ///
-/// 코인이 레벨 칩에 닿는 순간에 쓴다. [SelectionPop] 은 켜질 때 한 번만 튀는
-/// 것이라 여러 번 반복되는 이 자리에는 맞지 않는다.
-class _ArrivalPop extends StatefulWidget {
-  final int tick;
-  final Widget child;
+/// 예전에는 미션 목록이 이 탭에 통째로 붙어 있었고 꾸미기는 무대 구석의 작은
+/// 칩이었다. 둘 다 같은 무게의 버튼으로 내려놓는다. 꾸미기 쪽만 채운 버튼인
+/// 것은 이 탭이 옷장이라서다. 여기서 가장 하고 싶은 일이 갈아입기다.
+class _ActionRow extends StatelessWidget {
+  final Color color;
+  final int missionDone;
+  final int missionTotal;
+  final VoidCallback onMissionTap;
+  final VoidCallback onClosetTap;
 
-  const _ArrivalPop({required this.tick, required this.child});
-
-  @override
-  State<_ArrivalPop> createState() => _ArrivalPopState();
-}
-
-class _ArrivalPopState extends State<_ArrivalPop>
-    with SingleTickerProviderStateMixin {
-  // 늦게 만들지 않는다. 연출을 끈 기기에서는 build 가 컨트롤러를 건드리지
-  // 않는데, 그 상태로 dispose 가 컨트롤러를 만들면 이미 빠진 위젯의 조상을
-  // 찾다가 죽는다.
-  late final AnimationController _controller;
-  late final Animation<double> _scale;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(vsync: this, duration: AppMotion.normal);
-    _scale = TweenSequence<double>([
-      TweenSequenceItem(
-        tween: Tween<double>(begin: 1.0, end: 1.12)
-            .chain(CurveTween(curve: AppMotion.enter)),
-        weight: 40,
-      ),
-      TweenSequenceItem(
-        tween: Tween<double>(begin: 1.12, end: 1.0)
-            .chain(CurveTween(curve: AppMotion.emphasized)),
-        weight: 60,
-      ),
-    ]).animate(_controller);
-  }
-
-  @override
-  void didUpdateWidget(covariant _ArrivalPop oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.tick != oldWidget.tick && !AppMotion.isReduced(context)) {
-      _controller.forward(from: 0);
-    }
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
+  const _ActionRow({
+    required this.color,
+    required this.missionDone,
+    required this.missionTotal,
+    required this.onMissionTap,
+    required this.onClosetTap,
+  });
 
   @override
   Widget build(BuildContext context) {
-    if (AppMotion.isReduced(context)) return widget.child;
-    return ScaleTransition(scale: _scale, child: widget.child);
+    return Row(
+      children: [
+        Expanded(
+          child: _ActionButton(
+            icon: Icons.flag_rounded,
+            label: '미션',
+            // 오늘 몇 개를 했는지는 여기서만 말한다. 버튼에 숫자가 붙어 있으면
+            // 목록을 걷어 내고도 오늘 할 일이 남았는지 알 수 있다.
+            badge: missionTotal > 0 ? '$missionDone / $missionTotal' : null,
+            filled: false,
+            color: color,
+            onTap: onMissionTap,
+          ),
+        ),
+        const SizedBox(width: AppSpacing.md),
+        Expanded(
+          child: _ActionButton(
+            icon: Icons.checkroom_rounded,
+            label: '꾸미기',
+            filled: true,
+            color: color,
+            onTap: onClosetTap,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _ActionButton extends StatelessWidget {
+  final IconData icon;
+  final String label;
+
+  /// 버튼 오른쪽에 붙는 작은 숫자. 없으면 안 붙는다.
+  final String? badge;
+
+  /// 테마색으로 채울지. false 면 흰 바탕에 테마색 테두리다.
+  final bool filled;
+
+  final Color color;
+  final VoidCallback onTap;
+
+  const _ActionButton({
+    required this.icon,
+    required this.label,
+    required this.filled,
+    required this.color,
+    required this.onTap,
+    this.badge,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final foreground = filled ? Colors.white : color;
+
+    return PressableScale(
+      onTap: onTap,
+      scale: 0.96,
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.md,
+        ),
+        decoration: BoxDecoration(
+          color: filled ? color : AppColors.surface,
+          borderRadius: BorderRadius.circular(AppRadius.large),
+          border:
+              filled ? null : Border.all(color: color.withValues(alpha: 0.28)),
+          boxShadow: filled
+              ? [
+                  BoxShadow(
+                    color: color.withValues(alpha: 0.28),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ]
+              : null,
+        ),
+        // 글자를 키운 기기에서 아이콘과 글자가 버튼 폭을 넘는다. 넘치게 두는
+        // 대신 줄여서 앉힌다.
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 18, color: foreground),
+              const SizedBox(width: AppSpacing.sm),
+              StandardText(
+                text: label,
+                fontSize: 14,
+                color: foreground,
+                fontWeight: FontWeight.w700,
+                maxLines: 1,
+              ),
+              if (badge != null) ...[
+                const SizedBox(width: AppSpacing.sm),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 7,
+                    vertical: 1,
+                  ),
+                  decoration: BoxDecoration(
+                    color: filled
+                        ? Colors.white.withValues(alpha: 0.24)
+                        : color.withValues(alpha: 0.10),
+                    borderRadius: BorderRadius.circular(AppRadius.full),
+                  ),
+                  child: StandardText(
+                    text: badge!,
+                    fontSize: 11,
+                    color: foreground,
+                    maxLines: 1,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
