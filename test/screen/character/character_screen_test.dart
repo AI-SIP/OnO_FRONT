@@ -18,7 +18,7 @@ import 'package:ono/Provider/CosmeticProvider.dart';
 import 'package:ono/Provider/MissionProvider.dart';
 import 'package:ono/Provider/UserProvider.dart';
 import 'package:ono/Screen/Character/CharacterScreen.dart';
-import 'package:ono/Screen/Character/Widget/ActivityGrowthCard.dart';
+import 'package:ono/Screen/Character/Widget/AbilityStatPanel.dart';
 import 'package:ono/Screen/Cosmetic/CosmeticClosetScreen.dart';
 import 'package:ono/Screen/Cosmetic/Widget/CosmeticStage.dart';
 import 'package:ono/Screen/Mission/MissionCard.dart';
@@ -258,12 +258,19 @@ void main() {
       // 그 경험치가 어디서 오는지도 같은 화면에 있어야 한다.
       await pumpCharacter(tester);
 
-      expect(find.byType(ActivityGrowthCard), findsOneWidget);
-      expect(find.text('무엇으로 자랐나'), findsOneWidget);
-      expect(find.text('오답노트 작성'), findsOneWidget);
+      Finder inPanel(String text) => find.descendant(
+            of: find.byType(AbilityStatPanel),
+            matching: find.text(text),
+          );
+
+      expect(find.byType(AbilityStatPanel), findsOneWidget);
+      expect(inPanel('출석'), findsOneWidget);
+      expect(inPanel('오답노트'), findsOneWidget);
+      expect(inPanel('문제 복습'), findsOneWidget);
+      expect(inPanel('복습 세트'), findsOneWidget);
 
       final missionY = tester.getTopLeft(find.byType(MissionCard).first).dy;
-      final growthY = tester.getTopLeft(find.byType(ActivityGrowthCard)).dy;
+      final growthY = tester.getTopLeft(find.byType(AbilityStatPanel)).dy;
       expect(missionY, lessThan(growthY));
     });
   });

@@ -26,7 +26,7 @@ import '../Mission/MissionCard.dart';
 import '../Mission/MissionClaimScope.dart';
 import '../Mission/MissionScreen.dart';
 import '../Tutorial/TutorialTargets.dart';
-import 'Widget/ActivityGrowthCard.dart';
+import 'Widget/AbilityStatPanel.dart';
 
 /// 개구리와 성장을 한 화면에 몰아 주는 탭이다.
 ///
@@ -212,7 +212,7 @@ class _CharacterScreenState extends State<CharacterScreen> {
           const SizedBox(height: AppSpacing.sm),
           AppearTransition(
             delay: AppMotion.stagger * 6,
-            child: ActivityGrowthCard(userInfo: userInfo),
+            child: AbilityStatPanel(userInfo: userInfo),
           ),
         ],
       ],
