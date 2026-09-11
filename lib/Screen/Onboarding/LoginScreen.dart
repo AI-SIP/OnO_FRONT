@@ -27,7 +27,7 @@ import 'OnboardingBrand.dart';
 class LoginScreen extends StatefulWidget {
   /// 로그인이 끝나면 갈 화면.
   ///
-  /// 홈은 탭 넷을 `IndexedStack` 으로 한꺼번에 만들기 때문에, 위젯 테스트에서
+  /// 홈은 탭 다섯을 `IndexedStack` 으로 한꺼번에 만들기 때문에, 위젯 테스트에서
   /// 그대로 띄우면 앱 화면 전체가 딸려 온다. 넘어가는 것 자체를 확인하려는
   /// 테스트가 홈의 모든 Provider 를 갖춰야 하는 셈이라, 가벼운 화면으로
   /// 바꿔 끼울 수 있게 열어 둔다.

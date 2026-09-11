@@ -27,7 +27,6 @@ import 'Widget/ReviewReportScreen.dart';
 import 'Widget/SettingMenuButtons.dart';
 import 'Widget/ThemeChangeButton.dart';
 import 'Widget/StreakCard.dart';
-import 'Widget/UserLevelCard.dart';
 import '../../Module/Motion/TossDialog.dart';
 import '../../Module/Design/AppRadius.dart';
 import '../../Module/Design/AppColors.dart';
@@ -47,14 +46,16 @@ class SettingScreen extends StatefulWidget {
 
 class _SettingScreenState extends State<SettingScreen> {
   /// 마이 페이지가 홈의 몇 번째 탭인지. main.dart 의 widgetOptions 순서를 따른다.
-  static const int _myPageTabIndex = 3;
+  ///
+  /// 캐릭터 탭이 셋째 자리에 들어오면서 하나 밀렸다.
+  static const int _myPageTabIndex = 4;
 
   /// 카드가 하나씩 들어오는 간격.
   static const Duration _cardGap = Duration(milliseconds: 80);
 
   /// 이 탭에 몇 번째로 들어왔는지.
   ///
-  /// 홈이 탭 넷을 IndexedStack 으로 들고 있어서 앱을 켜는 순간 이 화면까지
+  /// 홈이 탭 다섯을 IndexedStack 으로 들고 있어서 앱을 켜는 순간 이 화면까지
   /// 함께 만들어진다. 그대로 두면 게이지가 탭을 누르기도 전에 다 차 있으므로,
   /// 들어올 때마다 이 값을 올려 게이지와 카드를 처음부터 다시 재생한다.
   int _visitSequence = 0;
@@ -125,6 +126,8 @@ class _SettingScreenState extends State<SettingScreen> {
                   padding: EdgeInsets.only(
                       bottom: screenHeight * 0.01, top: screenHeight * 0.02),
                   children: [
+                    // 레벨과 경험치, 활동별 성장은 캐릭터 탭이 가져갔다.
+                    // 여기에는 학습 기록만 남는다.
                     if (isTabletLandscape)
                       AppearTransition(
                         child: Padding(
@@ -135,22 +138,17 @@ class _SettingScreenState extends State<SettingScreen> {
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
                                 Expanded(
-                                  child: UserLevelCard(
-                                    key: widget.tutorialTargets?.levelCardKey,
-                                    userInfo: userProvider.userInfoModel,
+                                  child: StreakCard(
+                                    key:
+                                        widget.tutorialTargets?.calendarCardKey,
                                     themeProvider: themeProvider,
-                                    userName:
-                                        userProvider.userInfoModel?.name ??
-                                            '이름 없음',
                                     horizontalMarginFactor: 0,
                                   ),
                                 ),
                                 SizedBox(width: screenWidth * 0.02),
                                 Expanded(
-                                  child: StreakCard(
-                                    key:
-                                        widget.tutorialTargets?.calendarCardKey,
-                                    themeProvider: themeProvider,
+                                  child: _buildReviewReportButton(
+                                    themeProvider,
                                     horizontalMarginFactor: 0,
                                   ),
                                 ),
@@ -161,29 +159,17 @@ class _SettingScreenState extends State<SettingScreen> {
                       )
                     else ...[
                       AppearTransition(
-                        child: UserLevelCard(
-                          key: widget.tutorialTargets?.levelCardKey,
-                          userInfo: userProvider.userInfoModel,
-                          themeProvider: themeProvider,
-                          userName: userProvider.userInfoModel?.name ?? '이름 없음',
-                        ),
-                      ),
-                    ],
-                    if (!isTabletLandscape) ...[
-                      SizedBox(height: screenHeight * 0.01),
-                      AppearTransition(
-                        delay: _cardGap,
                         child: StreakCard(
                           key: widget.tutorialTargets?.calendarCardKey,
                           themeProvider: themeProvider,
                         ),
                       ),
+                      SizedBox(height: screenHeight * 0.01),
+                      AppearTransition(
+                        delay: _cardGap,
+                        child: _buildReviewReportButton(themeProvider),
+                      ),
                     ],
-                    SizedBox(height: screenHeight * 0.01),
-                    AppearTransition(
-                      delay: _cardGap * 2,
-                      child: _buildReviewReportButton(themeProvider),
-                    ),
                     SizedBox(height: screenHeight * 0.01),
                   ],
                 ),

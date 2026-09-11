@@ -10,7 +10,6 @@ import 'package:ono/Screen/Onboarding/LoginScreen.dart';
 import 'package:ono/Screen/User/MyPageScreen.dart';
 import 'package:ono/Screen/User/Widget/ReviewReportScreen.dart';
 import 'package:ono/Screen/User/Widget/StreakCard.dart';
-import 'package:ono/Screen/User/Widget/UserLevelCard.dart';
 
 import '../../helpers/helpers.dart';
 
@@ -107,7 +106,6 @@ void main() {
       });
 
       expect(find.text('로그인을 통해 설정을 변경해보세요!'), findsOneWidget);
-      expect(find.byType(UserLevelCard), findsNothing);
       expect(find.byType(StreakCard), findsNothing);
       expect(find.text('학습 리포트'), findsNothing);
     });
@@ -127,7 +125,6 @@ void main() {
 
       expect(find.textContaining('오노프렌즈님의 학습 기록'), findsOneWidget);
       expect(find.text('학습 리포트'), findsOneWidget);
-      expect(find.byType(UserLevelCard), findsOneWidget);
       expect(find.byType(StreakCard), findsOneWidget);
     });
 
@@ -195,7 +192,6 @@ void main() {
       });
 
       expect(tester.takeException(), isNull);
-      expect(find.byType(UserLevelCard), findsOneWidget);
       expect(find.byType(StreakCard), findsOneWidget);
     });
 
@@ -211,7 +207,6 @@ void main() {
       });
 
       expect(tester.takeException(), isNull);
-      expect(find.byType(UserLevelCard), findsOneWidget);
       expect(find.byType(StreakCard), findsOneWidget);
     });
   });

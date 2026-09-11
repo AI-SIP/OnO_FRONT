@@ -10,6 +10,8 @@ class ScreenIndexProvider extends ChangeNotifier {
     _screenIndex = index;
     notifyListeners(); // 상태 변화 알림
 
+    // main.dart 의 widgetOptions 순서와 같아야 한다. 하단 탭을 하나 늘리거나
+    // 자리를 바꾸면 여기도 같이 고친다.
     switch (index) {
       case 0:
         _sendScreenView('DirectoryScreen');
@@ -18,9 +20,12 @@ class ScreenIndexProvider extends ChangeNotifier {
         _sendScreenView('ProblemPracticeScreen');
         break;
       case 2:
-        _sendScreenView('StudyRoomScreen');
+        _sendScreenView('CharacterScreen');
         break;
       case 3:
+        _sendScreenView('StudyRoomScreen');
+        break;
+      case 4:
         _sendScreenView('SettingScreen');
         break;
     }
