@@ -8,6 +8,7 @@ import '../../Module/Motion/AppMotion.dart';
 import '../../Module/Motion/HandwritingReveal.dart';
 import '../../Module/Motion/TossPageRoute.dart';
 import '../../Provider/UserProvider.dart';
+import '../../Util/AppErrorReporter.dart';
 import '../../Util/NotificationService.dart';
 import '../../main.dart';
 import 'LoginScreen.dart';
@@ -66,6 +67,13 @@ class _SplashScreenState extends State<SplashScreen> {
   /// 맞춰 늘렸다.
   static const Duration _writeDuration = Duration(milliseconds: 1500);
 
+  /// 자동 로그인을 기다리는 한계 시간.
+  ///
+  /// 서버 호출에 30초 타임아웃이 걸려 있어서 영영 멈추지는 않지만, 다 적힌
+  /// 문구를 30초 동안 보고 있게 둘 수는 없다. 이 시간을 넘기면 로그인 화면으로
+  /// 보낸다. 뒤늦게 로그인 상태가 되면 그 화면이 받아서 홈으로 넘긴다.
+  static const Duration _autoLoginLimit = Duration(seconds: 8);
+
   /// 글씨를 다 쓰고 나서 화면에 머무는 시간.
   ///
   /// 마지막 획이 끝나자마자 넘어가면 방금 적은 것을 읽을 새가 없이 화면이
@@ -96,15 +104,39 @@ class _SplashScreenState extends State<SplashScreen> {
   Future<void> _start() async {
     final userProvider = Provider.of<UserProvider>(context, listen: false);
 
-    // 자동 로그인과 연출을 같이 굴린다. 연출이 끝나기를 기다리는 동안 로그인이
-    // 진행되므로 둘 중 늦은 쪽 시간만 쓴다.
-    await Future.wait<void>([
-      userProvider.autoLogin(),
-      _writingDone.future,
-    ]);
+    // 자동 로그인과 연출을 같이 굴린다. 먼저 시작해 두고 연출을 기다리므로
+    // 둘 중 늦은 쪽 시간만 쓴다.
+    final loginCheck = _autoLogin(userProvider);
+    await _writingDone.future;
+    final loggedIn = await loginCheck;
     if (!mounted) return;
 
-    _goNext(userProvider.loginStatus == LoginStatus.login);
+    _goNext(loggedIn);
+  }
+
+  /// 자동 로그인을 하고 로그인 상태인지 돌려준다. **어떤 경우에도 던지지
+  /// 않는다.**
+  ///
+  /// [UserProvider.autoLogin] 은 저장된 토큰을 읽는 것을 try 블록 밖에서 한다.
+  /// 안드로이드에서 보안 저장소가 손상되면([TokenProvider] 의 BAD_DECRYPT 처리)
+  /// 거기서 예외가 올라오는데, 그 시점에는 로그인 상태가 아직 `waiting` 이라
+  /// Provider 쪽 인증 실패 처리도 화면을 넘겨 주지 않는다. 여기서 막지 않으면
+  /// 이 화면에서 나가지 못하고 갇힌다.
+  Future<bool> _autoLogin(UserProvider userProvider) async {
+    try {
+      await userProvider.autoLogin().timeout(_autoLoginLimit);
+      return userProvider.loginStatus == LoginStatus.login;
+    } catch (error, stackTrace) {
+      await AppErrorReporter.report(
+        error,
+        stackTrace,
+        source: 'splash_auto_login',
+        severity: AppErrorSeverity.warning,
+      );
+      // 로그인 화면으로 보낸다. 거기서 다시 로그인하면 되고, 뒤늦게 로그인
+      // 상태가 되면 그 화면이 받아서 홈으로 넘긴다.
+      return false;
+    }
   }
 
   void _goNext(bool loggedIn) {
@@ -153,6 +185,10 @@ class _SplashScreenState extends State<SplashScreen> {
                   OnboardingBrand.frogAsset,
                   height: _frogHeight,
                   fit: BoxFit.contain,
+                  // 그림을 못 읽어도 첫 화면에 깨진 자리가 남으면 안 된다.
+                  // 문구는 그대로 적히고 넘어가는 것도 그대로 된다.
+                  errorBuilder: (_, __, ___) =>
+                      const SizedBox(height: _frogHeight),
                 ),
               ),
             ),

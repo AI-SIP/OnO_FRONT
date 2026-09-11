@@ -142,6 +142,9 @@ class _LoginScreenState extends State<LoginScreen> {
               OnboardingBrand.frogAsset,
               height: isTablet ? 180 : 144,
               fit: BoxFit.contain,
+              // 그림을 못 읽어도 로그인 버튼까지 못 쓰게 되면 안 된다.
+              errorBuilder: (_, __, ___) =>
+                  SizedBox(height: isTablet ? 180 : 144),
             ),
           ),
           SizedBox(height: isTablet ? 56 : 44),

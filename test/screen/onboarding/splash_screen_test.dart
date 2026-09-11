@@ -13,9 +13,12 @@ import '../../helpers/helpers.dart';
 class _FakeUserProvider extends Mock implements UserProvider {}
 
 /// 자동 로그인이 [delay] 만큼 걸린 뒤 [status] 로 끝나는 상황을 만든다.
+///
+/// [throws] 를 주면 그 예외를 던지는 상황이 된다.
 _FakeUserProvider _userProvider({
   required LoginStatus status,
   Duration delay = Duration.zero,
+  Object? throws,
 }) {
   final provider = _FakeUserProvider();
   when(() => provider.loginStatus).thenReturn(status);
@@ -23,8 +26,11 @@ _FakeUserProvider _userProvider({
   when(() => provider.addListener(any())).thenReturn(null);
   when(() => provider.removeListener(any())).thenReturn(null);
   when(() => provider.dispose()).thenReturn(null);
-  when(() => provider.autoLogin())
-      .thenAnswer((_) => Future<void>.delayed(delay));
+  when(() => provider.autoLogin()).thenAnswer(
+    (_) => Future<void>.delayed(delay, () {
+      if (throws != null) throw throws;
+    }),
+  );
   return provider;
 }
 
@@ -179,6 +185,53 @@ void main() {
     await tester.pump(const Duration(seconds: 2));
     await tester.pumpAndSettle();
     expect(find.byType(LoginScreen), findsOneWidget);
+  });
+
+  testWidgets('자동 로그인이 예외를 던져도 로그인 화면으로 넘어간다', (tester) async {
+    // 안드로이드에서 보안 저장소가 손상되면 저장된 토큰을 읽는 데서 예외가
+    // 올라온다. UserProvider.autoLogin 은 그 호출을 try 밖에서 하기 때문에
+    // 그대로 전파되고, 여기서 막지 않으면 첫 화면에 갇힌다.
+    await pumpOnoWidget(
+      tester,
+      _splash(),
+      userProvider: _userProvider(
+        status: LoginStatus.waiting,
+        throws: Exception('보안 저장소가 손상되었습니다'),
+      ),
+      settle: false,
+    );
+
+    await _runThroughSplash(tester);
+
+    expect(find.byType(LoginScreen), findsOneWidget);
+    expect(find.byType(SplashScreen), findsNothing);
+  });
+
+  testWidgets('자동 로그인이 한계 시간을 넘기면 기다리지 않고 넘어간다', (tester) async {
+    // 서버 호출에 30초 타임아웃이 걸려 있어서, 그대로 기다리면 다 적힌 문구를
+    // 30초 동안 보고 있게 된다.
+    await pumpOnoWidget(
+      tester,
+      _splash(),
+      userProvider: _userProvider(
+        status: LoginStatus.waiting,
+        delay: const Duration(seconds: 30),
+      ),
+      settle: false,
+    );
+
+    await _runThroughSplash(tester);
+    expect(find.byType(SplashScreen), findsOneWidget);
+
+    // 한계 시간 8초가 지나면 넘어간다.
+    await tester.pump(const Duration(seconds: 9));
+    await tester.pumpAndSettle();
+    expect(find.byType(LoginScreen), findsOneWidget);
+
+    // 자동 로그인은 아직 돌고 있다. 남겨 두면 끝나지 않은 타이머 때문에
+    // 테스트가 실패한다.
+    await tester.pump(const Duration(seconds: 30));
+    await tester.pumpAndSettle();
   });
 
   testWidgets('동작 줄이기를 켜도 화면에서 멈추지 않는다', (tester) async {
