@@ -293,21 +293,36 @@ void main() {
       1008: ErrorMessages.accessDenied,
       1009: ErrorMessages.invalidAccessToken,
       2001: ErrorMessages.fileUploadFailed,
+      2002: ErrorMessages.fileNotFound,
+      2003: ErrorMessages.invalidImageFile,
+      2004: ErrorMessages.fileSizeExceeded,
+      2005: ErrorMessages.uploadRateLimitExceeded,
       3001: ErrorMessages.userNotFound,
+      3002: ErrorMessages.invalidUserIdentifier,
       4001: ErrorMessages.problemNotFound,
       4002: ErrorMessages.problemUserUnmatched,
       4003: ErrorMessages.problemSolveImageAlreadyRegistered,
       4004: ErrorMessages.problemAnalysisNotFound,
+      4005: ErrorMessages.analysisRateLimitExceeded,
+      4006: ErrorMessages.problemMemoTooLong,
+      4007: ErrorMessages.problemReferenceTooLong,
+      4008: ErrorMessages.problemFolderIdRequired,
       4021: ErrorMessages.problemSolveNotFound,
       4022: ErrorMessages.problemSolveUserUnmatched,
+      4023: ErrorMessages.problemSolveInvalidInput,
       5001: ErrorMessages.folderNotFound,
       5002: ErrorMessages.folderUserUnmatched,
       5003: ErrorMessages.rootFolderNotExist,
       5004: ErrorMessages.rootFolderCannotRemove,
       5005: ErrorMessages.rootFolderCannotUpdate,
+      5006: ErrorMessages.invalidParentFolder,
       6001: ErrorMessages.practiceNoteNotFound,
+      6002: ErrorMessages.practiceNoteUserUnmatched,
       7001: ErrorMessages.missionTypeNotFound,
       7002: ErrorMessages.missionUserNotFound,
+      7010: ErrorMessages.missionProgressNotFound,
+      7011: ErrorMessages.missionNotCompleted,
+      7012: ErrorMessages.missionAlreadyClaimed,
       8001: ErrorMessages.fcmTokenNotFound,
       8002: ErrorMessages.fcmSendFailed,
       9001: ErrorMessages.tagNameEmpty,
@@ -331,10 +346,23 @@ void main() {
       10014: ErrorMessages.weeklyReportNotFound,
       10015: ErrorMessages.invalidReactionEmoji,
       10016: ErrorMessages.invalidStudyRoomRequest,
+      10017: ErrorMessages.sharedProblemCommentNotFound,
+      10018: ErrorMessages.invalidSharedProblemComment,
+      10019: ErrorMessages.sharedProblemCommentForbidden,
+      10020: ErrorMessages.alreadySharedProblem,
+      11001: ErrorMessages.invalidEmojiKey,
+      12001: ErrorMessages.calendarRecordNotFound,
+      12002: ErrorMessages.invalidDateFormat,
+      13001: ErrorMessages.feedbackNotFound,
+      14001: ErrorMessages.noticeNotFound,
+      14002: ErrorMessages.noticeTitleInvalid,
+      14003: ErrorMessages.noticeContentInvalid,
+      14004: ErrorMessages.noticeDurationInvalid,
+      14005: ErrorMessages.noticeTypeRequired,
     };
 
-    test('정의된 errorCode 48개가 모두 기대한 메시지로 매핑된다', () {
-      expect(expected.length, 48);
+    test('정의된 errorCode 76개가 모두 기대한 메시지로 매핑된다', () {
+      expect(expected.length, 76);
       expected.forEach((code, message) {
         expect(
           ErrorMessageMapper.byErrorCodeOrNull(code),
@@ -345,7 +373,7 @@ void main() {
     });
 
     test('정의되지 않은 errorCode 는 null 이다', () {
-      for (final code in [0, -1, 1000, 4005, 9999, 20000]) {
+      for (final code in [0, -1, 1000, 4009, 9999, 20000]) {
         expect(
           ErrorMessageMapper.byErrorCodeOrNull(code),
           isNull,
