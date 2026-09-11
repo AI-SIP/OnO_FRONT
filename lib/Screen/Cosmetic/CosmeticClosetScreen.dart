@@ -19,6 +19,7 @@ import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/CosmeticProvider.dart';
 import 'CosmeticCombinationPreviewScreen.dart';
 import 'Widget/CosmeticCollectionMeter.dart';
+import 'Widget/CosmeticDebugLevelPanel.dart';
 import 'Widget/CosmeticItemTile.dart';
 import 'Widget/CosmeticNextUnlockCard.dart';
 import 'Widget/CosmeticSlotTabs.dart';
@@ -26,10 +27,14 @@ import 'Widget/CosmeticStage.dart';
 
 /// 개구리를 꾸미는 화면이다.
 ///
-/// 화면은 두 층이다. 위에는 개구리와 레벨 슬라이더가 **붙박이로** 있고,
-/// 아래에서 자리를 골라 아이템을 갈아 끼운다. 무엇을 눌러도 위쪽 개구리가
-/// 바로 바뀌는 것이 이 화면의 전부라서, 개구리는 스크롤을 따라 사라지지
-/// 않는다.
+/// 화면은 두 층이다. 위에는 개구리가 **붙박이로** 있고, 아래에서 자리를 골라
+/// 아이템을 갈아 끼운다. 무엇을 눌러도 위쪽 개구리가 바로 바뀌는 것이 이
+/// 화면의 전부라서, 개구리는 스크롤을 따라 사라지지 않는다.
+///
+/// 예전에는 개구리 아래에 레벨 슬라이더가 하나 붙박이로 있었다. 해금이
+/// 능력치별로 갈리면서 조절할 것이 다섯이 됐고, 다섯을 다 세우면 개구리보다
+/// 조절기가 큰 화면이 된다. 접이식 [CosmeticDebugLevelPanel] 로 옮겨 접어
+/// 뒀고 [kDebugMode] 에서만 들어간다. 출시본에는 이 줄이 아예 없다.
 ///
 /// **시착하는 화면이다.** 아이템을 눌러도 그 자리에서 확정되지 않는다. 고른
 /// 것은 이 화면이 [_fitting] 에 들고 있다가 **저장**을 눌러야
@@ -211,10 +216,10 @@ class _CosmeticClosetScreenState extends State<CosmeticClosetScreen> {
           color: themeProvider.primaryColor,
         ),
         actions: [
-          // 레벨로 열리는 것은 서른다섯 중 열여섯뿐이고 나머지는 미션 보상이라
-          // 슬라이더를 끝까지 올려도 안 걸린다. 시안을 보는 동안은 전부 입어
-          // 볼 수 있어야 해서 잠금을 통째로 푸는 스위치를 둔다. 출시본에는
-          // 이 버튼이 아예 없다.
+          // 능력치 넷을 골고루 올려 둔 사람은 드물어서 기본 레벨에서는
+          // 쉰다섯 중 절반쯤만 열린다. 시안을 보는 동안은 전부 입어 볼 수
+          // 있어야 해서 잠금을 통째로 푸는 스위치를 둔다. 출시본에는 이
+          // 버튼이 아예 없다.
           if (kDebugMode)
             IconButton(
               icon: Icon(
@@ -284,8 +289,8 @@ class _CosmeticClosetScreenState extends State<CosmeticClosetScreen> {
                             frogSize,
                             fitting,
                           ),
-                          _buildLevelSlider(cosmetic, themeProvider),
-                          const SizedBox(height: AppSpacing.sm),
+                          if (kDebugMode) _buildDebugLevels(cosmetic),
+                          const SizedBox(height: AppSpacing.md),
                           CosmeticSlotTabs(
                             slots: slots,
                             index: slotIndex,
@@ -543,42 +548,16 @@ class _CosmeticClosetScreenState extends State<CosmeticClosetScreen> {
     return smaller.clamp(96.0, 340.0);
   }
 
-  /// 레벨을 직접 옮겨 보는 슬라이더.
+  /// **디버그 전용.** 능력치 레벨 다섯을 직접 옮겨 보는 접이식 패널.
   ///
-  /// 시안의 핵심이다. Lv.1 부터 Lv.15 까지 훑으면서 해금이 어떻게 쌓이는지
-  /// 개구리에 바로 보이게 한다. 실제 출시 화면에는 들어가지 않는다.
-  Widget _buildLevelSlider(
-    CosmeticProvider cosmetic,
-    ThemeHandler themeProvider,
-  ) {
-    return Row(
-      children: [
-        const SizedBox(width: AppSpacing.xs),
-        StandardText(
-          text: 'Lv.${cosmetic.level}',
-          fontSize: 14,
-          fontWeight: FontWeight.w700,
-          color: themeProvider.primaryColor,
-        ),
-        Expanded(
-          child: SliderTheme(
-            data: SliderTheme.of(context).copyWith(
-              trackHeight: 4,
-              overlayShape: const RoundSliderOverlayShape(overlayRadius: 16),
-            ),
-            child: Slider(
-              value: cosmetic.level.toDouble(),
-              min: 1,
-              max: cosmetic.maxLevel.toDouble(),
-              divisions: cosmetic.maxLevel - 1,
-              label: 'Lv.${cosmetic.level}',
-              activeColor: themeProvider.primaryColor,
-              inactiveColor: AppColors.surfaceMuted,
-              onChanged: (value) => cosmetic.setMockLevel(value.round()),
-            ),
-          ),
-        ),
-      ],
+  /// 시안의 절반이 여기 달려 있다. 출석만 올린 사람과 복습만 한 사람이 각각
+  /// 무엇을 보게 되는지, 잠긴 칸에 적히는 조건이 어떻게 읽히는지를 이걸로
+  /// 훑는다. 실제 출시 화면에는 들어가지 않는다.
+  Widget _buildDebugLevels(CosmeticProvider cosmetic) {
+    return CosmeticDebugLevelPanel(
+      levels: cosmetic.levels,
+      onChanged: cosmetic.setMockLevel,
+      onReplaced: cosmetic.setMockLevels,
     );
   }
 
@@ -624,10 +603,11 @@ class _CosmeticClosetScreenState extends State<CosmeticClosetScreen> {
     // 아니라 눈앞의 개구리와 같은 것을 가리켜야 한다.
     final equippedKey = fitting[slot.slot];
     final backdrop = _isBackdrop(cosmetic.slots, slot);
-    // 이번 레벨에 열린 것들. 마흔 칸을 눈으로 훑어 무엇이 늘었는지 찾게 하면
-    // 안 된다.
+    // 지금 레벨에서 막 열린 것들. 쉰다섯 칸을 눈으로 훑어 무엇이 늘었는지
+    // 찾게 하면 안 된다. 능력치가 넷으로 갈린 뒤로 "이번 레벨"이 하나가
+    // 아니어서, 넷 중 어느 쪽을 올렸든 그쪽에서 막 열린 것에 붙는다.
     final newKeys = <String>{
-      for (final item in cosmetic.unlockedAt(cosmetic.level)) item.itemKey,
+      for (final item in cosmetic.justUnlocked) item.itemKey,
     };
 
     final tiles = <Widget>[
@@ -670,6 +650,7 @@ class _CosmeticClosetScreenState extends State<CosmeticClosetScreen> {
                     slotName: slot.nameKo,
                     backdrop: backdrop,
                     color: color,
+                    levels: cosmetic.levels,
                   ),
                 ),
               ),

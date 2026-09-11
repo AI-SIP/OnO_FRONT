@@ -10,11 +10,13 @@
 // `시착` 그룹이 그 경계를 잠근다.
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:ono/Model/Cosmetic/CosmeticAbilityLevels.dart';
 import 'package:ono/Model/Cosmetic/CosmeticLoadoutModel.dart';
 import 'package:ono/Module/Motion/TossPageRoute.dart';
 import 'package:ono/Provider/CosmeticProvider.dart';
 import 'package:ono/Screen/Cosmetic/CosmeticClosetScreen.dart';
 import 'package:ono/Screen/Cosmetic/Widget/CosmeticCollectionMeter.dart';
+import 'package:ono/Screen/Cosmetic/Widget/CosmeticDebugLevelPanel.dart';
 import 'package:ono/Screen/Cosmetic/Widget/CosmeticItemTile.dart';
 import 'package:ono/Screen/Cosmetic/Widget/CosmeticNextUnlockCard.dart';
 import 'package:ono/Screen/Cosmetic/Widget/CosmeticStage.dart';
@@ -47,13 +49,19 @@ class _Host extends StatelessWidget {
 void main() {
   setUpOnoWidgetTest();
 
+  /// 다섯 레벨을 한 값으로 놓은 사람. 별말 없으면 전부 Lv.12 다.
+  ///
+  /// 해금이 능력치별로 갈렸지만 이 화면 테스트가 보려는 것은 대부분 레이아웃과
+  /// 시착 흐름이라, 기준 하나를 정해 두고 필요한 테스트만 능력치를 흩는다.
   Future<CosmeticProvider> pumpCloset(
     WidgetTester tester, {
-    int level = 12,
+    CosmeticAbilityLevels? levels,
     Size surfaceSize = OnoSurface.phone,
   }) async {
     disableAnimationsForTest(tester);
-    final cosmetic = CosmeticProvider(mockLevel: level);
+    final cosmetic = CosmeticProvider(
+      mockLevels: levels ?? CosmeticAbilityLevels.uniform(12),
+    );
 
     await withMockedNetworkImages(() async {
       await pumpOnoWidget(
@@ -70,7 +78,9 @@ void main() {
   /// 앞 화면을 거쳐 띄운다. 뒤로 가기를 보는 테스트가 쓴다.
   Future<CosmeticProvider> pushCloset(WidgetTester tester) async {
     disableAnimationsForTest(tester);
-    final cosmetic = CosmeticProvider(mockLevel: 12);
+    final cosmetic = CosmeticProvider(
+      mockLevels: CosmeticAbilityLevels.uniform(12),
+    );
 
     await withMockedNetworkImages(() async {
       await pumpOnoWidget(
@@ -216,18 +226,19 @@ void main() {
       await settleToast(tester);
     });
 
-    testWidgets('못 가진 것을 눌러도 걸쳐지지 않고 이유만 알려 준다', (tester) async {
-      // Lv.12 의 배경 자리에서 밤하늘은 Lv.13 부터다.
-      await pumpCloset(tester, level: 12);
+    testWidgets('못 가진 것을 눌러도 걸쳐지지 않고 무엇을 올려야 하는지 알려 준다', (tester) async {
+      // 출석 Lv.3 이면 배경 자리의 봄(2)은 열려 있고 여름(4)은 잠겨 있다.
+      await pumpCloset(tester, levels: CosmeticAbilityLevels(attendance: 3));
 
-      // 밤하늘은 예고 카드에도 적혀 있다. 격자의 칸 쪽을 누른다.
+      // 여름은 예고 카드에도 적혀 있다. 격자의 칸 쪽을 누른다.
       await tester.tap(find.descendant(
         of: find.byType(CosmeticItemTile),
-        matching: find.text('밤하늘'),
+        matching: find.text('여름'),
       ));
       await tester.pumpAndSettle();
 
-      expect(find.text('Lv.13 부터 쓸 수 있어요.'), findsOneWidget);
+      // 능력치 이름이 없으면 무엇의 4 인지 알 수 없다.
+      expect(find.text('출석 Lv.4 부터 쓸 수 있어요.'), findsOneWidget);
       // 못 가진 것을 눌렀다고 저장할 것이 생기면 안 된다.
       expect(find.text('저장'), findsNothing);
 
@@ -282,25 +293,25 @@ void main() {
 
   group('수집률', () {
     testWidgets('무대 맨 위에서 몇 개 중 몇 개인지 알려 준다', (tester) async {
-      // Lv.12 까지 열리는 것은 Lv.2 부터 Lv.12 까지 열한 가지다. 나머지는
-      // 더 높은 레벨이거나 미션 보상이다.
-      await pumpCloset(tester, level: 12);
+      // 다섯이 다 Lv.12 면 능력치별로 9 + 8 + 8 + 8 개, 총 학습으로 7 개가
+      // 열려 마흔이다.
+      await pumpCloset(tester);
 
       expect(find.byType(CosmeticCollectionMeter), findsOneWidget);
       expect(find.text('모은 치장'), findsOneWidget);
-      expect(find.text('11'), findsOneWidget);
+      expect(find.text('40'), findsOneWidget);
       expect(find.text(' / 55'), findsOneWidget);
     });
 
     testWidgets('레벨을 올리면 모은 개수가 는다', (tester) async {
-      final cosmetic = await pumpCloset(tester, level: 12);
+      final cosmetic = await pumpCloset(tester);
 
-      cosmetic.setMockLevel(15);
+      cosmetic.setMockLevels(CosmeticAbilityLevels.max);
       await tester.pumpAndSettle();
 
-      // 열한 가지에 밤하늘(13)과 왕관(14)과 학사 세트 셋(15)을 더해
-      // 열여섯이다. 레벨로 열리는 것은 여기까지고 나머지는 미션 보상이다.
-      expect(find.text('16'), findsOneWidget);
+      // 다섯을 끝까지 올리면 쉰다섯이 전부 열린다. 레벨로 안 열리는 것은
+      // 이제 하나도 없다.
+      expect(find.text('55'), findsOneWidget);
     });
 
     testWidgets('수집률은 무대 안, 개구리보다 위에 있다', (tester) async {
@@ -319,46 +330,67 @@ void main() {
         );
 
     testWidgets('격자보다 먼저, 다음에 열릴 것 하나를 크게 보여 준다', (tester) async {
-      // 첫 자리는 배경이다. Lv.12 에서 봄(3)과 공부방(7)을 가졌고 다음은
-      // Lv.13 의 밤하늘이다.
-      await pumpCloset(tester, level: 12);
+      // 첫 자리는 배경이다. 전부 Lv.12 면 배경 아홉 중 일곱을 가졌고 남은 것은
+      // 밤하늘(출석 14)과 우주(출석 15)다. 가까운 쪽은 밤하늘이다.
+      await pumpCloset(tester);
 
       expect(find.byType(CosmeticNextUnlockCard), findsOneWidget);
       expect(inCard(find.text('다음에 열려요')), findsOneWidget);
       expect(inCard(find.text('밤하늘')), findsOneWidget);
-      expect(inCard(find.text('Lv.13')), findsOneWidget);
+      // 무엇을 얼마나 올려야 하는지. 능력치 이름이 붙어야 읽힌다.
+      expect(inCard(find.text('출석 Lv.14')), findsOneWidget);
+    });
+
+    testWidgets('지금 내가 그 능력치에서 몇 레벨인지 같이 적는다', (tester) async {
+      // 필요 레벨만 적으면 코앞인지 한참 남았는지 알 수 없다.
+      await pumpCloset(tester);
+
+      expect(inCard(find.text('지금 출석 Lv.12 · 2 레벨 남았어요')), findsOneWidget);
+    });
+
+    testWidgets('한 칸 남았으면 한 칸 남았다고 말한다', (tester) async {
+      await pumpCloset(
+        tester,
+        levels: CosmeticAbilityLevels(attendance: 13),
+      );
+
+      expect(inCard(find.text('지금 출석 Lv.13 · 한 레벨만 더!')), findsOneWidget);
+    });
+
+    testWidgets('남은 레벨이 가장 적은 것을 고른다', (tester) async {
+      // 배경 자리에는 출석으로 열리는 여덟과 오답노트로 열리는 공부방(12)이
+      // 섞여 있다. 출석을 Lv.15 로 끝까지 올려 두면 출석 쪽은 남은 것이 없고,
+      // 필요 레벨이 더 높은 공부방 쪽이 유일하게 남은 하나가 된다.
+      await pumpCloset(
+        tester,
+        levels: CosmeticAbilityLevels(attendance: 15, noteWrite: 11),
+      );
+
+      expect(inCard(find.text('공부방')), findsOneWidget);
+      expect(inCard(find.text('오답노트 Lv.12')), findsOneWidget);
     });
 
     testWidgets('자리별 진행도를 같이 얹는다', (tester) async {
       // 탭 여덟 개에 숫자를 하나씩 달면 줄이 시끄러워진다. 고른 자리의 것만
       // 이 카드에서 말한다.
-      await pumpCloset(tester, level: 12);
+      await pumpCloset(tester);
 
-      expect(inCard(find.text('배경 2 / 9')), findsOneWidget);
+      expect(inCard(find.text('배경 7 / 9')), findsOneWidget);
     });
 
     testWidgets('예고 카드가 격자보다 위에 있다', (tester) async {
-      await pumpCloset(tester, level: 12);
+      await pumpCloset(tester);
 
       final cardY = tester.getTopLeft(find.byType(CosmeticNextUnlockCard)).dy;
       final tileY = tester.getTopLeft(find.byType(CosmeticSlotEmptyTile)).dy;
       expect(cardY, lessThan(tileY));
     });
 
-    testWidgets('레벨로 열릴 것이 없으면 미션 보상을 예고한다', (tester) async {
-      // Lv.15 의 머리 자리는 레벨로 열리는 다섯 가지를 다 가졌다. 남은 것은
-      // 미션 보상 셋이라 그쪽을 말한다.
-      await pumpCloset(tester, level: 15);
-
-      await tester.tap(find.text('머리'));
-      await tester.pumpAndSettle();
-
-      expect(inCard(find.text('베레모')), findsOneWidget);
-      expect(inCard(find.text('미션 보상')), findsOneWidget);
-    });
-
-    testWidgets('그 자리를 다 모으면 잘했다는 말 없이 진행도만 남는다', (tester) async {
-      final cosmetic = await pumpCloset(tester, level: 15);
+    testWidgets('그 자리를 다 모으면 마지막으로 열린 것을 대신 세운다', (tester) async {
+      // 빈 채로 높이만 남겨 두면 카드가 고장 난 것처럼 보인다. 그렇다고
+      // 축하 문구를 띄우면 자리마다 다 모을 때마다 잔소리가 된다. 다음 대신
+      // 마지막을 말한다.
+      final cosmetic = await pumpCloset(tester);
 
       cosmetic.setUnlockAll(true);
       await tester.pumpAndSettle();
@@ -366,36 +398,96 @@ void main() {
       // 카드가 사라지지 않는다. 탭을 옮길 때마다 격자가 위아래로 튀면 안 된다.
       expect(find.byType(CosmeticNextUnlockCard), findsOneWidget);
       expect(inCard(find.text('배경 9 / 9')), findsOneWidget);
-      // 축하 문구는 두지 않는다. 자리마다 뜨면 금세 잔소리가 된다.
+      expect(inCard(find.text('마지막으로 열린 것')), findsOneWidget);
+      expect(inCard(find.text('이 자리는 더 열릴 것이 없어요')), findsOneWidget);
+      expect(inCard(find.text('다음에 열려요')), findsNothing);
+
+      // 축하 문구는 두지 않는다.
       expect(find.textContaining('다 모았'), findsNothing);
       expect(find.textContaining('전부 가졌'), findsNothing);
-      expect(inCard(find.text('다음에 열려요')), findsNothing);
     });
   });
 
   group('NEW 표시', () {
-    testWidgets('이번 레벨에 열린 것에만 붙는다', (tester) async {
-      // Lv.13 에 열리는 것은 배경의 밤하늘 하나다.
-      await pumpCloset(tester, level: 13);
+    testWidgets('제 능력치에서 막 열린 것에만 붙는다', (tester) async {
+      // 출석만 Lv.2 로 올리면 그 레벨에 열리는 것은 배경의 봄 하나다.
+      await pumpCloset(tester, levels: CosmeticAbilityLevels(attendance: 2));
 
       expect(find.text('NEW'), findsOneWidget);
 
       final badgeX = tester.getCenter(find.text('NEW')).dx;
-      final tileX = tester.getCenter(find.text('밤하늘')).dx;
+      final tileX = tester
+          .getCenter(
+            find.descendant(
+              of: find.byType(CosmeticItemTile),
+              matching: find.text('봄'),
+            ),
+          )
+          .dx;
       // 왼쪽 위에 붙는다. 오른쪽 위는 입고 있다는 체크 자리다.
       expect(badgeX, lessThan(tileX));
     });
 
-    testWidgets('이번 레벨에 열린 것이 없는 자리에는 붙지 않는다', (tester) async {
-      // Lv.12 에 열리는 것은 머리의 버킷햇이고 배경에는 없다.
-      await pumpCloset(tester, level: 12);
+    testWidgets('다른 능력치로 열리는 자리에는 붙지 않는다', (tester) async {
+      // 출석을 올렸으니 머리 자리(문제 복습·총 학습)에는 새로 열린 것이 없다.
+      await pumpCloset(tester, levels: CosmeticAbilityLevels(attendance: 2));
 
-      expect(find.text('NEW'), findsNothing);
+      expect(find.text('NEW'), findsOneWidget);
 
       await tester.tap(find.text('머리'));
       await tester.pumpAndSettle();
 
-      expect(find.text('NEW'), findsOneWidget);
+      expect(find.text('NEW'), findsNothing);
+    });
+  });
+
+  group('디버그 레벨 패널', () {
+    testWidgets('접혀 있고 다섯 레벨이 한 줄에 적혀 있다', (tester) async {
+      // 슬라이더 다섯을 펴 두면 개구리보다 조절기가 큰 화면이 된다.
+      await pumpCloset(
+        tester,
+        levels: CosmeticAbilityLevels(
+          attendance: 9,
+          noteWrite: 5,
+          problemPractice: 12,
+          notePractice: 3,
+          totalStudy: 11,
+        ),
+      );
+
+      expect(find.byType(CosmeticDebugLevelPanel), findsOneWidget);
+      expect(find.text('디버그 레벨'), findsOneWidget);
+      // 접힌 줄에도 다섯이 적혀 있어서 펴지 않아도 어디에 서 있는지 읽힌다.
+      for (final level in ['9', '5', '12', '3', '11']) {
+        expect(find.text(level), findsWidgets, reason: level);
+      }
+      // 접혀 있으니 슬라이더는 아직 없다.
+      expect(find.byType(Slider), findsNothing);
+    });
+
+    testWidgets('펴면 능력치 다섯을 따로 옮길 수 있다', (tester) async {
+      await pumpCloset(tester);
+
+      await tester.tap(find.text('디버그 레벨'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(Slider), findsNWidgets(5));
+      // 총 학습은 넷과 따로 조절한다. 넷에 묶어 두면 총 학습 Lv.16 짜리를
+      // 보려고 넷을 다 끝까지 올려야 해서 능력치별 잠금이 하나도 안 남는다.
+      expect(find.text('총 학습'), findsOneWidget);
+    });
+
+    testWidgets('전부 최대를 누르면 쉰다섯이 다 열린다', (tester) async {
+      final cosmetic = await pumpCloset(tester);
+
+      await tester.tap(find.text('디버그 레벨'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('전부 최대'));
+      await tester.pumpAndSettle();
+
+      expect(cosmetic.levels, CosmeticAbilityLevels.max);
+      expect(cosmetic.levelsTouched, isTrue);
+      expect(find.text('55'), findsOneWidget);
     });
   });
 
