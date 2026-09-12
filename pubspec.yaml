@@ -106,6 +106,7 @@ flutter:
     - assets/FrogCharacter/
     - assets/Cosmetic/
     - assets/Reward/
+    - assets/ProfileFrame/
     - assets/emoji/
     - assets/no_image.png
 
