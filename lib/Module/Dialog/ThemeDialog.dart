@@ -351,6 +351,17 @@ class _ThemeDialogState extends State<ThemeDialog> {
                 Expanded(
                   child: AnimatedSwitcher(
                     duration: duration,
+                    // 기본 layoutBuilder 는 자식을 Stack 에 담고 가운데로
+                    // 맞춘다. 남는 폭이 넓은 Expanded 안에서는 그 탓에 이름이
+                    // 100px 가까이 오른쪽으로 밀려서, 간격을 8 로 줄여 놔도
+                    // 동그라미와 한참 떨어져 보였다. 왼쪽에 붙인다.
+                    layoutBuilder: (currentChild, previousChildren) => Stack(
+                      alignment: Alignment.centerLeft,
+                      children: <Widget>[
+                        ...previousChildren,
+                        if (currentChild != null) currentChild,
+                      ],
+                    ),
                     child: Column(
                       key: ValueKey<String>('$overline|$title|$detail'),
                       crossAxisAlignment: CrossAxisAlignment.start,
