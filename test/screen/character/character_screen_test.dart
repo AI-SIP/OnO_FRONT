@@ -15,7 +15,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:ono/Model/Common/LoginStatus.dart';
 import 'package:ono/Module/Debug/DebugLevels.dart';
-import 'package:ono/Module/Motion/AnimatedGauge.dart';
 import 'package:ono/Model/Mission/MissionGroupModel.dart';
 import 'package:ono/Model/Mission/MissionModel.dart';
 import 'package:ono/Model/User/UserInfoModel.dart';
@@ -406,11 +405,13 @@ void main() {
       expect(find.text('문제 복습'), findsOneWidget);
       expect(find.text('복습 세트'), findsOneWidget);
 
-      // 레벨 넷. 총 학습 레벨(Lv.7)과 겹치지 않는 값으로 잡아 두었다.
-      expect(find.text('Lv.3'), findsOneWidget);
-      expect(find.text('Lv.5'), findsOneWidget);
-      expect(find.text('Lv.2'), findsOneWidget);
-      expect(find.text('Lv.1'), findsOneWidget);
+      // 레벨 넷. 고리 안에서는 숫자만 쓴다. 고리 자체가 레벨 게이지이고
+      // 바로 위에 이름표가 붙어 있어서 `Lv.` 를 네 번 반복할 이유가 없다.
+      // `Lv.` 를 말하는 자리는 총 학습 한 줄로 남는다.
+      expect(find.text('3'), findsOneWidget);
+      expect(find.text('5'), findsOneWidget);
+      expect(find.text('2'), findsOneWidget);
+      expect(find.text('1'), findsOneWidget);
 
       // 다음 레벨까지 남은 경험치. 필요량은 10 + (레벨 - 1) * 10 이다.
       expect(find.text('8 / 30'), findsOneWidget);
@@ -449,7 +450,7 @@ void main() {
       await pumpCharacter(tester);
 
       final labelY = tester.getTopLeft(find.text('출석')).dy;
-      final levelY = tester.getTopLeft(find.text('Lv.3')).dy;
+      final levelY = tester.getTopLeft(find.text('3')).dy;
       final meterY = tester.getTopLeft(find.text('8 / 30')).dy;
 
       expect(labelY, lessThan(levelY));
@@ -492,16 +493,15 @@ void main() {
     });
 
     testWidgets('총 학습과 능력치 넷이 한 덩어리로 붙어 있다', (tester) async {
-      // 카드를 둘로 나누면 서로 다른 것을 말하는 것처럼 갈라져 보인다. 둘
-      // 사이에 있는 것은 여백 12 · 머리카락 한 올 · 여백 12 뿐이라, 카드 하나
-      // 분량의 테두리와 안쪽 여백이 끼어들 자리가 없다.
+      // 카드를 둘로 나누면 서로 다른 것을 말하는 것처럼 갈라져 보인다. 총
+      // 학습 줄과 눈금판 사이에 있는 것은 경험치 막대와 여백 둘과 머리카락
+      // 한 올뿐이라, 카드 하나 분량의 테두리와 안쪽 여백이 끼어들 자리가 없다.
       await pumpCharacter(tester);
 
-      final gaugeBottom =
-          tester.getRect(find.byType(AnimatedLinearGauge)).bottom;
+      final totalBottom = tester.getRect(find.text('총 학습')).bottom;
       final statTop = tester.getRect(find.byType(AbilityStatPanel)).top;
 
-      expect(statTop - gaugeBottom, lessThan(40.0));
+      expect(statTop - totalBottom, lessThan(60.0));
     });
 
     testWidgets('능력치 아이콘은 마이페이지가 쓰던 그 아이콘이다', (tester) async {
@@ -560,16 +560,16 @@ void main() {
 
       await pumpCharacter(tester, cosmetic: cosmetic);
 
-      // 서버가 준 출석은 Lv.3 이지만 더미를 만진 뒤로는 더미를 따른다.
-      expect(find.text('Lv.9'), findsOneWidget);
-      expect(find.text('Lv.3'), findsNothing);
+      // 서버가 준 출석은 3 이지만 더미를 만진 뒤로는 더미를 따른다.
+      expect(find.text('9'), findsOneWidget);
+      expect(find.text('3'), findsNothing);
     });
 
     testWidgets('더미 레벨을 한 번도 안 옮겼으면 서버가 준 레벨을 그린다', (tester) async {
       await pumpCharacter(tester);
 
-      expect(find.text('Lv.3'), findsOneWidget);
-      expect(find.text('Lv.12'), findsNothing);
+      expect(find.text('3'), findsOneWidget);
+      expect(find.text('12'), findsNothing);
     });
 
     testWidgets('사용자 정보가 아직 없어도 스탯창 자리는 그대로 있다', (tester) async {
@@ -676,8 +676,9 @@ void main() {
                 reason: '$finder 가 화면 아래로 잘렸다');
           }
 
-          // 능력치 넷의 레벨과 남은 경험치가 전부 그려져 있다.
-          expect(find.text('Lv.3'), findsOneWidget);
+          // 능력치 넷의 레벨과 남은 경험치가 전부 그려져 있다. 고리 안에서는
+          // 숫자만 쓴다.
+          expect(find.text('3'), findsOneWidget);
           expect(find.text('8 / 30'), findsOneWidget);
           expect(find.text('6 / 10'), findsOneWidget);
         });

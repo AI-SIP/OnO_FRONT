@@ -204,9 +204,12 @@ class _Ability {
 
 /// 고리의 두께. 지름을 따라가되 너무 얇거나 두꺼워지지 않게 막는다.
 ///
+/// 한때 지름의 10% 였는데 화면에서 실선 한 줄로 보여서, 얼마나 찼는지가 한눈에
+/// 안 들어왔다. 고리는 이 눈금판에서 값을 말하는 유일한 그림이라 두꺼워야 한다.
+///
 /// 고리 안쪽에 글자가 얼마나 들어가는지를 [AbilityStatPanel] 도 알아야 해서
 /// 눈금판 밖에 둔다.
-double _strokeOf(double dialSize) => (dialSize * 0.10).clamp(4.0, 6.0);
+double _strokeOf(double dialSize) => (dialSize * 0.155).clamp(7.0, 11.0);
 
 /// 고리 안쪽 글자가 테두리에서 떨어지는 거리. 테두리까지 물고 들어가면
 /// 숫자가 고리에 걸려 읽히지 않는다.
@@ -306,7 +309,13 @@ class _AbilityDial extends StatelessWidget {
                       painter: _DialPainter(
                         progress: current,
                         color: accent,
-                        trackColor: colors.surface,
+                        // 갈래 색을 아주 옅게 깔던 것을 한 단계 진하게 한다.
+                        // 트랙이 안 보이면 고리가 어디까지 도는 것인지 몰라서
+                        // 찬 만큼이 전체의 얼마인지 가늠이 안 된다.
+                        trackColor: Color.alphaBlend(
+                          accent.withValues(alpha: 0.22),
+                          Colors.white,
+                        ),
                         stroke: stroke,
                       ),
                     ),
@@ -317,7 +326,7 @@ class _AbilityDial extends StatelessWidget {
                       fit: BoxFit.scaleDown,
                       child: AnimatedCountText(
                         value: ability.level,
-                        formatter: GrowthType.level,
+                        formatter: GrowthType.ringLevel,
                         fontSize: GrowthType.abilityLevel * levelScale,
                         fontFamily: GrowthType.valueFamily,
                         color: accent,
@@ -392,7 +401,24 @@ class _DialPainter extends CustomPainter {
       ..strokeWidth = stroke
       ..strokeCap = StrokeCap.round
       ..color = color;
-    canvas.drawArc(rect, _start, math.pi * 2 * filled, false, fill);
+    final sweep = math.pi * 2 * filled;
+    canvas.drawArc(rect, _start, sweep, false, fill);
+
+    // 차오른 끝에 밝은 점을 찍는다. 고리가 어디까지 왔는지가 한 점으로
+    // 짚이고, 같은 색 안에서 끝을 찾느라 눈이 고리를 훑지 않아도 된다.
+    // 흰색 한 가지만 쓴다. 다른 색을 섞으면 화면에 없던 색이 하나 더 생긴다.
+    if (filled < 0.999) {
+      final angle = _start + sweep;
+      final head = Offset(
+        rect.center.dx + rect.width / 2 * math.cos(angle),
+        rect.center.dy + rect.height / 2 * math.sin(angle),
+      );
+      canvas.drawCircle(
+        head,
+        stroke * 0.24,
+        Paint()..color = Colors.white.withValues(alpha: 0.85),
+      );
+    }
   }
 
   @override

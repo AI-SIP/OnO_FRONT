@@ -409,17 +409,7 @@ class _CharacterStage extends StatelessWidget {
             ],
           ),
           const SizedBox(height: AppSpacing.sm),
-          AnimatedLinearGauge(
-            value: progress,
-            // **카드에서 테마색이 남는 곳은 여기 하나다.** 사용자가 고른 색이
-            // "내가 얼마나 왔나" 한 가지에만 붙는다.
-            color: color,
-            // 트랙까지 테마색이면 막대가 어디까지 찼는지가 진하기 차이로만
-            // 읽힌다. 흰색으로 파 두면 찬 곳과 안 찬 곳이 색으로 갈린다.
-            backgroundColor: Colors.white.withValues(alpha: 0.75),
-            height: 8,
-            borderRadius: AppRadius.full,
-          ),
+          _GrowthGauge(progress: progress, color: color),
           const SizedBox(height: AppSpacing.md),
           // 총 학습과 능력치 넷 사이를 가르는 선. 카드를 둘로 쪼개는 대신
           // 머리카락 한 올만큼만 긋는다. 같은 카드에 있지만 위와 아래가
@@ -457,6 +447,78 @@ class _CharacterStage extends StatelessWidget {
 
   /// 파츠 그림 원본의 한 변.
   static const double _frogMaxSize = 512.0;
+}
+
+/// 총 학습 경험치 막대다.
+///
+/// **이 영역에서 가장 중요한 값인데 제일 약해 보였다.** 8px 짜리 실선 한 줄은
+/// 구분선과 구별되지 않아서, 얼마나 찼는지가 아니라 카드에 줄이 하나 그어져
+/// 있는 것으로 읽혔다. 높이를 키우고 두 가지를 더한다.
+///
+/// - **광택**: 채운 부분 위쪽을 밝게 한다. 평평한 색면이 아니라 속이 찬
+///   원기둥처럼 보여서 게임의 체력 막대에 가까워진다. 흰색을 섞어 밝히므로
+///   화면에 없던 색이 새로 생기지 않는다.
+/// - **머리**: 차오른 끝에 밝은 세로선을 세운다. 어디까지 왔는지가 한 점으로
+///   짚인다. 능력치 고리도 같은 자리에 같은 표시를 한다.
+///
+/// 트랙은 흰색이다. 트랙까지 테마색이면 찬 곳과 안 찬 곳이 진하기 차이로만
+/// 갈린다. **카드에서 테마색이 남는 곳은 채운 부분 하나뿐이다.**
+class _GrowthGauge extends StatelessWidget {
+  final double progress;
+  final Color color;
+
+  const _GrowthGauge({required this.progress, required this.color});
+
+  /// 막대 높이.
+  static const double _height = 14.0;
+
+  @override
+  Widget build(BuildContext context) {
+    final radius = BorderRadius.circular(AppRadius.full);
+
+    return AnimatedGaugeValue(
+      value: progress.clamp(0.0, 1.0),
+      builder: (context, current) => ClipRRect(
+        borderRadius: radius,
+        child: Container(
+          height: _height,
+          color: Colors.white.withValues(alpha: 0.80),
+          child: FractionallySizedBox(
+            alignment: Alignment.centerLeft,
+            widthFactor: current,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                borderRadius: radius,
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Color.alphaBlend(
+                      Colors.white.withValues(alpha: 0.42),
+                      color,
+                    ),
+                    color,
+                  ],
+                  stops: const [0.0, 0.62],
+                ),
+              ),
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: Container(
+                  width: 3,
+                  margin: const EdgeInsets.symmetric(vertical: 3),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.75),
+                    borderRadius: radius,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 /// 미션과 꾸미기로 가는 버튼 두 개.

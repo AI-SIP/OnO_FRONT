@@ -36,7 +36,9 @@ abstract final class GrowthType {
   static const double totalLevel = 20.0;
 
   /// 능력치 레벨. 고리 안에 앉는다.
-  static const double abilityLevel = 14.0;
+  ///
+  /// 총 학습보다 작지만 작지 않다. 이 영역에서 두 번째로 큰 글자다.
+  static const double abilityLevel = 20.0;
 
   /// 이름표와 진행도. 값을 거드는 것은 전부 이 크기다.
   static const double supporting = 11.0;
@@ -78,6 +80,15 @@ abstract final class GrowthType {
 
   /// 레벨 글자. `Lv.7`.
   static String level(num value) => 'Lv.${value.round()}';
+
+  /// 고리 안에 앉는 능력치 레벨. **숫자만 쓴다.**
+  ///
+  /// `Lv.` 를 떼는 것은 [level] 이 정한 서식을 어기는 일이라 이유가 필요하다.
+  /// 고리 자체가 레벨 게이지이고 바로 위에 이름표가 붙어 있어서, 작은 원
+  /// 네 개에 `Lv.` 를 네 번 반복해 봐야 새로 알려 주는 것이 없다. 대신 그
+  /// 자리를 숫자에 내주면 같은 고리 안에서 글자가 훨씬 커진다. 이 영역에서
+  /// **`Lv.` 를 말하는 자리는 총 학습 한 줄**로 남는다.
+  static String ringLevel(num value) => value.round().toString();
 
   /// 진행도 글자. `24 / 60`.
   static String meter(num current, int goal) => '${current.round()} / $goal';
