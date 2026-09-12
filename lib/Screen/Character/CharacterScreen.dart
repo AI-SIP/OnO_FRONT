@@ -110,68 +110,54 @@ class _CharacterScreenState extends State<CharacterScreen> {
     );
 
     return Scaffold(
+      // 무대가 화면을 통째로 덮으므로 이 색은 무대가 그려지기 전 한 틱에만
+      // 보인다. 그래도 비워 두면 그 한 틱이 검게 뜬다.
       backgroundColor: AppColors.background,
       body: MotionReplayScope(
         token: _visitSequence,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // 무대가 남는 높이를 전부 가져간다. 아래 둘은 필요한 만큼만 쓰고,
-            // 글자를 키운 기기에서 아래가 두꺼워지면 개구리가 그만큼 작아진다.
-            // 넘치는 쪽이 아니라 개구리가 양보하는 쪽이 맞다.
-            Expanded(
-              child: _CharacterStage(
-                key: widget.tutorialTargets?.levelCardKey,
-                themeProvider: themeProvider,
-              ),
-            ),
-            SafeArea(
-              top: false,
-              child: Center(
-                child: ConstrainedBox(
-                  // 태블릿에서 스탯창이 끝없이 넓어지지 않게 가운데로 모은다.
-                  constraints: const BoxConstraints(maxWidth: 640),
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(
-                      AppSpacing.screenHorizontal,
-                      AppSpacing.lg,
-                      AppSpacing.screenHorizontal,
-                      AppSpacing.md,
-                    ),
-                    child: AppearTransition(
-                      delay: AppMotion.stagger * 5,
-                      child: _ActionRow(
-                        color: themeProvider.primaryColor,
-                        missionDone: missionProvider.dailyCompletedCount,
-                        missionTotal: missionProvider.dailyTotalCount,
-                        onMissionTap: _openMissions,
-                        onClosetTap: _openCloset,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
+        child: _CharacterStage(
+          key: widget.tutorialTargets?.levelCardKey,
+          themeProvider: themeProvider,
+          missionDone: missionProvider.dailyCompletedCount,
+          missionTotal: missionProvider.dailyTotalCount,
+          onMissionTap: _openMissions,
+          onClosetTap: _openCloset,
         ),
       ),
     );
   }
 }
 
-/// 개구리가 서 있는 무대다. 이 화면의 주인공이 앉는 자리다.
+/// 개구리가 서 있는 무대다. **이 탭의 화면 전체가 무대다.**
 ///
-/// 바탕은 위가 밝고 아래로 갈수록 테마색이 도는 세로 그라데이션이다. 위에서
-/// 빛이 들어오고 아래가 바닥인 결이라, 그 위에 선 개구리가 조각이 아니라
-/// 장면으로 읽힌다. 아래 모서리만 둥글려서 화면 위에서 내려온 무대처럼
-/// 보이게 하고, 좌우는 화면 끝까지 붙인다.
+/// 예전에는 무대가 위쪽 덩어리였고 그 아래에 버튼 둘이 회색 바탕 위에 따로
+/// 앉아 있었다. 배경 파츠가 개구리 발치에서 끊기고 아래 90px 남짓이 아무
+/// 역할도 없는 연보라 빈 면으로 남았다. 무대를 화면 끝까지 늘리고 **성장
+/// 카드와 버튼 둘을 그 위에 얹는다.** 셋 다 같은 장면 위에 떠 있는 것이 되고,
+/// 배경 그림에서 보이는 세로도 그만큼 늘어난다.
+///
+/// 바탕은 [CosmeticStageGround] 가 그린다. 배경 파츠를 걸쳤으면 그것이
+/// 화면을 채우고, 안 걸쳤으면 위가 밝고 아래로 갈수록 테마색이 도는
+/// 그라데이션과 지평선이 보인다.
 ///
 /// 금색 같은 별도의 장식색을 쓰지 않는다. 쓰는 색은 사용자가 테마에서 고른
 /// 색 하나뿐이다. 그래야 이 화면만 앱에서 겉돌지 않는다.
 class _CharacterStage extends StatelessWidget {
   final ThemeHandler themeProvider;
 
-  const _CharacterStage({super.key, required this.themeProvider});
+  final int missionDone;
+  final int missionTotal;
+  final VoidCallback onMissionTap;
+  final VoidCallback onClosetTap;
+
+  const _CharacterStage({
+    super.key,
+    required this.themeProvider,
+    required this.missionDone,
+    required this.missionTotal,
+    required this.onMissionTap,
+    required this.onClosetTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -188,7 +174,7 @@ class _CharacterStage extends StatelessWidget {
     final threshold = userInfo?.totalStudyNextLevelThreshold ?? 40;
     final progress = threshold > 0 ? (point / threshold).clamp(0.0, 1.0) : 0.0;
 
-    return Container(
+    return DecoratedBox(
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
@@ -200,26 +186,11 @@ class _CharacterStage extends StatelessWidget {
           ],
           stops: const [0.0, 0.55, 1.0],
         ),
-        borderRadius: const BorderRadius.vertical(
-          bottom: Radius.circular(AppRadius.xlarge + 8),
-        ),
-        // 무대가 아래 스탯창에서 살짝 떠 보이게 한다. 카드가 아니라 장면이라는
-        // 신호라서 테마색 그림자를 옅게 쓴다.
-        boxShadow: [
-          BoxShadow(
-            color: color.withValues(alpha: 0.12),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
       ),
-      // 배경 파츠가 무대 모서리를 넘지 않게, 그리고 개구리 빛무리가 좌우로
-      // 새 나가게 한꺼번에 잘라 낸다. 무대 자체가 그릇이므로 개구리는 제
-      // 액자를 따로 가질 필요가 없다.
-      child: ClipRRect(
-        borderRadius: const BorderRadius.vertical(
-          bottom: Radius.circular(AppRadius.xlarge + 8),
-        ),
+      // 개구리 빛무리가 좌우로 새 나가게 잘라 낸다. 모서리를 둥글리지 않는
+      // 것은 무대가 이제 카드가 아니라 화면 그 자체이기 때문이다. 화면
+      // 네 귀퉁이가 깎여 있으면 그 뒤에 또 무언가 있는 것처럼 보인다.
+      child: ClipRect(
         child: Stack(
           fit: StackFit.expand,
           children: [
@@ -228,7 +199,6 @@ class _CharacterStage extends StatelessWidget {
               color: color,
             ),
             SafeArea(
-              bottom: false,
               child: Padding(
                 padding: const EdgeInsets.only(
                   top: AppSpacing.md,
@@ -291,6 +261,29 @@ class _CharacterStage extends StatelessWidget {
                             // 꾸미러 가는 문은 아래 버튼이 맡는다. 개구리는
                             // 다시 한마디 하는 자리로 돌아왔다.
                             showEncouragement: true,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    // 버튼도 무대 위에 얹힌다. 회색 바탕에 따로 앉아 있던
+                    // 때에는 화면이 장면과 조작 판으로 갈라져 보였다.
+                    Center(
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 640),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.screenHorizontal,
+                          ),
+                          child: AppearTransition(
+                            delay: AppMotion.stagger * 5,
+                            child: _ActionRow(
+                              color: color,
+                              missionDone: missionDone,
+                              missionTotal: missionTotal,
+                              onMissionTap: onMissionTap,
+                              onClosetTap: onClosetTap,
+                            ),
                           ),
                         ),
                       ),

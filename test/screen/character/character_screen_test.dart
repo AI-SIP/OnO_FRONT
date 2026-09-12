@@ -231,16 +231,50 @@ void main() {
       expect(find.byType(CosmeticStageFrog), findsOneWidget);
     });
 
+    testWidgets('무대가 화면을 끝까지 덮는다', (tester) async {
+      // 배경이 개구리 발치에서 끊기고 그 아래 90px 남짓이 아무 역할도 없는
+      // 연보라 빈 면으로 남아 있었다. 버튼 둘도 그 빈 면 위에 떠 있었다.
+      await pumpCharacter(tester);
+
+      final screen = tester.getSize(find.byType(CharacterScreen));
+      final ground = tester.getRect(find.byType(CosmeticStageGround));
+
+      expect(ground.top, 0.0);
+      expect(ground.bottom, screen.height);
+      expect(ground.width, screen.width);
+    });
+
+    testWidgets('버튼 둘이 무대 위에 같은 크기로 얹힌다', (tester) async {
+      await pumpCharacter(tester);
+
+      final ground = tester.getRect(find.byType(CosmeticStageGround));
+      final mission = tester.getRect(find.text('미션'));
+      final closet = tester.getRect(find.text('꾸미기'));
+
+      // 둘 다 무대 안에 있다. 회색 바탕에 따로 앉아 있으면 화면이 장면과
+      // 조작 판으로 갈라져 보인다.
+      expect(ground.bottom, greaterThan(closet.bottom));
+      expect(ground.bottom, greaterThan(mission.bottom));
+      // 같은 줄에 나란히 선다.
+      expect((mission.center.dy - closet.center.dy).abs(), lessThan(2.0));
+    });
+
     testWidgets('개구리가 무대 바닥에 선다', (tester) async {
       // 남는 자리 한가운데에 띄워 두면 발밑에 빈 면이 한 뼘 남는다. 배경을
       // 걸쳤을 때는 지면에서 뜬 것으로 보이고, 안 걸쳤을 때는 그 자리가 아무
-      // 역할도 없는 빈 테마색으로 남는다.
+      // 역할도 없는 빈 테마색으로 남는다. 무대가 화면을 덮은 뒤로 발밑에
+      // 있는 것은 버튼 줄뿐이다.
       await pumpCharacter(tester);
 
       final frog = tester.getRect(find.byType(CosmeticStageFrog));
+      final button = tester.getRect(find.text('꾸미기'));
       final ground = tester.getRect(find.byType(CosmeticStageGround));
 
-      expect(ground.bottom - frog.bottom, lessThan(24.0));
+      expect(button.top - frog.bottom, greaterThan(0.0));
+      expect(button.top - frog.bottom, lessThan(40.0));
+      // 무대는 버튼 아래까지 이어진다. 배경이 개구리 발치에서 끊기면 그 아래가
+      // 아무 역할도 없는 빈 면이 된다.
+      expect(ground.bottom, greaterThan(button.bottom));
     });
 
     testWidgets('개구리가 무대 폭을 거의 다 쓴다', (tester) async {
