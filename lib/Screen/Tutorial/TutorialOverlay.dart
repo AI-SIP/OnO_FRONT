@@ -36,6 +36,31 @@ class _TutorialOverlayState extends State<TutorialOverlay>
   static const Curve _motionCurve = AppMotion.enter;
   static const double _speechBorderWidth = 1.0;
 
+  /// 안내 카드가 스크롤 없이 들어가려면 대략 이만큼은 있어야 한다.
+  /// 글자 크기 1배에서 가장 긴 단계를 실제로 재서(폰 320dp 392, 태블릿 341)
+  /// 조금 올려 잡은 값이다. 글자 배율을 곱해서 쓴다.
+  ///
+  /// 카드를 대상 위에 둘지 아래에 둘지 고르는 데만 쓰는 값이다. 카드 높이를
+  /// 이걸로 정하지는 않는다. 고른 자리에서 쓸 수 있는 높이는 언제나 그
+  /// 자리에 실제로 남은 만큼이라, 이 값이 실제와 어긋나도 자리를 덜 좋게
+  /// 고르는 것에서 끝나고 카드가 잘리지는 않는다.
+  static const double _phoneCardRoom = 400.0;
+  static const double _tabletCardRoom = 350.0;
+
+  /// 이만큼도 안 되는 자리라면 대상을 비켜 줘도 카드가 너무 좁아 보람이 없다.
+  static const double _usableCardRoom = 240.0;
+
+  /// 이보다 작은 대상은 화면 아래에 앉은 카드에 통째로 가려진다.
+  /// + 추가 버튼이 56dp 다.
+  static const double _smallTargetHeight = 160.0;
+
+  /// 계산 결과가 0 이하로 내려가도 카드에 이만큼은 준다. 안에서
+  /// 스크롤되더라도 카드가 아예 안 그려지는 것보다는 낫다.
+  static const double _minCardHeight = 120.0;
+
+  /// 강조 테두리를 알아볼 수 있는 최소 높이.
+  static const double _minHighlightHeight = 24.0;
+
   Rect? _targetRect;
   String? _lastStepId;
 
@@ -426,62 +451,47 @@ class _TutorialOverlayState extends State<TutorialOverlay>
         bottomObstruction + kBottomNavigationBarHeight + 12.0;
     final availableBottom = size.height - reservedBottom;
     final minCardTop = safeTop + 12;
-    final availableCardHeight = availableBottom - minCardTop;
     final isTablet = mediaQuery.size.shortestSide >= 600;
     final cardWidth = isTablet ? 560.0 : size.width - 32;
     final cardLeft = size.width >= 600 ? (size.width - cardWidth) / 2 : 16.0;
-    final cardMaxHeight = availableCardHeight > 0 ? availableCardHeight : 0.0;
-    // 카드 높이는 그리기 전에 알 수 없어서 짐작한 값으로 자리를 잡는다.
-    // 그런데 글자 크기를 키운 기기에서는 제목과 설명이 여러 줄로 늘어나
-    // 짐작한 값보다 카드가 훨씬 커진다. 삼성 기기는 기본 글자도 크고
-    // 접근성에서 더 키우는 사용자도 많아서, 짐작을 그대로 두면 카드가
-    // 아래로 삐져나가 버튼이 하단 내비게이션에 깔린다.
+    // 글자 크기를 키운 기기에서는 제목과 설명이 여러 줄로 늘어나 카드가
+    // 그만큼 커진다. 삼성 기기는 기본 글자도 크고 접근성에서 더 키우는
+    // 사용자도 많다. 카드를 대상 위와 아래 중 어디에 둘지 고를 때 이걸
+    // 같이 본다.
     final textScale = mediaQuery.textScaler.scale(1.0);
-    final estimatedCardHeight = (isTablet ? 310.0 : 230.0) * textScale;
-    final layoutCardHeight = estimatedCardHeight > cardMaxHeight
-        ? cardMaxHeight
-        : estimatedCardHeight;
-
-    var cardTop = availableBottom - layoutCardHeight - 8;
-    if (rect != null) {
-      final below = rect.bottom + 18;
-      final above = rect.top - layoutCardHeight - 18;
-      // 가리키는 것이 화면 아래쪽에 있으면 설명 카드를 위에 둔다. 그러지
-      // 않으면 카드가 기본 자리인 하단에 눌러앉아 정작 가리키는 버튼을
-      // 덮어 버린다. + 추가 버튼을 설명하는 단계가 그랬다.
-      final targetIsLow = rect.center.dy > size.height / 2;
-      if (targetIsLow && above > minCardTop) {
-        cardTop = above;
-      } else if (below + layoutCardHeight < availableBottom) {
-        cardTop = below;
-      } else if (above > safeTop) {
-        cardTop = above;
-      }
-    }
-    final maxCardTop = availableBottom - layoutCardHeight;
-    final clampedMaxCardTop = maxCardTop < minCardTop ? minCardTop : maxCardTop;
-    cardTop = cardTop.clamp(minCardTop, clampedMaxCardTop).toDouble();
-    final highlightMaxTop = size.height - bottomObstruction - 24;
-    final clampedHighlightMaxTop =
-        highlightMaxTop < safeTop + 8 ? safeTop + 8 : highlightMaxTop;
-    final highlightMaxHeight = size.height - safeTop - bottomObstruction - 16;
-    final clampedHighlightMaxHeight =
-        highlightMaxHeight < 24.0 ? 24.0 : highlightMaxHeight;
+    final slot = _cardSlot(
+      targetRect: rect,
+      minCardTop: minCardTop,
+      availableBottom: availableBottom,
+      requiredRoom: (isTablet ? _tabletCardRoom : _phoneCardRoom) * textScale,
+    );
+    final highlight = rect == null
+        ? null
+        : _highlightBand(
+            targetRect: rect,
+            screen: size,
+            // 강조 사각형은 위로는 상태 바 아래에서, 아래로는 하단 탭 바
+            // 위에서 끊는다. 4/7 `레벨과 성장` 의 대상 키가 화면 전체를
+            // 차지하는 무대(_CharacterStage)에 붙어 있어서, 끊지 않으면
+            // 강조 테두리가 탭 바까지 함께 감쌌다. 탭 바는 어느 단계에서도
+            // 설명하는 대상이 아니다.
+            top: safeTop + 8,
+            bottomLimit: size.height -
+                bottomObstruction -
+                kBottomNavigationBarHeight -
+                8,
+          );
 
     return Stack(
       children: [
-        if (rect != null)
+        if (highlight != null)
           AnimatedPositioned(
             duration: _motionDuration,
             curve: _motionCurve,
-            left: (rect.left - 8).clamp(8.0, size.width - 24).toDouble(),
-            top: (rect.top - 8)
-                .clamp(safeTop + 8, clampedHighlightMaxTop)
-                .toDouble(),
-            width: (rect.width + 16).clamp(24.0, size.width - 16).toDouble(),
-            height: (rect.height + 16)
-                .clamp(24.0, clampedHighlightMaxHeight)
-                .toDouble(),
+            left: highlight.left,
+            top: highlight.top,
+            width: highlight.width,
+            height: highlight.height,
             child: IgnorePointer(
               child: AnimatedOpacity(
                 duration: _motionDuration,
@@ -518,17 +528,14 @@ class _TutorialOverlayState extends State<TutorialOverlay>
           duration: _motionDuration,
           curve: _motionCurve,
           left: cardLeft,
-          top: cardTop,
+          // 위 변이 아니라 아래 변을 잡는다. 카드는 제 내용만큼 위로 자라고,
+          // 고른 자리에 실제로 남은 높이로만 묶인다. 그래서 `이전`·`다음` 이
+          // 하단 내비게이션에 깔리는 일도, 남은 자리를 못 쓰고 설명이
+          // 잘리는 일도 없다.
+          bottom: size.height - slot.bottom,
           width: cardWidth,
-          // 카드가 자리 잡은 곳부터 아래로 실제로 쓸 수 있는 높이로 묶는다.
-          // 예전에는 화면 전체에서 계산한 cardMaxHeight 로 묶어서, 카드가
-          // cardTop 아래로 얼마든지 자랄 수 있었다. 짐작한 높이보다 카드가
-          // 크면 그만큼 아래로 삐져나가 `이전`·`다음` 이 하단 내비게이션에
-          // 깔리거나 아예 화면 밖으로 나갔다.
           child: ConstrainedBox(
-            constraints: BoxConstraints(
-              maxHeight: _cardAvailableHeight(availableBottom, cardTop),
-            ),
+            constraints: BoxConstraints(maxHeight: slot.maxHeight),
             child: AnimatedSwitcher(
               duration: AppMotion.fast,
               switchInCurve: AppMotion.enter,
@@ -705,13 +712,103 @@ class _TutorialOverlayState extends State<TutorialOverlay>
     );
   }
 
-  /// 카드가 [cardTop] 에 자리 잡았을 때 아래로 쓸 수 있는 높이다.
+  /// 안내 카드가 놓일 자리다. 카드 아래 변의 y 좌표와, 그 자리에서 위로
+  /// 쓸 수 있는 높이를 준다.
   ///
-  /// 화면이 아주 작아 계산 결과가 0 이하로 내려가면 카드가 아예 안 그려진다.
-  /// 그럴 바에는 최소한만 확보해 두고 안에서 스크롤시키는 편이 낫다.
-  double _cardAvailableHeight(double availableBottom, double cardTop) {
-    final height = availableBottom - cardTop;
-    return height < 120.0 ? 120.0 : height;
+  /// 카드는 아래 변을 고정하고 제 내용만큼 위로 자란다. 그래서 자리를 잡는
+  /// 데 카드 높이를 미리 알 필요가 없다. 예전에는 위 변을 정해야 해서
+  /// 높이를 짐작했고(폰 230, 태블릿 310에 글자 배율), 짐작이 실제보다 작으면
+  /// 카드가 그만큼 바닥 쪽으로 내려앉아 위로 남아 있던 자리를 스스로
+  /// 버렸다. 설명이 긴 단계에서 카드 안에 스크롤이 생긴 것이 이 때문이다.
+  ///
+  /// 고르는 순서는 이렇다. 먼저 대상 위와 아래 중 카드가 다 들어가는
+  /// ([requiredRoom] 만큼 남는) 쪽을 쓰고, 둘 다 들어가면 넓은 쪽을 쓴다.
+  /// 어느 쪽을 골라도 카드는 대상을 덮지 않는다.
+  ///
+  /// 둘 다 모자라면 대상을 덮더라도 화면 아래에 붙이고 쓸 수 있는 높이를 다
+  /// 쓴다. 목록처럼 대상이 화면을 거의 다 차지하는 단계가 여기로 온다.
+  /// 카드가 그 일부만 덮으니 설명하는 것은 계속 보이고, 대신 설명이 다
+  /// 보인다.
+  ///
+  /// 대상이 작으면 이야기가 다르다. 2/7 `오답노트 작성 시작` 의 + 추가
+  /// 버튼은 56dp 짜리라 화면 아래에 앉은 카드에 통째로 가려진다. 그런
+  /// 단계는 카드가 좁아져 안에서 스크롤이 생겨도 비켜 주는 편이 낫다.
+  /// 설명하는 것이 안 보이면 안내가 아니다.
+  ({double bottom, double maxHeight}) _cardSlot({
+    required Rect? targetRect,
+    required double minCardTop,
+    required double availableBottom,
+    required double requiredRoom,
+  }) {
+    // 대상과 카드 사이 간격, 그리고 카드와 하단 사이 간격이다.
+    const gap = 18.0;
+    const bottomPad = 8.0;
+
+    final defaultBottom = availableBottom - bottomPad;
+    final fullRoom = defaultBottom - minCardTop;
+
+    if (targetRect != null) {
+      final aboveBottom = targetRect.top - gap;
+      final above = (
+        bottom: aboveBottom,
+        room: aboveBottom - minCardTop,
+      );
+      // 아래를 고르면 카드는 기본 자리인 화면 아래에 그대로 두고 높이만
+      // 묶는다. 그러면 카드 위 변이 대상 아래로 내려온다.
+      final below = (
+        bottom: defaultBottom,
+        room: defaultBottom - (targetRect.bottom + gap),
+      );
+      // 넓은 쪽을 먼저 본다.
+      final ordered =
+          above.room >= below.room ? [above, below] : [below, above];
+
+      for (final slot in ordered) {
+        if (slot.room >= requiredRoom && slot.bottom <= defaultBottom) {
+          return (bottom: slot.bottom, maxHeight: slot.room);
+        }
+      }
+      if (targetRect.height <= _smallTargetHeight) {
+        for (final slot in ordered) {
+          if (slot.room >= _usableCardRoom && slot.bottom <= defaultBottom) {
+            return (bottom: slot.bottom, maxHeight: slot.room);
+          }
+        }
+      }
+    }
+
+    return (
+      bottom: defaultBottom,
+      maxHeight: fullRoom < _minCardHeight ? _minCardHeight : fullRoom,
+    );
+  }
+
+  /// 대상을 감쌀 강조 사각형이다.
+  ///
+  /// [top] 과 [bottomLimit] 사이로 자른다. 대상이 화면을 통째로 차지해도
+  /// 강조가 상태 바나 하단 탭 바까지 넘어가지 않게 하는 것이 이 자르기다.
+  Rect _highlightBand({
+    required Rect targetRect,
+    required Size screen,
+    required double top,
+    required double bottomLimit,
+  }) {
+    var bandTop = targetRect.top - 8;
+    var bandBottom = targetRect.bottom + 8;
+    if (bandTop < top) bandTop = top;
+    if (bandBottom > bottomLimit) bandBottom = bottomLimit;
+    if (bandBottom - bandTop < _minHighlightHeight) {
+      bandTop = bandBottom - _minHighlightHeight;
+      if (bandTop < top) bandTop = top;
+    }
+    final height = bandBottom - bandTop;
+
+    return Rect.fromLTWH(
+      (targetRect.left - 8).clamp(8.0, screen.width - 24).toDouble(),
+      bandTop,
+      (targetRect.width + 16).clamp(24.0, screen.width - 16).toDouble(),
+      height < _minHighlightHeight ? _minHighlightHeight : height,
+    );
   }
 
   double _maxBottomInset(double padding, double viewPadding, double gesture) {
