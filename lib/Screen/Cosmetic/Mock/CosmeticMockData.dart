@@ -22,7 +22,15 @@ class CosmeticMockData {
   static const String baseImageUrl = 'assets/Cosmetic/BASE.png';
 
   /// 개구리 본체가 들어가는 층. 배경(100)·배낭(200) 뒤, 옷(400) 앞이다.
+  ///
+  /// 배낭은 자리가 아니라 아이템이 층을 덮어써서 200 에 온다([_backLayerOrder]).
   static const int baseLayerOrder = 300;
+
+  /// 등에 메는 것이 그려지는 층. 개구리 본체(300) 바로 뒤다.
+  ///
+  /// 자리가 아니라 **아이템**이 들고 있는 값이다. 배낭과 앞가방이 같은 `BAG`
+  /// 자리를 쓰지만 하나는 개구리 뒤, 하나는 옷 위에 그려져야 한다.
+  static const int _backLayerOrder = 200;
 
   /// 지금 하나뿐인 세트.
   static const String graduateSetId = 'graduate';
@@ -90,11 +98,11 @@ class CosmeticMockData {
       'nameKo': '배경',
       'composited': true,
     },
-    // 등에 메는 것이라 개구리 뒤에 깔린다. 앞으로 메는 것은 BAG(450) 이다.
-    {'slot': 'BACK', 'layerOrder': 200, 'nameKo': '배낭', 'composited': true},
     {'slot': 'OUTFIT', 'layerOrder': 400, 'nameKo': '옷', 'composited': true},
-    // 가방 세 종이 전부 앞으로 메는 그림이라 개구리 뒤(200)에 두면 몸통이 덮어
-    // 끈 조각만 보인다. 옷 위(450)로 올린다. 등에 메는 것은 BACK(200) 이다.
+    // **자리 하나에 그리는 층이 둘인 유일한 자리다.** 앞으로 메는 가방 셋은
+    // 개구리 뒤(200)에 두면 몸통이 덮어 끈 조각만 보여서 옷 위(450)에 그린다.
+    // 등에 메는 배낭 둘은 반대로 개구리 뒤여야 해서 아이템이 층을 200 으로
+    // 덮어쓴다. 사용자에게는 둘 다 `가방` 한 자리다.
     {'slot': 'BAG', 'layerOrder': 450, 'nameKo': '가방', 'composited': true},
     {'slot': 'NECK', 'layerOrder': 500, 'nameKo': '목', 'composited': true},
     {'slot': 'FACE', 'layerOrder': 600, 'nameKo': '얼굴', 'composited': true},
@@ -137,10 +145,12 @@ class CosmeticMockData {
     // ── 오답노트 작성 ──
     _item('bag_mini_backpack', 'BAG', '미니 백팩', 2, _noteWrite),
     _item('prop_notebook', 'HAND', '공책', 3, _noteWrite),
-    _item('back_backpack_navy', 'BACK', '남색 배낭', 5, _noteWrite),
+    _item('back_backpack_navy', 'BAG', '남색 배낭', 5, _noteWrite,
+        layerOrder: _backLayerOrder),
     _item('prop_study', 'HAND', '공부 소품', 6, _noteWrite),
     _item('bag_waist_pouch', 'BAG', '허리 가방', 8, _noteWrite),
-    _item('back_backpack_canvas', 'BACK', '캔버스 배낭', 9, _noteWrite),
+    _item('back_backpack_canvas', 'BAG', '캔버스 배낭', 9, _noteWrite,
+        layerOrder: _backLayerOrder),
     _item('bag_crossbody_satchel', 'BAG', '크로스백', 11, _noteWrite),
     _item('bg_study', 'BACKGROUND', '공부방', 12, _noteWrite),
     _item('prop_tumbler', 'HAND', '텀블러', 13, _noteWrite),
@@ -227,6 +237,7 @@ class CosmeticMockData {
     String? ability, {
     String? setId,
     bool fullBody = false,
+    int? layerOrder,
   }) {
     return {
       'itemKey': itemKey,
@@ -242,6 +253,9 @@ class CosmeticMockData {
       // 소매와 바짓단이 그려진 옷이다. 뒤에 전신 개구리를 두면 원래 팔다리가
       // 옷 밖으로 삐져나와서, 본체를 머리만 있는 그림으로 바꿔 깐다.
       'fullBody': fullBody,
+      // 자리의 그리는 층을 덮어쓸 때만 값이 있다. 서버도 같은 모양으로
+      // 내려주고, 비어 있으면 자리 값을 쓴다.
+      'layerOrder': layerOrder,
     };
   }
 }

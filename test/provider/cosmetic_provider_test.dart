@@ -26,8 +26,8 @@ void main() {
 
       expect(provider.equipped, {
         'BACKGROUND': 'bg_space', // 출석 Lv.15
-        'BACK': 'back_backpack_canvas', // 오답노트 Lv.9
         'OUTFIT': 'outfit_graduate', // 총 학습 Lv.20
+        // 배낭과 앞가방이 한 자리라 다섯 중 하나만 걸린다.
         'BAG': 'bag_crossbody_satchel', // 오답노트 Lv.11
         'NECK': 'neck_medal', // 복습 세트 Lv.12
         'FACE': 'face_moustache', // 문제 복습 Lv.14
@@ -108,9 +108,10 @@ void main() {
       expect(provider.equipped, {
         // 출석 6: 봄(2) · 여름(4) · 비 오는 날(6) 중 가장 늦은 것
         'BACKGROUND': 'bg_rainy',
-        'BAG': 'bag_mini_backpack', // 오답노트 2
+        // 가방 자리에서 가장 늦게 열린 것. 미니 백팩(2)보다 남색 배낭(5)이
+        // 늦다. 둘이 한 자리라 하나만 걸린다.
+        'BAG': 'back_backpack_navy', // 오답노트 5
         'HAND': 'prop_study', // 오답노트 6
-        'BACK': 'back_backpack_navy', // 오답노트 5
         'FACE': 'glasses_sun', // 문제 복습 6
         'HEAD': 'hat_beanie', // 문제 복습 4
         'NECK': 'neck_scarf_coral', // 복습 세트 6
@@ -431,6 +432,78 @@ void main() {
     });
   });
 
+  group('가방 자리의 그리는 층', () {
+    // 등에 메는 배낭과 앞으로 메는 가방이 한 자리다. 사용자에게는 `가방` 한
+    // 탭이고 그중 하나만 걸린다. 자리를 합치면서 그리는 층까지 하나로 묶으면
+    // 배낭이 개구리 앞으로 나와 몸통 위에 얹힌다. **합치면서 제일 깨지기 쉬운
+    // 지점이라 여기서 잠근다.**
+    int orderOf(CosmeticProvider provider, String itemKey) {
+      return provider.layers
+          .firstWhere((layer) => layer.itemKey == itemKey)
+          .layerOrder;
+    }
+
+    int baseOrder(CosmeticProvider provider) {
+      return provider.layers.firstWhere((layer) => layer.isBase).layerOrder;
+    }
+
+    test('배낭은 개구리 뒤에 그려진다', () {
+      for (final itemKey in ['back_backpack_navy', 'back_backpack_canvas']) {
+        final provider = maxed()..equip('BAG', itemKey);
+
+        expect(provider.equipped['BAG'], itemKey);
+        expect(
+          orderOf(provider, itemKey),
+          lessThan(baseOrder(provider)),
+          reason: '$itemKey 가 개구리 앞으로 나왔다',
+        );
+      }
+    });
+
+    test('앞으로 메는 가방은 개구리 앞에 그려진다', () {
+      for (final itemKey in [
+        'bag_mini_backpack',
+        'bag_waist_pouch',
+        'bag_crossbody_satchel',
+      ]) {
+        final provider = maxed()..equip('BAG', itemKey);
+
+        expect(
+          orderOf(provider, itemKey),
+          greaterThan(baseOrder(provider)),
+          reason: '$itemKey 가 개구리 뒤로 갔다',
+        );
+      }
+    });
+
+    test('둘은 같은 자리라 하나만 걸린다', () {
+      final provider = maxed()
+        ..equip('BAG', 'back_backpack_navy')
+        ..equip('BAG', 'bag_waist_pouch');
+
+      expect(provider.equipped['BAG'], 'bag_waist_pouch');
+      expect(
+        provider.layers.where((layer) => layer.slot == 'BAG'),
+        hasLength(1),
+      );
+    });
+
+    test('그려지는 순서가 실제로 배낭 · 개구리 · 앞가방이다', () {
+      // 층 번호만 보면 정렬이 틀렸어도 통과한다. 목록에 놓인 차례로 본다.
+      final back = maxed()..equip('BAG', 'back_backpack_canvas');
+      final backIndex = back.layers
+          .indexWhere((layer) => layer.itemKey == 'back_backpack_canvas');
+      final backBase = back.layers.indexWhere((layer) => layer.isBase);
+      expect(backIndex, lessThan(backBase));
+
+      final front = maxed()..equip('BAG', 'bag_crossbody_satchel');
+      final frontIndex = front.layers
+          .indexWhere((layer) => layer.itemKey == 'bag_crossbody_satchel');
+      final frontBase = front.layers.indexWhere((layer) => layer.isBase);
+      expect(frontIndex, greaterThan(frontBase));
+    });
+  });
+
   group('무대에 깔 배경', () {
     // 옷장 탭의 무대는 배경 파츠 한 장을 개구리 사각형에서 꺼내 화면 전체로
     // 편다. 512 정사각형이 둥근 사각형에 갇혀 있으면 개구리가 선 무대가 아니라
@@ -463,14 +536,16 @@ void main() {
     test('배낭은 개구리와 함께 남는다', () {
       // 배낭도 개구리보다 뒤에 그려지지만 개구리 몸에 맞춰 그린 그림이다.
       // 무대로 내보내면 자리가 어긋난다. layersWithoutBackdrop 과 다른 점이다.
-      final provider = maxed();
+      final provider = maxed()..equip('BAG', 'back_backpack_canvas');
 
       expect(
-        provider.layersOnStage.any((layer) => layer.slot == 'BACK'),
+        provider.layersOnStage
+            .any((layer) => layer.itemKey == 'back_backpack_canvas'),
         isTrue,
       );
       expect(
-        provider.layersWithoutBackdrop.any((layer) => layer.slot == 'BACK'),
+        provider.layersWithoutBackdrop
+            .any((layer) => layer.itemKey == 'back_backpack_canvas'),
         isFalse,
       );
     });

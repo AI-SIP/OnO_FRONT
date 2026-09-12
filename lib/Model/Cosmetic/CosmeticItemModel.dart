@@ -60,6 +60,18 @@ class CosmeticItemModel {
   /// [CosmeticLoadoutModel.defaultBaseHeadImageUrl] 로 바꿔 깐다.
   final bool fullBody;
 
+  /// 이 아이템만 따로 쓰는 그리는 층. 비어 있으면 자리의 값을 쓴다.
+  ///
+  /// **자리 하나에 그리는 층이 둘인 경우가 있다.** 가방이 그렇다. 등에 메는
+  /// 배낭은 개구리 뒤(200)에, 앞으로 메는 가방은 옷 위(450)에 그려야 하는데
+  /// 사용자에게는 둘 다 `가방` 한 자리다. 자리를 둘로 나누면 탭이 하나 늘고
+  /// 그중 하나만 걸 수 있다는 것이 안 보인다. 자리는 하나로 두고 **아이템이
+  /// 층만 덮어쓴다.**
+  ///
+  /// 서버가 `items[].layerOrder` 로 내려준다. 앱은 어떤 아이템이 예외인지
+  /// 모른다. 그 판단은 그림을 그린 쪽이 한다.
+  final int? layerOrder;
+
   const CosmeticItemModel({
     required this.itemKey,
     required this.slot,
@@ -72,6 +84,7 @@ class CosmeticItemModel {
     this.requiredAbility,
     this.setNameKo,
     this.fullBody = false,
+    this.layerOrder,
   });
 
   /// 한 건을 읽는다. 키나 슬롯이 없으면 쓸 수 없는 줄이라 null 이다.
@@ -108,8 +121,12 @@ class CosmeticItemModel {
       conflictsWith: _asStringList(json['conflictsWith']),
       owned: json['owned'] == true,
       fullBody: json['fullBody'] == true,
+      layerOrder: _asInt(json['layerOrder']),
     );
   }
+
+  /// 이 아이템을 그릴 층. 제 값이 있으면 그것을, 없으면 [slotOrder] 를 쓴다.
+  int layerOrderOr(int slotOrder) => layerOrder ?? slotOrder;
 
   /// 이 아이템을 걸 수 있는지. 가지고 있지 않으면 못 건다.
   bool get isEquippable => owned;
@@ -143,6 +160,7 @@ class CosmeticItemModel {
       conflictsWith: conflictsWith,
       owned: owned ?? this.owned,
       fullBody: fullBody,
+      layerOrder: layerOrder,
     );
   }
 

@@ -246,14 +246,19 @@ class CosmeticLoadoutModel {
       final item = itemOf(itemKey);
       if (item == null || item.imageUrl.isEmpty) continue;
 
+      // 자리 하나에 그리는 층이 둘인 경우가 있다. 등에 메는 배낭과 앞으로
+      // 메는 가방이 같은 `가방` 자리인데 개구리 뒤와 앞으로 갈린다. 아이템이
+      // 제 층을 들고 있으면 그것을 쓴다.
+      final order = item.layerOrderOr(slot.layerOrder);
+
       entries.add(
         _OrderedLayer(
-          order: slot.layerOrder,
+          order: order,
           tieBreak: 0,
           sequence: sequence++,
           layer: CosmeticLayerModel(
             imageUrl: item.imageUrl,
-            layerOrder: slot.layerOrder,
+            layerOrder: order,
             slot: slot.slot,
             itemKey: item.itemKey,
           ),
@@ -271,15 +276,16 @@ class CosmeticLoadoutModel {
       final slot = slotOf(unlock.slot);
       // 방금 얻은 것이라도 개구리에 겹치지 않는 자리면 그리지 않는다.
       if (slot != null && !slot.composited) continue;
+      final unlockOrder = itemOf(unlock.itemKey)?.layerOrder;
       entries.add(
         _OrderedLayer(
           // 슬롯을 모르면 맨 앞에 둔다. 새로 얻은 것은 보여야 한다.
-          order: slot?.layerOrder ?? _maxLayerOrder + 1,
+          order: unlockOrder ?? slot?.layerOrder ?? _maxLayerOrder + 1,
           tieBreak: 0,
           sequence: sequence++,
           layer: CosmeticLayerModel(
             imageUrl: unlock.imageUrl,
-            layerOrder: slot?.layerOrder ?? _maxLayerOrder + 1,
+            layerOrder: unlockOrder ?? slot?.layerOrder ?? _maxLayerOrder + 1,
             slot: unlock.slot,
             itemKey: unlock.itemKey,
           ),

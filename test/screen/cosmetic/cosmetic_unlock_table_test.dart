@@ -206,18 +206,32 @@ void main() {
             'setNameKo',
             'conflictsWith',
             'fullBody',
+            // 자리의 그리는 층을 덮어쓸 때만 값이 있다. 가방 자리가 쓴다.
+            'layerOrder',
           },
           reason: '${item['itemKey']} 의 필드가 계약과 다르다',
         );
       }
     });
 
-    test('BACK 은 배낭이고 BAG 이 가방이다', () {
-      // 앞으로 메는 것이 BAG(450), 등에 메는 것이 BACK(200) 이다. 둘의 이름을
-      // 서로 바꿔 적으면 격자 탭 두 개가 통째로 뒤바뀐다.
-      final slots = CosmeticMockData.loadout.slots;
-      expect(slots.firstWhere((s) => s.slot == 'BACK').nameKo, '배낭');
-      expect(slots.firstWhere((s) => s.slot == 'BAG').nameKo, '가방');
+    test('가방은 자리 하나뿐이고 배낭만 층을 덮어쓴다', () {
+      // 등에 메는 배낭과 앞으로 메는 가방이 한 자리다. 자리는 옷 위(450)에
+      // 그리고, 배낭 둘만 아이템이 층을 개구리 뒤(200)로 덮어쓴다. 이 값이
+      // 빠지면 배낭이 개구리 앞으로 나와 몸통 위에 얹힌다.
+      final catalog = CosmeticMockData.loadout;
+
+      expect(catalog.slots.any((s) => s.slot == 'BACK'), isFalse);
+      final bag = catalog.slots.firstWhere((s) => s.slot == 'BAG');
+      expect(bag.nameKo, '가방');
+      expect(bag.layerOrder, 450);
+
+      for (final item in catalog.itemsOfSlot('BAG')) {
+        expect(
+          item.layerOrder,
+          item.itemKey.startsWith('back_') ? 200 : isNull,
+          reason: item.itemKey,
+        );
+      }
     });
   });
 }
