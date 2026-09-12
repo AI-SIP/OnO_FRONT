@@ -439,12 +439,12 @@ class _CharacterStage extends StatelessWidget {
 /// 미션과 꾸미기로 가는 버튼 두 개.
 ///
 /// 예전에는 미션 목록이 이 탭에 통째로 붙어 있었고 꾸미기는 무대 구석의 작은
-/// 칩이었다. 둘 다 같은 무게의 버튼으로 내려놓는다. 꾸미기 쪽만 진하게 채운
-/// 것은 이 탭이 옷장이라서다. 여기서 가장 하고 싶은 일이 갈아입기다.
+/// 칩이었다. 둘 다 같은 무게의 버튼으로 내려놓는다.
 ///
-/// **둘 다 채운 버튼이다.** 한쪽만 흰 바탕에 테두리면 같은 폭인데도 그쪽이
-/// 얇고 작아 보여 저울이 기운다. 모양은 똑같이 두고 **색의 농도로만** 둘을
-/// 가른다. 진한 쪽이 이 탭에서 먼저 누를 것이다.
+/// **둘 다 밝은 버튼이다.** 한때 미션은 테마색을 옅게 깔고 꾸미기는 진하게
+/// 채웠는데, 무대가 화면을 덮으면서 그림 위에 보라 덩어리 둘이 얹힌 꼴이 됐다.
+/// 이제 바탕은 흰색이고 테마색은 **테두리와 글자와 아이콘에만** 쓴다. 어느
+/// 쪽이 먼저 누를 것인지는 색의 양이 아니라 테두리의 진하기와 두께로 말한다.
 class _ActionRow extends StatelessWidget {
   final Color color;
   final int missionDone;
@@ -471,7 +471,7 @@ class _ActionRow extends StatelessWidget {
             // 오늘 몇 개를 했는지는 여기서만 말한다. 버튼에 숫자가 붙어 있으면
             // 목록을 걷어 내고도 오늘 할 일이 남았는지 알 수 있다.
             badge: missionTotal > 0 ? '$missionDone / $missionTotal' : null,
-            strong: false,
+            primary: false,
             color: color,
             onTap: onMissionTap,
           ),
@@ -481,7 +481,7 @@ class _ActionRow extends StatelessWidget {
           child: _ActionButton(
             icon: Icons.checkroom_rounded,
             label: '꾸미기',
-            strong: true,
+            primary: true,
             color: color,
             onTap: onClosetTap,
           ),
@@ -491,6 +491,20 @@ class _ActionRow extends StatelessWidget {
   }
 }
 
+/// 무대 위에 떠 있는 버튼 한 개.
+///
+/// **게임 화면의 키처럼 두께를 가진다.** 배경 그림 위에 평평한 사각형을
+/// 얹으면 그림에 붙은 무늬인지 누를 수 있는 것인지 알기 어렵다. 아래쪽에
+/// 흐림 없는 테마색 그림자를 한 겹 깔아 **버튼의 옆면**을 만든다. 그 아래로
+/// 검은 그림자를 옅게 한 번 더 깔아 바닥에서 떨어뜨린다. 누르면
+/// [PressableScale] 이 줄여 주므로 옆면이 그만큼 눌려 들어간 것처럼 보인다.
+///
+/// **바탕은 흰색이되 완전히 불투명하지는 않다.** 살짝 비쳐야 무대 위에 놓인
+/// 것으로 읽힌다. 그렇다고 많이 비치면 밤하늘 배경에서 글자가 안 읽힌다.
+///
+/// 밝은 배경에서는 흰 바탕이 배경에 묻힐 수 있어서 **검은 그림자**가, 어두운
+/// 배경에서는 테두리가 안 보일 수 있어서 **흰 바탕 자체**가 버튼을 떼어 놓는다.
+/// 둘을 같이 두면 어느 배경에서나 읽힌다.
 class _ActionButton extends StatelessWidget {
   final IconData icon;
   final String label;
@@ -498,12 +512,11 @@ class _ActionButton extends StatelessWidget {
   /// 버튼 오른쪽에 붙는 작은 숫자. 없으면 안 붙는다.
   final String? badge;
 
-  /// 테마색을 진하게 채울지.
+  /// 이 탭에서 먼저 누를 것인지.
   ///
-  /// false 여도 **채운 버튼이다.** 같은 테마색을 아주 옅게 깐다. 한쪽만 흰
-  /// 바탕에 테두리면 폭이 같아도 그쪽이 얇고 작아 보여 둘의 저울이 기운다.
-  /// 모양은 똑같이 두고 색의 농도로만 가른다.
-  final bool strong;
+  /// 색의 양이 아니라 **테두리의 진하기와 옆면의 두께**로 가른다. 한쪽을
+  /// 테마색으로 꽉 채우면 그림 위에 색 덩어리가 생긴다.
+  final bool primary;
 
   final Color color;
   final VoidCallback onTap;
@@ -511,16 +524,17 @@ class _ActionButton extends StatelessWidget {
   const _ActionButton({
     required this.icon,
     required this.label,
-    required this.strong,
+    required this.primary,
     required this.color,
     required this.onTap,
     this.badge,
   });
 
+  /// 버튼 옆면의 두께.
+  double get _lip => primary ? 4.0 : 3.0;
+
   @override
   Widget build(BuildContext context) {
-    final foreground = strong ? Colors.white : color;
-
     return PressableScale(
       onTap: onTap,
       scale: 0.96,
@@ -530,22 +544,31 @@ class _ActionButton extends StatelessWidget {
           vertical: AppSpacing.md,
         ),
         decoration: BoxDecoration(
-          color: strong
-              ? color
-              : Color.alphaBlend(
-                  color.withValues(alpha: 0.12),
-                  AppColors.surface,
-                ),
+          // 먼저 누를 쪽만 테마색을 아주 옅게 섞는다. 색이 아니라 온도 차다.
+          color: primary
+              ? Color.alphaBlend(color.withValues(alpha: 0.07), Colors.white)
+                  .withValues(alpha: 0.94)
+              : Colors.white.withValues(alpha: 0.90),
           borderRadius: BorderRadius.circular(AppRadius.large),
-          boxShadow: strong
-              ? [
-                  BoxShadow(
-                    color: color.withValues(alpha: 0.28),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
-                  ),
-                ]
-              : null,
+          border: Border.all(
+            color: color.withValues(alpha: primary ? 0.55 : 0.30),
+            width: primary ? 1.6 : 1.2,
+          ),
+          boxShadow: [
+            // 흐리지 않은 그림자 = 버튼의 옆면.
+            BoxShadow(
+              color: color.withValues(alpha: primary ? 0.38 : 0.20),
+              blurRadius: 0,
+              offset: Offset(0, _lip),
+            ),
+            // 바닥에서 떨어뜨리는 그림자. 밝은 배경에서 흰 바탕이 묻히지
+            // 않게 하는 것도 이 한 겹이다.
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.10),
+              blurRadius: 12,
+              offset: Offset(0, _lip + 3),
+            ),
+          ],
         ),
         // 글자를 키운 기기에서 아이콘과 글자가 버튼 폭을 넘는다. 넘치게 두는
         // 대신 줄여서 앉힌다.
@@ -554,32 +577,34 @@ class _ActionButton extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(icon, size: 18, color: foreground),
+              Icon(icon, size: 18, color: color),
               const SizedBox(width: AppSpacing.sm),
               StandardText(
                 text: label,
                 fontSize: 14,
-                color: foreground,
+                color: color,
                 fontWeight: FontWeight.w700,
                 maxLines: 1,
               ),
               if (badge != null) ...[
                 const SizedBox(width: AppSpacing.sm),
+                // 버튼 안에서 유일하게 색이 꽉 찬 자리다. 회색으로 두면
+                // 숫자가 버튼에 얹힌 딱지처럼 따로 논다. 작아서 색 덩어리가
+                // 되지 않으면서, 오늘 할 일이 남았다는 것을 먼저 보게 한다.
                 Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 7,
-                    vertical: 1,
+                    horizontal: 8,
+                    vertical: 2,
                   ),
                   decoration: BoxDecoration(
-                    color: strong
-                        ? Colors.white.withValues(alpha: 0.24)
-                        : color.withValues(alpha: 0.16),
+                    color: color,
                     borderRadius: BorderRadius.circular(AppRadius.full),
                   ),
                   child: StandardText(
                     text: badge!,
                     fontSize: 11,
-                    color: foreground,
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
                     maxLines: 1,
                   ),
                 ),
