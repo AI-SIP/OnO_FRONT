@@ -251,11 +251,16 @@ class _ThemeDialogState extends State<ThemeDialog> {
 
   // ── 위쪽 미리보기 판 ─────────────────────────────────────────
 
-  /// 고른 색과 그 색을 어떻게 얻었는지를 크게 보여 주는 자리.
+  /// 고른 색을 크게 보여 주는 자리.
   ///
   /// 잠긴 칸을 누르면 같은 자리가 그 칸의 조건으로 바뀐다. 색 하나를 크게
   /// 띄워 두면 작은 동그라미 24개만 볼 때보다 "이 색으로 바꾼다"가 훨씬 잘
   /// 와닿는다.
+  ///
+  /// 이름 아래 설명은 **할 말이 있을 때만** 붙인다. 열린 색에는 아무것도 안
+  /// 붙는다. 어느 레벨에서 열었는지는 이미 지난 일이라 고르는 데 쓸모가 없고,
+  /// 색마다 한 줄씩 따라붙으면 판이 설명문처럼 보인다. 잠긴 색의 조건은
+  /// 지금 행동을 정하는 정보라서 남긴다.
   Widget _buildPreview(UserInfoModel? userInfo, Duration duration) {
     final inspected = _inspectedIndex;
     final isLocked = inspected != null;
@@ -265,10 +270,11 @@ class _ThemeDialogState extends State<ThemeDialog> {
     final Color panelAccent;
     final String overline;
     final String title;
-    final String detail;
+    final String? detail;
 
     if (index == null) {
       // 저장된 색이 24종 어디에도 없는 경우. 예전 버전에서 고른 색일 수 있다.
+      // 이름이 없는 이유를 말해 줘야 해서 이때는 한 줄 붙인다.
       swatchColor = _selectedColor ?? AppColors.borderStrong;
       panelAccent = swatchColor;
       overline = '지금 쓰는 색';
@@ -287,16 +293,17 @@ class _ThemeDialogState extends State<ThemeDialog> {
       if (isLocked) {
         // 잠긴 칸을 보고 있을 때는 판 전체가 그 능력치 색을 띤다. 어느 갈래를
         // 올려야 하는지가 글자보다 색으로 먼저 읽힌다.
+        //
+        // 능력치는 열 머리와 같은 짧은 이름으로 부른다. 긴 이름을 쓰면 좁은
+        // 폭에서 두 줄이 되고, 그때 판이 커지면서 격자가 밀린다.
         panelAccent = lane.colors.accent;
         overline = '아직 잠긴 색';
-        detail = '${lane.fullLabel} Lv.$requiredLevel 필요 · '
+        detail = '${lane.shortLabel} Lv.$requiredLevel 필요 · '
             '지금 Lv.$currentLevel';
       } else {
         panelAccent = swatchColor;
         overline = '고른 색';
-        detail = rowIndex == 0
-            ? '처음부터 열려 있는 색이에요'
-            : '${lane.fullLabel} Lv.$requiredLevel 로 연 색이에요';
+        detail = null;
       }
     }
 
@@ -338,7 +345,9 @@ class _ThemeDialogState extends State<ThemeDialog> {
                   isLocked: isLocked,
                   duration: duration,
                 ),
-                const SizedBox(width: AppSpacing.lg),
+                // 동그라미와 이름은 한 덩어리로 읽혀야 한다. 사이가 넓으면
+                // 색과 이름이 서로 다른 것을 가리키는 것처럼 보인다.
+                const SizedBox(width: AppSpacing.sm),
                 Expanded(
                   child: AnimatedSwitcher(
                     duration: duration,
@@ -362,13 +371,14 @@ class _ThemeDialogState extends State<ThemeDialog> {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
-                        StandardText(
-                          text: detail,
-                          fontSize: 12,
-                          color: AppColors.textSecondary,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
+                        if (detail != null)
+                          StandardText(
+                            text: detail,
+                            fontSize: 12,
+                            color: AppColors.textSecondary,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                       ],
                     ),
                   ),
