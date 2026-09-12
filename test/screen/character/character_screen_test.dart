@@ -187,6 +187,75 @@ void main() {
       );
     });
 
+    testWidgets('배경 파츠는 개구리 사각형이 아니라 무대에 깔린다', (tester) async {
+      // 512 정사각형을 둥근 사각형에 가둬 두면 개구리가 선 무대가 아니라
+      // 벽에 걸린 사진 한 장으로 읽힌다. 그 그림이 무대의 조명과 바닥
+      // 그림자까지 통째로 덮어서 연출이 화면에 나오지도 않았다.
+      final cosmetic =
+          CosmeticProvider(mockLevels: CosmeticAbilityLevels.uniform(12));
+      await pumpCharacter(tester, cosmetic: cosmetic);
+
+      final backdrop = cosmetic.stageBackdrop;
+      expect(backdrop, isNotNull, reason: '더미 기본 차림에 배경이 걸려 있어야 한다');
+      expect(find.byType(CosmeticStageGround), findsOneWidget);
+
+      final stack = tester.widget<FrogLayerStack>(
+        find.descendant(
+          of: find.byType(CosmeticStageFrog),
+          matching: find.byType(FrogLayerStack),
+        ),
+      );
+      expect(
+        stack.layers.any((layer) => layer.itemKey == backdrop!.itemKey),
+        isFalse,
+        reason: '배경이 개구리 사각형에 그대로 남아 있다',
+      );
+    });
+
+    testWidgets('배경을 안 걸쳐도 무대가 비지 않는다', (tester) async {
+      // 배경이 없으면 무대의 조명·빛무리·바닥 그림자가 살아나야 한다.
+      final cosmetic =
+          CosmeticProvider(mockLevels: CosmeticAbilityLevels.uniform(12))
+            ..unequipAll();
+      await pumpCharacter(tester, cosmetic: cosmetic);
+
+      expect(cosmetic.stageBackdrop, isNull);
+      expect(tester.takeException(), isNull);
+      expect(find.byType(CosmeticStageGround), findsOneWidget);
+      expect(find.byType(CosmeticStageFrog), findsOneWidget);
+    });
+
+    testWidgets('개구리가 무대 바닥에 선다', (tester) async {
+      // 남는 자리 한가운데에 띄워 두면 발밑에 빈 면이 한 뼘 남는다. 배경을
+      // 걸쳤을 때는 지면에서 뜬 것으로 보이고, 안 걸쳤을 때는 그 자리가 아무
+      // 역할도 없는 빈 테마색으로 남는다.
+      await pumpCharacter(tester);
+
+      final frog = tester.getRect(find.byType(CosmeticStageFrog));
+      final ground = tester.getRect(find.byType(CosmeticStageGround));
+
+      expect(ground.bottom - frog.bottom, lessThan(24.0));
+    });
+
+    testWidgets('개구리가 무대 폭을 거의 다 쓴다', (tester) async {
+      // 빛무리 몫까지 다 빼면 무대 폭의 85% 까지만 쓸 수 있어서 이 탭의
+      // 주인공치고 작았다. 빛무리는 가장자리로 갈수록 투명해지는 원이라
+      // 무대 밖으로 조금 새어 나가도 눈에 띄지 않는다.
+      await pumpCharacter(tester);
+
+      final ground = tester.getRect(find.byType(CosmeticStageGround));
+      final side = tester
+          .getSize(
+            find.descendant(
+              of: find.byType(CosmeticStageFrog),
+              matching: find.byType(FrogLayerStack),
+            ),
+          )
+          .width;
+
+      expect(side, greaterThan(ground.width * 0.9));
+    });
+
     testWidgets('개구리를 누르면 격려 말풍선이 뜬다', (tester) async {
       // 꾸미러 가는 문은 이제 버튼이 따로 맡는다. 개구리를 누르는 것은
       // 한마디 듣는 일로 되돌렸다.
@@ -383,17 +452,16 @@ void main() {
     });
 
     testWidgets('총 학습과 능력치 넷이 한 덩어리로 붙어 있다', (tester) async {
-      // 카드를 둘로 나누면 서로 다른 것을 말하는 것처럼 갈라져 보인다.
-      // 사이는 옅은 선 하나뿐이라 개구리까지의 거리보다 훨씬 가까워야 한다.
+      // 카드를 둘로 나누면 서로 다른 것을 말하는 것처럼 갈라져 보인다. 둘
+      // 사이에 있는 것은 여백 12 · 머리카락 한 올 · 여백 12 뿐이라, 카드 하나
+      // 분량의 테두리와 안쪽 여백이 끼어들 자리가 없다.
       await pumpCharacter(tester);
 
       final gaugeBottom =
           tester.getRect(find.byType(AnimatedLinearGauge)).bottom;
       final statTop = tester.getRect(find.byType(AbilityStatPanel)).top;
-      final statBottom = tester.getRect(find.byType(AbilityStatPanel)).bottom;
-      final frogTop = tester.getRect(find.byType(CosmeticStageFrog)).top;
 
-      expect(statTop - gaugeBottom, lessThan(frogTop - statBottom));
+      expect(statTop - gaugeBottom, lessThan(40.0));
     });
 
     testWidgets('능력치 아이콘은 마이페이지가 쓰던 그 아이콘이다', (tester) async {

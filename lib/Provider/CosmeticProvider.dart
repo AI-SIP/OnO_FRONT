@@ -134,6 +134,52 @@ class CosmeticProvider with ChangeNotifier {
     return _loadoutAt(_levels, next).resolveLayers();
   }
 
+  /// 무대 바닥에 깔 **배경 파츠 한 장**. 안 걸쳤으면 null 이다.
+  ///
+  /// 옷장 탭의 무대는 이 한 장을 개구리 사각형에서 꺼내 **화면 전체로 펼친다.**
+  /// 512 정사각형 그대로 둥근 사각형에 갇혀 있으면 캐릭터가 서 있는 무대가
+  /// 아니라 벽에 걸린 사진 한 장으로 읽히고, 무대가 깔아 둔 조명과 바닥
+  /// 그림자를 그 그림이 통째로 덮어 버린다.
+  ///
+  /// **가장 뒤에 그려지는 슬롯**의 것이다. 그 자리가 배경이라는 것은 서버가
+  /// 정한 그리는 순서에 이미 들어 있어서, 슬롯 이름을 앱에 박아 두지 않아도
+  /// 알 수 있다. 등짐도 개구리보다 뒤에 그려지지만 그것은 개구리 몸에 맞춰
+  /// 그린 그림이라 무대로 내보내면 자리가 어긋난다. 그래서 맨 뒤 한 자리만 본다.
+  CosmeticLayerModel? get stageBackdrop {
+    final slot = _backdropSlot;
+    if (slot == null) return null;
+    for (final layer in layers) {
+      if (layer.slot == slot) return layer;
+    }
+    return null;
+  }
+
+  /// [stageBackdrop] 한 장을 뺀 층들. 개구리 사각형에 그대로 남을 것들이다.
+  ///
+  /// [layersWithoutBackdrop] 과 다르다. 그쪽은 개구리 본체보다 **뒤에 그려지는
+  /// 것을 전부** 걷어 내서 등짐까지 사라진다. 이쪽은 맨 뒤 한 장만 뺀다. 무대가
+  /// 그 한 장을 대신 그리고, 등짐은 개구리와 같은 사각형에 남아야 한다.
+  List<CosmeticLayerModel> get layersOnStage {
+    final slot = _backdropSlot;
+    if (slot == null) return layers;
+    return [
+      for (final layer in layers)
+        if (layer.slot != slot) layer,
+    ];
+  }
+
+  /// 가장 뒤에 그려지는 슬롯의 키. 슬롯이 하나도 없으면 null.
+  String? get _backdropSlot {
+    final slots = _catalog.slots;
+    if (slots.isEmpty) return null;
+
+    var lowest = slots.first;
+    for (final slot in slots) {
+      if (slot.layerOrder < lowest.layerOrder) lowest = slot;
+    }
+    return lowest.slot;
+  }
+
   /// 이 슬롯에 들어가는 아이템들. 카탈로그 순서를 지킨다.
   List<CosmeticItemModel> itemsOfSlot(String slot) => loadout.itemsOfSlot(slot);
 

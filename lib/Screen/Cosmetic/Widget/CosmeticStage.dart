@@ -5,6 +5,111 @@ import '../../../Module/Design/AppRadius.dart';
 import '../../../Module/Motion/AppMotion.dart';
 import '../../User/Widget/FrogCharacter.dart';
 
+/// 무대 바닥이다. 개구리가 **액자가 아니라 장면 위에** 서게 만든다.
+///
+/// 배경 파츠는 512 정사각형 그림이다. 개구리 사각형에 같이 깔면 자리는 딱
+/// 맞지만, 둥근 사각형에 갇힌 512 그림은 캐릭터가 선 무대가 아니라 **벽에
+/// 걸린 사진 한 장**으로 보인다. 3D 로 렌더한 일러스트가 납작한 UI 카드 안에
+/// 박혀 있으니 화면의 나머지와 톤도 안 맞는다. 그리고 그 그림이 무대가 깔아
+/// 둔 조명과 바닥 그림자를 통째로 덮어서, 공들여 넣은 연출이 화면에 나오지도
+/// 않았다.
+///
+/// 그래서 배경 한 장만 개구리에게서 떼어 **무대 영역 전체에 깐다.**
+///
+/// - **걸쳤을 때**: 폭이 아니라 높이에 맞춰 채운다([BoxFit.cover]). 정사각형
+///   그림을 세로로 긴 무대에 넣으면 좌우가 잘리는 대신 하늘에서 바닥까지가
+///   온전히 남는다. 위아래를 자르면 지평선이 어디로든 밀려서 개구리 발밑이
+///   안 맞는다. 아래쪽에 붙여 두므로 **그림의 바닥이 무대의 바닥**이고, 그
+///   위에 선 개구리의 발치가 그대로 지면이 된다.
+/// - **안 걸쳤을 때**: 무대의 테마색 그라데이션이 그대로 보인다. 위아래가
+///   똑같은 면이면 개구리가 허공에 뜬 조각으로 보이므로, 아래쪽에 같은
+///   테마색을 한 겹 더 깔아 지평선을 만든다.
+///
+/// 배경을 걸쳤을 때 위쪽만 하얗게 덮는 것은 성장 카드가 앉을 자리를 만들기
+/// 위해서다. 밤하늘이나 우주를 걸치면 사진 위에 바로 앉은 흰 카드의 글자가
+/// 읽히지 않는다. 개구리가 선 아래쪽은 사진 그대로 둔다.
+class CosmeticStageGround extends StatelessWidget {
+  /// 깔아 둘 배경 파츠. `CosmeticProvider.stageBackdrop` 을 그대로 넘긴다.
+  /// null 이면 지평선만 그린다.
+  final CosmeticLayerModel? backdrop;
+
+  /// 강조색. 사용자가 테마에서 고른 색이다.
+  final Color color;
+
+  const CosmeticStageGround({
+    super.key,
+    required this.backdrop,
+    required this.color,
+  });
+
+  /// 지평선이 차지하는 높이의 비율.
+  static const double _horizonFactor = 0.34;
+
+  @override
+  Widget build(BuildContext context) {
+    final layer = backdrop;
+    if (layer == null || layer.imageUrl.isEmpty) return _buildHorizon();
+
+    final url = layer.imageUrl;
+    final isNetwork = url.startsWith('http');
+
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        Image(
+          image: isNetwork
+              ? NetworkImage(url) as ImageProvider<Object>
+              : AssetImage(url),
+          fit: BoxFit.cover,
+          alignment: Alignment.bottomCenter,
+          // 배경 한 장을 못 읽었다고 무대가 비면 안 된다. 지평선으로 돌아간다.
+          errorBuilder: (context, error, stackTrace) => _buildHorizon(),
+        ),
+        IgnorePointer(
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Colors.white.withValues(alpha: 0.72),
+                  Colors.white.withValues(alpha: 0.0),
+                ],
+                stops: const [0.0, 0.44],
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// 배경을 안 걸쳤을 때 개구리가 설 자리.
+  Widget _buildHorizon() {
+    return IgnorePointer(
+      child: Align(
+        alignment: Alignment.bottomCenter,
+        child: FractionallySizedBox(
+          heightFactor: _horizonFactor,
+          widthFactor: 1.0,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  color.withValues(alpha: 0.0),
+                  color.withValues(alpha: 0.16),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 /// 개구리가 서 있는 무대다.
 ///
 /// 옷장의 주인공은 격자가 아니라 개구리다. 그런데 파츠 그림에는 투명한 데가

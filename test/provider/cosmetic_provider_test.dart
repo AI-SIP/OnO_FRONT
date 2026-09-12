@@ -388,6 +388,51 @@ void main() {
     });
   });
 
+  group('무대에 깔 배경', () {
+    // 옷장 탭의 무대는 배경 파츠 한 장을 개구리 사각형에서 꺼내 화면 전체로
+    // 편다. 512 정사각형이 둥근 사각형에 갇혀 있으면 개구리가 선 무대가 아니라
+    // 벽에 걸린 사진 한 장으로 읽히고, 무대가 깔아 둔 조명과 바닥 그림자를
+    // 그 그림이 통째로 덮어 버린다.
+    test('가장 뒤에 그려지는 자리의 것을 무대로 내보낸다', () {
+      final provider = maxed();
+
+      expect(provider.stageBackdrop?.itemKey, 'bg_space');
+      expect(provider.stageBackdrop?.slot, 'BACKGROUND');
+    });
+
+    test('배경을 안 걸치면 없다', () {
+      final provider = maxed()..unequipAll();
+
+      expect(provider.stageBackdrop, isNull);
+      // 뺄 것이 없으면 층이 하나도 안 줄어든다. 모델에 == 이 없어서 목록끼리
+      // 견주지 않고 길이로 본다.
+      expect(provider.layersOnStage.length, provider.layers.length);
+    });
+
+    test('개구리에게는 배경 한 장만 빠진 층들이 간다', () {
+      final provider = maxed();
+
+      final onStage = provider.layersOnStage;
+      expect(onStage.length, provider.layers.length - 1);
+      expect(onStage.any((layer) => layer.slot == 'BACKGROUND'), isFalse);
+    });
+
+    test('등짐은 개구리와 함께 남는다', () {
+      // 등짐도 개구리보다 뒤에 그려지지만 개구리 몸에 맞춰 그린 그림이다.
+      // 무대로 내보내면 자리가 어긋난다. layersWithoutBackdrop 과 다른 점이다.
+      final provider = maxed();
+
+      expect(
+        provider.layersOnStage.any((layer) => layer.slot == 'BACK'),
+        isTrue,
+      );
+      expect(
+        provider.layersWithoutBackdrop.any((layer) => layer.slot == 'BACK'),
+        isFalse,
+      );
+    });
+  });
+
   group('더미 카탈로그', () {
     test('에셋 경로가 모두 assets/Cosmetic 아래를 가리킨다', () {
       for (final item in CosmeticMockData.loadout.items) {

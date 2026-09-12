@@ -225,61 +225,100 @@ class _CharacterStage extends StatelessWidget {
           ),
         ],
       ),
-      child: SafeArea(
-        bottom: false,
-        child: Center(
-          child: ConstrainedBox(
-            // 태블릿에서 무대가 끝없이 넓어지지 않게 가운데로 모은다.
-            constraints: const BoxConstraints(maxWidth: 640),
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.screenHorizontal,
-                AppSpacing.md,
-                AppSpacing.screenHorizontal,
-                AppSpacing.lg,
-              ),
-              child: Column(
-                children: [
-                  AppearTransition(
-                    delay: AppMotion.stagger * 2,
-                    child: _buildGrowthCard(
-                      level: level,
-                      point: point,
-                      threshold: threshold,
-                      progress: progress,
-                      color: color,
-                      userInfo: userInfo,
-                      // 꾸미기 화면의 디버그 패널에서 레벨을 옮기면 눈금판도
-                      // 같이 움직인다. 한 번도 안 옮겼으면 서버가 준 진짜
-                      // 레벨을 그대로 보여 준다.
-                      levelOverrides: kDebugMode && cosmetic.levelsTouched
-                          ? cosmetic.levels
-                          : null,
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  Expanded(
-                    child: LayoutBuilder(
-                      builder: (context, constraints) => Center(
-                        child: CosmeticStageFrog(
-                          layers: cosmetic.layers,
-                          size: _frogSizeFor(constraints),
-                          color: color,
-                          // 갈아입기는 꾸미기 화면에서 한다. 여기서는 들썩일
-                          // 일이 없다.
-                          equipTick: 0,
-                          // 꾸미러 가는 문은 아래 버튼이 맡는다. 개구리는
-                          // 다시 한마디 하는 자리로 돌아왔다.
-                          showEncouragement: true,
+      // 배경 파츠가 무대 모서리를 넘지 않게, 그리고 개구리 빛무리가 좌우로
+      // 새 나가게 한꺼번에 잘라 낸다. 무대 자체가 그릇이므로 개구리는 제
+      // 액자를 따로 가질 필요가 없다.
+      child: ClipRRect(
+        borderRadius: const BorderRadius.vertical(
+          bottom: Radius.circular(AppRadius.xlarge + 8),
+        ),
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            CosmeticStageGround(
+              backdrop: cosmetic.stageBackdrop,
+              color: color,
+            ),
+            SafeArea(
+              bottom: false,
+              child: Padding(
+                padding: const EdgeInsets.only(
+                  top: AppSpacing.md,
+                  bottom: AppSpacing.md,
+                ),
+                child: Column(
+                  children: [
+                    // 성장 카드만 좌우 여백과 폭 제한을 쓴다. 개구리는 무대를
+                    // 끝까지 쓴다.
+                    Center(
+                      child: ConstrainedBox(
+                        // 태블릿에서 카드가 끝없이 넓어지지 않게 모은다.
+                        constraints: const BoxConstraints(maxWidth: 640),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.screenHorizontal,
+                          ),
+                          child: AppearTransition(
+                            delay: AppMotion.stagger * 2,
+                            child: _buildGrowthCard(
+                              level: level,
+                              point: point,
+                              threshold: threshold,
+                              progress: progress,
+                              color: color,
+                              userInfo: userInfo,
+                              // 꾸미기 화면의 디버그 패널에서 레벨을 옮기면
+                              // 눈금판도 같이 움직인다. 한 번도 안 옮겼으면
+                              // 서버가 준 진짜 레벨을 그대로 보여 준다.
+                              levelOverrides:
+                                  kDebugMode && cosmetic.levelsTouched
+                                      ? cosmetic.levels
+                                      : null,
+                            ),
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                ],
+                    const SizedBox(height: AppSpacing.md),
+                    Expanded(
+                      child: LayoutBuilder(
+                        // 개구리는 무대 **바닥에** 선다. 가운데에 띄워 두면
+                        // 발밑에 빈 면이 한 뼘 남아서, 배경을 걸쳤을 때는
+                        // 지면에서 떠 보이고 안 걸쳤을 때는 그 자리가 아무
+                        // 역할도 없는 빈 테마색으로 남는다.
+                        builder: (context, constraints) => OverflowBox(
+                          // 빛무리가 무대 폭을 살짝 넘는다. 가장자리로 갈수록
+                          // 투명해지는 빛이라 잘려도 티가 안 나고, 그만큼
+                          // 개구리를 크게 그릴 수 있다.
+                          maxWidth: double.infinity,
+                          // 위에서 내려오는 것은 꽉 찬 제약이다. 아래 한계를
+                          // 0 으로 풀지 않으면 개구리 상자가 남는 높이만큼
+                          // 늘어나 버리고, 그러면 아래에 붙이라는 말이 아무
+                          // 일도 하지 않는다.
+                          minWidth: 0,
+                          minHeight: 0,
+                          alignment: Alignment.bottomCenter,
+                          child: CosmeticStageFrog(
+                            // 배경 한 장은 무대가 대신 그린다. 여기 남는 것은
+                            // 개구리 몸에 맞춰 그려진 것들뿐이다.
+                            layers: cosmetic.layersOnStage,
+                            size: _frogSizeFor(constraints),
+                            color: color,
+                            // 갈아입기는 꾸미기 화면에서 한다. 여기서는 들썩일
+                            // 일이 없다.
+                            equipTick: 0,
+                            // 꾸미러 가는 문은 아래 버튼이 맡는다. 개구리는
+                            // 다시 한마디 하는 자리로 돌아왔다.
+                            showEncouragement: true,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
+          ],
         ),
       ),
     );
@@ -421,18 +460,30 @@ class _CharacterStage extends StatelessWidget {
     return (threshold * ((level % 4) + 1) / 5).round();
   }
 
-  /// 개구리 한 변의 길이. 남은 자리에 들어가는 만큼만 크게 그린다.
+  /// 개구리 한 변의 길이. 남은 자리에 들어가는 만큼 크게 그린다.
   ///
   /// [CosmeticStageFrog] 는 빛무리와 바닥 그림자 때문에 한 변보다 가로로
-  /// 1.18배, 세로로 1.04배 넓게 자리를 쓴다. 그 몫까지 빼고 계산해야 무대가
-  /// 좁아졌을 때 넘치지 않는다. 아래 한계를 두지 않는 것도 같은 이유다.
-  /// 글자를 아주 크게 키우면 개구리가 작아질지언정 화면이 깨지면 안 된다.
+  /// 1.18배, 세로로 1.04배 넓게 자리를 쓴다.
+  ///
+  /// **가로는 그 몫을 다 빼지 않는다.** 1.18 을 그대로 빼면 무대 폭의 85%
+  /// 까지만 쓸 수 있어서 개구리가 이 탭의 주인공치고 작았다. 빛무리는
+  /// 가장자리로 갈수록 투명해지는 원이라 무대 밖으로 조금 새어 나가도 눈에
+  /// 띄지 않는다. 1.04 만 빼고 나머지는 무대가 잘라 낸다.
+  ///
+  /// **세로는 다 뺀다.** 바닥 그림자는 아래로 실제로 그려지는 것이라, 그 몫을
+  /// 안 빼면 개구리가 성장 카드를 밀어 올린다. 아래 한계를 두지 않는 것도 같은
+  /// 이유다. 글자를 아주 크게 키우면 개구리가 작아질지언정 화면이 깨지면 안 된다.
+  ///
+  /// 위 한계는 파츠 원본의 한 변이다. 그보다 크게 그려 봐야 뭉갠다.
   double _frogSizeFor(BoxConstraints constraints) {
-    final byWidth = constraints.maxWidth / 1.18;
+    final byWidth = constraints.maxWidth / 1.04;
     final byHeight = constraints.maxHeight / 1.04;
     final smaller = byWidth < byHeight ? byWidth : byHeight;
-    return smaller.clamp(0.0, 300.0);
+    return smaller.clamp(0.0, _frogMaxSize);
   }
+
+  /// 파츠 그림 원본의 한 변.
+  static const double _frogMaxSize = 512.0;
 }
 
 /// 미션과 꾸미기로 가는 버튼 두 개.
