@@ -489,8 +489,12 @@ class _CharacterStage extends StatelessWidget {
 /// 미션과 꾸미기로 가는 버튼 두 개.
 ///
 /// 예전에는 미션 목록이 이 탭에 통째로 붙어 있었고 꾸미기는 무대 구석의 작은
-/// 칩이었다. 둘 다 같은 무게의 버튼으로 내려놓는다. 꾸미기 쪽만 채운 버튼인
+/// 칩이었다. 둘 다 같은 무게의 버튼으로 내려놓는다. 꾸미기 쪽만 진하게 채운
 /// 것은 이 탭이 옷장이라서다. 여기서 가장 하고 싶은 일이 갈아입기다.
+///
+/// **둘 다 채운 버튼이다.** 한쪽만 흰 바탕에 테두리면 같은 폭인데도 그쪽이
+/// 얇고 작아 보여 저울이 기운다. 모양은 똑같이 두고 **색의 농도로만** 둘을
+/// 가른다. 진한 쪽이 이 탭에서 먼저 누를 것이다.
 class _ActionRow extends StatelessWidget {
   final Color color;
   final int missionDone;
@@ -517,7 +521,7 @@ class _ActionRow extends StatelessWidget {
             // 오늘 몇 개를 했는지는 여기서만 말한다. 버튼에 숫자가 붙어 있으면
             // 목록을 걷어 내고도 오늘 할 일이 남았는지 알 수 있다.
             badge: missionTotal > 0 ? '$missionDone / $missionTotal' : null,
-            filled: false,
+            strong: false,
             color: color,
             onTap: onMissionTap,
           ),
@@ -527,7 +531,7 @@ class _ActionRow extends StatelessWidget {
           child: _ActionButton(
             icon: Icons.checkroom_rounded,
             label: '꾸미기',
-            filled: true,
+            strong: true,
             color: color,
             onTap: onClosetTap,
           ),
@@ -544,8 +548,12 @@ class _ActionButton extends StatelessWidget {
   /// 버튼 오른쪽에 붙는 작은 숫자. 없으면 안 붙는다.
   final String? badge;
 
-  /// 테마색으로 채울지. false 면 흰 바탕에 테마색 테두리다.
-  final bool filled;
+  /// 테마색을 진하게 채울지.
+  ///
+  /// false 여도 **채운 버튼이다.** 같은 테마색을 아주 옅게 깐다. 한쪽만 흰
+  /// 바탕에 테두리면 폭이 같아도 그쪽이 얇고 작아 보여 둘의 저울이 기운다.
+  /// 모양은 똑같이 두고 색의 농도로만 가른다.
+  final bool strong;
 
   final Color color;
   final VoidCallback onTap;
@@ -553,7 +561,7 @@ class _ActionButton extends StatelessWidget {
   const _ActionButton({
     required this.icon,
     required this.label,
-    required this.filled,
+    required this.strong,
     required this.color,
     required this.onTap,
     this.badge,
@@ -561,7 +569,7 @@ class _ActionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final foreground = filled ? Colors.white : color;
+    final foreground = strong ? Colors.white : color;
 
     return PressableScale(
       onTap: onTap,
@@ -572,11 +580,14 @@ class _ActionButton extends StatelessWidget {
           vertical: AppSpacing.md,
         ),
         decoration: BoxDecoration(
-          color: filled ? color : AppColors.surface,
+          color: strong
+              ? color
+              : Color.alphaBlend(
+                  color.withValues(alpha: 0.12),
+                  AppColors.surface,
+                ),
           borderRadius: BorderRadius.circular(AppRadius.large),
-          border:
-              filled ? null : Border.all(color: color.withValues(alpha: 0.28)),
-          boxShadow: filled
+          boxShadow: strong
               ? [
                   BoxShadow(
                     color: color.withValues(alpha: 0.28),
@@ -610,9 +621,9 @@ class _ActionButton extends StatelessWidget {
                     vertical: 1,
                   ),
                   decoration: BoxDecoration(
-                    color: filled
+                    color: strong
                         ? Colors.white.withValues(alpha: 0.24)
-                        : color.withValues(alpha: 0.10),
+                        : color.withValues(alpha: 0.16),
                     borderRadius: BorderRadius.circular(AppRadius.full),
                   ),
                   child: StandardText(
