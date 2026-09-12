@@ -10,8 +10,9 @@ import '../../Module/Motion/PressableScale.dart';
 import '../../Module/Motion/TossPageRoute.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
+import '../../Provider/CosmeticProvider.dart';
 import '../../Provider/MissionProvider.dart';
-import 'MissionIcon.dart';
+import '../User/Widget/FrogCharacter.dart';
 import 'MissionPalette.dart';
 import 'MissionRewardChip.dart';
 import 'MissionTag.dart';
@@ -72,16 +73,22 @@ class TodayMissionCard extends StatelessWidget {
           ),
           child: Row(
             children: [
-              MissionIconBox(
-                iconKey: highlight?.iconKey ?? MissionIconKeys.fallback,
-                code: highlight?.code,
-                // 홈에서도 미션 화면과 같은 갈래 색을 쓴다.
-                colors: MissionPalette.colorsOf(
-                  code: highlight?.code,
-                  iconKey: highlight?.iconKey,
+              // 미션 갈래 그림 대신 그 사람이 꾸민 개구리를 세운다. 홈에서
+              // 처음 마주치는 자리라, 남의 아이콘이 아니라 내 캐릭터가 있는
+              // 편이 옷장으로 이어진다.
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: MissionPalette.colorsOf(
+                    code: highlight?.code,
+                    iconKey: highlight?.iconKey,
+                  ).surface,
+                  borderRadius: BorderRadius.circular(AppRadius.medium),
                 ),
-                padding: 6,
-                iconSize: 24,
+                child: FrogHeadAvatar(
+                  layers: context.watch<CosmeticProvider>().layers,
+                  size: 24,
+                ),
               ),
               const SizedBox(width: AppSpacing.md),
               Expanded(

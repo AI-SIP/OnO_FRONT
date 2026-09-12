@@ -2,7 +2,7 @@ import 'package:flutter/widgets.dart';
 
 /// 아래에 있는 게이지와 등장 모션을 처음부터 다시 재생시키는 장치다.
 ///
-/// 홈 화면은 탭 넷을 `IndexedStack` 으로 들고 있어서, 앱을 켜는 순간 마이
+/// 홈 화면은 탭 다섯을 `IndexedStack` 으로 들고 있어서, 앱을 켜는 순간 마이
 /// 페이지까지 함께 만들어진다. 그래서 게이지는 탭을 누르기도 전에 이미 다
 /// 차 있고, 정작 화면에 들어갔을 때는 아무것도 움직이지 않는다.
 ///
@@ -12,7 +12,7 @@ import 'package:flutter/widgets.dart';
 /// ```dart
 /// MotionReplayScope(
 ///   token: _visitSequence,
-///   child: ListView(children: [UserLevelCard(...), StreakCard(...)]),
+///   child: ListView(children: [ProfileEditCard(...), StreakCard(...)]),
 /// )
 /// ```
 ///

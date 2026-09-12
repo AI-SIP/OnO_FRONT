@@ -1,10 +1,9 @@
 import 'dart:ui';
 
 import 'package:firebase_analytics/firebase_analytics.dart';
+
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:ono/Model/Common/LoginStatus.dart';
-import 'package:ono/Module/User/ProfileAvatar.dart';
 import 'package:ono/Module/Util/UrlLauncher.dart';
 import 'package:provider/provider.dart';
 
@@ -14,20 +13,18 @@ import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/ScreenIndexProvider.dart';
 import '../../Provider/TutorialProvider.dart';
 import '../../Provider/UserProvider.dart';
-import '../../Service/Api/FileUpload/FileUploadService.dart';
 import '../Tutorial/TutorialTargets.dart';
 import '../Onboarding/LoginScreen.dart';
 import '../../Module/Motion/AppearTransition.dart';
 import '../../Module/Motion/MotionReplayScope.dart';
 import '../../Module/Motion/PressableScale.dart';
-import '../../Module/Motion/TossBottomSheet.dart';
 import '../../Module/Motion/TossPageRoute.dart';
 import 'Widget/AccountActionButtons.dart';
 import 'Widget/ReviewReportScreen.dart';
 import 'Widget/SettingMenuButtons.dart';
 import 'Widget/ThemeChangeButton.dart';
 import 'Widget/StreakCard.dart';
-import 'Widget/UserLevelCard.dart';
+import 'Widget/ProfileEditCard.dart';
 import '../../Module/Motion/TossDialog.dart';
 import '../../Module/Design/AppRadius.dart';
 import '../../Module/Design/AppColors.dart';
@@ -47,14 +44,16 @@ class SettingScreen extends StatefulWidget {
 
 class _SettingScreenState extends State<SettingScreen> {
   /// 마이 페이지가 홈의 몇 번째 탭인지. main.dart 의 widgetOptions 순서를 따른다.
-  static const int _myPageTabIndex = 3;
+  ///
+  /// 캐릭터 탭이 셋째 자리에 들어오면서 하나 밀렸다.
+  static const int _myPageTabIndex = 4;
 
   /// 카드가 하나씩 들어오는 간격.
   static const Duration _cardGap = Duration(milliseconds: 80);
 
   /// 이 탭에 몇 번째로 들어왔는지.
   ///
-  /// 홈이 탭 넷을 IndexedStack 으로 들고 있어서 앱을 켜는 순간 이 화면까지
+  /// 홈이 탭 다섯을 IndexedStack 으로 들고 있어서 앱을 켜는 순간 이 화면까지
   /// 함께 만들어진다. 그대로 두면 게이지가 탭을 누르기도 전에 다 차 있으므로,
   /// 들어올 때마다 이 값을 올려 게이지와 카드를 처음부터 다시 재생한다.
   int _visitSequence = 0;
@@ -125,8 +124,31 @@ class _SettingScreenState extends State<SettingScreen> {
                   padding: EdgeInsets.only(
                       bottom: screenHeight * 0.01, top: screenHeight * 0.02),
                   children: [
+                    // 레벨과 경험치는 캐릭터 탭이 가져갔다. 여기 맨 위에는
+                    // 내 사진과 이름이 온다. 마이페이지에서 가장 찾기 쉬워야
+                    // 하는 것이고, 예전에는 설정 안쪽에 숨어 있었다.
+                    AppearTransition(
+                      child: ProfileEditCard(themeProvider: themeProvider),
+                    ),
+                    SizedBox(height: screenHeight * 0.005),
+                    AppearTransition(
+                      delay: _cardGap,
+                      child: ThemeChangeButton(
+                        themeProvider: themeProvider,
+                        onTap: () {
+                          showTossDialog(
+                            context: context,
+                            builder: (BuildContext context) {
+                              return ThemeDialog();
+                            },
+                          );
+                        },
+                      ),
+                    ),
+                    SizedBox(height: screenHeight * 0.005),
                     if (isTabletLandscape)
                       AppearTransition(
+                        delay: _cardGap * 2,
                         child: Padding(
                           padding: EdgeInsets.symmetric(
                               horizontal: screenWidth * 0.04),
@@ -135,22 +157,17 @@ class _SettingScreenState extends State<SettingScreen> {
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
                                 Expanded(
-                                  child: UserLevelCard(
-                                    key: widget.tutorialTargets?.levelCardKey,
-                                    userInfo: userProvider.userInfoModel,
+                                  child: StreakCard(
+                                    key:
+                                        widget.tutorialTargets?.calendarCardKey,
                                     themeProvider: themeProvider,
-                                    userName:
-                                        userProvider.userInfoModel?.name ??
-                                            '이름 없음',
                                     horizontalMarginFactor: 0,
                                   ),
                                 ),
                                 SizedBox(width: screenWidth * 0.02),
                                 Expanded(
-                                  child: StreakCard(
-                                    key:
-                                        widget.tutorialTargets?.calendarCardKey,
-                                    themeProvider: themeProvider,
+                                  child: _buildReviewReportButton(
+                                    themeProvider,
                                     horizontalMarginFactor: 0,
                                   ),
                                 ),
@@ -161,29 +178,18 @@ class _SettingScreenState extends State<SettingScreen> {
                       )
                     else ...[
                       AppearTransition(
-                        child: UserLevelCard(
-                          key: widget.tutorialTargets?.levelCardKey,
-                          userInfo: userProvider.userInfoModel,
-                          themeProvider: themeProvider,
-                          userName: userProvider.userInfoModel?.name ?? '이름 없음',
-                        ),
-                      ),
-                    ],
-                    if (!isTabletLandscape) ...[
-                      SizedBox(height: screenHeight * 0.01),
-                      AppearTransition(
-                        delay: _cardGap,
+                        delay: _cardGap * 2,
                         child: StreakCard(
                           key: widget.tutorialTargets?.calendarCardKey,
                           themeProvider: themeProvider,
                         ),
                       ),
+                      SizedBox(height: screenHeight * 0.01),
+                      AppearTransition(
+                        delay: _cardGap * 3,
+                        child: _buildReviewReportButton(themeProvider),
+                      ),
                     ],
-                    SizedBox(height: screenHeight * 0.01),
-                    AppearTransition(
-                      delay: _cardGap * 2,
-                      child: _buildReviewReportButton(themeProvider),
-                    ),
                     SizedBox(height: screenHeight * 0.01),
                   ],
                 ),
@@ -457,275 +463,6 @@ class _MyPageSettingsScreen extends StatefulWidget {
 }
 
 class _MyPageSettingsScreenState extends State<_MyPageSettingsScreen> {
-  final ImagePicker _imagePicker = ImagePicker();
-  final FileUploadService _fileUploadService = FileUploadService();
-  bool _isUploadingProfileImage = false;
-
-  Future<void> _showProfileImageOptions() async {
-    if (_isUploadingProfileImage) return;
-    final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
-
-    // 손잡이와 모서리, 올라오는 속도는 showTossSheet 이 맞춘다.
-    await showTossSheet<void>(
-      context: context,
-      useRootNavigator: true,
-      isScrollControlled: false,
-      builder: (_) => Padding(
-        padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const StandardText(
-              text: '프로필 사진 변경',
-              fontSize: 16,
-              color: AppColors.textPrimary,
-              fontWeight: FontWeight.w700,
-            ),
-            const SizedBox(height: 16),
-            _buildSheetOption(
-              icon: Icons.photo_library_outlined,
-              label: '갤러리에서 선택',
-              color: themeProvider.primaryColor,
-              onTap: () {
-                Navigator.pop(context);
-                _pickFromGallery();
-              },
-            ),
-            const SizedBox(height: 8),
-            _buildSheetOption(
-              icon: Icons.person_outline,
-              label: '기본 이미지로 변경',
-              color: Colors.grey[600]!,
-              onTap: () {
-                Navigator.pop(context);
-                _resetToDefaultImage();
-              },
-            ),
-            const SizedBox(height: 8),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSheetOption({
-    required IconData icon,
-    required String label,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    return PressableScale(
-      onTap: onTap,
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        decoration: BoxDecoration(
-          color: Colors.grey[50],
-          borderRadius: BorderRadius.circular(AppRadius.medium),
-        ),
-        child: Row(
-          children: [
-            Icon(icon, size: 20, color: color),
-            const SizedBox(width: 12),
-            StandardText(
-                text: label, fontSize: 15, color: AppColors.textPrimary),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Future<void> _pickFromGallery() async {
-    final userProvider = Provider.of<UserProvider>(context, listen: false);
-    final pickedFile = await _imagePicker.pickImage(
-      source: ImageSource.gallery,
-      imageQuality: 90,
-    );
-    if (pickedFile == null) return;
-    if (!_isSupportedProfileImage(pickedFile.path)) {
-      _showProfileSnackBar('JPG, PNG, WEBP 이미지만 사용할 수 있어요.');
-      return;
-    }
-
-    setState(() => _isUploadingProfileImage = true);
-    try {
-      final imageUrl = await _fileUploadService.uploadImageFile(pickedFile);
-      await userProvider.updateUserProfileImageUrl(imageUrl);
-      FirebaseAnalytics.instance.logEvent(name: 'profile_image_updated');
-    } catch (_) {
-      if (!mounted) return;
-      _showProfileSnackBar('프로필 이미지 변경에 실패했습니다. 다시 시도해주세요.');
-    } finally {
-      if (mounted) setState(() => _isUploadingProfileImage = false);
-    }
-  }
-
-  Future<void> _resetToDefaultImage() async {
-    final userProvider = Provider.of<UserProvider>(context, listen: false);
-    setState(() => _isUploadingProfileImage = true);
-    try {
-      await userProvider.deleteUserProfileImage();
-      FirebaseAnalytics.instance.logEvent(name: 'profile_image_reset');
-    } catch (_) {
-      if (!mounted) return;
-      _showProfileSnackBar('기본 이미지 변경에 실패했습니다. 다시 시도해주세요.');
-    } finally {
-      if (mounted) setState(() => _isUploadingProfileImage = false);
-    }
-  }
-
-  bool _isSupportedProfileImage(String path) {
-    final extension = path.split('.').last.toLowerCase();
-    return extension == 'jpg' ||
-        extension == 'jpeg' ||
-        extension == 'png' ||
-        extension == 'webp';
-  }
-
-  Future<void> _showNameChangeDialog(String currentName) async {
-    final userProvider = Provider.of<UserProvider>(context, listen: false);
-    final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
-
-    await showTossDialog<void>(
-      context: context,
-      builder: (dialogContext) => _NameChangeDialog(
-        currentName: currentName,
-        themeProvider: themeProvider,
-        onSave: (newName) async {
-          await userProvider.updateUser(name: newName);
-          FirebaseAnalytics.instance.logEvent(name: 'username_updated');
-        },
-        onError: _showProfileSnackBar,
-      ),
-    );
-  }
-
-  void _showProfileSnackBar(String message) {
-    // 업로드 중 화면을 벗어나면 dispose 된 State 의 context 에 접근해 죽는다 (FLUTTER-15K)
-    if (!mounted) return;
-    AppToast.error(message);
-  }
-
-  Widget _buildProfileSection({
-    required BuildContext context,
-    required UserProvider userProvider,
-    required ThemeHandler themeProvider,
-  }) {
-    final mediaQuery = MediaQuery.of(context);
-    final screenHeight = mediaQuery.size.height;
-    final screenWidth = mediaQuery.size.width;
-    final userInfo = userProvider.userInfoModel;
-    final currentName = userInfo?.name ?? '이름 없음';
-
-    return Container(
-      margin: EdgeInsets.symmetric(
-        horizontal: screenWidth * 0.04,
-        vertical: screenHeight * 0.01,
-      ),
-      padding: EdgeInsets.all(screenHeight * 0.015),
-      decoration: BoxDecoration(
-        color: Colors.grey[50],
-        borderRadius: BorderRadius.circular(AppRadius.large),
-        border: Border.all(
-          color: Colors.grey[300]!,
-          width: 1,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  ProfileAvatar(
-                    imageUrl: userInfo?.profileImageUrl,
-                    size: 58,
-                    borderColor:
-                        themeProvider.primaryColor.withValues(alpha: 0.25),
-                    borderWidth: 1.2,
-                    backgroundColor:
-                        themeProvider.primaryColor.withValues(alpha: 0.06),
-                  ),
-                  Positioned(
-                    right: -2,
-                    bottom: -2,
-                    child: PressableScale(
-                      onTap: _isUploadingProfileImage
-                          ? null
-                          : _showProfileImageOptions,
-                      scale: 0.92,
-                      child: Container(
-                        width: 26,
-                        height: 26,
-                        decoration: BoxDecoration(
-                          color: themeProvider.primaryColor,
-                          shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white, width: 2),
-                        ),
-                        child: _isUploadingProfileImage
-                            ? const Padding(
-                                padding: EdgeInsets.all(6),
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: Colors.white,
-                                ),
-                              )
-                            : const Icon(
-                                Icons.photo_camera_outlined,
-                                size: 14,
-                                color: Colors.white,
-                              ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(width: screenHeight * 0.016),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    StandardText(
-                      text: currentName,
-                      fontSize: 15,
-                      color: AppColors.textPrimary,
-                      fontWeight: FontWeight.w700,
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 1,
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 10),
-              TextButton(
-                onPressed: () => _showNameChangeDialog(currentName),
-                style: TextButton.styleFrom(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  backgroundColor:
-                      themeProvider.primaryColor.withValues(alpha: 0.10),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppRadius.small),
-                  ),
-                ),
-                child: StandardText(
-                  text: '이름 변경',
-                  fontSize: 13,
-                  color: themeProvider.primaryColor,
-                  fontWeight: FontWeight.w700,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final userProvider = Provider.of<UserProvider>(context);
@@ -750,24 +487,8 @@ class _MyPageSettingsScreenState extends State<_MyPageSettingsScreen> {
             child: ListView(
               padding: const EdgeInsets.only(top: 16),
               children: [
-                _buildProfileSection(
-                  context: context,
-                  userProvider: userProvider,
-                  themeProvider: themeProvider,
-                ),
-                const SizedBox(height: 8),
-                ThemeChangeButton(
-                  themeProvider: themeProvider,
-                  onTap: () {
-                    showTossDialog(
-                      context: context,
-                      builder: (BuildContext context) {
-                        return ThemeDialog();
-                      },
-                    );
-                  },
-                ),
-                const SizedBox(height: 8),
+                // 프로필 사진과 이름, 테마 변경은 마이페이지 본문으로 나갔다.
+                // 여기에는 자주 건드리지 않는 것만 남긴다.
                 _buildTutorialReplaySection(
                   context: context,
                   themeProvider: themeProvider,
@@ -847,164 +568,6 @@ class _MyPageSettingsScreenState extends State<_MyPageSettingsScreen> {
           ),
         ],
       ),
-    );
-  }
-}
-
-class _NameChangeDialog extends StatefulWidget {
-  final String currentName;
-  final ThemeHandler themeProvider;
-  final Future<void> Function(String newName) onSave;
-  final ValueChanged<String> onError;
-
-  const _NameChangeDialog({
-    required this.currentName,
-    required this.themeProvider,
-    required this.onSave,
-    required this.onError,
-  });
-
-  @override
-  State<_NameChangeDialog> createState() => _NameChangeDialogState();
-}
-
-class _NameChangeDialogState extends State<_NameChangeDialog> {
-  late final TextEditingController _controller;
-  bool _isSaving = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = TextEditingController(text: widget.currentName);
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  Future<void> _saveName() async {
-    if (_isSaving) return;
-
-    final newName = _controller.text.trim();
-    if (newName.isEmpty) {
-      widget.onError('이름을 입력해주세요.');
-      return;
-    }
-    if (newName.length > 20) {
-      widget.onError('이름은 20자 이하로 입력해주세요.');
-      return;
-    }
-    if (newName == widget.currentName) {
-      Navigator.of(context).pop();
-      return;
-    }
-
-    setState(() => _isSaving = true);
-    try {
-      await widget.onSave(newName);
-      if (!mounted) return;
-      Navigator.of(context).pop();
-    } catch (_) {
-      widget.onError('이름 변경에 실패했습니다. 다시 시도해주세요.');
-      if (mounted) {
-        setState(() => _isSaving = false);
-      }
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      backgroundColor: Colors.white,
-      insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-      constraints: const BoxConstraints(maxWidth: 380),
-      title: const StandardText(
-        text: '이름 변경',
-        fontSize: 18,
-        color: AppColors.textPrimary,
-        fontWeight: FontWeight.w700,
-      ),
-      content: SizedBox(
-        width: double.maxFinite,
-        child: TextField(
-          controller: _controller,
-          enabled: !_isSaving,
-          autofocus: true,
-          maxLength: 20,
-          style: const StandardText(text: '').getTextStyle().copyWith(
-                color: AppColors.textPrimary,
-                fontSize: 14,
-              ),
-          decoration: InputDecoration(
-            counterText: '',
-            hintText: '이름을 입력하세요',
-            hintStyle: const StandardText(text: '')
-                .getTextStyle()
-                .copyWith(color: Colors.grey[400], fontSize: 13),
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 12,
-              vertical: 12,
-            ),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppRadius.medium),
-              borderSide: BorderSide(color: Colors.grey[300]!, width: 1),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppRadius.medium),
-              borderSide: BorderSide(color: Colors.grey[300]!, width: 1),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppRadius.medium),
-              borderSide: BorderSide(
-                color: widget.themeProvider.primaryColor.withValues(alpha: 0.6),
-                width: 1.5,
-              ),
-            ),
-          ),
-          onSubmitted: (_) => _saveName(),
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: _isSaving ? null : () => Navigator.of(context).pop(),
-          child: StandardText(
-            text: '취소',
-            fontSize: 13,
-            color: Colors.grey[700]!,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-        TextButton(
-          onPressed: _isSaving ? null : _saveName,
-          style: TextButton.styleFrom(
-            backgroundColor: widget.themeProvider.primaryColor,
-            padding: const EdgeInsets.symmetric(
-              horizontal: 14,
-              vertical: 10,
-            ),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(AppRadius.small),
-            ),
-          ),
-          child: _isSaving
-              ? const SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: Colors.white,
-                  ),
-                )
-              : const StandardText(
-                  text: '저장',
-                  fontSize: 13,
-                  color: Colors.white,
-                  fontWeight: FontWeight.w700,
-                ),
-        ),
-      ],
     );
   }
 }

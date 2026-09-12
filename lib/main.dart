@@ -9,6 +9,8 @@ import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart';
 import 'package:ono/Model/Common/LoginStatus.dart';
 import 'package:ono/Module/Text/StandardText.dart';
 import 'package:ono/Module/Theme/ThemeHandler.dart';
+import 'package:ono/Model/Cosmetic/CosmeticLoadoutModel.dart';
+import 'package:ono/Provider/CosmeticProvider.dart';
 import 'package:ono/Provider/FoldersProvider.dart';
 import 'package:ono/Provider/ScreenIndexProvider.dart';
 import 'package:ono/Screen/ProblemRegister/ProblemRegisterScreen.dart';
@@ -24,6 +26,8 @@ import 'Provider/ReviewDueProvider.dart';
 import 'Provider/StudyRoomProvider.dart';
 import 'Provider/UserProvider.dart';
 import 'Provider/TutorialProvider.dart';
+import 'Screen/Character/CharacterScreen.dart';
+import 'Screen/Character/Widget/FrogNavIcon.dart';
 import 'Screen/Folder/DirectoryScreen.dart';
 import 'Screen/PracticeNote/PracticeThumbnailScreen.dart';
 import 'Screen/StudyRoom/StudyRoomListScreen.dart';
@@ -147,6 +151,7 @@ Future<void> _bootstrapApp() async {
         ChangeNotifierProvider(create: (_) => ReviewDueProvider()),
         ChangeNotifierProvider(create: (_) => TutorialProvider()),
         ChangeNotifierProvider(create: (_) => StudyRoomProvider()),
+        ChangeNotifierProvider(create: (_) => CosmeticProvider()),
       ],
       child: const MyApp(),
     ),
@@ -358,6 +363,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
     final widgetOptions = <Widget>[
       DirectoryScreen(tutorialTargets: _tutorialTargets),
       PracticeThumbnailScreen(tutorialTargets: _tutorialTargets),
+      CharacterScreen(tutorialTargets: _tutorialTargets),
       StudyRoomListScreen(tutorialTargets: _tutorialTargets),
       SettingScreen(tutorialTargets: _tutorialTargets),
     ];
@@ -419,6 +425,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
       items: _bottomNavigationItems(
         themeProvider.primaryColor,
         screenIndexProvider.screenIndex,
+        context.watch<CosmeticProvider>().layers,
       ),
       currentIndex: screenIndexProvider.screenIndex,
       selectedItemColor: themeProvider.primaryColor,
@@ -435,11 +442,22 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
     );
   }
 
+  /// 캐릭터 탭이 하단 네비게이션의 몇 번째인지.
+  ///
+  /// 이 탭만 아이콘이 [IconData] 가 아니라 개구리 그림이라서 순번을 따로
+  /// 알아야 한다. [widgetOptions] 의 순서와 같아야 한다.
+  static const int _characterTabIndex = 2;
+
   /// 아이콘을 [BouncyNavIcon] 으로 감싸서 선택될 때 한 번 튀어오르게 한다.
   /// 선택 여부를 아이콘이 직접 알아야 해서 `activeIcon` 을 쓰지 않는다.
+  ///
+  /// 캐릭터 탭만 선 아이콘 대신 사용자가 꾸민 개구리 얼굴이 들어간다
+  /// ([FrogNavIcon]). 이 탭은 기능이 아니라 내 개구리라서, 갈아입히면
+  /// 하단 탭의 얼굴도 같이 바뀌는 쪽이 맞다.
   List<BottomNavigationBarItem> _bottomNavigationItems(
     Color activeColor,
     int currentIndex,
+    List<CosmeticLayerModel> frogLayers,
   ) {
     const specs = <({IconData icon, IconData activeIcon, String label})>[
       (
@@ -448,20 +466,30 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
         label: '오답노트 관리'
       ),
       (icon: Icons.history_outlined, activeIcon: Icons.history, label: '복습 세트'),
+      // 캐릭터 탭. 아이콘은 아래에서 개구리로 바꿔 끼운다.
+      (icon: Icons.spa_outlined, activeIcon: Icons.spa, label: '옷장'),
       (icon: Icons.group_outlined, activeIcon: Icons.group, label: '스터디룸'),
       (icon: Icons.person_outline, activeIcon: Icons.person, label: '마이 페이지'),
     ];
 
     return List<BottomNavigationBarItem>.generate(specs.length, (index) {
       final spec = specs[index];
+      final selected = currentIndex == index;
+
       return BottomNavigationBarItem(
-        icon: BouncyNavIcon(
-          icon: spec.icon,
-          activeIcon: spec.activeIcon,
-          selected: currentIndex == index,
-          activeColor: activeColor,
-          inactiveColor: Colors.grey,
-        ),
+        icon: index == _characterTabIndex
+            ? FrogNavIcon(
+                layers: frogLayers,
+                selected: selected,
+                activeColor: activeColor,
+              )
+            : BouncyNavIcon(
+                icon: spec.icon,
+                activeIcon: spec.activeIcon,
+                selected: selected,
+                activeColor: activeColor,
+                inactiveColor: Colors.grey,
+              ),
         label: spec.label,
       );
     });

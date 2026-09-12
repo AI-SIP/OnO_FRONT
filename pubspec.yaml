@@ -104,6 +104,10 @@ flutter:
     - assets/Logo/
     - assets/SocialLogin/
     - assets/FrogCharacter/
+    - assets/Cosmetic/
+    - assets/Reward/
+    - assets/ProfileFrame/
+    - assets/MissionIcon/
     - assets/emoji/
     - assets/no_image.png
 

@@ -1,0 +1,738 @@
+// 옷장 탭(캐릭터 화면) 위젯 테스트.
+//
+// 이 화면이 지켜야 하는 약속은 넷이다. 개구리가 주인공 자리에 크게 설 것,
+// 능력치가 **스크롤 없이** 전부 보일 것, 미션과 꾸미기는 버튼으로 갈 것,
+// 개구리를 누르면 격려 한마디를 할 것.
+//
+// 스크롤이 없다는 것이 이 화면의 핵심 제약이다. 작은 폰과 글자를 키운
+// 기기에서도 개구리 · 능력치 넷 · 총 레벨 · 버튼 둘이 한 화면에 들어와야
+// 한다. 아래 `한 화면` 그룹이 그것을 잠근다.
+//
+// 이 화면에는 끝나지 않는 연출이 있다. `disableAnimationsForTest` 로 꺼
+// 두지 않으면 `pumpAndSettle` 이 끝나지 않는다.
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:mocktail/mocktail.dart';
+import 'package:ono/Model/Common/LoginStatus.dart';
+import 'package:ono/Module/Debug/DebugLevels.dart';
+import 'package:ono/Model/Mission/MissionGroupModel.dart';
+import 'package:ono/Model/Mission/MissionModel.dart';
+import 'package:ono/Model/User/UserInfoModel.dart';
+import 'package:ono/Model/Cosmetic/CosmeticAbilityLevels.dart';
+import 'package:ono/Provider/CosmeticProvider.dart';
+import 'package:ono/Provider/MissionProvider.dart';
+import 'package:ono/Provider/UserProvider.dart';
+import 'package:ono/Screen/Character/CharacterScreen.dart';
+import 'package:ono/Screen/Character/Widget/AbilityStatPanel.dart';
+import 'package:ono/Screen/Cosmetic/CosmeticClosetScreen.dart';
+import 'package:ono/Screen/Cosmetic/Widget/CosmeticStage.dart';
+import 'package:ono/Screen/Mission/MissionCard.dart';
+import 'package:ono/Screen/Mission/MissionScreen.dart';
+import 'package:ono/Screen/User/Widget/FrogCharacter.dart';
+
+import '../../helpers/helpers.dart';
+
+class _FakeUserProvider extends Mock implements UserProvider {}
+
+MissionModel _mission({
+  required String code,
+  required String title,
+  int? progressId,
+  int current = 0,
+  int target = 3,
+  bool completed = false,
+  bool claimed = false,
+}) {
+  return MissionModel(
+    progressId: progressId,
+    code: code,
+    title: title,
+    description: '$title 설명',
+    iconKey: 'note_write',
+    category: MissionCategory.daily,
+    current: current,
+    target: target,
+    completed: completed,
+    claimed: claimed,
+    rewardType: MissionRewardType.xp,
+    rewardValue: 10,
+  );
+}
+
+/// 눈금판 넷의 고리. 스탯창 안에서 정사각형으로 그려진 것만 골라 왼쪽부터
+/// 줄 세운다. 고리를 그리는 화가가 비공개라 크기로 찾는다.
+List<Rect> dialRings(WidgetTester tester) {
+  final rects = <Rect>[];
+  final paints = find.descendant(
+    of: find.byType(AbilityStatPanel),
+    matching: find.byType(CustomPaint),
+  );
+  for (final element in paints.evaluate()) {
+    final box = element.renderObject! as RenderBox;
+    if (box.size.width == box.size.height && box.size.width > 20) {
+      rects.add(box.localToGlobal(Offset.zero) & box.size);
+    }
+  }
+  rects.sort((a, b) => a.left.compareTo(b.left));
+  return rects;
+}
+
+/// 이 위젯이 그리는 에셋의 자리. 에셋이 아니면 null.
+///
+/// `Image.asset` 에 `cacheWidth` 를 주면 공급자가 [ResizeImage] 로 한 겹
+/// 싸여서 `find.image` 로는 못 잡는다. 한 겹 벗겨 본다.
+String? assetPathOf(ImageProvider<Object> provider) {
+  if (provider is ResizeImage) return assetPathOf(provider.imageProvider);
+  if (provider is AssetImage) return provider.assetName;
+  return null;
+}
+
+/// 그 에셋을 그리는 [Image] 를 찾는다.
+Finder findAssetImage(String path) => find.byWidgetPredicate(
+      (widget) => widget is Image && assetPathOf(widget.image) == path,
+      description: path,
+    );
+
+void main() {
+  setUpOnoWidgetTest();
+
+  MissionBoardModel board() {
+    return MissionBoardModel(
+      daily: MissionGroupModel(
+        periodKey: '2026-09-11',
+        missions: [
+          _mission(
+            code: 'DAILY_REVIEW_3',
+            title: '세 문제만',
+            progressId: 1,
+            current: 1,
+          ),
+          _mission(
+            code: 'DAILY_NOTE_WRITE',
+            title: '오늘의 오답',
+            progressId: 2,
+            current: 1,
+            target: 1,
+            completed: true,
+          ),
+        ],
+      ),
+      weekly: const MissionGroupModel(periodKey: '2026-W37', missions: []),
+    );
+  }
+
+  /// 화면이 읽는 것은 `userInfoModel` 하나뿐이다. 진짜 Provider 는
+  /// `fetchUserInfo` 를 거쳐야 값이 차서, 여기서는 값을 바로 들고 있는
+  /// 가짜를 쓴다.
+  _FakeUserProvider userProvider({UserInfoModel? info}) {
+    final provider = _FakeUserProvider();
+    final served = info ??
+        UserInfoModel(
+          userId: 1,
+          name: '테스터',
+          totalStudyLevel: 7,
+          totalStudyCurrentPoint: 24,
+          totalStudyNextLevelThreshold: 60,
+          attendanceLevel: 3,
+          attendancePoint: 8,
+          noteWriteLevel: 5,
+          noteWritePoint: 12,
+          problemPracticeLevel: 2,
+          problemPracticePoint: 4,
+          notePracticeLevel: 1,
+          notePracticePoint: 6,
+        );
+
+    when(() => provider.isLoggedIn).thenReturn(LoginStatus.login);
+    // 진짜 UserProvider 가 유저 정보를 **내주는 자리에서** 디버그 레벨을
+    // 갈아 끼운다. 가짜도 같은 일을 해야 이 화면이 실제로 보는 값과 같아진다.
+    // thenReturn 이 아니라 thenAnswer 인 것은, 부를 때마다 지금 옮겨져 있는
+    // 레벨을 다시 반영해야 하기 때문이다.
+    when(() => provider.userInfoModel)
+        .thenAnswer((_) => DebugLevels.applyTo(served));
+    when(() => provider.addListener(any())).thenReturn(null);
+    when(() => provider.removeListener(any())).thenReturn(null);
+    when(() => provider.dispose()).thenReturn(null);
+    when(() => provider.fetchUserInfo(
+          showErrorSnackBar: any(named: 'showErrorSnackBar'),
+        )).thenAnswer((_) async {});
+    return provider;
+  }
+
+  Future<MissionProvider> pumpCharacter(
+    WidgetTester tester, {
+    MissionBoardModel? missionBoard,
+    UserInfoModel? info,
+    CosmeticProvider? cosmetic,
+    Size surfaceSize = OnoSurface.phone,
+    double textScale = 1.0,
+  }) async {
+    disableAnimationsForTest(tester);
+    final missionService = MockMissionService();
+    when(() => missionService.getMissions())
+        .thenAnswer((_) async => missionBoard ?? board());
+    final missionProvider = MissionProvider(missionService: missionService);
+
+    await withMockedNetworkImages(() async {
+      await pumpOnoWidget(
+        tester,
+        Builder(
+          builder: (context) => MediaQuery(
+            data: MediaQuery.of(context)
+                .copyWith(textScaler: TextScaler.linear(textScale)),
+            child: const CharacterScreen(),
+          ),
+        ),
+        missionProvider: missionProvider,
+        userProvider: userProvider(info: info),
+        cosmeticProvider: cosmetic ??
+            CosmeticProvider(mockLevels: CosmeticAbilityLevels.uniform(12)),
+        surfaceSize: surfaceSize,
+      );
+    });
+
+    return missionProvider;
+  }
+
+  group('무대', () {
+    testWidgets('개구리가 무대 위에 크게 선다', (tester) async {
+      await pumpCharacter(tester);
+
+      expect(find.byType(CosmeticStageFrog), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byType(CosmeticStageFrog),
+          matching: find.byType(FrogCharacter),
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('배경 파츠는 개구리 사각형이 아니라 무대에 깔린다', (tester) async {
+      // 512 정사각형을 둥근 사각형에 가둬 두면 개구리가 선 무대가 아니라
+      // 벽에 걸린 사진 한 장으로 읽힌다. 그 그림이 무대의 조명과 바닥
+      // 그림자까지 통째로 덮어서 연출이 화면에 나오지도 않았다.
+      final cosmetic =
+          CosmeticProvider(mockLevels: CosmeticAbilityLevels.uniform(12));
+      await pumpCharacter(tester, cosmetic: cosmetic);
+
+      final backdrop = cosmetic.stageBackdrop;
+      expect(backdrop, isNotNull, reason: '더미 기본 차림에 배경이 걸려 있어야 한다');
+      expect(find.byType(CosmeticStageGround), findsOneWidget);
+
+      final stack = tester.widget<FrogLayerStack>(
+        find.descendant(
+          of: find.byType(CosmeticStageFrog),
+          matching: find.byType(FrogLayerStack),
+        ),
+      );
+      expect(
+        stack.layers.any((layer) => layer.itemKey == backdrop!.itemKey),
+        isFalse,
+        reason: '배경이 개구리 사각형에 그대로 남아 있다',
+      );
+    });
+
+    testWidgets('배경을 안 걸쳐도 무대가 비지 않는다', (tester) async {
+      // 배경이 없으면 무대의 조명·빛무리·바닥 그림자가 살아나야 한다.
+      final cosmetic =
+          CosmeticProvider(mockLevels: CosmeticAbilityLevels.uniform(12))
+            ..unequipAll();
+      await pumpCharacter(tester, cosmetic: cosmetic);
+
+      expect(cosmetic.stageBackdrop, isNull);
+      expect(tester.takeException(), isNull);
+      expect(find.byType(CosmeticStageGround), findsOneWidget);
+      expect(find.byType(CosmeticStageFrog), findsOneWidget);
+    });
+
+    testWidgets('무대가 화면을 끝까지 덮는다', (tester) async {
+      // 배경이 개구리 발치에서 끊기고 그 아래 90px 남짓이 아무 역할도 없는
+      // 연보라 빈 면으로 남아 있었다. 버튼 둘도 그 빈 면 위에 떠 있었다.
+      await pumpCharacter(tester);
+
+      final screen = tester.getSize(find.byType(CharacterScreen));
+      final ground = tester.getRect(find.byType(CosmeticStageGround));
+
+      expect(ground.top, 0.0);
+      expect(ground.bottom, screen.height);
+      expect(ground.width, screen.width);
+    });
+
+    testWidgets('버튼 아이콘 두 장이 실제로 그려진다', (tester) async {
+      // 개구리와 같은 손으로 빚은 점토 그림이다. 머티리얼 아이콘은 선으로 그린
+      // 기호라 말랑한 렌더 옆에서 다른 세계 물건으로 보였다.
+      await pumpCharacter(tester);
+
+      expect(findAssetImage('assets/Icon/MissionButton.png'), findsOneWidget);
+      expect(findAssetImage('assets/Icon/ClosetButton.png'), findsOneWidget);
+    });
+
+    testWidgets('버튼 아이콘은 원본보다 작게 디코딩한다', (tester) async {
+      // 원본이 512 인데 화면에는 36 남짓으로 뜬다. 잘라 두지 않으면 한 장에
+      // 1MB 를 물고 있게 된다.
+      await pumpCharacter(tester);
+
+      final image = tester.widget<Image>(
+        findAssetImage('assets/Icon/ClosetButton.png'),
+      );
+      expect(image.image, isA<ResizeImage>());
+      expect((image.image as ResizeImage).width, lessThan(512));
+    });
+
+    testWidgets('버튼 둘이 무대 위에 같은 크기로 얹힌다', (tester) async {
+      await pumpCharacter(tester);
+
+      final ground = tester.getRect(find.byType(CosmeticStageGround));
+      final mission = tester.getRect(find.text('미션'));
+      final closet = tester.getRect(find.text('꾸미기'));
+
+      // 둘 다 무대 안에 있다. 회색 바탕에 따로 앉아 있으면 화면이 장면과
+      // 조작 판으로 갈라져 보인다.
+      expect(ground.bottom, greaterThan(closet.bottom));
+      expect(ground.bottom, greaterThan(mission.bottom));
+      // 같은 줄에 나란히 선다.
+      expect((mission.center.dy - closet.center.dy).abs(), lessThan(2.0));
+    });
+
+    testWidgets('개구리가 무대 바닥에 선다', (tester) async {
+      // 남는 자리 한가운데에 띄워 두면 발밑에 빈 면이 한 뼘 남는다. 배경을
+      // 걸쳤을 때는 지면에서 뜬 것으로 보이고, 안 걸쳤을 때는 그 자리가 아무
+      // 역할도 없는 빈 테마색으로 남는다. 무대가 화면을 덮은 뒤로 발밑에
+      // 있는 것은 버튼 줄뿐이다.
+      await pumpCharacter(tester);
+
+      final frog = tester.getRect(find.byType(CosmeticStageFrog));
+      final button = tester.getRect(find.text('꾸미기'));
+      final ground = tester.getRect(find.byType(CosmeticStageGround));
+
+      expect(button.top - frog.bottom, greaterThan(0.0));
+      expect(button.top - frog.bottom, lessThan(40.0));
+      // 무대는 버튼 아래까지 이어진다. 배경이 개구리 발치에서 끊기면 그 아래가
+      // 아무 역할도 없는 빈 면이 된다.
+      expect(ground.bottom, greaterThan(button.bottom));
+    });
+
+    testWidgets('개구리가 무대 폭을 거의 다 쓴다', (tester) async {
+      // 빛무리 몫까지 다 빼면 무대 폭의 85% 까지만 쓸 수 있어서 이 탭의
+      // 주인공치고 작았다. 빛무리는 가장자리로 갈수록 투명해지는 원이라
+      // 무대 밖으로 조금 새어 나가도 눈에 띄지 않는다.
+      await pumpCharacter(tester);
+
+      final ground = tester.getRect(find.byType(CosmeticStageGround));
+      final side = tester
+          .getSize(
+            find.descendant(
+              of: find.byType(CosmeticStageFrog),
+              matching: find.byType(FrogLayerStack),
+            ),
+          )
+          .width;
+
+      expect(side, greaterThan(ground.width * 0.9));
+    });
+
+    testWidgets('개구리를 누르면 격려 말풍선이 뜬다', (tester) async {
+      // 꾸미러 가는 문은 이제 버튼이 따로 맡는다. 개구리를 누르는 것은
+      // 한마디 듣는 일로 되돌렸다.
+      await pumpCharacter(tester);
+
+      final frog = tester.widget<FrogCharacter>(
+        find.descendant(
+          of: find.byType(CosmeticStageFrog),
+          matching: find.byType(FrogCharacter),
+        ),
+      );
+      expect(frog.showEncouragement, isTrue);
+    });
+
+    testWidgets('개구리를 눌러도 꾸미기 화면으로 가지 않는다', (tester) async {
+      await pumpCharacter(tester);
+
+      await tester.tap(find.byType(FrogCharacter).first);
+      // 말풍선은 2초 뒤에 스스로 사라진다. 그 타이머를 여기서 태워 보낸다.
+      await tester.pump(const Duration(seconds: 3));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(CosmeticClosetScreen), findsNothing);
+      expect(find.byType(CharacterScreen), findsOneWidget);
+    });
+
+    testWidgets('총 학습 레벨과 다음 레벨까지의 경험치가 개구리와 함께 보인다', (tester) async {
+      await pumpCharacter(tester);
+
+      expect(find.text('총 학습'), findsOneWidget);
+      expect(find.text('Lv.7'), findsOneWidget);
+      expect(find.text('24 / 60'), findsOneWidget);
+    });
+
+    testWidgets('진행도 수치에 꼬리표를 따로 붙이지 않는다', (tester) async {
+      // 총 학습만 `24 / 60 XP` 이고 능력치 넷은 `8 / 30` 이면 같은 뜻의 숫자
+      // 둘이 다른 종류로 읽힌다. 다섯 다 `현재 / 필요` 한 가지 모양만 쓴다.
+      await pumpCharacter(tester);
+
+      expect(find.text('24 / 60 XP'), findsNothing);
+    });
+
+    testWidgets('이름표 · 레벨 · 진행도가 개구리 위 한 줄에 같이 앉는다', (tester) async {
+      // 예전에는 레벨이 개구리 머리 위, 경험치 바가 발치에 있어서 둘을 같이
+      // 보려면 눈이 화면 위아래를 왔다 갔다 해야 했다. 한 가지를 말하는 값
+      // 둘이라 나란히 둔다.
+      await pumpCharacter(tester);
+
+      final labelY = tester.getTopLeft(find.text('총 학습')).dy;
+      final levelY = tester.getTopLeft(find.text('Lv.7')).dy;
+      final meterY = tester.getTopLeft(find.text('24 / 60')).dy;
+      final frogY = tester.getTopLeft(find.byType(CosmeticStageFrog)).dy;
+
+      for (final y in [labelY, levelY, meterY]) {
+        expect(y, lessThan(frogY));
+      }
+      // 셋이 같은 줄이다. 위아래로 갈라져 있으면 안 된다.
+      expect((labelY - levelY).abs(), lessThan(24));
+      expect((levelY - meterY).abs(), lessThan(24));
+    });
+
+    testWidgets('이름표는 레벨 앞, 진행도는 뒤에 온다', (tester) async {
+      // 성장 영역 다섯 덩어리가 모두 `이름표 → 값 → 진행도` 순서다. 하나만
+      // 순서가 다르면 그것이 제일 먼저 눈에 띈다. 가로로 누운 총 학습 줄에서
+      // 그 순서는 왼쪽에서 오른쪽이다.
+      await pumpCharacter(tester);
+
+      final labelX = tester.getTopLeft(find.text('총 학습')).dx;
+      final levelX = tester.getTopLeft(find.text('Lv.7')).dx;
+      final meterX = tester.getTopLeft(find.text('24 / 60')).dx;
+
+      expect(labelX, lessThan(levelX));
+      expect(levelX, lessThan(meterX));
+    });
+
+    testWidgets('꾸미기 화면에서 총 학습 더미 레벨을 옮기면 이름표도 따라간다', (tester) async {
+      // 디버그에서 총 학습을 올려도 이름표가 서버 값 그대로면 Lv.16~20 에서
+      // 열리는 것들을 시안에서 확인할 수가 없다.
+      final cosmetic =
+          CosmeticProvider(mockLevels: CosmeticAbilityLevels.uniform(12));
+      cosmetic.setMockLevel(null, 18);
+
+      await pumpCharacter(tester, cosmetic: cosmetic);
+
+      expect(find.text('Lv.18'), findsOneWidget);
+      expect(find.text('Lv.7'), findsNothing);
+      // 경험치도 더미를 따른다. 문턱은 백엔드가 정한 `40 × 레벨` 이다.
+      expect(find.text('432 / 720'), findsOneWidget);
+    });
+
+    testWidgets('총 학습 더미 레벨을 한 번도 안 옮겼으면 서버 값을 그린다', (tester) async {
+      await pumpCharacter(tester);
+
+      expect(find.text('Lv.7'), findsOneWidget);
+      expect(find.text('24 / 60'), findsOneWidget);
+    });
+  });
+
+  group('스탯창', () {
+    testWidgets('능력치 넷의 레벨과 남은 경험치가 한 번에 보인다', (tester) async {
+      await pumpCharacter(tester);
+
+      expect(find.byType(AbilityStatPanel), findsOneWidget);
+
+      // 이름 넷. MissionPalette 가 쓰는 이름 그대로다.
+      expect(find.text('출석'), findsOneWidget);
+      expect(find.text('오답노트'), findsOneWidget);
+      expect(find.text('문제 복습'), findsOneWidget);
+      expect(find.text('복습 세트'), findsOneWidget);
+
+      // 레벨 넷. 고리 안에서는 `Lv` 꼬리표와 숫자를 따로 세운다. 숫자만
+      // 남기면 그것이 레벨인지 개수인지 순위인지 알 수 없고, `Lv.3` 한
+      // 덩어리로 쓰면 작은 원에 들어가느라 숫자가 절반으로 줄어든다.
+      expect(find.text('Lv'), findsNWidgets(4));
+      expect(find.text('3'), findsOneWidget);
+      expect(find.text('5'), findsOneWidget);
+      expect(find.text('2'), findsOneWidget);
+      expect(find.text('1'), findsOneWidget);
+
+      // 다음 레벨까지 남은 경험치. 필요량은 10 + (레벨 - 1) * 10 이다.
+      expect(find.text('8 / 30'), findsOneWidget);
+      expect(find.text('12 / 50'), findsOneWidget);
+      expect(find.text('4 / 20'), findsOneWidget);
+      expect(find.text('6 / 10'), findsOneWidget);
+    });
+
+    testWidgets('이름표와 진행도가 고리에서 같은 만큼 떨어진다', (tester) async {
+      // 이름표를 고리 위로 올린 뒤 위아래를 4 로 뒀더니 글자가 고리에 얹혀
+      // 있는 것처럼 붙어 보였다. 고리는 둥글어서 글자와 가장 가까워지는 자리가
+      // 꼭대기와 바닥 한 점뿐이고 눈은 그 한 점을 먼저 본다. 한쪽만 벌리면
+      // 고리가 칸 안에서 밀려난 것처럼 보이므로 위아래가 같아야 한다.
+      await pumpCharacter(tester);
+
+      final rings = dialRings(tester);
+      expect(rings, hasLength(4));
+
+      const names = ['출석', '오답노트', '문제 복습', '복습 세트'];
+      const meters = ['8 / 30', '12 / 50', '4 / 20', '6 / 10'];
+      for (var index = 0; index < rings.length; index++) {
+        final above =
+            rings[index].top - tester.getRect(find.text(names[index])).bottom;
+        final below =
+            tester.getRect(find.text(meters[index])).top - rings[index].bottom;
+
+        expect(above, closeTo(below, 0.01), reason: names[index]);
+        expect(above, greaterThanOrEqualTo(8.0), reason: names[index]);
+      }
+    });
+
+    testWidgets('눈금판도 이름표가 레벨 위, 진행도가 아래다', (tester) async {
+      // 무대의 총 학습 줄과 같은 순서다. 자리가 세로로 길어서 왼쪽·오른쪽이
+      // 위·아래가 됐을 뿐이다. 다섯 중 하나만 이름표가 값 아래에 붙어 있으면
+      // 그것이 제일 먼저 눈에 띈다.
+      await pumpCharacter(tester);
+
+      final labelY = tester.getTopLeft(find.text('출석')).dy;
+      final levelY = tester.getTopLeft(find.text('3')).dy;
+      final meterY = tester.getTopLeft(find.text('8 / 30')).dy;
+
+      expect(labelY, lessThan(levelY));
+      expect(levelY, lessThan(meterY));
+    });
+
+    testWidgets('능력치 넷의 이름표가 같은 크기로 앉는다', (tester) async {
+      // 칸마다 따로 줄이면 `출석` 은 그대로인데 `문제 복습` 만 작아진다.
+      // 넷이 같은 틀이어야 한다는 규칙이 거기서 깨진다. 글자가 잘리기 쉬운
+      // 작은 폰에 글자를 키운 경우로 본다.
+      await pumpCharacter(
+        tester,
+        surfaceSize: OnoSurface.smallPhone,
+        textScale: 1.6,
+      );
+
+      // getRect 는 FittedBox 가 건 확대·축소까지 반영한 화면 위 크기다.
+      final heights = <double>{
+        for (final name in ['출석', '오답노트', '문제 복습', '복습 세트'])
+          double.parse(
+              tester.getRect(find.text(name)).height.toStringAsFixed(1)),
+      };
+      expect(heights, hasLength(1), reason: '넷의 글자 높이가 갈렸다: $heights');
+
+      // 고리 안 `Lv` 꼬리표도 넷이 같아야 한다. 꼬리표와 숫자가 크기가 달라서
+      // 따로 재는 길을 쓰는데, 그 계산이 틀어지면 여기서 갈린다.
+      final prefixes = <double>{
+        for (final element in find.text('Lv').evaluate())
+          double.parse(
+            ((element.renderObject! as RenderBox).size.height)
+                .toStringAsFixed(1),
+          ),
+      };
+      expect(prefixes, hasLength(1), reason: '넷의 Lv 높이가 갈렸다: $prefixes');
+    });
+
+    testWidgets('능력치는 총 학습 바로 아래, 개구리 위에 온다', (tester) async {
+      // 레벨 이야기가 개구리를 사이에 두고 갈라져 있으면 한 가지를 알려고
+      // 눈이 화면을 위아래로 오가야 한다. 총 학습과 능력치 넷은 붙어 있어야
+      // 하고, 그 둘 사이의 순서는 넷을 합산해 오르는 쪽이 위다.
+      await pumpCharacter(tester);
+
+      final totalY = tester.getTopLeft(find.text('총 학습')).dy;
+      final statY = tester.getTopLeft(find.byType(AbilityStatPanel)).dy;
+      final frogY = tester.getTopLeft(find.byType(CosmeticStageFrog)).dy;
+      final buttonY = tester.getTopLeft(find.text('꾸미기')).dy;
+
+      expect(totalY, lessThan(statY));
+      expect(statY, lessThan(frogY));
+      expect(frogY, lessThan(buttonY));
+    });
+
+    testWidgets('총 학습과 능력치 넷이 한 덩어리로 붙어 있다', (tester) async {
+      // 카드를 둘로 나누면 서로 다른 것을 말하는 것처럼 갈라져 보인다. 총
+      // 학습 줄과 눈금판 사이에 있는 것은 경험치 막대와 여백 둘과 머리카락
+      // 한 올뿐이라, 카드 하나 분량의 테두리와 안쪽 여백이 끼어들 자리가 없다.
+      await pumpCharacter(tester);
+
+      final totalBottom = tester.getRect(find.text('총 학습')).bottom;
+      final statTop = tester.getRect(find.byType(AbilityStatPanel)).top;
+
+      expect(statTop - totalBottom, lessThan(60.0));
+    });
+
+    testWidgets('능력치 아이콘은 마이페이지가 쓰던 그 아이콘이다', (tester) async {
+      // 한때 미션 카드의 이모지를 빌려 썼는데, 이모지는 크게 그려야 읽히고
+      // 이 자리는 15px 라서 뭉갰다. 넷 다 예전 레벨 카드의 아이콘으로 돌린다.
+      await pumpCharacter(tester);
+
+      for (final icon in [
+        Icons.waving_hand_rounded,
+        Icons.edit_note,
+        Icons.chrome_reader_mode_outlined,
+        Icons.history,
+      ]) {
+        expect(
+          find.descendant(
+            of: find.byType(AbilityStatPanel),
+            matching: find.byIcon(icon),
+          ),
+          findsOneWidget,
+          reason: '$icon',
+        );
+      }
+    });
+
+    testWidgets('능력치를 누르면 올리는 법이 뜬다', (tester) async {
+      // 눈금판은 지금 어디에 서 있는지만 말해 준다. 무엇을 해야 저 고리가
+      // 차는지는 여기서 알려 준다.
+      await pumpCharacter(tester);
+
+      await tester.tap(find.byIcon(Icons.waving_hand_rounded));
+      await tester.pumpAndSettle();
+
+      expect(find.text('출석 올리는 법'), findsOneWidget);
+      expect(find.text('하루에 한 번 앱을 열면'), findsOneWidget);
+      expect(find.text('+15점'), findsOneWidget);
+      expect(find.text('하루 한 번까지'), findsOneWidget);
+    });
+
+    testWidgets('능력치마다 다른 규칙을 말한다', (tester) async {
+      await pumpCharacter(tester);
+
+      await tester.tap(find.byIcon(Icons.edit_note));
+      await tester.pumpAndSettle();
+
+      expect(find.text('오답노트 올리는 법'), findsOneWidget);
+      // 서버의 MissionType 과 MissionLogService 가 정한 값이다.
+      expect(find.text('+10점'), findsOneWidget);
+      expect(find.text('하루 세 개까지'), findsOneWidget);
+    });
+
+    testWidgets('꾸미기 화면에서 더미 레벨을 옮기면 눈금판도 따라간다', (tester) async {
+      // 두 화면이 같은 능력치를 다른 레벨로 말하면 어느 쪽이 진짜인지 알 수 없다.
+      final cosmetic =
+          CosmeticProvider(mockLevels: CosmeticAbilityLevels.uniform(12));
+      cosmetic.setMockLevel(CosmeticAbility.attendance, 9);
+
+      await pumpCharacter(tester, cosmetic: cosmetic);
+
+      // 서버가 준 출석은 3 이지만 더미를 만진 뒤로는 더미를 따른다.
+      expect(find.text('9'), findsOneWidget);
+      expect(find.text('3'), findsNothing);
+    });
+
+    testWidgets('더미 레벨을 한 번도 안 옮겼으면 서버가 준 레벨을 그린다', (tester) async {
+      await pumpCharacter(tester);
+
+      expect(find.text('3'), findsOneWidget);
+      expect(find.text('12'), findsNothing);
+    });
+
+    testWidgets('사용자 정보가 아직 없어도 스탯창 자리는 그대로 있다', (tester) async {
+      // 값이 늦게 와서 카드가 나타났다 사라지면 아래 버튼이 들썩인다.
+      await pumpCharacter(
+        tester,
+        info: UserInfoModel(userId: 1, name: '테스터'),
+      );
+
+      expect(find.byType(AbilityStatPanel), findsOneWidget);
+      expect(find.text('출석'), findsOneWidget);
+    });
+  });
+
+  group('버튼', () {
+    testWidgets('미션 버튼을 누르면 미션 화면으로 간다', (tester) async {
+      await pumpCharacter(tester);
+
+      await tester.tap(find.text('미션'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(MissionScreen), findsOneWidget);
+    });
+
+    testWidgets('꾸미기 버튼을 누르면 꾸미기 화면으로 간다', (tester) async {
+      await pumpCharacter(tester);
+
+      await tester.tap(find.text('꾸미기'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(CosmeticClosetScreen), findsOneWidget);
+    });
+
+    testWidgets('오늘 미션을 몇 개 했는지 버튼에 붙는다', (tester) async {
+      // 목록을 걷어 냈어도 오늘 할 일이 남았는지는 알 수 있어야 한다.
+      await pumpCharacter(tester);
+
+      expect(find.text('1 / 2'), findsOneWidget);
+    });
+
+    testWidgets('미션 목록은 이 탭에 없다', (tester) async {
+      await pumpCharacter(tester);
+
+      expect(find.byType(MissionCard), findsNothing);
+      expect(find.text('세 문제만'), findsNothing);
+    });
+
+    testWidgets('미션이 없으면 버튼에 숫자가 안 붙는다', (tester) async {
+      await pumpCharacter(
+        tester,
+        missionBoard: const MissionBoardModel(
+          daily: MissionGroupModel(periodKey: '2026-09-11', missions: []),
+          weekly: MissionGroupModel(periodKey: '2026-W37', missions: []),
+        ),
+      );
+
+      expect(find.text('미션'), findsOneWidget);
+      expect(find.text('0 / 0'), findsNothing);
+      // 미션이 없어도 개구리와 능력치는 그대로 있다.
+      expect(find.byType(CosmeticStageFrog), findsOneWidget);
+      expect(find.byType(AbilityStatPanel), findsOneWidget);
+    });
+  });
+
+  group('한 화면', () {
+    // 이 화면의 존재 이유다. 경험치를 보려고 스크롤을 내리는 일이 없어야 한다.
+    for (final surface in <String, Size>{
+      '작은 폰': OnoSurface.smallPhone,
+      '폰': OnoSurface.phone,
+      '태블릿': OnoSurface.tablet,
+    }.entries) {
+      for (final scale in <String, double>{
+        '보통 글자': 1.0,
+        '글자 1.6배': 1.6,
+      }.entries) {
+        testWidgets('${surface.key} · ${scale.value} 에서 스크롤 없이 다 보인다',
+            (tester) async {
+          await pumpCharacter(
+            tester,
+            surfaceSize: surface.value,
+            textScale: scale.value,
+          );
+
+          expect(tester.takeException(), isNull);
+
+          // 스크롤 되는 것이 아예 없어야 한다. 하나라도 있으면 그 안에 숨은
+          // 것이 생긴다.
+          expect(find.byType(Scrollable), findsNothing);
+
+          final screenHeight =
+              tester.getSize(find.byType(CharacterScreen)).height;
+
+          // 개구리 · 능력치 · 버튼이 모두 화면 안에 통째로 들어와 있다.
+          for (final finder in <Finder>[
+            find.byType(CosmeticStageFrog),
+            find.byType(AbilityStatPanel),
+            find.text('미션'),
+            find.text('꾸미기'),
+          ]) {
+            final rect = tester.getRect(finder);
+            expect(rect.top, greaterThanOrEqualTo(0.0),
+                reason: '$finder 가 화면 위로 잘렸다');
+            expect(rect.bottom, lessThanOrEqualTo(screenHeight),
+                reason: '$finder 가 화면 아래로 잘렸다');
+          }
+
+          // 능력치 넷의 레벨과 남은 경험치가 전부 그려져 있다. 고리 안에는
+          // `Lv` 꼬리표와 숫자가 따로 선다.
+          expect(find.text('Lv'), findsNWidgets(4));
+          expect(find.text('3'), findsOneWidget);
+          expect(find.text('8 / 30'), findsOneWidget);
+          expect(find.text('6 / 10'), findsOneWidget);
+        });
+      }
+    }
+  });
+}

@@ -1,10 +1,13 @@
-// 미션 아이콘 폴백 테스트.
+// 미션 아이콘 테스트.
 //
-// 전용 아이콘 19종이 아직 없어서 앱이 이미 가진 이모지를 빌려 쓴다. 서버가
-// 앱이 모르는 코드나 iconKey 를 내려도 빈칸이 아니라 새싹이 떠야 한다.
+// 전용 아이콘 열아홉 종이 `assets/MissionIcon/{iconKey}.svg` 로 들어왔다.
+// 파일 이름이 곧 서버가 내려주는 키다. 서버가 앱이 모르는 코드나 iconKey 를
+// 내려도 빈칸이 아니라 기본 그림이 떠야 한다.
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:ono/Module/Emoji/OnoEmojiCatalog.dart';
 import 'package:ono/Screen/Mission/MissionIcon.dart';
 
 import '../../helpers/helpers.dart';
@@ -42,44 +45,39 @@ void main() {
     });
   });
 
-  group('MissionIcon.resolveEmojiKey', () {
-    test('미션 코드가 있으면 코드로 고른다', () {
-      // 일일 출석과 주간 출석은 iconKey 가 같다. 코드로 갈라야 다른 그림이 된다.
+  group('MissionIcon.resolveName', () {
+    test('미션 코드가 주간이면 코드로 갈아 끼운다', () {
+      // 일일 출석과 주간 출석은 iconKey 가 같게 온다. 한 주를 채운 것과 오늘
+      // 하루 켠 것이 같은 그림이면 안 된다.
       expect(
-        MissionIcon.resolveEmojiKey(
-          code: 'DAILY_ATTEND',
-          iconKey: 'attendance',
-        ),
-        'success_checkmark',
+        MissionIcon.resolveName(code: 'DAILY_ATTEND', iconKey: 'attendance'),
+        'attendance',
       );
       expect(
-        MissionIcon.resolveEmojiKey(
+        MissionIcon.resolveName(
           code: 'WEEKLY_ATTEND_5',
           iconKey: 'attendance',
         ),
-        'fired_up_sparkle_eyes',
+        'streak',
       );
     });
 
-    test('모르는 코드면 iconKey 로 고른다', () {
+    test('갈아 끼울 것이 없으면 iconKey 를 그대로 쓴다', () {
       expect(
-        MissionIcon.resolveEmojiKey(
-          code: 'DAILY_SOMETHING_NEW',
-          iconKey: 'review',
-        ),
-        'reading_with_glasses',
+        MissionIcon.resolveName(code: 'DAILY_SOMETHING_NEW', iconKey: 'review'),
+        'review',
       );
     });
 
-    test('둘 다 모르면 새싹으로 떨어진다', () {
+    test('둘 다 모르면 기본 그림으로 떨어진다', () {
       expect(
-        MissionIcon.resolveEmojiKey(code: '아직_없는_코드', iconKey: '아직_없는_키'),
-        MissionIconKeys.fallbackEmoji,
+        MissionIcon.resolveName(code: '아직_없는_코드', iconKey: '아직_없는_키'),
+        MissionIconKeys.fallback,
       );
-      expect(MissionIcon.resolveEmojiKey(), MissionIconKeys.fallbackEmoji);
+      expect(MissionIcon.resolveName(), MissionIconKeys.fallback);
     });
 
-    test('고른 이모지 키가 실제로 있는 그림인지', () {
+    test('고른 그림이 실제로 있는 파일인지', () {
       for (final key in [
         'DAILY_ATTEND',
         'DAILY_NOTE_WRITE',
@@ -92,17 +90,32 @@ void main() {
         'WEEKLY_REVIEW_30',
         'WEEKLY_SET_3',
       ]) {
-        final emojiKey = MissionIcon.resolveEmojiKey(code: key);
+        final path = MissionIcon.resolveAsset(code: key);
+        expect(File(path).existsSync(), isTrue,
+            reason: '$key 가 가리키는 $path 가 없다');
+      }
+    });
+
+    test('앱이 안다고 적어 둔 이름이 전부 파일로 있다', () {
+      // 목록과 파일이 어긋나면 그 키가 올 때만 조용히 기본 그림이 뜬다.
+      for (final name in MissionIconKeys.known) {
+        final path = '${MissionIconKeys.assetDirectory}/$name.svg';
+        expect(File(path).existsSync(), isTrue, reason: '$path 가 없다');
+      }
+    });
+
+    test('갈아 끼우는 표가 가리키는 이름도 앱이 아는 것이다', () {
+      for (final code in [
+        'WEEKLY_ATTEND_5',
+        'WEEKLY_NOTE_10',
+        'WEEKLY_SET_3'
+      ]) {
         expect(
-          OnoEmojiCatalog.byKey(emojiKey),
-          isNotNull,
-          reason: '$key 가 가리키는 $emojiKey 가 이모지 목록에 없다',
+          MissionIconKeys.known,
+          contains(MissionIcon.resolveName(code: code)),
+          reason: code,
         );
       }
-      expect(
-        OnoEmojiCatalog.byKey(MissionIconKeys.fallbackEmoji),
-        isNotNull,
-      );
     });
   });
 
@@ -116,12 +129,10 @@ void main() {
         ),
       );
 
-      expect(find.byType(Image), findsOneWidget);
+      expect(find.byType(SvgPicture), findsOneWidget);
     });
 
-    testWidgets('그림은 화면 크기에 맞춰 작게 디코딩한다', (tester) async {
-      // 이모지 원본이 한 장에 200KB 가까이 된다. 목록에 카드가 여럿 뜨므로
-      // 디코딩 크기를 제한하지 않으면 메모리가 크게 는다.
+    testWidgets('아는 키는 그 키의 그림 파일을 가리킨다', (tester) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(
@@ -134,11 +145,13 @@ void main() {
         ),
       );
 
-      final image = tester.widget<Image>(find.byType(Image));
-      final provider = image.image;
-      expect(provider, isA<ResizeImage>());
-      expect((provider as ResizeImage).width, isNotNull);
-      expect(provider.width, lessThanOrEqualTo(256));
+      expect(
+        MissionIcon.resolveAsset(iconKey: 'note_write'),
+        'assets/MissionIcon/note_write.svg',
+      );
+      final picture = tester.widget<SvgPicture>(find.byType(SvgPicture));
+      expect(picture.width, 30);
+      expect(picture.height, 30);
     });
   });
 }

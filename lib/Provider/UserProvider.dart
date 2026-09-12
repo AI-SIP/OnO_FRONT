@@ -4,7 +4,9 @@ import 'dart:core';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:flutter/foundation.dart';
 import 'package:ono/Model/Common/LoginStatus.dart';
+import 'package:ono/Module/Debug/DebugLevels.dart';
 import 'package:ono/Model/User/UserInfoModel.dart';
 import 'package:ono/Model/User/UserRegisterModel.dart';
 import 'package:ono/Module/Dialog/LoadingDialog.dart';
@@ -44,7 +46,27 @@ class UserProvider with ChangeNotifier {
   final AppleAuthService appleAuthService;
   final GoogleAuthService googleAuthService;
   final KakaoAuthService kakaoAuthService;
-  UserInfoModel? userInfoModel;
+
+  /// 서버가 준 유저 정보 원본. **디버그 레벨이 섞이지 않은 값이다.**
+  ///
+  /// 화면이 읽는 것은 [userInfoModel] 이고 그쪽에만 디버그 레벨이 얹힌다.
+  /// 원본과 화면용을 갈라 두지 않으면 디버그로 올린 레벨이 다음 저장 요청에
+  /// 실려 나가거나 재조회 결과와 뒤섞인다.
+  UserInfoModel? _userInfoModel;
+
+  /// 화면이 읽는 유저 정보.
+  ///
+  /// **디버그 빌드에서 꾸미기 화면의 디버그 패널을 만졌으면** 능력치 레벨을
+  /// 그 값으로 갈아 낀 사본이 나온다. 안 만졌으면 서버가 준 값 그대로다.
+  /// 릴리즈에서는 [DebugLevels.applyTo] 가 받은 것을 그대로 돌려주므로 이
+  /// 경로가 통째로 사라진다.
+  ///
+  /// 레벨을 읽는 화면이 테마 다이얼로그 · 옷장 탭 스탯창 · 꾸미기 해금 판정 ·
+  /// 마이페이지로 흩어져 있어서, 값을 **내주는 이 한 자리**에서 갈아 끼운다.
+  /// 화면마다 디버그 여부를 따져 묻게 하면 언젠가 한 곳이 빠진다.
+  UserInfoModel? get userInfoModel => DebugLevels.applyTo(_userInfoModel);
+
+  set userInfoModel(UserInfoModel? value) => _userInfoModel = value;
 
   UserProvider(
     this.problemsProvider,
@@ -66,6 +88,16 @@ class UserProvider with ChangeNotifier {
         googleAuthService = googleAuthService ?? GoogleAuthService(),
         kakaoAuthService = kakaoAuthService ?? KakaoAuthService() {
     TokenProvider.registerAuthFailureHandler(_handleAuthFailure);
+    // 디버그 패널에서 레벨을 옮기면 이쪽을 보고 있는 화면들도 다시 그려야
+    // 한다. 패널이 부르는 것은 CosmeticProvider 인데 테마 다이얼로그는
+    // 이쪽을 보고 있어서, 값이 바뀐 것을 여기가 따로 알아야 한다.
+    if (kDebugMode) DebugLevels.listenable.addListener(notifyListeners);
+  }
+
+  @override
+  void dispose() {
+    if (kDebugMode) DebugLevels.listenable.removeListener(notifyListeners);
+    super.dispose();
   }
 
   LoginStatus _loginStatus = LoginStatus.waiting;
@@ -277,14 +309,15 @@ class UserProvider with ChangeNotifier {
   }
 
   Future<void> fetchUserInfo({bool showErrorSnackBar = true}) async {
-    userInfoModel = await userService.fetchUserInfo(
+    _userInfoModel = await userService.fetchUserInfo(
       showErrorSnackBar: showErrorSnackBar,
     );
     // 유저 정보를 새로 받아올 때마다 Analytics 쪽 유저 속성도 맞춘다.
     // 로그인 직후, 자동 로그인, 프로필 수정 뒤가 모두 여기를 지난다.
     unawaited(
       AppAnalytics.identify(
-        userInfoModel,
+        // 원본을 보낸다. 디버그로 옮겨 놓은 레벨이 통계에 섞이면 안 된다.
+        _userInfoModel,
         loginMethod: await storage.read(key: 'loginMethod'),
       ),
     );
@@ -292,14 +325,14 @@ class UserProvider with ChangeNotifier {
   }
 
   Future<void> updateNotificationSettings(bool enabled) async {
-    if (userInfoModel == null) return;
-    final previous = userInfoModel!.notificationEnabled;
-    userInfoModel!.notificationEnabled = enabled;
+    if (_userInfoModel == null) return;
+    final previous = _userInfoModel!.notificationEnabled;
+    _userInfoModel!.notificationEnabled = enabled;
     notifyListeners();
     try {
       await userService.updateNotificationSettings(enabled);
     } catch (e, stackTrace) {
-      userInfoModel!.notificationEnabled = previous;
+      _userInfoModel!.notificationEnabled = previous;
       notifyListeners();
       await AppErrorReporter.report(
         e,
@@ -331,18 +364,18 @@ class UserProvider with ChangeNotifier {
   }
 
   Future<void> updateUserProfileImage(String imagePath) async {
-    userInfoModel = await userService.updateUserProfileImage(imagePath);
+    _userInfoModel = await userService.updateUserProfileImage(imagePath);
     notifyListeners();
   }
 
   Future<void> updateUserProfileImageUrl(String profileImageUrl) async {
-    userInfoModel =
+    _userInfoModel =
         await userService.updateUserProfileImageUrl(profileImageUrl);
     notifyListeners();
   }
 
   Future<void> deleteUserProfileImage() async {
-    userInfoModel = await userService.deleteUserProfileImage();
+    _userInfoModel = await userService.deleteUserProfileImage();
     notifyListeners();
   }
 
@@ -466,7 +499,7 @@ class UserProvider with ChangeNotifier {
   Future<void> resetUserInfo() async {
     _loginStatus = LoginStatus.logout;
     _isFirstLogin = true;
-    userInfoModel = null;
+    _userInfoModel = null;
 
     // 지우지 않으면 같은 기기에서 다른 계정으로 로그인했을 때 앞 사람의
     // 유저 속성이 그대로 남아 통계가 섞인다.

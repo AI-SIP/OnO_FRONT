@@ -1,0 +1,40 @@
+<svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <title>밤 학습</title>
+  <defs>
+    <linearGradient id="frog" x1=".15" y1="0" x2=".78" y2="1">
+      <stop offset="0" stop-color="#E9FFD2"/><stop offset=".52" stop-color="#C8EDA5"/><stop offset="1" stop-color="#91C978"/>
+    </linearGradient>
+    <radialGradient id="eye" cx=".32" cy=".24" r=".82">
+      <stop offset="0" stop-color="#5A4637"/><stop offset=".46" stop-color="#2A201C"/><stop offset="1" stop-color="#171311"/>
+    </radialGradient>
+    <linearGradient id="paper" x1=".2" y1="0" x2=".72" y2="1">
+      <stop offset="0" stop-color="#FFFDF3"/><stop offset=".62" stop-color="#FFF0D2"/><stop offset="1" stop-color="#E8CFA9"/>
+    </linearGradient>
+    <linearGradient id="blue" x1=".12" y1="0" x2=".84" y2="1">
+      <stop offset="0" stop-color="#90C4EE"/><stop offset=".55" stop-color="#679DD4"/><stop offset="1" stop-color="#456FA9"/>
+    </linearGradient>
+    <linearGradient id="coral" x1=".14" y1="0" x2=".82" y2="1">
+      <stop offset="0" stop-color="#F8C0AF"/><stop offset=".56" stop-color="#E9948F"/><stop offset="1" stop-color="#C96D75"/>
+    </linearGradient>
+    <linearGradient id="purple" x1=".15" y1="0" x2=".82" y2="1">
+      <stop offset="0" stop-color="#C9B9EA"/><stop offset=".57" stop-color="#9A84CB"/><stop offset="1" stop-color="#7463A8"/>
+    </linearGradient>
+    <linearGradient id="teal" x1=".14" y1="0" x2=".82" y2="1">
+      <stop offset="0" stop-color="#A7DFC5"/><stop offset=".55" stop-color="#70BA94"/><stop offset="1" stop-color="#468D70"/>
+    </linearGradient>
+    <linearGradient id="gold" x1=".15" y1="0" x2=".78" y2="1">
+      <stop offset="0" stop-color="#FFE8A4"/><stop offset=".54" stop-color="#EAC36D"/><stop offset="1" stop-color="#C8903F"/>
+    </linearGradient>
+    <linearGradient id="night" x1=".12" y1="0" x2=".84" y2="1">
+      <stop offset="0" stop-color="#8A94CB"/><stop offset=".58" stop-color="#5D6FAE"/><stop offset="1" stop-color="#3F4D7C"/>
+    </linearGradient>
+  </defs>
+  
+    <path d="M31.5 3.7c-8.7 2.1-14.2 9.1-14.2 18 0 9.6 6.3 16.4 16 18-3.15 3.4-7.55 5.1-12.4 5.1-10.2 0-17.2-7.7-17.2-18.2 0-13.3 11.1-23.5 27.8-22.9Z" fill="url(#night)" stroke="#394975" stroke-width="1.4" stroke-linejoin="round"/>
+    <path d="M8 24.4C9 15.2 15.6 8.9 24 6" stroke="#FFF" stroke-opacity=".36" stroke-width="1.15" stroke-linecap="round"/>
+    <path d="M18 33.8c5.2-3.1 10.6-3.1 16.2 0l-2.1 8c-4-1.1-8-1.1-12 0l-2.1-8Z" fill="url(#paper)" stroke="#B99568" stroke-width="1.05"/>
+    <path d="M26.1 34.1v7.2" stroke="#B99568" stroke-width=".9"/>
+    <path d="M38.2 6.5c.55 2 1.45 2.9 3 3-.05 0-.05 0 0 0-2.05.55-2.95 1.45-3 3-.55-2-1.45-2.9-3-3 2.05-.55 2.95-1.45 3-3Z" fill="#FFE8A4"/>
+    <path d="M42.5 22.2c.55 2 1.45 2.9 1.8 1.8-.05 0-.05 0 0 0-2.05.55-2.95 1.45-1.8 1.8-.55-2-1.45-2.9-1.8-1.8 2.05-.55 2.95-1.45 1.8-1.8Z" fill="#C9B9EA"/>
+  
+</svg>

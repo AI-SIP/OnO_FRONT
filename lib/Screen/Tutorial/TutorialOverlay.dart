@@ -8,6 +8,8 @@ import 'package:provider/provider.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/TutorialProvider.dart';
+import '../../Provider/CosmeticProvider.dart';
+import '../User/Widget/FrogCharacter.dart';
 import 'TutorialStep.dart';
 import 'TutorialTargets.dart';
 import '../../Module/Motion/AppMotion.dart';
@@ -32,7 +34,6 @@ class _TutorialOverlayState extends State<TutorialOverlay>
   // 다른 화면과 같은 값을 쓴다. 튜토리얼만 따로 놀지 않게 한다.
   static const Duration _motionDuration = AppMotion.normal;
   static const Curve _motionCurve = AppMotion.enter;
-  static const String _guideFrogAsset = 'assets/FrogCharacter/FROG_LEVEL15.png';
   static const double _speechBorderWidth = 1.0;
 
   Rect? _targetRect;
@@ -738,11 +739,13 @@ class _TutorialOverlayState extends State<TutorialOverlay>
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Image.asset(
-          _guideFrogAsset,
-          width: frogSize,
-          height: frogSize,
-          fit: BoxFit.contain,
+        // 안내를 하는 것도 내가 꾸민 개구리다. 앱을 처음 열었을 때부터
+        // 같은 개구리가 따라다녀야 이 앱의 마스코트로 읽힌다. 배경 파츠는
+        // 뺀다. 말풍선 옆에 네모난 배경이 깔리면 개구리가 아니라 카드가
+        // 놓인 것처럼 보인다.
+        FrogLayerStack(
+          layers: context.watch<CosmeticProvider>().layersWithoutBackdrop,
+          size: frogSize,
         ),
         const SizedBox(width: 4),
         Expanded(

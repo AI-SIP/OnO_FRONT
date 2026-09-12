@@ -1,68 +1,63 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../Model/Mission/MissionModel.dart';
 import '../../Module/Design/AppRadius.dart';
-import '../../Module/Emoji/OnoEmojiCatalog.dart';
 import 'MissionPalette.dart';
 
 /// 미션 아이콘을 고르는 곳이다. **아이콘 결정은 전부 이 파일에 모아 둔다.**
 ///
-/// 원래 계획은 `assets/MissionIcon/{iconKey}.svg` 19종이었는데 아직 제작
-/// 중이다. 그동안 Material 아이콘으로 그렸더니 앱의 다른 화면과 결이 달랐다.
-/// 이 앱에는 이미 직접 그린 이모지 66종(`assets/emoji/`)이 있고 문자열 키로
-/// 쓰는 체계도 있다. 전용 아이콘이 나올 때까지 그것을 빌려 쓴다.
+/// 전용 아이콘 열아홉 종이 `assets/MissionIcon/{iconKey}.svg` 로 들어왔다.
+/// 그전까지는 앱이 이미 가진 이모지 예순여섯 종을 빌려 썼는데, 이모지는 이
+/// 앱의 다른 자리를 위해 그린 그림이라 미션이 말하는 것과 어긋나는 짝이
+/// 있었고 한 장에 200KB 나 됐다.
 ///
-/// 전용 에셋이 들어오면 [_emojiByCode] / [_emojiByIconKey] 자리에 SVG 경로를
-/// 넣고 [MissionIcon.build] 안쪽만 바꾸면 된다. 화면 코드는 손대지 않는다.
+/// 파일 이름이 곧 서버가 내려주는 `iconKey` 다. 열아홉 종이 서버가 쓰는 키
+/// 전부와 일대일로 맞아서, 따로 옮겨 적는 표가 없어도 된다. 앱이 모르는 키가
+/// 와도 `default.svg` 가 뜬다.
 abstract final class MissionIconKeys {
   /// 모르는 키가 왔을 때 쓰는 폴백. 모델이 쓰는 기본값과 같아야 한다.
   static const String fallback = MissionModel.fallbackIconKey;
 
-  /// 아무것도 못 찾았을 때 쓰는 이모지. 새싹이 자라는 그림이다.
-  static const String fallbackEmoji = 'sprout_growth';
+  /// 전용 아이콘이 놓인 자리.
+  static const String assetDirectory = 'assets/MissionIcon';
+
+  /// 앱이 가지고 있는 아이콘 이름 전부. 파일 목록과 같아야 한다.
+  static const Set<String> known = <String>{
+    'accuracy',
+    'attendance',
+    'cheer',
+    'cleanup',
+    'dawn',
+    fallback,
+    'master',
+    'mood',
+    'night',
+    'note_write',
+    'overdue',
+    'photo',
+    'practice_set',
+    'reflection',
+    'revenge',
+    'review',
+    'share',
+    'streak',
+    'tag',
+  };
 }
 
-/// 미션 코드로 먼저 고른다.
+/// 미션 코드로 아이콘을 갈아 끼우는 자리다.
 ///
-/// 일일과 주간이 같은 `iconKey` 를 쓰기 때문이다(주간 출석도 `attendance`).
-/// 코드로 갈라야 `꾸준함`과 `출석`이 다른 그림을 갖는다.
-const Map<String, String> _emojiByCode = <String, String>{
-  'DAILY_ATTEND': 'success_checkmark',
-  'DAILY_NOTE_WRITE': 'holding_pen',
-  'DAILY_REVIEW_3': 'reading_with_glasses',
-  'DAILY_CORRECT_3': 'got_100_score',
-  'DAILY_PRACTICE_SET': 'studying_with_lamp',
-  'DAILY_MOOD': 'star_eyes_excited',
-  'WEEKLY_ATTEND_5': 'fired_up_sparkle_eyes',
-  'WEEKLY_NOTE_10': 'writing_wink',
-  'WEEKLY_REVIEW_30': 'reading_tablet',
-  'WEEKLY_SET_3': 'trophy_celebration',
+/// **일일과 주간이 같은 `iconKey` 로 오기 때문이다.** 주간 출석도 서버는
+/// `attendance` 로 보내는데, 한 주를 채운 것과 오늘 하루 켠 것은 다른 그림이어야
+/// 한다. 여기 적힌 코드만 갈아 끼우고 나머지는 `iconKey` 를 그대로 쓴다.
+const Map<String, String> _iconNameByCode = <String, String>{
+  'WEEKLY_ATTEND_5': 'streak',
+  'WEEKLY_NOTE_10': 'reflection',
+  'WEEKLY_SET_3': 'master',
 };
 
-/// 코드를 모르면 아이콘 키로 고른다. 서버가 미션을 새로 추가해도 여기서 걸린다.
-const Map<String, String> _emojiByIconKey = <String, String>{
-  'attendance': 'success_checkmark',
-  'note_write': 'holding_pen',
-  'review': 'reading_with_glasses',
-  'accuracy': 'got_100_score',
-  'practice_set': 'studying_with_lamp',
-  'mood': 'star_eyes_excited',
-  'streak': 'fired_up_sparkle_eyes',
-  'master': 'trophy_celebration',
-  'revenge': 'winking_fist',
-  'overdue': 'frustrated_studying',
-  'reflection': 'writing_wink',
-  'photo': 'star_eyes_excited',
-  'tag': 'puzzle_teamwork',
-  'share': 'studying_together',
-  'cheer': 'thumbs_up_wink',
-  'cleanup': 'success_checkmark',
-  'dawn': 'sprout_growth',
-  'night': 'cozy_blanket',
-  MissionIconKeys.fallback: MissionIconKeys.fallbackEmoji,
-};
-
-/// 이모지 에셋마저 없을 때 쓰는 마지막 폴백이다.
+/// 그림 파일마저 못 읽었을 때 쓰는 마지막 폴백이다.
 const Map<String, IconData> _iconByKey = <String, IconData>{
   'note_write': Icons.edit_note,
   'review': Icons.refresh,
@@ -105,46 +100,43 @@ class MissionIcon extends StatelessWidget {
     this.size = 28,
   });
 
-  /// 이 미션에 쓸 이모지 키. 모르는 값은 새싹으로 떨어진다.
-  static String resolveEmojiKey({String? code, String? iconKey}) {
-    final byCode = code == null ? null : _emojiByCode[code];
+  /// 이 미션에 쓸 아이콘 이름. 모르는 값은 `default` 로 떨어진다.
+  static String resolveName({String? code, String? iconKey}) {
+    final byCode = code == null ? null : _iconNameByCode[code];
     if (byCode != null) return byCode;
-    final byIconKey = iconKey == null ? null : _emojiByIconKey[iconKey];
-    return byIconKey ?? MissionIconKeys.fallbackEmoji;
+    if (iconKey != null && MissionIconKeys.known.contains(iconKey)) {
+      return iconKey;
+    }
+    return MissionIconKeys.fallback;
   }
 
-  /// 이모지 에셋까지 없을 때 쓰는 아이콘. 모르는 키는 깃발이다.
+  /// 이 미션에 쓸 그림 파일의 자리.
+  static String resolveAsset({String? code, String? iconKey}) =>
+      '${MissionIconKeys.assetDirectory}/'
+      '${resolveName(code: code, iconKey: iconKey)}.svg';
+
+  /// 그림 파일까지 못 읽었을 때 쓰는 아이콘. 모르는 키는 깃발이다.
   static IconData resolve(String? iconKey) {
     return _iconByKey[iconKey] ?? _iconByKey[MissionIconKeys.fallback]!;
   }
 
   /// 이 키를 앱이 아는지. 테스트와 디버깅용이다.
-  static bool isKnown(String? iconKey) => _iconByKey.containsKey(iconKey);
+  static bool isKnown(String? iconKey) =>
+      MissionIconKeys.known.contains(iconKey);
 
   @override
   Widget build(BuildContext context) {
-    final emoji = OnoEmojiCatalog.byKey(
-      resolveEmojiKey(code: code, iconKey: iconKey),
-    );
-    if (emoji == null) {
-      return Icon(resolve(iconKey), color: color, size: size);
-    }
-
-    // 이모지 원본은 한 장에 200KB 가까이 된다. 화면에는 30px 안팎으로 뜨므로
-    // 디코딩 크기를 그 두 배 남짓으로 잘라 둔다. 이걸 안 하면 목록에 카드가
-    // 열 장만 떠도 메모리가 크게 는다.
-    final devicePixelRatio = MediaQuery.maybeDevicePixelRatioOf(context) ?? 2.0;
-    final cacheWidth = (size * devicePixelRatio).round().clamp(24, 256);
-
-    return Image.asset(
-      emoji.assetPath,
+    return SvgPicture.asset(
+      resolveAsset(code: code, iconKey: iconKey),
       width: size,
       height: size,
       fit: BoxFit.contain,
-      cacheWidth: cacheWidth,
-      filterQuality: FilterQuality.medium,
-      errorBuilder: (_, __, ___) =>
-          Icon(resolve(iconKey), color: color, size: size),
+      // 벡터라서 크기를 키워도 뭉개지지 않는다. 이모지를 쓰던 때처럼 디코딩
+      // 크기를 잘라 둘 일도 없다.
+      //
+      // 그림을 읽는 동안에는 자리만 잡아 둔다. 여기서 폴백 아이콘을 그리면
+      // 목록이 뜰 때마다 깃발이 한 번 번쩍인다.
+      placeholderBuilder: (_) => SizedBox(width: size, height: size),
     );
   }
 }

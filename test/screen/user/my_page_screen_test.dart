@@ -10,7 +10,7 @@ import 'package:ono/Screen/Onboarding/LoginScreen.dart';
 import 'package:ono/Screen/User/MyPageScreen.dart';
 import 'package:ono/Screen/User/Widget/ReviewReportScreen.dart';
 import 'package:ono/Screen/User/Widget/StreakCard.dart';
-import 'package:ono/Screen/User/Widget/UserLevelCard.dart';
+import 'package:ono/Screen/User/Widget/ProfileEditCard.dart';
 
 import '../../helpers/helpers.dart';
 
@@ -107,7 +107,7 @@ void main() {
       });
 
       expect(find.text('로그인을 통해 설정을 변경해보세요!'), findsOneWidget);
-      expect(find.byType(UserLevelCard), findsNothing);
+      expect(find.byType(ProfileEditCard), findsNothing);
       expect(find.byType(StreakCard), findsNothing);
       expect(find.text('학습 리포트'), findsNothing);
     });
@@ -127,7 +127,7 @@ void main() {
 
       expect(find.textContaining('오노프렌즈님의 학습 기록'), findsOneWidget);
       expect(find.text('학습 리포트'), findsOneWidget);
-      expect(find.byType(UserLevelCard), findsOneWidget);
+      expect(find.byType(ProfileEditCard), findsOneWidget);
       expect(find.byType(StreakCard), findsOneWidget);
     });
 
@@ -164,7 +164,7 @@ void main() {
       expect(find.byType(ReviewReportScreen), findsOneWidget);
     });
 
-    testWidgets('설정 아이콘을 탭하면 프로필과 계정 메뉴가 보인다', (tester) async {
+    testWidgets('프로필은 본문에, 계정 메뉴는 설정 화면에 있다', (tester) async {
       await withMockedNetworkImages(() async {
         await pumpOnoWidget(
           tester,
@@ -175,13 +175,21 @@ void main() {
         );
       });
 
+      // 프로필과 테마 변경은 마이페이지 본문에 있다. 설정에는 자주 건드리지
+      // 않는 것만 남는다.
+      expect(find.byType(ProfileEditCard), findsOneWidget);
+      expect(find.text('이름 변경'), findsOneWidget);
+      expect(find.text('테마 변경'), findsOneWidget);
+
       await tester.tap(find.byIcon(Icons.settings));
       await tester.pumpAndSettle();
 
       expect(find.text('설정'), findsOneWidget);
-      expect(find.text('오노프렌즈'), findsOneWidget);
       expect(find.text('로그아웃'), findsOneWidget);
       expect(find.text('회원 탈퇴'), findsOneWidget);
+      // 설정에서는 빠졌다.
+      expect(find.byType(ProfileEditCard), findsNothing);
+      expect(find.text('테마 변경'), findsNothing);
     });
 
     testWidgets('태블릿 세로 크기에서도 예외 없이 그려진다', (tester) async {
@@ -195,7 +203,7 @@ void main() {
       });
 
       expect(tester.takeException(), isNull);
-      expect(find.byType(UserLevelCard), findsOneWidget);
+      expect(find.byType(ProfileEditCard), findsOneWidget);
       expect(find.byType(StreakCard), findsOneWidget);
     });
 
@@ -211,7 +219,7 @@ void main() {
       });
 
       expect(tester.takeException(), isNull);
-      expect(find.byType(UserLevelCard), findsOneWidget);
+      expect(find.byType(ProfileEditCard), findsOneWidget);
       expect(find.byType(StreakCard), findsOneWidget);
     });
   });

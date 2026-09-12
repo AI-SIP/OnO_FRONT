@@ -1,0 +1,50 @@
+<svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <title>스터디룸 문제 공유</title>
+  <defs>
+    <linearGradient id="frog" x1=".15" y1="0" x2=".78" y2="1">
+      <stop offset="0" stop-color="#E9FFD2"/><stop offset=".52" stop-color="#C8EDA5"/><stop offset="1" stop-color="#91C978"/>
+    </linearGradient>
+    <radialGradient id="eye" cx=".32" cy=".24" r=".82">
+      <stop offset="0" stop-color="#5A4637"/><stop offset=".46" stop-color="#2A201C"/><stop offset="1" stop-color="#171311"/>
+    </radialGradient>
+    <linearGradient id="paper" x1=".2" y1="0" x2=".72" y2="1">
+      <stop offset="0" stop-color="#FFFDF3"/><stop offset=".62" stop-color="#FFF0D2"/><stop offset="1" stop-color="#E8CFA9"/>
+    </linearGradient>
+    <linearGradient id="blue" x1=".12" y1="0" x2=".84" y2="1">
+      <stop offset="0" stop-color="#90C4EE"/><stop offset=".55" stop-color="#679DD4"/><stop offset="1" stop-color="#456FA9"/>
+    </linearGradient>
+    <linearGradient id="coral" x1=".14" y1="0" x2=".82" y2="1">
+      <stop offset="0" stop-color="#F8C0AF"/><stop offset=".56" stop-color="#E9948F"/><stop offset="1" stop-color="#C96D75"/>
+    </linearGradient>
+    <linearGradient id="purple" x1=".15" y1="0" x2=".82" y2="1">
+      <stop offset="0" stop-color="#C9B9EA"/><stop offset=".57" stop-color="#9A84CB"/><stop offset="1" stop-color="#7463A8"/>
+    </linearGradient>
+    <linearGradient id="teal" x1=".14" y1="0" x2=".82" y2="1">
+      <stop offset="0" stop-color="#A7DFC5"/><stop offset=".55" stop-color="#70BA94"/><stop offset="1" stop-color="#468D70"/>
+    </linearGradient>
+    <linearGradient id="gold" x1=".15" y1="0" x2=".78" y2="1">
+      <stop offset="0" stop-color="#FFE8A4"/><stop offset=".54" stop-color="#EAC36D"/><stop offset="1" stop-color="#C8903F"/>
+    </linearGradient>
+    <linearGradient id="night" x1=".12" y1="0" x2=".84" y2="1">
+      <stop offset="0" stop-color="#8A94CB"/><stop offset=".58" stop-color="#5D6FAE"/><stop offset="1" stop-color="#3F4D7C"/>
+    </linearGradient>
+  </defs>
+  
+    <rect x="3.5" y="20" width="20" height="23" rx="4.5" fill="url(#paper)" stroke="#B99568" stroke-width="1.2" transform="rotate(-5 3.5 20)"/>
+    <rect x="25" y="5" width="19.5" height="23" rx="4.5" fill="url(#paper)" stroke="#B99568" stroke-width="1.2" transform="rotate(5 25 5)"/>
+    <path d="M8.5 26h9M8.5 30h7M30 11h9M30 15h7" stroke="#78909C" stroke-width="1.15" stroke-linecap="round"/>
+    <path d="M17 34c7.7-.7 13.5-5.2 16.2-12.7" stroke="url(#blue)" stroke-width="4.2" stroke-linecap="round"/>
+    <path d="m31.1 17.1 3.2 5.9 5.5-3.7" fill="url(#blue)" stroke="#3D6798" stroke-width="1.05" stroke-linejoin="round"/>
+    <g transform="translate(4 8.3) rotate(-18) scale(0.65)">
+    <path d="M0 4.5C0 1.8 2 0 4.6 0c2.7 0 4.7 1.8 4.7 4.5v3.3c0 2.8-2.2 4.7-4.7 4.7S0 10.6 0 7.8V4.5Z" fill="url(#frog)" stroke="#709D62" stroke-width="1"/>
+    <circle cx="1.4" cy="1.2" r="1.45" fill="#DDF8BE"/><circle cx="4.6" cy=".3" r="1.55" fill="#DDF8BE"/><circle cx="7.8" cy="1.2" r="1.45" fill="#DDF8BE"/>
+    <path d="M1.5 7.2c1.9 1 4.3 1 6.2 0" stroke="#FFF" stroke-opacity=".35" stroke-width=".9" stroke-linecap="round"/>
+  </g>
+    <g transform="translate(37 30.2) rotate(18) scale(0.65)">
+    <path d="M0 4.5C0 1.8 2 0 4.6 0c2.7 0 4.7 1.8 4.7 4.5v3.3c0 2.8-2.2 4.7-4.7 4.7S0 10.6 0 7.8V4.5Z" fill="url(#frog)" stroke="#709D62" stroke-width="1"/>
+    <circle cx="1.4" cy="1.2" r="1.45" fill="#DDF8BE"/><circle cx="4.6" cy=".3" r="1.55" fill="#DDF8BE"/><circle cx="7.8" cy="1.2" r="1.45" fill="#DDF8BE"/>
+    <path d="M1.5 7.2c1.9 1 4.3 1 6.2 0" stroke="#FFF" stroke-opacity=".35" stroke-width=".9" stroke-linecap="round"/>
+  </g>
+    <path d="M21.5 7.6c.55 2 1.45 2.9 2.4 2.4-.05 0-.05 0 0 0-2.05.55-2.95 1.45-2.4 2.4-.55-2-1.45-2.9-2.4-2.4 2.05-.55 2.95-1.45 2.4-2.4Z" fill="url(#gold)"/>
+  
+</svg>

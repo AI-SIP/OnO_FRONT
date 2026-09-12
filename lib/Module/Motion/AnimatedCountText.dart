@@ -32,6 +32,9 @@ class AnimatedCountText extends StatelessWidget {
   /// 글자가 차지할 최소 너비.
   final double? minWidth;
 
+  /// 줄 높이. [StandardText] 의 것을 그대로 넘긴다.
+  final double height;
+
   final Duration duration;
   final Curve curve;
   final Duration delay;
@@ -46,6 +49,7 @@ class AnimatedCountText extends StatelessWidget {
     this.fontFamily = 'PretendardBold',
     this.textAlign = TextAlign.start,
     this.minWidth,
+    this.height = 1.8,
     this.duration = AppMotion.gauge,
     this.curve = AppMotion.emphasized,
     this.delay = Duration.zero,
@@ -71,6 +75,7 @@ class AnimatedCountText extends StatelessWidget {
           fontWeight: fontWeight,
           fontFamily: fontFamily,
           textAlign: textAlign,
+          height: height,
         );
 
         if (minWidth == null) return text;

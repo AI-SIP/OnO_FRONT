@@ -1,7 +1,9 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import '../../Model/Cosmetic/CosmeticLoadoutModel.dart';
 import '../../Model/Mission/MissionModel.dart';
 import '../../Module/Design/AppColors.dart';
 import '../../Module/Design/AppRadius.dart';
@@ -12,6 +14,7 @@ import '../../Module/Motion/AppHaptic.dart';
 import '../../Module/Motion/AppMotion.dart';
 import '../../Module/Motion/PressableScale.dart';
 import '../../Module/Text/StandardText.dart';
+import '../../Provider/CosmeticProvider.dart';
 import '../User/Widget/FrogCharacter.dart';
 import 'MissionRewardChip.dart';
 
@@ -124,6 +127,9 @@ class _MissionHeroCardState extends State<MissionHeroCard>
   @override
   Widget build(BuildContext context) {
     final ratio = _total > 0 ? _completed / _total : 0.0;
+    // LayoutBuilder 안쪽은 레이아웃 중에 돌아서 Provider 를 구독할 수 없다.
+    // 여기서 한 번 읽어 내려 준다.
+    final frogLayers = context.watch<CosmeticProvider>().layers;
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -149,7 +155,7 @@ class _MissionHeroCardState extends State<MissionHeroCard>
           ),
           child: Row(
             children: [
-              _buildFrogRing(gaugeSize, ratio),
+              _buildFrogRing(gaugeSize, ratio, frogLayers),
               // 링과 오른쪽 글상자가 확실히 떨어져 보이게 벌린다. 좁혀 두면
               // 둘이 한 덩어리로 읽혀서 어느 쪽이 무엇인지 눈에 안 들어온다.
               const SizedBox(width: AppSpacing.xxxl),
@@ -161,8 +167,24 @@ class _MissionHeroCardState extends State<MissionHeroCard>
     );
   }
 
-  Widget _buildFrogRing(double size, double ratio) {
-    final frog = FrogCharacter(level: widget.level, size: size * 0.62);
+  Widget _buildFrogRing(
+    double size,
+    double ratio,
+    List<CosmeticLayerModel> frogLayers,
+  ) {
+    // 개구리를 눌러도 아무 데도 가지 않는다. 꾸미러 가는 문은 옷장 탭의
+    // 꾸미기 버튼 하나로 모았다. 여기 개구리는 오늘 미션 진행도를 두른
+    // 그림이지 문이 아니다. 같은 그림이 화면마다 다른 일을 하면, 누르기 전에
+    // 무슨 일이 날지 알 수 없다.
+    //
+    // 격려 말풍선도 띄우지 않는다. 말풍선은 개구리보다 위로 솟는데 이 자리는
+    // 고리 안쪽이라 카드 밖으로 삐져나온다. 한마디 듣는 자리는 개구리가
+    // 주인공인 옷장 탭과 꾸미기 화면의 무대다.
+    final frog = FrogCharacter(
+      layers: frogLayers,
+      size: size * 0.62,
+      showEncouragement: false,
+    );
 
     return AnimatedCircularGauge(
       value: ratio,
