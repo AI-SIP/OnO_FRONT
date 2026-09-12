@@ -405,9 +405,10 @@ void main() {
       expect(find.text('문제 복습'), findsOneWidget);
       expect(find.text('복습 세트'), findsOneWidget);
 
-      // 레벨 넷. 고리 안에서는 숫자만 쓴다. 고리 자체가 레벨 게이지이고
-      // 바로 위에 이름표가 붙어 있어서 `Lv.` 를 네 번 반복할 이유가 없다.
-      // `Lv.` 를 말하는 자리는 총 학습 한 줄로 남는다.
+      // 레벨 넷. 고리 안에서는 `Lv` 꼬리표와 숫자를 따로 세운다. 숫자만
+      // 남기면 그것이 레벨인지 개수인지 순위인지 알 수 없고, `Lv.3` 한
+      // 덩어리로 쓰면 작은 원에 들어가느라 숫자가 절반으로 줄어든다.
+      expect(find.text('Lv'), findsNWidgets(4));
       expect(find.text('3'), findsOneWidget);
       expect(find.text('5'), findsOneWidget);
       expect(find.text('2'), findsOneWidget);
@@ -474,6 +475,17 @@ void main() {
               tester.getRect(find.text(name)).height.toStringAsFixed(1)),
       };
       expect(heights, hasLength(1), reason: '넷의 글자 높이가 갈렸다: $heights');
+
+      // 고리 안 `Lv` 꼬리표도 넷이 같아야 한다. 꼬리표와 숫자가 크기가 달라서
+      // 따로 재는 길을 쓰는데, 그 계산이 틀어지면 여기서 갈린다.
+      final prefixes = <double>{
+        for (final element in find.text('Lv').evaluate())
+          double.parse(
+            ((element.renderObject! as RenderBox).size.height)
+                .toStringAsFixed(1),
+          ),
+      };
+      expect(prefixes, hasLength(1), reason: '넷의 Lv 높이가 갈렸다: $prefixes');
     });
 
     testWidgets('능력치는 총 학습 바로 아래, 개구리 위에 온다', (tester) async {
@@ -676,8 +688,9 @@ void main() {
                 reason: '$finder 가 화면 아래로 잘렸다');
           }
 
-          // 능력치 넷의 레벨과 남은 경험치가 전부 그려져 있다. 고리 안에서는
-          // 숫자만 쓴다.
+          // 능력치 넷의 레벨과 남은 경험치가 전부 그려져 있다. 고리 안에는
+          // `Lv` 꼬리표와 숫자가 따로 선다.
+          expect(find.text('Lv'), findsNWidgets(4));
           expect(find.text('3'), findsOneWidget);
           expect(find.text('8 / 30'), findsOneWidget);
           expect(find.text('6 / 10'), findsOneWidget);

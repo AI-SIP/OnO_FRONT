@@ -81,14 +81,81 @@ abstract final class GrowthType {
   /// 레벨 글자. `Lv.7`.
   static String level(num value) => 'Lv.${value.round()}';
 
-  /// 고리 안에 앉는 능력치 레벨. **숫자만 쓴다.**
+  /// 고리 안에 앉는 능력치 레벨의 **숫자 부분**.
   ///
-  /// `Lv.` 를 떼는 것은 [level] 이 정한 서식을 어기는 일이라 이유가 필요하다.
-  /// 고리 자체가 레벨 게이지이고 바로 위에 이름표가 붙어 있어서, 작은 원
-  /// 네 개에 `Lv.` 를 네 번 반복해 봐야 새로 알려 주는 것이 없다. 대신 그
-  /// 자리를 숫자에 내주면 같은 고리 안에서 글자가 훨씬 커진다. 이 영역에서
-  /// **`Lv.` 를 말하는 자리는 총 학습 한 줄**로 남는다.
+  /// 앞에 [ringPrefix] 가 따로 붙는다. `Lv.3` 한 덩어리로 쓰면 다섯 글자가
+  /// 지름 40 남짓한 원 안에 들어가느라 숫자가 14px 까지 줄어들어서, 이
+  /// 눈금판에서 제일 중요한 값이 제일 작은 글자가 된다. 한때 `Lv.` 를 아예
+  /// 떼어 숫자만 남긴 적도 있는데, 그러면 3 이 레벨인지 개수인지 순위인지
+  /// 알 수 없었다. **꼬리표를 작게 따로 세우면 둘 다 된다.**
   static String ringLevel(num value) => value.round().toString();
+
+  /// 고리 안 숫자 앞에 붙는 꼬리표.
+  ///
+  /// 마침표를 뺀 것은 숫자와 떨어져 앉기 때문이다. `Lv.` 의 점은 뒤에 숫자가
+  /// 바로 붙을 때 둘을 잇는 역할을 하는데, 여기서는 그 자리를 여백이 한다.
+  static const String ringPrefix = 'Lv';
+
+  /// 꼬리표 크기. 숫자에 대한 비율이다.
+  ///
+  /// 절반보다 조금 크게 둔다. 더 줄이면 원 안에서 뭉개지고, 더 키우면 숫자가
+  /// 가져가야 할 자리를 먹는다.
+  static const double ringPrefixRatio = 0.55;
+
+  /// 꼬리표와 숫자 사이.
+  static const double ringPrefixGap = 2.0;
+
+  /// 고리 안 `Lv 3` 한 덩어리를 칸에 앉히는 배율.
+  ///
+  /// 꼬리표와 숫자가 크기가 달라서 [uniformScale] 로는 못 잰다. 한 덩어리로
+  /// 이어 붙인 글자를 숫자 크기로 재면 꼬리표 몫을 두 배 가까이 부풀려
+  /// 잡는다. 둘을 따로 재서 더한다.
+  static double ringScale(
+    BuildContext context,
+    Iterable<int> levels, {
+    required double available,
+  }) {
+    available -= 1.0;
+    if (available <= 0) return 1.0;
+
+    final scaler = MediaQuery.textScalerOf(context);
+    final prefix = _measure(
+      ringPrefix,
+      scaler.scale(abilityLevel * ringPrefixRatio),
+      valueFamily,
+    );
+
+    var widest = 0.0;
+    for (final level in levels) {
+      final number = _measure(
+        ringLevel(level),
+        scaler.scale(abilityLevel),
+        valueFamily,
+      );
+      widest = math.max(widest, prefix + ringPrefixGap + number);
+    }
+
+    if (widest <= available) return 1.0;
+    return available / widest;
+  }
+
+  /// 글자 한 줄의 폭.
+  static double _measure(String text, double fontSize, String fontFamily) {
+    final painter = TextPainter(
+      text: TextSpan(
+        text: text,
+        style: TextStyle(
+          fontSize: fontSize,
+          fontFamily: fontFamily,
+          fontWeight: FontWeight.bold,
+          height: lineHeight,
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+      maxLines: 1,
+    )..layout();
+    return painter.width;
+  }
 
   /// 진행도 글자. `24 / 60`.
   static String meter(num current, int goal) => '${current.round()} / $goal';
@@ -136,6 +203,64 @@ abstract final class GrowthType {
 
     if (widest <= available) return 1.0;
     return available / widest;
+  }
+}
+
+/// 고리 안에 앉는 능력치 레벨. `Lv` 꼬리표 + 숫자.
+///
+/// **숫자만 남기면 그것이 레벨인지 개수인지 순위인지 알 수 없다.** 그렇다고
+/// `Lv.3` 한 덩어리로 쓰면 다섯 글자가 작은 원에 들어가느라 숫자가 절반으로
+/// 줄어든다. 꼬리표를 숫자의 [GrowthType.ringPrefixRatio] 크기로 따로 세워
+/// 둘 다 살린다. 꼬리표는 같은 색을 옅게 써서 숫자를 가리지 않는다.
+class GrowthRingLevel extends StatelessWidget {
+  final int level;
+
+  /// 이 능력치의 색.
+  final Color color;
+
+  /// [GrowthType.ringScale] 이 재 준 배율. 넷을 같은 크기로 앉힐 때 쓴다.
+  final double scale;
+
+  /// 숫자가 올라가기 시작하는 시점. 고리에 준 것과 같은 값을 준다.
+  final Duration delay;
+
+  const GrowthRingLevel({
+    super.key,
+    required this.level,
+    required this.color,
+    this.scale = 1.0,
+    this.delay = Duration.zero,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final size = GrowthType.abilityLevel * scale;
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.baseline,
+      textBaseline: TextBaseline.alphabetic,
+      children: [
+        StandardText(
+          text: GrowthType.ringPrefix,
+          fontSize: size * GrowthType.ringPrefixRatio,
+          fontFamily: GrowthType.valueFamily,
+          color: color.withValues(alpha: 0.70),
+          height: GrowthType.lineHeight,
+          maxLines: 1,
+        ),
+        const SizedBox(width: GrowthType.ringPrefixGap),
+        AnimatedCountText(
+          value: level,
+          formatter: GrowthType.ringLevel,
+          fontSize: size,
+          fontFamily: GrowthType.valueFamily,
+          color: color,
+          height: GrowthType.lineHeight,
+          delay: delay,
+        ),
+      ],
+    );
   }
 }
 

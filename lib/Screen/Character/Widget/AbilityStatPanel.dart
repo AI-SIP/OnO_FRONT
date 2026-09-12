@@ -6,7 +6,6 @@ import '../../../Model/User/UserInfoModel.dart';
 import '../../../Module/Design/AppColors.dart';
 import '../../../Module/Design/AppRadius.dart';
 import '../../../Module/Design/AppSpacing.dart';
-import '../../../Module/Motion/AnimatedCountText.dart';
 import '../../../Module/Motion/AnimatedGauge.dart';
 import '../../../Module/Motion/AppHaptic.dart';
 import '../../../Module/Motion/PressableScale.dart';
@@ -324,15 +323,11 @@ class _AbilityDial extends StatelessWidget {
                     padding: EdgeInsets.all(stroke + _dialTextInset),
                     child: FittedBox(
                       fit: BoxFit.scaleDown,
-                      child: AnimatedCountText(
-                        value: ability.level,
-                        formatter: GrowthType.ringLevel,
-                        fontSize: GrowthType.abilityLevel * levelScale,
-                        fontFamily: GrowthType.valueFamily,
+                      child: GrowthRingLevel(
+                        level: ability.level,
                         color: accent,
-                        height: GrowthType.lineHeight,
+                        scale: levelScale,
                         delay: delay,
-                        textAlign: TextAlign.center,
                       ),
                     ),
                   ),
