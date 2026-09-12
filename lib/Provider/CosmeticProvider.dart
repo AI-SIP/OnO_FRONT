@@ -146,10 +146,13 @@ class CosmeticProvider with ChangeNotifier {
   /// 정한 그리는 순서에 이미 들어 있어서, 슬롯 이름을 앱에 박아 두지 않아도
   /// 알 수 있다. 등짐도 개구리보다 뒤에 그려지지만 그것은 개구리 몸에 맞춰
   /// 그린 그림이라 무대로 내보내면 자리가 어긋난다. 그래서 맨 뒤 한 자리만 본다.
-  CosmeticLayerModel? get stageBackdrop {
+  CosmeticLayerModel? get stageBackdrop => backdropOf(_equipped);
+
+  /// 이 차림에서 무대에 깔 배경. [stageBackdrop] 의 시착판이다.
+  CosmeticLayerModel? backdropOf(Map<String, String> equipped) {
     final slot = _backdropSlot;
     if (slot == null) return null;
-    for (final layer in layers) {
+    for (final layer in layersOf(equipped)) {
       if (layer.slot == slot) return layer;
     }
     return null;
@@ -160,11 +163,15 @@ class CosmeticProvider with ChangeNotifier {
   /// [layersWithoutBackdrop] 과 다르다. 그쪽은 개구리 본체보다 **뒤에 그려지는
   /// 것을 전부** 걷어 내서 등짐까지 사라진다. 이쪽은 맨 뒤 한 장만 뺀다. 무대가
   /// 그 한 장을 대신 그리고, 등짐은 개구리와 같은 사각형에 남아야 한다.
-  List<CosmeticLayerModel> get layersOnStage {
+  List<CosmeticLayerModel> get layersOnStage => layersOnStageOf(_equipped);
+
+  /// 이 차림에서 배경 한 장을 뺀 층들. [layersOnStage] 의 시착판이다.
+  List<CosmeticLayerModel> layersOnStageOf(Map<String, String> equipped) {
+    final all = layersOf(equipped);
     final slot = _backdropSlot;
-    if (slot == null) return layers;
+    if (slot == null) return all;
     return [
-      for (final layer in layers)
+      for (final layer in all)
         if (layer.slot != slot) layer,
     ];
   }

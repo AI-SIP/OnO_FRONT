@@ -419,12 +419,21 @@ class _CosmeticClosetScreenState extends State<CosmeticClosetScreen> {
     );
   }
 
-  /// 개구리가 서는 자리. 이 화면의 주인공이다.
+  /// 개구리가 서는 자리.
   ///
-  /// 바탕은 위가 밝고 아래로 갈수록 테마색이 도는 세로 그라데이션이다. 위에서
-  /// 빛이 들어오고 아래가 바닥인 무대의 결이라, 그 위에 선 개구리가 조각이
-  /// 아니라 장면으로 읽힌다. 빛무리와 바닥 그림자는
-  /// [CosmeticStageFrog] 가 그린다.
+  /// **여기서는 무대가 액자로 남는다.** 옷장 탭에서는 개구리가 주인공이고
+  /// 화면 전체가 그의 무대라 배경을 화면 끝까지 펼쳤지만, 이 화면의 주인공은
+  /// 아래 격자다. 무대는 고른 것이 어떻게 보이는지 확인하는 **미리보기 창**이고,
+  /// 미리보기 창이 테두리를 가지는 것은 자연스럽다. 화면 전체로 펼치면 지금 고른
+  /// 배경과 화면의 경계가 사라져서, 배경을 바꿨을 때 무엇이 달라졌는지 보려고
+  /// 화면을 통째로 훑어야 한다. 무대가 화면의 삼분의 일뿐이라 가로로 납작해서
+  /// 512 정사각형을 채우면 위아래가 크게 잘리는 것도 이유다.
+  ///
+  /// 액자는 하나만 둔다. 배경 파츠는 개구리 사각형이 아니라 **이 카드의
+  /// 바탕**으로 깐다. 개구리 사각형에 그대로 두면 둥근 사각형 안에 둥근
+  /// 사각형이 또 생겨서, 옷장 탭에서 걷어낸 액자가 여기에 그대로 남는다.
+  /// 배경을 안 걸치면 위가 밝고 아래로 갈수록 테마색이 도는 그라데이션과
+  /// 지평선이 보인다. 빛무리와 바닥 그림자는 [CosmeticStageFrog] 가 그린다.
   ///
   /// 금색 같은 별도의 장식색을 쓰지 않는다. 그러면 이 화면만 앱에서 겉돈다.
   Widget _buildStage(
@@ -440,12 +449,6 @@ class _CosmeticClosetScreenState extends State<CosmeticClosetScreen> {
     final showsProfile = activeSlot != null && !activeSlot.composited;
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(
-        AppSpacing.md,
-        AppSpacing.md,
-        AppSpacing.md,
-        AppSpacing.sm,
-      ),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
@@ -469,41 +472,69 @@ class _CosmeticClosetScreenState extends State<CosmeticClosetScreen> {
           ),
         ],
       ),
-      child: Column(
-        children: [
-          // 수집률과 되돌리기는 개구리 위에 겹치지 않게 한 줄을 따로 쓴다.
-          // 겹쳐 두면 배경을 입은 개구리의 모서리를 가린다.
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Expanded(
-                child: CosmeticCollectionMeter(
-                  owned: cosmetic.items.where((item) => item.owned).length,
-                  total: cosmetic.items.length,
-                  color: color,
-                ),
+      // 배경 파츠가 카드 모서리를 넘지 않게 잘라 낸다. 무대 카드 자체가
+      // 그릇이므로 개구리는 제 액자를 따로 가질 필요가 없다.
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(AppRadius.xlarge),
+        child: Stack(
+          children: [
+            Positioned.fill(
+              child: CosmeticStageGround(
+                backdrop: cosmetic.backdropOf(fitting),
+                color: color,
               ),
-              const SizedBox(width: AppSpacing.md),
-              _buildResetButton(cosmetic, color),
-            ],
-          ),
-          // 게이지 바로 아래에 개구리를 붙여 두면 둘이 한 덩어리로 읽혀서
-          // 무대가 좁아 보인다. 눈에 띄게 벌려 게이지는 머리말, 개구리는
-          // 무대 위 주인공으로 갈라 놓는다.
-          const SizedBox(height: AppSpacing.xl),
-          if (showsProfile)
-            _buildProfilePreview(cosmetic, fitting, activeSlot, frogSize, color)
-          else
-            CosmeticStageFrog(
-              // 저장하기 전에도 개구리는 바로 갈아입는다. 그래야 써 보는
-              // 의미가 있다. 바뀌지 않는 것은 하단 탭과 프로필의 개구리다.
-              layers: cosmetic.layersOf(fitting),
-              size: frogSize,
-              color: color,
-              equipTick: _equipTick,
             ),
-          const SizedBox(height: AppSpacing.sm),
-        ],
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.md,
+                AppSpacing.md,
+                AppSpacing.md,
+                AppSpacing.sm,
+              ),
+              child: Column(
+                children: [
+                  // 수집률과 되돌리기는 개구리 위에 겹치지 않게 한 줄을 따로 쓴다.
+                  // 겹쳐 두면 배경을 입은 개구리의 모서리를 가린다.
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Expanded(
+                        child: CosmeticCollectionMeter(
+                          owned:
+                              cosmetic.items.where((item) => item.owned).length,
+                          total: cosmetic.items.length,
+                          color: color,
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.md),
+                      _buildResetButton(cosmetic, color),
+                    ],
+                  ),
+                  // 게이지 바로 아래에 개구리를 붙여 두면 둘이 한 덩어리로 읽혀서
+                  // 무대가 좁아 보인다. 눈에 띄게 벌려 게이지는 머리말, 개구리는
+                  // 무대 위 주인공으로 갈라 놓는다.
+                  const SizedBox(height: AppSpacing.xl),
+                  if (showsProfile)
+                    _buildProfilePreview(
+                        cosmetic, fitting, activeSlot, frogSize, color)
+                  else
+                    CosmeticStageFrog(
+                      // 저장하기 전에도 개구리는 바로 갈아입는다. 그래야 써 보는
+                      // 의미가 있다. 바뀌지 않는 것은 하단 탭과 프로필의 개구리다.
+                      //
+                      // 배경 한 장은 이 카드가 대신 깐다. 여기 남는 것은 개구리 몸에
+                      // 맞춰 그려진 것들뿐이다.
+                      layers: cosmetic.layersOnStageOf(fitting),
+                      size: frogSize,
+                      color: color,
+                      equipTick: _equipTick,
+                    ),
+                  const SizedBox(height: AppSpacing.sm),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

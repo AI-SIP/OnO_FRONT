@@ -108,6 +108,40 @@ void main() {
     await tester.pumpAndSettle();
   }
 
+  group('무대 배경', () {
+    // 액자는 하나만 둔다. 배경 파츠를 개구리 사각형에 그대로 두면 둥근 사각형
+    // 안에 둥근 사각형이 또 생겨서, 옷장 탭에서 걷어낸 액자가 여기 남는다.
+    testWidgets('배경은 개구리 사각형이 아니라 무대 카드에 깔린다', (tester) async {
+      final cosmetic = await pumpCloset(tester);
+
+      final backdrop = cosmetic.backdropOf(cosmetic.equipped);
+      expect(backdrop, isNotNull, reason: '기본 차림에 배경이 걸려 있어야 한다');
+      expect(find.byType(CosmeticStageGround), findsOneWidget);
+
+      final stack = tester.widget<FrogLayerStack>(
+        find.descendant(
+          of: find.byType(CosmeticStageFrog),
+          matching: find.byType(FrogLayerStack),
+        ),
+      );
+      expect(
+        stack.layers.any((layer) => layer.itemKey == backdrop!.itemKey),
+        isFalse,
+      );
+    });
+
+    testWidgets('배경을 벗어도 무대가 비지 않는다', (tester) async {
+      final cosmetic = await pumpCloset(tester);
+
+      cosmetic.unequipAll();
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(find.byType(CosmeticStageGround), findsOneWidget);
+      expect(find.byType(CosmeticStageFrog), findsOneWidget);
+    });
+  });
+
   group('무대', () {
     testWidgets('개구리가 무대 위에 선다', (tester) async {
       await pumpCloset(tester);
