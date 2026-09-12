@@ -78,6 +78,7 @@ dev_dependencies:
   firebase_core_platform_interface: ^8.0.0
   firebase_analytics_platform_interface: ^6.0.0
   flutter_secure_storage_platform_interface: ^1.1.2
+  camera_platform_interface: ^2.11.0
   plugin_platform_interface: ^2.1.8
 
   # The "flutter_lints" package below contains a set of recommended lints to
