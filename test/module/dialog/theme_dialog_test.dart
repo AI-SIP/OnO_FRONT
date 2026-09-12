@@ -199,6 +199,20 @@ void main() {
       expect(find.text('출석 Lv.9 필요 · 지금 Lv.4'), findsOneWidget);
     });
 
+    testWidgets('이름이 긴 능력치도 조건을 열 머리와 같은 이름으로 부른다', (tester) async {
+      // 판에서는 '복습 세트 복습' 이 아니라 열 머리와 같은 '복습 세트' 다.
+      // 긴 이름을 쓰면 좁은 폭에서 두 줄이 되고, 그때 판이 커지면서 격자가
+      // 밀린다.
+      await pumpThemeDialog(tester);
+
+      await tester.tap(
+        find.byKey(ThemeDialog.cellKey(ThemeLockManager.themeIndexAt(5, 3))),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('복습 세트 Lv.15 필요 · 지금 Lv.1'), findsOneWidget);
+    });
+
     testWidgets('잠긴 칸은 눌러도 골라지지 않는다', (tester) async {
       final themeHandler = await pumpThemeDialog(tester);
 
@@ -225,14 +239,22 @@ void main() {
 
       expect(find.text('고른 색'), findsOneWidget);
       expect(find.text('빨간색'), findsOneWidget);
-      expect(find.text('출석 Lv.3 로 연 색이에요'), findsOneWidget);
     });
 
-    testWidgets('첫 행은 처음부터 열려 있다고 말해 준다', (tester) async {
+    testWidgets('열린 색에는 이름 밑에 설명을 붙이지 않는다', (tester) async {
+      // 어느 레벨에서 열었는지는 이미 지난 일이라 고르는 데 쓸모가 없다.
+      // 색마다 한 줄씩 따라붙으면 판이 설명문처럼 보인다.
       await pumpThemeDialog(tester);
 
       expect(find.text('연핑크'), findsOneWidget);
-      expect(find.text('처음부터 열려 있는 색이에요'), findsOneWidget);
+      expect(find.textContaining('열려 있는 색'), findsNothing);
+
+      await tester.tap(
+        find.byKey(ThemeDialog.cellKey(ThemeLockManager.themeIndexAt(1, 0))),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('연 색이에요'), findsNothing);
     });
 
     testWidgets('적용하면 테마가 바뀌고 창이 닫힌다', (tester) async {
@@ -293,6 +315,19 @@ void main() {
       });
     }
 
+    testWidgets('잠긴 칸을 눌러 조건이 펼쳐져도 스크롤이 생기지 않는다', (tester) async {
+      // 조건 한 줄이 붙으면서 위쪽 판이 그만큼 커진다. 그 바람에 격자가
+      // 밀려 스크롤이 생기면, 조건을 보려고 누른 순간 색들이 움직인다.
+      await pumpThemeDialog(tester, surfaceSize: OnoSurface.phone);
+
+      await tester.tap(
+        find.byKey(ThemeDialog.cellKey(ThemeLockManager.themeIndexAt(5, 3))),
+      );
+      await tester.pumpAndSettle();
+
+      expect(trackPosition(tester).maxScrollExtent, 0);
+    });
+
     testWidgets('첫 동그라미가 트랙 위 모서리에 붙지 않는다', (tester) async {
       await pumpThemeDialog(tester, surfaceSize: OnoSurface.phone);
 
@@ -327,6 +362,19 @@ void main() {
       );
 
       expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('작은 폰에서 글자 1.6배여도 넘치지 않고 조건이 그대로 읽힌다', (tester) async {
+      await pumpThemeDialog(
+        tester,
+        surfaceSize: OnoSurface.smallPhone,
+        textScale: 1.6,
+      );
+
+      expect(tester.takeException(), isNull);
+      // 여백을 넓히면서 조건까지 밀려 사라지면 안 된다.
+      expect(find.text('Lv.9'), findsNWidgets(1 + 4));
+      expect(find.text('출석'), findsOneWidget);
     });
 
     testWidgets('글자를 아주 크게 키워도 버튼이 화면 밖으로 밀리지 않는다', (tester) async {
