@@ -80,22 +80,10 @@ class AbilityGuideSheet extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildTitle(label, colors),
-          const SizedBox(height: AppSpacing.lg),
+          const SizedBox(height: AppSpacing.xl),
           _buildRule(guide, colors),
-          if (guide.hint.isNotEmpty) ...[
-            const SizedBox(height: AppSpacing.md),
-            _buildNote(guide.hint, Icons.info_outline_rounded),
-          ],
-          const SizedBox(height: AppSpacing.sm),
-          _buildNote(
-            '다음 레벨까지 필요한 점수는 레벨이 오를수록 10점씩 늘어나요.',
-            Icons.trending_up_rounded,
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          _buildNote(
-            '능력치 넷을 다 합쳐 하루에 $dailyPointLimit점까지 쌓여요.',
-            Icons.schedule_rounded,
-          ),
+          const SizedBox(height: AppSpacing.xl),
+          _buildFacts(guide, colors),
         ],
       ),
     );
@@ -109,24 +97,27 @@ class AbilityGuideSheet extends StatelessWidget {
     return Row(
       children: [
         Container(
-          padding: const EdgeInsets.all(AppSpacing.sm),
+          width: 44,
+          height: 44,
+          alignment: Alignment.center,
           decoration: BoxDecoration(
             color: colors.surface,
-            borderRadius: BorderRadius.circular(AppRadius.medium),
+            shape: BoxShape.circle,
           ),
           child: Icon(
             MissionPalette.iconOfKind(kind),
             color: colors.accent,
-            size: 22,
+            size: 24,
           ),
         ),
         const SizedBox(width: AppSpacing.md),
         Expanded(
           child: StandardText(
             text: '$label 올리는 법',
-            fontSize: 18,
+            fontSize: 19,
             fontWeight: FontWeight.w700,
             color: AppColors.textPrimary,
+            height: 1.3,
             maxLines: 2,
           ),
         ),
@@ -134,17 +125,21 @@ class AbilityGuideSheet extends StatelessWidget {
     );
   }
 
-  /// 규칙 한 줄. `무엇을 하면` + `몇 점` + `얼마까지`.
+  /// 규칙 한 덩어리. `무엇을 하면` + `몇 점` + `얼마까지`.
   ///
-  /// 점수를 크게 세우고 조건을 작게 붙인다. 이 시트를 여는 사람이 알고 싶은
-  /// 것은 대체로 "얼마나 쌓이나" 하나다.
+  /// **숫자를 제일 먼저 보게 한다.** 이 시트를 여는 사람이 알고 싶은 것은
+  /// 대체로 "얼마나 쌓이나" 하나다. 점수를 크게 세우고 조건을 그 아래 칩으로
+  /// 붙인다. 한도가 문장 속에 묻혀 있으면 점수만 읽고 닫는다.
   Widget _buildRule(_AbilityGuide guide, MissionKindColors colors) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(AppSpacing.lg),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.xl,
+        vertical: AppSpacing.xl,
+      ),
       decoration: BoxDecoration(
         color: colors.surface,
-        borderRadius: BorderRadius.circular(AppRadius.large),
+        borderRadius: BorderRadius.circular(AppRadius.xlarge),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -154,60 +149,108 @@ class AbilityGuideSheet extends StatelessWidget {
             text: guide.how,
             fontSize: 13,
             color: AppColors.textSecondary,
+            fontFamily: 'PretendardLight',
+            height: 1.5,
             maxLines: 2,
           ),
-          const SizedBox(height: AppSpacing.xs),
-          // 글자를 키운 기기에서 `+15점 · 하루 세 개까지` 가 한 줄을 넘는다.
-          // 줄여서 앉힌다. 잘라 내면 한도가 사라진다.
+          const SizedBox(height: AppSpacing.sm),
+          // 글자를 키운 기기에서 큰 숫자가 한 줄을 넘는다. 줄여서 앉힌다.
           FittedBox(
             fit: BoxFit.scaleDown,
             alignment: Alignment.centerLeft,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.baseline,
-              textBaseline: TextBaseline.alphabetic,
-              children: [
-                StandardText(
-                  text: '+${guide.point}점',
-                  fontSize: 24,
-                  fontWeight: FontWeight.w700,
-                  color: colors.accent,
-                  maxLines: 1,
-                ),
-                if (guide.limit.isNotEmpty) ...[
-                  const SizedBox(width: AppSpacing.sm),
-                  StandardText(
-                    text: guide.limit,
-                    fontSize: 12,
-                    color: AppColors.textSecondary,
-                    maxLines: 1,
-                  ),
-                ],
-              ],
+            child: StandardText(
+              text: '+${guide.point}점',
+              fontSize: 34,
+              fontWeight: FontWeight.w700,
+              color: colors.accent,
+              height: 1.15,
+              maxLines: 1,
             ),
           ),
+          if (guide.limit.isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.md),
+            _buildChip(guide.limit, colors),
+          ],
         ],
       ),
     );
   }
 
-  /// 규칙 아래에 붙는 짧은 설명 한 줄.
-  Widget _buildNote(String text, IconData icon) {
+  /// 한도를 담는 알약. 규칙 칸 안에서 점수 아래에 앉는다.
+  Widget _buildChip(String text, MissionKindColors colors) {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: 5,
+        ),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.85),
+          borderRadius: BorderRadius.circular(AppRadius.full),
+        ),
+        child: StandardText(
+          text: text,
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
+          color: colors.accent,
+          height: 1.3,
+          maxLines: 1,
+        ),
+      ),
+    );
+  }
+
+  /// 알아 둘 것 몇 줄.
+  ///
+  /// **한 줄에 한 가지만 적는다.** 예전에는 설명 셋이 같은 크기 회색 글자로
+  /// 붙어 있어서 세 문단이 한 덩어리로 보였다. 줄마다 여백을 벌리고 앞에
+  /// 그 능력치 색의 점을 찍어 어디가 한 줄의 시작인지 눈으로 짚이게 한다.
+  Widget _buildFacts(_AbilityGuide guide, MissionKindColors colors) {
+    final facts = <String>[
+      if (guide.hint.isNotEmpty) guide.hint,
+      '다음 레벨까지 필요한 점수는 레벨이 오를수록 10점씩 늘어나요.',
+      '능력치 넷을 다 합쳐 하루에 $dailyPointLimit점까지 쌓여요.',
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        for (var index = 0; index < facts.length; index++) ...[
+          if (index > 0) const SizedBox(height: AppSpacing.lg),
+          _buildFact(facts[index], colors),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildFact(String text, MissionKindColors colors) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.only(top: 1),
-          child: Icon(icon, size: 15, color: AppColors.textTertiary),
+          padding: const EdgeInsets.only(top: 7),
+          child: Container(
+            width: 5,
+            height: 5,
+            decoration: BoxDecoration(
+              color: colors.accent,
+              shape: BoxShape.circle,
+            ),
+          ),
         ),
-        const SizedBox(width: AppSpacing.sm),
+        const SizedBox(width: AppSpacing.md),
         Expanded(
           child: StandardText(
             text: text,
-            fontSize: 12,
-            color: AppColors.textTertiary,
+            fontSize: 13,
+            color: AppColors.textSecondary,
             fontWeight: FontWeight.normal,
             fontFamily: 'PretendardLight',
+            // 빽빽하다는 말의 대부분이 여기서 왔다. 설명 줄은 두 줄로 넘어가는
+            // 일이 잦은데 줄 사이가 좁으면 글자가 뭉쳐 보인다.
+            height: 1.65,
             maxLines: 3,
           ),
         ),
