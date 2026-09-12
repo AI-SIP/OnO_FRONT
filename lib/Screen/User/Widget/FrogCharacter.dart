@@ -6,6 +6,7 @@ import '../../../Model/Cosmetic/CosmeticLoadoutModel.dart';
 import '../../../Module/Text/StandardText.dart';
 import '../../../Module/Design/AppRadius.dart';
 import '../../../Module/Design/AppColors.dart';
+import '../../Cosmetic/Widget/CosmeticArt.dart';
 
 /// 개구리를 층층이 겹쳐 그리는 것만 하는 위젯이다.
 ///
@@ -69,18 +70,12 @@ class FrogLayerStack extends StatelessWidget {
     final url = layer.imageUrl;
     if (url.isEmpty) return const SizedBox.shrink();
 
-    final isNetwork = url.startsWith('http');
-
-    return Image(
+    // 지금 여기 오는 것은 전부 512 비트맵이지만, 그림 종류를 가리는 일은
+    // [CosmeticArt] 한 군데에만 둔다. 화면마다 확장자를 따져 묻기 시작하면
+    // 새 형식이 들어올 때마다 고칠 데가 늘어난다.
+    return KeyedSubtree(
       key: ValueKey(layer.itemKey ?? 'BASE'),
-      image: isNetwork
-          ? NetworkImage(url) as ImageProvider<Object>
-          : AssetImage(url),
-      width: size,
-      height: size,
-      fit: BoxFit.contain,
-      // 그림 한 장을 못 읽었다고 개구리가 통째로 깨지면 안 된다. 그 층만 비운다.
-      errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
+      child: CosmeticArt(url: url, size: size),
     );
   }
 }

@@ -388,6 +388,49 @@ void main() {
     });
   });
 
+  group('프로필 테두리', () {
+    // FRAME 은 개구리에 겹치지 않는 유일한 자리다. 원형 프로필 사진 둘레에만
+    // 두른다. 이걸 안 보면 테두리가 개구리 얼굴 위를 덮는다.
+    test('개구리 합성에서 빠진다', () {
+      final provider = maxed()..equip('FRAME', 'frame_master');
+
+      expect(provider.equipped['FRAME'], 'frame_master');
+      expect(
+        provider.layers.any((layer) => layer.slot == 'FRAME'),
+        isFalse,
+        reason: '프레임이 개구리 위에 그려지고 있다',
+      );
+    });
+
+    test('걸친 테두리는 profileFrame 으로 따로 나온다', () {
+      final provider = maxed()..equip('FRAME', 'frame_master');
+
+      expect(provider.profileFrame?.itemKey, 'frame_master');
+      expect(provider.profileFrame?.imageUrl,
+          'assets/ProfileFrame/frame_master.svg');
+    });
+
+    test('안 걸치면 null 이다', () {
+      expect(maxed().profileFrame, isNull);
+    });
+
+    test('첫 차림에는 안 들어간다', () {
+      // 프로필은 스터디룸에서 남들과 나란히 보이는데 서버가 남의 치장을
+      // 안 내려준다. 자동으로 걸면 나만 테두리가 있게 된다.
+      expect(maxed().equipped.containsKey('FRAME'), isFalse);
+      expect(uniform(12).equipped.containsKey('FRAME'), isFalse);
+    });
+
+    test('합성되는 자리는 첫 차림에 그대로 들어간다', () {
+      // 프레임만 빠져야지 다른 자리까지 빠지면 안 된다.
+      final equipped = maxed().equipped;
+      for (final slot in CosmeticMockData.loadout.slots) {
+        if (!slot.composited) continue;
+        expect(equipped.containsKey(slot.slot), isTrue, reason: slot.slot);
+      }
+    });
+  });
+
   group('무대에 깔 배경', () {
     // 옷장 탭의 무대는 배경 파츠 한 장을 개구리 사각형에서 꺼내 화면 전체로
     // 편다. 512 정사각형이 둥근 사각형에 갇혀 있으면 개구리가 선 무대가 아니라
@@ -434,9 +477,21 @@ void main() {
   });
 
   group('더미 카탈로그', () {
-    test('에셋 경로가 모두 assets/Cosmetic 아래를 가리킨다', () {
-      for (final item in CosmeticMockData.loadout.items) {
-        expect(item.imageUrl, 'assets/Cosmetic/${item.itemKey}.png');
+    test('에셋 경로가 자리에 맞는 곳을 가리킨다', () {
+      // 개구리에 겹치는 파츠는 512 비트맵이고, 개구리에 안 겹치는 자리
+      // (프로필 테두리)는 벡터다. 크기가 널뛰는 원 둘레에 쓰여서 비트맵으로
+      // 두면 어느 한쪽이 뭉갠다.
+      final catalog = CosmeticMockData.loadout;
+
+      for (final item in catalog.items) {
+        final composited = catalog.slotOf(item.slot)?.composited ?? true;
+        expect(
+          item.imageUrl,
+          composited
+              ? 'assets/Cosmetic/${item.itemKey}.png'
+              : 'assets/ProfileFrame/${item.itemKey}.svg',
+          reason: item.itemKey,
+        );
       }
     });
 

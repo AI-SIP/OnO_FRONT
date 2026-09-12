@@ -169,15 +169,33 @@ class CosmeticProvider with ChangeNotifier {
   }
 
   /// 가장 뒤에 그려지는 슬롯의 키. 슬롯이 하나도 없으면 null.
+  ///
+  /// **개구리에 겹치는 자리 중에서** 고른다. 프로필 테두리처럼 합성에서 빠지는
+  /// 자리는 애초에 개구리 뒤에 깔리는 것이 아니다.
   String? get _backdropSlot {
-    final slots = _catalog.slots;
-    if (slots.isEmpty) return null;
-
-    var lowest = slots.first;
-    for (final slot in slots) {
-      if (slot.layerOrder < lowest.layerOrder) lowest = slot;
+    CosmeticSlotModel? lowest;
+    for (final slot in _catalog.slots) {
+      if (!slot.composited) continue;
+      if (lowest == null || slot.layerOrder < lowest.layerOrder) lowest = slot;
     }
-    return lowest.slot;
+    return lowest?.slot;
+  }
+
+  /// 원형 프로필 사진에 두르는 **테두리**. 안 걸쳤으면 null 이다.
+  ///
+  /// 개구리 합성에서 빠지는 자리(`composited == false`)의 것이라 [layers] 에는
+  /// 안 들어간다. 개구리 위에 겹쳐 그리는 그림이 아니라 프로필 원 둘레에 두르는
+  /// 테두리라서, [ProfileAvatar] 가 따로 받아 간다.
+  ///
+  /// 그런 자리가 여럿이면 맨 앞에 그려지는 것을 쓴다. 지금은 `FRAME` 하나뿐이다.
+  CosmeticItemModel? get profileFrame {
+    CosmeticSlotModel? frame;
+    for (final slot in _catalog.slots) {
+      if (slot.composited) continue;
+      if (frame == null || slot.layerOrder > frame.layerOrder) frame = slot;
+    }
+    if (frame == null) return null;
+    return _catalog.itemOf(_equipped[frame.slot]);
   }
 
   /// 이 슬롯에 들어가는 아이템들. 카탈로그 순서를 지킨다.
@@ -435,6 +453,11 @@ class CosmeticProvider with ChangeNotifier {
 
     for (final item in _catalog.items) {
       if (!item.isUnlockedAt(levels)) continue;
+      // 개구리에 겹치지 않는 자리는 자동으로 걸어 주지 않는다. 프로필 테두리가
+      // 그렇다. 프로필은 스터디룸에서 남들과 나란히 보이는데 서버가 남의
+      // 치장을 안 내려주니, 자동으로 걸면 나만 테두리가 있게 된다. 고를지 말지는
+      // 사람이 정한다.
+      if (!(_catalog.slotOf(item.slot)?.composited ?? true)) continue;
 
       final current = picked[item.slot];
       if (current == null || item.requiredLevel > current.requiredLevel) {

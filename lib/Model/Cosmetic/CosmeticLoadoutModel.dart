@@ -237,6 +237,11 @@ class CosmeticLoadoutModel {
     );
 
     for (final slot in slots) {
+      // 개구리에 겹치지 않는 자리는 여기서 빠진다. 원형 프로필 테두리처럼
+      // 걸 수는 있지만 개구리 그림 위에 얹는 것이 아닌 자리다. 이걸 안 보면
+      // 프레임이 개구리 얼굴을 덮는다.
+      if (!slot.composited) continue;
+
       final itemKey = current[slot.slot];
       final item = itemOf(itemKey);
       if (item == null || item.imageUrl.isEmpty) continue;
@@ -264,6 +269,8 @@ class CosmeticLoadoutModel {
       }
 
       final slot = slotOf(unlock.slot);
+      // 방금 얻은 것이라도 개구리에 겹치지 않는 자리면 그리지 않는다.
+      if (slot != null && !slot.composited) continue;
       entries.add(
         _OrderedLayer(
           // 슬롯을 모르면 맨 앞에 둔다. 새로 얻은 것은 보여야 한다.

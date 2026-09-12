@@ -84,23 +84,32 @@ class CosmeticMockData {
   ///
   /// 이 순서가 옷장 탭의 순서이기도 하다.
   static const List<Map<String, Object?>> _slots = [
-    {'slot': 'BACKGROUND', 'layerOrder': 100, 'nameKo': '배경'},
+    {
+      'slot': 'BACKGROUND',
+      'layerOrder': 100,
+      'nameKo': '배경',
+      'composited': true,
+    },
     // 등에 메는 가방이라 개구리 뒤에 깔린다. 앞으로 메는 것은 BAG(450) 이다.
-    {'slot': 'BACK', 'layerOrder': 200, 'nameKo': '등짐'},
-    {'slot': 'OUTFIT', 'layerOrder': 400, 'nameKo': '옷'},
+    {'slot': 'BACK', 'layerOrder': 200, 'nameKo': '등짐', 'composited': true},
+    {'slot': 'OUTFIT', 'layerOrder': 400, 'nameKo': '옷', 'composited': true},
     // 가방 세 종이 전부 앞으로 메는 그림이라 개구리 뒤(200)에 두면 몸통이 덮어
     // 끈 조각만 보인다. 옷 위(450)로 올린다. 등에 메는 것은 BACK(200) 이다.
-    {'slot': 'BAG', 'layerOrder': 450, 'nameKo': '가방'},
-    {'slot': 'NECK', 'layerOrder': 500, 'nameKo': '목'},
-    {'slot': 'FACE', 'layerOrder': 600, 'nameKo': '얼굴'},
-    {'slot': 'HEAD', 'layerOrder': 700, 'nameKo': '머리'},
-    {'slot': 'HAND', 'layerOrder': 800, 'nameKo': '손'},
-    {'slot': 'BADGE', 'layerOrder': 850, 'nameKo': '뱃지'},
+    {'slot': 'BAG', 'layerOrder': 450, 'nameKo': '가방', 'composited': true},
+    {'slot': 'NECK', 'layerOrder': 500, 'nameKo': '목', 'composited': true},
+    {'slot': 'FACE', 'layerOrder': 600, 'nameKo': '얼굴', 'composited': true},
+    {'slot': 'HEAD', 'layerOrder': 700, 'nameKo': '머리', 'composited': true},
+    {'slot': 'HAND', 'layerOrder': 800, 'nameKo': '손', 'composited': true},
+    {'slot': 'BADGE', 'layerOrder': 850, 'nameKo': '뱃지', 'composited': true},
     // 개구리 앞에 흩날리는 것들. 무엇과도 겹치지 않는다.
-    {'slot': 'EFFECT', 'layerOrder': 900, 'nameKo': '효과'},
+    {'slot': 'EFFECT', 'layerOrder': 900, 'nameKo': '효과', 'composited': true},
+    // **개구리에 겹치지 않는 유일한 자리다.** 원형 프로필 사진 둘레에 두르는
+    // 테두리라, layerOrder 가 맨 뒤여도 개구리 합성에서는 빠진다. 그 판단을
+    // 앱이 슬롯 이름으로 하지 않도록 서버가 composited 로 내려준다.
+    {'slot': 'FRAME', 'layerOrder': 1000, 'nameKo': '프레임', 'composited': false},
   ];
 
-  /// 아이템 전부. 쉰다섯 가지가 빠짐없이 어느 능력치엔가 매달려 있다.
+  /// 아이템 전부. 예순세 가지가 빠짐없이 어느 능력치엔가 매달려 있다.
   ///
   /// 능력치별로 묶고 레벨 오름차순으로 적는다. 해금표와 같은 순서라 둘을 나란히
   /// 놓고 볼 수 있다. 이 순서가 옷장 격자의 순서이기도 해서, 한 자리 안에서는
@@ -109,16 +118,21 @@ class CosmeticMockData {
     // ── 출석 ──
     _item('bg_spring', 'BACKGROUND', '봄', 2, _attendance),
     _item('effect_petals', 'EFFECT', '꽃잎', 3, _attendance),
+    _frame('frame_spring', '봄 테두리', 3, _attendance),
     _item('bg_summer', 'BACKGROUND', '여름', 4, _attendance),
     _item('effect_sparkle', 'EFFECT', '반짝임', 5, _attendance),
+    _frame('frame_summer', '여름 테두리', 5, _attendance),
     _item('bg_rainy', 'BACKGROUND', '비 오는 날', 6, _attendance),
     _item('effect_fireflies', 'EFFECT', '반딧불', 8, _attendance),
     _item('bg_autumn', 'BACKGROUND', '가을', 9, _attendance),
+    _frame('frame_autumn', '가을 테두리', 10, _attendance),
     _item('bg_sunset', 'BACKGROUND', '노을', 11, _attendance),
     _item('bg_winter', 'BACKGROUND', '겨울', 12, _attendance),
     _item('effect_snow', 'EFFECT', '눈', 13, _attendance),
+    _frame('frame_winter', '겨울 테두리', 13, _attendance),
     _item('bg_night', 'BACKGROUND', '밤하늘', 14, _attendance),
     _item('bg_space', 'BACKGROUND', '우주', 15, _attendance),
+    _frame('frame_night', '밤하늘 테두리', 15, _attendance),
 
     // ── 오답노트 작성 ──
     _item('bag_mini_backpack', 'BAG', '미니 백팩', 2, _noteWrite),
@@ -130,6 +144,7 @@ class CosmeticMockData {
     _item('bag_crossbody_satchel', 'BAG', '크로스백', 11, _noteWrite),
     _item('bg_study', 'BACKGROUND', '공부방', 12, _noteWrite),
     _item('prop_tumbler', 'HAND', '텀블러', 13, _noteWrite),
+    _frame('frame_study', '공부방 테두리', 14, _noteWrite),
 
     // ── 문제 복습 ──
     _item('glasses_round', 'FACE', '동그란 안경', 2, _problemPractice),
@@ -158,6 +173,7 @@ class CosmeticMockData {
     // ── 총 학습 레벨 (능력치 넷을 합산해 오른다) ──
     _item('headband_sprout', 'HEAD', '새싹 머리띠', 2, null),
     _item('badge_leaf_star', 'BADGE', '나뭇잎 별', 3, null),
+    _frame('frame_leaf', '나뭇잎 테두리', 4, null),
     _item('badge_star', 'BADGE', '별 뱃지', 5, null),
     _item('badge_heart', 'BADGE', '하트 뱃지', 7, null),
     _item('prop_bouquet', 'HAND', '꽃다발', 8, null),
@@ -165,6 +181,7 @@ class CosmeticMockData {
     _item('prop_umbrella', 'HAND', '우산', 12, null),
     _item('badge_flame', 'BADGE', '불꽃 뱃지', 14, null),
     _item('prop_lantern', 'HAND', '랜턴', 16, null),
+    _frame('frame_master', '마스터 테두리', 17, null),
     _item('badge_snowflake', 'BADGE', '눈꽃 뱃지', 18, null),
     _item('hat_crown', 'HEAD', '왕관', 19, null),
     _item('hat_graduate', 'HEAD', '학사모', 20, null, setId: graduateSetId),
@@ -185,6 +202,23 @@ class CosmeticMockData {
   /// 때문에 `CosmeticProvider` 가 지금 레벨들을 보고 매번 다시 매긴다.
   ///
   /// [ability] 가 null 이면 총 학습 레벨 기준이다. 서버도 그 자리를 비워 보낸다.
+  /// 프로필 테두리 한 줄.
+  ///
+  /// 다른 치장과 두 가지가 다르다. 그림이 **SVG** 라서 `assets/ProfileFrame/`
+  /// 에 있고, 자리가 `FRAME` 이라 개구리 합성에서 빠진다. 서버도 같은 모양으로
+  /// 내려준다.
+  static Map<String, Object?> _frame(
+    String itemKey,
+    String nameKo,
+    int level,
+    String? ability,
+  ) {
+    return {
+      ..._item(itemKey, 'FRAME', nameKo, level, ability),
+      'imageUrl': 'assets/ProfileFrame/$itemKey.svg',
+    };
+  }
+
   static Map<String, Object?> _item(
     String itemKey,
     String slot,

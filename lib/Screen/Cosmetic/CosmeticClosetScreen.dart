@@ -16,6 +16,7 @@ import '../../Module/Motion/TossDialog.dart';
 import '../../Module/Motion/TossPageRoute.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
+import '../../Module/User/ProfileAvatar.dart';
 import '../../Provider/CosmeticProvider.dart';
 import 'CosmeticCombinationPreviewScreen.dart';
 import 'Widget/CosmeticCollectionMeter.dart';
@@ -288,6 +289,7 @@ class _CosmeticClosetScreenState extends State<CosmeticClosetScreen> {
                             themeProvider,
                             frogSize,
                             fitting,
+                            slots.isEmpty ? null : slots[slotIndex],
                           ),
                           if (kDebugMode) _buildDebugLevels(cosmetic),
                           const SizedBox(height: AppSpacing.md),
@@ -430,8 +432,12 @@ class _CosmeticClosetScreenState extends State<CosmeticClosetScreen> {
     ThemeHandler themeProvider,
     double frogSize,
     Map<String, String> fitting,
+    CosmeticSlotModel? activeSlot,
   ) {
     final color = themeProvider.primaryColor;
+    // 개구리에 겹치지 않는 자리를 고르고 있으면 무대에 개구리를 세워 봐야
+    // 무엇이 달라졌는지 안 보인다. 쓰이는 모습 그대로 프로필 원을 그린다.
+    final showsProfile = activeSlot != null && !activeSlot.composited;
 
     return Container(
       padding: const EdgeInsets.fromLTRB(
@@ -485,16 +491,49 @@ class _CosmeticClosetScreenState extends State<CosmeticClosetScreen> {
           // 무대가 좁아 보인다. 눈에 띄게 벌려 게이지는 머리말, 개구리는
           // 무대 위 주인공으로 갈라 놓는다.
           const SizedBox(height: AppSpacing.xl),
-          CosmeticStageFrog(
-            // 저장하기 전에도 개구리는 바로 갈아입는다. 그래야 써 보는
-            // 의미가 있다. 바뀌지 않는 것은 하단 탭과 프로필의 개구리다.
-            layers: cosmetic.layersOf(fitting),
-            size: frogSize,
-            color: color,
-            equipTick: _equipTick,
-          ),
+          if (showsProfile)
+            _buildProfilePreview(cosmetic, fitting, activeSlot, frogSize, color)
+          else
+            CosmeticStageFrog(
+              // 저장하기 전에도 개구리는 바로 갈아입는다. 그래야 써 보는
+              // 의미가 있다. 바뀌지 않는 것은 하단 탭과 프로필의 개구리다.
+              layers: cosmetic.layersOf(fitting),
+              size: frogSize,
+              color: color,
+              equipTick: _equipTick,
+            ),
           const SizedBox(height: AppSpacing.sm),
         ],
+      ),
+    );
+  }
+
+  /// 프로필 테두리를 고를 때의 미리보기.
+  ///
+  /// 이 자리의 것은 개구리에 겹치지 않고 **원형 프로필 사진 둘레**에만 두른다.
+  /// 개구리 무대에 세워 두면 무엇을 골라도 화면이 그대로라 고른 뜻이 통하지
+  /// 않는다. 실제로 쓰이는 모습 그대로 원을 그린다.
+  ///
+  /// 무대 높이는 개구리가 설 때와 같게 잡는다. 자리를 옮길 때마다 위쪽이
+  /// 들썩이면 아래 격자가 따라 흔들린다.
+  Widget _buildProfilePreview(
+    CosmeticProvider cosmetic,
+    Map<String, String> fitting,
+    CosmeticSlotModel slot,
+    double frogSize,
+    Color color,
+  ) {
+    return SizedBox(
+      height: frogSize * 1.04,
+      child: Center(
+        child: ProfileAvatar(
+          size: frogSize * 0.78,
+          borderColor: color.withValues(alpha: 0.25),
+          borderWidth: 1.2,
+          backgroundColor: color.withValues(alpha: 0.06),
+          frogLayers: cosmetic.layersOf(fitting),
+          frameUrl: cosmetic.itemOf(fitting[slot.slot])?.imageUrl,
+        ),
       ),
     );
   }

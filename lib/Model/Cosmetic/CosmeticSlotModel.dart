@@ -15,10 +15,21 @@ class CosmeticSlotModel {
   /// 화면에 보여 줄 이름. `배경`, `머리` 처럼 사용자가 읽는 말이다.
   final String nameKo;
 
+  /// 개구리 합성에 들어가는 자리인지.
+  ///
+  /// **false 면 개구리 그림에 겹치지 않는다.** `FRAME` 처럼 원형 프로필 사진
+  /// 둘레에만 두르는 자리가 그렇다. [layerOrder] 가 있어도 그건 그 자리들끼리의
+  /// 순서일 뿐이라, 이 값을 안 보면 프로필 테두리가 개구리 얼굴 위를 덮는다.
+  ///
+  /// 서버가 안 내려주면 true 다. 겹쳐 그리는 것이 여태까지의 모든 자리이고,
+  /// 새 자리가 생겼다고 개구리가 헐벗는 쪽이 더 나쁘다.
+  final bool composited;
+
   const CosmeticSlotModel({
     required this.slot,
     required this.layerOrder,
     required this.nameKo,
+    this.composited = true,
   });
 
   /// 한 건을 읽는다. 슬롯 키가 없으면 쓸 수 없는 줄이라 null 이다.
@@ -37,6 +48,8 @@ class CosmeticSlotModel {
       nameKo: json['nameKo'] is String && (json['nameKo'] as String).isNotEmpty
           ? json['nameKo'] as String
           : slot,
+      composited:
+          json['composited'] is bool ? json['composited'] as bool : true,
     );
   }
 
@@ -48,5 +61,5 @@ class CosmeticSlotModel {
   }
 
   @override
-  String toString() => 'CosmeticSlotModel($slot, $layerOrder)';
+  String toString() => 'CosmeticSlotModel($slot, $layerOrder, 합성 $composited)';
 }

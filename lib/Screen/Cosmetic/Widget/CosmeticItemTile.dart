@@ -10,6 +10,7 @@ import '../../../Module/Motion/AppMotion.dart';
 import '../../../Module/Motion/PressableScale.dart';
 import '../../../Module/Motion/SelectionPop.dart';
 import '../../../Module/Text/StandardText.dart';
+import 'CosmeticArt.dart';
 import 'CosmeticAbilityStyle.dart';
 
 /// 아이템 한 장을 개구리 위에 얹어 보여 주는 그림이다.
@@ -61,20 +62,16 @@ class CosmeticPartPreview extends StatelessWidget {
     0, 0, 0, 1, 0, //
   ];
 
-  static ImageProvider<Object> _providerOf(String url) => url.startsWith('http')
-      ? NetworkImage(url) as ImageProvider<Object>
-      : AssetImage(url);
-
+  /// 그림 한 장. 비트맵인지 벡터인지는 [CosmeticArt] 가 가른다.
+  ///
+  /// 반투명하게 깔아야 할 때가 있어서 [Opacity] 로 감싼다. `Image` 의
+  /// `opacity` 는 벡터에 없는 값이라 둘에 같이 쓸 수 있는 쪽을 택했다.
   Widget _image(String url, {double opacity = 1.0, BoxFit fit = BoxFit.cover}) {
     if (url.isEmpty) return const SizedBox.shrink();
 
-    return Image(
-      image: _providerOf(url),
-      fit: fit,
-      opacity: opacity >= 1.0 ? null : AlwaysStoppedAnimation<double>(opacity),
-      // 그림 한 장을 못 읽었다고 칸이 깨지면 안 된다. 그 층만 비운다.
-      errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
-    );
+    final art = CosmeticArt(url: url, fit: fit);
+    if (opacity >= 1.0) return art;
+    return Opacity(opacity: opacity, child: art);
   }
 
   @override

@@ -254,8 +254,10 @@ class _ProfileEditCardState extends State<ProfileEditCard> {
   /// 프로필 사진과 그 위에 붙는 카메라 배지.
   Widget _buildAvatar(String? imageUrl, double size, Color color) {
     // 사진을 안 올렸으면 지금 꾸민 개구리가 선다. 이 자리에서만 넘긴다.
-    // 스터디룸에서 보는 남의 프로필은 그대로 둔다.
-    final frogLayers = context.watch<CosmeticProvider>().layers;
+    // 스터디룸에서 보는 남의 프로필은 그대로 둔다. 프로필 테두리도 같은
+    // 이유로 여기서만 두른다. 테두리는 사진을 올린 사람에게도 둘러진다.
+    final cosmetic = context.watch<CosmeticProvider>();
+    final frogLayers = cosmetic.layers;
 
     return PressableScale(
       onTap: _isUploadingProfileImage ? null : _showProfileImageOptions,
@@ -270,6 +272,7 @@ class _ProfileEditCardState extends State<ProfileEditCard> {
             borderWidth: 1.2,
             backgroundColor: color.withValues(alpha: 0.06),
             frogLayers: frogLayers,
+            frameUrl: cosmetic.profileFrame?.imageUrl,
           ),
           Positioned(
             right: -2,

@@ -99,10 +99,11 @@ void main() {
   final items = CosmeticMockData.loadout.items;
 
   group('해금표 읽기', () {
-    test('표에서 쉰다섯 줄을 읽었다', () {
+    test('표에서 예순세 줄을 읽었다', () {
       // 이 숫자가 틀리면 아래 비교가 통째로 무의미해진다. 파서가 표를 제대로
-      // 훑었는지부터 확인한다.
-      expect(_table, hasLength(55));
+      // 훑었는지부터 확인한다. 쉰다섯에서 예순셋이 된 것은 프로필 테두리
+      // 여덟이 들어와서다.
+      expect(_table, hasLength(63));
     });
 
     test('같은 아이템이 두 번 적혀 있지 않다', () {
@@ -182,7 +183,12 @@ void main() {
 
       final slots = raw['slots']! as List<Map<String, Object?>>;
       for (final slot in slots) {
-        expect(slot.keys.toSet(), {'slot', 'layerOrder', 'nameKo'});
+        // composited 는 개구리 합성에 들어가는 자리인지다. FRAME 이 생기면서
+        // 계약에 들어왔다.
+        expect(
+          slot.keys.toSet(),
+          {'slot', 'layerOrder', 'nameKo', 'composited'},
+        );
       }
 
       final rawItems = raw['items']! as List<Map<String, Object?>>;

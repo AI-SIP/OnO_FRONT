@@ -294,13 +294,14 @@ void main() {
   group('수집률', () {
     testWidgets('무대 맨 위에서 몇 개 중 몇 개인지 알려 준다', (tester) async {
       // 다섯이 다 Lv.12 면 능력치별로 9 + 8 + 8 + 8 개, 총 학습으로 7 개가
-      // 열려 마흔이다.
+      // 열려 마흔이고, 프로필 테두리 넷(봄·여름·가을·나뭇잎)이 더해져
+      // 마흔넷이다.
       await pumpCloset(tester);
 
       expect(find.byType(CosmeticCollectionMeter), findsOneWidget);
       expect(find.text('모은 치장'), findsOneWidget);
-      expect(find.text('40'), findsOneWidget);
-      expect(find.text(' / 55'), findsOneWidget);
+      expect(find.text('44'), findsOneWidget);
+      expect(find.text(' / 63'), findsOneWidget);
     });
 
     testWidgets('레벨을 올리면 모은 개수가 는다', (tester) async {
@@ -309,9 +310,9 @@ void main() {
       cosmetic.setMockLevels(CosmeticAbilityLevels.max);
       await tester.pumpAndSettle();
 
-      // 다섯을 끝까지 올리면 쉰다섯이 전부 열린다. 레벨로 안 열리는 것은
+      // 다섯을 끝까지 올리면 예순셋이 전부 열린다. 레벨로 안 열리는 것은
       // 이제 하나도 없다.
-      expect(find.text('55'), findsOneWidget);
+      expect(find.text('63'), findsOneWidget);
     });
 
     testWidgets('수집률은 무대 안, 개구리보다 위에 있다', (tester) async {
@@ -477,7 +478,7 @@ void main() {
       expect(find.text('총 학습'), findsOneWidget);
     });
 
-    testWidgets('전부 최대를 누르면 쉰다섯이 다 열린다', (tester) async {
+    testWidgets('전부 최대를 누르면 예순셋이 다 열린다', (tester) async {
       final cosmetic = await pumpCloset(tester);
 
       await tester.tap(find.text('디버그 레벨'));
@@ -487,7 +488,7 @@ void main() {
 
       expect(cosmetic.levels, CosmeticAbilityLevels.max);
       expect(cosmetic.levelsTouched, isTrue);
-      expect(find.text('55'), findsOneWidget);
+      expect(find.text('63'), findsOneWidget);
     });
   });
 
