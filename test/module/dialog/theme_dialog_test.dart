@@ -213,17 +213,62 @@ void main() {
       expect(find.text('복습 세트 Lv.15 필요 · 지금 Lv.1'), findsOneWidget);
     });
 
-    testWidgets('잠긴 칸은 눌러도 골라지지 않는다', (tester) async {
+    testWidgets('잠긴 색을 보는 동안에는 적용 버튼이 잠겼다고 말한다', (tester) async {
+      await pumpThemeDialog(tester);
+
+      expect(find.text('적용하기'), findsOneWidget);
+
+      await tester.tap(
+        find.byKey(ThemeDialog.cellKey(ThemeLockManager.themeIndexAt(3, 0))),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('적용하기'), findsNothing);
+      expect(find.text('아직 잠긴 색이에요'), findsOneWidget);
+    });
+
+    testWidgets('잠긴 색을 보는 동안 적용을 눌러도 테마가 안 바뀌고 창도 안 닫힌다', (tester) async {
+      // 예전에는 이때 화면에 없는 예전 색이 적용되면서 창이 조용히 닫혔다.
+      // 사용자 눈에는 아무 일도 없이 나가진 것으로 보였다.
       final themeHandler = await pumpThemeDialog(tester);
 
       await tester.tap(
-        find.byKey(ThemeDialog.cellKey(ThemeLockManager.themeIndexAt(5, 3))),
+        find.byKey(ThemeDialog.cellKey(ThemeLockManager.themeIndexAt(3, 0))),
       );
       await tester.pumpAndSettle();
+
+      await tester.tap(find.text('아직 잠긴 색이에요'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+      await tester.pumpAndSettle();
+
+      expect(themeHandler.primaryColor, ThemeLockManager.getThemeColor(0));
+      // 창이 그대로 떠 있다.
+      expect(find.byType(ThemeDialog), findsOneWidget);
+      expect(find.text('아직 잠긴 색이에요'), findsOneWidget);
+      expect(find.text('시안'), findsOneWidget);
+    });
+
+    testWidgets('잠긴 색을 보다가 열린 색을 누르면 적용 버튼이 돌아온다', (tester) async {
+      final themeHandler = await pumpThemeDialog(tester);
+
+      await tester.tap(
+        find.byKey(ThemeDialog.cellKey(ThemeLockManager.themeIndexAt(3, 0))),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('아직 잠긴 색이에요'), findsOneWidget);
+
+      final target = ThemeLockManager.themeIndexAt(1, 0);
+      await tester.tap(find.byKey(ThemeDialog.cellKey(target)));
+      await tester.pumpAndSettle();
+
+      expect(find.text('아직 잠긴 색이에요'), findsNothing);
+      expect(find.text('적용하기'), findsOneWidget);
+
       await tapApply(tester);
 
-      // 처음 색(연핑크) 그대로다.
-      expect(themeHandler.primaryColor, ThemeLockManager.getThemeColor(0));
+      expect(themeHandler.primaryColor, ThemeLockManager.getThemeColor(target));
+      expect(find.byType(ThemeDialog), findsNothing);
     });
   });
 

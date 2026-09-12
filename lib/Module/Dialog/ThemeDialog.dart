@@ -188,6 +188,14 @@ class _ThemeDialogState extends State<ThemeDialog> {
   void _apply(ThemeHandler themeProvider) {
     if (_isApplying) return;
 
+    // 잠긴 색을 들여다보는 중이면 적용할 것이 없다.
+    //
+    // 버튼 쪽에서 이미 막고 있지만 여기서도 막는다. 이 함수가 하는 일은
+    // "창을 닫으면서 색을 바꾸는 것" 이라, 실수로 불리면 화면에 보이는 색과
+    // 다른 색이 적용된 채로 창이 닫힌다. 사용자 눈에는 아무 일도 없이
+    // 나가진 것으로 보이고, 그게 이 화면에서 제일 나쁜 일이다.
+    if (_inspectedIndex != null) return;
+
     final navigator = Navigator.of(context);
     final color = _selectedColor;
     final name = _selectedColorName;
@@ -351,6 +359,17 @@ class _ThemeDialogState extends State<ThemeDialog> {
                 Expanded(
                   child: AnimatedSwitcher(
                     duration: duration,
+                    // 기본 layoutBuilder 는 자식을 Stack 에 담고 가운데로
+                    // 맞춘다. 남는 폭이 넓은 Expanded 안에서는 그 탓에 이름이
+                    // 100px 가까이 오른쪽으로 밀려서, 간격을 8 로 줄여 놔도
+                    // 동그라미와 한참 떨어져 보였다. 왼쪽에 붙인다.
+                    layoutBuilder: (currentChild, previousChildren) => Stack(
+                      alignment: Alignment.centerLeft,
+                      children: <Widget>[
+                        ...previousChildren,
+                        if (currentChild != null) currentChild,
+                      ],
+                    ),
                     child: Column(
                       key: ValueKey<String>('$overline|$title|$detail'),
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -589,7 +608,17 @@ class _ThemeDialogState extends State<ThemeDialog> {
 
   // ── 아래쪽 버튼 ─────────────────────────────────────────────
 
+  /// 잠긴 색을 들여다보는 중에는 적용 버튼이 그 사실을 말한다.
+  ///
+  /// 예전에는 이때도 버튼이 멀쩡해 보였고, 누르면 **화면에 없는 예전 색**이
+  /// 적용되면서 창이 닫혔다. 색이 바뀐 것도 아니고 안 바뀐 것도 아닌 상태로
+  /// 나가져서, 무슨 일이 일어난 것인지 알 방법이 없었다.
+  ///
+  /// 조건은 이미 위쪽 판에 적혀 있으니 버튼은 "이건 못 고른다"만 말하면 된다.
+  /// 열린 색을 다시 누르면 [_select] 가 들여다보기를 풀어 원래대로 돌아온다.
   Widget _buildFooter(ThemeHandler themeProvider, Duration duration) {
+    final isInspectingLocked = _inspectedIndex != null;
+    final canApply = !_isApplying && !isInspectingLocked;
     final accent = _selectedColor ?? themeProvider.primaryColor;
 
     return Container(
@@ -622,11 +651,15 @@ class _ThemeDialogState extends State<ThemeDialog> {
             flex: 2,
             child: PressableScale(
               haptic: HapticLevel.none,
-              onTap: _isApplying ? null : () => _apply(themeProvider),
+              enabled: canApply,
+              onTap: canApply ? () => _apply(themeProvider) : null,
               child: _FooterButton(
-                label: '적용하기',
-                background: accent,
-                foreground: _onColor(accent),
+                label: isInspectingLocked ? '아직 잠긴 색이에요' : '적용하기',
+                background:
+                    isInspectingLocked ? AppColors.surfaceMuted : accent,
+                foreground: isInspectingLocked
+                    ? AppColors.textDisabled
+                    : _onColor(accent),
                 duration: duration,
               ),
             ),
@@ -964,6 +997,7 @@ class _FooterButton extends StatelessWidget {
             fontWeight: FontWeight.w700,
             color: foreground,
             maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
         );
       },
