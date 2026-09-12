@@ -77,6 +77,22 @@ List<Rect> dialRings(WidgetTester tester) {
   return rects;
 }
 
+/// 이 위젯이 그리는 에셋의 자리. 에셋이 아니면 null.
+///
+/// `Image.asset` 에 `cacheWidth` 를 주면 공급자가 [ResizeImage] 로 한 겹
+/// 싸여서 `find.image` 로는 못 잡는다. 한 겹 벗겨 본다.
+String? assetPathOf(ImageProvider<Object> provider) {
+  if (provider is ResizeImage) return assetPathOf(provider.imageProvider);
+  if (provider is AssetImage) return provider.assetName;
+  return null;
+}
+
+/// 그 에셋을 그리는 [Image] 를 찾는다.
+Finder findAssetImage(String path) => find.byWidgetPredicate(
+      (widget) => widget is Image && assetPathOf(widget.image) == path,
+      description: path,
+    );
+
 void main() {
   setUpOnoWidgetTest();
 
@@ -241,6 +257,27 @@ void main() {
       expect(ground.top, 0.0);
       expect(ground.bottom, screen.height);
       expect(ground.width, screen.width);
+    });
+
+    testWidgets('버튼 아이콘 두 장이 실제로 그려진다', (tester) async {
+      // 개구리와 같은 손으로 빚은 점토 그림이다. 머티리얼 아이콘은 선으로 그린
+      // 기호라 말랑한 렌더 옆에서 다른 세계 물건으로 보였다.
+      await pumpCharacter(tester);
+
+      expect(findAssetImage('assets/Icon/MissionButton.png'), findsOneWidget);
+      expect(findAssetImage('assets/Icon/ClosetButton.png'), findsOneWidget);
+    });
+
+    testWidgets('버튼 아이콘은 원본보다 작게 디코딩한다', (tester) async {
+      // 원본이 512 인데 화면에는 36 남짓으로 뜬다. 잘라 두지 않으면 한 장에
+      // 1MB 를 물고 있게 된다.
+      await pumpCharacter(tester);
+
+      final image = tester.widget<Image>(
+        findAssetImage('assets/Icon/ClosetButton.png'),
+      );
+      expect(image.image, isA<ResizeImage>());
+      expect((image.image as ResizeImage).width, lessThan(512));
     });
 
     testWidgets('버튼 둘이 무대 위에 같은 크기로 얹힌다', (tester) async {

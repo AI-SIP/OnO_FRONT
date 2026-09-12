@@ -278,7 +278,6 @@ class _CharacterStage extends StatelessWidget {
                           child: AppearTransition(
                             delay: AppMotion.stagger * 5,
                             child: _ActionRow(
-                              color: color,
                               missionDone: missionDone,
                               missionTotal: missionTotal,
                               onMissionTap: onMissionTap,
@@ -531,17 +530,16 @@ class _GrowthGauge extends StatelessWidget {
 /// 두고, 꾸미기 쪽을 진하게 한다. 이 탭이 옷장이라 여기서 가장 하고 싶은 일이
 /// 갈아입기다.
 ///
-/// 아이콘도 이 세계의 물건으로 고른다. 옷걸이는 개구리가 쓰는 물건이 아니다.
-/// 꾸미기는 개구리가 실제로 메는 배낭, 미션은 오늘 할 일에 치는 체크다.
+/// 아이콘은 개구리와 같은 손으로 빚은 점토 그림 두 장이다. 머티리얼 아이콘은
+/// 선으로 그린 기호라, 말랑한 렌더 옆에 두면 두 물건이 서로 다른 세계에서 온
+/// 것으로 보였다. **버튼의 색도 이 두 장에서 가져온다**([_ClayPalette]).
 class _ActionRow extends StatelessWidget {
-  final Color color;
   final int missionDone;
   final int missionTotal;
   final VoidCallback onMissionTap;
   final VoidCallback onClosetTap;
 
   const _ActionRow({
-    required this.color,
     required this.missionDone,
     required this.missionTotal,
     required this.onMissionTap,
@@ -554,29 +552,64 @@ class _ActionRow extends StatelessWidget {
       children: [
         Expanded(
           child: _ActionButton(
-            icon: Icons.task_alt_rounded,
+            iconAsset: _ActionIcons.mission,
             label: '미션',
             // 오늘 몇 개를 했는지는 여기서만 말한다. 버튼에 숫자가 붙어 있으면
             // 목록을 걷어 내고도 오늘 할 일이 남았는지 알 수 있다.
             badge: missionTotal > 0 ? '$missionDone / $missionTotal' : null,
             primary: false,
-            color: color,
             onTap: onMissionTap,
           ),
         ),
         const SizedBox(width: AppSpacing.md),
         Expanded(
           child: _ActionButton(
-            icon: Icons.backpack_rounded,
+            iconAsset: _ActionIcons.closet,
             label: '꾸미기',
             primary: true,
-            color: color,
             onTap: onClosetTap,
           ),
         ),
       ],
     );
   }
+}
+
+/// 버튼 아이콘 두 장.
+///
+/// 개구리와 같은 손으로 빚은 점토 그림이다. 원본이 512 라 작게 쓰면 뭉갠다.
+abstract final class _ActionIcons {
+  static const String mission = 'assets/Icon/MissionButton.png';
+  static const String closet = 'assets/Icon/ClosetButton.png';
+}
+
+/// 버튼이 쓰는 색이다. **아이콘 두 장에서 그대로 뽑았다.**
+///
+/// 여기만 테마색을 안 쓴다. 이 화면의 다른 곳은 사용자가 고른 색을 따르지만,
+/// 이 버튼은 아이콘이 색을 책임진다. 남색 테두리에 크림색 종이, 초록 체크,
+/// 분홍 문이 이미 들어 있는 그림 위에 보라 면을 깔면 둘이 따로 논다. 색을
+/// 하나 더 얹는 대신 **그림에 있는 색으로 면을 만든다.**
+///
+/// 남색과 크림은 어느 테마 옆에 놓아도 어색하지 않다. 스물네 가지 테마색이
+/// 전부 채도가 있는 색이라, 그 옆에서 버튼이 조용해야 서로 싸우지 않는다.
+///
+/// 노랗게 물들지 않게 **그늘은 남색으로 만든다.** 크림을 갈색이나 황토로
+/// 어둡게 하면 그 순간 금색 버튼이 된다.
+abstract final class _ClayPalette {
+  /// 아이콘의 테두리 색. 옷장 틀과 클립보드가 이 색이다.
+  static const Color navy = Color(0xFF1B3C6E);
+
+  /// 그 남색을 한 번 더 눌러 둔 것. 그림자에 쓴다.
+  static const Color navyDeep = Color(0xFF12294C);
+
+  /// 옷걸이와 종이의 크림색.
+  static const Color cream = Color(0xFFF6EAD4);
+
+  /// 크림을 흰쪽으로 올린 것. 무게가 가벼운 쪽의 면이다.
+  static const Color creamLight = Color(0xFFFDF9F1);
+
+  /// 체크와 손잡이의 초록.
+  static const Color green = Color(0xFF7ED08C);
 }
 
 /// 무대 위에 놓인 버튼 한 개.
@@ -589,19 +622,26 @@ class _ActionRow extends StatelessWidget {
 /// 점토를 흉내 내는 것은 셋이다.
 ///
 /// 1. **부드러운 그림자.** 딱딱한 색 띠 대신 크게 번지는 그림자로 띄운다.
-///    색은 테마색을 어둡게 한 것이라 바닥에 색이 도는 물건처럼 보인다.
-/// 2. **매트한 면.** 순색을 꽉 채우지 않고 흰색을 섞어 채도를 낮춘다. 진한
-///    보라를 꽉 채우면 이 화면의 물건이 아니라 어느 웹사이트의 버튼이 된다.
+///    색은 아이콘의 남색을 눌러 둔 것이라 바닥에 색이 도는 물건처럼 보인다.
+/// 2. **매트한 면.** 아이콘의 크림색이다. 그림 안에 색이 이미 충분히 들어
+///    있어서 **면은 조용한 편이 낫다.**
 /// 3. **안쪽의 은은한 빛.** 위가 살짝 밝고 아래가 살짝 어둡다. 평평한 색면이
-///    아니라 빛을 받는 덩어리로 읽힌다.
+///    아니라 빛을 받는 덩어리로 읽힌다. 그늘은 남색으로 만든다. 크림을 갈색
+///    쪽으로 어둡게 하면 그 순간 금색 버튼이 된다.
 ///
-/// 모서리는 완전한 알약이 아니라 **각이 조금 남은 둥근 사각형**이다. 개구리가
-/// 메는 가방이나 드는 책이 그런 모양이라 그림 속 물건들과 결이 맞는다.
+/// **테두리를 남색으로 두른 것도 아이콘을 따른 것이다.** 옷장도 클립보드도
+/// 남색 테두리를 두른 점토 덩어리라, 버튼이 같은 테두리를 가지면 아이콘이
+/// 버튼 위에 얹힌 것이 아니라 같은 물건의 일부로 보인다.
+///
+/// 모서리는 완전한 알약이 아니라 **각이 조금 남은 둥근 사각형**이다. 아이콘의
+/// 옷장과 클립보드가 그런 모양이다.
 ///
 /// 누르면 **내려앉으면서 그림자가 같이 줄어든다.** 자리만 내려가고 그림자가
 /// 그대로면 물건이 바닥으로 내려온 것이 아니라 그림이 밀린 것처럼 보인다.
 class _ActionButton extends StatefulWidget {
-  final IconData icon;
+  /// 아이콘 그림의 자리.
+  final String iconAsset;
+
   final String label;
 
   /// 버튼 오른쪽에 붙는 작은 숫자. 없으면 안 붙는다.
@@ -609,18 +649,16 @@ class _ActionButton extends StatefulWidget {
 
   /// 이 탭에서 먼저 누를 것인지.
   ///
-  /// **재질은 같고 무게만 다르다.** 하나는 흰색 하나는 보라색이면 한 화면에
-  /// 놓인 두 물건으로 안 보인다. 같은 테마색을 얼마나 섞었는지만 다르다.
+  /// **재질은 같고 무게만 다르다.** 같은 크림을 얼마나 진하게 쓰는지, 남색
+  /// 테두리를 얼마나 또렷하게 두르는지만 다르다.
   final bool primary;
 
-  final Color color;
   final VoidCallback onTap;
 
   const _ActionButton({
-    required this.icon,
+    required this.iconAsset,
     required this.label,
     required this.primary,
-    required this.color,
     required this.onTap,
     this.badge,
   });
@@ -632,6 +670,12 @@ class _ActionButton extends StatefulWidget {
 class _ActionButtonState extends State<_ActionButton> {
   /// 눌렸을 때 내려앉는 거리.
   static const double _sink = 3.0;
+
+  /// 아이콘 한 변.
+  ///
+  /// 점토 그림은 작게 쓰면 뭉갠다. 원본이 512 라 키울 여지는 충분하고, 이
+  /// 버튼에서는 아이콘이 글자보다 먼저 읽혀야 한다.
+  static const double _iconSize = 36.0;
 
   bool _pressed = false;
 
@@ -645,29 +689,16 @@ class _ActionButtonState extends State<_ActionButton> {
     widget.onTap();
   }
 
-  /// 면의 바탕색. 순색이 아니라 흰색을 섞어 채도를 낮춘 것이다.
-  Color get _face => Color.alphaBlend(
-        widget.color.withValues(alpha: widget.primary ? 0.52 : 0.13),
-        Colors.white,
-      );
-
-  /// 글자와 아이콘 색. 같은 색을 먹빛 쪽으로 눌러 쓴다.
-  ///
-  /// 순검정이면 면에서 떠 보이고, 테마색 그대로면 매트한 면 위에서 탁해진다.
-  Color get _ink => Color.lerp(
-        widget.color,
-        AppColors.textPrimary,
-        widget.primary ? 0.58 : 0.30,
-      )!;
-
-  /// 바닥에 지는 그림자 색. 테마색을 어둡게 한 것이다.
-  Color get _shade => Color.lerp(widget.color, Colors.black, 0.55)!;
+  /// 면의 바탕색.
+  Color get _face =>
+      widget.primary ? _ClayPalette.cream : _ClayPalette.creamLight;
 
   @override
   Widget build(BuildContext context) {
     final reduced = AppMotion.isReduced(context);
     final sunk = _pressed && !reduced;
     final face = _face;
+    final devicePixelRatio = MediaQuery.maybeDevicePixelRatioOf(context) ?? 2.0;
 
     return Semantics(
       button: true,
@@ -689,30 +720,35 @@ class _ActionButtonState extends State<_ActionButton> {
           ),
           padding: const EdgeInsets.symmetric(
             horizontal: AppSpacing.md,
-            vertical: AppSpacing.lg,
+            vertical: AppSpacing.md,
           ),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(AppRadius.xlarge),
             // 위가 밝고 아래가 어둡다. 차이를 아주 조금만 둬야 광택이 아니라
-            // 덩어리로 보인다.
+            // 덩어리로 보인다. 아래쪽 그늘은 남색이다.
             gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
               colors: [
-                Color.alphaBlend(Colors.white.withValues(alpha: 0.30), face),
+                Color.alphaBlend(Colors.white.withValues(alpha: 0.55), face),
                 face,
-                Color.alphaBlend(_shade.withValues(alpha: 0.10), face),
+                Color.alphaBlend(
+                  _ClayPalette.navy.withValues(alpha: 0.07),
+                  face,
+                ),
               ],
               stops: const [0.0, 0.55, 1.0],
             ),
-            // 테두리도 선이 아니라 면의 위쪽 모서리에 걸린 빛이다.
             border: Border.all(
-              color: Colors.white.withValues(alpha: 0.55),
-              width: 1.0,
+              color: _ClayPalette.navy
+                  .withValues(alpha: widget.primary ? 0.28 : 0.14),
+              width: 1.4,
             ),
             boxShadow: [
               BoxShadow(
-                color: _shade.withValues(alpha: sunk ? 0.18 : 0.26),
+                color: _ClayPalette.navyDeep.withValues(
+                  alpha: sunk ? 0.16 : (widget.primary ? 0.26 : 0.20),
+                ),
                 blurRadius: sunk ? 10 : 20,
                 spreadRadius: sunk ? -4 : -2,
                 offset: Offset(0, sunk ? 3 : 9),
@@ -726,12 +762,23 @@ class _ActionButtonState extends State<_ActionButton> {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(widget.icon, size: 24, color: _ink),
+                Image.asset(
+                  widget.iconAsset,
+                  width: _iconSize,
+                  height: _iconSize,
+                  fit: BoxFit.contain,
+                  // 원본이 512 인데 화면에는 36 남짓으로 뜬다. 디코딩 크기를
+                  // 잘라 두지 않으면 한 장에 1MB 를 물고 있게 된다.
+                  cacheWidth: (_iconSize * devicePixelRatio).round(),
+                  filterQuality: FilterQuality.medium,
+                  errorBuilder: (_, __, ___) =>
+                      const SizedBox(width: _iconSize, height: _iconSize),
+                ),
                 const SizedBox(width: AppSpacing.sm),
                 StandardText(
                   text: widget.label,
                   fontSize: 15,
-                  color: _ink,
+                  color: _ClayPalette.navy,
                   fontWeight: FontWeight.w700,
                   maxLines: 1,
                 ),
@@ -749,19 +796,19 @@ class _ActionButtonState extends State<_ActionButton> {
 
   /// 오늘 미션을 몇 개 했는지.
   ///
-  /// 면보다 한 겹 눌러 판 자리로 만든다. 알약을 색으로 꽉 채우면 매트한 면
-  /// 위에 반짝이는 딱지가 하나 붙는다.
+  /// 아이콘의 초록을 쓴다. 체크 표시와 같은 색이라 "했다"는 말이 색으로도
+  /// 이어진다. 글자는 다른 데와 같은 남색이다.
   Widget _buildBadge() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 2),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.62),
+        color: _ClayPalette.green,
         borderRadius: BorderRadius.circular(AppRadius.full),
       ),
       child: StandardText(
         text: widget.badge!,
         fontSize: 12,
-        color: _ink,
+        color: _ClayPalette.navy,
         fontWeight: FontWeight.w700,
         maxLines: 1,
       ),
