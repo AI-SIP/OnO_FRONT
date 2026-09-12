@@ -10,7 +10,7 @@ import '../../Module/Motion/AnimatedGauge.dart';
 import '../../Module/Motion/AppMotion.dart';
 import '../../Module/Motion/AppearTransition.dart';
 import '../../Module/Motion/MotionReplayScope.dart';
-import '../../Module/Motion/PressableScale.dart';
+import '../../Module/Motion/AppHaptic.dart';
 import '../../Module/Motion/TossPageRoute.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
@@ -464,10 +464,10 @@ class _CharacterStage extends StatelessWidget {
 /// 예전에는 미션 목록이 이 탭에 통째로 붙어 있었고 꾸미기는 무대 구석의 작은
 /// 칩이었다. 둘 다 같은 무게의 버튼으로 내려놓는다.
 ///
-/// **둘 다 밝은 버튼이다.** 한때 미션은 테마색을 옅게 깔고 꾸미기는 진하게
-/// 채웠는데, 무대가 화면을 덮으면서 그림 위에 보라 덩어리 둘이 얹힌 꼴이 됐다.
-/// 이제 바탕은 흰색이고 테마색은 **테두리와 글자와 아이콘에만** 쓴다. 어느
-/// 쪽이 먼저 누를 것인지는 색의 양이 아니라 테두리의 진하기와 두께로 말한다.
+/// **둘의 무게는 채움으로 가른다.** 꾸미기가 이 탭의 주 동작이라 테마색으로
+/// 꽉 채우고, 미션은 흰 바탕에 테마색 글자다. 한때 둘 다 흰 바탕에 테두리
+/// 진하기만 달리 했는데, 화면에서는 차이가 거의 안 보여서 둘 다 웹 폼의 보조
+/// 버튼처럼 읽혔다. 색 덩어리 **하나**는 무겁지 않다. 무거웠던 것은 둘이었다.
 class _ActionRow extends StatelessWidget {
   final Color color;
   final int missionDone;
@@ -514,21 +514,20 @@ class _ActionRow extends StatelessWidget {
   }
 }
 
-/// 무대 위에 떠 있는 버튼 한 개.
+/// 무대 위에 놓인 **게임 키** 한 개.
 ///
-/// **게임 화면의 키처럼 두께를 가진다.** 배경 그림 위에 평평한 사각형을
-/// 얹으면 그림에 붙은 무늬인지 누를 수 있는 것인지 알기 어렵다. 아래쪽에
-/// 흐림 없는 테마색 그림자를 한 겹 깔아 **버튼의 옆면**을 만든다. 그 아래로
-/// 검은 그림자를 옅게 한 번 더 깔아 바닥에서 떨어뜨린다. 누르면
-/// [PressableScale] 이 줄여 주므로 옆면이 그만큼 눌려 들어간 것처럼 보인다.
+/// 배경 그림 위에 평평한 사각형을 얹으면 그림에 붙은 무늬인지 누를 수 있는
+/// 것인지 알기 어렵다. 세 가지로 "누르는 물건"을 만든다.
 ///
-/// **바탕은 흰색이되 완전히 불투명하지는 않다.** 살짝 비쳐야 무대 위에 놓인
-/// 것으로 읽힌다. 그렇다고 많이 비치면 밤하늘 배경에서 글자가 안 읽힌다.
-///
-/// 밝은 배경에서는 흰 바탕이 배경에 묻힐 수 있어서 **검은 그림자**가, 어두운
-/// 배경에서는 테두리가 안 보일 수 있어서 **흰 바탕 자체**가 버튼을 떼어 놓는다.
-/// 둘을 같이 두면 어느 배경에서나 읽힌다.
-class _ActionButton extends StatelessWidget {
+/// 1. **옆면**: 윗면 아래에 진한 판을 한 장 깔아 위에서 내려다본 두께를
+///    만든다. 흐림 없는 그림자로 흉내 낸 적이 있는데 화면에서 옅은 선 한 줄로
+///    보여서 없는 것이나 마찬가지였다. 진짜 판을 깔고 [_depth] 만큼 내놓는다.
+/// 2. **눌림**: 누르면 윗면이 그 두께만큼 **실제로 내려앉는다.** 크기만
+///    줄이는 것과 다르게, 키가 바닥에 닿았다가 튀어 오르는 느낌이 난다.
+///    "동작 줄이기"를 켠 기기에서는 움직이지 않는다.
+/// 3. **모양**: 모서리를 완전히 둥글려 알약으로 만들고 아이콘을 글자보다 크게
+///    키운다. 각진 사각형에 작은 아이콘은 어느 앱에나 있는 보조 버튼이다.
+class _ActionButton extends StatefulWidget {
   final IconData icon;
   final String label;
 
@@ -536,9 +535,6 @@ class _ActionButton extends StatelessWidget {
   final String? badge;
 
   /// 이 탭에서 먼저 누를 것인지.
-  ///
-  /// 색의 양이 아니라 **테두리의 진하기와 옆면의 두께**로 가른다. 한쪽을
-  /// 테마색으로 꽉 채우면 그림 위에 색 덩어리가 생긴다.
   final bool primary;
 
   final Color color;
@@ -553,88 +549,149 @@ class _ActionButton extends StatelessWidget {
     this.badge,
   });
 
-  /// 버튼 옆면의 두께.
-  double get _lip => primary ? 4.0 : 3.0;
+  @override
+  State<_ActionButton> createState() => _ActionButtonState();
+}
+
+class _ActionButtonState extends State<_ActionButton> {
+  /// 옆면의 두께. 이만큼 내려앉는다.
+  ///
+  /// 4 로는 화면에서 안 보였다. 손가락 끝으로 눌렀을 때 눈에 띄려면 이 정도는
+  /// 돼야 한다.
+  static const double _depth = 7.0;
+
+  bool _pressed = false;
+
+  void _setPressed(bool value) {
+    if (_pressed == value) return;
+    setState(() => _pressed = value);
+  }
+
+  void _handleTap() {
+    AppHaptic.secondary();
+    widget.onTap();
+  }
+
+  /// 옆면 색. 윗면보다 어두워야 두께로 읽힌다.
+  ///
+  /// 검정을 섞는다. 금색이나 다른 색을 섞으면 그 색이 어디서 왔는지 설명할 수
+  /// 없고, 화면에 없던 색이 하나 더 생긴다.
+  Color get _sideColor => widget.primary
+      ? Color.lerp(widget.color, Colors.black, 0.34)!
+      : Color.alphaBlend(
+          widget.color.withValues(alpha: 0.55),
+          Colors.white,
+        );
+
+  Color get _faceColor =>
+      widget.primary ? widget.color : Colors.white.withValues(alpha: 0.95);
+
+  Color get _foreground => widget.primary ? Colors.white : widget.color;
 
   @override
   Widget build(BuildContext context) {
-    return PressableScale(
-      onTap: onTap,
-      scale: 0.96,
-      child: Container(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.md,
-          vertical: AppSpacing.md,
-        ),
-        decoration: BoxDecoration(
-          // 먼저 누를 쪽만 테마색을 아주 옅게 섞는다. 색이 아니라 온도 차다.
-          color: primary
-              ? Color.alphaBlend(color.withValues(alpha: 0.07), Colors.white)
-                  .withValues(alpha: 0.94)
-              : Colors.white.withValues(alpha: 0.90),
-          borderRadius: BorderRadius.circular(AppRadius.large),
-          border: Border.all(
-            color: color.withValues(alpha: primary ? 0.55 : 0.30),
-            width: primary ? 1.6 : 1.2,
-          ),
-          boxShadow: [
-            // 흐리지 않은 그림자 = 버튼의 옆면.
-            BoxShadow(
-              color: color.withValues(alpha: primary ? 0.38 : 0.20),
-              blurRadius: 0,
-              offset: Offset(0, _lip),
-            ),
-            // 바닥에서 떨어뜨리는 그림자. 밝은 배경에서 흰 바탕이 묻히지
-            // 않게 하는 것도 이 한 겹이다.
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.10),
-              blurRadius: 12,
-              offset: Offset(0, _lip + 3),
-            ),
-          ],
-        ),
-        // 글자를 키운 기기에서 아이콘과 글자가 버튼 폭을 넘는다. 넘치게 두는
-        // 대신 줄여서 앉힌다.
-        child: FittedBox(
-          fit: BoxFit.scaleDown,
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(icon, size: 18, color: color),
-              const SizedBox(width: AppSpacing.sm),
-              StandardText(
-                text: label,
-                fontSize: 14,
-                color: color,
-                fontWeight: FontWeight.w700,
-                maxLines: 1,
+    final radius = BorderRadius.circular(AppRadius.full);
+    final reduced = AppMotion.isReduced(context);
+    final sunk = _pressed && !reduced;
+
+    return Semantics(
+      button: true,
+      label: widget.label,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTapDown: (_) => _setPressed(true),
+        onTapUp: (_) => _setPressed(false),
+        onTapCancel: () => _setPressed(false),
+        onTap: _handleTap,
+        child: DecoratedBox(
+          // 옆면. 윗면이 내려앉으면 이 판이 가려진다.
+          decoration: BoxDecoration(
+            color: _sideColor,
+            borderRadius: radius,
+            boxShadow: [
+              // 바닥에서 떨어뜨린다. 밝은 배경에서 흰 윗면이 묻히지 않게
+              // 하는 것도 이 한 겹이다.
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.16),
+                blurRadius: 14,
+                offset: const Offset(0, 6),
               ),
-              if (badge != null) ...[
-                const SizedBox(width: AppSpacing.sm),
-                // 버튼 안에서 유일하게 색이 꽉 찬 자리다. 회색으로 두면
-                // 숫자가 버튼에 얹힌 딱지처럼 따로 논다. 작아서 색 덩어리가
-                // 되지 않으면서, 오늘 할 일이 남았다는 것을 먼저 보게 한다.
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 2,
-                  ),
-                  decoration: BoxDecoration(
-                    color: color,
-                    borderRadius: BorderRadius.circular(AppRadius.full),
-                  ),
-                  child: StandardText(
-                    text: badge!,
-                    fontSize: 11,
-                    color: Colors.white,
-                    fontWeight: FontWeight.w700,
-                    maxLines: 1,
-                  ),
-                ),
-              ],
             ],
           ),
+          child: AnimatedPadding(
+            duration: reduced ? Duration.zero : AppMotion.press,
+            curve: AppMotion.standard,
+            padding: EdgeInsets.only(
+              top: sunk ? _depth : 0,
+              bottom: sunk ? 0 : _depth,
+            ),
+            child: Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.md,
+                vertical: AppSpacing.lg,
+              ),
+              decoration: BoxDecoration(
+                color: _faceColor,
+                borderRadius: radius,
+                // 흰 윗면은 어두운 배경에서 저절로 떠 보이지만, 채운 윗면은
+                // 옆면과 붙어 한 덩어리로 보인다. 위쪽에 밝은 선을 한 줄
+                // 그어 빛을 받는 면이라는 것을 말한다.
+                border: Border.all(
+                  color: widget.primary
+                      ? Colors.white.withValues(alpha: 0.34)
+                      : widget.color.withValues(alpha: 0.32),
+                  width: 1.2,
+                ),
+              ),
+              // 글자를 키운 기기에서 아이콘과 글자가 버튼 폭을 넘는다. 넘치게
+              // 두는 대신 줄여서 앉힌다.
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(widget.icon, size: 24, color: _foreground),
+                    const SizedBox(width: AppSpacing.sm),
+                    StandardText(
+                      text: widget.label,
+                      fontSize: 15,
+                      color: _foreground,
+                      fontWeight: FontWeight.w700,
+                      maxLines: 1,
+                    ),
+                    if (widget.badge != null) ...[
+                      const SizedBox(width: AppSpacing.sm),
+                      _buildBadge(),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+          ),
         ),
+      ),
+    );
+  }
+
+  /// 오늘 미션을 몇 개 했는지.
+  ///
+  /// 버튼 안에서 색이 꽉 찬 자리다. 회색으로 두면 숫자가 버튼에 얹힌 딱지처럼
+  /// 따로 논다.
+  Widget _buildBadge() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 2),
+      decoration: BoxDecoration(
+        color: widget.primary
+            ? Colors.white.withValues(alpha: 0.26)
+            : widget.color,
+        borderRadius: BorderRadius.circular(AppRadius.full),
+      ),
+      child: StandardText(
+        text: widget.badge!,
+        fontSize: 12,
+        color: widget.primary ? Colors.white : Colors.white,
+        fontWeight: FontWeight.w700,
+        maxLines: 1,
       ),
     );
   }
