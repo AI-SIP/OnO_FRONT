@@ -58,6 +58,24 @@ MissionModel _mission({
   );
 }
 
+/// 눈금판 넷의 고리. 스탯창 안에서 정사각형으로 그려진 것만 골라 왼쪽부터
+/// 줄 세운다. 고리를 그리는 화가가 비공개라 크기로 찾는다.
+List<Rect> dialRings(WidgetTester tester) {
+  final rects = <Rect>[];
+  final paints = find.descendant(
+    of: find.byType(AbilityStatPanel),
+    matching: find.byType(CustomPaint),
+  );
+  for (final element in paints.evaluate()) {
+    final box = element.renderObject! as RenderBox;
+    if (box.size.width == box.size.height && box.size.width > 20) {
+      rects.add(box.localToGlobal(Offset.zero) & box.size);
+    }
+  }
+  rects.sort((a, b) => a.left.compareTo(b.left));
+  return rects;
+}
+
 void main() {
   setUpOnoWidgetTest();
 
@@ -289,6 +307,29 @@ void main() {
       expect(find.text('12 / 50'), findsOneWidget);
       expect(find.text('4 / 20'), findsOneWidget);
       expect(find.text('6 / 10'), findsOneWidget);
+    });
+
+    testWidgets('이름표와 진행도가 고리에서 같은 만큼 떨어진다', (tester) async {
+      // 이름표를 고리 위로 올린 뒤 위아래를 4 로 뒀더니 글자가 고리에 얹혀
+      // 있는 것처럼 붙어 보였다. 고리는 둥글어서 글자와 가장 가까워지는 자리가
+      // 꼭대기와 바닥 한 점뿐이고 눈은 그 한 점을 먼저 본다. 한쪽만 벌리면
+      // 고리가 칸 안에서 밀려난 것처럼 보이므로 위아래가 같아야 한다.
+      await pumpCharacter(tester);
+
+      final rings = dialRings(tester);
+      expect(rings, hasLength(4));
+
+      const names = ['출석', '오답노트', '문제 복습', '복습 세트'];
+      const meters = ['8 / 30', '12 / 50', '4 / 20', '6 / 10'];
+      for (var index = 0; index < rings.length; index++) {
+        final above =
+            rings[index].top - tester.getRect(find.text(names[index])).bottom;
+        final below =
+            tester.getRect(find.text(meters[index])).top - rings[index].bottom;
+
+        expect(above, closeTo(below, 0.01), reason: names[index]);
+        expect(above, greaterThanOrEqualTo(8.0), reason: names[index]);
+      }
     });
 
     testWidgets('눈금판도 이름표가 레벨 위, 진행도가 아래다', (tester) async {

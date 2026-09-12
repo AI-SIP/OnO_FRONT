@@ -208,6 +208,20 @@ double _strokeOf(double dialSize) => (dialSize * 0.10).clamp(4.0, 6.0);
 /// 숫자가 고리에 걸려 읽히지 않는다.
 const double _dialTextInset = 3.0;
 
+/// 고리와 그 위아래 글자 사이의 틈.
+///
+/// 이름표를 고리 위로 올리면서 위아래 모두 [AppSpacing.xs] 를 뒀는데 글자가
+/// 고리에 얹혀 있는 것처럼 붙어 보였다. 네모난 카드 사이라면 4 로도 떨어져
+/// 보이지만 **고리는 둥글어서 글자와 가장 가까워지는 자리가 꼭대기와 바닥
+/// 한 점뿐**이고, 눈은 그 한 점을 먼저 본다. 한 단계 올려 [AppSpacing.sm] 로
+/// 둔다. 무대의 총 학습 줄이 글자와 막대 사이에 쓰는 값과 같은 값이라,
+/// 성장 영역이 글자와 게이지를 어디서나 같은 간격으로 떼어 놓게 된다.
+///
+/// **위아래가 같은 값이다.** 한쪽만 벌리면 고리가 칸 안에서 위나 아래로
+/// 밀려난 것처럼 보이고, 눈금판이 넷 나란히 선 자리에서는 그 어긋남이 네 번
+/// 되풀이돼 더 눈에 띈다.
+const double _dialTextGap = AppSpacing.sm;
+
 /// 능력치 하나를 그리는 눈금판이다.
 ///
 /// 위에서 아래로 [GrowthType] 의 세 층을 그대로 쌓는다.
@@ -272,7 +286,7 @@ class _AbilityDial extends StatelessWidget {
               scale: labelScale,
             ),
           ),
-          const SizedBox(height: AppSpacing.xs),
+          const SizedBox(height: _dialTextGap),
           Center(
             child: SizedBox(
               width: dialSize,
@@ -313,7 +327,7 @@ class _AbilityDial extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(height: AppSpacing.xs),
+          const SizedBox(height: _dialTextGap),
           FittedBox(
             fit: BoxFit.scaleDown,
             child: GrowthMeterText(
