@@ -21,7 +21,7 @@ class CosmeticMockData {
   /// 개구리 본체 그림.
   static const String baseImageUrl = 'assets/Cosmetic/BASE.png';
 
-  /// 개구리 본체가 들어가는 층. 배경(100)·등짐(200) 뒤, 옷(400) 앞이다.
+  /// 개구리 본체가 들어가는 층. 배경(100)·배낭(200) 뒤, 옷(400) 앞이다.
   static const int baseLayerOrder = 300;
 
   /// 지금 하나뿐인 세트.
@@ -90,8 +90,8 @@ class CosmeticMockData {
       'nameKo': '배경',
       'composited': true,
     },
-    // 등에 메는 가방이라 개구리 뒤에 깔린다. 앞으로 메는 것은 BAG(450) 이다.
-    {'slot': 'BACK', 'layerOrder': 200, 'nameKo': '등짐', 'composited': true},
+    // 등에 메는 것이라 개구리 뒤에 깔린다. 앞으로 메는 것은 BAG(450) 이다.
+    {'slot': 'BACK', 'layerOrder': 200, 'nameKo': '배낭', 'composited': true},
     {'slot': 'OUTFIT', 'layerOrder': 400, 'nameKo': '옷', 'composited': true},
     // 가방 세 종이 전부 앞으로 메는 그림이라 개구리 뒤(200)에 두면 몸통이 덮어
     // 끈 조각만 보인다. 옷 위(450)로 올린다. 등에 메는 것은 BACK(200) 이다.
@@ -137,10 +137,10 @@ class CosmeticMockData {
     // ── 오답노트 작성 ──
     _item('bag_mini_backpack', 'BAG', '미니 백팩', 2, _noteWrite),
     _item('prop_notebook', 'HAND', '공책', 3, _noteWrite),
-    _item('back_backpack_navy', 'BACK', '남색 책가방', 5, _noteWrite),
+    _item('back_backpack_navy', 'BACK', '남색 배낭', 5, _noteWrite),
     _item('prop_study', 'HAND', '공부 소품', 6, _noteWrite),
     _item('bag_waist_pouch', 'BAG', '허리 가방', 8, _noteWrite),
-    _item('back_backpack_canvas', 'BACK', '캔버스 책가방', 9, _noteWrite),
+    _item('back_backpack_canvas', 'BACK', '캔버스 배낭', 9, _noteWrite),
     _item('bag_crossbody_satchel', 'BAG', '크로스백', 11, _noteWrite),
     _item('bg_study', 'BACKGROUND', '공부방', 12, _noteWrite),
     _item('prop_tumbler', 'HAND', '텀블러', 13, _noteWrite),

@@ -212,11 +212,11 @@ void main() {
       }
     });
 
-    test('BACK 은 등짐이고 BAG 이 가방이다', () {
+    test('BACK 은 배낭이고 BAG 이 가방이다', () {
       // 앞으로 메는 것이 BAG(450), 등에 메는 것이 BACK(200) 이다. 둘의 이름을
       // 서로 바꿔 적으면 격자 탭 두 개가 통째로 뒤바뀐다.
       final slots = CosmeticMockData.loadout.slots;
-      expect(slots.firstWhere((s) => s.slot == 'BACK').nameKo, '등짐');
+      expect(slots.firstWhere((s) => s.slot == 'BACK').nameKo, '배낭');
       expect(slots.firstWhere((s) => s.slot == 'BAG').nameKo, '가방');
     });
   });

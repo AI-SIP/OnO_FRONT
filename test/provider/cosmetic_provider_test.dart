@@ -460,8 +460,8 @@ void main() {
       expect(onStage.any((layer) => layer.slot == 'BACKGROUND'), isFalse);
     });
 
-    test('등짐은 개구리와 함께 남는다', () {
-      // 등짐도 개구리보다 뒤에 그려지지만 개구리 몸에 맞춰 그린 그림이다.
+    test('배낭은 개구리와 함께 남는다', () {
+      // 배낭도 개구리보다 뒤에 그려지지만 개구리 몸에 맞춰 그린 그림이다.
       // 무대로 내보내면 자리가 어긋난다. layersWithoutBackdrop 과 다른 점이다.
       final provider = maxed();
 
