@@ -98,7 +98,14 @@ class _ThemeDialogState extends State<ThemeDialog> {
   static const double _tierGutter = 36;
 
   /// 트랙과 트랙 사이.
-  static const double _laneGap = 6;
+  static const double _laneGap = AppSpacing.sm;
+
+  /// 동그라미 지름의 위 한계.
+  ///
+  /// 트랙이 넓어도 여기서 멈춘다. 원을 키우는 대신 남는 자리를 여백으로 돌리는
+  /// 쪽이 스물넷을 한눈에 볼 때 덜 답답하다. 색은 크기보다 서로 떨어져 있을 때
+  /// 더 잘 구분된다.
+  static const double _maxSwatch = 40;
 
   /// 트랙 안쪽 여백. 동그라미가 트랙 벽에 닿지 않게 한다.
   static const double _laneInset = 5;
@@ -111,16 +118,18 @@ class _ThemeDialogState extends State<ThemeDialog> {
   /// 둘째 사이만 벌어져 간격이 들쭉날쭉해진다). 칸의 색칠은 늘어난 높이까지
   /// 그대로 차므로 "색이 끝나는 자리가 지금 서 있는 곳"은 흐트러지지 않는다.
   ///
-  /// 늘어난 만큼은 칸과 칸 사이를 좁혀 되돌린다. 24칸이 390pt 폰과 태블릿에서
-  /// 스크롤 없이 들어가야 하는 조건이 있어서 트랙 전체 높이는 그대로여야
-  /// 한다. 여섯 칸에서 4px 씩 줄이면 24px 이 남고, 그것을 위아래 12px 로 나눠
-  /// 준다. 결과적으로 트랙 끝의 여백은 6 에서 16 으로 늘고 동그라미 사이는
-  /// 12 에서 8 로 좁는다. 캡슐 안에 든 것은 원래 그 비율로 보이는 편이
-  /// 자연스럽다.
+  /// 늘어난 만큼의 자리는 동그라미를 [_maxSwatch] 로 줄여서 마련했다. 24칸이
+  /// 390pt 폰과 태블릿에서 스크롤 없이 들어가야 하는 조건이 있어 트랙 전체
+  /// 높이는 늘릴 수 없다. 처음에는 칸 사이를 좁혀 이 자리를 만들었는데,
+  /// 그러면 끝만 벌어지고 가운데는 더 빽빽해졌다. 원을 줄이는 쪽이 끝도 사이도
+  /// 같이 벌릴 수 있다.
   static const double _laneEndPad = AppSpacing.md;
 
-  /// 칸과 칸 사이. [_laneEndPad] 만큼 끝을 벌리느라 좁혔다.
-  static const double _cellGap = AppSpacing.sm;
+  /// 칸과 칸 사이.
+  ///
+  /// 동그라미를 46 에서 [_maxSwatch] 로 줄이면서 생긴 자리를 여기에 돌려줬다.
+  /// 원이 작아지고 사이가 벌어지니 트랙이 빽빽해 보이지 않는다.
+  static const double _cellGap = AppSpacing.md;
 
   /// 적용을 누르고 창이 닫히기까지의 사이.
   ///
@@ -242,11 +251,16 @@ class _ThemeDialogState extends State<ThemeDialog> {
 
   // ── 위쪽 미리보기 판 ─────────────────────────────────────────
 
-  /// 고른 색과 그 색을 어떻게 얻었는지를 크게 보여 주는 자리.
+  /// 고른 색을 크게 보여 주는 자리.
   ///
   /// 잠긴 칸을 누르면 같은 자리가 그 칸의 조건으로 바뀐다. 색 하나를 크게
   /// 띄워 두면 작은 동그라미 24개만 볼 때보다 "이 색으로 바꾼다"가 훨씬 잘
   /// 와닿는다.
+  ///
+  /// 이름 아래 설명은 **할 말이 있을 때만** 붙인다. 열린 색에는 아무것도 안
+  /// 붙는다. 어느 레벨에서 열었는지는 이미 지난 일이라 고르는 데 쓸모가 없고,
+  /// 색마다 한 줄씩 따라붙으면 판이 설명문처럼 보인다. 잠긴 색의 조건은
+  /// 지금 행동을 정하는 정보라서 남긴다.
   Widget _buildPreview(UserInfoModel? userInfo, Duration duration) {
     final inspected = _inspectedIndex;
     final isLocked = inspected != null;
@@ -256,10 +270,11 @@ class _ThemeDialogState extends State<ThemeDialog> {
     final Color panelAccent;
     final String overline;
     final String title;
-    final String detail;
+    final String? detail;
 
     if (index == null) {
       // 저장된 색이 24종 어디에도 없는 경우. 예전 버전에서 고른 색일 수 있다.
+      // 이름이 없는 이유를 말해 줘야 해서 이때는 한 줄 붙인다.
       swatchColor = _selectedColor ?? AppColors.borderStrong;
       panelAccent = swatchColor;
       overline = '지금 쓰는 색';
@@ -278,16 +293,17 @@ class _ThemeDialogState extends State<ThemeDialog> {
       if (isLocked) {
         // 잠긴 칸을 보고 있을 때는 판 전체가 그 능력치 색을 띤다. 어느 갈래를
         // 올려야 하는지가 글자보다 색으로 먼저 읽힌다.
+        //
+        // 능력치는 열 머리와 같은 짧은 이름으로 부른다. 긴 이름을 쓰면 좁은
+        // 폭에서 두 줄이 되고, 그때 판이 커지면서 격자가 밀린다.
         panelAccent = lane.colors.accent;
         overline = '아직 잠긴 색';
-        detail = '${lane.fullLabel} Lv.$requiredLevel 필요 · '
+        detail = '${lane.shortLabel} Lv.$requiredLevel 필요 · '
             '지금 Lv.$currentLevel';
       } else {
         panelAccent = swatchColor;
         overline = '고른 색';
-        detail = rowIndex == 0
-            ? '처음부터 열려 있는 색이에요'
-            : '${lane.fullLabel} Lv.$requiredLevel 로 연 색이에요';
+        detail = null;
       }
     }
 
@@ -329,7 +345,9 @@ class _ThemeDialogState extends State<ThemeDialog> {
                   isLocked: isLocked,
                   duration: duration,
                 ),
-                const SizedBox(width: AppSpacing.lg),
+                // 동그라미와 이름은 한 덩어리로 읽혀야 한다. 사이가 넓으면
+                // 색과 이름이 서로 다른 것을 가리키는 것처럼 보인다.
+                const SizedBox(width: AppSpacing.sm),
                 Expanded(
                   child: AnimatedSwitcher(
                     duration: duration,
@@ -353,13 +371,14 @@ class _ThemeDialogState extends State<ThemeDialog> {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
-                        StandardText(
-                          text: detail,
-                          fontSize: 12,
-                          color: AppColors.textSecondary,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
+                        if (detail != null)
+                          StandardText(
+                            text: detail,
+                            fontSize: 12,
+                            color: AppColors.textSecondary,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                       ],
                     ),
                   ),
@@ -380,11 +399,13 @@ class _ThemeDialogState extends State<ThemeDialog> {
   /// 늘어선 여섯 칸이 "이 능력치를 올려서 얻는 색"으로 읽힌다.
   Widget _buildLaneHeader(UserInfoModel? userInfo) {
     return Padding(
+      // 위로는 미리보기 판과, 아래로는 격자와 벌린다. 머리줄이 격자에 붙어
+      // 있으면 능력치 이름이 첫 줄 색의 이름표처럼 보인다.
       padding: const EdgeInsets.fromLTRB(
         _gridPadding,
-        AppSpacing.md,
+        AppSpacing.lg,
         _gridPadding,
-        AppSpacing.sm,
+        AppSpacing.md,
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.end,
@@ -422,7 +443,7 @@ class _ThemeDialogState extends State<ThemeDialog> {
             _tierGutter -
             _laneGap * (_themeLanes.length - 1);
         final laneWidth = trackWidth / _themeLanes.length;
-        final swatchSize = (laneWidth - _laneInset * 2).clamp(26.0, 46.0);
+        final swatchSize = (laneWidth - _laneInset * 2).clamp(26.0, _maxSwatch);
         final cellHeight = swatchSize + _cellGap;
 
         return SingleChildScrollView(
@@ -430,7 +451,7 @@ class _ThemeDialogState extends State<ThemeDialog> {
             _gridPadding,
             0,
             _gridPadding,
-            AppSpacing.md,
+            AppSpacing.lg,
           ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
