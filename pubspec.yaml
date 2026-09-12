@@ -107,6 +107,7 @@ flutter:
     - assets/Cosmetic/
     - assets/Reward/
     - assets/ProfileFrame/
+    - assets/MissionIcon/
     - assets/emoji/
     - assets/no_image.png
 
