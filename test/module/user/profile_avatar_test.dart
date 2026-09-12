@@ -57,6 +57,68 @@ void main() {
     expect(find.byType(FrogHeadAvatar), findsOneWidget);
   });
 
+  group('치장 테두리', () {
+    // 테두리는 원을 **바깥에서 감싼다.** 원 안쪽에 그리면 사진을 덮는다.
+    // 에셋이 120 x 120 이고 가운데 96 x 96 이 비어 있어서, 사진이 그 96 자리를
+    // 쓰고 테두리가 바깥 12px 을 두른다.
+    const frame = 'assets/ProfileFrame/frame_leaf.svg';
+
+    testWidgets('테두리를 둘러도 전체 지름이 그대로다', (tester) async {
+      // 바깥으로 커지면 스터디룸 목록에서 줄이 밀린다.
+      await tester.pumpWidget(const MaterialApp(
+        home: Scaffold(
+          body: Center(
+            child: ProfileAvatar(
+              size: 120,
+              borderColor: Colors.black,
+              frameUrl: frame,
+            ),
+          ),
+        ),
+      ));
+
+      expect(tester.getSize(find.byType(ProfileAvatar)), const Size(120, 120));
+    });
+
+    testWidgets('테두리를 두르면 안쪽 사진이 그만큼 작아진다', (tester) async {
+      await tester.pumpWidget(const MaterialApp(
+        home: Scaffold(
+          body: Column(
+            children: [
+              ProfileAvatar(
+                size: 120,
+                borderColor: Colors.black,
+                frameUrl: frame,
+              ),
+              ProfileAvatar(size: 120, borderColor: Colors.black),
+            ],
+          ),
+        ),
+      ));
+
+      final framed = tester.getSize(find.byType(FrogHeadAvatar).at(0));
+      final bare = tester.getSize(find.byType(FrogHeadAvatar).at(1));
+
+      expect(framed.width, lessThan(bare.width));
+      // 120 의 96/120 = 96. 기본 테두리가 없어서 안쪽으로 들이지도 않는다.
+      expect(framed.width, closeTo(96, 0.5));
+    });
+
+    testWidgets('테두리가 없으면 사진이 원을 꽉 채운다', (tester) async {
+      await tester.pumpWidget(const MaterialApp(
+        home: Scaffold(
+          body: Center(
+            child: ProfileAvatar(size: 120, borderColor: Colors.black),
+          ),
+        ),
+      ));
+
+      expect(tester.getSize(find.byType(ProfileAvatar)), const Size(120, 120));
+      // 기본 테두리 두께(1)만큼만 안쪽에 앉는다.
+      expect(tester.getSize(find.byType(FrogHeadAvatar)).width, 118);
+    });
+  });
+
   group('개구리 프로필', () {
     testWidgets('개구리를 넘기면 기본 이미지 대신 개구리 얼굴이 선다', (tester) async {
       await withMockedNetworkImages(() async {

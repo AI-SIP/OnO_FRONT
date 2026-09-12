@@ -31,8 +31,8 @@ class ProfileAvatar extends StatelessWidget {
   /// [frogLayers] 와 같은 이유로 **내 프로필이 뜨는 자리에서만** 넘긴다. 남의
   /// 프로필에 내 테두리를 두르면 거짓말이 된다.
   ///
-  /// 사진을 올렸든 개구리가 섰든 **원 위에 그대로 얹는다.** 테두리는 안에 무엇이
-  /// 들어 있든 둘레를 도는 것이고, 그래야 사진을 바꿔도 테두리가 유지된다.
+  /// 테두리는 안에 무엇이 들어 있든 **바깥에서 감싼다.** 사진을 바꿔도
+  /// 그대로다.
   final String? frameUrl;
 
   const ProfileAvatar({
@@ -46,46 +46,56 @@ class ProfileAvatar extends StatelessWidget {
     this.frameUrl,
   });
 
+  /// 테두리 그림 한 변에 대한 **안쪽 빈 자리**의 비율.
+  ///
+  /// 프레임 에셋은 120 × 120 이고 가운데 96 × 96 을 비워 두었다. 사진이 그
+  /// 96 자리에 앉고 테두리가 바깥 12px 을 두른다.
+  static const double _frameInnerRatio = 96 / 120;
+
   @override
   Widget build(BuildContext context) {
     final resolvedUrl = imageUrl?.trim();
     final frame = frameUrl?.trim();
+    final framed = frame != null && frame.isNotEmpty;
+
+    // **테두리를 둘러도 전체 지름은 그대로다.** 바깥으로 커지면 스터디룸
+    // 목록에서 줄이 밀린다. 안쪽 사진이 그만큼 작아지는 것이 맞다.
+    final innerSize = framed ? size * _frameInnerRatio : size;
 
     final circle = Container(
-      width: size,
-      height: size,
+      width: innerSize,
+      height: innerSize,
       decoration: BoxDecoration(
         color: backgroundColor,
         shape: BoxShape.circle,
         // 치장 테두리를 둘렀으면 기본 테두리를 지운다. 두 겹이면 둘레에 선이
         // 두 줄 생겨서 치장이 덧댄 것처럼 보인다.
-        border: frame == null || frame.isEmpty
-            ? Border.all(color: borderColor, width: borderWidth)
-            : null,
+        border:
+            framed ? null : Border.all(color: borderColor, width: borderWidth),
       ),
       child: ClipOval(
         child: resolvedUrl == null || resolvedUrl.isEmpty
-            ? _defaultImage()
+            ? _defaultImage(innerSize, framed)
             : CachedNetworkImage(
                 imageUrl: resolvedUrl,
                 fit: BoxFit.cover,
-                placeholder: (_, __) => _defaultImage(),
-                errorWidget: (_, __, ___) => _defaultImage(),
+                placeholder: (_, __) => _defaultImage(innerSize, framed),
+                errorWidget: (_, __, ___) => _defaultImage(innerSize, framed),
               ),
       ),
     );
 
-    if (frame == null || frame.isEmpty) return circle;
+    if (!framed) return circle;
 
     return SizedBox(
       width: size,
       height: size,
       child: Stack(
-        fit: StackFit.expand,
+        alignment: Alignment.center,
         children: [
+          // 안쪽 사진이 먼저다. 테두리는 그 둘레를 도는 것이라 위에 얹혀도
+          // 사진을 덮지 않는다. 가운데가 비어 있는 그림이기 때문이다.
           circle,
-          // 테두리는 원 전체를 덮는 한 장이다. 안쪽은 비어 있어서 사진도
-          // 개구리도 그대로 비친다. 누름은 아래 원이 받아야 한다.
           IgnorePointer(
             child: CosmeticArt(url: frame, size: size, fit: BoxFit.contain),
           ),
@@ -100,12 +110,13 @@ class ProfileAvatar extends StatelessWidget {
   /// 조그맣게 박힌다. 얼굴만 도려내는 일은 [FrogHeadAvatar] 가 이미 하고
   /// 있어서 꾸민 개구리든 맨 개구리든 같은 것을 쓴다. 테두리 두께만큼 안쪽에
   /// 앉혀야 원 밖으로 삐져나오지 않는다.
-  Widget _defaultImage() {
-    final framed = frameUrl != null && frameUrl!.trim().isNotEmpty;
+  ///
+  /// [innerSize] 는 치장 테두리를 둘렀을 때 그만큼 줄어든 안쪽 지름이다.
+  Widget _defaultImage(double innerSize, bool framed) {
     return FrogHeadAvatar(
       layers: frogLayers ?? _bareFrog,
       // 치장 테두리를 둘렀으면 기본 테두리가 없으니 안쪽으로 들일 것도 없다.
-      size: framed ? size : size - borderWidth * 2,
+      size: framed ? innerSize : innerSize - borderWidth * 2,
     );
   }
 
