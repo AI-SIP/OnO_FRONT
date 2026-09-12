@@ -242,6 +242,28 @@ void main() {
       expect(labelX, lessThan(levelX));
       expect(levelX, lessThan(meterX));
     });
+
+    testWidgets('꾸미기 화면에서 총 학습 더미 레벨을 옮기면 이름표도 따라간다', (tester) async {
+      // 디버그에서 총 학습을 올려도 이름표가 서버 값 그대로면 Lv.16~20 에서
+      // 열리는 것들을 시안에서 확인할 수가 없다.
+      final cosmetic =
+          CosmeticProvider(mockLevels: CosmeticAbilityLevels.uniform(12));
+      cosmetic.setMockLevel(null, 18);
+
+      await pumpCharacter(tester, cosmetic: cosmetic);
+
+      expect(find.text('Lv.18'), findsOneWidget);
+      expect(find.text('Lv.7'), findsNothing);
+      // 경험치도 더미를 따른다. 문턱은 백엔드가 정한 `40 × 레벨` 이다.
+      expect(find.text('432 / 720'), findsOneWidget);
+    });
+
+    testWidgets('총 학습 더미 레벨을 한 번도 안 옮겼으면 서버 값을 그린다', (tester) async {
+      await pumpCharacter(tester);
+
+      expect(find.text('Lv.7'), findsOneWidget);
+      expect(find.text('24 / 60'), findsOneWidget);
+    });
   });
 
   group('스탯창', () {

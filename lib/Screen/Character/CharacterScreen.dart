@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../Model/Cosmetic/CosmeticAbilityLevels.dart';
 import '../../Module/Design/AppColors.dart';
 import '../../Module/Design/AppRadius.dart';
 import '../../Module/Design/AppSpacing.dart';
@@ -197,9 +198,22 @@ class _CharacterStage extends StatelessWidget {
     // LayoutBuilder 안에서는 watch 가 듣지 않는다. 그 바깥에서 받는다.
     final cosmetic = context.watch<CosmeticProvider>();
 
-    final level = userInfo?.totalStudyLevel ?? 0;
-    final point = userInfo?.totalStudyCurrentPoint ?? 0;
-    final threshold = userInfo?.totalStudyNextLevelThreshold ?? 40;
+    // 꾸미기 화면의 디버그 패널에서 총 학습 레벨을 옮기면 이 이름표도 같이
+    // 움직인다. 스탯창이 능력치 넷에 대해 하는 것과 같은 규칙이다. 두 화면이
+    // 같은 레벨을 다르게 말하면 어느 쪽이 진짜인지 알 수 없고, 무엇보다
+    // Lv.16~20 에서만 열리는 것들(랜턴 · 눈꽃 뱃지 · 왕관 · 학사 세트)을
+    // 시안에서 확인할 길이 없어진다. 한 번도 안 옮겼으면 서버 값 그대로다.
+    final mockLevel = kDebugMode && cosmetic.levelsTouched
+        ? cosmetic.levels.totalStudy
+        : null;
+
+    final level = mockLevel ?? userInfo?.totalStudyLevel ?? 0;
+    final threshold = mockLevel != null
+        ? _mockThreshold(mockLevel)
+        : (userInfo?.totalStudyNextLevelThreshold ?? 40);
+    final point = mockLevel != null
+        ? _mockPoint(mockLevel)
+        : (userInfo?.totalStudyCurrentPoint ?? 0);
     final progress = threshold > 0 ? (point / threshold).clamp(0.0, 1.0) : 0.0;
 
     return Container(
@@ -362,6 +376,25 @@ class _CharacterStage extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  /// **시안 전용.** 그 총 학습 레벨에서 다음 레벨까지 필요한 경험치.
+  ///
+  /// 백엔드가 확정한 식이 `40 × 레벨` 이고 레벨 상한은
+  /// [CosmeticAbilityLevels.maxTotalStudy] 다. **서버가 붙으면 서버가 내려준
+  /// `totalStudyNextLevelThreshold` 가 이긴다.** 여기 있는 것은 디버그 패널로
+  /// 레벨을 옮겨 볼 때 막대가 빈 채로 남지 않게 하려는 더미일 뿐이다.
+  static int _mockThreshold(int level) => 40 * level;
+
+  /// **시안 전용.** 그 레벨에서 지금까지 모은 경험치.
+  ///
+  /// 레벨을 옮길 때마다 막대가 다르게 차야 게이지가 어떻게 보이는지 한 번에
+  /// 훑을 수 있다. 5분의 1씩 네 칸을 돈다. 끝까지 올라간 뒤에는 더 갈 곳이
+  /// 없으니 꽉 채운다. 이것도 서버가 붙으면 `totalStudyCurrentPoint` 가 이긴다.
+  static int _mockPoint(int level) {
+    final threshold = _mockThreshold(level);
+    if (level >= CosmeticAbilityLevels.maxTotalStudy) return threshold;
+    return (threshold * ((level % 4) + 1) / 5).round();
   }
 
   /// 개구리 한 변의 길이. 남은 자리에 들어가는 만큼만 크게 그린다.
