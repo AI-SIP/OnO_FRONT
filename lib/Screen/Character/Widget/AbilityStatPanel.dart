@@ -1,3 +1,4 @@
+import '../../../Model/Cosmetic/CosmeticAbilityLevels.dart';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -195,10 +196,17 @@ class _Ability {
   });
 
   /// 다음 레벨까지 필요한 점수. 마이페이지 레벨 카드가 쓰던 식 그대로다.
+  ///
+  /// 만렙에서는 더 올라갈 자리가 없어 게이지를 꽉 채운다. 서버가 만렙에 닿은
+  /// 뒤로도 점수를 계속 쌓기 때문에, 이 식을 그대로 쓰면 분모를 넘겨 게이지가
+  /// 칸 밖으로 나간다.
+  bool get isMaxLevel => level >= CosmeticAbilityLevels.maxAbility;
+
   int get requiredPoint => 10 + (level - 1) * 10;
 
-  double get progress =>
-      requiredPoint > 0 ? (point / requiredPoint).clamp(0.0, 1.0) : 0.0;
+  double get progress => isMaxLevel
+      ? 1.0
+      : (requiredPoint > 0 ? (point / requiredPoint).clamp(0.0, 1.0) : 0.0);
 }
 
 /// 고리의 두께. 지름을 따라가되 너무 얇거나 두꺼워지지 않게 막는다.
