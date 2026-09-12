@@ -98,7 +98,14 @@ class _ThemeDialogState extends State<ThemeDialog> {
   static const double _tierGutter = 36;
 
   /// 트랙과 트랙 사이.
-  static const double _laneGap = 6;
+  static const double _laneGap = AppSpacing.sm;
+
+  /// 동그라미 지름의 위 한계.
+  ///
+  /// 트랙이 넓어도 여기서 멈춘다. 원을 키우는 대신 남는 자리를 여백으로 돌리는
+  /// 쪽이 스물넷을 한눈에 볼 때 덜 답답하다. 색은 크기보다 서로 떨어져 있을 때
+  /// 더 잘 구분된다.
+  static const double _maxSwatch = 40;
 
   /// 트랙 안쪽 여백. 동그라미가 트랙 벽에 닿지 않게 한다.
   static const double _laneInset = 5;
@@ -111,16 +118,18 @@ class _ThemeDialogState extends State<ThemeDialog> {
   /// 둘째 사이만 벌어져 간격이 들쭉날쭉해진다). 칸의 색칠은 늘어난 높이까지
   /// 그대로 차므로 "색이 끝나는 자리가 지금 서 있는 곳"은 흐트러지지 않는다.
   ///
-  /// 늘어난 만큼은 칸과 칸 사이를 좁혀 되돌린다. 24칸이 390pt 폰과 태블릿에서
-  /// 스크롤 없이 들어가야 하는 조건이 있어서 트랙 전체 높이는 그대로여야
-  /// 한다. 여섯 칸에서 4px 씩 줄이면 24px 이 남고, 그것을 위아래 12px 로 나눠
-  /// 준다. 결과적으로 트랙 끝의 여백은 6 에서 16 으로 늘고 동그라미 사이는
-  /// 12 에서 8 로 좁는다. 캡슐 안에 든 것은 원래 그 비율로 보이는 편이
-  /// 자연스럽다.
+  /// 늘어난 만큼의 자리는 동그라미를 [_maxSwatch] 로 줄여서 마련했다. 24칸이
+  /// 390pt 폰과 태블릿에서 스크롤 없이 들어가야 하는 조건이 있어 트랙 전체
+  /// 높이는 늘릴 수 없다. 처음에는 칸 사이를 좁혀 이 자리를 만들었는데,
+  /// 그러면 끝만 벌어지고 가운데는 더 빽빽해졌다. 원을 줄이는 쪽이 끝도 사이도
+  /// 같이 벌릴 수 있다.
   static const double _laneEndPad = AppSpacing.md;
 
-  /// 칸과 칸 사이. [_laneEndPad] 만큼 끝을 벌리느라 좁혔다.
-  static const double _cellGap = AppSpacing.sm;
+  /// 칸과 칸 사이.
+  ///
+  /// 동그라미를 46 에서 [_maxSwatch] 로 줄이면서 생긴 자리를 여기에 돌려줬다.
+  /// 원이 작아지고 사이가 벌어지니 트랙이 빽빽해 보이지 않는다.
+  static const double _cellGap = AppSpacing.md;
 
   /// 적용을 누르고 창이 닫히기까지의 사이.
   ///
@@ -380,11 +389,13 @@ class _ThemeDialogState extends State<ThemeDialog> {
   /// 늘어선 여섯 칸이 "이 능력치를 올려서 얻는 색"으로 읽힌다.
   Widget _buildLaneHeader(UserInfoModel? userInfo) {
     return Padding(
+      // 위로는 미리보기 판과, 아래로는 격자와 벌린다. 머리줄이 격자에 붙어
+      // 있으면 능력치 이름이 첫 줄 색의 이름표처럼 보인다.
       padding: const EdgeInsets.fromLTRB(
         _gridPadding,
-        AppSpacing.md,
+        AppSpacing.lg,
         _gridPadding,
-        AppSpacing.sm,
+        AppSpacing.md,
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.end,
@@ -422,7 +433,7 @@ class _ThemeDialogState extends State<ThemeDialog> {
             _tierGutter -
             _laneGap * (_themeLanes.length - 1);
         final laneWidth = trackWidth / _themeLanes.length;
-        final swatchSize = (laneWidth - _laneInset * 2).clamp(26.0, 46.0);
+        final swatchSize = (laneWidth - _laneInset * 2).clamp(26.0, _maxSwatch);
         final cellHeight = swatchSize + _cellGap;
 
         return SingleChildScrollView(
@@ -430,7 +441,7 @@ class _ThemeDialogState extends State<ThemeDialog> {
             _gridPadding,
             0,
             _gridPadding,
-            AppSpacing.md,
+            AppSpacing.lg,
           ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
