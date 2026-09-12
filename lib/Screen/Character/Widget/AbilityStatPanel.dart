@@ -2,7 +2,6 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
-import '../../../Model/Cosmetic/CosmeticAbilityLevels.dart';
 import '../../../Model/User/UserInfoModel.dart';
 import '../../../Module/Design/AppColors.dart';
 import '../../../Module/Design/AppRadius.dart';
@@ -46,15 +45,6 @@ class AbilityStatPanel extends StatelessWidget {
   /// 와도 카드 높이가 바뀌지 않아야 아래 버튼이 들썩이지 않는다.
   final UserInfoModel? userInfo;
 
-  /// **디버그 전용.** 레벨만 이 값으로 덮어 그린다.
-  ///
-  /// 꾸미기 화면의 디버그 패널에서 능력치 레벨을 옮기면 이 눈금판도 같이
-  /// 움직여야 한다. 두 화면이 같은 능력치를 다른 레벨로 말하면 어느 쪽이
-  /// 진짜인지 알 수 없다. 경험치는 더미에 없어서 [userInfo] 의 것을 그대로
-  /// 둔다. 필요량은 레벨을 따라가므로 덮어쓴 동안에는 `24 / 100` 처럼 진짜
-  /// 값과 더미 필요량이 섞인 줄이 나온다. 디버그에서만 보이는 줄이다.
-  final CosmeticAbilityLevels? levelOverrides;
-
   /// 카드 껍데기를 스스로 그릴지.
   ///
   /// 무대의 성장 카드 안으로 들어간 뒤로는 false 다. 카드 안에 카드가 또 있으면
@@ -66,7 +56,6 @@ class AbilityStatPanel extends StatelessWidget {
   const AbilityStatPanel({
     super.key,
     this.userInfo,
-    this.levelOverrides,
     this.framed = true,
   });
 
@@ -95,27 +84,27 @@ class AbilityStatPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     final info = userInfo;
 
-    final overrides = levelOverrides;
-
+    // 디버그 패널에서 옮겨 놓은 레벨은 여기서 따로 챙기지 않는다.
+    // [UserProvider] 가 유저 정보를 내주는 자리에서 이미 갈아 끼운다.
     final stats = <_Ability>[
       _Ability(
         kind: MissionKind.attendance,
-        level: overrides?.attendance ?? info?.attendanceLevel ?? 1,
+        level: info?.attendanceLevel ?? 1,
         point: info?.attendancePoint ?? 0,
       ),
       _Ability(
         kind: MissionKind.noteWrite,
-        level: overrides?.noteWrite ?? info?.noteWriteLevel ?? 1,
+        level: info?.noteWriteLevel ?? 1,
         point: info?.noteWritePoint ?? 0,
       ),
       _Ability(
         kind: MissionKind.problemPractice,
-        level: overrides?.problemPractice ?? info?.problemPracticeLevel ?? 1,
+        level: info?.problemPracticeLevel ?? 1,
         point: info?.problemPracticePoint ?? 0,
       ),
       _Ability(
         kind: MissionKind.notePractice,
-        level: overrides?.notePractice ?? info?.notePracticeLevel ?? 1,
+        level: info?.notePracticeLevel ?? 1,
         point: info?.notePracticePoint ?? 0,
       ),
     ];

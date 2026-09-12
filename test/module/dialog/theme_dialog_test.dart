@@ -17,6 +17,8 @@ import 'package:ono/Module/Dialog/ThemeDialog.dart';
 import 'package:ono/Module/Motion/TossDialog.dart';
 import 'package:ono/Module/Theme/ThemeHandler.dart';
 import 'package:ono/Module/Theme/ThemeLockManager.dart';
+import 'package:ono/Model/Cosmetic/CosmeticAbilityLevels.dart';
+import 'package:ono/Module/Debug/DebugLevels.dart';
 import 'package:ono/Provider/UserProvider.dart';
 
 import '../../helpers/helpers.dart';
@@ -28,7 +30,11 @@ class _FakeUserProvider extends Mock implements UserProvider {}
 _FakeUserProvider _userProvider(UserInfoModel? info) {
   final provider = _FakeUserProvider();
   when(() => provider.isLoggedIn).thenReturn(LoginStatus.login);
-  when(() => provider.userInfoModel).thenReturn(info);
+  // 진짜 UserProvider 는 유저 정보를 **내주는 자리에서** 디버그 레벨을 갈아
+  // 낀다. 가짜도 같은 일을 해야 이 창이 실제로 보는 값과 같아진다. 부를 때마다
+  // 지금 옮겨져 있는 레벨을 다시 반영해야 해서 thenAnswer 다.
+  when(() => provider.userInfoModel)
+      .thenAnswer((_) => DebugLevels.applyTo(info));
   when(() => provider.addListener(any())).thenReturn(null);
   when(() => provider.removeListener(any())).thenReturn(null);
   when(() => provider.dispose()).thenReturn(null);
@@ -168,6 +174,37 @@ void main() {
           reason: '$index 번 칸이 없다',
         );
       }
+    });
+  });
+
+  group('디버그 레벨', () {
+    // 꾸미기 화면의 디버그 패널로 레벨을 올려도 이 창은 진짜 레벨을 봐서 색이
+    // 안 열렸다. 출처가 둘이라 그랬다. 이제 UserProvider 가 유저 정보를
+    // 내주는 자리에서 갈아 끼우므로 여기까지 따라온다.
+    testWidgets('옮겨 놓은 레벨로 잠겨 있던 색이 열린다', (tester) async {
+      // 출석 열(0)의 Lv.9 행(3). 이 유저의 진짜 출석은 4 라 원래 잠겨 있다.
+      DebugLevels.override(CosmeticAbilityLevels(attendance: 15));
+
+      await pumpThemeDialog(tester);
+      await tester.tap(
+        find.byKey(ThemeDialog.cellKey(ThemeLockManager.themeIndexAt(3, 0))),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('아직 잠긴 색'), findsNothing);
+      expect(find.text('적용하기'), findsOneWidget);
+    });
+
+    testWidgets('한 번도 안 옮겼으면 진짜 레벨로 잠겨 있다', (tester) async {
+      await pumpThemeDialog(tester);
+
+      await tester.tap(
+        find.byKey(ThemeDialog.cellKey(ThemeLockManager.themeIndexAt(3, 0))),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('아직 잠긴 색'), findsOneWidget);
+      expect(find.text('출석 Lv.9 필요 · 지금 Lv.4'), findsOneWidget);
     });
   });
 

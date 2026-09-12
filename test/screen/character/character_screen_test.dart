@@ -14,6 +14,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:ono/Model/Common/LoginStatus.dart';
+import 'package:ono/Module/Debug/DebugLevels.dart';
 import 'package:ono/Module/Motion/AnimatedGauge.dart';
 import 'package:ono/Model/Mission/MissionGroupModel.dart';
 import 'package:ono/Model/Mission/MissionModel.dart';
@@ -110,25 +111,30 @@ void main() {
   /// 가짜를 쓴다.
   _FakeUserProvider userProvider({UserInfoModel? info}) {
     final provider = _FakeUserProvider();
+    final served = info ??
+        UserInfoModel(
+          userId: 1,
+          name: '테스터',
+          totalStudyLevel: 7,
+          totalStudyCurrentPoint: 24,
+          totalStudyNextLevelThreshold: 60,
+          attendanceLevel: 3,
+          attendancePoint: 8,
+          noteWriteLevel: 5,
+          noteWritePoint: 12,
+          problemPracticeLevel: 2,
+          problemPracticePoint: 4,
+          notePracticeLevel: 1,
+          notePracticePoint: 6,
+        );
+
     when(() => provider.isLoggedIn).thenReturn(LoginStatus.login);
-    when(() => provider.userInfoModel).thenReturn(
-      info ??
-          UserInfoModel(
-            userId: 1,
-            name: '테스터',
-            totalStudyLevel: 7,
-            totalStudyCurrentPoint: 24,
-            totalStudyNextLevelThreshold: 60,
-            attendanceLevel: 3,
-            attendancePoint: 8,
-            noteWriteLevel: 5,
-            noteWritePoint: 12,
-            problemPracticeLevel: 2,
-            problemPracticePoint: 4,
-            notePracticeLevel: 1,
-            notePracticePoint: 6,
-          ),
-    );
+    // 진짜 UserProvider 가 유저 정보를 **내주는 자리에서** 디버그 레벨을
+    // 갈아 끼운다. 가짜도 같은 일을 해야 이 화면이 실제로 보는 값과 같아진다.
+    // thenReturn 이 아니라 thenAnswer 인 것은, 부를 때마다 지금 옮겨져 있는
+    // 레벨을 다시 반영해야 하기 때문이다.
+    when(() => provider.userInfoModel)
+        .thenAnswer((_) => DebugLevels.applyTo(served));
     when(() => provider.addListener(any())).thenReturn(null);
     when(() => provider.removeListener(any())).thenReturn(null);
     when(() => provider.dispose()).thenReturn(null);

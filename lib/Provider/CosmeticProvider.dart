@@ -4,6 +4,7 @@ import '../Model/Cosmetic/CosmeticAbilityLevels.dart';
 import '../Model/Cosmetic/CosmeticItemModel.dart';
 import '../Model/Cosmetic/CosmeticLoadoutModel.dart';
 import '../Model/Cosmetic/CosmeticSlotModel.dart';
+import '../Module/Debug/DebugLevels.dart';
 import '../Screen/Cosmetic/Mock/CosmeticMockData.dart';
 
 /// 개구리 치장(옷장)을 들고 있는 프로바이더다.
@@ -304,6 +305,10 @@ class CosmeticProvider with ChangeNotifier {
   /// 내린다. 못 가진 것을 입고 있는 모습이 더 이상하다.
   void setMockLevels(CosmeticAbilityLevels next) {
     _levelsTouched = true;
+    // **앱 전체가 이 레벨을 보게 한다.** 여기만 바꾸면 옷장은 Lv.15 인데
+    // 테마는 진짜 레벨을 말하는 화면이 둘 생긴다. UserProvider 가 유저 정보를
+    // 내줄 때 이 값을 갈아 끼워서, 레벨을 읽는 화면이 모두 따라오게 한다.
+    DebugLevels.override(next);
     if (next == _levels) return;
 
     _levels = next;
@@ -414,6 +419,7 @@ class CosmeticProvider with ChangeNotifier {
   void clear() {
     _levels = CosmeticMockData.demoLevels;
     _levelsTouched = false;
+    DebugLevels.reset();
     _touched = false;
     _equipped = _presetFor(_levels);
     _lastFailureMessage = null;

@@ -1,6 +1,7 @@
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ono/Config/AppConfig.dart';
+import 'package:ono/Module/Debug/DebugLevels.dart';
 
 /// 모든 테스트 파일의 main() 맨 앞에서 한 번 부른다.
 ///
@@ -28,6 +29,9 @@ void setUpOnoTest() {
   TestWidgetsFlutterBinding.ensureInitialized();
   AppConfig.loadForTest();
   setUpTestDotenv();
+  // 디버그 레벨은 앱 전체가 함께 보는 자리라 테스트 사이로 새어 나간다.
+  // 한 테스트가 옮겨 놓은 값이 다음 테스트의 유저 정보에 얹히면 안 된다.
+  setUp(DebugLevels.reset);
 }
 
 /// dotenv 를 더미 값으로 채운다. 이미 초기화되어 있으면 그대로 둔다.

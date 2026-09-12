@@ -20,7 +20,10 @@ import 'package:ono/Model/Folder/FolderModel.dart';
 import 'package:ono/Model/Folder/FolderThumbnailModel.dart';
 import 'package:ono/Model/PracticeNote/PracticeNoteThumbnailModel.dart';
 import 'package:ono/Model/Problem/ProblemModel.dart';
+import 'package:ono/Model/Cosmetic/CosmeticAbilityLevels.dart';
 import 'package:ono/Model/User/UserInfoModel.dart';
+import 'package:ono/Module/Debug/DebugLevels.dart';
+import 'package:ono/Module/Theme/ThemeLockManager.dart';
 import 'package:ono/Model/Mission/MissionGroupModel.dart';
 import 'package:ono/Model/Mission/MissionModel.dart';
 import 'package:ono/Provider/FoldersProvider.dart';
@@ -142,6 +145,118 @@ void main() {
     );
     notified = NotifyRecorder();
     provider.addListener(notified.call);
+  });
+
+  group('디버그 레벨', () {
+    // 꾸미기 화면의 디버그 패널이 옮겨 놓은 레벨을 앱 전체가 보게 하는 길이다.
+    // 레벨을 읽는 화면이 테마 다이얼로그 · 옷장 탭 스탯창 · 꾸미기 해금 판정 ·
+    // 마이페이지로 흩어져 있어서, 값을 내주는 이 한 자리에서 갈아 끼운다.
+    UserInfoModel levelled() => UserInfoModel(
+          userId: 1,
+          attendanceLevel: 3,
+          noteWriteLevel: 2,
+          problemPracticeLevel: 4,
+          notePracticeLevel: 1,
+          totalStudyLevel: 5,
+          totalStudyCurrentPoint: 24,
+          totalStudyNextLevelThreshold: 60,
+        );
+
+    test('한 번도 안 옮겼으면 서버가 준 값 그대로다', () {
+      provider.userInfoModel = levelled();
+
+      expect(provider.userInfoModel?.attendanceLevel, 3);
+      expect(provider.userInfoModel?.totalStudyLevel, 5);
+      expect(provider.userInfoModel?.totalStudyCurrentPoint, 24);
+      expect(provider.userInfoModel?.totalStudyNextLevelThreshold, 60);
+    });
+
+    test('옮겨 놓으면 능력치 넷과 총 학습이 그 값으로 나온다', () {
+      provider.userInfoModel = levelled();
+
+      DebugLevels.override(
+        CosmeticAbilityLevels(
+          attendance: 12,
+          noteWrite: 9,
+          problemPractice: 15,
+          notePractice: 7,
+          totalStudy: 18,
+        ),
+      );
+
+      final info = provider.userInfoModel!;
+      expect(info.attendanceLevel, 12);
+      expect(info.noteWriteLevel, 9);
+      expect(info.problemPracticeLevel, 15);
+      expect(info.notePracticeLevel, 7);
+      expect(info.totalStudyLevel, 18);
+      // 총 학습은 문턱과 점수도 같이 지어낸다. 안 그러면 Lv.18 에 24 / 60 같은
+      // 줄이 나와 막대가 아예 안 움직인다. 문턱은 백엔드가 정한 40 x 레벨이다.
+      expect(info.totalStudyNextLevelThreshold, 720);
+      expect(info.totalStudyCurrentPoint, 432);
+    });
+
+    test('상한을 넘겨도 총 학습은 20 에서 멈춘다', () {
+      provider.userInfoModel = levelled();
+
+      DebugLevels.override(CosmeticAbilityLevels(totalStudy: 99));
+
+      expect(provider.userInfoModel?.totalStudyLevel, 20);
+    });
+
+    test('서버가 준 원본을 덮어쓰지 않는다', () {
+      // 읽는 자리에서만 갈아 끼우는 것이라, 옮겨 놓은 것을 지우면 진짜 값이
+      // 그대로 돌아와야 한다. 로그인이나 재조회가 이 값에 오염되면 안 된다.
+      provider.userInfoModel = levelled();
+      DebugLevels.override(CosmeticAbilityLevels(attendance: 12));
+      expect(provider.userInfoModel?.attendanceLevel, 12);
+
+      DebugLevels.reset();
+
+      expect(provider.userInfoModel?.attendanceLevel, 3);
+      expect(provider.userInfoModel?.totalStudyCurrentPoint, 24);
+    });
+
+    test('이름이나 알림 설정 같은 나머지는 그대로 따라온다', () {
+      provider.userInfoModel = UserInfoModel(
+        userId: 7,
+        name: '테스터',
+        notificationEnabled: false,
+        attendanceLevel: 3,
+      );
+
+      DebugLevels.override(CosmeticAbilityLevels(attendance: 12));
+
+      final info = provider.userInfoModel!;
+      expect(info.userId, 7);
+      expect(info.name, '테스터');
+      expect(info.notificationEnabled, isFalse);
+    });
+
+    test('옮기면 화면이 다시 그려지도록 알린다', () {
+      // 디버그 패널은 CosmeticProvider 를 부르는데 테마 다이얼로그는 이쪽을
+      // 보고 있다. 값이 바뀐 것을 이쪽이 따로 알아야 색이 열린다.
+      provider.userInfoModel = levelled();
+      final before = notified.count;
+
+      DebugLevels.override(CosmeticAbilityLevels(attendance: 12));
+
+      expect(notified.count, greaterThan(before));
+    });
+
+    test('테마 해금 판정이 옮겨 놓은 레벨을 따라간다', () {
+      // 이 건의 처음이자 마지막 이유다. 디버그로 출석을 올려도 테마는 진짜
+      // 레벨을 봐서 색이 안 열렸다. 격자 8번은 출석 열의 셋째 칸이고 필요
+      // 레벨이 6 이라, 출석 3 에서는 잠겨 있고 12 에서는 열려 있어야 한다.
+      provider.userInfoModel = levelled();
+      expect(
+          ThemeLockManager.isThemeUnlocked(8, provider.userInfoModel), isFalse);
+
+      DebugLevels.override(CosmeticAbilityLevels(attendance: 12));
+
+      expect(
+          ThemeLockManager.isThemeUnlocked(8, provider.userInfoModel), isTrue);
+    });
   });
 
   group('초기 상태', () {
