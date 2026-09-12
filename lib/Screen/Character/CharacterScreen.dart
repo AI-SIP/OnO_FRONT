@@ -19,10 +19,12 @@ import '../../Provider/MissionProvider.dart';
 import '../../Provider/ScreenIndexProvider.dart';
 import '../../Provider/UserProvider.dart';
 import '../Cosmetic/CosmeticClosetScreen.dart';
+import '../Cosmetic/Widget/CosmeticAbilityStyle.dart';
 import '../Cosmetic/Widget/CosmeticStage.dart';
 import '../Mission/MissionScreen.dart';
 import '../Tutorial/TutorialTargets.dart';
 import 'Widget/AbilityStatPanel.dart';
+import 'Widget/GrowthTypeScale.dart';
 
 /// 개구리와 성장을 한 화면에 몰아 주는 탭이다. 하단 탭에서는 `옷장`이다.
 ///
@@ -269,19 +271,21 @@ class _CharacterStage extends StatelessWidget {
     );
   }
 
-  /// 총 학습 레벨과 다음 레벨까지의 경험치를 **한 줄에 같이** 놓는다.
+  /// 총 학습 레벨과 다음 레벨까지의 경험치.
   ///
-  /// 예전에는 레벨 이름표가 개구리 머리 위에, 경험치 바가 발치에 있었다.
-  /// 숫자가 개구리를 위아래로 감싸는 모양은 보기에는 좋았지만, **둘을 같이
-  /// 보려면 눈이 화면 위아래를 왔다 갔다 해야 했다.** 정작 이 둘은 한 가지를
-  /// 말하는 값이다. 지금 레벨과 그 레벨을 얼마나 지났는지다.
+  /// [GrowthType] 의 세 층을 그대로 따른다. 왼쪽에 `[아이콘] 총 학습` 이름표와
+  /// `Lv.11` 값이 붙어 한 문장으로 읽히고, 진행도는 오른쪽 끝에 앉는다. 막대는
+  /// 그 아래 칸 전체를 가로지르므로 **이름표는 막대의 왼쪽 끝과, 진행도는
+  /// 오른쪽 끝과 맞물린다.** 스탯창의 눈금판 넷이 `이름표 → 값 → 진행도` 를
+  /// 위에서 아래로 쌓는 것을, 자리가 가로로 긴 여기서는 옆으로 편 것이다.
   ///
-  /// 왼쪽에 레벨, 오른쪽에 남은 경험치와 막대를 둔다. 왼쪽을 읽고 오른쪽으로
-  /// 눈을 옮기면 `Lv.7 · 24 / 60` 한 문장이 된다. 발치가 비면서 개구리도
-  /// 그만큼 커졌다.
+  /// 예전에는 이 칸 안에서만 규칙이 셋이었다. 이름표는 값 왼쪽인데 `다음
+  /// 레벨까지` 는 수치 위였고, 레벨은 15px 테마색인데 경험치는 12px 테마색,
+  /// 두 덩어리가 한 줄을 반씩 나눠 쓰느라 막대는 오른쪽 절반에만 있었다.
+  /// 규칙을 하나로 줄이고 막대를 칸 전체로 넓혔다.
   ///
-  /// 글자를 키운 기기에서는 양쪽이 다 칸보다 넓어진다. 넘치게 두는 대신
-  /// 각자 줄여서 앉힌다.
+  /// 글자를 키운 기기에서는 한 줄이 칸보다 넓어진다. 이름표와 값은 붙어 있어야
+  /// 한 문장으로 읽히므로 **둘을 함께** 줄이고, 진행도는 따로 줄인다.
   Widget _buildLevelHeader(
     int level,
     int point,
@@ -292,102 +296,71 @@ class _CharacterStage extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.md,
-        vertical: AppSpacing.sm,
+        vertical: AppSpacing.md,
       ),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.85),
         borderRadius: BorderRadius.circular(AppRadius.large),
         border: Border.all(color: color.withValues(alpha: 0.20)),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Flexible(
-            child: FittedBox(
-              fit: BoxFit.scaleDown,
-              alignment: Alignment.centerLeft,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.local_florist_rounded, size: 14, color: color),
-                  const SizedBox(width: AppSpacing.xs),
-                  const StandardText(
-                    text: '학습 레벨',
-                    fontSize: 11,
-                    color: AppColors.textSecondary,
-                    maxLines: 1,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Flexible(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      // 이름도 아이콘도 꾸미기 화면의 잠금 배지가 쓰는 것과
+                      // 같은 것을 가져온다. 같은 레벨을 두 화면이 다른 말로
+                      // 부르면 그 말이 정보를 잃는다.
+                      GrowthLabel(
+                        icon: CosmeticAbilityStyle.iconOf(null),
+                        text: CosmeticAbilityStyle.labelOf(null),
+                        color: color,
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
+                      AnimatedCountText(
+                        value: level,
+                        formatter: GrowthType.level,
+                        fontSize: GrowthType.totalLevel,
+                        fontFamily: GrowthType.valueFamily,
+                        color: color,
+                        height: GrowthType.lineHeight,
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: AppSpacing.sm),
-                  AnimatedCountText(
-                    value: level,
-                    formatter: (value) => 'Lv.${value.round()}',
-                    fontSize: 15,
-                    color: color,
-                  ),
-                ],
+                ),
               ),
-            ),
+              const SizedBox(width: AppSpacing.md),
+              Flexible(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerRight,
+                  child: GrowthMeterText(current: point, goal: threshold),
+                ),
+              ),
+            ],
           ),
-          const SizedBox(width: AppSpacing.md),
-          Expanded(child: _buildExpMeter(point, threshold, progress, color)),
+          const SizedBox(height: AppSpacing.sm),
+          AnimatedLinearGauge(
+            value: progress,
+            color: color,
+            // 이름표 바탕이 흰색이라 회색 트랙은 잘 안 보인다. 같은 테마색을
+            // 옅게 깔아 파인 자리로 만든다.
+            backgroundColor: color.withValues(alpha: 0.18),
+            height: 8,
+            borderRadius: AppRadius.full,
+          ),
         ],
       ),
-    );
-  }
-
-  /// 다음 레벨까지의 경험치. 이름표 오른쪽에 붙는다.
-  Widget _buildExpMeter(
-    int point,
-    int threshold,
-    double progress,
-    Color color,
-  ) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        // 좁은 폰에서 이 한 줄이 남은 폭을 넘는다. 양쪽 끝에 붙여 두는 모양은
-        // 지키면서 각자 줄어들게 한다.
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            const Flexible(
-              child: FittedBox(
-                fit: BoxFit.scaleDown,
-                alignment: Alignment.centerLeft,
-                child: StandardText(
-                  text: '다음 레벨까지',
-                  fontSize: 11,
-                  color: AppColors.textSecondary,
-                  maxLines: 1,
-                ),
-              ),
-            ),
-            const SizedBox(width: AppSpacing.sm),
-            Flexible(
-              child: FittedBox(
-                fit: BoxFit.scaleDown,
-                alignment: Alignment.centerRight,
-                child: AnimatedCountText(
-                  value: point,
-                  formatter: (value) => '${value.round()} / $threshold XP',
-                  fontSize: 12,
-                  color: color,
-                ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: AppSpacing.xs),
-        AnimatedLinearGauge(
-          value: progress,
-          color: color,
-          // 이름표 바탕이 흰색이라 회색 트랙은 잘 안 보인다. 같은 테마색을
-          // 옅게 깔아 파인 자리로 만든다.
-          backgroundColor: color.withValues(alpha: 0.18),
-          height: 6,
-          borderRadius: AppRadius.full,
-        ),
-      ],
     );
   }
 

@@ -197,24 +197,50 @@ void main() {
     testWidgets('총 학습 레벨과 다음 레벨까지의 경험치가 개구리와 함께 보인다', (tester) async {
       await pumpCharacter(tester);
 
+      expect(find.text('총 학습'), findsOneWidget);
       expect(find.text('Lv.7'), findsOneWidget);
-      expect(find.text('24 / 60 XP'), findsOneWidget);
+      expect(find.text('24 / 60'), findsOneWidget);
     });
 
-    testWidgets('레벨과 경험치가 개구리 위 한 줄에 같이 앉는다', (tester) async {
+    testWidgets('진행도 수치에 꼬리표를 따로 붙이지 않는다', (tester) async {
+      // 총 학습만 `24 / 60 XP` 이고 능력치 넷은 `8 / 30` 이면 같은 뜻의 숫자
+      // 둘이 다른 종류로 읽힌다. 다섯 다 `현재 / 필요` 한 가지 모양만 쓴다.
+      await pumpCharacter(tester);
+
+      expect(find.text('24 / 60 XP'), findsNothing);
+    });
+
+    testWidgets('이름표 · 레벨 · 진행도가 개구리 위 한 줄에 같이 앉는다', (tester) async {
       // 예전에는 레벨이 개구리 머리 위, 경험치 바가 발치에 있어서 둘을 같이
       // 보려면 눈이 화면 위아래를 왔다 갔다 해야 했다. 한 가지를 말하는 값
       // 둘이라 나란히 둔다.
       await pumpCharacter(tester);
 
+      final labelY = tester.getTopLeft(find.text('총 학습')).dy;
       final levelY = tester.getTopLeft(find.text('Lv.7')).dy;
+      final meterY = tester.getTopLeft(find.text('24 / 60')).dy;
       final frogY = tester.getTopLeft(find.byType(CosmeticStageFrog)).dy;
-      final expY = tester.getTopLeft(find.text('다음 레벨까지')).dy;
 
-      expect(levelY, lessThan(frogY));
-      expect(expY, lessThan(frogY));
-      // 같은 줄이다. 위아래로 갈라져 있으면 안 된다.
-      expect((levelY - expY).abs(), lessThan(24));
+      for (final y in [labelY, levelY, meterY]) {
+        expect(y, lessThan(frogY));
+      }
+      // 셋이 같은 줄이다. 위아래로 갈라져 있으면 안 된다.
+      expect((labelY - levelY).abs(), lessThan(24));
+      expect((levelY - meterY).abs(), lessThan(24));
+    });
+
+    testWidgets('이름표는 레벨 앞, 진행도는 뒤에 온다', (tester) async {
+      // 성장 영역 다섯 덩어리가 모두 `이름표 → 값 → 진행도` 순서다. 하나만
+      // 순서가 다르면 그것이 제일 먼저 눈에 띈다. 가로로 누운 총 학습 줄에서
+      // 그 순서는 왼쪽에서 오른쪽이다.
+      await pumpCharacter(tester);
+
+      final labelX = tester.getTopLeft(find.text('총 학습')).dx;
+      final levelX = tester.getTopLeft(find.text('Lv.7')).dx;
+      final meterX = tester.getTopLeft(find.text('24 / 60')).dx;
+
+      expect(labelX, lessThan(levelX));
+      expect(levelX, lessThan(meterX));
     });
   });
 
@@ -241,6 +267,39 @@ void main() {
       expect(find.text('12 / 50'), findsOneWidget);
       expect(find.text('4 / 20'), findsOneWidget);
       expect(find.text('6 / 10'), findsOneWidget);
+    });
+
+    testWidgets('눈금판도 이름표가 레벨 위, 진행도가 아래다', (tester) async {
+      // 무대의 총 학습 줄과 같은 순서다. 자리가 세로로 길어서 왼쪽·오른쪽이
+      // 위·아래가 됐을 뿐이다. 다섯 중 하나만 이름표가 값 아래에 붙어 있으면
+      // 그것이 제일 먼저 눈에 띈다.
+      await pumpCharacter(tester);
+
+      final labelY = tester.getTopLeft(find.text('출석')).dy;
+      final levelY = tester.getTopLeft(find.text('Lv.3')).dy;
+      final meterY = tester.getTopLeft(find.text('8 / 30')).dy;
+
+      expect(labelY, lessThan(levelY));
+      expect(levelY, lessThan(meterY));
+    });
+
+    testWidgets('능력치 넷의 이름표가 같은 크기로 앉는다', (tester) async {
+      // 칸마다 따로 줄이면 `출석` 은 그대로인데 `문제 복습` 만 작아진다.
+      // 넷이 같은 틀이어야 한다는 규칙이 거기서 깨진다. 글자가 잘리기 쉬운
+      // 작은 폰에 글자를 키운 경우로 본다.
+      await pumpCharacter(
+        tester,
+        surfaceSize: OnoSurface.smallPhone,
+        textScale: 1.6,
+      );
+
+      // getRect 는 FittedBox 가 건 확대·축소까지 반영한 화면 위 크기다.
+      final heights = <double>{
+        for (final name in ['출석', '오답노트', '문제 복습', '복습 세트'])
+          double.parse(
+              tester.getRect(find.text(name)).height.toStringAsFixed(1)),
+      };
+      expect(heights, hasLength(1), reason: '넷의 글자 높이가 갈렸다: $heights');
     });
 
     testWidgets('능력치는 무대 아래, 버튼 위에 온다', (tester) async {

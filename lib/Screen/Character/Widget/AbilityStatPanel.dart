@@ -12,9 +12,9 @@ import '../../../Module/Motion/AnimatedGauge.dart';
 import '../../../Module/Motion/AppHaptic.dart';
 import '../../../Module/Motion/PressableScale.dart';
 import '../../../Module/Motion/TossBottomSheet.dart';
-import '../../../Module/Text/StandardText.dart';
 import '../../Mission/MissionPalette.dart';
 import 'AbilityGuideSheet.dart';
+import 'GrowthTypeScale.dart';
 
 /// 능력치 넷을 눈금판 네 개로 세운 **스탯창**이다.
 ///
@@ -125,6 +125,34 @@ class AbilityStatPanel extends StatelessWidget {
               (constraints.maxWidth - _dialGap * 3) / stats.length;
           final dial = cellWidth.clamp(_dialMin, _dialMax);
 
+          // 넷의 글자를 **같은 크기로** 앉힌다.
+          //
+          // 칸마다 [FittedBox] 를 따로 두면 `출석` 은 그대로인데 `문제 복습`
+          // 만 작아지고, `Lv.3` 옆에서 `Lv.12` 만 작아진다. 넷이 같은 틀이어야
+          // 한다는 규칙이 바로 거기서 깨진다. 세 줄 각각 가장 넓은 것이 칸에
+          // 들어가는 배율을 한 번 재서 넷에 똑같이 먹인다.
+          final labelScale = GrowthType.uniformScale(
+            context,
+            [for (final stat in stats) MissionPalette.labelOfKind(stat.kind)],
+            available:
+                cellWidth - GrowthType.labelIcon - GrowthType.labelIconGap,
+          );
+          final meterScale = GrowthType.uniformScale(
+            context,
+            [
+              for (final stat in stats)
+                GrowthType.meter(stat.point, stat.requiredPoint),
+            ],
+            available: cellWidth,
+          );
+          final levelScale = GrowthType.uniformScale(
+            context,
+            [for (final stat in stats) GrowthType.level(stat.level)],
+            available: dial - (_strokeOf(dial) + _dialTextInset) * 2,
+            fontSize: GrowthType.abilityLevel,
+            fontFamily: GrowthType.valueFamily,
+          );
+
           return Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -134,6 +162,9 @@ class AbilityStatPanel extends StatelessWidget {
                   child: _AbilityDial(
                     ability: stats[index],
                     dialSize: dial,
+                    labelScale: labelScale,
+                    levelScale: levelScale,
+                    meterScale: meterScale,
                     delay: _start + _gap * index,
                     onTap: () => _openGuide(context, stats[index].kind),
                   ),
@@ -167,21 +198,41 @@ class _Ability {
       requiredPoint > 0 ? (point / requiredPoint).clamp(0.0, 1.0) : 0.0;
 }
 
+/// 고리의 두께. 지름을 따라가되 너무 얇거나 두꺼워지지 않게 막는다.
+///
+/// 고리 안쪽에 글자가 얼마나 들어가는지를 [AbilityStatPanel] 도 알아야 해서
+/// 눈금판 밖에 둔다.
+double _strokeOf(double dialSize) => (dialSize * 0.10).clamp(4.0, 6.0);
+
+/// 고리 안쪽 글자가 테두리에서 떨어지는 거리. 테두리까지 물고 들어가면
+/// 숫자가 고리에 걸려 읽히지 않는다.
+const double _dialTextInset = 3.0;
+
 /// 능력치 하나를 그리는 눈금판이다.
 ///
-/// 위에서 아래로 세 층이다.
+/// 위에서 아래로 [GrowthType] 의 세 층을 그대로 쌓는다.
 ///
-/// 1. **눈금판**: 12시에서 시작해 시계 방향으로 차오르는 고리. 가운데에
-///    `Lv.3` 이 앉는다. 이 화면에서 가장 크게 읽혀야 하는 숫자라서 고리
-///    한가운데를 내준다.
-/// 2. **이름**: 미션과 같은 아이콘 + 능력치 이름.
-/// 3. **남은 경험치**: `8 / 30`. 예쁘기만 하고 이 숫자를 못 읽으면 실패다.
+/// 1. **이름표**: `[아이콘] 출석`. 무대의 총 학습 이름표와 같은 모양이다.
+/// 2. **값**: 12시에서 시계 방향으로 차오르는 고리, 그 한가운데에 `Lv.3`.
+///    이 칸에서 제일 크게 읽혀야 하는 숫자라서 고리 한가운데를 내준다.
+/// 3. **진행도**: `8 / 30`. 예쁘기만 하고 이 숫자를 못 읽으면 실패다.
 ///
-/// 글자를 키운 기기에서는 셋 다 칸보다 넓어진다. 넘치게 두는 대신
-/// [FittedBox] 로 줄여서 앉힌다. 기본 크기보다 작아지지는 않는다.
+/// 이름표가 값 아래가 아니라 **위**인 것은 무대의 총 학습 줄과 순서를 맞추기
+/// 위해서다. 다섯 덩어리 중 하나만 이름표가 아래에 붙어 있으면 그것이 먼저
+/// 눈에 띈다.
+///
+/// 세 줄의 글자 크기는 [AbilityStatPanel] 이 넷을 한꺼번에 재서 넘겨준다.
+/// 칸마다 따로 줄이면 넷의 크기가 어긋난다. 그래도 남는 넘침은 [FittedBox]
+/// 가 막는다.
 class _AbilityDial extends StatelessWidget {
   final _Ability ability;
   final double dialSize;
+
+  /// 넷이 함께 쓰는 글자 배율. [GrowthType.uniformScale] 이 재 준 값이다.
+  final double labelScale;
+  final double levelScale;
+  final double meterScale;
+
   final Duration delay;
 
   /// 누르면 올리는 법을 펼친다.
@@ -190,17 +241,18 @@ class _AbilityDial extends StatelessWidget {
   const _AbilityDial({
     required this.ability,
     required this.dialSize,
+    required this.labelScale,
+    required this.levelScale,
+    required this.meterScale,
     required this.delay,
     required this.onTap,
   });
-
-  /// 고리의 두께. 지름을 따라가되 너무 얇거나 두꺼워지지 않게 막는다.
-  double get _stroke => (dialSize * 0.10).clamp(4.0, 6.0);
 
   @override
   Widget build(BuildContext context) {
     final colors = MissionPalette.of(ability.kind);
     final accent = colors.accent;
+    final stroke = _strokeOf(dialSize);
 
     // 누를 수 있는 자리를 눈금판 하나 통째로 잡는다. 고리만 누르게 하면
     // 손가락보다 얇아서 잘 안 눌린다.
@@ -211,6 +263,16 @@ class _AbilityDial extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: GrowthLabel(
+              icon: MissionPalette.iconOfKind(ability.kind),
+              text: MissionPalette.labelOfKind(ability.kind),
+              color: accent,
+              scale: labelScale,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.xs),
           Center(
             child: SizedBox(
               width: dialSize,
@@ -227,21 +289,21 @@ class _AbilityDial extends StatelessWidget {
                         progress: current,
                         color: accent,
                         trackColor: colors.surface,
-                        stroke: _stroke,
+                        stroke: stroke,
                       ),
                     ),
                   ),
-                  // 고리 안쪽에만 글자를 둔다. 테두리까지 물고 들어가면
-                  // 숫자가 고리에 걸려 읽히지 않는다.
                   Padding(
-                    padding: EdgeInsets.all(_stroke + 3),
+                    padding: EdgeInsets.all(stroke + _dialTextInset),
                     child: FittedBox(
                       fit: BoxFit.scaleDown,
                       child: AnimatedCountText(
                         value: ability.level,
-                        formatter: (value) => 'Lv.${value.round()}',
-                        fontSize: 13,
+                        formatter: GrowthType.level,
+                        fontSize: GrowthType.abilityLevel * levelScale,
+                        fontFamily: GrowthType.valueFamily,
                         color: accent,
+                        height: GrowthType.lineHeight,
                         delay: delay,
                         textAlign: TextAlign.center,
                       ),
@@ -254,31 +316,11 @@ class _AbilityDial extends StatelessWidget {
           const SizedBox(height: AppSpacing.xs),
           FittedBox(
             fit: BoxFit.scaleDown,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  MissionPalette.iconOfKind(ability.kind),
-                  color: accent,
-                  size: 15,
-                ),
-                const SizedBox(width: 3),
-                StandardText(
-                  text: MissionPalette.labelOfKind(ability.kind),
-                  fontSize: 11,
-                  color: AppColors.textSecondary,
-                  maxLines: 1,
-                ),
-              ],
-            ),
-          ),
-          FittedBox(
-            fit: BoxFit.scaleDown,
-            child: StandardText(
-              text: '${ability.point} / ${ability.requiredPoint}',
-              fontSize: 10,
-              color: AppColors.textTertiary,
-              maxLines: 1,
+            child: GrowthMeterText(
+              current: ability.point,
+              goal: ability.requiredPoint,
+              scale: meterScale,
+              delay: delay,
             ),
           ),
         ],
