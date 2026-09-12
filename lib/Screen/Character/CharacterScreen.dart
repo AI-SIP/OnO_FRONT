@@ -338,9 +338,24 @@ class _CharacterStage extends StatelessWidget {
         vertical: AppSpacing.md,
       ),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.85),
+        // **살짝 비친다.** 불투명한 흰 판이면 배경 그림에 뚫린 구멍이 되고,
+        // 카드가 무대 위에 놓인 것이 아니라 무대를 가린 것이 된다. 그렇다고
+        // 많이 비치면 밤하늘 배경에서 글자가 안 읽힌다.
+        color: Colors.white.withValues(alpha: 0.78),
         borderRadius: BorderRadius.circular(AppRadius.large),
-        border: Border.all(color: color.withValues(alpha: 0.20)),
+        // 테두리는 테마색이 아니라 흰색이다. 어두운 배경에서 카드의 모서리를
+        // 그어 주는 일만 하면 되고, 이 카드에 테마색을 한 겹 더 얹으면
+        // 그러잖아도 색이 많은 자리가 더 시끄러워진다.
+        border: Border.all(color: Colors.white.withValues(alpha: 0.65)),
+        // 밝은 배경에서는 흰 카드가 배경에 묻힌다. 테두리 대신 이 그림자가
+        // 그때 카드를 떼어 놓는다.
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.07),
+            blurRadius: 14,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -371,7 +386,12 @@ class _CharacterStage extends StatelessWidget {
                         formatter: GrowthType.level,
                         fontSize: GrowthType.totalLevel,
                         fontFamily: GrowthType.valueFamily,
-                        color: color,
+                        // **여기만 색을 뺀다.** 능력치 넷은 서로를 구분해야
+                        // 해서 색이 정보지만, 총 학습은 혼자라 색으로 가를
+                        // 형제가 없다. 이 영역에서 가장 큰 글자여서 색이
+                        // 없어도 가장 먼저 읽히고, 덜어 낸 색은 바로 아래
+                        // 막대가 가져간다.
+                        color: GrowthType.totalLevelColor,
                         height: GrowthType.lineHeight,
                       ),
                     ],
@@ -391,18 +411,21 @@ class _CharacterStage extends StatelessWidget {
           const SizedBox(height: AppSpacing.sm),
           AnimatedLinearGauge(
             value: progress,
+            // **카드에서 테마색이 남는 곳은 여기 하나다.** 사용자가 고른 색이
+            // "내가 얼마나 왔나" 한 가지에만 붙는다.
             color: color,
-            // 이름표 바탕이 흰색이라 회색 트랙은 잘 안 보인다. 같은 테마색을
-            // 옅게 깔아 파인 자리로 만든다.
-            backgroundColor: color.withValues(alpha: 0.18),
+            // 트랙까지 테마색이면 막대가 어디까지 찼는지가 진하기 차이로만
+            // 읽힌다. 흰색으로 파 두면 찬 곳과 안 찬 곳이 색으로 갈린다.
+            backgroundColor: Colors.white.withValues(alpha: 0.75),
             height: 8,
             borderRadius: AppRadius.full,
           ),
           const SizedBox(height: AppSpacing.md),
           // 총 학습과 능력치 넷 사이를 가르는 선. 카드를 둘로 쪼개는 대신
           // 머리카락 한 올만큼만 긋는다. 같은 카드에 있지만 위와 아래가
-          // 다른 층이라는 것만 말하면 된다.
-          Container(height: 1, color: color.withValues(alpha: 0.12)),
+          // 다른 층이라는 것만 말하면 된다. 흰색인 것은 카드 테두리와 같은
+          // 이유다. 이 카드에 테마색을 더 얹지 않는다.
+          Container(height: 1, color: Colors.white.withValues(alpha: 0.75)),
           const SizedBox(height: AppSpacing.md),
           AbilityStatPanel(userInfo: userInfo, framed: false),
         ],
