@@ -14,6 +14,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:ono/Model/Common/LoginStatus.dart';
+import 'package:ono/Module/Motion/AnimatedGauge.dart';
 import 'package:ono/Model/Mission/MissionGroupModel.dart';
 import 'package:ono/Model/Mission/MissionModel.dart';
 import 'package:ono/Model/User/UserInfoModel.dart';
@@ -365,15 +366,34 @@ void main() {
       expect(heights, hasLength(1), reason: '넷의 글자 높이가 갈렸다: $heights');
     });
 
-    testWidgets('능력치는 무대 아래, 버튼 위에 온다', (tester) async {
+    testWidgets('능력치는 총 학습 바로 아래, 개구리 위에 온다', (tester) async {
+      // 레벨 이야기가 개구리를 사이에 두고 갈라져 있으면 한 가지를 알려고
+      // 눈이 화면을 위아래로 오가야 한다. 총 학습과 능력치 넷은 붙어 있어야
+      // 하고, 그 둘 사이의 순서는 넷을 합산해 오르는 쪽이 위다.
       await pumpCharacter(tester);
 
-      final frogY = tester.getTopLeft(find.byType(CosmeticStageFrog)).dy;
+      final totalY = tester.getTopLeft(find.text('총 학습')).dy;
       final statY = tester.getTopLeft(find.byType(AbilityStatPanel)).dy;
+      final frogY = tester.getTopLeft(find.byType(CosmeticStageFrog)).dy;
       final buttonY = tester.getTopLeft(find.text('꾸미기')).dy;
 
-      expect(frogY, lessThan(statY));
-      expect(statY, lessThan(buttonY));
+      expect(totalY, lessThan(statY));
+      expect(statY, lessThan(frogY));
+      expect(frogY, lessThan(buttonY));
+    });
+
+    testWidgets('총 학습과 능력치 넷이 한 덩어리로 붙어 있다', (tester) async {
+      // 카드를 둘로 나누면 서로 다른 것을 말하는 것처럼 갈라져 보인다.
+      // 사이는 옅은 선 하나뿐이라 개구리까지의 거리보다 훨씬 가까워야 한다.
+      await pumpCharacter(tester);
+
+      final gaugeBottom =
+          tester.getRect(find.byType(AnimatedLinearGauge)).bottom;
+      final statTop = tester.getRect(find.byType(AbilityStatPanel)).top;
+      final statBottom = tester.getRect(find.byType(AbilityStatPanel)).bottom;
+      final frogTop = tester.getRect(find.byType(CosmeticStageFrog)).top;
+
+      expect(statTop - gaugeBottom, lessThan(frogTop - statBottom));
     });
 
     testWidgets('능력치 아이콘은 마이페이지가 쓰던 그 아이콘이다', (tester) async {

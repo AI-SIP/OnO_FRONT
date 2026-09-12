@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../Model/Cosmetic/CosmeticAbilityLevels.dart';
+import '../../Model/User/UserInfoModel.dart';
 import '../../Module/Design/AppColors.dart';
 import '../../Module/Design/AppRadius.dart';
 import '../../Module/Design/AppSpacing.dart';
@@ -29,11 +30,10 @@ import 'Widget/GrowthTypeScale.dart';
 
 /// 개구리와 성장을 한 화면에 몰아 주는 탭이다. 하단 탭에서는 `옷장`이다.
 ///
-/// 화면은 **스크롤이 없다.** 셋이 위에서 아래로 붙박이로 앉는다.
+/// 화면은 **스크롤이 없다.** 둘이 위에서 아래로 붙박이로 앉는다.
 ///
-/// - **무대**: 위쪽에 총 학습 레벨과 다음 레벨까지의 경험치가 한 줄로 붙고,
+/// - **무대**: 위쪽에 성장 카드(총 학습 한 줄 + 능력치 눈금판 넷)가 붙고,
 ///   그 아래에 꾸민 개구리가 크게 선다.
-/// - **스탯창**([AbilityStatPanel]): 능력치 넷의 레벨과 남은 경험치.
 /// - **버튼 둘**: 미션과 꾸미기.
 ///
 /// 원래는 무대 아래에 오늘의 미션 목록이 스크롤로 붙어 있었고 능력치 넉 줄은
@@ -41,6 +41,11 @@ import 'Widget/GrowthTypeScale.dart';
 /// 가장 자주 궁금한 것이 "내가 얼마나 자랐나"인데 그게 화면 밖에 있었다는
 /// 뜻이다. 목록을 버튼 하나로 접고, 그 자리를 능력치에 내줬다. 미션을 더 볼
 /// 사람은 미션 버튼으로 넘어간다.
+///
+/// 그 뒤로도 **레벨 이야기가 개구리를 사이에 두고 갈라져 있었다.** 총 학습은
+/// 개구리 위, 능력치 넷은 개구리 아래였다. 둘 다 "내가 얼마나 자랐나"에
+/// 답하는 값이라 같이 읽혀야 하는데 눈이 화면을 위아래로 오가야 했다.
+/// 넷을 총 학습 바로 아래로 올려 카드 하나로 묶었다.
 ///
 /// **개구리를 누르면 격려 한마디를 한다.** 꾸미러 가는 문은 이제 버튼이
 /// 따로 맡아서, 개구리를 누르는 것이 꾸미기 화면으로 가는 지름길일 필요가
@@ -102,8 +107,6 @@ class _CharacterScreenState extends State<CharacterScreen> {
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeHandler>(context);
     final missionProvider = Provider.of<MissionProvider>(context);
-    final userInfo = Provider.of<UserProvider>(context).userInfoModel;
-    final cosmetic = Provider.of<CosmeticProvider>(context);
     _syncVisitSequence(
       Provider.of<ScreenIndexProvider>(context).screenIndex,
     );
@@ -137,34 +140,15 @@ class _CharacterScreenState extends State<CharacterScreen> {
                       AppSpacing.screenHorizontal,
                       AppSpacing.md,
                     ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        AppearTransition(
-                          delay: AppMotion.stagger * 2,
-                          child: AbilityStatPanel(
-                            userInfo: userInfo,
-                            // 꾸미기 화면의 디버그 패널에서 레벨을 옮기면
-                            // 여기 눈금판도 같이 움직인다. 한 번도 안 옮겼으면
-                            // 서버가 준 진짜 레벨을 그대로 보여 준다.
-                            levelOverrides: kDebugMode && cosmetic.levelsTouched
-                                ? cosmetic.levels
-                                : null,
-                          ),
-                        ),
-                        const SizedBox(height: AppSpacing.md),
-                        AppearTransition(
-                          delay: AppMotion.stagger * 5,
-                          child: _ActionRow(
-                            color: themeProvider.primaryColor,
-                            missionDone: missionProvider.dailyCompletedCount,
-                            missionTotal: missionProvider.dailyTotalCount,
-                            onMissionTap: _openMissions,
-                            onClosetTap: _openCloset,
-                          ),
-                        ),
-                      ],
+                    child: AppearTransition(
+                      delay: AppMotion.stagger * 5,
+                      child: _ActionRow(
+                        color: themeProvider.primaryColor,
+                        missionDone: missionProvider.dailyCompletedCount,
+                        missionTotal: missionProvider.dailyTotalCount,
+                        onMissionTap: _openMissions,
+                        onClosetTap: _openCloset,
+                      ),
                     ),
                   ),
                 ),
@@ -256,8 +240,24 @@ class _CharacterStage extends StatelessWidget {
               ),
               child: Column(
                 children: [
-                  _buildLevelHeader(level, point, threshold, progress, color),
-                  const SizedBox(height: AppSpacing.sm),
+                  AppearTransition(
+                    delay: AppMotion.stagger * 2,
+                    child: _buildGrowthCard(
+                      level: level,
+                      point: point,
+                      threshold: threshold,
+                      progress: progress,
+                      color: color,
+                      userInfo: userInfo,
+                      // 꾸미기 화면의 디버그 패널에서 레벨을 옮기면 눈금판도
+                      // 같이 움직인다. 한 번도 안 옮겼으면 서버가 준 진짜
+                      // 레벨을 그대로 보여 준다.
+                      levelOverrides: kDebugMode && cosmetic.levelsTouched
+                          ? cosmetic.levels
+                          : null,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.md),
                   Expanded(
                     child: LayoutBuilder(
                       builder: (context, constraints) => Center(
@@ -285,28 +285,41 @@ class _CharacterStage extends StatelessWidget {
     );
   }
 
-  /// 총 학습 레벨과 다음 레벨까지의 경험치.
+  /// **성장 카드.** 총 학습 한 줄과 능력치 눈금판 넷이 한 카드에 들어간다.
   ///
-  /// [GrowthType] 의 세 층을 그대로 따른다. 왼쪽에 `[아이콘] 총 학습` 이름표와
-  /// `Lv.11` 값이 붙어 한 문장으로 읽히고, 진행도는 오른쪽 끝에 앉는다. 막대는
-  /// 그 아래 칸 전체를 가로지르므로 **이름표는 막대의 왼쪽 끝과, 진행도는
-  /// 오른쪽 끝과 맞물린다.** 스탯창의 눈금판 넷이 `이름표 → 값 → 진행도` 를
-  /// 위에서 아래로 쌓는 것을, 자리가 가로로 긴 여기서는 옆으로 편 것이다.
+  /// 둘을 한 덩어리로 묶은 이유는 둘 다 "내가 얼마나 자랐나" 하나에 답하는
+  /// 값이기 때문이다. 총 학습이 개구리 위, 능력치 넷이 개구리 아래에 있던
+  /// 동안에는 한 가지를 알려고 눈이 화면을 위아래로 오가야 했다. 카드를 둘로
+  /// 나란히 놓지 않은 것도 같은 이유다. 카드가 둘이면 서로 다른 것을 말하는
+  /// 것처럼 갈라져 보이고, 테두리와 안쪽 여백이 두 겹이라 세로도 그만큼 더
+  /// 먹어 개구리가 작아진다. 사이는 옅은 선 하나로만 가른다.
   ///
-  /// 예전에는 이 칸 안에서만 규칙이 셋이었다. 이름표는 값 왼쪽인데 `다음
+  /// **총 학습이 위다.** 넷을 합산해 오르는 값이라 위계가 그렇고, 글자도 한
+  /// 치수 크다([GrowthType.totalLevel]).
+  ///
+  /// 총 학습 줄은 [GrowthType] 의 세 층을 그대로 따른다. 왼쪽에 `[아이콘]
+  /// 총 학습` 이름표와 `Lv.11` 값이 붙어 한 문장으로 읽히고, 진행도는 오른쪽
+  /// 끝에 앉는다. 막대는 그 아래 칸 전체를 가로지르므로 **이름표는 막대의
+  /// 왼쪽 끝과, 진행도는 오른쪽 끝과 맞물린다.** 눈금판 넷이 `이름표 → 값 →
+  /// 진행도` 를 위에서 아래로 쌓는 것을, 자리가 가로로 긴 여기서는 옆으로 편
+  /// 것이다.
+  ///
+  /// 예전에는 이 줄 안에서만 규칙이 셋이었다. 이름표는 값 왼쪽인데 `다음
   /// 레벨까지` 는 수치 위였고, 레벨은 15px 테마색인데 경험치는 12px 테마색,
   /// 두 덩어리가 한 줄을 반씩 나눠 쓰느라 막대는 오른쪽 절반에만 있었다.
   /// 규칙을 하나로 줄이고 막대를 칸 전체로 넓혔다.
   ///
   /// 글자를 키운 기기에서는 한 줄이 칸보다 넓어진다. 이름표와 값은 붙어 있어야
   /// 한 문장으로 읽히므로 **둘을 함께** 줄이고, 진행도는 따로 줄인다.
-  Widget _buildLevelHeader(
-    int level,
-    int point,
-    int threshold,
-    double progress,
-    Color color,
-  ) {
+  Widget _buildGrowthCard({
+    required int level,
+    required int point,
+    required int threshold,
+    required double progress,
+    required Color color,
+    required UserInfoModel? userInfo,
+    required CosmeticAbilityLevels? levelOverrides,
+  }) {
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.md,
@@ -372,6 +385,17 @@ class _CharacterStage extends StatelessWidget {
             backgroundColor: color.withValues(alpha: 0.18),
             height: 8,
             borderRadius: AppRadius.full,
+          ),
+          const SizedBox(height: AppSpacing.md),
+          // 총 학습과 능력치 넷 사이를 가르는 선. 카드를 둘로 쪼개는 대신
+          // 머리카락 한 올만큼만 긋는다. 같은 카드에 있지만 위와 아래가
+          // 다른 층이라는 것만 말하면 된다.
+          Container(height: 1, color: color.withValues(alpha: 0.12)),
+          const SizedBox(height: AppSpacing.md),
+          AbilityStatPanel(
+            userInfo: userInfo,
+            levelOverrides: levelOverrides,
+            framed: false,
           ),
         ],
       ),

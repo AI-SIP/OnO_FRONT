@@ -55,7 +55,20 @@ class AbilityStatPanel extends StatelessWidget {
   /// 값과 더미 필요량이 섞인 줄이 나온다. 디버그에서만 보이는 줄이다.
   final CosmeticAbilityLevels? levelOverrides;
 
-  const AbilityStatPanel({super.key, this.userInfo, this.levelOverrides});
+  /// 카드 껍데기를 스스로 그릴지.
+  ///
+  /// 무대의 성장 카드 안으로 들어간 뒤로는 false 다. 카드 안에 카드가 또 있으면
+  /// 총 학습과 능력치 넷이 서로 다른 것을 말하는 것처럼 갈라져 보이고, 테두리와
+  /// 안쪽 여백이 두 겹이라 세로도 그만큼 더 먹는다. 혼자 떨어져 놓일 때를 위해
+  /// 기본값은 true 로 둔다.
+  final bool framed;
+
+  const AbilityStatPanel({
+    super.key,
+    this.userInfo,
+    this.levelOverrides,
+    this.framed = true,
+  });
 
   /// 눈금판이 왼쪽부터 하나씩 차오르도록 매기는 간격이다. 넷이 한꺼번에
   /// 움직이면 산만하고, 너무 벌리면 마지막 것이 늦게 끝난다.
@@ -107,6 +120,64 @@ class AbilityStatPanel extends StatelessWidget {
       ),
     ];
 
+    final dials = LayoutBuilder(
+      builder: (context, constraints) {
+        // 칸 넷을 같은 폭으로 나눈다. 눈금판은 그 칸에 들어가는 만큼만
+        // 커진다. 태블릿에서 끝없이 커지지 않게 위도 막아 둔다.
+        final cellWidth = (constraints.maxWidth - _dialGap * 3) / stats.length;
+        final dial = cellWidth.clamp(_dialMin, _dialMax);
+
+        // 넷의 글자를 **같은 크기로** 앉힌다.
+        //
+        // 칸마다 [FittedBox] 를 따로 두면 `출석` 은 그대로인데 `문제 복습`
+        // 만 작아지고, `Lv.3` 옆에서 `Lv.12` 만 작아진다. 넷이 같은 틀이어야
+        // 한다는 규칙이 바로 거기서 깨진다. 세 줄 각각 가장 넓은 것이 칸에
+        // 들어가는 배율을 한 번 재서 넷에 똑같이 먹인다.
+        final labelScale = GrowthType.uniformScale(
+          context,
+          [for (final stat in stats) MissionPalette.labelOfKind(stat.kind)],
+          available: cellWidth - GrowthType.labelIcon - GrowthType.labelIconGap,
+        );
+        final meterScale = GrowthType.uniformScale(
+          context,
+          [
+            for (final stat in stats)
+              GrowthType.meter(stat.point, stat.requiredPoint),
+          ],
+          available: cellWidth,
+        );
+        final levelScale = GrowthType.uniformScale(
+          context,
+          [for (final stat in stats) GrowthType.level(stat.level)],
+          available: dial - (_strokeOf(dial) + _dialTextInset) * 2,
+          fontSize: GrowthType.abilityLevel,
+          fontFamily: GrowthType.valueFamily,
+        );
+
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            for (var index = 0; index < stats.length; index++) ...[
+              if (index > 0) const SizedBox(width: _dialGap),
+              Expanded(
+                child: _AbilityDial(
+                  ability: stats[index],
+                  dialSize: dial,
+                  labelScale: labelScale,
+                  levelScale: levelScale,
+                  meterScale: meterScale,
+                  delay: _start + _gap * index,
+                  onTap: () => _openGuide(context, stats[index].kind),
+                ),
+              ),
+            ],
+          ],
+        );
+      },
+    );
+
+    if (!framed) return dials;
+
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.md,
@@ -117,63 +188,7 @@ class AbilityStatPanel extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppRadius.large),
         border: Border.all(color: AppColors.border),
       ),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          // 칸 넷을 같은 폭으로 나눈다. 눈금판은 그 칸에 들어가는 만큼만
-          // 커진다. 태블릿에서 끝없이 커지지 않게 위도 막아 둔다.
-          final cellWidth =
-              (constraints.maxWidth - _dialGap * 3) / stats.length;
-          final dial = cellWidth.clamp(_dialMin, _dialMax);
-
-          // 넷의 글자를 **같은 크기로** 앉힌다.
-          //
-          // 칸마다 [FittedBox] 를 따로 두면 `출석` 은 그대로인데 `문제 복습`
-          // 만 작아지고, `Lv.3` 옆에서 `Lv.12` 만 작아진다. 넷이 같은 틀이어야
-          // 한다는 규칙이 바로 거기서 깨진다. 세 줄 각각 가장 넓은 것이 칸에
-          // 들어가는 배율을 한 번 재서 넷에 똑같이 먹인다.
-          final labelScale = GrowthType.uniformScale(
-            context,
-            [for (final stat in stats) MissionPalette.labelOfKind(stat.kind)],
-            available:
-                cellWidth - GrowthType.labelIcon - GrowthType.labelIconGap,
-          );
-          final meterScale = GrowthType.uniformScale(
-            context,
-            [
-              for (final stat in stats)
-                GrowthType.meter(stat.point, stat.requiredPoint),
-            ],
-            available: cellWidth,
-          );
-          final levelScale = GrowthType.uniformScale(
-            context,
-            [for (final stat in stats) GrowthType.level(stat.level)],
-            available: dial - (_strokeOf(dial) + _dialTextInset) * 2,
-            fontSize: GrowthType.abilityLevel,
-            fontFamily: GrowthType.valueFamily,
-          );
-
-          return Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              for (var index = 0; index < stats.length; index++) ...[
-                if (index > 0) const SizedBox(width: _dialGap),
-                Expanded(
-                  child: _AbilityDial(
-                    ability: stats[index],
-                    dialSize: dial,
-                    labelScale: labelScale,
-                    levelScale: levelScale,
-                    meterScale: meterScale,
-                    delay: _start + _gap * index,
-                    onTap: () => _openGuide(context, stats[index].kind),
-                  ),
-                ),
-              ],
-            ],
-          );
-        },
-      ),
+      child: dials,
     );
   }
 }
@@ -215,7 +230,7 @@ const double _dialTextInset = 3.0;
 /// 보이지만 **고리는 둥글어서 글자와 가장 가까워지는 자리가 꼭대기와 바닥
 /// 한 점뿐**이고, 눈은 그 한 점을 먼저 본다. 한 단계 올려 [AppSpacing.sm] 로
 /// 둔다. 무대의 총 학습 줄이 글자와 막대 사이에 쓰는 값과 같은 값이라,
-/// 성장 영역이 글자와 게이지를 어디서나 같은 간격으로 떼어 놓게 된다.
+/// 성장 영역 다섯 덩어리가 글자와 게이지를 같은 간격으로 떼어 놓게 된다.
 ///
 /// **위아래가 같은 값이다.** 한쪽만 벌리면 고리가 칸 안에서 위나 아래로
 /// 밀려난 것처럼 보이고, 눈금판이 넷 나란히 선 자리에서는 그 어긋남이 네 번
