@@ -515,6 +515,31 @@ void main() {
       );
     }
 
+    /// **지난주**의 주차 키. 오늘을 기준으로 그때그때 만든다.
+    ///
+    /// 예전에는 `2026-W36` 처럼 박아 두었는데, 라벨은 [MissionPeriodLabel] 이
+    /// 지금 시각으로 몇 주 전인지를 세어 정한다. 그래서 박아 둔 키는 **그 주가
+    /// 지나가는 순간 다른 말이 된다.** 실제로 2026-09-13 까지 `지난주` 였다가
+    /// ISO 주차가 넘어가는 월요일 자정에 `2주 전` 이 되어 깨졌다.
+    ///
+    /// 키가 오늘을 따라오면 이 테스트는 어느 날 돌려도 같은 말을 본다.
+    String lastWeekKey() {
+      final monday =
+          _mondayOf(DateTime.now()).subtract(const Duration(days: 7));
+      // ISO 주차는 1월 4일이 든 주가 1주차다. 그 주의 월요일부터 몇 주 떨어져
+      // 있는지를 센다. 연초에는 지난주가 작년 마지막 주차일 수 있어서, 해를
+      // 하나 내려 가며 자기가 속한 주차를 찾는다.
+      for (var year = monday.year + 1; year >= monday.year - 1; year--) {
+        final jan4 = DateTime(year, 1, 4);
+        final firstMonday = _mondayOf(jan4);
+        final weeks = monday.difference(firstMonday).inDays ~/ 7;
+        if (weeks >= 0 && weeks < 53) {
+          return '$year-W${(weeks + 1).toString().padLeft(2, '0')}';
+        }
+      }
+      throw StateError('지난주의 주차 키를 못 만들었다: $monday');
+    }
+
     MissionModel expiredMission() => buildMission(
           code: 'WEEKLY_REVIEW_30',
           title: '서른 번의 복습',
@@ -522,7 +547,7 @@ void main() {
           current: 30,
           target: 30,
           completed: true,
-          periodKey: '2026-W36',
+          periodKey: lastWeekKey(),
         );
 
     testWidgets('지난 미션이 없으면 배너가 없다', (tester) async {
@@ -563,7 +588,7 @@ void main() {
       expect(find.text('지난 미션'), findsOneWidget);
       expect(find.text('서른 번의 복습'), findsOneWidget);
       // 서버 키를 그대로 보여 주지 않는다.
-      expect(find.text('2026-W36'), findsNothing);
+      expect(find.text(lastWeekKey()), findsNothing);
       expect(find.text('지난주'), findsOneWidget);
     });
 
@@ -1285,4 +1310,12 @@ void main() {
           .called(1);
     });
   });
+}
+
+/// 그 날이 든 주의 월요일.
+///
+/// ISO 주차는 월요일에 넘어간다. 주차를 다룰 때 기준이 되는 하루다.
+DateTime _mondayOf(DateTime value) {
+  final date = DateTime(value.year, value.month, value.day);
+  return date.subtract(Duration(days: date.weekday - 1));
 }
