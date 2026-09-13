@@ -23,7 +23,14 @@ class CameraHandler {
   }
 
   // Launch the camera screen and return the captured image
-  Future<CameraCapture?> takePicture(BuildContext context) async {
+  //
+  // [multiple] 이면 여러 장 모드로 연다. 담아 두고 계속 찍다가 완료를 눌러야
+  // 나온다. [maxShots] 는 그때 담을 수 있는 최대 장수다.
+  Future<CameraCapture?> takePicture(
+    BuildContext context, {
+    bool multiple = false,
+    int maxShots = 1,
+  }) async {
     final cameras = _availableCameras;
     if (cameras == null || cameras.isEmpty) {
       debugPrint("No cameras available.");
@@ -34,7 +41,11 @@ class CameraHandler {
     // 시작할지는 화면이 정한다.
     return Navigator.of(context).push(
       TossPageRoute(
-        builder: (context) => CameraScreen(cameras: cameras),
+        builder: (context) => CameraScreen(
+          cameras: cameras,
+          multiple: multiple,
+          maxShots: maxShots,
+        ),
       ),
     );
   }

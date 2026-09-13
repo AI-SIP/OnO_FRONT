@@ -10,12 +10,15 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 
 import 'CameraCapture.dart';
+import 'CropImage.dart';
 import '../Design/AppColors.dart';
+import '../Design/AppToast.dart';
 import '../Design/AppRadius.dart';
 import '../Design/AppSpacing.dart';
 import '../Motion/AppHaptic.dart';
 import '../Motion/AppMotion.dart';
 import '../Motion/PressableScale.dart';
+import '../Motion/TossDialog.dart';
 import '../Text/StandardText.dart';
 import '../Theme/ThemeHandler.dart';
 
@@ -43,14 +46,29 @@ class CameraScreen extends StatefulWidget {
   /// 기기가 가진 카메라 전부. 전후면 전환에 쓴다.
   final List<CameraDescription> cameras;
 
-  const CameraScreen({super.key, required this.cameras});
+  /// 여러 장을 담아 두고 계속 찍는 모드인지.
+  ///
+  /// 장수로 판단하면 안 된다. 스무 장 중 열아홉을 채운 뒤에는 남은 자리가
+  /// 하나라 [maxShots] 가 1 이 되는데, 그렇다고 화면이 한 장짜리로 바뀌면
+  /// "카메라로 여러 장 촬영" 을 골랐는데 담기도 완료도 없는 화면이 나온다.
+  final bool multiple;
+
+  /// 담을 수 있는 최대 장수. 다 채우면 완료를 안 눌러도 나간다.
+  final int maxShots;
+
+  const CameraScreen({
+    super.key,
+    required this.cameras,
+    this.multiple = false,
+    this.maxShots = 1,
+  });
 
   @override
   State<CameraScreen> createState() => _CameraScreenState();
 }
 
 class _CameraScreenState extends State<CameraScreen>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   CameraController? _controller;
   Future<void>? _initializeControllerFuture;
 
@@ -73,6 +91,22 @@ class _CameraScreenState extends State<CameraScreen>
   /// 방금 찍은 것. 다시 찍기를 눌러도 남겨 둬서 되돌아갈 수 있게 한다.
   XFile? _lastShot;
 
+  /// 여러 장 모드에서 담아 둔 것들. 완료를 누르면 이걸 통째로 돌려준다.
+  final List<XFile> _shots = [];
+
+  /// 담은 것들을 펼쳐 보는 중인지.
+  bool _showTray = false;
+
+  /// 펼쳐 보는 중에 지금 보고 있는 사진.
+  int _trayIndex = 0;
+  PageController? _trayPager;
+  final ScrollController _filmstrip = ScrollController();
+
+  /// 확인 단계에 올라온 것을 자르기까지 마쳤는지.
+  ///
+  /// 잘라 놓고도 이걸 안 알려 주면 등록 화면이 자르기를 한 번 더 띄운다.
+  bool _reviewCropped = false;
+
   double _minZoom = 1.0;
   double _maxZoom = 1.0;
   double _zoom = 1.0;
@@ -90,6 +124,23 @@ class _CameraScreenState extends State<CameraScreen>
   /// 셔터를 누른 순간 화면이 한 번 하얘지는 것.
   late final AnimationController _shutterFlash;
 
+  /// 화면 밖으로 나가면서 내려놓는 중인 카메라.
+  Future<void>? _releasing;
+
+  /// 지금 잡는 중인 것. 여러 곳에서 동시에 잡으러 오는 것을 하나로 모은다.
+  Future<void>? _acquiring;
+
+  /// 결과를 들고 이미 나간 상태. 나가는 중에 카메라를 새로 잡으면 아무도
+  /// 안 놓는 세션이 남는다.
+  bool _leaving = false;
+
+  /// 카메라를 놓아 둔 상태.
+  ///
+  /// 놓아 둔 것은 실패한 것이 아니라 기다리는 것이다. 이걸 구분하지 않으면,
+  /// 놓은 뒤부터 다시 잡기 전까지 사이에 화면이 한 번이라도 다시 그려질 때
+  /// "카메라를 열 수 없어요" 가 번쩍인다.
+  bool _cameraReleased = false;
+
   @override
   void initState() {
     super.initState();
@@ -105,8 +156,123 @@ class _CameraScreenState extends State<CameraScreen>
       reverseDuration: AppMotion.fast,
     );
 
+    WidgetsBinding.instance.addObserver(this);
     _description = _initialDescription();
     _initializeControllerFuture = _setUpController(_description);
+  }
+
+  /// 화면이 정말로 밖으로 나갔을 때만 카메라를 놓는다.
+  ///
+  /// 안드로이드는 자르기와 문서 스캐너가 다른 액티비티라, 그리로 넘어가면
+  /// 카메라를 내주고 돌아와도 알아서 되찾지 않는다. 미리보기가 검게 죽은 채로
+  /// 남는다. 그래서 나갈 때 내려놓고 돌아올 때 다시 잡아야 한다.
+  ///
+  /// 다만 그 기준을 [AppLifecycleState.inactive] 로 잡으면 안 된다. iOS 는
+  /// 자르기 화면을 이 화면 위에 얹기만 해도 inactive 를 보내는데, 앱은 여전히
+  /// 앞에 있고 카메라도 그대로 쓸 수 있다. 거기서 카메라를 놓아 버리면 돌아올
+  /// 때 아직 내려가는 중인 세션 위에 새로 잡으려다 실패해서, 자르기를 마치고
+  /// 나온 사람에게 "카메라를 열 수 없어요" 가 뜬다.
+  ///
+  /// [AppLifecycleState.paused] 는 화면 밖으로 나갔을 때만 온다. 안드로이드가
+  /// 다른 액티비티로 넘어가는 경우가 여기 들어오고, iOS 가 화면 위에 무언가를
+  /// 얹는 경우는 안 들어온다. 양쪽 다 필요한 만큼만 하게 된다.
+  ///
+  /// 담아 둔 사진은 화면 상태라 그대로 남는다.
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused) {
+      final controller = _controller;
+      if (controller == null) return;
+
+      _controller = null;
+      // 내려가는 것을 붙잡아 둔다. 다시 잡기 전에 이게 끝나야 한다.
+      _releasing = controller.dispose();
+      setState(() => _cameraReleased = true);
+      return;
+    }
+
+    if (state == AppLifecycleState.resumed && _controller == null) {
+      _acquire();
+    }
+  }
+
+  /// 카메라가 아직 살아 있는지 보고, 죽었으면 다시 잡는다.
+  ///
+  /// 문서 스캐너는 자기가 카메라를 쓰는 화면이라 우리 세션을 끊고 간다. iOS 는
+  /// 이걸 이 화면 위에 얹어서 열기 때문에 화면 밖으로 나갔다는 신호가 오지
+  /// 않는다. 돌아왔을 때 알아서 살아 있기도 하고 아니기도 해서, 물어보고
+  /// 죽었을 때만 다시 잡는다.
+  void _ensureCameraAlive() {
+    final controller = _controller;
+    if (controller != null &&
+        controller.value.isInitialized &&
+        !controller.value.hasError) {
+      return;
+    }
+    _acquire();
+  }
+
+  /// 카메라를 잡는 유일한 입구.
+  ///
+  /// 들어오는 길이 여럿이다. 화면에 처음 들어올 때, 화면 밖으로 나갔다 돌아올
+  /// 때, 문서 스캐너에서 나올 때, 안내 화면에서 다시 시도를 누를 때.
+  ///
+  /// 안드로이드에서 문서 스캐너는 별도 액티비티라 스캐너가 끝나는 것과
+  /// `resumed` 가 오는 것이 거의 동시에 일어난다. 둘이 각각 카메라를 잡으면
+  /// 컨트롤러가 두 개가 되고, 하나는 하드웨어를 쥔 채 아무도 안 놓는 유령이
+  /// 되고 다른 하나는 "쓰는 중" 이라며 실패한다. 그러면 다시 시도를 눌러도
+  /// 유령이 카메라를 쥐고 있어서 화면을 나가기 전까지 안 풀린다.
+  ///
+  /// 그래서 잡는 일은 항상 이 함수 하나를 거치고, 이미 잡는 중이면 그것을
+  /// 그대로 쓴다.
+  void _acquire() {
+    if (!mounted) return;
+
+    final inFlight = _acquiring;
+    if (inFlight != null) {
+      // 이미 누가 잡고 있다. 화면은 그 결과를 같이 기다린다.
+      setState(() {
+        _cameraReleased = false;
+        _initializeControllerFuture = inFlight;
+      });
+      return;
+    }
+
+    final acquiring = _acquireWithRetry();
+    _acquiring = acquiring;
+    acquiring.whenComplete(() {
+      if (identical(_acquiring, acquiring)) _acquiring = null;
+    });
+
+    setState(() {
+      _cameraReleased = false;
+      _initializeControllerFuture = acquiring;
+    });
+  }
+
+  /// 쓰던 것을 확실히 내려놓고 새로 잡는다.
+  ///
+  /// 앞의 것이 다 내려가기 전에 새로 잡으면 기기가 아직 쓰는 중이라며 거절한다.
+  /// 끝나기를 기다리고, 그래도 안 되면 한 박자 쉬고 다시 해 본다.
+  Future<void> _acquireWithRetry() async {
+    final previous = _controller;
+    _controller = null;
+    if (previous != null) await previous.dispose();
+
+    await _releasing;
+    _releasing = null;
+
+    for (var attempt = 0;; attempt++) {
+      try {
+        await _setUpController(_description);
+        return;
+      } catch (e) {
+        if (attempt >= 2) rethrow;
+        debugPrint('카메라를 다시 잡지 못해 재시도합니다: $e');
+        await Future<void>.delayed(const Duration(milliseconds: 250));
+        if (!mounted) return;
+      }
+    }
   }
 
   @override
@@ -118,6 +284,9 @@ class _CameraScreenState extends State<CameraScreen>
       DeviceOrientation.landscapeRight,
     ]);
 
+    WidgetsBinding.instance.removeObserver(this);
+    _trayPager?.dispose();
+    _filmstrip.dispose();
     _zoomLabelTimer?.cancel();
     _focusTimer?.cancel();
     _shutterFlash.dispose();
@@ -153,9 +322,23 @@ class _CameraScreenState extends State<CameraScreen>
       // 사진만 찍는 화면이라 마이크 권한까지 물을 이유가 없다.
       enableAudio: false,
     );
-    _controller = controller;
 
-    await controller.initialize();
+    try {
+      await controller.initialize();
+    } catch (_) {
+      // 여기서 안 놓으면 실패한 것이 네이티브 핸들을 쥔 채 남는다. 재시도가
+      // 도는 경로라 흘릴수록 다음 시도가 더 안 된다.
+      await controller.dispose();
+      rethrow;
+    }
+
+    // 잡는 사이에 화면이 사라졌으면 쥐고 있을 이유가 없다.
+    if (!mounted || _leaving) {
+      await controller.dispose();
+      return;
+    }
+
+    _controller = controller;
     await _readZoomBounds(controller);
     await _applyFlashMode(controller);
   }
@@ -182,21 +365,17 @@ class _CameraScreenState extends State<CameraScreen>
     }
   }
 
-  Future<void> _retryInitialize() async {
-    final previous = _controller;
-    _controller = null;
-    await previous?.dispose();
-
-    if (!mounted) return;
-    setState(() {
-      _initializeControllerFuture = _setUpController(_description);
-    });
-  }
+  void _retryInitialize() => _acquire();
 
   Future<void> _switchLens() async {
     final next = _oppositeLens;
     final controller = _controller;
-    if (next == null || controller == null || _isSwitchingLens) return;
+    if (next == null ||
+        controller == null ||
+        _isSwitchingLens ||
+        _isCapturing) {
+      return;
+    }
 
     setState(() => _isSwitchingLens = true);
     try {
@@ -206,6 +385,7 @@ class _CameraScreenState extends State<CameraScreen>
       await _applyFlashMode(controller);
     } catch (e) {
       debugPrint('카메라를 전환하지 못했습니다: $e');
+      AppToast.error('카메라를 바꾸지 못했어요.');
     } finally {
       if (mounted) setState(() => _isSwitchingLens = false);
     }
@@ -225,7 +405,12 @@ class _CameraScreenState extends State<CameraScreen>
 
   Future<void> _capture() async {
     final controller = _controller;
-    if (_isCapturing || controller == null || !controller.value.isInitialized) {
+    if (_isCapturing ||
+        _isSwitchingLens ||
+        _isScanning ||
+        _showTray ||
+        controller == null ||
+        !controller.value.isInitialized) {
       return;
     }
 
@@ -245,6 +430,9 @@ class _CameraScreenState extends State<CameraScreen>
       });
     } catch (e) {
       debugPrint('사진을 찍지 못했습니다: $e');
+      // 셔터를 눌러 진동과 번쩍임까지 받았는데 아무 일도 안 일어나면
+      // 사용자는 자기가 잘못 누른 줄 안다.
+      AppToast.error('사진을 찍지 못했어요. 다시 눌러 보세요.');
     } finally {
       if (mounted) setState(() => _isCapturing = false);
     }
@@ -253,13 +441,200 @@ class _CameraScreenState extends State<CameraScreen>
   Future<void> _pickFromGallery() async {
     if (_isCapturing) return;
     try {
-      final picked = await ImagePicker().pickImage(source: ImageSource.gallery);
-      if (picked == null || !mounted) return;
+      final picker = ImagePicker();
+
       // 앨범에서 이미 눈으로 고른 것이라 확인 단계를 한 번 더 두지 않는다.
-      Navigator.of(context).pop(CameraCapture(file: picked));
+      if (!_isMulti) {
+        final picked = await picker.pickImage(source: ImageSource.gallery);
+        if (picked == null || !mounted) return;
+        _leaving = true;
+        Navigator.of(context).pop(CameraCapture.one(picked));
+        return;
+      }
+
+      // limit 은 2 이상이어야 한다. 1 을 주면 세 플랫폼 구현이 모두
+      // ArgumentError 를 던져서 버튼이 조용히 죽는다. 남은 자리가 하나면
+      // 제한 없이 고르게 하고 _addShots 가 잘라 낸다.
+      final picked = await picker.pickMultiImage(
+        limit: _remainingShots >= 2 ? _remainingShots : null,
+      );
+      if (picked.isEmpty || !mounted) return;
+      _addShots(picked);
     } catch (e) {
       debugPrint('갤러리에서 이미지를 고르지 못했습니다: $e');
+      AppToast.error('앨범을 열지 못했어요.');
     }
+  }
+
+  /// 여러 장 모드인지. 담아 두고 계속 찍는다.
+  bool get _isMulti => widget.multiple;
+
+  /// 앞으로 몇 장 더 담을 수 있는지.
+  int get _remainingShots => widget.maxShots - _shots.length;
+
+  bool get _isFull => _remainingShots <= 0;
+
+  /// 담고, 다 찼으면 바로 나간다.
+  void _addShots(List<XFile> files) {
+    // 같은 파일을 두 번 담지 않는다. 확인 단계를 다시 열어 담기를 또 누르면
+    // 같은 사진이 두 장으로 늘어나던 일이 있었다.
+    final fresh = files
+        .where((file) => !_shots.any((shot) => shot.path == file.path))
+        .take(_remainingShots)
+        .toList();
+
+    setState(() {
+      _shots.addAll(fresh);
+      _reviewing = null;
+      _reviewCropped = false;
+      if (_shots.isNotEmpty) _lastShot = _shots.last;
+    });
+    if (_isFull) _finishMulti();
+  }
+
+  // ── 담은 것 펼쳐 보기 ─────────────────────────────────────
+
+  /// 썸네일 한 칸의 크기와 사이 간격. 스트립을 굴릴 자리를 계산하는 데 쓴다.
+  static const double _thumbSize = 56;
+  static const double _thumbGap = AppSpacing.sm;
+
+  void _openTray() {
+    if (_shots.isEmpty || _reviewing != null) return;
+
+    // 방금 찍은 것부터 보는 게 자연스럽다. 썸네일이 보여 주던 것도 그것이다.
+    final index = _shots.length - 1;
+    _trayPager?.dispose();
+    _trayPager = PageController(initialPage: index);
+
+    setState(() {
+      _trayIndex = index;
+      _showTray = true;
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) => _revealThumb(index));
+  }
+
+  void _closeTray() => setState(() => _showTray = false);
+
+  /// 보고 있는 사진의 썸네일이 스트립 밖으로 밀려나 있으면 끌어온다.
+  void _revealThumb(int index) {
+    if (!_filmstrip.hasClients) return;
+
+    final position = _filmstrip.position;
+    final centered = index * (_thumbSize + _thumbGap) -
+        (position.viewportDimension - _thumbSize) / 2;
+
+    _filmstrip.animateTo(
+      centered.clamp(0.0, position.maxScrollExtent),
+      duration: AppMotion.normal,
+      curve: AppMotion.standard,
+    );
+  }
+
+  void _showShot(int index) {
+    setState(() => _trayIndex = index);
+    _trayPager?.animateToPage(
+      index,
+      duration: AppMotion.normal,
+      curve: AppMotion.standard,
+    );
+    _revealThumb(index);
+  }
+
+  /// 뺄 건지 한 번 더 묻는다.
+  ///
+  /// 되돌릴 수 없다. 목록에서 빠진 사진은 촬영 화면으로 돌아가도 없고, 다시
+  /// 찍는 수밖에 없다.
+  Future<void> _confirmRemoveShot(int index) async {
+    final confirmed = await showTossDialog<bool>(
+      context: context,
+      // 목록 바탕이 이미 거의 검다. 기본 가림막으로는 다이얼로그가 떠 보이지
+      // 않아서 한 단계 더 어둡게 깐다.
+      barrierColor: Colors.black.withValues(alpha: 0.72),
+      builder: (context) => _RemoveShotDialog(order: index + 1),
+    );
+
+    if (confirmed != true || !mounted) return;
+    _removeShot(index);
+  }
+
+  void _removeShot(int index) {
+    // 뺀 사진은 다시 볼 일이 없다. 캐시에 남겨 두면 자리만 차지한다.
+    _evictCached(_shots[index]);
+
+    setState(() {
+      _shots.removeAt(index);
+      _lastShot = _shots.isEmpty ? null : _shots.last;
+      if (_shots.isEmpty) {
+        _showTray = false;
+        return;
+      }
+      _trayIndex = index.clamp(0, _shots.length - 1);
+    });
+
+    if (_shots.isEmpty) return;
+    // 목록이 한 칸 줄어든 뒤에 옮겨야 한다. 같은 프레임에 옮기면 아직 있는
+    // 줄 아는 칸으로 뛴다.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_showTray) return;
+      final pager = _trayPager;
+      if (pager != null && pager.hasClients) pager.jumpToPage(_trayIndex);
+      _revealThumb(_trayIndex);
+    });
+  }
+
+  /// 담아 둔 것 하나를 잘라서 그 자리에 도로 넣는다.
+  Future<void> _cropShot(int index) async {
+    final accent =
+        Provider.of<ThemeHandler>(context, listen: false).primaryColor;
+    final cropped = await cropImageFile(_shots[index], accent: accent);
+    if (cropped == null || !mounted) return;
+
+    setState(() {
+      _shots[index] = cropped;
+      _lastShot = _shots.last;
+    });
+  }
+
+  void _evictCached(XFile file) {
+    FileImage(File(file.path)).evict();
+  }
+
+  /// 확인 단계에 올라온 것을 자른다.
+  Future<void> _cropReviewing() async {
+    final file = _reviewing;
+    if (file == null) return;
+
+    final accent =
+        Provider.of<ThemeHandler>(context, listen: false).primaryColor;
+    final cropped = await cropImageFile(file, accent: accent);
+    if (cropped == null || !mounted) return;
+
+    setState(() {
+      _reviewing = cropped;
+      _reviewCropped = true;
+    });
+  }
+
+  void _finishMulti() {
+    if (_shots.isEmpty) return;
+    _leaving = true;
+    // 여러 장은 크롭 화면을 거치지 않으므로 alreadyCropped 를 보지 않는다.
+    Navigator.of(context).pop(CameraCapture(files: List.of(_shots)));
+  }
+
+  /// 담아 둔 것을 버리고 나갈 건지 묻는다.
+  ///
+  /// 한 장을 뺄 때는 확인을 받으면서 전부 버릴 때는 안 묻고 있었다. 열 몇 장을
+  /// 찍어 놓고 닫기를 잘못 누르면 안내도 없이 다 날아갔다.
+  Future<bool> _confirmDiscard() async {
+    if (_shots.isEmpty) return true;
+
+    final discard = await showTossDialog<bool>(
+      context: context,
+      barrierColor: Colors.black.withValues(alpha: 0.72),
+      builder: (context) => _DiscardShotsDialog(count: _shots.length),
+    );
+    return discard == true;
   }
 
   /// 문서 모드. OS 가 가진 문서 스캐너를 띄운다.
@@ -294,33 +669,68 @@ class _CameraScreenState extends State<CameraScreen>
     setState(() => _isScanning = true);
     try {
       final paths = await CunningDocumentScanner.getPictures(
-        noOfPages: 1,
+        // 스캐너도 여러 장을 지원한다. 남은 만큼만 받는다.
+        noOfPages: _isMulti ? _remainingShots : 1,
         androidScannerMode: AndroidScannerMode.full,
       );
 
       if (paths == null || paths.isEmpty || !mounted) return;
+
+      // 여러 장 모드에서는 이미 담아 둔 것이 있을 수 있으니 합쳐서 들고 간다.
+      if (_isMulti) {
+        _addShots(paths.map(XFile.new).toList());
+        return;
+      }
+
       // 스캐너가 이미 반듯하게 잘라 준 것이라 크롭 화면으로 넘기지 않는다.
+      _leaving = true;
       Navigator.of(context).pop(
-        CameraCapture(file: XFile(paths.first), alreadyCropped: true),
+        CameraCapture.one(XFile(paths.first), alreadyCropped: true),
       );
     } catch (e) {
       debugPrint('문서 스캔을 열지 못했습니다: $e');
+      AppToast.error('문서 스캔을 열지 못했어요. 잠시 뒤 다시 시도해 주세요.');
     } finally {
-      if (mounted) setState(() => _isScanning = false);
+      if (mounted) {
+        setState(() => _isScanning = false);
+        // 스캐너가 카메라를 가져갔다 돌려준다. 그대로 살아 있으면 아무것도
+        // 안 하고, 끊겨 있으면 다시 잡는다. 이미 결과를 들고 나간 뒤라면
+        // 잡을 이유가 없다. 나가는 중에 잡으면 아무도 안 놓는 세션이 남는다.
+        if (!_leaving) _ensureCameraAlive();
+      }
     }
   }
 
-  void _openReview(XFile file) => setState(() => _reviewing = file);
+  void _openReview(XFile file) => setState(() {
+        _reviewing = file;
+        _reviewCropped = false;
+      });
 
-  void _retake() => setState(() => _reviewing = null);
+  void _retake() => setState(() {
+        _reviewing = null;
+        _reviewCropped = false;
+      });
 
   void _useReviewed() {
     final file = _reviewing;
     if (file == null) return;
-    Navigator.of(context).pop(CameraCapture(file: file));
+
+    if (_isMulti) {
+      _addShots([file]);
+      return;
+    }
+    // 여기서 이미 잘랐으면 등록 화면이 자르기를 또 띄우지 않게 알린다.
+    _leaving = true;
+    Navigator.of(context).pop(
+      CameraCapture.one(file, alreadyCropped: _reviewCropped),
+    );
   }
 
-  void _close() => Navigator.of(context).pop();
+  Future<void> _close() async {
+    if (!await _confirmDiscard() || !mounted) return;
+    _leaving = true;
+    Navigator.of(context).pop();
+  }
 
   // ── 초점과 확대 ───────────────────────────────────────────
 
@@ -399,10 +809,19 @@ class _CameraScreenState extends State<CameraScreen>
       value: SystemUiOverlayStyle.light,
       child: PopScope(
         // 확인 단계에서 뒤로가기는 화면을 닫는 게 아니라 다시 찍기다.
-        canPop: _reviewing == null,
-        onPopInvokedWithResult: (didPop, _) {
+        canPop: _reviewing == null && !_showTray && _shots.isEmpty,
+        onPopInvokedWithResult: (didPop, _) async {
           if (didPop) return;
-          _retake();
+          // 확인 단계가 먼저다. 목록 위에 확인 단계가 겹쳐 있을 수 있다.
+          if (_reviewing != null) {
+            _retake();
+            return;
+          }
+          if (_showTray) {
+            _closeTray();
+            return;
+          }
+          await _close();
         },
         child: Scaffold(
           backgroundColor: Colors.black,
@@ -412,7 +831,32 @@ class _CameraScreenState extends State<CameraScreen>
               // ConnectionState.done 은 future 가 에러로 끝난 경우에도 done 이다.
               // 권한 거부나 다른 앱의 카메라 점유로 initialize() 가 실패하면
               // previewSize 가 null 이라 aspectRatio 접근에서 크래시가 난다.
-              if (snapshot.connectionState != ConnectionState.done) {
+              // 확인 단계와 담은 사진 목록은 카메라가 필요 없는 화면이다.
+              // 카메라 상태로 먼저 갈라 버리면, 자르기를 하러 나갔다 돌아오는
+              // 사이에 담아 둔 사진이 화면에서 사라지고, 재획득이 실패하면
+              // 안내 화면에 갇혀 찍어 둔 것을 통째로 버리게 된다.
+              final reviewing = _reviewing;
+              if (reviewing != null) {
+                return Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    const ColoredBox(color: Colors.black),
+                    _buildReview(reviewing, accent),
+                  ],
+                );
+              }
+              if (_showTray) {
+                return Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    const ColoredBox(color: Colors.black),
+                    _buildTray(accent),
+                  ],
+                );
+              }
+
+              if (_cameraReleased ||
+                  snapshot.connectionState != ConnectionState.done) {
                 return const _CameraLoading();
               }
 
@@ -426,16 +870,10 @@ class _CameraScreenState extends State<CameraScreen>
               return Stack(
                 fit: StackFit.expand,
                 children: [
-                  IgnorePointer(
-                    ignoring: _reviewing != null,
-                    child: _buildPreviewLayer(controller),
-                  ),
-                  if (_reviewing == null) ...[
-                    _buildTopControls(),
-                    _buildBottomControls(accent),
-                  ],
+                  _buildPreviewLayer(controller),
+                  _buildTopControls(),
+                  _buildBottomControls(accent),
                   _buildShutterFlash(),
-                  if (_reviewing != null) _buildReview(_reviewing!, accent),
                 ],
               );
             },
@@ -625,7 +1063,7 @@ class _CameraScreenState extends State<CameraScreen>
                       ),
                       _ShutterButton(
                         accent: accent,
-                        enabled: !_isCapturing,
+                        enabled: !_isCapturing && !_isFull,
                         onTap: _capture,
                       ),
                       Expanded(
@@ -633,15 +1071,36 @@ class _CameraScreenState extends State<CameraScreen>
                           alignment: Alignment.centerRight,
                           child: _LastShotThumbnail(
                             file: _lastShot,
-                            onTap: _lastShot == null
-                                ? null
-                                : () => _openReview(_lastShot!),
+                            // 여러 장 모드에서는 몇 장 담았는지가 여기서
+                            // 보여야 한다. 한 장짜리에서는 셀 것이 없다.
+                            count: _isMulti ? _shots.length : 0,
+                            // 여러 장 모드에서 누르면 담은 것을 펼쳐 본다.
+                            // 예전에는 마지막 것의 확인 단계를 다시 열었는데,
+                            // 거기서 담기를 또 누르면 같은 사진이 두 장이 됐다.
+                            onTap: _isMulti
+                                ? (_shots.isEmpty ? null : _openTray)
+                                : (_lastShot == null
+                                    ? null
+                                    : () => _openReview(_lastShot!)),
                           ),
                         ),
                       ),
                     ],
                   ),
                 ),
+                if (_isMulti && _shots.isNotEmpty) ...[
+                  const SizedBox(height: AppSpacing.md),
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 520),
+                    child: _WideButton(
+                      label: '${_shots.length}장 담았어요 · 완료',
+                      icon: Icons.check_rounded,
+                      fill: accent,
+                      haptic: HapticLevel.primary,
+                      onTap: _finishMulti,
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
@@ -676,24 +1135,38 @@ class _CameraScreenState extends State<CameraScreen>
           child: SafeArea(
             child: Column(
               children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.lg,
+                    AppSpacing.sm,
+                    AppSpacing.lg,
+                    0,
+                  ),
+                  child: Row(
+                    children: [
+                      if (_reviewCropped)
+                        StandardText(
+                          text: '잘라 뒀어요',
+                          fontSize: 13,
+                          height: 1.3,
+                          fontFamily: 'PretendardLight',
+                          color: Colors.white.withValues(alpha: 0.7),
+                        ),
+                      const Spacer(),
+                      _GlassIconButton(
+                        icon: Icons.crop_rounded,
+                        semanticLabel: '자르기',
+                        onTap: _cropReviewing,
+                      ),
+                    ],
+                  ),
+                ),
                 Expanded(
                   child: Padding(
                     padding: const EdgeInsets.all(AppSpacing.md),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(AppRadius.large),
-                      child: Image.file(
-                        File(file.path),
-                        fit: BoxFit.contain,
-                        width: double.infinity,
-                        errorBuilder: (context, error, stackTrace) => Center(
-                          child: StandardText(
-                            text: '사진을 불러오지 못했어요',
-                            fontSize: 14,
-                            height: 1.3,
-                            color: Colors.white.withValues(alpha: 0.8),
-                          ),
-                        ),
-                      ),
+                      child: _ShotImage(file: file),
                     ),
                   ),
                 ),
@@ -719,8 +1192,13 @@ class _CameraScreenState extends State<CameraScreen>
                           const SizedBox(width: AppSpacing.md),
                           Expanded(
                             child: _WideButton(
-                              label: '이걸로 쓰기',
-                              icon: Icons.check_rounded,
+                              // 여러 장 모드에서는 이걸 눌러도 안 나가고
+                              // 촬영 화면으로 돌아온다. 나가는 것처럼 읽히면
+                              // 안 되므로 문구를 바꾼다.
+                              label: _isMulti ? '담기' : '이걸로 쓰기',
+                              icon: _isMulti
+                                  ? Icons.add_rounded
+                                  : Icons.check_rounded,
                               fill: accent,
                               haptic: HapticLevel.primary,
                               onTap: _useReviewed,
@@ -734,6 +1212,147 @@ class _CameraScreenState extends State<CameraScreen>
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  /// 담아 둔 것을 펼쳐 보는 자리.
+  ///
+  /// 여러 장을 찍다 보면 뭘 담았는지 잊는다. 잘못 찍힌 것을 빼고, 삐뚤게
+  /// 찍힌 것을 자를 수 있어야 한다. 예전에는 오른쪽 아래 썸네일이 마지막 것을
+  /// 다시 보여 주기만 해서 둘 다 못 했다.
+  ///
+  /// 사진 앱과 같은 모양으로 둔다. 큰 사진을 좌우로 넘기고, 아래 띠에서 지금
+  /// 어디쯤인지 보고 건너뛴다. 편집과 제거는 지금 보고 있는 한 장에 대한
+  /// 것이라 사진 바로 아래에 둔다.
+  Widget _buildTray(Color accent) {
+    final total = _shots.length;
+
+    return Positioned.fill(
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () {},
+        child: ColoredBox(
+          color: Colors.black.withValues(alpha: 0.96),
+          child: SafeArea(
+            child: Column(
+              children: [
+                _buildTrayHeader(accent, total),
+                Expanded(
+                  child: PageView.builder(
+                    controller: _trayPager,
+                    itemCount: total,
+                    onPageChanged: (index) {
+                      setState(() => _trayIndex = index);
+                      _revealThumb(index);
+                    },
+                    itemBuilder: (context, index) => Padding(
+                      padding: const EdgeInsets.all(AppSpacing.md),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(AppRadius.large),
+                        child: _ShotImage(file: _shots[index]),
+                      ),
+                    ),
+                  ),
+                ),
+                _buildTrayActions(),
+                _buildFilmstrip(accent),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTrayHeader(Color accent, int total) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.lg,
+        AppSpacing.md,
+        AppSpacing.lg,
+        AppSpacing.sm,
+      ),
+      child: Row(
+        children: [
+          _GlassIconButton(
+            icon: Icons.close_rounded,
+            semanticLabel: '촬영 화면으로 돌아가기',
+            onTap: _closeTray,
+          ),
+          Expanded(
+            child: Center(
+              child: StandardText(
+                text: '${_trayIndex + 1} / $total',
+                fontSize: 15,
+                height: 1.2,
+                color: Colors.white,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ),
+          // 완료는 어느 사진을 보고 있든 눌릴 수 있어야 해서 머리에 둔다.
+          _TrayDoneButton(accent: accent, count: total, onTap: _finishMulti),
+        ],
+      ),
+    );
+  }
+
+  /// 지금 보고 있는 한 장에 대한 것.
+  Widget _buildTrayActions() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.xl,
+        0,
+        AppSpacing.xl,
+        AppSpacing.md,
+      ),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 520),
+          child: Row(
+            children: [
+              Expanded(
+                child: _WideButton(
+                  label: '편집하기',
+                  icon: Icons.crop_rounded,
+                  onTap: () => _cropShot(_trayIndex),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: _WideButton(
+                  label: '제거하기',
+                  icon: Icons.delete_outline_rounded,
+                  haptic: HapticLevel.selection,
+                  onTap: () => _confirmRemoveShot(_trayIndex),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFilmstrip(Color accent) {
+    return SizedBox(
+      height: _thumbSize + AppSpacing.lg,
+      child: ListView.separated(
+        controller: _filmstrip,
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+        itemCount: _shots.length,
+        separatorBuilder: (context, index) => const SizedBox(width: _thumbGap),
+        itemBuilder: (context, index) => _FilmstripThumb(
+          file: _shots[index],
+          index: index,
+          size: _thumbSize,
+          selected: index == _trayIndex,
+          accent: accent,
+          onTap: () => _showShot(index),
         ),
       ),
     );
@@ -1071,7 +1690,14 @@ class _LastShotThumbnail extends StatelessWidget {
   final XFile? file;
   final VoidCallback? onTap;
 
-  const _LastShotThumbnail({required this.file, required this.onTap});
+  /// 담아 둔 장수. 0 이면 배지를 안 그린다.
+  final int count;
+
+  const _LastShotThumbnail({
+    required this.file,
+    required this.onTap,
+    this.count = 0,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1082,27 +1708,456 @@ class _LastShotThumbnail extends StatelessWidget {
     }
 
     return Semantics(
-      label: '방금 찍은 사진 다시 보기',
+      label: count > 0 ? '담은 사진 $count장' : '방금 찍은 사진 다시 보기',
       child: PressableScale(
         onTap: onTap,
         scale: 0.9,
-        child: Container(
+        child: SizedBox(
           width: 48,
           height: 48,
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(AppRadius.medium),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.8),
+                    width: 2,
+                  ),
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(AppRadius.medium - 2),
+                  child: _ShotImage(
+                    file: current,
+                    fit: BoxFit.cover,
+                    decodeWidth: 48,
+                  ),
+                ),
+              ),
+              if (count > 0)
+                Positioned(
+                  top: -6,
+                  right: -6,
+                  // 라벨이 이미 "담은 사진 N장"이라고 말한다. 배지의 숫자까지
+                  // 읽히면 "담은 사진 1장 1"이 된다.
+                  child: ExcludeSemantics(
+                      child: Container(
+                    constraints: const BoxConstraints(minWidth: 22),
+                    height: 22,
+                    padding: const EdgeInsets.symmetric(horizontal: 6),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(AppRadius.full),
+                    ),
+                    child: Center(
+                      child: StandardText(
+                        text: '$count',
+                        fontSize: 12,
+                        height: 1.0,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                  )),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// 파일에서 읽어 그리는 사진.
+///
+/// 그냥 [Image.file] 을 쓰면 두 가지가 걸린다. 첫째, 다 읽을 때까지 빈자리로
+/// 남아서 화면이 잠깐 비어 보인다. 둘째, 자르기 도구가 파일을 막 쓰고 나온
+/// 직후에는 아직 다 안 써진 것을 읽어 실패할 때가 있다. 그때 errorBuilder 가
+/// 곧바로 "불러오지 못했어요" 를 띄우는데, 한 박자 뒤에 다시 읽으면 멀쩡히
+/// 열리는 것이라 그 문구는 거짓말이 된다.
+///
+/// 읽는 동안에는 도는 표시를 보여 주고, 실패하면 몇 번 더 시도한 다음에야
+/// 못 읽었다고 말한다.
+class _ShotImage extends StatefulWidget {
+  final XFile file;
+  final BoxFit fit;
+
+  /// 그려질 크기(논리 픽셀). 주면 그만큼만 디코딩한다.
+  ///
+  /// 안 주면 원본 해상도로 푼다. 12MP 사진 한 장이 46MB 라, 56px 짜리
+  /// 썸네일 띠에 스무 장을 걸면 그대로 앉는다. 큰 화면과 썸네일이 같은
+  /// 캐시 키를 쓰는 것도 문제였다. 크기를 주면 키가 갈린다.
+  final double? decodeWidth;
+
+  const _ShotImage({
+    required this.file,
+    this.fit = BoxFit.contain,
+    this.decodeWidth,
+  });
+
+  @override
+  State<_ShotImage> createState() => _ShotImageState();
+}
+
+class _ShotImageState extends State<_ShotImage> {
+  /// 다시 읽어 본 횟수. 키에 섞어서 [Image] 를 새로 만들게 한다.
+  int _attempt = 0;
+  bool _giveUp = false;
+  Timer? _retryTimer;
+
+  static const int _maxAttempts = 3;
+  static const Duration _retryDelay = Duration(milliseconds: 200);
+
+  @override
+  void didUpdateWidget(covariant _ShotImage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.file.path == widget.file.path) return;
+
+    _retryTimer?.cancel();
+    _attempt = 0;
+    _giveUp = false;
+  }
+
+  @override
+  void dispose() {
+    _retryTimer?.cancel();
+    super.dispose();
+  }
+
+  void _scheduleRetry() {
+    if (_retryTimer?.isActive ?? false) return;
+
+    _retryTimer = Timer(_retryDelay, () {
+      if (!mounted) return;
+      setState(() {
+        if (_attempt >= _maxAttempts) {
+          _giveUp = true;
+        } else {
+          _attempt++;
+          FileImage(File(widget.file.path)).evict();
+        }
+      });
+    });
+  }
+
+  int? _cacheWidth(BuildContext context) {
+    final width = widget.decodeWidth;
+    if (width == null) return null;
+    return (width * MediaQuery.devicePixelRatioOf(context)).round();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_giveUp) {
+      return Center(
+        child: StandardText(
+          text: '사진을 불러오지 못했어요',
+          fontSize: 14,
+          height: 1.3,
+          color: Colors.white.withValues(alpha: 0.8),
+          textAlign: TextAlign.center,
+        ),
+      );
+    }
+
+    return Image.file(
+      File(widget.file.path),
+      key: ValueKey('${widget.file.path}#$_attempt'),
+      fit: widget.fit,
+      width: double.infinity,
+      cacheWidth: _cacheWidth(context),
+      frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
+        if (wasSynchronouslyLoaded || frame != null) return child;
+        return const _ShotImageLoading();
+      },
+      errorBuilder: (context, error, stackTrace) {
+        // build 중이라 여기서 바로 setState 를 하면 안 된다.
+        WidgetsBinding.instance.addPostFrameCallback((_) => _scheduleRetry());
+        return const _ShotImageLoading();
+      },
+    );
+  }
+}
+
+class _ShotImageLoading extends StatelessWidget {
+  const _ShotImageLoading();
+
+  @override
+  Widget build(BuildContext context) {
+    // 동작 줄이기를 켠 기기에서는 도는 것 대신 자리만 잡아 둔다.
+    if (AppMotion.isReduced(context)) {
+      return ColoredBox(color: Colors.white.withValues(alpha: 0.08));
+    }
+
+    return Center(
+      child: SizedBox(
+        width: 22,
+        height: 22,
+        child: CircularProgressIndicator(
+          strokeWidth: 2.2,
+          valueColor: AlwaysStoppedAnimation<Color>(
+            Colors.white.withValues(alpha: 0.7),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// 담아 둔 것을 통째로 버리고 나갈 건지 묻는 것.
+class _DiscardShotsDialog extends StatelessWidget {
+  final int count;
+
+  const _DiscardShotsDialog({required this.count});
+
+  @override
+  Widget build(BuildContext context) {
+    return _CameraDialog(
+      icon: Icons.exit_to_app_rounded,
+      title: '담은 $count장을 버릴까요?',
+      description: '지금 나가면 찍은 사진이 등록되지 않아요.',
+      confirmLabel: '버리고 나가기',
+      onCancel: () => Navigator.pop(context, false),
+      onConfirm: () => Navigator.pop(context, true),
+    );
+  }
+}
+
+/// 담은 사진을 뺄 건지 묻는 것.
+///
+/// 앱의 다른 삭제 확인은 흰 카드인데 여기서는 안 맞는다. 이 다이얼로그가
+/// 뜨는 자리가 검은 사진 목록 위라, 흰 카드가 튀어나오면 다른 앱에서 온
+/// 것처럼 보인다. 목록과 같은 어두운 면에 같은 버튼을 쓴다.
+class _RemoveShotDialog extends StatelessWidget {
+  /// 몇 번째 사진인지. 목록에서 보고 있던 자리를 그대로 말해 준다.
+  final int order;
+
+  const _RemoveShotDialog({required this.order});
+
+  @override
+  Widget build(BuildContext context) {
+    return _CameraDialog(
+      icon: Icons.delete_outline_rounded,
+      title: '이 사진을 뺄까요?',
+      description: '$order번째 사진이에요. 빼면 다시 찍어야 해요.',
+      confirmLabel: '빼기',
+      onCancel: () => Navigator.pop(context, false),
+      onConfirm: () => Navigator.pop(context, true),
+    );
+  }
+}
+
+/// 촬영 화면 위에 뜨는 확인 창.
+///
+/// 앱의 다른 확인 창은 흰 카드인데 여기서는 안 맞는다. 이게 뜨는 자리가 검은
+/// 촬영 화면이나 사진 목록 위라, 흰 카드가 튀어나오면 다른 앱에서 온 것처럼
+/// 보인다. 목록과 같은 어두운 면에 같은 버튼을 쓴다.
+class _CameraDialog extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String description;
+  final String confirmLabel;
+  final VoidCallback onCancel;
+  final VoidCallback onConfirm;
+
+  const _CameraDialog({
+    required this.icon,
+    required this.title,
+    required this.description,
+    required this.confirmLabel,
+    required this.onCancel,
+    required this.onConfirm,
+  });
+
+  /// 목록 바탕보다 한 겹 떠 보이는 면. 검은 바탕 위에 흰색을 옅게 얹은 값이다.
+  static const Color _surface = Color(0xFF1C1D20);
+
+  /// 되돌릴 수 없는 쪽.
+  static const Color _danger = Color(0xFFE5484D);
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      insetPadding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.xxl,
+        vertical: AppSpacing.xxl,
+      ),
+      child: Container(
+        padding: const EdgeInsets.all(AppSpacing.xl),
+        decoration: BoxDecoration(
+          color: _surface,
+          borderRadius: BorderRadius.circular(AppRadius.xlarge),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                color: _danger.withValues(alpha: 0.18),
+                borderRadius: BorderRadius.circular(AppRadius.medium),
+              ),
+              child: Icon(icon, color: const Color(0xFFFF6B6B), size: 20),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            StandardText(
+              text: title,
+              fontSize: 16,
+              height: 1.3,
+              color: Colors.white,
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            StandardText(
+              text: description,
+              fontSize: 13,
+              height: 1.5,
+              fontFamily: 'PretendardLight',
+              color: Colors.white.withValues(alpha: 0.7),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            Row(
+              children: [
+                Expanded(
+                  child: _WideButton(
+                    label: '취소',
+                    compact: true,
+                    onTap: onCancel,
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: _WideButton(
+                    label: confirmLabel,
+                    fill: _danger,
+                    haptic: HapticLevel.primary,
+                    compact: true,
+                    onTap: onConfirm,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// 목록 머리의 완료 버튼.
+///
+/// 아래 두 버튼은 보고 있는 한 장에 대한 것이라, 전체를 끝내는 것과 같은
+/// 줄에 두면 무엇에 대한 버튼인지 헷갈린다.
+class _TrayDoneButton extends StatelessWidget {
+  final Color accent;
+  final int count;
+  final VoidCallback onTap;
+
+  const _TrayDoneButton({
+    required this.accent,
+    required this.count,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final foreground =
+        ThemeData.estimateBrightnessForColor(accent) == Brightness.dark
+            ? Colors.white
+            : AppColors.textPrimary;
+
+    return Semantics(
+      label: '$count장 담기를 끝내고 나가기',
+      child: PressableScale(
+        onTap: onTap,
+        haptic: HapticLevel.primary,
+        child: Container(
+          constraints: const BoxConstraints(minHeight: 44),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.lg,
+            vertical: AppSpacing.sm,
+          ),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(AppRadius.medium),
+            color: accent,
+            borderRadius: BorderRadius.circular(AppRadius.full),
+          ),
+          child: Center(
+            widthFactor: 1,
+            // 라벨이 이미 무엇을 끝내는지 말한다. 글자까지 읽히면 뒤에
+            // "완료"가 한 번 더 붙는다.
+            child: ExcludeSemantics(
+              child: StandardText(
+                text: '완료',
+                fontSize: 15,
+                height: 1.2,
+                color: foreground,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// 목록 아래 띠의 썸네일 한 칸.
+class _FilmstripThumb extends StatelessWidget {
+  final XFile file;
+  final int index;
+  final double size;
+  final bool selected;
+  final Color accent;
+  final VoidCallback onTap;
+
+  const _FilmstripThumb({
+    required this.file,
+    required this.index,
+    required this.size,
+    required this.selected,
+    required this.accent,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      label: '${index + 1}번째 사진',
+      selected: selected,
+      child: PressableScale(
+        onTap: onTap,
+        haptic: HapticLevel.selection,
+        scale: 0.92,
+        child: AnimatedContainer(
+          duration: AppMotion.fast,
+          curve: AppMotion.standard,
+          width: size,
+          height: size,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(AppRadius.small),
             border: Border.all(
-              color: Colors.white.withValues(alpha: 0.8),
-              width: 2,
+              color: selected ? accent : Colors.white.withValues(alpha: 0.25),
+              width: selected ? 2.5 : 1,
             ),
           ),
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(AppRadius.medium - 2),
-            child: Image.file(
-              File(current.path),
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) => ColoredBox(
-                color: Colors.white.withValues(alpha: 0.15),
+            borderRadius: BorderRadius.circular(AppRadius.small - 2),
+            child: Opacity(
+              opacity: selected ? 1 : 0.55,
+              child: _ShotImage(
+                file: file,
+                fit: BoxFit.cover,
+                decodeWidth: size,
               ),
             ),
           ),
@@ -1149,12 +2204,17 @@ class _WideButton extends StatelessWidget {
   final HapticLevel haptic;
   final VoidCallback onTap;
 
+  /// 다이얼로그 안처럼 좁은 자리에 들어갈 때. 화면 아래 컨트롤과 같은 크기로
+  /// 두면 카드 절반을 버튼이 차지한다.
+  final bool compact;
+
   const _WideButton({
     required this.label,
     required this.onTap,
     this.icon,
     this.fill,
     this.haptic = HapticLevel.secondary,
+    this.compact = false,
   });
 
   @override
@@ -1171,18 +2231,19 @@ class _WideButton extends StatelessWidget {
     // 버튼 둘이 한 줄을 나눠 쓰는 자리라 글자를 키운 기기에서는 폭이 모자란다.
     // 아이콘은 글자 크기와 무관하게 제 자리를 차지하므로 그때는 뺀다. 글자를
     // 줄여 욱여넣는 것보다 아이콘을 포기하는 쪽이 낫다.
+    final fontSize = compact ? 14.0 : 15.0;
     final showIcon =
-        icon != null && MediaQuery.textScalerOf(context).scale(15) <= 20;
+        icon != null && MediaQuery.textScalerOf(context).scale(fontSize) <= 20;
 
     return PressableScale(
       onTap: onTap,
       haptic: haptic,
       child: Container(
         // 글자가 두 줄이 되면 버튼이 제 크기 그대로 커진다.
-        constraints: const BoxConstraints(minHeight: 54),
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.md,
-          vertical: AppSpacing.sm,
+        constraints: BoxConstraints(minHeight: compact ? 44 : 54),
+        padding: EdgeInsets.symmetric(
+          horizontal: compact ? AppSpacing.sm : AppSpacing.md,
+          vertical: compact ? AppSpacing.xs : AppSpacing.sm,
         ),
         decoration: BoxDecoration(
           color: background ?? Colors.white.withValues(alpha: 0.12),
@@ -1195,13 +2256,13 @@ class _WideButton extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             if (showIcon) ...[
-              Icon(icon, size: 18, color: foreground),
+              Icon(icon, size: compact ? 16 : 18, color: foreground),
               const SizedBox(width: AppSpacing.sm),
             ],
             Flexible(
               child: StandardText(
                 text: label,
-                fontSize: 15,
+                fontSize: fontSize,
                 height: 1.2,
                 color: foreground,
                 textAlign: TextAlign.center,

@@ -19,7 +19,11 @@ import '../../helpers/helpers.dart';
 /// 성공과 실패, 촬영, 플래시, 초점을 모두 시험할 수 있다.
 class FakeCameraPlatform extends CameraPlatform
     with MockPlatformInterfaceMixin {
-  FakeCameraPlatform({this.createError, this.gate});
+  FakeCameraPlatform({
+    this.createError,
+    this.gate,
+    this.reuseSameFile = false,
+  });
 
   /// 넘기면 `createCameraWithSettings` 가 이걸 던진다. 권한 거부와 카메라
   /// 점유를 흉내 내는 데 쓴다.
@@ -28,9 +32,18 @@ class FakeCameraPlatform extends CameraPlatform
   /// 넘기면 초기화가 여기서 멈춘다. 여는 중 화면을 보려고 둔 것이다.
   final Completer<void>? gate;
 
+  /// true 면 찍을 때마다 같은 파일을 돌려준다. 같은 사진이 두 번 담기지
+  /// 않는지 보려고 둔 것이다. 실제 카메라는 찍을 때마다 다른 파일을 준다.
+  final bool reuseSameFile;
+
   /// 촬영이 돌려줄 파일. 확인 단계가 `Image.file` 로 실제로 읽으므로 진짜
   /// 파일이어야 한다.
   late final String picturePath;
+
+  /// 가장 마지막에 돌려준 파일.
+  late String lastPicturePath;
+
+  late final Directory _dir;
 
   int _nextCameraId = 1;
   final Map<int, StreamController<CameraInitializedEvent>> _initialized = {};
@@ -45,13 +58,14 @@ class FakeCameraPlatform extends CameraPlatform
   CameraDescription? lastCreatedDescription;
 
   void prepare() {
-    final dir = Directory.systemTemp.createTempSync('ono_camera_test');
+    _dir = Directory.systemTemp.createTempSync('ono_camera_test');
     addTearDown(() {
-      if (dir.existsSync()) dir.deleteSync(recursive: true);
+      if (_dir.existsSync()) _dir.deleteSync(recursive: true);
     });
-    final file = File('${dir.path}/shot.png')
+    final file = File('${_dir.path}/shot.png')
       ..writeAsBytesSync(kTransparentPngBytes);
     picturePath = file.path;
+    lastPicturePath = picturePath;
   }
 
   @override
@@ -108,7 +122,15 @@ class FakeCameraPlatform extends CameraPlatform
   @override
   Future<XFile> takePicture(int cameraId) async {
     takePictureCallCount++;
-    return XFile(picturePath);
+    if (reuseSameFile) {
+      lastPicturePath = picturePath;
+      return XFile(picturePath);
+    }
+
+    final file = File('${_dir.path}/shot_$takePictureCallCount.png')
+      ..writeAsBytesSync(kTransparentPngBytes);
+    lastPicturePath = file.path;
+    return XFile(file.path);
   }
 
   @override
@@ -172,8 +194,14 @@ void main() {
     Size surfaceSize = OnoSurface.phone,
     double textScale = 1.0,
     bool settleAfterPush = true,
+    bool multiple = false,
+    int maxShots = 1,
   }) async {
     final result = <CameraCapture?>[];
+
+    // 사진을 읽는 동안 도는 표시가 뜬다. 끝나지 않는 애니메이션이라 이걸
+    // 끄지 않으면 pumpAndSettle 이 영영 안 끝난다.
+    disableAnimationsForTest(tester);
 
     // 화면을 Navigator 로 띄우므로 MediaQuery 를 home 안에서 감싸면 안 닿는다.
     // 기기 설정을 바꾸듯 뷰 쪽에서 글자 배율을 올린다.
@@ -192,7 +220,11 @@ void main() {
                 result.add(
                   await Navigator.of(inner).push<CameraCapture>(
                     MaterialPageRoute<CameraCapture>(
-                      builder: (_) => CameraScreen(cameras: cameras),
+                      builder: (_) => CameraScreen(
+                        cameras: cameras,
+                        multiple: multiple,
+                        maxShots: maxShots,
+                      ),
                     ),
                   ),
                 );
@@ -216,12 +248,46 @@ void main() {
     return result;
   }
 
+  /// 화면 밖으로 나가는 것을 기기가 보내는 순서 그대로 흉내 낸다.
+  ///
+  /// resumed 에서 paused 로 건너뛰면 프레임워크가 중간 단계를 건너뛴 것으로
+  /// 보고 흘려버린다. 실제로도 inactive 와 hidden 을 거쳐서 온다.
+  Future<void> sendToBackground(WidgetTester tester) async {
+    for (final state in [
+      AppLifecycleState.inactive,
+      AppLifecycleState.hidden,
+      AppLifecycleState.paused,
+    ]) {
+      tester.binding.handleAppLifecycleStateChanged(state);
+    }
+    // 생명주기 알림이 프레임 루프의 끝에 들어오는 경우가 있어서, 그 뒤에
+    // 예약된 프레임까지 확실히 그리려면 한 번 더 돌려야 한다.
+    await tester.pumpAndSettle();
+    await tester.pumpAndSettle();
+  }
+
+  Future<void> sendToForeground(WidgetTester tester) async {
+    for (final state in [
+      AppLifecycleState.hidden,
+      AppLifecycleState.inactive,
+      AppLifecycleState.resumed,
+    ]) {
+      tester.binding.handleAppLifecycleStateChanged(state);
+    }
+    await tester.pumpAndSettle();
+    await tester.pumpAndSettle();
+  }
+
   FakeCameraPlatform installFake({
     Object? createError,
     Completer<void>? gate,
+    bool reuseSameFile = false,
   }) {
-    final fake = FakeCameraPlatform(createError: createError, gate: gate)
-      ..prepare();
+    final fake = FakeCameraPlatform(
+      createError: createError,
+      gate: gate,
+      reuseSameFile: reuseSameFile,
+    )..prepare();
     CameraPlatform.instance = fake;
     return fake;
   }
@@ -379,7 +445,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(result, hasLength(1));
-      expect(result.single?.file.path, fake.picturePath);
+      expect(result.single?.files.single.path, fake.lastPicturePath);
       expect(result.single?.alreadyCropped, isFalse);
       expect(find.byType(CameraScreen), findsNothing);
     });
@@ -425,6 +491,366 @@ void main() {
       expect(find.text('다시 시도'), findsNothing);
     });
 
+    testWidgets('여러 장 모드는 담기로 바뀌고 화면이 안 닫힌다', (tester) async {
+      installFake();
+
+      final result =
+          await pumpCameraScreen(tester, multiple: true, maxShots: 3);
+
+      await tester.tap(find.bySemanticsLabel('촬영'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('담기'), findsOneWidget);
+      expect(find.text('이걸로 쓰기'), findsNothing);
+
+      await tester.tap(find.text('담기'));
+      await tester.pumpAndSettle();
+
+      expect(result, isEmpty, reason: '완료를 누르기 전에는 안 나간다');
+      expect(find.bySemanticsLabel('촬영'), findsOneWidget);
+      expect(find.text('1장 담았어요 · 완료'), findsOneWidget);
+      expect(find.bySemanticsLabel('담은 사진 1장'), findsOneWidget);
+    });
+
+    testWidgets('여러 장을 담고 완료를 누르면 담은 만큼 들고 나간다', (tester) async {
+      final fake = installFake();
+
+      final result =
+          await pumpCameraScreen(tester, multiple: true, maxShots: 3);
+
+      for (var i = 0; i < 2; i++) {
+        await tester.tap(find.bySemanticsLabel('촬영'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('담기'));
+        await tester.pumpAndSettle();
+      }
+
+      expect(fake.takePictureCallCount, 2);
+      expect(find.text('2장 담았어요 · 완료'), findsOneWidget);
+
+      await tester.tap(find.text('2장 담았어요 · 완료'));
+      await tester.pumpAndSettle();
+
+      expect(result, hasLength(1));
+      expect(result.single?.files, hasLength(2));
+      expect(find.byType(CameraScreen), findsNothing);
+    });
+
+    testWidgets('최대 장수를 채우면 완료를 안 눌러도 나간다', (tester) async {
+      installFake();
+
+      final result =
+          await pumpCameraScreen(tester, multiple: true, maxShots: 2);
+
+      for (var i = 0; i < 2; i++) {
+        await tester.tap(find.bySemanticsLabel('촬영'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('담기'));
+        await tester.pumpAndSettle();
+      }
+
+      expect(result, hasLength(1));
+      expect(
+        result.single?.files,
+        hasLength(2),
+        reason: '더 담을 수 없으면 굳이 완료를 한 번 더 누르게 하지 않는다',
+      );
+    });
+
+    testWidgets('담은 사진을 누르면 목록이 펼쳐진다', (tester) async {
+      installFake();
+
+      await pumpCameraScreen(tester, multiple: true, maxShots: 5);
+
+      await tester.tap(find.bySemanticsLabel('촬영'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('담기'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.bySemanticsLabel('담은 사진 1장'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('1 / 1'), findsOneWidget);
+      expect(find.text('편집하기'), findsOneWidget);
+      expect(find.text('제거하기'), findsOneWidget);
+      expect(find.bySemanticsLabel('1번째 사진'), findsOneWidget);
+      expect(find.bySemanticsLabel('1장 담기를 끝내고 나가기'), findsOneWidget);
+      // 목록이 떠 있는 동안에는 촬영 컨트롤을 감춘다.
+      expect(find.bySemanticsLabel('촬영'), findsNothing);
+    });
+
+    testWidgets('좌우로 넘기면 보고 있는 사진이 바뀐다', (tester) async {
+      installFake();
+
+      await pumpCameraScreen(tester, multiple: true, maxShots: 5);
+
+      for (var i = 0; i < 3; i++) {
+        await tester.tap(find.bySemanticsLabel('촬영'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('담기'));
+        await tester.pumpAndSettle();
+      }
+
+      // 방금 찍은 것부터 보여 준다.
+      await tester.tap(find.bySemanticsLabel('담은 사진 3장'));
+      await tester.pumpAndSettle();
+      expect(find.text('3 / 3'), findsOneWidget);
+
+      // 오른쪽으로 밀면 앞 사진으로 간다.
+      await tester.drag(find.byType(PageView), const Offset(400, 0));
+      await tester.pumpAndSettle();
+      expect(find.text('2 / 3'), findsOneWidget);
+
+      // 아래 띠에서 눌러 건너뛴다.
+      await tester.tap(find.bySemanticsLabel('1번째 사진'));
+      await tester.pumpAndSettle();
+      expect(find.text('1 / 3'), findsOneWidget);
+    });
+
+    testWidgets('목록에서 뺀 사진은 담은 것에서 빠진다', (tester) async {
+      installFake();
+
+      final result =
+          await pumpCameraScreen(tester, multiple: true, maxShots: 5);
+
+      for (var i = 0; i < 2; i++) {
+        await tester.tap(find.bySemanticsLabel('촬영'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('담기'));
+        await tester.pumpAndSettle();
+      }
+      expect(find.text('2장 담았어요 · 완료'), findsOneWidget);
+
+      await tester.tap(find.bySemanticsLabel('담은 사진 2장'));
+      await tester.pumpAndSettle();
+
+      // 되돌릴 수 없으니 한 번 더 묻는다.
+      await tester.tap(find.text('제거하기'));
+      await tester.pumpAndSettle();
+      expect(find.text('이 사진을 뺄까요?'), findsOneWidget);
+      expect(find.text('2번째 사진이에요. 빼면 다시 찍어야 해요.'), findsOneWidget);
+
+      await tester.tap(find.text('빼기'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('1 / 1'), findsOneWidget);
+      expect(find.bySemanticsLabel('2번째 사진'), findsNothing);
+
+      // 남은 것까지 빼면 목록이 저절로 닫히고 촬영 화면으로 돌아온다.
+      await tester.tap(find.text('제거하기'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('빼기'));
+      await tester.pumpAndSettle();
+
+      expect(find.bySemanticsLabel('촬영'), findsOneWidget);
+      expect(find.textContaining('담았어요'), findsNothing);
+      expect(result, isEmpty);
+    });
+
+    testWidgets('제거를 취소하면 사진이 그대로 남는다', (tester) async {
+      installFake();
+
+      await pumpCameraScreen(tester, multiple: true, maxShots: 5);
+
+      await tester.tap(find.bySemanticsLabel('촬영'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('담기'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.bySemanticsLabel('담은 사진 1장'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('제거하기'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('취소'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('1 / 1'), findsOneWidget);
+      expect(find.bySemanticsLabel('1번째 사진'), findsOneWidget);
+    });
+
+    testWidgets('같은 사진을 다시 담아도 늘어나지 않는다', (tester) async {
+      installFake(reuseSameFile: true);
+
+      await pumpCameraScreen(tester, multiple: true, maxShots: 5);
+
+      // 가짜 카메라는 늘 같은 파일을 돌려준다. 확인 단계를 다시 열어 담기를
+      // 또 눌러도 두 장이 되면 안 된다.
+      for (var i = 0; i < 3; i++) {
+        await tester.tap(find.bySemanticsLabel('촬영'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('담기'));
+        await tester.pumpAndSettle();
+      }
+
+      expect(
+        find.text('1장 담았어요 · 완료'),
+        findsOneWidget,
+        reason: '같은 파일은 한 번만 담긴다',
+      );
+    });
+
+    testWidgets('확인 단계에서 자르기를 열 수 있다', (tester) async {
+      installFake();
+
+      await pumpCameraScreen(tester);
+
+      await tester.tap(find.bySemanticsLabel('촬영'));
+      await tester.pumpAndSettle();
+
+      expect(find.bySemanticsLabel('자르기'), findsOneWidget);
+      expect(find.byIcon(Icons.crop_rounded), findsOneWidget);
+    });
+
+    testWidgets('자르기 화면이 위에 얹혀도 카메라를 놓지 않는다', (tester) async {
+      final fake = installFake();
+
+      await pumpCameraScreen(tester);
+      final opened = fake.createCameraCallCount;
+
+      // iOS 는 자르기 화면을 얹기만 해도 inactive 를 보낸다. 앱은 여전히 앞에
+      // 있으므로 카메라를 놓으면 안 된다. 놓았다가 다시 잡으면 아직 내려가는
+      // 중인 세션 위에 겹쳐 잡으려다 "카메라를 열 수 없어요" 가 뜬다.
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+      await tester.pumpAndSettle();
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      await tester.pumpAndSettle();
+
+      expect(fake.disposeCallCount, 0, reason: '놓지 않았어야 한다');
+      expect(fake.createCameraCallCount, opened, reason: '다시 잡지 않았어야 한다');
+      expect(find.byType(CameraPreview), findsOneWidget);
+      expect(find.text('카메라를 열 수 없어요'), findsNothing);
+    });
+
+    testWidgets('나갔다 돌아오는 동안 안내 화면이 번쩍이지 않는다', (tester) async {
+      installFake();
+
+      await pumpCameraScreen(tester);
+      await sendToBackground(tester);
+
+      // 놓은 뒤 다시 잡기 전까지가 문제였다. 그 사이에 그려지는 프레임마다
+      // 안내 화면이 아니라 기다리는 화면이어야 한다.
+      for (final state in [
+        AppLifecycleState.hidden,
+        AppLifecycleState.inactive,
+        AppLifecycleState.resumed,
+      ]) {
+        tester.binding.handleAppLifecycleStateChanged(state);
+        await tester.pump();
+        expect(
+          find.text('카메라를 열 수 없어요'),
+          findsNothing,
+          reason: '$state 로 넘어가는 중에 못 연 것처럼 보였다',
+        );
+      }
+
+      await tester.pumpAndSettle();
+      await tester.pumpAndSettle();
+      expect(find.byType(CameraPreview), findsOneWidget);
+    });
+
+    testWidgets('화면 밖으로 나갔다 오면 카메라를 다시 잡는다', (tester) async {
+      final fake = installFake();
+
+      await pumpCameraScreen(tester);
+      final opened = fake.createCameraCallCount;
+
+      // 안드로이드는 다른 액티비티로 넘어가면 여기까지 온다. 카메라를 내주므로
+      // 돌아올 때 다시 잡아야 미리보기가 산다.
+      await sendToBackground(tester);
+      expect(fake.disposeCallCount, 1);
+
+      await sendToForeground(tester);
+
+      expect(fake.createCameraCallCount, opened + 1);
+      expect(find.byType(CameraPreview), findsOneWidget);
+      expect(find.text('카메라를 열 수 없어요'), findsNothing);
+    });
+
+    testWidgets('담은 것이 있는데 닫으려 하면 버릴 건지 묻는다', (tester) async {
+      installFake();
+
+      final result =
+          await pumpCameraScreen(tester, multiple: true, maxShots: 5);
+
+      for (var i = 0; i < 2; i++) {
+        await tester.tap(find.bySemanticsLabel('촬영'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('담기'));
+        await tester.pumpAndSettle();
+      }
+
+      await tester.tap(find.bySemanticsLabel('닫기'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('담은 2장을 버릴까요?'), findsOneWidget);
+
+      // 취소하면 그대로 남는다.
+      await tester.tap(find.text('취소'));
+      await tester.pumpAndSettle();
+      expect(result, isEmpty);
+      expect(find.text('2장 담았어요 · 완료'), findsOneWidget);
+
+      // 버리기를 고르면 그때 나간다.
+      await tester.tap(find.bySemanticsLabel('닫기'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('버리고 나가기'));
+      await tester.pumpAndSettle();
+
+      expect(result, hasLength(1));
+      expect(result.single, isNull, reason: '버렸으므로 들고 나가는 것이 없다');
+    });
+
+    testWidgets('담은 것이 없으면 닫기가 바로 나간다', (tester) async {
+      installFake();
+
+      final result =
+          await pumpCameraScreen(tester, multiple: true, maxShots: 5);
+
+      await tester.tap(find.bySemanticsLabel('닫기'));
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('버릴까요?'), findsNothing);
+      expect(result, hasLength(1));
+    });
+
+    testWidgets('자르기를 하러 나가 있는 동안에도 담은 목록이 남는다', (tester) async {
+      installFake();
+
+      await pumpCameraScreen(tester, multiple: true, maxShots: 5);
+
+      await tester.tap(find.bySemanticsLabel('촬영'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('담기'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.bySemanticsLabel('담은 사진 1장'));
+      await tester.pumpAndSettle();
+
+      // 안드로이드에서 자르기는 다른 액티비티라 화면 밖으로 나갔다 온다.
+      // 그동안 목록이 사라지면, 돌아와 카메라를 못 잡았을 때 담아 둔 것을
+      // 통째로 버리는 것 말고 할 수 있는 게 없어진다.
+      await sendToBackground(tester);
+      expect(find.text('1 / 1'), findsOneWidget);
+      expect(find.text('편집하기'), findsOneWidget);
+      expect(find.text('카메라를 열 수 없어요'), findsNothing);
+
+      await sendToForeground(tester);
+      expect(find.text('1 / 1'), findsOneWidget);
+    });
+
+    testWidgets('한 장 모드에서는 담은 장수를 세지 않는다', (tester) async {
+      installFake();
+
+      await pumpCameraScreen(tester);
+
+      await tester.tap(find.bySemanticsLabel('촬영'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('다시 찍기'));
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('담았어요'), findsNothing);
+      expect(find.bySemanticsLabel('방금 찍은 사진 다시 보기'), findsOneWidget);
+    });
+
     for (final size in [OnoSurface.smallPhone, OnoSurface.tablet]) {
       testWidgets('${size.width.toInt()}dp 글자 1.6배에서 넘치지 않는다', (tester) async {
         disableAnimationsForTest(tester);
@@ -456,8 +882,61 @@ void main() {
       });
     }
 
+    testWidgets('여러 장 모드는 완료 버튼이 하나 더 붙는데도 안 넘친다', (tester) async {
+      installFake();
+
+      await pumpCameraScreen(
+        tester,
+        surfaceSize: OnoSurface.smallPhone,
+        textScale: 1.6,
+        multiple: true,
+        maxShots: 3,
+      );
+
+      // 담고 나야 완료 버튼이 붙는다. 하단이 제일 높아지는 순간이다.
+      await tester.tap(find.bySemanticsLabel('촬영'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('담기'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('1장 담았어요 · 완료'), findsOneWidget);
+      expect(
+        tester.takeException(),
+        isNull,
+        reason: '320dp 글자 1.6배에서 완료 버튼까지 얹으니 넘쳤다',
+      );
+    });
+
+    testWidgets('담은 사진 목록도 작은 폰에서 글자를 키우면 안 넘친다', (tester) async {
+      installFake();
+
+      await pumpCameraScreen(
+        tester,
+        surfaceSize: OnoSurface.smallPhone,
+        textScale: 1.6,
+        multiple: true,
+        maxShots: 5,
+      );
+
+      await tester.tap(find.bySemanticsLabel('촬영'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('담기'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.bySemanticsLabel('담은 사진 1장'));
+      await tester.pumpAndSettle();
+
+      // 머리줄, 큰 사진, 버튼 두 개, 썸네일 띠가 한 화면에 다 들어가야 한다.
+      expect(find.text('편집하기'), findsOneWidget);
+      expect(find.text('제거하기'), findsOneWidget);
+      expect(find.bySemanticsLabel('1번째 사진'), findsOneWidget);
+      expect(
+        tester.takeException(),
+        isNull,
+        reason: '320dp 글자 1.6배 담은 사진 목록에서 넘쳤다',
+      );
+    });
+
     testWidgets('안내 화면도 작은 폰에서 글자를 키우면 넘치지 않는다', (tester) async {
-      disableAnimationsForTest(tester);
       installFake(
         createError: CameraException('CameraAccessDenied', '권한 없음'),
       );

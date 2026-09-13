@@ -1469,10 +1469,28 @@ class _MultiProblemRegisterScreenState
       }
     }
 
+    // 카메라로 이어 찍는 길도 있어서 남은 장수를 미리 넘긴다. 스무 장을 다
+    // 찍고 나서 잘렸다고 알리는 것보다 애초에 그만큼만 찍게 하는 쪽이 낫다.
+    final remainingBeforePick = _maxBatchProblemCount - _problemImages.length;
+
+    // 이미 다 찼으면 피커를 열지 않는다. 열어 주면 찍게 해 놓고 나올 때
+    // 버린다고 알리는 꼴이 된다.
+    if (remainingBeforePick <= 0) {
+      clearInitialOpeningState();
+      SnackBarDialog.showSnackBar(
+        context: context,
+        message: '여러 장 작성은 한 번에 최대 20장까지 등록할 수 있습니다.',
+        backgroundColor: Colors.orange,
+      );
+      return;
+    }
+
     late final List<XFile> pickedImages;
     try {
-      pickedImages =
-          await _imagePickerHandler.pickMultipleImagesFromGallery(context);
+      pickedImages = await _imagePickerHandler.pickMultipleImages(
+        context,
+        maxShots: remainingBeforePick,
+      );
     } catch (_) {
       if (mounted) {
         clearInitialOpeningState();
@@ -1518,8 +1536,7 @@ class _MultiProblemRegisterScreenState
     _BatchProblemDraft draft, {
     VoidCallback? onChanged,
   }) async {
-    final pickedImages =
-        await _imagePickerHandler.pickMultipleImagesFromGallery(context);
+    final pickedImages = await _imagePickerHandler.pickMultipleImages(context);
     if (!mounted || pickedImages.isEmpty) return;
 
     draft.answerImages.addAll(pickedImages);
@@ -1531,8 +1548,7 @@ class _MultiProblemRegisterScreenState
     _BatchProblemDraft draft, {
     VoidCallback? onChanged,
   }) async {
-    final pickedImages =
-        await _imagePickerHandler.pickMultipleImagesFromGallery(context);
+    final pickedImages = await _imagePickerHandler.pickMultipleImages(context);
     if (!mounted || pickedImages.isEmpty) return;
 
     draft.problemImages.addAll(pickedImages);
