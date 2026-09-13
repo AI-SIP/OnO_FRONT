@@ -56,11 +56,13 @@ void main() {
   Future<CosmeticProvider> pumpCloset(
     WidgetTester tester, {
     CosmeticAbilityLevels? levels,
+    FakeCosmeticService? service,
     Size surfaceSize = OnoSurface.phone,
   }) async {
     disableAnimationsForTest(tester);
-    final cosmetic = CosmeticProvider(
-      mockLevels: levels ?? CosmeticAbilityLevels.uniform(12),
+    final cosmetic = await loadedCosmeticProvider(
+      levels: levels ?? CosmeticAbilityLevels.uniform(12),
+      service: service,
     );
 
     await withMockedNetworkImages(() async {
@@ -78,8 +80,8 @@ void main() {
   /// 앞 화면을 거쳐 띄운다. 뒤로 가기를 보는 테스트가 쓴다.
   Future<CosmeticProvider> pushCloset(WidgetTester tester) async {
     disableAnimationsForTest(tester);
-    final cosmetic = CosmeticProvider(
-      mockLevels: CosmeticAbilityLevels.uniform(12),
+    final cosmetic = await loadedCosmeticProvider(
+      levels: CosmeticAbilityLevels.uniform(12),
     );
 
     await withMockedNetworkImages(() async {
@@ -133,7 +135,7 @@ void main() {
     testWidgets('배경을 벗어도 무대가 비지 않는다', (tester) async {
       final cosmetic = await pumpCloset(tester);
 
-      cosmetic.unequipAll();
+      await cosmetic.unequipAll();
       await tester.pumpAndSettle();
 
       expect(tester.takeException(), isNull);
@@ -523,6 +525,131 @@ void main() {
       expect(cosmetic.levels, CosmeticAbilityLevels.max);
       expect(cosmetic.levelsTouched, isTrue);
       expect(find.text('63'), findsOneWidget);
+    });
+  });
+
+  group('저장', () {
+    /// 옷장을 서버까지 물려 띄운다. 서버로 무엇이 나갔는지 보려는 테스트가 쓴다.
+    Future<(CosmeticProvider, FakeCosmeticService)> pumpWithServer(
+      WidgetTester tester, {
+      CosmeticAbilityLevels? levels,
+    }) async {
+      final at = levels ?? CosmeticAbilityLevels.uniform(12);
+      final service =
+          FakeCosmeticService(catalog: CosmeticMockData.catalogAt(at));
+      final cosmetic = await pumpCloset(tester, levels: at, service: service);
+      return (cosmetic, service);
+    }
+
+    testWidgets('차림 전체가 한 번에 나간다', (tester) async {
+      // 자리마다 요청을 하나씩 보내면 중간에 하나가 실패했을 때 절반만
+      // 갈아입은 차림이 서버에 남는다.
+      final (cosmetic, service) = await pumpWithServer(tester);
+
+      await tester.tap(find.text('봄'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('저장'));
+      await tester.pumpAndSettle();
+
+      expect(service.equipAllRequests, hasLength(1));
+      expect(service.equipAllRequests.single, cosmetic.equipped);
+      expect(cosmetic.itemOf(cosmetic.equipped['BACKGROUND'])?.nameKo, '봄');
+
+      await settleToast(tester);
+    });
+
+    testWidgets('프로필 테두리도 함께 실려 나간다', (tester) async {
+      // 서버는 **요청에 없는 자리를 비운다.** 개구리에 안 겹치는 자리라고
+      // 저장 payload 에서 빼면, 다른 자리를 바꿀 때마다 사용자가 골라 둔
+      // 테두리가 조용히 벗겨진다.
+      final (cosmetic, service) = await pumpWithServer(tester);
+      await cosmetic.equip('FRAME', 'frame_autumn'); // 출석 Lv.10
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('봄'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('저장'));
+      await tester.pumpAndSettle();
+
+      expect(
+        service.equipAllRequests.single['FRAME'],
+        'frame_autumn',
+        reason: '다른 자리를 바꿨는데 프로필 테두리가 저장 요청에서 빠졌다',
+      );
+      expect(cosmetic.equipped['FRAME'], 'frame_autumn');
+
+      await settleToast(tester);
+    });
+
+    testWidgets('실패하면 알려 주고 입어 본 것은 남는다', (tester) async {
+      // 실패했는데 시착을 접으면 방금 고른 것이 통째로 사라져서, 실패를
+      // 알려 봐야 다시 고르는 수밖에 없다.
+      final (cosmetic, service) = await pumpWithServer(tester);
+      final before = Map<String, String>.from(cosmetic.equipped);
+      service.failEquip = true;
+
+      await tester.tap(find.text('봄'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('저장'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('차림을 저장하지 못했어요. 잠시 뒤 다시 해 주세요.'), findsOneWidget);
+      expect(find.text('새 차림으로 갈아입었어요.'), findsNothing);
+      // 서버가 준 마지막 차림으로 되돌아갔다.
+      expect(cosmetic.equipped, before);
+      // 저장 줄은 그대로 있어서 다시 누를 수 있다.
+      expect(find.text('저장'), findsOneWidget);
+
+      await settleToast(tester);
+    });
+
+    testWidgets('서버가 벗긴 자리가 있으면 무엇이 벗겨졌는지 말한다', (tester) async {
+      // 저장은 됐는데 고른 것 중 일부가 조용히 사라지면 저장이 안 된 것으로
+      // 읽힌다.
+      final (_, service) = await pumpWithServer(tester);
+      service.equipAllUnequippedSlots = const ['HEAD'];
+
+      await tester.tap(find.text('봄'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('저장'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('머리 자리는 함께 벗었어요.'), findsOneWidget);
+
+      await settleToast(tester);
+    });
+  });
+
+  group('옷장을 못 받았을 때', () {
+    // 치장은 있으면 좋은 것이라 조회가 실패해도 앱은 평소대로 떠야 한다.
+    // 그래도 꾸미러 들어온 사람에게는 무슨 일인지 말해 줘야 한다.
+    testWidgets('못 불러왔다고 말하고 다시 시도를 준다', (tester) async {
+      await pumpCloset(tester, service: FakeCosmeticService(failLoad: true));
+
+      expect(tester.takeException(), isNull);
+      expect(find.text('옷장을 불러오지 못했어요.'), findsOneWidget);
+      expect(find.text('다시 시도'), findsOneWidget);
+      // 개구리 자리는 비지 않는다. 아무것도 안 걸친 개구리가 선다.
+      expect(find.byType(CosmeticStageFrog), findsOneWidget);
+    });
+
+    testWidgets('다시 시도를 누르면 옷장이 열린다', (tester) async {
+      final service = FakeCosmeticService(
+        catalog: CosmeticMockData.catalogAt(CosmeticAbilityLevels.uniform(12)),
+        failLoad: true,
+      );
+      await pumpCloset(
+        tester,
+        levels: CosmeticAbilityLevels.uniform(12),
+        service: service,
+      );
+
+      service.failLoad = false;
+      await tester.tap(find.text('다시 시도'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('옷장을 불러오지 못했어요.'), findsNothing);
+      expect(find.byType(CosmeticItemTile), findsWidgets);
     });
   });
 

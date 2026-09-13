@@ -9,7 +9,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:ono/Model/Cosmetic/CosmeticItemModel.dart';
 import 'package:ono/Model/Cosmetic/CosmeticLoadoutModel.dart';
 import 'package:ono/Model/Cosmetic/CosmeticAbilityLevels.dart';
-import 'package:ono/Provider/CosmeticProvider.dart';
 import 'package:ono/Screen/Mission/MissionLevelUp.dart';
 
 import '../../helpers/helpers.dart';
@@ -89,8 +88,9 @@ void main() {
       expect(missionUnlocksBetween(5, 3, unlockedAt), isEmpty);
     });
 
-    test('더미 카탈로그에서 총 학습 Lv.19 → Lv.20 은 학사 세트 세 개다', () {
-      final provider = CosmeticProvider();
+    test('카탈로그에서 총 학습 Lv.19 → Lv.20 은 학사 세트 세 개다', () async {
+      final provider =
+          await loadedCosmeticProvider(levels: CosmeticAbilityLevels.max);
       final unlocked =
           missionUnlocksBetween(19, 20, provider.unlockedAtTotalStudyLevel);
 
@@ -140,8 +140,9 @@ void main() {
       ]);
     });
 
-    test('마지막 칸은 오른 뒤의 차림과 같다', () {
-      final provider = CosmeticProvider();
+    test('마지막 칸은 오른 뒤의 차림과 같다', () async {
+      final provider =
+          await loadedCosmeticProvider(levels: CosmeticAbilityLevels.max);
       final after = provider.layersAtLevel(20);
 
       final stages = missionUnlockStages(
@@ -157,9 +158,10 @@ void main() {
       );
     });
 
-    test('같은 자리에 있던 것은 내린다', () {
+    test('같은 자리에 있던 것은 내린다', () async {
       // 총 학습 Lv.19 의 왕관이 Lv.20 의 학사모로 바뀐다. 둘이 같이 걸리면 안 된다.
-      final provider = CosmeticProvider();
+      final provider =
+          await loadedCosmeticProvider(levels: CosmeticAbilityLevels.max);
       final stages = missionUnlockStages(
         before: provider.layersAtLevel(19),
         after: provider.layersAtLevel(20),
@@ -251,10 +253,12 @@ void main() {
       if (reduceMotion) disableAnimationsForTest(tester);
       // 연출은 오르기 전 차림에서 시작한다. 그래서 프로바이더도 오르기 전
       // 레벨로 세운다. [wearing] 으로 그 위에 따로 걸칠 수 있다.
-      final cosmetic = CosmeticProvider(
-        mockLevels: CosmeticAbilityLevels.uniform(previousLevel ?? level),
+      final cosmetic = await loadedCosmeticProvider(
+        levels: CosmeticAbilityLevels.uniform(previousLevel ?? level),
       );
-      wearing.forEach(cosmetic.equip);
+      for (final entry in wearing.entries) {
+        await cosmetic.equip(entry.key, entry.value);
+      }
       await pumpOnoWidget(
         tester,
         cosmeticProvider: cosmetic,
@@ -366,8 +370,9 @@ void main() {
     });
 
     testWidgets('열린 것이 없으면 이름표 대신 레벨 게이지를 둔다', (tester) async {
-      final provider = CosmeticProvider();
-      // 더미 카탈로그에는 총 학습 Lv.20 위로 열리는 것이 없다. 게이지 양 끝
+      final provider =
+          await loadedCosmeticProvider(levels: CosmeticAbilityLevels.max);
+      // 카탈로그에는 총 학습 Lv.20 위로 열리는 것이 없다. 게이지 양 끝
       // 글자가 레벨 줄의 글자와 겹치지 않도록 카탈로그 밖 레벨로 올린다.
       expect(
         missionUnlocksBetween(21, 22, provider.unlockedAtTotalStudyLevel),

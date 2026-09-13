@@ -170,7 +170,9 @@ void main() {
         missionProvider: missionProvider,
         userProvider: userProvider(info: info),
         cosmeticProvider: cosmetic ??
-            CosmeticProvider(mockLevels: CosmeticAbilityLevels.uniform(12)),
+            await loadedCosmeticProvider(
+              levels: CosmeticAbilityLevels.uniform(12),
+            ),
         surfaceSize: surfaceSize,
       );
     });
@@ -196,12 +198,13 @@ void main() {
       // 512 정사각형을 둥근 사각형에 가둬 두면 개구리가 선 무대가 아니라
       // 벽에 걸린 사진 한 장으로 읽힌다. 그 그림이 무대의 조명과 바닥
       // 그림자까지 통째로 덮어서 연출이 화면에 나오지도 않았다.
-      final cosmetic =
-          CosmeticProvider(mockLevels: CosmeticAbilityLevels.uniform(12));
+      final cosmetic = await loadedCosmeticProvider(
+        levels: CosmeticAbilityLevels.uniform(12),
+      );
       await pumpCharacter(tester, cosmetic: cosmetic);
 
       final backdrop = cosmetic.stageBackdrop;
-      expect(backdrop, isNotNull, reason: '더미 기본 차림에 배경이 걸려 있어야 한다');
+      expect(backdrop, isNotNull, reason: '서버가 준 기본 차림에 배경이 걸려 있어야 한다');
       expect(find.byType(CosmeticStageGround), findsOneWidget);
 
       final stack = tester.widget<FrogLayerStack>(
@@ -219,9 +222,10 @@ void main() {
 
     testWidgets('배경을 안 걸쳐도 무대가 비지 않는다', (tester) async {
       // 배경이 없으면 무대의 조명·빛무리·바닥 그림자가 살아나야 한다.
-      final cosmetic =
-          CosmeticProvider(mockLevels: CosmeticAbilityLevels.uniform(12))
-            ..unequipAll();
+      final cosmetic = await loadedCosmeticProvider(
+        levels: CosmeticAbilityLevels.uniform(12),
+      );
+      await cosmetic.unequipAll();
       await pumpCharacter(tester, cosmetic: cosmetic);
 
       expect(cosmetic.stageBackdrop, isNull);
@@ -394,8 +398,9 @@ void main() {
     testWidgets('꾸미기 화면에서 총 학습 더미 레벨을 옮기면 이름표도 따라간다', (tester) async {
       // 디버그에서 총 학습을 올려도 이름표가 서버 값 그대로면 Lv.16~20 에서
       // 열리는 것들을 시안에서 확인할 수가 없다.
-      final cosmetic =
-          CosmeticProvider(mockLevels: CosmeticAbilityLevels.uniform(12));
+      final cosmetic = await loadedCosmeticProvider(
+        levels: CosmeticAbilityLevels.uniform(12),
+      );
       cosmetic.setMockLevel(null, 18);
 
       await pumpCharacter(tester, cosmetic: cosmetic);
@@ -587,8 +592,9 @@ void main() {
 
     testWidgets('꾸미기 화면에서 더미 레벨을 옮기면 눈금판도 따라간다', (tester) async {
       // 두 화면이 같은 능력치를 다른 레벨로 말하면 어느 쪽이 진짜인지 알 수 없다.
-      final cosmetic =
-          CosmeticProvider(mockLevels: CosmeticAbilityLevels.uniform(12));
+      final cosmetic = await loadedCosmeticProvider(
+        levels: CosmeticAbilityLevels.uniform(12),
+      );
       cosmetic.setMockLevel(CosmeticAbility.attendance, 9);
 
       await pumpCharacter(tester, cosmetic: cosmetic);

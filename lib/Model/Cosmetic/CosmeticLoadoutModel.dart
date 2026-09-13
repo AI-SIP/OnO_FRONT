@@ -312,6 +312,43 @@ class CosmeticLoadoutModel {
     return max;
   }
 
+  /// 이 차림에 하나를 걸거나([itemKey] 가 null 이면) 벗긴 결과.
+  ///
+  /// 슬롯이 달라도 겹쳐 그리면 이상해지는 짝이 있어서([CosmeticItemModel.conflictsWith]),
+  /// 이쪽을 걸면 저쪽은 내려야 한다. 서로 한쪽에만 적어 두는 경우가 있어 양쪽
+  /// 방향을 모두 본다.
+  ///
+  /// **서버도 같은 규칙으로 푼다.** 규칙이 프로바이더 안에 숨어 있으면 가짜
+  /// 서버를 세울 때 같은 것을 한 벌 더 적게 되고, 두 벌이 되면 언젠가 갈린다.
+  /// 갈리는 순간 저장을 누를 때마다 눈앞의 개구리가 한 번 더 바뀐다.
+  Map<String, String> applyEquip(
+    Map<String, String> equipped, {
+    required String slot,
+    String? itemKey,
+  }) {
+    final next = Map<String, String>.from(equipped);
+
+    if (itemKey == null) {
+      next.remove(slot);
+      return Map<String, String>.unmodifiable(next);
+    }
+
+    next[slot] = itemKey;
+
+    final conflicts = itemOf(itemKey)?.conflictsWith ?? const <String>[];
+    for (final entry in next.entries.toList()) {
+      if (entry.key == slot) continue;
+      final other = itemOf(entry.value);
+      if (other == null) continue;
+
+      final collides = conflicts.contains(other.itemKey) ||
+          other.conflictsWith.contains(itemKey);
+      if (collides) next.remove(entry.key);
+    }
+
+    return Map<String, String>.unmodifiable(next);
+  }
+
   /// `equipped` 만 갈아 끼운 새 차림.
   CosmeticLoadoutModel withEquipped(Map<String, String> next) {
     return CosmeticLoadoutModel(

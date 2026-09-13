@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ono/Constants/ProfileImageDefaults.dart';
 import 'package:ono/Module/User/ProfileAvatar.dart';
-import 'package:ono/Screen/Cosmetic/Mock/CosmeticMockData.dart';
 import 'package:ono/Screen/User/Widget/FrogCharacter.dart';
 
 import '../../helpers/helpers.dart';

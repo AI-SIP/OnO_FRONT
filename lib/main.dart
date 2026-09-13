@@ -133,12 +133,20 @@ Future<void> _bootstrapApp() async {
         ),
         // UserProvider 가 로그아웃 때 함께 비우므로 그보다 먼저 만든다.
         ChangeNotifierProvider(create: (_) => MissionProvider()),
+        // 옷장도 마찬가지다. 로그인해야 받아 오고 로그아웃하면 비운다.
+        // 혼자 떠 있으면 이 사람의 레벨을 한 번도 못 봐서 해금 표시가 전부
+        // 어긋난다.
+        ChangeNotifierProvider(create: (_) => CosmeticProvider()),
         ChangeNotifierProvider(
           create: (context) => UserProvider(
             Provider.of<ProblemsProvider>(context, listen: false),
             Provider.of<FoldersProvider>(context, listen: false),
             Provider.of<ProblemPracticeProvider>(context, listen: false),
             missionProvider: Provider.of<MissionProvider>(
+              context,
+              listen: false,
+            ),
+            cosmeticProvider: Provider.of<CosmeticProvider>(
               context,
               listen: false,
             ),
@@ -151,7 +159,6 @@ Future<void> _bootstrapApp() async {
         ChangeNotifierProvider(create: (_) => ReviewDueProvider()),
         ChangeNotifierProvider(create: (_) => TutorialProvider()),
         ChangeNotifierProvider(create: (_) => StudyRoomProvider()),
-        ChangeNotifierProvider(create: (_) => CosmeticProvider()),
       ],
       child: const MyApp(),
     ),

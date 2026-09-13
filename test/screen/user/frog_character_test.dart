@@ -8,8 +8,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:ono/Model/Cosmetic/CosmeticLoadoutModel.dart';
 import 'package:ono/Module/Text/StandardText.dart';
 import 'package:ono/Model/Cosmetic/CosmeticAbilityLevels.dart';
-import 'package:ono/Provider/CosmeticProvider.dart';
-import 'package:ono/Screen/Cosmetic/Mock/CosmeticMockData.dart';
 import 'package:ono/Screen/User/Widget/FrogCharacter.dart';
 
 import '../../helpers/helpers.dart';
@@ -174,13 +172,14 @@ void main() {
       expect(layers.single.imageUrl, 'assets/Cosmetic/BASE.png');
     });
 
-    test('프로바이더가 준 층도 같은 순서다', () {
-      final provider = CosmeticProvider(mockLevels: CosmeticAbilityLevels.max);
+    test('프로바이더가 준 층도 같은 순서다', () async {
+      final provider =
+          await loadedCosmeticProvider(levels: CosmeticAbilityLevels.max);
       // 다 열린 사람은 자리마다 하나씩 입고 있다. 순서만 보려는 것이라
       // 전부 벗기고 양 끝 둘만 직접 걸친다.
-      provider.unequipAll();
-      provider.equip('BACKGROUND', 'bg_night');
-      provider.equip('HAND', 'prop_diploma');
+      await provider.unequipAll();
+      await provider.equip('BACKGROUND', 'bg_night');
+      await provider.equip('HAND', 'prop_diploma');
 
       expect(
         [for (final layer in provider.layers) layer.layerOrder],

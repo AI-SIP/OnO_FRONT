@@ -11,6 +11,7 @@ import 'package:ono/Model/User/UserInfoModel.dart';
 import 'package:ono/Model/User/UserRegisterModel.dart';
 import 'package:ono/Module/Dialog/LoadingDialog.dart';
 import 'package:ono/Provider/FoldersProvider.dart';
+import 'package:ono/Provider/CosmeticProvider.dart';
 import 'package:ono/Provider/MissionProvider.dart';
 import 'package:ono/Provider/PracticeNoteProvider.dart';
 import 'package:ono/Service/Api/Problem/ProblemService.dart';
@@ -39,6 +40,13 @@ class UserProvider with ChangeNotifier {
 
   /// 로그아웃 때 함께 비운다. 앱 밖(테스트 등)에서는 없을 수 있다.
   final MissionProvider? missionProvider;
+
+  /// 옷장. 유저 정보를 받을 때마다 레벨을 맞춰 주고 로그아웃 때 비운다.
+  ///
+  /// 옷장은 **이 사람의 능력치 레벨**을 알아야 무엇이 열렸는지 말할 수 있는데,
+  /// 그 다섯은 유저 정보에만 있다. 여기 물려 두지 않으면 옷장이 혼자 떠서
+  /// 레벨을 한 번도 못 본다. 앱 밖(테스트 등)에서는 없을 수 있다.
+  final CosmeticProvider? cosmeticProvider;
   final TokenProvider tokenProvider;
   final HttpService httpService;
   final UserService userService;
@@ -73,6 +81,7 @@ class UserProvider with ChangeNotifier {
     this.foldersProvider,
     this.practiceProvider, {
     this.missionProvider,
+    this.cosmeticProvider,
     TokenProvider? tokenProvider,
     HttpService? httpService,
     UserService? userService,
@@ -321,6 +330,13 @@ class UserProvider with ChangeNotifier {
         loginMethod: await storage.read(key: 'loginMethod'),
       ),
     );
+    // 옷장에 이 사람의 능력치 레벨을 넘기고, 처음이거나 레벨이 올랐으면
+    // 카탈로그를 다시 읽게 한다. 화면이 읽는 쪽(userInfoModel)을 넘기는 것은
+    // 디버그 패널로 옮겨 놓은 레벨을 옷장도 함께 보게 하려는 것이다.
+    //
+    // 기다리지 않는다. 치장은 있으면 좋은 것이지 유저 정보 조회를 붙잡고
+    // 있을 것이 아니다.
+    unawaited(cosmeticProvider?.syncWithUser(userInfoModel) ?? Future.value());
     notifyListeners();
   }
 
@@ -515,6 +531,9 @@ class UserProvider with ChangeNotifier {
     // 비우지 않으면 다른 계정으로 로그인한 첫 화면에 앞 사람의 미션 진행도와
     // 받기 배지가 그대로 뜬다.
     missionProvider?.clear();
+    // 비우지 않으면 다른 계정으로 로그인한 첫 화면의 하단 탭과 프로필에
+    // 앞 사람이 꾸며 둔 개구리가 그대로 남는다.
+    cosmeticProvider?.clear();
     notifyListeners();
   }
 
