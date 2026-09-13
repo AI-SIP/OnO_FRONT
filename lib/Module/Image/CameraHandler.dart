@@ -2,7 +2,10 @@ import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 
 import '../Motion/TossPageRoute.dart';
+import 'CameraCapture.dart';
 import 'CameraScreen.dart';
+
+export 'CameraCapture.dart';
 
 /// 촬영 화면을 띄우고 찍힌 사진을 돌려주는 것까지만 한다.
 ///
@@ -20,7 +23,7 @@ class CameraHandler {
   }
 
   // Launch the camera screen and return the captured image
-  Future<XFile?> takePicture(BuildContext context) async {
+  Future<CameraCapture?> takePicture(BuildContext context) async {
     final cameras = _availableCameras;
     if (cameras == null || cameras.isEmpty) {
       debugPrint("No cameras available.");

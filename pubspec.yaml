@@ -48,6 +48,10 @@ dependencies:
   cached_network_image: ^3.4.0
   image_cropper: ^12.2.1
   camera: ^0.11.0+2
+
+  # 문서 모드. 안드로이드는 ML Kit, iOS 는 VisionKit 의 문서 스캐너를 띄운다.
+  # 종이 테두리를 찾아 원근을 펴고 그림자를 걷어 내는 일을 OS 가 대신 해 준다.
+  cunning_document_scanner: ^3.0.2
   image: ^3.0.1
   share_plus: ^10.0.2
   path_provider: ^2.1.4

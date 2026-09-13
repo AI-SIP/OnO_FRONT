@@ -6,6 +6,7 @@ import 'package:camera/camera.dart';
 import 'package:camera_platform_interface/camera_platform_interface.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:ono/Module/Image/CameraCapture.dart';
 import 'package:ono/Module/Image/CameraScreen.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 
@@ -165,14 +166,14 @@ void main() {
   ///
   /// 실제로도 `CameraHandler` 가 `Navigator.push` 로 띄우므로 같은 모양으로
   /// 감싼다. 그래야 이걸로 쓰기가 무엇을 들고 나가는지 볼 수 있다.
-  Future<List<XFile?>> pumpCameraScreen(
+  Future<List<CameraCapture?>> pumpCameraScreen(
     WidgetTester tester, {
     List<CameraDescription> cameras = const [backCamera, frontCamera],
     Size surfaceSize = OnoSurface.phone,
     double textScale = 1.0,
     bool settleAfterPush = true,
   }) async {
-    final result = <XFile?>[];
+    final result = <CameraCapture?>[];
 
     // 화면을 Navigator 로 띄우므로 MediaQuery 를 home 안에서 감싸면 안 닿는다.
     // 기기 설정을 바꾸듯 뷰 쪽에서 글자 배율을 올린다.
@@ -189,8 +190,8 @@ void main() {
             child: TextButton(
               onPressed: () async {
                 result.add(
-                  await Navigator.of(inner).push<XFile>(
-                    MaterialPageRoute<XFile>(
+                  await Navigator.of(inner).push<CameraCapture>(
+                    MaterialPageRoute<CameraCapture>(
                       builder: (_) => CameraScreen(cameras: cameras),
                     ),
                   ),
@@ -253,6 +254,26 @@ void main() {
       // 하단: 갤러리에서 고르기, 셔터
       expect(find.byIcon(Icons.photo_library_rounded), findsOneWidget);
       expect(find.bySemanticsLabel('촬영'), findsOneWidget);
+    });
+
+    testWidgets('문서 모드가 무엇을 해 주는지 화면에 적혀 있다', (tester) async {
+      installFake();
+
+      await pumpCameraScreen(tester);
+
+      // 아이콘만 두면 눌러 보기 전에는 무슨 일이 나는지 알 수 없다.
+      expect(find.text('문서 모드로 찍기'), findsOneWidget);
+      expect(
+        find.text('종이를 반듯하게 펴고 밝게 보정해요'),
+        findsOneWidget,
+        reason: '눌렀을 때 무엇이 달라지는지가 글로 보여야 한다',
+      );
+      expect(find.byIcon(Icons.auto_fix_high_rounded), findsOneWidget);
+
+      // 확인 단계에 올라가면 촬영 컨트롤과 같이 사라진다.
+      await tester.tap(find.bySemanticsLabel('촬영'));
+      await tester.pumpAndSettle();
+      expect(find.text('문서 모드로 찍기'), findsNothing);
     });
 
     testWidgets('후면 카메라뿐이면 전후면 전환 버튼을 두지 않는다', (tester) async {
@@ -358,7 +379,8 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(result, hasLength(1));
-      expect(result.single?.path, fake.picturePath);
+      expect(result.single?.file.path, fake.picturePath);
+      expect(result.single?.alreadyCropped, isFalse);
       expect(find.byType(CameraScreen), findsNothing);
     });
 

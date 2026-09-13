@@ -2,12 +2,14 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:camera/camera.dart';
+import 'package:cunning_document_scanner/cunning_document_scanner.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 
+import 'CameraCapture.dart';
 import '../Design/AppColors.dart';
 import '../Design/AppRadius.dart';
 import '../Design/AppSpacing.dart';
@@ -61,6 +63,9 @@ class _CameraScreenState extends State<CameraScreen>
   /// returned` 로 터지는 것을 막는다.
   bool _isCapturing = false;
   bool _isSwitchingLens = false;
+
+  /// 문서 스캐너를 여는 중. 연달아 누르면 두 번 열린다.
+  bool _isScanning = false;
 
   /// 확인 단계에 올라와 있는 사진. null 이면 촬영 화면이다.
   XFile? _reviewing;
@@ -251,9 +256,47 @@ class _CameraScreenState extends State<CameraScreen>
       final picked = await ImagePicker().pickImage(source: ImageSource.gallery);
       if (picked == null || !mounted) return;
       // 앨범에서 이미 눈으로 고른 것이라 확인 단계를 한 번 더 두지 않는다.
-      Navigator.of(context).pop(picked);
+      Navigator.of(context).pop(CameraCapture(file: picked));
     } catch (e) {
       debugPrint('갤러리에서 이미지를 고르지 못했습니다: $e');
+    }
+  }
+
+  /// 문서 모드. OS 가 가진 문서 스캐너를 띄운다.
+  ///
+  /// 종이 테두리를 찾아 원근을 펴고 그림자를 걷어 내는 일은 안드로이드의 ML Kit
+  /// 과 iOS 의 VisionKit 이 이미 아주 잘한다. 우리가 직접 할 이유가 없다.
+  ///
+  /// 대신 이건 OS 가 그리는 화면이라 이 화면의 생김새를 물려받지 못한다. 그래서
+  /// 기본 촬영을 이쪽으로 바꾸지 않고 따로 들어가는 길만 냈다.
+  ///
+  /// 필터는 색을 살리는 쪽으로 연다. 오답노트는 찍은 뒤에 색을 골라 필기를
+  /// 지우는 기능([ImageColorPickerHandler])을 쓰는데, 흑백으로 받아 버리면 고를
+  /// 색이 남지 않는다. 더 하얗게 만들고 싶은 사람은 스캐너 안에서 바꾸면 된다.
+  Future<void> _scanDocument() async {
+    if (_isCapturing || _isScanning) return;
+
+    setState(() => _isScanning = true);
+    try {
+      final paths = await CunningDocumentScanner.getPictures(
+        noOfPages: 1,
+        androidScannerMode: AndroidScannerMode.full,
+        iosScannerOptions: IosScannerOptions(
+          imageFormat: IosImageFormat.jpg,
+          defaultFilter: IosDocumentFilter.color,
+          showFilterBar: true,
+        ),
+      );
+
+      if (paths == null || paths.isEmpty || !mounted) return;
+      // 스캐너가 이미 반듯하게 잘라 준 것이라 크롭 화면으로 넘기지 않는다.
+      Navigator.of(context).pop(
+        CameraCapture(file: XFile(paths.first), alreadyCropped: true),
+      );
+    } catch (e) {
+      debugPrint('문서 스캔을 열지 못했습니다: $e');
+    } finally {
+      if (mounted) setState(() => _isScanning = false);
     }
   }
 
@@ -264,7 +307,7 @@ class _CameraScreenState extends State<CameraScreen>
   void _useReviewed() {
     final file = _reviewing;
     if (file == null) return;
-    Navigator.of(context).pop(file);
+    Navigator.of(context).pop(CameraCapture(file: file));
   }
 
   void _close() => Navigator.of(context).pop();
@@ -547,15 +590,12 @@ class _CameraScreenState extends State<CameraScreen>
                   _ZoomLabel(zoom: _zoom),
                   const SizedBox(height: AppSpacing.md),
                 ],
-                StandardText(
-                  text: '문제가 안내선 안에 들어오게 맞춰주세요',
-                  fontSize: 13,
-                  height: 1.3,
-                  fontFamily: 'PretendardLight',
-                  color: Colors.white.withValues(alpha: 0.85),
-                  textAlign: TextAlign.center,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 520),
+                  child: _DocumentModeBanner(
+                    enabled: !_isScanning,
+                    onTap: _scanDocument,
+                  ),
                 ),
                 const SizedBox(height: AppSpacing.lg),
                 // 태블릿에서 갤러리 버튼과 셔터가 화면 양 끝까지 벌어지지 않게 한다.
@@ -872,6 +912,99 @@ class _GlassIconButton extends StatelessWidget {
   }
 }
 
+/// 문서 모드로 들어가는 자리.
+///
+/// 아이콘 하나로 두면 눌러 보기 전에는 무슨 일이 일어나는지 알 수 없다. 이건
+/// 다른 화면으로 넘어가는 데다 결과물까지 달라지는 것이라, 무엇을 해 주는지를
+/// 글로 적어 둔다.
+class _DocumentModeBanner extends StatelessWidget {
+  final bool enabled;
+  final VoidCallback onTap;
+
+  const _DocumentModeBanner({required this.enabled, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    // 글자를 키운 기기에서는 화살표가 차지하는 폭을 글자에 준다.
+    final showChevron = MediaQuery.textScalerOf(context).scale(14) <= 19;
+
+    return Semantics(
+      label: '문서 모드로 찍기. 종이를 반듯하게 펴고 밝게 보정해요',
+      child: PressableScale(
+        onTap: onTap,
+        enabled: enabled,
+        child: AnimatedOpacity(
+          duration: AppMotion.fast,
+          opacity: enabled ? 1 : 0.5,
+          child: Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.md,
+              vertical: AppSpacing.md,
+            ),
+            decoration: BoxDecoration(
+              color: Colors.black.withValues(alpha: 0.45),
+              borderRadius: BorderRadius.circular(AppRadius.large),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.4)),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.16),
+                    borderRadius: BorderRadius.circular(AppRadius.small),
+                  ),
+                  child: const Icon(
+                    Icons.auto_fix_high_rounded,
+                    size: 20,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const StandardText(
+                        text: '문서 모드로 찍기',
+                        fontSize: 14,
+                        height: 1.25,
+                        color: Colors.white,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 2),
+                      StandardText(
+                        text: '종이를 반듯하게 펴고 밝게 보정해요',
+                        fontSize: 11,
+                        height: 1.3,
+                        fontFamily: 'PretendardLight',
+                        color: Colors.white.withValues(alpha: 0.8),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+                if (showChevron) ...[
+                  const SizedBox(width: AppSpacing.sm),
+                  Icon(
+                    Icons.chevron_right_rounded,
+                    size: 20,
+                    color: Colors.white.withValues(alpha: 0.7),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 /// 셔터.
 class _ShutterButton extends StatelessWidget {
   final Color accent;
@@ -1089,11 +1222,13 @@ class _GuideFrame extends StatelessWidget {
 class _GuideFramePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
+    // 위아래를 넉넉히 띄운다. 아래쪽은 하단 컨트롤이 미리보기를 덮고 들어오는
+    // 자리라, 여기를 좁게 잡으면 귀퉁이가 문서 모드 배너에 가린다.
     final rect = Rect.fromLTRB(
       size.width * 0.07,
-      size.height * 0.13,
+      size.height * 0.18,
       size.width * 0.93,
-      size.height * 0.87,
+      size.height * 0.82,
     );
 
     // 귀퉁이 한 변의 길이. 프레임이 작아져도 제 몫은 지키게 범위를 둔다.
