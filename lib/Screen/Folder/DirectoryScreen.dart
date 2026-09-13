@@ -1,13 +1,13 @@
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
 import 'package:ono/Model/Common/LoginStatus.dart';
 import 'package:ono/Model/Folder/FolderModel.dart';
 import 'package:ono/Model/Folder/FolderThumbnailModel.dart';
 import 'package:ono/Model/Problem/ProblemRegisterModel.dart';
 import 'package:ono/Module/Dialog/SnackBarDialog.dart';
+import 'package:ono/Module/Theme/ClayIcon.dart';
 import 'package:ono/Module/Theme/NoteIconHandler.dart';
 import 'package:ono/Provider/FoldersProvider.dart';
 import 'package:ono/Provider/ProblemsProvider.dart';
@@ -1277,8 +1277,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                             mainAxisAlignment: MainAxisAlignment.center,
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              SvgPicture.asset(
-                                'assets/Icon/GreenNote.svg', // 아이콘 경로
+                              const ClayIcon(
+                                'assets/Icon/GreenNote.png', // 아이콘 경로
                                 width: 100, // 적절한 크기 설정
                                 height: 100,
                               ),
@@ -1389,7 +1389,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
             child: SizedBox(
               width: 50,
               height: 70,
-              child: SvgPicture.asset(
+              child: ClayIcon(
                 NoteIconHandler.getNoteIcon(index), // 헬퍼 클래스로 아이콘 설정
                 width: 50,
                 height: 50,
@@ -1489,7 +1489,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
             ),
             child: isSelected
                 ? const Icon(Icons.check, color: Colors.red)
-                : SvgPicture.asset(
+                : ClayIcon(
                     NoteIconHandler.getNoteIcon(index),
                     width: 30,
                     height: 30,

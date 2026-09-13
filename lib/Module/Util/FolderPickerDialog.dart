@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_svg/svg.dart';
+import 'package:ono/Module/Theme/ClayIcon.dart';
 import 'package:ono/Module/Theme/NoteIconHandler.dart';
 import 'package:ono/Module/Dialog/SnackBarDialog.dart';
 import 'package:provider/provider.dart';
@@ -256,8 +256,8 @@ class _FolderPickerDialogState extends State<FolderPickerDialog> {
                       ),
                       IconButton(
                         tooltip: '공책 추가',
-                        icon: SvgPicture.asset(
-                          "assets/Icon/addNote.svg",
+                        icon: const ClayIcon(
+                          "assets/Icon/addNote.png",
                           width: 26,
                           height: 26,
                         ),
@@ -564,7 +564,7 @@ class _FolderPickerDialogState extends State<FolderPickerDialog> {
                     ),
             ),
             const SizedBox(width: 4),
-            SvgPicture.asset(
+            ClayIcon(
               NoteIconHandler.getNoteIcon(level),
               width: iconSize,
               height: iconSize,

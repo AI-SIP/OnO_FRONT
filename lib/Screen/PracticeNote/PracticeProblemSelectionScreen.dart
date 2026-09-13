@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:ono/Model/PracticeNote/PracticeNoteDetailModel.dart';
 import 'package:ono/Model/Tag/TagModel.dart';
 import 'package:ono/Provider/PracticeNoteProvider.dart';
@@ -16,6 +15,7 @@ import '../../Model/Problem/ProblemModel.dart';
 import '../../Module/Problem/ProblemThumbnailCard.dart';
 import '../../Module/Text/mobile_font_size.dart';
 import '../../Module/Text/StandardText.dart';
+import '../../Module/Theme/ClayIcon.dart';
 import '../../Module/Theme/NoteIconHandler.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/FoldersProvider.dart';
@@ -876,7 +876,7 @@ class _PracticeProblemSelectionScreenState
         curve: AppMotion.emphasized,
         child: Column(
           children: [
-            SvgPicture.asset(
+            ClayIcon(
               NoteIconHandler.getNoteIcon(allFolders.indexOf(folder)),
               width: 60,
               height: 60,
@@ -965,7 +965,7 @@ class _PracticeProblemSelectionScreenState
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    SvgPicture.asset(
+                    ClayIcon(
                       NoteIconHandler.getNoteIcon(index),
                       width: isCompact ? 34 : 42,
                       height: isCompact ? 34 : 42,
@@ -1061,24 +1061,17 @@ class _PracticeProblemSelectionScreenState
 
     if (_searchMode == _PracticeSearchMode.title && _titleQuery.isEmpty) {
       // 문구만 있으면 화면이 비어 보인다. 검색 안내라 연필 대신 돋보기를 쓴다.
+      // 바로 아래 빈 상태가 점토 연필이라 돋보기도 같은 재질로 둔다.
       return Center(
         child: AppearTransition(
           offset: 12,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Container(
-                width: 84,
-                height: 84,
-                decoration: const BoxDecoration(
-                  color: AppColors.surfaceMuted,
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.search_rounded,
-                  size: 36,
-                  color: AppColors.textTertiary,
-                ),
+              const ClayIcon(
+                'assets/Icon/Search.png',
+                width: 100,
+                height: 100,
               ),
               const SizedBox(height: 16),
               StandardText(
@@ -1107,8 +1100,8 @@ class _PracticeProblemSelectionScreenState
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                SvgPicture.asset(
-                  'assets/Icon/PencilDetail.svg',
+                const ClayIcon(
+                  'assets/Icon/PencilDetail.png',
                   width: 100,
                   height: 100,
                 ),

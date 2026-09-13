@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
 import 'package:ono/Module/Text/StandardLightText.dart';
 import 'package:ono/Module/Text/UnderlinedText.dart';
@@ -16,6 +15,7 @@ import '../../../Module/Image/DisplayImage.dart';
 import '../../../Module/Image/FullScreenImage.dart';
 import '../../../Module/Text/mobile_font_size.dart';
 import '../../../Module/Text/StandardText.dart';
+import '../../../Module/Theme/ClayIcon.dart';
 import '../../../Module/Theme/ThemeHandler.dart';
 import '../../../Service/Api/Problem/ProblemSolveService.dart';
 import '../../../Module/Motion/AppHaptic.dart';
@@ -141,8 +141,8 @@ class _RepeatSectionV2State extends State<RepeatSectionV2>
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          SvgPicture.asset(
-                            'assets/Icon/PencilDetail.svg',
+                          const ClayIcon(
+                            'assets/Icon/PencilDetail.png',
                             width: 100,
                             height: 100,
                           ),

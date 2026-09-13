@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:ono/Model/Common/LoginStatus.dart';
@@ -9,15 +8,6 @@ import 'package:ono/Screen/ProblemRegister/TemplateSelectionScreen.dart';
 import '../../helpers/helpers.dart';
 
 class _FakeUserProvider extends Mock implements UserProvider {}
-
-/// SvgPicture 를 에셋 경로로 찾는다. 상단 탭과 본문 이미지가 같은 SVG 를 쓸 수
-/// 있으니, 화면에 실제로 그려져 있는 것만 잡힌다는 점을 이용한다.
-Finder _svgAsset(String path) => find.byWidgetPredicate(
-      (widget) =>
-          widget is SvgPicture &&
-          widget.bytesLoader is SvgAssetLoader &&
-          (widget.bytesLoader as SvgAssetLoader).assetName == path,
-    );
 
 void main() {
   setUpOnoWidgetTest();
@@ -68,7 +58,8 @@ void main() {
     expect(find.text('길잡이 템플릿'), findsOneWidget);
 
     // 상단 탭의 "암기왕"(simple) 아이콘을 감싼 GestureDetector 를 탭한다.
-    final simpleTabIcon = _svgAsset('assets/Icon/PencilDetail.svg');
+    // 점토 그림으로 바뀌면서 SvgPicture 가 아니라 Image 가 되었다.
+    final simpleTabIcon = findAssetImage('assets/Icon/PencilDetail.png');
     expect(simpleTabIcon, findsOneWidget);
     await tester.tap(
       find.ancestor(
