@@ -6,6 +6,14 @@
 	<true/>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
+	<!-- 앱이 지원한다고 밝힌 언어 안에서 iOS 가 화면 언어를 고른다. en 만
+	     있으면 한국어 폰에서도 시스템이 그리는 화면(문서 스캐너, 사진
+	     선택기, 권한 안내)이 전부 영어로 나온다. -->
+	<key>CFBundleLocalizations</key>
+	<array>
+		<string>ko</string>
+		<string>en</string>
+	</array>
 	<key>CFBundleDisplayName</key>
 	<string>OnO</string>
 	<key>CFBundleExecutable</key>
