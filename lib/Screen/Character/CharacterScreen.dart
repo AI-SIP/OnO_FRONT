@@ -11,13 +11,17 @@ import '../../Module/Motion/AppMotion.dart';
 import '../../Module/Motion/AppearTransition.dart';
 import '../../Module/Motion/MotionReplayScope.dart';
 import '../../Module/Motion/AppHaptic.dart';
+import '../../Module/Motion/PressableScale.dart';
 import '../../Module/Motion/TossPageRoute.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
+import '../../Provider/AchievementProvider.dart';
 import '../../Provider/CosmeticProvider.dart';
 import '../../Provider/MissionProvider.dart';
 import '../../Provider/ScreenIndexProvider.dart';
 import '../../Provider/UserProvider.dart';
+import '../Achievement/AchievementScreen.dart';
+import '../Achievement/Widget/AchievementMedal.dart';
 import '../Cosmetic/CosmeticClosetScreen.dart';
 import '../Cosmetic/Widget/CosmeticAbilityStyle.dart';
 import '../Cosmetic/Widget/CosmeticStage.dart';
@@ -30,8 +34,8 @@ import 'Widget/GrowthTypeScale.dart';
 ///
 /// 화면은 **스크롤이 없다.** 둘이 위에서 아래로 붙박이로 앉는다.
 ///
-/// - **무대**: 위쪽에 성장 카드(총 학습 한 줄 + 능력치 눈금판 넷)가 붙고,
-///   그 아래에 꾸민 개구리가 크게 선다.
+/// - **무대**: 위쪽에 성장 카드(총 학습 한 줄 + 능력치 눈금판 넷 + 훈장 한
+///   줄)가 붙고, 그 아래에 꾸민 개구리가 크게 선다.
 /// - **버튼 둘**: 미션과 꾸미기.
 ///
 /// 원래는 무대 아래에 오늘의 미션 목록이 스크롤로 붙어 있었고 능력치 넉 줄은
@@ -48,6 +52,14 @@ import 'Widget/GrowthTypeScale.dart';
 /// **개구리를 누르면 격려 한마디를 한다.** 꾸미러 가는 문은 이제 버튼이
 /// 따로 맡아서, 개구리를 누르는 것이 꾸미기 화면으로 가는 지름길일 필요가
 /// 없어졌다.
+///
+/// **훈장으로 가는 문은 성장 카드 맨 아래 한 줄이다**([_AchievementRow]).
+/// 아래 버튼 줄에 셋째 버튼으로 넣어 보면 320dp 짜리 폰에서 셋이 각각 88dp 를
+/// 나눠 갖는데, 미션 버튼에는 `2 / 3` 배지까지 붙어서 글자를 키운 기기에서는
+/// 세 버튼의 글자가 전부 6px 남짓으로 줄어든다. 그리고 훈장은 자주 눌러
+/// 들어가는 자리가 아니라 가끔 보고 흐뭇한 것이라, 꾸미기·미션과 같은 무게로
+/// 세울 것도 아니다. 총 학습과 능력치가 "얼마나 자랐나"를 말하는 카드 안에서
+/// "무엇을 해냈나"로 이어지는 자리가 말도 맞는다.
 class CharacterScreen extends StatefulWidget {
   final TutorialTargets? tutorialTargets;
 
@@ -101,6 +113,13 @@ class _CharacterScreenState extends State<CharacterScreen> {
     );
   }
 
+  void _openAchievements() {
+    Navigator.push(
+      context,
+      TossPageRoute(builder: (_) => const AchievementScreen()),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeHandler>(context);
@@ -120,7 +139,9 @@ class _CharacterScreenState extends State<CharacterScreen> {
           themeProvider: themeProvider,
           missionDone: missionProvider.dailyCompletedCount,
           missionTotal: missionProvider.dailyTotalCount,
+          achievement: Provider.of<AchievementProvider>(context),
           onMissionTap: _openMissions,
+          onAchievementTap: _openAchievements,
           onClosetTap: _openCloset,
         ),
       ),
@@ -147,7 +168,12 @@ class _CharacterStage extends StatelessWidget {
 
   final int missionDone;
   final int missionTotal;
+
+  /// 훈장. 몇 개를 모았는지와 아직 못 알린 새 훈장이 있는지를 읽는다.
+  final AchievementProvider achievement;
+
   final VoidCallback onMissionTap;
+  final VoidCallback onAchievementTap;
   final VoidCallback onClosetTap;
 
   const _CharacterStage({
@@ -155,7 +181,9 @@ class _CharacterStage extends StatelessWidget {
     required this.themeProvider,
     required this.missionDone,
     required this.missionTotal,
+    required this.achievement,
     required this.onMissionTap,
+    required this.onAchievementTap,
     required this.onClosetTap,
   });
 
@@ -417,6 +445,18 @@ class _CharacterStage extends StatelessWidget {
           Container(height: 1, color: Colors.white.withValues(alpha: 0.75)),
           const SizedBox(height: AppSpacing.md),
           AbilityStatPanel(userInfo: userInfo, framed: false),
+          const SizedBox(height: AppSpacing.sm),
+          // 능력치 넷 아래에 훈장 한 줄. 같은 선으로 가른다. 총 학습과 능력치가
+          // "얼마나 자랐나"를 말한 다음에 "무엇을 해냈나"가 온다.
+          Container(height: 1, color: Colors.white.withValues(alpha: 0.75)),
+          const SizedBox(height: AppSpacing.sm),
+          _AchievementRow(
+            earned: achievement.earnedCount,
+            total: achievement.total,
+            hasNews: achievement.hasNews,
+            color: color,
+            onTap: onAchievementTap,
+          ),
         ],
       ),
     );
@@ -446,6 +486,123 @@ class _CharacterStage extends StatelessWidget {
 
   /// 파츠 그림 원본의 한 변.
   static const double _frogMaxSize = 512.0;
+}
+
+/// 성장 카드 맨 아래, 훈장으로 가는 한 줄이다.
+///
+/// **버튼이 아니라 줄이다.** 미션·꾸미기와 같은 점토 버튼으로 세우지 않은 데는
+/// 이유가 둘이다.
+///
+/// 1. **자리가 없다.** 320dp 짜리 폰에서 버튼 셋은 각각 88dp 를 나눠 갖는데,
+///    미션 버튼에는 `2 / 3` 배지까지 붙는다. 글자를 1.6배로 키운 기기에서는
+///    세 버튼의 글자가 전부 6px 남짓으로 줄어 읽을 수 없게 된다.
+/// 2. **무게가 다르다.** 훈장은 자주 눌러 들어가는 자리가 아니라 가끔 보고
+///    흐뭇한 것이다. 꾸미기와 같은 크기로 세우면 이 탭에서 무엇을 먼저 해야
+///    하는지가 흐려진다.
+///
+/// 그래서 조용한 한 줄로 두되 **숫자는 적는다.** `3 / 12` 가 있으면 누르기
+/// 전에도 아직 아홉 개가 남았다는 것을 알 수 있고, 그 숫자가 들어가 보게
+/// 만든다. 아직 훈장판을 못 받았으면(서버가 답이 없거나 배포 전) 숫자를
+/// 비우고 문만 남긴다. 숫자가 없다고 문까지 사라지면 안 된다.
+class _AchievementRow extends StatelessWidget {
+  final int earned;
+  final int total;
+
+  /// 아직 못 알린 새 훈장이 있는지. `NEW` 가 붙는다.
+  final bool hasNews;
+
+  final Color color;
+  final VoidCallback onTap;
+
+  const _AchievementRow({
+    required this.earned,
+    required this.total,
+    required this.hasNews,
+    required this.color,
+    required this.onTap,
+  });
+
+  /// 왼쪽 훈장 그림 한 변. 능력치 눈금판의 아이콘과 비슷한 크기다.
+  static const double _medalSize = 20.0;
+
+  @override
+  Widget build(BuildContext context) {
+    return PressableScale(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Row(
+        children: [
+          const AchievementMedal(
+            imageUrl: kAchievementEntryIcon,
+            size: _medalSize,
+            locked: false,
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          // 글자를 키운 기기에서 이름과 숫자가 한 줄을 넘는다. 넘치게 두는
+          // 대신 줄여서 앉힌다. 이 카드의 다른 줄들과 같은 처리다.
+          Expanded(
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const StandardText(
+                    text: '훈장',
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textSecondary,
+                    maxLines: 1,
+                    height: 1.4,
+                  ),
+                  if (total > 0) ...[
+                    const SizedBox(width: AppSpacing.sm),
+                    StandardText(
+                      text: '$earned / $total',
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: color,
+                      maxLines: 1,
+                      height: 1.4,
+                    ),
+                  ],
+                  if (hasNews) ...[
+                    const SizedBox(width: AppSpacing.sm),
+                    _buildNewBadge(),
+                  ],
+                ],
+              ),
+            ),
+          ),
+          Icon(
+            Icons.chevron_right_rounded,
+            size: 18,
+            color: AppColors.textTertiary,
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 새로 받은 것이 있을 때만 붙는다. 늘 붙어 있으면 표시가 아니라 장식이
+  /// 되어, 정작 새 훈장이 생긴 날에 눈에 안 띈다.
+  Widget _buildNewBadge() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(AppRadius.full),
+      ),
+      child: const StandardText(
+        text: 'NEW',
+        fontSize: 9,
+        fontWeight: FontWeight.w700,
+        color: Colors.white,
+        maxLines: 1,
+        height: 1.4,
+      ),
+    );
+  }
 }
 
 /// 총 학습 경험치 막대다.

@@ -10,6 +10,7 @@ import 'package:ono/Model/Common/LoginStatus.dart';
 import 'package:ono/Module/Text/StandardText.dart';
 import 'package:ono/Module/Theme/ThemeHandler.dart';
 import 'package:ono/Model/Cosmetic/CosmeticLoadoutModel.dart';
+import 'package:ono/Provider/AchievementProvider.dart';
 import 'package:ono/Provider/CosmeticProvider.dart';
 import 'package:ono/Provider/FoldersProvider.dart';
 import 'package:ono/Provider/ScreenIndexProvider.dart';
@@ -137,6 +138,10 @@ Future<void> _bootstrapApp() async {
         // 혼자 떠 있으면 이 사람의 레벨을 한 번도 못 봐서 해금 표시가 전부
         // 어긋난다.
         ChangeNotifierProvider(create: (_) => CosmeticProvider()),
+        // 훈장도 마찬가지다. 로그인해야 받아 오고 로그아웃하면 비운다.
+        // 혼자 떠 있으면 새로 받은 훈장을 아무도 못 받아 둬서, 축하 한 번이
+        // 조용히 사라진다.
+        ChangeNotifierProvider(create: (_) => AchievementProvider()),
         ChangeNotifierProvider(
           create: (context) => UserProvider(
             Provider.of<ProblemsProvider>(context, listen: false),
@@ -147,6 +152,10 @@ Future<void> _bootstrapApp() async {
               listen: false,
             ),
             cosmeticProvider: Provider.of<CosmeticProvider>(
+              context,
+              listen: false,
+            ),
+            achievementProvider: Provider.of<AchievementProvider>(
               context,
               listen: false,
             ),

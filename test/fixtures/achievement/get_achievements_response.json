@@ -1,0 +1,127 @@
+{
+  "data": {
+    "achievements": [
+      {
+        "key": "first_step",
+        "nameKo": "첫 걸음",
+        "descriptionKo": "오답노트를 처음 적었어요",
+        "imageUrl": "assets/Medal/first_step.png",
+        "earned": true,
+        "earnedAt": "2026-03-02T21:14:08",
+        "current": null,
+        "target": null
+      },
+      {
+        "key": "archivist",
+        "nameKo": "기록광",
+        "descriptionKo": "오답노트를 백 개나 모았어요",
+        "imageUrl": "assets/Medal/archivist.png",
+        "earned": false,
+        "earnedAt": null,
+        "current": 87,
+        "target": 100
+      },
+      {
+        "key": "persistence",
+        "nameKo": "집념",
+        "descriptionKo": "한 문제를 다섯 번 다시 봤어요",
+        "imageUrl": "assets/Medal/persistence.png",
+        "earned": false,
+        "earnedAt": null,
+        "current": 3,
+        "target": 5
+      },
+      {
+        "key": "phoenix",
+        "nameKo": "불사조",
+        "descriptionKo": "틀렸던 문제를 기어이 맞혔어요",
+        "imageUrl": "assets/Medal/phoenix.png",
+        "earned": true,
+        "earnedAt": "2026-05-19T08:40:33",
+        "current": null,
+        "target": null
+      },
+      {
+        "key": "dawn_class",
+        "nameKo": "새벽반",
+        "descriptionKo": "해 뜨기 전에 열 번 공부했어요",
+        "imageUrl": "assets/Medal/dawn_class.png",
+        "earned": false,
+        "earnedAt": null,
+        "current": 2,
+        "target": 10
+      },
+      {
+        "key": "night_owl",
+        "nameKo": "올빼미",
+        "descriptionKo": "밤이 깊어도 열 번 공부했어요",
+        "imageUrl": "assets/Medal/night_owl.png",
+        "earned": false,
+        "earnedAt": null,
+        "current": 0,
+        "target": 10
+      },
+      {
+        "key": "perfect_month",
+        "nameKo": "개근",
+        "descriptionKo": "서른 날을 하루도 안 빼먹었어요",
+        "imageUrl": "assets/Medal/perfect_month.png",
+        "earned": true,
+        "earnedAt": "2026-09-14T01:23:45",
+        "current": 30,
+        "target": 30
+      },
+      {
+        "key": "flawless",
+        "nameKo": "무결점",
+        "descriptionKo": "열 번을 내리 맞혔어요",
+        "imageUrl": "assets/Medal/flawless.png",
+        "earned": false,
+        "earnedAt": null,
+        "current": 6,
+        "target": 10
+      },
+      {
+        "key": "organizer",
+        "nameKo": "정리의 신",
+        "descriptionKo": "폴더를 열 개나 만들어 정리했어요",
+        "imageUrl": "assets/Medal/organizer.png",
+        "earned": false,
+        "earnedAt": null,
+        "current": 4,
+        "target": 10
+      },
+      {
+        "key": "reviewer",
+        "nameKo": "회고왕",
+        "descriptionKo": "복습하고 쉰 번을 되돌아봤어요",
+        "imageUrl": "assets/Medal/reviewer.png",
+        "earned": false,
+        "earnedAt": null,
+        "current": 12,
+        "target": 50
+      },
+      {
+        "key": "companion",
+        "nameKo": "동행",
+        "descriptionKo": "같이 공부할 사람을 찾았어요",
+        "imageUrl": "assets/Medal/companion.png",
+        "earned": false,
+        "earnedAt": null,
+        "current": 0,
+        "target": 1
+      },
+      {
+        "key": "cheerleader",
+        "nameKo": "응원단장",
+        "descriptionKo": "백 번을 응원했어요",
+        "imageUrl": "assets/Medal/cheerleader.png",
+        "earned": false,
+        "earnedAt": null,
+        "current": 23,
+        "target": 100
+      }
+    ],
+    "newlyEarned": ["perfect_month"]
+  }
+}

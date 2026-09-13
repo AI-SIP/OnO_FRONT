@@ -11,6 +11,7 @@ import 'package:ono/Model/User/UserInfoModel.dart';
 import 'package:ono/Model/User/UserRegisterModel.dart';
 import 'package:ono/Module/Dialog/LoadingDialog.dart';
 import 'package:ono/Provider/FoldersProvider.dart';
+import 'package:ono/Provider/AchievementProvider.dart';
 import 'package:ono/Provider/CosmeticProvider.dart';
 import 'package:ono/Provider/MissionProvider.dart';
 import 'package:ono/Provider/PracticeNoteProvider.dart';
@@ -47,6 +48,15 @@ class UserProvider with ChangeNotifier {
   /// 그 다섯은 유저 정보에만 있다. 여기 물려 두지 않으면 옷장이 혼자 떠서
   /// 레벨을 한 번도 못 본다. 앱 밖(테스트 등)에서는 없을 수 있다.
   final CosmeticProvider? cosmeticProvider;
+
+  /// 훈장. 로그인 뒤 한 번 채우고 로그아웃 때 비운다.
+  ///
+  /// 여기 물려 두지 않으면 훈장은 사용자가 스스로 훈장 화면을 열 때만 채워진다.
+  /// 새로 받은 훈장은 **그 조회 한 번에만** 실려 오므로, 아무도 안 물어보는
+  /// 동안에는 서른 날을 채운 개근 훈장도 조용히 `earned` 로 바뀌고 만다.
+  /// 앱 밖(테스트 등)에서는 없을 수 있다.
+  final AchievementProvider? achievementProvider;
+
   final TokenProvider tokenProvider;
   final HttpService httpService;
   final UserService userService;
@@ -82,6 +92,7 @@ class UserProvider with ChangeNotifier {
     this.practiceProvider, {
     this.missionProvider,
     this.cosmeticProvider,
+    this.achievementProvider,
     TokenProvider? tokenProvider,
     HttpService? httpService,
     UserService? userService,
@@ -337,6 +348,13 @@ class UserProvider with ChangeNotifier {
     // 기다리지 않는다. 치장은 있으면 좋은 것이지 유저 정보 조회를 붙잡고
     // 있을 것이 아니다.
     unawaited(cosmeticProvider?.syncWithUser(userInfoModel) ?? Future.value());
+    // 훈장도 같이 채운다. 이쪽은 레벨을 안 보고 **처음 한 번만** 받아 온다.
+    // 열두 가지 조건을 서버가 다시 세는 조회라 유저 정보가 갱신될 때마다
+    // 부르면 요청만 늘고, 훈장 화면이 열릴 때마다 어차피 다시 읽는다.
+    // 기다리지 않는 이유는 치장과 같다.
+    unawaited(
+      achievementProvider?.syncWithUser(userInfoModel) ?? Future.value(),
+    );
     notifyListeners();
   }
 
@@ -534,6 +552,9 @@ class UserProvider with ChangeNotifier {
     // 비우지 않으면 다른 계정으로 로그인한 첫 화면의 하단 탭과 프로필에
     // 앞 사람이 꾸며 둔 개구리가 그대로 남는다.
     cosmeticProvider?.clear();
+    // 비우지 않으면 다른 계정으로 로그인한 첫 화면에 앞 사람이 받은 훈장의
+    // 축하가 뜬다. 기기에 적어 둔 축하거리까지 같이 지운다.
+    achievementProvider?.clear();
     notifyListeners();
   }
 
