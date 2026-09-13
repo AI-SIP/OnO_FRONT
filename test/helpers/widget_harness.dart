@@ -6,6 +6,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ono/Module/Theme/ThemeHandler.dart';
+import 'package:ono/Provider/AchievementProvider.dart';
 import 'package:ono/Provider/CosmeticProvider.dart';
 import 'package:ono/Provider/FoldersProvider.dart';
 import 'package:ono/Provider/MissionProvider.dart';
@@ -89,6 +90,7 @@ Future<void> pumpOnoWidget(
   TutorialProvider? tutorialProvider,
   ScreenIndexProvider? screenIndexProvider,
   CosmeticProvider? cosmeticProvider,
+  AchievementProvider? achievementProvider,
   ThemeHandler? themeHandler,
   Size surfaceSize = OnoSurface.phone,
   List<NavigatorObserver> navigatorObservers = const [],
@@ -138,6 +140,12 @@ Future<void> pumpOnoWidget(
           value: studyRoomProvider ?? StudyRoomProvider(),
         ),
         ChangeNotifierProvider<CosmeticProvider>.value(value: cosmetic),
+        // 훈장은 안 넘기면 빈 채로 둔다. 이 프로바이더는 누가 부르기 전까지
+        // 서버에 묻지 않으므로, 옷장 탭처럼 훈장 줄만 있는 화면은 이것으로
+        // 충분하다.
+        ChangeNotifierProvider<AchievementProvider>.value(
+          value: achievementProvider ?? AchievementProvider(),
+        ),
       ],
       child: Builder(
         builder: (context) {

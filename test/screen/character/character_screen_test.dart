@@ -1,12 +1,13 @@
 // 옷장 탭(캐릭터 화면) 위젯 테스트.
 //
-// 이 화면이 지켜야 하는 약속은 넷이다. 개구리가 주인공 자리에 크게 설 것,
+// 이 화면이 지켜야 하는 약속은 다섯이다. 개구리가 주인공 자리에 크게 설 것,
 // 능력치가 **스크롤 없이** 전부 보일 것, 미션과 꾸미기는 버튼으로 갈 것,
-// 개구리를 누르면 격려 한마디를 할 것.
+// 훈장으로 가는 문이 성장 카드 안에 있을 것, 개구리를 누르면 격려 한마디를
+// 할 것.
 //
 // 스크롤이 없다는 것이 이 화면의 핵심 제약이다. 작은 폰과 글자를 키운
-// 기기에서도 개구리 · 능력치 넷 · 총 레벨 · 버튼 둘이 한 화면에 들어와야
-// 한다. 아래 `한 화면` 그룹이 그것을 잠근다.
+// 기기에서도 개구리 · 능력치 넷 · 총 레벨 · 훈장 줄 · 버튼 둘이 한 화면에
+// 들어와야 한다. 아래 `한 화면` 그룹이 그것을 잠근다.
 //
 // 이 화면에는 끝나지 않는 연출이 있다. `disableAnimationsForTest` 로 꺼
 // 두지 않으면 `pumpAndSettle` 이 끝나지 않는다.
@@ -19,9 +20,11 @@ import 'package:ono/Model/Mission/MissionGroupModel.dart';
 import 'package:ono/Model/Mission/MissionModel.dart';
 import 'package:ono/Model/User/UserInfoModel.dart';
 import 'package:ono/Model/Cosmetic/CosmeticAbilityLevels.dart';
+import 'package:ono/Provider/AchievementProvider.dart';
 import 'package:ono/Provider/CosmeticProvider.dart';
 import 'package:ono/Provider/MissionProvider.dart';
 import 'package:ono/Provider/UserProvider.dart';
+import 'package:ono/Screen/Achievement/AchievementScreen.dart';
 import 'package:ono/Screen/Character/CharacterScreen.dart';
 import 'package:ono/Screen/Character/Widget/AbilityStatPanel.dart';
 import 'package:ono/Screen/Cosmetic/CosmeticClosetScreen.dart';
@@ -148,6 +151,7 @@ void main() {
     MissionBoardModel? missionBoard,
     UserInfoModel? info,
     CosmeticProvider? cosmetic,
+    AchievementProvider? achievement,
     Size surfaceSize = OnoSurface.phone,
     double textScale = 1.0,
   }) async {
@@ -173,6 +177,7 @@ void main() {
             await loadedCosmeticProvider(
               levels: CosmeticAbilityLevels.uniform(12),
             ),
+        achievementProvider: achievement,
         surfaceSize: surfaceSize,
       );
     });
@@ -623,6 +628,73 @@ void main() {
     });
   });
 
+  group('훈장', () {
+    testWidgets('훈장 줄이 성장 카드 안에 있다', (tester) async {
+      // 버튼 줄에 셋째 버튼으로 넣으면 작은 폰에서 글자가 6px 남짓으로 줄어든다.
+      // 무게도 다르다. 훈장은 가끔 보고 흐뭇한 것이지 여기서 가장 하고 싶은
+      // 일이 아니다.
+      await pumpCharacter(tester);
+
+      expect(find.text('훈장'), findsOneWidget);
+    });
+
+    testWidgets('몇 개 중 몇 개를 모았는지 숫자로 말한다', (tester) async {
+      await pumpCharacter(
+        tester,
+        achievement: await loadedAchievementProvider(),
+      );
+
+      // 누르기 전에도 아홉 개가 남았다는 것이 보여야 들어가 본다.
+      expect(find.text('3 / 12'), findsOneWidget);
+    });
+
+    testWidgets('아직 못 받았으면 숫자 없이 문만 남긴다', (tester) async {
+      // 서버가 답이 없거나 아직 배포 전인 경우다. 숫자가 없다고 문까지
+      // 사라지면 안 된다.
+      await pumpCharacter(
+        tester,
+        achievement: AchievementProvider(
+          service: FakeAchievementService(failLoad: true),
+          store: FakeAchievementCelebrationStore(),
+        ),
+      );
+
+      expect(find.text('훈장'), findsOneWidget);
+      expect(find.textContaining(' / 12'), findsNothing);
+    });
+
+    testWidgets('누르면 훈장 화면으로 간다', (tester) async {
+      await pumpCharacter(tester);
+
+      await tester.tap(find.text('훈장'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(AchievementScreen), findsOneWidget);
+    });
+
+    testWidgets('새로 받은 것이 있으면 NEW 가 붙는다', (tester) async {
+      // 이것이 없으면 새 훈장이 생겨도 사용자가 스스로 훈장 화면을 열기
+      // 전까지 아무 기척이 없다.
+      await pumpCharacter(
+        tester,
+        achievement: await loadedAchievementProvider(),
+      );
+
+      expect(find.text('NEW'), findsOneWidget);
+    });
+
+    testWidgets('새로 받은 것이 없으면 NEW 가 안 붙는다', (tester) async {
+      // 늘 붙어 있으면 표시가 아니라 장식이 되어, 정작 새 훈장이 생긴 날에
+      // 눈에 안 띈다.
+      final provider = await loadedAchievementProvider();
+      provider.consumeCelebration();
+
+      await pumpCharacter(tester, achievement: provider);
+
+      expect(find.text('NEW'), findsNothing);
+    });
+  });
+
   group('버튼', () {
     testWidgets('미션 버튼을 누르면 미션 화면으로 간다', (tester) async {
       await pumpCharacter(tester);
@@ -705,6 +777,9 @@ void main() {
           for (final finder in <Finder>[
             find.byType(CosmeticStageFrog),
             find.byType(AbilityStatPanel),
+            // 훈장으로 가는 문도 이 화면 안에 통째로 들어와야 한다. 스크롤이
+            // 없으니 잘리면 아예 못 누른다.
+            find.text('훈장'),
             find.text('미션'),
             find.text('꾸미기'),
           ]) {
