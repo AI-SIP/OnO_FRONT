@@ -222,7 +222,7 @@ void main() {
     test('레벨마다 다른 말을 한다', () {
       expect(missionLevelPhraseOf(2), missionLevelPhrases[2]);
       expect(missionLevelPhraseOf(7), missionLevelPhrases[7]);
-      expect(missionLevelPhraseOf(15), '최고 레벨이에요');
+      expect(missionLevelPhraseOf(20), '최고 레벨이에요');
     });
 
     test('문구가 겹치지 않는다', () {
@@ -234,7 +234,7 @@ void main() {
 
     test('표를 벗어나면 양 끝 문구로 떨어진다', () {
       expect(missionLevelPhraseOf(1), missionLevelPhraseOf(2));
-      expect(missionLevelPhraseOf(99), missionLevelPhraseOf(15));
+      expect(missionLevelPhraseOf(99), missionLevelPhraseOf(20));
     });
   });
 

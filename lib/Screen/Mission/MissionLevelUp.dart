@@ -40,7 +40,12 @@ const Map<int, String> missionLevelPhrases = <int, String>{
   12: '여기까지 오기 쉽지 않아요',
   13: '손꼽히는 실력이에요',
   14: '정점이 보여요',
-  15: '최고 레벨이에요',
+  15: '한 고비를 넘었어요',
+  16: '여기서부터가 진짜예요',
+  17: '드물게 오는 자리예요',
+  18: '거의 다 왔어요',
+  19: '마지막 한 걸음이에요',
+  20: '최고 레벨이에요',
 };
 
 /// [level] 에 맞는 문구. 표를 벗어나면 마지막 문구로 떨어진다.
@@ -48,7 +53,7 @@ String missionLevelPhraseOf(int level) {
   final phrase = missionLevelPhrases[level];
   if (phrase != null) return phrase;
   if (level < 2) return missionLevelPhrases[2]!;
-  return missionLevelPhrases[15]!;
+  return missionLevelPhrases[20]!;
 }
 
 /// 지금 열려 있는 테마의 번호들.
