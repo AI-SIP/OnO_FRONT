@@ -113,6 +113,7 @@ flutter:
     - assets/Reward/
     - assets/ProfileFrame/
     - assets/MissionIcon/
+    - assets/Medal/
     - assets/emoji/
     - assets/no_image.png
 
