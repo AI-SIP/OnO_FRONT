@@ -48,7 +48,8 @@ void main() {
     });
 
     test('레벨 범위를 벗어나면 1 과 각자의 상한 사이로 잘린다', () {
-      // 능력치 넷은 15 까지, 총 학습은 20 까지다.
+      // 능력치 넷과 총 학습 모두 상한은 20 이다. 임계값이 네 배 관계라
+      // 넷을 만렙까지 올린 누적이 총 학습 만렙과 정확히 맞물린다.
       final low =
           CosmeticProvider(mockLevels: CosmeticAbilityLevels.uniform(0));
       final high =

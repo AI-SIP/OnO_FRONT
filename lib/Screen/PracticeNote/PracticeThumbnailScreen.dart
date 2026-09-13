@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
@@ -8,6 +7,7 @@ import '../User/Widget/FrogCharacter.dart';
 import '../../Model/PracticeNote/PracticeNoteThumbnailModel.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Text/mobile_font_size.dart';
+import '../../Module/Theme/ClayIcon.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/PracticeNoteProvider.dart';
 import '../../Util/AppSnackBar.dart';
@@ -698,8 +698,8 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
       child: Center(
         child: isSelected
             ? const Icon(Icons.check, color: Colors.white)
-            : SvgPicture.asset(
-                'assets/Icon/RainbowNote.svg',
+            : const ClayIcon(
+                'assets/Icon/RainbowNote.png',
                 width: 40,
                 height: 40,
               ),
@@ -798,19 +798,22 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
 
   List<Widget> _buildStatusIcons(int practiceCount) {
     List<String> icons = [
-      'assets/Icon/SmallGreenFrog.svg',
-      'assets/Icon/SmallYellowFrog.svg',
-      'assets/Icon/SmallPinkFrog.svg'
+      'assets/Icon/SmallGreenFrog.png',
+      'assets/Icon/SmallYellowFrog.png',
+      'assets/Icon/SmallPinkFrog.png'
     ];
 
     return List<Widget>.generate(3, (index) {
       return Padding(
         padding: EdgeInsets.only(right: index == 2 ? 0 : 4.0),
-        child: SvgPicture.asset(
+        child: ClayIcon(
           icons[index],
           width: 20,
           height: 20,
-          color: index < practiceCount ? null : Colors.white,
+          // 아직 안 한 회차는 개구리를 하얗게 덮어 빈자리로 보이게 한다.
+          // SvgPicture 의 color 와 같은 자리다. 풀컬러 그림이라 색이 입혀지는
+          // 게 아니라 실루엣만 남고 통째로 하얘진다. 그게 노리던 것이다.
+          tint: index < practiceCount ? null : Colors.white,
         ),
       );
     });

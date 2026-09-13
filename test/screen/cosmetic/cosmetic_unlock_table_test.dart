@@ -155,7 +155,7 @@ void main() {
       }
     });
 
-    test('능력치 넷은 15, 총 학습은 20 을 넘지 않는다', () {
+    test('어느 줄도 그 기준의 상한을 넘지 않는다', () {
       for (final item in items) {
         final max = CosmeticAbilityLevels.maxLevelOf(item.requiredAbility);
         expect(

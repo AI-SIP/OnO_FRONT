@@ -40,7 +40,12 @@ const Map<int, String> missionLevelPhrases = <int, String>{
   12: '여기까지 오기 쉽지 않아요',
   13: '손꼽히는 실력이에요',
   14: '정점이 보여요',
-  15: '최고 레벨이에요',
+  15: '한 고비를 넘었어요',
+  16: '여기서부터가 진짜예요',
+  17: '드물게 오는 자리예요',
+  18: '거의 다 왔어요',
+  19: '마지막 한 걸음이에요',
+  20: '최고 레벨이에요',
 };
 
 /// [level] 에 맞는 문구. 표를 벗어나면 마지막 문구로 떨어진다.
@@ -48,7 +53,7 @@ String missionLevelPhraseOf(int level) {
   final phrase = missionLevelPhrases[level];
   if (phrase != null) return phrase;
   if (level < 2) return missionLevelPhrases[2]!;
-  return missionLevelPhrases[15]!;
+  return missionLevelPhrases[20]!;
 }
 
 /// 지금 열려 있는 테마의 번호들.
@@ -573,14 +578,8 @@ class _MissionLevelUpViewState extends State<_MissionLevelUpView>
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const StandardText(
-            text: '개구리가 바로 입어 봤어요',
-            fontSize: 13,
-            color: AppColors.textSecondary,
-            textAlign: TextAlign.center,
-            maxLines: 2,
-          ),
-          const SizedBox(height: AppSpacing.md),
+          // 설명 없이 얻은 것만 보여 준다. 개구리가 입는 모습은 바로 위에서
+          // 이미 보여 주고 있어서, 그걸 다시 말로 옮기면 읽을 것만 늘어난다.
           if (reduced)
             _chipWrap(chips)
           else

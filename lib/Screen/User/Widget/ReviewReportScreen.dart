@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
 import 'package:ono/Model/LearningReport/LearningReportResponseModel.dart';
 import 'package:ono/Module/Text/StandardText.dart';
+import 'package:ono/Module/Theme/ClayIcon.dart';
 import 'package:ono/Module/Theme/ThemeHandler.dart';
 import 'package:ono/Provider/UserProvider.dart';
 import 'package:ono/Screen/ProblemShare/AchievementCardScreen.dart';
@@ -108,8 +108,8 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            SvgPicture.asset(
-              'assets/Icon/GlassDetail.svg',
+            const ClayIcon(
+              'assets/Icon/Glass.png',
               width: 120,
               height: 120,
             ),

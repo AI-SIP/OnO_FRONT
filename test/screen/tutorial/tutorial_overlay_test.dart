@@ -66,16 +66,16 @@ Future<void> exitRunning(WidgetTester tester, TutorialProvider provider) async {
   await tester.pump(const Duration(seconds: 1));
 }
 
-/// [buttonText] 버튼을 누르고, 스텝 카드를 감싼 AnimatedSwitcher(180ms)
-/// 전환이 끝날 만큼만 pump 한다. pumpAndSettle 은 running 상태에서 절대
-/// 수렴하지 않으므로(위 [exitRunning] 설명 참고) 쓰지 않는다. 이 정도
-/// 플러시가 없으면 이전 스텝 카드의 텍스트·버튼이 새 카드와 함께 잠깐
-/// 공존해 `findsOneWidget`/`findsNothing` 단언이나 `tap()` 의 대상 특정이
-/// 깨진다.
+/// [buttonText] 버튼을 누르고, 제목·설명을 옆으로 밀어 넘기는
+/// AnimatedSwitcher(AppMotion.page, 320ms) 전환이 끝날 만큼 pump 한다.
+/// pumpAndSettle 은 running 상태에서 절대 수렴하지 않으므로(위 [exitRunning]
+/// 설명 참고) 쓰지 않는다. 이 정도 플러시가 없으면 이전 스텝의 제목·설명이
+/// 새 것과 함께 잠깐 공존해 `findsOneWidget`/`findsNothing` 단언이나
+/// `tap()` 의 대상 특정이 깨진다.
 Future<void> tapAndPump(WidgetTester tester, String buttonText) async {
   await tester.tap(find.text(buttonText));
   await tester.pump();
-  await tester.pump(const Duration(milliseconds: 250));
+  await tester.pump(const Duration(milliseconds: 400));
 }
 
 void main() {
