@@ -1,0 +1,27 @@
+{
+  "data": {
+    "achievements": [
+      {
+        "key": "first_step",
+        "nameKo": "첫 걸음",
+        "descriptionKo": "오답노트를 처음 적었어요",
+        "imageUrl": "assets/Medal/first_step.png",
+        "earned": true,
+        "earnedAt": "2026-03-02T21:14:08",
+        "current": null,
+        "target": null
+      },
+      {
+        "key": "archivist",
+        "nameKo": "기록광",
+        "descriptionKo": "오답노트를 백 개나 모았어요",
+        "imageUrl": "assets/Medal/archivist.png",
+        "earned": false,
+        "earnedAt": null,
+        "current": 87,
+        "target": 100
+      }
+    ],
+    "newlyEarned": []
+  }
+}
