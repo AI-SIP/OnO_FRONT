@@ -17,6 +17,10 @@ import '../../Module/Motion/StepProgressBar.dart';
 import '../../Module/Design/AppRadius.dart';
 import '../../Module/Design/AppColors.dart';
 
+/// 안내 카드를 가리키는 key 다. 단계가 바뀌어도 같은 카드라서 값이 변하지
+/// 않는다. 테스트에서 카드 네모를 잡을 때 쓴다.
+const Key tutorialStepCardKey = ValueKey('tutorial_step_card');
+
 class TutorialOverlay extends StatefulWidget {
   final TutorialTargets targets;
 
@@ -36,8 +40,37 @@ class _TutorialOverlayState extends State<TutorialOverlay>
   static const Curve _motionCurve = AppMotion.enter;
   static const double _speechBorderWidth = 1.0;
 
+  /// 안내 카드가 스크롤 없이 들어가려면 대략 이만큼은 있어야 한다.
+  /// 글자 크기 1배에서 가장 긴 단계를 실제로 재서(폰 320dp 392, 태블릿 341)
+  /// 조금 올려 잡은 값이다. 글자 배율을 곱해서 쓴다.
+  ///
+  /// 카드를 대상 위에 둘지 아래에 둘지 고르는 데만 쓰는 값이다. 카드 높이를
+  /// 이걸로 정하지는 않는다. 고른 자리에서 쓸 수 있는 높이는 언제나 그
+  /// 자리에 실제로 남은 만큼이라, 이 값이 실제와 어긋나도 자리를 덜 좋게
+  /// 고르는 것에서 끝나고 카드가 잘리지는 않는다.
+  static const double _phoneCardRoom = 400.0;
+  static const double _tabletCardRoom = 350.0;
+
+  /// 이만큼도 안 되는 자리라면 대상을 비켜 줘도 카드가 너무 좁아 보람이 없다.
+  static const double _usableCardRoom = 240.0;
+
+  /// 이보다 작은 대상은 화면 아래에 앉은 카드에 통째로 가려진다.
+  /// + 추가 버튼이 56dp 다.
+  static const double _smallTargetHeight = 160.0;
+
+  /// 계산 결과가 0 이하로 내려가도 카드에 이만큼은 준다. 안에서
+  /// 스크롤되더라도 카드가 아예 안 그려지는 것보다는 낫다.
+  static const double _minCardHeight = 120.0;
+
+  /// 강조 테두리를 알아볼 수 있는 최소 높이.
+  static const double _minHighlightHeight = 24.0;
+
   Rect? _targetRect;
   String? _lastStepId;
+
+  /// 지금 카드에 그려져 있는 단계 번호와, 거기로 올 때의 방향이다.
+  int? _renderedStepIndex;
+  bool _slideForward = true;
 
   /// 단계가 바뀔 때 테두리를 한 번 두껍게 했다 되돌린다.
   ///
@@ -138,6 +171,7 @@ class _TutorialOverlayState extends State<TutorialOverlay>
     final tutorialProvider = Provider.of<TutorialProvider>(context);
     if (!tutorialProvider.isVisible) {
       _lastStepId = null;
+      _renderedStepIndex = null;
       return const SizedBox.shrink();
     }
 
@@ -426,62 +460,47 @@ class _TutorialOverlayState extends State<TutorialOverlay>
         bottomObstruction + kBottomNavigationBarHeight + 12.0;
     final availableBottom = size.height - reservedBottom;
     final minCardTop = safeTop + 12;
-    final availableCardHeight = availableBottom - minCardTop;
     final isTablet = mediaQuery.size.shortestSide >= 600;
     final cardWidth = isTablet ? 560.0 : size.width - 32;
     final cardLeft = size.width >= 600 ? (size.width - cardWidth) / 2 : 16.0;
-    final cardMaxHeight = availableCardHeight > 0 ? availableCardHeight : 0.0;
-    // 카드 높이는 그리기 전에 알 수 없어서 짐작한 값으로 자리를 잡는다.
-    // 그런데 글자 크기를 키운 기기에서는 제목과 설명이 여러 줄로 늘어나
-    // 짐작한 값보다 카드가 훨씬 커진다. 삼성 기기는 기본 글자도 크고
-    // 접근성에서 더 키우는 사용자도 많아서, 짐작을 그대로 두면 카드가
-    // 아래로 삐져나가 버튼이 하단 내비게이션에 깔린다.
+    // 글자 크기를 키운 기기에서는 제목과 설명이 여러 줄로 늘어나 카드가
+    // 그만큼 커진다. 삼성 기기는 기본 글자도 크고 접근성에서 더 키우는
+    // 사용자도 많다. 카드를 대상 위와 아래 중 어디에 둘지 고를 때 이걸
+    // 같이 본다.
     final textScale = mediaQuery.textScaler.scale(1.0);
-    final estimatedCardHeight = (isTablet ? 310.0 : 230.0) * textScale;
-    final layoutCardHeight = estimatedCardHeight > cardMaxHeight
-        ? cardMaxHeight
-        : estimatedCardHeight;
-
-    var cardTop = availableBottom - layoutCardHeight - 8;
-    if (rect != null) {
-      final below = rect.bottom + 18;
-      final above = rect.top - layoutCardHeight - 18;
-      // 가리키는 것이 화면 아래쪽에 있으면 설명 카드를 위에 둔다. 그러지
-      // 않으면 카드가 기본 자리인 하단에 눌러앉아 정작 가리키는 버튼을
-      // 덮어 버린다. + 추가 버튼을 설명하는 단계가 그랬다.
-      final targetIsLow = rect.center.dy > size.height / 2;
-      if (targetIsLow && above > minCardTop) {
-        cardTop = above;
-      } else if (below + layoutCardHeight < availableBottom) {
-        cardTop = below;
-      } else if (above > safeTop) {
-        cardTop = above;
-      }
-    }
-    final maxCardTop = availableBottom - layoutCardHeight;
-    final clampedMaxCardTop = maxCardTop < minCardTop ? minCardTop : maxCardTop;
-    cardTop = cardTop.clamp(minCardTop, clampedMaxCardTop).toDouble();
-    final highlightMaxTop = size.height - bottomObstruction - 24;
-    final clampedHighlightMaxTop =
-        highlightMaxTop < safeTop + 8 ? safeTop + 8 : highlightMaxTop;
-    final highlightMaxHeight = size.height - safeTop - bottomObstruction - 16;
-    final clampedHighlightMaxHeight =
-        highlightMaxHeight < 24.0 ? 24.0 : highlightMaxHeight;
+    final slot = _cardSlot(
+      targetRect: rect,
+      minCardTop: minCardTop,
+      availableBottom: availableBottom,
+      requiredRoom: (isTablet ? _tabletCardRoom : _phoneCardRoom) * textScale,
+    );
+    final highlight = rect == null
+        ? null
+        : _highlightBand(
+            targetRect: rect,
+            screen: size,
+            // 강조 사각형은 위로는 상태 바 아래에서, 아래로는 하단 탭 바
+            // 위에서 끊는다. 4/7 `레벨과 성장` 의 대상 키가 화면 전체를
+            // 차지하는 무대(_CharacterStage)에 붙어 있어서, 끊지 않으면
+            // 강조 테두리가 탭 바까지 함께 감쌌다. 탭 바는 어느 단계에서도
+            // 설명하는 대상이 아니다.
+            top: safeTop + 8,
+            bottomLimit: size.height -
+                bottomObstruction -
+                kBottomNavigationBarHeight -
+                8,
+          );
 
     return Stack(
       children: [
-        if (rect != null)
+        if (highlight != null)
           AnimatedPositioned(
             duration: _motionDuration,
             curve: _motionCurve,
-            left: (rect.left - 8).clamp(8.0, size.width - 24).toDouble(),
-            top: (rect.top - 8)
-                .clamp(safeTop + 8, clampedHighlightMaxTop)
-                .toDouble(),
-            width: (rect.width + 16).clamp(24.0, size.width - 16).toDouble(),
-            height: (rect.height + 16)
-                .clamp(24.0, clampedHighlightMaxHeight)
-                .toDouble(),
+            left: highlight.left,
+            top: highlight.top,
+            width: highlight.width,
+            height: highlight.height,
             child: IgnorePointer(
               child: AnimatedOpacity(
                 duration: _motionDuration,
@@ -518,35 +537,15 @@ class _TutorialOverlayState extends State<TutorialOverlay>
           duration: _motionDuration,
           curve: _motionCurve,
           left: cardLeft,
-          top: cardTop,
+          // 위 변이 아니라 아래 변을 잡는다. 카드는 제 내용만큼 위로 자라고,
+          // 고른 자리에 실제로 남은 높이로만 묶인다. 그래서 `이전`·`다음` 이
+          // 하단 내비게이션에 깔리는 일도, 남은 자리를 못 쓰고 설명이
+          // 잘리는 일도 없다.
+          bottom: size.height - slot.bottom,
           width: cardWidth,
-          // 카드가 자리 잡은 곳부터 아래로 실제로 쓸 수 있는 높이로 묶는다.
-          // 예전에는 화면 전체에서 계산한 cardMaxHeight 로 묶어서, 카드가
-          // cardTop 아래로 얼마든지 자랄 수 있었다. 짐작한 높이보다 카드가
-          // 크면 그만큼 아래로 삐져나가 `이전`·`다음` 이 하단 내비게이션에
-          // 깔리거나 아예 화면 밖으로 나갔다.
           child: ConstrainedBox(
-            constraints: BoxConstraints(
-              maxHeight: _cardAvailableHeight(availableBottom, cardTop),
-            ),
-            child: AnimatedSwitcher(
-              duration: AppMotion.fast,
-              switchInCurve: AppMotion.enter,
-              switchOutCurve: AppMotion.exit,
-              transitionBuilder: (child, animation) {
-                return FadeTransition(
-                  opacity: animation,
-                  child: SlideTransition(
-                    position: Tween<Offset>(
-                      begin: const Offset(0, 0.04),
-                      end: Offset.zero,
-                    ).animate(animation),
-                    child: child,
-                  ),
-                );
-              },
-              child: _buildStepCard(tutorialProvider, themeProvider),
-            ),
+            constraints: BoxConstraints(maxHeight: slot.maxHeight),
+            child: _buildStepCard(tutorialProvider, themeProvider),
           ),
         ),
       ],
@@ -558,8 +557,17 @@ class _TutorialOverlayState extends State<TutorialOverlay>
     ThemeHandler themeProvider,
   ) {
     final step = tutorialProvider.currentStep;
-    final isLast =
-        tutorialProvider.currentStepIndex == tutorialSteps.length - 1;
+    final stepIndex = tutorialProvider.currentStepIndex;
+    final isLast = stepIndex == tutorialSteps.length - 1;
+    // 넘어가는 방향은 단계 번호가 실제로 바뀔 때만 새로 정한다. 전환 도중에
+    // 다른 이유로 다시 build 되어도 나가는 글이 방향을 바꾸지 않게 한다.
+    if (_renderedStepIndex != stepIndex) {
+      _slideForward =
+          _renderedStepIndex == null || stepIndex > _renderedStepIndex!;
+      _renderedStepIndex = stepIndex;
+    }
+    // 기기에서 동작 줄이기를 켠 사용자에게는 미는 움직임을 뺀다.
+    final reduceMotion = AppMotion.isReduced(context);
     final isTablet = MediaQuery.of(context).size.shortestSide >= 600;
     final cardPadding = isTablet
         ? const EdgeInsets.fromLTRB(22, 22, 22, 18)
@@ -571,7 +579,11 @@ class _TutorialOverlayState extends State<TutorialOverlay>
     final buttonSize = isTablet ? 14.0 : 12.0;
 
     return Container(
-      key: ValueKey(step.id),
+      // 단계가 바뀌어도 같은 카드다. 예전에는 카드를 통째로 바꿔 끼워서
+      // 안의 진행 막대도 매번 새로 만들어졌고, 그래서 막대가 이전 칸에서
+      // 이어서 차는 대신 0 에서 다시 찼다. 어디까지 왔는지가 안 보이니
+      // 화면이 넘어간 것도 같이 안 보였다.
+      key: tutorialStepCardKey,
       padding: cardPadding,
       decoration: BoxDecoration(
         color: Colors.white,
@@ -594,15 +606,14 @@ class _TutorialOverlayState extends State<TutorialOverlay>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     StandardText(
-                      text:
-                          '${tutorialProvider.currentStepIndex + 1} / ${tutorialSteps.length}',
+                      text: '${stepIndex + 1} / ${tutorialSteps.length}',
                       fontSize: progressSize,
                       color: themeProvider.primaryColor,
                     ),
                     const SizedBox(height: 8),
                     // 숫자만으로는 얼마나 남았는지 잘 안 들어와서 막대를 함께 둔다.
                     StepProgressBar(
-                      currentStep: tutorialProvider.currentStepIndex + 1,
+                      currentStep: stepIndex + 1,
                       totalSteps: tutorialSteps.length,
                       color: themeProvider.primaryColor,
                       backgroundColor:
@@ -610,19 +621,61 @@ class _TutorialOverlayState extends State<TutorialOverlay>
                       height: 3,
                     ),
                     const SizedBox(height: 12),
-                    StandardText(
-                      text: step.title,
-                      fontSize: titleSize,
-                      color: AppColors.textPrimary,
-                      fontWeight: FontWeight.w700,
-                    ),
-                    const SizedBox(height: 8),
-                    StandardText(
-                      text: step.description,
-                      fontSize: bodySize,
-                      color: Colors.grey[700]!,
-                      fontWeight: FontWeight.w500,
-                      fontFamily: 'PretendardBold',
+                    // 제목과 설명만 옆으로 밀어 넘긴다. 카드와 개구리와 진행
+                    // 막대는 자리에 남아 있고 글만 갈리므로 같은 안내판을
+                    // 한 장 넘긴 것으로 읽힌다. 예전에는 카드 전체가 제자리에서
+                    // 흐려졌다 나타나서 무엇이 바뀐 것인지 잘 안 보였다.
+                    // 미는 글이 말풍선 밖으로 삐져나가지 않게 좌우를 자른다.
+                    // 카드 안의 SingleChildScrollView 는 내용이 다 들어가면
+                    // 아예 자르지 않아서, 여기서 직접 자르지 않으면 넘어가는
+                    // 동안 글이 카드 밖 어두운 바탕 위로 나온다.
+                    ClipRect(
+                      clipper: const _SideClipper(),
+                      child: AnimatedSize(
+                        duration:
+                            reduceMotion ? Duration.zero : AppMotion.normal,
+                        curve: AppMotion.standard,
+                        alignment: Alignment.topLeft,
+                        child: AnimatedSwitcher(
+                          duration:
+                              reduceMotion ? Duration.zero : AppMotion.page,
+                          switchInCurve: AppMotion.enter,
+                          switchOutCurve: AppMotion.exit,
+                          layoutBuilder: (currentChild, previousChildren) =>
+                              Stack(
+                            alignment: Alignment.topLeft,
+                            children: [
+                              ...previousChildren,
+                              if (currentChild != null) currentChild,
+                            ],
+                          ),
+                          transitionBuilder: (child, animation) =>
+                              _slideTransition(child, animation, step.id),
+                          child: SizedBox(
+                            key: ValueKey(step.id),
+                            width: double.infinity,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                StandardText(
+                                  text: step.title,
+                                  fontSize: titleSize,
+                                  color: AppColors.textPrimary,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                                const SizedBox(height: 8),
+                                StandardText(
+                                  text: step.description,
+                                  fontSize: bodySize,
+                                  color: Colors.grey[700]!,
+                                  fontWeight: FontWeight.w500,
+                                  fontFamily: 'PretendardBold',
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
                     ),
                   ],
                 ),
@@ -705,13 +758,133 @@ class _TutorialOverlayState extends State<TutorialOverlay>
     );
   }
 
-  /// 카드가 [cardTop] 에 자리 잡았을 때 아래로 쓸 수 있는 높이다.
+  /// 제목과 설명이 옆으로 밀려 들어오고 밀려 나가는 방식이다.
   ///
-  /// 화면이 아주 작아 계산 결과가 0 이하로 내려가면 카드가 아예 안 그려진다.
-  /// 그럴 바에는 최소한만 확보해 두고 안에서 스크롤시키는 편이 낫다.
-  double _cardAvailableHeight(double availableBottom, double cardTop) {
-    final height = availableBottom - cardTop;
-    return height < 120.0 ? 120.0 : height;
+  /// 들어오는 글은 가는 방향 반대편에서 들어오고 나가는 글은 가는 방향으로
+  /// 빠진다. `다음` 이면 새 글이 오른쪽에서 들어오면서 옛 글이 왼쪽으로
+  /// 나가고, `이전` 이면 반대다. 손으로 넘기는 방향과 같아야 어느 쪽으로
+  /// 움직였는지가 읽힌다.
+  ///
+  /// [currentStepId] 는 지금 그려야 할 단계다. AnimatedSwitcher 는 들어오는
+  /// 글과 나가는 글에 같은 builder 를 쓰므로 이걸로 둘을 가른다.
+  Widget _slideTransition(
+    Widget child,
+    Animation<double> animation,
+    String currentStepId,
+  ) {
+    final distance = AppMotion.isReduced(context) ? 0.0 : 0.18;
+    final isIncoming = child.key == ValueKey<String>(currentStepId);
+    final dx = _slideForward ? distance : -distance;
+
+    return FadeTransition(
+      opacity: animation,
+      child: SlideTransition(
+        position: Tween<Offset>(
+          begin: Offset(isIncoming ? dx : -dx, 0),
+          end: Offset.zero,
+        ).animate(animation),
+        child: child,
+      ),
+    );
+  }
+
+  /// 안내 카드가 놓일 자리다. 카드 아래 변의 y 좌표와, 그 자리에서 위로
+  /// 쓸 수 있는 높이를 준다.
+  ///
+  /// 카드는 아래 변을 고정하고 제 내용만큼 위로 자란다. 그래서 자리를 잡는
+  /// 데 카드 높이를 미리 알 필요가 없다. 예전에는 위 변을 정해야 해서
+  /// 높이를 짐작했고(폰 230, 태블릿 310에 글자 배율), 짐작이 실제보다 작으면
+  /// 카드가 그만큼 바닥 쪽으로 내려앉아 위로 남아 있던 자리를 스스로
+  /// 버렸다. 설명이 긴 단계에서 카드 안에 스크롤이 생긴 것이 이 때문이다.
+  ///
+  /// 고르는 순서는 이렇다. 먼저 대상 위와 아래 중 카드가 다 들어가는
+  /// ([requiredRoom] 만큼 남는) 쪽을 쓰고, 둘 다 들어가면 넓은 쪽을 쓴다.
+  /// 어느 쪽을 골라도 카드는 대상을 덮지 않는다.
+  ///
+  /// 둘 다 모자라면 대상을 덮더라도 화면 아래에 붙이고 쓸 수 있는 높이를 다
+  /// 쓴다. 목록처럼 대상이 화면을 거의 다 차지하는 단계가 여기로 온다.
+  /// 카드가 그 일부만 덮으니 설명하는 것은 계속 보이고, 대신 설명이 다
+  /// 보인다.
+  ///
+  /// 대상이 작으면 이야기가 다르다. 2/7 `오답노트 작성 시작` 의 + 추가
+  /// 버튼은 56dp 짜리라 화면 아래에 앉은 카드에 통째로 가려진다. 그런
+  /// 단계는 카드가 좁아져 안에서 스크롤이 생겨도 비켜 주는 편이 낫다.
+  /// 설명하는 것이 안 보이면 안내가 아니다.
+  ({double bottom, double maxHeight}) _cardSlot({
+    required Rect? targetRect,
+    required double minCardTop,
+    required double availableBottom,
+    required double requiredRoom,
+  }) {
+    // 대상과 카드 사이 간격, 그리고 카드와 하단 사이 간격이다.
+    const gap = 18.0;
+    const bottomPad = 8.0;
+
+    final defaultBottom = availableBottom - bottomPad;
+    final fullRoom = defaultBottom - minCardTop;
+
+    if (targetRect != null) {
+      final aboveBottom = targetRect.top - gap;
+      final above = (
+        bottom: aboveBottom,
+        room: aboveBottom - minCardTop,
+      );
+      // 아래를 고르면 카드는 기본 자리인 화면 아래에 그대로 두고 높이만
+      // 묶는다. 그러면 카드 위 변이 대상 아래로 내려온다.
+      final below = (
+        bottom: defaultBottom,
+        room: defaultBottom - (targetRect.bottom + gap),
+      );
+      // 넓은 쪽을 먼저 본다.
+      final ordered =
+          above.room >= below.room ? [above, below] : [below, above];
+
+      for (final slot in ordered) {
+        if (slot.room >= requiredRoom && slot.bottom <= defaultBottom) {
+          return (bottom: slot.bottom, maxHeight: slot.room);
+        }
+      }
+      if (targetRect.height <= _smallTargetHeight) {
+        for (final slot in ordered) {
+          if (slot.room >= _usableCardRoom && slot.bottom <= defaultBottom) {
+            return (bottom: slot.bottom, maxHeight: slot.room);
+          }
+        }
+      }
+    }
+
+    return (
+      bottom: defaultBottom,
+      maxHeight: fullRoom < _minCardHeight ? _minCardHeight : fullRoom,
+    );
+  }
+
+  /// 대상을 감쌀 강조 사각형이다.
+  ///
+  /// [top] 과 [bottomLimit] 사이로 자른다. 대상이 화면을 통째로 차지해도
+  /// 강조가 상태 바나 하단 탭 바까지 넘어가지 않게 하는 것이 이 자르기다.
+  Rect _highlightBand({
+    required Rect targetRect,
+    required Size screen,
+    required double top,
+    required double bottomLimit,
+  }) {
+    var bandTop = targetRect.top - 8;
+    var bandBottom = targetRect.bottom + 8;
+    if (bandTop < top) bandTop = top;
+    if (bandBottom > bottomLimit) bandBottom = bottomLimit;
+    if (bandBottom - bandTop < _minHighlightHeight) {
+      bandTop = bandBottom - _minHighlightHeight;
+      if (bandTop < top) bandTop = top;
+    }
+    final height = bandBottom - bandTop;
+
+    return Rect.fromLTWH(
+      (targetRect.left - 8).clamp(8.0, screen.width - 24).toDouble(),
+      bandTop,
+      (targetRect.width + 16).clamp(24.0, screen.width - 16).toDouble(),
+      height < _minHighlightHeight ? _minHighlightHeight : height,
+    );
   }
 
   double _maxBottomInset(double padding, double viewPadding, double gesture) {
@@ -790,6 +963,23 @@ class _TutorialOverlayState extends State<TutorialOverlay>
       ],
     );
   }
+}
+
+/// 좌우만 자른다.
+///
+/// 제목과 설명이 옆으로 밀려 들어오고 나갈 때 쓴다. 위아래는 자르지 않는다.
+/// 글이 갈리면서 높이가 달라지는 동안 AnimatedSize 가 아직 따라오는 중이라
+/// 세로까지 자르면 마지막 줄이 잠깐 잘린다.
+class _SideClipper extends CustomClipper<Rect> {
+  const _SideClipper();
+
+  static const double _tall = 10000.0;
+
+  @override
+  Rect getClip(Size size) => Rect.fromLTRB(0, -_tall, size.width, _tall);
+
+  @override
+  bool shouldReclip(covariant CustomClipper<Rect> oldClipper) => false;
 }
 
 class _SpeechTailPainter extends CustomPainter {

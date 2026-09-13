@@ -304,7 +304,6 @@ void main() {
       // 총 학습 Lv.19 → Lv.20 은 학사 세트 셋이 한꺼번에 열린다. 가장 화려한 경우다.
       await pumpLevelUp(tester, level: 20, previousLevel: 19);
 
-      expect(find.text('개구리가 바로 입어 봤어요'), findsOneWidget);
       expect(find.text('학사모'), findsOneWidget);
       expect(find.text('학사복'), findsOneWidget);
       expect(find.text('졸업장'), findsOneWidget);
@@ -377,7 +376,8 @@ void main() {
 
       await pumpLevelUp(tester, level: 22, previousLevel: 21);
 
-      expect(find.text('개구리가 바로 입어 봤어요'), findsNothing);
+      // 열린 것이 없으면 이름표도 없다. 카탈로그 밖 레벨이라 아무것도 안 열린다.
+      expect(find.text('학사모'), findsNothing);
       // 게이지는 Lv.1 에서 카탈로그의 마지막 레벨까지를 눈금으로 쓴다.
       expect(find.text('Lv.1'), findsOneWidget);
       expect(find.text('Lv.${provider.maxTotalStudyLevel}'), findsOneWidget);
@@ -432,7 +432,7 @@ void main() {
               reason: '${size.width.toInt()}dp × $scale 에서 넘쳤다',
             );
             expect(find.text('계속하기'), findsOneWidget);
-            expect(find.text('개구리가 바로 입어 봤어요'), findsOneWidget);
+            expect(find.text('학사모'), findsOneWidget);
             expect(find.text('새 테마가 열렸어요'), findsOneWidget);
           },
         );
