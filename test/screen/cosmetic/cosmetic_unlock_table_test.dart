@@ -10,7 +10,8 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ono/Model/Cosmetic/CosmeticAbilityLevels.dart';
-import 'package:ono/Screen/Cosmetic/Mock/CosmeticMockData.dart';
+
+import '../../helpers/cosmetic_catalog_fixture.dart';
 
 /// 해금표 한 줄.
 class _TableRow {

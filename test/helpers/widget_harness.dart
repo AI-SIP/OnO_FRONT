@@ -20,6 +20,7 @@ import 'package:ono/Util/AppNavigator.dart';
 import 'package:ono/Util/AppSnackBar.dart';
 import 'package:provider/provider.dart';
 
+import 'cosmetic_catalog_fixture.dart';
 import 'firebase_analytics_stub.dart';
 import 'secure_storage_stub.dart';
 import 'test_setup.dart';
@@ -104,6 +105,10 @@ Future<void> pumpOnoWidget(
       foldersProvider ?? FoldersProvider(problemsProvider: problems);
   final practice =
       practiceProvider ?? ProblemPracticeProvider(problemsProvider: problems);
+  // 옷장은 서버에서 받아야 채워진다. 안 넘기면 가짜 서버에서 한 번 받아 둔다.
+  // 빈 옷장을 기본으로 두면 개구리가 그려지는 화면 열일곱 군데의 테스트가
+  // 전부 맨 개구리만 보게 된다.
+  final cosmetic = cosmeticProvider ?? await loadedCosmeticProvider();
 
   await tester.pumpWidget(
     MultiProvider(
@@ -132,9 +137,7 @@ Future<void> pumpOnoWidget(
         ChangeNotifierProvider<StudyRoomProvider>.value(
           value: studyRoomProvider ?? StudyRoomProvider(),
         ),
-        ChangeNotifierProvider<CosmeticProvider>.value(
-          value: cosmeticProvider ?? CosmeticProvider(),
-        ),
+        ChangeNotifierProvider<CosmeticProvider>.value(value: cosmetic),
       ],
       child: Builder(
         builder: (context) {

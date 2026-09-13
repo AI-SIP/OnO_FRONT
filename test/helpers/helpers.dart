@@ -2,6 +2,7 @@
 //
 // import '../helpers/helpers.dart';
 export 'asset_finder.dart';
+export 'cosmetic_catalog_fixture.dart';
 export 'firebase_analytics_stub.dart';
 export 'fixtures.dart';
 export 'mock_http_client.dart';

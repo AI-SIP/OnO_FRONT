@@ -46,8 +46,10 @@ import 'Widget/CosmeticStage.dart';
 /// 프로필 사진이 프로바이더의 개구리를 보고 있어서, 입어 보는 중에 그것들까지
 /// 따라 바뀌면 아직 정하지도 않은 차림이 앱 전체에 퍼진다.
 ///
-/// 서버를 타지 않는다. 카탈로그도 장착 상태도 [CosmeticProvider] 가 더미로
-/// 들고 있다.
+/// 카탈로그도 장착 상태도 서버가 정한다. 아직 못 받았으면 자리 목록이 비어
+/// 있어서 아래 격자 자리에 [_buildEmpty] 가 대신 뜬다. 못 받은 채로 이 화면에
+/// 들어왔으면 한 번 더 받아 본다([initState]). 로그인 직후의 조회가 실패했을 때
+/// 사용자가 다시 시도할 수 있는 유일한 자리다.
 class CosmeticClosetScreen extends StatefulWidget {
   const CosmeticClosetScreen({super.key});
 
@@ -68,10 +70,36 @@ class _CosmeticClosetScreenState extends State<CosmeticClosetScreen> {
   /// 따른다. 저장하거나 되돌리면 다시 null 이 된다.
   Map<String, String>? _fitting;
 
+  /// 저장 요청이 나가 있는지. 버튼을 두 번 눌러 두 번 보내는 것을 막는다.
+  bool _saving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // 로그인 직후의 조회가 실패했으면 옷장이 비어 있다. 꾸미러 들어온 사람에게
+    // 빈 화면만 보여 주고 끝낼 수는 없어서 여기서 한 번 더 받아 본다.
+    //
+    // 첫 프레임이 끝난 뒤에 부른다. [CosmeticProvider.load] 는 시작하면서
+    // 바로 알림을 보내는데, 그리는 도중에 알리면 `setState() called during
+    // build` 로 화면이 통째로 터진다.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final cosmetic = Provider.of<CosmeticProvider>(context, listen: false);
+      if (!cosmetic.hasCatalog && !cosmetic.isLoading) {
+        cosmetic.load();
+      }
+    });
+  }
+
   /// 화면에 그릴 차림. 못 쓰게 된 것은 매번 걷어 낸다.
   ///
   /// 시착하는 동안 레벨 슬라이더를 내리거나 전체 해금을 끄면 방금 입어 본 것이
   /// 못 가진 것이 된다. 그 판정은 프로바이더가 한다.
+  ///
+  /// **자리를 추리지 않는다.** 이 맵이 그대로 저장 요청이 되는데, 서버는
+  /// 요청에 없는 자리를 비운다. 개구리에 겹치지 않는 자리(프로필 테두리)를
+  /// 여기서 걸러 내면 저장할 때마다 사용자가 골라 둔 테두리가 조용히 벗겨진다.
+  /// 개구리를 그릴 때만 빼는 것은 `layersOnStageOf` 쪽이 따로 한다.
   Map<String, String> _fittingOf(CosmeticProvider cosmetic) =>
       cosmetic.usableOf(_fitting ?? cosmetic.equipped);
 
@@ -135,11 +163,40 @@ class _CosmeticClosetScreenState extends State<CosmeticClosetScreen> {
   }
 
   /// 저장한다. 여기서야 하단 탭 아이콘과 프로필 사진까지 바뀐다.
-  void _onSaveTap(CosmeticProvider cosmetic) {
+  ///
+  /// 개구리는 **누른 즉시** 바뀐다. 프로바이더가 먼저 갈아입고 나중에 서버에
+  /// 묻기 때문이다. 응답을 기다렸다 바꾸면 그 사이 화면이 멈춘 것처럼 보인다.
+  ///
+  /// 그래서 축하 문구는 서버의 답을 받고 띄운다. 누르자마자 "갈아입었어요"를
+  /// 띄워 놓고 곧바로 "저장하지 못했어요"를 띄우면 둘 중 무엇이 사실인지 알 수
+  /// 없다. 실패하면 프로바이더가 서버가 준 마지막 차림으로 되돌리고, 입어 본
+  /// 것은 [_fitting] 에 그대로 남아 저장 줄이 다시 올라온다. 다시 누르면 된다.
+  Future<void> _onSaveTap(CosmeticProvider cosmetic) async {
+    if (_saving) return;
+
     AppHaptic.primary();
-    cosmetic.save(_fittingOf(cosmetic));
-    setState(() => _fitting = null);
-    AppToast.success('새 차림으로 갈아입었어요.');
+    setState(() => _saving = true);
+    final saved = await cosmetic.save(_fittingOf(cosmetic));
+    if (!mounted) return;
+
+    setState(() {
+      _saving = false;
+      // 성공했을 때만 시착을 접는다. 실패했는데 접으면 방금 고른 것이 통째로
+      // 사라져서, 실패를 알려 봐야 다시 고르는 수밖에 없다.
+      if (saved) _fitting = null;
+    });
+
+    final failure = cosmetic.consumeFailure();
+    if (failure != null) {
+      AppToast.info(failure);
+      return;
+    }
+
+    // 서버가 겹치는 자리를 함께 벗겼으면 무엇이 벗겨졌는지 먼저 말한다.
+    // 저장은 됐는데 고른 것 중 일부가 조용히 사라지면 저장이 안 된 것으로
+    // 읽힌다.
+    final notice = cosmetic.consumeNotice();
+    AppToast.success(notice ?? '새 차림으로 갈아입었어요.');
   }
 
   /// 입어 본 것을 버리고 원래 차림으로 돌아간다.
@@ -305,7 +362,7 @@ class _CosmeticClosetScreenState extends State<CosmeticClosetScreen> {
                     ),
                     Expanded(
                       child: slots.isEmpty
-                          ? _buildEmpty()
+                          ? _buildEmpty(cosmetic, themeProvider.primaryColor)
                           : _buildSlotItems(
                               cosmetic,
                               slots[slotIndex],
@@ -759,8 +816,68 @@ class _CosmeticClosetScreenState extends State<CosmeticClosetScreen> {
     return slot.layerOrder == lowest;
   }
 
-  /// 자리 자체가 하나도 없을 때. 더미에서는 나지 않지만 서버가 붙으면 난다.
-  Widget _buildEmpty() {
+  /// 자리가 하나도 없을 때.
+  ///
+  /// 셋을 갈라 말한다. **받는 중**인지, **못 받은** 것인지, 정말로 **꾸밀 것이
+  /// 없는** 것인지는 사용자가 할 일이 서로 다르다. 기다리면 되는 일에 다시
+  /// 시도를 내밀거나, 못 받은 것을 "없다"고 말하면 안 된다.
+  Widget _buildEmpty(CosmeticProvider cosmetic, Color color) {
+    if (cosmetic.isLoading) {
+      return const Center(
+        child: StandardText(
+          text: '옷장을 여는 중이에요.',
+          fontSize: 13,
+          color: AppColors.textTertiary,
+          textAlign: TextAlign.center,
+          maxLines: 2,
+        ),
+      );
+    }
+
+    if (cosmetic.loadFailed) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.screenHorizontal,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const StandardText(
+                text: '옷장을 불러오지 못했어요.',
+                fontSize: 14,
+                color: AppColors.textSecondary,
+                textAlign: TextAlign.center,
+                maxLines: 2,
+              ),
+              const SizedBox(height: AppSpacing.md),
+              PressableScale(
+                onTap: cosmetic.load,
+                scale: 0.94,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.lg,
+                    vertical: AppSpacing.sm,
+                  ),
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.10),
+                    borderRadius: BorderRadius.circular(AppRadius.full),
+                  ),
+                  child: StandardText(
+                    text: '다시 시도',
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: color,
+                    maxLines: 1,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     return const Center(
       child: StandardText(
         text: '아직 꾸밀 수 있는 것이 없어요.',

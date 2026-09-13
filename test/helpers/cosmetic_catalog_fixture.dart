@@ -1,20 +1,27 @@
-import '../../../Model/Cosmetic/CosmeticAbilityLevels.dart';
-import '../../../Model/Cosmetic/CosmeticLoadoutModel.dart';
+import 'package:ono/Model/Cosmetic/CosmeticAbilityLevels.dart';
+import 'package:ono/Model/Cosmetic/CosmeticEquipResultModel.dart';
+import 'package:ono/Model/Cosmetic/CosmeticLoadoutModel.dart';
+import 'package:ono/Model/User/UserInfoModel.dart';
+import 'package:ono/Module/Debug/DebugCosmeticPreset.dart';
+import 'package:ono/Provider/CosmeticProvider.dart';
+import 'package:ono/Service/Api/Cosmetic/CosmeticService.dart';
 
-/// 백엔드가 붙기 전까지 쓰는 옷장 더미 카탈로그다.
+/// 옷장 **계약 픽스처**다. `GET /api/cosmetics` 가 내려줄 것을 그대로 적어 둔다.
 ///
-/// **서버 응답과 똑같은 모양으로 들고 있는다.** [rawResponse] 는
-/// `GET /api/cosmetics` 가 내려줄 JSON 그대로라서, 나중에 API 가 생기면 이
-/// 맵을 실제 응답으로 갈아 끼우기만 하면 된다. 화면과 프로바이더는 전부
-/// [CosmeticLoadoutModel] 만 보고 있어서 그 위쪽은 손댈 것이 없다.
+/// 원래는 백엔드가 붙기 전까지 앱이 읽던 더미였다(`lib/Screen/Cosmetic/Mock/`).
+/// 서버가 붙으면서 앱은 더 이상 이것을 읽지 않는다. 그런데도 지우지 않고 테스트
+/// 쪽으로 옮겨 온 이유는 **역할이 바뀌었기 때문**이다.
 ///
-/// 그래서 여기에 Dart 객체를 직접 만들어 두지 않고 굳이 Map 을 거친다. 파싱까지
-/// 같은 길을 타야 교체했을 때 다른 데서 터지지 않는다.
+/// 1. **해금표와 서버 사이의 계약서다.** 여기 적힌 자리·능력치·레벨은
+///    `docs/치장 시스템/해금표.md` 를 그대로 옮긴 것이고, 어긋나지 않는지는
+///    `test/screen/cosmetic/cosmetic_unlock_table_test.dart` 가 문서를 직접
+///    읽어 잠근다. 이것을 없애면 그 테스트가 같이 사라진다. 배치를 바꿀 일이
+///    생기면 문서를 먼저 고친다.
+/// 2. **가짜 서버의 밑천이다.** [FakeCosmeticService] 가 이 카탈로그로 응답을
+///    만든다. 그래서 옷장을 보는 테스트들은 서버 왕복까지 포함한 길을 탄다.
 ///
-/// **아이템 배치는 `docs/치장 시스템/해금표.md` 가 정한다.** 여기 적힌 자리와
-/// 능력치와 레벨은 그 문서를 그대로 옮긴 것이고, 어긋나지 않는지는
-/// `test/screen/cosmetic/cosmetic_unlock_table_test.dart` 가 문서를 직접 읽어
-/// 잠근다. 배치를 바꿀 일이 생기면 문서를 먼저 고친다.
+/// Dart 객체를 직접 만들어 두지 않고 굳이 Map 을 거치는 것도 그대로 뒀다.
+/// 파싱까지 같은 길을 타야 실제 응답이 달라졌을 때 여기서 걸린다.
 class CosmeticMockData {
   const CosmeticMockData._();
 
@@ -36,10 +43,11 @@ class CosmeticMockData {
   static const String graduateSetId = 'graduate';
   static const String graduateSetNameKo = '학사 세트';
 
-  /// `GET /api/cosmetics` 응답과 같은 모양의 더미다.
+  /// `GET /api/cosmetics` 응답과 같은 모양이다.
   ///
-  /// `equipped` 는 비워 둔다. 처음에 무엇을 입고 있을지는 레벨에 따라 달라져서
-  /// `CosmeticProvider` 가 정한다. 서버가 붙으면 서버가 준 값이 그대로 쓰인다.
+  /// `owned` 와 `equipped` 는 비워 둔다. 둘 다 **사람마다 다른 값**이라 이
+  /// 표에는 적을 것이 없다. 레벨을 정해 놓고 그 사람의 응답을 만드는 것은
+  /// [catalogAt] 이 한다.
   static Map<String, Object?> get rawResponse => {
         'baseImageUrl': baseImageUrl,
         'baseLayerOrder': baseLayerOrder,
@@ -48,10 +56,62 @@ class CosmeticMockData {
         'equipped': <String, String>{},
       };
 
-  /// 파싱까지 끝낸 더미. 매번 같은 것을 쓴다.
+  /// 파싱까지 끝낸 카탈로그. 아무것도 안 가졌고 아무것도 안 걸친 상태다.
+  ///
+  /// 표 자체를 확인하는 테스트(해금표 대조, 에셋 경로)가 쓴다. 사람의 상태가
+  /// 필요하면 [catalogAt] 을 쓴다.
   static final CosmeticLoadoutModel loadout =
       CosmeticLoadoutModel.fromJsonOrNull(rawResponse) ??
           CosmeticLoadoutModel.empty;
+
+  /// 그 레벨들의 사람에게 **서버가 내려줄** 응답.
+  ///
+  /// 서버가 하는 일 둘을 여기서 그대로 흉내 낸다.
+  ///
+  /// 1. 아이템마다 `owned` 를 매긴다. 해금표대로 제 능력치의 레벨을 본다.
+  /// 2. 장착 행이 없는 사람에게 **기본 차림**을 계산해 `equipped` 에 채운다.
+  ///
+  /// 둘 다 이제 서버의 몫이라 앱에는 규칙이 없다. 규칙 한 벌은
+  /// [DebugCosmeticPreset] 에 남아 있는데(조합 검수 화면이 쓴다), 같은 규칙을
+  /// 여기 또 적으면 두 벌이 되고 두 벌이 되면 언젠가 갈린다. 그래서 그것을
+  /// 빌려 쓴다.
+  static CosmeticLoadoutModel catalogAt(CosmeticAbilityLevels levels) {
+    final items = [
+      for (final item in rawResponse['items']! as List<Map<String, Object?>>)
+        {...item, 'owned': _isUnlocked(item, levels)},
+    ];
+    final catalog = CosmeticLoadoutModel.fromJsonOrNull({
+          ...rawResponse,
+          'items': items,
+        }) ??
+        CosmeticLoadoutModel.empty;
+
+    return catalog.withEquipped(DebugCosmeticPreset.presetOf(catalog, levels));
+  }
+
+  /// 그 레벨들에서 이 줄이 열려 있는지. 해금표가 정한 규칙 그대로다.
+  static bool _isUnlocked(
+    Map<String, Object?> item,
+    CosmeticAbilityLevels levels,
+  ) {
+    final ability = CosmeticAbility.fromKeyOrNull(item['requiredAbility']);
+    final required = item['requiredLevel'] as int;
+    return levels.levelOf(ability) >= required;
+  }
+
+  /// 그 레벨들을 달고 있는 유저 정보.
+  ///
+  /// 옷장은 [CosmeticProvider.syncWithUser] 로만 레벨을 받는다. 실제 앱에서
+  /// 레벨이 오는 길이 그것 하나뿐이라, 테스트도 같은 길로 넣는다.
+  static UserInfoModel userInfoAt(CosmeticAbilityLevels levels) =>
+      UserInfoModel(
+        userId: 1,
+        attendanceLevel: levels.attendance,
+        noteWriteLevel: levels.noteWrite,
+        problemPracticeLevel: levels.problemPractice,
+        notePracticeLevel: levels.notePractice,
+        totalStudyLevel: levels.totalStudy,
+      );
 
   /// 학사 세트를 입은 개구리 한 벌.
   ///
@@ -258,4 +318,132 @@ class CosmeticMockData {
       'layerOrder': layerOrder,
     };
   }
+}
+
+/// 옷장 API 의 **가짜 서버**다.
+///
+/// 진짜 서버처럼 차림을 제가 들고 있는다. 장착 요청을 받으면 제 차림을 고쳐
+/// 놓고 **차림 전체**를 돌려준다. 응답만 흉내 내고 상태를 안 들고 있으면,
+/// "저장한 것이 다음 조회에 실려 온다" 같은 것을 잠글 수 없다.
+///
+/// 겹쳐 걸 수 없는 것을 함께 내리는 규칙은 [CosmeticLoadoutModel.applyEquip]
+/// 을 쓴다. 앱도 같은 것을 쓴다. 규칙을 여기 또 적으면 두 벌이 되고, 두 벌이
+/// 어긋나면 저장할 때마다 눈앞의 개구리가 한 번 더 바뀐다.
+class FakeCosmeticService implements CosmeticService {
+  FakeCosmeticService({
+    CosmeticLoadoutModel? catalog,
+    this.failLoad = false,
+    this.failEquip = false,
+  }) : catalog =
+            catalog ?? CosmeticMockData.catalogAt(CosmeticAbilityLevels.max) {
+    equipped = Map<String, String>.from(this.catalog.equipped);
+  }
+
+  /// 서버가 들고 있는 카탈로그.
+  CosmeticLoadoutModel catalog;
+
+  /// 서버가 들고 있는 차림.
+  late Map<String, String> equipped;
+
+  /// 조회가 실패하는지. 404 나 연결 끊김을 흉내 낸다.
+  bool failLoad;
+
+  /// 장착이 실패하는지. `equip-all` 이 아직 배포되기 전을 흉내 낸다.
+  bool failEquip;
+
+  /// 조회가 몇 번 나갔는지.
+  int loadCount = 0;
+
+  /// `equip-all` 로 실제로 나간 차림들. 무엇을 보냈는지 잠그는 데 쓴다.
+  final List<Map<String, String>> equipAllRequests = [];
+
+  /// 다음 `equip-all` 응답에 실어 보낼 `unequippedSlots`.
+  ///
+  /// 진짜 서버는 요청에 담긴 것끼리 부딪혔을 때만 이 목록을 채운다. 가짜
+  /// 서버는 겹침을 판정하지 않으므로 필요한 테스트가 직접 적어 준다.
+  List<String> equipAllUnequippedSlots = const [];
+
+  @override
+  Future<CosmeticLoadoutModel?> getCosmetics() async {
+    loadCount++;
+    if (failLoad) return null;
+    return catalog.withEquipped(equipped);
+  }
+
+  @override
+  Future<CosmeticEquipResultModel?> equip({
+    required String slot,
+    String? itemKey,
+  }) async {
+    if (failEquip) return null;
+    return _commit(catalog.applyEquip(equipped, slot: slot, itemKey: itemKey),
+        requested: {slot});
+  }
+
+  @override
+  Future<CosmeticEquipResultModel?> equipSet(String setId) async {
+    if (failEquip) return null;
+
+    var next = equipped;
+    final requested = <String>{};
+    for (final item in catalog.itemsOfSet(setId)) {
+      next = catalog.applyEquip(next, slot: item.slot, itemKey: item.itemKey);
+      requested.add(item.slot);
+    }
+    return _commit(next, requested: requested);
+  }
+
+  @override
+  Future<CosmeticEquipResultModel?> equipAll(
+    Map<String, String> equipped,
+  ) async {
+    equipAllRequests.add(Map<String, String>.from(equipped));
+    if (failEquip) return null;
+
+    // **전체 교체다.** 요청에 없는 자리는 비운다. 그렇게 비워진 자리는
+    // 사용자가 일부러 뺀 것이라 `unequippedSlots` 에 담지 않는다. 여기 담기는
+    // 것은 요청에 담겨 왔는데도 서버가 거절한 자리뿐이다.
+    this.equipped = Map<String, String>.from(equipped);
+    return CosmeticEquipResultModel(
+      equipped: Map<String, String>.from(equipped),
+      unequippedSlots: equipAllUnequippedSlots,
+    );
+  }
+
+  /// 바뀐 차림을 받아들이고 응답을 만든다.
+  ///
+  /// `unequippedSlots` 에는 **충돌로 벗겨진 자리만** 담는다. 이번 요청이 직접
+  /// 건드린 자리([requested])는 사용자가 그렇게 시킨 것이라 빼고 센다.
+  CosmeticEquipResultModel _commit(
+    Map<String, String> next, {
+    required Set<String> requested,
+  }) {
+    final removed = [
+      for (final slot in equipped.keys)
+        if (!next.containsKey(slot) && !requested.contains(slot)) slot,
+    ];
+    equipped = Map<String, String>.from(next);
+
+    return CosmeticEquipResultModel(
+      equipped: Map<String, String>.from(next),
+      unequippedSlots: removed,
+    );
+  }
+}
+
+/// 가짜 서버에서 옷장을 **받아 온** 프로바이더.
+///
+/// 앱에서 옷장이 채워지는 길과 같은 길을 탄다. 로그인 뒤 유저 정보가 들어오면
+/// [CosmeticProvider.syncWithUser] 가 레벨을 맞추고 카탈로그를 받는다. 생성자로
+/// 상태를 밀어 넣지 않는 것은, 그러면 조회가 빠진 길을 테스트하게 되기 때문이다.
+Future<CosmeticProvider> loadedCosmeticProvider({
+  CosmeticAbilityLevels? levels,
+  FakeCosmeticService? service,
+}) async {
+  final at = levels ?? CosmeticMockData.demoLevels;
+  final fake =
+      service ?? FakeCosmeticService(catalog: CosmeticMockData.catalogAt(at));
+  final provider = CosmeticProvider(cosmeticService: fake);
+  await provider.syncWithUser(CosmeticMockData.userInfoAt(at));
+  return provider;
 }

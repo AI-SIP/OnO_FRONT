@@ -10,7 +10,6 @@ import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/CosmeticProvider.dart';
 import '../User/Widget/FrogCharacter.dart';
-import 'Mock/CosmeticMockData.dart';
 
 /// 조합을 한꺼번에 펼쳐 보는 **개발용** 화면이다.
 ///
@@ -205,7 +204,7 @@ class CosmeticCombinationPreviewScreen extends StatelessWidget {
               for (final item in cosmetic.itemsOfSlot(slot.slot))
                 _Combo(
                   label: item.nameKo,
-                  layers: _layersOf({
+                  layers: cosmetic.layersOf({
                     ...cosmetic.equipped,
                     slot.slot: item.itemKey,
                   }),
@@ -242,7 +241,7 @@ class CosmeticCombinationPreviewScreen extends StatelessWidget {
               for (final b in secondItems)
                 _Combo(
                   label: '${_short(a)}+${_short(b)}',
-                  layers: _layersOf({
+                  layers: cosmetic.layersOf({
                     first.slot: a.itemKey,
                     second.slot: b.itemKey,
                   }),
@@ -256,11 +255,8 @@ class CosmeticCombinationPreviewScreen extends StatelessWidget {
 
   /// 이 차림을 그릴 층들.
   ///
-  /// 옷장과 같은 길로 만든다. [CosmeticProvider] 는 지금 입고 있는 것만
-  /// 돌려주므로, 임의의 조합은 카탈로그에서 직접 펼친다. 더미를 읽기만 한다.
-  List<CosmeticLayerModel> _layersOf(Map<String, String> equipped) {
-    return CosmeticMockData.loadout.resolveLayers(equippedOverride: equipped);
-  }
+  /// 옷장과 같은 길로 만든다. 서버가 준 카탈로그를 그대로 쓰므로, 여기 뜨는
+  /// 조합은 실제로 내려오는 그림들의 조합이다.
 
   /// 칸 이름이 길어지지 않게 앞 네 글자만 쓴다.
   String _short(CosmeticItemModel item) {
