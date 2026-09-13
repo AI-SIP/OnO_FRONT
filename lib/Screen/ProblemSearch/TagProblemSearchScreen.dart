@@ -1,13 +1,13 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 
 import '../../Model/Problem/ProblemModel.dart';
 import '../../Model/Tag/TagModel.dart';
 import '../../Module/Problem/ProblemThumbnailCard.dart';
 import '../../Module/Text/StandardText.dart';
+import '../../Module/Theme/ClayIcon.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/ProblemsProvider.dart';
 import '../../Service/Api/Tag/TagService.dart';
@@ -495,10 +495,11 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
     if (_problems.isEmpty) {
       if (_mode == _SearchMode.title && _currentQuery.isEmpty) {
         // 문구만 덩그러니 있으면 화면이 비어 보인다. 다른 빈 화면처럼
-        // 그림을 두되, 검색 안내라 연필 대신 돋보기를 쓴다.
+        // 그림을 두되, 검색 안내라 연필 대신 돋보기를 쓴다. 둘 다 같은 손으로
+        // 빚은 점토 그림이라 나란히 놓아도 결이 맞는다.
         return _buildEmptyState(
           '검색어를 입력해주세요.',
-          icon: Icons.search_rounded,
+          iconAsset: 'assets/Icon/Search.png',
           detail: '오답노트 제목의 일부만 넣어도 찾을 수 있어요.',
         );
       }
@@ -530,9 +531,9 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
     );
   }
 
-  /// [icon] 을 주면 그림 대신 동그란 아이콘을 그린다. [detail] 은 그 아래
+  /// [iconAsset] 을 주면 기본 연필 대신 그 그림을 그린다. [detail] 은 그 아래
   /// 덧붙이는 한 줄이다.
-  Widget _buildEmptyState(String message, {IconData? icon, String? detail}) {
+  Widget _buildEmptyState(String message, {String? iconAsset, String? detail}) {
     return LayoutBuilder(
       builder: (context, constraints) => SingleChildScrollView(
         child: ConstrainedBox(
@@ -546,26 +547,11 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    if (icon != null)
-                      Container(
-                        width: 84,
-                        height: 84,
-                        decoration: const BoxDecoration(
-                          color: AppColors.surfaceMuted,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          icon,
-                          size: 36,
-                          color: AppColors.textTertiary,
-                        ),
-                      )
-                    else
-                      SvgPicture.asset(
-                        'assets/Icon/PencilDetail.svg',
-                        width: 100,
-                        height: 100,
-                      ),
+                    ClayIcon(
+                      iconAsset ?? 'assets/Icon/PencilDetail.png',
+                      width: 100,
+                      height: 100,
+                    ),
                     const SizedBox(height: 16),
                     StandardText(
                       text: message,

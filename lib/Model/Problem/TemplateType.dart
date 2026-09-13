@@ -63,22 +63,24 @@ extension TemplateTypeExtension on TemplateType {
   String get templateThumbnailImage {
     switch (this) {
       case TemplateType.simple:
-        return "assets/Icon/Pencil.svg";
+        return "assets/Icon/Pencil.png";
       case TemplateType.clean:
-        return "assets/Icon/Eraser.svg";
+        return "assets/Icon/Eraser.png";
       case TemplateType.special:
-        return "assets/Icon/Glass.svg";
+        return "assets/Icon/Glass.png";
     }
   }
 
   String get templateDetailImage {
     switch (this) {
       case TemplateType.simple:
-        return "assets/Icon/PencilDetail.svg";
+        return "assets/Icon/PencilDetail.png";
       case TemplateType.clean:
-        return "assets/Icon/EraserDetail.svg";
+        return "assets/Icon/EraserDetail.png";
       case TemplateType.special:
-        return "assets/Icon/GlassDetail.svg";
+        // 길잡이만 상세용 그림이 따로 없다. 점토로 다시 그린 돋보기가 한
+        // 장뿐이라 썸네일과 같은 것을 쓴다.
+        return "assets/Icon/Glass.png";
     }
   }
 

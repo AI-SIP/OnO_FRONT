@@ -1,7 +1,6 @@
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:ono/Model/PracticeNote/PracticeNoteDetailModel.dart';
 import 'package:ono/Model/PracticeNote/PracticeNoteUpdateModel.dart';
 import 'package:ono/Model/PracticeNote/PracticeNotificationModel.dart';
@@ -12,6 +11,7 @@ import '../../Model/PracticeNote/RepeatType.dart';
 import '../../Module/Dialog/SnackBarDialog.dart';
 import '../../Module/Text/mobile_font_size.dart';
 import '../../Module/Text/StandardText.dart';
+import '../../Module/Theme/ClayIcon.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/PracticeNoteProvider.dart';
 import '../../Util/AppErrorReporter.dart';
@@ -414,7 +414,7 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
   Widget _buildInfoHeader(ThemeHandler themeProvider) {
     return Row(
       children: [
-        SvgPicture.asset('assets/Icon/RainbowNote.svg', width: 24, height: 24),
+        const ClayIcon('assets/Icon/RainbowNote.png', width: 24, height: 24),
         const SizedBox(width: 8),
         StandardText(
           text: "3회 반복 복습 시스템",

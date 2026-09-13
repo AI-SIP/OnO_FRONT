@@ -2,13 +2,13 @@ import 'dart:math';
 
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 
 import '../../Model/Folder/FolderThumbnailModel.dart';
 import '../../Model/Problem/ProblemModel.dart';
 import '../../Module/Problem/ProblemThumbnailCard.dart';
 import '../../Module/Text/StandardText.dart';
+import '../../Module/Theme/ClayIcon.dart';
 import '../../Module/Theme/NoteIconHandler.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/FoldersProvider.dart';
@@ -636,7 +636,7 @@ class _ProblemPickerScreenState extends State<ProblemPickerScreen> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      SvgPicture.asset(
+                      ClayIcon(
                         NoteIconHandler.getNoteIcon(i),
                         width: isCompact ? 34 : 42,
                         height: isCompact ? 34 : 42,
