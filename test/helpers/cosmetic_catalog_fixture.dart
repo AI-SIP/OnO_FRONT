@@ -22,6 +22,11 @@ import 'package:ono/Service/Api/Cosmetic/CosmeticService.dart';
 ///
 /// Dart 객체를 직접 만들어 두지 않고 굳이 Map 을 거치는 것도 그대로 뒀다.
 /// 파싱까지 같은 길을 타야 실제 응답이 달라졌을 때 여기서 걸린다.
+///
+/// **`test/fixtures/cosmetic/*.json` 과 역할이 다르다.** 이쪽은 어떤 아이템이
+/// 몇 레벨에 열리는지(해금표)를 잠그고 가짜 서버의 밑천이 된다. 그쪽은 응답
+/// **한 번의 본문 모양**을, `CommonResponse` 껍데기까지 포함해 잠근다. 아이템
+/// 목록은 몇 줄뿐이어서 해금표를 대신하지 못한다.
 class CosmeticMockData {
   const CosmeticMockData._();
 
