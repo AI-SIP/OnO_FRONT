@@ -573,14 +573,8 @@ class _MissionLevelUpViewState extends State<_MissionLevelUpView>
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const StandardText(
-            text: '개구리가 바로 입어 봤어요',
-            fontSize: 13,
-            color: AppColors.textSecondary,
-            textAlign: TextAlign.center,
-            maxLines: 2,
-          ),
-          const SizedBox(height: AppSpacing.md),
+          // 설명 없이 얻은 것만 보여 준다. 개구리가 입는 모습은 바로 위에서
+          // 이미 보여 주고 있어서, 그걸 다시 말로 옮기면 읽을 것만 늘어난다.
           if (reduced)
             _chipWrap(chips)
           else
