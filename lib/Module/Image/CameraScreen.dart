@@ -264,15 +264,30 @@ class _CameraScreenState extends State<CameraScreen>
 
   /// 문서 모드. OS 가 가진 문서 스캐너를 띄운다.
   ///
-  /// 종이 테두리를 찾아 원근을 펴고 그림자를 걷어 내는 일은 안드로이드의 ML Kit
-  /// 과 iOS 의 VisionKit 이 이미 아주 잘한다. 우리가 직접 할 이유가 없다.
+  /// 두 가지를 해 준다. 첫째가 원근 보정이다. 종이의 네 귀퉁이를 찾아 비스듬히
+  /// 찍힌 사각형을 반듯한 직사각형으로 편다. 둘째가 보정 필터다. 그림자와
+  /// 얼룩을 걷어 내고 종이를 하얗게 만든다.
+  ///
+  /// 원근 보정은 끌 수 없는 기본 동작이고 필터는 사용자가 스캐너 화면에서
+  /// 고른다. 안드로이드의 ML Kit 과 iOS 의 VisionKit 이 이미 아주 잘하는
+  /// 일이라 우리가 직접 할 이유가 없다.
   ///
   /// 대신 이건 OS 가 그리는 화면이라 이 화면의 생김새를 물려받지 못한다. 그래서
   /// 기본 촬영을 이쪽으로 바꾸지 않고 따로 들어가는 길만 냈다.
   ///
-  /// 필터는 색을 살리는 쪽으로 연다. 오답노트는 찍은 뒤에 색을 골라 필기를
-  /// 지우는 기능([ImageColorPickerHandler])을 쓰는데, 흑백으로 받아 버리면 고를
-  /// 색이 남지 않는다. 더 하얗게 만들고 싶은 사람은 스캐너 안에서 바꾸면 된다.
+  /// 안드로이드는 [AndroidScannerMode.full] 이라야 보정 필터가 붙는다.
+  /// base 는 자르기만 하고 필터가 없다.
+  ///
+  /// iOS 는 여기서 필터를 정해 줄 수 없다. 카메라로 들어가면 애플의
+  /// `VNDocumentCameraViewController` 가 통째로 화면을 맡고, 필터 종류와
+  /// 기본값도 그쪽이 정한다. 패키지의 `iosScannerOptions` 는 앨범에서 가져올
+  /// 때 쓰는 자체 크롭 화면에만 걸리는 값이라(CunningDocumentScannerPlugin
+  /// .swift:292) 여기서는 넘겨도 아무 일이 없다.
+  ///
+  /// 필터가 신경 쓰이는 이유가 있다. 오답노트는 찍은 뒤에 색을 골라 필기를
+  /// 지우는 기능([ImageColorPickerHandler])을 쓰는데, 사용자가 흑백 필터로
+  /// 저장하면 고를 색이 남지 않는다. 양쪽 다 기본값은 색을 살리는 쪽이라
+  /// 그대로 두면 문제가 없다.
   Future<void> _scanDocument() async {
     if (_isCapturing || _isScanning) return;
 
@@ -281,11 +296,6 @@ class _CameraScreenState extends State<CameraScreen>
       final paths = await CunningDocumentScanner.getPictures(
         noOfPages: 1,
         androidScannerMode: AndroidScannerMode.full,
-        iosScannerOptions: IosScannerOptions(
-          imageFormat: IosImageFormat.jpg,
-          defaultFilter: IosDocumentFilter.color,
-          showFilterBar: true,
-        ),
       );
 
       if (paths == null || paths.isEmpty || !mounted) return;
