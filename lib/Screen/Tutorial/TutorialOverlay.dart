@@ -17,6 +17,10 @@ import '../../Module/Motion/StepProgressBar.dart';
 import '../../Module/Design/AppRadius.dart';
 import '../../Module/Design/AppColors.dart';
 
+/// 안내 카드를 가리키는 key 다. 단계가 바뀌어도 같은 카드라서 값이 변하지
+/// 않는다. 테스트에서 카드 네모를 잡을 때 쓴다.
+const Key tutorialStepCardKey = ValueKey('tutorial_step_card');
+
 class TutorialOverlay extends StatefulWidget {
   final TutorialTargets targets;
 
@@ -63,6 +67,10 @@ class _TutorialOverlayState extends State<TutorialOverlay>
 
   Rect? _targetRect;
   String? _lastStepId;
+
+  /// 지금 카드에 그려져 있는 단계 번호와, 거기로 올 때의 방향이다.
+  int? _renderedStepIndex;
+  bool _slideForward = true;
 
   /// 단계가 바뀔 때 테두리를 한 번 두껍게 했다 되돌린다.
   ///
@@ -163,6 +171,7 @@ class _TutorialOverlayState extends State<TutorialOverlay>
     final tutorialProvider = Provider.of<TutorialProvider>(context);
     if (!tutorialProvider.isVisible) {
       _lastStepId = null;
+      _renderedStepIndex = null;
       return const SizedBox.shrink();
     }
 
@@ -536,24 +545,7 @@ class _TutorialOverlayState extends State<TutorialOverlay>
           width: cardWidth,
           child: ConstrainedBox(
             constraints: BoxConstraints(maxHeight: slot.maxHeight),
-            child: AnimatedSwitcher(
-              duration: AppMotion.fast,
-              switchInCurve: AppMotion.enter,
-              switchOutCurve: AppMotion.exit,
-              transitionBuilder: (child, animation) {
-                return FadeTransition(
-                  opacity: animation,
-                  child: SlideTransition(
-                    position: Tween<Offset>(
-                      begin: const Offset(0, 0.04),
-                      end: Offset.zero,
-                    ).animate(animation),
-                    child: child,
-                  ),
-                );
-              },
-              child: _buildStepCard(tutorialProvider, themeProvider),
-            ),
+            child: _buildStepCard(tutorialProvider, themeProvider),
           ),
         ),
       ],
@@ -565,8 +557,17 @@ class _TutorialOverlayState extends State<TutorialOverlay>
     ThemeHandler themeProvider,
   ) {
     final step = tutorialProvider.currentStep;
-    final isLast =
-        tutorialProvider.currentStepIndex == tutorialSteps.length - 1;
+    final stepIndex = tutorialProvider.currentStepIndex;
+    final isLast = stepIndex == tutorialSteps.length - 1;
+    // 넘어가는 방향은 단계 번호가 실제로 바뀔 때만 새로 정한다. 전환 도중에
+    // 다른 이유로 다시 build 되어도 나가는 글이 방향을 바꾸지 않게 한다.
+    if (_renderedStepIndex != stepIndex) {
+      _slideForward =
+          _renderedStepIndex == null || stepIndex > _renderedStepIndex!;
+      _renderedStepIndex = stepIndex;
+    }
+    // 기기에서 동작 줄이기를 켠 사용자에게는 미는 움직임을 뺀다.
+    final reduceMotion = AppMotion.isReduced(context);
     final isTablet = MediaQuery.of(context).size.shortestSide >= 600;
     final cardPadding = isTablet
         ? const EdgeInsets.fromLTRB(22, 22, 22, 18)
@@ -578,7 +579,11 @@ class _TutorialOverlayState extends State<TutorialOverlay>
     final buttonSize = isTablet ? 14.0 : 12.0;
 
     return Container(
-      key: ValueKey(step.id),
+      // 단계가 바뀌어도 같은 카드다. 예전에는 카드를 통째로 바꿔 끼워서
+      // 안의 진행 막대도 매번 새로 만들어졌고, 그래서 막대가 이전 칸에서
+      // 이어서 차는 대신 0 에서 다시 찼다. 어디까지 왔는지가 안 보이니
+      // 화면이 넘어간 것도 같이 안 보였다.
+      key: tutorialStepCardKey,
       padding: cardPadding,
       decoration: BoxDecoration(
         color: Colors.white,
@@ -601,15 +606,14 @@ class _TutorialOverlayState extends State<TutorialOverlay>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     StandardText(
-                      text:
-                          '${tutorialProvider.currentStepIndex + 1} / ${tutorialSteps.length}',
+                      text: '${stepIndex + 1} / ${tutorialSteps.length}',
                       fontSize: progressSize,
                       color: themeProvider.primaryColor,
                     ),
                     const SizedBox(height: 8),
                     // 숫자만으로는 얼마나 남았는지 잘 안 들어와서 막대를 함께 둔다.
                     StepProgressBar(
-                      currentStep: tutorialProvider.currentStepIndex + 1,
+                      currentStep: stepIndex + 1,
                       totalSteps: tutorialSteps.length,
                       color: themeProvider.primaryColor,
                       backgroundColor:
@@ -617,19 +621,61 @@ class _TutorialOverlayState extends State<TutorialOverlay>
                       height: 3,
                     ),
                     const SizedBox(height: 12),
-                    StandardText(
-                      text: step.title,
-                      fontSize: titleSize,
-                      color: AppColors.textPrimary,
-                      fontWeight: FontWeight.w700,
-                    ),
-                    const SizedBox(height: 8),
-                    StandardText(
-                      text: step.description,
-                      fontSize: bodySize,
-                      color: Colors.grey[700]!,
-                      fontWeight: FontWeight.w500,
-                      fontFamily: 'PretendardBold',
+                    // 제목과 설명만 옆으로 밀어 넘긴다. 카드와 개구리와 진행
+                    // 막대는 자리에 남아 있고 글만 갈리므로 같은 안내판을
+                    // 한 장 넘긴 것으로 읽힌다. 예전에는 카드 전체가 제자리에서
+                    // 흐려졌다 나타나서 무엇이 바뀐 것인지 잘 안 보였다.
+                    // 미는 글이 말풍선 밖으로 삐져나가지 않게 좌우를 자른다.
+                    // 카드 안의 SingleChildScrollView 는 내용이 다 들어가면
+                    // 아예 자르지 않아서, 여기서 직접 자르지 않으면 넘어가는
+                    // 동안 글이 카드 밖 어두운 바탕 위로 나온다.
+                    ClipRect(
+                      clipper: const _SideClipper(),
+                      child: AnimatedSize(
+                        duration:
+                            reduceMotion ? Duration.zero : AppMotion.normal,
+                        curve: AppMotion.standard,
+                        alignment: Alignment.topLeft,
+                        child: AnimatedSwitcher(
+                          duration:
+                              reduceMotion ? Duration.zero : AppMotion.page,
+                          switchInCurve: AppMotion.enter,
+                          switchOutCurve: AppMotion.exit,
+                          layoutBuilder: (currentChild, previousChildren) =>
+                              Stack(
+                            alignment: Alignment.topLeft,
+                            children: [
+                              ...previousChildren,
+                              if (currentChild != null) currentChild,
+                            ],
+                          ),
+                          transitionBuilder: (child, animation) =>
+                              _slideTransition(child, animation, step.id),
+                          child: SizedBox(
+                            key: ValueKey(step.id),
+                            width: double.infinity,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                StandardText(
+                                  text: step.title,
+                                  fontSize: titleSize,
+                                  color: AppColors.textPrimary,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                                const SizedBox(height: 8),
+                                StandardText(
+                                  text: step.description,
+                                  fontSize: bodySize,
+                                  color: Colors.grey[700]!,
+                                  fontWeight: FontWeight.w500,
+                                  fontFamily: 'PretendardBold',
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
                     ),
                   ],
                 ),
@@ -708,6 +754,36 @@ class _TutorialOverlayState extends State<TutorialOverlay>
             ],
           ),
         ],
+      ),
+    );
+  }
+
+  /// 제목과 설명이 옆으로 밀려 들어오고 밀려 나가는 방식이다.
+  ///
+  /// 들어오는 글은 가는 방향 반대편에서 들어오고 나가는 글은 가는 방향으로
+  /// 빠진다. `다음` 이면 새 글이 오른쪽에서 들어오면서 옛 글이 왼쪽으로
+  /// 나가고, `이전` 이면 반대다. 손으로 넘기는 방향과 같아야 어느 쪽으로
+  /// 움직였는지가 읽힌다.
+  ///
+  /// [currentStepId] 는 지금 그려야 할 단계다. AnimatedSwitcher 는 들어오는
+  /// 글과 나가는 글에 같은 builder 를 쓰므로 이걸로 둘을 가른다.
+  Widget _slideTransition(
+    Widget child,
+    Animation<double> animation,
+    String currentStepId,
+  ) {
+    final distance = AppMotion.isReduced(context) ? 0.0 : 0.18;
+    final isIncoming = child.key == ValueKey<String>(currentStepId);
+    final dx = _slideForward ? distance : -distance;
+
+    return FadeTransition(
+      opacity: animation,
+      child: SlideTransition(
+        position: Tween<Offset>(
+          begin: Offset(isIncoming ? dx : -dx, 0),
+          end: Offset.zero,
+        ).animate(animation),
+        child: child,
       ),
     );
   }
@@ -887,6 +963,23 @@ class _TutorialOverlayState extends State<TutorialOverlay>
       ],
     );
   }
+}
+
+/// 좌우만 자른다.
+///
+/// 제목과 설명이 옆으로 밀려 들어오고 나갈 때 쓴다. 위아래는 자르지 않는다.
+/// 글이 갈리면서 높이가 달라지는 동안 AnimatedSize 가 아직 따라오는 중이라
+/// 세로까지 자르면 마지막 줄이 잠깐 잘린다.
+class _SideClipper extends CustomClipper<Rect> {
+  const _SideClipper();
+
+  static const double _tall = 10000.0;
+
+  @override
+  Rect getClip(Size size) => Rect.fromLTRB(0, -_tall, size.width, _tall);
+
+  @override
+  bool shouldReclip(covariant CustomClipper<Rect> oldClipper) => false;
 }
 
 class _SpeechTailPainter extends CustomPainter {

@@ -133,9 +133,9 @@ void main() {
     await tester.pump(const Duration(milliseconds: 600));
   }
 
-  /// 안내 카드의 네모. 카드는 현재 단계 id 를 key 로 달고 있다.
-  Rect cardRect(WidgetTester tester, int stepIndex) {
-    return tester.getRect(find.byKey(ValueKey(tutorialSteps[stepIndex].id)));
+  /// 안내 카드의 네모. 단계가 바뀌어도 카드는 같은 key 를 달고 있다.
+  Rect cardRect(WidgetTester tester) {
+    return tester.getRect(find.byKey(tutorialStepCardKey));
   }
 
   /// 카드 안에서 더 스크롤해야 하는 양. 0 이면 설명이 한 번에 다 보인다.
@@ -166,7 +166,7 @@ void main() {
     int stepIndex, {
     required Size surface,
   }) {
-    final card = cardRect(tester, stepIndex);
+    final card = cardRect(tester);
     final where = '${stepIndex + 1}/${tutorialSteps.length} '
         '`${tutorialSteps[stepIndex].title}`';
     expect(card.top, greaterThanOrEqualTo(_safeTop),
@@ -295,7 +295,7 @@ void main() {
         // 대상이 화면 맨 아래에 있어서 아래쪽에는 카드가 들어갈 자리가 없다.
         // 카드는 대상 위로 올라와야 한다.
         expect(
-          cardRect(tester, 1).bottom,
+          cardRect(tester).bottom,
           lessThanOrEqualTo(rect.top),
           reason: '카드가 + 추가 버튼 위로 올라오지 않아 설명 중인 버튼을 덮었다',
         );
