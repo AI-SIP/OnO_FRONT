@@ -1,0 +1,23 @@
+{
+  "name": "happy_bounce",
+  "canvas": { "width": 512, "height": 512 },
+  "layerUsage": "whole-cosmetic-stack-transform",
+  "transformOriginAlignment": [0.0, 0.67],
+  "loop": false,
+  "durationMs": 890,
+  "animatedWebpPreview": "happy_bounce.webp",
+  "spritesheet": { "file": "spritesheet.png", "columns": 4, "rows": 3, "frameWidth": 512, "frameHeight": 512 },
+  "keyframes": [
+    { "t": 0.000, "translateY": 0, "scaleX": 1.000, "scaleY": 1.000 },
+    { "t": 0.079, "translateY": 2, "scaleX": 1.035, "scaleY": 0.965 },
+    { "t": 0.157, "translateY": -8, "scaleX": 0.995, "scaleY": 1.005 },
+    { "t": 0.247, "translateY": -20, "scaleX": 0.975, "scaleY": 1.025 },
+    { "t": 0.348, "translateY": -25, "scaleX": 0.980, "scaleY": 1.020 },
+    { "t": 0.449, "translateY": -17, "scaleX": 0.990, "scaleY": 1.010 },
+    { "t": 0.539, "translateY": -6, "scaleX": 1.010, "scaleY": 0.990 },
+    { "t": 0.618, "translateY": 2, "scaleX": 1.040, "scaleY": 0.960 },
+    { "t": 0.719, "translateY": 0, "scaleX": 1.000, "scaleY": 1.000 },
+    { "t": 1.000, "translateY": 0, "scaleX": 1.000, "scaleY": 1.000 }
+  ]
+}
+

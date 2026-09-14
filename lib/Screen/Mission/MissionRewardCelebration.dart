@@ -12,6 +12,7 @@ import '../../Module/Motion/AppHaptic.dart';
 import '../../Module/Motion/AppMotion.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
+import '../User/Widget/FrogMotion.dart';
 import 'MissionRewardChest.dart';
 import 'MissionRewardChip.dart';
 
@@ -301,7 +302,7 @@ class _MissionRewardCelebrationState extends State<_MissionRewardCelebration>
     final size =
         math.min(132.0, MediaQuery.sizeOf(context).shortestSide * 0.34);
 
-    return MissionRewardChest(
+    final chest = MissionRewardChest(
       // 연출을 끈 기기에는 시계를 돌리지 않고 마지막 모습만 준다.
       progress: reduced ? const AlwaysStoppedAnimation<double>(1) : _show,
       size: size,
@@ -312,6 +313,24 @@ class _MissionRewardCelebrationState extends State<_MissionRewardCelebration>
         key: _coinKey,
         child: MissionRewardToken(size: size * 0.22, color: primary),
       ),
+    );
+
+    // 체크 휘장이 상자 위에 한 번 찍힌다. 상자는 "무엇을 받았는가"를, 이건
+    // "해냈다"를 말한다. 카드가 떠 있는 시간과 길이가 거의 같아서 따로 시계를
+    // 달지 않고 카드와 함께 나고 사라진다.
+    //
+    // 상자 그림 한 변에 맞춘다. 상자가 쓰는 자리는 그보다 넓어서 휘장이 그
+    // 안에 들어앉고, 카드 밖으로 삐져나가지 않는다.
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        chest,
+        FrogEffectOverlay(
+          clip: FrogMotion.missionComplete,
+          tick: 1,
+          size: size,
+        ),
+      ],
     );
   }
 }

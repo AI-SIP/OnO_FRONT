@@ -1,0 +1,12 @@
+{
+  "name": "level_up",
+  "canvas": { "width": 512, "height": 512 },
+  "layerUsage": "transparent-effect-overlay",
+  "loop": false,
+  "durationMs": 1740,
+  "animatedWebp": "level_up.webp",
+  "spritesheet": { "file": "spritesheet.png", "columns": 4, "rows": 4, "frameWidth": 512, "frameHeight": 512 },
+  "frameCount": 16,
+  "frameDurationsMs": [80, 80, 80, 80, 80, 80, 80, 80, 85, 85, 90, 90, 100, 120, 150, 380]
+}
+

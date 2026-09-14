@@ -3,10 +3,12 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 
 import '../../../Model/Cosmetic/CosmeticLoadoutModel.dart';
+import '../../../Module/Motion/AppMotion.dart';
 import '../../../Module/Text/StandardText.dart';
 import '../../../Module/Design/AppRadius.dart';
 import '../../../Module/Design/AppColors.dart';
 import '../../Cosmetic/Widget/CosmeticArt.dart';
+import 'FrogMotion.dart';
 
 /// 개구리를 층층이 겹쳐 그리는 것만 하는 위젯이다.
 ///
@@ -32,11 +34,21 @@ class FrogLayerStack extends StatelessWidget {
   /// 카드처럼 보이도록 잘라 낸다. 배경을 안 걸었으면 잘라도 보이는 변화가 없다.
   final double borderRadius;
 
+  /// 개구리가 눈을 깜빡일지.
+  ///
+  /// 켜면 BASE 한 장을 눈 깜빡임 webp 로 **바꿔 그린다.** 겹치는 것이 아니라
+  /// 자리를 대신하는 것이라 그 위에 얹힌 치장의 좌표는 그대로다.
+  ///
+  /// **개구리가 주인공인 자리에서만 켠다.** 하단 탭 아이콘과 프로필 사진은
+  /// 화면에 늘 떠 있어서, 거기까지 깜빡이면 어디를 봐도 무언가가 움직인다.
+  final bool blinking;
+
   const FrogLayerStack({
     super.key,
     this.layers = const [],
     this.size = 180,
     this.borderRadius = AppRadius.large,
+    this.blinking = false,
   });
 
   /// 실제로 그릴 층들. 비어 있으면 개구리 본체 한 장으로 메운다.
@@ -59,15 +71,39 @@ class FrogLayerStack extends StatelessWidget {
         child: Stack(
           fit: StackFit.expand,
           children: [
-            for (final layer in _resolved) _buildLayer(layer),
+            for (final layer in _resolved) _buildLayer(context, layer),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildLayer(CosmeticLayerModel layer) {
-    final url = layer.imageUrl;
+  /// 이 층에 실제로 그릴 그림.
+  ///
+  /// 눈 깜빡임만 여기서 갈린다. BASE 자리에 들어가는 그림이라 겹치지 않고
+  /// **바꿔 끼운다.**
+  String _resolveUrl(BuildContext context, CosmeticLayerModel layer) {
+    if (!blinking || !layer.isBase) return layer.imageUrl;
+
+    // 깜빡이는 그림은 기본 개구리 한 장에서 떠 온 것이다. 전신 옷을 입어
+    // 본체가 [CosmeticLoadoutModel.defaultBaseHeadImageUrl] 로 갈렸거나 서버가
+    // 다른 본체를 내려주면 눈 자리가 맞는다는 보장이 없다. 그럴 때는 원래
+    // 그림을 그대로 둔다. 갈아 끼우는 규칙 자체는 건드리지 않는다.
+    if (layer.imageUrl != CosmeticLoadoutModel.defaultBaseImageUrl) {
+      return layer.imageUrl;
+    }
+
+    // 끝나지 않는 움직임이라 "동작 줄이기"를 켠 기기에서는 빼고, 테스트에서도
+    // 끈다. [FrogMotion.loopsEnabled] 설명을 참고한다.
+    if (!FrogMotion.loopsEnabled || AppMotion.isReduced(context)) {
+      return layer.imageUrl;
+    }
+
+    return FrogMotion.blink.webp ?? layer.imageUrl;
+  }
+
+  Widget _buildLayer(BuildContext context, CosmeticLayerModel layer) {
+    final url = _resolveUrl(context, layer);
     if (url.isEmpty) return const SizedBox.shrink();
 
     // 지금 여기 오는 것은 전부 512 비트맵이지만, 그림 종류를 가리는 일은
@@ -101,6 +137,14 @@ class FrogCharacter extends StatefulWidget {
   /// 모서리 둥글기. [FrogLayerStack.borderRadius] 로 그대로 간다.
   final double borderRadius;
 
+  /// 가만히 있을 때 숨을 쉬고 눈을 깜빡일지.
+  ///
+  /// 켜면 층 전체가 잔잔하게 오르내리고([FrogMotion.idle]) 눈이 깜빡인다
+  /// ([FrogMotion.blink]). 둘 다 끝나지 않는 움직임이라 **개구리가 주인공인
+  /// 무대에서만 켠다.** 목록 카드나 미션 고리 안처럼 다른 것을 보는 중에 곁에
+  /// 서 있는 개구리까지 계속 움직이면 화면이 산만해진다.
+  final bool idleMotion;
+
   const FrogCharacter({
     super.key,
     this.layers = const [],
@@ -108,6 +152,7 @@ class FrogCharacter extends StatefulWidget {
     this.size = 180,
     this.showEncouragement = true,
     this.borderRadius = AppRadius.large,
+    this.idleMotion = false,
   });
 
   @override
@@ -186,6 +231,26 @@ class _FrogCharacterState extends State<FrogCharacter>
     widget.onTap?.call();
   }
 
+  /// 개구리 그림. 대기 모션을 켰으면 **층 전체**를 함께 움직인다.
+  ///
+  /// 층 하나만 움직이면 모자와 옷이 제자리에 남아 개구리만 몸에서 빠져나간다.
+  Widget _buildStack() {
+    final stack = FrogLayerStack(
+      layers: widget.layers,
+      size: widget.size,
+      borderRadius: widget.borderRadius,
+      blinking: widget.idleMotion,
+    );
+
+    if (!widget.idleMotion) return stack;
+
+    return FrogStackMotion(
+      clip: FrogMotion.idle,
+      size: widget.size,
+      child: stack,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -203,11 +268,7 @@ class _FrogCharacterState extends State<FrogCharacter>
                 child: child,
               );
             },
-            child: FrogLayerStack(
-              layers: widget.layers,
-              size: widget.size,
-              borderRadius: widget.borderRadius,
-            ),
+            child: _buildStack(),
           ),
           // 격려 메시지
           if (_showMessage && _displayMessage != null)

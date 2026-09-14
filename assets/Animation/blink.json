@@ -1,0 +1,17 @@
+{
+  "name": "blink",
+  "canvas": { "width": 512, "height": 512 },
+  "layerUsage": "base-replacement",
+  "loop": true,
+  "durationMs": 2040,
+  "animatedWebp": "ono_blink.webp",
+  "spritesheet": { "file": "spritesheet.png", "columns": 4, "rows": 2, "frameWidth": 512, "frameHeight": 512 },
+  "frames": [
+    { "file": "frames/000_open.png", "durationMs": 1700 },
+    { "file": "frames/001_half.png", "durationMs": 70 },
+    { "file": "frames/002_closed.png", "durationMs": 100 },
+    { "file": "frames/003_half.png", "durationMs": 70 },
+    { "file": "frames/004_open.png", "durationMs": 100 }
+  ]
+}
+
