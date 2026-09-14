@@ -6,6 +6,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ono/Module/Theme/ThemeHandler.dart';
+import 'package:ono/Screen/User/Widget/FrogMotion.dart';
 import 'package:ono/Provider/AchievementProvider.dart';
 import 'package:ono/Provider/CosmeticProvider.dart';
 import 'package:ono/Provider/FoldersProvider.dart';
@@ -42,10 +43,17 @@ import 'test_setup.dart';
 /// [setUpOnoTest] 가 하는 일에 더해, 위젯을 그릴 때 플랫폼 채널을 타는 것들을
 /// 가짜로 바꿔 끼운다. FirebaseAnalytics 와 FlutterSecureStorage(ThemeHandler 가
 /// 생성자에서 색상을 읽는다)가 그 대상이다.
+///
+/// 개구리의 반복 모션(대기, 눈 깜빡임)도 여기서 끈다. `pumpAndSettle` 은
+/// 예약된 프레임이 없어질 때까지 펌프하는데 이 둘은 끝나지 않는다. 개구리는
+/// 앱 곳곳에 서 있어서, 켜 둔 채로는 개구리를 그리는 화면의 테스트가 전부
+/// 타임아웃난다. 반복 모션 자체를 확인하는 테스트만 스스로 다시 켠다.
 void setUpOnoWidgetTest() {
   setUpOnoTest();
   stubFirebaseAnalytics();
   stubSecureStorage();
+  setUp(() => FrogMotion.loopsEnabled = false);
+  tearDown(() => FrogMotion.loopsEnabled = true);
 }
 
 /// 화면 크기 프리셋. 반응형이 1차 환경이라 둘 다 돌려 보는 게 좋다.

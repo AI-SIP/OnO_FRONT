@@ -4,6 +4,7 @@ import '../../../Model/Cosmetic/CosmeticLoadoutModel.dart';
 import '../../../Module/Design/AppRadius.dart';
 import '../../../Module/Motion/AppMotion.dart';
 import '../../User/Widget/FrogCharacter.dart';
+import '../../User/Widget/FrogMotion.dart';
 
 /// 무대 바닥이다. 개구리가 **액자가 아니라 장면 위에** 서게 만든다.
 ///
@@ -196,6 +197,25 @@ class CosmeticStageFrog extends StatelessWidget {
               borderRadius: AppRadius.large,
               showEncouragement: showEncouragement,
               onTap: onTap,
+              // 앱에서 개구리가 숨을 쉬고 눈을 깜빡이는 자리는 여기뿐이다.
+              // 옷장과 캐릭터 탭은 개구리를 보러 온 화면이라 살아 있어야 하고,
+              // 나머지 자리(하단 탭, 프로필 사진, 목록 카드, 미션 고리)는 다른
+              // 것을 보는 중에 곁에 서 있는 그림이라 가만히 둔다.
+              idleMotion: true,
+            ),
+          ),
+          // 갈아입을 때 반짝이는 효과. 치장 층 순서에서 맨 위라 개구리를 그린
+          // 뒤에 얹는다. 개구리 사각형에 맞춰 깔면 512 좌표계가 그대로 맞는다.
+          Positioned(
+            left: 0,
+            right: 0,
+            top: 0,
+            child: Center(
+              child: FrogEffectOverlay(
+                clip: FrogMotion.equipEffect,
+                tick: equipTick,
+                size: size,
+              ),
             ),
           ),
         ],

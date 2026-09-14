@@ -21,6 +21,7 @@ import '../../Module/Theme/ThemeHandler.dart';
 import '../../Module/Theme/ThemeLockManager.dart';
 import '../../Provider/CosmeticProvider.dart';
 import '../User/Widget/FrogCharacter.dart';
+import '../User/Widget/FrogMotion.dart';
 
 /// 레벨대별 한 줄이다.
 ///
@@ -494,9 +495,20 @@ class _MissionLevelUpViewState extends State<_MissionLevelUpView>
                 ),
               );
 
+        // 금빛 링과 잎·별이 개구리에서 피어오른다. 치장 층 순서에서 맨 위라
+        // 개구리를 그린 뒤에 얹는다. 개구리보다 넓게 잡아야 링이 몸을 두른다.
+        //
+        // 화면이 뜨자마자 한 번만 튼다. 새로 열린 치장이 하나씩 내려앉는
+        // 동안에는 파문이 그 박자를 맡고, 이건 "레벨이 올랐다" 한 번이다.
+        final burst = FrogEffectOverlay(
+          clip: FrogMotion.levelUp,
+          tick: 1,
+          size: size,
+        );
+
         final content = Stack(
           alignment: Alignment.center,
-          children: [glow, ripples, frog],
+          children: [glow, ripples, frog, burst],
         );
 
         if (reduced) return content;

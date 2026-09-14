@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 
 import '../../Provider/CosmeticProvider.dart';
 import '../User/Widget/FrogCharacter.dart';
+import '../User/Widget/FrogMotion.dart';
 import '../../Module/Emoji/OnoEmojiCatalog.dart';
 import '../../Module/Emoji/OnoEmojiImage.dart';
 import '../../Module/Emoji/OnoEmojiPicker.dart';
@@ -115,11 +116,21 @@ class _PracticeCompletionScreenState extends State<PracticeCompletionScreen> {
                       // 복습을 끝낸 자리에 서는 것은 내가 꾸민 개구리다.
                       // 배경 파츠는 뺀다. 흰 화면 한가운데에 네모난 배경이
                       // 깔리면 개구리가 아니라 카드가 놓인 것처럼 보인다.
-                      FrogLayerStack(
-                        layers: context
-                            .watch<CosmeticProvider>()
-                            .layersWithoutBackdrop,
+                      //
+                      // 나타나면서 한 번 통통 튄다. 입고 있는 치장까지 함께
+                      // 움직여야 해서 그림이 아니라 층 전체를 민다.
+                      // 확인 표시는 개구리 옆에 그어지는 것이라 같이 튀지
+                      // 않게 밖에 둔다.
+                      FrogStackMotion(
+                        clip: FrogMotion.happyBounce,
                         size: screenHeight * 0.2,
+                        tick: 1,
+                        child: FrogLayerStack(
+                          layers: context
+                              .watch<CosmeticProvider>()
+                              .layersWithoutBackdrop,
+                          size: screenHeight * 0.2,
+                        ),
                       ),
                       // 화면만 바뀌면 끝났다는 느낌이 없어서, 캐릭터 옆에
                       // 확인 표시가 그어지게 했다.
