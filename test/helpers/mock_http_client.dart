@@ -33,6 +33,15 @@ class CapturedRequest {
 
   String? get contentType => headers['Content-Type'] ?? headers['content-type'];
 
+  /// 앱 버전 헤더. 값이 아니라 키가 있는지부터 봐야 할 때가 있어
+  /// [hasAppVersionHeader] 도 함께 둔다.
+  String? get appVersion =>
+      headers['X-App-Version'] ?? headers['x-app-version'];
+
+  bool get hasAppVersionHeader =>
+      headers.containsKey('X-App-Version') ||
+      headers.containsKey('x-app-version');
+
   /// 쿼리 파라미터. `?cursor=10&size=20` 같은 것을 검증할 때 쓴다.
   Map<String, String> get queryParameters => url.queryParameters;
 
