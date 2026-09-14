@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 
 import 'package:http/http.dart' as http;
 
+import '../../Config/AppConfig.dart';
 import '../../Constants/ErrorMessages.dart';
 import '../../Exception/ApiException.dart';
 import '../../Provider/TokenProvider.dart';
@@ -94,9 +95,15 @@ class HttpService {
       }
     }
 
+    // 서버가 요청이 어느 앱 버전에서 왔는지 보고 XP 자동 적립 여부를 가른다.
+    // 버전을 못 읽었으면 빈 값 대신 키 자체를 뺀다. 헤더가 없으면 서버가
+    // 구버전으로 보고 자동 적립을 켜는데, 그게 안전한 쪽이다.
+    final appVersion = AppConfig.appVersion;
+
     Map<String, String> mergedHeaders = {
       if (requiredToken) 'Authorization': '$accessToken',
       if (!isMultipart) 'Content-Type': 'application/json; charset=UTF-8',
+      if (appVersion != null) 'X-App-Version': appVersion,
       ...?headers,
     };
 
