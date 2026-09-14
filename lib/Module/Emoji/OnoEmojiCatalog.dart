@@ -206,6 +206,25 @@ class OnoEmojiCatalog {
         category: OnoEmojiCategory.leisure),
     OnoEmoji(
         key: 'wearing_scarf', label: '목도리', category: OnoEmojiCategory.leisure),
+    // 그림만 있고 목록에 없어서 아무도 고를 수 없던 일곱이다. 파일은 처음부터
+    // 들어와 있었는데 키가 빠져 있었다.
+    OnoEmoji(
+        key: 'angry_on_fire', label: '열정', category: OnoEmojiCategory.cheer),
+    OnoEmoji(key: 'cheers_beer', label: '건배', category: OnoEmojiCategory.cheer),
+    OnoEmoji(
+        key: 'christmas_santa',
+        label: '크리스마스',
+        category: OnoEmojiCategory.cheer),
+    OnoEmoji(
+        key: 'excited_sparkles',
+        label: '설렘',
+        category: OnoEmojiCategory.emotion),
+    OnoEmoji(
+        key: 'idea_lightbulb', label: '아이디어', category: OnoEmojiCategory.study),
+    OnoEmoji(
+        key: 'peeking_pole', label: '숨어보기', category: OnoEmojiCategory.social),
+    OnoEmoji(
+        key: 'stressed_bomb', label: '멘붕', category: OnoEmojiCategory.emotion),
   ];
 
   static const Map<String, String> unicodeKeyMap = {

@@ -112,7 +112,6 @@ flutter:
     - assets/GuideScreen/
     - assets/Logo/
     - assets/SocialLogin/
-    - assets/FrogCharacter/
     - assets/Cosmetic/
     - assets/Reward/
     - assets/ProfileFrame/
