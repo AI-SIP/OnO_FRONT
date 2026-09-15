@@ -4,9 +4,15 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../Model/Common/LoginStatus.dart';
+import '../../Module/Design/AppColors.dart';
+import '../../Module/Design/AppRadius.dart';
+import '../../Module/Design/AppSpacing.dart';
 import '../../Module/Motion/AppMotion.dart';
+import '../../Module/Motion/AppearTransition.dart';
 import '../../Module/Motion/HandwritingReveal.dart';
+import '../../Module/Motion/PressableScale.dart';
 import '../../Module/Motion/TossPageRoute.dart';
+import '../../Module/Text/StandardText.dart';
 import '../../Provider/UserProvider.dart';
 import '../../Util/AppErrorReporter.dart';
 import '../../Util/NotificationService.dart';
@@ -70,8 +76,12 @@ class _SplashScreenState extends State<SplashScreen> {
   /// 자동 로그인을 기다리는 한계 시간.
   ///
   /// 서버 호출에 30초 타임아웃이 걸려 있어서 영영 멈추지는 않지만, 다 적힌
-  /// 문구를 30초 동안 보고 있게 둘 수는 없다. 이 시간을 넘기면 로그인 화면으로
-  /// 보낸다. 뒤늦게 로그인 상태가 되면 그 화면이 받아서 홈으로 넘긴다.
+  /// 문구를 30초 동안 보고 있게 둘 수는 없다. 이 시간을 넘기면 서버에 연결하지
+  /// 못한 것으로 보고 다시 시도를 띄운다.
+  ///
+  /// 예전에는 로그인 화면으로 보냈다. 그런데 자동 로그인은 뒤에서 계속 돌다가
+  /// 30초 뒤에 로그인 상태로 끝나기도 해서, 로그인 화면에 있던 사람이 갑자기
+  /// 빈 홈으로 넘어갔다.
   static const Duration _autoLoginLimit = Duration(seconds: 8);
 
   /// 글씨를 다 쓰고 나서 화면에 머무는 시간.
@@ -88,6 +98,19 @@ class _SplashScreenState extends State<SplashScreen> {
   Timer? _holdTimer;
 
   bool _navigated = false;
+
+  /// 지금 돌고 있는 자동 로그인.
+  ///
+  /// 한계 시간을 넘겨도 뒤에서 계속 돈다. 그 사이에 다시 시도를 누르면 새로
+  /// 시작하지 않고 이것을 이어서 기다린다. 토큰 갱신은 어차피 한 번에 하나만
+  /// 나가므로 새로 시작해도 같은 요청을 기다리게 될 뿐이다.
+  Future<_LoginCheck>? _attempt;
+
+  /// 서버에 연결하지 못해 다시 시도를 띄워 둔 상태인지.
+  bool _unreachable = false;
+
+  /// 다시 시도를 눌러 기다리는 중인지.
+  bool _retrying = false;
 
   @override
   void dispose() {
@@ -106,26 +129,63 @@ class _SplashScreenState extends State<SplashScreen> {
 
     // 자동 로그인과 연출을 같이 굴린다. 먼저 시작해 두고 연출을 기다리므로
     // 둘 중 늦은 쪽 시간만 쓴다.
-    final loginCheck = _autoLogin(userProvider);
+    final loginCheck = _checkLogin(userProvider);
     await _writingDone.future;
-    final loggedIn = await loginCheck;
+    final result = await loginCheck;
     if (!mounted) return;
 
-    _goNext(loggedIn);
+    _goNext(result);
   }
 
-  /// 자동 로그인을 하고 로그인 상태인지 돌려준다. **어떤 경우에도 던지지
-  /// 않는다.**
+  Future<void> _retry() async {
+    if (_retrying) return;
+    setState(() => _retrying = true);
+
+    final result = await _checkLogin(
+      Provider.of<UserProvider>(context, listen: false),
+    );
+    if (!mounted) return;
+
+    setState(() => _retrying = false);
+    _goNext(result);
+  }
+
+  /// 자동 로그인을 [_autoLoginLimit] 까지만 기다리고 결과를 돌려준다.
+  Future<_LoginCheck> _checkLogin(UserProvider userProvider) async {
+    final attempt = _attempt ??= _autoLogin(userProvider);
+    try {
+      return await attempt.timeout(_autoLoginLimit);
+    } on TimeoutException {
+      // 뒤에서 계속 도는 자동 로그인이 끝나면 그 결과로 다시 넘긴다. 다시
+      // 시도를 띄워 둔 사이에 연결되면 누르지 않아도 넘어간다.
+      unawaited(attempt.then((result) {
+        if (mounted) _goNext(result);
+      }));
+
+      // 토큰 갱신은 끝났고 데이터만 받는 중이면 로그인은 확인된 것이다.
+      // 데이터는 홈에서 마저 받는다.
+      if (userProvider.loginStatus == LoginStatus.login) {
+        return _LoginCheck.login;
+      }
+      return _LoginCheck.unreachable;
+    }
+  }
+
+  /// 자동 로그인을 하고 결과를 돌려준다. **어떤 경우에도 던지지 않는다.**
   ///
   /// [UserProvider.autoLogin] 은 저장된 토큰을 읽는 것을 try 블록 밖에서 한다.
   /// 안드로이드에서 보안 저장소가 손상되면([TokenProvider] 의 BAD_DECRYPT 처리)
   /// 거기서 예외가 올라오는데, 그 시점에는 로그인 상태가 아직 `waiting` 이라
   /// Provider 쪽 인증 실패 처리도 화면을 넘겨 주지 않는다. 여기서 막지 않으면
   /// 이 화면에서 나가지 못하고 갇힌다.
-  Future<bool> _autoLogin(UserProvider userProvider) async {
+  Future<_LoginCheck> _autoLogin(UserProvider userProvider) async {
     try {
-      await userProvider.autoLogin().timeout(_autoLoginLimit);
-      return userProvider.loginStatus == LoginStatus.login;
+      await userProvider.autoLogin();
+      return switch (userProvider.loginStatus) {
+        LoginStatus.login => _LoginCheck.login,
+        LoginStatus.unreachable => _LoginCheck.unreachable,
+        _ => _LoginCheck.logout,
+      };
     } catch (error, stackTrace) {
       await AppErrorReporter.report(
         error,
@@ -133,21 +193,26 @@ class _SplashScreenState extends State<SplashScreen> {
         source: 'splash_auto_login',
         severity: AppErrorSeverity.warning,
       );
-      // 로그인 화면으로 보낸다. 거기서 다시 로그인하면 되고, 뒤늦게 로그인
-      // 상태가 되면 그 화면이 받아서 홈으로 넘긴다.
-      return false;
+      // 로그인 화면으로 보낸다. 거기서 다시 로그인하면 된다.
+      return _LoginCheck.logout;
+    } finally {
+      _attempt = null;
     }
   }
 
-  void _goNext(bool loggedIn) {
+  void _goNext(_LoginCheck result) {
     if (_navigated) return;
+
+    if (result == _LoginCheck.unreachable) {
+      // 로그인 화면으로 보내지 않는다. 토큰이 살아 있는 사람에게 다시
+      // 로그인하라고 하는 셈이고, 뒤늦게 연결되면 그 화면에서 홈으로 튄다.
+      if (!_unreachable) setState(() => _unreachable = true);
+      return;
+    }
+
     _navigated = true;
 
-    if (!loggedIn) {
-      // autoLogin 은 끝나면서 로그인이나 로그아웃 중 하나로 상태를 정한다.
-      // 혹시 waiting 으로 남더라도 로그인 화면이 상태를 계속 보고 있어서,
-      // 뒤늦게 로그인으로 바뀌면 그쪽에서 알아서 홈으로 넘어간다. 예전처럼
-      // 여기서 500ms 간격으로 상태를 다시 볼 이유가 없다.
+    if (result == _LoginCheck.logout) {
       Navigator.of(context).pushReplacement(
         TossPageRoute(builder: (_) => const LoginScreen()),
       );
@@ -225,6 +290,26 @@ class _SplashScreenState extends State<SplashScreen> {
                 ),
               ),
             ),
+            if (_unreachable)
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: AppearTransition(
+                  // 공책 줄이 안내 글자를 가로지르면 읽기 어려워서 종이 색으로
+                  // 덮는다.
+                  child: ColoredBox(
+                    color: OnboardingBrand.background,
+                    child: SafeArea(
+                      top: false,
+                      child: _UnreachableNotice(
+                        retrying: _retrying,
+                        onRetry: _retry,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
           ],
         ),
       ),
@@ -243,6 +328,84 @@ class _SplashScreenState extends State<SplashScreen> {
       child: FractionalTranslation(
         translation: const Offset(0, -0.5),
         child: Center(child: child),
+      ),
+    );
+  }
+}
+
+/// 자동 로그인이 어떻게 끝났는지.
+enum _LoginCheck {
+  login,
+  logout,
+
+  /// 서버에 물어보지 못해 확인하지 못했다. [LoginStatus.unreachable] 참고.
+  unreachable,
+}
+
+/// 서버에 연결하지 못했을 때 화면 아래에 띄우는 안내와 다시 시도 버튼이다.
+///
+/// 개구리와 문구는 그대로 두고 아래에만 얹는다. 오류 화면으로 통째로 바꾸면
+/// 앱이 고장 난 것처럼 보이는데, 대부분은 잠깐 끊긴 것이라 다시 누르면 된다.
+class _UnreachableNotice extends StatelessWidget {
+  final bool retrying;
+  final VoidCallback onRetry;
+
+  const _UnreachableNotice({required this.retrying, required this.onRetry});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.screenHorizontal,
+        AppSpacing.lg,
+        AppSpacing.screenHorizontal,
+        AppSpacing.xxxl,
+      ),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 400),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const StandardText(
+                text: '서버에 연결할 수 없어요',
+                fontSize: 16,
+                color: AppColors.textPrimary,
+                textAlign: TextAlign.center,
+              ),
+              const StandardText(
+                text: '인터넷 연결을 확인하고 다시 시도해 주세요.',
+                fontSize: 13,
+                fontWeight: FontWeight.w400,
+                fontFamily: 'PretendardLight',
+                color: AppColors.textTertiary,
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: AppSpacing.lg),
+              PressableScale(
+                onTap: onRetry,
+                enabled: !retrying,
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color:
+                        retrying ? AppColors.surfaceMuted : OnboardingBrand.ink,
+                    borderRadius: BorderRadius.circular(AppRadius.medium),
+                  ),
+                  child: StandardText(
+                    text: retrying ? '연결하는 중이에요' : '다시 시도',
+                    fontSize: 15,
+                    color: retrying ? AppColors.textTertiary : Colors.white,
+                    textAlign: TextAlign.center,
+                    height: 1.2,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

@@ -34,6 +34,30 @@ _FakeUserProvider _userProvider({
   return provider;
 }
 
+/// 자동 로그인을 부를 때마다 [attempts] 를 앞에서부터 하나씩 꺼내 쓴다.
+///
+/// 다시 시도를 누르면 자동 로그인을 한 번 더 부르는데, 그때마다 결과가 달라야
+/// 하는 상황(처음엔 연결이 안 되다가 두 번째에 되는 것)을 만든다.
+_FakeUserProvider _scriptedUserProvider(
+  List<({LoginStatus status, Duration delay})> attempts,
+) {
+  final provider = _FakeUserProvider();
+  var status = LoginStatus.waiting;
+  var index = 0;
+  when(() => provider.loginStatus).thenAnswer((_) => status);
+  when(() => provider.isLoggedIn).thenAnswer((_) => status);
+  when(() => provider.addListener(any())).thenReturn(null);
+  when(() => provider.removeListener(any())).thenReturn(null);
+  when(() => provider.dispose()).thenReturn(null);
+  when(() => provider.autoLogin()).thenAnswer((_) {
+    final attempt = attempts[index++];
+    return Future<void>.delayed(attempt.delay, () => status = attempt.status);
+  });
+  return provider;
+}
+
+const _unreachableMessage = '서버에 연결할 수 없어요';
+
 Widget _splash() => SplashScreen(
       homeBuilder: (_) => const Scaffold(body: Text('홈')),
     );
@@ -207,26 +231,133 @@ void main() {
     expect(find.byType(SplashScreen), findsNothing);
   });
 
-  testWidgets('자동 로그인이 한계 시간을 넘기면 기다리지 않고 넘어간다', (tester) async {
+  testWidgets('자동 로그인이 한계 시간을 넘기면 로그인 화면이 아니라 다시 시도를 띄운다', (tester) async {
     // 서버 호출에 30초 타임아웃이 걸려 있어서, 그대로 기다리면 다 적힌 문구를
     // 30초 동안 보고 있게 된다.
+    //
+    // 예전에는 여기서 로그인 화면으로 보냈는데, 뒤에서 계속 돌던 자동 로그인이
+    // 30초 뒤 로그인 상태로 끝나면 그 화면에서 빈 홈으로 튀었다.
+    await pumpOnoWidget(
+      tester,
+      _splash(),
+      userProvider: _scriptedUserProvider([
+        (status: LoginStatus.unreachable, delay: const Duration(seconds: 30)),
+      ]),
+      settle: false,
+    );
+
+    await _runThroughSplash(tester);
+    expect(find.text(_unreachableMessage), findsNothing);
+
+    // 한계 시간 8초가 지나면 다시 시도를 띄운다.
+    await tester.pump(const Duration(seconds: 9));
+    await tester.pumpAndSettle();
+    expect(find.text(_unreachableMessage), findsOneWidget);
+    expect(find.byType(LoginScreen), findsNothing);
+
+    // 자동 로그인이 끝내 연결하지 못해도 그대로 머문다.
+    await tester.pump(const Duration(seconds: 30));
+    await tester.pumpAndSettle();
+    expect(find.text(_unreachableMessage), findsOneWidget);
+    expect(find.byType(LoginScreen), findsNothing);
+  });
+
+  testWidgets('서버에 연결하지 못하면 로그인 화면으로 가지 않고 다시 시도를 띄운다', (tester) async {
+    await pumpOnoWidget(
+      tester,
+      _splash(),
+      userProvider: _scriptedUserProvider([
+        (status: LoginStatus.unreachable, delay: Duration.zero),
+      ]),
+      settle: false,
+    );
+
+    await _runThroughSplash(tester);
+
+    expect(find.byType(SplashScreen), findsOneWidget);
+    expect(find.text(_unreachableMessage), findsOneWidget);
+    expect(find.text('홈'), findsNothing);
+    expect(find.byType(LoginScreen), findsNothing);
+  });
+
+  testWidgets('다시 시도해서 연결되면 홈으로 넘어간다', (tester) async {
+    await pumpOnoWidget(
+      tester,
+      _splash(),
+      userProvider: _scriptedUserProvider([
+        (status: LoginStatus.unreachable, delay: Duration.zero),
+        (status: LoginStatus.login, delay: const Duration(seconds: 1)),
+      ]),
+      settle: false,
+    );
+    await _runThroughSplash(tester);
+
+    await tester.tap(find.text('다시 시도'));
+    await tester.pump();
+    // 기다리는 동안에는 한 번 더 누를 수 없게 글자가 바뀐다.
+    expect(find.text('연결하는 중이에요'), findsOneWidget);
+
+    await tester.pump(const Duration(seconds: 1));
+    await tester.pumpAndSettle();
+    expect(find.text('홈'), findsOneWidget);
+  });
+
+  testWidgets('다시 시도했는데 인증이 만료됐으면 로그인 화면으로 간다', (tester) async {
+    await pumpOnoWidget(
+      tester,
+      _splash(),
+      userProvider: _scriptedUserProvider([
+        (status: LoginStatus.unreachable, delay: Duration.zero),
+        (status: LoginStatus.logout, delay: Duration.zero),
+      ]),
+      settle: false,
+    );
+    await _runThroughSplash(tester);
+
+    await tester.tap(find.text('다시 시도'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(LoginScreen), findsOneWidget);
+  });
+
+  testWidgets('한계 시간을 넘긴 뒤에 연결되면 누르지 않아도 홈으로 넘어간다', (tester) async {
+    await pumpOnoWidget(
+      tester,
+      _splash(),
+      userProvider: _scriptedUserProvider([
+        (status: LoginStatus.login, delay: const Duration(seconds: 12)),
+      ]),
+      settle: false,
+    );
+
+    await _runThroughSplash(tester);
+    await tester.pump(const Duration(seconds: 6));
+    await tester.pumpAndSettle();
+    expect(find.text(_unreachableMessage), findsOneWidget);
+
+    await tester.pump(const Duration(seconds: 4));
+    await tester.pumpAndSettle();
+    expect(find.text('홈'), findsOneWidget);
+  });
+
+  testWidgets('한계 시간을 넘겼어도 로그인은 확인됐고 데이터만 받는 중이면 홈으로 넘어간다', (tester) async {
+    // 토큰 갱신이 끝나면 로그인 상태가 되고, 그 뒤에 데이터를 받는다. 데이터가
+    // 늦는 것은 서버에 연결하지 못한 것이 아니다.
     await pumpOnoWidget(
       tester,
       _splash(),
       userProvider: _userProvider(
-        status: LoginStatus.waiting,
+        status: LoginStatus.login,
         delay: const Duration(seconds: 30),
       ),
       settle: false,
     );
 
     await _runThroughSplash(tester);
-    expect(find.byType(SplashScreen), findsOneWidget);
-
-    // 한계 시간 8초가 지나면 넘어간다.
     await tester.pump(const Duration(seconds: 9));
     await tester.pumpAndSettle();
-    expect(find.byType(LoginScreen), findsOneWidget);
+    expect(find.text('홈'), findsOneWidget);
+    expect(find.text(_unreachableMessage), findsNothing);
 
     // 자동 로그인은 아직 돌고 있다. 남겨 두면 끝나지 않은 타이머 때문에
     // 테스트가 실패한다.

@@ -432,7 +432,7 @@ void main() {
       expect(provider.userInfoModel, isNull);
     });
 
-    test('토큰 갱신이 일시적 네트워크 오류면 세션을 유지한다 (의도된 동작)', () async {
+    test('토큰 갱신이 네트워크 오류면 로그인도 로그아웃도 아닌 unreachable 이 된다', () async {
       when(() => tokenProvider.getRefreshToken())
           .thenAnswer((_) async => 'refresh-token');
       when(() => tokenProvider.refreshAccessToken())
@@ -440,8 +440,37 @@ void main() {
 
       await provider.autoLogin();
 
-      // 실제로 데이터를 못 가져왔어도, 일시적 네트워크 문제로 세션 자체를
-      // 끊지는 않는다는 게 이 코드의 의도다 (주석 참고).
+      // 예전에는 login 으로 쳐서 데이터를 하나도 못 받은 빈 홈으로 들어갔다.
+      // 토큰은 지우지 않아야 다시 시도했을 때 그대로 로그인된다.
+      expect(provider.isLoggedIn, LoginStatus.unreachable);
+      verifyNever(() => tokenProvider.deleteToken());
+    });
+
+    test('토큰 갱신이 5xx 여도 unreachable 이 된다', () async {
+      when(() => tokenProvider.getRefreshToken())
+          .thenAnswer((_) async => 'refresh-token');
+      when(() => tokenProvider.refreshAccessToken())
+          .thenThrow(ApiException(statusCode: 503, message: '점검 중'));
+
+      await provider.autoLogin();
+
+      expect(provider.isLoggedIn, LoginStatus.unreachable);
+    });
+
+    test('unreachable 뒤에 다시 시도해서 갱신되면 login 이 된다', () async {
+      when(() => tokenProvider.getRefreshToken())
+          .thenAnswer((_) async => 'refresh-token');
+      when(() => tokenProvider.refreshAccessToken())
+          .thenThrow(NetworkException());
+      await provider.autoLogin();
+      expect(provider.isLoggedIn, LoginStatus.unreachable);
+
+      when(() => tokenProvider.refreshAccessToken()).thenAnswer((_) async {});
+      when(() => userService.fetchUserInfo(showErrorSnackBar: true))
+          .thenThrow(Exception('서버 점검 중'));
+
+      await provider.autoLogin();
+
       expect(provider.isLoggedIn, LoginStatus.login);
     });
   });

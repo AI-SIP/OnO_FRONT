@@ -449,7 +449,9 @@ class UserProvider with ChangeNotifier {
       );
       await _handleAuthFailure();
     } catch (error, stackTrace) {
-      // 일시적인 네트워크 오류 등은 로그인 상태 유지
+      // 서버에 물어보지 못했을 뿐이라 토큰은 지우지 않는다. 다만 로그인으로
+      // 치면 데이터를 하나도 못 받은 빈 홈으로 들어가므로, 확인하지 못했다는
+      // 상태로 두고 화면이 다시 시도하게 한다.
       debugPrint('자동 로그인 일시 실패: $error');
       await AppErrorReporter.report(
         error,
@@ -457,8 +459,7 @@ class UserProvider with ChangeNotifier {
         source: 'auto_login_refresh',
         severity: AppErrorSeverity.warning,
       );
-      _isFirstLogin = false;
-      _loginStatus = LoginStatus.login;
+      _loginStatus = LoginStatus.unreachable;
     } finally {
       notifyListeners();
     }
