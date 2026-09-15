@@ -32,6 +32,10 @@ class GoldenSurface {
 
   /// 화면 골든의 기본 조합.
   static const all = [smallPhone, phone, phoneLargeText, tablet];
+
+  /// 폰과 태블릿 레이아웃만. 넘치는지는 위젯 테스트의 `크기` 그룹이 이미 보고
+  /// 있어서, 생김새만 잠그면 되는 화면은 이 둘로 충분하다. 이미지 수가 절반이 된다.
+  static const layouts = [phone, tablet];
 }
 
 /// 한 화면을 [surfaces] 크기마다 골든으로 뜬다.
@@ -60,11 +64,18 @@ class GoldenSurface {
 ///
 /// 동작 줄이기를 켜고 뜬다. 끝나지 않는 연출이 있으면 `pumpAndSettle` 이 끝나지
 /// 않고, 연출 중간 프레임을 뜨면 매번 다른 이미지가 나오기 때문이다.
+///
+/// 펌프는 [runWith] 안에서 돈다. 기본은 네트워크 이미지를 투명 PNG 로 막는
+/// [withMockedNetworkImages] 다. 태그 화면처럼 서비스를 주입할 수 없어 HTTP 를
+/// 통째로 가로채야 하는 화면은 그 가짜로 바꿔 넘긴다. 둘 다 `HttpOverrides` 라
+/// 겹쳐 쓰면 안쪽 것만 먹는다.
 void screenGoldenTest(
   String description, {
   required String fileName,
   required Future<Widget> Function() buildApp,
   List<GoldenSurface> surfaces = GoldenSurface.all,
+  Future<void> Function(Future<void> Function() body) runWith =
+      withMockedNetworkImages,
 }) {
   for (final surface in surfaces) {
     final slot = _AppSlot();
@@ -80,18 +91,53 @@ void screenGoldenTest(
       pumpWidget: (tester, wrapper) async {
         disableAnimationsForTest(tester);
         addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+        // 입력칸에 포커스가 가는 화면은 커서가 깜빡인다. 찍히는 순간 커서가
+        // 켜져 있는지가 타이머에 달려 있으면 이미지가 흔들리므로 늘 켜 둔다.
+        EditableText.debugDeterministicCursor = true;
+        addTearDown(() => EditableText.debugDeterministicCursor = false);
         slot.app = await buildApp();
-        await withMockedNetworkImages(() => tester.pumpWidget(wrapper));
+        await runWith(() => tester.pumpWidget(wrapper));
       },
       // 먼저 settle 하고 나서 그림을 미리 읽는다. 훈장 화면처럼 들어온 뒤에
       // 스스로 조회하는 화면은 settle 전에는 그림 위젯이 아직 없어서, 순서를
       // 바꾸면 그림이 빈 채로 찍힌다.
-      pumpBeforeTest: (tester) => withMockedNetworkImages(() async {
+      pumpBeforeTest: (tester) => runWith(() async {
         await tester.pumpAndSettle();
-        await precacheImages(tester);
+        await _precacheLocalImages(tester);
       }),
     );
   }
+}
+
+/// 에셋과 메모리 그림만 미리 읽는다.
+///
+/// 그림 디코딩은 진짜 비동기라 `runAsync` 안에서만 끝난다. 그런데 `runAsync` 가
+/// 도는 동안에는 화면에 걸려 있던 다른 비동기도 같이 흘러간다. 책장 화면의
+/// `CachedNetworkImage` 는 그 틈에 캐시 폴더(path_provider)를 찾다가
+/// `MissingPluginException` 으로 테스트를 깨뜨렸고, alchemist 의 `precacheImages`
+/// 로 네트워크 그림까지 기다리게 했을 때는 10분 시간 초과로 죽었다.
+///
+/// 그래서 네트워크 그림은 기다리지 않고(어차피 투명 PNG 로 막힌다), 미리 읽을
+/// 로컬 그림이 없으면 `runAsync` 에 아예 들어가지 않는다.
+Future<void> _precacheLocalImages(WidgetTester tester) async {
+  bool isLocal(ImageProvider provider) {
+    if (provider is ResizeImage) return isLocal(provider.imageProvider);
+    return provider is AssetBundleImageProvider || provider is MemoryImage;
+  }
+
+  final locals = [
+    for (final element in find.byType(Image).evaluate())
+      if (isLocal((element.widget as Image).image)) element,
+  ];
+  if (locals.isEmpty) return;
+
+  await tester.runAsync(() async {
+    await Future.wait([
+      for (final element in locals)
+        precacheImage((element.widget as Image).image, element),
+    ]);
+  });
+  await tester.pumpAndSettle();
 }
 
 class _AppSlot {

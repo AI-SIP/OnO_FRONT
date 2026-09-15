@@ -21,7 +21,14 @@ Future<void> testExecutable(FutureOr<void> Function() testMain) {
       ),
       // 진짜 폰트로 그리는 이미지. OS 마다 글자 렌더링이 달라서 커밋하지 않고
       // 로컬에서 눈으로 확인하는 데만 쓴다. CI 에서는 만들 필요가 없다.
-      platformGoldensConfig: PlatformGoldensConfig(enabled: !isRunningInCi),
+      //
+      // 이쪽은 그림자를 진짜로 그리는데, 전체 테스트를 한꺼번에 돌리면 책장 화면
+      // 태블릿의 추가 버튼 그림자 끝 1px 이 가끔 달라서 로컬 실행이 깨졌다. 눈으로
+      // 보는 용도라 0.1% 까지는 같은 이미지로 본다. CI 쪽은 그림자를 안 그린다.
+      platformGoldensConfig: PlatformGoldensConfig(
+        enabled: !isRunningInCi,
+        diffThreshold: 0.001,
+      ),
       // 글자를 네모로 가린 이미지. OS 와 상관없이 거의 같게 나와서 이것만 커밋하고
       // CI 에서 비교한다.
       //
