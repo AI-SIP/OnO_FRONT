@@ -3,6 +3,7 @@ import 'dart:ui';
 
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart';
@@ -38,6 +39,7 @@ import 'Screen/User/MyPageScreen.dart';
 import 'Util/AppErrorReporter.dart';
 import 'Util/AppNavigator.dart';
 import 'Util/AppSnackBar.dart';
+import 'Util/SentryEnvironment.dart';
 import 'Util/NotificationService.dart';
 import 'Module/Notice/ServiceNoticeDialog.dart';
 import 'Service/Api/Notice/NoticeService.dart';
@@ -80,6 +82,13 @@ Future<void> main() async {
       await SentryFlutter.init(
         (options) {
           options.dsn = dotenv.env['SENTRY_DSN'] ?? '';
+          // 운영 사용자 에러만 갈라 볼 수 있게 ENV 를 environment 로 싣는다.
+          // release 이름(패키지@버전+빌드)은 sentry_flutter 가 알아서 채운다.
+          options.environment = SentryEnvironment.resolve(
+            appEnv: const String.fromEnvironment('ENV', defaultValue: 'local'),
+            isReleaseMode: kReleaseMode,
+            isProfileMode: kProfileMode,
+          );
           options.profilesSampleRate = 0.0;
           options.tracesSampleRate = 1.0;
         },
