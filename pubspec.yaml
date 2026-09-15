@@ -78,6 +78,10 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
 
+  # E2E 테스트. 진짜 앱을 시뮬레이터에 띄워 dev 서버에 붙인다. integration_test/ 참고.
+  integration_test:
+    sdk: flutter
+
   # 테스트용 mock 라이브러리. 코드 생성(build_runner)이 필요 없다.
   mocktail: ^1.0.4
 
