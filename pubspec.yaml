@@ -82,6 +82,9 @@ dev_dependencies:
   integration_test:
     sdk: flutter
 
+  # OS 화면(사진 선택 등)까지 누르는 E2E 테스트. patrol_test/ 참고. 실행에는 patrol_cli 가 필요하다.
+  patrol: ^4.9.0
+
   # 테스트용 mock 라이브러리. 코드 생성(build_runner)이 필요 없다.
   mocktail: ^1.0.4
 
@@ -176,3 +179,12 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/custom-fonts/#from-packages
+
+# Patrol E2E 설정. patrol_test/README.md 참고.
+patrol:
+  app_name: OnO
+  test_directory: patrol_test
+  android:
+    package_name: com.ono.app
+  ios:
+    bundle_id: com.aisip.OnO

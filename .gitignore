@@ -138,3 +138,6 @@ docs/
 test/**/goldens/*
 !test/**/goldens/ci/
 test/**/failures/
+
+# Patrol 이 테스트를 돌릴 때마다 만드는 진입점. 커밋하지 않는다.
+patrol_test/test_bundle.dart

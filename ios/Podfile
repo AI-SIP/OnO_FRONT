@@ -38,6 +38,10 @@ target 'Runner' do
   target 'RunnerTests' do
     inherit! :search_paths
   end
+  # Patrol E2E 테스트 번들. 앱과 같은 플러그인을 다 물어야 해서 :complete 로 받는다.
+  target 'RunnerUITests' do
+    inherit! :complete
+  end
 end
 
 post_install do |installer|
