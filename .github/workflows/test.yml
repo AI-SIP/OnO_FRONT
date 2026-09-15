@@ -87,3 +87,13 @@ jobs:
 
       - name: 테스트 실행
         run: flutter test
+
+      - name: 골든 실패 diff 올리기
+        # 골든 테스트가 깨지면 test/**/failures/ 에 기준 이미지와 새 이미지, 차이를
+        # 표시한 이미지가 남는다. 러너가 끝나면 사라지므로 받아 볼 수 있게 올린다.
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: golden-failures
+          path: test/**/failures/
+          if-no-files-found: ignore
