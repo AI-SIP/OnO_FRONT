@@ -6,6 +6,7 @@ export 'asset_finder.dart';
 export 'cosmetic_catalog_fixture.dart';
 export 'firebase_analytics_stub.dart';
 export 'fixtures.dart';
+export 'golden_harness.dart';
 export 'mock_http_client.dart';
 export 'mocks.dart';
 export 'secure_storage_stub.dart';

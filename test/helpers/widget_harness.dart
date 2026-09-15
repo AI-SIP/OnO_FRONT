@@ -110,75 +110,28 @@ Future<void> pumpOnoWidget(
 }) async {
   await setSurfaceSize(tester, surfaceSize);
 
-  final problems = problemsProvider ?? ProblemsProvider();
-  final folders =
-      foldersProvider ?? FoldersProvider(problemsProvider: problems);
-  final practice =
-      practiceProvider ?? ProblemPracticeProvider(problemsProvider: problems);
   // 옷장은 서버에서 받아야 채워진다. 안 넘기면 가짜 서버에서 한 번 받아 둔다.
   // 빈 옷장을 기본으로 두면 개구리가 그려지는 화면 열일곱 군데의 테스트가
   // 전부 맨 개구리만 보게 된다.
   final cosmetic = cosmeticProvider ?? await loadedCosmeticProvider();
 
   await tester.pumpWidget(
-    MultiProvider(
-      providers: [
-        ChangeNotifierProvider<ProblemsProvider>.value(value: problems),
-        ChangeNotifierProvider<FoldersProvider>.value(value: folders),
-        ChangeNotifierProvider<ProblemPracticeProvider>.value(value: practice),
-        ChangeNotifierProvider<UserProvider>.value(
-          value: userProvider ?? UserProvider(problems, folders, practice),
-        ),
-        ChangeNotifierProvider<ThemeHandler>.value(
-          value: themeHandler ?? ThemeHandler(),
-        ),
-        ChangeNotifierProvider<ScreenIndexProvider>.value(
-          value: screenIndexProvider ?? ScreenIndexProvider(),
-        ),
-        ChangeNotifierProvider<ReviewDueProvider>.value(
-          value: reviewDueProvider ?? ReviewDueProvider(),
-        ),
-        ChangeNotifierProvider<MissionProvider>.value(
-          value: missionProvider ?? MissionProvider(),
-        ),
-        ChangeNotifierProvider<TutorialProvider>.value(
-          value: tutorialProvider ?? TutorialProvider(),
-        ),
-        ChangeNotifierProvider<StudyRoomProvider>.value(
-          value: studyRoomProvider ?? StudyRoomProvider(),
-        ),
-        ChangeNotifierProvider<CosmeticProvider>.value(value: cosmetic),
-        // 훈장은 안 넘기면 빈 채로 둔다. 이 프로바이더는 누가 부르기 전까지
-        // 서버에 묻지 않으므로, 옷장 탭처럼 훈장 줄만 있는 화면은 이것으로
-        // 충분하다.
-        ChangeNotifierProvider<AchievementProvider>.value(
-          value: achievementProvider ?? AchievementProvider(),
-        ),
-      ],
-      child: Builder(
-        builder: (context) {
-          final theme = Provider.of<ThemeHandler>(context);
-          return MaterialApp(
-            // 앱과 같은 키를 물려야 알림이 실제로 뜬다. 알림이 SnackBar 에서
-            // 위에서 내려오는 AppToast 로 바뀌면서 Navigator 의 Overlay 를
-            // 쓰게 되어, navigatorKey 도 함께 물려야 한다.
-            scaffoldMessengerKey: AppSnackBar.messengerKey,
-            navigatorKey: AppNavigator.navigatorKey,
-            navigatorObservers: navigatorObservers,
-            routes: routes,
-            theme: ThemeData(
-              colorScheme: ColorScheme.fromSeed(seedColor: theme.primaryColor),
-              primaryColor: theme.primaryColor,
-              useMaterial3: true,
-              dialogTheme: const DialogThemeData(
-                constraints: BoxConstraints(maxWidth: 420),
-              ),
-            ),
-            debugShowCheckedModeBanner: false,
-            home: child,
-          );
-        },
-      ),
+    buildOnoApp(
+      child,
+      problemsProvider: problemsProvider,
+      foldersProvider: foldersProvider,
+      practiceProvider: practiceProvider,
+      userProvider: userProvider,
+      studyRoomProvider: studyRoomProvider,
+      reviewDueProvider: reviewDueProvider,
+      missionProvider: missionProvider,
+      tutorialProvider: tutorialProvider,
+      screenIndexProvider: screenIndexProvider,
+      cosmeticProvider: cosmetic,
+      achievementProvider: achievementProvider,
+      themeHandler: themeHandler,
+      navigatorObservers: navigatorObservers,
+      routes: routes,
     ),
   );
 
@@ -187,6 +140,97 @@ Future<void> pumpOnoWidget(
   } else {
     await tester.pump();
   }
+}
+
+/// [pumpOnoWidget] 이 띄우는 Provider 트리와 MaterialApp 을 위젯으로만 만든다.
+///
+/// 펌프는 부르는 쪽이 한다. 골든 테스트처럼 다른 틀(alchemist)이 펌프를 맡는
+/// 자리에서 같은 트리를 쓰려고 떼어 냈다. 옷장은 서버에서 받아야 채워지는데
+/// 여기서는 기다릴 수 없으므로 [cosmeticProvider] 는 반드시 넘긴다.
+Widget buildOnoApp(
+  Widget child, {
+  required CosmeticProvider cosmeticProvider,
+  ProblemsProvider? problemsProvider,
+  FoldersProvider? foldersProvider,
+  ProblemPracticeProvider? practiceProvider,
+  UserProvider? userProvider,
+  StudyRoomProvider? studyRoomProvider,
+  ReviewDueProvider? reviewDueProvider,
+  MissionProvider? missionProvider,
+  TutorialProvider? tutorialProvider,
+  ScreenIndexProvider? screenIndexProvider,
+  AchievementProvider? achievementProvider,
+  ThemeHandler? themeHandler,
+  List<NavigatorObserver> navigatorObservers = const [],
+  Map<String, WidgetBuilder> routes = const {},
+}) {
+  final problems = problemsProvider ?? ProblemsProvider();
+  final folders =
+      foldersProvider ?? FoldersProvider(problemsProvider: problems);
+  final practice =
+      practiceProvider ?? ProblemPracticeProvider(problemsProvider: problems);
+
+  return MultiProvider(
+    providers: [
+      ChangeNotifierProvider<ProblemsProvider>.value(value: problems),
+      ChangeNotifierProvider<FoldersProvider>.value(value: folders),
+      ChangeNotifierProvider<ProblemPracticeProvider>.value(value: practice),
+      ChangeNotifierProvider<UserProvider>.value(
+        value: userProvider ?? UserProvider(problems, folders, practice),
+      ),
+      ChangeNotifierProvider<ThemeHandler>.value(
+        value: themeHandler ?? ThemeHandler(),
+      ),
+      ChangeNotifierProvider<ScreenIndexProvider>.value(
+        value: screenIndexProvider ?? ScreenIndexProvider(),
+      ),
+      ChangeNotifierProvider<ReviewDueProvider>.value(
+        value: reviewDueProvider ?? ReviewDueProvider(),
+      ),
+      ChangeNotifierProvider<MissionProvider>.value(
+        value: missionProvider ?? MissionProvider(),
+      ),
+      ChangeNotifierProvider<TutorialProvider>.value(
+        value: tutorialProvider ?? TutorialProvider(),
+      ),
+      ChangeNotifierProvider<StudyRoomProvider>.value(
+        value: studyRoomProvider ?? StudyRoomProvider(),
+      ),
+      ChangeNotifierProvider<CosmeticProvider>.value(
+        value: cosmeticProvider,
+      ),
+      // 훈장은 안 넘기면 빈 채로 둔다. 이 프로바이더는 누가 부르기 전까지
+      // 서버에 묻지 않으므로, 옷장 탭처럼 훈장 줄만 있는 화면은 이것으로
+      // 충분하다.
+      ChangeNotifierProvider<AchievementProvider>.value(
+        value: achievementProvider ?? AchievementProvider(),
+      ),
+    ],
+    child: Builder(
+      builder: (context) {
+        final theme = Provider.of<ThemeHandler>(context);
+        return MaterialApp(
+          // 앱과 같은 키를 물려야 알림이 실제로 뜬다. 알림이 SnackBar 에서
+          // 위에서 내려오는 AppToast 로 바뀌면서 Navigator 의 Overlay 를
+          // 쓰게 되어, navigatorKey 도 함께 물려야 한다.
+          scaffoldMessengerKey: AppSnackBar.messengerKey,
+          navigatorKey: AppNavigator.navigatorKey,
+          navigatorObservers: navigatorObservers,
+          routes: routes,
+          theme: ThemeData(
+            colorScheme: ColorScheme.fromSeed(seedColor: theme.primaryColor),
+            primaryColor: theme.primaryColor,
+            useMaterial3: true,
+            dialogTheme: const DialogThemeData(
+              constraints: BoxConstraints(maxWidth: 420),
+            ),
+          ),
+          debugShowCheckedModeBanner: false,
+          home: child,
+        );
+      },
+    ),
+  );
 }
 
 /// 기기에서 "동작 줄이기"를 켠 것처럼 만든다.

@@ -89,6 +89,11 @@ dev_dependencies:
   camera_platform_interface: ^2.11.0
   plugin_platform_interface: ^2.1.8
 
+  # 골든 테스트. 글자를 네모로 그리는 CI 용 이미지와 진짜 폰트로 그리는 로컬 확인용
+  # 이미지를 한 테스트에서 같이 만든다. CI(Ubuntu)와 로컬(macOS)의 폰트 렌더링이 달라서
+  # 진짜 폰트 이미지는 커밋하지 않고 CI 용만 커밋해 비교한다.
+  alchemist: ^0.14.0
+
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
   # activated in the `analysis_options.yaml` file located at the root of your
