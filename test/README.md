@@ -260,10 +260,32 @@ void main() {
 - **`buildApp` 은 `buildOnoApp` 으로 만든다.** `pumpOnoWidget` 과 같은 Provider 트리다.
   화면이 읽는 Provider 는 가짜 서비스를 물려서 넘기는 규칙도 같다.
 - **크기는 기본으로 네 벌이다.** `GoldenSurface.all` (작은 폰, 폰, 폰 글자 1.6배, 태블릿).
-  줄이려면 `surfaces:` 로 넘긴다.
+  넘치는지는 위젯 테스트의 `크기` 그룹이 이미 보고 있으니, 생김새만 잠그면 되는 화면은
+  `surfaces: GoldenSurface.layouts` (폰, 태블릿) 로 줄인다. 작은 폰과 큰 글씨에서의
+  배치 자체가 약속인 화면(훈장, 옷장, 캐릭터)만 네 벌을 뜬다.
+- **네트워크 그림은 비워 둔다.** 골든을 비교하는 동안 진짜 비동기가 흐르는데, 그때
+  `CachedNetworkImage` 가 캐시 폴더를 찾다가 `MissingPluginException` 으로 깨진다.
+  그림을 비우면 기본 그림이 들어가서 카드의 틀은 똑같이 잠긴다.
+- **서비스를 주입할 수 없어 HTTP 를 가로채야 하는 화면은 `runWith:` 로 넘긴다.**
+  기본값인 `withMockedNetworkImages` 와 같은 `HttpOverrides` 라 겹쳐 쓰면 안쪽 것만
+  먹는다. `tag_selection_screen_golden_test.dart` 가 예다.
 - **동작 줄이기가 켜진 채로 뜬다.** 연출 중간 프레임이 찍히면 매번 다른 이미지가 나온다.
   시간이 흐르는 알림(축하 토스트 등)도 끄고 뜬다.
 - **날짜나 랜덤처럼 실행마다 달라지는 값은 픽스처로 고정한다.** 안 그러면 매일 깨진다.
+  화면이 `DateTime.now()` 로 문구를 만들면 픽스처로는 못 막는다. `MissionHistoryScreen`
+  처럼 `clock` 을 받는 화면만 골든을 뜬다.
+
+## 아직 골든이 없는 화면
+
+위젯 테스트는 있지만 골든을 뜨지 않은 화면과 그 이유다. 날짜와 플랫폼에 매인 화면은 #222 에서 다룬다.
+
+| 화면 | 이유 |
+|---|---|
+| `SplashScreen` | 글씨를 쓰는 연출이 끝나면 다음 화면으로 넘어가서, 멈춰 있는 모습이 없다 |
+| `LoginScreen` | Apple 로그인 버튼이 `Platform.isIOS || isMacOS` 로 갈려서 로컬(macOS)과 CI(Linux) 이미지가 다르다 |
+| `StudyRoomListScreen`, `StudyRoomDetailScreen` | 공유 문제 카드가 `DateTime.now()` 로 `N일 전` 을 만든다 |
+| `MyPageScreen` | 스트릭 카드가 `DateTime.now()` 로 이번 달 달력을 그린다 |
+| `PracticeTitleWriteScreen` | 알림 시각 기본값이 지금 시각이다 |
 
 ## 기준 이미지를 다시 뜰 때
 
