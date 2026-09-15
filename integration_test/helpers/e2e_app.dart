@@ -100,9 +100,14 @@ Future<void> pumpFor(WidgetTester tester, Duration duration) async {
 
 /// [text] 가 보일 때까지 기다렸다가 누른다. 같은 글자가 여럿이면 마지막 것을
 /// 누른다. 다이얼로그는 화면 맨 위에 쌓이므로 대개 마지막 것이 다이얼로그 버튼이다.
+///
+/// 누르기 전에 화면 안으로 스크롤한다. 목록 아래쪽 버튼은 만들어져 있어도 화면
+/// 밖이라, 그냥 누르면 아무 일도 안 일어난 채 다음 단계에서 멈춘다.
 Future<void> tapText(WidgetTester tester, String text) async {
   final finder = find.text(text);
   await pumpUntilFound(tester, finder);
+  await tester.ensureVisible(finder.last);
+  await pumpFor(tester, const Duration(milliseconds: 300));
   await tester.tap(finder.last, warnIfMissed: false);
   await pumpFor(tester, const Duration(milliseconds: 600));
 }

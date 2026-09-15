@@ -28,6 +28,24 @@ require File.expand_path(File.join('packages', 'flutter_tools', 'bin', 'podhelpe
 
 flutter_ios_podfile_setup
 
+# 테스트 전용 플러그인은 Debug 구성에만 링크한다.
+#
+# flutter_install_all_ios_pods 는 pubspec 의 dev_dependencies 플러그인까지 모든 구성에 pod 로
+# 넣는다(flutter/flutter#163874). 그대로 두면 Release 로 뽑은 Runner.app 에 patrol.framework 와
+# integration_test.framework 가 들어가고, patrol 때문에 앱 본체까지 XCTest 를 링크한다.
+# 등록 파일에서 import 를 빼는 쪽은 scripts/strip_test_plugins.sh 가 맡는다. 목록을 같이 고친다.
+# E2E 는 patrol test 와 flutter test 가 Debug 로 빌드하므로 영향이 없다.
+DEBUG_ONLY_PODS = %w[integration_test patrol].freeze
+
+def pod(name = nil, *requirements)
+  if DEBUG_ONLY_PODS.include?(name)
+    options = requirements.last.is_a?(Hash) ? requirements.pop.dup : {}
+    options[:configurations] = ['Debug']
+    requirements << options
+  end
+  super(name, *requirements)
+end
+
 target 'Runner' do
   use_frameworks!
   # use_modular_headers! 는 뺐다. firebase_core 4.x 가 Swift 모듈로 바뀌면서
@@ -37,6 +55,10 @@ target 'Runner' do
   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
   target 'RunnerTests' do
     inherit! :search_paths
+  end
+  # Patrol E2E 테스트 번들. 앱과 같은 플러그인을 다 물어야 해서 :complete 로 받는다.
+  target 'RunnerUITests' do
+    inherit! :complete
   end
 end
 
