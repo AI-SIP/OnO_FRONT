@@ -59,6 +59,24 @@ Patrol 은 XCTest UI 테스트 번들 안에서 Dart 테스트를 돌린다. 그
 
 <br>
 
+## 출시 빌드에 섞이는 것
+
+Flutter 3.35 의 CocoaPods 연동은 `dev_dependencies` 플러그인도 Release 구성까지 링크하고, iOS 플러그인
+등록 파일(`GeneratedPluginRegistrant.m`)도 Release 에서 이 플러그인들을 import 한다. 그래서 Release 로
+뽑은 `Runner.app` 에 아래가 들어간다.
+
+| 무엇 | 언제부터 | 확인한 것 |
+|---|---|---|
+| `integration_test.framework` | #225 | XCTest 를 링크하지 않는다 |
+| `patrol.framework` | #227 | XCTest 를 weak 로 링크하고, 앱 본체(`Runner`)도 XCTest 를 weak 로 링크한다 |
+
+- Podfile 에서 두 pod 를 Debug 구성에만 넣어 봤는데, 등록 파일이 `@import integration_test;` 에서
+  모듈을 못 찾아 Release 빌드가 깨졌다. 등록 파일은 Flutter 가 빌드마다 다시 만들어서 손댈 수 없다.
+- **XCTest 를 weak 로 링크한 앱이 App Store 심사를 통과하는지는 확인하지 못했다.** 출시 전에 TestFlight
+  업로드로 한 번 확인해야 한다.
+
+<br>
+
 ## 아직 안 하는 것
 
 | 무엇 | 이유 |
