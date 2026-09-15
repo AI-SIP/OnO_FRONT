@@ -59,21 +59,35 @@ Patrol 은 XCTest UI 테스트 번들 안에서 Dart 테스트를 돌린다. 그
 
 <br>
 
-## 출시 빌드에 섞이는 것
+## 출시 빌드에서 빼는 법
 
-Flutter 3.35 의 CocoaPods 연동은 `dev_dependencies` 플러그인도 Release 구성까지 링크하고, iOS 플러그인
-등록 파일(`GeneratedPluginRegistrant.m`)도 Release 에서 이 플러그인들을 import 한다. 그래서 Release 로
-뽑은 `Runner.app` 에 아래가 들어간다.
+Flutter 는 iOS 에서 아직 `dev_dependencies` 플러그인을 Release 에서 걸러 주지 않는다
+([flutter/flutter#163874](https://github.com/flutter/flutter/issues/163874)). 그대로 두면 Release 로 뽑은
+`Runner.app` 에 `patrol.framework` 와 `integration_test.framework` 가 들어가고, patrol 때문에 앱 본체까지
+XCTest 를 링크한다. 그래서 두 군데서 막는다.
 
-| 무엇 | 언제부터 | 확인한 것 |
-|---|---|---|
-| `integration_test.framework` | #225 | XCTest 를 링크하지 않는다 |
-| `patrol.framework` | #227 | XCTest 를 weak 로 링크하고, 앱 본체(`Runner`)도 XCTest 를 weak 로 링크한다 |
+| 어디서 | 무엇을 |
+|---|---|
+| `ios/Podfile` 의 `DEBUG_ONLY_PODS` | 두 pod 를 Debug 구성에만 링크한다 |
+| `ios/scripts/strip_test_plugins.sh` (Runner 의 `Strip Test Plugins` 단계) | Debug 가 아니면 컴파일 직전에 `GeneratedPluginRegistrant.m` 에서 두 플러그인의 import 와 등록 줄을 지운다 |
 
-- Podfile 에서 두 pod 를 Debug 구성에만 넣어 봤는데, 등록 파일이 `@import integration_test;` 에서
-  모듈을 못 찾아 Release 빌드가 깨졌다. 등록 파일은 Flutter 가 빌드마다 다시 만들어서 손댈 수 없다.
-- **XCTest 를 weak 로 링크한 앱이 App Store 심사를 통과하는지는 확인하지 못했다.** 출시 전에 TestFlight
-  업로드로 한 번 확인해야 한다.
+- **둘 다 필요하다.** pod 만 빼면 등록 파일이 `@import integration_test;` 에서 모듈을 못 찾아 빌드가 깨지고,
+  등록 파일만 고치면 프레임워크가 그대로 실린다.
+- **iOS 네이티브 코드가 있는 dev 의존성을 더하면 두 목록에 같이 넣는다.**
+- 등록 파일 모양이 바뀌어 스크립트가 못 지우면 Release 빌드가 모듈을 못 찾아 실패한다. 조용히 실리지는 않는다.
+- Android 는 Flutter 가 Release 에서 dev 의존성을 빼 준다. 따로 할 것이 없다.
+
+확인한 것 (2026-09-15):
+
+| 빌드 | 결과 |
+|---|---|
+| `flutter build ios --release` (빌드 폴더를 지우고) | 프레임워크 41 → 39개, `Runner` 와 모든 프레임워크에 XCTest 링크 없음, 68.7MB → 66.5MB |
+| `flutter build ios --profile` | 테스트 프레임워크 없음 |
+| `flutter build apk --release` | dex 에 `pl/leancode/patrol`, `dev/flutter/plugins/integration_test` 없음 |
+| Debug 로 `patrol test`, `flutter test integration_test` | 모두 통과 |
+
+- **빌드 폴더를 안 지우고 확인하면 틀린다.** Xcode 가 전에 넣어 둔 프레임워크를 `build/ios/Release-iphoneos` 에
+  남겨 두어서, 설정을 고친 뒤에도 한동안 그대로 들어 있는 것처럼 보였다.
 
 <br>
 
