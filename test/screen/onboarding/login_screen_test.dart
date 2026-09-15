@@ -1,5 +1,3 @@
-import 'dart:io' show Platform;
-
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -111,23 +109,30 @@ void main() {
     expect(svgAsset('assets/SocialLogin/KakaoLogin.svg'), findsOneWidget);
   });
 
-  testWidgets('애플 로그인 버튼은 iOS 와 macOS 에서만 보인다', (tester) async {
-    await pumpOnoWidget(
-      tester,
-      const LoginScreen(),
-      userProvider: userProvider,
-    );
+  // 테마의 플랫폼으로 분기한다. 예전에는 dart:io 의 Platform 으로 갈라서 개발자
+  // macOS 에서는 버튼이 있고 Linux CI 에서는 없었고, 테스트도 호스트 OS 를 보고
+  // 단언을 바꿔야 했다. 이제는 테마로 플랫폼을 흉내 내서 어느 OS 에서든 두 갈래를
+  // 같이 본다.
+  for (final entry in <TargetPlatform, bool>{
+    TargetPlatform.iOS: true,
+    TargetPlatform.macOS: true,
+    TargetPlatform.android: false,
+  }.entries) {
+    testWidgets(
+        '애플 로그인 버튼은 ${entry.key.name} 에서 ${entry.value ? '보인다' : '안 보인다'}',
+        (tester) async {
+      await pumpOnoWidget(
+        tester,
+        onTargetPlatform(entry.key, const LoginScreen()),
+        userProvider: userProvider,
+      );
 
-    // `if (Platform.isIOS || Platform.isMacOS)` 로 분기한다. 위젯 테스트는
-    // 호스트 플랫폼에서 돌기 때문에, 개발자 macOS 에서는 버튼이 있고 리눅스
-    // CI 에서는 없다. 한쪽만 단언하면 다른 쪽에서 깨진다.
-    final appleButton = svgAsset('assets/SocialLogin/AppleLogin.svg');
-    if (Platform.isIOS || Platform.isMacOS) {
-      expect(appleButton, findsOneWidget);
-    } else {
-      expect(appleButton, findsNothing);
-    }
-  });
+      expect(
+        svgAsset('assets/SocialLogin/AppleLogin.svg'),
+        entry.value ? findsOneWidget : findsNothing,
+      );
+    });
+  }
 
   testWidgets('게스트로 시작하기를 누르면 안내가 뜬다', (tester) async {
     await pumpOnoWidget(

@@ -271,21 +271,24 @@ void main() {
   먹는다. `tag_selection_screen_golden_test.dart` 가 예다.
 - **동작 줄이기가 켜진 채로 뜬다.** 연출 중간 프레임이 찍히면 매번 다른 이미지가 나온다.
   시간이 흐르는 알림(축하 토스트 등)도 끄고 뜬다.
-- **날짜나 랜덤처럼 실행마다 달라지는 값은 픽스처로 고정한다.** 안 그러면 매일 깨진다.
-  화면이 `DateTime.now()` 로 문구를 만들면 픽스처로는 못 막는다. `MissionHistoryScreen`
-  처럼 `clock` 을 받는 화면만 골든을 뜬다.
+- **지금 시각에 매인 문구는 `AppClock` 을 읽게 한다.** `screenGoldenTest` 는 `AppClock` 을
+  `goldenNow`(2026년 9월 10일 오후 3시)로 멈춰 두고 뜬다. 화면이 `DateTime.now()` 를 직접
+  읽으면 날마다 깨지므로, `N일 전` 이나 이번 달 달력처럼 화면에 나오는 자리는
+  `lib/Util/AppClock.dart` 의 `AppClock.now()` 로 바꾸고 픽스처 날짜는 `goldenNow` 기준으로
+  적는다. 연타를 막으려고 시각을 재는 것처럼 화면에 안 나오는 곳은 그대로 둔다.
+- **플랫폼에 따라 갈리는 화면은 `Theme.of(context).platform` 으로 판단하게 한다.**
+  `dart:io` 의 `Platform` 은 호스트 OS 를 따라서 로컬(macOS)과 CI(Linux) 이미지가 갈린다.
+  테스트에서는 `onTargetPlatform(TargetPlatform.iOS, child)` 로 감싸서 흉내 낸다.
+- **탭을 옮기는 것처럼 손을 대야 보이는 모습은 `prepare:` 에서 만든다.**
+  `study_room_detail_screen_golden_test.dart` 가 예다.
+- **로컬 이미지에서 한글이 네모로 나오는 글자가 있다.** 글꼴을 지정하지 않은 `Text` 는
+  기기에서는 시스템 글꼴로 나오지만 테스트에는 그 글꼴이 없어서다. 앱 문제는 아니다.
 
 ## 아직 골든이 없는 화면
-
-위젯 테스트는 있지만 골든을 뜨지 않은 화면과 그 이유다. 날짜와 플랫폼에 매인 화면은 #222 에서 다룬다.
 
 | 화면 | 이유 |
 |---|---|
 | `SplashScreen` | 글씨를 쓰는 연출이 끝나면 다음 화면으로 넘어가서, 멈춰 있는 모습이 없다 |
-| `LoginScreen` | Apple 로그인 버튼이 `Platform.isIOS || isMacOS` 로 갈려서 로컬(macOS)과 CI(Linux) 이미지가 다르다 |
-| `StudyRoomListScreen`, `StudyRoomDetailScreen` | 공유 문제 카드가 `DateTime.now()` 로 `N일 전` 을 만든다 |
-| `MyPageScreen` | 스트릭 카드가 `DateTime.now()` 로 이번 달 달력을 그린다 |
-| `PracticeTitleWriteScreen` | 알림 시각 기본값이 지금 시각이다 |
 
 ## 기준 이미지를 다시 뜰 때
 

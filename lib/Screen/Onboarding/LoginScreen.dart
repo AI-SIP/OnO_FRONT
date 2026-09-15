@@ -1,5 +1,3 @@
-import 'dart:io' show Platform;
-
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:provider/provider.dart';
@@ -172,7 +170,12 @@ class _LoginScreenState extends State<LoginScreen> {
             assetPath: 'assets/SocialLogin/GoogleLogin.svg',
             label: '구글로 로그인',
           ),
-          if (Platform.isIOS || Platform.isMacOS)
+          // dart:io 의 Platform 이 아니라 테마의 플랫폼으로 판단한다. 앱 테마는
+          // 플랫폼을 따로 정하지 않아서 기기에서는 결과가 같고, 테스트에서는 테마로
+          // 플랫폼을 흉내 낼 수 있다. Platform 으로 두면 macOS 개발기에서는 버튼이
+          // 있고 Linux CI 에서는 없어서 골든 이미지가 둘로 갈렸다.
+          if (Theme.of(context).platform == TargetPlatform.iOS ||
+              Theme.of(context).platform == TargetPlatform.macOS)
             _socialButton(
               onPressed: () => userProvider.signInWithApple(context),
               assetPath: 'assets/SocialLogin/AppleLogin.svg',

@@ -233,6 +233,20 @@ Widget buildOnoApp(
   );
 }
 
+/// [child] 를 [platform] 기기에서 띄운 것처럼 테마의 플랫폼을 바꿔 감싼다.
+///
+/// 화면이 `Theme.of(context).platform` 으로 갈리는 경우에 쓴다. 앱 테마는 플랫폼을
+/// 따로 정하지 않아서 기기에서는 `defaultTargetPlatform` 과 같다.
+/// `debugDefaultTargetPlatformOverride` 와 달리 테스트가 끝날 때 되돌릴 것이 없다.
+Widget onTargetPlatform(TargetPlatform platform, Widget child) {
+  return Builder(
+    builder: (context) => Theme(
+      data: Theme.of(context).copyWith(platform: platform),
+      child: child,
+    ),
+  );
+}
+
 /// 기기에서 "동작 줄이기"를 켠 것처럼 만든다.
 ///
 /// 미션 화면처럼 **끝나지 않는 연출**(받을 수 있는 카드의 펄스, 개구리의

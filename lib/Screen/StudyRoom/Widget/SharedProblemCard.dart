@@ -17,6 +17,7 @@ import '../../../Module/Motion/TossPageRoute.dart';
 import '../../../Module/Motion/TossDialog.dart';
 import '../../../Module/Design/AppColors.dart';
 import '../../../Module/Design/AppRadius.dart';
+import '../../../Util/AppClock.dart';
 
 class SharedProblemCard extends StatefulWidget {
   final SharedProblemModel problem;
@@ -51,7 +52,7 @@ class _SharedProblemCardState extends State<SharedProblemCard> {
   }
 
   String _timeAgo(DateTime dt) {
-    final diff = DateTime.now().difference(dt);
+    final diff = AppClock.now().difference(dt);
     if (diff.inMinutes < 1) return '방금';
     if (diff.inMinutes < 60) return '${diff.inMinutes}분 전';
     if (diff.inHours < 24) return '${diff.inHours}시간 전';

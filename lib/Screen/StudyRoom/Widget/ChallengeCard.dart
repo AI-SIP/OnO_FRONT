@@ -10,6 +10,7 @@ import '../../../Module/Motion/PressableScale.dart';
 import '../../../Module/Motion/TossDialog.dart';
 import '../../../Module/Design/AppColors.dart';
 import '../../../Module/Design/AppRadius.dart';
+import '../../../Util/AppClock.dart';
 
 class ChallengeCard extends StatelessWidget {
   final ChallengeModel challenge;
@@ -24,7 +25,7 @@ class ChallengeCard extends StatelessWidget {
   });
 
   String _daysLeft(DateTime endAt) {
-    final diff = endAt.difference(DateTime.now()).inDays;
+    final diff = endAt.difference(AppClock.now()).inDays;
     if (diff < 0) return '종료';
     if (diff == 0) return '오늘 마감';
     return '$diff일 남음';

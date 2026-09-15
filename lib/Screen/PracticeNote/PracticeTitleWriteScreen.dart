@@ -15,6 +15,7 @@ import '../../Module/Theme/ClayIcon.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/PracticeNoteProvider.dart';
 import '../../Util/AppErrorReporter.dart';
+import '../../Util/AppClock.dart';
 import '../../Module/Motion/AppHaptic.dart';
 import '../../Module/Motion/PressableScale.dart';
 import '../../Module/Motion/TossDialog.dart';
@@ -52,7 +53,7 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
     super.initState();
 
     // 현재 시각으로 초기화
-    final now = DateTime.now();
+    final now = AppClock.now();
     _notifyTime = TimeOfDay(hour: now.hour, minute: now.minute);
 
     _titleController = TextEditingController(

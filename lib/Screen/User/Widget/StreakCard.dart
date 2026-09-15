@@ -9,6 +9,7 @@ import '../../../Module/Motion/Skeleton.dart';
 import '../../../Module/Text/StandardText.dart';
 import '../../../Module/Theme/ThemeHandler.dart';
 import '../../../Service/Api/StudyCalendar/StudyCalendarService.dart';
+import '../../../Util/AppClock.dart';
 import '../LearningCalendarScreen.dart';
 import '../../../Module/Motion/TossPageRoute.dart';
 import '../../../Module/Design/AppColors.dart';
@@ -81,7 +82,7 @@ class _StreakCardState extends State<StreakCard> {
   }
 
   Future<void> _loadCalendarData() async {
-    final now = DateTime.now();
+    final now = AppClock.now();
     try {
       final data = await StudyCalendarService().getStudyCalendar(
         year: now.year,
@@ -183,8 +184,8 @@ class _StreakCardState extends State<StreakCard> {
     Color primaryColor, {
     bool isTablet = false,
   }) {
-    final calendarYear = _calendarData?.year ?? DateTime.now().year;
-    final calendarMonth = _calendarData?.month ?? DateTime.now().month;
+    final calendarYear = _calendarData?.year ?? AppClock.now().year;
+    final calendarMonth = _calendarData?.month ?? AppClock.now().month;
 
     return PressableScale(
       haptic: HapticLevel.selection,
@@ -286,7 +287,7 @@ class _StreakCardState extends State<StreakCard> {
     final double maxDotSize = isTablet ? 20.0 : 12.0;
     final double dotSize = ((availableWidth / 7) * 0.6).clamp(0.0, maxDotSize);
 
-    final now = DateTime.now();
+    final now = AppClock.now();
     final calendarData = _calendarData!;
     final firstDayOfMonth = DateTime(calendarData.year, calendarData.month, 1);
     final firstWeekdayOffset = firstDayOfMonth.weekday % 7;
