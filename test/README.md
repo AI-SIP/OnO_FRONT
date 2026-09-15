@@ -211,3 +211,84 @@ await tester.pump(const Duration(milliseconds: 100));
 
 화면 전환은 `NavigatorObserver` mock 을 `navigatorObservers` 로 넘겨 `didPush` 가
 불렸는지 본다.
+
+---
+
+# 골든 테스트 규약 (3차)
+
+위젯 테스트는 무엇이 몇 개 그려지는지와 넘치지 않는지를 본다. 패딩이나 색이 바뀌어도
+레이아웃 제약만 안 깨지면 통과한다. 골든 테스트는 화면을 PNG 로 떠 두고 다음 실행에서
+픽셀을 비교해서, **어제와 달라졌는지**를 잡는다. "보기 좋은가"는 여전히 사람이 본다.
+
+도구는 [alchemist](https://pub.dev/packages/alchemist) 를 쓴다. 기준으로 삼을 파일은
+`test/screen/achievement/achievement_screen_golden_test.dart` 다.
+
+## 이미지가 두 벌 나온다
+
+| 경로 | 글자 | 커밋 | 쓰임 |
+|---|---|---|---|
+| `goldens/ci/` | 네모로 가림 | 한다 | CI 가 비교한다 |
+| `goldens/macos/` (로컬 OS 이름) | 진짜 폰트 | 안 한다 | 로컬에서 눈으로 확인한다 |
+
+글자를 가리는 이유는 **폰트 렌더링이 OS 마다 달라서**다. 로컬(macOS)에서 진짜 폰트로 뜬
+이미지는 CI(Ubuntu)에서 반드시 어긋난다. 가린 이미지는 OS 와 상관없이 거의 같게 나온다.
+
+"거의"라서 CI 비교에는 0.2% 허용치가 있다. 글자를 1.6배로 키우면 진행 막대 끝 같은
+테두리가 OS 마다 1px 안쪽으로 다르게 번지기 때문이다(실측 0.07%). 설정은
+`test/flutter_test_config.dart` 에 있다.
+
+## 쓰는 법
+
+```dart
+void main() {
+  setUpOnoWidgetTest();
+
+  screenGoldenTest(
+    '훈장 화면',
+    fileName: 'achievement_screen',
+    buildApp: () async => buildOnoApp(
+      const AchievementScreen(),
+      cosmeticProvider: await loadedCosmeticProvider(),
+      achievementProvider: AchievementProvider(service: fakeService, store: fakeStore),
+    ),
+  );
+}
+```
+
+- **파일은 위젯 테스트 옆에 `<대상>_golden_test.dart` 로 둔다.** 이미지는 그 옆
+  `goldens/` 에 생긴다.
+- **`buildApp` 은 `buildOnoApp` 으로 만든다.** `pumpOnoWidget` 과 같은 Provider 트리다.
+  화면이 읽는 Provider 는 가짜 서비스를 물려서 넘기는 규칙도 같다.
+- **크기는 기본으로 네 벌이다.** `GoldenSurface.all` (작은 폰, 폰, 폰 글자 1.6배, 태블릿).
+  줄이려면 `surfaces:` 로 넘긴다.
+- **동작 줄이기가 켜진 채로 뜬다.** 연출 중간 프레임이 찍히면 매번 다른 이미지가 나온다.
+  시간이 흐르는 알림(축하 토스트 등)도 끄고 뜬다.
+- **날짜나 랜덤처럼 실행마다 달라지는 값은 픽스처로 고정한다.** 안 그러면 매일 깨진다.
+
+## 기준 이미지를 다시 뜰 때
+
+화면을 **일부러** 바꿨으면 기준 이미지도 같이 바꿔서 같은 PR 에 올린다.
+
+```
+flutter test --update-goldens test/screen/achievement/achievement_screen_golden_test.dart
+```
+
+- **파일을 지정해서 돌린다.** 전체에 `--update-goldens` 를 걸면 의도하지 않은 화면의
+  이미지까지 조용히 덮어써서 비교하는 의미가 없어진다.
+- **커밋 전에 `goldens/macos/` 이미지를 열어서 눈으로 본다.** 가린 이미지로는 글자가
+  잘렸는지 알 수 없다.
+- **PR diff 에서 바뀐 PNG 를 확인한다.** GitHub 은 이미지 diff 를 나란히 보여준다.
+
+## CI 에서 깨졌을 때
+
+1. Actions 실행 페이지 아래 **Artifacts 의 `golden-failures`** 를 받는다.
+2. `*_isolatedDiff.png` 가 달라진 픽셀만, `*_maskedDiff.png` 가 원본 위에 달라진 곳을
+   표시한 것이다.
+3. 의도한 변경이면 위 방법으로 기준 이미지를 다시 뜨고, 아니면 코드를 고친다.
+
+골든만 돌리거나 빼고 돌릴 수 있다. 태그는 `dart_test.yaml` 에 있다.
+
+```
+flutter test --tags golden
+flutter test --exclude-tags golden
+```
