@@ -1,6 +1,8 @@
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
@@ -16,6 +18,27 @@ class FullScreenImage extends StatelessWidget {
 
   const FullScreenImage({super.key, required this.imagePath});
 
+  /// 갤러리에 저장해도 되는지 확인한다.
+  /// Android 10(API 29) 이상은 image_gallery_saver_plus 가 MediaStore 로 저장해서 권한이 필요 없다.
+  /// Android 13(API 33) 부터는 storage 권한이 없어져 요청하면 대화상자 없이 항상 거부로 온다.
+  /// Android 9 이하만 WRITE_EXTERNAL_STORAGE 가 필요해 기존처럼 요청한다.
+  /// iOS 는 permission_handler 가 storage 를 항상 허용으로 돌려주므로 기존 동작 그대로다.
+  Future<bool> _canSaveToGallery() async {
+    if (Platform.isAndroid) {
+      try {
+        final androidInfo = await DeviceInfoPlugin().androidInfo;
+        if (androidInfo.version.sdkInt >= 29) return true;
+      } catch (_) {
+        // 버전을 못 읽으면 권한 요청 대신 저장을 시도한다.
+        // 기기 대부분이 Android 10 이상이고, 저장이 실패하면 실패 안내가 뜬다.
+        return true;
+      }
+    }
+
+    final status = await Permission.storage.request();
+    return status.isGranted;
+  }
+
   Future<void> _downloadImage(BuildContext context) async {
     if (imagePath == null) {
       SnackBarDialog.showSnackBar(
@@ -25,9 +48,7 @@ class FullScreenImage extends StatelessWidget {
       return;
     }
 
-    // 권한 요청
-    var status = await Permission.storage.request();
-    if (status.isGranted) {
+    if (await _canSaveToGallery()) {
       try {
         // 이미지 다운로드
         var response = await http.get(Uri.parse(imagePath!));
