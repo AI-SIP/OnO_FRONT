@@ -314,10 +314,20 @@ class HttpService {
         rawMessage: serverMessage,
       );
 
-      // 토큰 만료 시 재시도 (ACCESS_TOKEN_EXPIRED 또는 코드 없는 401)
+      // 액세스 토큰이 거절되면 갱신 후 한 번만 재시도한다.
       // requiredToken이 true이고, 아직 재시도하지 않았다면 토큰 갱신 후 재시도
-      final shouldRefreshToken =
-          errorCode == 1005 || (errorCode == null && status == 401);
+      // - 1005 ACCESS_TOKEN_EXPIRED
+      // - 1007 AUTHENTICATION_FAILED: 운영 서버는 만료된 토큰에도 1005 가 아니라
+      //   1007 을 준다. 블랙리스트 조회가 실패해도 멀쩡한 토큰에 1007 이 나간다.
+      // - 1009 INVALID_ACCESS_TOKEN: 서명·형식이 틀렸거나 로그아웃된 토큰이다.
+      //   리프레시 토큰이 살아 있으면 새 토큰으로 되살아나고, 아니면 갱신이
+      //   인증 실패로 끝나 어차피 로그아웃된다.
+      // 리프레시 토큰 계열(1001·1002·1004·1006)과 권한 부족(1008)은 액세스 토큰을
+      // 새로 받아도 달라지지 않으므로 갱신하지 않는다.
+      final shouldRefreshToken = errorCode == 1005 ||
+          errorCode == 1007 ||
+          errorCode == 1009 ||
+          (errorCode == null && status == 401);
       if (requiredToken && !retry && shouldRefreshToken) {
         await tokenProvider.refreshAccessToken();
         return sendRequest(
