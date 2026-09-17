@@ -489,6 +489,8 @@ class _ChallengeCreateSheetState extends State<ChallengeCreateSheet> {
       keyboardType: inputType,
       inputFormatters: inputFormatters,
       style: style,
+      // 모바일 터치는 기본값으로 바깥을 눌러도 포커스가 안 풀린다. iOS 숫자 키패드엔 완료 버튼도 없다.
+      onTapOutside: (_) => FocusManager.instance.primaryFocus?.unfocus(),
       decoration: InputDecoration(
         hintText: hint,
         hintStyle: TextStyle(fontSize: 14, color: Colors.grey[400]),
