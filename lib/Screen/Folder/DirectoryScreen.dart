@@ -60,6 +60,10 @@ class DirectoryScreen extends StatefulWidget {
 
 class _DirectoryScreenState extends State<DirectoryScreen> {
   static const double _dialogMaxWidth = 420;
+  // 공책을 지우면 서버가 안에 든 공책과 오답노트까지 함께 지운다. 하위 공책의
+  // 오답노트 수는 클라이언트가 정확히 모르므로 개수 없이 범위만 알린다.
+  static const String _folderDeleteScopeMessage =
+      '안에 있는 공책과 오답노트도 함께 삭제되며, 되돌릴 수 없습니다.';
   bool _isSelectionMode = false; // 선택 모드 활성화 여부
   final List<int> _selectedFolderIds = []; // 선택된 폴더 ID 리스트
   final List<int> _selectedProblemIds = []; // 선택된 문제 ID 리스트
@@ -1854,16 +1858,26 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     final folderIds = <int>[];
     final problemIds = <int>[];
     String successMessage;
+    String confirmMessage;
 
     if (item is FolderThumbnailModel) {
       folderIds.add(item.folderId);
       successMessage = '${item.folderName} 공책을 삭제했어요.';
+      final folderName = item.folderName.isNotEmpty ? item.folderName : '제목 없음';
+      confirmMessage = '\'$folderName\' 공책을 정말 삭제하시겠습니까?\n'
+          '$_folderDeleteScopeMessage';
     } else if (item is ProblemModel) {
       problemIds.add(item.problemId);
       successMessage = '오답노트를 삭제했어요.';
+      confirmMessage = '정말로 이 오답노트를 삭제하시겠습니까?';
     } else {
       return;
     }
+
+    // 휴지통에 놓자마자 지우면 잘못 놓았을 때 되돌릴 수 없다. 공책은 안에 든
+    // 공책과 오답노트까지 서버에서 지워지므로 한 번 더 묻는다. (#233)
+    final confirmed = await _showDeleteConfirmDialog(message: confirmMessage);
+    if (!confirmed || !mounted) return;
 
     await _deleteItems(
       folderIds: folderIds,
@@ -1943,8 +1957,18 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     }
   }
 
-  void _confirmDelete() {
-    showTossDialog(
+  Future<void> _confirmDelete() async {
+    final message = _selectedFolderIds.isNotEmpty
+        ? '선택한 항목을 정말 삭제하시겠습니까?\n$_folderDeleteScopeMessage'
+        : '선택한 항목을 정말 삭제하시겠습니까?';
+    final confirmed = await _showDeleteConfirmDialog(message: message);
+    if (!confirmed || !mounted) return;
+    _deleteSelectedItems();
+  }
+
+  /// 삭제 확인 창. 삭제를 누르면 true, 취소하거나 바깥을 눌러 닫으면 false.
+  Future<bool> _showDeleteConfirmDialog({required String message}) async {
+    final confirmed = await showTossDialog<bool>(
       context: context,
       builder: (dialogContext) => _buildPhoneWidthDialog(
         Dialog(
@@ -1952,7 +1976,9 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppRadius.large),
           ),
-          child: Container(
+          // 가로 화면이나 글자를 크게 키운 작은 폰에서 높이가 모자라면 잘리지
+          // 않고 스크롤되게 한다.
+          child: SingleChildScrollView(
             padding: const EdgeInsets.all(24),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -1983,8 +2009,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                 ),
                 const SizedBox(height: 20),
                 // 내용
-                const StandardText(
-                  text: '선택한 항목을 정말 삭제하시겠습니까?',
+                StandardText(
+                  text: message,
                   fontSize: 15,
                   color: AppColors.textPrimary,
                   textAlign: TextAlign.center,
@@ -1995,7 +2021,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                   children: [
                     Expanded(
                       child: TextButton(
-                        onPressed: () => Navigator.of(dialogContext).pop(),
+                        onPressed: () => Navigator.of(dialogContext).pop(false),
                         style: TextButton.styleFrom(
                           padding: const EdgeInsets.symmetric(
                               horizontal: 12, vertical: 8),
@@ -2015,10 +2041,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                     const SizedBox(width: 8),
                     Expanded(
                       child: TextButton(
-                        onPressed: () {
-                          Navigator.of(dialogContext).pop();
-                          _deleteSelectedItems();
-                        },
+                        onPressed: () => Navigator.of(dialogContext).pop(true),
                         style: TextButton.styleFrom(
                           padding: const EdgeInsets.symmetric(
                               horizontal: 12, vertical: 8),
@@ -2043,6 +2066,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         ),
       ),
     );
+    return confirmed == true;
   }
 
   Widget _buildPhoneWidthDialog(Widget child) {
