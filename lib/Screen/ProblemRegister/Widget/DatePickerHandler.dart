@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import '../../../Module/Text/mobile_font_size.dart';
@@ -29,6 +31,12 @@ class DatePickerHandler extends StatefulWidget {
 
 class _DatePickerHandlerState extends State<DatePickerHandler> {
   static const _weekdayLabels = ['일', '월', '화', '수', '목', '금', '토'];
+  static const _gridSpacing = 6.0;
+
+  /// 가로 폰에서 칸을 낮출 때의 하한. 날짜 숫자 한 줄이 들어가는 높이다.
+  /// 이보다 낮춰야 들어가는 화면에서는 칸을 더 줄이지 않고 달력만 스크롤한다.
+  static const _minCellHeight = 28.0;
+  static const _compactHeight = 500.0;
 
   late DateTime _visibleMonth;
   late final DateTime _firstSelectableDate;
@@ -64,6 +72,9 @@ class _DatePickerHandlerState extends State<DatePickerHandler> {
   @override
   Widget build(BuildContext context) {
     final primaryColor = Theme.of(context).primaryColor;
+    // 가로로 둔 폰처럼 높이가 낮은 화면. 여백을 줄여 달력 칸에 높이를 더 준다.
+    // 세로 폰과 태블릿은 높이가 이보다 커서 원래 모습 그대로다.
+    final compact = MediaQuery.sizeOf(context).height < _compactHeight;
 
     return ClipRRect(
       borderRadius: const BorderRadius.vertical(top: Radius.circular(24.0)),
@@ -78,7 +89,7 @@ class _DatePickerHandlerState extends State<DatePickerHandler> {
               Container(
                 width: 40,
                 height: 4,
-                margin: const EdgeInsets.only(bottom: 16),
+                margin: EdgeInsets.only(bottom: compact ? 8 : 16),
                 decoration: BoxDecoration(
                   color: Colors.grey[300],
                   borderRadius: BorderRadius.circular(AppRadius.full),
@@ -90,10 +101,11 @@ class _DatePickerHandlerState extends State<DatePickerHandler> {
                 fontWeight: FontWeight.w600,
                 color: AppColors.textPrimary,
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: compact ? 4 : 16),
               Row(
                 children: [
                   IconButton(
+                    visualDensity: compact ? VisualDensity.compact : null,
                     onPressed: _canGoPrev ? () => _changeMonth(-1) : null,
                     icon: Icon(
                       Icons.chevron_left,
@@ -112,6 +124,7 @@ class _DatePickerHandlerState extends State<DatePickerHandler> {
                     ),
                   ),
                   IconButton(
+                    visualDensity: compact ? VisualDensity.compact : null,
                     onPressed: _canGoNext ? () => _changeMonth(1) : null,
                     icon: Icon(
                       Icons.chevron_right,
@@ -120,10 +133,11 @@ class _DatePickerHandlerState extends State<DatePickerHandler> {
                   ),
                 ],
               ),
-              const SizedBox(height: 8),
+              SizedBox(height: compact ? 4 : 8),
               _buildWeekdayHeader(),
-              const SizedBox(height: 8),
-              _buildDateGrid(primaryColor),
+              SizedBox(height: compact ? 4 : 8),
+              // 남은 높이를 달력에 넘겨 준다. 내용이 짧으면 원래 크기 그대로다.
+              Flexible(child: _buildDateGrid(primaryColor)),
             ],
           ),
         ),
@@ -156,65 +170,84 @@ class _DatePickerHandlerState extends State<DatePickerHandler> {
     final totalCells = firstWeekday + daysInMonth;
     final rowCount = (totalCells / 7).ceil();
 
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: rowCount * 7,
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 7,
-        mainAxisSpacing: 6,
-        crossAxisSpacing: 6,
-      ),
-      itemBuilder: (_, index) {
-        final day = index - firstWeekday + 1;
-        if (day < 1 || day > daysInMonth) {
-          return const SizedBox.shrink();
-        }
+    // 칸은 폭으로 정한 정사각형이다. 가로 폰은 시트가 폭 640 까지 넓어지는데
+    // 높이는 390 이 안 돼서, 정사각형 그대로면 3주차 이후가 시트 밖으로 밀려
+    // 누를 수 없었다. 남은 높이에 안 들어갈 때만 칸 높이를 낮춘다.
+    return LayoutBuilder(builder: (context, constraints) {
+      final cellWidth = (constraints.maxWidth - _gridSpacing * 6) / 7;
+      final spacingHeight = _gridSpacing * (rowCount - 1);
+      var childAspectRatio = 1.0;
+      var scrollable = false;
+      if (constraints.hasBoundedHeight &&
+          cellWidth * rowCount + spacingHeight > constraints.maxHeight) {
+        final fittedHeight = (constraints.maxHeight - spacingHeight) / rowCount;
+        childAspectRatio = cellWidth / math.max(fittedHeight, _minCellHeight);
+        scrollable = fittedHeight < _minCellHeight;
+      }
 
-        final date = DateTime(_visibleMonth.year, _visibleMonth.month, day);
-        final selectable = !date.isBefore(_firstSelectableDate) &&
-            !date.isAfter(_lastSelectableDate);
-        final isSelected = DateUtils.isSameDay(date, widget.initialDate);
-        final isToday = DateUtils.isSameDay(date, DateTime.now());
+      return GridView.builder(
+        shrinkWrap: true,
+        physics: scrollable
+            ? const ClampingScrollPhysics()
+            : const NeverScrollableScrollPhysics(),
+        itemCount: rowCount * 7,
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 7,
+          mainAxisSpacing: _gridSpacing,
+          crossAxisSpacing: _gridSpacing,
+          childAspectRatio: childAspectRatio,
+        ),
+        itemBuilder: (_, index) {
+          final day = index - firstWeekday + 1;
+          if (day < 1 || day > daysInMonth) {
+            return const SizedBox.shrink();
+          }
 
-        return PressableScale(
-          haptic: HapticLevel.selection,
-          enabled: selectable,
-          onTap: selectable ? () => widget.onDateSelected(date) : null,
-          child: Container(
-            decoration: BoxDecoration(
-              color: isSelected
-                  ? primaryColor
-                  : selectable
-                      ? Colors.grey[100]
-                      : Colors.grey[50],
-              borderRadius: BorderRadius.circular(AppRadius.medium),
-              border: Border.all(
+          final date = DateTime(_visibleMonth.year, _visibleMonth.month, day);
+          final selectable = !date.isBefore(_firstSelectableDate) &&
+              !date.isAfter(_lastSelectableDate);
+          final isSelected = DateUtils.isSameDay(date, widget.initialDate);
+          final isToday = DateUtils.isSameDay(date, DateTime.now());
+
+          return PressableScale(
+            haptic: HapticLevel.selection,
+            enabled: selectable,
+            onTap: selectable ? () => widget.onDateSelected(date) : null,
+            child: Container(
+              decoration: BoxDecoration(
                 color: isSelected
                     ? primaryColor
-                    : isToday
-                        ? primaryColor.withOpacity(0.6)
-                        : selectable
-                            ? Colors.grey[200]!
-                            : Colors.transparent,
-                width: isToday && !isSelected ? 1.4 : 1,
-              ),
-            ),
-            child: Center(
-              child: StandardText(
-                text: '$day',
-                fontSize: MobileFontSize.reduced(context, 13),
-                fontWeight: isToday ? FontWeight.w700 : FontWeight.normal,
-                color: isSelected
-                    ? Colors.white
                     : selectable
-                        ? Colors.black87
-                        : Colors.grey[300]!,
+                        ? Colors.grey[100]
+                        : Colors.grey[50],
+                borderRadius: BorderRadius.circular(AppRadius.medium),
+                border: Border.all(
+                  color: isSelected
+                      ? primaryColor
+                      : isToday
+                          ? primaryColor.withOpacity(0.6)
+                          : selectable
+                              ? Colors.grey[200]!
+                              : Colors.transparent,
+                  width: isToday && !isSelected ? 1.4 : 1,
+                ),
+              ),
+              child: Center(
+                child: StandardText(
+                  text: '$day',
+                  fontSize: MobileFontSize.reduced(context, 13),
+                  fontWeight: isToday ? FontWeight.w700 : FontWeight.normal,
+                  color: isSelected
+                      ? Colors.white
+                      : selectable
+                          ? Colors.black87
+                          : Colors.grey[300]!,
+                ),
               ),
             ),
-          ),
-        );
-      },
-    );
+          );
+        },
+      );
+    });
   }
 }
