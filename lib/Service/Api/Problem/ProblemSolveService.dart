@@ -82,22 +82,18 @@ class ProblemSolveService {
     required int problemSolveId,
     required List<File> images,
   }) async {
-    // File 리스트를 MultipartFile 리스트로 변환
-    final List<http.MultipartFile> multipartFiles = [];
-    for (var imageFile in images) {
-      multipartFiles.add(
-        await http.MultipartFile.fromPath(
-          'images', // 서버의 @RequestParam 이름과 동일
-          imageFile.path,
-        ),
-      );
-    }
-
     await httpService.sendRequest(
       method: 'POST',
       url: '$baseUrl/$problemSolveId/images',
       isMultipart: true,
-      files: multipartFiles,
+      // 토큰 갱신 후 재시도할 때 파일을 다시 읽어야 한다.
+      filesBuilder: () async => [
+        for (final imageFile in images)
+          await http.MultipartFile.fromPath(
+            'images', // 서버의 @RequestParam 이름과 동일
+            imageFile.path,
+          ),
+      ],
     );
   }
 

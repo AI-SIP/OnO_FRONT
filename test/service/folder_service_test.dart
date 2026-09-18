@@ -97,8 +97,12 @@ void main() {
     });
 
     test('errorCode 가 1000번대면 401 이 아니어도 UnauthorizedException', () async {
+      // 1005·1007·1009 는 갱신하고 한 번 더 시도하는 코드라 여기서는 쓰지 않는다.
       final http = TestHttpClient.respondWith(
-        errorResponse(statusCode: 400, errorCode: 1005, message: '토큰 만료'),
+        errorResponse(
+            statusCode: 400,
+            errorCode: 1002,
+            message: '리프레시 토큰 정보를 찾을 수 없습니다.'),
       );
 
       await expectLater(
