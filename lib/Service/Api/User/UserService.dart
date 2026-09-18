@@ -56,7 +56,8 @@ class UserService {
       method: 'PATCH',
       url: '${AppConfig.baseUrl}/api/users/me/profile-image',
       isMultipart: true,
-      files: [
+      // 토큰 갱신 후 재시도할 때 파일을 다시 읽어야 한다.
+      filesBuilder: () async => [
         await http.MultipartFile.fromPath('profileImage', imagePath),
       ],
     );

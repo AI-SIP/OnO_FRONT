@@ -98,7 +98,7 @@ void main() {
         method: 'POST',
         url: '$testBaseUrl/api/fileUpload',
         isMultipart: true,
-        files: [
+        filesBuilder: () async => [
           http.MultipartFile.fromString('file', 'content', filename: 'a.txt'),
         ],
       );
