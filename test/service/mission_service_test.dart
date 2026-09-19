@@ -232,6 +232,94 @@ void main() {
       expect(result.rewardValue, 10);
       expect(result.totalStudyLevel, 7);
       expect(result.leveledUp, isTrue);
+      expect(result.unlockedCosmetics, isEmpty);
+    });
+
+    // 서버는 이번에 열린 꾸미기를 응답에 실어 준다. 예전에는 이 값을 버리고
+    // 앱이 총 학습 레벨로 직접 세어서, 능력치 기준으로 열린 것이 연출에서
+    // 빠졌다 (#257).
+    test('서버가 준 unlockedCosmetics 를 그대로 읽는다', () async {
+      final http = TestHttpClient.respondJson(apiEnvelope({
+        'progressId': 1024,
+        'rewardType': 'XP',
+        'rewardValue': 10,
+        'totalStudyLevel': 7,
+        // 레벨은 그대로인데 꾸미기만 열린 경우다.
+        'leveledUp': false,
+        'unlockedCosmetics': [
+          {
+            'itemKey': 'glasses_round',
+            'nameKo': '동그란 안경',
+            'slot': 'FACE',
+            'imageUrl': 'assets/Cosmetic/glasses_round.png',
+          },
+          {
+            'itemKey': 'headband_sprout',
+            'nameKo': '새싹 머리띠',
+            'slot': 'HEAD',
+            'imageUrl': 'assets/Cosmetic/headband_sprout.png',
+          },
+        ],
+      }));
+
+      final result = await buildService(http).claim(1024);
+
+      expect(result!.leveledUp, isFalse);
+      expect(
+        result.unlockedCosmetics.map((unlock) => unlock.itemKey),
+        ['glasses_round', 'headband_sprout'],
+      );
+      expect(result.unlockedCosmetics.first.nameKo, '동그란 안경');
+      expect(result.unlockedCosmetics.first.slot, 'FACE');
+    });
+
+    test('unlockedCosmetics 가 빈 배열이거나 아예 없으면 빈 목록이다', () async {
+      final empty = TestHttpClient.respondJson(apiEnvelope({
+        'progressId': 1024,
+        'rewardType': 'XP',
+        'rewardValue': 10,
+        'totalStudyLevel': 7,
+        'leveledUp': false,
+        'unlockedCosmetics': <Object?>[],
+      }));
+      final missing = TestHttpClient.respondJson(apiEnvelope({
+        'progressId': 1024,
+        'rewardType': 'XP',
+        'rewardValue': 10,
+        'totalStudyLevel': 7,
+        'leveledUp': false,
+      }));
+
+      expect(
+          (await buildService(empty).claim(1024))!.unlockedCosmetics, isEmpty);
+      expect((await buildService(missing).claim(1024))!.unlockedCosmetics,
+          isEmpty);
+    });
+
+    test('읽지 못하는 해금 줄은 버리고 나머지는 살린다', () async {
+      final http = TestHttpClient.respondJson(apiEnvelope({
+        'progressId': 1024,
+        'rewardType': 'XP',
+        'rewardValue': 10,
+        'totalStudyLevel': 7,
+        'leveledUp': false,
+        'unlockedCosmetics': [
+          {'nameKo': '키 없음'},
+          {
+            'itemKey': 'bg_spring',
+            'nameKo': '봄 들판',
+            'slot': 'BACKGROUND',
+            'imageUrl': 'assets/Cosmetic/bg_spring.png',
+          },
+        ],
+      }));
+
+      final result = await buildService(http).claim(1024);
+
+      expect(
+        result!.unlockedCosmetics.map((unlock) => unlock.itemKey),
+        ['bg_spring'],
+      );
     });
 
     test('이미 받은 미션(7012)은 거절로 표시하고 문구를 알려준다', () async {

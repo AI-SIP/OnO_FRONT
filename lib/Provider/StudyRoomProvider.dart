@@ -62,7 +62,12 @@ class StudyRoomProvider extends ChangeNotifier {
     notifyListeners();
     try {
       _activeRoomId = roomId;
-      selectedRoom = await _service.fetchRoomDetail(roomId);
+      final detail = await _service.fetchRoomDetail(roomId);
+      // 상세 응답에는 hasUnreadReport 가 없어서 언제나 false 로 온다. 목록 항목을
+      // 상세로 통째로 갈아 끼우면, 리포트를 읽지도 않았는데 목록의 배지가
+      // 사라진다. 목록이 들고 있던 값을 그대로 잇는다. 배지를 다시 맞추는 것은
+      // 목록을 새로 받을 때고, 여기서 목록을 또 부르면 요청만 하나 는다.
+      selectedRoom = _keepUnreadReport(detail);
       rooms = [
         for (final room in rooms)
           if (room.roomId == roomId) selectedRoom! else room,
@@ -77,6 +82,34 @@ class StudyRoomProvider extends ChangeNotifier {
     } finally {
       isLoading = false;
       notifyListeners();
+    }
+  }
+
+  /// 목록이 들고 있던 [StudyRoomModel.hasUnreadReport] 를 상세에 이어 붙인다.
+  ///
+  /// 목록에 없던 방(초대 링크로 바로 들어온 경우)이면 이어 붙일 것이 없어
+  /// 상세를 그대로 쓴다.
+  StudyRoomModel _keepUnreadReport(StudyRoomModel detail) {
+    for (final room in rooms) {
+      if (room.roomId != detail.roomId) continue;
+      if (!room.hasUnreadReport) break;
+      return detail.copyWith(hasUnreadReport: true);
+    }
+    return detail;
+  }
+
+  /// 그 방의 읽지 않은 리포트 배지를 내린다.
+  void _clearUnreadReportBadge(int? roomId) {
+    if (roomId == null) return;
+    rooms = [
+      for (final room in rooms)
+        if (room.roomId == roomId && room.hasUnreadReport)
+          room.copyWith(hasUnreadReport: false)
+        else
+          room,
+    ];
+    if (selectedRoom?.roomId == roomId && selectedRoom!.hasUnreadReport) {
+      selectedRoom = selectedRoom!.copyWith(hasUnreadReport: false);
     }
   }
 
@@ -479,6 +512,9 @@ class StudyRoomProvider extends ChangeNotifier {
   Future<void> markReportRead() async {
     // API 호출 전 낙관적 업데이트 — 실패해도 이번 세션에서는 리포트가 다시 뜨지 않는다.
     weeklyReport?.isRead = true;
+    // 읽었으니 목록의 배지도 같이 내린다. 상세를 열었다고 내리지는 않으므로
+    // (#258) 실제로 읽은 이 자리에서 내려야 목록이 서버와 같은 말을 한다.
+    _clearUnreadReportBadge(selectedRoom?.roomId ?? _activeRoomId);
     notifyListeners();
     final roomId = selectedRoom?.roomId ?? _activeRoomId;
     final report = weeklyReport;

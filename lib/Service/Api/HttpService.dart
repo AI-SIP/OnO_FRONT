@@ -318,14 +318,26 @@ class HttpService {
         rawMessage: serverMessage,
       );
 
+      // 서버의 범용 오류 핸들러는 errorCode 자리에 HTTP 상태값을 그대로 넣는다.
+      // dev 실측으로 405 → errorCode:405, 잘못된 파라미터 → errorCode:500 이
+      // 확인됐다. 업무 에러 코드는 네 자리(1000 이상)라 세 자리 값은 에러 코드가
+      // 아니라 상태 코드로 읽는다. 본문의 상태값이 응답 상태와 어긋날 때 진짜
+      // 원인을 들고 있는 쪽은 본문이다.
+      final effectiveStatus = _effectiveStatusOf(
+        status: status,
+        errorCode: errorCode,
+      );
+
       // 액세스 토큰이 거절되면 갱신 후 한 번만 재시도한다.
       // requiredToken이 true이고, 아직 재시도하지 않았다면 토큰 갱신 후 재시도
-      // - 1005 ACCESS_TOKEN_EXPIRED
-      // - 1007 AUTHENTICATION_FAILED: 운영 서버는 만료된 토큰에도 1005 가 아니라
-      //   1007 을 준다. 블랙리스트 조회가 실패해도 멀쩡한 토큰에 1007 이 나간다.
-      // - 1009 INVALID_ACCESS_TOKEN: 서명·형식이 틀렸거나 로그아웃된 토큰이다.
-      //   리프레시 토큰이 살아 있으면 새 토큰으로 되살아나고, 아니면 갱신이
-      //   인증 실패로 끝나 어차피 로그아웃된다.
+      // - 1005 ACCESS_TOKEN_EXPIRED: 만료된 액세스 토큰에 나온다. dev 실측으로
+      //   401 + 1005 를 확인했다(JwtTokenizer → JwtTokenFilter 경로).
+      // - 1007 AUTHENTICATION_FAILED: Authorization 헤더가 없거나 Bearer 접두사가
+      //   빠졌을 때다. 토큰 검증 중의 다른 예외(블랙리스트 조회 실패 등)도 이리로
+      //   묶여서, 멀쩡한 토큰에도 1007 이 나갈 수 있다.
+      // - 1009 INVALID_ACCESS_TOKEN: 서명이 훼손됐거나 형식이 틀렸거나 로그아웃된
+      //   토큰이다. 리프레시 토큰이 살아 있으면 새 토큰으로 되살아나고, 아니면
+      //   갱신이 인증 실패로 끝나 어차피 로그아웃된다.
       // 리프레시 토큰 계열(1001·1002·1004·1006)과 권한 부족(1008)은 액세스 토큰을
       // 새로 받아도 달라지지 않으므로 갱신하지 않는다.
       final shouldRefreshToken = errorCode == 1005 ||
@@ -369,6 +381,15 @@ class HttpService {
               message: message,
             ),
             showErrorSnackBar: requiredToken ? false : showErrorSnackBar,
+          );
+        }
+        // 서버 쪽이 깨진 것(5xx)은 잘못된 요청이 아니다. 사용자가 고칠 것이
+        // 없으므로 "잠시 후 다시 시도" 성격의 안내로 가야 한다. 인증 구간을
+        // 가른 뒤에 보기 때문에 1xxx 가 여기로 내려올 일은 없다.
+        if (effectiveStatus >= 500) {
+          _throwWithSnackBar(
+            ServerException(statusCode: effectiveStatus, message: message),
+            showErrorSnackBar: showErrorSnackBar,
           );
         }
         // 기타 비즈니스 로직 에러는 BadRequestException으로 처리
@@ -449,9 +470,12 @@ class HttpService {
   /// 돌아올 수 없다.
   ///
   /// 반대로 리프레시 토큰 자체가 거절된 코드(1001·1002·1003·1004·1006)는 새 토큰을
-  /// 받을 방법이 없으므로 그대로 로그아웃시킨다. 탈퇴한 계정은 리프레시 토큰이
-  /// 사라져 갱신 단계에서 1002 로 끝나므로 이 경로가 로그아웃을 막지 않는다.
+  /// 받을 방법이 없으므로 그대로 로그아웃시킨다.
   /// 갱신을 거치지 않고 바로 올라온 인증 오류(retry == false)도 기존대로 둔다.
+  ///
+  /// 탈퇴한 계정은 여기에 기대지 못한다. dev 실측으로, 지금 서버는 탈퇴해도
+  /// 리프레시 토큰을 지우지 않아 갱신이 200 으로 성공한다(백엔드 AI-SIP/OnO_BACKEND#298
+  /// 에서 수정 중). 고쳐지면 갱신이 1002 로 끝나 이 경로가 로그아웃을 막지 않는다.
   void _throwIfServerAuthIsTemporarilyDown({
     required int status,
     required int? errorCode,
@@ -476,6 +500,17 @@ class HttpService {
       errorCode == 1003 || // INVALID_AUTHORITY
       errorCode == 1004 || // REFRESH_TOKEN_NOT_EQUAL
       errorCode == 1006; // REFRESH_TOKEN_EXPIRED
+
+  /// 이 응답을 무엇으로 볼지 정할 때 쓸 상태 코드.
+  ///
+  /// 서버의 범용 오류 핸들러는 `errorCode` 자리에 HTTP 상태값을 그대로 넣는다.
+  /// 업무 에러 코드는 네 자리(1000 이상)라 세 자리 값과 섞이지 않는다. 그래서
+  /// 세 자리면 상태 코드로 읽고, 아니면 응답의 상태 코드를 그대로 쓴다.
+  int _effectiveStatusOf({required int status, required int? errorCode}) {
+    if (errorCode == null) return status;
+    if (errorCode < 100 || errorCode >= 600) return status;
+    return errorCode;
+  }
 
   String _safeResponseMessage({
     required int status,
