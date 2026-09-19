@@ -274,22 +274,66 @@ class PracticeDetailScreen extends StatelessWidget {
     );
   }
 
+  /// 지난 복습을 끝내고 고른 기분이다.
+  ///
+  /// 전에는 글자 한 줄과 이모지를 가운데에 나란히 두기만 해서, 위의 통계와
+  /// 경계가 없어 어디에 속한 것인지 읽히지 않았다. 옅게 칠한 칸으로 묶고
+  /// 이모지를 동그란 자리에 앉혔다. 그림만으로는 무엇을 고른 것인지 알기
+  /// 어려워서 이모지의 이름도 같이 쓴다.
+  ///
+  /// 서버가 이 앱이 모르는 키를 보내면 [OnoEmojiCatalog.byKey] 가 null 을
+  /// 주는데, 그때는 칸 자체를 그리지 않는다. 이름도 그림도 없이 빈 자리만
+  /// 남기 때문이다.
   Widget _buildLastMoodRow(ThemeHandler themeProvider) {
     final emoji = OnoEmojiCatalog.byKey(practice.lastSessionMoodEmojiKey!);
+    if (emoji == null) return const SizedBox.shrink();
 
     return Padding(
-      padding: const EdgeInsets.only(top: 12),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          StandardText(
-            text: '지난 복습 소감',
-            fontSize: 13,
-            color: themeProvider.primaryColor,
+      padding: const EdgeInsets.only(top: 14),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: themeProvider.primaryColor.withValues(alpha: 0.06),
+          borderRadius: BorderRadius.circular(AppRadius.medium),
+          border: Border.all(
+            color: themeProvider.primaryColor.withValues(alpha: 0.18),
           ),
-          const SizedBox(width: 8),
-          OnoEmojiImage(emoji: emoji, size: 28),
-        ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+              ),
+              child: OnoEmojiImage(emoji: emoji, size: 30),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const StandardText(
+                    text: '지난 복습 소감',
+                    fontSize: 12,
+                    color: AppColors.textTertiary,
+                    height: 1.2,
+                  ),
+                  const SizedBox(height: 4),
+                  StandardText(
+                    text: emoji.label,
+                    fontSize: 15,
+                    color: themeProvider.primaryColor,
+                    height: 1.2,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -44,4 +44,37 @@ void main() {
       );
     },
   );
+
+  // 지난 복습 소감이 있는 모습은 따로 뜬다. 위 픽스처는 소감이 없어서 그 칸이
+  // 아예 그려지지 않아, 생김새가 잠기지 않는다.
+  screenGoldenTest(
+    '복습 세트 상세 화면 (지난 복습 소감 있음)',
+    fileName: 'practice_detail_screen_with_mood',
+    surfaces: GoldenSurface.layouts,
+    buildApp: () async {
+      final practiceProvider = ProblemPracticeProvider(
+        problemsProvider: MockProblemsProvider(),
+        practiceNoteService: MockPracticeNoteService(),
+      );
+      practiceProvider.currentProblems = [
+        ProblemModel(problemId: 10, reference: '수학 문제집 p.12'),
+      ];
+
+      return buildOnoApp(
+        PracticeDetailScreen(
+          practice: PracticeNoteDetailModel(
+            practiceId: 1,
+            practiceTitle: '수학 오답노트',
+            practiceCount: 3,
+            createdAt: DateTime(2024, 1, 1),
+            lastSolvedAt: null,
+            lastSessionMoodEmojiKey: 'cool_sunglasses',
+            problemIdList: const [10],
+          ),
+        ),
+        cosmeticProvider: await loadedCosmeticProvider(),
+        practiceProvider: practiceProvider,
+      );
+    },
+  );
 }

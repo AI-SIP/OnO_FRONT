@@ -220,4 +220,52 @@ void main() {
       expect(counter.replaced, 0);
     });
   });
+
+  // 아이패드 mini 를 가로로 두면 짧은 쪽이 744 라 태블릿으로 걸리는데 세로로
+  // 쓸 수 있는 길이는 700 밖에 안 됐다. 개구리 180 과 그 아래 간격 56 이
+  // 고정이라 맨 아래 게스트로 시작하기가 밀려 스크롤해야 보였다.
+  group('세로로 짧은 화면', () {
+    const sizes = <String, Size>{
+      '아이패드 mini 가로': Size(1133, 744),
+      '아이패드 10.9 가로': Size(1180, 820),
+      '아이패드 Pro 11 가로': Size(1194, 834),
+      '아이패드 Pro 11 세로': Size(834, 1194),
+    };
+
+    for (final entry in sizes.entries) {
+      for (final scale in <double>[1.0, 1.3]) {
+        testWidgets('${entry.key} 글자 ${scale}배에서 게스트로 시작하기가 스크롤 없이 보인다',
+            (tester) async {
+          // 상태 표시줄과 홈 인디케이터를 실제 기기처럼 둔다. 이것이 없으면
+          // 세로 길이가 그만큼 넉넉해져서 밀리는 것이 재현되지 않는다.
+          tester.view.padding = const FakeViewPadding(top: 24, bottom: 20);
+          addTearDown(tester.view.resetPadding);
+          tester.platformDispatcher.textScaleFactorTestValue = scale;
+          addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+
+          await withMockedNetworkImages(() async {
+            await pumpOnoWidget(
+              tester,
+              const LoginScreen(),
+              surfaceSize: entry.value,
+              settle: false,
+            );
+          });
+          await tester.pump(const Duration(seconds: 1));
+
+          final position = tester
+              .state<ScrollableState>(find.byType(Scrollable).first)
+              .position;
+
+          expect(position.maxScrollExtent, 0,
+              reason: '${entry.key} 에서 스크롤해야 끝까지 보인다');
+          expect(
+            tester.getRect(find.text('게스트로 시작하기')).bottom,
+            lessThanOrEqualTo(position.viewportDimension + 24),
+            reason: '${entry.key} 에서 게스트로 시작하기가 화면 밖으로 밀렸다',
+          );
+        });
+      }
+    }
+  });
 }
