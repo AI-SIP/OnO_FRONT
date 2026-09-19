@@ -9,6 +9,7 @@ import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/StudyRoomProvider.dart';
 import '../../Util/AppSnackBar.dart';
 import 'Widget/StudyRoomThumbnail.dart';
+import '../../Module/Design/AppLayout.dart';
 import '../../Module/Design/AppRadius.dart';
 import '../../Module/Design/AppColors.dart';
 
@@ -143,7 +144,17 @@ class _StudyRoomEditScreenState extends State<StudyRoomEditScreen> {
       body: SafeArea(
         child: Center(
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 520),
+            constraints: BoxConstraints(
+              // 520 으로 못 박아 두어 아이패드 13인치 가로(1376)에서 좌우로
+              // 428 씩 비었다. 입력 폼이라 격자만큼 넓힐 것은 아니지만, 화면이
+              // 커진 만큼은 같이 넓어져야 한다.
+              maxWidth: AppLayout.contentWidth(
+                MediaQuery.sizeOf(context).width,
+                ratio: 0.78,
+                min: 520,
+                max: 1000,
+              ),
+            ),
             child: Padding(
               padding: EdgeInsets.fromLTRB(
                 screenWidth * 0.06,

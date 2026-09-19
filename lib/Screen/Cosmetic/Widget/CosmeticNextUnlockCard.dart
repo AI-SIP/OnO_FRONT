@@ -241,7 +241,16 @@ class CosmeticNextUnlockCard extends StatelessWidget {
           ),
           if (shown != null) ...[
             const SizedBox(width: AppSpacing.sm),
-            Flexible(child: CosmeticLockBadge(item: shown, fontSize: 11)),
+            // Flexible 로 두면 배지가 제 너비만큼만 차지하는데, 앞의 이름이
+            // 이미 제 몫(절반)을 다 쓴 자리에서 시작하므로 배지는 카드 한가운데
+            // 언저리에서 끝나고 오른쪽이 통째로 빈다. 태블릿처럼 카드가 넓을수록
+            // 더 벌어진다. 제 몫을 다 받아서 그 안에서 오른쪽에 붙게 한다.
+            Expanded(
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: CosmeticLockBadge(item: shown, fontSize: 11),
+              ),
+            ),
           ],
         ],
       ),

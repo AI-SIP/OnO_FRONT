@@ -385,6 +385,30 @@ void main() {
       expect(inCard(find.text('지금 출석 Lv.12 · 2 레벨 남았어요')), findsOneWidget);
     });
 
+    // 배지를 Flexible 로 두면 제 너비만큼만 차지하는데, 앞의 이름이 이미 제
+    // 몫(절반)을 다 쓴 자리에서 시작하므로 카드 한가운데 언저리에서 끝나고
+    // 오른쪽이 통째로 빈다. 카드가 넓은 태블릿일수록 더 벌어진다.
+    for (final entry in <String, Size>{
+      '폰': OnoSurface.phone,
+      '태블릿': OnoSurface.tablet,
+    }.entries) {
+      testWidgets('${entry.key}에서 필요 레벨 배지가 카드 오른쪽 끝에 붙는다', (tester) async {
+        await pumpCloset(tester, surfaceSize: entry.value);
+
+        final cardRight =
+            tester.getRect(find.byType(CosmeticNextUnlockCard)).right;
+        final badgeRight = tester.getRect(inCard(find.text('출석 Lv.14'))).right;
+
+        // 카드 안쪽 여백과 배지 테두리 몫만 열어 둔다.
+        expect(
+          badgeRight,
+          greaterThan(cardRight - 60),
+          reason: '${entry.key}: 배지가 오른쪽 끝에서 '
+              '${(cardRight - badgeRight).toStringAsFixed(1)} 만큼 떨어져 있다',
+        );
+      });
+    }
+
     testWidgets('한 칸 남았으면 한 칸 남았다고 말한다', (tester) async {
       await pumpCloset(
         tester,

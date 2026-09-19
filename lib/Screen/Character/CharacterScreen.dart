@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../Model/User/UserInfoModel.dart';
 import '../../Module/Design/AppColors.dart';
+import '../../Module/Design/AppLayout.dart';
 import '../../Module/Design/AppRadius.dart';
 import '../../Module/Design/AppSpacing.dart';
 import '../../Module/Motion/AnimatedCountText.dart';
@@ -497,11 +498,12 @@ class _CharacterStage extends StatelessWidget {
   ///
   /// 개구리는 파츠 원본이 512 라 그 이상 키우면 뭉갠다. 그래서 빈 면을 줄이는
   /// 몫은 카드와 버튼이 맡는다.
-  static double _contentWidthFor(double available) {
-    // 폰은 지금 그대로 화면을 다 쓴다.
-    if (available < 600) return available;
-    return (available * 0.88).clamp(640.0, 1240.0);
-  }
+  static double _contentWidthFor(double available) => AppLayout.contentWidth(
+        available,
+        ratio: 0.88,
+        min: 640,
+        max: 1240,
+      );
 }
 
 /// 성장 카드 맨 아래, 훈장으로 가는 한 줄이다.

@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../Model/Cosmetic/CosmeticItemModel.dart';
 import '../../Model/Cosmetic/CosmeticSlotModel.dart';
 import '../../Module/Design/AppColors.dart';
+import '../../Module/Design/AppLayout.dart';
 import '../../Module/Design/AppRadius.dart';
 import '../../Module/Design/AppSpacing.dart';
 import '../../Module/Design/AppToast.dart';
@@ -213,9 +214,29 @@ class _CosmeticClosetScreenState extends State<CosmeticClosetScreen> {
   /// 여러 개를 걸쳐 보고 나서 뒤로 가기를 누르면 그동안 고른 것이 통째로
   /// 사라진다. 되돌릴 수 없는 일이라 한 번 막는다.
   Future<bool> _confirmDiscard(Color color) async {
+    final openTime = DateTime.now();
+
     final leave = await showTossDialog<bool>(
       context: context,
-      builder: (dialogContext) => _DiscardDialog(color: color),
+      // 아이패드에서 창이 뜨자마자 스스로 닫혔다. 배리어에 맡기면 뜨는 순간
+      // 바깥 탭이 한 번 들어와서 그대로 닫히기 때문이다. 배리어로 닫는 것을
+      // 끄고 TapRegion 으로 직접 받아 처음 0.5초는 무시한다.
+      // 공책 이름 창에 이미 같은 우회가 들어가 있다(DirectoryScreen).
+      barrierDismissible: false,
+      builder: (dialogContext) => TapRegion(
+        onTapOutside: (_) {
+          // Workaround for iPadOS 26.1 bug:
+          // https://github.com/flutter/flutter/issues/177992
+          if (DateTime.now().difference(openTime) <
+              const Duration(milliseconds: 500)) {
+            return;
+          }
+          if (Navigator.canPop(dialogContext)) {
+            Navigator.pop(dialogContext);
+          }
+        },
+        child: _DiscardDialog(color: color),
+      ),
     );
     return leave ?? false;
   }
@@ -684,12 +705,13 @@ class _CosmeticClosetScreenState extends State<CosmeticClosetScreen> {
   /// 640 으로 못 박아 두었더니 아이패드 13인치를 가로로 두면(1376) 좌우에
   /// 368 씩 비어서, 넓은 화면 한가운데 폰 화면을 그대로 옮겨 놓은 것처럼
   /// 보였다. 화면 폭을 따라가되 양 끝은 가둔다.
-  static double _contentWidthFor(BoxConstraints constraints) {
-    final available = constraints.maxWidth;
-    // 폰은 지금 그대로 화면을 다 쓴다.
-    if (available < 600) return available;
-    return (available * 0.88).clamp(640.0, 1240.0);
-  }
+  static double _contentWidthFor(BoxConstraints constraints) =>
+      AppLayout.contentWidth(
+        constraints.maxWidth,
+        ratio: 0.88,
+        min: 640,
+        max: 1240,
+      );
 
   /// 격자 칸 하나가 지향하는 폭.
   ///

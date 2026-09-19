@@ -126,29 +126,38 @@ class _AchievementCardScreenState extends State<AchievementCardScreen> {
       body: Column(
         children: [
           Expanded(
-            child: Center(
-              // 카드가 아래에서 올라오며 들어온다. 캡처 대상인 RepaintBoundary
-              // 바깥에 둬야 공유 이미지에 영향이 없다.
-              child: AppearTransition(
-                offset: 24,
-                duration: AppMotion.slow,
-                // 그림자는 RepaintBoundary 밖에 둬서 미리보기에만 보임
-                child: Container(
-                  decoration: BoxDecoration(
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.12),
-                        blurRadius: 20,
-                        spreadRadius: 0,
-                        offset: const Offset(0, 6),
+            child: LayoutBuilder(
+              builder: (context, constraints) => Center(
+                // 카드는 360x600 그대로 공유 이미지로 찍힌다. 그 크기를 바꾸면
+                // 내보내는 그림이 달라지므로 배치는 건드리지 않고, 태블릿에서
+                // 작은 카드가 넓은 화면 한가운데 놓여 보이던 것만 확대해서
+                // 고친다. Transform 은 그릴 때 적용되므로 글자는 흐려지지 않고,
+                // 캡처 대상인 RepaintBoundary 바깥이라 내보내는 그림에도 영향이
+                // 없다.
+                child: Transform.scale(
+                  scale: _previewScaleFor(constraints),
+                  child: AppearTransition(
+                    offset: 24,
+                    duration: AppMotion.slow,
+                    // 그림자는 RepaintBoundary 밖에 둬서 미리보기에만 보임
+                    child: Container(
+                      decoration: BoxDecoration(
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.12),
+                            blurRadius: 20,
+                            spreadRadius: 0,
+                            offset: const Offset(0, 6),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                  child: RepaintBoundary(
-                    key: _globalKey,
-                    child: _AchievementCard(
-                      userInfo: widget.userInfo,
-                      weeklyReport: widget.weeklyReport,
+                      child: RepaintBoundary(
+                        key: _globalKey,
+                        child: _AchievementCard(
+                          userInfo: widget.userInfo,
+                          weeklyReport: widget.weeklyReport,
+                        ),
+                      ),
                     ),
                   ),
                 ),
@@ -162,6 +171,19 @@ class _AchievementCardScreenState extends State<AchievementCardScreen> {
         ],
       ),
     );
+  }
+
+  /// 미리보기로 보여 줄 배율.
+  ///
+  /// 폰에서는 카드가 이미 화면 폭을 거의 채워서 1 로 떨어진다. 화면이 커질수록
+  /// 같이 커지되 너무 키우면 화면 밖으로 넘치므로 위를 막아 둔다.
+  double _previewScaleFor(BoxConstraints constraints) {
+    const cardWidth = 360.0;
+    const cardHeight = 600.0;
+    final byWidth = constraints.maxWidth * 0.9 / cardWidth;
+    final byHeight = constraints.maxHeight * 0.92 / cardHeight;
+    final smaller = byWidth < byHeight ? byWidth : byHeight;
+    return smaller.clamp(1.0, 1.9);
   }
 
   Widget _buildShareButton(ThemeHandler themeProvider) {
