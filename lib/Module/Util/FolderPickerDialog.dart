@@ -179,7 +179,10 @@ class _FolderPickerDialogState extends State<FolderPickerDialog> {
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeHandler>(context);
     final size = MediaQuery.of(context).size;
-    final isTablet = size.width >= 600;
+    // 짧은 쪽으로 가른다. 폭만 보면 폰을 가로로 돌렸을 때도 태블릿으로 걸려서
+    // 아래 minHeight 560 이 그 화면의 maxHeight 보다 커지고, 그러면 앞뒤가
+    // 뒤집힌 BoxConstraints 라 디버그 빌드에서 그대로 멈춘다.
+    final isTablet = size.shortestSide >= 600;
     final selectedFolderName =
         FolderPickerDialog.getFolderNameByFolderId(_selectedFolderId) ??
             '선택 안 됨';
@@ -188,185 +191,207 @@ class _FolderPickerDialogState extends State<FolderPickerDialog> {
     final dialogTitle = widget.isManagementMode ? '공책 정리' : '공책 선택';
     final confirmText = widget.isManagementMode ? '완료하기' : '선택하기';
 
-    return Dialog(
-      backgroundColor: Colors.white,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppRadius.large),
-      ),
-      insetPadding: EdgeInsets.symmetric(
-        horizontal: isTablet ? 40 : 12,
-        vertical: isTablet ? 32 : 14,
-      ),
-      child: ConstrainedBox(
-        constraints: BoxConstraints(
-          maxHeight: size.height * 0.86,
-          maxWidth: isTablet ? 720 : size.width - 24,
-          minHeight: isTablet ? 560 : size.height * 0.72,
+    final maxHeight = size.height * 0.86;
+    final maxWidth = isTablet ? 720.0 : size.width - 24;
+
+    // 앱 전체 테마가 다이얼로그 폭을 420 으로 묶어 둔다(main.dart 의
+    // dialogTheme). 그 아래에서는 여기 적은 720 이 한 번도 쓰이지 못하고
+    // 태블릿에서도 폰과 같은 폭이 나왔다. 이 다이얼로그에서만 그 한계를
+    // 다시 정한다.
+    return Theme(
+      data: Theme.of(context).copyWith(
+        dialogTheme: DialogThemeData(
+          constraints: BoxConstraints(maxWidth: maxWidth),
         ),
-        child: Column(
-          children: [
-            Container(
-              padding: EdgeInsets.fromLTRB(isTablet ? 26 : 18, 20, 14, 16),
-              decoration: BoxDecoration(
-                color: themeProvider.primaryColor.withOpacity(0.08),
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(18),
-                  topRight: Radius.circular(18),
+      ),
+      child: Dialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.large),
+        ),
+        insetPadding: EdgeInsets.symmetric(
+          horizontal: isTablet ? 40 : 12,
+          vertical: isTablet ? 32 : 14,
+        ),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxHeight: maxHeight,
+            maxWidth: maxWidth,
+            // 높이가 모자란 화면에서는 하한을 접는다. 하한이 상한을 넘으면
+            // 앞뒤가 뒤집힌 제약이 된다.
+            minHeight:
+                (isTablet ? 560.0 : size.height * 0.72).clamp(0.0, maxHeight),
+          ),
+          child: Column(
+            children: [
+              Container(
+                padding: EdgeInsets.fromLTRB(isTablet ? 26 : 18, 20, 14, 16),
+                decoration: BoxDecoration(
+                  color: themeProvider.primaryColor.withOpacity(0.08),
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(18),
+                    topRight: Radius.circular(18),
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(7),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius:
+                                BorderRadius.circular(AppRadius.small),
+                          ),
+                          child: Icon(
+                            Icons.folder_open,
+                            color: themeProvider.primaryColor,
+                            size: 19,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              StandardText(
+                                text: dialogTitle,
+                                fontSize: MobileFontSize.reduced(context, 21),
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.textPrimary,
+                              ),
+                              const SizedBox(height: 4),
+                              StandardText(
+                                text: widget.isManagementMode
+                                    ? '공책을 길게 눌러 위치를 바꿀 수 있어요'
+                                    : '오답노트를 넣을 공책을 골라주세요',
+                                fontSize: MobileFontSize.reduced(context, 12),
+                                color: AppColors.textSecondary,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ),
+                        ),
+                        IconButton(
+                          tooltip: '공책 추가',
+                          icon: const ClayIcon(
+                            "assets/Icon/addNote.png",
+                            width: 26,
+                            height: 26,
+                          ),
+                          onPressed: (_selectedFolderId == null ||
+                                  _isMovingFolder)
+                              ? null
+                              : () async {
+                                  await _showFolderNameDialog(
+                                    dialogTitle: '공책 생성',
+                                    defaultFolderName: '',
+                                    parentFolderName: createTargetName,
+                                    onFolderNameSubmitted: (folderName) async {
+                                      final parentId = _selectedFolderId;
+                                      if (parentId != null) {
+                                        await _createFolder(
+                                            folderName, parentId);
+                                      }
+                                    },
+                                  );
+                                },
+                        ),
+                        IconButton(
+                          tooltip: '닫기',
+                          icon: const Icon(Icons.close, size: 22),
+                          color: AppColors.textSecondary,
+                          onPressed: () {
+                            Navigator.pop(context, widget.initialFolderId);
+                          },
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(7),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(AppRadius.small),
-                        ),
-                        child: Icon(
-                          Icons.folder_open,
+              Flexible(
+                child: _isLoading || _rootNode == null
+                    ? Center(
+                        child: CircularProgressIndicator(
                           color: themeProvider.primaryColor,
-                          size: 19,
                         ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            StandardText(
-                              text: dialogTitle,
-                              fontSize: MobileFontSize.reduced(context, 21),
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.textPrimary,
-                            ),
-                            const SizedBox(height: 4),
-                            StandardText(
-                              text: widget.isManagementMode
-                                  ? '공책을 길게 눌러 위치를 바꿀 수 있어요'
-                                  : '오답노트를 넣을 공책을 골라주세요',
-                              fontSize: MobileFontSize.reduced(context, 12),
-                              color: AppColors.textSecondary,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ],
+                      )
+                    : ListView(
+                        padding: EdgeInsets.fromLTRB(
+                          isTablet ? 18 : 10,
+                          12,
+                          isTablet ? 18 : 10,
+                          12,
                         ),
+                        children:
+                            _buildFolderTreeList(_rootNode!, themeProvider),
                       ),
-                      IconButton(
-                        tooltip: '공책 추가',
-                        icon: const ClayIcon(
-                          "assets/Icon/addNote.png",
-                          width: 26,
-                          height: 26,
-                        ),
-                        onPressed: (_selectedFolderId == null ||
-                                _isMovingFolder)
-                            ? null
-                            : () async {
-                                await _showFolderNameDialog(
-                                  dialogTitle: '공책 생성',
-                                  defaultFolderName: '',
-                                  parentFolderName: createTargetName,
-                                  onFolderNameSubmitted: (folderName) async {
-                                    final parentId = _selectedFolderId;
-                                    if (parentId != null) {
-                                      await _createFolder(folderName, parentId);
-                                    }
-                                  },
-                                );
-                              },
-                      ),
-                      IconButton(
-                        tooltip: '닫기',
-                        icon: const Icon(Icons.close, size: 22),
-                        color: AppColors.textSecondary,
+              ),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+                decoration: BoxDecoration(
+                  color: Colors.grey[50],
+                  border: Border(
+                    top: BorderSide(color: Colors.grey[200]!, width: 1),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TextButton(
                         onPressed: () {
                           Navigator.pop(context, widget.initialFolderId);
                         },
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          backgroundColor: Colors.grey[100],
+                          shape: RoundedRectangleBorder(
+                            borderRadius:
+                                BorderRadius.circular(AppRadius.small),
+                          ),
+                        ),
+                        child: StandardText(
+                          text: '취소',
+                          fontSize: MobileFontSize.reduced(context, 15),
+                          color: AppColors.textPrimary,
+                        ),
                       ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            Flexible(
-              child: _isLoading || _rootNode == null
-                  ? Center(
-                      child: CircularProgressIndicator(
-                        color: themeProvider.primaryColor,
-                      ),
-                    )
-                  : ListView(
-                      padding: EdgeInsets.fromLTRB(
-                        isTablet ? 18 : 10,
-                        12,
-                        isTablet ? 18 : 10,
-                        12,
-                      ),
-                      children: _buildFolderTreeList(_rootNode!, themeProvider),
                     ),
-            ),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
-              decoration: BoxDecoration(
-                color: Colors.grey[50],
-                border: Border(
-                  top: BorderSide(color: Colors.grey[200]!, width: 1),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: TextButton(
+                        onPressed: () {
+                          if (_isMovingFolder) return;
+                          if (_selectedFolderId != null) {
+                            Navigator.pop(context, _selectedFolderId);
+                          } else {
+                            Navigator.pop(context, null);
+                          }
+                        },
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          backgroundColor: themeProvider.primaryColor,
+                          shape: RoundedRectangleBorder(
+                            borderRadius:
+                                BorderRadius.circular(AppRadius.small),
+                          ),
+                        ),
+                        child: StandardText(
+                          text: confirmText,
+                          fontSize: 15,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: TextButton(
-                      onPressed: () {
-                        Navigator.pop(context, widget.initialFolderId);
-                      },
-                      style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        backgroundColor: Colors.grey[100],
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(AppRadius.small),
-                        ),
-                      ),
-                      child: StandardText(
-                        text: '취소',
-                        fontSize: MobileFontSize.reduced(context, 15),
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: TextButton(
-                      onPressed: () {
-                        if (_isMovingFolder) return;
-                        if (_selectedFolderId != null) {
-                          Navigator.pop(context, _selectedFolderId);
-                        } else {
-                          Navigator.pop(context, null);
-                        }
-                      },
-                      style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        backgroundColor: themeProvider.primaryColor,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(AppRadius.small),
-                        ),
-                      ),
-                      child: StandardText(
-                        text: confirmText,
-                        fontSize: 15,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
