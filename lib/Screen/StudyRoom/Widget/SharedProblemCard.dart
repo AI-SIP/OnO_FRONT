@@ -457,8 +457,10 @@ class _SharedProblemCardState extends State<SharedProblemCard> {
                 onTap: () => Navigator.push(
                   context,
                   TossPageRoute(
-                    builder: (_) =>
-                        FullScreenImage(imagePath: imageUrls[index]),
+                    builder: (_) => FullScreenImage(
+                      imagePaths: imageUrls,
+                      initialIndex: index,
+                    ),
                   ),
                 ),
                 child: Container(

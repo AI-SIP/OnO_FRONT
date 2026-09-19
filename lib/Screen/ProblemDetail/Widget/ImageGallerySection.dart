@@ -69,8 +69,10 @@ class _ImageGallerySectionState extends State<ImageGallerySection> {
                 onTap: () => Navigator.push(
                   context,
                   TossPageRoute(
-                    builder: (_) =>
-                        FullScreenImage(imagePath: widget.imageUrls[i]),
+                    builder: (_) => FullScreenImage(
+                      imagePaths: widget.imageUrls,
+                      initialIndex: i,
+                    ),
                   ),
                 ),
                 child: ClipRRect(
