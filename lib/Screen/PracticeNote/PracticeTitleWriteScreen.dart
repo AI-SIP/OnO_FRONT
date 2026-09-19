@@ -89,10 +89,20 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
     super.dispose();
   }
 
+  /// 알림을 켜고 매주 반복을 골랐는데 요일을 하나도 고르지 않은 상태.
+  bool get _isWeekdayMissing =>
+      _notifyEnabled &&
+      _repeatType == RepeatType.weekly &&
+      _selectedWeekdays.isEmpty;
+
   Future<void> _submitPractice(
       BuildContext context, ThemeHandler themeProvider) async {
     if (_titleController.text.isEmpty) {
-      _showTitleRequiredDialog(context);
+      _showWarningDialog(context, '제목을 입력해 주세요!');
+    } else if (_isWeekdayMissing) {
+      // 서버는 주간 반복에 요일이 하나도 없으면 400(errorCode 6003)으로 거절한다.
+      // 요청을 보내기 전에 앱에서 먼저 알려 준다.
+      _showWarningDialog(context, '알림 받을 요일을 하나 이상 골라 주세요!');
     } else {
       final problemPracticeProvider =
           Provider.of<ProblemPracticeProvider>(context, listen: false);
@@ -181,7 +191,7 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
     }
   }
 
-  void _showTitleRequiredDialog(BuildContext context) {
+  void _showWarningDialog(BuildContext context, String message) {
     final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
 
     showTossDialog(
@@ -224,7 +234,7 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
                 const SizedBox(height: 20),
                 // 내용
                 StandardText(
-                  text: '제목을 입력해 주세요!',
+                  text: message,
                   fontSize: MobileFontSize.reduced(context, 15),
                   color: AppColors.textPrimary,
                   textAlign: TextAlign.center,
@@ -563,11 +573,25 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
                       ),
                       if (_repeatType == RepeatType.weekly) ...[
                         const SizedBox(height: 16),
-                        const StandardText(
-                          text: '요일 선택',
-                          fontSize: 14,
-                          color: AppColors.textSecondary,
-                          fontWeight: FontWeight.w500,
+                        Wrap(
+                          spacing: 6,
+                          runSpacing: 4,
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          children: [
+                            const StandardText(
+                              text: '요일 선택',
+                              fontSize: 14,
+                              color: AppColors.textSecondary,
+                              fontWeight: FontWeight.w500,
+                            ),
+                            // 하나도 안 고르면 저장이 막히므로 미리 알려 준다.
+                            if (_selectedWeekdays.isEmpty)
+                              const StandardText(
+                                text: '하나 이상 골라 주세요',
+                                fontSize: 12,
+                                color: Colors.orange,
+                              ),
+                          ],
                         ),
                         const SizedBox(height: 12),
                         Wrap(

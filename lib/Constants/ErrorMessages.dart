@@ -57,6 +57,7 @@ class ErrorMessages {
 
   static const String practiceNoteNotFound = '복습 세트를 찾을 수 없습니다.';
   static const String practiceNoteUserUnmatched = '해당 복습 세트에 대한 권한이 없습니다.';
+  static const String practiceNoteWeekDaysRequired = '알림 받을 요일을 하나 이상 골라 주세요.';
 
   static const String missionTypeNotFound = '잘못된 미션 종류입니다.';
   static const String missionUserNotFound = '해당하는 유저가 존재하지 않습니다.';
