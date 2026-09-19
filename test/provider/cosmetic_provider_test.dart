@@ -18,6 +18,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ono/Model/Cosmetic/CosmeticAbilityLevels.dart';
 import 'package:ono/Model/Cosmetic/CosmeticEquipResultModel.dart';
+import 'package:ono/Model/Cosmetic/CosmeticItemModel.dart';
 import 'package:ono/Provider/CosmeticProvider.dart';
 
 import '../helpers/helpers.dart';
@@ -731,9 +732,15 @@ void main() {
       final provider = await maxed();
       await provider.unequip('HEAD');
 
-      final layers = provider.layersWith(
-        [provider.itemOf('hat_crown')!],
-      );
+      final crown = provider.itemOf('hat_crown')!;
+      final layers = provider.layersWith([
+        CosmeticUnlockModel(
+          itemKey: crown.itemKey,
+          nameKo: crown.nameKo,
+          slot: crown.slot,
+          imageUrl: crown.imageUrl,
+        ),
+      ]);
 
       expect(
         [for (final layer in layers) layer.itemKey],

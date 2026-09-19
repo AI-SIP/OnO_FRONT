@@ -59,8 +59,10 @@ String missionLevelPhraseOf(int level) {
 
 /// 지금 열려 있는 테마의 번호들.
 ///
-/// 서버가 해금 정보를 따로 내려주지 않아서 [ThemeLockManager] 의 로컬 계산을
-/// 쓴다. 받기 전후로 한 번씩 구해 차이를 보면 이번에 열린 것을 알 수 있다.
+/// **테마는 꾸미기와 다르다.** 꾸미기 해금은 서버가 보상 응답에 실어 주지만,
+/// 테마는 앱 안에만 있는 것이라 서버가 알려 줄 것이 없다. 그래서 여기만
+/// [ThemeLockManager] 의 로컬 계산을 쓴다. 받기 전후로 한 번씩 구해 차이를
+/// 보면 이번에 열린 것을 알 수 있다.
 Set<int> unlockedThemeIndexes(UserInfoModel? userInfo) {
   return <int>{
     for (var i = 0; i < ThemeLockManager.themeNames.length; i++)
@@ -79,29 +81,40 @@ List<int> newlyUnlockedThemeIndexes(Set<int> before, Set<int> after) {
   ];
 }
 
-/// [from] 다음 레벨부터 [to] 까지 새로 열리는 치장 아이템을 순서대로 모은다.
+/// 서버가 준 해금을 이 앱이 그릴 수 있는 모습으로 맞춘다.
 ///
-/// 한 번에 두 레벨 넘게 오르는 일이 있어서 구간을 훑는다. Lv.13 에서 Lv.15 로
-/// 뛰면 Lv.14 의 것과 Lv.15 의 것이 모두 이번에 열린 것이다.
+/// 해금을 정하는 쪽은 서버다. 그런데 **그림은 앱 안에 있다.** 서버에 아이템이
+/// 하나 늘어도 그 그림을 담은 버전을 깔기 전까지 앱은 그것을 그릴 수 없고,
+/// 옷장 카탈로그는 이미 그런 것을 걷어 낸 뒤다([CosmeticAssetGuard]).
 ///
-/// [unlockedAt] 은 `CosmeticProvider.unlockedAtTotalStudyLevel` 을 그대로
-/// 넘긴다. 프로바이더를 직접 받지 않는 것은 이 계산만 따로 확인할 수 있게
-/// 하려는 것이다.
-///
-/// **총 학습 레벨 기준이다.** 해금이 능력치별로 갈린 뒤로 출석이나 복습으로
-/// 열리는 것은 그쪽 레벨이 오를 때 열리는 것이라 이 축하의 몫이 아니다.
-List<CosmeticItemModel> missionUnlocksBetween(
-  int from,
-  int to,
-  List<CosmeticItemModel> Function(int level) unlockedAt,
-) {
-  if (to <= from) return const [];
-
-  final unlocked = <CosmeticItemModel>[];
-  for (var level = from + 1; level <= to; level++) {
-    unlocked.addAll(unlockedAt(level));
-  }
-  return unlocked;
+/// 그래서 카탈로그에 있는 것은 카탈로그의 값(이름·그림·자리)으로 바꿔 놓고,
+/// 카탈로그에 없는 것은 그림을 비워 이름만 알린다. 이름표는 뜨고 개구리만
+/// 그대로다. 아직 카탈로그를 못 받았으면([hasCatalog] 가 false) 비교할 것이
+/// 없으니 서버 값을 그대로 믿는다.
+List<CosmeticUnlockModel> missionDrawableUnlocks({
+  required List<CosmeticUnlockModel> unlocks,
+  required bool hasCatalog,
+  required CosmeticItemModel? Function(String itemKey) itemOf,
+}) {
+  return [
+    for (final unlock in unlocks)
+      if (itemOf(unlock.itemKey) case final item?)
+        CosmeticUnlockModel(
+          itemKey: item.itemKey,
+          nameKo: item.nameKo,
+          slot: item.slot,
+          imageUrl: item.imageUrl,
+        )
+      else if (!hasCatalog)
+        unlock
+      else
+        CosmeticUnlockModel(
+          itemKey: unlock.itemKey,
+          nameKo: unlock.nameKo,
+          slot: unlock.slot,
+          imageUrl: '',
+        ),
+  ];
 }
 
 /// 해금된 것을 하나씩 얹어 가는 중간 차림들을 만든다.
@@ -118,7 +131,7 @@ List<CosmeticItemModel> missionUnlocksBetween(
 List<List<CosmeticLayerModel>> missionUnlockStages({
   required List<CosmeticLayerModel> before,
   required List<CosmeticLayerModel> after,
-  required List<CosmeticItemModel> unlocked,
+  required List<CosmeticUnlockModel> unlocked,
 }) {
   final stages = <List<CosmeticLayerModel>>[List.of(before)];
   if (unlocked.isEmpty) return stages;
@@ -201,6 +214,11 @@ Future<void> showMissionLevelUp(
   /// 두 레벨이 오르면 그 사이 것까지 전부 이번에 열린 것이다.
   int? previousLevel,
   List<int> unlockedThemeIndexes = const [],
+
+  /// 이번에 열린 꾸미기들. **서버가 준 것을 그대로 넘긴다.**
+  ///
+  /// 비어 있으면 해금 영역은 통째로 없고, 레벨이 오른 것만 보여 준다.
+  List<CosmeticUnlockModel> unlockedCosmetics = const [],
 }) {
   AppHaptic.primary();
   return showGeneralDialog<void>(
@@ -216,6 +234,7 @@ Future<void> showMissionLevelUp(
       level: level,
       previousLevel: previousLevel,
       unlockedThemeIndexes: unlockedThemeIndexes,
+      unlockedCosmetics: unlockedCosmetics,
     ),
     // 빌더 안에서 CurvedAnimation 을 만들면 프레임마다 새로 생긴다.
     transitionBuilder: (context, animation, secondaryAnimation, child) =>
@@ -227,11 +246,13 @@ class _MissionLevelUpView extends StatefulWidget {
   final int? level;
   final int? previousLevel;
   final List<int> unlockedThemeIndexes;
+  final List<CosmeticUnlockModel> unlockedCosmetics;
 
   const _MissionLevelUpView({
     this.level,
     this.previousLevel,
     this.unlockedThemeIndexes = const [],
+    this.unlockedCosmetics = const [],
   });
 
   @override
@@ -273,8 +294,8 @@ class _MissionLevelUpViewState extends State<_MissionLevelUpView>
   /// 해금된 것을 하나씩 입히는 시계. 0 에서 1 까지가 전부 입은 것이다.
   late final AnimationController _unlock;
 
-  /// 이번 레벨업으로 새로 열린 치장들. 열린 순서 그대로다.
-  late final List<CosmeticItemModel> _unlocked;
+  /// 이번에 새로 열린 치장들. 서버가 준 순서 그대로다.
+  late final List<CosmeticUnlockModel> _unlocked;
 
   /// 오르기 전 차림에서 시작해 하나씩 걸쳐 가는 중간 차림들.
   late final List<List<CosmeticLayerModel>> _stages;
@@ -297,10 +318,10 @@ class _MissionLevelUpViewState extends State<_MissionLevelUpView>
     // watch 가 되지 않는 문제도 같이 피한다.
     final cosmetic = Provider.of<CosmeticProvider>(context, listen: false);
     _maxLevel = cosmetic.maxTotalStudyLevel;
-    _unlocked = missionUnlocksBetween(
-      _previousLevel,
-      _level,
-      cosmetic.unlockedAtTotalStudyLevel,
+    _unlocked = missionDrawableUnlocks(
+      unlocks: widget.unlockedCosmetics,
+      hasCatalog: cosmetic.hasCatalog,
+      itemOf: cosmetic.itemOf,
     );
     _stages = missionUnlockStages(
       // 자동으로 입혀 주는 차림이 없어졌다. 그 레벨의 정해진 모습이 아니라
@@ -367,6 +388,13 @@ class _MissionLevelUpViewState extends State<_MissionLevelUpView>
   int get _previousLevel =>
       widget.previousLevel ?? (_level > 1 ? _level - 1 : _level);
 
+  /// 이번에 레벨이 올랐는지.
+  ///
+  /// 레벨이 오르지 않아도 이 창이 뜬다. 능력치 기준으로 열리는 것이 있어서,
+  /// 총 학습 레벨은 그대로인 채 꾸미기만 열리는 경우다. 그때는 `Lv.5 → Lv.5`
+  /// 가 되므로 레벨 줄을 감추고 열린 것만 보여 준다.
+  bool get _leveledUp => _level > _previousLevel;
+
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeHandler>(context);
@@ -398,17 +426,29 @@ class _MissionLevelUpViewState extends State<_MissionLevelUpView>
                 children: [
                   _buildFrog(primary, reduced),
                   const SizedBox(height: AppSpacing.xl),
-                  // 제목을 따로 두지 않는다. `Lv.1 → Lv.2` 가 이미 그 말이다.
-                  _buildLevelRow(primary, reduced),
-                  const SizedBox(height: AppSpacing.md),
-                  StandardText(
-                    text: missionLevelPhraseOf(_level),
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textSecondary,
-                    textAlign: TextAlign.center,
-                    maxLines: 2,
-                  ),
+                  if (_leveledUp) ...[
+                    // 제목을 따로 두지 않는다. `Lv.1 → Lv.2` 가 이미 그 말이다.
+                    _buildLevelRow(primary, reduced),
+                    const SizedBox(height: AppSpacing.md),
+                    StandardText(
+                      text: missionLevelPhraseOf(_level),
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textSecondary,
+                      textAlign: TextAlign.center,
+                      maxLines: 2,
+                    ),
+                  ] else
+                    // 레벨은 그대로고 열린 것만 있는 경우다. 레벨 줄이 없으면
+                    // 무엇을 축하하는 자리인지 말해 줄 것이 하나는 있어야 한다.
+                    const StandardText(
+                      text: '새 꾸미기가 열렸어요',
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary,
+                      textAlign: TextAlign.center,
+                      maxLines: 2,
+                    ),
                   const SizedBox(height: AppSpacing.xl),
                   // 입을 것이 열렸으면 그것을, 아니면 얼마나 올라왔는지를 둔다.
                   if (_unlocked.isNotEmpty)
