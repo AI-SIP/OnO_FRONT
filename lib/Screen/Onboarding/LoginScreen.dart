@@ -99,6 +99,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               child: _frog(
                                 context,
                                 themeProvider.primaryColor,
+                                constraints.maxHeight,
                               ),
                             ),
                             _loginActions(),
@@ -121,8 +122,20 @@ class _LoginScreenState extends State<LoginScreen> {
   ///
   /// 문구는 스플래시에서 이미 써 보여줬으므로 여기서는 다시 쓰지 않고 떠오르기만
   /// 한다.
-  Widget _frog(BuildContext context, Color color) {
+  /// [available] 은 이 화면이 쓸 수 있는 세로 길이다.
+  ///
+  /// 전에는 짧은 쪽이 600 이상이면 태블릿으로 치고 개구리를 180, 그 아래 간격을
+  /// 56 으로 못 박았다. 아이패드 mini 를 가로로 두면 짧은 쪽이 744 라 태블릿으로
+  /// 걸리는데 세로로 쓸 수 있는 길이는 700 밖에 안 돼서, 맨 아래 게스트로
+  /// 시작하기가 40 만큼 밀려 스크롤해야 보였다. 글자 크기를 키운 기기에서는
+  /// 61 까지 밀렸다.
+  ///
+  /// 그래서 기기 종류가 아니라 실제로 남은 세로 길이를 보고 정한다. 여유가 있는
+  /// 세로 화면에서는 위아래 한계에 걸려 지금과 같은 크기가 나온다.
+  Widget _frog(BuildContext context, Color color, double available) {
     final isTablet = MediaQuery.of(context).size.shortestSide >= 600;
+    final frogHeight = (available * 0.17).clamp(100.0, 190.0);
+    final frogGap = (available * 0.05).clamp(24.0, 56.0);
 
     return Align(
       // 가운데에 두면 위쪽 여백이 허전하고 버튼 묶음과도 붙어 보인다. 조금
@@ -138,14 +151,13 @@ class _LoginScreenState extends State<LoginScreen> {
             tag: OnboardingBrand.frogHeroTag,
             child: Image.asset(
               OnboardingBrand.frogAsset,
-              height: isTablet ? 180 : 144,
+              height: frogHeight,
               fit: BoxFit.contain,
               // 그림을 못 읽어도 로그인 버튼까지 못 쓰게 되면 안 된다.
-              errorBuilder: (_, __, ___) =>
-                  SizedBox(height: isTablet ? 180 : 144),
+              errorBuilder: (_, __, ___) => SizedBox(height: frogHeight),
             ),
           ),
-          SizedBox(height: isTablet ? 56 : 44),
+          SizedBox(height: frogGap),
           AppearTransition(
             delay: _buttonsDelay,
             child: HandWriteText(
