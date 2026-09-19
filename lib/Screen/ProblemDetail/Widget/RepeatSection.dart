@@ -49,8 +49,12 @@ Widget buildRepeatSection(
               onTap: () => Navigator.push(
                   ctx,
                   TossPageRoute(
-                      builder: (_) =>
-                          FullScreenImage(imagePath: solve.imageUrl))),
+                      builder: (_) => FullScreenImage(
+                            imagePaths: list
+                                .map((e) => e.imageUrl)
+                                .toList(growable: false),
+                            initialIndex: idx,
+                          ))),
               onLongPress: () async {
                 final problemsProvider =
                     Provider.of<ProblemsProvider>(ctx, listen: false);

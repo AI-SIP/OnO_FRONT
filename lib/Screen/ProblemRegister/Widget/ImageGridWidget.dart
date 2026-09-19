@@ -155,7 +155,10 @@ class ImageGridWidget extends StatelessWidget {
                       onTap: () => Navigator.push(
                         context,
                         TossPageRoute(
-                          builder: (_) => FullScreenImage(imagePath: imageUrl),
+                          builder: (_) => FullScreenImage(
+                            imagePaths: existingImageUrls,
+                            initialIndex: idx - 1,
+                          ),
                         ),
                       ),
                       child: Container(

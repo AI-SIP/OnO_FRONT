@@ -1133,8 +1133,10 @@ class _ImageSliderState extends State<_ImageSlider> {
                 onTap: () => Navigator.push(
                   context,
                   TossPageRoute(
-                    builder: (_) =>
-                        FullScreenImage(imagePath: widget.imageUrls[i]),
+                    builder: (_) => FullScreenImage(
+                      imagePaths: widget.imageUrls,
+                      initialIndex: i,
+                    ),
                   ),
                 ),
                 child: ClipRRect(
