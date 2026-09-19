@@ -60,7 +60,6 @@ class _PracticeCompletionScreenState extends State<PracticeCompletionScreen> {
     final themeProvider = Provider.of<ThemeHandler>(context);
     final practiceProvider =
         Provider.of<ProblemPracticeProvider>(context, listen: false);
-    final screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -69,7 +68,7 @@ class _PracticeCompletionScreenState extends State<PracticeCompletionScreen> {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Expanded(
-            child: buildCompletionContent(screenHeight, themeProvider),
+            child: buildCompletionContent(themeProvider),
           ),
           buildConfirmationButton(context, themeProvider, practiceProvider),
         ],
@@ -90,92 +89,114 @@ class _PracticeCompletionScreenState extends State<PracticeCompletionScreen> {
     );
   }
 
-  Widget buildCompletionContent(
-      double screenHeight, ThemeHandler themeProvider) {
-    return SingleChildScrollView(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            SizedBox(height: screenHeight * 0.2),
-            // 복습을 끝낸 자리다. 캐릭터가 먼저 커지며 나타나고 문구와 기분
-            // 고르기가 차례로 따라온다.
-            AppearTransition(
-              offset: 0,
-              child: TweenAnimationBuilder<double>(
-                tween: Tween<double>(begin: 0.86, end: 1.0),
-                duration: AppMotion.slow,
-                curve: AppMotion.emphasized,
-                builder: (context, scale, child) =>
-                    Transform.scale(scale: scale, child: child),
-                child: Center(
-                  child: Stack(
-                    alignment: Alignment.bottomRight,
-                    children: [
-                      // 복습을 끝낸 자리에 서는 것은 내가 꾸민 개구리다.
-                      // 배경 파츠는 뺀다. 흰 화면 한가운데에 네모난 배경이
-                      // 깔리면 개구리가 아니라 카드가 놓인 것처럼 보인다.
-                      //
-                      // 나타나면서 한 번 통통 튄다. 입고 있는 치장까지 함께
-                      // 움직여야 해서 그림이 아니라 층 전체를 민다.
-                      // 확인 표시는 개구리 옆에 그어지는 것이라 같이 튀지
-                      // 않게 밖에 둔다.
-                      FrogStackMotion(
-                        clip: FrogMotion.happyBounce,
-                        size: screenHeight * 0.2,
-                        tick: 1,
-                        child: FrogLayerStack(
-                          layers: context
-                              .watch<CosmeticProvider>()
-                              .layersWithoutBackdrop,
-                          size: screenHeight * 0.2,
+  /// 복습을 끝낸 뒤 보는 화면이다.
+  ///
+  /// 세로 간격을 화면 전체 높이의 비율로 박아 두었더니 여백과 개구리가 화면의
+  /// 65% 를 먹어서, 정작 골라 달라고 띄운 기분 고르기가 아래로 밀려 스크롤해야
+  /// 보였다. 남은 높이를 재서 그 안에서 간격을 나누도록 바꿨다.
+  ///
+  /// [SingleChildScrollView] 는 그대로 둔다. 작은 폰이나 글자를 키운 기기에서는
+  /// 내용이 남은 높이보다 커지는데, 그때는 [Spacer] 가 0 이 되고 예전처럼
+  /// 스크롤된다.
+  Widget buildCompletionContent(ThemeHandler themeProvider) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final available = constraints.maxHeight;
+
+        // 개구리도 남은 높이를 따라간다. 화면 전체 높이로 잡으면 아래 버튼과
+        // 앱바가 빠진 만큼 늘 커져서 뒤의 내용을 밀어낸다.
+        final frogSize = (available * 0.26).clamp(120.0, 220.0);
+
+        return SingleChildScrollView(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: available),
+            child: IntrinsicHeight(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                child: Column(
+                  children: [
+                    const Spacer(flex: 3),
+                    // 복습을 끝낸 자리다. 캐릭터가 먼저 커지며 나타나고 문구와 기분
+                    // 고르기가 차례로 따라온다.
+                    AppearTransition(
+                      offset: 0,
+                      child: TweenAnimationBuilder<double>(
+                        tween: Tween<double>(begin: 0.86, end: 1.0),
+                        duration: AppMotion.slow,
+                        curve: AppMotion.emphasized,
+                        builder: (context, scale, child) =>
+                            Transform.scale(scale: scale, child: child),
+                        child: Center(
+                          child: Stack(
+                            alignment: Alignment.bottomRight,
+                            children: [
+                              // 복습을 끝낸 자리에 서는 것은 내가 꾸민 개구리다.
+                              // 배경 파츠는 뺀다. 흰 화면 한가운데에 네모난 배경이
+                              // 깔리면 개구리가 아니라 카드가 놓인 것처럼 보인다.
+                              //
+                              // 나타나면서 한 번 통통 튄다. 입고 있는 치장까지 함께
+                              // 움직여야 해서 그림이 아니라 층 전체를 민다.
+                              // 확인 표시는 개구리 옆에 그어지는 것이라 같이 튀지
+                              // 않게 밖에 둔다.
+                              FrogStackMotion(
+                                clip: FrogMotion.happyBounce,
+                                size: frogSize,
+                                tick: 1,
+                                child: FrogLayerStack(
+                                  layers: context
+                                      .watch<CosmeticProvider>()
+                                      .layersWithoutBackdrop,
+                                  size: frogSize,
+                                ),
+                              ),
+                              // 화면만 바뀌면 끝났다는 느낌이 없어서, 캐릭터 옆에
+                              // 확인 표시가 그어지게 했다.
+                              SuccessCheck(
+                                size: frogSize * 0.3,
+                                color: themeProvider.primaryColor,
+                                backgroundColor: Colors.white,
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                      // 화면만 바뀌면 끝났다는 느낌이 없어서, 캐릭터 옆에
-                      // 확인 표시가 그어지게 했다.
-                      SuccessCheck(
-                        size: screenHeight * 0.06,
-                        color: themeProvider.primaryColor,
-                        backgroundColor: Colors.white,
+                    ),
+                    const Spacer(flex: 2),
+                    AppearTransition(
+                      delay: AppMotion.stagger * 3,
+                      child: StandardText(
+                        text: '${widget.practiceRound}회차 복습을 완료했어요',
+                        fontSize: MobileFontSize.reduced(context, 24),
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                        textAlign: TextAlign.center,
                       ),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(height: 8),
+                    AppearTransition(
+                      delay: AppMotion.stagger * 5,
+                      child: AnimatedCountText(
+                        value: widget.totalProblems,
+                        formatter: (value) => '총 ${value.round()}문제를 풀었어요.',
+                        fontSize: 16,
+                        fontWeight: FontWeight.normal,
+                        color: AppColors.textSecondary,
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                    const Spacer(flex: 3),
+                    AppearTransition(
+                      delay: AppMotion.stagger * 7,
+                      child: _buildMoodSection(themeProvider),
+                    ),
+                    const Spacer(flex: 1),
+                  ],
                 ),
               ),
             ),
-            SizedBox(height: screenHeight * 0.1),
-            AppearTransition(
-              delay: AppMotion.stagger * 3,
-              child: StandardText(
-                text: '${widget.practiceRound}회차 복습을 완료했어요',
-                fontSize: MobileFontSize.reduced(context, 24),
-                fontWeight: FontWeight.bold,
-                color: Colors.black,
-                textAlign: TextAlign.center,
-              ),
-            ),
-            SizedBox(height: screenHeight * 0.01),
-            AppearTransition(
-              delay: AppMotion.stagger * 5,
-              child: AnimatedCountText(
-                value: widget.totalProblems,
-                formatter: (value) => '총 ${value.round()}문제를 풀었어요.',
-                fontSize: 16,
-                fontWeight: FontWeight.normal,
-                color: AppColors.textSecondary,
-                textAlign: TextAlign.center,
-              ),
-            ),
-            SizedBox(height: screenHeight * 0.06),
-            AppearTransition(
-              delay: AppMotion.stagger * 7,
-              child: _buildMoodSection(themeProvider),
-            ),
-            SizedBox(height: screenHeight * 0.08),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 
