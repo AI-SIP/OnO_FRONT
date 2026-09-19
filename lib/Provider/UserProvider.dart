@@ -492,25 +492,90 @@ class UserProvider with ChangeNotifier {
     }
   }
 
+  /// 기기에 적어 둔 로그인 방식. 비교하기 좋게 소문자로 맞춰 준다.
+  ///
+  /// 저장은 소셜 플랫폼 값(`'GOOGLE'`·`'APPLE'`·`'KAKAO'`)과 `'GUEST'` 라 전부
+  /// 대문자인데 비교는 소문자로 하고 있어서, 로그아웃과 탈퇴의 분기가 한 번도
+  /// 걸리지 않았다. 이미 대문자로 저장된 기기가 있으니 읽는 쪽에서 맞춘다.
+  Future<String?> _readLoginMethod() async {
+    final loginMethod = await storage.read(key: 'loginMethod');
+    return loginMethod?.toLowerCase();
+  }
+
   Future<void> signOut() async {
-    String? loginMethod = await storage.read(key: 'loginMethod');
-    if (loginMethod == 'google') {
-      await googleAuthService.logoutGoogleSignIn();
-    } else if (loginMethod == 'apple') {
-      // apple 은 별도의 로그아웃 로직이 없습니다.
-    } else if (loginMethod == 'kakao') {
-      await kakaoAuthService.logoutKakaoSignIn();
-    } else if (loginMethod == 'guest') {
+    String? loginMethod = await _readLoginMethod();
+
+    if (loginMethod == 'guest') {
+      // 게스트는 다시 들어올 길이 없어 로그아웃이 곧 탈퇴다.
+      // deleteAccount 가 서버 계정과 기기 토큰을 모두 지우므로 여기서 끝낸다.
+      // 이어서 로그아웃 요청을 보내면 토큰이 이미 없어 인증 오류가 뜬다.
       await deleteAccount();
+      return;
     }
 
-    await userService.logoutAccount();
-    await resetUserInfo();
+    try {
+      // 소셜 SDK 로그아웃을 서버 요청보다 먼저 한다. 기기 안에서 끝나는 일이라
+      // 서버가 무슨 답을 주든 함께 실패하면 안 된다.
+      await _signOutFromSocialSdk(loginMethod);
+
+      // 기기에서 토큰을 지우기 전에 보내야 한다. resetUserInfo 뒤에 보내면
+      // 실을 토큰이 남아 있지 않다.
+      await userService.logoutAccount(refreshToken: await _readRefreshToken());
+    } catch (error, stackTrace) {
+      // 서버가 로그아웃을 거절해도(인증을 요구하게 된 뒤로는 401 이 온다)
+      // 사용자는 로그아웃을 누른 것이다. 여기서 멈추면 기기에 세션이 그대로
+      // 남는데, 그게 서버 세션이 남는 것보다 나쁘다.
+      debugPrint('로그아웃 요청 실패: $error');
+      await AppErrorReporter.report(
+        error,
+        stackTrace,
+        source: 'sign_out',
+        severity: AppErrorSeverity.warning,
+      );
+    } finally {
+      // 서버 응답이 어떻든 기기 토큰과 사용자 상태는 반드시 지운다.
+      await resetUserInfo();
+    }
+  }
+
+  /// 소셜 SDK 쪽 로그아웃.
+  ///
+  /// 여기서 실패해도 서버 로그아웃과 기기 정리는 이어가야 하므로 따로 감싼다.
+  Future<void> _signOutFromSocialSdk(String? loginMethod) async {
+    try {
+      if (loginMethod == 'google') {
+        await googleAuthService.logoutGoogleSignIn();
+      } else if (loginMethod == 'kakao') {
+        await kakaoAuthService.logoutKakaoSignIn();
+      }
+      // apple 은 별도의 로그아웃 로직이 없습니다.
+    } catch (error, stackTrace) {
+      debugPrint('소셜 SDK 로그아웃 실패: $error');
+      await AppErrorReporter.report(
+        error,
+        stackTrace,
+        source: 'sign_out_social_sdk',
+        severity: AppErrorSeverity.warning,
+      );
+    }
+  }
+
+  /// 로그아웃 요청에 실을 리프레시 토큰.
+  ///
+  /// 못 읽어도 로그아웃 자체는 진행해야 한다. 서버 세션을 못 지우는 것보다
+  /// 기기에 토큰이 남는 쪽이 나쁘다. 그래서 실패는 삼키고 null 을 돌려준다.
+  Future<String?> _readRefreshToken() async {
+    try {
+      return await tokenProvider.getRefreshToken();
+    } catch (error) {
+      debugPrint('로그아웃에 실을 리프레시 토큰을 읽지 못했습니다: $error');
+      return null;
+    }
   }
 
   // 회원 탈퇴 함수
   Future<void> deleteAccount() async {
-    String? loginMethod = await storage.read(key: 'loginMethod');
+    String? loginMethod = await _readLoginMethod();
     if (loginMethod == 'google') {
       // 구글 회원 탈퇴 로직
       await googleAuthService.revokeGoogleSignIn();
