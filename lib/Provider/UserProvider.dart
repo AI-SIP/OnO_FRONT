@@ -492,8 +492,18 @@ class UserProvider with ChangeNotifier {
     }
   }
 
+  /// 기기에 적어 둔 로그인 방식. 비교하기 좋게 소문자로 맞춰 준다.
+  ///
+  /// 저장은 소셜 플랫폼 값(`'GOOGLE'`·`'APPLE'`·`'KAKAO'`)과 `'GUEST'` 라 전부
+  /// 대문자인데 비교는 소문자로 하고 있어서, 로그아웃과 탈퇴의 분기가 한 번도
+  /// 걸리지 않았다. 이미 대문자로 저장된 기기가 있으니 읽는 쪽에서 맞춘다.
+  Future<String?> _readLoginMethod() async {
+    final loginMethod = await storage.read(key: 'loginMethod');
+    return loginMethod?.toLowerCase();
+  }
+
   Future<void> signOut() async {
-    String? loginMethod = await storage.read(key: 'loginMethod');
+    String? loginMethod = await _readLoginMethod();
     if (loginMethod == 'google') {
       await googleAuthService.logoutGoogleSignIn();
     } else if (loginMethod == 'apple') {
@@ -501,7 +511,11 @@ class UserProvider with ChangeNotifier {
     } else if (loginMethod == 'kakao') {
       await kakaoAuthService.logoutKakaoSignIn();
     } else if (loginMethod == 'guest') {
+      // 게스트는 다시 들어올 길이 없어 로그아웃이 곧 탈퇴다.
+      // deleteAccount 가 서버 계정과 기기 토큰을 모두 지우므로 여기서 끝낸다.
+      // 이어서 로그아웃 요청을 보내면 토큰이 이미 없어 인증 오류가 뜬다.
       await deleteAccount();
+      return;
     }
 
     await userService.logoutAccount();
@@ -510,7 +524,7 @@ class UserProvider with ChangeNotifier {
 
   // 회원 탈퇴 함수
   Future<void> deleteAccount() async {
-    String? loginMethod = await storage.read(key: 'loginMethod');
+    String? loginMethod = await _readLoginMethod();
     if (loginMethod == 'google') {
       // 구글 회원 탈퇴 로직
       await googleAuthService.revokeGoogleSignIn();
