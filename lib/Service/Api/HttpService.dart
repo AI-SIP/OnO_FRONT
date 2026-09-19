@@ -77,7 +77,11 @@ class HttpService {
     Map<String, dynamic>? body,
     Map<String, String>? queryParams,
     bool isMultipart = false,
-    List<http.MultipartFile>? files,
+    // multipart 로 보낼 파일을 "만드는 방법"을 받는다. 만들어진 MultipartFile 을
+    // 받으면 안 된다. http 패키지의 MultipartFile 은 한 번 전송하면 finalize 되어
+    // 두 번째 전송에서 StateError 를 던지는데, 토큰 갱신 후 재시도할 때 같은
+    // 인스턴스를 다시 실으면 그 StateError 가 "알 수 없는 오류"로 나갔다.
+    Future<List<http.MultipartFile>> Function()? filesBuilder,
     bool requiredToken = true,
     bool retry = false,
     bool showErrorSnackBar = true,
@@ -125,10 +129,10 @@ class HttpService {
           break;
 
         case 'POST':
-          if (isMultipart && files != null) {
+          if (isMultipart && filesBuilder != null) {
             final req = http.MultipartRequest('POST', uri)
               ..headers.addAll(mergedHeaders)
-              ..files.addAll(files);
+              ..files.addAll(await filesBuilder());
 
             // body의 각 항목을 처리
             if (body != null) {
@@ -163,12 +167,12 @@ class HttpService {
           break;
 
         case 'PATCH':
-          if (isMultipart && files != null) {
+          if (isMultipart && filesBuilder != null) {
             final req = http.MultipartRequest('PATCH', uri)
               ..headers.addAll(mergedHeaders)
               ..fields
                   .addAll(body?.map((k, v) => MapEntry(k, v.toString())) ?? {})
-              ..files.addAll(files);
+              ..files.addAll(await filesBuilder());
             final streamed =
                 await _client.send(req).timeout(const Duration(seconds: 30));
             response = await http.Response.fromStream(streamed);
@@ -314,10 +318,32 @@ class HttpService {
         rawMessage: serverMessage,
       );
 
-      // 토큰 만료 시 재시도 (ACCESS_TOKEN_EXPIRED 또는 코드 없는 401)
+      // 서버의 범용 오류 핸들러는 errorCode 자리에 HTTP 상태값을 그대로 넣는다.
+      // dev 실측으로 405 → errorCode:405, 잘못된 파라미터 → errorCode:500 이
+      // 확인됐다. 업무 에러 코드는 네 자리(1000 이상)라 세 자리 값은 에러 코드가
+      // 아니라 상태 코드로 읽는다. 본문의 상태값이 응답 상태와 어긋날 때 진짜
+      // 원인을 들고 있는 쪽은 본문이다.
+      final effectiveStatus = _effectiveStatusOf(
+        status: status,
+        errorCode: errorCode,
+      );
+
+      // 액세스 토큰이 거절되면 갱신 후 한 번만 재시도한다.
       // requiredToken이 true이고, 아직 재시도하지 않았다면 토큰 갱신 후 재시도
-      final shouldRefreshToken =
-          errorCode == 1005 || (errorCode == null && status == 401);
+      // - 1005 ACCESS_TOKEN_EXPIRED: 만료된 액세스 토큰에 나온다. dev 실측으로
+      //   401 + 1005 를 확인했다(JwtTokenizer → JwtTokenFilter 경로).
+      // - 1007 AUTHENTICATION_FAILED: Authorization 헤더가 없거나 Bearer 접두사가
+      //   빠졌을 때다. 토큰 검증 중의 다른 예외(블랙리스트 조회 실패 등)도 이리로
+      //   묶여서, 멀쩡한 토큰에도 1007 이 나갈 수 있다.
+      // - 1009 INVALID_ACCESS_TOKEN: 서명이 훼손됐거나 형식이 틀렸거나 로그아웃된
+      //   토큰이다. 리프레시 토큰이 살아 있으면 새 토큰으로 되살아나고, 아니면
+      //   갱신이 인증 실패로 끝나 어차피 로그아웃된다.
+      // 리프레시 토큰 계열(1001·1002·1004·1006)과 권한 부족(1008)은 액세스 토큰을
+      // 새로 받아도 달라지지 않으므로 갱신하지 않는다.
+      final shouldRefreshToken = errorCode == 1005 ||
+          errorCode == 1007 ||
+          errorCode == 1009 ||
+          (errorCode == null && status == 401);
       if (requiredToken && !retry && shouldRefreshToken) {
         await tokenProvider.refreshAccessToken();
         return sendRequest(
@@ -327,7 +353,7 @@ class HttpService {
           body: body,
           queryParams: queryParams,
           isMultipart: isMultipart,
-          files: files,
+          filesBuilder: filesBuilder,
           requiredToken: requiredToken,
           retry: true,
           showErrorSnackBar: showErrorSnackBar,
@@ -339,6 +365,13 @@ class HttpService {
       if (errorCode != null) {
         // 인증 관련 에러 코드
         if (errorCode >= 1000 && errorCode < 2000) {
+          _throwIfServerAuthIsTemporarilyDown(
+            status: status,
+            errorCode: errorCode,
+            requiredToken: requiredToken,
+            retry: retry,
+            showErrorSnackBar: showErrorSnackBar,
+          );
           if (requiredToken) {
             await tokenProvider.notifyAuthFailure();
           }
@@ -348,6 +381,15 @@ class HttpService {
               message: message,
             ),
             showErrorSnackBar: requiredToken ? false : showErrorSnackBar,
+          );
+        }
+        // 서버 쪽이 깨진 것(5xx)은 잘못된 요청이 아니다. 사용자가 고칠 것이
+        // 없으므로 "잠시 후 다시 시도" 성격의 안내로 가야 한다. 인증 구간을
+        // 가른 뒤에 보기 때문에 1xxx 가 여기로 내려올 일은 없다.
+        if (effectiveStatus >= 500) {
+          _throwWithSnackBar(
+            ServerException(statusCode: effectiveStatus, message: message),
+            showErrorSnackBar: showErrorSnackBar,
           );
         }
         // 기타 비즈니스 로직 에러는 BadRequestException으로 처리
@@ -363,6 +405,13 @@ class HttpService {
 
       // errorCode가 없을 경우 상태 코드로 판단
       if (status == 401) {
+        _throwIfServerAuthIsTemporarilyDown(
+          status: status,
+          errorCode: errorCode,
+          requiredToken: requiredToken,
+          retry: retry,
+          showErrorSnackBar: showErrorSnackBar,
+        );
         if (requiredToken) {
           await tokenProvider.notifyAuthFailure();
         }
@@ -408,6 +457,59 @@ class HttpService {
       return decodedBody['data'];
     }
     return decodedBody;
+  }
+
+  /// 토큰 갱신에 성공하고 재시도했는데도 인증 오류가 온 경우, 저장된 토큰을
+  /// 지우지 않고 "잠시 후 다시 시도" 성격의 예외로 끝낸다.
+  ///
+  /// 백엔드 JwtTokenFilter 는 토큰 검증 중 발생한 모든 예외를 catch (Exception) 으로
+  /// 받아 1007 AUTHENTICATION_FAILED 로 내린다. 여기에는 Redis 블랙리스트 조회 실패도
+  /// 들어가므로, Redis 가 죽어 있는 동안에는 멀쩡한 토큰을 가진 모든 요청이 1007 을
+  /// 받는다. 갱신은 DB 만 보기 때문에 성공하는데, 재시도가 또 1007 이라고 방금 받은
+  /// 유효한 토큰을 지워 버리면 게스트 사용자는 소셜 자격증명이 없어 계정으로 영영
+  /// 돌아올 수 없다.
+  ///
+  /// 반대로 리프레시 토큰 자체가 거절된 코드(1001·1002·1003·1004·1006)는 새 토큰을
+  /// 받을 방법이 없으므로 그대로 로그아웃시킨다.
+  /// 갱신을 거치지 않고 바로 올라온 인증 오류(retry == false)도 기존대로 둔다.
+  ///
+  /// 탈퇴한 계정은 여기에 기대지 못한다. dev 실측으로, 지금 서버는 탈퇴해도
+  /// 리프레시 토큰을 지우지 않아 갱신이 200 으로 성공한다(백엔드 AI-SIP/OnO_BACKEND#298
+  /// 에서 수정 중). 고쳐지면 갱신이 1002 로 끝나 이 경로가 로그아웃을 막지 않는다.
+  void _throwIfServerAuthIsTemporarilyDown({
+    required int status,
+    required int? errorCode,
+    required bool requiredToken,
+    required bool retry,
+    required bool showErrorSnackBar,
+  }) {
+    if (!requiredToken || !retry) return;
+    if (_isRefreshTokenRejected(errorCode)) return;
+
+    _throwWithSnackBar(
+      ServerException(statusCode: status, message: ErrorMessages.server),
+      showErrorSnackBar: showErrorSnackBar,
+    );
+  }
+
+  /// 리프레시 토큰 자체가 거절된 에러 코드.
+  /// TokenProvider 가 갱신 응답에서 보는 목록과 같다.
+  bool _isRefreshTokenRejected(int? errorCode) =>
+      errorCode == 1001 || // INVALID_REFRESH_TOKEN
+      errorCode == 1002 || // REFRESH_TOKEN_NOT_FOUND
+      errorCode == 1003 || // INVALID_AUTHORITY
+      errorCode == 1004 || // REFRESH_TOKEN_NOT_EQUAL
+      errorCode == 1006; // REFRESH_TOKEN_EXPIRED
+
+  /// 이 응답을 무엇으로 볼지 정할 때 쓸 상태 코드.
+  ///
+  /// 서버의 범용 오류 핸들러는 `errorCode` 자리에 HTTP 상태값을 그대로 넣는다.
+  /// 업무 에러 코드는 네 자리(1000 이상)라 세 자리 값과 섞이지 않는다. 그래서
+  /// 세 자리면 상태 코드로 읽고, 아니면 응답의 상태 코드를 그대로 쓴다.
+  int _effectiveStatusOf({required int status, required int? errorCode}) {
+    if (errorCode == null) return status;
+    if (errorCode < 100 || errorCode >= 600) return status;
+    return errorCode;
   }
 
   String _safeResponseMessage({

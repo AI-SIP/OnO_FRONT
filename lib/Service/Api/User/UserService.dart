@@ -56,7 +56,8 @@ class UserService {
       method: 'PATCH',
       url: '${AppConfig.baseUrl}/api/users/me/profile-image',
       isMultipart: true,
-      files: [
+      // 토큰 갱신 후 재시도할 때 파일을 다시 읽어야 한다.
+      filesBuilder: () async => [
         await http.MultipartFile.fromPath('profileImage', imagePath),
       ],
     );
@@ -94,10 +95,19 @@ class UserService {
     );
   }
 
-  Future<void> logoutAccount() async {
+  /// 로그아웃.
+  ///
+  /// 서버는 [refreshToken] 이 함께 와야 세션 행을 지운다. 안 보내면 액세스
+  /// 토큰만 블랙리스트에 들어가고 리프레시 토큰은 그대로 살아 있어서, 기기에서
+  /// 새어 나간 토큰으로 로그아웃 뒤에도 세션을 되살릴 수 있다.
+  ///
+  /// 토큰을 못 읽은 경우에는 null 이 온다. 그래도 요청은 보낸다. 액세스 토큰만
+  /// 이라도 막는 편이 아무것도 안 하는 것보다 낫다.
+  Future<void> logoutAccount({String? refreshToken}) async {
     await httpService.sendRequest(
       method: 'POST',
       url: '${AppConfig.baseUrl}/api/auth/logout',
+      body: refreshToken == null ? null : {'refreshToken': refreshToken},
     );
   }
 

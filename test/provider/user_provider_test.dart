@@ -550,9 +550,181 @@ void main() {
     });
   });
 
+  group('로그아웃 / 회원 탈퇴 (이슈 #254)', () {
+    // 로그인 방식은 소셜 플랫폼 값(`'GOOGLE'`·`'APPLE'`·`'KAKAO'`)과 `'GUEST'`
+    // 로 저장된다. 전부 대문자다. 비교를 소문자로 하던 동안에는 이 분기가 한
+    // 번도 걸리지 않아 탈퇴해도 연동 해제가, 로그아웃해도 SDK 로그아웃이 돌지
+    // 않았다. 그래서 여기서는 실제 저장값인 대문자를 넣고 본다.
+    setUp(() {
+      when(() => tokenProvider.getRefreshToken())
+          .thenAnswer((_) async => 'refresh-token');
+      when(() => userService.logoutAccount(
+          refreshToken: any(named: 'refreshToken'))).thenAnswer((_) async {});
+      when(() => userService.deleteAccount()).thenAnswer((_) async {});
+      when(() => googleAuthService.logoutGoogleSignIn())
+          .thenAnswer((_) async {});
+      when(() => googleAuthService.revokeGoogleSignIn())
+          .thenAnswer((_) async {});
+      when(() => kakaoAuthService.logoutKakaoSignIn()).thenAnswer((_) async {});
+      when(() => kakaoAuthService.revokeKakaoSignIn()).thenAnswer((_) async {});
+      when(() => appleAuthService.revokeSignInWithApple())
+          .thenAnswer((_) async {});
+    });
+
+    test('GOOGLE 로 저장돼 있으면 로그아웃 때 구글 SDK 로그아웃이 돈다', () async {
+      storageData['loginMethod'] = 'GOOGLE';
+
+      await provider.signOut();
+
+      verify(() => googleAuthService.logoutGoogleSignIn()).called(1);
+      verify(() => userService.logoutAccount(refreshToken: 'refresh-token'))
+          .called(1);
+      expect(provider.isLoggedIn, LoginStatus.logout);
+    });
+
+    test('KAKAO 로 저장돼 있으면 로그아웃 때 카카오 SDK 로그아웃이 돈다', () async {
+      storageData['loginMethod'] = 'KAKAO';
+
+      await provider.signOut();
+
+      verify(() => kakaoAuthService.logoutKakaoSignIn()).called(1);
+      verify(() => userService.logoutAccount(refreshToken: 'refresh-token'))
+          .called(1);
+    });
+
+    test('APPLE 은 별도 로그아웃이 없어 서버 로그아웃만 부른다', () async {
+      storageData['loginMethod'] = 'APPLE';
+
+      await provider.signOut();
+
+      verifyNever(() => googleAuthService.logoutGoogleSignIn());
+      verifyNever(() => kakaoAuthService.logoutKakaoSignIn());
+      verify(() => userService.logoutAccount(refreshToken: 'refresh-token'))
+          .called(1);
+    });
+
+    // 로그아웃 안내가 "게스트 유저의 경우 모든 정보가 삭제됩니다" 라고 말한다.
+    // 분기가 안 걸리던 동안에는 기기 토큰만 지워지고 서버 계정이 남아, 아무도
+    // 다시 들어갈 수 없는 계정이 됐다.
+    test('GUEST 로 저장돼 있으면 로그아웃이 계정 삭제까지 한다', () async {
+      storageData['loginMethod'] = 'GUEST';
+
+      await provider.signOut();
+
+      verify(() => userService.deleteAccount()).called(1);
+      // 계정도 토큰도 이미 지워진 뒤라 로그아웃 요청은 보내지 않는다.
+      // 보내면 토큰이 없어 인증 오류만 뜬다.
+      verifyNever(() =>
+          userService.logoutAccount(refreshToken: any(named: 'refreshToken')));
+      expect(provider.isLoggedIn, LoginStatus.logout);
+    });
+
+    // 애플은 계정 삭제 때 토큰 해제를 심사 요건으로 본다.
+    test('APPLE 로 저장돼 있으면 탈퇴 때 애플 연동 해제가 돈다', () async {
+      storageData['loginMethod'] = 'APPLE';
+
+      await provider.deleteAccount();
+
+      verify(() => appleAuthService.revokeSignInWithApple()).called(1);
+      verify(() => userService.deleteAccount()).called(1);
+    });
+
+    test('GOOGLE 로 저장돼 있으면 탈퇴 때 구글 연동 해제가 돈다', () async {
+      storageData['loginMethod'] = 'GOOGLE';
+
+      await provider.deleteAccount();
+
+      verify(() => googleAuthService.revokeGoogleSignIn()).called(1);
+    });
+
+    test('KAKAO 로 저장돼 있으면 탈퇴 때 카카오 연동 해제가 돈다', () async {
+      storageData['loginMethod'] = 'KAKAO';
+
+      await provider.deleteAccount();
+
+      verify(() => kakaoAuthService.revokeKakaoSignIn()).called(1);
+    });
+
+    test('소문자로 저장된 기기에서도 그대로 걸린다', () async {
+      storageData['loginMethod'] = 'kakao';
+
+      await provider.signOut();
+
+      verify(() => kakaoAuthService.logoutKakaoSignIn()).called(1);
+    });
+
+    test('로그인 방식이 없으면 서버 로그아웃만 부른다', () async {
+      await provider.signOut();
+
+      verifyNever(() => userService.deleteAccount());
+      verify(() => userService.logoutAccount(refreshToken: 'refresh-token'))
+          .called(1);
+    });
+  });
+
+  group('로그아웃 요청 (이슈 #256)', () {
+    setUp(() {
+      storageData['loginMethod'] = 'APPLE';
+      when(() => tokenProvider.getRefreshToken())
+          .thenAnswer((_) async => 'refresh-token');
+      when(() => userService.logoutAccount(
+          refreshToken: any(named: 'refreshToken'))).thenAnswer((_) async {});
+    });
+
+    // 서버는 리프레시 토큰이 함께 와야 세션 행을 지운다. 안 보내면 그 토큰으로
+    // 로그아웃 뒤에도 갱신이 200 으로 성공한다(dev 실측).
+    test('기기에 적힌 리프레시 토큰을 실어 보낸다', () async {
+      await provider.signOut();
+
+      verify(() => userService.logoutAccount(refreshToken: 'refresh-token'))
+          .called(1);
+      expect(provider.isLoggedIn, LoginStatus.logout);
+    });
+
+    test('토큰을 못 읽어도 로그아웃은 그대로 진행된다', () async {
+      when(() => tokenProvider.getRefreshToken())
+          .thenThrow(UnauthorizedException(message: '보안 저장소 손상'));
+
+      await provider.signOut();
+
+      verify(() => userService.logoutAccount(refreshToken: null)).called(1);
+      expect(provider.isLoggedIn, LoginStatus.logout);
+    });
+
+    // 백엔드(#311)가 로그아웃에도 인증을 요구하게 되면서, 토큰이 죽어 있으면
+    // 401 이 온다. 사용자는 로그아웃을 누른 것이므로 기기 정리는 반드시 한다.
+    test('요청이 401 로 실패해도 기기 토큰과 사용자 상태는 정리된다', () async {
+      storageData['accessToken'] = 'access-token';
+      storageData['refreshToken'] = 'refresh-token';
+      when(() => userService.logoutAccount(
+              refreshToken: any(named: 'refreshToken')))
+          .thenThrow(UnauthorizedException(errorCode: 1007, message: '인증 실패'));
+
+      await provider.signOut();
+
+      expect(provider.isLoggedIn, LoginStatus.logout);
+      expect(storageData['accessToken'], isNull);
+      expect(storageData['refreshToken'], isNull);
+      expect(storageData['loginMethod'], isNull);
+    });
+
+    test('소셜 SDK 로그아웃이 실패해도 서버 로그아웃과 기기 정리는 이어간다', () async {
+      storageData['loginMethod'] = 'KAKAO';
+      when(() => kakaoAuthService.logoutKakaoSignIn())
+          .thenThrow(Exception('카카오 SDK 실패'));
+
+      await provider.signOut();
+
+      verify(() => userService.logoutAccount(refreshToken: 'refresh-token'))
+          .called(1);
+      expect(provider.isLoggedIn, LoginStatus.logout);
+    });
+  });
+
   group('Analytics 유저 식별 (이슈 #164)', () {
     test('유저 정보를 받아오면 Analytics 에 유저 번호와 학습 단계가 나간다', () async {
-      storageData['loginMethod'] = 'kakao';
+      // 저장값은 소셜 플랫폼 값 그대로라 대문자다.
+      storageData['loginMethod'] = 'KAKAO';
       when(() => userService.fetchUserInfo(showErrorSnackBar: true))
           .thenAnswer((_) async => _userInfo());
 
@@ -561,7 +733,7 @@ void main() {
       await Future<void>.delayed(Duration.zero);
 
       expect(analyticsRecorder.userId, '1');
-      expect(analyticsRecorder.userProperties['login_method'], 'kakao');
+      expect(analyticsRecorder.userProperties['login_method'], 'KAKAO');
       expect(
         analyticsRecorder.userProperties['notification_enabled'],
         isNotNull,
@@ -569,7 +741,7 @@ void main() {
     });
 
     test('로그아웃하면 앞 사람의 유저 속성이 남지 않는다', () async {
-      storageData['loginMethod'] = 'google';
+      storageData['loginMethod'] = 'GOOGLE';
       when(() => userService.fetchUserInfo(showErrorSnackBar: true))
           .thenAnswer((_) async => _userInfo());
       await provider.fetchUserInfo();

@@ -20,13 +20,37 @@ import 'package:ono/Service/Api/StudyRoom/StudyRoomService.dart';
 import '../helpers/helpers.dart';
 import 'support/provider_test_env.dart';
 
-StudyRoomModel _room(int id, {String? name, int hostUserId = 1}) {
+StudyRoomModel _room(
+  int id, {
+  String? name,
+  int hostUserId = 1,
+  bool hasUnreadReport = false,
+}) {
   return StudyRoomModel(
     roomId: id,
     name: name ?? 'room-$id',
     hostUserId: hostUserId,
     members: const [],
+    hasUnreadReport: hasUnreadReport,
   );
+}
+
+/// fetchRoomDetail 이 함께 부르는 네 가지를 전부 빈 응답으로 막는다.
+void _stubRoomDetailSideRequests(MockStudyRoomService service) {
+  when(() => service.fetchFeed(1, cursor: null))
+      .thenAnswer((_) async => const CursorPage(
+            content: [],
+            nextCursor: null,
+            hasNext: false,
+          ));
+  when(() => service.fetchChallenges(1)).thenAnswer((_) async => []);
+  when(() => service.fetchSharedProblems(1, cursor: null))
+      .thenAnswer((_) async => const CursorPage(
+            content: [],
+            nextCursor: null,
+            hasNext: false,
+          ));
+  when(() => service.fetchWeeklyReports(roomId: 1)).thenAnswer((_) async => []);
 }
 
 ActivityFeedModel _feed(int id) {
@@ -163,6 +187,41 @@ void main() {
       await provider.fetchRoomDetail(1);
 
       expect(provider.rooms.first.name, '새 이름');
+    });
+
+    // hasUnreadReport 는 목록 응답에만 있고 상세 응답에는 없다. 상세로 통째로
+    // 갈아 끼우면 읽지도 않은 리포트의 배지가 사라졌다 (#258).
+    test('상세를 불러와도 목록이 들고 있던 읽지 않은 리포트 배지는 남는다', () async {
+      when(() => service.fetchMyRooms())
+          .thenAnswer((_) async => [_room(1, hasUnreadReport: true)]);
+      await provider.fetchMyRooms();
+
+      // 상세 응답에는 키가 없어 언제나 false 다.
+      when(() => service.fetchRoomDetail(1))
+          .thenAnswer((_) async => _room(1, name: '새 이름'));
+      _stubRoomDetailSideRequests(service);
+
+      await provider.fetchRoomDetail(1);
+
+      expect(provider.rooms.first.hasUnreadReport, isTrue);
+      expect(provider.selectedRoom?.hasUnreadReport, isTrue);
+      expect(provider.rooms.first.name, '새 이름');
+      // 값을 살리려고 목록을 다시 부르지 않는다.
+      verify(() => service.fetchMyRooms()).called(1);
+    });
+
+    test('목록에 읽지 않은 리포트가 없었으면 상세를 불러와도 배지는 그대로 없다', () async {
+      when(() => service.fetchMyRooms())
+          .thenAnswer((_) async => [_room(1, hasUnreadReport: false)]);
+      await provider.fetchMyRooms();
+
+      when(() => service.fetchRoomDetail(1)).thenAnswer((_) async => _room(1));
+      _stubRoomDetailSideRequests(service);
+
+      await provider.fetchRoomDetail(1);
+
+      expect(provider.rooms.first.hasUnreadReport, isFalse);
+      expect(provider.selectedRoom?.hasUnreadReport, isFalse);
     });
   });
 
@@ -531,6 +590,40 @@ void main() {
       await provider.markReportRead(); // 던지지 않아야 한다
 
       expect(provider.weeklyReport?.isRead, isTrue);
+    });
+
+    // 상세를 열었다고 배지를 내리지 않게 됐으니(#258), 실제로 읽은 이 자리에서
+    // 내려야 한다.
+    test('리포트를 읽으면 목록의 읽지 않은 리포트 배지도 함께 내려간다', () async {
+      when(() => service.fetchMyRooms())
+          .thenAnswer((_) async => [_room(1, hasUnreadReport: true)]);
+      await provider.fetchMyRooms();
+      when(() => service.fetchRoomDetail(1)).thenAnswer((_) async => _room(1));
+      _stubRoomDetailSideRequests(service);
+      when(() => service.fetchWeeklyReports(roomId: 1)).thenAnswer(
+        (_) async => [
+          WeeklyReportModel(
+            reportId: 1,
+            topMemberName: 'a',
+            topMemberProblemCount: 1,
+            longestStreakName: 'b',
+            longestStreakDays: 1,
+            totalProblems: 1,
+            challengesCompleted: 0,
+            cheerMessage: '화이팅',
+          ),
+        ],
+      );
+      await provider.fetchRoomDetail(1);
+      expect(provider.rooms.first.hasUnreadReport, isTrue);
+
+      when(() => service.markWeeklyReportRead(roomId: 1, reportId: 1))
+          .thenAnswer((_) async => true);
+
+      await provider.markReportRead();
+
+      expect(provider.rooms.first.hasUnreadReport, isFalse);
+      expect(provider.selectedRoom?.hasUnreadReport, isFalse);
     });
   });
 

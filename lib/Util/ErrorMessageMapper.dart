@@ -73,6 +73,8 @@ class ErrorMessageMapper {
         return ErrorMessages.practiceNoteNotFound;
       case 6002:
         return ErrorMessages.practiceNoteUserUnmatched;
+      case 6003:
+        return ErrorMessages.practiceNoteWeekDaysRequired;
       case 7001:
         return ErrorMessages.missionTypeNotFound;
       case 7002:

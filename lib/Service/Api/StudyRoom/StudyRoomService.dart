@@ -69,14 +69,14 @@ class StudyRoomService {
     required int roomId,
     required String imagePath,
   }) async {
-    final files = <http.MultipartFile>[
-      await http.MultipartFile.fromPath('thumbnail', imagePath),
-    ];
     final data = await httpService.sendRequest(
       method: 'PATCH',
       url: '$baseUrl/$roomId/thumbnail',
       isMultipart: true,
-      files: files,
+      // 토큰 갱신 후 재시도할 때 파일을 다시 읽어야 한다.
+      filesBuilder: () async => [
+        await http.MultipartFile.fromPath('thumbnail', imagePath),
+      ],
     );
     return _asMap(data)['thumbnailUrl'] as String?;
   }

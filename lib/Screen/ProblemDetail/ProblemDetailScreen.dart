@@ -845,10 +845,15 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
 
     try {
       for (final practiceId in practiceIds) {
+        // 서버는 practiceNotification 키가 없으면 그 세트의 복습 알림을 지운다.
+        // 문제만 담는 요청이므로 세트가 이미 가진 알림 설정을 그대로 실어 보낸다.
+        // 바로 위에서 fetchAllPracticeContents 로 받아 둔 캐시라 추가 요청은 없다.
+        final practiceNote = await practiceProvider.getPracticeNote(practiceId);
         final updateModel = PracticeNoteUpdateModel(
           practiceNoteId: practiceId,
           addProblemIdList: [problemId],
           removeProblemIdList: const [],
+          practiceNotificationModel: practiceNote.practiceNotificationModel,
         );
         await practiceProvider.updatePractice(
           updateModel,

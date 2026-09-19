@@ -65,6 +65,8 @@ class DatePickerWidget extends StatelessWidget {
                   sheetAnimationStyle: AppMotion.sheetStyle,
                   context: context,
                   isScrollControlled: true,
+                  // 가로 폰에서는 시트가 화면 높이를 다 채우므로 상태 표시줄을 피한다.
+                  useSafeArea: true,
                   builder: (_) => DatePickerHandler(
                     initialDate: selectedDate,
                     onDateSelected: (d) => Navigator.pop(context, d),

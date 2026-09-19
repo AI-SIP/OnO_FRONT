@@ -130,10 +130,11 @@ class _MissionClaimScopeState extends State<MissionClaimScope> {
     final userProvider = Provider.of<UserProvider>(context, listen: false);
     if (missionProvider.isClaiming(progressId)) return;
 
-    // 받기 전에 열려 있던 테마를 찍어 둔다. 서버가 해금 정보를 내려주지 않아서
-    // 받은 뒤와 비교해 이번에 열린 것을 알아낸다.
+    // 받기 전에 열려 있던 테마를 찍어 둔다. **테마는 앱 안에만 있는 것이라**
+    // 서버가 알려 줄 것이 없어서, 받은 뒤와 비교해 이번에 열린 것을 알아낸다.
+    // 꾸미기 해금은 이렇게 세지 않는다. 서버가 응답에 실어 준다.
     final unlockedBefore = unlockedThemeIndexes(userProvider.userInfoModel);
-    // 레벨업 전의 종합 레벨. 이 사이에 열린 치장을 찾아 개구리에 입히는 데 쓴다.
+    // 레벨업 전의 종합 레벨. `Lv.5 → Lv.6` 를 쓰는 데 쓴다.
     final levelBefore = userProvider.userInfoModel?.totalStudyLevel;
 
     final result = await missionProvider.claim(progressId);
@@ -163,15 +164,21 @@ class _MissionClaimScopeState extends State<MissionClaimScope> {
       }
       if (!mounted) return;
 
-      if (result.leveledUp) {
+      final unlockedThemes = newlyUnlockedThemeIndexes(
+        unlockedBefore,
+        unlockedThemeIndexes(userProvider.userInfoModel),
+      );
+
+      // 레벨이 오르지 않아도 꾸미기가 열렸으면 알린다. 해금이 능력치별로
+      // 갈려 있어서, 총 학습 레벨은 그대로인 채 열리는 것이 있다. 서버가 빈
+      // 목록을 주거나 키를 안 주면 여기서 조용히 넘어간다.
+      if (result.leveledUp || result.unlockedCosmetics.isNotEmpty) {
         await showMissionLevelUp(
           context,
           level: result.totalStudyLevel,
           previousLevel: levelBefore,
-          unlockedThemeIndexes: newlyUnlockedThemeIndexes(
-            unlockedBefore,
-            unlockedThemeIndexes(userProvider.userInfoModel),
-          ),
+          unlockedThemeIndexes: unlockedThemes,
+          unlockedCosmetics: result.unlockedCosmetics,
         );
       }
     });
@@ -206,9 +213,9 @@ class _MissionClaimScopeState extends State<MissionClaimScope> {
       missionTitle: mission.title,
       rewardType: result.rewardType,
       amount: result.rewardValue,
-      // 뒤에 레벨업 화면이 붙는 경우다. 상자가 열린 뒤 머무는 시간을 줄여
+      // 뒤에 레벨업·해금 화면이 붙는 경우다. 상자가 열린 뒤 머무는 시간을 줄여
       // 두 연출이 이어 붙어 늘어지지 않게 한다.
-      levelUpFollows: result.leveledUp,
+      levelUpFollows: result.leveledUp || result.unlockedCosmetics.isNotEmpty,
     );
     if (!mounted) return;
 

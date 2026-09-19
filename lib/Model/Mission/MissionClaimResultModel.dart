@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 
+import '../Cosmetic/CosmeticItemModel.dart';
 import 'MissionModel.dart';
 
 /// 받기가 뜻대로 되지 않았을 때, 그것이 어떤 실패인지.
@@ -56,12 +57,21 @@ class MissionClaimResultModel {
   /// 이번 보상으로 레벨이 올랐는지.
   final bool leveledUp;
 
+  /// 이번 보상으로 열린 꾸미기들. 서버가 정한다.
+  ///
+  /// 해금 기준이 능력치별로 갈려 있어서 앱이 총 학습 레벨만 보고 세면 맞지
+  /// 않고, 레벨이 오르지 않아도 열리는 것이 있다. 서버가 열린 것을 그대로
+  /// 실어 주므로 앱은 세지 않는다. 키가 없거나 빈 배열이면 이번에 열린 것이
+  /// 없다는 뜻이라 빈 목록이다.
+  final List<CosmeticUnlockModel> unlockedCosmetics;
+
   const MissionClaimResultModel({
     required this.progressId,
     required this.rewardType,
     required this.rewardValue,
     required this.totalStudyLevel,
     required this.leveledUp,
+    this.unlockedCosmetics = const [],
   });
 
   static MissionClaimResultModel? fromJsonOrNull(Object? json) {
@@ -77,6 +87,8 @@ class MissionClaimResultModel {
         rewardValue: _asInt(json['rewardValue']) ?? 0,
         totalStudyLevel: _asInt(json['totalStudyLevel']),
         leveledUp: json['leveledUp'] == true,
+        unlockedCosmetics:
+            CosmeticUnlockModel.listFrom(json['unlockedCosmetics']),
       );
     } catch (error) {
       debugPrint('[MissionClaimResultModel] 받기 결과를 읽지 못했다: $error');

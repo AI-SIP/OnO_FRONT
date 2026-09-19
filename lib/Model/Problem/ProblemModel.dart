@@ -41,11 +41,7 @@ class ProblemModel {
   });
 
   factory ProblemModel.fromJson(Map<String, dynamic> json) {
-    final rawImageList = (json['imageUrlList'] as List<dynamic>?)
-            ?.map((e) =>
-                ProblemImageDataModel.fromJson(e as Map<String, dynamic>))
-            .toList() ??
-        [];
+    final rawImageList = ProblemImageDataModel.listFrom(json['imageUrlList']);
 
     final problemImages = <ProblemImageDataModel>[];
     final answerImages = <ProblemImageDataModel>[];

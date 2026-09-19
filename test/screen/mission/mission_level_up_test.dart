@@ -1,19 +1,35 @@
-// 레벨업 연출 테스트.
+// 해금 연출 테스트.
 //
 // 개구리 그림은 더 이상 레벨에 따라 바뀌지 않는다. 그래서 성장은 이번에 열린
-// 치장을 개구리에 직접 입혀서만 보인다. 여기서 잠그는 것은 두 가지다.
-// 하나는 "무엇이 몇 개 열렸는지"를 세는 계산이고, 다른 하나는 그것이 개구리에
-// 실제로 얹히는지다.
+// 치장을 개구리에 직접 입혀서만 보인다. 여기서 잠그는 것은 세 가지다.
+// 서버가 준 해금을 앱이 그릴 수 있는 모습으로 맞추는 계산, 그것이 개구리에
+// 실제로 얹히는지, 그리고 레벨이 오르지 않은 해금도 알리는지다 (#257).
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ono/Model/Cosmetic/CosmeticItemModel.dart';
 import 'package:ono/Model/Cosmetic/CosmeticLoadoutModel.dart';
 import 'package:ono/Model/Cosmetic/CosmeticAbilityLevels.dart';
+import 'package:ono/Provider/CosmeticProvider.dart';
 import 'package:ono/Screen/Mission/MissionLevelUp.dart';
 
 import '../../helpers/helpers.dart';
 
-/// 테스트에서 쓰는 아이템 한 건. 총 학습 레벨로 열리는 것이다.
+/// 서버가 내려준 해금 한 건.
+CosmeticUnlockModel _unlock(
+  String itemKey,
+  String slot, {
+  String? nameKo,
+  String imageUrl = '',
+}) {
+  return CosmeticUnlockModel(
+    itemKey: itemKey,
+    slot: slot,
+    nameKo: nameKo ?? itemKey,
+    imageUrl: imageUrl.isEmpty ? 'assets/Cosmetic/$itemKey.png' : imageUrl,
+  );
+}
+
+/// 카탈로그 아이템 한 건. 서버가 옷장으로 내려주는 모양이다.
 CosmeticItemModel _item(
   String itemKey,
   String slot, {
@@ -32,6 +48,20 @@ CosmeticItemModel _item(
     owned: true,
   );
 }
+
+/// 카탈로그 아이템을 서버가 내려준 해금 모양으로 옮긴다.
+CosmeticUnlockModel _unlockOf(CosmeticItemModel item) => CosmeticUnlockModel(
+      itemKey: item.itemKey,
+      slot: item.slot,
+      nameKo: item.nameKo,
+      imageUrl: item.imageUrl,
+    );
+
+/// 그 총 학습 레벨에서 열리는 것들을 서버가 실어 준 셈 친다.
+List<CosmeticUnlockModel> _unlocksAt(CosmeticProvider provider, int level) => [
+      for (final item in provider.unlockedAtTotalStudyLevel(level))
+        _unlockOf(item),
+    ];
 
 /// 층 한 장.
 CosmeticLayerModel _layer(String? itemKey, int order, {String? slot}) {
@@ -52,53 +82,101 @@ List<List<String?>> _keysOf(List<List<CosmeticLayerModel>> stages) {
   ];
 }
 
+/// 총 학습 Lv.20 에서 한꺼번에 열리는 학사 세트. 가장 화려한 경우다.
+const _graduateSet = ['hat_graduate', 'outfit_graduate', 'prop_diploma'];
+
 void main() {
   setUpOnoWidgetTest();
 
-  group('이번에 열린 치장', () {
-    List<CosmeticItemModel> unlockedAt(int level) => switch (level) {
-          3 => [_item('bg_spring', 'BACKGROUND', level: 3)],
-          4 => [_item('glasses_round', 'FACE', level: 4)],
-          _ => const [],
-        };
+  // 해금을 정하는 쪽은 서버다. 앱이 총 학습 레벨로 세면 능력치 기준으로 열린
+  // 것이 빠지고, 레벨이 오르지 않은 해금은 아예 세어지지 않았다 (#257).
+  group('서버가 준 해금 맞추기', () {
+    final catalog = <String, CosmeticItemModel>{
+      'bg_spring': _item('bg_spring', 'BACKGROUND', nameKo: '봄 들판'),
+      'glasses_round': _item('glasses_round', 'FACE', nameKo: '동그란 안경'),
+    };
+    CosmeticItemModel? itemOf(String itemKey) => catalog[itemKey];
 
-    test('오른 구간의 것을 레벨 순서대로 모은다', () {
-      final unlocked = missionUnlocksBetween(2, 4, unlockedAt);
+    test('카탈로그에 있으면 카탈로그의 이름과 그림으로 바꿔 놓는다', () {
+      final unlocks = missionDrawableUnlocks(
+        // 서버 값이 비어 있어도 카탈로그가 채워 준다.
+        unlocks: [_unlock('bg_spring', '', nameKo: 'bg_spring', imageUrl: ' ')],
+        hasCatalog: true,
+        itemOf: itemOf,
+      );
+
+      expect(unlocks, hasLength(1));
+      expect(unlocks.single.nameKo, '봄 들판');
+      expect(unlocks.single.slot, 'BACKGROUND');
+      expect(unlocks.single.imageUrl, 'assets/Cosmetic/bg_spring.png');
+    });
+
+    test('카탈로그에 없으면 그림만 비우고 이름은 남긴다', () {
+      // 이 앱 버전에 그림이 없는 아이템이다. 개구리는 그대로 두고 이름만 알린다.
+      final unlocks = missionDrawableUnlocks(
+        unlocks: [_unlock('hat_alien', 'HEAD', nameKo: '외계 모자')],
+        hasCatalog: true,
+        itemOf: itemOf,
+      );
+
+      expect(unlocks, hasLength(1));
+      expect(unlocks.single.nameKo, '외계 모자');
+      expect(unlocks.single.imageUrl, isEmpty);
+    });
+
+    test('카탈로그를 아직 못 받았으면 서버 값을 그대로 믿는다', () {
+      final unlocks = missionDrawableUnlocks(
+        unlocks: [_unlock('hat_alien', 'HEAD', nameKo: '외계 모자')],
+        hasCatalog: false,
+        itemOf: (_) => null,
+      );
+
+      expect(unlocks.single.imageUrl, 'assets/Cosmetic/hat_alien.png');
+    });
+
+    test('서버가 준 순서를 지키고, 빈 목록은 빈 목록이다', () {
+      final unlocks = missionDrawableUnlocks(
+        unlocks: [
+          _unlock('glasses_round', 'FACE'),
+          _unlock('bg_spring', 'BACKGROUND'),
+        ],
+        hasCatalog: true,
+        itemOf: itemOf,
+      );
 
       expect(
-        unlocked.map((item) => item.itemKey),
-        ['bg_spring', 'glasses_round'],
+        unlocks.map((unlock) => unlock.itemKey),
+        ['glasses_round', 'bg_spring'],
+      );
+      expect(
+        missionDrawableUnlocks(
+          unlocks: const [],
+          hasCatalog: true,
+          itemOf: itemOf,
+        ),
+        isEmpty,
       );
     });
 
-    test('오르기 전 레벨의 것은 세지 않는다', () {
-      // Lv.3 에서 Lv.4 로 오르면 Lv.3 의 것은 이미 가지고 있던 것이다.
-      expect(
-        missionUnlocksBetween(3, 4, unlockedAt).map((item) => item.itemKey),
-        ['glasses_round'],
-      );
-    });
-
-    test('열린 것이 없는 구간은 빈 목록이다', () {
-      expect(missionUnlocksBetween(4, 5, unlockedAt), isEmpty);
-    });
-
-    test('레벨이 오르지 않았으면 빈 목록이다', () {
-      expect(missionUnlocksBetween(5, 5, unlockedAt), isEmpty);
-      expect(missionUnlocksBetween(5, 3, unlockedAt), isEmpty);
-    });
-
-    test('카탈로그에서 총 학습 Lv.19 → Lv.20 은 학사 세트 세 개다', () async {
-      final provider =
-          await loadedCosmeticProvider(levels: CosmeticAbilityLevels.max);
-      final unlocked =
-          missionUnlocksBetween(19, 20, provider.unlockedAtTotalStudyLevel);
+    test('서버 응답에서 읽어 낸 해금이 그대로 연출로 간다', () {
+      // MissionClaimResultModel 이 버리던 값이다.
+      final unlocks = CosmeticUnlockModel.listFrom([
+        {
+          'itemKey': 'glasses_round',
+          'nameKo': '동그란 안경',
+          'slot': 'FACE',
+          'imageUrl': 'assets/Cosmetic/glasses_round.png',
+        },
+      ]);
 
       expect(
-        unlocked.map((item) => item.itemKey),
-        containsAll(['hat_graduate', 'outfit_graduate', 'prop_diploma']),
+        missionDrawableUnlocks(
+          unlocks: unlocks,
+          hasCatalog: true,
+          itemOf: itemOf,
+        ).single.nameKo,
+        '동그란 안경',
       );
-      expect(unlocked, hasLength(3));
     });
   });
 
@@ -127,8 +205,8 @@ void main() {
         before: [base],
         after: [bag, base, hat],
         unlocked: [
-          _item('hat_beanie', 'HEAD', level: 6),
-          _item('bag_mini_backpack', 'BAG', level: 8),
+          _unlock('hat_beanie', 'HEAD'),
+          _unlock('bag_mini_backpack', 'BAG'),
         ],
       );
 
@@ -148,8 +226,7 @@ void main() {
       final stages = missionUnlockStages(
         before: provider.layersAtLevel(19),
         after: after,
-        unlocked:
-            missionUnlocksBetween(19, 20, provider.unlockedAtTotalStudyLevel),
+        unlocked: _unlocksAt(provider, 20),
       );
 
       expect(
@@ -165,8 +242,7 @@ void main() {
       final stages = missionUnlockStages(
         before: provider.layersAtLevel(19),
         after: provider.layersAtLevel(20),
-        unlocked:
-            missionUnlocksBetween(19, 20, provider.unlockedAtTotalStudyLevel),
+        unlocked: _unlocksAt(provider, 20),
       );
 
       expect(_keysOf(stages).first, contains('hat_crown'));
@@ -187,16 +263,12 @@ void main() {
       final stages = missionUnlockStages(
         before: [base],
         after: [base],
-        unlocked: [
-          const CosmeticItemModel(
+        unlocked: const [
+          CosmeticUnlockModel(
             itemKey: 'nothing',
             slot: 'HEAD',
             nameKo: '그림 없음',
             imageUrl: '',
-            requiredLevel: 6,
-            setId: null,
-            conflictsWith: [],
-            owned: true,
           ),
         ],
       );
@@ -246,6 +318,8 @@ void main() {
       required int level,
       int? previousLevel,
       List<int> unlocked = const [],
+      // 서버가 이번에 열렸다고 알려 준 것들. 키를 주면 카탈로그에서 찾아 넘긴다.
+      List<String> unlockedCosmetics = const [],
       bool reduceMotion = true,
       bool settle = true,
       Map<String, String> wearing = const {},
@@ -259,6 +333,9 @@ void main() {
       for (final entry in wearing.entries) {
         await cosmetic.equip(entry.key, entry.value);
       }
+      final serverUnlocks = [
+        for (final key in unlockedCosmetics) _unlockOf(cosmetic.itemOf(key)!),
+      ];
       await pumpOnoWidget(
         tester,
         cosmeticProvider: cosmetic,
@@ -271,6 +348,7 @@ void main() {
                   level: level,
                   previousLevel: previousLevel,
                   unlockedThemeIndexes: unlocked,
+                  unlockedCosmetics: serverUnlocks,
                 ),
                 child: const Text('열기'),
               ),
@@ -306,7 +384,12 @@ void main() {
 
     testWidgets('열린 치장의 이름을 보여 준다', (tester) async {
       // 총 학습 Lv.19 → Lv.20 은 학사 세트 셋이 한꺼번에 열린다. 가장 화려한 경우다.
-      await pumpLevelUp(tester, level: 20, previousLevel: 19);
+      await pumpLevelUp(
+        tester,
+        level: 20,
+        previousLevel: 19,
+        unlockedCosmetics: _graduateSet,
+      );
 
       expect(find.text('학사모'), findsOneWidget);
       expect(find.text('학사복'), findsOneWidget);
@@ -314,7 +397,12 @@ void main() {
     });
 
     testWidgets('연출을 끈 기기에서는 다 입은 개구리를 바로 보여 준다', (tester) async {
-      await pumpLevelUp(tester, level: 20, previousLevel: 19);
+      await pumpLevelUp(
+        tester,
+        level: 20,
+        previousLevel: 19,
+        unlockedCosmetics: _graduateSet,
+      );
 
       final drawn = drawnLayers(tester);
       expect(drawn, contains('assets/Cosmetic/hat_graduate.png'));
@@ -329,6 +417,7 @@ void main() {
         tester,
         level: 20,
         previousLevel: 19,
+        unlockedCosmetics: _graduateSet,
         reduceMotion: false,
         settle: false,
       );
@@ -372,13 +461,8 @@ void main() {
     testWidgets('열린 것이 없으면 이름표 대신 레벨 게이지를 둔다', (tester) async {
       final provider =
           await loadedCosmeticProvider(levels: CosmeticAbilityLevels.max);
-      // 카탈로그에는 총 학습 Lv.20 위로 열리는 것이 없다. 게이지 양 끝
-      // 글자가 레벨 줄의 글자와 겹치지 않도록 카탈로그 밖 레벨로 올린다.
-      expect(
-        missionUnlocksBetween(21, 22, provider.unlockedAtTotalStudyLevel),
-        isEmpty,
-      );
-
+      // 게이지 양 끝 글자가 레벨 줄의 글자와 겹치지 않도록 카탈로그 밖 레벨로
+      // 올린다. 서버가 해금을 하나도 주지 않은 레벨업이다.
       await pumpLevelUp(tester, level: 22, previousLevel: 21);
 
       // 열린 것이 없으면 이름표도 없다. 카탈로그 밖 레벨이라 아무것도 안 열린다.
@@ -418,6 +502,11 @@ void main() {
                             level: 20,
                             previousLevel: 19,
                             unlockedThemeIndexes: const [8, 9],
+                            unlockedCosmetics: [
+                              _unlock('hat_graduate', 'HEAD', nameKo: '학사모'),
+                              _unlock('outfit_graduate', 'BODY', nameKo: '학사복'),
+                              _unlock('prop_diploma', 'PROP', nameKo: '졸업장'),
+                            ],
                           ),
                           child: const Text('열기'),
                         ),
@@ -443,6 +532,36 @@ void main() {
         );
       }
     }
+
+    // 해금이 능력치별로 갈려 있어서 총 학습 레벨이 그대로인 채 열리는 것이
+    // 있다. 예전에는 레벨업이 없으면 창 자체가 뜨지 않아 아무 안내도 없었다 (#257).
+    testWidgets('레벨이 오르지 않아도 열린 꾸미기를 알린다', (tester) async {
+      await pumpLevelUp(
+        tester,
+        level: 19,
+        previousLevel: 19,
+        unlockedCosmetics: const ['hat_crown'],
+      );
+
+      expect(find.text('새 꾸미기가 열렸어요'), findsOneWidget);
+      expect(find.text('왕관'), findsOneWidget);
+      // 오르지 않은 레벨을 오른 것처럼 말하지 않는다.
+      expect(find.text('Lv.19'), findsNothing);
+      expect(find.text(missionLevelPhraseOf(19)), findsNothing);
+      expect(find.text('계속하기'), findsOneWidget);
+    });
+
+    testWidgets('레벨이 올랐으면 해금 제목 대신 레벨 줄을 둔다', (tester) async {
+      await pumpLevelUp(
+        tester,
+        level: 20,
+        previousLevel: 19,
+        unlockedCosmetics: _graduateSet,
+      );
+
+      expect(find.text('새 꾸미기가 열렸어요'), findsNothing);
+      expect(find.text('Lv.19'), findsOneWidget);
+    });
 
     testWidgets('해금된 테마가 없으면 그 자리는 통째로 없다', (tester) async {
       await pumpLevelUp(tester, level: 6, previousLevel: 5);

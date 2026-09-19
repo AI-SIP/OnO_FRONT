@@ -194,18 +194,17 @@ class CosmeticProvider with ChangeNotifier {
         DebugCosmeticPreset.presetOf(_catalogOrEmpty, levels),
       ).resolveLayers();
 
-  /// **지금 차림 위에** 아이템 몇 개를 더 얹은 층들.
+  /// **지금 차림 위에** 방금 열린 것을 더 얹은 층들.
   ///
-  /// 레벨업 연출이 "방금 열린 것을 입어 보는" 모습을 그릴 때 쓴다. 자동으로
+  /// 해금 연출이 "방금 열린 것을 입어 보는" 모습을 그릴 때 쓴다. 자동으로
   /// 입혀 주는 것이 없으니 기준은 그 레벨의 정해진 차림이 아니라 지금 이
   /// 사람이 입고 있는 모습이어야 한다.
-  List<CosmeticLayerModel> layersWith(Iterable<CosmeticItemModel> extra) {
-    final next = Map<String, String>.from(_equipped);
-    for (final item in extra) {
-      next[item.slot] = item.itemKey;
-    }
-    return _loadoutAt(_levels, next).resolveLayers();
-  }
+  ///
+  /// 카탈로그에 아직 없는 아이템도 그린다. 해금은 서버가 알려 주는데 옷장
+  /// 카탈로그는 아직 옛것일 수 있어서, `equipped` 에 키를 꽂는 대신 그림을
+  /// 그대로 얹는다.
+  List<CosmeticLayerModel> layersWith(List<CosmeticUnlockModel> extra) =>
+      _loadoutAt(_levels, _equipped).resolveLayers(extra: extra);
 
   /// 무대 바닥에 깔 **배경 파츠 한 장**. 안 걸쳤으면 null 이다.
   ///

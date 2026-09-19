@@ -369,6 +369,148 @@ void main() {
     });
   });
 
+  // 서버가 주간 반복에 요일이 하나도 없는 요청을 400(errorCode 6003)으로 거절한다.
+  // 앱이 먼저 막지 않으면 사용자는 저장이 왜 실패했는지 알 수 없다(#265).
+  group('매주 반복 요일 검사', () {
+    testWidgets('신규 등록: 매주인데 요일을 안 고르면 안내가 뜨고 요청이 나가지 않는다', (tester) async {
+      await pumpOnoWidget(
+        tester,
+        PracticeTitleWriteScreen(
+          practiceRegisterModel: PracticeNoteRegisterModel(
+            practiceTitle: '',
+            registerProblemIdList: const [],
+          ),
+        ),
+        practiceProvider: practiceProvider,
+      );
+
+      await tester.enterText(find.byType(TextField), '요일 안 고른 세트');
+      await tester.tap(find.byType(Switch));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('매주'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.widgetWithText(ElevatedButton, '복습 세트 만들기'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('알림 받을 요일을 하나 이상 골라 주세요!'), findsOneWidget);
+      verifyNever(() => practiceNoteService.registerPracticeNote(any()));
+
+      await tester.tap(find.text('확인'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('알림 받을 요일을 하나 이상 골라 주세요!'), findsNothing);
+      expect(find.byType(PracticeTitleWriteScreen), findsOneWidget);
+    });
+
+    testWidgets('신규 등록: 요일을 하나 고르면 안내 없이 저장된다', (tester) async {
+      when(() => practiceNoteService.registerPracticeNote(any()))
+          .thenAnswer((_) async => 5);
+      when(() => practiceNoteService.getPracticeNoteById(5,
+          showErrorSnackBar: false)).thenAnswer((_) async => _detail(5));
+
+      await _pumpTargetOntoStack(
+        tester,
+        practiceProvider,
+        PracticeTitleWriteScreen(
+          practiceRegisterModel: PracticeNoteRegisterModel(
+            practiceTitle: '',
+            registerProblemIdList: const [],
+          ),
+        ),
+      );
+
+      await tester.enterText(find.byType(TextField), '요일 하나 고른 세트');
+      await tester.tap(find.byType(Switch));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('매주'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('금')); // 5번 요일
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.widgetWithText(ElevatedButton, '복습 세트 만들기'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('알림 받을 요일을 하나 이상 골라 주세요!'), findsNothing);
+      final captured =
+          verify(() => practiceNoteService.registerPracticeNote(captureAny()))
+              .captured;
+      final model = captured.single as PracticeNoteRegisterModel;
+      expect(model.practiceNotificationModel?.repeatType, RepeatType.weekly);
+      expect(model.practiceNotificationModel?.weekDays, [5]);
+      // 저장이 끝나면 화면을 빠져나간다.
+      expect(find.byType(PracticeTitleWriteScreen), findsNothing);
+    });
+
+    testWidgets('수정: 고른 요일을 모두 지우고 저장하면 안내가 뜨고 요청이 나가지 않는다', (tester) async {
+      await pumpOnoWidget(
+        tester,
+        PracticeTitleWriteScreen(
+          practiceNoteUpdateModel: PracticeNoteUpdateModel(
+            practiceNoteId: 1,
+            practiceTitle: '기존 복습 세트',
+            addProblemIdList: const [],
+            removeProblemIdList: const [],
+          ),
+          practiceNoteDetailModel: _detail(
+            1,
+            notification: PracticeNotificationModel(
+              intervalDays: 7,
+              hour: 9,
+              minute: 30,
+              repeatType: RepeatType.weekly,
+              weekDays: const [1],
+            ),
+          ),
+        ),
+        practiceProvider: practiceProvider,
+      );
+
+      await tester.tap(find.text('월')); // 하나뿐인 선택을 해제한다.
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.widgetWithText(ElevatedButton, '복습 세트 수정하기'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('알림 받을 요일을 하나 이상 골라 주세요!'), findsOneWidget);
+      verifyNever(() => practiceNoteService.updatePracticeNote(any(),
+          showErrorSnackBar: any(named: 'showErrorSnackBar')));
+    });
+
+    testWidgets('매일 반복이면 요일이 비어 있어도 그대로 저장된다', (tester) async {
+      when(() => practiceNoteService.registerPracticeNote(any()))
+          .thenAnswer((_) async => 5);
+      when(() => practiceNoteService.getPracticeNoteById(5,
+          showErrorSnackBar: false)).thenAnswer((_) async => _detail(5));
+
+      await _pumpTargetOntoStack(
+        tester,
+        practiceProvider,
+        PracticeTitleWriteScreen(
+          practiceRegisterModel: PracticeNoteRegisterModel(
+            practiceTitle: '',
+            registerProblemIdList: const [],
+          ),
+        ),
+      );
+
+      await tester.enterText(find.byType(TextField), '매일 알림 세트');
+      await tester.tap(find.byType(Switch));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.widgetWithText(ElevatedButton, '복습 세트 만들기'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('알림 받을 요일을 하나 이상 골라 주세요!'), findsNothing);
+      final captured =
+          verify(() => practiceNoteService.registerPracticeNote(captureAny()))
+              .captured;
+      final model = captured.single as PracticeNoteRegisterModel;
+      expect(model.practiceNotificationModel?.repeatType, RepeatType.daily);
+      expect(model.practiceNotificationModel?.weekDays, isNull);
+    });
+  });
+
   group('알려진 프로덕션 버그', () {
     testWidgets(
       '알림이 켜져 있지만 intervalDays 가 없는 모델을 넘기면 초기화 중 크래시한다',

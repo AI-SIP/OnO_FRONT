@@ -115,22 +115,19 @@ class ProblemService {
     required List<File> problemImages,
     required List<String> problemImageTypes,
   }) async {
-    // File 리스트를 MultipartFile 리스트로 변환
-    final List<http.MultipartFile> multipartFiles = [];
-    for (var imageFile in problemImages) {
-      multipartFiles.add(
-        await http.MultipartFile.fromPath(
-          'problemImages', // 서버의 @RequestParam 이름과 동일
-          imageFile.path,
-        ),
-      );
-    }
-
     await httpService.sendRequest(
       method: 'POST',
       url: '$baseUrl/$problemId/imageData',
       isMultipart: true,
-      files: multipartFiles,
+      // 토큰이 만료돼 갱신 후 재시도할 때 파일을 처음부터 다시 읽어야 하므로
+      // 만들어 둔 MultipartFile 이 아니라 만드는 방법을 넘긴다.
+      filesBuilder: () async => [
+        for (final imageFile in problemImages)
+          await http.MultipartFile.fromPath(
+            'problemImages', // 서버의 @RequestParam 이름과 동일
+            imageFile.path,
+          ),
+      ],
       body: {
         'problemImageTypes': problemImageTypes,
       },

@@ -398,6 +398,8 @@ class _ChallengeCreateSheetState extends State<ChallengeCreateSheet> {
       sheetAnimationStyle: AppMotion.sheetStyle,
       context: context,
       isScrollControlled: true,
+      // 가로 폰에서는 시트가 화면 높이를 다 채우므로 상태 표시줄을 피한다.
+      useSafeArea: true,
       builder: (_) => DatePickerHandler(
         title: '마감일 선택',
         initialDate: _endAt.isBefore(today) ? today : _endAt,
@@ -489,6 +491,8 @@ class _ChallengeCreateSheetState extends State<ChallengeCreateSheet> {
       keyboardType: inputType,
       inputFormatters: inputFormatters,
       style: style,
+      // 모바일 터치는 기본값으로 바깥을 눌러도 포커스가 안 풀린다. iOS 숫자 키패드엔 완료 버튼도 없다.
+      onTapOutside: (_) => FocusManager.instance.primaryFocus?.unfocus(),
       decoration: InputDecoration(
         hintText: hint,
         hintStyle: TextStyle(fontSize: 14, color: Colors.grey[400]),

@@ -318,6 +318,7 @@ void main() {
       5006: ErrorMessages.invalidParentFolder,
       6001: ErrorMessages.practiceNoteNotFound,
       6002: ErrorMessages.practiceNoteUserUnmatched,
+      6003: ErrorMessages.practiceNoteWeekDaysRequired,
       7001: ErrorMessages.missionTypeNotFound,
       7002: ErrorMessages.missionUserNotFound,
       7010: ErrorMessages.missionProgressNotFound,
@@ -361,8 +362,8 @@ void main() {
       14005: ErrorMessages.noticeTypeRequired,
     };
 
-    test('정의된 errorCode 76개가 모두 기대한 메시지로 매핑된다', () {
-      expect(expected.length, 76);
+    test('정의된 errorCode 77개가 모두 기대한 메시지로 매핑된다', () {
+      expect(expected.length, 77);
       expected.forEach((code, message) {
         expect(
           ErrorMessageMapper.byErrorCodeOrNull(code),
