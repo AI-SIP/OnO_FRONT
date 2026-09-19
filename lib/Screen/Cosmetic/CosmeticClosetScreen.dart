@@ -327,8 +327,8 @@ class _CosmeticClosetScreenState extends State<CosmeticClosetScreen> {
 
             return Center(
               child: ConstrainedBox(
-                // 태블릿에서 격자가 끝없이 넓어지지 않게 가운데로 모은다.
-                constraints: const BoxConstraints(maxWidth: 640),
+                constraints:
+                    BoxConstraints(maxWidth: _contentWidthFor(constraints)),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
@@ -400,76 +400,91 @@ class _CosmeticClosetScreenState extends State<CosmeticClosetScreen> {
       ),
       child: SafeArea(
         top: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(
-            AppSpacing.screenHorizontal,
-            AppSpacing.md,
-            AppSpacing.screenHorizontal,
-            AppSpacing.md,
-          ),
-          child: Row(
-            children: [
-              PressableScale(
-                onTap: _onRevertTap,
-                haptic: HapticLevel.none,
-                scale: 0.94,
-                child: const Padding(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: AppSpacing.md,
-                    vertical: AppSpacing.md,
-                  ),
-                  child: StandardText(
-                    text: '되돌리기',
-                    fontSize: 14,
-                    color: AppColors.textSecondary,
-                    maxLines: 1,
-                  ),
-                ),
+        // 저장바는 bottomNavigationBar 라 본문의 폭 제한을 받지 않는다.
+        // 그냥 두면 본문은 가운데로 모이는데 이 줄만 화면 끝까지 늘어나서
+        // 되돌리기와 저장이 본문 바깥에 서 있는 것처럼 보인다.
+        // heightFactor 를 주지 않으면 세로로도 꽉 차서, 저장바가 화면 전체를
+        // 덮고 뒤로가기까지 눌리지 않는다. 높이는 내용에 맞춘다.
+        child: Center(
+          heightFactor: 1,
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: _contentWidthFor(
+                BoxConstraints(maxWidth: MediaQuery.sizeOf(context).width),
               ),
-              const SizedBox(width: AppSpacing.sm),
-              Expanded(
-                child: PressableScale(
-                  onTap: () => _onSaveTap(cosmetic),
-                  haptic: HapticLevel.none,
-                  scale: 0.97,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.md,
-                      vertical: AppSpacing.md,
-                    ),
-                    decoration: BoxDecoration(
-                      color: color,
-                      borderRadius: BorderRadius.circular(AppRadius.large),
-                      boxShadow: [
-                        BoxShadow(
-                          color: color.withValues(alpha: 0.28),
-                          blurRadius: 12,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: const FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.check_rounded,
-                              size: 18, color: Colors.white),
-                          SizedBox(width: AppSpacing.sm),
-                          StandardText(
-                            text: '저장',
-                            fontSize: 15,
-                            color: Colors.white,
-                            fontWeight: FontWeight.w700,
-                            maxLines: 1,
-                          ),
-                        ],
+            ),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.screenHorizontal,
+                AppSpacing.md,
+                AppSpacing.screenHorizontal,
+                AppSpacing.md,
+              ),
+              child: Row(
+                children: [
+                  PressableScale(
+                    onTap: _onRevertTap,
+                    haptic: HapticLevel.none,
+                    scale: 0.94,
+                    child: const Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: AppSpacing.md,
+                        vertical: AppSpacing.md,
+                      ),
+                      child: StandardText(
+                        text: '되돌리기',
+                        fontSize: 14,
+                        color: AppColors.textSecondary,
+                        maxLines: 1,
                       ),
                     ),
                   ),
-                ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(
+                    child: PressableScale(
+                      onTap: () => _onSaveTap(cosmetic),
+                      haptic: HapticLevel.none,
+                      scale: 0.97,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.md,
+                          vertical: AppSpacing.md,
+                        ),
+                        decoration: BoxDecoration(
+                          color: color,
+                          borderRadius: BorderRadius.circular(AppRadius.large),
+                          boxShadow: [
+                            BoxShadow(
+                              color: color.withValues(alpha: 0.28),
+                              blurRadius: 12,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: const FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.check_rounded,
+                                  size: 18, color: Colors.white),
+                              SizedBox(width: AppSpacing.sm),
+                              StandardText(
+                                text: '저장',
+                                fontSize: 15,
+                                color: Colors.white,
+                                fontWeight: FontWeight.w700,
+                                maxLines: 1,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       ),
@@ -664,9 +679,29 @@ class _CosmeticClosetScreenState extends State<CosmeticClosetScreen> {
     );
   }
 
+  /// 무대와 격자가 쓸 폭이다.
+  ///
+  /// 640 으로 못 박아 두었더니 아이패드 13인치를 가로로 두면(1376) 좌우에
+  /// 368 씩 비어서, 넓은 화면 한가운데 폰 화면을 그대로 옮겨 놓은 것처럼
+  /// 보였다. 화면 폭을 따라가되 양 끝은 가둔다.
+  static double _contentWidthFor(BoxConstraints constraints) {
+    final available = constraints.maxWidth;
+    // 폰은 지금 그대로 화면을 다 쓴다.
+    if (available < 600) return available;
+    return (available * 0.88).clamp(640.0, 1240.0);
+  }
+
+  /// 격자 칸 하나가 지향하는 폭.
+  ///
+  /// 폰에서 118 로 나눠 셋을 만든다. 태블릿에서도 같은 값을 쓰면 열만 늘고
+  /// 칸은 폰과 같은 109 로 남아서, 화면이 두 배가 되어도 아이템 하나하나는
+  /// 그대로 작았다.
+  static double _tileTargetFor(BoxConstraints constraints) =>
+      constraints.maxWidth >= 600 ? 140.0 : 118.0;
+
   /// 개구리 한 변의 길이. 좁은 쪽과 낮은 쪽 중 더 빡빡한 쪽을 따른다.
   double _frogSizeFor(BoxConstraints constraints) {
-    final byWidth = constraints.maxWidth * 0.50;
+    final byWidth = _contentWidthFor(constraints) * 0.50;
     final byHeight = constraints.maxHeight * 0.28;
     final smaller = byWidth < byHeight ? byWidth : byHeight;
     // 태블릿에서는 폭이 남아도 여기서 멈춘다. 더 키우면 아이템 격자가 첫
@@ -756,8 +791,10 @@ class _CosmeticClosetScreenState extends State<CosmeticClosetScreen> {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        // 칸 하나가 120 언저리가 되게 나눈다. 폰은 셋, 태블릿은 여섯까지.
-        final columns = (constraints.maxWidth / 118).floor().clamp(3, 6);
+        // 칸 하나가 목표 폭 언저리가 되게 나눈다. 폰은 셋, 태블릿은 여덟까지.
+        final columns = (constraints.maxWidth / _tileTargetFor(constraints))
+            .floor()
+            .clamp(3, 8);
 
         return CustomScrollView(
           slivers: [
