@@ -556,7 +556,10 @@ void main() {
     // 번도 걸리지 않아 탈퇴해도 연동 해제가, 로그아웃해도 SDK 로그아웃이 돌지
     // 않았다. 그래서 여기서는 실제 저장값인 대문자를 넣고 본다.
     setUp(() {
-      when(() => userService.logoutAccount()).thenAnswer((_) async {});
+      when(() => tokenProvider.getRefreshToken())
+          .thenAnswer((_) async => 'refresh-token');
+      when(() => userService.logoutAccount(
+          refreshToken: any(named: 'refreshToken'))).thenAnswer((_) async {});
       when(() => userService.deleteAccount()).thenAnswer((_) async {});
       when(() => googleAuthService.logoutGoogleSignIn())
           .thenAnswer((_) async {});
@@ -574,7 +577,8 @@ void main() {
       await provider.signOut();
 
       verify(() => googleAuthService.logoutGoogleSignIn()).called(1);
-      verify(() => userService.logoutAccount()).called(1);
+      verify(() => userService.logoutAccount(refreshToken: 'refresh-token'))
+          .called(1);
       expect(provider.isLoggedIn, LoginStatus.logout);
     });
 
@@ -584,7 +588,8 @@ void main() {
       await provider.signOut();
 
       verify(() => kakaoAuthService.logoutKakaoSignIn()).called(1);
-      verify(() => userService.logoutAccount()).called(1);
+      verify(() => userService.logoutAccount(refreshToken: 'refresh-token'))
+          .called(1);
     });
 
     test('APPLE 은 별도 로그아웃이 없어 서버 로그아웃만 부른다', () async {
@@ -594,7 +599,8 @@ void main() {
 
       verifyNever(() => googleAuthService.logoutGoogleSignIn());
       verifyNever(() => kakaoAuthService.logoutKakaoSignIn());
-      verify(() => userService.logoutAccount()).called(1);
+      verify(() => userService.logoutAccount(refreshToken: 'refresh-token'))
+          .called(1);
     });
 
     // 로그아웃 안내가 "게스트 유저의 경우 모든 정보가 삭제됩니다" 라고 말한다.
@@ -608,7 +614,8 @@ void main() {
       verify(() => userService.deleteAccount()).called(1);
       // 계정도 토큰도 이미 지워진 뒤라 로그아웃 요청은 보내지 않는다.
       // 보내면 토큰이 없어 인증 오류만 뜬다.
-      verifyNever(() => userService.logoutAccount());
+      verifyNever(() =>
+          userService.logoutAccount(refreshToken: any(named: 'refreshToken')));
       expect(provider.isLoggedIn, LoginStatus.logout);
     });
 
@@ -650,7 +657,67 @@ void main() {
       await provider.signOut();
 
       verifyNever(() => userService.deleteAccount());
-      verify(() => userService.logoutAccount()).called(1);
+      verify(() => userService.logoutAccount(refreshToken: 'refresh-token'))
+          .called(1);
+    });
+  });
+
+  group('로그아웃 요청 (이슈 #256)', () {
+    setUp(() {
+      storageData['loginMethod'] = 'APPLE';
+      when(() => tokenProvider.getRefreshToken())
+          .thenAnswer((_) async => 'refresh-token');
+      when(() => userService.logoutAccount(
+          refreshToken: any(named: 'refreshToken'))).thenAnswer((_) async {});
+    });
+
+    // 서버는 리프레시 토큰이 함께 와야 세션 행을 지운다. 안 보내면 그 토큰으로
+    // 로그아웃 뒤에도 갱신이 200 으로 성공한다(dev 실측).
+    test('기기에 적힌 리프레시 토큰을 실어 보낸다', () async {
+      await provider.signOut();
+
+      verify(() => userService.logoutAccount(refreshToken: 'refresh-token'))
+          .called(1);
+      expect(provider.isLoggedIn, LoginStatus.logout);
+    });
+
+    test('토큰을 못 읽어도 로그아웃은 그대로 진행된다', () async {
+      when(() => tokenProvider.getRefreshToken())
+          .thenThrow(UnauthorizedException(message: '보안 저장소 손상'));
+
+      await provider.signOut();
+
+      verify(() => userService.logoutAccount(refreshToken: null)).called(1);
+      expect(provider.isLoggedIn, LoginStatus.logout);
+    });
+
+    // 백엔드(#311)가 로그아웃에도 인증을 요구하게 되면서, 토큰이 죽어 있으면
+    // 401 이 온다. 사용자는 로그아웃을 누른 것이므로 기기 정리는 반드시 한다.
+    test('요청이 401 로 실패해도 기기 토큰과 사용자 상태는 정리된다', () async {
+      storageData['accessToken'] = 'access-token';
+      storageData['refreshToken'] = 'refresh-token';
+      when(() => userService.logoutAccount(
+              refreshToken: any(named: 'refreshToken')))
+          .thenThrow(UnauthorizedException(errorCode: 1007, message: '인증 실패'));
+
+      await provider.signOut();
+
+      expect(provider.isLoggedIn, LoginStatus.logout);
+      expect(storageData['accessToken'], isNull);
+      expect(storageData['refreshToken'], isNull);
+      expect(storageData['loginMethod'], isNull);
+    });
+
+    test('소셜 SDK 로그아웃이 실패해도 서버 로그아웃과 기기 정리는 이어간다', () async {
+      storageData['loginMethod'] = 'KAKAO';
+      when(() => kakaoAuthService.logoutKakaoSignIn())
+          .thenThrow(Exception('카카오 SDK 실패'));
+
+      await provider.signOut();
+
+      verify(() => userService.logoutAccount(refreshToken: 'refresh-token'))
+          .called(1);
+      expect(provider.isLoggedIn, LoginStatus.logout);
     });
   });
 

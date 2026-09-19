@@ -285,13 +285,26 @@ void main() {
   });
 
   group('logoutAccount / deleteAccount', () {
-    test('logoutAccount: POST /api/auth/logout', () async {
+    // 서버는 refreshToken 이 함께 와야 세션 행을 지운다. 안 보내면 그 토큰으로
+    // 로그아웃 뒤에도 갱신이 성공한다(dev 실측).
+    test('logoutAccount: POST /api/auth/logout, 리프레시 토큰을 body 로 보낸다', () async {
+      final http = TestHttpClient.respondWith(emptyResponse());
+      await buildService(http)
+          .logoutAccount(refreshToken: 'test-refresh-token');
+
+      expect(http.lastRequest.method, 'POST');
+      expect(http.lastRequest.url.toString(), '$testBaseUrl/api/auth/logout');
+      expect(http.lastRequest.authorization, 'test-access-token');
+      expect(http.lastRequest.jsonBody, {'refreshToken': 'test-refresh-token'});
+    });
+
+    test('logoutAccount: 리프레시 토큰을 못 읽었어도 요청 자체는 나간다', () async {
       final http = TestHttpClient.respondWith(emptyResponse());
       await buildService(http).logoutAccount();
 
       expect(http.lastRequest.method, 'POST');
       expect(http.lastRequest.url.toString(), '$testBaseUrl/api/auth/logout');
-      expect(http.lastRequest.authorization, 'test-access-token');
+      expect(http.lastRequest.jsonBody, isNull);
     });
 
     test('deleteAccount: DELETE /api/users', () async {
