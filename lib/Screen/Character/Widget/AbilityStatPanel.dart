@@ -68,6 +68,13 @@ class AbilityStatPanel extends StatelessWidget {
   static const double _dialMin = 40.0;
   static const double _dialMax = 64.0;
 
+  /// 태블릿에서의 위 한계.
+  ///
+  /// 태블릿에서는 칸 하나가 140 가까이 되는데 고리는 64 에서 멈춰서, 넓은
+  /// 카드 안에 작은 고리 넷이 떠 있는 것처럼 보였다. 칸이 넓어진 만큼만
+  /// 같이 키운다.
+  static const double _dialMaxTablet = 92.0;
+
   /// 눈금판 사이의 틈.
   static const double _dialGap = 6.0;
 
@@ -114,7 +121,10 @@ class AbilityStatPanel extends StatelessWidget {
         // 칸 넷을 같은 폭으로 나눈다. 눈금판은 그 칸에 들어가는 만큼만
         // 커진다. 태블릿에서 끝없이 커지지 않게 위도 막아 둔다.
         final cellWidth = (constraints.maxWidth - _dialGap * 3) / stats.length;
-        final dial = cellWidth.clamp(_dialMin, _dialMax);
+        final dialMax = MediaQuery.of(context).size.shortestSide >= 600
+            ? _dialMaxTablet
+            : _dialMax;
+        final dial = cellWidth.clamp(_dialMin, dialMax);
 
         // 넷의 글자를 **같은 크기로** 앉힌다.
         //

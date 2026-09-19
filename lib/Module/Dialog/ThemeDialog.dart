@@ -107,6 +107,22 @@ class _ThemeDialogState extends State<ThemeDialog> {
   /// 더 잘 구분된다.
   static const double _maxSwatch = 40;
 
+  /// 태블릿에서의 동그라미 위 한계.
+  ///
+  /// 폰에서 40 으로 묶어 둔 이유(남는 자리를 여백으로 돌린다)는 그대로지만,
+  /// 태블릿에서는 다이얼로그 자체가 넓어져서 40 짜리 원 스물넷이 큰 판 위에
+  /// 흩어진 점처럼 보였다. 판이 넓어진 만큼만 같이 키운다.
+  static const double _maxSwatchTablet = 52;
+
+  /// 태블릿에서의 다이얼로그 폭.
+  static const double _maxWidthTablet = 560;
+
+  /// 폰에서의 다이얼로그 폭.
+  static const double _maxWidthPhone = 430;
+
+  static bool _isTablet(BuildContext context) =>
+      MediaQuery.of(context).size.shortestSide >= 600;
+
   /// 트랙 안쪽 여백. 동그라미가 트랙 벽에 닿지 않게 한다.
   static const double _laneInset = 5;
 
@@ -230,28 +246,41 @@ class _ThemeDialogState extends State<ThemeDialog> {
     final duration =
         AppMotion.isReduced(context) ? Duration.zero : AppMotion.normal;
 
-    return Dialog(
-      backgroundColor: AppColors.surface,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppRadius.xlarge),
-      ),
-      insetPadding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.xl,
-        vertical: AppSpacing.xxl,
-      ),
-      child: ConstrainedBox(
-        constraints: BoxConstraints(
-          maxWidth: 430,
-          maxHeight: screenHeight * 0.86,
+    final maxWidth = _isTablet(context) ? _maxWidthTablet : _maxWidthPhone;
+
+    // 앱 전체 테마가 다이얼로그 폭을 420 으로 묶어 둔다(main.dart 의
+    // dialogTheme). 그래서 여기 적어 둔 430 은 한 번도 쓰인 적이 없고,
+    // 태블릿에서도 폰과 같은 폭의 작은 판이 화면 한가운데 떴다. 이
+    // 다이얼로그에서만 그 한계를 다시 정한다.
+    return Theme(
+      data: Theme.of(context).copyWith(
+        dialogTheme: DialogThemeData(
+          constraints: BoxConstraints(maxWidth: maxWidth),
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _buildPreview(userInfo, duration),
-            _buildLaneHeader(userInfo),
-            Flexible(child: _buildTracks(userInfo, duration)),
-            _buildFooter(themeProvider, duration),
-          ],
+      ),
+      child: Dialog(
+        backgroundColor: AppColors.surface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.xlarge),
+        ),
+        insetPadding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.xl,
+          vertical: AppSpacing.xxl,
+        ),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxWidth: maxWidth,
+            maxHeight: screenHeight * 0.86,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _buildPreview(userInfo, duration),
+              _buildLaneHeader(userInfo),
+              Flexible(child: _buildTracks(userInfo, duration)),
+              _buildFooter(themeProvider, duration),
+            ],
+          ),
         ),
       ),
     );
@@ -462,7 +491,8 @@ class _ThemeDialogState extends State<ThemeDialog> {
             _tierGutter -
             _laneGap * (_themeLanes.length - 1);
         final laneWidth = trackWidth / _themeLanes.length;
-        final swatchSize = (laneWidth - _laneInset * 2).clamp(26.0, _maxSwatch);
+        final maxSwatch = _isTablet(context) ? _maxSwatchTablet : _maxSwatch;
+        final swatchSize = (laneWidth - _laneInset * 2).clamp(26.0, maxSwatch);
         final cellHeight = swatchSize + _cellGap;
 
         return SingleChildScrollView(

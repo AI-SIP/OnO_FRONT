@@ -449,7 +449,13 @@ class ProblemSolveRegisterTemplateState
             child: Row(
               children: [
                 // 시간 글자가 길어지면 칩이 밀려 나가므로 줄어들 수 있게 둔다.
-                Flexible(
+                //
+                // Flexible 로 두면 글자가 제 몫을 다 쓰지 않고 줄어드는데,
+                // 뒤따르는 칩 묶음은 배정받은 폭 그대로 글자 바로 뒤에 놓인다.
+                // 그래서 태블릿에서는 칩이 오른쪽 끝이 아니라 화면 가운데쯤에
+                // 서고 그 오른쪽이 통째로 비었다(834 폭에서 465 에서 끝났다).
+                // Expanded 로 제 몫을 다 쓰게 하면 칩 묶음이 오른쪽 끝에 붙는다.
+                Expanded(
                   child: PressableScale(
                     onTap: _showTimeInputDialog,
                     child: Container(

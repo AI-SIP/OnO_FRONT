@@ -239,7 +239,8 @@ class _CharacterStage extends StatelessWidget {
                     Center(
                       child: ConstrainedBox(
                         // 태블릿에서 카드가 끝없이 넓어지지 않게 모은다.
-                        constraints: const BoxConstraints(maxWidth: 640),
+                        constraints:
+                            const BoxConstraints(maxWidth: _contentMaxWidth),
                         child: Padding(
                           padding: const EdgeInsets.symmetric(
                             horizontal: AppSpacing.screenHorizontal,
@@ -298,7 +299,8 @@ class _CharacterStage extends StatelessWidget {
                     // 때에는 화면이 장면과 조작 판으로 갈라져 보였다.
                     Center(
                       child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 640),
+                        constraints:
+                            const BoxConstraints(maxWidth: _contentMaxWidth),
                         child: Padding(
                           padding: const EdgeInsets.symmetric(
                             horizontal: AppSpacing.screenHorizontal,
@@ -486,6 +488,14 @@ class _CharacterStage extends StatelessWidget {
 
   /// 파츠 그림 원본의 한 변.
   static const double _frogMaxSize = 512.0;
+
+  /// 성장 카드와 버튼 줄의 폭 한계.
+  ///
+  /// 640 이었는데, 아이패드 세로(834)에서는 좌우로 97 씩 총 194 가 빈 면으로
+  /// 남아 카드가 화면 가운데에 작게 얹힌 것처럼 보였다. 개구리는 파츠 원본이
+  /// 512 라 그 이상 키우면 뭉개지므로, 대신 카드와 버튼이 무대 폭을 더 쓰게
+  /// 해서 빈 면을 줄인다.
+  static const double _contentMaxWidth = 760.0;
 }
 
 /// 성장 카드 맨 아래, 훈장으로 가는 한 줄이다.
