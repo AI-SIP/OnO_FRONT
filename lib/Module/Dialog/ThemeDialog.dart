@@ -112,10 +112,10 @@ class _ThemeDialogState extends State<ThemeDialog> {
   /// 폰에서 40 으로 묶어 둔 이유(남는 자리를 여백으로 돌린다)는 그대로지만,
   /// 태블릿에서는 다이얼로그 자체가 넓어져서 40 짜리 원 스물넷이 큰 판 위에
   /// 흩어진 점처럼 보였다. 판이 넓어진 만큼만 같이 키운다.
-  static const double _maxSwatchTablet = 52;
+  static const double _maxSwatchTablet = 58;
 
   /// 태블릿에서의 다이얼로그 폭.
-  static const double _maxWidthTablet = 560;
+  static const double _maxWidthTablet = 640;
 
   /// 폰에서의 다이얼로그 폭.
   static const double _maxWidthPhone = 430;

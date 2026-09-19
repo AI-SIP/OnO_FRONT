@@ -194,6 +194,8 @@ class _CharacterStage extends StatelessWidget {
     // LayoutBuilder 안에서는 watch 가 듣지 않는다. 그 바깥에서 받는다.
     final cosmetic = context.watch<CosmeticProvider>();
 
+    final contentWidth = _contentWidthFor(MediaQuery.sizeOf(context).width);
+
     // 디버그 패널에서 옮겨 놓은 레벨은 여기서 따로 챙기지 않는다.
     // [UserProvider] 가 유저 정보를 내주는 자리에서 이미 갈아 끼운다. 그래야
     // 이 화면과 테마 다이얼로그와 마이페이지가 같은 값을 말한다.
@@ -239,8 +241,7 @@ class _CharacterStage extends StatelessWidget {
                     Center(
                       child: ConstrainedBox(
                         // 태블릿에서 카드가 끝없이 넓어지지 않게 모은다.
-                        constraints:
-                            const BoxConstraints(maxWidth: _contentMaxWidth),
+                        constraints: BoxConstraints(maxWidth: contentWidth),
                         child: Padding(
                           padding: const EdgeInsets.symmetric(
                             horizontal: AppSpacing.screenHorizontal,
@@ -299,8 +300,7 @@ class _CharacterStage extends StatelessWidget {
                     // 때에는 화면이 장면과 조작 판으로 갈라져 보였다.
                     Center(
                       child: ConstrainedBox(
-                        constraints:
-                            const BoxConstraints(maxWidth: _contentMaxWidth),
+                        constraints: BoxConstraints(maxWidth: contentWidth),
                         child: Padding(
                           padding: const EdgeInsets.symmetric(
                             horizontal: AppSpacing.screenHorizontal,
@@ -489,13 +489,19 @@ class _CharacterStage extends StatelessWidget {
   /// 파츠 그림 원본의 한 변.
   static const double _frogMaxSize = 512.0;
 
-  /// 성장 카드와 버튼 줄의 폭 한계.
+  /// 성장 카드와 버튼 줄이 쓸 폭이다.
   ///
-  /// 640 이었는데, 아이패드 세로(834)에서는 좌우로 97 씩 총 194 가 빈 면으로
-  /// 남아 카드가 화면 가운데에 작게 얹힌 것처럼 보였다. 개구리는 파츠 원본이
-  /// 512 라 그 이상 키우면 뭉개지므로, 대신 카드와 버튼이 무대 폭을 더 쓰게
-  /// 해서 빈 면을 줄인다.
-  static const double _contentMaxWidth = 760.0;
+  /// 640 으로 못 박아 두었더니 아이패드 세로(834)에서 좌우로 97 씩, 13인치를
+  /// 가로로 두면(1376) 308 씩 비었다. 760 으로 올려도 큰 화면에서는 여전히
+  /// 남는다. 고정값으로는 기기마다 어긋나므로 무대 폭을 따라가게 한다.
+  ///
+  /// 개구리는 파츠 원본이 512 라 그 이상 키우면 뭉갠다. 그래서 빈 면을 줄이는
+  /// 몫은 카드와 버튼이 맡는다.
+  static double _contentWidthFor(double available) {
+    // 폰은 지금 그대로 화면을 다 쓴다.
+    if (available < 600) return available;
+    return (available * 0.88).clamp(640.0, 1240.0);
+  }
 }
 
 /// 성장 카드 맨 아래, 훈장으로 가는 한 줄이다.
