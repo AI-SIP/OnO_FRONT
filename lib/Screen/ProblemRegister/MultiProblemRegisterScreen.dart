@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:camera/camera.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -1860,6 +1861,13 @@ class _MultiProblemRegisterScreenState
         setState(() => _isSubmitting = false);
       }
     }
+
+    // 한 장씩 등록과 같은 이벤트로 남겨야 오답노트를 쓴 사람 수가 맞는다.
+    // 몇 장을 한 번에 올렸는지는 count 로 따로 본다.
+    FirebaseAnalytics.instance.logEvent(
+      name: 'problem_created',
+      parameters: {'mode': 'multi', 'count': registeredProblemIds.length},
+    );
 
     if (!mounted) {
       progress.dispose();

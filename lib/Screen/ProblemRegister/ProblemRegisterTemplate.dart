@@ -927,6 +927,7 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
 
     FirebaseAnalytics.instance.logEvent(
       name: widget.isEditMode ? 'problem_updated' : 'problem_created',
+      parameters: widget.isEditMode ? null : {'mode': 'single', 'count': 1},
     );
 
     // 1차에서는 행동 응답에 미션 진행도가 실려 오지 않는다. 등록이 끝난 뒤

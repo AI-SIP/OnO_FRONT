@@ -36,8 +36,12 @@ class ThemeHandler with ChangeNotifier {
     saveColor('darkPrimaryColor', _darkPrimaryColor);
     saveColor('desaturateColor', _desaturateColor);
 
-    FirebaseAnalytics.instance
-        .logEvent(name: 'theme_color_change_to_$colorName');
+    // 색 이름을 이벤트 이름에 붙이면 색마다 이벤트가 따로 생겨서, 콘솔에
+    // 주요 이벤트로 걸어 둔 theme_color_change 로는 하나도 안 잡혔다.
+    FirebaseAnalytics.instance.logEvent(
+      name: 'theme_color_change',
+      parameters: {'color': colorName},
+    );
     notifyListeners();
   }
 
