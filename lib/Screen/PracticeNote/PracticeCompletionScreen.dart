@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import '../../Provider/CosmeticProvider.dart';
 import '../User/Widget/FrogCharacter.dart';
 import '../User/Widget/FrogMotion.dart';
+import '../../Module/Emoji/OnoEmoji.dart';
 import '../../Module/Emoji/OnoEmojiCatalog.dart';
 import '../../Module/Emoji/OnoEmojiImage.dart';
 import '../../Module/Emoji/OnoEmojiPicker.dart';
@@ -61,6 +62,26 @@ class _PracticeCompletionScreenState extends State<PracticeCompletionScreen> {
   /// 확인을 또 누르면 횟수가 그만큼 쌓였다. 저장에 성공하면 화면이 닫힐
   /// 때까지 다시 켜지 않는다.
   bool _submitting = false;
+
+  /// 더보기에서 고른, 추천에 없는 이모지. 목록 맨 앞에 칸을 하나 더 세운다.
+  ///
+  /// 더보기 칸은 가로 목록의 맨 끝이라 폰에서는 화면 밖에 있다. 거기에만
+  /// 골라 둔 모양을 그렸더니 다이얼로그를 닫고 돌아왔을 때 무엇을 골랐는지
+  /// 보이지 않았다. 맨 앞에 두고 목록도 처음으로 되돌린다.
+  String? _extraMoodKey;
+
+  final ScrollController _moodScrollController = ScrollController();
+
+  @override
+  void dispose() {
+    _moodScrollController.dispose();
+    super.dispose();
+  }
+
+  List<String> get _moodKeys => [
+        if (_extraMoodKey != null) _extraMoodKey!,
+        ..._recommendedMoodKeys,
+      ];
 
   @override
   Widget build(BuildContext context) {
@@ -223,15 +244,17 @@ class _PracticeCompletionScreenState extends State<PracticeCompletionScreen> {
         SizedBox(
           height: 82,
           child: ListView.separated(
+            controller: _moodScrollController,
             scrollDirection: Axis.horizontal,
-            itemCount: _recommendedMoodKeys.length + 1,
+            itemCount: _moodKeys.length + 1,
             separatorBuilder: (_, __) => const SizedBox(width: 10),
             itemBuilder: (context, index) {
-              if (index == _recommendedMoodKeys.length) {
+              final moodKeys = _moodKeys;
+              if (index == moodKeys.length) {
                 return _buildMoreMoodButton(themeProvider);
               }
 
-              final emojiKey = _recommendedMoodKeys[index];
+              final emojiKey = moodKeys[index];
               final emoji = OnoEmojiCatalog.byKey(emojiKey);
               if (emoji == null) return const SizedBox.shrink();
 
@@ -282,61 +305,45 @@ class _PracticeCompletionScreenState extends State<PracticeCompletionScreen> {
     );
   }
 
-  /// 추천 칸 끝의 `...` 칸.
-  ///
-  /// 여기서 고른 이모지는 추천 칸에 없어서 다이얼로그가 닫히면 무엇을 골랐는지
-  /// 보이지 않았다. 추천 밖의 것을 골랐으면 이 칸이 그 이모지를 골라 둔
-  /// 모양으로 보여 준다. 다시 누르면 다이얼로그가 열려 바꿀 수 있다.
   Widget _buildMoreMoodButton(ThemeHandler themeProvider) {
-    final selectedKey = _selectedMoodKey;
-    final picked =
-        selectedKey == null || _recommendedMoodKeys.contains(selectedKey)
-            ? null
-            : OnoEmojiCatalog.byKey(selectedKey);
-
     return PressableScale(
       onTap: () {
         OnoEmojiPicker.show(
           context,
           selectedKey: _selectedMoodKey,
-          onSelected: (emoji) => setState(() => _selectedMoodKey = emoji.key),
+          onSelected: _onMoreMoodSelected,
         );
       },
       child: Container(
         width: 70,
-        padding:
-            picked == null ? null : const EdgeInsets.symmetric(vertical: 8),
         decoration: BoxDecoration(
-          color: picked == null
-              ? Colors.grey[50]
-              : themeProvider.primaryColor.withValues(alpha: 0.1),
+          color: Colors.grey[50],
           borderRadius: BorderRadius.circular(AppRadius.medium),
-          border: Border.all(
-            color:
-                picked == null ? AppColors.border : themeProvider.primaryColor,
-          ),
+          border: Border.all(color: AppColors.border),
         ),
-        child: picked == null
-            ? Icon(
-                Icons.more_horiz,
-                color: themeProvider.primaryColor,
-              )
-            : Column(
-                children: [
-                  OnoEmojiImage(emoji: picked, size: 54),
-                  const SizedBox(height: 4),
-                  Container(
-                    width: 5,
-                    height: 5,
-                    decoration: BoxDecoration(
-                      color: themeProvider.primaryColor,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                ],
-              ),
+        child: Icon(
+          Icons.more_horiz,
+          color: themeProvider.primaryColor,
+        ),
       ),
     );
+  }
+
+  void _onMoreMoodSelected(OnoEmoji emoji) {
+    if (!mounted) return;
+    setState(() {
+      _selectedMoodKey = emoji.key;
+      if (!_recommendedMoodKeys.contains(emoji.key)) {
+        _extraMoodKey = emoji.key;
+      }
+    });
+    if (_moodScrollController.hasClients) {
+      _moodScrollController.animateTo(
+        0,
+        duration: AppMotion.normal,
+        curve: AppMotion.standard,
+      );
+    }
   }
 
   Widget buildConfirmationButton(BuildContext context,
