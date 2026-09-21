@@ -19,6 +19,7 @@ import '../../Module/Design/AppColors.dart';
 import '../../Module/Design/AppToast.dart';
 import '../../Module/Motion/AppMotion.dart';
 import '../../Module/Motion/AppearTransition.dart';
+import '../../Util/AppAnalytics.dart';
 
 class AchievementCardScreen extends StatefulWidget {
   final UserInfoModel userInfo;
@@ -35,6 +36,12 @@ class AchievementCardScreen extends StatefulWidget {
 }
 
 class _AchievementCardScreenState extends State<AchievementCardScreen> {
+  @override
+  void initState() {
+    super.initState();
+    AppAnalytics.logScreenView('AchievementCardScreen');
+  }
+
   final GlobalKey _globalKey = GlobalKey();
   bool _isSharing = false;
 
@@ -85,6 +92,11 @@ class _AchievementCardScreenState extends State<AchievementCardScreen> {
         ),
       );
 
+      // 공유 창을 띄운 것과 실제로 보낸 것은 다르다. 끝까지 보냈는지 남긴다.
+      AppAnalytics.logEvent('share_result', {
+        'content_type': 'achievement_card',
+        'result': result.status.name,
+      });
       if (result.status == ShareResultStatus.success && mounted) {
         _showShareCompletedSnackBar();
       }

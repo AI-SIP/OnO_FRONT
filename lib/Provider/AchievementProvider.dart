@@ -6,6 +6,7 @@ import '../Model/Achievement/AchievementBoardModel.dart';
 import '../Model/Achievement/AchievementModel.dart';
 import '../Model/User/UserInfoModel.dart';
 import '../Service/Api/Achievement/AchievementService.dart';
+import '../Util/AppAnalytics.dart';
 import 'AchievementCelebrationStore.dart';
 
 /// 훈장판을 아직 받았는지.
@@ -168,6 +169,12 @@ class AchievementProvider with ChangeNotifier {
 
     final next = {..._pending, ...keys};
     if (next.length == _pending.length) return;
+
+    // 서버는 받은 순간의 응답에만 실어 주므로 여기가 받은 시점이다.
+    // GA4 추천 이벤트라 이름과 파라미터를 그대로 쓴다.
+    for (final key in next.difference(_pending)) {
+      AppAnalytics.logEvent('unlock_achievement', {'achievement_id': key});
+    }
 
     _pending = next;
     // 알리기 전에 앱이 내려가도 남아 있어야 한다.

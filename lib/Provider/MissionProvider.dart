@@ -3,6 +3,7 @@ import 'package:ono/Model/Mission/MissionClaimResultModel.dart';
 import 'package:ono/Model/Mission/MissionGroupModel.dart';
 import 'package:ono/Model/Mission/MissionModel.dart';
 import 'package:ono/Service/Api/Mission/MissionService.dart';
+import 'package:ono/Util/AppAnalytics.dart';
 import 'package:ono/Util/AppErrorReporter.dart';
 
 /// 미션 조회와 보상 받기를 들고 있는 프로바이더다.
@@ -178,6 +179,12 @@ class MissionProvider with ChangeNotifier {
     _lastClaimFailure = null;
     notifyListeners();
 
+    // 받기 전에 찾아 둔다. 받고 나면 보드가 바뀌어 지난 미션인지 알 수 없다.
+    final board = _board;
+    final mission = board == null ? null : _findIn(board, progressId);
+    final expired = board != null &&
+        board.expired.missions.any((m) => m.progressId == progressId);
+
     try {
       final result = await _missionService.claim(
         progressId,
@@ -188,6 +195,7 @@ class MissionProvider with ChangeNotifier {
         _locallyClaimedIds.add(result.progressId);
         _board = _board?.markClaimed(result.progressId);
       }
+      _logClaim(mission, expired: expired, result: result);
       return result;
     } catch (e, stackTrace) {
       debugPrint('MissionProvider claim error: $e');
@@ -201,6 +209,36 @@ class MissionProvider with ChangeNotifier {
     } finally {
       _claimingProgressIds.remove(progressId);
       notifyListeners();
+    }
+  }
+
+  /// 보상 받기와 그 결과로 오른 레벨을 남긴다. 어떤 미션을 끝까지 받는지,
+  /// 지난 미션을 챙겨 받는지를 본다.
+  void _logClaim(
+    MissionModel? mission, {
+    required bool expired,
+    required MissionClaimResultModel? result,
+  }) {
+    AppAnalytics.logEvent('mission_claim', {
+      'mission_code': mission?.code,
+      'period': mission?.category.raw.toLowerCase(),
+      'reward_value': result?.rewardValue ?? mission?.rewardValue,
+      'expired': expired,
+      'result':
+          result == null ? (_lastClaimFailure?.kind.name ?? 'fail') : 'success',
+    });
+    if (result == null) return;
+
+    final level = result.totalStudyLevel;
+    if (result.leveledUp && level != null) {
+      // GA4 추천 이벤트라 이름과 파라미터를 그대로 쓴다.
+      AppAnalytics.logEvent('level_up', {'level': level});
+    }
+    for (final unlocked in result.unlockedCosmetics) {
+      AppAnalytics.logEvent('cosmetic_unlock', {
+        'item_key': unlocked.itemKey,
+        'slot': unlocked.slot,
+      });
     }
   }
 

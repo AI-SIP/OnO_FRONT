@@ -19,6 +19,7 @@ import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Module/User/ProfileAvatar.dart';
 import '../../Provider/CosmeticProvider.dart';
+import '../../Util/AppAnalytics.dart';
 import 'CosmeticCombinationPreviewScreen.dart';
 import 'Widget/CosmeticCollectionMeter.dart';
 import 'Widget/CosmeticDebugLevelPanel.dart';
@@ -77,6 +78,7 @@ class _CosmeticClosetScreenState extends State<CosmeticClosetScreen> {
   @override
   void initState() {
     super.initState();
+    AppAnalytics.logScreenView('CosmeticClosetScreen');
     // 로그인 직후의 조회가 실패했으면 옷장이 비어 있다. 꾸미러 들어온 사람에게
     // 빈 화면만 보여 주고 끝낼 수는 없어서 여기서 한 번 더 받아 본다.
     //
@@ -119,6 +121,11 @@ class _CosmeticClosetScreenState extends State<CosmeticClosetScreen> {
     CosmeticItemModel item,
   ) {
     if (!item.owned) {
+      // 잠긴 것을 눌러 본 것은 그 아이템을 갖고 싶다는 신호라 따로 남긴다.
+      AppAnalytics.logEvent('cosmetic_locked_tap', {
+        ..._itemParams(item),
+        'required_level': item.requiredLevel,
+      });
       AppHaptic.secondary();
       final reason = cosmetic.lockReasonOf(item.itemKey);
       if (reason != null) AppToast.info(reason);
@@ -128,6 +135,10 @@ class _CosmeticClosetScreenState extends State<CosmeticClosetScreen> {
     AppHaptic.selection();
     final current = _fittingOf(cosmetic);
     final worn = current[slot.slot] == item.itemKey;
+    AppAnalytics.logEvent('cosmetic_try_on', {
+      ..._itemParams(item),
+      'action': worn ? 'remove' : 'wear',
+    });
     _wear(
       cosmetic.previewEquip(
         current,
@@ -136,6 +147,14 @@ class _CosmeticClosetScreenState extends State<CosmeticClosetScreen> {
       ),
     );
   }
+
+  /// Analytics 에 싣는 아이템 정보. 어느 능력치로 여는지는 `requiredAbility`
+  /// 가 없으면 총 학습 레벨이라 `total` 로 적는다.
+  static Map<String, Object?> _itemParams(CosmeticItemModel item) => {
+        'item_key': item.itemKey,
+        'slot': item.slot,
+        'category': item.requiredAbility?.key.toLowerCase() ?? 'total',
+      };
 
   /// 자리를 비운다. 이미 비어 있으면 아무 일도 하지 않는다.
   void _onEmptyTap(CosmeticProvider cosmetic, CosmeticSlotModel slot) {
@@ -177,7 +196,10 @@ class _CosmeticClosetScreenState extends State<CosmeticClosetScreen> {
 
     AppHaptic.primary();
     setState(() => _saving = true);
-    final saved = await cosmetic.save(_fittingOf(cosmetic));
+    final before = Map<String, String>.of(cosmetic.equipped);
+    final next = _fittingOf(cosmetic);
+    final saved = await cosmetic.save(next);
+    _logSave(saved: saved, before: before, next: next);
     if (!mounted) return;
 
     setState(() {
@@ -200,8 +222,35 @@ class _CosmeticClosetScreenState extends State<CosmeticClosetScreen> {
     AppToast.success(notice ?? '새 차림으로 갈아입었어요.');
   }
 
+  /// 저장 결과를 남긴다. 성공했으면 새로 걸친 아이템마다 하나씩 남겨서
+  /// 어떤 아이템을 실제로 입는지 센다. 입어 보기만 한 것은 [_onItemTap] 쪽이다.
+  static void _logSave({
+    required bool saved,
+    required Map<String, String> before,
+    required Map<String, String> next,
+  }) {
+    final added = [
+      for (final entry in next.entries)
+        if (before[entry.key] != entry.value) entry,
+    ];
+    AppAnalytics.logEvent('cosmetic_save', {
+      'result': saved ? 'success' : 'fail',
+      'count': next.length,
+      'changed_count': added.length +
+          before.keys.where((slot) => !next.containsKey(slot)).length,
+    });
+    if (!saved) return;
+    for (final entry in added) {
+      AppAnalytics.logEvent('cosmetic_equip', {
+        'item_key': entry.value,
+        'slot': entry.key,
+      });
+    }
+  }
+
   /// 입어 본 것을 버리고 원래 차림으로 돌아간다.
   void _onRevertTap() {
+    AppAnalytics.logEvent('cosmetic_revert');
     AppHaptic.selection();
     setState(() {
       _fitting = null;
@@ -261,6 +310,8 @@ class _CosmeticClosetScreenState extends State<CosmeticClosetScreen> {
         final navigator = Navigator.of(context);
         final leave = await _confirmDiscard(themeProvider.primaryColor);
         if (!leave) return;
+        // 입어 보고 저장하지 않은 채 나간 것. 저장 줄이 눈에 안 띄는지 본다.
+        AppAnalytics.logEvent('cosmetic_discard');
         navigator.pop();
       },
       child: _buildScaffold(
@@ -375,8 +426,12 @@ class _CosmeticClosetScreenState extends State<CosmeticClosetScreen> {
                             slots: slots,
                             index: slotIndex,
                             color: themeProvider.primaryColor,
-                            onChanged: (index) =>
-                                setState(() => _slotIndex = index),
+                            onChanged: (index) {
+                              AppAnalytics.logEvent('cosmetic_slot_view', {
+                                'slot': slots[index].slot,
+                              });
+                              setState(() => _slotIndex = index);
+                            },
                           ),
                         ],
                       ),

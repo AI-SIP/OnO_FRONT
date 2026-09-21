@@ -812,7 +812,7 @@ class _MissionLevelUpViewState extends State<_MissionLevelUpView>
     navigator.pop();
     showTossDialog(
       context: navigator.context,
-      builder: (_) => ThemeDialog(),
+      builder: (_) => ThemeDialog(source: 'level_up'),
     );
   }
 

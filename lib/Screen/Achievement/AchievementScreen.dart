@@ -13,6 +13,7 @@ import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/AchievementProvider.dart';
 import 'Widget/AchievementCard.dart';
+import '../../Util/AppAnalytics.dart';
 
 /// 받은 훈장과 아직 못 받은 훈장을 한 목록으로 보여 주는 화면이다.
 ///
@@ -48,6 +49,7 @@ class _AchievementScreenState extends State<AchievementScreen> {
   @override
   void initState() {
     super.initState();
+    AppAnalytics.logScreenView('AchievementScreen');
     WidgetsBinding.instance.addPostFrameCallback((_) => _loadAndCelebrate());
   }
 
