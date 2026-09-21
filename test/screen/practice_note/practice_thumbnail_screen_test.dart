@@ -7,6 +7,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:ono/Module/Emoji/OnoEmojiImage.dart';
 import 'package:ono/Module/Motion/Skeleton.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:ono/Model/Common/PaginatedResponse.dart';
@@ -121,7 +122,7 @@ void main() {
     expect(find.text('1회 복습'), findsOneWidget);
   });
 
-  testWidgets('지난 복습 소감이 있으면 날짜 아래에 이모지 이름이 보인다', (tester) async {
+  testWidgets('지난 복습 소감이 있으면 날짜 뒤에 그림만 붙는다', (tester) async {
     when(() => practiceNoteService.getPracticeNoteThumbnailsV2(
           cursor: null,
           size: 20,
@@ -138,9 +139,11 @@ void main() {
       practiceProvider: practiceProvider,
     );
 
-    // 소감이 없거나 이 앱이 모르는 키면 그 줄을 그리지 않는다.
-    expect(find.text('지난 소감'), findsOneWidget);
-    expect(find.text('멋짐'), findsOneWidget);
+    // 그림만 날짜 뒤에 붙고 이름은 길게 눌러야 뜬다. 소감이 없거나 이 앱이
+    // 모르는 키면 그리지 않는다.
+    expect(find.byTooltip('지난 소감: 멋짐'), findsOneWidget);
+    expect(find.byType(OnoEmojiImage), findsOneWidget);
+    expect(find.text('멋짐'), findsNothing);
   });
 
   testWidgets('복습 3회 이상이면 "복습 완료" 태그로 바뀐다', (tester) async {

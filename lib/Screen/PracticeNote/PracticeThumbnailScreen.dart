@@ -738,51 +738,44 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
             overflow: TextOverflow.ellipsis,
           ),
           const SizedBox(height: 5),
-          StandardText(
-            text:
-                '마지막 복습 날짜: ${formatDateTime(practice.lastSolvedAt) ?? '복습 기록 없음'}',
-            fontSize: 11,
-            color: Colors.grey,
+          Row(
+            children: [
+              Flexible(
+                child: StandardText(
+                  text:
+                      '마지막 복습 날짜: ${formatDateTime(practice.lastSolvedAt) ?? '복습 기록 없음'}',
+                  fontSize: 11,
+                  color: Colors.grey,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              ..._buildLastMood(practice),
+            ],
           ),
-          ..._buildLastMood(practice),
         ],
       ),
     );
   }
 
-  /// 지난 복습을 끝내고 고른 기분.
+  /// 지난 복습을 끝내고 고른 기분. 마지막 복습 날짜 바로 뒤에 붙는다.
   ///
   /// 상세 화면 위쪽에 따로 칸을 두었더니 통계와 문제 목록 사이에 끼어
-  /// 자리만 차지했다. 여러 세트를 훑어보는 목록에서 날짜 아래 한 줄로 본다.
+  /// 자리만 차지했다. 목록으로 옮기면서도 줄을 하나 더 쓰면 카드가 길어져서,
+  /// 날짜 줄 끝에 그림만 둔다. 복습을 마치며 직접 고른 그림이라 이름 없이도
+  /// 알아본다. 이름은 길게 누르면 뜨고 스크린 리더도 읽는다.
   /// 서버가 이 앱이 모르는 키를 보내면 [OnoEmojiCatalog.byKey] 가 null 을
-  /// 주는데, 그때는 줄 자체를 그리지 않는다.
+  /// 주는데, 그때는 그리지 않는다.
   List<Widget> _buildLastMood(PracticeNoteThumbnails practice) {
     final key = practice.lastSessionMoodEmojiKey;
     final emoji = key == null ? null : OnoEmojiCatalog.byKey(key);
     if (emoji == null) return const [];
 
     return [
-      const SizedBox(height: 4),
-      Row(
-        children: [
-          const StandardText(
-            text: '지난 소감',
-            fontSize: 11,
-            color: Colors.grey,
-          ),
-          const SizedBox(width: 4),
-          OnoEmojiImage(emoji: emoji, size: 18),
-          const SizedBox(width: 2),
-          Flexible(
-            child: StandardText(
-              text: emoji.label,
-              fontSize: 11,
-              color: AppColors.textSecondary,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        ],
+      const SizedBox(width: 4),
+      Tooltip(
+        message: '지난 소감: ${emoji.label}',
+        child: OnoEmojiImage(emoji: emoji, size: 18),
       ),
     ];
   }
