@@ -182,7 +182,8 @@ class _HandwritingRevealState extends State<HandwritingReveal>
           alignment: Alignment.centerLeft,
           clipBehavior: Clip.none,
           children: [
-            _mask(stroke.progress, text),
+            _mask(
+                stroke.progress, stroke.progress < 1 ? _clipRight(text) : text),
             if (widget.underline)
               Positioned.fill(
                 child: CustomPaint(
@@ -271,6 +272,15 @@ class _HandwritingRevealState extends State<HandwritingReveal>
     );
   }
 
+  /// 글자 상자 오른쪽으로 삐져나온 획을 쓰는 동안만 잘라 둔다.
+  ///
+  /// 손글씨 폰트는 마지막 글자(닫는 따옴표)가 상자 오른쪽 밖까지 그려진다.
+  /// [_mask] 의 가리개는 상자 안에만 덮이므로 그 조각만 처음부터 흐릿하게
+  /// 보였다. 다 쓰고 나면 자르지 않아 완성된 글씨는 그대로 남는다.
+  Widget _clipRight(Widget child) {
+    return ClipRect(clipper: const _RightEdgeClipper(), child: child);
+  }
+
   /// 적는 자리에 얹는 연필이다.
   ///
   /// 그림의 심이 왼쪽 아래 모서리에 있고 몸통이 오른쪽 위로 뻗어 있다. 그래서
@@ -345,6 +355,18 @@ class _StrokeState {
 }
 
 /// 문구 아래에 왼쪽부터 그어지는 선이다.
+/// 오른쪽만 상자 경계에서 자른다. 위아래와 왼쪽은 획이 넘쳐도 그대로 둔다.
+class _RightEdgeClipper extends CustomClipper<Rect> {
+  const _RightEdgeClipper();
+
+  @override
+  Rect getClip(Size size) =>
+      Rect.fromLTRB(-size.width, -size.height, size.width, size.height * 2);
+
+  @override
+  bool shouldReclip(covariant _RightEdgeClipper oldClipper) => false;
+}
+
 class _UnderlinePainter extends CustomPainter {
   final Color color;
 
