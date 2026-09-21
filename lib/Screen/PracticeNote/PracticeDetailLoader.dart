@@ -8,6 +8,7 @@ import '../../Module/Motion/Skeleton.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/PracticeNoteProvider.dart';
+import '../../Util/AppAnalytics.dart';
 import 'PracticeDetailScreen.dart';
 
 /// 복습 세트 화면을 먼저 열고, 그 안에서 세트를 불러온다.
@@ -41,6 +42,9 @@ class _PracticeDetailLoaderState extends State<PracticeDetailLoader> {
   @override
   void initState() {
     super.initState();
+    // 세트 화면은 StatelessWidget 이라 여기서 남긴다. 알림으로 바로 여는
+    // 경로는 NotificationService 에서 따로 남긴다.
+    AppAnalytics.logScreenView('PracticeDetailScreen');
     _load();
   }
 

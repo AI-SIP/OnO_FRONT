@@ -8,6 +8,7 @@ import 'package:ono/Module/Theme/ThemeHandler.dart';
 import 'package:ono/Provider/ReviewDueProvider.dart';
 import 'package:ono/Screen/ProblemDetail/ProblemDetailScreen.dart';
 import 'package:ono/Service/Api/Problem/ProblemService.dart';
+import 'package:ono/Util/AppAnalytics.dart';
 import 'package:provider/provider.dart';
 import '../../Module/Motion/AppHaptic.dart';
 import '../../Module/Motion/PressableScale.dart';
@@ -31,6 +32,7 @@ class _ReviewDueScreenState extends State<ReviewDueScreen> {
   void initState() {
     super.initState();
     FirebaseAnalytics.instance.logEvent(name: 'review_due_screen_view');
+    AppAnalytics.logScreenView('ReviewDueScreen');
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final provider = Provider.of<ReviewDueProvider>(context, listen: false);
       if (provider.data == null) {
@@ -192,6 +194,12 @@ class _ReviewDueScreenState extends State<ReviewDueScreen> {
       child: PressableScale(
         haptic: HapticLevel.none,
         onTap: () async {
+          // 추천 목록에서 실제로 문제를 여는지. 연속으로 맞힌 횟수가 적은
+          // 문제부터 여는지도 본다.
+          AppAnalytics.logEvent('review_due_problem_open', {
+            'review_interval': problem.reviewInterval,
+            'correct_streak': problem.consecutiveCorrectCount,
+          });
           await Navigator.push(
             context,
             TossPageRoute(

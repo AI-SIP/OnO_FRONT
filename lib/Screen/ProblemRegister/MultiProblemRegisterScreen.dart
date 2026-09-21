@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:camera/camera.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -28,6 +29,7 @@ import '../../Provider/UserProvider.dart';
 import '../../Service/Api/FileUpload/FileUploadService.dart';
 import '../../Service/Api/Problem/ProblemService.dart';
 import '../../Service/Api/Tag/TagService.dart';
+import '../../Util/AppAnalytics.dart';
 import '../../Util/AppErrorReporter.dart';
 import 'TagSelectionScreen.dart';
 import 'Widget/DatePickerWidget.dart';
@@ -84,6 +86,7 @@ class _MultiProblemRegisterScreenState
   @override
   void initState() {
     super.initState();
+    AppAnalytics.logScreenView('MultiProblemRegisterScreen');
     _selectedFolderId = widget.initialFolderId;
     _loadTags();
     _loadRecommendedTags();
@@ -138,6 +141,10 @@ class _MultiProblemRegisterScreenState
     setState(() => _isLoadingRecommendations = true);
     try {
       final recommended = await _tagService.recommendTags();
+      AppAnalytics.logEvent('tag_recommend_shown', {
+        'count': recommended.length,
+        'with_image': false,
+      });
       if (!mounted) return;
       setState(() {
         _recommendedTags
@@ -1455,6 +1462,7 @@ class _MultiProblemRegisterScreenState
       );
       return;
     }
+    AppAnalytics.logEvent('tag_recommend_apply', {'mode': 'multi'});
 
     selectedTagIds.add(tag.tagId);
     _mergeIntoAvailableTags([tag]);
@@ -1860,6 +1868,13 @@ class _MultiProblemRegisterScreenState
         setState(() => _isSubmitting = false);
       }
     }
+
+    // 한 장씩 등록과 같은 이벤트로 남겨야 오답노트를 쓴 사람 수가 맞는다.
+    // 몇 장을 한 번에 올렸는지는 count 로 따로 본다.
+    FirebaseAnalytics.instance.logEvent(
+      name: 'problem_created',
+      parameters: {'mode': 'multi', 'count': registeredProblemIds.length},
+    );
 
     if (!mounted) {
       progress.dispose();

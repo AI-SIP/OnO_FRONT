@@ -21,6 +21,7 @@ import '../../Module/Motion/TossDialog.dart';
 import '../../Module/Design/AppColors.dart';
 import '../../Module/Design/AppRadius.dart';
 import '../../Module/Design/AppSpacing.dart';
+import '../../Util/AppAnalytics.dart';
 
 class ProblemSolveRegisterTemplate extends StatefulWidget {
   final int problemId;
@@ -895,6 +896,12 @@ class _AnswerImagesScreen extends StatefulWidget {
 }
 
 class _AnswerImagesScreenState extends State<_AnswerImagesScreen> {
+  @override
+  void initState() {
+    super.initState();
+    AppAnalytics.logScreenView('AnswerImagesScreen');
+  }
+
   final PageController _pageController = PageController();
   int _currentPage = 0;
 

@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:camera/camera.dart';
-import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -36,6 +35,7 @@ import '../../Module/Motion/TossPageRoute.dart';
 import '../../Module/Motion/TossDialog.dart';
 import '../../Module/Design/AppColors.dart';
 import '../../Module/Design/AppRadius.dart';
+import '../../Util/AppAnalytics.dart';
 
 class ProblemRegisterTemplate extends StatefulWidget {
   final ProblemModel? problemModel;
@@ -528,6 +528,12 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
     setState(() => _isLoadingRecommendations = true);
     try {
       final recommended = await _tagService.recommendTags(imageUrls: imageUrls);
+      // 추천을 몇 개 보여 줬는지. 아래 tag_recommend_apply 와 나눠 보면
+      // 추천을 얼마나 받아들이는지 나온다.
+      AppAnalytics.logEvent('tag_recommend_shown', {
+        'count': recommended.length,
+        'with_image': imageUrls?.isNotEmpty ?? false,
+      });
       if (!mounted) return;
       setState(() {
         _recommendedTags
@@ -554,6 +560,7 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
       );
       return;
     }
+    AppAnalytics.logEvent('tag_recommend_apply', {'mode': 'single'});
     setState(() {
       _selectedTagIds.add(tag.tagId);
       _mergeIntoAvailableTags([tag]);
@@ -858,8 +865,21 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
   }
 
   Future<void> submit() async {
+    // 등록이 끝나면 resetAll 이 입력값을 비운다. 무엇을 채워 올렸는지는
+    // 지금 잡아 둔다.
+    final analyticsParams = <String, Object?>{
+      'problem_image_count':
+          _problemImages.length + _existingProblemImageUrls.length,
+      'answer_image_count':
+          _answerImages.length + _existingAnswerImageUrls.length,
+      'tag_count': _selectedTagIds.length,
+      'has_memo': _memoCtrl.text.trim().isNotEmpty,
+      'auto_title': !_hasUserEditedTitle,
+    };
+
     // 제목 필수 입력 검증
     if (_titleCtrl.text.trim().isEmpty) {
+      AppAnalytics.logEvent('problem_register_blocked', {'reason': 'title'});
       _showTitleRequiredDialog(context);
       return;
     }
@@ -868,6 +888,7 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
     if (!widget.isEditMode &&
         _problemImages.isEmpty &&
         _existingProblemImageUrls.isEmpty) {
+      AppAnalytics.logEvent('problem_register_blocked', {'reason': 'image'});
       _showProblemImageRequiredDialog(context);
       return;
     }
@@ -925,8 +946,13 @@ class ProblemRegisterTemplateState extends State<ProblemRegisterTemplate> {
 
     if (!mounted) return;
 
-    FirebaseAnalytics.instance.logEvent(
-      name: widget.isEditMode ? 'problem_updated' : 'problem_created',
+    AppAnalytics.logEvent(
+      widget.isEditMode ? 'problem_updated' : 'problem_created',
+      {
+        if (!widget.isEditMode) 'mode': 'single',
+        if (!widget.isEditMode) 'count': 1,
+        ...analyticsParams,
+      },
     );
 
     // 1차에서는 행동 응답에 미션 진행도가 실려 오지 않는다. 등록이 끝난 뒤

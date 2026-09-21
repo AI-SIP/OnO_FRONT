@@ -1,4 +1,3 @@
-import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 
 import '../Model/StudyRoom/ActivityFeedModel.dart';
@@ -12,6 +11,7 @@ import '../Model/StudyRoom/WeeklyReportModel.dart';
 import '../Module/Emoji/OnoEmojiCatalog.dart';
 import '../Service/Api/StudyRoom/StudyRoomService.dart';
 import '../Util/AppErrorReporter.dart';
+import '../Util/AppAnalytics.dart';
 
 class StudyRoomProvider extends ChangeNotifier {
   final StudyRoomService _service;
@@ -284,7 +284,10 @@ class StudyRoomProvider extends ChangeNotifier {
       await _reportReactionFailure(error, stackTrace);
       return;
     }
-    FirebaseAnalytics.instance.logEvent(name: 'feed_reaction_toggled');
+    AppAnalytics.logEvent('feed_reaction_toggled', {
+      'emoji': emojiKey,
+      'feed_type': feed.eventType,
+    });
     notifyListeners();
   }
 
@@ -317,7 +320,14 @@ class StudyRoomProvider extends ChangeNotifier {
       endAt: endAt,
     );
     challenges = [...challenges, newChallenge];
-    FirebaseAnalytics.instance.logEvent(name: 'challenge_created');
+    // 어떤 챌린지를 만드는지. 개인과 그룹, 무엇을 세는지, 기간과 목표를 본다.
+    AppAnalytics.logEvent('challenge_created', {
+      'scope': type,
+      'metric': metric,
+      'period': period ?? 'once',
+      'period_days': periodDays,
+      'target_value': targetValue,
+    });
     notifyListeners();
   }
 
@@ -326,6 +336,7 @@ class StudyRoomProvider extends ChangeNotifier {
     if (roomId == null) return;
     await _service.deleteChallenge(roomId: roomId, challengeId: challengeId);
     challenges = challenges.where((c) => c.challengeId != challengeId).toList();
+    AppAnalytics.logEvent('challenge_deleted');
     notifyListeners();
   }
 
@@ -356,6 +367,7 @@ class StudyRoomProvider extends ChangeNotifier {
     );
     sharedProblems.removeWhere((s) => s.sharedProblemId == sharedProblemId);
     sharedProblemComments.remove(sharedProblemId);
+    AppAnalytics.logEvent('shared_problem_deleted');
     notifyListeners();
   }
 
@@ -410,7 +422,7 @@ class StudyRoomProvider extends ChangeNotifier {
       await _reportReactionFailure(error, stackTrace);
       return;
     }
-    FirebaseAnalytics.instance.logEvent(name: 'problem_reaction_toggled');
+    AppAnalytics.logEvent('problem_reaction_toggled', {'emoji': emojiKey});
     notifyListeners();
   }
 
@@ -477,6 +489,7 @@ class StudyRoomProvider extends ChangeNotifier {
             .map(
                 (comment) => comment.commentId == commentId ? updated : comment)
             .toList();
+    AppAnalytics.logEvent('comment_updated');
     notifyListeners();
   }
 
@@ -491,6 +504,7 @@ class StudyRoomProvider extends ChangeNotifier {
       sharedProblemId: sharedProblemId,
       commentId: commentId,
     );
+    AppAnalytics.logEvent('comment_deleted');
     sharedProblemComments[sharedProblemId] =
         (sharedProblemComments[sharedProblemId] ?? const [])
             .where((comment) => comment.commentId != commentId)
@@ -523,7 +537,7 @@ class StudyRoomProvider extends ChangeNotifier {
       commentId: commentId,
       emoji: emojiKey,
     );
-    FirebaseAnalytics.instance.logEvent(name: 'comment_reaction_toggled');
+    AppAnalytics.logEvent('comment_reaction_toggled', {'emoji': emojiKey});
     notifyListeners();
   }
 

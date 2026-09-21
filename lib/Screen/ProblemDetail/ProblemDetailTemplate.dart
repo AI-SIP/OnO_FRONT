@@ -17,6 +17,7 @@ import '../../Module/Motion/AppMotion.dart';
 import '../../Module/Motion/SelectionPop.dart';
 import '../../Module/Design/AppColors.dart';
 import '../../Module/Design/AppRadius.dart';
+import '../../Util/AppAnalytics.dart';
 
 class ProblemDetailTemplate extends StatefulWidget {
   final ProblemModel problemModel;
@@ -49,6 +50,9 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
       // 넘겼을 때 탭 표시가 이전 자리에 머물러 있었다.
       if (_tabController.index == _currentTabIndex) return;
       AppHaptic.selection();
+      AppAnalytics.logEvent('problem_detail_tab', {
+        'tab': const ['problem', 'answer', 'history'][_tabController.index],
+      });
       setState(() {
         _currentTabIndex = _tabController.index;
       });

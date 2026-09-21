@@ -13,6 +13,7 @@ import '../../Module/Motion/Skeleton.dart';
 import '../../Module/Motion/TossDialog.dart';
 import '../../Module/Design/AppColors.dart';
 import '../../Module/Design/AppRadius.dart';
+import '../../Util/AppAnalytics.dart';
 
 class TagSelectionResult {
   final List<int> selectedTagIds;
@@ -51,6 +52,7 @@ class _TagSelectionScreenState extends State<TagSelectionScreen> {
   @override
   void initState() {
     super.initState();
+    AppAnalytics.logScreenView('TagSelectionScreen');
     _selectedTagIds.addAll(widget.initialSelectedTagIds);
     _tags.addAll(widget.initialTags);
     _loadTags();
@@ -424,6 +426,9 @@ class _TagSelectionScreenState extends State<TagSelectionScreen> {
                                   await _tagService.deleteTags(
                                     selectedDeleteTagIds.toList(),
                                   );
+                                  AppAnalytics.logEvent('tag_deleted', {
+                                    'count': selectedDeleteTagIds.length,
+                                  });
                                   if (!mounted) return;
                                   setState(() {
                                     _tags.removeWhere((tag) =>
@@ -581,6 +586,11 @@ class _TagSelectionScreenState extends State<TagSelectionScreen> {
       return;
     }
 
+    // 태그를 몇 개씩 붙이는지, 전체 태그를 얼마나 만들어 두는지 본다.
+    AppAnalytics.logEvent('tag_select_confirm', {
+      'count': _selectedTagIds.length,
+      'total_tag_count': _tags.length,
+    });
     Navigator.of(context).pop(
       TagSelectionResult(
         selectedTagIds: _selectedTagIds.toList(),

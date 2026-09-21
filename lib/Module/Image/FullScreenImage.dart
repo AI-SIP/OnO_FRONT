@@ -14,6 +14,7 @@ import '../Design/AppRadius.dart';
 import '../Dialog/SnackBarDialog.dart';
 import '../Motion/AppHaptic.dart';
 import '../Text/StandardText.dart';
+import '../../Util/AppAnalytics.dart';
 
 /// 이미지를 전체 화면으로 크게 보는 화면이다.
 ///
@@ -79,6 +80,10 @@ class _FullScreenImageState extends State<FullScreenImage> {
 
   bool get _isGallery => widget.imagePaths.length > 1;
 
+  // Analytics 용. 넘겨 볼 때마다 남기지 않고 닫을 때 한 번에 남긴다.
+  final Set<int> _viewedIndexes = {};
+  bool _everZoomed = false;
+
   @override
   void initState() {
     super.initState();
@@ -86,6 +91,8 @@ class _FullScreenImageState extends State<FullScreenImage> {
         ? widget.initialIndex.clamp(0, widget.imagePaths.length - 1)
         : 0;
     _pageController = PageController(initialPage: _current);
+    _viewedIndexes.add(_current);
+    AppAnalytics.logScreenView('FullScreenImage');
     _thumbnailController = ScrollController();
     _zoomControllers = List.generate(
       widget.imagePaths.length,
@@ -95,6 +102,12 @@ class _FullScreenImageState extends State<FullScreenImage> {
 
   @override
   void dispose() {
+    // 여러 장을 넘겨 보는지, 확대해서 보는지. 이미지 보기를 손볼 때 기준이다.
+    AppAnalytics.logEvent('image_viewer_close', {
+      'image_count': widget.imagePaths.length,
+      'viewed_count': _viewedIndexes.length,
+      'zoomed': _everZoomed,
+    });
     _pageController.dispose();
     _thumbnailController.dispose();
     for (final controller in _zoomControllers) {
@@ -108,6 +121,7 @@ class _FullScreenImageState extends State<FullScreenImage> {
     if (_zoomControllers.isEmpty) return;
     final scale = _zoomControllers[_current].value.getMaxScaleOnAxis();
     final zoomed = scale > 1.01;
+    if (zoomed) _everZoomed = true;
     if (zoomed != _zoomed) {
       setState(() => _zoomed = zoomed);
     }
@@ -118,6 +132,7 @@ class _FullScreenImageState extends State<FullScreenImage> {
     // 떠나는 장의 확대를 풀어 둔다. 되돌아왔을 때 키워 둔 채로 있으면
     // 어디를 보고 있었는지 알 수 없다.
     _zoomControllers[_current].value = Matrix4.identity();
+    _viewedIndexes.add(index);
     setState(() {
       _current = index;
       _zoomed = false;
@@ -243,6 +258,9 @@ class _FullScreenImageState extends State<FullScreenImage> {
       );
       if (!mounted) return;
 
+      AppAnalytics.logEvent('image_download', {
+        'result': result['isSuccess'] == true ? 'success' : 'fail',
+      });
       if (result['isSuccess'] == true) {
         AppHaptic.primary();
         SnackBarDialog.showSnackBar(

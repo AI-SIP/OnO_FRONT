@@ -4,6 +4,7 @@ import 'package:ono/Screen/ProblemRegister/Widget/ActionButtons.dart';
 import 'package:provider/provider.dart';
 
 import '../../Model/Problem/ProblemModel.dart';
+import '../../Util/AppAnalytics.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 
@@ -26,6 +27,14 @@ class ProblemRegisterScreen extends StatefulWidget {
 class _ProblemRegisterScreenState extends State<ProblemRegisterScreen> {
   final GlobalKey<ProblemRegisterTemplateState> _templateKey =
       GlobalKey<ProblemRegisterTemplateState>();
+
+  @override
+  void initState() {
+    super.initState();
+    AppAnalytics.logScreenView(
+      widget.isEditMode ? 'ProblemEditScreen' : 'ProblemRegisterScreen',
+    );
+  }
 
   @override
   Widget build(BuildContext context) {

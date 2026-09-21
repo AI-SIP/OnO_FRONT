@@ -10,6 +10,7 @@ import '../../Module/Motion/PressableScale.dart';
 import '../../Module/Motion/AppMotion.dart';
 import '../../Module/Design/AppRadius.dart';
 import '../../Module/Design/AppColors.dart';
+import '../../Util/AppAnalytics.dart';
 
 class ProblemSolveEntry {
   static Future<bool?> open({
@@ -32,6 +33,14 @@ class ProblemSolveEntry {
     if (mode == null || !context.mounted) {
       return null;
     }
+
+    // 종이에 풀고 기록만 남기는지, 앱 안 캔버스에 푸는지. 문제 이미지가
+    // 없으면 캔버스를 골라도 기록 화면으로 간다.
+    AppAnalytics.logEvent('solve_mode_select', {
+      'mode': mode == _ProblemSolveMode.offline || problemImageUrls.isEmpty
+          ? 'offline'
+          : 'canvas',
+    });
 
     if (mode == _ProblemSolveMode.offline) {
       return Navigator.push<bool>(

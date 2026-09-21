@@ -14,6 +14,7 @@ import 'MissionIcon.dart';
 import 'MissionPalette.dart';
 import 'MissionPeriodLabel.dart';
 import 'MissionRewardChip.dart';
+import '../../Util/AppAnalytics.dart';
 
 /// 지금까지 받은 보상을 모아 보여 주는 화면이다.
 ///
@@ -79,6 +80,7 @@ class _MissionHistoryScreenState extends State<MissionHistoryScreen> {
   @override
   void initState() {
     super.initState();
+    AppAnalytics.logScreenView('MissionHistoryScreen');
     _scrollController.addListener(_onScroll);
     WidgetsBinding.instance.addPostFrameCallback((_) => _loadMore());
   }

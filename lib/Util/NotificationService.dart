@@ -22,6 +22,7 @@ import '../Screen/ReviewDue/ReviewDueScreen.dart';
 import '../Screen/StudyRoom/SharedProblemDetailScreen.dart';
 import '../Screen/StudyRoom/StudyRoomDetailScreen.dart';
 import '../Service/Api/HttpService.dart';
+import 'AppAnalytics.dart';
 import 'AppErrorReporter.dart';
 import 'AppNavigator.dart';
 import '../Module/Motion/TossPageRoute.dart';
@@ -237,11 +238,16 @@ class NotificationService {
     // 포그라운드 메시지
     FirebaseMessaging.onMessage.listen((msg) {
       debugPrint('Foreground message: ${msg.notification?.title}');
+      AppAnalytics.logEvent('push_receive', {
+        'notification_type': _typeOf(msg.data),
+        'entry': 'foreground',
+      });
     });
 
     // 백그라운드 상태에서 알림 탭
     FirebaseMessaging.onMessageOpenedApp.listen((msg) {
       debugPrint('Notification tapped (background), data: ${msg.data}');
+      _logPushOpen(msg.data, entry: 'background');
       _handleNotificationNavigation(msg.data);
     });
 
@@ -252,6 +258,7 @@ class NotificationService {
         // type 만 들고 있으면 problemId, roomId 같이 화면을 여는 데 필요한
         // 값이 사라진다. data 를 통째로 들고 있는다.
         _pendingNotificationData = Map<String, dynamic>.from(msg.data);
+        _logPushOpen(msg.data, entry: 'terminated');
       }
     });
 
@@ -284,6 +291,27 @@ class NotificationService {
     if (data == null) return;
     _pendingNotificationData = null;
     _handleNotificationNavigation(data);
+  }
+
+  /// 알림 종류. 옛 형식은 type 없이 practiceId 만 온다.
+  static String _typeOf(Map<String, dynamic> data) {
+    final type = data['type']?.toString();
+    if (type != null && type.isNotEmpty) return type;
+    return data.containsKey('practiceId') ? 'practice_legacy' : 'unknown';
+  }
+
+  /// 알림을 눌러 들어온 것을 남긴다. 어떤 알림이 사람을 다시 데려오는지 본다.
+  ///
+  /// FCM 이 자동으로 남기는 notification_open 은 콘솔에서 보낸 알림만 세서,
+  /// 서버가 보내는 복습 알림은 잡히지 않는다.
+  static void _logPushOpen(
+    Map<String, dynamic> data, {
+    required String entry,
+  }) {
+    AppAnalytics.logEvent('push_open', {
+      'notification_type': _typeOf(data),
+      'entry': entry,
+    });
   }
 
   void _handleNotificationNavigation(Map<String, dynamic> data) {
@@ -416,6 +444,7 @@ class NotificationService {
 
       final current = AppNavigator.navigatorKey.currentState;
       if (current == null) return;
+      AppAnalytics.logScreenView('PracticeDetailScreen');
       current.push(
         TossPageRoute(builder: (_) => PracticeDetailScreen(practice: practice)),
       );

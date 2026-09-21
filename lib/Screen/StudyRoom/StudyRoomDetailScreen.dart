@@ -25,6 +25,7 @@ import '../../Module/Motion/TossDialog.dart';
 import '../../Module/Motion/AppMotion.dart';
 import '../../Module/Design/AppColors.dart';
 import '../../Module/Design/AppRadius.dart';
+import '../../Util/AppAnalytics.dart';
 
 class StudyRoomDetailScreen extends StatefulWidget {
   final int roomId;
@@ -43,6 +44,7 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
   @override
   void initState() {
     super.initState();
+    AppAnalytics.logScreenView('StudyRoomDetailScreen');
     _tabController = TabController(length: 4, vsync: this);
     _tabController.addListener(_handleTabChanged);
     FirebaseAnalytics.instance.logEvent(name: 'study_room_detail_view');
@@ -71,7 +73,25 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
     super.dispose();
   }
 
+  /// Analytics 에 싣는 탭 이름. 탭 순서와 같다.
+  static const List<String> _analyticsTabs = [
+    'ranking',
+    'challenge',
+    'shared',
+    'activity',
+  ];
+
+  int? _loggedTabIndex;
+
   void _handleTabChanged() {
+    // 밀어 넘기는 동안에도 불려서, 자리를 잡은 탭만 한 번 남긴다.
+    final index = _tabController.index;
+    if (!_tabController.indexIsChanging && _loggedTabIndex != index) {
+      _loggedTabIndex = index;
+      AppAnalytics.logEvent('study_room_tab_view', {
+        'tab': _analyticsTabs[index],
+      });
+    }
     if (_tabController.index != 2 && !_showSharedTabChrome) {
       setState(() => _showSharedTabChrome = true);
     }
@@ -89,7 +109,8 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
     Future.delayed(const Duration(milliseconds: 600), () {
       if (!mounted) return;
       final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
-      WeeklyReportSheet.show(context, report, themeProvider, onClose: () {
+      WeeklyReportSheet.show(context, report, themeProvider, source: 'auto',
+          onClose: () {
         provider.markReportRead();
       });
     });
@@ -109,6 +130,7 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
   ) async {
     try {
       final code = await provider.generateInviteCode(widget.roomId);
+      AppAnalytics.logEvent('invite_code_issued');
       if (!context.mounted) return;
       InviteCodeSheet.show(
         context,
@@ -161,6 +183,10 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
     );
     if (confirmed == true && context.mounted) {
       await provider.leaveRoom(widget.roomId);
+      AppAnalytics.logEvent('study_room_leave', {
+        'is_host': isHost,
+        'member_count': room?.members.length,
+      });
       if (context.mounted) Navigator.pop(context);
     }
   }
@@ -182,6 +208,7 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
     );
     if (confirmed == true && context.mounted) {
       await provider.deleteRoom(widget.roomId);
+      AppAnalytics.logEvent('study_room_delete');
       if (context.mounted) Navigator.pop(context);
     }
   }
@@ -1114,6 +1141,9 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
                                       await provider.kickMember(
                                         room.roomId,
                                         member.userId,
+                                      );
+                                      AppAnalytics.logEvent(
+                                        'study_room_kick_member',
                                       );
                                       if (context.mounted) {
                                         Navigator.pop(context);

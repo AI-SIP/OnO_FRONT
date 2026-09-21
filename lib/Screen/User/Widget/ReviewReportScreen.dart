@@ -18,6 +18,7 @@ import '../../../Module/Motion/AppearTransition.dart';
 import '../../../Module/Design/AppColors.dart';
 import '../../../Module/Design/AppRadius.dart';
 import '../../../Module/Design/AppSpacing.dart';
+import 'package:ono/Util/AppAnalytics.dart';
 
 enum ReportPeriod { weekly, monthly, total }
 
@@ -43,6 +44,7 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
   @override
   void initState() {
     super.initState();
+    AppAnalytics.logScreenView('ReviewReportScreen');
     _fetchReport();
   }
 
@@ -472,6 +474,7 @@ class _ReviewReportScreenState extends State<ReviewReportScreen> {
       child: PressableScale(
         haptic: HapticLevel.selection,
         onTap: () {
+          AppAnalytics.logEvent('report_period_view', {'period': period.name});
           setState(() {
             _selectedPeriod = period;
           });

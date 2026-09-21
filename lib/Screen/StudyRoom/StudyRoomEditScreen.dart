@@ -12,6 +12,7 @@ import 'Widget/StudyRoomThumbnail.dart';
 import '../../Module/Design/AppLayout.dart';
 import '../../Module/Design/AppRadius.dart';
 import '../../Module/Design/AppColors.dart';
+import '../../Util/AppAnalytics.dart';
 
 class StudyRoomEditScreen extends StatefulWidget {
   final StudyRoomModel room;
@@ -31,6 +32,7 @@ class _StudyRoomEditScreenState extends State<StudyRoomEditScreen> {
   @override
   void initState() {
     super.initState();
+    AppAnalytics.logScreenView('StudyRoomEditScreen');
     _nameController = TextEditingController(text: widget.room.name);
   }
 

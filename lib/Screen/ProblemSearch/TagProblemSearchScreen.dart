@@ -20,6 +20,7 @@ import '../../Module/Motion/Skeleton.dart';
 import '../../Module/Motion/TossPageRoute.dart';
 import '../../Module/Design/AppColors.dart';
 import '../../Module/Design/AppRadius.dart';
+import '../../Util/AppAnalytics.dart';
 
 enum _SearchMode { tag, title }
 
@@ -61,6 +62,7 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
   @override
   void initState() {
     super.initState();
+    AppAnalytics.logScreenView('TagProblemSearchScreen');
     _selectedProblems.addAll(widget.initialSelectedProblems);
     _scrollController.addListener(_onScroll);
     _queryController.addListener(_onQueryChanged);
@@ -163,6 +165,14 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
         cursor: isInitial ? null : _cursor,
         size: 20,
       );
+      if (isInitial) {
+        // 검색어는 보내지 않는다. 무엇으로 찾고 몇 개가 나오는지만 본다.
+        AppAnalytics.logEvent('problem_search', {
+          'mode': 'tag',
+          'result_count': response.content.length,
+          'has_next': response.hasNext,
+        });
+      }
       if (!mounted) return;
       setState(() {
         if (isInitial) {
@@ -215,6 +225,14 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
         cursor: isInitial ? null : _cursor,
         size: 20,
       );
+      if (isInitial) {
+        // 검색어는 보내지 않는다. 무엇으로 찾고 몇 개가 나오는지만 본다.
+        AppAnalytics.logEvent('problem_search', {
+          'mode': 'title',
+          'result_count': response.content.length,
+          'has_next': response.hasNext,
+        });
+      }
       if (!mounted) return;
       setState(() {
         if (isInitial) {
@@ -594,6 +612,7 @@ class _TagProblemSearchScreenState extends State<TagProblemSearchScreen> {
             _toggleProblemSelection(problem);
             return;
           }
+          AppAnalytics.logEvent('search_result_open', {'mode': _mode.name});
           await Navigator.push(
             context,
             TossPageRoute(

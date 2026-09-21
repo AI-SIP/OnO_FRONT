@@ -31,6 +31,9 @@ class AppAnalytics {
   static const String _daysSinceSignup = 'days_since_signup';
   static const String _hasProfileImage = 'has_profile_image';
 
+  /// 지금 쓰는 테마 색 이름. 기기에 저장되는 값이라 로그아웃해도 지우지 않는다.
+  static const String themeColorProperty = 'theme_color';
+
   static const List<String> _allProperties = [
     _loginMethod,
     _totalStudyLevel,
@@ -42,6 +45,115 @@ class AppAnalytics {
     _daysSinceSignup,
     _hasProfileImage,
   ];
+
+  /// 이 빌드가 Analytics 를 보내도 되는지.
+  ///
+  /// Firebase 프로젝트가 운영과 개발에 하나뿐이라, 개발 서버 빌드나 로컬
+  /// 디버그 실행에서 누른 것까지 운영 통계에 섞였다. 운영 서버를 붙인 릴리즈
+  /// 빌드만 보낸다. 기준은 Sentry 가 `production` 으로 치는 빌드와 같다.
+  static bool shouldCollect({
+    required String appEnv,
+    required bool isReleaseMode,
+  }) {
+    return isReleaseMode && appEnv == 'prod';
+  }
+
+  /// [shouldCollect] 에 따라 수집을 켜거나 끈다. Firebase 초기화 직후에 부른다.
+  ///
+  /// 네이티브 SDK 가 앱 시작과 함께 보내는 자동 이벤트는 이 호출보다 먼저
+  /// 나갈 수 있다. 끄는 값은 기기에 남아서 다음 실행부터는 처음부터 꺼진다.
+  static Future<void> applyCollectionPolicy() async {
+    try {
+      await FirebaseAnalytics.instance.setAnalyticsCollectionEnabled(
+        shouldCollect(
+          appEnv: const String.fromEnvironment('ENV', defaultValue: 'local'),
+          isReleaseMode: kReleaseMode,
+        ),
+      );
+    } catch (error) {
+      debugPrint('[AppAnalytics] 수집 설정 실패: $error');
+    }
+  }
+
+  /// 이벤트를 남긴다. 새로 더하는 이벤트는 모두 이것을 거친다.
+  ///
+  /// 이름 규칙과 파라미터 이름은 `docs/애널리틱스 지표/이벤트 목록.md` 에
+  /// 모아 두었다. 파라미터는 콘솔에 맞춤 측정기준으로 등록해야 보고서에
+  /// 나오고 등록 한도가 50개라, 새 이름을 만들기 전에 목록에 있는 것을
+  /// 먼저 쓴다.
+  ///
+  /// Firebase 는 파라미터 값으로 문자열과 숫자만 받는다. bool 은 문자열로
+  /// 바꾸고, 100자를 넘는 문자열은 잘라서 보낸다. 수집에 실패해도 앱 동작에
+  /// 영향이 없도록 예외를 삼킨다.
+  static void logEvent(String name, [Map<String, Object?>? parameters]) {
+    try {
+      FirebaseAnalytics.instance
+          .logEvent(name: name, parameters: _sanitize(parameters))
+          .catchError((Object error) {
+        debugPrint('[AppAnalytics] $name 기록 실패: $error');
+      });
+    } catch (error) {
+      debugPrint('[AppAnalytics] $name 기록 실패: $error');
+    }
+  }
+
+  static Map<String, Object>? _sanitize(Map<String, Object?>? parameters) {
+    if (parameters == null) return null;
+    final result = <String, Object>{};
+    parameters.forEach((key, value) {
+      if (value == null) return;
+      if (value is bool) {
+        result[key] = value.toString();
+      } else if (value is num) {
+        result[key] = value;
+      } else {
+        final text = value.toString();
+        result[key] = text.length <= 100 ? text : text.substring(0, 100);
+      }
+    });
+    return result;
+  }
+
+  /// 방금 가입한 계정으로 보이는지.
+  ///
+  /// 서버가 로그인 응답에 신규 가입 여부를 실어 주지 않아서 계정이 만들어진
+  /// 시각으로 판단한다. 튜토리얼을 자동으로 띄우는 기준(30분)보다 좁게 잡아서
+  /// 가입하고 바로 다시 로그인한 사람을 가입으로 두 번 세지 않는다.
+  static bool looksLikeSignUp(DateTime? createdAt, {DateTime? now}) {
+    if (createdAt == null) return false;
+    final elapsed = (now ?? DateTime.now()).difference(createdAt);
+    return !elapsed.isNegative && elapsed < const Duration(minutes: 10);
+  }
+
+  /// 로그인과 상관없는 앱 설정을 유저 속성으로 남긴다. 값이 null 이면 지운다.
+  ///
+  /// 지금 쓰는 테마처럼 기기에 저장되는 값이라 [identify] 와 따로 둔다.
+  static void setUserProperty(String name, String? value) {
+    try {
+      _set(name, value).catchError((Object error) {
+        debugPrint('[AppAnalytics] $name 속성 저장 실패: $error');
+      });
+    } catch (error) {
+      debugPrint('[AppAnalytics] $name 속성 저장 실패: $error');
+    }
+  }
+
+  /// 하단 탭이 아닌 화면에 들어왔음을 남긴다. 화면의 `initState` 에서 부른다.
+  ///
+  /// 화면 이동에 이름을 주지 않아서 `FirebaseAnalyticsObserver` 가 하위 화면을
+  /// 하나도 기록하지 못했다. 들어오는 경로가 여러 곳이라 이동마다 이름을
+  /// 다는 대신 화면 쪽에서 한 번 남긴다.
+  static void logScreenView(String screenName) {
+    try {
+      FirebaseAnalytics.instance
+          .logScreenView(screenName: screenName, screenClass: screenName)
+          .catchError((Object error) {
+        debugPrint('[AppAnalytics] 화면 기록 실패: $error');
+      });
+    } catch (error) {
+      debugPrint('[AppAnalytics] 화면 기록 실패: $error');
+    }
+  }
 
   /// 로그인한 유저를 식별시키고 유저 속성을 갱신한다.
   ///

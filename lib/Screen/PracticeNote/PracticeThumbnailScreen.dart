@@ -25,6 +25,7 @@ import '../../Module/Motion/TossPageRoute.dart';
 import '../../Module/Motion/TossDialog.dart';
 import '../../Module/Design/AppColors.dart';
 import '../../Module/Design/AppRadius.dart';
+import '../../Util/AppAnalytics.dart';
 
 class PracticeThumbnailScreen extends StatefulWidget {
   final TutorialTargets? tutorialTargets;
@@ -464,6 +465,10 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
                               context,
                               listen: false);
                           await provider.deletePractices(deletePracticeIds);
+                          AppAnalytics.logEvent('practice_set_deleted', {
+                            'count': deletePracticeIds.length,
+                            'source': 'list',
+                          });
 
                           setState(() {
                             _isSelectionMode = false;

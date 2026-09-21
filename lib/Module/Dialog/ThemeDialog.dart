@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../Model/User/UserInfoModel.dart';
 import '../../Provider/UserProvider.dart';
+import '../../Util/AppAnalytics.dart';
 import '../../Screen/Mission/MissionPalette.dart';
 import '../Design/AppColors.dart';
 import '../Design/AppRadius.dart';
@@ -78,7 +79,10 @@ class ThemeDialog extends StatefulWidget {
   // const 로 만들지 않는다. 이미 `ThemeDialog()` 로 부르는 자리가 둘 있어서
   // 생성자만 const 로 바꾸면 그쪽에 prefer_const_constructors 가 새로 뜬다.
   // ignore: prefer_const_constructors_in_immutables
-  ThemeDialog({super.key});
+  ThemeDialog({super.key, this.source = 'mypage'});
+
+  /// 어디서 열었는지. Analytics 에 그대로 실린다 (`mypage`, `level_up`).
+  final String source;
 
   /// 격자 한 칸의 키. 칸이 다시 그려져도 같은 칸으로 이어진다.
   ///
@@ -184,6 +188,20 @@ class _ThemeDialogState extends State<ThemeDialog> {
     _selectedIndex = null;
   }
 
+  /// Analytics 에 싣는 능력치 이름. [ThemeLockManager] 의 열 순서와 같다.
+  static const List<String> _analyticsCategories = [
+    'attendance',
+    'note_write',
+    'problem_practice',
+    'note_practice',
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    AppAnalytics.logEvent('theme_dialog_open', {'source': widget.source});
+  }
+
   void _select(int index) {
     setState(() {
       _selectedColor = ThemeLockManager.getThemeColor(index);
@@ -198,6 +216,18 @@ class _ThemeDialogState extends State<ThemeDialog> {
   /// 예전에는 창 위에 창을 하나 더 띄웠다. 조건 하나 보자고 화면을 덮는 것은
   /// 과했고, 확인을 누르고 돌아와야 다음 칸을 볼 수 있었다.
   void _inspect(int index) {
+    // 잠긴 색을 눌러 본 것은 그 색을 갖고 싶다는 신호라 따로 남긴다.
+    final userInfo =
+        Provider.of<UserProvider>(context, listen: false).userInfoModel;
+    AppAnalytics.logEvent('theme_locked_tap', {
+      'color': ThemeLockManager.getThemeName(index),
+      'category':
+          _analyticsCategories[ThemeLockManager.getCategoryIndex(index)],
+      'required_level': ThemeLockManager.getRequiredLevel(
+        ThemeLockManager.getRowIndex(index),
+      ),
+      'level_gap': ThemeLockManager.getRemainingLevel(index, userInfo),
+    });
     setState(() => _inspectedIndex = index);
   }
 
@@ -222,6 +252,17 @@ class _ThemeDialogState extends State<ThemeDialog> {
     }
 
     AppHaptic.primary();
+    // 이미 쓰던 색을 다시 적용한 것은 바꾼 것으로 세지 않는다.
+    if (color != themeProvider.primaryColor) {
+      final index = _selectedIndex;
+      AppAnalytics.logEvent('theme_color_change', {
+        'color': name,
+        'category': index == null
+            ? null
+            : _analyticsCategories[ThemeLockManager.getCategoryIndex(index)],
+        'source': widget.source,
+      });
+    }
     themeProvider.changePrimaryColor(color, name);
 
     if (AppMotion.isReduced(context)) {

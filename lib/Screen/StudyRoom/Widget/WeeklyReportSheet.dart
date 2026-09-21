@@ -1,4 +1,3 @@
-import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 
 import '../../../Model/StudyRoom/WeeklyReportModel.dart';
@@ -8,6 +7,7 @@ import '../../../Module/User/ProfileAvatar.dart';
 import '../../../Module/Motion/AppMotion.dart';
 import '../../../Module/Design/AppColors.dart';
 import '../../../Module/Design/AppRadius.dart';
+import '../../../Util/AppAnalytics.dart';
 
 class WeeklyReportSheet extends StatelessWidget {
   final WeeklyReportModel report;
@@ -24,8 +24,10 @@ class WeeklyReportSheet extends StatelessWidget {
     WeeklyReportModel report,
     ThemeHandler themeProvider, {
     VoidCallback? onClose,
+    String source = 'menu',
   }) {
-    FirebaseAnalytics.instance.logEvent(name: 'weekly_report_viewed');
+    // 방에 들어올 때 저절로 뜬 것(auto)과 메뉴에서 찾아 연 것(menu)을 가른다.
+    AppAnalytics.logEvent('weekly_report_viewed', {'source': source});
     return showModalBottomSheet(
       sheetAnimationStyle: AppMotion.sheetStyle,
       context: context,

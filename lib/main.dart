@@ -36,6 +36,7 @@ import 'Screen/StudyRoom/StudyRoomListScreen.dart';
 import 'Screen/Tutorial/TutorialOverlay.dart';
 import 'Screen/Tutorial/TutorialTargets.dart';
 import 'Screen/User/MyPageScreen.dart';
+import 'Util/AppAnalytics.dart';
 import 'Util/AppErrorReporter.dart';
 import 'Util/AppNavigator.dart';
 import 'Util/AppSnackBar.dart';
@@ -117,6 +118,7 @@ Future<void> _bootstrapApp() async {
   await AppConfig.load();
 
   await initializeOnOFirebaseApp();
+  await AppAnalytics.applyCollectionPolicy();
 
   await NotificationService.instance.init();
   FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
@@ -340,7 +342,16 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
     final notice = await _noticeService.getActiveNotice();
     if (notice == null || !mounted) return;
 
+    AppAnalytics.logEvent('notice_view', {
+      'notice_id': notice.noticeId,
+      'notice_type': notice.type.name,
+    });
     final result = await ServiceNoticeDialog.show(context, notice);
+    // 닫기, 다시 보지 않기, 바깥을 눌러 닫기(null) 중 무엇을 고르는지 본다.
+    AppAnalytics.logEvent('notice_close', {
+      'notice_id': notice.noticeId,
+      'result': result?.name ?? 'outside',
+    });
     if (result == NoticeDialogResult.dismissed) {
       await _noticeService.dismissNotice(notice.noticeId);
     }

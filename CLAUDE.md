@@ -39,6 +39,12 @@ flutter run                      # 실행
 - 불확실하면 추정하지 말고 먼저 드러냄.
 - 관련 기획/개발 문서: `docs/` 우선 참고.
 
+## 지표 수집 (Firebase Analytics)
+
+- 새 화면은 `initState` 에서 `AppAnalytics.logScreenView('화면이름')`, 새 행동은 성공한 뒤 `AppAnalytics.logEvent`.
+- 이름 규칙, 파라미터 사전, 콘솔 등록 목록: `docs/애널리틱스 지표/이벤트 목록.md` (8절이 새 기능 체크리스트).
+- `test/util/analytics_*_test.dart` 가 이름 규칙과 화면 조회 누락을 막는다.
+
 ## UI 원칙
 
 폰·태블릿 모두 1차 환경. 모든 UI는 반응형 기본. 고정 width/height 지양.

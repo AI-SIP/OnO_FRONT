@@ -43,6 +43,7 @@ import '../Tutorial/TutorialTargets.dart';
 import '../../Module/Motion/TossDialog.dart';
 import '../../Module/Design/AppColors.dart';
 import '../../Module/Design/AppRadius.dart';
+import 'package:ono/Util/AppAnalytics.dart';
 
 class DirectoryScreen extends StatefulWidget {
   final int? folderId; // 이 화면이 표시할 폴더 ID
@@ -801,7 +802,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
   Future<void> _navigateToSingleProblemRegisterInCurrentFolder() async {
     FirebaseAnalytics.instance
-        .logEvent(name: 'directory_create_single_problem_note_click');
+        .logEvent(name: 'directory_create_single_note_click');
 
     if (_currentFolder == null) return;
 
@@ -830,7 +831,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
   Future<void> _navigateToMultiProblemRegisterInCurrentFolder() async {
     FirebaseAnalytics.instance
-        .logEvent(name: 'directory_create_multi_problem_note_click');
+        .logEvent(name: 'directory_create_multi_note_click');
 
     if (_currentFolder == null) return;
 
@@ -1060,6 +1061,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     try {
       await foldersProvider.updateFolder(
           newName, _currentFolder!.folderId, null);
+      AppAnalytics.logEvent('folder_renamed');
     } on ApiException catch (e) {
       if (mounted) {
         SnackBarDialog.showSnackBar(
@@ -1863,13 +1865,11 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
     if (!deleted || !mounted) return;
 
-    FirebaseAnalytics.instance.logEvent(
-      name: 'items_deleted',
-      parameters: {
-        'folder_count': folderIds.length,
-        'problem_count': problemIds.length,
-      },
-    );
+    AppAnalytics.logEvent('items_deleted', {
+      'folder_count': folderIds.length,
+      'problem_count': problemIds.length,
+      'source': 'selection',
+    });
 
     setState(() {
       _isSelectionMode = false;
@@ -1903,13 +1903,19 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     final confirmed = await _showDeleteConfirmDialog(message: confirmMessage);
     if (!confirmed || !mounted) return;
 
-    await _deleteItems(
+    final deleted = await _deleteItems(
       folderIds: folderIds,
       problemIds: problemIds,
       loadingMessage: '삭제 중...',
       successMessage: successMessage,
       errorMessage: '삭제 중 오류가 발생했습니다.',
     );
+    if (!deleted) return;
+    AppAnalytics.logEvent('items_deleted', {
+      'folder_count': folderIds.length,
+      'problem_count': problemIds.length,
+      'source': 'drag',
+    });
   }
 
   Future<bool> _deleteItems({
@@ -2113,17 +2119,17 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       return;
     }
 
-    FirebaseAnalytics.instance.logEvent(name: 'folder_move', parameters: {
-      'folder_id': folder.folderId,
-      'target_folder_id': newParentFolderId,
-    });
-
     final foldersProvider =
         Provider.of<FoldersProvider>(context, listen: false);
 
     // 폴더 업데이트 (서버 + 메타데이터 갱신)
     await foldersProvider.updateFolder(
         folder.folderName, folder.folderId, newParentFolderId);
+    // 옮기기가 끝난 뒤에 남긴다. 예전에는 요청 전에 남겨서 실패도 셌다.
+    AppAnalytics.logEvent('folder_move', {
+      'folder_id': folder.folderId,
+      'target_folder_id': newParentFolderId,
+    });
 
     // 출발지 폴더 캐시 갱신 (이동한 폴더가 목록에서 사라지도록)
     if (_currentFolder != null) {
@@ -2152,11 +2158,6 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
       return; // 문제 ID 또는 폴더 ID가 null이면 실행하지 않음
     }
 
-    FirebaseAnalytics.instance.logEvent(name: 'problem_path_edit', parameters: {
-      'problem_id': problemRegisterModel.problemId!,
-      'target_folder_id': problemRegisterModel.folderId!,
-    });
-
     final problemsProvider =
         Provider.of<ProblemsProvider>(context, listen: false);
     final foldersProvider =
@@ -2164,6 +2165,10 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
     // 문제 업데이트 (서버 + ProblemsProvider 캐시 갱신)
     await problemsProvider.updateProblem(problemRegisterModel);
+    AppAnalytics.logEvent('problem_path_edit', {
+      'problem_id': problemRegisterModel.problemId,
+      'target_folder_id': problemRegisterModel.folderId,
+    });
 
     // 출발지 폴더 캐시 갱신 (이동한 문제가 목록에서 사라지도록)
     if (_currentFolder != null) {

@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -20,6 +19,7 @@ import '../../Module/Motion/AppearTransition.dart';
 import '../../Module/Design/AppColors.dart';
 import '../../Module/Design/AppRadius.dart';
 import '../../Module/Design/AppToast.dart';
+import '../../Util/AppAnalytics.dart';
 
 class PracticeCompletionScreen extends StatefulWidget {
   final int practiceId;
@@ -47,6 +47,12 @@ class _PracticeCompletionScreenState extends State<PracticeCompletionScreen> {
   /// 확인을 또 누르면 횟수가 그만큼 쌓였다. 저장에 성공하면 화면이 닫힐
   /// 때까지 다시 켜지 않는다.
   bool _submitting = false;
+
+  @override
+  void initState() {
+    super.initState();
+    AppAnalytics.logScreenView('PracticeCompletionScreen');
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -253,8 +259,13 @@ class _PracticeCompletionScreenState extends State<PracticeCompletionScreen> {
                     return;
                   }
                   if (!mounted) return;
-                  FirebaseAnalytics.instance
-                      .logEvent(name: 'practice_session_completed');
+                  // 세트를 끝까지 푼 것. 몇 문제짜리를 몇 번째로 끝냈는지와
+                  // 기분을 고르는지를 본다.
+                  AppAnalytics.logEvent('practice_session_completed', {
+                    'problem_count': widget.totalProblems,
+                    'round': widget.practiceRound,
+                    'mood': _selectedMoodKey ?? 'none',
+                  });
 
                   // 1차에서는 행동 응답에 미션 진행도가 실려 오지 않는다. 세트를
                   // 끝낸 뒤 다시 조회해야 미션이 바로 반영된다.

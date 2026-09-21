@@ -1,6 +1,8 @@
-import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+
+import '../../Util/AppAnalytics.dart';
+import 'ThemeLockManager.dart';
 
 class ThemeHandler with ChangeNotifier {
   // 기본 색상
@@ -36,8 +38,9 @@ class ThemeHandler with ChangeNotifier {
     saveColor('darkPrimaryColor', _darkPrimaryColor);
     saveColor('desaturateColor', _desaturateColor);
 
-    FirebaseAnalytics.instance
-        .logEvent(name: 'theme_color_change_to_$colorName');
+    // 바꾼 이벤트는 어디서 바꿨는지 아는 ThemeDialog 가 남긴다. 여기서는
+    // 지금 쓰는 테마를 유저 속성으로 둬서, 어떤 색을 가장 많이 쓰는지 본다.
+    AppAnalytics.setUserProperty(AppAnalytics.themeColorProperty, colorName);
     notifyListeners();
   }
 
@@ -50,7 +53,21 @@ class ThemeHandler with ChangeNotifier {
         await loadColor('darkPrimaryColor', darkenColor(Colors.pink[200]!));
     _desaturateColor =
         await loadColor('desaturateColor', desaturatenColor(Colors.pink[200]!));
+    AppAnalytics.setUserProperty(
+      AppAnalytics.themeColorProperty,
+      _themeNameOf(_primaryColor),
+    );
     notifyListeners();
+  }
+
+  /// 테마 목록에서 이 색의 이름을 찾는다. 목록에 없는 색이면 `기타` 다.
+  static String _themeNameOf(Color color) {
+    for (int i = 0; i < ThemeLockManager.themeCount; i++) {
+      if (ThemeLockManager.getThemeColor(i) == color) {
+        return ThemeLockManager.getThemeName(i);
+      }
+    }
+    return '기타';
   }
 
   // 색상을 저장하는 메서드

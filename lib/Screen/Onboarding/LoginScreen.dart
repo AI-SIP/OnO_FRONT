@@ -18,6 +18,7 @@ import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/UserProvider.dart';
 import '../../main.dart';
 import 'OnboardingBrand.dart';
+import '../../Util/AppAnalytics.dart';
 
 /// 로그인 화면이다.
 ///
@@ -38,6 +39,12 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  @override
+  void initState() {
+    super.initState();
+    AppAnalytics.logScreenView('LoginScreen');
+  }
+
   /// 로그인 버튼 묶음의 최대 폭.
   ///
   /// 예전에는 화면 폭의 80% 였는데, 태블릿에서는 버튼 하나가 화면을 가로질러

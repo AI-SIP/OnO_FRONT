@@ -18,6 +18,7 @@ import 'MissionClaimScope.dart';
 import 'MissionHeroCard.dart';
 import 'MissionHistoryScreen.dart';
 import 'MissionSegments.dart';
+import '../../Util/AppAnalytics.dart';
 
 /// 일일 미션과 주간 미션을 보여 주고 보상을 받는 화면이다.
 ///
@@ -56,6 +57,7 @@ class _MissionScreenState extends State<MissionScreen> {
   @override
   void initState() {
     super.initState();
+    AppAnalytics.logScreenView('MissionScreen');
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       Provider.of<MissionProvider>(context, listen: false).fetchMissions();
@@ -149,6 +151,9 @@ class _MissionScreenState extends State<MissionScreen> {
                           index: _tabIndex,
                           color: themeProvider.primaryColor,
                           onChanged: (index) => setState(() {
+                            AppAnalytics.logEvent('mission_tab_view', {
+                              'period': index == 0 ? 'daily' : 'weekly',
+                            });
                             _tabIndex = index;
                             // 탭을 옮긴 뒤로는 목록이 하나씩 올라오지 않는다.
                             _entryPlayed = true;

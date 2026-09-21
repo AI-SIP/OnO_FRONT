@@ -6,6 +6,7 @@ import 'package:ono/Model/PracticeNote/PracticeNoteUpdateModel.dart';
 import 'package:ono/Module/Dialog/SnackBarDialog.dart';
 import 'package:ono/Provider/PracticeNoteProvider.dart';
 import 'package:ono/Screen/ProblemRegister/ProblemRegisterScreen.dart';
+import 'package:ono/Util/AppAnalytics.dart';
 import 'package:ono/Util/AppErrorReporter.dart';
 import 'package:provider/provider.dart';
 
@@ -52,6 +53,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
   @override
   void initState() {
     super.initState();
+    AppAnalytics.logScreenView('ProblemDetailScreen');
     _setProblemModel();
   }
 
@@ -128,6 +130,16 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
         final problem = await problemsProvider.getProblem(problemId);
 
         // 분석이 완료되거나 실패하거나 이미지가 없으면 폴링 중지
+        final status = problem.analysis?.status;
+        if (status == ProblemAnalysisStatus.COMPLETED ||
+            status == ProblemAnalysisStatus.FAILED ||
+            status == ProblemAnalysisStatus.NO_IMAGE) {
+          // 등록하면 AI 분석이 뒤에서 돈다. 얼마나 성공하는지 본다.
+          AppAnalytics.logEvent('problem_analysis_result', {
+            'result': status!.name.toLowerCase(),
+            'poll_count': _pollingCount,
+          });
+        }
         if (problem.analysis?.status == ProblemAnalysisStatus.COMPLETED) {
           debugPrint('✅ Analysis completed - polling stopped');
           _stopAnalysisPolling();
@@ -348,7 +360,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
   void _showActionDialog(
       ProblemModel problemModel, ThemeHandler themeProvider) {
     FirebaseAnalytics.instance
-        .logEvent(name: 'problem_detail_screen_action_dialog_button_click');
+        .logEvent(name: 'problem_detail_action_dialog_click');
 
     final openTime = DateTime.now();
     showModalBottomSheet(
@@ -860,6 +872,9 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
         );
       }
 
+      AppAnalytics.logEvent('practice_set_add_problem', {
+        'set_count': practiceIds.length,
+      });
       if (!mounted) return;
       LoadingDialog.hide(context);
       SnackBarDialog.showSnackBar(
@@ -956,9 +971,6 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                     Expanded(
                       child: TextButton(
                         onPressed: () async {
-                          FirebaseAnalytics.instance
-                              .logEvent(name: 'problem_delete');
-
                           // context가 유효할 때 Provider와 Navigator 가져오기
                           final problemsProvider =
                               Provider.of<ProblemsProvider>(context,
@@ -974,6 +986,11 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                           try {
                             // 삭제 작업 수행
                             await problemsProvider.deleteProblems([problemId]);
+                            // 예전에는 삭제를 요청하기 전에 남겨서 실패도 셌다.
+                            AppAnalytics.logEvent('problem_delete', {
+                              'count': 1,
+                              'source': 'detail',
+                            });
                             //await practiceProvider.fetchAllPracticeContents();
 
                             if (mounted) {

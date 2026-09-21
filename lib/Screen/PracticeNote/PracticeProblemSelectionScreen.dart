@@ -32,6 +32,7 @@ import '../../Module/Motion/Skeleton.dart';
 import '../../Module/Motion/TossDialog.dart';
 import '../../Module/Design/AppColors.dart';
 import '../../Module/Design/AppRadius.dart';
+import 'package:ono/Util/AppAnalytics.dart';
 
 enum _PracticeSearchMode { folder, tag, title }
 
@@ -80,6 +81,7 @@ class _PracticeProblemSelectionScreenState
   @override
   void initState() {
     super.initState();
+    AppAnalytics.logScreenView('PracticeProblemSelectionScreen');
     _folderScrollController = ScrollController();
     _problemScrollController = ScrollController();
     _folderScrollController.addListener(_onFolderScroll);

@@ -19,6 +19,7 @@ import '../../Util/NotificationService.dart';
 import '../../main.dart';
 import 'LoginScreen.dart';
 import 'OnboardingBrand.dart';
+import '../../Util/AppAnalytics.dart';
 
 /// 앱을 켜면 제일 먼저 뜨는 화면이다.
 ///
@@ -121,6 +122,7 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
+    AppAnalytics.logScreenView('SplashScreen');
     unawaited(_start());
   }
 
@@ -204,6 +206,8 @@ class _SplashScreenState extends State<SplashScreen> {
     if (_navigated) return;
 
     if (result == _LoginCheck.unreachable) {
+      // 서버에 닿지 못해 첫 화면에 묶인 것. 얼마나 자주 겪는지 본다.
+      AppAnalytics.logEvent('splash_unreachable', {'retry': _unreachable});
       // 로그인 화면으로 보내지 않는다. 토큰이 살아 있는 사람에게 다시
       // 로그인하라고 하는 셈이고, 뒤늦게 연결되면 그 화면에서 홈으로 튄다.
       if (!_unreachable) setState(() => _unreachable = true);

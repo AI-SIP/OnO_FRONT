@@ -12,6 +12,7 @@ import '../Motion/PressableScale.dart';
 import '../Motion/AppMotion.dart';
 import '../Design/AppColors.dart';
 import '../Design/AppRadius.dart';
+import 'package:ono/Util/AppAnalytics.dart';
 
 /// 이미지를 어디서 가져올지.
 enum ImageSourceChoice { camera, gallery }
@@ -231,11 +232,24 @@ class ImagePickerHandler {
 
     if (choice == ImageSourceChoice.camera) {
       FirebaseAnalytics.instance.logEvent(name: 'image_select_camera');
-      return pickImagesFromCamera(context, maxShots: maxShots);
+      return _logPicked(
+        'camera',
+        await pickImagesFromCamera(context, maxShots: maxShots),
+      );
     }
 
     FirebaseAnalytics.instance.logEvent(name: 'image_select_multiple_gallery');
-    return pickMultipleImagesFromGallery(context);
+    return _logPicked('gallery', await pickMultipleImagesFromGallery(context));
+  }
+
+  /// 실제로 받은 장수를 남긴다. image_select_* 는 어디서 가져올지 고른
+  /// 순간이라, 카메라나 앨범을 열었다가 그냥 닫은 것도 센다.
+  static List<XFile> _logPicked(String source, List<XFile> files) {
+    AppAnalytics.logEvent('image_picked', {
+      'source': source,
+      'count': files.length,
+    });
+    return files;
   }
 
   Future<void> showImagePicker(
@@ -258,7 +272,9 @@ class ImagePickerHandler {
       // 한꺼번에 나가고, 태그 추천은 응답 순서가 보장되지 않아 마지막에
       // 도착한 것이 이긴다. 카메라로 여러 장을 이어 찍는 길은 그것을 감당하게
       // 만든 여러 장 작성 화면(pickMultipleImages)에만 낸다.
-      onImagePicked(await pickImageFromCamera(context, accent: accent));
+      final file = await pickImageFromCamera(context, accent: accent);
+      _logPicked('camera', [if (file != null) file]);
+      onImagePicked(file);
       return;
     }
 
@@ -267,12 +283,15 @@ class ImagePickerHandler {
     );
 
     if (multiple) {
-      final pickedFiles = await pickMultipleImagesFromGallery(context);
+      final pickedFiles =
+          _logPicked('gallery', await pickMultipleImagesFromGallery(context));
       if (pickedFiles.isNotEmpty) onMultipleImagesPicked(pickedFiles);
       return;
     }
 
-    onImagePicked(await pickImageFromGallery(context, accent: accent));
+    final file = await pickImageFromGallery(context, accent: accent);
+    _logPicked('gallery', [if (file != null) file]);
+    onImagePicked(file);
   }
 
   Widget _buildActionItem({
