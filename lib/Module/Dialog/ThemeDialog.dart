@@ -897,7 +897,7 @@ class _ThemeCell extends StatelessWidget {
             peak: 1.12,
             child: isUnlocked
                 ? _buildUnlockedSwatch(color)
-                : _buildLockedSwatch(color, colors, requiredLevel),
+                : _buildLockedSwatch(color, requiredLevel),
           ),
         ),
       ),
@@ -950,12 +950,11 @@ class _ThemeCell extends StatelessWidget {
   }
 
   /// 잠긴 색. 필요한 레벨이 칸 안에 적혀 있다.
-  Widget _buildLockedSwatch(
-    Color color,
-    MissionKindColors colors,
-    int requiredLevel,
-  ) {
+  Widget _buildLockedSwatch(Color color, int requiredLevel) {
     final highlight = isNextGoal || isInspected;
+    // 테두리는 미션 칸의 색이 아니라 그 테마색을 조금 진하게 쓴다. 칸 색을
+    // 쓰면 출석은 빨강, 오답노트는 보라처럼 테마와 상관없는 색이 둘러졌다.
+    final edge = ThemeHandler.darkenColor(color, amount: 0.15);
 
     return AnimatedContainer(
       duration: duration,
@@ -967,9 +966,9 @@ class _ThemeCell extends StatelessWidget {
         color: _lockedTint(color, highlight ? 0.34 : 0.20),
         border: Border.all(
           color: isInspected
-              ? colors.accent
+              ? edge
               : (isNextGoal
-                  ? colors.accent.withValues(alpha: 0.55)
+                  ? edge.withValues(alpha: 0.55)
                   : Colors.transparent),
           width: isInspected ? 2 : 1.5,
         ),
@@ -983,7 +982,7 @@ class _ThemeCell extends StatelessWidget {
               text: 'Lv.$requiredLevel',
               fontSize: 9,
               fontWeight: FontWeight.w700,
-              color: highlight ? colors.accent : AppColors.textTertiary,
+              color: highlight ? edge : AppColors.textTertiary,
               maxLines: 1,
             ),
           ),
