@@ -8,9 +8,11 @@ import 'package:flutter_test/flutter_test.dart';
 /// 그렇게 한 번도 콘솔에 들어가지 못했는데, 앱에서는 아무 표시가 없어서
 /// 콘솔과 코드를 대조하기 전까지 몰랐다 (#275).
 void main() {
-  // logEvent(name: '...') 와 TutorialProvider 의 _logEvent('...') 둘 다 잡는다.
+  // logEvent(name: '...'), AppAnalytics.logEvent('...'), TutorialProvider 의
+  // _logEvent('...') 를 모두 잡는다. 이름을 삼항식으로 고르는 곳
+  // (problem_created / problem_updated)은 따옴표로 시작하지 않아 빠진다.
   final pattern = RegExp(
-    r"""(?:logEvent\(\s*name:\s*|_logEvent\()'([^']*)'""",
+    r"""(?:logEvent\(\s*name:\s*|logEvent\(\s*)'([^']*)'""",
   );
   // 이름에 변수를 붙이는 곳은 변수 앞 고정 부분만 본다.
   final interpolation = RegExp(r'\$');

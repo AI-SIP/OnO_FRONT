@@ -183,6 +183,70 @@ void main() {
     });
   });
 
+  group('looksLikeSignUp', () {
+    final now = DateTime(2026, 9, 21, 12);
+
+    test('계정이 10분 안에 만들어졌으면 가입으로 본다', () {
+      expect(
+        AppAnalytics.looksLikeSignUp(
+          now.subtract(const Duration(minutes: 3)),
+          now: now,
+        ),
+        isTrue,
+      );
+    });
+
+    test('오래된 계정의 로그인은 가입이 아니다', () {
+      expect(
+        AppAnalytics.looksLikeSignUp(
+          now.subtract(const Duration(minutes: 10)),
+          now: now,
+        ),
+        isFalse,
+      );
+      expect(AppAnalytics.looksLikeSignUp(null, now: now), isFalse);
+    });
+
+    test('기기 시계가 서버보다 늦어 미래로 보여도 가입으로 세지 않는다', () {
+      expect(
+        AppAnalytics.looksLikeSignUp(
+          now.add(const Duration(minutes: 1)),
+          now: now,
+        ),
+        isFalse,
+      );
+    });
+  });
+
+  group('logEvent', () {
+    test('bool 은 문자열로 바꾸고 null 인 값은 빼고 보낸다', () async {
+      AppAnalytics.logEvent('sample_event', {
+        'flag': true,
+        'count': 3,
+        'empty': null,
+        'label': 'abc',
+      });
+      await Future<void>.delayed(Duration.zero);
+
+      expect(analyticsRecorder.loggedEvents, ['sample_event']);
+      expect(analyticsRecorder.loggedParameters.single, {
+        'flag': 'true',
+        'count': 3,
+        'label': 'abc',
+      });
+    });
+
+    test('100자를 넘는 문자열은 잘라서 보낸다', () async {
+      AppAnalytics.logEvent('sample_event', {'text': 'a' * 150});
+      await Future<void>.delayed(Duration.zero);
+
+      expect(
+        (analyticsRecorder.loggedParameters.single!['text'] as String).length,
+        100,
+      );
+    });
+  });
+
   group('logScreenView', () {
     test('화면 이름을 screen_view 로 남긴다', () async {
       AppAnalytics.logScreenView('ProblemDetailScreen');
