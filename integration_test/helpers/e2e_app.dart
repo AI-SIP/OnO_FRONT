@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ono/main.dart' as app;
+import 'package:ono/Util/AppErrorReporter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// 앱을 처음 설치한 상태로 띄우고 [body] 를 돌린다.
@@ -30,6 +31,8 @@ Future<void> runFreshApp(
   await prefs.clear();
 
   final testOnError = FlutterError.onError;
+  // 테스트의 실패와 시드 데이터가 Sentry 와 Discord 에 운영 이슈처럼 쌓였다.
+  AppErrorReporter.enabled = false;
   unawaited(app.main());
   try {
     await body();
