@@ -12,7 +12,7 @@ import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/PracticeNoteProvider.dart';
 import '../../Util/AppSnackBar.dart';
 import '../Tutorial/TutorialTargets.dart';
-import 'PracticeDetailScreen.dart';
+import 'PracticeDetailLoader.dart';
 import 'PracticeProblemSelectionScreen.dart';
 import '../../Module/Motion/AppMotion.dart';
 import '../../Module/Motion/AppearTransition.dart';
@@ -618,7 +618,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
                 : _selectedPracticeIds.add(practice.practiceId);
           });
         } else {
-          _navigateToPracticeDetail(practice.practiceId);
+          _navigateToPracticeDetail(practice);
         }
       },
       child: Padding(
@@ -641,24 +641,35 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
     );
   }
 
-  void _navigateToPracticeDetail(int practiceId) async {
+  /// 복습 세트 화면이 열려 있는 동안 켜 둔다. 화면이 넘어가는 애니메이션
+  /// 사이에 한 번 더 눌려도 두 번 쌓이지 않게 한다.
+  bool _openingPractice = false;
+
+  void _navigateToPracticeDetail(PracticeNoteThumbnails practice) async {
+    if (_openingPractice) return;
+    _openingPractice = true;
+
     final practiceProvider =
         Provider.of<ProblemPracticeProvider>(context, listen: false);
+    final practiceId = practice.practiceId;
 
-    // 로딩 다이얼로그를 띄우지 않는다. 떴다 사라진 다음 화면이 넘어가서
-    // 한 번 눌렀는데 두 번 바뀌는 것처럼 보였다. 누른 항목이 줄어드는 것으로
-    // 눌린 것은 이미 알 수 있고, 열린 화면은 자기 자리를 잡으며 나타난다.
-    await practiceProvider.fetchPracticeNote(practiceId);
-    await practiceProvider.moveToPractice(practiceId);
-    if (!mounted) return;
-
-    final result = await Navigator.push<bool>(
-      context,
-      TossPageRoute(
-        builder: (context) => PracticeDetailScreen(
-            practice: practiceProvider.currentPracticeNote!),
-      ),
-    );
+    // 불러오기를 기다리지 않고 화면부터 넘긴다. 세트는 넘어간 화면 안에서
+    // 불러온다. 기다리는 동안 목록이 그대로 있으면 다른 세트를 또 눌러 두
+    // 화면이 겹쳐 쌓였다.
+    final bool? result;
+    try {
+      result = await Navigator.push<bool>(
+        context,
+        TossPageRoute(
+          builder: (context) => PracticeDetailLoader(
+            practiceId: practiceId,
+            title: practice.practiceTitle,
+          ),
+        ),
+      );
+    } finally {
+      _openingPractice = false;
+    }
 
     // 복습을 완료한 경우(result == true)에만 해당 썸네일 업데이트
     if (result == true) {

@@ -106,10 +106,19 @@ class ProblemPracticeProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  /// 가장 최근에 시작한 [moveToPractice] 의 번호.
+  ///
+  /// 복습 세트를 열어 두고 불러오는 사이에 다른 세트를 열면 두 불러오기가
+  /// 겹친다. 늦게 끝난 쪽이 먼저 연 세트라면 그 결과로 덮지 않는다.
+  int _moveGeneration = 0;
+
   Future<void> moveToPractice(int practiceId) async {
+    final generation = ++_moveGeneration;
     final targetPractice = await getPracticeNote(practiceId);
 
-    currentProblems.clear();
+    // 다 모은 뒤에 한 번에 바꾼다. 공유 목록에 바로 넣으면 겹친 불러오기가
+    // 서로의 문제를 섞어 넣는다.
+    final loadedProblems = <ProblemModel>[];
 
     // 복습 세트의 각 문제를 서버에서 조회 (지연 로딩 대응)
     for (var problemId in targetPractice.problemIdList) {
@@ -124,7 +133,7 @@ class ProblemPracticeProvider with ChangeNotifier {
           await problemsProvider.fetchProblem(problemId);
           problemModel = await problemsProvider.getProblem(problemId);
         }
-        currentProblems.add(problemModel);
+        loadedProblems.add(problemModel);
       } catch (e, stackTrace) {
         debugPrint('Error loading problem $problemId: $e');
         debugPrint('Stack trace: $stackTrace');
@@ -138,8 +147,11 @@ class ProblemPracticeProvider with ChangeNotifier {
       }
     }
 
+    if (generation != _moveGeneration) return;
+
     debugPrint(
-        'Moved to practice: $practiceId, loaded ${currentProblems.length}/${targetPractice.problemIdList.length} problems');
+        'Moved to practice: $practiceId, loaded ${loadedProblems.length}/${targetPractice.problemIdList.length} problems');
+    currentProblems = loadedProblems;
     currentPracticeNote = targetPractice;
     notifyListeners();
   }
