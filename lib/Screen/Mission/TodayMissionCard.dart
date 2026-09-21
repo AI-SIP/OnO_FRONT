@@ -45,7 +45,7 @@ class TodayMissionCard extends StatelessWidget {
 
     return Padding(
       // 아래에 추천 복습 배너가 이어 붙는다. 둘이 세로로 쌓이면 홈 위쪽이
-      // 무거워지므로 사이를 좁히고 이 카드 자체도 납작하게 둔다.
+      // 무거워지므로 사이를 좁힌다.
       padding: const EdgeInsets.only(bottom: AppSpacing.sm),
       child: PressableScale(
         onTap: () {
@@ -55,10 +55,8 @@ class TodayMissionCard extends StatelessWidget {
           );
         },
         child: Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.md,
-            vertical: AppSpacing.sm + 2,
-          ),
+          // 바로 아래 추천 복습 배너와 같은 크기로 보이도록 안쪽 여백을 맞춘다.
+          padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(AppRadius.large),
@@ -125,7 +123,7 @@ class TodayMissionCard extends StatelessWidget {
                         ],
                       ],
                     ),
-                    const SizedBox(height: AppSpacing.xs),
+                    const SizedBox(height: AppSpacing.sm),
                     AnimatedLinearGauge(
                       value: ratio.toDouble(),
                       color: themeProvider.primaryColor,
