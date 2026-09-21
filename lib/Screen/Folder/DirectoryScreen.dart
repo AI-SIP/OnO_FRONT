@@ -1413,15 +1413,14 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         },
         child: LongPressDraggable<FolderThumbnailModel>(
           data: folder,
-          feedback: Material(
-            child: SizedBox(
-              width: 50,
-              height: 70,
-              child: ClayIcon(
-                NoteIconHandler.getNoteIcon(index), // 헬퍼 클래스로 아이콘 설정
-                width: 50,
-                height: 50,
-              ),
+          dragAnchorStrategy: pointerDragAnchorStrategy,
+          feedback: _DragFeedbackCard(
+            color: themeProvider.primaryColor,
+            title: folder.folderName.isNotEmpty ? folder.folderName : '제목 없음',
+            leading: ClayIcon(
+              NoteIconHandler.getNoteIcon(index),
+              width: 34,
+              height: 34,
             ),
           ),
           childWhenDragging: Opacity(
@@ -1630,16 +1629,17 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         },
         child: LongPressDraggable<ProblemModel>(
           data: problem,
-          feedback: Material(
-            child: SizedBox(
-              width: 50,
-              height: 70,
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(AppRadius.small),
-                child: DisplayImage(
-                  imagePath: imageUrl,
-                  fit: BoxFit.cover,
-                ),
+          dragAnchorStrategy: pointerDragAnchorStrategy,
+          feedback: _DragFeedbackCard(
+            color: themeProvider.primaryColor,
+            title: problem.reference?.isNotEmpty == true
+                ? problem.reference!
+                : '제목 없음',
+            leading: ClipRRect(
+              borderRadius: BorderRadius.circular(AppRadius.small),
+              child: DisplayImage(
+                imagePath: imageUrl,
+                fit: BoxFit.cover,
               ),
             ),
           ),
@@ -2319,6 +2319,77 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
               const SizedBox(width: 8),
               Icon(Icons.chevron_right, size: 20, color: Colors.grey[400]),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// 공책이나 오답노트를 꾹 눌러 끌 때 손가락에 붙어 다니는 카드.
+///
+/// 전에는 기본 Material 의 흰 네모 위에 아이콘이나 사진만 50x70 으로 떠서,
+/// 무엇을 들고 있는지도 잘 안 보이고 모서리가 각져 화면에서 동떨어져 보였다.
+/// 목록 칸과 같은 둥근 카드에 그림과 이름을 담고, 손에 든 것처럼 살짝
+/// 기울여 그림자를 띄운다. 손가락에 가리지 않게 손끝 위쪽에 둔다.
+class _DragFeedbackCard extends StatelessWidget {
+  final Widget leading;
+  final String title;
+  final Color color;
+
+  const _DragFeedbackCard({
+    required this.leading,
+    required this.title,
+    required this.color,
+  });
+
+  static const double _width = 200;
+  static const double _height = 60;
+
+  @override
+  Widget build(BuildContext context) {
+    // pointerDragAnchorStrategy 는 손끝을 카드의 왼쪽 위에 둔다. 카드를
+    // 가운데로 옮기고 손끝보다 조금 위로 띄운다.
+    return Transform.translate(
+      offset: const Offset(-_width / 2, -_height - 20),
+      child: Transform.rotate(
+        angle: -0.05,
+        child: Material(
+          color: Colors.transparent,
+          child: Container(
+            width: _width,
+            height: _height,
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(AppRadius.large),
+              border:
+                  Border.all(color: color.withValues(alpha: 0.5), width: 1.5),
+              boxShadow: [
+                BoxShadow(
+                  color: color.withValues(alpha: 0.25),
+                  blurRadius: 18,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                SizedBox(width: 40, height: 40, child: Center(child: leading)),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: StandardText(
+                    text: title,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                Icon(Icons.open_with_rounded, size: 18, color: color),
+              ],
+            ),
           ),
         ),
       ),
