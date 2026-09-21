@@ -181,7 +181,7 @@ class CosmeticCombinationPreviewScreen extends StatelessWidget {
   _ComboSection _levelSection(CosmeticProvider cosmetic) {
     return _ComboSection(
       title: '레벨별 기본 차림',
-      description: '다섯 레벨을 같이 올릴 때 개구리가 어떻게 달라지는지',
+      description: '능력치 5개의 레벨을 같이 올릴 때 개구리가 어떻게 달라지는지',
       combos: [
         for (var level = 1; level <= cosmetic.maxTotalStudyLevel; level++)
           _Combo(

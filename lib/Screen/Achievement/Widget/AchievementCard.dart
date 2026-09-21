@@ -194,6 +194,6 @@ class AchievementCard extends StatelessWidget {
     }
 
     // 0 아니면 1인 훈장. 눈금을 세울 것이 없어서 한 번이면 된다고 적는다.
-    return '한 번만 해내면 받아요';
+    return '1번만 해내면 받아요';
   }
 }

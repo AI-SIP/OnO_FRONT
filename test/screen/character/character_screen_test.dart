@@ -578,9 +578,9 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('출석 올리는 법'), findsOneWidget);
-      expect(find.text('하루에 한 번 앱을 열면'), findsOneWidget);
+      expect(find.text('하루에 1번 앱을 열면'), findsOneWidget);
       expect(find.text('+15점'), findsOneWidget);
-      expect(find.text('하루 한 번까지'), findsOneWidget);
+      expect(find.text('하루 1번까지'), findsOneWidget);
     });
 
     testWidgets('능력치마다 다른 규칙을 말한다', (tester) async {
@@ -592,7 +592,7 @@ void main() {
       expect(find.text('오답노트 올리는 법'), findsOneWidget);
       // 서버의 MissionType 과 MissionLogService 가 정한 값이다.
       expect(find.text('+10점'), findsOneWidget);
-      expect(find.text('하루 세 개까지'), findsOneWidget);
+      expect(find.text('하루 3개까지'), findsOneWidget);
     });
 
     testWidgets('꾸미기 화면에서 더미 레벨을 옮기면 눈금판도 따라간다', (tester) async {

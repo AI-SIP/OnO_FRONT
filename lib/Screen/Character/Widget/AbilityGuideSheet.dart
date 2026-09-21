@@ -28,28 +28,28 @@ class AbilityGuideSheet extends StatelessWidget {
   /// 알 수 없다. 한도까지 같이 적는다.
   static const Map<MissionKind, _AbilityGuide> _guides = {
     MissionKind.attendance: _AbilityGuide(
-      how: '하루에 한 번 앱을 열면',
+      how: '하루에 1번 앱을 열면',
       point: 15,
-      limit: '하루 한 번까지',
-      hint: '오늘 들어온 것만으로 쌓여요. 몇 번을 열어도 하루치는 한 번이에요.',
+      limit: '하루 1번까지',
+      hint: '오늘 들어온 것만으로 쌓여요. 몇 번을 열어도 하루치는 1번이에요.',
     ),
     MissionKind.noteWrite: _AbilityGuide(
-      how: '오답노트를 한 개 등록하면',
+      how: '오답노트를 1개 등록하면',
       point: 10,
-      limit: '하루 세 개까지',
-      hint: '한 번에 여러 개를 올려도 하루에 세 개까지만 쌓여요.',
+      limit: '하루 3개까지',
+      hint: '한 번에 여러 개를 올려도 하루에 3개까지만 쌓여요.',
     ),
     MissionKind.problemPractice: _AbilityGuide(
-      how: '문제를 한 개 복습하면',
+      how: '문제를 1개 복습하면',
       point: 5,
-      limit: '문제마다 한 번까지',
-      hint: '같은 문제를 다시 풀어도 처음 한 번만 쌓여요. 새 문제를 풀면 또 쌓여요.',
+      limit: '문제마다 1번까지',
+      hint: '같은 문제를 다시 풀어도 처음 1번만 쌓여요. 새 문제를 풀면 또 쌓여요.',
     ),
     MissionKind.notePractice: _AbilityGuide(
-      how: '복습 세트를 한 개 끝내면',
+      how: '복습 세트를 1개 끝내면',
       point: 15,
-      limit: '세트마다 한 번까지',
-      hint: '같은 세트를 다시 끝내도 처음 한 번만 쌓여요.',
+      limit: '세트마다 1번까지',
+      hint: '같은 세트를 다시 끝내도 처음 1번만 쌓여요.',
     ),
     MissionKind.etc: _AbilityGuide(
       how: '앱을 쓰면',
