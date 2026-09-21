@@ -378,7 +378,7 @@ void main() {
       expect(inCard(find.text('출석 Lv.14')), findsOneWidget);
     });
 
-    testWidgets('지금 내가 그 능력치에서 몇 레벨인지 같이 적는다', (tester) async {
+    testWidgets('지금 레벨 없이 획득까지 남은 레벨만 적는다', (tester) async {
       // 필요 레벨만 적으면 코앞인지 한참 남았는지 알 수 없다.
       await pumpCloset(tester);
 
@@ -409,7 +409,7 @@ void main() {
       });
     }
 
-    testWidgets('한 칸 남았으면 한 칸 남았다고 말한다', (tester) async {
+    testWidgets('한 칸 남아도 같은 말로 남은 레벨을 적는다', (tester) async {
       await pumpCloset(
         tester,
         levels: CosmeticAbilityLevels(attendance: 13),
