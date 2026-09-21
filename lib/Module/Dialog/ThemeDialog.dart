@@ -276,6 +276,7 @@ class _ThemeDialogState extends State<ThemeDialog> {
             mainAxisSize: MainAxisSize.min,
             children: [
               _buildPreview(userInfo, duration),
+              const Divider(height: 1, color: AppColors.border),
               _buildLaneHeader(userInfo),
               Flexible(child: _buildTracks(userInfo, duration)),
               _buildFooter(themeProvider, duration),
@@ -359,14 +360,13 @@ class _ThemeDialogState extends State<ThemeDialog> {
             AppSpacing.xl,
             AppSpacing.lg,
           ),
-          decoration: BoxDecoration(
-            // 그라데이션을 깔지 않는다. 색 24개가 주인공인 화면에서 배경까지
-            // 번지면 무엇을 고르는 중인지가 흐려진다.
-            color: Color.alphaBlend(
-              accent.withValues(alpha: 0.10),
-              AppColors.surface,
-            ),
-            borderRadius: const BorderRadius.only(
+          decoration: const BoxDecoration(
+            // 배경은 칠하지 않는다. 고른 색이나 미션 칸 색을 옅게 깔았더니
+            // 누를 때마다 판 전체가 분홍, 보라, 초록, 파랑으로 바뀌어 색 24개가
+            // 주인공인 화면에서 무엇을 고르는 중인지가 흐려졌다. 아래 격자와는
+            // 선 하나로만 나눈다.
+            color: AppColors.surface,
+            borderRadius: BorderRadius.only(
               topLeft: Radius.circular(AppRadius.xlarge),
               topRight: Radius.circular(AppRadius.xlarge),
             ),

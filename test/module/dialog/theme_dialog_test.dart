@@ -13,6 +13,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:ono/Model/Common/LoginStatus.dart';
 import 'package:ono/Model/User/UserInfoModel.dart';
+import 'package:ono/Module/Design/AppColors.dart';
 import 'package:ono/Module/Dialog/ThemeDialog.dart';
 import 'package:ono/Module/Motion/TossDialog.dart';
 import 'package:ono/Module/Theme/ThemeHandler.dart';
@@ -205,6 +206,45 @@ void main() {
 
       expect(find.text('아직 잠긴 색'), findsOneWidget);
       expect(find.text('출석 Lv.9 필요 · 지금 Lv.4'), findsOneWidget);
+    });
+  });
+
+  group('맨 위 미리보기 판', () {
+    Color? panelColor(WidgetTester tester, String text) {
+      final panel = find.ancestor(
+        of: find.text(text),
+        matching: find.byWidgetPredicate(
+          (w) =>
+              w is Container &&
+              w.decoration is BoxDecoration &&
+              (w.decoration! as BoxDecoration).borderRadius != null,
+        ),
+      );
+      return (tester.widget<Container>(panel.first).decoration!
+              as BoxDecoration)
+          .color;
+    }
+
+    testWidgets('잠긴 색을 눌러도 배경은 흰색이다', (tester) async {
+      // 전에는 미션 칸 색(출석 빨강, 오답노트 보라 …)을 옅게 깔아서 누를
+      // 때마다 판 전체가 다른 색으로 바뀌었다.
+      await pumpThemeDialog(tester);
+      await tester.tap(
+        find.byKey(ThemeDialog.cellKey(ThemeLockManager.themeIndexAt(3, 0))),
+      );
+      await tester.pumpAndSettle();
+
+      expect(panelColor(tester, '아직 잠긴 색'), AppColors.surface);
+    });
+
+    testWidgets('열린 색을 골라도 배경은 흰색이다', (tester) async {
+      await pumpThemeDialog(tester);
+      await tester.tap(
+        find.byKey(ThemeDialog.cellKey(ThemeLockManager.themeIndexAt(0, 1))),
+      );
+      await tester.pumpAndSettle();
+
+      expect(panelColor(tester, '고른 색'), AppColors.surface);
     });
   });
 
