@@ -103,7 +103,7 @@ void main() {
         missions: [
           buildMission(
             code: 'DAILY_REVIEW_3',
-            title: '세 문제만',
+            title: '3문제만',
             progressId: 1,
             current: 1,
           ),
@@ -177,7 +177,7 @@ void main() {
       // 진행 중에는 버튼을 두지 않는다. 지금 할 수 있는 것이 없는데 버튼이
       // 있으면 눌러 보게 되고, 눌리지 않으면 고장으로 읽힌다.
       expect(find.text('진행 중'), findsNothing);
-      expect(find.text('세 문제만'), findsOneWidget);
+      expect(find.text('3문제만'), findsOneWidget);
       expect(find.text('1/3'), findsOneWidget);
       // 받은 것은 도장만 남는다.
       expect(find.text('받음'), findsOneWidget);
@@ -191,7 +191,7 @@ void main() {
       await pumpMissionScreen(tester, missionService: missionService);
 
       final claimable = tester.getTopLeft(find.text('오늘의 오답')).dy;
-      final inProgress = tester.getTopLeft(find.text('세 문제만')).dy;
+      final inProgress = tester.getTopLeft(find.text('3문제만')).dy;
       // 능력치 라벨도 '출석' 이라 제목 쪽(먼저 그려지는 것)만 본다.
       final claimed = tester.getTopLeft(find.text('출석').first).dy;
 
@@ -244,7 +244,7 @@ void main() {
             missions: [
               buildMission(
                 code: 'WEEKLY_NOTE_10',
-                title: '열 권의 노트',
+                title: '오답노트 10개',
                 progressId: 9,
               ),
             ],
@@ -261,7 +261,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // 한 번에 한 탭만 그린다. 주간으로 옮기면 주간 것만 트리에 있다.
-      expect(find.text('열 권의 노트'), findsOneWidget);
+      expect(find.text('오답노트 10개'), findsOneWidget);
     });
   });
 
@@ -285,7 +285,7 @@ void main() {
           missions: [
             buildMission(
               code: 'WEEKLY_NOTE_10',
-              title: '열 권의 노트',
+              title: '오답노트 10개',
               progressId: 9,
               current: 2,
               target: 10,
@@ -308,12 +308,12 @@ void main() {
       await pumpTwoTabs(tester);
 
       expect(find.text('오늘의 오답'), findsOneWidget);
-      expect(find.text('열 권의 노트'), findsNothing);
+      expect(find.text('오답노트 10개'), findsNothing);
 
       await tester.tap(find.text('주간'));
       await tester.pumpAndSettle();
 
-      expect(find.text('열 권의 노트'), findsOneWidget);
+      expect(find.text('오답노트 10개'), findsOneWidget);
       expect(find.text('오늘의 오답'), findsNothing);
     });
 
@@ -466,7 +466,7 @@ void main() {
         cardColor(tester, '오늘의 오답'),
         MissionPalette.claimableSurface(ThemeHandler().primaryColor),
       );
-      expect(cardColor(tester, '세 문제만'), Colors.white);
+      expect(cardColor(tester, '3문제만'), Colors.white);
       expect(cardColor(tester, '출석'), Colors.white);
     });
 

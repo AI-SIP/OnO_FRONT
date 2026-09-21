@@ -15,7 +15,7 @@ Map<String, dynamic> itemJson({
   return <String, dynamic>{
     'progressId': progressId,
     'code': 'WEEKLY_NOTE_10',
-    'title': '열 권의 노트',
+    'title': '오답노트 10개',
     'iconKey': 'writing_wink',
     'category': category,
     'periodKey': '2026-W37',
@@ -33,7 +33,7 @@ void main() {
       expect(item, isNotNull);
       expect(item!.progressId, 1024);
       expect(item.code, 'WEEKLY_NOTE_10');
-      expect(item.title, '열 권의 노트');
+      expect(item.title, '오답노트 10개');
       expect(item.iconKey, 'writing_wink');
       expect(item.category, MissionCategory.weekly);
       expect(item.periodKey, '2026-W37');

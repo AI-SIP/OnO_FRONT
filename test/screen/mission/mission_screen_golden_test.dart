@@ -53,7 +53,7 @@ void main() {
             missions: [
               mission(
                 code: 'DAILY_REVIEW_3',
-                title: '세 문제만',
+                title: '3문제만',
                 progressId: 1,
                 current: 1,
               ),

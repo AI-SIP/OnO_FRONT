@@ -150,7 +150,7 @@ void main() {
             {
               'progressId': 1024,
               'code': 'WEEKLY_NOTE_10',
-              'title': '열 권의 노트',
+              'title': '오답노트 10개',
               'iconKey': 'writing_wink',
               'category': 'WEEKLY',
               'periodKey': '2026-W37',
@@ -177,7 +177,7 @@ void main() {
       // 첫 페이지에는 커서를 보내지 않는다.
       expect(http.lastRequest.queryParameters.containsKey('cursor'), isFalse);
       expect(page, isNotNull);
-      expect(page!.content.single.title, '열 권의 노트');
+      expect(page!.content.single.title, '오답노트 10개');
       expect(page.totalClaimedXp, 1250);
       expect(page.totalClaimedCount, 37);
     });

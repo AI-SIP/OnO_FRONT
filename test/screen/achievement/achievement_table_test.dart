@@ -36,7 +36,7 @@ class _TableRow {
 /// 문서 경로. `flutter test` 는 패키지 루트에서 돈다.
 const String _docPath = 'docs/훈장/훈장표.md';
 
-/// `| `first_step` | 첫 걸음 | 오답노트를 처음 적었어요 | 오답노트 1개 | `problem` |`
+/// `| `first_step` | 첫 걸음 | 오답노트를 처음 작성했어요 | 오답노트 1개 | `problem` |`
 ///
 /// 표의 머리줄(`| key | 이름 | ... |`)과 구분선은 첫 칸이 백틱으로 감싸인
 /// 식별자가 아니라서 저절로 걸러진다.

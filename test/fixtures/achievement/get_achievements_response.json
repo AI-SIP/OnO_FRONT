@@ -4,7 +4,7 @@
       {
         "key": "first_step",
         "nameKo": "첫 걸음",
-        "descriptionKo": "오답노트를 처음 적었어요",
+        "descriptionKo": "오답노트를 처음 작성했어요",
         "imageUrl": "assets/Medal/first_step.png",
         "earned": true,
         "earnedAt": "2026-03-02T21:14:08",
@@ -14,7 +14,7 @@
       {
         "key": "archivist",
         "nameKo": "기록광",
-        "descriptionKo": "오답노트를 백 개나 모았어요",
+        "descriptionKo": "오답노트를 100개 작성했어요",
         "imageUrl": "assets/Medal/archivist.png",
         "earned": false,
         "earnedAt": null,
@@ -24,7 +24,7 @@
       {
         "key": "persistence",
         "nameKo": "집념",
-        "descriptionKo": "한 문제를 다섯 번 다시 봤어요",
+        "descriptionKo": "한 문제를 5번 복습했어요",
         "imageUrl": "assets/Medal/persistence.png",
         "earned": false,
         "earnedAt": null,
@@ -34,7 +34,7 @@
       {
         "key": "phoenix",
         "nameKo": "불사조",
-        "descriptionKo": "틀렸던 문제를 기어이 맞혔어요",
+        "descriptionKo": "틀렸던 문제를 다시 풀어 맞혔어요",
         "imageUrl": "assets/Medal/phoenix.png",
         "earned": true,
         "earnedAt": "2026-05-19T08:40:33",
@@ -44,7 +44,7 @@
       {
         "key": "dawn_class",
         "nameKo": "새벽반",
-        "descriptionKo": "해 뜨기 전에 열 번 공부했어요",
+        "descriptionKo": "새벽 5~8시에 10번 복습했어요",
         "imageUrl": "assets/Medal/dawn_class.png",
         "earned": false,
         "earnedAt": null,
@@ -54,7 +54,7 @@
       {
         "key": "night_owl",
         "nameKo": "올빼미",
-        "descriptionKo": "밤이 깊어도 열 번 공부했어요",
+        "descriptionKo": "밤 12~3시에 10번 복습했어요",
         "imageUrl": "assets/Medal/night_owl.png",
         "earned": false,
         "earnedAt": null,
@@ -64,7 +64,7 @@
       {
         "key": "perfect_month",
         "nameKo": "개근",
-        "descriptionKo": "서른 날을 하루도 안 빼먹었어요",
+        "descriptionKo": "30일 연속 출석했어요",
         "imageUrl": "assets/Medal/perfect_month.png",
         "earned": true,
         "earnedAt": "2026-09-14T01:23:45",
@@ -74,7 +74,7 @@
       {
         "key": "flawless",
         "nameKo": "무결점",
-        "descriptionKo": "열 번을 내리 맞혔어요",
+        "descriptionKo": "10번 연속으로 맞혔어요",
         "imageUrl": "assets/Medal/flawless.png",
         "earned": false,
         "earnedAt": null,
@@ -84,7 +84,7 @@
       {
         "key": "organizer",
         "nameKo": "정리의 신",
-        "descriptionKo": "폴더를 열 개나 만들어 정리했어요",
+        "descriptionKo": "폴더를 10개 만들었어요",
         "imageUrl": "assets/Medal/organizer.png",
         "earned": false,
         "earnedAt": null,
@@ -94,7 +94,7 @@
       {
         "key": "reviewer",
         "nameKo": "회고왕",
-        "descriptionKo": "복습하고 쉰 번을 되돌아봤어요",
+        "descriptionKo": "복습 회고를 50번 남겼어요",
         "imageUrl": "assets/Medal/reviewer.png",
         "earned": false,
         "earnedAt": null,
@@ -104,7 +104,7 @@
       {
         "key": "companion",
         "nameKo": "동행",
-        "descriptionKo": "같이 공부할 사람을 찾았어요",
+        "descriptionKo": "스터디룸에 처음 참여했어요",
         "imageUrl": "assets/Medal/companion.png",
         "earned": false,
         "earnedAt": null,
@@ -114,7 +114,7 @@
       {
         "key": "cheerleader",
         "nameKo": "응원단장",
-        "descriptionKo": "백 번을 응원했어요",
+        "descriptionKo": "응원을 100번 보냈어요",
         "imageUrl": "assets/Medal/cheerleader.png",
         "earned": false,
         "earnedAt": null,

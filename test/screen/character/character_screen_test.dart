@@ -90,7 +90,7 @@ void main() {
         missions: [
           _mission(
             code: 'DAILY_REVIEW_3',
-            title: '세 문제만',
+            title: '3문제만',
             progressId: 1,
             current: 1,
           ),
@@ -725,7 +725,7 @@ void main() {
       await pumpCharacter(tester);
 
       expect(find.byType(MissionCard), findsNothing);
-      expect(find.text('세 문제만'), findsNothing);
+      expect(find.text('3문제만'), findsNothing);
     });
 
     testWidgets('미션이 없으면 버튼에 숫자가 안 붙는다', (tester) async {
