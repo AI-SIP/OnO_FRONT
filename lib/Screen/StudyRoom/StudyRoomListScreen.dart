@@ -1,4 +1,3 @@
-import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -34,7 +33,9 @@ class _StudyRoomListScreenState extends State<StudyRoomListScreen> {
   @override
   void initState() {
     super.initState();
-    FirebaseAnalytics.instance.logEvent(name: 'study_room_list_view');
+    // 이 화면은 홈의 IndexedStack 안에 있어서 initState 가 탭을 누를 때가
+    // 아니라 홈이 뜰 때 한 번 돈다. 여기서 남기던 study_room_list_view 는 앱을
+    // 켠 횟수와 같아서 뺐다. 탭 진입은 ScreenIndexProvider 가 남긴다.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final provider = Provider.of<StudyRoomProvider>(context, listen: false);
       provider.updateCurrentUserId(

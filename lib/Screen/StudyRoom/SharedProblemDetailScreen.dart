@@ -14,6 +14,7 @@ import 'Widget/SharedProblemCommentsSection.dart';
 import '../../Module/Motion/TossDialog.dart';
 import '../../Module/Design/AppRadius.dart';
 import '../../Module/Design/AppColors.dart';
+import '../../Util/AppAnalytics.dart';
 
 class SharedProblemDetailScreen extends StatefulWidget {
   final SharedProblemModel problem;
@@ -26,6 +27,12 @@ class SharedProblemDetailScreen extends StatefulWidget {
 }
 
 class _SharedProblemDetailScreenState extends State<SharedProblemDetailScreen> {
+  @override
+  void initState() {
+    super.initState();
+    AppAnalytics.logScreenView('SharedProblemDetailScreen');
+  }
+
   bool _isRefreshing = false;
 
   String _timeAgo(DateTime dt) {

@@ -1,4 +1,3 @@
-import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -23,6 +22,7 @@ import '../../Module/Motion/AppearTransition.dart';
 import '../../Module/Design/AppColors.dart';
 import '../../Module/Design/AppRadius.dart';
 import '../../Module/Design/AppToast.dart';
+import '../../Util/AppAnalytics.dart';
 
 class LearningCalendarScreen extends StatefulWidget {
   const LearningCalendarScreen({super.key});
@@ -64,6 +64,7 @@ class _LearningCalendarScreenState extends State<LearningCalendarScreen> {
   @override
   void initState() {
     super.initState();
+    AppAnalytics.logScreenView('LearningCalendarScreen');
     final now = DateTime.now();
     _year = now.year;
     _month = now.month;
@@ -96,7 +97,10 @@ class _LearningCalendarScreenState extends State<LearningCalendarScreen> {
       await prefs.setString(key, text);
     }
     if (!mounted) return;
-    FirebaseAnalytics.instance.logEvent(name: 'calendar_diary_saved');
+    AppAnalytics.logEvent('calendar_diary_saved', {
+      'is_delete': text.isEmpty,
+      'length': text.length,
+    });
     AppToast.show(
       message: '다이어리가 저장되었어요.',
       type: ToastType.success,
@@ -128,6 +132,8 @@ class _LearningCalendarScreenState extends State<LearningCalendarScreen> {
   }
 
   void _prevMonth() {
+    // 지난 달을 얼마나 거슬러 보는지. 달력을 기록 보관용으로 쓰는지 본다.
+    AppAnalytics.logEvent('calendar_month_change', {'direction': 'prev'});
     setState(() {
       if (_month == 1) {
         _year -= 1;
@@ -143,6 +149,7 @@ class _LearningCalendarScreenState extends State<LearningCalendarScreen> {
   void _nextMonth() {
     final now = DateTime.now();
     if (_year > now.year || (_year == now.year && _month >= now.month)) return;
+    AppAnalytics.logEvent('calendar_month_change', {'direction': 'next'});
     setState(() {
       if (_month == 12) {
         _year += 1;
@@ -779,7 +786,10 @@ class _LearningCalendarScreenState extends State<LearningCalendarScreen> {
             emojiKey: emoji.key,
             showErrorSnackBar: false,
           );
-          FirebaseAnalytics.instance.logEvent(name: 'mood_set');
+          AppAnalytics.logEvent('mood_set', {
+            'mood': emoji.key,
+            'is_change': record.moodEmojiKey != null,
+          });
           if (!mounted) return;
           await _loadCalendar();
         } catch (_) {

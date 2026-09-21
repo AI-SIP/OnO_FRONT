@@ -29,6 +29,7 @@ import '../../Module/Motion/TossDialog.dart';
 import '../../Module/Design/AppRadius.dart';
 import '../../Module/Design/AppColors.dart';
 import '../../Module/Design/AppToast.dart';
+import 'package:ono/Util/AppAnalytics.dart';
 
 class SettingScreen extends StatefulWidget {
   final TutorialTargets? tutorialTargets;
@@ -464,6 +465,12 @@ class _MyPageSettingsScreen extends StatefulWidget {
 
 class _MyPageSettingsScreenState extends State<_MyPageSettingsScreen> {
   @override
+  void initState() {
+    super.initState();
+    AppAnalytics.logScreenView('MyPageSettingsScreen');
+  }
+
+  @override
   Widget build(BuildContext context) {
     final userProvider = Provider.of<UserProvider>(context);
     final themeProvider = Provider.of<ThemeHandler>(context);
@@ -522,6 +529,10 @@ class _MyPageSettingsScreenState extends State<_MyPageSettingsScreen> {
                     try {
                       await Provider.of<UserProvider>(context, listen: false)
                           .updateNotificationSettings(value);
+                      // 복습 알림을 끄는 사람이 얼마나 되는지 본다.
+                      AppAnalytics.logEvent('notification_setting_change', {
+                        'enabled': value,
+                      });
                     } catch (_) {
                       if (!context.mounted) return;
                       AppToast.error('알림 설정 변경에 실패했습니다. 다시 시도해주세요.');

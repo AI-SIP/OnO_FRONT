@@ -9,6 +9,7 @@ import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/StudyRoomProvider.dart';
 import '../../Util/AppSnackBar.dart';
 import '../../Module/Design/AppRadius.dart';
+import '../../Util/AppAnalytics.dart';
 
 class StudyRoomJoinScreen extends StatefulWidget {
   const StudyRoomJoinScreen({super.key});
@@ -18,6 +19,12 @@ class StudyRoomJoinScreen extends StatefulWidget {
 }
 
 class _StudyRoomJoinScreenState extends State<StudyRoomJoinScreen> {
+  @override
+  void initState() {
+    super.initState();
+    AppAnalytics.logScreenView('StudyRoomJoinScreen');
+  }
+
   final _codeController = TextEditingController();
   final _standardStyle = const StandardText(text: '').getTextStyle();
   bool _isJoining = false;

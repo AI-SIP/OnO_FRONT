@@ -21,6 +21,7 @@ import '../../Module/Motion/PressableScale.dart';
 import '../../Module/Motion/TossDialog.dart';
 import '../../Module/Design/AppColors.dart';
 import '../../Module/Design/AppRadius.dart';
+import '../../Util/AppAnalytics.dart';
 
 class ProblemPickerScreen extends StatefulWidget {
   final int roomId;
@@ -52,6 +53,7 @@ class _ProblemPickerScreenState extends State<ProblemPickerScreen> {
   @override
   void initState() {
     super.initState();
+    AppAnalytics.logScreenView('ProblemPickerScreen');
     _problemScrollController = ScrollController();
     _problemScrollController.addListener(_onProblemScroll);
     WidgetsBinding.instance.addPostFrameCallback((_) => _loadFolders());

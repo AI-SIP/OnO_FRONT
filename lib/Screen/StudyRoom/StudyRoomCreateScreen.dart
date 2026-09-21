@@ -1,4 +1,3 @@
-import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
@@ -13,6 +12,7 @@ import '../../Module/Motion/TossDialog.dart';
 import '../../Module/Design/AppLayout.dart';
 import '../../Module/Design/AppRadius.dart';
 import '../../Module/Design/AppColors.dart';
+import '../../Util/AppAnalytics.dart';
 
 class StudyRoomCreateScreen extends StatefulWidget {
   const StudyRoomCreateScreen({super.key});
@@ -22,6 +22,12 @@ class StudyRoomCreateScreen extends StatefulWidget {
 }
 
 class _StudyRoomCreateScreenState extends State<StudyRoomCreateScreen> {
+  @override
+  void initState() {
+    super.initState();
+    AppAnalytics.logScreenView('StudyRoomCreateScreen');
+  }
+
   final _nameController = TextEditingController();
   final _standardStyle = const StandardText(text: '').getTextStyle();
   XFile? _thumbnailFile;
@@ -132,7 +138,9 @@ class _StudyRoomCreateScreenState extends State<StudyRoomCreateScreen> {
           AppSnackBar.showError('방은 만들었지만 사진 등록에 실패했어요');
         }
       }
-      FirebaseAnalytics.instance.logEvent(name: 'study_room_created');
+      AppAnalytics.logEvent('study_room_created', {
+        'has_thumbnail': thumbnailFile != null,
+      });
       if (mounted) Navigator.pop(context, true);
     } catch (_) {
       AppSnackBar.showError('방 생성에 실패했습니다');
