@@ -2251,6 +2251,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         },
         child: Container(
           padding: const EdgeInsets.all(14),
+          constraints:
+              const BoxConstraints(minHeight: TodayMissionCard.minHeight),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(AppRadius.large),

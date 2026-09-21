@@ -26,6 +26,13 @@ import 'MissionScreen.dart';
 /// 미션 조회에 실패했거나 미션이 하나도 없으면 **배너를 통째로 숨긴다.**
 /// 백엔드에 아직 미션 API 가 없을 때 홈에 오류가 남지 않아야 한다.
 class TodayMissionCard extends StatelessWidget {
+  /// 이 카드와 추천 복습 배너가 함께 쓰는 최소 높이.
+  ///
+  /// 추천 복습 배너는 밀린 문제가 있으면 두 줄이 되어 이 카드보다 8 쯤
+  /// 높았다. 두 줄일 때의 높이를 둘 다의 바닥으로 삼아 나란히 같은 크기로
+  /// 보이게 한다. 글자를 키운 기기에서는 각자 더 커질 수 있다.
+  static const double minHeight = 76;
+
   const TodayMissionCard({super.key});
 
   @override
@@ -55,8 +62,10 @@ class TodayMissionCard extends StatelessWidget {
           );
         },
         child: Container(
-          // 바로 아래 추천 복습 배너와 같은 크기로 보이도록 안쪽 여백을 맞춘다.
+          // 바로 아래 추천 복습 배너와 같은 크기로 보이도록 안쪽 여백과
+          // 최소 높이를 맞춘다.
           padding: const EdgeInsets.all(14),
+          constraints: const BoxConstraints(minHeight: minHeight),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(AppRadius.large),
