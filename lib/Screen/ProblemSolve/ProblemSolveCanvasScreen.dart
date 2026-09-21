@@ -14,6 +14,7 @@ import '../../Module/Dialog/SnackBarDialog.dart';
 import '../../Module/Text/mobile_font_size.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
+import '../../Util/AppAnalytics.dart';
 import 'ProblemSolveRegisterScreen.dart';
 import '../../Module/Motion/AppHaptic.dart';
 import '../../Module/Motion/PressableScale.dart';
@@ -67,6 +68,17 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
   _CanvasTool _previousTool = _CanvasTool.pen;
   Offset? _cursorPosition; // canvas-space position for eraser cursor overlay
 
+  // Analytics 용. 도구를 바꿀 때마다 남기면 이벤트가 너무 많아서, 한 번 푸는
+  // 동안 무엇을 썼는지 모아 두었다가 제출하거나 나갈 때 한 번에 남긴다.
+  final Set<String> _usedTools = {_CanvasTool.pen.name};
+  bool _usedStylus = false;
+  bool _usedStylusButton = false;
+  bool _changedColor = false;
+  bool _changedWidth = false;
+  int _undoCount = 0;
+  bool _cleared = false;
+  bool _submitted = false;
+
   static const _pencilChannel = MethodChannel('com.aisip.ono/pencil_events');
 
   static const List<Color> _paletteColors = [
@@ -87,6 +99,7 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
   @override
   void initState() {
     super.initState();
+    AppAnalytics.logScreenView('ProblemSolveCanvasScreen');
     _strokesByImage =
         List.generate(widget.problemImageUrls.length, (_) => <_DrawStroke>[]);
     _imageReadyStates =
@@ -104,6 +117,7 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
     if (!Platform.isIOS) return;
     _pencilChannel.setMethodCallHandler((call) async {
       if (call.method == 'doubleTap' && mounted) {
+        _usedStylusButton = true;
         setState(() => _toggleToLastTool());
       }
     });
@@ -149,6 +163,8 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
 
   @override
   void dispose() {
+    // 풀다가 제출하지 않고 나간 것. 어디까지 쓰다 그만두는지 본다.
+    if (!_submitted) _logCanvasSession('canvas_abandon');
     if (Platform.isIOS) _pencilChannel.setMethodCallHandler(null);
     _timer?.cancel();
     _transformationController.dispose();
@@ -253,9 +269,13 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
                     boundaryMargin: const EdgeInsets.all(80),
                     child: Listener(
                       onPointerDown: (event) {
+                        if (event.kind == PointerDeviceKind.stylus) {
+                          _usedStylus = true;
+                        }
                         // Apple Pencil 2 flat-side tap / S Pen secondary button
                         if (event.kind == PointerDeviceKind.stylus &&
                             event.buttons & kSecondaryStylusButton != 0) {
+                          _usedStylusButton = true;
                           setState(() => _toggleToLastTool());
                           return;
                         }
@@ -263,6 +283,7 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
                         final forceErase =
                             event.kind == PointerDeviceKind.stylus &&
                                 event.buttons & kPrimaryStylusButton != 0;
+                        if (forceErase) _usedStylusButton = true;
                         _handlePointerDown(event.localPosition, imageRect,
                             forceErase: forceErase);
                       },
@@ -478,6 +499,7 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
                     onChanged: _selectedTool == _CanvasTool.move
                         ? null
                         : (value) => setState(() {
+                              _changedWidth = true;
                               if (_isEraserTool) {
                                 _eraserWidth = value;
                               } else {
@@ -640,6 +662,7 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
     return PressableScale(
       haptic: HapticLevel.selection,
       onTap: () => setState(() {
+        if (color != _penColor) _changedColor = true;
         _penColor = color;
         _setTool(_CanvasTool.pen);
       }),
@@ -713,6 +736,7 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
   }
 
   void _setTool(_CanvasTool tool) {
+    _usedTools.add(tool.name);
     if (tool != _selectedTool) {
       _previousTool = _selectedTool;
       _selectedTool = tool;
@@ -867,6 +891,7 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
   }
 
   void _undoLastStroke() {
+    _undoCount++;
     setState(() {
       if (_currentStrokes.isNotEmpty) {
         _currentStrokes.removeLast();
@@ -875,6 +900,7 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
   }
 
   void _clearStrokes() {
+    _cleared = true;
     setState(_currentStrokes.clear);
   }
 
@@ -932,6 +958,24 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
     });
   }
 
+  /// 한 번 푼 동안 캔버스를 어떻게 썼는지 남긴다. 지우개 두 가지, 색, 굵기,
+  /// 스타일러스 버튼 같은 기능이 실제로 쓰이는지를 여기서 본다.
+  void _logCanvasSession(String name) {
+    final strokes = _strokesByImage.expand((s) => s).where((s) => !s.isEraser);
+    AppAnalytics.logEvent(name, {
+      'duration_sec': _elapsedSeconds,
+      'image_count': widget.problemImageUrls.length,
+      'stroke_count': strokes.length,
+      'tools': (_usedTools.toList()..sort()).join(','),
+      'used_stylus': _usedStylus,
+      'stylus_button': _usedStylusButton,
+      'color_changed': _changedColor,
+      'width_changed': _changedWidth,
+      'undo_count': _undoCount,
+      'cleared': _cleared,
+    });
+  }
+
   Future<void> _submit(ThemeHandler themeProvider) async {
     if (!_isCurrentImageReady || _hasImageLoadError) return;
 
@@ -955,6 +999,10 @@ class _ProblemSolveCanvasScreenState extends State<ProblemSolveCanvasScreen> {
         ),
       );
 
+      if (result == true) {
+        _submitted = true;
+        _logCanvasSession('canvas_submit');
+      }
       if (result == true && mounted) {
         Navigator.of(context).pop(true);
       } else if (mounted) {

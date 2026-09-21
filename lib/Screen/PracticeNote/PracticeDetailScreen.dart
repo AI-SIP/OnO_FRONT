@@ -21,6 +21,7 @@ import '../../Module/Motion/AppMotion.dart';
 import '../../Module/Design/AppColors.dart';
 import '../../Module/Design/AppToast.dart';
 import '../../Module/Design/AppRadius.dart';
+import '../../Util/AppAnalytics.dart';
 
 class PracticeDetailScreen extends StatelessWidget {
   final PracticeNoteDetailModel practice;
@@ -418,6 +419,10 @@ class PracticeDetailScreen extends StatelessWidget {
       BuildContext context, ProblemPracticeProvider practiceProvider,
       {required bool shuffle}) {
     if (practiceProvider.currentProblems.isNotEmpty) {
+      AppAnalytics.logEvent('practice_start', {
+        'shuffle': shuffle,
+        'problem_count': practiceProvider.currentProblems.length,
+      });
       if (shuffle) {
         practiceProvider.shuffleCurrentProblems();
       } else {
@@ -648,6 +653,10 @@ class PracticeDetailScreen extends StatelessWidget {
                           try {
                             await provider
                                 .deletePractices([practice.practiceId]);
+                            AppAnalytics.logEvent('practice_set_deleted', {
+                              'count': 1,
+                              'source': 'detail',
+                            });
                             AppToast.success('복습 세트를 삭제했어요.');
                           } catch (e) {
                             debugPrint('복습 세트 삭제 실패: $e');

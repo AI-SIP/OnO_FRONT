@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -260,8 +259,13 @@ class _PracticeCompletionScreenState extends State<PracticeCompletionScreen> {
                     return;
                   }
                   if (!mounted) return;
-                  FirebaseAnalytics.instance
-                      .logEvent(name: 'practice_session_completed');
+                  // 세트를 끝까지 푼 것. 몇 문제짜리를 몇 번째로 끝냈는지와
+                  // 기분을 고르는지를 본다.
+                  AppAnalytics.logEvent('practice_session_completed', {
+                    'problem_count': widget.totalProblems,
+                    'round': widget.practiceRound,
+                    'mood': _selectedMoodKey ?? 'none',
+                  });
 
                   // 1차에서는 행동 응답에 미션 진행도가 실려 오지 않는다. 세트를
                   // 끝낸 뒤 다시 조회해야 미션이 바로 반영된다.

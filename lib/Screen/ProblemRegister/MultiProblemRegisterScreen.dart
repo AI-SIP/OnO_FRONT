@@ -141,6 +141,10 @@ class _MultiProblemRegisterScreenState
     setState(() => _isLoadingRecommendations = true);
     try {
       final recommended = await _tagService.recommendTags();
+      AppAnalytics.logEvent('tag_recommend_shown', {
+        'count': recommended.length,
+        'with_image': false,
+      });
       if (!mounted) return;
       setState(() {
         _recommendedTags
@@ -1458,6 +1462,7 @@ class _MultiProblemRegisterScreenState
       );
       return;
     }
+    AppAnalytics.logEvent('tag_recommend_apply', {'mode': 'multi'});
 
     selectedTagIds.add(tag.tagId);
     _mergeIntoAvailableTags([tag]);

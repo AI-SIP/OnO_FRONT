@@ -1,4 +1,3 @@
-import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:ono/Model/PracticeNote/PracticeNoteDetailModel.dart';
@@ -22,6 +21,7 @@ import '../../Module/Motion/TossDialog.dart';
 import '../../Module/Motion/AppMotion.dart';
 import '../../Module/Design/AppColors.dart';
 import '../../Module/Design/AppRadius.dart';
+import 'package:ono/Util/AppAnalytics.dart';
 
 class PracticeTitleWriteScreen extends StatefulWidget {
   final PracticeNoteRegisterModel? practiceRegisterModel;
@@ -51,6 +51,7 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
   @override
   void initState() {
     super.initState();
+    AppAnalytics.logScreenView('PracticeTitleWriteScreen');
 
     // 현재 시각으로 초기화
     final now = AppClock.now();
@@ -95,6 +96,14 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
       _repeatType == RepeatType.weekly &&
       _selectedWeekdays.isEmpty;
 
+  /// 복습 알림을 어떻게 걸어 두는지. 알림을 켜는 사람이 얼마나 되는지,
+  /// 매일과 매주 중 무엇을 고르는지 본다.
+  Map<String, Object?> _notificationParams() => {
+        'notify_enabled': _notifyEnabled,
+        if (_notifyEnabled) 'repeat_type': _repeatType.name,
+        if (_notifyEnabled) 'notify_hour': _notifyTime.hour,
+      };
+
   Future<void> _submitPractice(
       BuildContext context, ThemeHandler themeProvider) async {
     if (_titleController.text.isEmpty) {
@@ -130,7 +139,13 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
 
           await problemPracticeProvider
               .updatePractice(widget.practiceNoteUpdateModel!);
-          FirebaseAnalytics.instance.logEvent(name: 'practice_set_updated');
+          AppAnalytics.logEvent('practice_set_updated', {
+            'added_count':
+                widget.practiceNoteUpdateModel!.addProblemIdList.length,
+            'removed_count':
+                widget.practiceNoteUpdateModel!.removeProblemIdList.length,
+            ..._notificationParams(),
+          });
 
           if (!context.mounted) return;
           _showSnackBar(context, themeProvider, '복습 세트가 수정되었습니다.',
@@ -159,7 +174,11 @@ class _PracticeTitleWriteScreenState extends State<PracticeTitleWriteScreen> {
           }
           await problemPracticeProvider
               .registerPractice(widget.practiceRegisterModel!);
-          FirebaseAnalytics.instance.logEvent(name: 'practice_set_created');
+          AppAnalytics.logEvent('practice_set_created', {
+            'problem_count':
+                widget.practiceRegisterModel!.registerProblemIdList.length,
+            ..._notificationParams(),
+          });
 
           if (!context.mounted) return;
           _showSnackBar(context, themeProvider, '복습 세트가 생성되었습니다.',

@@ -21,6 +21,7 @@ import '../Motion/PressableScale.dart';
 import '../Motion/TossDialog.dart';
 import '../Text/StandardText.dart';
 import '../Theme/ThemeHandler.dart';
+import '../../Util/AppAnalytics.dart';
 
 /// 오답노트에 넣을 사진을 찍는 화면이다.
 ///
@@ -144,6 +145,7 @@ class _CameraScreenState extends State<CameraScreen>
   @override
   void initState() {
     super.initState();
+    AppAnalytics.logScreenView('CameraScreen');
 
     // 화면 방향을 세로로 고정
     SystemChrome.setPreferredOrientations([
@@ -423,6 +425,12 @@ class _CameraScreenState extends State<CameraScreen>
 
     try {
       final image = await controller.takePicture();
+      // 일반 촬영과 문서 스캔 중 무엇을 쓰는지, 플래시를 켜는지 본다.
+      AppAnalytics.logEvent('camera_capture', {
+        'mode': 'photo',
+        'flash': _flashMode.name,
+        'multiple': _isMulti,
+      });
       if (!mounted) return;
       setState(() {
         _lastShot = image;
@@ -675,6 +683,11 @@ class _CameraScreenState extends State<CameraScreen>
       );
 
       if (paths == null || paths.isEmpty || !mounted) return;
+      AppAnalytics.logEvent('camera_capture', {
+        'mode': 'scan',
+        'count': paths.length,
+        'multiple': _isMulti,
+      });
 
       // 여러 장 모드에서는 이미 담아 둔 것이 있을 수 있으니 합쳐서 들고 간다.
       if (_isMulti) {

@@ -194,6 +194,12 @@ class _ReviewDueScreenState extends State<ReviewDueScreen> {
       child: PressableScale(
         haptic: HapticLevel.none,
         onTap: () async {
+          // 추천 목록에서 실제로 문제를 여는지. 연속으로 맞힌 횟수가 적은
+          // 문제부터 여는지도 본다.
+          AppAnalytics.logEvent('review_due_problem_open', {
+            'review_interval': problem.reviewInterval,
+            'correct_streak': problem.consecutiveCorrectCount,
+          });
           await Navigator.push(
             context,
             TossPageRoute(

@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:ono/Model/Problem/ImprovementType.dart';
 import 'package:ono/Module/Dialog/LoadingDialog.dart';
@@ -179,7 +178,22 @@ class _ProblemSolveRegisterScreenState
         );
       }
 
-      FirebaseAnalytics.instance.logEvent(name: 'problem_repeat');
+      // 복습 한 번이 어떤 모습인지 남긴다. 몇 번 맞히는지, 얼마나 걸리는지,
+      // 기분과 개선 유형을 실제로 고르는지, 필기 캔버스로 푸는지를 본다.
+      final improvements = reviewData['improvements'] as List<ImprovementType>;
+      final mood = reviewData['moodEmojiKey'] as String?;
+      AppAnalytics.logEvent('problem_repeat', {
+        'answer_status':
+            (reviewData['answerStatus'] as AnswerStatus).name.toLowerCase(),
+        'duration_sec': reviewData['timeSpentSeconds'] as int?,
+        'improvements': improvements.map((i) => i.name.toLowerCase()).join(','),
+        'improvement_count': improvements.length,
+        'mood': mood ?? 'none',
+        'has_reflection': reviewData['reflection'] != null,
+        'image_count': solutionImages.length,
+        'via_canvas': widget.initialTimeSpentSeconds != null,
+        'in_practice_set': practiceProvider.currentPracticeNote != null,
+      });
 
       // 5. 유저 정보 갱신 (경험치 업데이트)
       await userProvider.fetchUserInfo();
