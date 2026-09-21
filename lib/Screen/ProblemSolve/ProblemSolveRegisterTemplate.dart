@@ -475,32 +475,39 @@ class ProblemSolveRegisterTemplateState
                   ),
                 ),
                 const SizedBox(width: AppSpacing.sm),
-                // 좁은 폰에서 조절 칩 넷이 한 줄에 다 안 들어가 오른쪽으로
-                // 넘쳤다. 남는 자리를 칩 묶음이 가져가고, 모자라면 아랫줄로
-                // 내린다.
-                Expanded(
-                  child: Wrap(
-                    alignment: WrapAlignment.end,
-                    spacing: 4,
-                    runSpacing: 6,
-                    children: [
-                      _buildAdjustChip('-1분', themeProvider, () {
-                        setState(() {
-                          _timeSpentSeconds -= 60;
-                          if (_timeSpentSeconds < 0) _timeSpentSeconds = 0;
-                        });
-                      }),
-                      _buildAdjustChip('+1분', themeProvider,
-                          () => setState(() => _timeSpentSeconds += 60)),
-                      _buildAdjustChip('-10초', themeProvider, () {
-                        setState(() {
-                          _timeSpentSeconds -= 10;
-                          if (_timeSpentSeconds < 0) _timeSpentSeconds = 0;
-                        });
-                      }),
-                      _buildAdjustChip('+10초', themeProvider,
-                          () => setState(() => _timeSpentSeconds += 10)),
-                    ],
+                // 칩 넷은 항상 한 줄에 둔다. 전에는 글자와 칩 묶음이 폭을 반씩
+                // 나눠 가져서, 글자는 자리가 남는데 칩은 반쪽에 안 들어가 폰에서
+                // 아랫줄로 넘어갔다. 칩 묶음이 제 폭을 먼저 쓰고 글자가 나머지를
+                // 쓴다. 그래도 모자라는 아주 좁은 폰에서는 줄을 바꾸지 않고
+                // 칩을 조금 줄인다.
+                ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxWidth: MediaQuery.sizeOf(context).width * 0.6,
+                  ),
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerRight,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        _buildAdjustChip('-1분', themeProvider, () {
+                          setState(() {
+                            _timeSpentSeconds -= 60;
+                            if (_timeSpentSeconds < 0) _timeSpentSeconds = 0;
+                          });
+                        }),
+                        _buildAdjustChip('+1분', themeProvider,
+                            () => setState(() => _timeSpentSeconds += 60)),
+                        _buildAdjustChip('-10초', themeProvider, () {
+                          setState(() {
+                            _timeSpentSeconds -= 10;
+                            if (_timeSpentSeconds < 0) _timeSpentSeconds = 0;
+                          });
+                        }),
+                        _buildAdjustChip('+10초', themeProvider,
+                            () => setState(() => _timeSpentSeconds += 10)),
+                      ],
+                    ),
                   ),
                 ),
               ],
