@@ -117,7 +117,9 @@ void main() {
     final picked = find.byWidgetPredicate(
       (w) => w is OnoEmojiImage && w.emoji?.key == 'crying_in_rain',
     );
-    expect(picked.hitTestable(), findsOneWidget);
+    expect(picked.hitTestable(), findsWidgets);
+    // 제목 줄 오른쪽에도 고른 기분의 이름이 뜬다.
+    expect(find.text('슬픔'), findsOneWidget);
   });
 
   testWidgets('확인 버튼을 탭하면 addPracticeCount 를 호출하고 완료 스낵바를 띄운다', (tester) async {

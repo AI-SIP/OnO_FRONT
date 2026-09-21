@@ -234,11 +234,18 @@ class _PracticeCompletionScreenState extends State<PracticeCompletionScreen> {
       children: [
         const Divider(),
         const SizedBox(height: 12),
-        StandardText(
-          text: '이번 복습 어땠나요?',
-          fontSize: MobileFontSize.reduced(context, 16),
-          fontWeight: FontWeight.bold,
-          color: AppColors.textPrimary,
+        Row(
+          children: [
+            Expanded(
+              child: StandardText(
+                text: '이번 복습 어땠나요?',
+                fontSize: MobileFontSize.reduced(context, 16),
+                fontWeight: FontWeight.bold,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            _buildSelectedMood(themeProvider),
+          ],
         ),
         const SizedBox(height: 12),
         SizedBox(
@@ -302,6 +309,43 @@ class _PracticeCompletionScreenState extends State<PracticeCompletionScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  /// 지금 고른 기분을 제목 줄 오른쪽에 적는다.
+  ///
+  /// 칸 목록은 가로로 넘어가서 고른 칸이 화면 밖에 있을 수 있다. 특히
+  /// 더보기에서 고르면 다이얼로그가 닫힌 뒤 무엇을 골랐는지 목록만 봐서는
+  /// 알 수 없었다. 어디서 골랐든 여기 한 곳에 보인다.
+  Widget _buildSelectedMood(ThemeHandler themeProvider) {
+    final key = _selectedMoodKey;
+    final emoji = key == null ? null : OnoEmojiCatalog.byKey(key);
+
+    return AnimatedSwitcher(
+      duration: AppMotion.fast,
+      child: emoji == null
+          ? const SizedBox.shrink()
+          : Container(
+              key: ValueKey(emoji.key),
+              padding: const EdgeInsets.fromLTRB(4, 2, 10, 2),
+              decoration: BoxDecoration(
+                color: themeProvider.primaryColor.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(AppRadius.full),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  OnoEmojiImage(emoji: emoji, size: 26),
+                  const SizedBox(width: 4),
+                  StandardText(
+                    text: emoji.label,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: themeProvider.primaryColor,
+                  ),
+                ],
+              ),
+            ),
     );
   }
 
