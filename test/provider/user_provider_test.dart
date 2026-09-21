@@ -759,6 +759,62 @@ void main() {
     });
   });
 
+  group('Analytics 로그아웃과 탈퇴 (이슈 #275)', () {
+    setUp(() {
+      resetAnalyticsRecorder();
+      when(() => tokenProvider.getRefreshToken())
+          .thenAnswer((_) async => 'refresh-token');
+      when(() => userService.logoutAccount(
+          refreshToken: any(named: 'refreshToken'))).thenAnswer((_) async {});
+      when(() => userService.deleteAccount()).thenAnswer((_) async {});
+      when(() => googleAuthService.logoutGoogleSignIn())
+          .thenAnswer((_) async {});
+      when(() => kakaoAuthService.revokeKakaoSignIn()).thenAnswer((_) async {});
+    });
+
+    int indexOf(String name) => analyticsRecorder.loggedEvents.indexOf(name);
+
+    test('직접 탈퇴하면 user_delete 가 withdraw 로 나간다', () async {
+      storageData['loginMethod'] = 'KAKAO';
+
+      await provider.deleteAccount();
+      await Future<void>.delayed(Duration.zero);
+
+      final index = indexOf('user_delete');
+      expect(index, isNot(-1));
+      expect(analyticsRecorder.loggedParameters[index], {
+        'method': 'kakao',
+        'trigger': 'withdraw',
+      });
+    });
+
+    // 게스트는 로그아웃이 곧 탈퇴라, 가르지 않으면 탈퇴가 부풀려 보인다.
+    test('게스트 로그아웃은 guest_logout 으로 나가고 logout 은 남기지 않는다', () async {
+      storageData['loginMethod'] = 'GUEST';
+
+      await provider.signOut();
+      await Future<void>.delayed(Duration.zero);
+
+      expect(
+        analyticsRecorder.loggedParameters[indexOf('user_delete')],
+        containsPair('trigger', 'guest_logout'),
+      );
+      expect(analyticsRecorder.loggedEvents, isNot(contains('logout')));
+    });
+
+    test('회원 로그아웃은 logout 으로 나간다', () async {
+      storageData['loginMethod'] = 'GOOGLE';
+
+      await provider.signOut();
+      await Future<void>.delayed(Duration.zero);
+
+      expect(analyticsRecorder.loggedParameters[indexOf('logout')], {
+        'method': 'google',
+      });
+      expect(analyticsRecorder.loggedEvents, isNot(contains('user_delete')));
+    });
+  });
+
   group('changeIsFirstLogin', () {
     test('한 번 호출하면 false 로 바뀌고 되돌릴 방법이 없다', () {
       provider.changeIsFirstLogin();

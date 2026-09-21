@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:core';
 
-import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter/foundation.dart';
@@ -161,6 +160,7 @@ class UserProvider with ChangeNotifier {
       _loginStatus = LoginStatus.login;
       notifyListeners();
       debugPrint('[signInWithMember] login status set to login');
+      if (isRegister) _logLoginSuccess(userRegisterModel.platform);
 
       if (!context.mounted) return;
       LoadingDialog.hide(context);
@@ -171,6 +171,10 @@ class UserProvider with ChangeNotifier {
       }
     } catch (error, stackTrace) {
       debugPrint('[signInWithMember] error occurred: $error');
+      AppAnalytics.logEvent('login_fail', {
+        'source': 'member',
+        'error': error.runtimeType.toString(),
+      });
       if (!context.mounted) {
         await AppErrorReporter.report(
           error,
@@ -185,6 +189,7 @@ class UserProvider with ChangeNotifier {
   }
 
   Future<void> signInWithGuest(BuildContext context) async {
+    AppAnalytics.logEvent('login_start', {'method': 'guest'});
     try {
       LoadingDialog.show(context, '로그인 중 입니다...');
       final response = await userService.signInWithGuest();
@@ -197,6 +202,7 @@ class UserProvider with ChangeNotifier {
 
       _loginStatus = LoginStatus.login;
       notifyListeners();
+      if (isRegister) _logLoginSuccess('GUEST');
 
       if (!context.mounted) return;
       LoadingDialog.hide(context);
@@ -206,6 +212,10 @@ class UserProvider with ChangeNotifier {
         throw Exception('response: ${response.toString()}');
       }
     } catch (error, stackTrace) {
+      AppAnalytics.logEvent('login_fail', {
+        'source': 'guest',
+        'error': error.runtimeType.toString(),
+      });
       if (!context.mounted) {
         await AppErrorReporter.report(
           error,
@@ -225,14 +235,17 @@ class UserProvider with ChangeNotifier {
   }
 
   Future<void> signInWithGoogle(BuildContext context) async {
+    AppAnalytics.logEvent('login_start', {'method': 'google'});
     await signInWithMember(context, googleAuthService.signInWithGoogle);
   }
 
   Future<void> signInWithApple(BuildContext context) async {
+    AppAnalytics.logEvent('login_start', {'method': 'apple'});
     await signInWithMember(context, appleAuthService.signInWithApple);
   }
 
   Future<void> signInWithKakao(BuildContext context) async {
+    AppAnalytics.logEvent('login_start', {'method': 'kakao'});
     await signInWithMember(context, kakaoAuthService.signInWithKakao);
   }
 
@@ -286,7 +299,17 @@ class UserProvider with ChangeNotifier {
 
   Future<void> saveUserLoginInfo(String? loginMethod) async {
     await storage.write(key: 'loginMethod', value: loginMethod);
-    FirebaseAnalytics.instance.logLogin(loginMethod: loginMethod);
+  }
+
+  /// 로그인이 끝까지 성공했을 때 남긴다. 예전에는 토큰을 받기 전에 남겨서
+  /// 실패한 로그인도 login 으로 셌다.
+  void _logLoginSuccess(String? loginMethod) {
+    final method = loginMethod?.toLowerCase();
+    // 둘 다 GA4 추천 이벤트라 이름과 파라미터를 그대로 쓴다.
+    AppAnalytics.logEvent('login', {'method': method});
+    if (AppAnalytics.looksLikeSignUp(_userInfoModel?.createdAt)) {
+      AppAnalytics.logEvent('sign_up', {'method': method});
+    }
   }
 
   Future<bool> saveUserToken({dynamic response}) async {
@@ -509,9 +532,11 @@ class UserProvider with ChangeNotifier {
       // 게스트는 다시 들어올 길이 없어 로그아웃이 곧 탈퇴다.
       // deleteAccount 가 서버 계정과 기기 토큰을 모두 지우므로 여기서 끝낸다.
       // 이어서 로그아웃 요청을 보내면 토큰이 이미 없어 인증 오류가 뜬다.
-      await deleteAccount();
+      await deleteAccount(trigger: 'guest_logout');
       return;
     }
+
+    AppAnalytics.logEvent('logout', {'method': loginMethod});
 
     try {
       // 소셜 SDK 로그아웃을 서버 요청보다 먼저 한다. 기기 안에서 끝나는 일이라
@@ -574,7 +599,9 @@ class UserProvider with ChangeNotifier {
   }
 
   // 회원 탈퇴 함수
-  Future<void> deleteAccount() async {
+  /// 계정을 지운다. [trigger] 는 Analytics 에만 쓴다. 게스트는 로그아웃이
+  /// 곧 탈퇴라, 직접 탈퇴한 것과 갈라 보지 않으면 탈퇴가 부풀려 보인다.
+  Future<void> deleteAccount({String trigger = 'withdraw'}) async {
     String? loginMethod = await _readLoginMethod();
     if (loginMethod == 'google') {
       // 구글 회원 탈퇴 로직
@@ -589,11 +616,12 @@ class UserProvider with ChangeNotifier {
     } else {}
 
     await userService.deleteAccount();
+    // 유저 식별을 지우기 전에 남겨야 누가 나갔는지 이어 볼 수 있다.
+    AppAnalytics.logEvent('user_delete', {
+      'method': loginMethod,
+      'trigger': trigger,
+    });
     await resetUserInfo();
-
-    await FirebaseAnalytics.instance.logEvent(
-      name: 'user_delete',
-    );
   }
 
   Future<void> resetUserInfo() async {
