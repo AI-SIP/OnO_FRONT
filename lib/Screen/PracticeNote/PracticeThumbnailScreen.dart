@@ -5,6 +5,8 @@ import 'package:provider/provider.dart';
 import '../../Provider/CosmeticProvider.dart';
 import '../User/Widget/FrogCharacter.dart';
 import '../../Model/PracticeNote/PracticeNoteThumbnailModel.dart';
+import '../../Module/Emoji/OnoEmojiCatalog.dart';
+import '../../Module/Emoji/OnoEmojiImage.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Text/mobile_font_size.dart';
 import '../../Module/Theme/ClayIcon.dart';
@@ -742,17 +744,54 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
             fontSize: 11,
             color: Colors.grey,
           ),
+          ..._buildLastMood(practice),
         ],
       ),
     );
+  }
+
+  /// 지난 복습을 끝내고 고른 기분.
+  ///
+  /// 상세 화면 위쪽에 따로 칸을 두었더니 통계와 문제 목록 사이에 끼어
+  /// 자리만 차지했다. 여러 세트를 훑어보는 목록에서 날짜 아래 한 줄로 본다.
+  /// 서버가 이 앱이 모르는 키를 보내면 [OnoEmojiCatalog.byKey] 가 null 을
+  /// 주는데, 그때는 줄 자체를 그리지 않는다.
+  List<Widget> _buildLastMood(PracticeNoteThumbnails practice) {
+    final key = practice.lastSessionMoodEmojiKey;
+    final emoji = key == null ? null : OnoEmojiCatalog.byKey(key);
+    if (emoji == null) return const [];
+
+    return [
+      const SizedBox(height: 4),
+      Row(
+        children: [
+          const StandardText(
+            text: '지난 소감',
+            fontSize: 11,
+            color: Colors.grey,
+          ),
+          const SizedBox(width: 4),
+          OnoEmojiImage(emoji: emoji, size: 18),
+          const SizedBox(width: 2),
+          Flexible(
+            child: StandardText(
+              text: emoji.label,
+              fontSize: 11,
+              color: AppColors.textSecondary,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
+    ];
   }
 
   Widget _buildPracticeMeta(
       PracticeNoteThumbnails practice, ThemeHandler themeProvider) {
     const frogIconBoxWidth = 68.0;
 
-    // 지난 복습 소감 이모지는 여기 두지 않는다. 목록에서는 몇 회 복습했는지만
-    // 보면 되고, 소감은 상세 화면에서 본다.
+    // 지난 복습 소감은 왼쪽 날짜 아래에 둔다. 여기는 몇 회 복습했는지만 본다.
     return Semantics(
       label: practice.practiceCount >= 3
           ? '복습 완료'

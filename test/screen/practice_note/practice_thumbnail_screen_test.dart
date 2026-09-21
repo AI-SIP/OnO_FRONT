@@ -121,6 +121,28 @@ void main() {
     expect(find.text('1회 복습'), findsOneWidget);
   });
 
+  testWidgets('지난 복습 소감이 있으면 날짜 아래에 이모지 이름이 보인다', (tester) async {
+    when(() => practiceNoteService.getPracticeNoteThumbnailsV2(
+          cursor: null,
+          size: 20,
+        )).thenAnswer((_) async => _page([
+          _thumb(1, lastSessionMoodEmojiKey: 'cool_sunglasses'),
+          _thumb(2),
+          _thumb(3, lastSessionMoodEmojiKey: 'no_such_emoji_key'),
+        ]));
+    await practiceProvider.loadInitialPracticeThumbnails();
+
+    await pumpOnoWidget(
+      tester,
+      const PracticeThumbnailScreen(),
+      practiceProvider: practiceProvider,
+    );
+
+    // 소감이 없거나 이 앱이 모르는 키면 그 줄을 그리지 않는다.
+    expect(find.text('지난 소감'), findsOneWidget);
+    expect(find.text('멋짐'), findsOneWidget);
+  });
+
   testWidgets('복습 3회 이상이면 "복습 완료" 태그로 바뀐다', (tester) async {
     when(() => practiceNoteService.getPracticeNoteThumbnailsV2(
           cursor: null,
