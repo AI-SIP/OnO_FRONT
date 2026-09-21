@@ -382,7 +382,7 @@ void main() {
       // 필요 레벨만 적으면 코앞인지 한참 남았는지 알 수 없다.
       await pumpCloset(tester);
 
-      expect(inCard(find.text('지금 출석 Lv.12 · 2 레벨 남았어요')), findsOneWidget);
+      expect(inCard(find.text('획득까지 2레벨 남았어요')), findsOneWidget);
     });
 
     // 배지를 Flexible 로 두면 제 너비만큼만 차지하는데, 앞의 이름이 이미 제
@@ -415,7 +415,7 @@ void main() {
         levels: CosmeticAbilityLevels(attendance: 13),
       );
 
-      expect(inCard(find.text('지금 출석 Lv.13 · 한 레벨만 더!')), findsOneWidget);
+      expect(inCard(find.text('획득까지 1레벨 남았어요')), findsOneWidget);
     });
 
     testWidgets('남은 레벨이 가장 적은 것을 고른다', (tester) async {
