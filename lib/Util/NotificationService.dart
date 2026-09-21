@@ -22,6 +22,7 @@ import '../Screen/ReviewDue/ReviewDueScreen.dart';
 import '../Screen/StudyRoom/SharedProblemDetailScreen.dart';
 import '../Screen/StudyRoom/StudyRoomDetailScreen.dart';
 import '../Service/Api/HttpService.dart';
+import 'AppAnalytics.dart';
 import 'AppErrorReporter.dart';
 import 'AppNavigator.dart';
 import '../Module/Motion/TossPageRoute.dart';
@@ -416,6 +417,7 @@ class NotificationService {
 
       final current = AppNavigator.navigatorKey.currentState;
       if (current == null) return;
+      AppAnalytics.logScreenView('PracticeDetailScreen');
       current.push(
         TossPageRoute(builder: (_) => PracticeDetailScreen(practice: practice)),
       );

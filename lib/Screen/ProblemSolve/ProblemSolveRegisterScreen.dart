@@ -17,6 +17,7 @@ import '../../Provider/PracticeNoteProvider.dart';
 import '../../Provider/ProblemsProvider.dart';
 import '../../Provider/UserProvider.dart';
 import '../../Service/Api/Problem/ProblemSolveService.dart';
+import '../../Util/AppAnalytics.dart';
 import 'ProblemSolveRegisterTemplate.dart';
 import '../../Module/Design/AppRadius.dart';
 
@@ -43,6 +44,12 @@ class _ProblemSolveRegisterScreenState
     extends State<ProblemSolveRegisterScreen> {
   final GlobalKey<ProblemSolveRegisterTemplateState> _templateKey =
       GlobalKey<ProblemSolveRegisterTemplateState>();
+
+  @override
+  void initState() {
+    super.initState();
+    AppAnalytics.logScreenView('ProblemSolveRegisterScreen');
+  }
 
   @override
   Widget build(BuildContext context) {

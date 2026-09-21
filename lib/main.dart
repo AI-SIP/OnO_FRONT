@@ -36,6 +36,7 @@ import 'Screen/StudyRoom/StudyRoomListScreen.dart';
 import 'Screen/Tutorial/TutorialOverlay.dart';
 import 'Screen/Tutorial/TutorialTargets.dart';
 import 'Screen/User/MyPageScreen.dart';
+import 'Util/AppAnalytics.dart';
 import 'Util/AppErrorReporter.dart';
 import 'Util/AppNavigator.dart';
 import 'Util/AppSnackBar.dart';
@@ -117,6 +118,7 @@ Future<void> _bootstrapApp() async {
   await AppConfig.load();
 
   await initializeOnOFirebaseApp();
+  await AppAnalytics.applyCollectionPolicy();
 
   await NotificationService.instance.init();
   FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);

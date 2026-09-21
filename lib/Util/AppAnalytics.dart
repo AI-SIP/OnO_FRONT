@@ -43,6 +43,52 @@ class AppAnalytics {
     _hasProfileImage,
   ];
 
+  /// 이 빌드가 Analytics 를 보내도 되는지.
+  ///
+  /// Firebase 프로젝트가 운영과 개발에 하나뿐이라, 개발 서버 빌드나 로컬
+  /// 디버그 실행에서 누른 것까지 운영 통계에 섞였다. 운영 서버를 붙인 릴리즈
+  /// 빌드만 보낸다. 기준은 Sentry 가 `production` 으로 치는 빌드와 같다.
+  static bool shouldCollect({
+    required String appEnv,
+    required bool isReleaseMode,
+  }) {
+    return isReleaseMode && appEnv == 'prod';
+  }
+
+  /// [shouldCollect] 에 따라 수집을 켜거나 끈다. Firebase 초기화 직후에 부른다.
+  ///
+  /// 네이티브 SDK 가 앱 시작과 함께 보내는 자동 이벤트는 이 호출보다 먼저
+  /// 나갈 수 있다. 끄는 값은 기기에 남아서 다음 실행부터는 처음부터 꺼진다.
+  static Future<void> applyCollectionPolicy() async {
+    try {
+      await FirebaseAnalytics.instance.setAnalyticsCollectionEnabled(
+        shouldCollect(
+          appEnv: const String.fromEnvironment('ENV', defaultValue: 'local'),
+          isReleaseMode: kReleaseMode,
+        ),
+      );
+    } catch (error) {
+      debugPrint('[AppAnalytics] 수집 설정 실패: $error');
+    }
+  }
+
+  /// 하단 탭이 아닌 화면에 들어왔음을 남긴다. 화면의 `initState` 에서 부른다.
+  ///
+  /// 화면 이동에 이름을 주지 않아서 `FirebaseAnalyticsObserver` 가 하위 화면을
+  /// 하나도 기록하지 못했다. 들어오는 경로가 여러 곳이라 이동마다 이름을
+  /// 다는 대신 화면 쪽에서 한 번 남긴다.
+  static void logScreenView(String screenName) {
+    try {
+      FirebaseAnalytics.instance
+          .logScreenView(screenName: screenName, screenClass: screenName)
+          .catchError((Object error) {
+        debugPrint('[AppAnalytics] 화면 기록 실패: $error');
+      });
+    } catch (error) {
+      debugPrint('[AppAnalytics] 화면 기록 실패: $error');
+    }
+  }
+
   /// 로그인한 유저를 식별시키고 유저 속성을 갱신한다.
   ///
   /// 유저 정보를 새로 받아올 때마다 부르면 된다. 레벨이나 알림 설정이

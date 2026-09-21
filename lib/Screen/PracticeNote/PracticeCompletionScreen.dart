@@ -20,6 +20,7 @@ import '../../Module/Motion/AppearTransition.dart';
 import '../../Module/Design/AppColors.dart';
 import '../../Module/Design/AppRadius.dart';
 import '../../Module/Design/AppToast.dart';
+import '../../Util/AppAnalytics.dart';
 
 class PracticeCompletionScreen extends StatefulWidget {
   final int practiceId;
@@ -47,6 +48,12 @@ class _PracticeCompletionScreenState extends State<PracticeCompletionScreen> {
   /// 확인을 또 누르면 횟수가 그만큼 쌓였다. 저장에 성공하면 화면이 닫힐
   /// 때까지 다시 켜지 않는다.
   bool _submitting = false;
+
+  @override
+  void initState() {
+    super.initState();
+    AppAnalytics.logScreenView('PracticeCompletionScreen');
+  }
 
   @override
   Widget build(BuildContext context) {

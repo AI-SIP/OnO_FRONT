@@ -6,6 +6,7 @@ import 'package:ono/Model/PracticeNote/PracticeNoteUpdateModel.dart';
 import 'package:ono/Module/Dialog/SnackBarDialog.dart';
 import 'package:ono/Provider/PracticeNoteProvider.dart';
 import 'package:ono/Screen/ProblemRegister/ProblemRegisterScreen.dart';
+import 'package:ono/Util/AppAnalytics.dart';
 import 'package:ono/Util/AppErrorReporter.dart';
 import 'package:provider/provider.dart';
 
@@ -52,6 +53,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
   @override
   void initState() {
     super.initState();
+    AppAnalytics.logScreenView('ProblemDetailScreen');
     _setProblemModel();
   }
 

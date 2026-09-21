@@ -52,6 +52,14 @@ class _FakeFirebaseAnalyticsPlatform extends FirebaseAnalyticsPlatform
   /// 실제로 기록된 이벤트 이름들. 필요하면 테스트에서 검증에 쓸 수 있다.
   final List<String> loggedEvents = [];
 
+  /// [loggedEvents] 와 같은 순서로 쌓이는 이벤트 파라미터.
+  @override
+  final List<Map<String, Object?>?> loggedParameters = [];
+
+  /// 마지막으로 설정된 수집 여부. 한 번도 안 불렸으면 null 이다.
+  @override
+  bool? collectionEnabled;
+
   @override
   FirebaseAnalyticsPlatform delegateFor({
     required FirebaseApp app,
@@ -75,6 +83,12 @@ class _FakeFirebaseAnalyticsPlatform extends FirebaseAnalyticsPlatform
     AnalyticsCallOptions? callOptions,
   }) async {
     loggedEvents.add(name);
+    loggedParameters.add(parameters);
+  }
+
+  @override
+  Future<void> setAnalyticsCollectionEnabled(bool enabled) async {
+    collectionEnabled = enabled;
   }
 
   @override
@@ -124,6 +138,8 @@ void resetAnalyticsRecorder() {
   final platform = FirebaseAnalyticsPlatform.instance;
   if (platform is _FakeFirebaseAnalyticsPlatform) {
     platform.loggedEvents.clear();
+    platform.loggedParameters.clear();
+    platform.collectionEnabled = null;
     platform.userProperties.clear();
     platform.userId = null;
   }
@@ -132,6 +148,8 @@ void resetAnalyticsRecorder() {
 /// 스텁이 기록해 둔 것을 읽는 창구.
 abstract interface class FakeAnalyticsRecorder {
   List<String> get loggedEvents;
+  List<Map<String, Object?>?> get loggedParameters;
+  bool? get collectionEnabled;
   String? get userId;
   Map<String, String?> get userProperties;
 }

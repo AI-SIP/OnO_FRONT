@@ -29,6 +29,7 @@ import '../../Provider/UserProvider.dart';
 import '../../Service/Api/FileUpload/FileUploadService.dart';
 import '../../Service/Api/Problem/ProblemService.dart';
 import '../../Service/Api/Tag/TagService.dart';
+import '../../Util/AppAnalytics.dart';
 import '../../Util/AppErrorReporter.dart';
 import 'TagSelectionScreen.dart';
 import 'Widget/DatePickerWidget.dart';
@@ -85,6 +86,7 @@ class _MultiProblemRegisterScreenState
   @override
   void initState() {
     super.initState();
+    AppAnalytics.logScreenView('MultiProblemRegisterScreen');
     _selectedFolderId = widget.initialFolderId;
     _loadTags();
     _loadRecommendedTags();

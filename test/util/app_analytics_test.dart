@@ -147,4 +147,52 @@ void main() {
       expect(analyticsRecorder.userId, isNull);
     });
   });
+
+  group('shouldCollect', () {
+    test('운영 서버를 붙인 릴리즈 빌드만 보낸다', () {
+      expect(
+        AppAnalytics.shouldCollect(appEnv: 'prod', isReleaseMode: true),
+        isTrue,
+      );
+    });
+
+    test('개발 서버 빌드와 로컬 빌드는 보내지 않는다', () {
+      expect(
+        AppAnalytics.shouldCollect(appEnv: 'dev', isReleaseMode: true),
+        isFalse,
+      );
+      expect(
+        AppAnalytics.shouldCollect(appEnv: 'local', isReleaseMode: true),
+        isFalse,
+      );
+    });
+
+    test('디버그 실행은 운영 서버를 붙여도 보내지 않는다', () {
+      expect(
+        AppAnalytics.shouldCollect(appEnv: 'prod', isReleaseMode: false),
+        isFalse,
+      );
+    });
+  });
+
+  group('applyCollectionPolicy', () {
+    test('테스트 실행은 디버그라 수집을 끈다', () async {
+      await AppAnalytics.applyCollectionPolicy();
+
+      expect(analyticsRecorder.collectionEnabled, isFalse);
+    });
+  });
+
+  group('logScreenView', () {
+    test('화면 이름을 screen_view 로 남긴다', () async {
+      AppAnalytics.logScreenView('ProblemDetailScreen');
+      await Future<void>.delayed(Duration.zero);
+
+      expect(analyticsRecorder.loggedEvents, ['screen_view']);
+      expect(
+        analyticsRecorder.loggedParameters.single,
+        containsPair('screen_name', 'ProblemDetailScreen'),
+      );
+    });
+  });
 }
