@@ -2284,30 +2284,10 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      children: [
-                        const StandardText(
-                          text: '추천 복습 문제',
-                          fontSize: 14,
-                          color: AppColors.textPrimary,
-                        ),
-                        const SizedBox(width: 6),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 7, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: themeProvider.primaryColor,
-                            borderRadius:
-                                BorderRadius.circular(AppRadius.medium),
-                          ),
-                          child: StandardText(
-                            text: '${reviewDueProvider.dueCount}개',
-                            fontSize: 10,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ],
+                    const StandardText(
+                      text: '추천 복습 문제',
+                      fontSize: 14,
+                      color: AppColors.textPrimary,
                     ),
                     if (overdueCount > 0) ...[
                       const SizedBox(height: 2),
@@ -2320,6 +2300,23 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                   ],
                 ),
               ),
+              // 개수는 누르면 가는 곳 바로 앞에 둔다. 위 오늘의 미션 카드의
+              // 받기 태그와 같은 자리다.
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                decoration: BoxDecoration(
+                  color: themeProvider.primaryColor,
+                  borderRadius: BorderRadius.circular(AppRadius.medium),
+                ),
+                child: StandardText(
+                  text: '${reviewDueProvider.dueCount}개',
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(width: 8),
               Icon(Icons.chevron_right, size: 20, color: Colors.grey[400]),
             ],
           ),

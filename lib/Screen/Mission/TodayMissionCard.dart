@@ -119,17 +119,6 @@ class TodayMissionCard extends StatelessWidget {
                           fontSize: 12,
                           color: AppColors.textTertiary,
                         ),
-                        if (unclaimed > 0) ...[
-                          const SizedBox(width: AppSpacing.sm),
-                          MissionTag(
-                            text: '받기 $unclaimed',
-                            color: themeProvider.primaryColor,
-                            leading: MissionRewardToken(
-                              size: MissionTag.fontSize * 1.1,
-                              color: themeProvider.primaryColor,
-                            ),
-                          ),
-                        ],
                       ],
                     ),
                     const SizedBox(height: AppSpacing.sm),
@@ -143,6 +132,19 @@ class TodayMissionCard extends StatelessWidget {
                   ],
                 ),
               ),
+              // 받을 것은 누르면 가는 곳 바로 앞에 둔다. 아래 추천 복습
+              // 배너의 개수 배지와 같은 자리다.
+              if (unclaimed > 0) ...[
+                const SizedBox(width: AppSpacing.sm),
+                MissionTag(
+                  text: '받기 $unclaimed',
+                  color: themeProvider.primaryColor,
+                  leading: MissionRewardToken(
+                    size: MissionTag.fontSize * 1.1,
+                    color: themeProvider.primaryColor,
+                  ),
+                ),
+              ],
               const SizedBox(width: AppSpacing.sm),
               Icon(Icons.chevron_right, size: 20, color: Colors.grey[400]),
             ],
