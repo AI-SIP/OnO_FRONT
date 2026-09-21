@@ -189,7 +189,14 @@ class _PracticeNavigationButtonsState extends State<PracticeNavigationButtons> {
     );
   }
 
+  /// 완료 화면으로 넘어가는 중인지. 두 번 눌리면 완료 화면이 이 화면이
+  /// 아니라 먼저 뜬 완료 화면을 갈아 끼워서, 닫을 때 한 화면이 남았다.
+  bool _openingCompletion = false;
+
   void _showCompletionScreen() {
+    if (_openingCompletion) return;
+    _openingCompletion = true;
+
     final practiceId = widget.practiceProvider.currentPracticeNote!.practiceId;
     final totalProblems = widget.practiceProvider.currentProblems.length;
     final matchingPractices = widget.practiceProvider.practices

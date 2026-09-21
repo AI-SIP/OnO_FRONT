@@ -55,6 +55,13 @@ class _PracticeCompletionScreenState extends State<PracticeCompletionScreen> {
 
   String? _selectedMoodKey;
 
+  /// 완료를 저장하는 중이거나 이미 저장했는지.
+  ///
+  /// 완료 요청은 보낼 때마다 복습 횟수를 하나씩 올린다. 응답을 기다리는 동안
+  /// 확인을 또 누르면 횟수가 그만큼 쌓였다. 저장에 성공하면 화면이 닫힐
+  /// 때까지 다시 켜지 않는다.
+  bool _submitting = false;
+
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeHandler>(context);
@@ -275,7 +282,18 @@ class _PracticeCompletionScreenState extends State<PracticeCompletionScreen> {
     );
   }
 
+  /// 추천 칸 끝의 `...` 칸.
+  ///
+  /// 여기서 고른 이모지는 추천 칸에 없어서 다이얼로그가 닫히면 무엇을 골랐는지
+  /// 보이지 않았다. 추천 밖의 것을 골랐으면 이 칸이 그 이모지를 골라 둔
+  /// 모양으로 보여 준다. 다시 누르면 다이얼로그가 열려 바꿀 수 있다.
   Widget _buildMoreMoodButton(ThemeHandler themeProvider) {
+    final selectedKey = _selectedMoodKey;
+    final picked =
+        selectedKey == null || _recommendedMoodKeys.contains(selectedKey)
+            ? null
+            : OnoEmojiCatalog.byKey(selectedKey);
+
     return PressableScale(
       onTap: () {
         OnoEmojiPicker.show(
@@ -286,15 +304,37 @@ class _PracticeCompletionScreenState extends State<PracticeCompletionScreen> {
       },
       child: Container(
         width: 70,
+        padding:
+            picked == null ? null : const EdgeInsets.symmetric(vertical: 8),
         decoration: BoxDecoration(
-          color: Colors.grey[50],
+          color: picked == null
+              ? Colors.grey[50]
+              : themeProvider.primaryColor.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(AppRadius.medium),
-          border: Border.all(color: AppColors.border),
+          border: Border.all(
+            color:
+                picked == null ? AppColors.border : themeProvider.primaryColor,
+          ),
         ),
-        child: Icon(
-          Icons.more_horiz,
-          color: themeProvider.primaryColor,
-        ),
+        child: picked == null
+            ? Icon(
+                Icons.more_horiz,
+                color: themeProvider.primaryColor,
+              )
+            : Column(
+                children: [
+                  OnoEmojiImage(emoji: picked, size: 54),
+                  const SizedBox(height: 4),
+                  Container(
+                    width: 5,
+                    height: 5,
+                    decoration: BoxDecoration(
+                      color: themeProvider.primaryColor,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                ],
+              ),
       ),
     );
   }
@@ -308,50 +348,66 @@ class _PracticeCompletionScreenState extends State<PracticeCompletionScreen> {
         width: double.infinity,
         height: 50,
         child: ElevatedButton(
-          onPressed: () async {
-            final navigator = Navigator.of(context);
-            final missionProvider =
-                Provider.of<MissionProvider>(context, listen: false);
-            try {
-              await practiceProvider.addPracticeCount(
-                widget.practiceId,
-                moodEmojiKey: _selectedMoodKey,
-              );
-            } catch (_) {
-              if (!mounted) return;
-              AppToast.error('복습 완료를 저장하지 못했어요.');
-              return;
-            }
-            if (!mounted) return;
-            FirebaseAnalytics.instance
-                .logEvent(name: 'practice_session_completed');
+          onPressed: _submitting
+              ? null
+              : () async {
+                  final navigator = Navigator.of(context);
+                  final missionProvider =
+                      Provider.of<MissionProvider>(context, listen: false);
+                  setState(() => _submitting = true);
+                  try {
+                    await practiceProvider.addPracticeCount(
+                      widget.practiceId,
+                      moodEmojiKey: _selectedMoodKey,
+                    );
+                  } catch (_) {
+                    if (!mounted) return;
+                    setState(() => _submitting = false);
+                    AppToast.error('복습 완료를 저장하지 못했어요.');
+                    return;
+                  }
+                  if (!mounted) return;
+                  FirebaseAnalytics.instance
+                      .logEvent(name: 'practice_session_completed');
 
-            // 1차에서는 행동 응답에 미션 진행도가 실려 오지 않는다. 세트를
-            // 끝낸 뒤 다시 조회해야 미션이 바로 반영된다.
-            unawaited(missionProvider.fetchMissions());
-            // 2번 pop: PracticeCompletionScreen -> PracticeDetailScreen -> PracticeThumbnailScreen
-            // 두 번째 pop에서 true를 반환하여 썸네일 업데이트 신호 전달
-            if (navigator.canPop()) {
-              navigator.pop(); // PracticeCompletionScreen 닫기
-            }
-            if (navigator.canPop()) {
-              navigator.pop(true); // PracticeDetailScreen 닫으면서 true 반환
-            }
-            AppToast.success('복습을 완료했습니다!');
-          },
+                  // 1차에서는 행동 응답에 미션 진행도가 실려 오지 않는다. 세트를
+                  // 끝낸 뒤 다시 조회해야 미션이 바로 반영된다.
+                  unawaited(missionProvider.fetchMissions());
+                  // 2번 pop: PracticeCompletionScreen -> PracticeDetailScreen -> PracticeThumbnailScreen
+                  // 두 번째 pop에서 true를 반환하여 썸네일 업데이트 신호 전달
+                  if (navigator.canPop()) {
+                    navigator.pop(); // PracticeCompletionScreen 닫기
+                  }
+                  if (navigator.canPop()) {
+                    navigator.pop(true); // PracticeDetailScreen 닫으면서 true 반환
+                  }
+                  AppToast.success('복습을 완료했습니다!');
+                },
           style: ElevatedButton.styleFrom(
             backgroundColor: themeProvider.primaryColor,
+            // 저장하는 동안에도 흐려지지 않게 같은 색을 쓴다. 대신 글자
+            // 자리에 도는 표시를 둔다.
+            disabledBackgroundColor: themeProvider.primaryColor,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(AppRadius.large),
             ),
             elevation: 0,
           ),
-          child: const StandardText(
-            text: "확인",
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
+          child: _submitting
+              ? const SizedBox(
+                  width: 22,
+                  height: 22,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2.4,
+                    color: Colors.white,
+                  ),
+                )
+              : const StandardText(
+                  text: "확인",
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
         ),
       ),
     );
