@@ -505,15 +505,28 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
               await fetchFoldersAndProblems();
               await missionProvider?.fetchMissions();
             },
+            // 좌우 여백은 목록 안쪽에 둔다. 목록은 제 영역 밖을 잘라내서,
+            // 바깥에 여백을 두면 폴더에 끌어다 댈 때 커지는 강조 테두리의
+            // 양옆이 잘렸다.
             child: Padding(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.symmetric(vertical: _pagePadding),
               child: Column(
                 children: [
-                  // 미션 조회에 실패했거나 미션이 없으면 카드가 스스로 숨는다.
-                  if (widget.folderId == null) const TodayMissionCard(),
-                  if (widget.folderId == null && reviewDueProvider.dueCount > 0)
-                    _buildReviewDueBadge(
-                        context, reviewDueProvider, themeProvider),
+                  Padding(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: _pagePadding),
+                    child: Column(
+                      children: [
+                        // 미션 조회에 실패했거나 미션이 없으면 카드가 스스로
+                        // 숨는다.
+                        if (widget.folderId == null) const TodayMissionCard(),
+                        if (widget.folderId == null &&
+                            reviewDueProvider.dueCount > 0)
+                          _buildReviewDueBadge(
+                              context, reviewDueProvider, themeProvider),
+                      ],
+                    ),
+                  ),
                   _buildFolderAndProblemGrid(themeProvider),
                 ],
               ),
@@ -602,6 +615,9 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
   /// 목록에서 하나씩 들어오게 할 항목 수. 첫 화면에 보이는 만큼이다.
   static const int _staggeredItemLimit = 8;
+
+  /// 홈 화면 둘레의 여백.
+  static const double _pagePadding = 20;
 
   Widget _buildQuickCreateFab(ThemeHandler themeProvider) {
     return Column(
@@ -1265,8 +1281,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                       itemCount: 5,
                       itemHeight: 96,
                       spacing: 16,
-                      padding:
-                          EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      padding: EdgeInsets.symmetric(
+                          horizontal: _pagePadding + 16, vertical: 8),
                     );
                   }
 
@@ -1274,6 +1290,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                   if (currentSubfolders.isEmpty && currentProblems.isEmpty) {
                     return SingleChildScrollView(
                       physics: const AlwaysScrollableScrollPhysics(),
+                      padding:
+                          const EdgeInsets.symmetric(horizontal: _pagePadding),
                       child: SizedBox(
                         height: MediaQuery.of(context).size.height * 0.7,
                         child: Center(
@@ -1316,6 +1334,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                   return ListView.builder(
                     controller: _scrollController,
                     physics: const AlwaysScrollableScrollPhysics(),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: _pagePadding),
                     itemCount: totalItems + (isLoadingMore || hasMore ? 1 : 0),
                     itemBuilder: (context, index) {
                       // 로딩 인디케이터 표시
@@ -1348,7 +1368,11 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                 },
               ),
             ),
-            if (_isSelectionMode) _buildBottomActionButtons(themeProvider),
+            if (_isSelectionMode)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: _pagePadding),
+                child: _buildBottomActionButtons(themeProvider),
+              ),
           ],
         ));
   }
