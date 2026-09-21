@@ -65,6 +65,22 @@ void main() {
           .map((label) => tester.getRect(find.text(label)).top)
           .toSet();
       expect(tops, hasLength(1), reason: '${entry.key}: 칩이 두 줄로 나뉘었다');
+
+      // 칩끼리 딱 붙어 있지 않다.
+      final minus10 = tester.getRect(find
+          .ancestor(
+            of: find.text('-10초'),
+            matching: find.byType(Container),
+          )
+          .first);
+      final plus10 = tester.getRect(find
+          .ancestor(
+            of: find.text('+10초'),
+            matching: find.byType(Container),
+          )
+          .first);
+      expect(plus10.left - minus10.right, greaterThan(3),
+          reason: '${entry.key}: 칩 사이가 붙어 있다');
     });
   }
 }
