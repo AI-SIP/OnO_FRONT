@@ -55,7 +55,7 @@ void main() {
               progressId: 2,
               claimedAt: DateTime(2026, 9, 9, 21, 5),
               code: 'DAILY_REVIEW_3',
-              title: '세 문제만',
+              title: '3문제만',
               rewardValue: 15,
             ),
             item(

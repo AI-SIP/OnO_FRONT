@@ -12,7 +12,7 @@ class AchievementModel {
   /// 화면에 적는 이름. `기록광`.
   final String nameKo;
 
-  /// 화면에 적는 한 줄 설명. `오답노트를 백 개나 모았어요`.
+  /// 화면에 적는 한 줄 설명. `오답노트를 100개 작성했어요`.
   final String descriptionKo;
 
   /// 훈장 그림. 치장과 같이 **앱 번들 경로**(`assets/Medal/<key>.png`)다.

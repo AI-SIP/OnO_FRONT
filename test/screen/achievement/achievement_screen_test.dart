@@ -114,9 +114,9 @@ void main() {
       await settleToast(tester);
 
       expect(find.text('첫 걸음'), findsOneWidget);
-      expect(find.text('오답노트를 처음 적었어요'), findsOneWidget);
+      expect(find.text('오답노트를 처음 작성했어요'), findsOneWidget);
       expect(find.text('기록광'), findsOneWidget);
-      expect(find.text('오답노트를 백 개나 모았어요'), findsOneWidget);
+      expect(find.text('오답노트를 100개 작성했어요'), findsOneWidget);
     });
 
     testWidgets('몇 개 중 몇 개를 모았는지 맨 위에 있다', (tester) async {

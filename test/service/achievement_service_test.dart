@@ -39,7 +39,7 @@ void main() {
           {
             'key': 'archivist',
             'nameKo': '기록광',
-            'descriptionKo': '오답노트를 백 개나 모았어요',
+            'descriptionKo': '오답노트를 100개 작성했어요',
             'imageUrl': 'assets/Medal/archivist.png',
             'earned': true,
             'earnedAt': '2026-09-14T01:23:45',
@@ -193,7 +193,7 @@ void main() {
       // 있는지 보여야 갖고 싶어진다.
       final archivist = board.of('archivist')!;
       expect(archivist.nameKo, '기록광');
-      expect(archivist.descriptionKo, '오답노트를 백 개나 모았어요');
+      expect(archivist.descriptionKo, '오답노트를 100개 작성했어요');
       expect(archivist.imageUrl, 'assets/Medal/archivist.png');
       expect(archivist.current, 87);
       expect(archivist.target, 100);
