@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
 import 'package:ono/Model/User/UserRegisterModel.dart';
@@ -11,7 +12,15 @@ class GoogleAuthService {
   final GoogleSignIn _googleSignIn = GoogleSignIn();
 
   Future<UserRegisterModel?> signInWithGoogle(BuildContext context) async {
-    final googleSignInAccount = await _googleSignIn.signIn();
+    final GoogleSignInAccount? googleSignInAccount;
+    try {
+      googleSignInAccount = await _googleSignIn.signIn();
+    } on PlatformException catch (error) {
+      // 12501 은 사용자가 창을 닫은 것이고 12502 는 이미 다른 로그인 창이 떠
+      // 있는 것이다. 둘 다 결함이 아니라서 취소로 돌려 조용히 끝낸다.
+      if (_isCanceled(error)) return null;
+      rethrow;
+    }
     if (googleSignInAccount != null) {
       String? email = googleSignInAccount.email;
       String? name = googleSignInAccount.displayName;
@@ -22,6 +31,12 @@ class GoogleAuthService {
     } else {
       return null;
     }
+  }
+
+  static bool _isCanceled(PlatformException error) {
+    if (error.code == GoogleSignIn.kSignInCanceledError) return true;
+    final message = error.message ?? '';
+    return message.contains('12501') || message.contains('12502');
   }
 
   Future<void> logoutGoogleSignIn() async {
