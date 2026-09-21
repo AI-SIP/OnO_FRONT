@@ -60,12 +60,13 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(BottomSheet), findsNothing);
-    // 제목 옆 표와 줄 맨 앞 칸, 두 곳 모두 화면 안에 보인다.
-    expect(find.text('슬픔'), findsOneWidget);
+    // 제목 옆 그림과 줄 맨 앞 칸, 두 곳 모두 화면 안에 보인다. 이름 글자는
+    // 적지 않는다.
+    expect(find.text('슬픔'), findsNothing);
     expect(emojiImage('crying_in_rain').hitTestable(), findsNWidgets(2));
   });
 
-  testWidgets('추천 칸을 고르면 제목 옆에 이름이 뜨고 다시 누르면 사라진다', (tester) async {
+  testWidgets('추천 칸을 고르면 제목 옆에 그림이 뜨고 다시 누르면 사라진다', (tester) async {
     await pumpOnoWidget(tester, const _Host());
 
     final first = emojiImage(MoodPickerRow.recommendedKeys.first);

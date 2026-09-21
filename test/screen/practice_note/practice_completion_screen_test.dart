@@ -118,8 +118,9 @@ void main() {
       (w) => w is OnoEmojiImage && w.emoji?.key == 'crying_in_rain',
     );
     expect(picked.hitTestable(), findsWidgets);
-    // 제목 줄 오른쪽에도 고른 기분의 이름이 뜬다.
-    expect(find.text('슬픔'), findsOneWidget);
+    // 제목 줄 오른쪽에도 고른 기분이 그림으로 뜬다. 이름 글자는 적지 않는다.
+    expect(picked.hitTestable(), findsNWidgets(2));
+    expect(find.text('슬픔'), findsNothing);
   });
 
   testWidgets('확인 버튼을 탭하면 addPracticeCount 를 호출하고 완료 스낵바를 띄운다', (tester) async {

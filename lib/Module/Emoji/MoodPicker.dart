@@ -5,7 +5,6 @@ import '../Design/AppRadius.dart';
 import '../Motion/AppHaptic.dart';
 import '../Motion/AppMotion.dart';
 import '../Motion/PressableScale.dart';
-import '../Text/StandardText.dart';
 import 'OnoEmoji.dart';
 import 'OnoEmojiCatalog.dart';
 import 'OnoEmojiImage.dart';
@@ -177,10 +176,11 @@ class _MoodPickerRowState extends State<MoodPickerRow> {
   }
 }
 
-/// 지금 고른 기분을 제목 줄 오른쪽에 적는 표.
+/// 지금 고른 기분을 제목 줄 오른쪽에 보여 주는 그림.
 ///
 /// 칸 줄은 가로로 넘어가서 고른 칸이 화면 밖에 있을 수 있다. 어디서
-/// 골랐든 제목 옆 한 곳에서 보인다. 고른 것이 없으면 자리를 차지하지 않는다.
+/// 골랐든 제목 옆 한 곳에서 보인다. 이름은 적지 않고 그림만 둔다.
+/// 스크린 리더는 이름을 읽는다. 고른 것이 없으면 자리를 차지하지 않는다.
 class SelectedMoodChip extends StatelessWidget {
   final String? selectedKey;
   final Color color;
@@ -200,25 +200,16 @@ class SelectedMoodChip extends StatelessWidget {
       duration: AppMotion.fast,
       child: emoji == null
           ? const SizedBox.shrink()
-          : Container(
+          : Semantics(
               key: ValueKey(emoji.key),
-              padding: const EdgeInsets.fromLTRB(4, 2, 10, 2),
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(AppRadius.full),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  OnoEmojiImage(emoji: emoji, size: 26),
-                  const SizedBox(width: 4),
-                  StandardText(
-                    text: emoji.label,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: color,
-                  ),
-                ],
+              label: '고른 기분: ${emoji.label}',
+              child: Container(
+                padding: const EdgeInsets.all(3),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: OnoEmojiImage(emoji: emoji, size: 30),
               ),
             ),
     );
