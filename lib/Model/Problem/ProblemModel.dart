@@ -11,6 +11,12 @@ class ProblemModel {
   final DateTime? solvedAt;
   final DateTime? lastSolvedAt;
   final DateTime? createdAt;
+
+  /// 화면에 적을 푼 날짜.
+  ///
+  /// 서버는 푼 날짜 없이도 문제를 저장한다. 그런 문제에서 `solvedAt!` 을 쓰면
+  /// 상세 화면이 통째로 멈췄다. 없으면 적은 날짜로, 그것도 없으면 오늘로 둔다.
+  DateTime get displaySolvedAt => solvedAt ?? createdAt ?? DateTime.now();
   final DateTime? updateAt;
   final int solveCount;
 

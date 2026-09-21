@@ -92,24 +92,23 @@ void main() {
   });
 
   group('남은 거리', () {
-    test('지금 레벨과 남은 레벨을 같이 적는다', () {
+    test('지금 레벨은 빼고 남은 레벨만 적는다', () {
       expect(
         CosmeticAbilityStyle.progressOf(
           _item(level: 14, ability: CosmeticAbility.attendance),
           CosmeticAbilityLevels(attendance: 11),
         ),
-        '지금 출석 Lv.11 · 3 레벨 남았어요',
+        '획득까지 3레벨 남았어요',
       );
     });
 
-    test('한 칸 남았으면 한 칸 남았다고 말한다', () {
-      // 이 한 줄이 "한 번만 더" 를 만든다.
+    test('한 칸 남았어도 같은 말로 적는다', () {
       expect(
         CosmeticAbilityStyle.progressOf(
           _item(level: 14, ability: CosmeticAbility.attendance),
           CosmeticAbilityLevels(attendance: 13),
         ),
-        '지금 출석 Lv.13 · 한 레벨만 더!',
+        '획득까지 1레벨 남았어요',
       );
     });
 
@@ -119,7 +118,7 @@ void main() {
           _item(level: 3, ability: CosmeticAbility.attendance),
           CosmeticAbilityLevels(attendance: 9),
         ),
-        '지금 출석 Lv.9 · 열려 있어요',
+        '지금 바로 얻을 수 있어요',
       );
     });
 

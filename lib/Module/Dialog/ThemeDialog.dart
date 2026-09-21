@@ -276,6 +276,7 @@ class _ThemeDialogState extends State<ThemeDialog> {
             mainAxisSize: MainAxisSize.min,
             children: [
               _buildPreview(userInfo, duration),
+              const Divider(height: 1, color: AppColors.border),
               _buildLaneHeader(userInfo),
               Flexible(child: _buildTracks(userInfo, duration)),
               _buildFooter(themeProvider, duration),
@@ -359,14 +360,13 @@ class _ThemeDialogState extends State<ThemeDialog> {
             AppSpacing.xl,
             AppSpacing.lg,
           ),
-          decoration: BoxDecoration(
-            // 그라데이션을 깔지 않는다. 색 24개가 주인공인 화면에서 배경까지
-            // 번지면 무엇을 고르는 중인지가 흐려진다.
-            color: Color.alphaBlend(
-              accent.withValues(alpha: 0.10),
-              AppColors.surface,
-            ),
-            borderRadius: const BorderRadius.only(
+          decoration: const BoxDecoration(
+            // 배경은 칠하지 않는다. 고른 색이나 미션 칸 색을 옅게 깔았더니
+            // 누를 때마다 판 전체가 분홍, 보라, 초록, 파랑으로 바뀌어 색 24개가
+            // 주인공인 화면에서 무엇을 고르는 중인지가 흐려졌다. 아래 격자와는
+            // 선 하나로만 나눈다.
+            color: AppColors.surface,
+            borderRadius: BorderRadius.only(
               topLeft: Radius.circular(AppRadius.xlarge),
               topRight: Radius.circular(AppRadius.xlarge),
             ),
@@ -897,7 +897,7 @@ class _ThemeCell extends StatelessWidget {
             peak: 1.12,
             child: isUnlocked
                 ? _buildUnlockedSwatch(color)
-                : _buildLockedSwatch(color, colors, requiredLevel),
+                : _buildLockedSwatch(color, requiredLevel),
           ),
         ),
       ),
@@ -950,12 +950,11 @@ class _ThemeCell extends StatelessWidget {
   }
 
   /// 잠긴 색. 필요한 레벨이 칸 안에 적혀 있다.
-  Widget _buildLockedSwatch(
-    Color color,
-    MissionKindColors colors,
-    int requiredLevel,
-  ) {
+  Widget _buildLockedSwatch(Color color, int requiredLevel) {
     final highlight = isNextGoal || isInspected;
+    // 테두리는 미션 칸의 색이 아니라 그 테마색을 조금 진하게 쓴다. 칸 색을
+    // 쓰면 출석은 빨강, 오답노트는 보라처럼 테마와 상관없는 색이 둘러졌다.
+    final edge = ThemeHandler.darkenColor(color, amount: 0.15);
 
     return AnimatedContainer(
       duration: duration,
@@ -967,9 +966,9 @@ class _ThemeCell extends StatelessWidget {
         color: _lockedTint(color, highlight ? 0.34 : 0.20),
         border: Border.all(
           color: isInspected
-              ? colors.accent
+              ? edge
               : (isNextGoal
-                  ? colors.accent.withValues(alpha: 0.55)
+                  ? edge.withValues(alpha: 0.55)
                   : Colors.transparent),
           width: isInspected ? 2 : 1.5,
         ),
@@ -983,7 +982,7 @@ class _ThemeCell extends StatelessWidget {
               text: 'Lv.$requiredLevel',
               fontSize: 9,
               fontWeight: FontWeight.w700,
-              color: highlight ? colors.accent : AppColors.textTertiary,
+              color: highlight ? edge : AppColors.textTertiary,
               maxLines: 1,
             ),
           ),

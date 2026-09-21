@@ -44,21 +44,18 @@ abstract final class CosmeticAbilityStyle {
   static String requirementOf(CosmeticItemModel item) =>
       cosmeticRequirementLabel(item);
 
-  /// 지금 내가 그 능력치에서 몇 레벨이고 몇 레벨이 남았는지.
+  /// 이 아이템을 얻기까지 몇 레벨이 남았는지.
   ///
-  /// 필요 레벨만 적어 두면 그것이 코앞인지 한참 남았는지 알 수 없다. 지금
-  /// 레벨을 옆에 붙이면 `한 레벨만 더` 가 생긴다. 한 칸 차이일 때 그 말을
-  /// 그대로 쓰는 이유다.
+  /// 필요 레벨만 적어 두면 그것이 코앞인지 한참 남았는지 알 수 없어서 남은
+  /// 거리를 적는다. 지금 레벨은 적지 않는다. 바로 윗줄의 `문제 복습 Lv.4` 와
+  /// 나란히 `지금 문제 복습 Lv.4` 가 붙으면 어느 쪽이 필요 레벨인지 헷갈렸다.
   static String progressOf(
     CosmeticItemModel item,
     CosmeticAbilityLevels levels,
   ) {
-    final label = labelOf(item.requiredAbility);
-    final current = levels.levelOf(item.requiredAbility);
     final remaining = item.remainingLevelsAt(levels);
 
-    if (remaining <= 0) return '지금 $label Lv.$current · 열려 있어요';
-    if (remaining == 1) return '지금 $label Lv.$current · 한 레벨만 더!';
-    return '지금 $label Lv.$current · $remaining 레벨 남았어요';
+    if (remaining <= 0) return '지금 바로 얻을 수 있어요';
+    return '획득까지 $remaining레벨 남았어요';
   }
 }

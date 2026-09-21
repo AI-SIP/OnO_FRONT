@@ -26,6 +26,13 @@ import 'MissionScreen.dart';
 /// 미션 조회에 실패했거나 미션이 하나도 없으면 **배너를 통째로 숨긴다.**
 /// 백엔드에 아직 미션 API 가 없을 때 홈에 오류가 남지 않아야 한다.
 class TodayMissionCard extends StatelessWidget {
+  /// 이 카드와 추천 복습 배너가 함께 쓰는 최소 높이.
+  ///
+  /// 추천 복습 배너는 밀린 문제가 있으면 두 줄이 되어 이 카드보다 8 쯤
+  /// 높았다. 두 줄일 때의 높이를 둘 다의 바닥으로 삼아 나란히 같은 크기로
+  /// 보이게 한다. 글자를 키운 기기에서는 각자 더 커질 수 있다.
+  static const double minHeight = 76;
+
   const TodayMissionCard({super.key});
 
   @override
@@ -45,7 +52,7 @@ class TodayMissionCard extends StatelessWidget {
 
     return Padding(
       // 아래에 추천 복습 배너가 이어 붙는다. 둘이 세로로 쌓이면 홈 위쪽이
-      // 무거워지므로 사이를 좁히고 이 카드 자체도 납작하게 둔다.
+      // 무거워지므로 사이를 좁힌다.
       padding: const EdgeInsets.only(bottom: AppSpacing.sm),
       child: PressableScale(
         onTap: () {
@@ -55,10 +62,10 @@ class TodayMissionCard extends StatelessWidget {
           );
         },
         child: Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.md,
-            vertical: AppSpacing.sm + 2,
-          ),
+          // 바로 아래 추천 복습 배너와 같은 크기로 보이도록 안쪽 여백과
+          // 최소 높이를 맞춘다.
+          padding: const EdgeInsets.all(14),
+          constraints: const BoxConstraints(minHeight: minHeight),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(AppRadius.large),
@@ -112,20 +119,9 @@ class TodayMissionCard extends StatelessWidget {
                           fontSize: 12,
                           color: AppColors.textTertiary,
                         ),
-                        if (unclaimed > 0) ...[
-                          const SizedBox(width: AppSpacing.sm),
-                          MissionTag(
-                            text: '받기 $unclaimed',
-                            color: themeProvider.primaryColor,
-                            leading: MissionRewardToken(
-                              size: MissionTag.fontSize * 1.1,
-                              color: themeProvider.primaryColor,
-                            ),
-                          ),
-                        ],
                       ],
                     ),
-                    const SizedBox(height: AppSpacing.xs),
+                    const SizedBox(height: AppSpacing.sm),
                     AnimatedLinearGauge(
                       value: ratio.toDouble(),
                       color: themeProvider.primaryColor,
@@ -136,6 +132,19 @@ class TodayMissionCard extends StatelessWidget {
                   ],
                 ),
               ),
+              // 받을 것은 누르면 가는 곳 바로 앞에 둔다. 아래 추천 복습
+              // 배너의 개수 배지와 같은 자리다.
+              if (unclaimed > 0) ...[
+                const SizedBox(width: AppSpacing.sm),
+                MissionTag(
+                  text: '받기 $unclaimed',
+                  color: themeProvider.primaryColor,
+                  leading: MissionRewardToken(
+                    size: MissionTag.fontSize * 1.1,
+                    color: themeProvider.primaryColor,
+                  ),
+                ),
+              ],
               const SizedBox(width: AppSpacing.sm),
               Icon(Icons.chevron_right, size: 20, color: Colors.grey[400]),
             ],

@@ -42,11 +42,13 @@ void main() {
       });
       await tester.pump(const Duration(milliseconds: 300));
 
+      // 칩에서 가까운 순서로 칩 묶음의 줄, 소요 시간 글자와 칩 묶음을 함께
+      // 담은 줄이다.
       final row = find.ancestor(
-        of: find.byType(Wrap).first,
+        of: find.text('+10초'),
         matching: find.byType(Row),
       );
-      final rowRight = tester.getRect(row.first).right;
+      final rowRight = tester.getRect(row.at(1)).right;
       final lastChipRight = tester.getRect(find.text('+10초')).right;
 
       // 칩 상자에 테두리와 여백이 있어서 글자 기준으로는 줄 끝보다 몇 픽셀
@@ -57,6 +59,28 @@ void main() {
         reason: '${entry.key}: 칩이 오른쪽 끝에서 '
             '${(rowRight - lastChipRight).toStringAsFixed(1)} 만큼 떨어져 있다',
       );
+
+      // 칩 넷은 한 줄에 선다. 폰에서 +10초 가 아랫줄로 넘어갔었다.
+      final tops = ['-1분', '+1분', '-10초', '+10초']
+          .map((label) => tester.getRect(find.text(label)).top)
+          .toSet();
+      expect(tops, hasLength(1), reason: '${entry.key}: 칩이 두 줄로 나뉘었다');
+
+      // 칩끼리 딱 붙어 있지 않다.
+      final minus10 = tester.getRect(find
+          .ancestor(
+            of: find.text('-10초'),
+            matching: find.byType(Container),
+          )
+          .first);
+      final plus10 = tester.getRect(find
+          .ancestor(
+            of: find.text('+10초'),
+            matching: find.byType(Container),
+          )
+          .first);
+      expect(plus10.left - minus10.right, greaterThan(3),
+          reason: '${entry.key}: 칩 사이가 붙어 있다');
     });
   }
 }

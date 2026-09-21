@@ -7,17 +7,13 @@ import 'package:provider/provider.dart';
 import '../../Provider/CosmeticProvider.dart';
 import '../User/Widget/FrogCharacter.dart';
 import '../User/Widget/FrogMotion.dart';
-import '../../Module/Emoji/OnoEmojiCatalog.dart';
-import '../../Module/Emoji/OnoEmojiImage.dart';
-import '../../Module/Emoji/OnoEmojiPicker.dart';
 import '../../Module/Text/mobile_font_size.dart';
+import '../../Module/Emoji/MoodPicker.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/MissionProvider.dart';
 import '../../Provider/PracticeNoteProvider.dart';
-import '../../Module/Motion/AppHaptic.dart';
 import '../../Module/Motion/SuccessCheck.dart';
-import '../../Module/Motion/PressableScale.dart';
 import '../../Module/Motion/AnimatedCountText.dart';
 import '../../Module/Motion/AppMotion.dart';
 import '../../Module/Motion/AppearTransition.dart';
@@ -43,17 +39,14 @@ class PracticeCompletionScreen extends StatefulWidget {
 }
 
 class _PracticeCompletionScreenState extends State<PracticeCompletionScreen> {
-  static const List<String> _recommendedMoodKeys = [
-    'success_checkmark',
-    'got_100_score',
-    'fired_up_sparkle_eyes',
-    'happy_tears',
-    'frustrated_studying',
-    'dizzy_spiral_eyes2',
-    'sleeping_blanket',
-  ];
-
   String? _selectedMoodKey;
+
+  /// 완료를 저장하는 중이거나 이미 저장했는지.
+  ///
+  /// 완료 요청은 보낼 때마다 복습 횟수를 하나씩 올린다. 응답을 기다리는 동안
+  /// 확인을 또 누르면 횟수가 그만큼 쌓였다. 저장에 성공하면 화면이 닫힐
+  /// 때까지 다시 켜지 않는다.
+  bool _submitting = false;
 
   @override
   Widget build(BuildContext context) {
@@ -206,96 +199,29 @@ class _PracticeCompletionScreenState extends State<PracticeCompletionScreen> {
       children: [
         const Divider(),
         const SizedBox(height: 12),
-        StandardText(
-          text: '이번 복습 어땠나요?',
-          fontSize: MobileFontSize.reduced(context, 16),
-          fontWeight: FontWeight.bold,
-          color: AppColors.textPrimary,
+        Row(
+          children: [
+            Expanded(
+              child: StandardText(
+                text: '이번 복습 어땠나요?',
+                fontSize: MobileFontSize.reduced(context, 16),
+                fontWeight: FontWeight.bold,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            SelectedMoodChip(
+              selectedKey: _selectedMoodKey,
+              color: themeProvider.primaryColor,
+            ),
+          ],
         ),
         const SizedBox(height: 12),
-        SizedBox(
-          height: 82,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            itemCount: _recommendedMoodKeys.length + 1,
-            separatorBuilder: (_, __) => const SizedBox(width: 10),
-            itemBuilder: (context, index) {
-              if (index == _recommendedMoodKeys.length) {
-                return _buildMoreMoodButton(themeProvider);
-              }
-
-              final emojiKey = _recommendedMoodKeys[index];
-              final emoji = OnoEmojiCatalog.byKey(emojiKey);
-              if (emoji == null) return const SizedBox.shrink();
-
-              final isSelected = _selectedMoodKey == emojiKey;
-              return PressableScale(
-                haptic: HapticLevel.selection,
-                onTap: () {
-                  setState(() {
-                    _selectedMoodKey = isSelected ? null : emojiKey;
-                  });
-                },
-                child: Container(
-                  width: 70,
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  decoration: BoxDecoration(
-                    color: isSelected
-                        ? themeProvider.primaryColor.withValues(alpha: 0.1)
-                        : Colors.grey[50],
-                    borderRadius: BorderRadius.circular(AppRadius.medium),
-                    border: Border.all(
-                      color: isSelected
-                          ? themeProvider.primaryColor
-                          : Colors.grey[200]!,
-                    ),
-                  ),
-                  child: Column(
-                    children: [
-                      OnoEmojiImage(emoji: emoji, size: 54),
-                      const SizedBox(height: 4),
-                      Container(
-                        width: 5,
-                        height: 5,
-                        decoration: BoxDecoration(
-                          color: isSelected
-                              ? themeProvider.primaryColor
-                              : Colors.transparent,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            },
-          ),
+        MoodPickerRow(
+          selectedKey: _selectedMoodKey,
+          color: themeProvider.primaryColor,
+          onChanged: (key) => setState(() => _selectedMoodKey = key),
         ),
       ],
-    );
-  }
-
-  Widget _buildMoreMoodButton(ThemeHandler themeProvider) {
-    return PressableScale(
-      onTap: () {
-        OnoEmojiPicker.show(
-          context,
-          selectedKey: _selectedMoodKey,
-          onSelected: (emoji) => setState(() => _selectedMoodKey = emoji.key),
-        );
-      },
-      child: Container(
-        width: 70,
-        decoration: BoxDecoration(
-          color: Colors.grey[50],
-          borderRadius: BorderRadius.circular(AppRadius.medium),
-          border: Border.all(color: AppColors.border),
-        ),
-        child: Icon(
-          Icons.more_horiz,
-          color: themeProvider.primaryColor,
-        ),
-      ),
     );
   }
 
@@ -308,50 +234,66 @@ class _PracticeCompletionScreenState extends State<PracticeCompletionScreen> {
         width: double.infinity,
         height: 50,
         child: ElevatedButton(
-          onPressed: () async {
-            final navigator = Navigator.of(context);
-            final missionProvider =
-                Provider.of<MissionProvider>(context, listen: false);
-            try {
-              await practiceProvider.addPracticeCount(
-                widget.practiceId,
-                moodEmojiKey: _selectedMoodKey,
-              );
-            } catch (_) {
-              if (!mounted) return;
-              AppToast.error('복습 완료를 저장하지 못했어요.');
-              return;
-            }
-            if (!mounted) return;
-            FirebaseAnalytics.instance
-                .logEvent(name: 'practice_session_completed');
+          onPressed: _submitting
+              ? null
+              : () async {
+                  final navigator = Navigator.of(context);
+                  final missionProvider =
+                      Provider.of<MissionProvider>(context, listen: false);
+                  setState(() => _submitting = true);
+                  try {
+                    await practiceProvider.addPracticeCount(
+                      widget.practiceId,
+                      moodEmojiKey: _selectedMoodKey,
+                    );
+                  } catch (_) {
+                    if (!mounted) return;
+                    setState(() => _submitting = false);
+                    AppToast.error('복습 완료를 저장하지 못했어요.');
+                    return;
+                  }
+                  if (!mounted) return;
+                  FirebaseAnalytics.instance
+                      .logEvent(name: 'practice_session_completed');
 
-            // 1차에서는 행동 응답에 미션 진행도가 실려 오지 않는다. 세트를
-            // 끝낸 뒤 다시 조회해야 미션이 바로 반영된다.
-            unawaited(missionProvider.fetchMissions());
-            // 2번 pop: PracticeCompletionScreen -> PracticeDetailScreen -> PracticeThumbnailScreen
-            // 두 번째 pop에서 true를 반환하여 썸네일 업데이트 신호 전달
-            if (navigator.canPop()) {
-              navigator.pop(); // PracticeCompletionScreen 닫기
-            }
-            if (navigator.canPop()) {
-              navigator.pop(true); // PracticeDetailScreen 닫으면서 true 반환
-            }
-            AppToast.success('복습을 완료했습니다!');
-          },
+                  // 1차에서는 행동 응답에 미션 진행도가 실려 오지 않는다. 세트를
+                  // 끝낸 뒤 다시 조회해야 미션이 바로 반영된다.
+                  unawaited(missionProvider.fetchMissions());
+                  // 2번 pop: PracticeCompletionScreen -> PracticeDetailScreen -> PracticeThumbnailScreen
+                  // 두 번째 pop에서 true를 반환하여 썸네일 업데이트 신호 전달
+                  if (navigator.canPop()) {
+                    navigator.pop(); // PracticeCompletionScreen 닫기
+                  }
+                  if (navigator.canPop()) {
+                    navigator.pop(true); // PracticeDetailScreen 닫으면서 true 반환
+                  }
+                  AppToast.success('복습을 완료했습니다!');
+                },
           style: ElevatedButton.styleFrom(
             backgroundColor: themeProvider.primaryColor,
+            // 저장하는 동안에도 흐려지지 않게 같은 색을 쓴다. 대신 글자
+            // 자리에 도는 표시를 둔다.
+            disabledBackgroundColor: themeProvider.primaryColor,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(AppRadius.large),
             ),
             elevation: 0,
           ),
-          child: const StandardText(
-            text: "확인",
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
+          child: _submitting
+              ? const SizedBox(
+                  width: 22,
+                  height: 22,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2.4,
+                    color: Colors.white,
+                  ),
+                )
+              : const StandardText(
+                  text: "확인",
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
         ),
       ),
     );

@@ -505,15 +505,28 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
               await fetchFoldersAndProblems();
               await missionProvider?.fetchMissions();
             },
+            // 좌우 여백은 목록 안쪽에 둔다. 목록은 제 영역 밖을 잘라내서,
+            // 바깥에 여백을 두면 폴더에 끌어다 댈 때 커지는 강조 테두리의
+            // 양옆이 잘렸다.
             child: Padding(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.symmetric(vertical: _pagePadding),
               child: Column(
                 children: [
-                  // 미션 조회에 실패했거나 미션이 없으면 카드가 스스로 숨는다.
-                  if (widget.folderId == null) const TodayMissionCard(),
-                  if (widget.folderId == null && reviewDueProvider.dueCount > 0)
-                    _buildReviewDueBadge(
-                        context, reviewDueProvider, themeProvider),
+                  Padding(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: _pagePadding),
+                    child: Column(
+                      children: [
+                        // 미션 조회에 실패했거나 미션이 없으면 카드가 스스로
+                        // 숨는다.
+                        if (widget.folderId == null) const TodayMissionCard(),
+                        if (widget.folderId == null &&
+                            reviewDueProvider.dueCount > 0)
+                          _buildReviewDueBadge(
+                              context, reviewDueProvider, themeProvider),
+                      ],
+                    ),
+                  ),
                   _buildFolderAndProblemGrid(themeProvider),
                 ],
               ),
@@ -602,6 +615,9 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
   /// 목록에서 하나씩 들어오게 할 항목 수. 첫 화면에 보이는 만큼이다.
   static const int _staggeredItemLimit = 8;
+
+  /// 홈 화면 둘레의 여백.
+  static const double _pagePadding = 20;
 
   Widget _buildQuickCreateFab(ThemeHandler themeProvider) {
     return Column(
@@ -1265,8 +1281,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                       itemCount: 5,
                       itemHeight: 96,
                       spacing: 16,
-                      padding:
-                          EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      padding: EdgeInsets.symmetric(
+                          horizontal: _pagePadding + 16, vertical: 8),
                     );
                   }
 
@@ -1274,6 +1290,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                   if (currentSubfolders.isEmpty && currentProblems.isEmpty) {
                     return SingleChildScrollView(
                       physics: const AlwaysScrollableScrollPhysics(),
+                      padding:
+                          const EdgeInsets.symmetric(horizontal: _pagePadding),
                       child: SizedBox(
                         height: MediaQuery.of(context).size.height * 0.7,
                         child: Center(
@@ -1316,6 +1334,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                   return ListView.builder(
                     controller: _scrollController,
                     physics: const AlwaysScrollableScrollPhysics(),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: _pagePadding),
                     itemCount: totalItems + (isLoadingMore || hasMore ? 1 : 0),
                     itemBuilder: (context, index) {
                       // 로딩 인디케이터 표시
@@ -1348,7 +1368,11 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                 },
               ),
             ),
-            if (_isSelectionMode) _buildBottomActionButtons(themeProvider),
+            if (_isSelectionMode)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: _pagePadding),
+                child: _buildBottomActionButtons(themeProvider),
+              ),
           ],
         ));
   }
@@ -1389,15 +1413,14 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         },
         child: LongPressDraggable<FolderThumbnailModel>(
           data: folder,
-          feedback: Material(
-            child: SizedBox(
-              width: 50,
-              height: 70,
-              child: ClayIcon(
-                NoteIconHandler.getNoteIcon(index), // 헬퍼 클래스로 아이콘 설정
-                width: 50,
-                height: 50,
-              ),
+          dragAnchorStrategy: pointerDragAnchorStrategy,
+          feedback: _DragFeedbackCard(
+            color: themeProvider.primaryColor,
+            title: folder.folderName.isNotEmpty ? folder.folderName : '제목 없음',
+            leading: ClayIcon(
+              NoteIconHandler.getNoteIcon(index),
+              width: 34,
+              height: 34,
             ),
           ),
           childWhenDragging: Opacity(
@@ -1606,16 +1629,17 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         },
         child: LongPressDraggable<ProblemModel>(
           data: problem,
-          feedback: Material(
-            child: SizedBox(
-              width: 50,
-              height: 70,
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(AppRadius.small),
-                child: DisplayImage(
-                  imagePath: imageUrl,
-                  fit: BoxFit.cover,
-                ),
+          dragAnchorStrategy: pointerDragAnchorStrategy,
+          feedback: _DragFeedbackCard(
+            color: themeProvider.primaryColor,
+            title: problem.reference?.isNotEmpty == true
+                ? problem.reference!
+                : '제목 없음',
+            leading: ClipRRect(
+              borderRadius: BorderRadius.circular(AppRadius.small),
+              child: DisplayImage(
+                imagePath: imageUrl,
+                fit: BoxFit.cover,
               ),
             ),
           ),
@@ -2227,6 +2251,8 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
         },
         child: Container(
           padding: const EdgeInsets.all(14),
+          constraints:
+              const BoxConstraints(minHeight: TodayMissionCard.minHeight),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(AppRadius.large),
@@ -2258,30 +2284,10 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      children: [
-                        const StandardText(
-                          text: '추천 복습 문제',
-                          fontSize: 14,
-                          color: AppColors.textPrimary,
-                        ),
-                        const SizedBox(width: 6),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 7, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: themeProvider.primaryColor,
-                            borderRadius:
-                                BorderRadius.circular(AppRadius.medium),
-                          ),
-                          child: StandardText(
-                            text: '${reviewDueProvider.dueCount}개',
-                            fontSize: 10,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ],
+                    const StandardText(
+                      text: '추천 복습 문제',
+                      fontSize: 14,
+                      color: AppColors.textPrimary,
                     ),
                     if (overdueCount > 0) ...[
                       const SizedBox(height: 2),
@@ -2294,8 +2300,96 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
                   ],
                 ),
               ),
+              // 개수는 누르면 가는 곳 바로 앞에 둔다. 위 오늘의 미션 카드의
+              // 받기 태그와 같은 자리다.
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                decoration: BoxDecoration(
+                  color: themeProvider.primaryColor,
+                  borderRadius: BorderRadius.circular(AppRadius.medium),
+                ),
+                child: StandardText(
+                  text: '${reviewDueProvider.dueCount}개',
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(width: 8),
               Icon(Icons.chevron_right, size: 20, color: Colors.grey[400]),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// 공책이나 오답노트를 꾹 눌러 끌 때 손가락에 붙어 다니는 카드.
+///
+/// 전에는 기본 Material 의 흰 네모 위에 아이콘이나 사진만 50x70 으로 떠서,
+/// 무엇을 들고 있는지도 잘 안 보이고 모서리가 각져 화면에서 동떨어져 보였다.
+/// 목록 칸과 같은 둥근 카드에 그림과 이름을 담고, 손에 든 것처럼 살짝
+/// 기울여 그림자를 띄운다. 손가락에 가리지 않게 손끝 위쪽에 둔다.
+class _DragFeedbackCard extends StatelessWidget {
+  final Widget leading;
+  final String title;
+  final Color color;
+
+  const _DragFeedbackCard({
+    required this.leading,
+    required this.title,
+    required this.color,
+  });
+
+  static const double _width = 200;
+  static const double _height = 60;
+
+  @override
+  Widget build(BuildContext context) {
+    // pointerDragAnchorStrategy 는 손끝을 카드의 왼쪽 위에 둔다. 카드를
+    // 가운데로 옮기고 손끝보다 조금 위로 띄운다.
+    return Transform.translate(
+      offset: const Offset(-_width / 2, -_height - 20),
+      child: Transform.rotate(
+        angle: -0.05,
+        child: Material(
+          color: Colors.transparent,
+          child: Container(
+            width: _width,
+            height: _height,
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(AppRadius.large),
+              border:
+                  Border.all(color: color.withValues(alpha: 0.5), width: 1.5),
+              boxShadow: [
+                BoxShadow(
+                  color: color.withValues(alpha: 0.25),
+                  blurRadius: 18,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                SizedBox(width: 40, height: 40, child: Center(child: leading)),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: StandardText(
+                    text: title,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                Icon(Icons.open_with_rounded, size: 18, color: color),
+              ],
+            ),
           ),
         ),
       ),

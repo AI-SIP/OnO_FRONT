@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:ono/Module/Emoji/OnoEmojiImage.dart';
 import 'package:ono/Module/Motion/PressableScale.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:ono/Model/PracticeNote/PracticeNoteDetailModel.dart';
@@ -95,6 +98,31 @@ void main() {
     expect(find.byType(BottomSheet), findsOneWidget);
   });
 
+  testWidgets('더보기에서 추천에 없는 것을 고르면 목록 맨 앞에 보인다', (tester) async {
+    // 폰에서는 더보기 칸이 화면 밖이라, 그 칸에만 골라 둔 모양을 그리면
+    // 돌아왔을 때 무엇을 골랐는지 보이지 않았다.
+    await pumpScreen(tester);
+    await tester.dragUntilVisible(
+      find.byIcon(Icons.more_horiz),
+      find.byType(ListView).first,
+      const Offset(-200, 0),
+    );
+    await tester.tap(find.byIcon(Icons.more_horiz));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('슬픔'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(BottomSheet), findsNothing);
+    final picked = find.byWidgetPredicate(
+      (w) => w is OnoEmojiImage && w.emoji?.key == 'crying_in_rain',
+    );
+    expect(picked.hitTestable(), findsWidgets);
+    // 제목 줄 오른쪽에도 고른 기분이 그림으로 뜬다. 이름 글자는 적지 않는다.
+    expect(picked.hitTestable(), findsNWidgets(2));
+    expect(find.text('슬픔'), findsNothing);
+  });
+
   testWidgets('확인 버튼을 탭하면 addPracticeCount 를 호출하고 완료 스낵바를 띄운다', (tester) async {
     when(() => practiceNoteService.addPracticeNoteCount(1, moodEmojiKey: null))
         .thenAnswer((_) async {});
@@ -149,5 +177,28 @@ void main() {
     await pumpScreen(tester, surfaceSize: OnoSurface.smallPhone);
 
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('저장을 기다리는 동안 확인을 또 눌러도 한 번만 보낸다', (tester) async {
+    final completer = Completer<void>();
+    when(() => practiceNoteService.addPracticeNoteCount(1, moodEmojiKey: null))
+        .thenAnswer((_) => completer.future);
+
+    await pumpScreen(tester);
+    await tester.tap(find.text('확인'));
+    await tester.pump();
+    await tester.tap(find.byType(ElevatedButton).last, warnIfMissed: false);
+    await tester.pump();
+
+    verify(() =>
+            practiceNoteService.addPracticeNoteCount(1, moodEmojiKey: null))
+        .called(1);
+
+    // 성공으로 끝내면 완료 알림이 뜨는데, AppToast 는 같은 문구를 0.8초
+    // 안에 두 번 띄우지 않아서 바로 다음 테스트의 알림이 삼켜진다. 실패로
+    // 끝내고 이 테스트를 맨 끝에 둔다.
+    completer.completeError(Exception('network error'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
   });
 }

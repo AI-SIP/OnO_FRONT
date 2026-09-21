@@ -5,6 +5,8 @@ import 'package:provider/provider.dart';
 import '../../Provider/CosmeticProvider.dart';
 import '../User/Widget/FrogCharacter.dart';
 import '../../Model/PracticeNote/PracticeNoteThumbnailModel.dart';
+import '../../Module/Emoji/OnoEmojiCatalog.dart';
+import '../../Module/Emoji/OnoEmojiImage.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Text/mobile_font_size.dart';
 import '../../Module/Theme/ClayIcon.dart';
@@ -12,7 +14,7 @@ import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/PracticeNoteProvider.dart';
 import '../../Util/AppSnackBar.dart';
 import '../Tutorial/TutorialTargets.dart';
-import 'PracticeDetailScreen.dart';
+import 'PracticeDetailLoader.dart';
 import 'PracticeProblemSelectionScreen.dart';
 import '../../Module/Motion/AppMotion.dart';
 import '../../Module/Motion/AppearTransition.dart';
@@ -618,7 +620,7 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
                 : _selectedPracticeIds.add(practice.practiceId);
           });
         } else {
-          _navigateToPracticeDetail(practice.practiceId);
+          _navigateToPracticeDetail(practice);
         }
       },
       child: Padding(
@@ -641,24 +643,35 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
     );
   }
 
-  void _navigateToPracticeDetail(int practiceId) async {
+  /// 복습 세트 화면이 열려 있는 동안 켜 둔다. 화면이 넘어가는 애니메이션
+  /// 사이에 한 번 더 눌려도 두 번 쌓이지 않게 한다.
+  bool _openingPractice = false;
+
+  void _navigateToPracticeDetail(PracticeNoteThumbnails practice) async {
+    if (_openingPractice) return;
+    _openingPractice = true;
+
     final practiceProvider =
         Provider.of<ProblemPracticeProvider>(context, listen: false);
+    final practiceId = practice.practiceId;
 
-    // 로딩 다이얼로그를 띄우지 않는다. 떴다 사라진 다음 화면이 넘어가서
-    // 한 번 눌렀는데 두 번 바뀌는 것처럼 보였다. 누른 항목이 줄어드는 것으로
-    // 눌린 것은 이미 알 수 있고, 열린 화면은 자기 자리를 잡으며 나타난다.
-    await practiceProvider.fetchPracticeNote(practiceId);
-    await practiceProvider.moveToPractice(practiceId);
-    if (!mounted) return;
-
-    final result = await Navigator.push<bool>(
-      context,
-      TossPageRoute(
-        builder: (context) => PracticeDetailScreen(
-            practice: practiceProvider.currentPracticeNote!),
-      ),
-    );
+    // 불러오기를 기다리지 않고 화면부터 넘긴다. 세트는 넘어간 화면 안에서
+    // 불러온다. 기다리는 동안 목록이 그대로 있으면 다른 세트를 또 눌러 두
+    // 화면이 겹쳐 쌓였다.
+    final bool? result;
+    try {
+      result = await Navigator.push<bool>(
+        context,
+        TossPageRoute(
+          builder: (context) => PracticeDetailLoader(
+            practiceId: practiceId,
+            title: practice.practiceTitle,
+          ),
+        ),
+      );
+    } finally {
+      _openingPractice = false;
+    }
 
     // 복습을 완료한 경우(result == true)에만 해당 썸네일 업데이트
     if (result == true) {
@@ -725,23 +738,53 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
             overflow: TextOverflow.ellipsis,
           ),
           const SizedBox(height: 5),
-          StandardText(
-            text:
-                '마지막 복습 날짜: ${formatDateTime(practice.lastSolvedAt) ?? '복습 기록 없음'}',
-            fontSize: 11,
-            color: Colors.grey,
+          Row(
+            children: [
+              Flexible(
+                child: StandardText(
+                  text:
+                      '마지막 복습 날짜: ${formatDateTime(practice.lastSolvedAt) ?? '복습 기록 없음'}',
+                  fontSize: 11,
+                  color: Colors.grey,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              ..._buildLastMood(practice),
+            ],
           ),
         ],
       ),
     );
   }
 
+  /// 지난 복습을 끝내고 고른 기분. 마지막 복습 날짜 바로 뒤에 붙는다.
+  ///
+  /// 상세 화면 위쪽에 따로 칸을 두었더니 통계와 문제 목록 사이에 끼어
+  /// 자리만 차지했다. 목록으로 옮기면서도 줄을 하나 더 쓰면 카드가 길어져서,
+  /// 날짜 줄 끝에 그림만 둔다. 복습을 마치며 직접 고른 그림이라 이름 없이도
+  /// 알아본다. 이름은 길게 누르면 뜨고 스크린 리더도 읽는다.
+  /// 서버가 이 앱이 모르는 키를 보내면 [OnoEmojiCatalog.byKey] 가 null 을
+  /// 주는데, 그때는 그리지 않는다.
+  List<Widget> _buildLastMood(PracticeNoteThumbnails practice) {
+    final key = practice.lastSessionMoodEmojiKey;
+    final emoji = key == null ? null : OnoEmojiCatalog.byKey(key);
+    if (emoji == null) return const [];
+
+    return [
+      const SizedBox(width: 4),
+      Tooltip(
+        message: '지난 소감: ${emoji.label}',
+        child: OnoEmojiImage(emoji: emoji, size: 18),
+      ),
+    ];
+  }
+
   Widget _buildPracticeMeta(
       PracticeNoteThumbnails practice, ThemeHandler themeProvider) {
     const frogIconBoxWidth = 68.0;
 
-    // 지난 복습 소감 이모지는 여기 두지 않는다. 목록에서는 몇 회 복습했는지만
-    // 보면 되고, 소감은 상세 화면에서 본다.
+    // 지난 복습 소감은 왼쪽 날짜 아래에 둔다. 여기는 몇 회 복습했는지만 본다.
     return Semantics(
       label: practice.practiceCount >= 3
           ? '복습 완료'

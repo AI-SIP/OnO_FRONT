@@ -8,6 +8,7 @@ import '../../Module/Theme/ThemeHandler.dart';
 import '../../Module/User/ProfileAvatar.dart';
 import '../../Provider/StudyRoomProvider.dart';
 import '../../Provider/UserProvider.dart';
+import '../../Util/AppErrorReporter.dart';
 import '../Tutorial/TutorialTargets.dart';
 import 'StudyRoomCreateScreen.dart';
 import 'StudyRoomDetailScreen.dart';
@@ -39,12 +40,29 @@ class _StudyRoomListScreenState extends State<StudyRoomListScreen> {
       provider.updateCurrentUserId(
         Provider.of<UserProvider>(context, listen: false).userInfoModel?.userId,
       );
-      provider.fetchMyRooms();
+      _loadRooms(provider);
     });
   }
 
   Future<void> _refresh() async {
-    await Provider.of<StudyRoomProvider>(context, listen: false).fetchMyRooms();
+    await _loadRooms(Provider.of<StudyRoomProvider>(context, listen: false));
+  }
+
+  /// 목록을 불러온다. 실패해도 던지지 않는다.
+  ///
+  /// 실패는 HttpService 가 이미 스낵바로 알린다. 여기서 받지 않으면 예외가
+  /// 끝까지 올라가 앱이 죽은 것처럼 fatal 로 보고됐다.
+  Future<void> _loadRooms(StudyRoomProvider provider) async {
+    try {
+      await provider.fetchMyRooms();
+    } catch (error, stackTrace) {
+      await AppErrorReporter.report(
+        error,
+        stackTrace,
+        source: 'study_room_fetch',
+        severity: AppErrorSeverity.warning,
+      );
+    }
   }
 
   void _openCreate() {

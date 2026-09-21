@@ -131,38 +131,8 @@ void main() {
     expect(find.text('기록 없음'), findsNothing);
   });
 
-  testWidgets('지난 복습 소감 이모지 키가 없으면 그 행이 안 보인다', (tester) async {
-    practiceProvider.currentProblems = [_problem(10)];
-
-    await pumpOnoWidget(
-      tester,
-      PracticeDetailScreen(
-        practice: _practice(problemIdList: [10]),
-      ),
-      practiceProvider: practiceProvider,
-    );
-
-    expect(find.text('지난 복습 소감'), findsNothing);
-  });
-
-  testWidgets('지난 복습 소감 이모지 키가 있으면 그 행이 보인다', (tester) async {
-    practiceProvider.currentProblems = [_problem(10)];
-
-    await pumpOnoWidget(
-      tester,
-      PracticeDetailScreen(
-        practice: _practice(
-          problemIdList: [10],
-          lastSessionMoodEmojiKey: 'birthday_cake',
-        ),
-      ),
-      practiceProvider: practiceProvider,
-    );
-
-    expect(find.text('지난 복습 소감'), findsOneWidget);
-  });
-
-  testWidgets('지난 복습 소감에 고른 이모지의 이름이 같이 나온다', (tester) async {
+  testWidgets('지난 복습 소감은 상세 화면에 나오지 않는다', (tester) async {
+    // 소감은 복습 세트 목록의 날짜 아래에서 본다.
     practiceProvider.currentProblems = [_problem(10)];
 
     await pumpOnoWidget(
@@ -176,26 +146,8 @@ void main() {
       practiceProvider: practiceProvider,
     );
 
-    // 그림만으로는 무엇을 고른 것인지 알기 어려워서 이름을 같이 쓴다.
-    expect(find.text('멋짐'), findsOneWidget);
-  });
-
-  testWidgets('이 앱이 모르는 이모지 키가 오면 소감 칸을 그리지 않는다', (tester) async {
-    practiceProvider.currentProblems = [_problem(10)];
-
-    await pumpOnoWidget(
-      tester,
-      PracticeDetailScreen(
-        practice: _practice(
-          problemIdList: [10],
-          lastSessionMoodEmojiKey: 'no_such_emoji_key',
-        ),
-      ),
-      practiceProvider: practiceProvider,
-    );
-
-    // 이름도 그림도 못 찾으면 빈 칸만 남는다. 아예 그리지 않는다.
     expect(find.text('지난 복습 소감'), findsNothing);
+    expect(find.text('멋짐'), findsNothing);
   });
 
   testWidgets('문제가 없으면 빈 상태 그림(안내 문구·프로그·추가 버튼)이 보이고 복습하기 버튼은 없다',

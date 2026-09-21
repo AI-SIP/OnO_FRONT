@@ -182,7 +182,10 @@ class _HandwritingRevealState extends State<HandwritingReveal>
           alignment: Alignment.centerLeft,
           clipBehavior: Clip.none,
           children: [
-            _mask(stroke.progress, text),
+            // 다 쓰고 나면 가리개를 걷어 낸다. 남겨 두면 흐린 끝자락이
+            // 문구 오른쪽 끝에 그대로 덮여 있어서 마지막 글자(닫는 따옴표)만
+            // 흐릿하게 보였다.
+            if (stroke.progress >= 1) text else _mask(stroke.progress, text),
             if (widget.underline)
               Positioned.fill(
                 child: CustomPaint(
@@ -253,8 +256,11 @@ class _HandwritingRevealState extends State<HandwritingReveal>
     return ShaderMask(
       blendMode: BlendMode.dstIn,
       shaderCallback: (bounds) {
-        final edge = progress.clamp(0.0, 1.0);
-        final soft = (edge - _softEdge).clamp(0.0, 1.0);
+        // 흐린 끝자락까지 상자 밖으로 밀어내야 다 썼을 때 마지막 글자가
+        // 온전히 드러난다. progress 를 그대로 쓰면 1 이 되어도 오른쪽 끝
+        // [_softEdge] 만큼이 흐린 채로 남았다.
+        final edge = (progress * (1 + _softEdge)).clamp(0.0, 1.0);
+        final soft = (progress * (1 + _softEdge) - _softEdge).clamp(0.0, 1.0);
         return LinearGradient(
           begin: Alignment.centerLeft,
           end: Alignment.centerRight,

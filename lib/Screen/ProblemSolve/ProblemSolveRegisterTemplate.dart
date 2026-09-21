@@ -7,11 +7,9 @@ import 'package:provider/provider.dart';
 
 import '../../Model/Problem/AnswerStatus.dart';
 import '../../Model/Problem/ImprovementType.dart';
-import '../../Module/Emoji/OnoEmojiCatalog.dart';
-import '../../Module/Emoji/OnoEmojiImage.dart';
-import '../../Module/Emoji/OnoEmojiPicker.dart';
 import '../../Module/Image/ImagePickerHandler.dart';
 import '../../Module/Text/mobile_font_size.dart';
+import '../../Module/Emoji/MoodPicker.dart';
 import '../../Module/Text/StandardText.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/ProblemsProvider.dart';
@@ -51,18 +49,6 @@ class ProblemSolveRegisterTemplateState
 
   /// 이 회차의 기분 이모지 키. 안 고르고 넘어가도 된다.
   String? _selectedMoodKey;
-
-  /// 목록에 먼저 보여줄 이모지다. 복습 세트 완료 화면과 같은 것을 쓴다.
-  /// 여기 없는 것은 `더보기` 에서 전체 목록으로 고른다.
-  static const List<String> _recommendedMoodKeys = [
-    'success_checkmark',
-    'got_100_score',
-    'fired_up_sparkle_eyes',
-    'happy_tears',
-    'frustrated_studying',
-    'dizzy_spiral_eyes2',
-    'sleeping_blanket',
-  ];
 
   // 개선 체크리스트 (ImprovementType enum 사용)
   final Map<ImprovementType, bool> _improvements = {
@@ -475,32 +461,42 @@ class ProblemSolveRegisterTemplateState
                   ),
                 ),
                 const SizedBox(width: AppSpacing.sm),
-                // 좁은 폰에서 조절 칩 넷이 한 줄에 다 안 들어가 오른쪽으로
-                // 넘쳤다. 남는 자리를 칩 묶음이 가져가고, 모자라면 아랫줄로
-                // 내린다.
-                Expanded(
-                  child: Wrap(
-                    alignment: WrapAlignment.end,
-                    spacing: 4,
-                    runSpacing: 6,
-                    children: [
-                      _buildAdjustChip('-1분', themeProvider, () {
-                        setState(() {
-                          _timeSpentSeconds -= 60;
-                          if (_timeSpentSeconds < 0) _timeSpentSeconds = 0;
-                        });
-                      }),
-                      _buildAdjustChip('+1분', themeProvider,
-                          () => setState(() => _timeSpentSeconds += 60)),
-                      _buildAdjustChip('-10초', themeProvider, () {
-                        setState(() {
-                          _timeSpentSeconds -= 10;
-                          if (_timeSpentSeconds < 0) _timeSpentSeconds = 0;
-                        });
-                      }),
-                      _buildAdjustChip('+10초', themeProvider,
-                          () => setState(() => _timeSpentSeconds += 10)),
-                    ],
+                // 칩 넷은 항상 한 줄에 둔다. 전에는 글자와 칩 묶음이 폭을 반씩
+                // 나눠 가져서, 글자는 자리가 남는데 칩은 반쪽에 안 들어가 폰에서
+                // 아랫줄로 넘어갔다. 칩 묶음이 제 폭을 먼저 쓰고 글자가 나머지를
+                // 쓴다. 그래도 모자라는 아주 좁은 폰에서는 줄을 바꾸지 않고
+                // 칩을 조금 줄인다.
+                ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxWidth: MediaQuery.sizeOf(context).width * 0.6,
+                  ),
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerRight,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        _buildAdjustChip('-1분', themeProvider, () {
+                          setState(() {
+                            _timeSpentSeconds -= 60;
+                            if (_timeSpentSeconds < 0) _timeSpentSeconds = 0;
+                          });
+                        }),
+                        const SizedBox(width: 6),
+                        _buildAdjustChip('+1분', themeProvider,
+                            () => setState(() => _timeSpentSeconds += 60)),
+                        const SizedBox(width: 6),
+                        _buildAdjustChip('-10초', themeProvider, () {
+                          setState(() {
+                            _timeSpentSeconds -= 10;
+                            if (_timeSpentSeconds < 0) _timeSpentSeconds = 0;
+                          });
+                        }),
+                        const SizedBox(width: 6),
+                        _buildAdjustChip('+10초', themeProvider,
+                            () => setState(() => _timeSpentSeconds += 10)),
+                      ],
+                    ),
                   ),
                 ),
               ],
@@ -766,6 +762,7 @@ class ProblemSolveRegisterTemplateState
     required IconData icon,
     required String title,
     required ThemeHandler themeProvider,
+    Widget? trailing,
   }) {
     return Row(
       children: [
@@ -792,6 +789,7 @@ class ProblemSolveRegisterTemplateState
             color: AppColors.textPrimary,
           ),
         ),
+        if (trailing != null) trailing,
       ],
     );
   }
@@ -832,88 +830,18 @@ class ProblemSolveRegisterTemplateState
             icon: Icons.mood,
             title: '이번 복습 어땠나요?',
             themeProvider: themeProvider,
-          ),
-          const SizedBox(height: 12),
-          SizedBox(
-            height: 82,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              itemCount: _recommendedMoodKeys.length + 1,
-              separatorBuilder: (_, __) => const SizedBox(width: 10),
-              itemBuilder: (context, index) {
-                if (index == _recommendedMoodKeys.length) {
-                  return _buildMoreMoodButton(themeProvider);
-                }
-
-                final emojiKey = _recommendedMoodKeys[index];
-                final emoji = OnoEmojiCatalog.byKey(emojiKey);
-                if (emoji == null) return const SizedBox.shrink();
-
-                final isSelected = _selectedMoodKey == emojiKey;
-                return PressableScale(
-                  haptic: HapticLevel.selection,
-                  // 고른 것을 다시 누르면 해제된다. 안 고르고 넘어가는 것도
-                  // 그대로 되어야 해서 되돌릴 길을 열어 둔다.
-                  onTap: () => setState(
-                    () => _selectedMoodKey = isSelected ? null : emojiKey,
-                  ),
-                  child: Container(
-                    width: 70,
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    decoration: BoxDecoration(
-                      color: isSelected
-                          ? themeProvider.primaryColor.withValues(alpha: 0.1)
-                          : Colors.grey[50],
-                      borderRadius: BorderRadius.circular(AppRadius.medium),
-                      border: Border.all(
-                        color: isSelected
-                            ? themeProvider.primaryColor
-                            : AppColors.border,
-                      ),
-                    ),
-                    child: Column(
-                      children: [
-                        OnoEmojiImage(emoji: emoji, size: 54),
-                        const SizedBox(height: 4),
-                        Container(
-                          width: 5,
-                          height: 5,
-                          decoration: BoxDecoration(
-                            color: isSelected
-                                ? themeProvider.primaryColor
-                                : Colors.transparent,
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              },
+            trailing: SelectedMoodChip(
+              selectedKey: _selectedMoodKey,
+              color: themeProvider.primaryColor,
             ),
           ),
+          const SizedBox(height: 12),
+          MoodPickerRow(
+            selectedKey: _selectedMoodKey,
+            color: themeProvider.primaryColor,
+            onChanged: (key) => setState(() => _selectedMoodKey = key),
+          ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildMoreMoodButton(ThemeHandler themeProvider) {
-    return PressableScale(
-      onTap: () {
-        OnoEmojiPicker.show(
-          context,
-          selectedKey: _selectedMoodKey,
-          onSelected: (emoji) => setState(() => _selectedMoodKey = emoji.key),
-        );
-      },
-      child: Container(
-        width: 70,
-        decoration: BoxDecoration(
-          color: Colors.grey[50],
-          borderRadius: BorderRadius.circular(AppRadius.medium),
-          border: Border.all(color: AppColors.border),
-        ),
-        child: Icon(Icons.more_horiz, color: themeProvider.primaryColor),
       ),
     );
   }

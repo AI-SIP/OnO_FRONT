@@ -181,7 +181,7 @@ void main() {
       await settleToast(tester);
 
       expect(gaugeIn(cardOf('phoenix')), findsNothing);
-      expect(find.text('한 번만 해내면 받아요'), findsOneWidget);
+      expect(find.text('1번만 해내면 받아요'), findsOneWidget);
     });
   });
 

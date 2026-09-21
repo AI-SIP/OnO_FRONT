@@ -143,7 +143,7 @@ class _ProblemDetailTemplateV2State extends State<ProblemDetailTemplateV2>
                   Icon(Icons.calendar_month,
                       color: themeProvider.primaryColor, size: 18),
                   const SizedBox(width: 8),
-                  buildDateRow(widget.problemModel.solvedAt!,
+                  buildDateRow(widget.problemModel.displaySolvedAt,
                       themeProvider.primaryColor),
                 ],
               ),

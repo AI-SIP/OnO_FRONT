@@ -63,6 +63,8 @@ Future<void> main() async {
             details.stack ?? StackTrace.current,
             source: 'flutter_error',
             severity: AppErrorSeverity.fatal,
+            // Sentry 로는 SentryFlutter 의 FlutterError 통합이 보낸다.
+            sendToSentry: false,
           ),
         );
       };
@@ -74,6 +76,8 @@ Future<void> main() async {
             stackTrace,
             source: 'platform_dispatcher',
             severity: AppErrorSeverity.fatal,
+            // Sentry 로는 SentryFlutter 의 onError 통합이 보낸다.
+            sendToSentry: false,
           ),
         );
         return true;
@@ -81,7 +85,10 @@ Future<void> main() async {
 
       await SentryFlutter.init(
         (options) {
-          options.dsn = dotenv.env['SENTRY_DSN'] ?? '';
+          // DSN 이 비면 SentryFlutter 는 아무것도 보내지 않는다. E2E 가
+          // 보고를 꺼 둔 경우다.
+          options.dsn =
+              AppErrorReporter.enabled ? dotenv.env['SENTRY_DSN'] ?? '' : '';
           // 운영 사용자 에러만 갈라 볼 수 있게 ENV 를 environment 로 싣는다.
           // release 이름(패키지@버전+빌드)은 sentry_flutter 가 알아서 채운다.
           options.environment = SentryEnvironment.resolve(
