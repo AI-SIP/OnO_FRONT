@@ -11,6 +11,7 @@ import '../Model/StudyRoom/StudyRoomModel.dart';
 import '../Model/StudyRoom/WeeklyReportModel.dart';
 import '../Module/Emoji/OnoEmojiCatalog.dart';
 import '../Service/Api/StudyRoom/StudyRoomService.dart';
+import '../Util/AppErrorReporter.dart';
 
 class StudyRoomProvider extends ChangeNotifier {
   final StudyRoomService _service;
@@ -247,6 +248,21 @@ class StudyRoomProvider extends ChangeNotifier {
     }
   }
 
+  /// 반응을 누른 곳은 결과를 기다리지 않는다. 여기서 받지 않으면 예외가
+  /// 끝까지 올라가 fatal 로 보고됐다. 사용자에게는 HttpService 가 스낵바로
+  /// 이미 알렸고, 반응은 누르기 전 그대로 남는다.
+  Future<void> _reportReactionFailure(
+    Object error,
+    StackTrace stackTrace,
+  ) {
+    return AppErrorReporter.report(
+      error,
+      stackTrace,
+      source: 'study_room_reaction_toggle',
+      severity: AppErrorSeverity.warning,
+    );
+  }
+
   String _normalizeEmojiKey(String emoji) {
     return OnoEmojiCatalog.byKey(emoji)?.key ?? emoji;
   }
@@ -258,11 +274,16 @@ class StudyRoomProvider extends ChangeNotifier {
     final roomId = selectedRoom?.roomId ?? _activeRoomId;
     if (roomId == null) return;
 
-    feed.reactions = await _service.toggleFeedReaction(
-      roomId: roomId,
-      feedId: feedId,
-      emoji: emojiKey,
-    );
+    try {
+      feed.reactions = await _service.toggleFeedReaction(
+        roomId: roomId,
+        feedId: feedId,
+        emoji: emojiKey,
+      );
+    } catch (error, stackTrace) {
+      await _reportReactionFailure(error, stackTrace);
+      return;
+    }
     FirebaseAnalytics.instance.logEvent(name: 'feed_reaction_toggled');
     notifyListeners();
   }
@@ -379,11 +400,16 @@ class StudyRoomProvider extends ChangeNotifier {
     final emojiKey = _normalizeEmojiKey(emoji);
     final roomId = selectedRoom?.roomId ?? _activeRoomId;
     if (roomId == null) return;
-    shared.reactions = await _service.toggleSharedProblemReaction(
-      roomId: roomId,
-      sharedProblemId: sharedProblemId,
-      emoji: emojiKey,
-    );
+    try {
+      shared.reactions = await _service.toggleSharedProblemReaction(
+        roomId: roomId,
+        sharedProblemId: sharedProblemId,
+        emoji: emojiKey,
+      );
+    } catch (error, stackTrace) {
+      await _reportReactionFailure(error, stackTrace);
+      return;
+    }
     FirebaseAnalytics.instance.logEvent(name: 'problem_reaction_toggled');
     notifyListeners();
   }
