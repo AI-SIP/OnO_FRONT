@@ -23,7 +23,7 @@ class ProblemDetailScreenWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             verticalSpacer(ctx, .03),
-            buildDateRow(problem.solvedAt!, theme.primaryColor),
+            buildDateRow(problem.displaySolvedAt, theme.primaryColor),
             /*
             verticalSpacer(ctx, .03),
             buildReferenceRow(problem.reference, theme.primaryColor),

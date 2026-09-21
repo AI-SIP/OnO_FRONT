@@ -345,7 +345,7 @@ class _ProblemDetailTemplateState extends State<ProblemDetailTemplate>
               const Spacer(),
               UnderlinedText(
                 text: DateFormat('yyyy년 M월 d일')
-                    .format(widget.problemModel.solvedAt!),
+                    .format(widget.problemModel.displaySolvedAt),
                 fontSize: 16,
               ),
             ],

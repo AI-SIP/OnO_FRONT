@@ -224,11 +224,9 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
                         next.analysis?.problemType;
               },
               builder: (context, problemModel, child) {
-                if (_isProblemDeleted) {
-                  return Expanded(
-                      child:
-                          Container()); // Problem has been deleted, so show nothing or a message
-                }
+                // 이 builder 는 이미 Expanded 안에 있다. 여기서 Expanded 를 또
+                // 두르면 ParentDataWidget 오류가 난다.
+                if (_isProblemDeleted) return const SizedBox.shrink();
                 if (problemModel == null) {
                   // 초기 로딩 시에만 Future로 가져오기
                   return FutureBuilder<ProblemModel>(
