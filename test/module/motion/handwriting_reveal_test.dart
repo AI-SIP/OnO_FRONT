@@ -11,6 +11,29 @@ const _duration = Duration(milliseconds: 600);
 void main() {
   setUpOnoWidgetTest();
 
+  testWidgets('다 쓰고 나면 가리개가 걷혀 마지막 글자가 흐리지 않다', (tester) async {
+    // 가리개의 흐린 끝자락이 다 쓴 뒤에도 문구 오른쪽 끝을 덮고 있어서
+    // 스플래시의 닫는 따옴표만 흐릿하게 남았다.
+    await pumpOnoWidget(
+      tester,
+      Scaffold(
+        body: Center(
+          child: HandwritingReveal(
+            text: _phrase,
+            color: Colors.black,
+            duration: _duration,
+          ),
+        ),
+      ),
+      settle: false,
+    );
+    expect(find.byType(ShaderMask), findsOneWidget);
+
+    await tester.pumpAndSettle();
+    expect(find.text(_phrase), findsOneWidget);
+    expect(find.byType(ShaderMask), findsNothing);
+  });
+
   testWidgets('다 써질 때까지는 onCompleted 가 불리지 않는다', (tester) async {
     var completed = false;
 

@@ -182,8 +182,10 @@ class _HandwritingRevealState extends State<HandwritingReveal>
           alignment: Alignment.centerLeft,
           clipBehavior: Clip.none,
           children: [
-            _mask(
-                stroke.progress, stroke.progress < 1 ? _clipRight(text) : text),
+            // 다 쓰고 나면 가리개를 걷어 낸다. 남겨 두면 흐린 끝자락이
+            // 문구 오른쪽 끝에 그대로 덮여 있어서 마지막 글자(닫는 따옴표)만
+            // 흐릿하게 보였다.
+            if (stroke.progress >= 1) text else _mask(stroke.progress, text),
             if (widget.underline)
               Positioned.fill(
                 child: CustomPaint(
@@ -254,8 +256,11 @@ class _HandwritingRevealState extends State<HandwritingReveal>
     return ShaderMask(
       blendMode: BlendMode.dstIn,
       shaderCallback: (bounds) {
-        final edge = progress.clamp(0.0, 1.0);
-        final soft = (edge - _softEdge).clamp(0.0, 1.0);
+        // 흐린 끝자락까지 상자 밖으로 밀어내야 다 썼을 때 마지막 글자가
+        // 온전히 드러난다. progress 를 그대로 쓰면 1 이 되어도 오른쪽 끝
+        // [_softEdge] 만큼이 흐린 채로 남았다.
+        final edge = (progress * (1 + _softEdge)).clamp(0.0, 1.0);
+        final soft = (progress * (1 + _softEdge) - _softEdge).clamp(0.0, 1.0);
         return LinearGradient(
           begin: Alignment.centerLeft,
           end: Alignment.centerRight,
@@ -270,15 +275,6 @@ class _HandwritingRevealState extends State<HandwritingReveal>
       },
       child: child,
     );
-  }
-
-  /// 글자 상자 오른쪽으로 삐져나온 획을 쓰는 동안만 잘라 둔다.
-  ///
-  /// 손글씨 폰트는 마지막 글자(닫는 따옴표)가 상자 오른쪽 밖까지 그려진다.
-  /// [_mask] 의 가리개는 상자 안에만 덮이므로 그 조각만 처음부터 흐릿하게
-  /// 보였다. 다 쓰고 나면 자르지 않아 완성된 글씨는 그대로 남는다.
-  Widget _clipRight(Widget child) {
-    return ClipRect(clipper: const _RightEdgeClipper(), child: child);
   }
 
   /// 적는 자리에 얹는 연필이다.
@@ -355,18 +351,6 @@ class _StrokeState {
 }
 
 /// 문구 아래에 왼쪽부터 그어지는 선이다.
-/// 오른쪽만 상자 경계에서 자른다. 위아래와 왼쪽은 획이 넘쳐도 그대로 둔다.
-class _RightEdgeClipper extends CustomClipper<Rect> {
-  const _RightEdgeClipper();
-
-  @override
-  Rect getClip(Size size) =>
-      Rect.fromLTRB(-size.width, -size.height, size.width, size.height * 2);
-
-  @override
-  bool shouldReclip(covariant _RightEdgeClipper oldClipper) => false;
-}
-
 class _UnderlinePainter extends CustomPainter {
   final Color color;
 
