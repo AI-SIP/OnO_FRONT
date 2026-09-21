@@ -276,10 +276,10 @@ class PracticeDetailScreen extends StatelessWidget {
 
   /// 지난 복습을 끝내고 고른 기분이다.
   ///
-  /// 전에는 글자 한 줄과 이모지를 가운데에 나란히 두기만 해서, 위의 통계와
-  /// 경계가 없어 어디에 속한 것인지 읽히지 않았다. 옅게 칠한 칸으로 묶고
-  /// 이모지를 동그란 자리에 앉혔다. 그림만으로는 무엇을 고른 것인지 알기
-  /// 어려워서 이모지의 이름도 같이 쓴다.
+  /// 칸을 칠해 묶었더니 이 화면에서 혼자 색이 들어간 덩어리가 되고, 화면
+  /// 끝까지 붙어 있어 아래 문제 목록과 좌우 선도 어긋났다. 칠하지 않고 위의
+  /// 통계와는 구분선으로만 나눈다. 좌우 여백은 문제 목록과 같은 16 이다.
+  /// 그림만으로는 무엇을 고른 것인지 알기 어려워서 이모지의 이름도 같이 쓴다.
   ///
   /// 서버가 이 앱이 모르는 키를 보내면 [OnoEmojiCatalog.byKey] 가 null 을
   /// 주는데, 그때는 칸 자체를 그리지 않는다. 이름도 그림도 없이 빈 자리만
@@ -289,51 +289,53 @@ class PracticeDetailScreen extends StatelessWidget {
     if (emoji == null) return const SizedBox.shrink();
 
     return Padding(
-      padding: const EdgeInsets.only(top: 14),
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        decoration: BoxDecoration(
-          color: themeProvider.primaryColor.withValues(alpha: 0.06),
-          borderRadius: BorderRadius.circular(AppRadius.medium),
-          border: Border.all(
-            color: themeProvider.primaryColor.withValues(alpha: 0.18),
+      padding: const EdgeInsets.only(top: 16),
+      child: Column(
+        children: [
+          const Divider(
+            height: 1,
+            indent: 16,
+            endIndent: 16,
+            color: AppColors.border,
           ),
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(6),
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                shape: BoxShape.circle,
-              ),
-              child: OnoEmojiImage(emoji: emoji, size: 30),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const StandardText(
-                    text: '지난 복습 소감',
-                    fontSize: 12,
-                    color: AppColors.textTertiary,
-                    height: 1.2,
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: const BoxDecoration(
+                    color: AppColors.surfaceMuted,
+                    shape: BoxShape.circle,
                   ),
-                  const SizedBox(height: 4),
-                  StandardText(
-                    text: emoji.label,
-                    fontSize: 15,
-                    color: themeProvider.primaryColor,
-                    height: 1.2,
+                  child: OnoEmojiImage(emoji: emoji, size: 30),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const StandardText(
+                        text: '지난 복습 소감',
+                        fontSize: 12,
+                        color: AppColors.textTertiary,
+                        height: 1.2,
+                      ),
+                      const SizedBox(height: 4),
+                      StandardText(
+                        text: emoji.label,
+                        fontSize: 15,
+                        color: themeProvider.primaryColor,
+                        height: 1.2,
+                      ),
+                    ],
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
