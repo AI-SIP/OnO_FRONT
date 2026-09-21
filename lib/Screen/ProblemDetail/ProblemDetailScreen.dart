@@ -348,7 +348,7 @@ class _ProblemDetailScreenState extends State<ProblemDetailScreen> {
   void _showActionDialog(
       ProblemModel problemModel, ThemeHandler themeProvider) {
     FirebaseAnalytics.instance
-        .logEvent(name: 'problem_detail_screen_action_dialog_button_click');
+        .logEvent(name: 'problem_detail_action_dialog_click');
 
     final openTime = DateTime.now();
     showModalBottomSheet(

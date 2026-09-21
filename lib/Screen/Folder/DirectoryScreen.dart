@@ -801,7 +801,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
   Future<void> _navigateToSingleProblemRegisterInCurrentFolder() async {
     FirebaseAnalytics.instance
-        .logEvent(name: 'directory_create_single_problem_note_click');
+        .logEvent(name: 'directory_create_single_note_click');
 
     if (_currentFolder == null) return;
 
@@ -830,7 +830,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
   Future<void> _navigateToMultiProblemRegisterInCurrentFolder() async {
     FirebaseAnalytics.instance
-        .logEvent(name: 'directory_create_multi_problem_note_click');
+        .logEvent(name: 'directory_create_multi_note_click');
 
     if (_currentFolder == null) return;
 
