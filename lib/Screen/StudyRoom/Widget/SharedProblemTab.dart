@@ -4,11 +4,11 @@ import 'package:provider/provider.dart';
 import '../../../Module/Text/StandardText.dart';
 import '../../../Module/Theme/ThemeHandler.dart';
 import '../../../Provider/StudyRoomProvider.dart';
-import '../../../Util/AppSnackBar.dart';
 import '../ProblemPickerScreen.dart';
 import 'SharedProblemCard.dart';
 import '../../../Module/Motion/TossPageRoute.dart';
 import '../../../Module/Design/AppColors.dart';
+import '../../../Module/Design/AppToast.dart';
 import '../../../Module/Design/AppRadius.dart';
 
 class SharedProblemTab extends StatefulWidget {
@@ -95,10 +95,7 @@ class _SharedProblemTabState extends State<SharedProblemTab>
     }
   }
 
-  Future<void> _openPicker(
-    BuildContext context,
-    ThemeHandler themeProvider,
-  ) async {
+  Future<void> _openPicker(BuildContext context) async {
     final provider = Provider.of<StudyRoomProvider>(context, listen: false);
     final alreadySharedIds = provider.sharedProblems
         .map((s) => s.problemId)
@@ -115,18 +112,7 @@ class _SharedProblemTabState extends State<SharedProblemTab>
       ),
     );
     if (result == true && context.mounted) {
-      AppSnackBar.messengerKey.currentState?.showSnackBar(
-        SnackBar(
-          content: const StandardText(
-            text: '문제를 공유했어요!',
-            fontSize: 14,
-            color: Colors.white,
-          ),
-          backgroundColor: themeProvider.primaryColor,
-          behavior: SnackBarBehavior.floating,
-          duration: const Duration(seconds: 2),
-        ),
-      );
+      AppToast.success('문제를 공유했어요!');
     }
   }
 
@@ -251,7 +237,7 @@ class _SharedProblemTabState extends State<SharedProblemTab>
                     child: SizedBox(
                       width: double.infinity,
                       child: TextButton.icon(
-                        onPressed: () => _openPicker(context, themeProvider),
+                        onPressed: () => _openPicker(context),
                         style: TextButton.styleFrom(
                           backgroundColor: themeProvider.primaryColor,
                           foregroundColor: Colors.white,

@@ -25,7 +25,6 @@ class SnackBarDialog {
       message: safeMessage,
       type: _typeOf(backgroundColor),
       context: context,
-      duration: const Duration(seconds: 2),
     );
   }
 

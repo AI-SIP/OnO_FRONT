@@ -40,12 +40,28 @@ class AppToast {
   static void info(String message) =>
       show(message: message, type: ToastType.info);
 
+  /// 알림이 떠 있는 시간은 성격이 정한다.
+  ///
+  /// 잘 됐다는 말은 읽지 않아도 그만이라 짧게 지나가고, 잘못됐다는 말과
+  /// 주의는 무엇이 문제인지 읽어야 해서 길게 남는다. 그동안 부르는 쪽마다
+  /// 시간을 적어서 같은 성격인데도 2초와 3초가 섞여 있었다.
+  static Duration _durationOf(ToastType type) {
+    switch (type) {
+      case ToastType.success:
+        return const Duration(seconds: 2);
+      case ToastType.error:
+      case ToastType.info:
+        return const Duration(seconds: 3);
+    }
+  }
+
   /// [context] 를 주면 그 화면의 Overlay 를, 주지 않으면 앱 전체의 것을 쓴다.
+  /// [duration] 은 규칙을 벗어나야 할 때만 준다. 보통은 비워 둔다.
   static void show({
     required String message,
     ToastType type = ToastType.info,
     BuildContext? context,
-    Duration duration = const Duration(seconds: 3),
+    Duration? duration,
   }) {
     if (message.trim().isEmpty) return;
 
@@ -73,7 +89,7 @@ class AppToast {
       builder: (context) => _ToastView(
         message: message,
         type: type,
-        duration: duration,
+        duration: duration ?? _durationOf(type),
         onDismiss: dismiss,
       ),
     );
