@@ -154,50 +154,6 @@
 
 <br>
 
-## 프로젝트 구조
-
-```
-lib/
-├── Config/      앱 설정과 환경(ENV)별 서버 주소
-├── Constants/   공통 상수
-├── Exception/   앱 전역 예외와 에러 코드
-├── Model/       서버 응답을 담는 모델
-├── Module/      화면 여러 곳이 함께 쓰는 위젯과 유틸(이미지, 테마, 이모지 등)
-├── Provider/    상태 관리(문제, 폴더, 복습 세트, 미션, 치장, 스터디룸, 토큰 등)
-├── Screen/      화면 단위(책장, 오답노트, 복습, 스터디룸, 옷장, 미션, 훈장 등)
-├── Service/     서버 통신과 소셜 로그인
-└── Util/        날짜, 로깅 같은 도구
-```
-
-테스트 파일 199개가 `test/` 에 있습니다. 위젯 골든 테스트와 함께, 새 화면이 화면 조회 이벤트를 빠뜨리지 않았는지와 이벤트 이름이 규칙을 지키는지도 검사합니다.
-
-<br>
-
-## 개발 환경 세팅
-
-```bash
-flutter pub get
-
-# 로컬 서버를 보고 실행 (ENV 기본값은 local)
-flutter run
-
-# 개발 서버 / 운영 서버
-flutter run --dart-define=ENV=dev
-flutter run --dart-define=ENV=prod
-```
-
-`.env` 파일이 필요합니다. 저장소에 올라가지 않으니 팀에 요청해 주세요. 서버 주소(`BASE_URL_LOCAL`, `BASE_URL_DEV`, `BASE_URL_PROD`)와 가이드 페이지 주소, 외부 서비스 키가 들어 있습니다.
-
-출시 전에는 아래를 통과해야 합니다.
-
-```bash
-dart format .
-flutter analyze   # 경고 0개
-flutter test
-```
-
-<br>
-
 ## 업데이트 내역
 
 | 날짜 | 버전 | 내용 |
