@@ -1,19 +1,17 @@
 <div align="center">
 
-<img src=".github/readme/frog.png" width="120" alt="OnO" />
-
 # OnO · 손쉽게 작성하는 나만의 AI 오답노트
 
 **틀린 문제를 찍어 두면, 복습까지 알아서 이어집니다.**
 
-[![App Store](https://img.shields.io/badge/App_Store-다운로드-0D96F6?logo=apple&logoColor=white)](https://apps.apple.com/kr/app/오노-ono-손쉬운-나만의-오답노트/id6602886624)
-[![Google Play](https://img.shields.io/badge/Google_Play-다운로드-414141?logo=googleplay&logoColor=white)](https://play.google.com/store/apps/details?id=com.ono.app&pcampaignid=web_share)
-[![사용자 가이드](https://img.shields.io/badge/사용법-가이드-1CBA1A)](https://ono-guide.notion.site/OnO-3d642b6aecdc8091a875c204f2479e05)
+<a href="https://apps.apple.com/kr/app/오노-ono-손쉬운-나만의-오답노트/id6602886624"><img src="https://img.shields.io/badge/App%20Store-000000?style=for-the-badge&logo=apple&logoColor=white" height="36" alt="App Store" /></a>
+<a href="https://play.google.com/store/apps/details?id=com.ono.app&pcampaignid=web_share"><img src="https://img.shields.io/badge/Google%20Play-000000?style=for-the-badge&logo=googleplay&logoColor=white" height="36" alt="Google Play" /></a>
+<a href="https://ono-guide.notion.site/OnO-3d642b6aecdc8091a875c204f2479e05"><img src="https://img.shields.io/badge/%EC%82%AC%EC%9A%A9%EC%9E%90%20%EA%B0%80%EC%9D%B4%EB%93%9C-1CBA1A?style=for-the-badge&logoColor=white" height="36" alt="사용자 가이드" /></a>
 
-![Flutter](https://img.shields.io/badge/Flutter-3.3+-02569B?logo=flutter&logoColor=white)
-![Dart](https://img.shields.io/badge/Dart-3.3+-0175C2?logo=dart&logoColor=white)
-![Version](https://img.shields.io/badge/version-4.1.0-1CBA1A)
-![Platform](https://img.shields.io/badge/platform-iOS_|_Android-lightgrey)
+<img src="https://img.shields.io/badge/version-4.1.0-1CBA1A?style=flat-square" alt="version 4.1.0" />
+<img src="https://img.shields.io/badge/Flutter-3.3+-02569B?style=flat-square&logo=flutter&logoColor=white" alt="Flutter 3.3+" />
+<img src="https://img.shields.io/badge/Dart-3.3+-0175C2?style=flat-square&logo=dart&logoColor=white" alt="Dart 3.3+" />
+<img src="https://img.shields.io/badge/iOS%20%C2%B7%20Android-6E7781?style=flat-square" alt="iOS · Android" />
 
 <img src=".github/readme/hero.png" width="860" alt="OnO 주요 화면" />
 
@@ -39,15 +37,15 @@
 ## 4.1.0 에서 새로 생긴 것
 
 <div align="center">
-<img src=".github/readme/38-closet.png" width="190" />
-<img src=".github/readme/39-stats.png" width="190" />
-<img src=".github/readme/41-decorate-try.png" width="190" />
-<img src=".github/readme/47-medals.png" width="190" />
+<img src=".github/readme/38-closet.png" width="170" />
+<img src=".github/readme/39-stats.png" width="170" />
+<img src=".github/readme/41-decorate-try.png" width="170" />
+<img src=".github/readme/47-medals.png" width="170" />
 <br>
-<img src=".github/readme/43-mission-daily.png" width="190" />
-<img src=".github/readme/44-mission-weekly.png" width="190" />
-<img src=".github/readme/45-mission-reward.png" width="190" />
-<img src=".github/readme/46-level-up.png" width="190" />
+<img src=".github/readme/43-mission-daily.png" width="170" />
+<img src=".github/readme/44-mission-weekly.png" width="170" />
+<img src=".github/readme/45-mission-reward.png" width="170" />
+<img src=".github/readme/46-level-up.png" width="170" />
 </div>
 
 - **옷장** — 하단 가운데 개구리 탭에서 총 학습 레벨과 출석, 오답노트, 문제 복습, 복습 세트 네 가지 능력치를 봅니다.
@@ -66,7 +64,7 @@
 
 | 로그인 | 안내 시작 | 공책과 오답노트 | 레벨과 성장 |
 | --- | --- | --- | --- |
-| <img src=".github/readme/01-login.png" width="200" /> | <img src=".github/readme/02-tutorial-start.png" width="200" /> | <img src=".github/readme/03-tutorial-notebook.png" width="200" /> | <img src=".github/readme/04-tutorial-level.png" width="200" /> |
+| <img src=".github/readme/01-login.png" width="170" /> | <img src=".github/readme/02-tutorial-start.png" width="170" /> | <img src=".github/readme/03-tutorial-notebook.png" width="170" /> | <img src=".github/readme/04-tutorial-level.png" width="170" /> |
 
 ### 2. 오답노트 작성하기
 
@@ -74,7 +72,7 @@
 
 | 추가 메뉴 | 작성 화면 | 제목과 태그, 메모 | 태그 고르기 |
 | --- | --- | --- | --- |
-| <img src=".github/readme/05-add-menu.png" width="200" /> | <img src=".github/readme/06-write-images.png" width="200" /> | <img src=".github/readme/07-write-meta.png" width="200" /> | <img src=".github/readme/08-tag-picker.png" width="200" /> |
+| <img src=".github/readme/05-add-menu.png" width="170" /> | <img src=".github/readme/06-write-images.png" width="170" /> | <img src=".github/readme/07-write-meta.png" width="170" /> | <img src=".github/readme/08-tag-picker.png" width="170" /> |
 
 ### 3. 책장으로 정리하고 태그로 찾기
 
@@ -82,7 +80,7 @@
 
 | 책장 | 공책 안 | 오답노트 목록 | 태그로 검색 | 추천 복습 문제 |
 | --- | --- | --- | --- | --- |
-| <img src=".github/readme/09-bookshelf.png" width="180" /> | <img src=".github/readme/10-notebook.png" width="180" /> | <img src=".github/readme/11-note-list.png" width="180" /> | <img src=".github/readme/12-tag-search.png" width="180" /> | <img src=".github/readme/13-review-due.png" width="180" /> |
+| <img src=".github/readme/09-bookshelf.png" width="170" /> | <img src=".github/readme/10-notebook.png" width="170" /> | <img src=".github/readme/11-note-list.png" width="170" /> | <img src=".github/readme/12-tag-search.png" width="170" /> | <img src=".github/readme/13-review-due.png" width="170" /> |
 
 ### 4. 자세히 보기와 AI 오답분석
 
@@ -90,7 +88,7 @@
 
 | 문제 | 정답 | 태그와 메모 | AI 오답분석 |
 | --- | --- | --- | --- |
-| <img src=".github/readme/14-detail-problem.png" width="200" /> | <img src=".github/readme/15-detail-answer.png" width="200" /> | <img src=".github/readme/16-detail-memo.png" width="200" /> | <img src=".github/readme/17-ai-analysis.png" width="200" /> |
+| <img src=".github/readme/14-detail-problem.png" width="170" /> | <img src=".github/readme/15-detail-answer.png" width="170" /> | <img src=".github/readme/16-detail-memo.png" width="170" /> | <img src=".github/readme/17-ai-analysis.png" width="170" /> |
 
 ### 5. 앱에서 바로 다시 풀기
 
@@ -98,7 +96,7 @@
 
 | 방식 고르기 | 필기해서 풀기 | 복습 기록 | 회차 자세히 |
 | --- | --- | --- | --- |
-| <img src=".github/readme/18-retry-choice.png" width="200" /> | <img src=".github/readme/19-retry-draw.png" width="200" /> | <img src=".github/readme/20-retry-history.png" width="200" /> | <img src=".github/readme/21-retry-detail.png" width="200" /> |
+| <img src=".github/readme/18-retry-choice.png" width="170" /> | <img src=".github/readme/19-retry-draw.png" width="170" /> | <img src=".github/readme/20-retry-history.png" width="170" /> | <img src=".github/readme/21-retry-detail.png" width="170" /> |
 
 ### 6. 복습 세트로 시험 준비하기
 
@@ -106,15 +104,19 @@
 
 | 세트 목록 | 세트 상세 | 방식 고르기 | 복습 진행 | 복습 완료 |
 | --- | --- | --- | --- | --- |
-| <img src=".github/readme/22-set-list.png" width="180" /> | <img src=".github/readme/23-set-detail.png" width="180" /> | <img src=".github/readme/24-set-mode.png" width="180" /> | <img src=".github/readme/25-set-run.png" width="180" /> | <img src=".github/readme/26-set-done.png" width="180" /> |
+| <img src=".github/readme/22-set-list.png" width="170" /> | <img src=".github/readme/23-set-detail.png" width="170" /> | <img src=".github/readme/24-set-mode.png" width="170" /> | <img src=".github/readme/25-set-run.png" width="170" /> | <img src=".github/readme/26-set-done.png" width="170" /> |
 
 ### 7. 스터디룸에서 함께 공부하기
 
 친구들과 방을 만들면 이번 주 누가 얼마나 공부했는지 랭킹으로 보입니다. 함께 채우는 챌린지를 걸고, 어려웠던 문제를 공유해 댓글과 이모지로 이야기합니다.
 
-| 스터디룸 목록 | 랭킹 | 챌린지 | 문제 공유 | 댓글과 반응 | 활동 |
-| --- | --- | --- | --- | --- | --- |
-| <img src=".github/readme/27-room-list.png" width="150" /> | <img src=".github/readme/28-room-rank.png" width="150" /> | <img src=".github/readme/29-room-challenge.png" width="150" /> | <img src=".github/readme/30-room-share.png" width="150" /> | <img src=".github/readme/31-room-comments.png" width="150" /> | <img src=".github/readme/32-room-activity.png" width="150" /> |
+| 스터디룸 목록 | 랭킹 | 챌린지 |
+| --- | --- | --- |
+| <img src=".github/readme/27-room-list.png" width="170" /> | <img src=".github/readme/28-room-rank.png" width="170" /> | <img src=".github/readme/29-room-challenge.png" width="170" /> |
+
+| 문제 공유 | 댓글과 반응 | 활동 |
+| --- | --- | --- |
+| <img src=".github/readme/30-room-share.png" width="170" /> | <img src=".github/readme/31-room-comments.png" width="170" /> | <img src=".github/readme/32-room-activity.png" width="170" /> |
 
 ### 8. 나의 성장 확인하기
 
@@ -122,16 +124,16 @@
 
 | 마이 페이지 | 학습 달력 | 학습 리포트 | 집중 복습 추천 | 학습 성취 카드 |
 | --- | --- | --- | --- | --- |
-| <img src=".github/readme/33-mypage.png" width="180" /> | <img src=".github/readme/34-calendar.png" width="180" /> | <img src=".github/readme/35-report.png" width="180" /> | <img src=".github/readme/36-report-focus.png" width="180" /> | <img src=".github/readme/37-share-card.png" width="180" /> |
+| <img src=".github/readme/33-mypage.png" width="170" /> | <img src=".github/readme/34-calendar.png" width="170" /> | <img src=".github/readme/35-report.png" width="170" /> | <img src=".github/readme/36-report-focus.png" width="170" /> | <img src=".github/readme/37-share-card.png" width="170" /> |
 
 ### 9. 그 밖에
 
 | 기능 | 설명 | 화면 |
 | --- | --- | --- |
-| 개구리 꾸미기 | 열 자리(배경, 옷, 가방, 목, 얼굴, 머리, 손, 뱃지, 효과, 프레임)에 치장을 입힙니다. 잠긴 것에는 어떤 능력치를 몇 레벨까지 올려야 열리는지 적혀 있습니다. | <img src=".github/readme/40-decorate.png" width="160" /> |
-| 프로필 테두리 | 프레임 자리의 치장은 개구리가 아니라 프로필 사진 둘레에 둘러집니다. | <img src=".github/readme/42-profile-frame.png" width="160" /> |
-| 테마 변경 | 능력치 레벨이 3, 6, 9, 12, 15가 될 때마다 색이 하나씩 열려 모두 24가지가 됩니다. | <img src=".github/readme/48-theme.png" width="160" /> |
-| 복습 알림 | 복습 세트에 알림 시간을 걸어 두면 정해진 시간에 알려 줍니다. 설정에서 끌 수 있습니다. | <img src=".github/readme/49-settings.png" width="160" /> |
+| 개구리 꾸미기 | 열 자리(배경, 옷, 가방, 목, 얼굴, 머리, 손, 뱃지, 효과, 프레임)에 치장을 입힙니다. 잠긴 것에는 어떤 능력치를 몇 레벨까지 올려야 열리는지 적혀 있습니다. | <img src=".github/readme/40-decorate.png" width="170" /> |
+| 프로필 테두리 | 프레임 자리의 치장은 개구리가 아니라 프로필 사진 둘레에 둘러집니다. | <img src=".github/readme/42-profile-frame.png" width="170" /> |
+| 테마 변경 | 능력치 레벨이 3, 6, 9, 12, 15가 될 때마다 색이 하나씩 열려 모두 24가지가 됩니다. | <img src=".github/readme/48-theme.png" width="170" /> |
+| 복습 알림 | 복습 세트에 알림 시간을 걸어 두면 정해진 시간에 알려 줍니다. 설정에서 끌 수 있습니다. | <img src=".github/readme/49-settings.png" width="170" /> |
 | 기기 연동 | 아이폰과 갤럭시, 태블릿 어디에서 로그인해도 오답노트와 복습 기록, 꾸민 개구리가 그대로 이어집니다. | |
 
 <br>
