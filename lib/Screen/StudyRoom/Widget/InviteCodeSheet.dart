@@ -207,7 +207,6 @@ class InviteCodeSheet extends StatelessWidget {
       message: '초대 코드가 복사되었어요!',
       type: ToastType.success,
       context: context,
-      duration: const Duration(seconds: 2),
     );
   }
 

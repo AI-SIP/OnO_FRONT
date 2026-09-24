@@ -105,7 +105,6 @@ class _LearningCalendarScreenState extends State<LearningCalendarScreen> {
       message: '다이어리가 저장되었어요.',
       type: ToastType.success,
       context: context,
-      duration: const Duration(seconds: 2),
     );
   }
 

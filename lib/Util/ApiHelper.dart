@@ -42,7 +42,6 @@ class ApiHelper {
           message: successMessage,
           type: ToastType.success,
           context: context,
-          duration: const Duration(seconds: 2),
         );
       }
 
@@ -106,7 +105,6 @@ class ApiHelper {
           message: successMessage,
           type: ToastType.success,
           context: context,
-          duration: const Duration(seconds: 2),
         );
       }
 
@@ -226,7 +224,6 @@ class ApiHelper {
         type: presentation.backgroundColor == Colors.orange
             ? ToastType.info
             : ToastType.error,
-        duration: const Duration(seconds: 3),
       );
     }
   }

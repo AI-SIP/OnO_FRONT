@@ -12,7 +12,6 @@ import '../../Module/Text/mobile_font_size.dart';
 import '../../Module/Theme/ClayIcon.dart';
 import '../../Module/Theme/ThemeHandler.dart';
 import '../../Provider/PracticeNoteProvider.dart';
-import '../../Util/AppSnackBar.dart';
 import '../Tutorial/TutorialTargets.dart';
 import 'PracticeDetailLoader.dart';
 import 'PracticeProblemSelectionScreen.dart';
@@ -25,6 +24,7 @@ import '../../Module/Motion/TossPageRoute.dart';
 import '../../Module/Motion/TossDialog.dart';
 import '../../Module/Design/AppColors.dart';
 import '../../Module/Design/AppRadius.dart';
+import '../../Module/Design/AppToast.dart';
 import '../../Util/AppAnalytics.dart';
 
 class PracticeThumbnailScreen extends StatefulWidget {
@@ -383,8 +383,6 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
   }
 
   Future<void> _showDeletePracticeDialog(List<int> deletePracticeIds) async {
-    final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
-
     return showTossDialog(
       context: context,
       builder: (context) {
@@ -475,17 +473,9 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
                             _selectedPracticeIds.clear();
                           });
 
-                          AppSnackBar.messengerKey.currentState?.showSnackBar(
-                            SnackBar(
-                              content: const StandardText(
-                                text: '복습 세트가 삭제되었습니다!',
-                                fontSize: 14,
-                                color: Colors.white,
-                              ),
-                              backgroundColor: themeProvider.primaryColor,
-                              duration: const Duration(seconds: 2),
-                            ),
-                          );
+                          // 다이얼로그를 닫은 뒤라 이 자리의 context 는 이미
+                          // 죽어 있다. 넘기지 않고 앱 전체 Overlay 에 맡긴다.
+                          AppToast.success('복습 세트가 삭제되었습니다!');
                         },
                         style: TextButton.styleFrom(
                           padding: const EdgeInsets.symmetric(
