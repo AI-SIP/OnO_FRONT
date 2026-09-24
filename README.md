@@ -78,9 +78,9 @@
 
 공책 안에 또 공책을 두어 과목과 단원으로 나눕니다. 태그나 제목으로 검색하면 원하는 문제가 바로 나오고, 복습할 때가 된 문제는 추천 복습 문제가 먼저 모아 줍니다.
 
-| 책장 | 공책 안 | 오답노트 목록 | 태그로 검색 | 추천 복습 문제 |
-| --- | --- | --- | --- | --- |
-| <img src=".github/readme/09-bookshelf.png" width="170" /> | <img src=".github/readme/10-notebook.png" width="170" /> | <img src=".github/readme/11-note-list.png" width="170" /> | <img src=".github/readme/12-tag-search.png" width="170" /> | <img src=".github/readme/13-review-due.png" width="170" /> |
+| 책장 | 공책 안 | 태그로 검색 | 추천 복습 문제 |
+| --- | --- | --- | --- |
+| <img src=".github/readme/09-bookshelf.png" width="170" /> | <img src=".github/readme/10-notebook.png" width="170" /> | <img src=".github/readme/12-tag-search.png" width="170" /> | <img src=".github/readme/13-review-due.png" width="170" /> |
 
 ### 4. 자세히 보기와 AI 오답분석
 
@@ -102,9 +102,9 @@
 
 복습할 문제를 묶어 두면 등록한 순서나 셔플 모드로 한 번에 돌려 봅니다. 마치고 나면 이번 복습이 어땠는지 이모지로 남깁니다.
 
-| 세트 목록 | 세트 상세 | 방식 고르기 | 복습 진행 | 복습 완료 |
-| --- | --- | --- | --- | --- |
-| <img src=".github/readme/22-set-list.png" width="170" /> | <img src=".github/readme/23-set-detail.png" width="170" /> | <img src=".github/readme/24-set-mode.png" width="170" /> | <img src=".github/readme/25-set-run.png" width="170" /> | <img src=".github/readme/26-set-done.png" width="170" /> |
+| 세트 목록 | 세트 상세 | 복습 진행 | 복습 완료 |
+| --- | --- | --- | --- |
+| <img src=".github/readme/22-set-list.png" width="170" /> | <img src=".github/readme/23-set-detail.png" width="170" /> | <img src=".github/readme/25-set-run.png" width="170" /> | <img src=".github/readme/26-set-done.png" width="170" /> |
 
 ### 7. 스터디룸에서 함께 공부하기
 
@@ -122,9 +122,9 @@
 
 학습 달력에는 공부한 날마다 내 개구리 도장과 그날의 기분이 찍힙니다. 학습 리포트에서 복습 추이와 약점을 확인하고, 이번 주 기록은 성취 카드로 만들어 친구에게 보냅니다.
 
-| 마이 페이지 | 학습 달력 | 학습 리포트 | 집중 복습 추천 | 학습 성취 카드 |
-| --- | --- | --- | --- | --- |
-| <img src=".github/readme/33-mypage.png" width="170" /> | <img src=".github/readme/34-calendar.png" width="170" /> | <img src=".github/readme/35-report.png" width="170" /> | <img src=".github/readme/36-report-focus.png" width="170" /> | <img src=".github/readme/37-share-card.png" width="170" /> |
+| 마이 페이지 | 학습 달력 | 학습 리포트 | 학습 성취 카드 |
+| --- | --- | --- | --- |
+| <img src=".github/readme/33-mypage.png" width="170" /> | <img src=".github/readme/34-calendar.png" width="170" /> | <img src=".github/readme/35-report.png" width="170" /> | <img src=".github/readme/37-share-card.png" width="170" /> |
 
 ### 9. 그 밖에
 
@@ -134,7 +134,6 @@
 | 프로필 테두리 | 프레임 자리의 치장은 개구리가 아니라 프로필 사진 둘레에 둘러집니다. | <img src=".github/readme/42-profile-frame.png" width="170" /> |
 | 테마 변경 | 능력치 레벨이 3, 6, 9, 12, 15가 될 때마다 색이 하나씩 열려 모두 24가지가 됩니다. | <img src=".github/readme/48-theme.png" width="170" /> |
 | 복습 알림 | 복습 세트에 알림 시간을 걸어 두면 정해진 시간에 알려 줍니다. 설정에서 끌 수 있습니다. | <img src=".github/readme/49-settings.png" width="170" /> |
-| 기기 연동 | 아이폰과 갤럭시, 태블릿 어디에서 로그인해도 오답노트와 복습 기록, 꾸민 개구리가 그대로 이어집니다. | |
 
 <br>
 
@@ -212,6 +211,12 @@ flutter test
 | 2026/2 | v3.2.0 | 복습 기록 도입 · 대규모 디자인 개선 |
 | 2026/1 | v3.1.0 | OnO 캐릭터 성장 도입 · 오답노트 등록 로딩 시간 감소 |
 | 2026/1 | v3.0.0 | 레벨 도입 · 복습 알림 도입 · 이미지 등록 편의성 개선 |
+
+<details>
+<summary>2024년 기록 더 보기</summary>
+
+| 날짜 | 버전 | 내용 |
+| --- | --- | --- |
 | 2024/11 | v2.4.0 | 복습 리스트 도입 |
 | 2024/10 | v2.3.0 | 필기 제거 방식 개선 · 캐릭터 아이콘 추가 |
 | 2024/10 | v2.2.0 | 노트와 템플릿 캐릭터 도입 · UI/UX 대규모 개선 |
@@ -219,6 +224,8 @@ flutter test
 | 2024/10 | v2.0.0 | AI 오답분석 도입 · 과목별 템플릿 도입 · UI 대규모 수정 |
 | 2024/9 | v1.3.2 | 구글 플레이 스토어 출시 · 오답노트 관리와 닉네임 설정 도입 |
 | 2024/8 | v1.0.0 | 앱 스토어 출시 · 오답 등록과 복습, 파란색 필기 제거 |
+
+</details>
 
 <br>
 
