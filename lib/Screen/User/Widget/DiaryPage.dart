@@ -15,7 +15,7 @@ import 'FrogCharacter.dart';
 ///
 /// 전에는 입력칸과 저장 버튼뿐이라, 저장해도 같은 입력칸이 그대로 남아
 /// 일기를 썼다는 느낌이 없었다. 이제 쓴 날은 **손글씨로 줄 위에 적힌 한 쪽**
-/// 으로 보이고, 그날 공부한 만큼 개구리 도장이 찍힌다. 고치려면 `고쳐 쓰기` 를
+/// 으로 보이고, 끝에 개구리 도장이 찍힌다. 고치려면 `고쳐 쓰기` 를
 /// 눌러야 입력칸으로 바뀐다.
 ///
 /// 날짜마다 따로 두려면 바깥에서 날짜로 `key` 를 줘야 한다. 그래야 다른 날을
@@ -31,9 +31,6 @@ class DiaryPage extends StatefulWidget {
 
   /// 그날 고른 기분. 쪽 오른쪽 위에 스티커처럼 붙는다.
   final String? moodEmojiKey;
-
-  /// `복습 3회 · 오답노트 2개` 처럼 그날 공부한 것. 안 한 날이면 null.
-  final String? studySummary;
 
   /// 도장에 찍을 개구리. `CosmeticProvider.layersWithoutBackdrop` 이다.
   final List<CosmeticLayerModel> frogLayers;
@@ -53,7 +50,6 @@ class DiaryPage extends StatefulWidget {
     required this.frogLayers,
     required this.onSave,
     this.moodEmojiKey,
-    this.studySummary,
   });
 
   static const int maxLength = 300;
@@ -365,30 +361,14 @@ class _DiaryPageState extends State<DiaryPage> {
         Row(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (widget.studySummary != null) ...[
-                    StandardText(
-                      text: widget.studySummary!,
-                      fontSize: 11,
-                      color: AppColors.textTertiary,
-                      height: 1.4,
-                    ),
-                    const SizedBox(height: AppSpacing.sm),
-                  ],
-                  _PillButton(
-                    key: DiaryPage.editButtonKey,
-                    icon: Icons.edit_outlined,
-                    label: '고쳐 쓰기',
-                    color: widget.primaryColor,
-                    onTap: _startWriting,
-                  ),
-                ],
-              ),
+            _PillButton(
+              key: DiaryPage.editButtonKey,
+              icon: Icons.edit_outlined,
+              label: '고쳐 쓰기',
+              color: widget.primaryColor,
+              onTap: _startWriting,
             ),
-            const SizedBox(width: AppSpacing.md),
+            const Spacer(),
             _FrogStamp(
               key: DiaryPage.stampKey,
               layers: widget.frogLayers,

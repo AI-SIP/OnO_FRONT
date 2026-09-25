@@ -75,7 +75,11 @@ class _LearningCalendarScreenState extends State<LearningCalendarScreen> {
     final now = DateTime.now();
     _year = now.year;
     _month = now.month;
+    // 들어오자마자 오늘 일기를 쓸 수 있게 오늘을 골라 둔다. 아무 날도 안 고른
+    // 채로 열면 일기 칸이 아예 보이지 않아 당일에는 쓸 곳이 없는 줄 알았다.
+    _selectedDay = now.day;
     _loadCalendar();
+    _loadDiary(_year, _month, now.day);
   }
 
   String _diaryKey(int year, int month, int day) =>
@@ -543,27 +547,27 @@ class _LearningCalendarScreenState extends State<LearningCalendarScreen> {
   }
 
   Widget _buildSelectedDayDetail(ThemeHandler themeProvider) {
-    if (_selectedDay == null || _calendarData == null)
-      return const SizedBox.shrink();
+    if (_selectedDay == null) return const SizedBox.shrink();
 
-    final record = _calendarData!.recordFor(_selectedDay!);
+    // 일기는 기기에만 있으므로 달력 조회에 실패해도 쓸 수 있어야 한다.
+    // 학습 기록 박스만 조회가 된 때 보인다.
+    final calendarData = _calendarData;
+    final record = calendarData?.recordFor(_selectedDay!);
     final weekdayIndex = DateTime(_year, _month, _selectedDay!).weekday % 7;
     final weekdayName = _dayOfWeekNames[weekdayIndex];
     final primaryColor = themeProvider.primaryColor;
 
     final day = _selectedDay!;
-    final studySummary = (record != null && record.hasStudied)
-        ? '복습 ${record.reviewCount}회 · 오답노트 ${record.noteWriteCount}개 · '
-            '${record.studyMinutes}분 공부'
-        : null;
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _buildDayRecordBox(record, weekdayName, themeProvider),
-          const SizedBox(height: 20),
+          if (calendarData != null) ...[
+            _buildDayRecordBox(record, weekdayName, themeProvider),
+            const SizedBox(height: 20),
+          ],
           DiaryPage(
             // 날짜마다 쓰던 상태를 따로 둔다. 다른 날로 옮기면 입력칸이 닫힌다.
             key: ValueKey('diary_${_year}_${_month}_$day'),
@@ -571,7 +575,6 @@ class _LearningCalendarScreenState extends State<LearningCalendarScreen> {
             date: DateTime(_year, _month, day),
             weekdayName: weekdayName,
             moodEmojiKey: record?.moodEmojiKey,
-            studySummary: studySummary,
             frogLayers: context.watch<CosmeticProvider>().layersWithoutBackdrop,
             primaryColor: primaryColor,
             onSave: (text) => _saveDiary(_year, _month, day, text),

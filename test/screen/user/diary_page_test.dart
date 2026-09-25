@@ -86,8 +86,7 @@ void main() {
     expect(find.byKey(DiaryPage.stampKey), findsOneWidget);
   });
 
-  testWidgets('쓴 날은 읽는 쪽으로 열리고 고쳐 쓰기를 누르면 적은 글이 입력칸에 담긴다',
-      (tester) async {
+  testWidgets('쓴 날은 읽는 쪽으로 열리고 고쳐 쓰기를 누르면 적은 글이 입력칸에 담긴다', (tester) async {
     await pumpDiary(tester, savedText: '어제 쓴 일기');
 
     expect(find.byType(TextField), findsNothing);
@@ -229,7 +228,6 @@ class _HostState extends State<_Host> {
       savedText: _text,
       date: DateTime(2026, 9, 25),
       weekdayName: '목요일',
-      studySummary: '복습 3회 · 오답노트 2개 · 12분 공부',
       frogLayers: const [],
       primaryColor: Colors.green,
       onSave: (text) async {
