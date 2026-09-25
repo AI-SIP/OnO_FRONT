@@ -283,6 +283,29 @@ void main() {
       verify(() => userProvider.signOut()).called(1);
       expect(find.byType(LoginScreen), findsOneWidget);
     });
+
+    // 게스트는 로그아웃이 곧 계정 삭제라 서버 요청이 나간다. 실패했는데도
+    // 로그인 화면으로 넘어가면 지워지지 않은 계정에서 빠져나간 셈이 된다.
+    testWidgets('로그아웃에 실패하면 안내를 띄우고 화면을 넘기지 않는다', (tester) async {
+      final userProvider = buildLoggedInUserProvider();
+      when(() => userProvider.signOut()).thenThrow(Exception('network'));
+
+      await withMockedNetworkImages(() async {
+        await pumpOnoWidget(
+          tester,
+          const SettingScreen(),
+          userProvider: userProvider,
+        );
+      });
+
+      await openAccountActionDialog(tester, '로그아웃');
+
+      await tester.tap(find.text('확인'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(LoginScreen), findsNothing);
+      expect(find.textContaining('로그아웃에 실패했어요'), findsOneWidget);
+    });
   });
 
   group('회원 탈퇴 — 되돌릴 수 없는 동작 확인', () {

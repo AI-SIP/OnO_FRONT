@@ -6,6 +6,8 @@ import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart';
 import 'package:ono/Model/User/UserRegisterModel.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
+import '../../Util/AppSnackBar.dart';
+
 class KakaoAuthService {
   Future<UserRegisterModel?> signInWithKakao(BuildContext context) async {
     if (await isKakaoTalkInstalled()) {
@@ -83,7 +85,17 @@ class KakaoAuthService {
     await UserApi.instance.logout();
   }
 
+  /// 카카오 연동을 끊는다.
+  ///
+  /// 실패해도 던지지 않는다. 탈퇴는 서버 계정을 지우는 것이 본체라, 카카오
+  /// 쪽 정리가 안 됐다고 탈퇴 자체를 멈추면 계정이 남는다. 구글, 애플과 같다.
   Future<void> revokeKakaoSignIn() async {
-    await UserApi.instance.unlink();
+    try {
+      await UserApi.instance.unlink();
+    } catch (error, stackTrace) {
+      debugPrint('카카오 연동 해제 실패: $error');
+      AppSnackBar.showError('카카오 계정 연동 해제에 실패했습니다.');
+      await Sentry.captureException(error, stackTrace: stackTrace);
+    }
   }
 }
