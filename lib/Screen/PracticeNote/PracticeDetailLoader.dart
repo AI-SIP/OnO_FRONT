@@ -55,6 +55,10 @@ class _PracticeDetailLoaderState extends State<PracticeDetailLoader> {
 
     try {
       await provider.fetchPracticeNote(widget.practiceId);
+      // 세트를 받는 동안 사용자가 나가서 다른 세트를 열었을 수 있다. 그때
+      // 이어서 moveToPractice 를 부르면 화면에 떠 있는 다른 세트의 문제
+      // 목록을 이 세트 것으로 덮어써서, 복습 횟수도 엉뚱한 세트에 올라간다.
+      if (!mounted) return;
       await provider.moveToPractice(widget.practiceId);
     } catch (error) {
       debugPrint('Failed to open practice ${widget.practiceId}: $error');
