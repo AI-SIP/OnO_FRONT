@@ -164,7 +164,10 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
     bool isHost = false,
   }) async {
     final themeProvider = Provider.of<ThemeHandler>(context, listen: false);
-    final room = provider.selectedRoom;
+    final selected = provider.selectedRoom;
+    // 다른 방이 남아 있을 수 있어 번호를 확인한다 (build 와 같은 이유).
+    final room =
+        selected != null && selected.roomId == widget.roomId ? selected : null;
     final hasOtherMembers = room != null && room.members.length > 1;
     final content = isHost
         ? hasOtherMembers
@@ -324,7 +327,13 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
   Widget build(BuildContext context) {
     final provider = Provider.of<StudyRoomProvider>(context);
     final themeProvider = Provider.of<ThemeHandler>(context);
-    final room = provider.selectedRoom;
+    // 프로바이더는 방을 하나만 들고 있고, 조회에 실패하면 앞서 열었던 방이
+    // 그대로 남는다. 번호가 다르면 없는 것으로 본다. 예전에는 로딩 중일 때만
+    // 번호를 봐서, 조회가 실패하면 앞 방의 내용을 그리면서 나가기와 삭제는
+    // 이 화면의 방 번호로 나갔다.
+    final selected = provider.selectedRoom;
+    final room =
+        selected != null && selected.roomId == widget.roomId ? selected : null;
     final isHost = room != null && provider.isHost(room);
 
     return Scaffold(
@@ -381,7 +390,7 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
                 child: SizedBox.shrink(),
               ),
       ),
-      body: provider.isLoading && (room == null || room.roomId != widget.roomId)
+      body: provider.isLoading && room == null
           ? Center(
               child: CircularProgressIndicator(
                 color: themeProvider.primaryColor,
@@ -390,7 +399,7 @@ class _StudyRoomDetailScreenState extends State<StudyRoomDetailScreen>
           : room == null
               ? Center(
                   child: StandardText(
-                    text: '방을 찾을 수 없습니다',
+                    text: '방을 불러오지 못했어요',
                     fontSize: 15,
                     color: Colors.grey[500]!,
                   ),

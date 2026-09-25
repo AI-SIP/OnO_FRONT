@@ -124,8 +124,30 @@ void main() {
 
     await pumpDetail(tester, currentUserId: 10);
 
-    expect(find.text('방을 찾을 수 없습니다'), findsOneWidget);
+    expect(find.text('방을 불러오지 못했어요'), findsOneWidget);
     expect(find.byType(CircularProgressIndicator), findsNothing);
+  });
+
+  // 프로바이더는 방을 하나만 들고 있고 조회에 실패하면 앞서 열었던 방이 남는다.
+  // 그 방을 그리면 제목과 멤버는 앞 방인데 나가기와 삭제는 이 화면의 방 번호로
+  // 나가서, 사용자가 보고 있지도 않은 방에서 나가게 된다.
+  testWidgets('앞서 연 방이 남아 있어도 다른 방 조회가 실패하면 그 방을 그리지 않는다', (tester) async {
+    when(() => service.fetchRoomDetail(1)).thenAnswer((_) async => _room());
+    await pumpDetail(tester, currentUserId: 10);
+    expect(find.text('알고리즘 스터디'), findsWidgets);
+
+    when(() => service.fetchRoomDetail(2)).thenThrow(Exception('forbidden'));
+    await withMockedNetworkImages(() async {
+      await pumpOnoWidget(
+        tester,
+        const StudyRoomDetailScreen(roomId: 2),
+        studyRoomProvider: studyRoomProvider,
+        userProvider: _buildUserProvider(10),
+      );
+    });
+
+    expect(find.text('알고리즘 스터디'), findsNothing);
+    expect(find.text('방을 불러오지 못했어요'), findsOneWidget);
   });
 
   testWidgets('정상 응답이면 방 이름과 멤버 수, 탭 4개가 보인다', (tester) async {
