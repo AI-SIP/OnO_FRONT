@@ -243,6 +243,10 @@ class _PracticeCompletionScreenState extends State<PracticeCompletionScreen> {
           onPressed: _submitting
               ? null
               : () async {
+                  // 버튼을 잠그는 것은 다시 그린 뒤부터라, 같은 프레임에 두
+                  // 번 눌리면 이 콜백이 두 번 돈다. 복습 횟수가 두 번 오르는
+                  // 자리라 눌린 순간에도 확인한다.
+                  if (_submitting) return;
                   final navigator = Navigator.of(context);
                   final missionProvider =
                       Provider.of<MissionProvider>(context, listen: false);
