@@ -138,6 +138,23 @@ void main() {
     expect(find.text('복습을 완료했습니다!'), findsOneWidget);
   });
 
+  // 완료 요청은 보낼 때마다 복습 횟수를 하나씩 올린다. 버튼이 잠기는 것은 화면을
+  // 다시 그린 뒤라, 같은 프레임에 두 번 눌려도 한 번만 나가야 한다.
+  testWidgets('확인 버튼을 연달아 두 번 눌러도 한 번만 저장한다', (tester) async {
+    when(() => practiceNoteService.addPracticeNoteCount(1, moodEmojiKey: null))
+        .thenAnswer((_) async {});
+
+    await pumpScreen(tester);
+    await tester.tap(find.text('확인'));
+    await tester.tap(find.text('확인'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+
+    verify(() =>
+            practiceNoteService.addPracticeNoteCount(1, moodEmojiKey: null))
+        .called(1);
+  });
+
   testWidgets('기분을 고르고 확인을 누르면 선택한 moodEmojiKey 로 저장한다', (tester) async {
     when(() => practiceNoteService.addPracticeNoteCount(1,
         moodEmojiKey: any(named: 'moodEmojiKey'))).thenAnswer((_) async {});
