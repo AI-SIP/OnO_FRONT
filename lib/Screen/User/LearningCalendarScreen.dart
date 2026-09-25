@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../Model/Cosmetic/CosmeticLoadoutModel.dart';
 import '../../Provider/CosmeticProvider.dart';
+import 'Widget/DiaryPage.dart';
 import 'Widget/FrogCharacter.dart';
 import '../../Model/StudyCalendar/StudyCalendarModel.dart';
 import '../../Module/Emoji/OnoEmojiCategory.dart';
@@ -37,8 +38,14 @@ class _LearningCalendarScreenState extends State<LearningCalendarScreen> {
   StudyCalendarModel? _calendarData;
   bool _isLoading = true;
   int? _selectedDay;
-  final TextEditingController _diaryController = TextEditingController();
+
+  /// 고른 날의 일기. 불러오는 중이면 null, 안 쓴 날이면 빈 문자열이다.
+  String? _diaryText;
   int _loadDiarySeq = 0;
+
+  /// 이 달에서 일기를 쓴 날들. 달력 칸에 연필 표시를 단다.
+  Set<int> _diaryDays = const {};
+  int _loadDiaryDaysSeq = 0;
 
   final StudyCalendarService _service = StudyCalendarService();
 
@@ -68,48 +75,93 @@ class _LearningCalendarScreenState extends State<LearningCalendarScreen> {
     final now = DateTime.now();
     _year = now.year;
     _month = now.month;
+    // 들어오자마자 오늘 일기를 쓸 수 있게 오늘을 골라 둔다. 아무 날도 안 고른
+    // 채로 열면 일기 칸이 아예 보이지 않아 당일에는 쓸 곳이 없는 줄 알았다.
+    _selectedDay = now.day;
     _loadCalendar();
-  }
-
-  @override
-  void dispose() {
-    _diaryController.dispose();
-    super.dispose();
+    _loadDiary(_year, _month, now.day);
   }
 
   String _diaryKey(int year, int month, int day) =>
-      'diary_text_${year}_${month}_${day}';
+      '${_diaryMonthPrefix(year, month)}$day';
+
+  String _diaryMonthPrefix(int year, int month) =>
+      'diary_text_${year}_${month}_';
+
+  Future<void> _loadDiaryDays() async {
+    final seq = ++_loadDiaryDaysSeq;
+    final year = _year;
+    final month = _month;
+    final prefs = await SharedPreferences.getInstance();
+    final prefix = _diaryMonthPrefix(year, month);
+    final days = <int>{};
+    for (final key in prefs.getKeys()) {
+      if (!key.startsWith(prefix)) continue;
+      final day = int.tryParse(key.substring(prefix.length));
+      if (day != null) days.add(day);
+    }
+    if (!mounted || seq != _loadDiaryDaysSeq) return;
+    setState(() => _diaryDays = days);
+  }
 
   Future<void> _loadDiary(int year, int month, int day) async {
     final seq = ++_loadDiarySeq;
     final prefs = await SharedPreferences.getInstance();
     final text = prefs.getString(_diaryKey(year, month, day)) ?? '';
     if (!mounted || seq != _loadDiarySeq) return;
-    _diaryController.text = text;
+    setState(() => _diaryText = text);
   }
 
-  Future<void> _saveDiary(int year, int month, int day, String text) async {
-    final prefs = await SharedPreferences.getInstance();
-    final key = _diaryKey(year, month, day);
-    if (text.isEmpty) {
-      await prefs.remove(key);
-    } else {
-      await prefs.setString(key, text);
+  Future<bool> _saveDiary(int year, int month, int day, String text) async {
+    final isChange = (_diaryText ?? '').isNotEmpty;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final key = _diaryKey(year, month, day);
+      if (text.isEmpty) {
+        await prefs.remove(key);
+      } else {
+        await prefs.setString(key, text);
+      }
+    } catch (_) {
+      if (mounted) {
+        AppToast.show(
+          message: '일기를 저장하지 못했어요.',
+          type: ToastType.error,
+          context: context,
+        );
+      }
+      return false;
     }
-    if (!mounted) return;
+    if (!mounted) return true;
     AppAnalytics.logEvent('calendar_diary_saved', {
       'is_delete': text.isEmpty,
+      'is_change': isChange,
       'length': text.length,
     });
+    setState(() {
+      // 저장하는 사이 다른 날이나 다른 달로 옮겨 갔으면 지금 보는 쪽을 덮지 않는다.
+      if (_year == year && _month == month) {
+        if (_selectedDay == day) _diaryText = text;
+        final days = {..._diaryDays};
+        if (text.isEmpty) {
+          days.remove(day);
+        } else {
+          days.add(day);
+        }
+        _diaryDays = days;
+      }
+    });
     AppToast.show(
-      message: '다이어리가 저장되었어요.',
+      message: text.isEmpty ? '일기를 지웠어요.' : '일기를 남겼어요.',
       type: ToastType.success,
       context: context,
     );
+    return true;
   }
 
   Future<void> _loadCalendar() async {
     setState(() => _isLoading = true);
+    _loadDiaryDays();
     try {
       final data = await _service.getStudyCalendar(
         year: _year,
@@ -445,6 +497,7 @@ class _LearningCalendarScreenState extends State<LearningCalendarScreen> {
                         isFuture: isFuture,
                         intensityLevel: intensity,
                         moodEmojiKey: record?.moodEmojiKey,
+                        hasDiary: _diaryDays.contains(day),
                         themeProvider: themeProvider,
                         frogLayers: frogLayers,
                         onTap: isFuture
@@ -452,7 +505,10 @@ class _LearningCalendarScreenState extends State<LearningCalendarScreen> {
                             : () {
                                 final newDay =
                                     (_selectedDay == day) ? null : day;
-                                setState(() => _selectedDay = newDay);
+                                setState(() {
+                                  _selectedDay = newDay;
+                                  _diaryText = null;
+                                });
                                 if (newDay != null) {
                                   _loadDiary(_year, _month, newDay);
                                 }
@@ -491,173 +547,127 @@ class _LearningCalendarScreenState extends State<LearningCalendarScreen> {
   }
 
   Widget _buildSelectedDayDetail(ThemeHandler themeProvider) {
-    if (_selectedDay == null || _calendarData == null)
-      return const SizedBox.shrink();
+    if (_selectedDay == null) return const SizedBox.shrink();
 
-    final record = _calendarData!.recordFor(_selectedDay!);
+    // 일기는 기기에만 있으므로 달력 조회에 실패해도 쓸 수 있어야 한다.
+    // 학습 기록 박스만 조회가 된 때 보인다.
+    final calendarData = _calendarData;
+    final record = calendarData?.recordFor(_selectedDay!);
     final weekdayIndex = DateTime(_year, _month, _selectedDay!).weekday % 7;
     final weekdayName = _dayOfWeekNames[weekdayIndex];
     final primaryColor = themeProvider.primaryColor;
 
+    final day = _selectedDay!;
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.grey[50],
-          borderRadius: BorderRadius.circular(AppRadius.medium),
-          border: Border.all(color: AppColors.border),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                StandardText(
-                  text: '$_month월 $_selectedDay일 $weekdayName',
-                  fontSize: 14,
-                  color: primaryColor,
-                ),
-                PressableScale(
-                  onTap: () => setState(() => _selectedDay = null),
-                  child: Icon(Icons.close, size: 16, color: Colors.grey[400]),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            if (record == null || !record.hasStudied)
-              Center(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 4),
-                  child: StandardText(
-                    text: '이 날은 학습하지 않았어요',
-                    fontSize: 13,
-                    color: Colors.grey,
-                  ),
-                ),
-              )
-            else ...[
-              _buildMoodSection(record, themeProvider),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  _buildStatChip('복습', '${record.reviewCount}회', primaryColor),
-                  const SizedBox(width: 8),
-                  _buildStatChip(
-                      '오답노트', '${record.noteWriteCount}개', primaryColor),
-                  const SizedBox(width: 8),
-                  _buildStatChip('학습', '${record.studyMinutes}분', primaryColor),
-                ],
-              ),
-              if (record.reviewedItems.isNotEmpty) ...[
-                const SizedBox(height: 12),
-                StandardText(
-                  text: '복습한 항목',
-                  fontSize: 11,
-                  color: AppColors.textTertiary,
-                ),
-                const SizedBox(height: 6),
-                ...record.reviewedItems.map((item) => Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 3),
-                      child: Row(
-                        children: [
-                          Icon(Icons.article_outlined,
-                              size: 13, color: Colors.grey[400]),
-                          const SizedBox(width: 6),
-                          Expanded(
-                            child: StandardText(
-                              text: item,
-                              fontSize: 12,
-                              color: AppColors.textPrimary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    )),
-              ],
-            ],
-            const SizedBox(height: 14),
-            _buildDiarySection(themeProvider),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (calendarData != null) ...[
+            _buildDayRecordBox(record, weekdayName, themeProvider),
+            const SizedBox(height: 20),
           ],
-        ),
+          DiaryPage(
+            // 날짜마다 쓰던 상태를 따로 둔다. 다른 날로 옮기면 입력칸이 닫힌다.
+            key: ValueKey('diary_${_year}_${_month}_$day'),
+            savedText: _diaryText,
+            date: DateTime(_year, _month, day),
+            weekdayName: weekdayName,
+            moodEmojiKey: record?.moodEmojiKey,
+            frogLayers: context.watch<CosmeticProvider>().layersWithoutBackdrop,
+            primaryColor: primaryColor,
+            onSave: (text) => _saveDiary(_year, _month, day, text),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildDiarySection(ThemeHandler themeProvider) {
+  Widget _buildDayRecordBox(
+    DailyStudyRecord? record,
+    String weekdayName,
+    ThemeHandler themeProvider,
+  ) {
     final primaryColor = themeProvider.primaryColor;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Icon(Icons.edit_note, size: 15, color: AppColors.textTertiary),
-            const SizedBox(width: 6),
-            StandardText(
-              text: '하루 기록',
-              fontSize: 12,
-              color: AppColors.textTertiary,
-            ),
-          ],
-        ),
-        const SizedBox(height: 6),
-        TextField(
-          controller: _diaryController,
-          maxLines: 4,
-          maxLength: 300,
-          style: const TextStyle(fontSize: 13, color: AppColors.textPrimary),
-          decoration: InputDecoration(
-            hintText: '오늘 하루를 기록해보세요...',
-            hintStyle: TextStyle(fontSize: 13, color: Colors.grey[400]),
-            filled: true,
-            fillColor: Colors.white,
-            counterStyle: TextStyle(fontSize: 10, color: Colors.grey[400]),
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppRadius.small),
-              borderSide: BorderSide(color: Colors.grey[300]!),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppRadius.small),
-              borderSide: BorderSide(color: Colors.grey[300]!),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppRadius.small),
-              borderSide: BorderSide(color: primaryColor.withOpacity(0.5)),
-            ),
-          ),
-        ),
-        const SizedBox(height: 8),
-        Align(
-          alignment: Alignment.centerRight,
-          child: TextButton(
-            onPressed: () {
-              final day = _selectedDay;
-              if (day == null) return;
-              final text = _diaryController.text.trim();
-              _saveDiary(_year, _month, day, text);
-              FocusScope.of(context).unfocus();
-            },
-            style: TextButton.styleFrom(
-              backgroundColor: primaryColor,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppRadius.small),
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.grey[50],
+        borderRadius: BorderRadius.circular(AppRadius.medium),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              StandardText(
+                text: '$_month월 $_selectedDay일 $weekdayName',
+                fontSize: 14,
+                color: primaryColor,
               ),
-              minimumSize: const Size(72, 34),
-              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            ),
-            child: const StandardText(
-              text: '저장',
-              fontSize: 13,
-              color: Colors.white,
-            ),
+              PressableScale(
+                onTap: () => setState(() => _selectedDay = null),
+                child: Icon(Icons.close, size: 16, color: Colors.grey[400]),
+              ),
+            ],
           ),
-        ),
-      ],
+          const SizedBox(height: 12),
+          if (record == null || !record.hasStudied)
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: StandardText(
+                  text: '이 날은 학습하지 않았어요',
+                  fontSize: 13,
+                  color: Colors.grey,
+                ),
+              ),
+            )
+          else ...[
+            _buildMoodSection(record, themeProvider),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                _buildStatChip('복습', '${record.reviewCount}회', primaryColor),
+                const SizedBox(width: 8),
+                _buildStatChip(
+                    '오답노트', '${record.noteWriteCount}개', primaryColor),
+                const SizedBox(width: 8),
+                _buildStatChip('학습', '${record.studyMinutes}분', primaryColor),
+              ],
+            ),
+            if (record.reviewedItems.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              StandardText(
+                text: '복습한 항목',
+                fontSize: 11,
+                color: AppColors.textTertiary,
+              ),
+              const SizedBox(height: 6),
+              ...record.reviewedItems.map((item) => Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 3),
+                    child: Row(
+                      children: [
+                        Icon(Icons.article_outlined,
+                            size: 13, color: Colors.grey[400]),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: StandardText(
+                            text: item,
+                            fontSize: 12,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  )),
+            ],
+          ],
+        ],
+      ),
     );
   }
 
@@ -848,6 +858,10 @@ class _CalendarCell extends StatelessWidget {
   final bool isFuture;
   final int intensityLevel;
   final String? moodEmojiKey;
+
+  /// 이 날 일기를 썼는지. 오른쪽 위에 연필 표시를 단다.
+  final bool hasDiary;
+
   final ThemeHandler themeProvider;
 
   /// 공부한 날에 찍을 개구리. `CosmeticProvider.layersWithoutBackdrop` 이다.
@@ -861,6 +875,7 @@ class _CalendarCell extends StatelessWidget {
     required this.isFuture,
     required this.intensityLevel,
     this.moodEmojiKey,
+    this.hasDiary = false,
     required this.themeProvider,
     required this.frogLayers,
     this.onTap,
@@ -950,6 +965,28 @@ class _CalendarCell extends StatelessWidget {
                 right: -1,
                 bottom: -1,
                 child: OnoEmojiImage(emojiKey: moodEmojiKey, size: 18),
+              ),
+            // 기분 스티커가 오른쪽 아래를 쓰므로 일기 표시는 오른쪽 위에 둔다.
+            if (hasDiary)
+              Positioned(
+                right: -2,
+                top: -2,
+                child: Container(
+                  width: 15,
+                  height: 15,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: themeProvider.primaryColor.withValues(alpha: 0.5),
+                    ),
+                  ),
+                  child: Icon(
+                    Icons.edit_rounded,
+                    size: 9,
+                    color: themeProvider.primaryColor,
+                  ),
+                ),
               ),
           ],
         ),

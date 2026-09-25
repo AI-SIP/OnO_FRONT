@@ -767,7 +767,8 @@ class _ProblemPracticeScreen extends State<PracticeThumbnailScreen> {
     if (emoji == null) return const [];
 
     return [
-      const SizedBox(width: 4),
+      // 4 로 두면 날짜 끝 글자에 그림이 붙어 보여서 조금 띄운다.
+      const SizedBox(width: 8),
       Tooltip(
         message: '지난 소감: ${emoji.label}',
         child: OnoEmojiImage(emoji: emoji, size: 18),

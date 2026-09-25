@@ -35,6 +35,9 @@ class TodayMissionCard extends StatelessWidget {
 
   const TodayMissionCard({super.key});
 
+  /// 진행 게이지를 테스트에서 찾는 키.
+  static const Key gaugeKey = Key('today_mission_gauge');
+
   @override
   Widget build(BuildContext context) {
     final missionProvider = Provider.of<MissionProvider>(context);
@@ -122,10 +125,15 @@ class TodayMissionCard extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(height: AppSpacing.sm),
+                    // 트랙을 회색이 아니라 주제색으로 옅게 깐다. 회색 트랙은
+                    // 흰 카드 위에서 거의 구분되지 않아, 하나도 못 채운 날에는
+                    // 게이지가 통째로 없는 것처럼 보였다. 업적 게이지와 같은 농도다.
                     AnimatedLinearGauge(
+                      key: gaugeKey,
                       value: ratio.toDouble(),
                       color: themeProvider.primaryColor,
-                      backgroundColor: AppColors.surfaceMuted,
+                      backgroundColor:
+                          themeProvider.primaryColor.withValues(alpha: 0.16),
                       height: 5,
                       borderRadius: AppRadius.full,
                     ),

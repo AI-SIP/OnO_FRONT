@@ -7,6 +7,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:ono/Model/Mission/MissionGroupModel.dart';
 import 'package:ono/Model/Mission/MissionModel.dart';
+import 'package:ono/Module/Design/AppColors.dart';
+import 'package:ono/Module/Motion/AnimatedGauge.dart';
 import 'package:ono/Provider/MissionProvider.dart';
 import 'package:ono/Screen/Mission/MissionScreen.dart';
 import 'package:ono/Screen/Mission/TodayMissionCard.dart';
@@ -81,6 +83,32 @@ void main() {
     expect(find.text('오늘의 미션'), findsOneWidget);
     expect(find.text('1/3'), findsOneWidget);
     expect(find.text('받기 1'), findsOneWidget);
+  });
+
+  testWidgets('하나도 못 채운 날에도 게이지 트랙이 흰 카드와 구분되는 색이다', (tester) async {
+    // 2차 QA: 트랙이 흰 카드와 거의 같은 회색이라 0개 달성일 때 게이지가
+    // 없는 것처럼 보였다.
+    await pumpCard(
+      tester,
+      MissionBoardModel(
+        daily: MissionGroupModel(
+          periodKey: '2026-09-09',
+          missions: [
+            buildMission(code: 'DAILY_ATTEND', progressId: 1),
+            buildMission(code: 'DAILY_NOTE_WRITE', progressId: 2),
+          ],
+        ),
+        weekly: const MissionGroupModel(periodKey: '2026-W37', missions: []),
+      ),
+    );
+
+    expect(find.text('0/2'), findsOneWidget);
+    final gauge = tester.widget<AnimatedLinearGauge>(
+      find.byKey(TodayMissionCard.gaugeKey),
+    );
+    expect(gauge.value, 0.0);
+    expect(gauge.backgroundColor, isNot(AppColors.surfaceMuted));
+    expect(gauge.backgroundColor, gauge.color.withValues(alpha: 0.16));
   });
 
   testWidgets('조회에 실패하면 배너를 통째로 숨긴다', (tester) async {
